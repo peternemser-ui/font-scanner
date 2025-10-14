@@ -415,7 +415,7 @@ body {
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 8px;
-  font-family: var(--font-family, inherit);
+  /* Font will be dynamically set via JavaScript */
 }
 
 .font-item p {
@@ -436,6 +436,22 @@ body {
   padding-top: 10px;
   border-top: 1px solid #e5e7eb;
   font-size: 0.8rem;
+}
+
+/* Font preview styling */
+.font-preview {
+  font-size: 1.2rem;
+  line-height: 1.3;
+  margin-bottom: 8px;
+  color: var(--text-primary);
+  /* Font family will be set dynamically */
+}
+
+.font-sample-text {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-style: italic;
+  margin-top: 4px;
 }
 
 .font-details {

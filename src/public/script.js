@@ -407,8 +407,16 @@ class FontScannerApp {
         systemFonts.forEach(font => {
           const fontItem = document.createElement('div');
           fontItem.className = 'font-item';
+          const fontFamily = font.fontFamily || font.name || 'Unknown Font';
+          const cleanFontName = fontFamily.replace(/['"]/g, '');
+          
           fontItem.innerHTML = `
-            <h4>"${font.fontFamily || font.name || 'Unknown Font'}"</h4>
+            <div class="font-preview" style="font-family: ${fontFamily}, serif;">
+              ${cleanFontName}
+            </div>
+            <div class="font-sample-text" style="font-family: ${fontFamily}, serif;">
+              The quick brown fox jumps over the lazy dog
+            </div>
             <div class="font-details-bottom">
               <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
               <p><strong>Style:</strong> ${font.fontStyle || 'normal'}</p>
@@ -431,6 +439,8 @@ class FontScannerApp {
           console.log(`🔤 Adding web font ${index + 1}:`, font.fontFamily || font.name);
           const fontItem = document.createElement('div');
           fontItem.className = 'font-item';
+          const fontFamily = font.fontFamily || font.name || 'Unknown Font';
+          const cleanFontName = fontFamily.replace(/['"]/g, '');
           
           // Truncate very long sources (like base64 data URLs)
           let displaySource = font.src || '';
@@ -439,7 +449,12 @@ class FontScannerApp {
           }
           
           fontItem.innerHTML = `
-            <h4>${font.fontFamily || font.name || 'Unknown Font'}</h4>
+            <div class="font-preview" style="font-family: ${fontFamily}, sans-serif;">
+              ${cleanFontName}
+            </div>
+            <div class="font-sample-text" style="font-family: ${fontFamily}, sans-serif;">
+              The quick brown fox jumps over the lazy dog
+            </div>
             <div class="font-details-bottom">
               <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
               <p><strong>Style:</strong> ${font.fontStyle || 'normal'}</p>
@@ -462,8 +477,16 @@ class FontScannerApp {
         googleFonts.forEach(font => {
           const fontItem = document.createElement('div');
           fontItem.className = 'font-item';
+          const fontFamily = font.fontFamily || font.name || 'Unknown Font';
+          const cleanFontName = fontFamily.replace(/['"]/g, '');
+          
           fontItem.innerHTML = `
-            <h4>${font.fontFamily || font.name || 'Unknown Font'}</h4>
+            <div class="font-preview" style="font-family: ${fontFamily}, sans-serif;">
+              ${cleanFontName}
+            </div>
+            <div class="font-sample-text" style="font-family: ${fontFamily}, sans-serif;">
+              The quick brown fox jumps over the lazy dog
+            </div>
             <div class="font-details-bottom">
               <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
               <p><strong>Style:</strong> ${font.fontStyle || 'normal'}</p>
@@ -484,8 +507,16 @@ class FontScannerApp {
         iconFonts.forEach(font => {
           const fontItem = document.createElement('div');
           fontItem.className = 'font-item';
+          const fontFamily = font.fontFamily || font.name || 'Unknown Font';
+          const cleanFontName = fontFamily.replace(/['"]/g, '');
+          
           fontItem.innerHTML = `
-            <h4>${font.fontFamily || font.name || 'Unknown Font'}</h4>
+            <div class="font-preview" style="font-family: ${fontFamily}, monospace;">
+              ${cleanFontName}
+            </div>
+            <div class="font-sample-text" style="font-family: ${fontFamily}, monospace;">
+              ⭐ 🏠 📧 ⚙️ 🔍 (Icon Preview)
+            </div>
             <div class="font-details-bottom">
               <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
               <p><strong>Style:</strong> ${font.fontStyle || 'normal'}</p>
