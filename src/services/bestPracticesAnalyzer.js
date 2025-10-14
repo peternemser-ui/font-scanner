@@ -135,50 +135,88 @@ class BestPracticesAnalyzer {
       good: [],
     };
 
-    fontAnalysis.fontSources.forEach((source) => {
-      if (source.includes('.woff2')) {
-        analysis.woff2Support++;
-        analysis.good.push(`WOFF2 format detected: ${source}`);
-      } else if (source.includes('.woff')) {
-        analysis.woffSupport++;
-        analysis.good.push(`WOFF format detected: ${source}`);
-      } else if (source.includes('.ttf') || source.includes('.otf')) {
-        analysis.legacyFormats++;
+    // Analyze font sources if available
+    if (fontAnalysis.fontSources && fontAnalysis.fontSources.length > 0) {
+      fontAnalysis.fontSources.forEach((source) => {
+        if (source.includes('.woff2')) {
+          analysis.woff2Support++;
+          analysis.good.push(`WOFF2 format detected: ${source}`);
+        } else if (source.includes('.woff')) {
+          analysis.woffSupport++;
+          analysis.good.push(`WOFF format detected: ${source}`);
+        } else if (source.includes('.ttf') || source.includes('.otf')) {
+          analysis.legacyFormats++;
+          analysis.issues.push({
+            type: 'warning',
+            message: `Legacy font format detected: ${source}. Consider using WOFF2 for better compression.`,
+          });
+        }
+
+        // Check for variable fonts
+        if (source.includes('variable') || source.includes('var')) {
+          analysis.variableFonts++;
+          analysis.good.push(`Variable font detected: ${source}`);
+        }
+
+        // Check for potential subsetting
+        if (source.includes('subset') || source.includes('latin')) {
+          analysis.subsetting++;
+          analysis.good.push(`Font subsetting detected: ${source}`);
+        }
+      });
+
+      const totalFonts = fontAnalysis.fontSources.length;
+      const score =
+        totalFonts > 0
+          ? ((analysis.woff2Support * 2 +
+              analysis.woffSupport +
+              analysis.subsetting +
+              analysis.variableFonts) /
+              (totalFonts * 2)) *
+            100
+          : 100;
+
+      return {
+        ...analysis,
+        score: Math.min(score, 100),
+        percentage: Math.min(score, 100),
+      };
+    } else {
+      // No explicit font sources found - likely using system fonts
+      const systemFontsCount = fontAnalysis.categorizedFonts?.system?.length || 0;
+      const totalFontsUsed = fontAnalysis.totalFonts || 0;
+      
+      if (systemFontsCount > 0) {
+        analysis.good.push(`Using ${systemFontsCount} system fonts for optimal performance`);
+        // System fonts are inherently "optimized" since they don't require downloads
+        return {
+          ...analysis,
+          score: 85, // Good score for system fonts
+          percentage: 85,
+        };
+      } else if (totalFontsUsed > 0) {
+        analysis.issues.push({
+          type: 'info',
+          message: `${totalFontsUsed} fonts detected but no explicit web font sources found. This may indicate system fonts or embedded fonts.`,
+        });
+        return {
+          ...analysis,
+          score: 70, // Decent score when fonts are detected but sources unclear
+          percentage: 70,
+        };
+      } else {
+        // No fonts detected at all
         analysis.issues.push({
           type: 'warning',
-          message: `Legacy font format detected: ${source}. Consider using WOFF2 for better compression.`,
+          message: 'No fonts detected. This may indicate a scanning issue or a very minimal page.',
         });
+        return {
+          ...analysis,
+          score: 50, // Neutral score when no fonts detected
+          percentage: 50,
+        };
       }
-
-      // Check for variable fonts
-      if (source.includes('variable') || source.includes('var')) {
-        analysis.variableFonts++;
-        analysis.good.push(`Variable font detected: ${source}`);
-      }
-
-      // Check for potential subsetting
-      if (source.includes('subset') || source.includes('latin')) {
-        analysis.subsetting++;
-        analysis.good.push(`Font subsetting detected: ${source}`);
-      }
-    });
-
-    const totalFonts = fontAnalysis.fontSources.length;
-    const score =
-      totalFonts > 0
-        ? ((analysis.woff2Support * 2 +
-            analysis.woffSupport +
-            analysis.subsetting +
-            analysis.variableFonts) /
-            (totalFonts * 2)) *
-          100
-        : 100;
-
-    return {
-      ...analysis,
-      score: Math.min(score, 100),
-      percentage: Math.min(score, 100),
-    };
+    }
   }
 
   async analyzeAccessibility(page) {
@@ -387,7 +425,15 @@ class BestPracticesAnalyzer {
       }
     });
 
-    return totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
+    const calculatedScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
+    
+    // Apply minimum score adjustment for system fonts or minimal detection
+    if (calculatedScore < 50 && bestPractices.fontOptimization?.good?.length > 0) {
+      // If we have some positive indicators but low score, boost it slightly
+      return Math.max(calculatedScore, 60);
+    }
+    
+    return calculatedScore;
   }
 
   calculateLoadingStrategyScore(strategies) {
@@ -868,13 +914,28 @@ class BestPracticesAnalyzer {
       sustainabilityScore: 0,
     };
 
+    // Count fonts from font optimization analysis
     if (bestPractices.fontOptimization) {
-      metrics.totalFonts =
+      const fontSourceCount = 
         bestPractices.fontOptimization.woff2Support +
         bestPractices.fontOptimization.woffSupport +
         bestPractices.fontOptimization.legacyFormats;
-      metrics.optimizedFonts =
-        bestPractices.fontOptimization.woff2Support + bestPractices.fontOptimization.woffSupport;
+      
+      // If we have font sources, use that count, otherwise fall back to font display analysis
+      if (fontSourceCount > 0) {
+        metrics.totalFonts = fontSourceCount;
+        metrics.optimizedFonts =
+          bestPractices.fontOptimization.woff2Support + bestPractices.fontOptimization.woffSupport;
+      } else if (bestPractices.fontDisplay && bestPractices.fontDisplay.total > 0) {
+        // Fall back to font-face count from fontDisplay analysis
+        metrics.totalFonts = bestPractices.fontDisplay.total;
+        // Assume system fonts are "optimized" if no web fonts are detected
+        metrics.optimizedFonts = Math.max(1, Math.floor(bestPractices.fontDisplay.total * 0.5));
+      } else {
+        // Default assumption: if no explicit fonts detected, assume 1 system font
+        metrics.totalFonts = 1;
+        metrics.optimizedFonts = 1;
+      }
     }
 
     metrics.accessibilityScore = bestPractices.accessibility?.percentage || 0;
