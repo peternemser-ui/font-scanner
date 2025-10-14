@@ -415,7 +415,9 @@ class FontScannerApp {
               ${cleanFontName}
             </div>
             <div class="font-sample-text" style="font-family: ${fontFamily}, serif;">
-              The quick brown fox jumps over the lazy dog
+              ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>
+              abcdefghijklmnopqrstuvwxyz<br>
+              0123456789 !@#$%^&*()_+-=[]{}|;':",./<>?
             </div>
             <div class="font-details-bottom">
               <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
@@ -453,7 +455,9 @@ class FontScannerApp {
               ${cleanFontName}
             </div>
             <div class="font-sample-text" style="font-family: ${fontFamily}, sans-serif;">
-              The quick brown fox jumps over the lazy dog
+              ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>
+              abcdefghijklmnopqrstuvwxyz<br>
+              0123456789 !@#$%^&*()_+-=[]{}|;':",./<>?
             </div>
             <div class="font-details-bottom">
               <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
@@ -485,7 +489,9 @@ class FontScannerApp {
               ${cleanFontName}
             </div>
             <div class="font-sample-text" style="font-family: ${fontFamily}, sans-serif;">
-              The quick brown fox jumps over the lazy dog
+              ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>
+              abcdefghijklmnopqrstuvwxyz<br>
+              0123456789 !@#$%^&*()_+-=[]{}|;':",./<>?
             </div>
             <div class="font-details-bottom">
               <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
@@ -515,7 +521,9 @@ class FontScannerApp {
               ${cleanFontName}
             </div>
             <div class="font-sample-text" style="font-family: ${fontFamily}, monospace;">
-              ⭐ 🏠 📧 ⚙️ 🔍 (Icon Preview)
+              ⭐ 🏠 📧 ⚙️ 🔍 ❤️ 📱 💡 🔒 ✅ ❌ ⚠️ 📊 🎯 🚀<br>
+              Icons & Symbols Preview<br>
+              ABCDEFGHIJKLM 0123456789
             </div>
             <div class="font-details-bottom">
               <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
