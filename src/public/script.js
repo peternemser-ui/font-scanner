@@ -408,9 +408,11 @@ class FontScannerApp {
           const fontItem = document.createElement('div');
           fontItem.className = 'font-item';
           fontItem.innerHTML = `
-            <h4>${font.fontFamily || font.name || 'Unknown Font'}</h4>
-            <p><strong>Weight:</strong> ${font.fontWeight || 'Normal'}</p>
-            <p><strong>Style:</strong> ${font.fontStyle || 'Normal'}</p>
+            <h4>"${font.fontFamily || font.name || 'Unknown Font'}"</h4>
+            <div class="font-details-bottom">
+              <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
+              <p><strong>Style:</strong> ${font.fontStyle || 'normal'}</p>
+            </div>
           `;
           systemFontsList.appendChild(fontItem);
         });
@@ -438,10 +440,12 @@ class FontScannerApp {
           
           fontItem.innerHTML = `
             <h4>${font.fontFamily || font.name || 'Unknown Font'}</h4>
-            <p><strong>Weight:</strong> ${font.fontWeight || 'Normal'}</p>
-            <p><strong>Style:</strong> ${font.fontStyle || 'Normal'}</p>
-            <p><strong>Display:</strong> ${font.fontDisplay || 'auto'}</p>
-            ${font.src && font.src !== 'System' ? `<p><strong>Source:</strong> ${displaySource}</p>` : ''}
+            <div class="font-details-bottom">
+              <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
+              <p><strong>Style:</strong> ${font.fontStyle || 'normal'}</p>
+              <p><strong>Display:</strong> ${font.fontDisplay || 'swap'}</p>
+              ${font.src && font.src !== 'System' ? `<p><strong>Source:</strong> ${displaySource}</p>` : ''}
+            </div>
           `;
           webFontsList.appendChild(fontItem);
         });
@@ -460,9 +464,11 @@ class FontScannerApp {
           fontItem.className = 'font-item';
           fontItem.innerHTML = `
             <h4>${font.fontFamily || font.name || 'Unknown Font'}</h4>
-            <p><strong>Weight:</strong> ${font.fontWeight || 'Normal'}</p>
-            <p><strong>Style:</strong> ${font.fontStyle || 'Normal'}</p>
-            <p><strong>Source:</strong> Google Fonts</p>
+            <div class="font-details-bottom">
+              <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
+              <p><strong>Style:</strong> ${font.fontStyle || 'normal'}</p>
+              <p><strong>Source:</strong> Google Fonts</p>
+            </div>
           `;
           googleFontsList.appendChild(fontItem);
         });
@@ -480,10 +486,12 @@ class FontScannerApp {
           fontItem.className = 'font-item';
           fontItem.innerHTML = `
             <h4>${font.fontFamily || font.name || 'Unknown Font'}</h4>
-            <p><strong>Weight:</strong> ${font.fontWeight || 'Normal'}</p>
-            <p><strong>Style:</strong> ${font.fontStyle || 'Normal'}</p>
-            <p><strong>Type:</strong> Icon Font</p>
-            <p><strong>Source:</strong> ${font.source ? font.source.substring(0, 100) + (font.source.length > 100 ? '...' : '') : 'Unknown'}</p>
+            <div class="font-details-bottom">
+              <p><strong>Weight:</strong> ${font.fontWeight || 'normal'}</p>
+              <p><strong>Style:</strong> ${font.fontStyle || 'normal'}</p>
+              <p><strong>Type:</strong> Icon Font</p>
+              <p><strong>Source:</strong> ${font.source ? font.source.substring(0, 100) + (font.source.length > 100 ? '...' : '') : 'Unknown'}</p>
+            </div>
           `;
           iconFontsList.appendChild(fontItem);
         });

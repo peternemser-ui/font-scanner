@@ -371,6 +371,8 @@ body {
   background: #f8fafc;
   padding: 20px;
   border-radius: var(--border-radius);
+  border: 2px solid #cbd5e1; /* Darker border */
+  box-shadow: var(--shadow);
 }
 
 .category-card h4 {
@@ -394,10 +396,53 @@ body {
   border-bottom: none;
 }
 
+/* Font item styling for better display */
+.font-item {
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  padding: 15px;
+  margin-bottom: 12px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+
+.font-item:last-child {
+  margin-bottom: 0;
+}
+
+.font-item h4 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 8px;
+  font-family: var(--font-family, inherit);
+}
+
+.font-item p {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  margin: 4px 0;
+  line-height: 1.4;
+}
+
+.font-item p strong {
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+/* Font details at bottom styling */
+.font-details-bottom {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+  font-size: 0.8rem;
+}
+
 .font-details {
   background: #f8fafc;
   padding: 20px;
   border-radius: var(--border-radius);
+  border: 2px solid #cbd5e1; /* Match category cards */
 }
 
 .performance-metrics {
