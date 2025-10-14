@@ -921,7 +921,7 @@ class BestPracticesAnalyzer {
         bestPractices.fontOptimization.woffSupport +
         bestPractices.fontOptimization.legacyFormats;
       
-      // If we have font sources, use that count, otherwise fall back to font display analysis
+      // If we have font sources, use that count
       if (fontSourceCount > 0) {
         metrics.totalFonts = fontSourceCount;
         metrics.optimizedFonts =
@@ -929,12 +929,15 @@ class BestPracticesAnalyzer {
       } else if (bestPractices.fontDisplay && bestPractices.fontDisplay.total > 0) {
         // Fall back to font-face count from fontDisplay analysis
         metrics.totalFonts = bestPractices.fontDisplay.total;
-        // Assume system fonts are "optimized" if no web fonts are detected
-        metrics.optimizedFonts = Math.max(1, Math.floor(bestPractices.fontDisplay.total * 0.5));
+        // Calculate optimized fonts based on the optimization percentage
+        const optimizationPercentage = bestPractices.fontOptimization.percentage || 0;
+        metrics.optimizedFonts = Math.round((optimizationPercentage / 100) * bestPractices.fontDisplay.total);
       } else {
         // Default assumption: if no explicit fonts detected, assume 1 system font
         metrics.totalFonts = 1;
-        metrics.optimizedFonts = 1;
+        // Calculate optimized fonts based on the optimization percentage
+        const optimizationPercentage = bestPractices.fontOptimization.percentage || 0;
+        metrics.optimizedFonts = optimizationPercentage >= 80 ? 1 : 0;
       }
     }
 

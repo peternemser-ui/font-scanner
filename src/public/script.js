@@ -643,8 +643,19 @@ class FontScannerApp {
     // Update practice scores in the existing grid
     const categories = bestPracticesData.categories || {};
     
+    // Map category names to HTML element IDs
+    const categoryIdMap = {
+      fontDisplay: 'fontDisplayScore',
+      fontLoading: 'fontLoadingScore',
+      accessibility: 'accessibilityScore',
+      performance: 'performanceScore',
+      fontOptimization: 'optimizationScore', // Maps to optimizationScore in HTML
+      fallbacks: 'fallbacksScore'
+    };
+    
     Object.entries(categories).forEach(([category, data]) => {
-      const scoreElement = document.getElementById(`${category}Score`);
+      const elementId = categoryIdMap[category] || `${category}Score`;
+      const scoreElement = document.getElementById(elementId);
       if (scoreElement) {
         scoreElement.textContent = `${data.percentage || 0}%`;
         scoreElement.className = `practice-score ${this.getScoreClass(data.percentage || 0)}`;
