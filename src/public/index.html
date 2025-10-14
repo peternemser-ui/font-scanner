@@ -1,0 +1,449 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Font Scanner - Comprehensive Font Analysis Tool</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container">
+      <header class="header">
+        <h1>🔍 Font Scanner</h1>
+        <p>Comprehensive website font analysis and best practices audit</p>
+      </header>
+
+      <main class="main">
+        <section class="scan-section">
+          <div class="input-container">
+            <input
+              type="url"
+              id="urlInput"
+              placeholder="Enter website URL (e.g., https://example.com)"
+              required
+            />
+
+            <button id="scanButton" type="button">
+              <span class="button-text">Analyze Website</span>
+              <span class="loading-spinner" hidden>🔄</span>
+            </button>
+          </div>
+          <div class="scan-description">
+            <p id="scanDescription">Comprehensive website font analysis and best practices audit</p>
+          </div>
+          <div id="errorMessage" class="error-message" hidden></div>
+        </section>
+
+        <section id="resultsSection" class="results-section" hidden>
+          <div class="results-header">
+            <h2>Analysis Results</h2>
+            <div class="scan-info">
+              <span id="scannedUrl"></span>
+              <span id="scanTime"></span>
+            </div>
+          </div>
+
+          <div class="score-overview">
+            <div class="score-card">
+              <div class="score-circle">
+                <span id="overallScore">0</span>
+                <span class="score-grade" id="overallGrade">F</span>
+              </div>
+              <h3>Overall Score</h3>
+              <div id="scoreBreakdown" class="score-breakdown-display"></div>
+            </div>
+          </div>
+
+          <div class="tabs">
+            <button class="tab-button active" data-tab="overview">Overview</button>
+            <button class="tab-button" data-tab="fonts">Fonts</button>
+            <button class="tab-button" data-tab="lighthouse">Lighthouse</button>
+            <button class="tab-button" data-tab="best-practices">Best Practices</button>
+            <button class="tab-button" data-tab="recommendations">Recommendations</button>
+            <button class="tab-button" data-tab="final-report">📊 Final Report</button>
+          </div>
+
+          <div class="tab-content">
+            <div id="overview-tab" class="tab-panel active">
+              <div class="overview-grid">
+                <div class="overview-card">
+                  <h4>Font Summary</h4>
+                  <div class="metric">
+                    <span class="metric-value" id="totalFonts">0</span>
+                    <span class="metric-label">Total Fonts</span>
+                  </div>
+                </div>
+                <div class="overview-card">
+                  <h4>Performance</h4>
+                  <div class="metric">
+                    <span class="metric-value" id="loadTime">0ms</span>
+                    <span class="metric-label">Load Time</span>
+                  </div>
+                </div>
+                <div class="overview-card">
+                  <h4>Best Practices</h4>
+                  <div class="metric">
+                    <span class="metric-value" id="practicesScore">0%</span>
+                    <span class="metric-label">Compliance</span>
+                  </div>
+                </div>
+                <div class="overview-card">
+                  <h4>Analysis Type</h4>
+                  <div class="metric">
+                    <span class="metric-value" id="analysisType">Basic</span>
+                    <span class="metric-label">Scan Type</span>
+                  </div>
+                </div>
+                <div class="overview-card">
+                  <h4>Pages Analyzed</h4>
+                  <div class="metric">
+                    <span class="metric-value" id="pagesAnalyzed">1</span>
+                    <span class="metric-label">Total Pages</span>
+                  </div>
+                </div>
+              </div>
+              <div id="reportDownload" class="report-download" hidden>
+                <h4>📄 Comprehensive Report</h4>
+                <p>Your detailed PDF report is ready for download</p>
+                <button id="downloadButton" class="download-btn">Download PDF Report</button>
+              </div>
+              <div id="screenshot-container" class="screenshot-container">
+                <h4>Page Screenshot</h4>
+                <img
+                  id="pageScreenshot"
+                  alt="Page screenshot"
+                  style="max-width: 100%; border-radius: 8px"
+                />
+              </div>
+            </div>
+
+            <div id="fonts-tab" class="tab-panel">
+              <div class="font-categories">
+                <div class="category-card">
+                  <h4>System Fonts</h4>
+                  <ul id="systemFontsList"></ul>
+                </div>
+                <div class="category-card">
+                  <h4>Web Fonts</h4>
+                  <ul id="webFontsList"></ul>
+                </div>
+                <div class="category-card">
+                  <h4>Google Fonts</h4>
+                  <ul id="googleFontsList"></ul>
+                </div>
+                <div class="category-card">
+                  <h4>Icon Fonts</h4>
+                  <ul id="iconFontsList"></ul>
+                </div>
+              </div>
+              <div class="font-details">
+                <h4>Font Details</h4>
+                <div id="fontDetailsTable"></div>
+              </div>
+            </div>
+
+            <div id="lighthouse-tab" class="tab-panel">
+              <div class="lighthouse-comparison">
+                <div class="device-comparison">
+                  <div class="device-card">
+                    <h4>🖥️ Desktop Performance</h4>
+                    <div class="lighthouse-scores" id="desktopScores">
+                      <div class="score-item">
+                        <span class="score-label">Performance</span>
+                        <span class="score-value" id="desktopPerformance">-</span>
+                      </div>
+                      <div class="score-item">
+                        <span class="score-label">Accessibility</span>
+                        <span class="score-value" id="desktopAccessibility">-</span>
+                      </div>
+                      <div class="score-item">
+                        <span class="score-label">Best Practices</span>
+                        <span class="score-value" id="desktopBestPractices">-</span>
+                      </div>
+                      <div class="score-item">
+                        <span class="score-label">SEO</span>
+                        <span class="score-value" id="desktopSEO">-</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="device-card">
+                    <h4>📱 Mobile Performance</h4>
+                    <div class="lighthouse-scores" id="mobileScores">
+                      <div class="score-item">
+                        <span class="score-label">Performance</span>
+                        <span class="score-value" id="mobilePerformance">-</span>
+                      </div>
+                      <div class="score-item">
+                        <span class="score-label">Accessibility</span>
+                        <span class="score-value" id="mobileAccessibility">-</span>
+                      </div>
+                      <div class="score-item">
+                        <span class="score-label">Best Practices</span>
+                        <span class="score-value" id="mobileBestPractices">-</span>
+                      </div>
+                      <div class="score-item">
+                        <span class="score-label">SEO</span>
+                        <span class="score-value" id="mobileSEO">-</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="lighthouseDetails" class="lighthouse-details"></div>
+              </div>
+            </div>
+
+            <div id="multi-page-tab" class="tab-panel">
+              <div class="multi-page-analysis">
+                <div id="pagesList" class="pages-list"></div>
+              </div>
+            </div>
+
+            <div id="best-practices-tab" class="tab-panel">
+              <div class="practices-overview">
+                <div class="practice-summary">
+                  <h3>Font Best Practices Analysis</h3>
+                  <div class="summary-metrics">
+                    <div class="metric">
+                      <label>Overall Grade</label>
+                      <span id="overallGradeValue" class="grade">-</span>
+                    </div>
+                    <div class="metric">
+                      <label>Total Fonts</label>
+                      <span id="totalFontsMetric">-</span>
+                    </div>
+                    <div class="metric">
+                      <label>Optimized Fonts</label>
+                      <span id="optimizedFontsMetric">-</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="practices-tabs">
+                <div class="sub-tabs">
+                  <button class="sub-tab-button active" data-subtab="overview">Overview</button>
+                  <button class="sub-tab-button" data-subtab="detailed">Detailed Analysis</button>
+                  <button class="sub-tab-button" data-subtab="security">Security & Caching</button>
+                  <button class="sub-tab-button" data-subtab="webvitals">Web Vitals Impact</button>
+                </div>
+
+                <div id="overview-subtab" class="sub-tab-panel active">
+                  <div class="practices-grid">
+                    <div class="practice-card">
+                      <h4>Font Display</h4>
+                      <div class="practice-score" id="fontDisplayScore">0%</div>
+                      <div id="fontDisplayDetails"></div>
+                    </div>
+                    <div class="practice-card">
+                      <h4>Font Loading</h4>
+                      <div class="practice-score" id="fontLoadingScore">0%</div>
+                      <div id="fontLoadingDetails"></div>
+                    </div>
+                    <div class="practice-card">
+                      <h4>Accessibility</h4>
+                      <div class="practice-score" id="accessibilityScore">0%</div>
+                      <div id="accessibilityDetails"></div>
+                    </div>
+                    <div class="practice-card">
+                      <h4>Performance</h4>
+                      <div class="practice-score" id="performanceScore">0%</div>
+                      <div id="performanceDetails"></div>
+                    </div>
+                    <div class="practice-card">
+                      <h4>Font Optimization</h4>
+                      <div class="practice-score" id="optimizationScore">0%</div>
+                      <div id="optimizationDetails"></div>
+                    </div>
+                    <div class="practice-card">
+                      <h4>Font Fallbacks</h4>
+                      <div class="practice-score" id="fallbacksScore">0%</div>
+                      <div id="fallbacksDetails"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="detailed-subtab" class="sub-tab-panel">
+                  <div class="detailed-analysis">
+                    <div class="issue-section critical">
+                      <h4>🚨 Critical Issues</h4>
+                      <div id="criticalIssuesList" class="issues-list"></div>
+                    </div>
+                    <div class="issue-section warnings">
+                      <h4>⚠️ Warnings</h4>
+                      <div id="warningsList" class="issues-list"></div>
+                    </div>
+                    <div class="issue-section optimizations">
+                      <h4>🚀 Optimization Opportunities</h4>
+                      <div id="optimizationsList" class="issues-list"></div>
+                    </div>
+                    <div class="issue-section strengths">
+                      <h4>✅ Strengths</h4>
+                      <div id="strengthsList" class="issues-list"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div id="security-subtab" class="sub-tab-panel">
+                  <div class="security-analysis">
+                    <div class="security-metrics">
+                      <div class="metric-card">
+                        <h5>Security Score</h5>
+                        <div id="securityScoreValue" class="score-large">-</div>
+                      </div>
+                      <div class="metric-card">
+                        <h5>Caching Score</h5>
+                        <div id="cachingScoreValue" class="score-large">-</div>
+                      </div>
+                    </div>
+                    <div id="securityDetails" class="details-section"></div>
+                    <div id="cachingDetails" class="details-section"></div>
+                  </div>
+                </div>
+
+                <div id="webvitals-subtab" class="sub-tab-panel">
+                  <div class="webvitals-analysis">
+                    <h4>Font Impact on Core Web Vitals</h4>
+                    <div class="webvitals-metrics">
+                      <div class="vital-metric">
+                        <label>Layout Stability</label>
+                        <div id="layoutStabilityScore" class="vital-score">-</div>
+                      </div>
+                      <div class="vital-metric">
+                        <label>Render Blocking</label>
+                        <div id="renderBlockingScore" class="vital-score">-</div>
+                      </div>
+                    </div>
+                    <div id="webVitalsDetails" class="details-section"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div id="recommendations-tab" class="tab-panel">
+              <div id="recommendationsList" class="recommendations-list"></div>
+            </div>
+
+            <div id="final-report-tab" class="tab-panel">
+              <div class="final-report">
+                <div class="report-header">
+                  <h2>📊 Comprehensive Font Analysis Report</h2>
+                  <div class="report-meta">
+                    <div class="report-info">
+                      <span id="reportUrl" class="report-url">-</span>
+                      <span id="reportDate" class="report-date">-</span>
+                    </div>
+                    <div class="report-actions">
+                      <button id="downloadReportBtn" class="download-btn">💾 Download PDF</button>
+                      <button id="printReportBtn" class="print-btn">🖶️ Print Report</button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="report-summary">
+                  <h3>Executive Summary</h3>
+                  <div class="summary-grid">
+                    <div class="summary-card score-card">
+                      <div class="summary-score" id="finalOverallScore">-</div>
+                      <div class="summary-label">Overall Score</div>
+                      <div class="summary-grade" id="finalOverallGrade">-</div>
+                    </div>
+                    <div class="summary-card">
+                      <div class="summary-value" id="finalTotalFonts">-</div>
+                      <div class="summary-label">Total Fonts</div>
+                    </div>
+                    <div class="summary-card">
+                      <div class="summary-value" id="finalOptimizedFonts">-</div>
+                      <div class="summary-label">Optimized Fonts</div>
+                    </div>
+                    <div class="summary-card">
+                      <div class="summary-value" id="finalCarbonFootprint">-</div>
+                      <div class="summary-label">CO₂ Impact (g)</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="report-section">
+                  <h3>📊 Font Family Analysis</h3>
+                  <div id="fontFamilyChart" class="chart-container">
+                    <canvas id="fontFamilyCanvas" width="400" height="300"></canvas>
+                  </div>
+                  <div id="fontFamilyLegend" class="chart-legend"></div>
+                </div>
+
+                <div class="report-section">
+                  <h3>📁 Font Files & Resources</h3>
+                  <div id="fontResourcesTable" class="resources-table"></div>
+                </div>
+
+                <div class="report-section">
+                  <h3>⚡ Performance Impact</h3>
+                  <div class="performance-grid">
+                    <div class="perf-card">
+                      <h4>Loading Performance</h4>
+                      <div id="loadingMetrics" class="metrics-list"></div>
+                    </div>
+                    <div class="perf-card">
+                      <h4>Core Web Vitals Impact</h4>
+                      <div id="webVitalsImpact" class="metrics-list"></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="report-section">
+                  <h3>🎯 Lighthouse Scores</h3>
+                  <div class="lighthouse-summary">
+                    <div class="device-scores">
+                      <div class="device-score">
+                        <h4>Desktop</h4>
+                        <div id="desktopLighthouseScores" class="lighthouse-scores"></div>
+                      </div>
+                      <div class="device-score">
+                        <h4>Mobile</h4>
+                        <div id="mobileLighthouseScores" class="lighthouse-scores"></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="report-section">
+                  <h3>🛠️ Recommendations Summary</h3>
+                  <div id="reportRecommendations" class="report-recommendations"></div>
+                </div>
+
+                <div class="report-section">
+                  <h3>📈 Technical Details</h3>
+                  <div class="technical-grid">
+                    <div class="tech-card">
+                      <h4>Font Formats</h4>
+                      <div id="fontFormats" class="tech-details"></div>
+                    </div>
+                    <div class="tech-card">
+                      <h4>Loading Strategy</h4>
+                      <div id="loadingStrategy" class="tech-details"></div>
+                    </div>
+                    <div class="tech-card">
+                      <h4>Security Analysis</h4>
+                      <div id="securityAnalysis" class="tech-details"></div>
+                    </div>
+                    <div class="tech-card">
+                      <h4>Accessibility</h4>
+                      <div id="accessibilityAnalysis" class="tech-details"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>
