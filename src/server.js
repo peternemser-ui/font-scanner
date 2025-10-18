@@ -11,6 +11,7 @@ const config = require('./config');
 const { createLogger } = require('./utils/logger');
 const { errorMiddleware } = require('./utils/errorHandler');
 const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
+const requestIdMiddleware = require('./middleware/requestId');
 const browserPool = require('./utils/browserPool');
 
 const logger = createLogger('Server');
@@ -56,6 +57,9 @@ app.use(compression());
 
 // Logging
 app.use(morgan('combined'));
+
+// Request ID tracking - adds unique ID to each request
+app.use(requestIdMiddleware);
 
 // Metrics middleware
 app.use(metricsMiddleware);

@@ -33,7 +33,13 @@ class Logger {
     const color = COLORS[level] || '';
     const reset = COLORS.RESET;
 
-    let logMessage = `${color}[${timestamp}] [${level}] [${this.context}]${reset} ${message}`;
+    // Extract requestId if present in data
+    let requestId = '';
+    if (data && data.requestId) {
+      requestId = ` [reqId:${data.requestId.substring(0, 8)}]`;
+    }
+
+    let logMessage = `${color}[${timestamp}] [${level}] [${this.context}]${requestId}${reset} ${message}`;
 
     if (data) {
       logMessage += ` ${JSON.stringify(data)}`;

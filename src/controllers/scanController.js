@@ -18,6 +18,7 @@ const logger = createLogger('ScanController');
 const scanWebsite = asyncHandler(async (req, res) => {
   const { scanType = 'basic' } = req.body;
   let { url } = req.body;
+  const requestId = req.id; // Get request ID from middleware
 
   // Validate input
   if (!url) {
@@ -39,7 +40,7 @@ const scanWebsite = asyncHandler(async (req, res) => {
   }
 
   // Test if URL is actually reachable
-  logger.info('Testing URL reachability', { url });
+  logger.info('Testing URL reachability', { url, requestId });
   let isReachable = await testUrlReachability(url);
   
   // If HTTPS fails, try HTTP
@@ -70,7 +71,7 @@ const scanWebsite = asyncHandler(async (req, res) => {
   if (useCache) {
     const cachedResult = defaultCache.get(url, { scanType });
     if (cachedResult) {
-      logger.info('Returning cached scan result', { url, scanType });
+      logger.info('Returning cached scan result', { url, scanType, requestId });
       return res.json({
         success: true,
         scanType: 'basic',
@@ -82,7 +83,7 @@ const scanWebsite = asyncHandler(async (req, res) => {
     }
   }
 
-  logger.info(`Starting ${scanType} scan`, { url, scanType });
+  logger.info(`Starting ${scanType} scan`, { url, scanType, requestId });
 
   let scanResult;
 
