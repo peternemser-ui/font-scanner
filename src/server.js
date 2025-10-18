@@ -11,6 +11,7 @@ const config = require('./config');
 const { createLogger } = require('./utils/logger');
 const { errorMiddleware } = require('./utils/errorHandler');
 const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
+const browserPool = require('./utils/browserPool');
 
 const logger = createLogger('Server');
 const app = express();
@@ -146,16 +147,25 @@ const server = app.listen(PORT, () => {
 });
 
 // Graceful shutdown handling
-const gracefulShutdown = (signal) => {
+const gracefulShutdown = async (signal) => {
   logger.info(`${signal} received. Starting graceful shutdown...`);
   isShuttingDown = true;
 
   // Stop accepting new connections
-  server.close(() => {
+  server.close(async () => {
     logger.info('HTTP server closed. All connections finished.');
 
     // Cleanup tasks
     logger.info('Performing cleanup tasks...');
+
+    // Drain browser pool
+    try {
+      logger.info('Draining browser pool...');
+      await browserPool.drain();
+      logger.info('Browser pool drained successfully');
+    } catch (error) {
+      logger.error('Error draining browser pool:', error);
+    }
 
     // Close database connections, cleanup resources, etc.
     // Add your cleanup logic here

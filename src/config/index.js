@@ -28,6 +28,14 @@ const config = {
     timeout: parseInt(process.env.PUPPETEER_TIMEOUT || '30000', 10),
   },
 
+  // Browser Pool
+  browserPool: {
+    min: parseInt(process.env.BROWSER_POOL_MIN || '1', 10),
+    max: parseInt(process.env.BROWSER_POOL_MAX || '5', 10),
+    idleTimeout: parseInt(process.env.BROWSER_POOL_IDLE_TIMEOUT || '300000', 10), // 5 minutes
+    acquireTimeout: parseInt(process.env.BROWSER_POOL_ACQUIRE_TIMEOUT || '30000', 10), // 30 seconds
+  },
+
   // Reports
   reports: {
     dir: process.env.REPORTS_DIR || './reports',

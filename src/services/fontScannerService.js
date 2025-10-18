@@ -1,5 +1,5 @@
-const puppeteer = require('puppeteer');
 const { createLogger } = require('../utils/logger');
+const browserPool = require('../utils/browserPool');
 const FontAnalyzer = require('./fontAnalyzer');
 const performanceAnalyzer = require('./performanceAnalyzer');
 const bestPracticesAnalyzer = require('./bestPracticesAnalyzer');
@@ -8,39 +8,14 @@ const fallbackScannerService = require('./fallbackScannerService');
 const logger = createLogger('FontScannerService');
 
 class FontScannerService {
-  constructor() {
-    this.browser = null;
-  }
-
-  async initBrowser() {
-    if (!this.browser) {
-      this.browser = await puppeteer.launch({
-        headless: 'new',
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--disable-gpu',
-          '--disable-features=VizDisplayCompositor',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-        ],
-        defaultViewport: { width: 1920, height: 1080 },
-        timeout: 120000, // 2 minutes for browser operations
-      });
-    }
-    return this.browser;
-  }
-
   async scanWebsite(url) {
-    const browser = await this.initBrowser();
-    const page = await browser.newPage();
+    // Acquire browser from pool
+    const browser = await browserPool.acquire();
+    let page = null;
 
     try {
+      page = await browser.newPage();
+
       // Listen to browser console messages to see FontAnalyzer debug output
       page.on('console', (msg) => {
         const text = msg.text();
@@ -154,37 +129,25 @@ class FontScannerService {
       logger.info('Falling back to simple HTTP-based analysis...');
 
       // Use fallback scanner
-      await page.close();
-      return await fallbackScannerService.scanWebsite(url);
-    } finally {
       if (page && !page.isClosed()) {
         await page.close();
       }
-    }
-  }
-
-  async closeBrowser() {
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
+      
+      // Release browser back to pool before fallback
+      await browserPool.release(browser);
+      
+      return await fallbackScannerService.scanWebsite(url);
+    } finally {
+      // Always close page and release browser
+      if (page && !page.isClosed()) {
+        await page.close();
+      }
+      await browserPool.release(browser);
     }
   }
 }
 
 // Create singleton instance
 const fontScannerService = new FontScannerService();
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  logger.info('Closing browser...');
-  await fontScannerService.closeBrowser();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  logger.info('Closing browser...');
-  await fontScannerService.closeBrowser();
-  process.exit(0);
-});
 
 module.exports = fontScannerService;

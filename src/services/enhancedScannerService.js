@@ -1,4 +1,5 @@
 const { createLogger } = require('../utils/logger');
+const browserPool = require('../utils/browserPool');
 const fontScannerService = require('./fontScannerService');
 const fontAnalyzer = require('./fontAnalyzer');
 const performanceAnalyzer = require('./performanceAnalyzer');
