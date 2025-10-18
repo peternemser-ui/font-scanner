@@ -1,5 +1,5 @@
 # Development Dockerfile with hot-reload support
-FROM node:18-alpine AS development
+FROM node:25-alpine AS development
 
 # Install Chromium and dependencies for Puppeteer
 RUN apk add --no-cache \
