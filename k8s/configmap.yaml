@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: font-scanner-config
+  namespace: font-scanner
+  labels:
+    app: font-scanner
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  LOG_LEVEL: "INFO"
+  PUPPETEER_HEADLESS: "true"
+  PUPPETEER_TIMEOUT: "30000"
+  RATE_LIMIT_WINDOW_MS: "900000"
+  RATE_LIMIT_MAX_REQUESTS: "100"
+  REPORTS_DIR: "/app/reports"
+  REPORTS_RETENTION_DAYS: "7"
+  MAX_PAGES_TO_SCAN: "10"
+  SCAN_TIMEOUT: "60000"

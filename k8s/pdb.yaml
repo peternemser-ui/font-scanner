@@ -1,0 +1,12 @@
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: font-scanner
+  namespace: font-scanner
+  labels:
+    app: font-scanner
+spec:
+  minAvailable: 2
+  selector:
+    matchLabels:
+      app: font-scanner

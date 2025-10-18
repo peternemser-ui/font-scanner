@@ -2,6 +2,8 @@ const fontScannerService = require('../services/fontScannerService');
 const enhancedScannerService = require('../services/enhancedScannerService');
 const FontAnalyzer = require('../services/fontAnalyzer');
 const {
+  testUrlReachability,
+  normalizeUrl,
   validateUrl,
   isValidDomain,
   validateScanType,
@@ -22,11 +24,36 @@ const scanWebsite = asyncHandler(async (req, res) => {
     throw new ValidationError('URL is required. Please provide a valid URL to scan.');
   }
 
-  // Sanitize URL
+  // Sanitize and normalize URL (automatically add https:// if no protocol)
   url = sanitizeUrl(url);
+  url = normalizeUrl(url);
 
+  // Basic URL format validation
   if (!validateUrl(url)) {
-    throw new ValidationError('Invalid URL. Please provide a valid HTTP or HTTPS URL.');
+    // Try with http:// if https:// failed
+    const httpUrl = url.replace('https://', 'http://');
+    if (!validateUrl(httpUrl)) {
+      throw new ValidationError('Invalid URL format. Please enter a valid domain name (e.g., example.com).');
+    }
+    url = httpUrl;
+  }
+
+  // Test if URL is actually reachable
+  logger.info('Testing URL reachability', { url });
+  let isReachable = await testUrlReachability(url);
+  
+  // If HTTPS fails, try HTTP
+  if (!isReachable && url.startsWith('https://')) {
+    const httpUrl = url.replace('https://', 'http://');
+    logger.info('HTTPS failed, trying HTTP', { httpUrl });
+    isReachable = await testUrlReachability(httpUrl);
+    if (isReachable) {
+      url = httpUrl;
+    }
+  }
+  
+  if (!isReachable) {
+    throw new ValidationError('Website is not accessible. Please check the URL and ensure the website is online.');
   }
 
   if (!isValidDomain(url)) {
@@ -62,14 +89,16 @@ const scanWebsite = asyncHandler(async (req, res) => {
   try {
     if (scanType === 'comprehensive') {
       // Comprehensive scan with Lighthouse, multi-page analysis, and PDF report
-      scanResult = await enhancedScannerService.performComprehensiveScan(url);
+      const scanId = `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      scanResult = await enhancedScannerService.performComprehensiveScan(url, scanId);
 
       logger.debug('Scan completed, result structure:', {
         hasScanResult: !!scanResult,
         scanResultKeys: scanResult ? Object.keys(scanResult) : 'No result',
-        fontsCount:
-          scanResult?.pages?.reduce((total, page) => total + (page.fonts?.length || 0), 0) || 0,
-        pagesCount: scanResult?.pages?.length || 0,
+        hasBasicScan: !!scanResult?.basicScan,
+        hasFonts: !!scanResult?.basicScan?.fonts,
+        totalFonts: scanResult?.basicScan?.fonts?.totalFonts || 0,
+        fontsArrayLength: scanResult?.basicScan?.fonts?.fonts?.length || 0,
         hasLighthouse: !!scanResult?.lighthouse,
       });
 
@@ -78,90 +107,53 @@ const scanWebsite = asyncHandler(async (req, res) => {
       const fontLocations = {}; // Track where fonts are used in code
       let mainScreenshot = null;
       
-      // Collect fonts and screenshot from all pages
-      scanResult.pages?.forEach((page, pageIndex) => {
-        logger.debug(`Processing fonts for page ${pageIndex + 1}: ${page.url}`);
-        
-        // Extract fonts from page.fonts.fonts array
-        if (page.fonts?.fonts) {
-          logger.debug(`Found ${page.fonts.fonts.length} fonts in page.fonts.fonts`);
-          page.fonts.fonts.forEach(font => {
-            const fontKey = typeof font === 'string' ? font : font.fontFamily || font.name;
-            if (fontKey) {
-              // Use FontAnalyzer for proper categorization
-              const fontAnalyzer = new FontAnalyzer();
-              const isIconFont = fontAnalyzer.isIconFont(fontKey);
-
-              allFonts.push({
-                fontFamily: fontKey,
-                family: fontKey,
-                name: fontKey,
-                fontWeight: 'normal',
-                fontStyle: 'normal', 
-                fontDisplay: 'auto',
-                src: 'System',
-                isSystemFont: true,
-                isGoogleFont: false,
-                isIconFont: isIconFont,
-                pageUrl: page.url || 'Unknown',
-                usageContext: 'CSS property'
-              });
-              
-              // Track font locations
-              if (!fontLocations[fontKey]) {
-                fontLocations[fontKey] = [];
-              }
-              fontLocations[fontKey].push({
-                page: page.url || `Page ${pageIndex + 1}`,
-                context: 'System font usage',
-                cssProperty: 'font-family'
-              });
-            }
-          });
-        }
-        
-        // Extract fonts from page.fonts.fontFaces array
-        if (page.fonts?.fontFaces) {
-          logger.debug(`Found ${page.fonts.fontFaces.length} fonts in page.fonts.fontFaces`);
-          page.fonts.fontFaces.forEach(face => {
-            const fontKey = face.fontFamily || 'Unknown';
-        // Use FontAnalyzer for proper categorization
-        const fontAnalyzer = new FontAnalyzer();
-        const isIconFont = fontAnalyzer.isIconFont(fontKey);
-        const isGoogleFont = face.src?.includes('fonts.googleapis.com') || false;
-
-        // Categorize fonts properly
-        allFonts.push({
-          fontFamily: fontKey,
-          family: fontKey,
-          name: fontKey,
-          fontWeight: face.fontWeight || 'normal',
-          fontStyle: face.fontStyle || 'normal',
-          fontDisplay: face.fontDisplay || 'auto',
-          src: face.src || 'System',
-          isSystemFont: !face.src,
-          isGoogleFont: isGoogleFont,
-          isIconFont: isIconFont,
-          pageUrl: page.url || 'Unknown',
-          usageContext: '@font-face declaration'
-        });            // Track font locations for @font-face
+      // Get fonts from basicScan instead of pages
+      const fontsData = scanResult.basicScan?.fonts;
+      
+      logger.info('🔍 DEBUG fonts data from basicScan:', {
+        hasFontsData: !!fontsData,
+        totalFonts: fontsData?.totalFonts || 0,
+        fontsArrayLength: fontsData?.fonts?.length || 0,
+        categorizedFonts: fontsData?.categorizedFonts
+      });
+      
+      // Process fonts from the basicScan
+      if (fontsData?.fonts && Array.isArray(fontsData.fonts)) {
+        fontsData.fonts.forEach((font, fontIndex) => {
+          const fontKey = font.fontFamily || font.name;
+          if (fontKey) {
+            allFonts.push({
+              fontFamily: fontKey,
+              family: fontKey,
+              name: fontKey,
+              fontWeight: font.fontWeight || 'normal',
+              fontStyle: font.fontStyle || 'normal',
+              fontDisplay: font.fontDisplay || 'auto',
+              src: font.src || (font.isSystemFont ? 'System' : 'Web'),
+              isSystemFont: font.isSystemFont || false,
+              isGoogleFont: font.isGoogleFont || false,
+              isIconFont: font.isIconFont || false,
+              pageUrl: url,
+              usageContext: 'Main page'
+            });
+            
+            // Track font locations
             if (!fontLocations[fontKey]) {
               fontLocations[fontKey] = [];
             }
             fontLocations[fontKey].push({
-              page: page.url || `Page ${pageIndex + 1}`,
-              context: '@font-face declaration',
-              cssProperty: 'src, font-family',
-              sourceUrl: face.src
+              page: url,
+              context: font.isSystemFont ? 'System font usage' : 'Web font',
+              cssProperty: 'font-family'
             });
-          });
-        }
-        
-        // Use screenshot from first successful page
-        if (!mainScreenshot && page.screenshot) {
-          mainScreenshot = page.screenshot;
-        }
-      });
+          }
+        });
+      }
+      
+      // Get screenshot from basicScan if available
+      if (scanResult.basicScan?.screenshot) {
+        mainScreenshot = scanResult.basicScan.screenshot;
+      }
       
       logger.debug(`Total fonts collected before deduplication: ${allFonts.length}`);
       
@@ -205,31 +197,84 @@ const scanWebsite = asyncHandler(async (req, res) => {
       
       // Generate comprehensive recommendations based on analysis
       const recommendations = generateRecommendations(uniqueFonts, scanResult);
-      
-      // Transform best practices data
-      const bestPracticesData = {
-        score: scanResult.summary?.bestPractices?.score || 0,
-        summary: {
-          grade: scanResult.summary?.bestPractices?.grade || 'F'
-        },
-        metrics: {
-          totalFonts: uniqueFonts.length,
-          optimizedFonts: uniqueFonts.filter(f => f.fontDisplay === 'swap').length
-        },
-        categories: {
-          fontDisplay: { score: 75, percentage: 75 },
-          fontLoading: { score: 80, percentage: 80 },
-          accessibility: { score: 70, percentage: 70 },
-          performance: { score: 65, percentage: 65 },
-          fontOptimization: { score: 60, percentage: 60 },
-          fallbacks: { score: 85, percentage: 85 },
-          security: { score: 90, percentage: 90 },
-          caching: { score: 70, percentage: 70 },
-          sustainability: { score: 75, percentage: 75 },
-          webVitals: { score: 80, percentage: 80 }
-        },
-        recommendations: recommendations
-      };
+
+      // Transform best practices data - aggregate from all pages
+      let bestPracticesData = null;
+
+      // Find the first page with valid bestPractices data
+      const pageWithBestPractices = scanResult.pages?.find(page =>
+        page.bestPractices && page.bestPractices.score !== undefined
+      );
+
+      if (pageWithBestPractices && pageWithBestPractices.bestPractices) {
+        // Use the actual best practices analysis from the page
+        const bp = pageWithBestPractices.bestPractices;
+
+        bestPracticesData = {
+          score: bp.score || 0,
+          summary: bp.summary || {
+            grade: bp.summary?.grade || getGradeFromScore(bp.score || 0),
+            overallScore: bp.score || 0,
+            mainIssues: bp.summary?.mainIssues || [],
+            mainStrengths: bp.summary?.mainStrengths || []
+          },
+          metrics: bp.metrics || {
+            totalFonts: uniqueFonts.length,
+            optimizedFonts: uniqueFonts.filter(f => f.fontDisplay === 'swap').length,
+            accessibilityScore: bp.categories?.accessibility?.percentage || 0,
+            performanceScore: bp.categories?.performance?.percentage || 0,
+            securityScore: bp.categories?.security?.percentage || 0,
+            sustainabilityScore: bp.categories?.sustainability?.percentage || 0
+          },
+          categories: bp.categories || {
+            fontDisplay: { score: 0, percentage: 0 },
+            fontLoading: { score: 0, percentage: 0 },
+            accessibility: { score: 0, percentage: 0 },
+            performance: { score: 0, percentage: 0 },
+            fontOptimization: { score: 0, percentage: 0 },
+            fallbacks: { score: 0, percentage: 0 },
+            security: { score: 0, percentage: 0 },
+            caching: { score: 0, percentage: 0 },
+            sustainability: { score: 0, percentage: 0 },
+            webVitals: { score: 0, percentage: 0 }
+          },
+          recommendations: bp.recommendations || recommendations,
+          detailedAnalysis: bp.detailedAnalysis || {}
+        };
+
+        logger.debug('Best Practices data extracted from page:', {
+          score: bestPracticesData.score,
+          hasCategories: !!bestPracticesData.categories,
+          categoriesKeys: Object.keys(bestPracticesData.categories),
+          recommendationsCount: bestPracticesData.recommendations?.length || 0
+        });
+      } else {
+        // Fallback to hardcoded values if no best practices data found
+        logger.warn('No best practices data found in pages, using fallback data');
+        bestPracticesData = {
+          score: 0,
+          summary: {
+            grade: 'F'
+          },
+          metrics: {
+            totalFonts: uniqueFonts.length,
+            optimizedFonts: uniqueFonts.filter(f => f.fontDisplay === 'swap').length
+          },
+          categories: {
+            fontDisplay: { score: 0, percentage: 0 },
+            fontLoading: { score: 0, percentage: 0 },
+            accessibility: { score: 0, percentage: 0 },
+            performance: { score: 0, percentage: 0 },
+            fontOptimization: { score: 0, percentage: 0 },
+            fallbacks: { score: 0, percentage: 0 },
+            security: { score: 0, percentage: 0 },
+            caching: { score: 0, percentage: 0 },
+            sustainability: { score: 0, percentage: 0 },
+            webVitals: { score: 0, percentage: 0 }
+          },
+          recommendations: recommendations
+        };
+      }
       
       // Transform lighthouse data to match frontend expectations
       let lighthouseData = null;
@@ -338,6 +383,13 @@ const scanWebsite = asyncHandler(async (req, res) => {
         };
       }
 
+      // Log font data before building response
+      logger.info('🔍 Font data being sent to frontend:', {
+        uniqueFontsCount: uniqueFonts.length,
+        uniqueFontsPreview: uniqueFonts.slice(0, 5),
+        categorizedFonts: categorizedFonts
+      });
+
       const transformedResults = {
         fonts: {
           fonts: uniqueFonts, // For the fonts tab
@@ -355,19 +407,33 @@ const scanWebsite = asyncHandler(async (req, res) => {
           }
         },
         bestPractices: bestPracticesData,
-        pages: scanResult.pages || [],
+        pages: [{
+          url: url,
+          fonts: {
+            fonts: uniqueFonts,
+            totalFonts: uniqueFonts.length,
+            categorizedFonts: categorizedFonts
+          },
+          screenshot: mainScreenshot
+        }], // Maintain compatibility with pages structure
         lighthouse: lighthouseData,
         summary: scanResult.summary || {},
         screenshot: mainScreenshot
       };
 
+      logger.info('🔍 Final transformedResults.fonts:', {
+        totalFonts: transformedResults.fonts.totalFonts,
+        fontsArrayLength: transformedResults.fonts.fonts.length
+      });
+
       const response = {
         success: true,
+        scanId: scanId,
         scanType: 'comprehensive',
         url: url,
         scannedAt: new Date().toISOString(),
         results: transformedResults,
-        pages: scanResult.pages,
+        pages: transformedResults.pages,
         lighthouse: scanResult.lighthouse,
         reportGenerated: !!scanResult.reportPath,
         reportFilename: scanResult.reportFilename,
@@ -446,6 +512,15 @@ const downloadReport = asyncHandler(async (req, res) => {
   const fileStream = fs.createReadStream(filepath);
   fileStream.pipe(res);
 });
+
+// Helper function to get grade from score
+const getGradeFromScore = (score) => {
+  if (score >= 90) return 'A';
+  if (score >= 80) return 'B';
+  if (score >= 70) return 'C';
+  if (score >= 60) return 'D';
+  return 'F';
+};
 
 // Helper method to generate recommendations based on font analysis
 const generateRecommendations = (fonts, scanResult) => {
@@ -596,8 +671,71 @@ const generateRecommendations = (fonts, scanResult) => {
   return recommendations;
 };
 
+/**
+ * 🚀 NEW: Best-in-class comprehensive scan endpoint
+ */
+const performBestInClassScan = asyncHandler(async (req, res) => {
+  let { url } = req.body;
+
+  // Validate input
+  if (!url) {
+    throw new ValidationError('URL is required for best-in-class scan');
+  }
+
+  // Sanitize and normalize URL
+  url = sanitizeUrl(url);
+  url = normalizeUrl(url);
+
+  if (!validateUrl(url)) {
+    throw new ValidationError('Invalid URL format for best-in-class scan');
+  }
+
+  // Test URL reachability
+  logger.info('🔍 Testing URL reachability for best-in-class scan', { url });
+  const isReachable = await testUrlReachability(url);
+  
+  if (!isReachable) {
+    throw new ValidationError(`URL is not reachable: ${url}`);
+  }
+
+  const options = {
+    includePerformance: req.body.includePerformance !== false,
+    includeBestPractices: req.body.includeBestPractices !== false,
+    includeFontPairing: req.body.includeFontPairing !== false,
+    includeRealUserMetrics: req.body.includeRealUserMetrics !== false,
+    includeCrossBrowserTesting: req.body.includeCrossBrowserTesting !== false,
+    includeAdvancedAccessibility: req.body.includeAdvancedAccessibility !== false,
+    includeFontLicensing: req.body.includeFontLicensing !== false,
+    includeBenchmarking: req.body.includeBenchmarking !== false,
+    includeLighthouse: req.body.includeLighthouse !== false,
+    ...req.body.options
+  };
+
+  logger.info(`🚀 Starting best-in-class comprehensive scan for: ${url}`);
+  
+  // Generate unique scan ID for progress tracking
+  const scanId = `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+  
+  const result = await enhancedScannerService.runFullScan(url, scanId, options);
+  
+  logger.info(`✅ Best-in-class scan completed - Score: ${result.overallScore}/100 (${result.grade})`);
+
+  res.json({
+    success: true,
+    scanId: scanId,
+    data: result,
+    message: `Best-in-class scan completed with ${result.grade} grade (${result.overallScore}/100)`,
+    scanDuration: result.scanDuration,
+    featuresAnalyzed: Object.keys(result).filter(key => 
+      result[key] && typeof result[key] === 'object' && !result[key].error
+    ).length,
+    timestamp: new Date().toISOString()
+  });
+});
+
 module.exports = {
   scanWebsite,
   downloadReport,
   generateRecommendations,
+  performBestInClassScan,
 };

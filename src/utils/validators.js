@@ -4,6 +4,73 @@
  */
 
 /**
+ * Test if a URL is actually reachable
+ * @param {string} url - The URL to test
+ * @param {number} timeout - Timeout in milliseconds (default: 5000)
+ * @returns {Promise<boolean>} True if URL is reachable, false otherwise
+ */
+const testUrlReachability = async (url, timeout = 5000) => {
+  try {
+    const https = require('https');
+    const http = require('http');
+    const { URL } = require('url');
+    
+    const urlObj = new URL(url);
+    const client = urlObj.protocol === 'https:' ? https : http;
+    
+    return new Promise((resolve) => {
+      const req = client.request({
+        hostname: urlObj.hostname,
+        port: urlObj.port,
+        path: urlObj.pathname + urlObj.search,
+        method: 'HEAD',
+        timeout: timeout,
+        headers: {
+          'User-Agent': 'Font-Scanner/1.0'
+        }
+      }, (res) => {
+        resolve(res.statusCode >= 200 && res.statusCode < 400);
+      });
+      
+      req.on('error', () => resolve(false));
+      req.on('timeout', () => {
+        req.destroy();
+        resolve(false);
+      });
+      
+      req.end();
+    });
+  } catch (error) {
+    return false;
+  }
+};
+
+/**
+ * Normalize URL by automatically adding protocol if missing
+ * @param {string} url - The URL to normalize
+ * @returns {string} Normalized URL with protocol
+ */
+const normalizeUrl = (url) => {
+  if (!url || typeof url !== 'string') {
+    return '';
+  }
+
+  // Trim whitespace
+  url = url.trim();
+
+  // If URL already has a protocol, return as is
+  if (url.startsWith('http://') || url.startsWith('https://')) {
+    return url;
+  }
+
+  // Remove any protocol-like prefixes that might be incomplete
+  url = url.replace(/^[a-zA-Z]+:\/\//, '');
+
+  // Try HTTPS first (more secure and common)
+  return `https://${url}`;
+};
+
+/**
  * Validate if a string is a valid HTTP or HTTPS URL
  * @param {string} url - The URL to validate
  * @returns {boolean} True if valid HTTP/HTTPS URL, false otherwise
@@ -58,8 +125,14 @@ const sanitizeUrl = (url) => {
   // Trim whitespace
   url = url.trim();
 
-  // Remove any potentially dangerous characters and control characters
-  url = url.replace(/[<>"\s\x00-\x1F\x7F]/g, '');
+  // Remove any potentially dangerous characters
+  url = url.replace(/[<>"\s]/g, '');
+  
+  // Remove control characters using string methods
+  url = url.split('').filter(char => {
+    const code = char.charCodeAt(0);
+    return code > 31 && code !== 127;
+  }).join('');
 
   // Prevent URL confusion attacks
   url = url.replace(/[\u200B-\u200D\uFEFF]/g, ''); // Remove zero-width characters
@@ -190,6 +263,8 @@ const sanitizeString = (input, maxLength = 1000) => {
 };
 
 module.exports = {
+  testUrlReachability,
+  normalizeUrl,
   validateUrl,
   sanitizeUrl,
   isValidDomain,

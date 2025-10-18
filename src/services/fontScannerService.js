@@ -30,7 +30,7 @@ class FontScannerService {
           '--disable-renderer-backgrounding',
         ],
         defaultViewport: { width: 1920, height: 1080 },
-        timeout: 60000,
+        timeout: 120000, // 2 minutes for browser operations
       });
     }
     return this.browser;
@@ -41,6 +41,14 @@ class FontScannerService {
     const page = await browser.newPage();
 
     try {
+      // Listen to browser console messages to see FontAnalyzer debug output
+      page.on('console', (msg) => {
+        const text = msg.text();
+        if (text.includes('FontAnalyzer:')) {
+          logger.info(`Browser Console: ${text}`);
+        }
+      });
+
       // Set user agent and viewport
       await page.setUserAgent(
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
@@ -54,10 +62,10 @@ class FontScannerService {
       let loadTime = 0;
 
       try {
-        // Try with networkidle2 first
+        // Try with networkidle2 first (increased timeout)
         await page.goto(url, {
           waitUntil: 'networkidle2',
-          timeout: 45000,
+          timeout: 120000, // 2 minutes
         });
         loadTime = Date.now() - startTime;
         logger.info(`Page loaded with networkidle2 in ${loadTime}ms`);
@@ -68,22 +76,28 @@ class FontScannerService {
           try {
             await page.goto(url, {
               waitUntil: 'domcontentloaded',
-              timeout: 30000,
+              timeout: 90000, // 1.5 minutes
             });
             loadTime = Date.now() - startTime;
             logger.info(`Page loaded with domcontentloaded in ${loadTime}ms`);
           } catch (fallbackError) {
             logger.info('Timeout with domcontentloaded, trying load...');
             // Final fallback to basic load
-            await page.goto(url, {
-              waitUntil: 'load',
-              timeout: 20000,
-            });
-            loadTime = Date.now() - startTime;
-            logger.info(`Page loaded with basic load in ${loadTime}ms`);
+            try {
+              await page.goto(url, {
+                waitUntil: 'load',
+                timeout: 60000, // 1 minute
+              });
+              loadTime = Date.now() - startTime;
+              logger.info(`Page loaded with basic load in ${loadTime}ms`);
+            } catch (finalError) {
+              logger.error(`All page load strategies failed for ${url}:`, finalError.message);
+              throw new Error(`The website took too long to load. This could be due to slow server response, large resources, or network issues. Please try again later or check if the website is accessible.`);
+            }
           }
         } else {
-          throw error;
+          logger.error(`Page navigation error for ${url}:`, error.message);
+          throw new Error(`Failed to access the website: ${error.message}. Please check the URL and try again.`);
         }
       }
 

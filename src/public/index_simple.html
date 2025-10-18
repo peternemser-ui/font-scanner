@@ -7,9 +7,6 @@
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <!-- Theme Toggle Button -->
-    <button id="themeToggle" class="theme-toggle">🌓 Theme</button>
-    
     <div class="container">
       <!-- Font Size Controls -->
       <div class="font-size-controls">
@@ -27,17 +24,6 @@
         <!-- URL Input Form -->
         <div style="margin-top: 2rem;">
           <input type="url" id="urlInput" placeholder="https://example.com" />
-          
-          <!-- Best-in-Class Toggle -->
-          <div class="scan-options" style="margin: 1rem 0;">
-            <label class="toggle-container">
-              <input type="checkbox" id="bestInClassToggle" />
-              <span class="toggle-slider"></span>
-              <span class="toggle-label">🚀 Best-in-Class Analysis</span>
-            </label>
-            <small class="toggle-description">Advanced AI analysis with industry benchmarking, cross-browser testing, and comprehensive accessibility</small>
-          </div>
-          
           <button id="analyzeButton">ANALYZE</button>
         </div>
       </header>
@@ -45,12 +31,8 @@
       <!-- Results Container -->
       <div id="results" class="results-container hidden">
         <div id="loadingMessage" class="hidden">
-          <h2>Processing Analysis...</h2>
+          <h2>Processing...</h2>
           <p class="animate-pulse">Analyzing website fonts and performance...</p>
-          <div class="progress-container">
-            <div class="progress-bar" id="progressBar"></div>
-          </div>
-          <div id="progressText" class="progress-text"></div>
         </div>
 
         <!-- Executive Summary -->

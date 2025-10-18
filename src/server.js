@@ -10,10 +10,14 @@ const scanController = require('./controllers/scanController');
 const config = require('./config');
 const { createLogger } = require('./utils/logger');
 const { errorMiddleware } = require('./utils/errorHandler');
+const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
 
 const logger = createLogger('Server');
 const app = express();
 const PORT = config.port;
+
+// Health check state
+let isShuttingDown = false;
 
 // Security middleware
 app.use(
@@ -52,6 +56,9 @@ app.use(compression());
 // Logging
 app.use(morgan('combined'));
 
+// Metrics middleware
+app.use(metricsMiddleware);
+
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
@@ -60,11 +67,38 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Routes
+// Liveness probe - checks if app is alive
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'OK', timestamp: new Date().toISOString() });
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime(),
+    memory: process.memoryUsage()
+  });
 });
 
+// Readiness probe - checks if app is ready to accept traffic
+app.get('/api/ready', (req, res) => {
+  if (isShuttingDown) {
+    return res.status(503).json({
+      status: 'NOT_READY',
+      reason: 'Server is shutting down',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  res.json({
+    status: 'READY',
+    timestamp: new Date().toISOString(),
+    uptime: process.uptime()
+  });
+});
+
+// Prometheus metrics endpoint
+app.get('/metrics', metricsHandler);
+
 app.post('/api/scan', scanController.scanWebsite);
+app.post('/api/scan/best-in-class', scanController.performBestInClassScan);
 
 // Download PDF report
 app.get('/api/reports/:filename', scanController.downloadReport);
@@ -105,9 +139,52 @@ app.use('*', (req, res) => {
 app.use(errorMiddleware);
 
 // Start server
-app.listen(PORT, () => {
+const server = app.listen(PORT, () => {
   logger.info(`Font Scanner server running on port ${PORT}`);
   logger.info(`Access the application at http://localhost:${PORT}`);
+  logger.info(`Environment: ${config.nodeEnv}`);
+});
+
+// Graceful shutdown handling
+const gracefulShutdown = (signal) => {
+  logger.info(`${signal} received. Starting graceful shutdown...`);
+  isShuttingDown = true;
+
+  // Stop accepting new connections
+  server.close(() => {
+    logger.info('HTTP server closed. All connections finished.');
+
+    // Cleanup tasks
+    logger.info('Performing cleanup tasks...');
+
+    // Close database connections, cleanup resources, etc.
+    // Add your cleanup logic here
+
+    logger.info('Cleanup complete. Exiting process.');
+    process.exit(0);
+  });
+
+  // Force shutdown after 30 seconds if graceful shutdown takes too long
+  setTimeout(() => {
+    logger.error('Graceful shutdown timeout exceeded. Forcing shutdown.');
+    process.exit(1);
+  }, 30000);
+};
+
+// Listen for termination signals
+process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
+// Handle uncaught exceptions
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught Exception:', error);
+  gracefulShutdown('UNCAUGHT_EXCEPTION');
+});
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  gracefulShutdown('UNHANDLED_REJECTION');
 });
 
 module.exports = app;

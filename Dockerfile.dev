@@ -1,0 +1,41 @@
+# Development Dockerfile with hot-reload support
+FROM node:18-alpine AS development
+
+# Install Chromium and dependencies for Puppeteer
+RUN apk add --no-cache \
+    chromium \
+    nss \
+    freetype \
+    harfbuzz \
+    ca-certificates \
+    ttf-freefont \
+    font-noto-emoji \
+    tini
+
+# Tell Puppeteer to skip installing Chrome
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+
+# Install all dependencies (including devDependencies)
+RUN npm ci && \
+    npm cache clean --force
+
+# Copy source code
+COPY . .
+
+# Create directories
+RUN mkdir -p /app/reports /app/logs
+
+# Expose ports (app + debugger)
+EXPOSE 3000 9229
+
+# Use tini
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start with nodemon for hot reload
+CMD ["npm", "run", "dev"]

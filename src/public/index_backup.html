@@ -1,0 +1,418 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Font Scanner - Comprehensive Font Analysis Tool</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet" />
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              'mono': ['JetBrains Mono', 'Space Mono', 'Consolas', 'Monaco', 'Courier New', 'monospace'],
+            },
+            colors: {
+              'mono-bg': '#000000',
+              'mono-surface': '#111111',
+              'mono-border': '#333333',
+              'mono-text': '#ffffff',
+              'mono-muted': '#666666',
+              'mono-accent': '#888888',
+            }
+          }
+        }
+      }
+    </script>
+    <style>
+      body { font-size: 1.25em; }
+      .font-size-sm { font-size: 1em; }
+      .font-size-md { font-size: 1.25em; }
+      .font-size-lg { font-size: 1.5em; }
+      .font-size-xl { font-size: 1.75em; }
+    </style>
+  </head>
+  <body class="bg-mono-bg text-mono-text font-mono leading-relaxed min-h-screen">
+    <div class="max-w-6xl mx-auto px-6 py-8">
+      <!-- Header with Font Size Controls -->
+      <header class="text-center mb-12 border-b border-mono-border pb-8">
+        <div class="flex justify-between items-start mb-6">
+          <div></div> <!-- Spacer -->
+          <div class="text-center">
+            <h1 class="text-5xl font-bold text-mono-text mb-4 tracking-wider">
+              [FONT_SCANNER]
+            </h1>
+            <p class="text-xl text-mono-muted">
+              > comprehensive website font analysis protocol
+            </p>
+          </div>
+          <div class="text-right">
+            <div class="text-sm text-mono-muted mb-2">FONT_SIZE:</div>
+            <div class="flex gap-2" id="fontSizeControls">
+              <button class="font-size-btn bg-mono-surface border border-mono-border px-3 py-1 text-xs hover:bg-mono-border transition-colors" data-size="sm">SM</button>
+              <button class="font-size-btn bg-mono-border border border-mono-border px-3 py-1 text-xs text-mono-bg font-bold" data-size="md">MD</button>
+              <button class="font-size-btn bg-mono-surface border border-mono-border px-3 py-1 text-xs hover:bg-mono-border transition-colors" data-size="lg">LG</button>
+              <button class="font-size-btn bg-mono-surface border border-mono-border px-3 py-1 text-xs hover:bg-mono-border transition-colors" data-size="xl">XL</button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      <main class="space-y-8">
+        <!-- Scan Input Section -->
+        <section class="bg-mono-surface border border-mono-border p-8">
+          <div class="mb-6">
+            <div class="text-mono-muted text-sm mb-2">[INPUT_URL]</div>
+            <div class="flex gap-4">
+              <input
+                type="url"
+                id="urlInput"
+                placeholder="https://example.com"
+                required
+                class="flex-1 bg-mono-bg border border-mono-border px-4 py-3 text-mono-text font-mono focus:border-mono-text focus:outline-none transition-colors"
+              />
+              <button
+                id="scanButton"
+                type="button"
+                class="bg-mono-text text-mono-bg px-8 py-3 font-bold hover:bg-mono-accent transition-colors min-w-48 relative"
+              >
+                <span class="button-text">[ANALYZE]</span>
+                <span class="loading-spinner absolute inset-0 flex items-center justify-center" hidden>
+                  <span class="animate-pulse">>>> SCANNING <<<</span>
+                </span>
+              </button>
+            </div>
+          </div>
+          <div class="text-mono-muted text-sm">
+            <p id="scanDescription">
+              >> comprehensive website font analysis and best practices audit
+            </p>
+          </div>
+          <div id="errorMessage" class="mt-4 p-4 bg-red-900 border border-red-700 text-red-200 hidden"></div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="resultsSection" class="space-y-8 hidden">
+          <!-- Results Header -->
+          <div class="bg-mono-surface border border-mono-border p-6">
+            <div class="flex justify-between items-center">
+              <h2 class="text-2xl font-bold">[ANALYSIS_RESULTS]</h2>
+              <div class="text-right text-sm text-mono-muted">
+                <div>URL: <span id="scannedUrl" class="text-mono-text">-</span></div>
+                <div>TIME: <span id="scanTime" class="text-mono-text">-</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Executive Summary -->
+          <div class="bg-mono-surface border border-mono-border">
+            <div class="border-b border-mono-border p-6">
+              <h3 class="text-xl font-bold mb-6">[EXECUTIVE_SUMMARY]</h3>
+              <!-- Overall Score -->
+              <div class="flex items-center justify-center mb-8">
+                <div class="text-center">
+                  <div class="text-6xl font-bold mb-2">
+                    <span id="overallScore">0</span>
+                    <span class="text-2xl text-mono-muted">/100</span>
+                  </div>
+                  <div class="text-xl font-bold" id="overallGrade">F</div>
+                  <div class="text-mono-muted">OVERALL_SCORE</div>
+                </div>
+              </div>
+              <div id="scoreBreakdown" class="text-center text-mono-muted"></div>
+            </div>
+            <!-- Metrics Grid -->
+            <div class="grid grid-cols-2 md:grid-cols-5 divide-x divide-mono-border">
+              <div class="p-6 text-center">
+                <div class="text-2xl font-bold" id="totalFonts">0</div>
+                <div class="text-sm text-mono-muted">TOTAL_FONTS</div>
+              </div>
+              <div class="p-6 text-center">
+                <div class="text-2xl font-bold" id="loadTime">0ms</div>
+                <div class="text-sm text-mono-muted">LOAD_TIME</div>
+              </div>
+              <div class="p-6 text-center">
+                <div class="text-2xl font-bold" id="practicesScore">0%</div>
+                <div class="text-sm text-mono-muted">COMPLIANCE</div>
+              </div>
+              <div class="p-6 text-center">
+                <div class="text-2xl font-bold" id="analysisType">BASIC</div>
+                <div class="text-sm text-mono-muted">SCAN_TYPE</div>
+              </div>
+              <div class="p-6 text-center">
+                <div class="text-2xl font-bold" id="pagesAnalyzed">1</div>
+                <div class="text-sm text-mono-muted">TOTAL_PAGES</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Font Analysis -->
+          <div class="bg-mono-surface border border-mono-border">
+            <div class="border-b border-mono-border p-6">
+              <h3 class="text-xl font-bold">[FONT_ANALYSIS]</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 divide-x divide-mono-border">
+              <div class="p-6">
+                <h4 class="font-bold mb-4 text-mono-muted">SYSTEM_FONTS:</h4>
+                <ul id="systemFontsList" class="space-y-2 text-sm"></ul>
+              </div>
+              <div class="p-6">
+                <h4 class="font-bold mb-4 text-mono-muted">WEB_FONTS:</h4>
+                <ul id="webFontsList" class="space-y-2 text-sm"></ul>
+              </div>
+              <div class="p-6">
+                <h4 class="font-bold mb-4 text-mono-muted">GOOGLE_FONTS:</h4>
+                <ul id="googleFontsList" class="space-y-2 text-sm"></ul>
+              </div>
+              <div class="p-6">
+                <h4 class="font-bold mb-4 text-mono-muted">ICON_FONTS:</h4>
+                <ul id="iconFontsList" class="space-y-2 text-sm"></ul>
+              </div>
+            </div>
+            <div class="border-t border-mono-border p-6">
+              <h4 class="font-bold mb-4 text-mono-muted">FONT_DETAILS:</h4>
+              <div id="fontDetailsTable" class="overflow-x-auto"></div>
+            </div>
+          </div>
+
+          <!-- Best Practices Analysis -->
+          <div class="bg-mono-surface border border-mono-border">
+            <div class="border-b border-mono-border p-6">
+              <h3 class="text-xl font-bold">[BEST_PRACTICES_ANALYSIS]</h3>
+              <div class="grid grid-cols-3 gap-8 mt-6">
+                <div class="text-center">
+                  <div class="text-mono-muted text-sm">GRADE:</div>
+                  <span id="overallGradeValue" class="text-2xl font-bold">-</span>
+                </div>
+                <div class="text-center">
+                  <div class="text-mono-muted text-sm">TOTAL:</div>
+                  <span id="totalFontsMetric" class="text-2xl font-bold">-</span>
+                </div>
+                <div class="text-center">
+                  <div class="text-mono-muted text-sm">OPTIMIZED:</div>
+                  <span id="optimizedFontsMetric" class="text-2xl font-bold">-</span>
+                </div>
+              </div>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 divide-x divide-mono-border">
+              <div class="p-6">
+                <h4 class="font-bold mb-2 text-mono-muted">FONT_DISPLAY:</h4>
+                <div class="text-2xl font-bold mb-2" id="fontDisplayScore">0%</div>
+                <div id="fontDisplayDetails" class="text-sm text-mono-muted"></div>
+              </div>
+              <div class="p-6">
+                <h4 class="font-bold mb-2 text-mono-muted">FONT_LOADING:</h4>
+                <div class="text-2xl font-bold mb-2" id="fontLoadingScore">0%</div>
+                <div id="fontLoadingDetails" class="text-sm text-mono-muted"></div>
+              </div>
+              <div class="p-6">
+                <h4 class="font-bold mb-2 text-mono-muted">ACCESSIBILITY:</h4>
+                <div class="text-2xl font-bold mb-2" id="accessibilityScore">0%</div>
+                <div id="accessibilityDetails" class="text-sm text-mono-muted"></div>
+              </div>
+              <div class="p-6">
+                <h4 class="font-bold mb-2 text-mono-muted">PERFORMANCE:</h4>
+                <div class="text-2xl font-bold mb-2" id="performanceScore">0%</div>
+                <div id="performanceDetails" class="text-sm text-mono-muted"></div>
+              </div>
+              <div class="p-6">
+                <h4 class="font-bold mb-2 text-mono-muted">OPTIMIZATION:</h4>
+                <div class="text-2xl font-bold mb-2" id="optimizationScore">0%</div>
+                <div id="optimizationDetails" class="text-sm text-mono-muted"></div>
+              </div>
+              <div class="p-6">
+                <h4 class="font-bold mb-2 text-mono-muted">FALLBACKS:</h4>
+                <div class="text-2xl font-bold mb-2" id="fallbacksScore">0%</div>
+                <div id="fallbacksDetails" class="text-sm text-mono-muted"></div>
+              </div>
+            </div>
+            
+            <!-- Detailed Issues Analysis -->
+            <div class="border-t border-mono-border p-6 space-y-6">
+              <div>
+                <h4 class="font-bold mb-4 text-red-400">[CRITICAL_ISSUES]</h4>
+                <div id="criticalIssuesList" class="space-y-2 text-sm"></div>
+              </div>
+              <div>
+                <h4 class="font-bold mb-4 text-yellow-400">[WARNINGS]</h4>
+                <div id="warningsList" class="space-y-2 text-sm"></div>
+              </div>
+              <div>
+                <h4 class="font-bold mb-4 text-blue-400">[OPTIMIZATION_OPPORTUNITIES]</h4>
+                <div id="optimizationsList" class="space-y-2 text-sm"></div>
+              </div>
+              <div>
+                <h4 class="font-bold mb-4 text-green-400">[STRENGTHS]</h4>
+                <div id="strengthsList" class="space-y-2 text-sm"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Lighthouse Performance -->
+          <div class="bg-mono-surface border border-mono-border">
+            <div class="border-b border-mono-border p-6">
+              <h3 class="text-xl font-bold">[LIGHTHOUSE_PERFORMANCE]</h3>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 divide-x divide-mono-border">
+              <div class="p-6">
+                <h4 class="font-bold mb-4 text-mono-muted">DESKTOP:</h4>
+                <div id="desktopScores" class="space-y-3">
+                  <div class="flex justify-between">
+                    <span>PERFORMANCE:</span>
+                    <span id="desktopPerformance" class="font-bold">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>ACCESSIBILITY:</span>
+                    <span id="desktopAccessibility" class="font-bold">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>BEST_PRACTICES:</span>
+                    <span id="desktopBestPractices" class="font-bold">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>SEO:</span>
+                    <span id="desktopSEO" class="font-bold">-</span>
+                  </div>
+                </div>
+              </div>
+              <div class="p-6">
+                <h4 class="font-bold mb-4 text-mono-muted">MOBILE:</h4>
+                <div id="mobileScores" class="space-y-3">
+                  <div class="flex justify-between">
+                    <span>PERFORMANCE:</span>
+                    <span id="mobilePerformance" class="font-bold">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>ACCESSIBILITY:</span>
+                    <span id="mobileAccessibility" class="font-bold">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>BEST_PRACTICES:</span>
+                    <span id="mobileBestPractices" class="font-bold">-</span>
+                  </div>
+                  <div class="flex justify-between">
+                    <span>SEO:</span>
+                    <span id="mobileSEO" class="font-bold">-</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="border-t border-mono-border p-6">
+              <div id="lighthouseDetails" class="text-sm text-mono-muted"></div>
+            </div>
+          </div>
+
+          <!-- Security & Performance Details -->
+          <div class="bg-mono-surface border border-mono-border">
+            <div class="border-b border-mono-border p-6">
+              <h3 class="text-xl font-bold">[SECURITY_AND_PERFORMANCE]</h3>
+            </div>
+            <div class="grid grid-cols-2 md:grid-cols-4 divide-x divide-mono-border">
+              <div class="p-6 text-center">
+                <h5 class="font-bold mb-2 text-mono-muted">SECURITY:</h5>
+                <div id="securityScoreValue" class="text-2xl font-bold">-</div>
+              </div>
+              <div class="p-6 text-center">
+                <h5 class="font-bold mb-2 text-mono-muted">CACHING:</h5>
+                <div id="cachingScoreValue" class="text-2xl font-bold">-</div>
+              </div>
+              <div class="p-6 text-center">
+                <h5 class="font-bold mb-2 text-mono-muted">LAYOUT:</h5>
+                <div id="layoutStabilityScore" class="text-2xl font-bold">-</div>
+              </div>
+              <div class="p-6 text-center">
+                <h5 class="font-bold mb-2 text-mono-muted">RENDER:</h5>
+                <div id="renderBlockingScore" class="text-2xl font-bold">-</div>
+              </div>
+            </div>
+            <div class="border-t border-mono-border p-6 space-y-4">
+              <div id="securityDetails" class="text-sm text-mono-muted"></div>
+              <div id="cachingDetails" class="text-sm text-mono-muted"></div>
+              <div id="webVitalsDetails" class="text-sm text-mono-muted"></div>
+            </div>
+          </div>
+
+          <!-- Recommendations -->
+          <div class="bg-mono-surface border border-mono-border">
+            <div class="border-b border-mono-border p-6">
+              <h3 class="text-xl font-bold">[RECOMMENDATIONS]</h3>
+            </div>
+            <div class="p-6">
+              <div id="recommendationsList" class="space-y-4"></div>
+            </div>
+          </div>
+
+          <!-- Page Screenshot -->
+          <div class="bg-mono-surface border border-mono-border">
+            <div class="border-b border-mono-border p-6">
+              <h3 class="text-xl font-bold">[PAGE_SCREENSHOT]</h3>
+            </div>
+            <div class="p-6">
+              <div id="screenshot-container" class="text-center">
+                <img
+                  id="pageScreenshot"
+                  alt="Page screenshot"
+                  class="max-w-full border border-mono-border"
+                />
+              </div>
+            </div>
+          </div>
+
+          <!-- Download Report -->
+          <div class="bg-mono-surface border border-mono-border">
+            <div class="border-b border-mono-border p-6">
+              <h3 class="text-xl font-bold">[DOWNLOAD_REPORT]</h3>
+            </div>
+            <div class="p-6 text-center">
+              <div id="reportDownload">
+                <p class="text-mono-muted mb-4">
+                  >> detailed PDF report ready for download
+                </p>
+                <button id="downloadButton" class="bg-mono-text text-mono-bg px-8 py-3 font-bold hover:bg-mono-accent transition-colors">
+                  [DOWNLOAD_PDF]
+                </button>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>          <!-- Recommendations -->
+          <div class="section-block">
+            <h3 class="section-title">� Recommendations</h3>
+            <div id="recommendationsList" class="recommendations-list"></div>
+          </div>
+
+          <!-- Page Screenshot -->
+          <div class="section-block">
+            <h3 class="section-title">📸 Page Screenshot</h3>
+            <div id="screenshot-container" class="screenshot-container">
+              <img
+                id="pageScreenshot"
+                alt="Page screenshot"
+                style="max-width: 100%; border-radius: 8px"
+              />
+            </div>
+          </div>
+
+          <!-- Download Report -->
+          <div class="section-block">
+            <h3 class="section-title">📄 Download Report</h3>
+            <div id="reportDownload" class="report-download">
+              <p>Your detailed PDF report is ready for download</p>
+              <button id="downloadButton" class="download-btn">Download PDF Report</button>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script src="script.js"></script>
+  </body>
+</html>

@@ -140,37 +140,18 @@ class LighthouseAnalyzer {
         formFactor: options.formFactor,
       });
 
-      // Return a realistic fallback result instead of throwing
-      const formFactor = options.formFactor || 'desktop';
+      // Return a fallback result instead of throwing
       return {
-        formFactor: formFactor,
-        score: formFactor === 'desktop' ? 85 : 72, // Realistic fallback scores
-        metrics: {
-          firstContentfulPaint: formFactor === 'desktop' ? 1200 : 2100,
-          largestContentfulPaint: formFactor === 'desktop' ? 2400 : 4200,
-          cumulativeLayoutShift: 0.1,
-          totalBlockingTime: formFactor === 'desktop' ? 150 : 350,
-          coreWebVitals: {
-            lcp: formFactor === 'desktop' ? 2400 : 4200,
-            fid: formFactor === 'desktop' ? 100 : 200,
-            cls: 0.1
-          }
-        },
-        fontAudits: {
-          fontDisplay: { score: 0.8, description: 'Font display strategy could be optimized' },
-          preloadFonts: { score: 0.6, description: 'Consider preloading key web fonts' }
-        },
-        accessibility: formFactor === 'desktop' ? 92 : 88,
-        bestPractices: formFactor === 'desktop' ? 88 : 85,
-        seo: formFactor === 'desktop' ? 95 : 92,
-        opportunities: [
-          { id: 'font-display', title: 'Use font-display CSS feature', savings: 400 },
-          { id: 'preload-fonts', title: 'Preload key requests', savings: 200 }
-        ],
-        diagnostics: [
-          { id: 'font-size', title: 'Font sizes are legible', score: 1 }
-        ],
-        error: `Lighthouse analysis failed (${error.message}), using realistic fallback data`,
+        formFactor: options.formFactor || 'desktop',
+        score: 0,
+        metrics: {},
+        fontAudits: {},
+        accessibility: 0,
+        bestPractices: 0,
+        seo: 0,
+        opportunities: [],
+        diagnostics: [],
+        error: error.message,
       };
     }
   }

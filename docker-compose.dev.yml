@@ -1,0 +1,50 @@
+version: '3.9'
+
+services:
+  font-scanner-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    container_name: font-scanner-dev
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Node.js debugging port
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - LOG_LEVEL=DEBUG
+      - PUPPETEER_HEADLESS=true
+      - PUPPETEER_TIMEOUT=30000
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=1000
+      - REPORTS_DIR=/app/reports
+      - REPORTS_RETENTION_DAYS=7
+      - MAX_PAGES_TO_SCAN=10
+      - SCAN_TIMEOUT=60000
+    volumes:
+      - ./src:/app/src:cached
+      - ./tests:/app/tests:cached
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
+      - dev-reports:/app/reports
+      - dev-logs:/app/logs
+      - node_modules:/app/node_modules
+    networks:
+      - font-scanner-dev-network
+    stdin_open: true
+    tty: true
+    command: npm run dev
+
+volumes:
+  dev-reports:
+    driver: local
+  dev-logs:
+    driver: local
+  node_modules:
+    driver: local
+
+networks:
+  font-scanner-dev-network:
+    driver: bridge
