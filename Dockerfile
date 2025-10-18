@@ -1,6 +1,6 @@
 # Multi-stage build for production-ready Font Scanner application
 # Stage 1: Base dependencies
-FROM node:18-alpine AS base
+FROM node:25-alpine AS base
 
 # Install Chromium and dependencies for Puppeteer
 RUN apk add --no-cache \
