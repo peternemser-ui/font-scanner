@@ -178,18 +178,24 @@ class LighthouseAnalyzer {
   processLighthouseResults(lhr, formFactor) {
     const fontRelatedAudits = this.extractFontAudits(lhr);
     const performanceMetrics = this.extractPerformanceMetrics(lhr);
-    const accessibility = this.extractAccessibilityIssues(lhr);
-    const bestPractices = this.extractBestPractices(lhr);
-    const seoIssues = this.extractSEOIssues(lhr);
+    const accessibilityData = this.extractAccessibilityIssues(lhr);
+    const bestPracticesData = this.extractBestPractices(lhr);
+    const seoData = this.extractSEOIssues(lhr);
 
     return {
       formFactor: formFactor || 'desktop',
       score: Math.round(lhr.categories.performance.score * 100),
+      performance: Math.round(lhr.categories.performance.score * 100), // Add explicit performance score
       metrics: performanceMetrics,
       fontAudits: fontRelatedAudits,
-      accessibility,
-      bestPractices,
-      seo: seoIssues,
+      // Expose scores at root level for easy frontend access
+      accessibility: accessibilityData.score,
+      bestPractices: bestPracticesData.score,
+      seo: seoData.score,
+      // Keep detailed data nested
+      accessibilityDetails: accessibilityData,
+      bestPracticesDetails: bestPracticesData,
+      seoDetails: seoData,
       opportunities: this.extractOpportunities(lhr),
       diagnostics: this.extractDiagnostics(lhr),
     };
