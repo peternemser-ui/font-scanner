@@ -9,12 +9,19 @@ A comprehensive, enterprise-grade web application that analyzes websites for fon
 
 ## Features
 
-- **Font Discovery**: Identifies all fonts used on a webpage
-- **Font Display Analysis**: Analyzes font-display properties and loading strategies
-- **Performance Metrics**: Measures font loading times and impact on page performance
-- **Best Practices Audit**: Checks compliance with font loading best practices
-- **Visual Analysis**: Screenshots and visual comparison of font rendering
-- **Detailed Reports**: Comprehensive PDF reports with actionable recommendations
+### Comprehensive Font & Typography Analysis
+
+- **Font Discovery**: Identifies all fonts used (system, Google Fonts, web fonts, icon fonts)
+- **Performance Analysis**: Lighthouse desktop + mobile with Core Web Vitals (LCP, FID, CLS)
+- **Best Practices Audit**: Industry-standard compliance checking with detailed recommendations
+- **AI-Powered Font Pairing**: Typography harmony evaluation and pairing quality scoring
+- **Real User Metrics (RUM)**: Simulated user experience and UX quality assessment
+- **Cross-Browser Testing**: Chrome, Firefox, Safari compatibility analysis
+- **Advanced Accessibility**: WCAG 2.1 AA/AAA compliance, contrast analysis, readability scoring
+- **Font Licensing Detection**: License identification and compliance checking
+- **Industry Benchmarking**: Competitive analysis against best-in-class standards
+- **Detailed Reports**: Comprehensive PDF reports with weighted scoring and actionable recommendations
+- **Score Breakdown Visualization**: Transparent display of exactly how scores are calculated
 - **Enterprise-Ready**: Production-ready with Docker, Kubernetes, monitoring, and CI/CD
 
 ## Technology Stack
@@ -67,20 +74,77 @@ make docker-compose
 
 See [DOCKER_README.md](./DOCKER_README.md) for detailed Docker instructions.
 
-## Deployment Documentation
+## Comprehensive Analysis Mode
 
+Font Scanner performs a **complete 10-analyzer comprehensive scan** for every website:
+
+### Analysis Components (Weighted Scoring)
+
+1. **Basic Font Scan** (15%) - Font discovery, format detection, categorization
+2. **Performance Analysis** (12%) - Load times, font loading waterfall, optimization
+3. **Best Practices** (10%) - Industry standards, font-display strategies
+4. **Font Pairing Analysis** (15%) - AI-powered typography harmony evaluation
+5. **Real User Metrics** (12%) - Simulated user experience, UX quality
+6. **Cross-Browser Testing** (10%) - Chrome/Firefox/Safari compatibility
+7. **Advanced Accessibility** (13%) - WCAG compliance, contrast, readability
+8. **Font Licensing** (8%) - License identification, compliance checking
+9. **Lighthouse** (5%) - Google's performance audit (desktop + mobile)
+
+### What You Get
+
+- ✅ **Weighted Score** (0-100) with transparent breakdown
+- ✅ **Letter Grade** (A+ to F) with industry benchmarking
+- ✅ **Visual Score Breakdown** showing which analyzers contributed
+- ✅ **Completeness Bonus** when ≥70% features work with base score >70
+- ✅ **PDF Report Download** with all metrics and recommendations
+- ✅ **10+ Advanced Analyzers** working in parallel
+- ✅ **5-10 Minute Analysis** (thorough and comprehensive)
+
+### Scoring Transparency
+
+The new **Score Breakdown** feature shows exactly how your score is calculated:
+- Component-by-component progress bars
+- Weight distribution visualization
+- Base score vs completeness bonus
+- Clear indicators for included/excluded analyzers
+- Educational notes about scoring methodology
+
+**Note:** Only working analyzers contribute to scores. Failed analyzers are excluded rather than penalized.
+
+## Documentation
+
+### Deployment & Operations
 - [DEPLOYMENT.md](./DEPLOYMENT.md) - Complete enterprise deployment guide
 - [DOCKER_README.md](./DOCKER_README.md) - Docker quick start
 - [k8s/README.md](./k8s/README.md) - Kubernetes deployment details
+- [docs/DATA_RETENTION.md](./docs/DATA_RETENTION.md) - Data retention and cleanup operations
+
+### Security & Compliance
 - [SECURITY.md](./SECURITY.md) - Security policy and best practices
+- [PRIVACY.md](./PRIVACY.md) - Privacy policy and GDPR compliance
+- [docs/RATE_LIMITING.md](./docs/RATE_LIMITING.md) - Rate limiting configuration and monitoring
+- [docs/REDIS_RATE_LIMITING.md](./docs/REDIS_RATE_LIMITING.md) - Redis integration for distributed systems
+
+### Monitoring & Observability
+- [docs/ERROR_TELEMETRY.md](./docs/ERROR_TELEMETRY.md) - Error tracking and analytics system
+- [docs/ERROR_TELEMETRY_SUMMARY.md](./docs/ERROR_TELEMETRY_SUMMARY.md) - Implementation summary
 
 ## API Endpoints
 
-- `POST /api/scan` - Analyze a website for fonts
+### Core Endpoints
+- `POST /api/scan/best-in-class` - Comprehensive analysis with 10+ analyzers (5-10 minutes)
+  - Includes: Font discovery, performance, best practices, font pairing, RUM, cross-browser, accessibility, licensing, benchmarking, Lighthouse
+  - Returns: Weighted scoring (0-100), letter grade (A+ to F), PDF report
 - `GET /api/health` - Liveness probe endpoint
 - `GET /api/ready` - Readiness probe endpoint
 - `GET /api/reports/:filename` - Download PDF reports
 - `GET /metrics` - Prometheus metrics endpoint
+
+### Admin & Monitoring
+- `GET /api/admin/rate-limits` - Rate limit analytics and statistics
+- `GET /api/admin/errors` - Error telemetry analytics (filter by time/category/type)
+- `GET /api/admin/errors/:errorId` - Specific error details with similar errors
+- `GET /api/reports/stats` - Report cleanup statistics
 - `GET /api/test` - API information endpoint
 
 ## Make Commands

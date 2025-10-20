@@ -85,78 +85,18 @@ class FontScannerApp {
       return;
     }
 
-    // Check if best-in-class scan is requested
-    const bestInClassToggle = document.getElementById('bestInClassToggle');
-    const useBestInClass = bestInClassToggle ? bestInClassToggle.checked : false;
-    
-    console.log('🚀 Best-in-class mode:', useBestInClass);
-    
     // Normalize the URL before sending to backend
     const normalizedUrl = this.normalizeUrl(url);
-
-    if (useBestInClass) {
-      await this.performBestInClassScan(normalizedUrl);
-    } else {
-      await this.performBasicScan(normalizedUrl);
-    }
-  }
-
-  async performBasicScan(normalizedUrl) {
-    this.setLoading(true);
-    this.showProgress();
     
-    // Clear previous font preview styles
-    this.clearFontPreviewStyles();
-
-    try {
-      const controller = new AbortController();
-      const timeoutDuration = 300000; // 5 minutes
-      const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
-
-      console.log('📡 Sending request to /api/scan...');
-      const response = await fetch('/api/scan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: normalizedUrl, scanType: 'comprehensive' }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-      console.log('📡 Response received:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ Server error response:', errorData);
-        throw new Error(errorData.message || `Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Scan data received:', data);
-
-      this.displayResults(data);
-    } catch (error) {
-      console.error('❌ Scan error:', error);
-
-      let errorMessage;
-      if (error.name === 'AbortError') {
-        errorMessage = 'Scan timed out. Comprehensive scans may take longer for complex websites.';
-      } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
-      } else {
-        errorMessage = error.message || 'An error occurred while scanning the website';
-      }
-
-      this.showError(errorMessage);
-    } finally {
-      this.setLoading(false);
-    }
+    console.log('🚀 Starting comprehensive analysis...');
+    
+    // Always perform comprehensive scan
+    await this.performComprehensiveScan(normalizedUrl);
   }
 
-  async performBestInClassScan(normalizedUrl) {
+  async performComprehensiveScan(normalizedUrl) {
     this.setLoading(true);
-    this.showProgress('🚀 Running best-in-class analysis...');
+    this.showProgress('� Running comprehensive analysis...');
     
     // Clear previous font preview styles
     this.clearFontPreviewStyles();
@@ -196,36 +136,36 @@ class FontScannerApp {
       }
 
       const data = await response.json();
-      console.log(`🎉 Best-in-class scan completed with grade: ${data.data.grade}`);
+      console.log(`🎉 Comprehensive scan completed with grade: ${data.data.grade}`);
       
       if (data.success) {
-        this.displayBestInClassResults(data.data);
+        this.displayComprehensiveResults(data.data);
       } else {
-        this.showError(data.error || 'Best-in-class scan failed');
+        this.showError(data.error || 'Comprehensive scan failed');
       }
     } catch (error) {
-      console.error('❌ Best-in-class scan error:', error);
+      console.error('❌ Comprehensive scan error:', error);
       if (error.name === 'AbortError') {
-        this.showError('Best-in-class scan timed out. This comprehensive analysis may take longer.');
+        this.showError('Comprehensive scan timed out. Please try again.');
       } else {
-        this.showError(`Best-in-class scan failed: ${error.message}`);
+        this.showError(`Comprehensive scan failed: ${error.message}`);
       }
     } finally {
       this.setLoading(false);
     }
   }
 
-  displayBestInClassResults(data) {
-    console.log('🎯 Displaying best-in-class results:', data);
+  prepareDataForDisplay(data) {
+    console.log('🎯 Preparing comprehensive results for display:', data);
     
-    // Transform best-in-class data to regular display format with proper nesting
+    // Transform comprehensive data to display format with proper nesting
     const transformedData = {
       results: {
         fonts: data.basicScan?.fonts || { totalFonts: 0, fonts: [] },
         performance: data.performance || data.basicScan?.performance || {},
         bestPractices: data.bestPractices || data.basicScan?.bestPractices || {},
         lighthouse: data.lighthouse || {},
-        // Add best-in-class specific data
+        // Add comprehensive scan specific data
         overallScore: data.overallScore,
         grade: data.grade,
         scanDuration: data.scanDuration,
@@ -234,7 +174,8 @@ class FontScannerApp {
         crossBrowserTesting: data.crossBrowserTesting,
         advancedAccessibility: data.advancedAccessibility,
         fontLicensing: data.fontLicensing,
-        benchmarkAnalysis: data.benchmarkAnalysis
+        benchmarkAnalysis: data.benchmarkAnalysis,
+        scoringBreakdown: data.scoringBreakdown
       },
       url: data.url || 'Unknown URL',
       scannedAt: data.scannedAt || new Date().toISOString()
@@ -242,10 +183,16 @@ class FontScannerApp {
     
     console.log('🔄 Transformed data for display:', transformedData);
     
-    // Use regular display with transformed data
+    return transformedData;
+  }
+  
+  displayComprehensiveResults(data) {
+    const transformedData = this.prepareDataForDisplay(data);
+    
+    // Use main display with transformed data
     this.displayResults(transformedData);
     
-    // Add best-in-class grade indicator at the very top
+    // Add comprehensive analysis grade indicator at the very top
     setTimeout(() => {
       console.log('🎯 Grade Debug - data.overallScore:', data.overallScore);
       console.log('🎯 Grade Debug - data.grade:', data.grade);
@@ -254,7 +201,7 @@ class FontScannerApp {
       
       if (this.resultsContainer && (data.overallScore || transformedData.results.overallScore) && (data.grade || transformedData.results.grade)) {
         const gradeIndicator = document.createElement('div');
-        gradeIndicator.className = 'best-in-class-grade';
+        gradeIndicator.className = 'comprehensive-grade';
         gradeIndicator.style.cssText = `
           background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
           border: 2px solid #00ff41;
@@ -274,7 +221,7 @@ class FontScannerApp {
         gradeIndicator.innerHTML = `
           <div class="grade-badge">
             <div style="color: #000; font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; text-shadow: none;">
-              🚀 BEST-IN-CLASS ANALYSIS COMPLETE
+              🚀 COMPREHENSIVE ANALYSIS COMPLETE
             </div>
             <div style="color: #000; font-size: 2.5rem; font-weight: 900; text-shadow: none; margin: 0.5rem 0;">
               GRADE: ${finalGrade}

@@ -29,6 +29,24 @@ body {
   padding: 0;
   min-height: 100vh;
   overflow-x: hidden;
+  font-size: 14px; /* Base font size */
+}
+
+/* Font size variants */
+body.font-size-sm {
+  font-size: 12px;
+}
+
+body.font-size-md {
+  font-size: 14px; /* Default */
+}
+
+body.font-size-lg {
+  font-size: 16px;
+}
+
+body.font-size-xl {
+  font-size: 18px;
 }
 
 .container {
