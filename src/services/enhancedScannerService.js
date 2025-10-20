@@ -174,7 +174,9 @@ class EnhancedScannerService {
         logger.info('🏠 Step 10: Running Lighthouse analysis...');
         broadcastProgress(10, 'Running comprehensive Lighthouse analysis...', 91);
         try {
-          result.lighthouse = await this.performLighthouseAnalysis(url);
+          result.lighthouse = await this.performLighthouseAnalysis(url, {
+            includeMobile: options.includeMobileLighthouse !== false // Run mobile by default
+          });
         } catch (error) {
           logger.warn('Lighthouse analysis failed:', error.message);
           result.lighthouse = { 
@@ -246,7 +248,7 @@ class EnhancedScannerService {
     return results;
   }
 
-  async performLighthouseAnalysis(baseUrl) {
+  async performLighthouseAnalysis(baseUrl, options = {}) {
     logger.info('Starting Lighthouse analysis...');
 
     const lighthouse = {
@@ -255,17 +257,21 @@ class EnhancedScannerService {
     };
 
     try {
-      // Desktop analysis
+      // Desktop analysis (always run)
       logger.info('Running desktop Lighthouse analysis...');
       lighthouse.desktop = await lighthouseAnalyzer.analyzeWithLighthouse(baseUrl, {
         formFactor: 'desktop',
       });
 
-      // Mobile analysis
-      logger.info('Running mobile Lighthouse analysis...');
-      lighthouse.mobile = await lighthouseAnalyzer.analyzeWithLighthouse(baseUrl, {
-        formFactor: 'mobile',
-      });
+      // Mobile analysis (run by default, can be disabled)
+      if (options.includeMobile !== false) {
+        logger.info('Running mobile Lighthouse analysis...');
+        lighthouse.mobile = await lighthouseAnalyzer.analyzeWithLighthouse(baseUrl, {
+          formFactor: 'mobile',
+        });
+      } else {
+        logger.info('⚡ Mobile Lighthouse disabled via options');
+      }
 
       return lighthouse;
     } catch (error) {
@@ -283,6 +289,7 @@ class EnhancedScannerService {
 
   /**
    * Calculate best-in-class overall score (0-100)
+   * Fixed: Only includes working analyzers, no inflated defaults
    */
   calculateBestInClassScore(result) {
     const weights = {
@@ -299,131 +306,269 @@ class EnhancedScannerService {
 
     let totalScore = 0;
     let totalWeight = 0;
+    const scoringBreakdown = []; // Track what contributed to the score
 
-    // Basic scan score
+    // Basic scan score (REQUIRED - always included)
     if (result.basicScan && !result.basicScan.error) {
       const basicScore = this.extractBasicScanScore(result.basicScan);
       totalScore += basicScore * weights.basicScan;
       totalWeight += weights.basicScan;
+      scoringBreakdown.push({ component: 'basicScan', score: basicScore, weight: weights.basicScan });
+      logger.debug(`✅ Basic scan scored: ${basicScore}`);
+    } else {
+      logger.warn('⚠️ Basic scan missing or failed - this should not happen');
     }
 
-    // Performance score
-    if (result.performance && !result.performance.error) {
-      const perfScore = result.performance.overallScore || result.performance.score || 70;
-      totalScore += perfScore * weights.performance;
-      totalWeight += weights.performance;
+    // Performance score - only if valid score exists
+    if (result.performance && !result.performance.error && 
+        (result.performance.overallScore != null || result.performance.score != null)) {
+      const perfScore = result.performance.overallScore || result.performance.score;
+      if (perfScore > 0) {
+        totalScore += perfScore * weights.performance;
+        totalWeight += weights.performance;
+        scoringBreakdown.push({ component: 'performance', score: perfScore, weight: weights.performance });
+        logger.debug(`✅ Performance scored: ${perfScore}`);
+      }
+    } else {
+      logger.debug('⏭️ Performance analysis excluded from scoring (not available)');
     }
 
-    // Best practices score
-    if (result.bestPractices && !result.bestPractices.error) {
-      const bpScore = result.bestPractices.overallScore || result.bestPractices.score || 70;
-      totalScore += bpScore * weights.bestPractices;
-      totalWeight += weights.bestPractices;
+    // Best practices score - only if valid score exists
+    if (result.bestPractices && !result.bestPractices.error && 
+        (result.bestPractices.overallScore != null || result.bestPractices.score != null)) {
+      const bpScore = result.bestPractices.overallScore || result.bestPractices.score;
+      if (bpScore > 0) {
+        totalScore += bpScore * weights.bestPractices;
+        totalWeight += weights.bestPractices;
+        scoringBreakdown.push({ component: 'bestPractices', score: bpScore, weight: weights.bestPractices });
+        logger.debug(`✅ Best practices scored: ${bpScore}`);
+      }
+    } else {
+      logger.debug('⏭️ Best practices analysis excluded from scoring (not available)');
     }
 
-    // Font pairing score
-    if (result.fontPairing && !result.fontPairing.error) {
-      const fpScore = result.fontPairing.score || result.fontPairing.overallScore || 75;
-      totalScore += fpScore * weights.fontPairing;
-      totalWeight += weights.fontPairing;
+    // Font pairing score - only if valid score exists
+    if (result.fontPairing && !result.fontPairing.error && 
+        (result.fontPairing.score != null || result.fontPairing.overallScore != null)) {
+      const fpScore = result.fontPairing.score || result.fontPairing.overallScore;
+      if (fpScore > 0) {
+        totalScore += fpScore * weights.fontPairing;
+        totalWeight += weights.fontPairing;
+        scoringBreakdown.push({ component: 'fontPairing', score: fpScore, weight: weights.fontPairing });
+        logger.debug(`✅ Font pairing scored: ${fpScore}`);
+      }
+    } else {
+      logger.debug('⏭️ Font pairing analysis excluded from scoring (not available)');
     }
 
-    // Real user metrics score
-    if (result.realUserMetrics && !result.realUserMetrics.error) {
-      const rumScore = result.realUserMetrics.score || result.realUserMetrics.overallScore || 70;
-      totalScore += rumScore * weights.realUserMetrics;
-      totalWeight += weights.realUserMetrics;
+    // Real user metrics score - only if valid score exists
+    if (result.realUserMetrics && !result.realUserMetrics.error && 
+        (result.realUserMetrics.score != null || result.realUserMetrics.overallScore != null)) {
+      const rumScore = result.realUserMetrics.score || result.realUserMetrics.overallScore;
+      if (rumScore > 0) {
+        totalScore += rumScore * weights.realUserMetrics;
+        totalWeight += weights.realUserMetrics;
+        scoringBreakdown.push({ component: 'realUserMetrics', score: rumScore, weight: weights.realUserMetrics });
+        logger.debug(`✅ Real user metrics scored: ${rumScore}`);
+      }
+    } else {
+      logger.debug('⏭️ Real user metrics excluded from scoring (not available)');
     }
 
-    // Cross-browser testing score
-    if (result.crossBrowserTesting && !result.crossBrowserTesting.error) {
-      const cbtScore = result.crossBrowserTesting.overallScore || result.crossBrowserTesting.score || 75;
-      totalScore += cbtScore * weights.crossBrowserTesting;
-      totalWeight += weights.crossBrowserTesting;
+    // Cross-browser testing score - only if valid score exists
+    if (result.crossBrowserTesting && !result.crossBrowserTesting.error && 
+        (result.crossBrowserTesting.overallScore != null || result.crossBrowserTesting.score != null)) {
+      const cbtScore = result.crossBrowserTesting.overallScore || result.crossBrowserTesting.score;
+      if (cbtScore > 0) {
+        totalScore += cbtScore * weights.crossBrowserTesting;
+        totalWeight += weights.crossBrowserTesting;
+        scoringBreakdown.push({ component: 'crossBrowserTesting', score: cbtScore, weight: weights.crossBrowserTesting });
+        logger.debug(`✅ Cross-browser testing scored: ${cbtScore}`);
+      }
+    } else {
+      logger.debug('⏭️ Cross-browser testing excluded from scoring (not available)');
     }
 
-    // Advanced accessibility score
-    if (result.advancedAccessibility && !result.advancedAccessibility.error) {
-      const aaScore = result.advancedAccessibility.overallScore || result.advancedAccessibility.score || 65;
-      totalScore += aaScore * weights.advancedAccessibility;
-      totalWeight += weights.advancedAccessibility;
+    // Advanced accessibility score - only if valid score exists
+    if (result.accessibility && !result.accessibility.error && 
+        (result.accessibility.overallScore != null || result.accessibility.score != null)) {
+      const aaScore = result.accessibility.overallScore || result.accessibility.score;
+      if (aaScore > 0) {
+        totalScore += aaScore * weights.advancedAccessibility;
+        totalWeight += weights.advancedAccessibility;
+        scoringBreakdown.push({ component: 'accessibility', score: aaScore, weight: weights.advancedAccessibility });
+        logger.debug(`✅ Advanced accessibility scored: ${aaScore}`);
+      }
+    } else {
+      logger.debug('⏭️ Advanced accessibility excluded from scoring (not available)');
     }
 
-    // Font licensing score
-    if (result.fontLicensing && !result.fontLicensing.error) {
-      const flScore = result.fontLicensing.complianceScore || result.fontLicensing.score || 80;
-      totalScore += flScore * weights.fontLicensing;
-      totalWeight += weights.fontLicensing;
+    // Font licensing score - only if valid score exists
+    if (result.licenseCompliance && !result.licenseCompliance.error && 
+        (result.licenseCompliance.complianceScore != null || result.licenseCompliance.score != null)) {
+      const flScore = result.licenseCompliance.complianceScore || result.licenseCompliance.score;
+      if (flScore > 0) {
+        totalScore += flScore * weights.fontLicensing;
+        totalWeight += weights.fontLicensing;
+        scoringBreakdown.push({ component: 'fontLicensing', score: flScore, weight: weights.fontLicensing });
+        logger.debug(`✅ Font licensing scored: ${flScore}`);
+      }
+    } else {
+      logger.debug('⏭️ Font licensing excluded from scoring (not available)');
     }
 
-    // Lighthouse score
+    // Lighthouse score - only if valid score exists
     if (result.lighthouse && !result.lighthouse.error) {
       const lhScore = this.extractLighthouseScore(result.lighthouse);
-      totalScore += lhScore * weights.lighthouse;
-      totalWeight += weights.lighthouse;
+      if (lhScore > 0) {
+        totalScore += lhScore * weights.lighthouse;
+        totalWeight += weights.lighthouse;
+        scoringBreakdown.push({ component: 'lighthouse', score: lhScore, weight: weights.lighthouse });
+        logger.debug(`✅ Lighthouse scored: ${lhScore}`);
+      }
+    } else {
+      logger.debug('⏭️ Lighthouse excluded from scoring (not available)');
     }
 
     // Calculate weighted average
     const finalScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
     
-    // Apply bonus for completeness (having all features working)
-    const completenessBonus = this.calculateCompletenessBonus(result);
+    // Apply selective completeness bonus (only if base score > 70)
+    const completenessBonus = finalScore > 70 ? this.calculateCompletenessBonus(result) : 0;
     
-    return Math.min(100, finalScore + completenessBonus);
+    const adjustedScore = Math.min(100, finalScore + completenessBonus);
+
+    // Log scoring breakdown for transparency
+    logger.info('📊 Scoring breakdown:', {
+      components: scoringBreakdown.length,
+      totalWeight: totalWeight.toFixed(2),
+      baseScore: finalScore,
+      completenessBonus,
+      finalScore: adjustedScore,
+      breakdown: scoringBreakdown
+    });
+
+    // Store breakdown in result for frontend display
+    result.scoringBreakdown = {
+      components: scoringBreakdown,
+      baseScore: finalScore,
+      completenessBonus,
+      finalScore: adjustedScore,
+      totalWeight
+    };
+    
+    return adjustedScore;
   }
 
   /**
    * Calculate completeness bonus for having all features
+   * Fixed: More conservative bonus, requires high completion rate
    */
   calculateCompletenessBonus(result) {
     const features = [
       'basicScan', 'performance', 'bestPractices', 'fontPairing',
-      'realUserMetrics', 'crossBrowserTesting', 'advancedAccessibility',
-      'fontLicensing', 'lighthouse'
+      'realUserMetrics', 'crossBrowserTesting', 'accessibility',
+      'licenseCompliance', 'lighthouse'
     ];
 
-    const workingFeatures = features.filter(feature => 
-      result[feature] && !result[feature].error
-    ).length;
+    // Count features that have valid scores
+    const workingFeatures = features.filter(feature => {
+      const component = result[feature];
+      if (!component || component.error) return false;
+      
+      // Check if component has a valid score
+      const score = component.score || component.overallScore || component.complianceScore;
+      return score != null && score > 0;
+    }).length;
 
     const completeness = workingFeatures / features.length;
     
-    // Bonus of up to 5 points for feature completeness
-    return Math.round(completeness * 5);
+    // More conservative bonus:
+    // - Must have at least 70% features working to get any bonus
+    // - Max bonus reduced from 5 to 3 points
+    // - Only rewards near-complete implementations
+    if (completeness < 0.7) {
+      logger.debug(`⚠️ Low completeness (${Math.round(completeness * 100)}%) - no bonus awarded`);
+      return 0;
+    }
+    
+    const bonus = Math.round((completeness - 0.7) / 0.3 * 3); // 0-3 points for 70-100% completion
+    logger.debug(`✨ Completeness bonus: +${bonus} points (${Math.round(completeness * 100)}% features working)`);
+    
+    return bonus;
   }
 
   /**
    * Extract basic scan score
+   * Fixed: More realistic scoring based on actual metrics
    */
   extractBasicScanScore(basicScan) {
-    if (basicScan.fonts && basicScan.fonts.totalFonts !== undefined) {
-      // Score based on font count and performance
-      const fontCount = basicScan.fonts.totalFonts;
-      let score = 85; // Base score
-      
-      if (fontCount > 10) score -= 15;
-      else if (fontCount > 6) score -= 10;
-      else if (fontCount > 3) score -= 5;
-      
-      if (basicScan.performance && basicScan.performance.initialLoadTime) {
-        const loadTime = basicScan.performance.initialLoadTime;
-        if (loadTime > 3000) score -= 10;
-        else if (loadTime > 2000) score -= 5;
-      }
-      
-      return Math.max(0, score);
+    if (!basicScan || !basicScan.fonts) {
+      logger.warn('⚠️ Basic scan missing font data');
+      return 0;
     }
-    return 70; // Default score
+
+    const fontCount = basicScan.fonts.totalFonts || 0;
+    
+    // Start with performance-based score (50 points max)
+    let performanceScore = 50;
+    if (basicScan.performance && basicScan.performance.initialLoadTime) {
+      const loadTime = basicScan.performance.initialLoadTime;
+      if (loadTime < 1000) performanceScore = 50;        // Excellent
+      else if (loadTime < 2000) performanceScore = 40;   // Good
+      else if (loadTime < 3000) performanceScore = 30;   // Fair
+      else if (loadTime < 5000) performanceScore = 20;   // Poor
+      else performanceScore = 10;                        // Very poor
+    }
+    
+    // Font optimization score (50 points max)
+    let fontScore = 50;
+    if (fontCount === 0) {
+      fontScore = 30; // Suspicious - might be scan issue
+    } else if (fontCount <= 2) {
+      fontScore = 50; // Optimal
+    } else if (fontCount <= 4) {
+      fontScore = 45; // Good
+    } else if (fontCount <= 6) {
+      fontScore = 35; // Fair
+    } else if (fontCount <= 10) {
+      fontScore = 25; // Concerning
+    } else {
+      fontScore = 15; // Too many fonts
+    }
+    
+    // Bonus for using modern formats (up to 10 points)
+    let formatBonus = 0;
+    if (basicScan.fonts.fonts && Array.isArray(basicScan.fonts.fonts)) {
+      const hasWoff2 = basicScan.fonts.fonts.some(f => f.format === 'woff2');
+      const hasFontDisplay = basicScan.fonts.fonts.some(f => f.fontDisplay && f.fontDisplay !== 'auto');
+      
+      if (hasWoff2) formatBonus += 5;
+      if (hasFontDisplay) formatBonus += 5;
+    }
+    
+    const finalScore = Math.min(100, performanceScore + fontScore + formatBonus);
+    
+    logger.debug(`📊 Basic scan scoring: perf=${performanceScore}, fonts=${fontScore}, bonus=${formatBonus}, total=${finalScore}`);
+    
+    return finalScore;
   }
 
   /**
    * Extract Lighthouse score
+   * Fixed: Returns 0 for invalid data instead of defaulting to 70
    */
   extractLighthouseScore(lighthouse) {
     // Handle new format with desktop/mobile structure
     if (lighthouse && lighthouse.desktop && lighthouse.mobile) {
       const desktopScore = lighthouse.desktop.score || 0;
       const mobileScore = lighthouse.mobile.score || 0;
+      
+      // Must have at least one valid score
+      if (desktopScore === 0 && mobileScore === 0) {
+        logger.debug('⚠️ Lighthouse has no valid scores');
+        return 0;
+      }
       
       // Weight mobile performance more heavily (60% mobile, 40% desktop)
       const weightedScore = Math.round((mobileScore * 0.6) + (desktopScore * 0.4));
@@ -443,15 +588,22 @@ class EnhancedScannerService {
         }
       });
 
-      return categoryCount > 0 ? Math.round(totalScore / categoryCount) : 70;
+      if (categoryCount === 0) {
+        logger.debug('⚠️ Lighthouse has no valid category scores');
+        return 0;
+      }
+
+      return Math.round(totalScore / categoryCount);
     }
 
     // Handle single score format
-    if (lighthouse && typeof lighthouse.score === 'number') {
+    if (lighthouse && typeof lighthouse.score === 'number' && lighthouse.score > 0) {
       return Math.max(0, Math.min(100, lighthouse.score));
     }
 
-    return 70; // Default score
+    // No valid Lighthouse data found
+    logger.debug('⚠️ Lighthouse data invalid or missing');
+    return 0;
   }
 
   /**
