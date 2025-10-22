@@ -54,6 +54,7 @@ class LighthouseAnalyzer {
         onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
         port: chrome.port,
         disableStorageReset: true,
+        maxWaitForLoad: 30000, // 30 second timeout for faster scans
         ...options,
       };
 
@@ -111,7 +112,15 @@ class LighthouseAnalyzer {
         delete lighthouseOptions.preset;
       }
 
-      const runnerResult = await lighthouse(url, lighthouseOptions, config);
+      // Add timeout wrapper to prevent hanging
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Lighthouse analysis timed out after 45 seconds')), 45000);
+      });
+      
+      const runnerResult = await Promise.race([
+        lighthouse(url, lighthouseOptions, config),
+        timeoutPromise
+      ]);
       
       // Log the actual configuration that was used
       if (runnerResult?.lhr?.configSettings) {

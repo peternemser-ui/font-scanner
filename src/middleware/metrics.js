@@ -57,6 +57,13 @@ const errorTotal = new promClient.Counter({
   registers: [register],
 });
 
+const rateLimitCounter = new promClient.Counter({
+  name: 'font_scanner_rate_limit_hits_total',
+  help: 'Total number of rate limit hits',
+  labelNames: ['limiter', 'endpoint'],
+  registers: [register],
+});
+
 // Middleware to track HTTP metrics
 const metricsMiddleware = (req, res, next) => {
   const start = Date.now();
@@ -114,6 +121,7 @@ module.exports = {
   startScan,
   endScan,
   recordError,
+  rateLimitCounter,
   metrics: {
     httpRequestDuration,
     httpRequestTotal,
@@ -121,5 +129,6 @@ module.exports = {
     scanTotal,
     activeScans,
     errorTotal,
+    rateLimitCounter,
   },
 };

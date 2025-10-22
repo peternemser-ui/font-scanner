@@ -20,13 +20,15 @@ A comprehensive, enterprise-grade web application that analyzes websites for fon
 - **Advanced Accessibility**: WCAG 2.1 AA/AAA compliance, contrast analysis, readability scoring
 - **Font Licensing Detection**: License identification and compliance checking
 - **Industry Benchmarking**: Competitive analysis against best-in-class standards
+- **Real-Time Progress Updates**: WebSocket-powered live progress tracking (5-10 min scans)
 - **Detailed Reports**: Comprehensive PDF reports with weighted scoring and actionable recommendations
 - **Score Breakdown Visualization**: Transparent display of exactly how scores are calculated
 - **Enterprise-Ready**: Production-ready with Docker, Kubernetes, monitoring, and CI/CD
 
 ## Technology Stack
 
-- **Backend**: Node.js, Express
+- **Backend**: Node.js, Express, Socket.IO
+- **Real-Time**: WebSocket progress updates with Socket.IO
 - **Web Scraping**: Puppeteer with Chromium
 - **Monitoring**: Prometheus metrics
 - **Security**: Helmet.js, rate limiting, input validation
@@ -94,15 +96,27 @@ Font Scanner performs a **complete 10-analyzer comprehensive scan** for every we
 
 - ✅ **Weighted Score** (0-100) with transparent breakdown
 - ✅ **Letter Grade** (A+ to F) with industry benchmarking
+- ✅ **Real-Time Progress** - Live WebSocket updates showing each analyzer step
 - ✅ **Visual Score Breakdown** showing which analyzers contributed
 - ✅ **Completeness Bonus** when ≥70% features work with base score >70
 - ✅ **PDF Report Download** with all metrics and recommendations
 - ✅ **10+ Advanced Analyzers** working in parallel
-- ✅ **5-10 Minute Analysis** (thorough and comprehensive)
+- ✅ **5-10 Minute Analysis** with live time estimates
+
+### Real-Time Progress Tracking (NEW!)
+
+Experience transparent, real-time progress updates during comprehensive scans:
+- **Live step tracking**: See which analyzer is currently running (Step 1/10)
+- **Status indicators**: Running (⏳), Completed (✅), Error (❌)
+- **Progress bars**: Visual feedback for each step's completion
+- **Time estimates**: Real-time elapsed/remaining time calculations
+- **No guessing**: Know exactly what's happening during long scans
+
+See [WEBSOCKET_PROGRESS.md](./WEBSOCKET_PROGRESS.md) for implementation details.
 
 ### Scoring Transparency
 
-The new **Score Breakdown** feature shows exactly how your score is calculated:
+The **Score Breakdown** feature shows exactly how your score is calculated:
 - Component-by-component progress bars
 - Weight distribution visualization
 - Base score vs completeness bonus

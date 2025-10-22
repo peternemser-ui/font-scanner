@@ -2,7 +2,7 @@ const { createLogger } = require('../utils/logger');
 const browserPool = require('../utils/browserPool');
 const fontScannerService = require('./fontScannerService');
 const fontAnalyzer = require('./fontAnalyzer');
-const performanceAnalyzer = require('./performanceAnalyzer');
+// const performanceAnalyzer = require('./performanceAnalyzer'); // Disabled - requires page context
 const lighthouseAnalyzer = require('./lighthouseAnalyzer');
 const bestPracticesAnalyzer = require('./bestPracticesAnalyzer');
 const siteDiscovery = require('./siteDiscovery');
@@ -29,14 +29,32 @@ class EnhancedScannerService {
     const startTime = Date.now();
     logger.info(`Starting full scan for URL: ${url} with scanId: ${scanId}`);
 
-    // Helper function for broadcasting progress
-    const broadcastProgress = (step, message, percentage) => {
+    // Helper function for emitting progress via Socket.IO
+    const emitProgress = (step, total, name, status, progress = 0) => {
       try {
-        if (global.broadcastProgress) {
-          global.broadcastProgress(scanId, step, message, percentage);
+        if (global.io) {
+          const elapsed = Date.now() - startTime;
+          const avgTimePerStep = elapsed / step;
+          const remainingSteps = total - step;
+          const estimatedRemaining = Math.round(avgTimePerStep * remainingSteps);
+          
+          global.io.to(scanId).emit('progress', {
+            scanId,
+            step,
+            total,
+            name,
+            status, // 'running', 'completed', 'error'
+            progress, // 0-100
+            elapsed,
+            estimated: elapsed + estimatedRemaining,
+            remaining: estimatedRemaining, // Add explicit remaining time
+            timestamp: Date.now()
+          });
+          
+          logger.info(`Progress [${step}/${total}]: ${name} - ${status}`, { scanId, progress });
         }
       } catch (error) {
-        logger.error('Error broadcasting progress:', error);
+        logger.error('Error emitting progress:', error);
       }
     };
 
@@ -62,24 +80,27 @@ class EnhancedScannerService {
 
       // Step 1: Basic font scan (always first)
       logger.info('🔍 Step 1: Performing basic font scan...');
-      broadcastProgress(1, 'Starting basic font scan...', 9);
+      emitProgress(1, 10, 'Basic Font Scan', 'running', 10);
       result.basicScan = await fontScannerService.scanWebsite(url, options);
       const fontsData = result.basicScan?.fonts?.fonts || [];
+      emitProgress(1, 10, 'Basic Font Scan', 'completed', 100);
 
-      // Step 2: Performance analysis
+      // Step 2: Performance analysis (SKIPPED - requires Puppeteer page context)
       if (options.includePerformance !== false) {
-        logger.info('⚡ Step 2: Analyzing performance...');
-        try {
-          result.performance = await performanceAnalyzer.analyzePerformance(url, result.basicScan);
-        } catch (error) {
-          logger.warn('Performance analysis failed:', error.message);
-          result.performance = { error: 'Performance analysis failed', details: error.message };
-        }
+        logger.info('⚡ Step 2: Performance analysis (using Lighthouse metrics instead)...');
+        emitProgress(2, 10, 'Performance Analysis', 'running', 10);
+        // Skip detailed performance analysis - Lighthouse will provide performance metrics
+        result.performance = { 
+          source: 'lighthouse',
+          note: 'Performance metrics provided by Lighthouse analysis'
+        };
+        emitProgress(2, 10, 'Performance Analysis', 'completed', 100);
       }
 
       // Step 3: Best practices analysis
       if (options.includeBestPractices !== false) {
         logger.info('✅ Step 3: Analyzing best practices...');
+        emitProgress(3, 10, 'Best Practices', 'running', 10);
         try {
           // Use best practices from basic scan if available, otherwise generate fallback
           if (result.basicScan && result.basicScan.bestPractices) {
@@ -88,9 +109,11 @@ class EnhancedScannerService {
             // Generate fallback best practices analysis
             result.bestPractices = this.generateFallbackBestPractices(result.basicScan?.fonts);
           }
+          emitProgress(3, 10, 'Best Practices', 'completed', 100);
         } catch (error) {
           logger.warn('Best practices analysis failed:', error.message);
           result.bestPractices = this.generateFallbackBestPractices(result.basicScan?.fonts);
+          emitProgress(3, 10, 'Best Practices', 'error', 0);
         }
       }
 
@@ -99,95 +122,108 @@ class EnhancedScannerService {
       // Step 4: AI-Powered Font Pairing Analysis
       if (options.includeFontPairing !== false) {
         logger.info('🎨 Step 4: Analyzing font pairings with AI...');
+        emitProgress(4, 10, 'AI Font Pairing', 'running', 10);
         try {
           result.fontPairing = await fontPairingAnalyzer.analyzeFontPairings(fontsData, result.basicScan);
+          emitProgress(4, 10, 'AI Font Pairing', 'completed', 100);
         } catch (error) {
           logger.warn('Font pairing analysis failed:', error.message);
           result.fontPairing = { error: 'Font pairing analysis failed', details: error.message };
+          emitProgress(4, 10, 'AI Font Pairing', 'error', 0);
         }
       }
 
       // Step 5: Real User Metrics (RUM)
       if (options.includeRealUserMetrics !== false) {
         logger.info('📊 Step 5: Collecting real user metrics...');
-        broadcastProgress('user-metrics', 60, '📊 Collecting Real User Data');
+        emitProgress(5, 10, 'Real User Metrics', 'running', 10);
         try {
           result.realUserMetrics = await realUserMetricsService.getRUMSummary(url);
-          broadcastProgress('user-metrics', 65, '✅ User Metrics Complete');
+          emitProgress(5, 10, 'Real User Metrics', 'completed', 100);
         } catch (error) {
           logger.warn('Real user metrics failed:', error.message);
           result.realUserMetrics = { error: 'Real user metrics failed', details: error.message };
-          broadcastProgress('user-metrics', 65, '⚠️ User Metrics Failed');
+          emitProgress(5, 10, 'Real User Metrics', 'error', 0);
         }
       }
 
       // Step 6: Cross-Browser Testing
       if (options.includeCrossBrowserTesting !== false) {
         logger.info('🌍 Step 6: Running cross-browser testing...');
-        broadcastProgress(6, 'Analyzing cross-browser compatibility...', 55);
+        emitProgress(6, 10, 'Cross-Browser Testing', 'running', 10);
         try {
           result.crossBrowserTesting = await crossBrowserTestingService.getCrossBrowserSummary(url);
+          emitProgress(6, 10, 'Cross-Browser Testing', 'completed', 100);
         } catch (error) {
           logger.warn('Cross-browser testing failed:', error.message);
           result.crossBrowserTesting = { error: 'Cross-browser testing failed', details: error.message };
+          emitProgress(6, 10, 'Cross-Browser Testing', 'error', 0);
         }
       }
 
       // Step 7: Advanced Accessibility Analysis
       if (options.includeAdvancedAccessibility !== false) {
         logger.info('♿ Step 7: Analyzing advanced accessibility...');
-        broadcastProgress(7, 'Evaluating accessibility standards...', 64);
+        emitProgress(7, 10, 'Accessibility Analysis', 'running', 10);
         try {
           result.accessibility = await advancedAccessibilityAnalyzer.analyzeAccessibility(fontsData, result.basicScan);
+          emitProgress(7, 10, 'Accessibility Analysis', 'completed', 100);
         } catch (error) {
           logger.warn('Advanced accessibility analysis failed:', error.message);
           result.advancedAccessibility = { error: 'Advanced accessibility analysis failed', details: error.message };
+          emitProgress(7, 10, 'Accessibility Analysis', 'error', 0);
         }
       }
 
       // Step 8: Font Licensing Detection
       if (options.includeFontLicensing !== false) {
         logger.info('⚖️ Step 8: Detecting font licensing...');
-        broadcastProgress(8, 'Checking font licensing compliance...', 73);
+        emitProgress(8, 10, 'Font Licensing', 'running', 10);
         try {
           result.licenseCompliance = await fontLicensingDetector.getLicensingSummary(fontsData, url);
+          emitProgress(8, 10, 'Font Licensing', 'completed', 100);
         } catch (error) {
           logger.warn('Font licensing detection failed:', error.message);
           result.licenseCompliance = { error: 'Font licensing detection failed', details: error.message };
+          emitProgress(8, 10, 'Font Licensing', 'error', 0);
         }
       }
 
       // Step 9: Industry Benchmark Analysis
       if (options.includeBenchmarking !== false) {
         logger.info('🏆 Step 9: Running industry benchmark analysis...');
-        broadcastProgress(9, 'Benchmarking against industry standards...', 82);
+        emitProgress(9, 10, 'Industry Benchmarking', 'running', 10);
         try {
           result.typographyBenchmark = await benchmarkAnalyzer.evaluateAgainstBenchmarks(result);
+          emitProgress(9, 10, 'Industry Benchmarking', 'completed', 100);
         } catch (error) {
           logger.warn('Benchmark analysis failed:', error.message);
           result.typographyBenchmark = { error: 'Benchmark analysis failed', details: error.message };
+          emitProgress(9, 10, 'Industry Benchmarking', 'error', 0);
         }
       }
 
       // Step 10: Lighthouse analysis (final step for complete metrics)
       if (options.includeLighthouse !== false) {
         logger.info('🏠 Step 10: Running Lighthouse analysis...');
-        broadcastProgress(10, 'Running comprehensive Lighthouse analysis...', 91);
+        emitProgress(10, 10, 'Lighthouse Analysis', 'running', 10);
         try {
           result.lighthouse = await this.performLighthouseAnalysis(url, {
             includeMobile: options.includeMobileLighthouse !== false // Run mobile by default
           });
+          emitProgress(10, 10, 'Lighthouse Analysis', 'completed', 100);
         } catch (error) {
           logger.warn('Lighthouse analysis failed:', error.message);
           result.lighthouse = { 
             desktop: { error: 'Lighthouse desktop analysis failed', details: error.message },
             mobile: { error: 'Lighthouse mobile analysis failed', details: error.message }
           };
+          emitProgress(10, 10, 'Lighthouse Analysis', 'error', 0);
         }
       }
 
-      // Step 11: Final Analysis and Scoring
-      broadcastProgress(11, 'Generating final analysis and recommendations...', 95);
+      // Final: Analysis and Scoring
+      emitProgress(10, 10, 'Finalizing Results', 'running', 50);
       
       // Calculate overall score with new features
       result.overallScore = this.calculateBestInClassScore(result);
@@ -199,11 +235,11 @@ class EnhancedScannerService {
       // Calculate scan duration
       result.scanDuration = Date.now() - startTime;
 
-      // Broadcast completion
-      broadcastProgress(11, 'Scan completed successfully!', 100);
-
       logger.info(`🎉 BEST-IN-CLASS scan completed in ${result.scanDuration}ms`);
       logger.info(`📊 Final Score: ${result.overallScore}/100 (Grade: ${result.grade})`);
+      
+      // Emit final completion progress
+      emitProgress(10, 10, 'Scan Complete', 'completed', 100);
       
       return result;
 

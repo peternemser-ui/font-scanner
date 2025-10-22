@@ -88,12 +88,12 @@ class FontAnalyzer {
           }
         });
 
-        // Get computed styles for all elements (sample)
+        // Get computed styles for all elements (optimized sampling)
         const allElements = document.querySelectorAll('*');
         console.log('🔍 FontAnalyzer: Found', allElements.length, 'elements to analyze');
         
-        // Sample first 500 elements to get better coverage
-        const sampleElements = Array.from(allElements).slice(0, 500);
+        // Sample first 200 elements for better performance (reduced from 500)
+        const sampleElements = Array.from(allElements).slice(0, 200);
         sampleElements.forEach((element, index) => {
           const styles = window.getComputedStyle(element);
           const fontFamily = styles.fontFamily;
@@ -127,6 +127,41 @@ class FontAnalyzer {
                 textContent: element.textContent.trim().substring(0, 100),
               });
             }
+          }
+        });
+
+        // ENHANCED: Check pseudo-elements for icon fonts (::before, ::after)
+        console.log('🔍 FontAnalyzer: Checking pseudo-elements for icon fonts...');
+        const pseudoSampleElements = Array.from(allElements).slice(0, 200);
+        pseudoSampleElements.forEach((element, index) => {
+          try {
+            // Check ::before pseudo-element
+            const beforeStyles = window.getComputedStyle(element, '::before');
+            const beforeFont = beforeStyles.fontFamily;
+            if (beforeFont && beforeFont !== 'initial' && beforeStyles.content && beforeStyles.content !== 'none') {
+              const individualFonts = beforeFont.split(',').map(f => f.trim().replace(/['"]/g, ''));
+              individualFonts.forEach(font => {
+                if (font && font !== 'initial') {
+                  console.log('🔍 FontAnalyzer: Adding font from ::before:', font);
+                  fonts.add(font);
+                }
+              });
+            }
+
+            // Check ::after pseudo-element
+            const afterStyles = window.getComputedStyle(element, '::after');
+            const afterFont = afterStyles.fontFamily;
+            if (afterFont && afterFont !== 'initial' && afterStyles.content && afterStyles.content !== 'none') {
+              const individualFonts = afterFont.split(',').map(f => f.trim().replace(/['"]/g, ''));
+              individualFonts.forEach(font => {
+                if (font && font !== 'initial') {
+                  console.log('🔍 FontAnalyzer: Adding font from ::after:', font);
+                  fonts.add(font);
+                }
+              });
+            }
+          } catch (e) {
+            // Silently ignore errors accessing pseudo-elements
           }
         });
 
@@ -254,13 +289,34 @@ class FontAnalyzer {
       // Analyze font loading performance
       const fontLoadingData = await this.analyzeFontLoading(page);
 
-      // Categorize fonts
-      const categorizedFonts = this.categorizeFonts(fontData.fonts);
-
-      // Process fonts into objects with metadata
+      // Process fonts into objects with metadata first
       const processedFonts = fontData.fonts.map(fontName => {
         const cleanFont = fontName.replace(/['"]/g, '').trim();
         
+        // Find matching font face rule for this font
+        const matchingFontFace = fontData.fontFaces.find(ff => 
+          ff.fontFamily.toLowerCase() === cleanFont.toLowerCase()
+        );
+
+        // Find matching font sources (URLs)
+        const matchingSources = fontData.fontSources.filter(src => 
+          src.toLowerCase().includes(cleanFont.toLowerCase().replace(/ /g, '+')) ||
+          src.toLowerCase().includes(cleanFont.toLowerCase().replace(/ /g, '-')) ||
+          src.toLowerCase().includes(cleanFont.toLowerCase().replace(/ /g, ''))
+        );
+
+        // Extract URLs from font face src property
+        let fontUrls = [];
+        if (matchingFontFace && matchingFontFace.src) {
+          const srcMatches = matchingFontFace.src.match(/url\(['"]?([^'"]+)['"]?\)/g);
+          if (srcMatches) {
+            fontUrls = srcMatches.map(match => {
+              const url = match.match(/url\(['"]?([^'"]+)['"]?\)/)?.[1];
+              return url;
+            }).filter(Boolean);
+          }
+        }
+
         return {
           fontFamily: cleanFont,
           name: cleanFont,
@@ -268,18 +324,31 @@ class FontAnalyzer {
                   this.isSystemFont(cleanFont) ? 'system' : 'web',
           isSystemFont: this.isSystemFont(cleanFont),
           isGoogleFont: this.isGoogleFont(cleanFont),
-          isIconFont: this.isIconFont(cleanFont),
+          isIconFont: this.isIconFont(cleanFont, matchingFontFace),
           isWebFont: this.isWebFont(cleanFont),
-          fontWeight: 'normal',
-          fontStyle: 'normal'
+          fontWeight: matchingFontFace?.fontWeight || 'normal',
+          fontStyle: matchingFontFace?.fontStyle || 'normal',
+          fontDisplay: matchingFontFace?.fontDisplay || 'auto',
+          url: fontUrls.length > 0 ? fontUrls[0] : null, // Primary URL
+          sources: fontUrls.length > 0 ? fontUrls : matchingSources, // All URLs
+          unicodeRange: matchingFontFace?.unicodeRange || null
         };
       });
+
+      // Categorize fonts after processing (now we have full metadata)
+      const categorizedFonts = this.categorizeFontsFromProcessed(processedFonts);
 
       logger.info('Font analysis completed:', {
         totalFonts: processedFonts.length,
         fonts: processedFonts,
         categorized: categorizedFonts
       });
+
+      // Log icon fonts detected
+      const iconFonts = processedFonts.filter(f => f.isIconFont);
+      if (iconFonts.length > 0) {
+        logger.info(`🎨 Icon fonts detected: ${iconFonts.map(f => f.fontFamily).join(', ')}`);
+      }
 
       return {
         totalFonts: processedFonts.length,
@@ -428,6 +497,33 @@ class FontAnalyzer {
     return categories;
   }
 
+  // New method to categorize processed font objects
+  categorizeFontsFromProcessed(processedFonts) {
+    const categories = {
+      system: [],
+      webFonts: [],
+      googleFonts: [],
+      iconFonts: [],
+      customFonts: [],
+    };
+
+    processedFonts.forEach((font) => {
+      if (font.isIconFont) {
+        categories.iconFonts.push(font.fontFamily);
+      } else if (font.isSystemFont) {
+        categories.system.push(font.fontFamily);
+      } else if (font.isGoogleFont || font.source === 'google') {
+        categories.googleFonts.push(font.fontFamily);
+      } else if (font.isWebFont) {
+        categories.webFonts.push(font.fontFamily);
+      } else {
+        categories.customFonts.push(font.fontFamily);
+      }
+    });
+
+    return categories;
+  }
+
   isSystemFont(fontName) {
     const systemFonts = [
       'Arial', 'Helvetica', 'Times', 'Times New Roman', 'Courier', 'Courier New',
@@ -517,7 +613,7 @@ class FontAnalyzer {
     );
   }
 
-  isIconFont(fontName) {
+  isIconFont(fontName, fontData = {}) {
     // Common icon font names and patterns
     const iconFontPatterns = [
       'fontawesome',
@@ -545,18 +641,58 @@ class FontAnalyzer {
       'et-line',
       'pe-7s',
       'dashicons',
-      'genericons'
+      'genericons',
+      'eleganticons',
+      'typicons',
+      'entypo',
+      'maki',
+      'mapbox',
+      'octicons',
+      'socicon',
+      'weather-icons',
+      'payment-icons',
+      'cryptocurrency-icons',
+      // Groundworks and common custom icon fonts
+      'icomoon',
+      'custom-icons',
+      'site-icons',
+      'brand-icons',
+      'ui-icons'
     ];
 
     const lowerFontName = fontName.toLowerCase();
-    return iconFontPatterns.some(pattern => 
+    
+    // Check font name patterns
+    const matchesPattern = iconFontPatterns.some(pattern => 
       lowerFontName.includes(pattern) || 
-      lowerFontName.includes('icon') && (
+      (lowerFontName.includes('icon') && (
         lowerFontName.includes('font') || 
         lowerFontName.includes('glyph') ||
         lowerFontName.includes('symbol')
-      )
+      ))
     );
+
+    if (matchesPattern) return true;
+
+    // Check unicode range - icon fonts often use Private Use Area (PUA)
+    // PUA ranges: U+E000-F8FF, U+F0000-FFFFD, U+100000-10FFFD
+    if (fontData.unicodeRange) {
+      const unicodeStr = fontData.unicodeRange.toLowerCase();
+      const iconRanges = ['e000', 'e001', 'e002', 'e003', 'e004', 'e005', 'f000', 'f001'];
+      if (iconRanges.some(range => unicodeStr.includes(range))) {
+        return true;
+      }
+    }
+
+    // Check if font family contains ligatures or specific icon indicators
+    if (fontData.src) {
+      const srcLower = fontData.src.toLowerCase();
+      if (srcLower.includes('icon') || srcLower.includes('glyph') || srcLower.includes('symbol')) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
 

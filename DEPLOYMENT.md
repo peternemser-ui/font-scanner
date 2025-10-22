@@ -102,12 +102,65 @@ NODE_ENV=production
 LOG_LEVEL=INFO
 PUPPETEER_HEADLESS=true
 PUPPETEER_TIMEOUT=30000
-RATE_LIMIT_WINDOW_MS=900000
-RATE_LIMIT_MAX_REQUESTS=100
+
+# Rate Limiting Configuration
+# See RATE_LIMITING.md for detailed information
+
+# Global rate limit (all API endpoints)
+RATE_LIMIT_WINDOW_MS=900000              # 15 minutes (900,000 ms)
+RATE_LIMIT_MAX_REQUESTS=100              # 100 requests per IP per window
+
+# Scan endpoint rate limit (resource-intensive operations)
+SCAN_RATE_LIMIT_WINDOW_MS=900000         # 15 minutes (900,000 ms)
+SCAN_RATE_LIMIT_MAX_REQUESTS=20          # 20 scans per IP per window
+
+# Download endpoint rate limit (PDF reports)
+DOWNLOAD_RATE_LIMIT_WINDOW_MS=900000     # 15 minutes (900,000 ms)
+DOWNLOAD_RATE_LIMIT_MAX_REQUESTS=50      # 50 downloads per IP per window
+
+# Report configuration
 REPORTS_RETENTION_DAYS=7
+
+# Performance settings
 MAX_PAGES_TO_SCAN=10
 SCAN_TIMEOUT=60000
+
+# Browser pool configuration
+BROWSER_POOL_MIN=1
+BROWSER_POOL_MAX=5
+BROWSER_POOL_IDLE_TIMEOUT=300000         # 5 minutes
+BROWSER_POOL_ACQUIRE_TIMEOUT=30000       # 30 seconds
 ```
+
+### Recommended Production Values
+
+For different deployment scales:
+
+**Small Deployment (1-100 users):**
+```env
+RATE_LIMIT_MAX_REQUESTS=200
+SCAN_RATE_LIMIT_MAX_REQUESTS=30
+DOWNLOAD_RATE_LIMIT_MAX_REQUESTS=100
+BROWSER_POOL_MAX=3
+```
+
+**Medium Deployment (100-1000 users):**
+```env
+RATE_LIMIT_MAX_REQUESTS=500
+SCAN_RATE_LIMIT_MAX_REQUESTS=50
+DOWNLOAD_RATE_LIMIT_MAX_REQUESTS=200
+BROWSER_POOL_MAX=5
+```
+
+**Large Deployment (1000+ users):**
+```env
+RATE_LIMIT_MAX_REQUESTS=1000
+SCAN_RATE_LIMIT_MAX_REQUESTS=100
+DOWNLOAD_RATE_LIMIT_MAX_REQUESTS=500
+BROWSER_POOL_MAX=10
+```
+
+**Note:** For large deployments, consider implementing Redis-based rate limiting for proper distributed rate limiting across multiple instances. See [Rate Limiting Documentation](./RATE_LIMITING.md) for implementation details.
 
 ## Kubernetes Deployment
 

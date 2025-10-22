@@ -3,6 +3,8 @@
  */
 
 const { createLogger } = require('./logger');
+const { recordError } = require('./errorTelemetry');
+const config = require('../config');
 
 const logger = createLogger('ErrorHandler');
 
@@ -167,6 +169,18 @@ function errorMiddleware(err, req, res, next) {
     method: req.method,
     body: req.body,
   });
+
+  // Record in telemetry (if enabled)
+  if (config.errorTelemetry?.enabled) {
+    recordError(error, {
+      requestId: req.id,
+      url: req.url,
+      method: req.method,
+      userAgent: req.get('user-agent'),
+      ip: req.ip,
+      statusCode: error.statusCode
+    });
+  }
 
   // Send response
   const statusCode = error.statusCode || 500;

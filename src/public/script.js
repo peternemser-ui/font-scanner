@@ -1,10 +1,215 @@
-class FontScannerApp {
+﻿class FontScannerApp {
   constructor() {
     console.log('🚀 FontScannerApp initializing...');
+    
+    // Initialize Socket.IO client
+    this.socket = io({
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
+    
+    this.scanId = null;
+    this.initializeSocketHandlers();
+    
     this.initializeElements();
     this.bindEvents();
     this.initializeFontSizeControls();
     console.log('✅ FontScannerApp initialized successfully');
+  }
+  
+  initializeSocketHandlers() {
+    this.socket.on('connect', () => {
+      console.log('✅ WebSocket connected:', this.socket.id);
+    });
+    
+    this.socket.on('disconnect', (reason) => {
+      console.log('❌ WebSocket disconnected:', reason);
+    });
+    
+    this.socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+    });
+    
+    this.socket.on('progress', (data) => {
+      console.log('📊 Progress update:', data);
+      this.handleProgressUpdate(data);
+    });
+  }
+  
+  handleProgressUpdate(data) {
+    console.log('📊 Progress update received:', data);
+    const { step, total, name, status, progress, elapsed, remaining } = data;
+    
+    // Update progress UI
+    const progressContainer = document.getElementById('progressContainer');
+    console.log('📦 Progress container exists:', !!progressContainer);
+    if (!progressContainer) {
+      console.warn('⚠️ Progress container not found, cannot update');
+      return;
+    }
+    
+    // Update main progress bar with smooth animation
+    const mainProgressBar = document.getElementById('mainProgressBar');
+    if (mainProgressBar) {
+      const overallProgress = ((step - 1) / total * 100) + (progress / total);
+      
+      // Add transition if not already there
+      if (!mainProgressBar.style.transition) {
+        mainProgressBar.style.transition = 'width 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)';
+      }
+      
+      mainProgressBar.style.width = `${overallProgress}%`;
+      
+      // Add pulse effect when progress increases
+      mainProgressBar.style.transform = 'scaleY(1.2)';
+      setTimeout(() => {
+        mainProgressBar.style.transform = 'scaleY(1)';
+      }, 300);
+    }
+    
+    // Update step status
+    const stepElement = document.getElementById(`step-${step}`);
+    if (!stepElement) return;
+    
+    const statusIcon = stepElement.querySelector('.status-icon');
+    
+    if (status === 'running') {
+      statusIcon.textContent = '⏳';
+      stepElement.style.opacity = '1';
+      stepElement.style.transform = 'scale(1.15)';
+      stepElement.style.background = 'rgba(255, 193, 7, 0.2)';
+      stepElement.style.borderColor = 'rgba(255, 193, 7, 0.5)';
+      
+      // Add pulsing animation
+      statusIcon.style.animation = 'pulse 1.5s ease-in-out infinite';
+    } else if (status === 'completed') {
+      statusIcon.textContent = '✅';
+      stepElement.style.opacity = '0.7';
+      stepElement.style.transform = 'scale(1)';
+      stepElement.style.background = 'rgba(76, 175, 80, 0.15)';
+      stepElement.style.borderColor = 'rgba(76, 175, 80, 0.3)';
+      
+      // Add completion pop animation
+      statusIcon.style.animation = 'checkmark 0.5s ease';
+      setTimeout(() => {
+        statusIcon.style.animation = 'none';
+      }, 500);
+    } else if (status === 'error') {
+      statusIcon.textContent = '❌';
+      stepElement.style.opacity = '0.5';
+      stepElement.style.transform = 'scale(1)';
+      stepElement.style.background = 'rgba(244, 67, 54, 0.15)';
+      stepElement.style.borderColor = 'rgba(244, 67, 54, 0.3)';
+      
+      // Add shake animation
+      statusIcon.style.animation = 'shake 0.5s ease';
+      setTimeout(() => {
+        statusIcon.style.animation = 'none';
+      }, 500);
+    }
+    
+    // Update time estimates
+    const timeDisplay = document.getElementById('timeEstimate');
+    if (timeDisplay && elapsed !== undefined && remaining !== undefined) {
+      const elapsedSeconds = Math.floor(elapsed / 1000);
+      const remainingSeconds = Math.floor(remaining / 1000);
+      
+      // Only show time estimates after 2+ steps completed (more accurate)
+      if (step >= 2 && remainingSeconds > 0) {
+        timeDisplay.textContent = `${this.formatTime(elapsedSeconds)} elapsed • ~${this.formatTime(remainingSeconds)} remaining`;
+      } else if (step === 1) {
+        // First step - just show progress without time estimate
+        timeDisplay.textContent = `Analyzing... • Step ${step}/${total}`;
+      } else {
+        timeDisplay.textContent = `Step ${step}/${total} • ${name}`;
+      }
+    } else if (timeDisplay) {
+      timeDisplay.textContent = `Step ${step}/${total} • ${name}`;
+    }
+  }
+  
+  formatTime(seconds) {
+    if (seconds < 60) {
+      return `${seconds}s`;
+    }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+  }
+
+  showProgressUI() {
+    console.log('🎨 showProgressUI() called');
+    // Create progress container if it doesn't exist
+    let progressContainer = document.getElementById('progressContainer');
+    console.log('📦 Existing container:', progressContainer);
+    
+    if (!progressContainer) {
+      console.log('✨ Creating new progress container...');
+      progressContainer = document.createElement('div');
+      progressContainer.id = 'progressContainer';
+      // Don't use className to avoid conflicts with existing .progress-container styles
+      progressContainer.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin: 0; font-size: 1.1em;">🚀 Comprehensive Analysis</h3>
+          <div id="timeEstimate" style="font-size: 0.9em; color: #00ff88;">Initializing...</div>
+        </div>
+        <div class="progress-bar-main" style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 12px; overflow: hidden;">
+          <div id="mainProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00ff88, #00cc66); transition: width 0.3s ease;"></div>
+        </div>
+        <div class="progress-steps-horizontal" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          ${this.generateProgressSteps()}
+        </div>
+      `;
+      
+      // Insert before results
+      const results = document.getElementById('results');
+      console.log('📍 Results element:', results);
+      if (results && results.parentNode) {
+        results.parentNode.insertBefore(progressContainer, results);
+        console.log('✅ Progress container inserted into DOM');
+      } else {
+        console.error('❌ Results element or parent not found!');
+      }
+    }
+    
+    progressContainer.style.display = 'block';
+    console.log('👁️ Progress container display set to block');
+  }
+
+  hideProgressUI() {
+    console.log('🚪 hideProgressUI() called');
+    const progressContainer = document.getElementById('progressContainer');
+    console.log('📦 Progress container found:', !!progressContainer);
+    if (progressContainer) {
+      progressContainer.style.display = 'none';
+      console.log('✅ Progress container display set to none');
+    } else {
+      console.warn('⚠️ Progress container not found when trying to hide');
+    }
+  }
+
+  generateProgressSteps() {
+    const steps = [
+      { id: 1, name: 'Fonts', icon: '🔍' },
+      { id: 2, name: 'Performance', icon: '⚡' },
+      { id: 3, name: 'Practices', icon: '✅' },
+      { id: 4, name: 'AI', icon: '🎨' },
+      { id: 5, name: 'Metrics', icon: '📊' },
+      { id: 6, name: 'Browser', icon: '🌍' },
+      { id: 7, name: 'A11y', icon: '♿' },
+      { id: 8, name: 'License', icon: '⚖️' },
+      { id: 9, name: 'Bench', icon: '🏆' },
+      { id: 10, name: 'Lighthouse', icon: '🏠' }
+    ];
+    
+    return steps.map(step => `
+      <div class="progress-step-compact" id="step-${step.id}" title="Step ${step.id}: ${step.name}">
+        <span class="status-icon">⏸️</span>
+        <span style="font-size: 0.85em;">${step.icon}</span>
+      </div>
+    `).join('');
   }
 
   initializeElements() {
@@ -23,26 +228,67 @@ class FontScannerApp {
   }
 
   initializeFontSizeControls() {
+    console.log('🔤 Initializing font size controls...');
     const fontSizeButtons = document.querySelectorAll('.font-size-btn');
     const body = document.body;
     
-    fontSizeButtons.forEach(button => {
-      button.addEventListener('click', () => {
+    console.log(`📊 Found ${fontSizeButtons.length} font size buttons`);
+    
+    if (fontSizeButtons.length === 0) {
+      console.warn('⚠️ No font size buttons found in DOM!');
+      return;
+    }
+    
+    fontSizeButtons.forEach((button, index) => {
+      const size = button.dataset.size;
+      console.log(`  Button ${index + 1}: ${size}`);
+      
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log(`🔤 Font size button clicked: ${size}`);
+        
         // Remove active state from all buttons
         fontSizeButtons.forEach(btn => {
           btn.classList.remove('active');
+          btn.setAttribute('aria-pressed', 'false');
         });
         
         // Add active state to clicked button
         button.classList.add('active');
+        button.setAttribute('aria-pressed', 'true');
         
-        // Apply font size class
-        const size = button.dataset.size;
-        // Remove only font-size classes, preserve other classes like white-theme
-        body.className = body.className.replace(/font-size-\w+/g, '');
+        // Remove all font-size classes, preserve other classes like white-theme
+        body.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg', 'font-size-xl');
+        
+        // Apply new font size class
         body.classList.add(`font-size-${size}`);
+        
+        // Save preference
+        localStorage.setItem('fontSize', size);
+        console.log(`✅ Font size changed to: ${size}`);
       });
     });
+    
+    // Load saved font size preference
+    const savedSize = localStorage.getItem('fontSize') || 'md';
+    console.log(`📖 Loading saved font size: ${savedSize}`);
+    
+    // Apply saved size
+    body.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg', 'font-size-xl');
+    body.classList.add(`font-size-${savedSize}`);
+    
+    // Update button states
+    fontSizeButtons.forEach(btn => {
+      if (btn.dataset.size === savedSize) {
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+      } else {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-pressed', 'false');
+      }
+    });
+    
+    console.log('✅ Font size controls initialized');
   }
 
   bindEvents() {
@@ -95,8 +341,22 @@ class FontScannerApp {
   }
 
   async performComprehensiveScan(normalizedUrl) {
+    console.log('🎯 performComprehensiveScan called with URL:', normalizedUrl);
     this.setLoading(true);
-    this.showProgress('� Running comprehensive analysis...');
+    console.log('⏳ Loading state set to true');
+    
+    // Generate unique scan ID
+    this.scanId = `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log('🆔 Generated scan ID:', this.scanId);
+    
+    // Join Socket.IO room for this scan
+    this.socket.emit('join-scan', this.scanId);
+    console.log('🚪 Emitted join-scan event');
+    
+    // Show progress UI
+    console.log('📢 About to call showProgressUI()...');
+    this.showProgressUI();
+    console.log('📢 showProgressUI() completed');
     
     // Clear previous font preview styles
     this.clearFontPreviewStyles();
@@ -114,6 +374,7 @@ class FontScannerApp {
         },
         body: JSON.stringify({ 
           url: normalizedUrl,
+          scanId: this.scanId,
           includePerformance: true,
           includeBestPractices: true,
           includeFontPairing: true,
@@ -136,15 +397,24 @@ class FontScannerApp {
       }
 
       const data = await response.json();
-      console.log(`🎉 Comprehensive scan completed with grade: ${data.data.grade}`);
+      console.log(`🎉 Comprehensive scan completed with grade: ${data.data?.grade}`);
+      console.log('📦 Full response data:', data);
+      console.log('🔍 data.success:', data.success);
+      console.log('🔍 data.data exists:', !!data.data);
       
       if (data.success) {
+        console.log('✅ Success flag is true, hiding progress and showing results...');
+        this.hideProgressUI();
+        console.log('✅ Progress UI hidden, calling displayComprehensiveResults...');
         this.displayComprehensiveResults(data.data);
+        console.log('✅ displayComprehensiveResults completed');
       } else {
+        console.error('❌ Success flag is false');
         this.showError(data.error || 'Comprehensive scan failed');
       }
     } catch (error) {
       console.error('❌ Comprehensive scan error:', error);
+      this.hideProgressUI();
       if (error.name === 'AbortError') {
         this.showError('Comprehensive scan timed out. Please try again.');
       } else {
@@ -187,10 +457,13 @@ class FontScannerApp {
   }
   
   displayComprehensiveResults(data) {
+    console.log('🎬 displayComprehensiveResults called with data:', data);
     const transformedData = this.prepareDataForDisplay(data);
+    console.log('🔄 Data transformed, calling displayResults...');
     
     // Use main display with transformed data
     this.displayResults(transformedData);
+    console.log('✅ displayResults completed');
     
     // Add comprehensive analysis grade indicator at the very top
     setTimeout(() => {
@@ -636,6 +909,10 @@ class FontScannerApp {
 
     // Clear existing content and build results
     this.resultsContainer.innerHTML = '';
+    
+    // Make sure results container is visible
+    this.resultsContainer.classList.remove('hidden');
+    console.log('✅ Results container unhidden');
 
     // Executive Summary (not in accordion)
     this.createExecutiveSummary(results, url, scannedAt);
@@ -647,12 +924,11 @@ class FontScannerApp {
     
     // Create accordion sections - REDESIGNED FOR SIMPLICITY
     this.createAccordionSection('font-analysis', 'FONT_ANALYSIS', 'Font Analysis', () => this.createFontAnalysis(results.fonts));
-    this.createAccordionSection('analysis-metrics', 'ANALYSIS_METRICS', 'Analysis & Metrics', () => this.createAnalysisMetrics(results.bestPractices, results.performance, results.lighthouse, results));
+    this.createAccordionSection('recommendations', 'RECOMMENDATIONS', 'Analysis & Recommendations', () => this.createRecommendations(results));
     this.createAccordionSection('lighthouse', 'LIGHTHOUSE_ANALYSIS', 'Lighthouse Analysis', () => this.createLighthouseAnalysis(results.lighthouse));
     this.createAccordionSection('accessibility-wcag', 'ACCESSIBILITY_WCAG', 'Accessibility + WCAG', () => this.createAccessibilityWCAG(results.fonts, results));
     this.createAccordionSection('font-loading-architecture', 'FONT_LOADING_ARCHITECTURE', 'Font Loading Architecture', () => this.createFontLoadingArchitecture(results.fonts));
     this.createAccordionSection('css-examples', 'CSS_EXAMPLES', 'CSS Examples', () => this.createCSSExamples(results.fonts));
-    this.createAccordionSection('recommendations', 'RECOMMENDATIONS', 'Recommendations', () => this.createRecommendations(results));
     
     // Page Screenshot
     if (results.screenshot) {
@@ -804,7 +1080,7 @@ class FontScannerApp {
 
       <!-- 4-Column Metrics Dashboard -->
       <div class="executive-grid">
-        ${this.createExecutiveCard('Overall Performance', overallScore, 100, 'performance', '⚡')}
+        ${this.createExecutiveCard('Page Speed', overallScore, 100, 'performance', '⚡')}
         ${this.createExecutiveCard('Best Practices', compliance, 100, 'practices', '✅')}
         ${this.createExecutiveCard('Accessibility', accessibility, 100, 'accessibility', '♿')}
         ${this.createExecutiveCard('SEO Score', seo, 100, 'seo', '🔍')}
@@ -911,7 +1187,7 @@ class FontScannerApp {
       <div class="breakdown-header">
         <div class="breakdown-summary">
           <div class="breakdown-final-score">
-            <span class="breakdown-final-label">Final Score</span>
+            <span class="breakdown-final-label">Comprehensive Quality Score</span>
             <span class="breakdown-final-value" style="color: ${getScoreColor(finalScore)};">${finalScore}/100</span>
             <span class="breakdown-final-grade">(Grade: ${grade})</span>
           </div>
@@ -941,6 +1217,9 @@ class FontScannerApp {
       <div class="breakdown-components">
         <h3>Component Scores</h3>
         <p class="breakdown-description">
+          📊 <strong>About This Score:</strong> The comprehensive quality score (${finalScore}/100) combines 9 specialized analyzers 
+          including fonts, accessibility, licensing, and benchmarks. This is different from the "Page Speed" score above, 
+          which only measures Lighthouse performance metrics.<br><br>
           ✅ <strong>Included:</strong> Only components with valid scores contribute to the final grade. 
           Failed or unavailable analyzers are excluded entirely (no default scores).
         </p>
@@ -4532,7 +4811,145 @@ body {
     const section = document.createElement('div');
     section.className = 'section';
     
-    // Create recommendations data for table format
+    // ========================================
+    // PART 1: ANALYSIS & METRICS
+    // ========================================
+    const analysisFindings = [];
+
+    // Extract data from results
+    const bestPractices = results.bestPractices;
+    const performance = results.performance;
+    const lighthouse = results.lighthouse;
+
+    // Best Practices findings
+    if (bestPractices) {
+      const score = bestPractices?.score || bestPractices?.overall || 0;
+      const categories = bestPractices?.categories || bestPractices?.breakdown || {};
+
+      analysisFindings.push({
+        status: score >= 80 ? 'pass' : score >= 60 ? 'warning' : 'fail',
+        category: 'Best Practices',
+        finding: 'Overall Compliance Score',
+        details: `${score}% - ${score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Needs Improvement' : 'Critical'}`
+      });
+
+      // Add category breakdowns
+      Object.entries(categories).forEach(([key, value]) => {
+        const categoryScore = typeof value === 'object' ? value.score : value;
+        analysisFindings.push({
+          status: categoryScore >= 80 ? 'pass' : categoryScore >= 60 ? 'warning' : 'fail',
+          category: 'Best Practices',
+          finding: this.formatCategoryName(key),
+          details: `${categoryScore}%`
+        });
+      });
+    }
+
+    // Performance findings
+    if (lighthouse) {
+      const desktopPerf = Math.round(lighthouse?.desktop?.performance || 0);
+      const mobilePerf = Math.round(lighthouse?.mobile?.performance || 0);
+
+      analysisFindings.push({
+        status: desktopPerf >= 90 ? 'pass' : desktopPerf >= 50 ? 'warning' : 'fail',
+        category: 'Performance',
+        finding: 'Desktop Performance Score',
+        details: `${this.formatScore(desktopPerf)}`
+      });
+
+      analysisFindings.push({
+        status: mobilePerf >= 90 ? 'pass' : mobilePerf >= 50 ? 'warning' : 'fail',
+        category: 'Performance',
+        finding: 'Mobile Performance Score',
+        details: `${this.formatScore(mobilePerf)}`
+      });
+
+      // Core Web Vitals
+      if (lighthouse.mobile?.coreWebVitals) {
+        const cwv = lighthouse.mobile.coreWebVitals;
+
+        if (cwv.lcp) {
+          analysisFindings.push({
+            status: cwv.lcp <= 2500 ? 'pass' : cwv.lcp <= 4000 ? 'warning' : 'fail',
+            category: 'Performance',
+            finding: 'LCP (Largest Contentful Paint)',
+            details: `${Math.round(cwv.lcp)}ms - ${cwv.lcp <= 2500 ? 'Good' : cwv.lcp <= 4000 ? 'Needs Improvement' : 'Poor'}`
+          });
+        }
+
+        if (cwv.fcp) {
+          analysisFindings.push({
+            status: cwv.fcp <= 1800 ? 'pass' : cwv.fcp <= 3000 ? 'warning' : 'fail',
+            category: 'Performance',
+            finding: 'FCP (First Contentful Paint)',
+            details: `${Math.round(cwv.fcp)}ms - ${cwv.fcp <= 1800 ? 'Good' : cwv.fcp <= 3000 ? 'Needs Improvement' : 'Poor'}`
+          });
+        }
+
+        if (cwv.cls !== undefined) {
+          analysisFindings.push({
+            status: cwv.cls <= 0.1 ? 'pass' : cwv.cls <= 0.25 ? 'warning' : 'fail',
+            category: 'Performance',
+            finding: 'CLS (Cumulative Layout Shift)',
+            details: `${cwv.cls.toFixed(3)} - ${cwv.cls <= 0.1 ? 'Good' : cwv.cls <= 0.25 ? 'Needs Improvement' : 'Poor'}`
+          });
+        }
+      }
+    }
+
+    // Security findings
+    if (results.security || results.caching) {
+      const security = results.security || {};
+      const caching = results.caching || {};
+
+      if (security.cors !== undefined) {
+        analysisFindings.push({
+          status: security.cors ? 'pass' : 'fail',
+          category: 'Security',
+          finding: 'CORS Configuration',
+          details: security.cors ? 'Properly configured' : 'Missing or incorrect'
+        });
+      }
+
+      if (security.sri !== undefined) {
+        analysisFindings.push({
+          status: security.sri ? 'pass' : 'warning',
+          category: 'Security',
+          finding: 'Subresource Integrity (SRI)',
+          details: security.sri ? 'Implemented' : 'Not implemented'
+        });
+      }
+
+      if (caching.cacheHeaders !== undefined) {
+        analysisFindings.push({
+          status: caching.cacheHeaders ? 'pass' : 'warning',
+          category: 'Caching',
+          finding: 'Cache Headers',
+          details: caching.cacheHeaders ? 'Present' : 'Missing or suboptimal'
+        });
+      }
+    }
+
+    // Font-specific performance
+    if (performance) {
+      if (performance.fontLoadTime) {
+        analysisFindings.push({
+          status: performance.fontLoadTime <= 500 ? 'pass' : performance.fontLoadTime <= 1000 ? 'warning' : 'fail',
+          category: 'Font Performance',
+          finding: 'Font Load Time',
+          details: `${performance.fontLoadTime}ms - ${performance.fontLoadTime <= 500 ? 'Fast' : performance.fontLoadTime <= 1000 ? 'Moderate' : 'Slow'}`
+        });
+      }
+    }
+
+    // Separate analysis findings by priority
+    const criticalAnalysis = analysisFindings.filter(f => f.status === 'fail');
+    const warningAnalysis = analysisFindings.filter(f => f.status === 'warning');
+    const passedAnalysis = analysisFindings.filter(f => f.status === 'pass');
+
+    // ========================================
+    // PART 2: RECOMMENDATIONS
+    // ========================================
     const recommendationsFindings = [
       {
         status: 'fail',
@@ -4646,6 +5063,50 @@ body {
     
     section.innerHTML = `
       <div class="recommendations-analysis">
+        <!-- ANALYSIS SECTION -->
+        <h3>📊 COMPREHENSIVE ANALYSIS</h3>
+        <p><em>Detailed analysis of performance, best practices, security, and Core Web Vitals</em></p>
+        
+        ${criticalAnalysis.length > 0 ? `
+          <div style="margin-bottom: 2rem;">
+            <h4 style="color: #ef4444; margin-bottom: 1rem;">🔴 Critical Issues (${criticalAnalysis.length})</h4>
+            ${this.createFindingsTable(criticalAnalysis)}
+          </div>
+        ` : ''}
+        
+        ${warningAnalysis.length > 0 ? `
+          <div style="margin-bottom: 2rem;">
+            <h4 style="color: #f59e0b; margin-bottom: 1rem;">⚠️ Needs Improvement (${warningAnalysis.length})</h4>
+            ${this.createFindingsTable(warningAnalysis)}
+          </div>
+        ` : ''}
+        
+        ${passedAnalysis.length > 0 ? `
+          <div style="margin-bottom: 2rem;">
+            <h4 style="color: #22c55e; margin-bottom: 1rem;">✅ Passed (${passedAnalysis.length})</h4>
+            <details>
+              <summary style="cursor: pointer; padding: 0.5rem; background: rgba(34, 197, 94, 0.1); border-radius: 4px; margin-bottom: 1rem;">
+                Click to view all passed checks
+              </summary>
+              ${this.createFindingsTable(passedAnalysis)}
+            </details>
+          </div>
+        ` : ''}
+        
+        <div style="margin-top: 2rem; margin-bottom: 3rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px;">
+          <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">💡 Focus Areas</h4>
+          <p style="margin: 0;">
+            ${criticalAnalysis.length > 0 
+              ? `Address <strong>${criticalAnalysis.length} critical issue${criticalAnalysis.length > 1 ? 's' : ''}</strong> first for maximum impact.` 
+              : warningAnalysis.length > 0 
+                ? `Optimize <strong>${warningAnalysis.length} area${warningAnalysis.length > 1 ? 's' : ''}</strong> to achieve excellence.`
+                : `<strong>Excellent work!</strong> All checks passed. Monitor regularly to maintain performance.`}
+          </p>
+        </div>
+        
+        <hr style="border: none; border-top: 2px solid #333; margin: 3rem 0;">
+        
+        <!-- RECOMMENDATIONS SECTION -->
         <h3>📋 FONT OPTIMIZATION RECOMMENDATIONS</h3>
         <p><em>Prioritized recommendations to improve font performance, accessibility, and user experience.</em></p>
         

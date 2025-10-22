@@ -144,6 +144,55 @@ We explicitly **do not collect**:
 
 **All data is automatically deleted after the retention period. No manual action required.**
 
+### Automated Cleanup Process
+
+Font Scanner includes an **automated cleanup service** that runs daily to ensure GDPR compliance:
+
+- **Daily Scan**: Every 24 hours, the system scans for expired reports
+- **PDF Reports**: Files older than 7 days are automatically deleted
+- **Disk Space Recovery**: Freed space is tracked and logged
+- **Error Handling**: Failed deletions are logged for manual review
+- **Monitoring**: Real-time statistics available via `/api/reports/stats` endpoint
+
+#### Cleanup Service Details
+
+The cleanup service operates as follows:
+
+1. **Runs automatically** on server startup
+2. **Scheduled execution** every 24 hours
+3. **Graceful shutdown** support during server restarts
+4. **Comprehensive logging** of all deletion operations
+5. **Statistics tracking**: total files, old files, disk space freed
+
+#### Monitoring Cleanup Operations
+
+Administrators can monitor the cleanup service:
+
+```bash
+# Check cleanup statistics
+curl http://localhost:3000/api/reports/stats
+```
+
+Response includes:
+- Total number of reports
+- Number of old reports (beyond retention)
+- Number of recent reports (within retention)
+- Total disk space used
+- Configured retention period
+- Reports directory path
+
+#### Manual Cleanup
+
+While cleanup is automatic, you can also manually trigger it:
+
+```javascript
+const { cleanupOldReports } = require('./src/utils/reportCleanup');
+
+// Run manual cleanup
+const result = await cleanupOldReports();
+console.log(`Deleted: ${result.deleted}, Freed: ${result.freedSpaceMB} MB`);
+```
+
 ---
 
 ## 🌍 GDPR Compliance

@@ -22,9 +22,9 @@ class BrowserPool {
       min: options.min || parseInt(process.env.BROWSER_POOL_MIN || '1', 10),
       max: options.max || parseInt(process.env.BROWSER_POOL_MAX || '5', 10),
       testOnBorrow: true,
-      evictionRunIntervalMillis: 30000, // Check for idle browsers every 30s
-      idleTimeoutMillis: 300000, // Close browsers idle for 5 minutes
-      acquireTimeoutMillis: 30000, // Wait max 30s to acquire a browser
+      evictionRunIntervalMillis: 60000, // Check for idle browsers every 60s
+      idleTimeoutMillis: 600000, // Close browsers idle for 10 minutes
+      acquireTimeoutMillis: 60000, // Wait max 60s to acquire a browser
     };
 
     logger.info('Initializing browser pool', {
@@ -50,11 +50,9 @@ class BrowserPool {
                 '--disable-dev-shm-usage',
                 '--disable-accelerated-2d-canvas',
                 '--no-first-run',
-                '--no-zygote',
-                '--single-process',
                 '--disable-gpu',
-                '--disable-web-security',
-                '--disable-features=IsolateOrigins,site-per-process',
+                // Removed --single-process, --no-zygote, --disable-web-security
+                // and --disable-features as they were causing browser disconnections
               ],
               timeout: config.puppeteer.timeout,
             });

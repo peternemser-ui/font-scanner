@@ -13,8 +13,17 @@ const config = {
 
   // Rate Limiting
   rateLimit: {
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10),
+    // Global rate limit (all endpoints)
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
     maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
+    
+    // Scan endpoint rate limit (more restrictive)
+    scanWindowMs: parseInt(process.env.SCAN_RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
+    scanMaxRequests: parseInt(process.env.SCAN_RATE_LIMIT_MAX_REQUESTS || '20', 10),
+    
+    // Download endpoint rate limit
+    downloadWindowMs: parseInt(process.env.DOWNLOAD_RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
+    downloadMaxRequests: parseInt(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS || '50', 10),
   },
 
   // Security
@@ -46,6 +55,19 @@ const config = {
   performance: {
     maxPagesToScan: parseInt(process.env.MAX_PAGES_TO_SCAN || '10', 10),
     scanTimeout: parseInt(process.env.SCAN_TIMEOUT || '60000', 10),
+  },
+
+  // Error Telemetry
+  errorTelemetry: {
+    enabled: process.env.ERROR_TELEMETRY_ENABLED !== 'false',
+    maxErrors: parseInt(process.env.ERROR_TELEMETRY_MAX_ERRORS || '1000', 10),
+    maxAggregations: parseInt(process.env.ERROR_TELEMETRY_MAX_AGGREGATIONS || '100', 10),
+    retentionHours: parseInt(process.env.ERROR_TELEMETRY_RETENTION_HOURS || '24', 10),
+    thresholds: {
+      minute: parseInt(process.env.ERROR_TELEMETRY_THRESHOLD_MINUTE || '10', 10),
+      hour: parseInt(process.env.ERROR_TELEMETRY_THRESHOLD_HOUR || '100', 10),
+      day: parseInt(process.env.ERROR_TELEMETRY_THRESHOLD_DAY || '1000', 10),
+    },
   },
 };
 

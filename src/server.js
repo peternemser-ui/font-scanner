@@ -3,8 +3,9 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
+const http = require('http');
+const { Server: SocketIO } = require('socket.io');
 
 const scanController = require('./controllers/scanController');
 const config = require('./config');
@@ -12,14 +13,44 @@ const { createLogger } = require('./utils/logger');
 const { errorMiddleware } = require('./utils/errorHandler');
 const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
 const requestIdMiddleware = require('./middleware/requestId');
+const { 
+  globalLimiter, 
+  scanLimiter, 
+  downloadLimiter, 
+  rateLimitLogger,
+  getRateLimitStats,
+  getRateLimitAnalytics
+} = require('./middleware/rateLimiter');
 const browserPool = require('./utils/browserPool');
+const { 
+  startScheduledCleanup, 
+  stopScheduledCleanup, 
+  getCleanupStats 
+} = require('./utils/reportCleanup');
 
 const logger = createLogger('Server');
 const app = express();
+const server = http.createServer(app);
+const io = new SocketIO(server, {
+  cors: {
+    origin: config.corsOrigin || '*',
+    methods: ['GET', 'POST']
+  }
+});
+
 const PORT = config.port;
 
 // Health check state
 let isShuttingDown = false;
+
+// Start report cleanup scheduler (runs daily)
+let cleanupInterval = null;
+try {
+  cleanupInterval = startScheduledCleanup();
+  logger.info('Report cleanup scheduler started');
+} catch (error) {
+  logger.error('Failed to start report cleanup scheduler:', error);
+}
 
 // Security middleware
 app.use(
@@ -36,14 +67,11 @@ app.use(
   })
 );
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.maxRequests,
-  message: 'Too many requests from this IP, please try again later.',
-});
+// Rate limiting - Global limiter for all requests
+app.use(globalLimiter);
 
-app.use(limiter);
+// Rate limit monitoring
+app.use(rateLimitLogger);
 
 // CORS
 app.use(
@@ -102,11 +130,112 @@ app.get('/api/ready', (req, res) => {
 // Prometheus metrics endpoint
 app.get('/metrics', metricsHandler);
 
-app.post('/api/scan', scanController.scanWebsite);
-app.post('/api/scan/best-in-class', scanController.performBestInClassScan);
+// Rate limit stats endpoint (for monitoring)
+app.get('/api/rate-limits', (req, res) => {
+  res.json({
+    limits: getRateLimitStats(),
+    message: 'Current rate limit configuration',
+  });
+});
+
+// Enhanced rate limit analytics endpoint (detailed monitoring)
+app.get('/api/admin/rate-limits', (req, res) => {
+  try {
+    const analytics = getRateLimitAnalytics();
+    res.json(analytics);
+  } catch (error) {
+    logger.error('Error fetching rate limit analytics:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch rate limit analytics',
+    });
+  }
+});
+
+// Error telemetry analytics endpoint
+app.get('/api/admin/errors', (req, res) => {
+  try {
+    const { timeWindow, category, type } = req.query;
+    const errorTelemetry = require('./utils/errorTelemetry');
+    
+    const statistics = errorTelemetry.getStatistics({ 
+      timeWindow, 
+      category, 
+      type 
+    });
+    const rates = errorTelemetry.getErrorRates();
+    const thresholds = errorTelemetry.checkThresholds();
+    
+    res.json({
+      status: 'ok',
+      statistics,
+      rates,
+      thresholds,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error fetching error telemetry:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch error telemetry',
+    });
+  }
+});
+
+// Get specific error details
+app.get('/api/admin/errors/:errorId', (req, res) => {
+  try {
+    const { errorId } = req.params;
+    const errorTelemetry = require('./utils/errorTelemetry');
+    
+    const errorDetails = errorTelemetry.getErrorById(errorId);
+    if (!errorDetails) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Error not found'
+      });
+    }
+    
+    const similarErrors = errorTelemetry.getSimilarErrors(errorId, 10);
+    
+    res.json({
+      status: 'ok',
+      error: errorDetails,
+      similarErrors,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error fetching error details:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch error details',
+    });
+  }
+});
+
+// Report cleanup statistics endpoint
+app.get('/api/reports/stats', async (req, res) => {
+  try {
+    const stats = await getCleanupStats();
+    res.json({
+      status: 'ok',
+      stats,
+      message: 'Report cleanup statistics',
+    });
+  } catch (error) {
+    logger.error('Error fetching report stats:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch report statistics',
+    });
+  }
+});
+
+app.post('/api/scan', scanLimiter, scanController.scanWebsite);
+app.post('/api/scan/best-in-class', scanLimiter, scanController.performBestInClassScan);
 
 // Download PDF report
-app.get('/api/reports/:filename', scanController.downloadReport);
+app.get('/api/reports/:filename', downloadLimiter, scanController.downloadReport);
 
 // Test endpoint for debugging
 app.get('/api/test', (req, res) => {
@@ -143,11 +272,34 @@ app.use('*', (req, res) => {
 // Error handling middleware (must be last)
 app.use(errorMiddleware);
 
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  logger.info('Client connected to WebSocket', { socketId: socket.id });
+  
+  // Handle scan room joining
+  socket.on('join-scan', (scanId) => {
+    socket.join(scanId);
+    logger.info(`Socket ${socket.id} joined scan room: ${scanId}`);
+  });
+  
+  socket.on('disconnect', () => {
+    logger.info('Client disconnected from WebSocket', { socketId: socket.id });
+  });
+  
+  socket.on('error', (error) => {
+    logger.error('Socket.IO error:', error);
+  });
+});
+
+// Make io globally accessible for scan services
+global.io = io;
+
 // Start server
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
   logger.info(`Font Scanner server running on port ${PORT}`);
   logger.info(`Access the application at http://localhost:${PORT}`);
   logger.info(`Environment: ${config.nodeEnv}`);
+  logger.info('WebSocket server ready');
 });
 
 // Graceful shutdown handling
@@ -161,6 +313,15 @@ const gracefulShutdown = async (signal) => {
 
     // Cleanup tasks
     logger.info('Performing cleanup tasks...');
+
+    // Stop report cleanup scheduler
+    try {
+      logger.info('Stopping report cleanup scheduler...');
+      stopScheduledCleanup(cleanupInterval);
+      logger.info('Report cleanup scheduler stopped');
+    } catch (error) {
+      logger.error('Error stopping report cleanup scheduler:', error);
+    }
 
     // Drain browser pool
     try {
