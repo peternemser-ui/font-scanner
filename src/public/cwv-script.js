@@ -140,8 +140,8 @@ function displayResults(data) {
     </div>
     ` : ''}
 
-    <!-- Desktop vs Mobile Comparison -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
+    <!-- Comprehensive 3-Column Layout: Mobile, Desktop, Best Practices -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 1.5rem; margin-bottom: 2rem;">
       <!-- Mobile (70% weight) -->
       <div style="
         background: rgba(150, 0, 255, 0.1);
@@ -178,6 +178,19 @@ function displayResults(data) {
             ${desktop.passedCWV ? '✅ All Core Web Vitals passed' : '⚠️ Some metrics need improvement'}
           </p>
         </div>
+      </div>
+
+      <!-- Best Practices & Google Standards -->
+      <div style="
+        background: rgba(0, 255, 65, 0.08);
+        border: 2px solid rgba(0, 255, 65, 0.4);
+        border-radius: 12px;
+        padding: 1.5rem;
+      ">
+        <h3 style="color: #00ff41; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+          <span>💡 Best Practices & Standards</span>
+        </h3>
+        ${renderBestPracticesColumn(mobile, desktop)}
       </div>
     </div>
 
@@ -396,8 +409,137 @@ function getRatingEmoji(rating) {
     case 'good': return '✅';
     case 'needs-improvement': return '⚠️';
     case 'poor': return '❌';
-    default: return '❓';
+    default: return '⏱️'; // Clock icon instead of question mark
   }
+}
+
+function renderBestPracticesColumn(mobile, desktop) {
+  const practices = [
+    {
+      metric: 'LCP',
+      icon: '🖼️',
+      target: '< 2.5s',
+      mobile: mobile.lcp,
+      desktop: desktop.lcp,
+      tips: [
+        'Optimize largest image/video',
+        'Use CDN for faster delivery',
+        'Remove render-blocking resources',
+        'Implement lazy loading properly'
+      ]
+    },
+    {
+      metric: 'INP/FID',
+      icon: '👆',
+      target: '< 200ms',
+      mobile: mobile.inp,
+      desktop: desktop.inp,
+      tips: [
+        'Minimize JavaScript execution',
+        'Break up long tasks (< 50ms)',
+        'Use web workers for heavy tasks',
+        'Debounce user input handlers'
+      ]
+    },
+    {
+      metric: 'CLS',
+      icon: '📐',
+      target: '< 0.1',
+      mobile: mobile.cls,
+      desktop: desktop.cls,
+      tips: [
+        'Set image/video dimensions',
+        'Reserve space for ads/embeds',
+        'Avoid inserting content above existing',
+        'Use CSS aspect-ratio property'
+      ]
+    }
+  ];
+
+  return `
+    <div style="display: grid; gap: 1.2rem;">
+      ${practices.map(practice => {
+        const mobilePass = practice.mobile.rating === 'good';
+        const desktopPass = practice.desktop.rating === 'good';
+        const bothPass = mobilePass && desktopPass;
+        
+        return `
+          <div style="
+            background: ${bothPass ? 'rgba(0, 255, 65, 0.08)' : 'rgba(255, 140, 0, 0.08)'};
+            border: 1px solid ${bothPass ? 'rgba(0, 255, 65, 0.3)' : 'rgba(255, 140, 0, 0.3)'};
+            border-radius: 8px;
+            padding: 1rem;
+          ">
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+              <span style="font-size: 1.5rem;">${practice.icon}</span>
+              <div>
+                <div style="color: ${bothPass ? '#00ff41' : '#ff8c00'}; font-weight: bold; font-size: 1rem;">
+                  ${practice.metric}
+                </div>
+                <div style="color: #808080; font-size: 0.75rem;">
+                  Target: ${practice.target}
+                </div>
+              </div>
+              <div style="margin-left: auto;">
+                ${bothPass ? '✅' : mobilePass || desktopPass ? '⚠️' : '❌'}
+              </div>
+            </div>
+            
+            <div style="
+              background: rgba(0, 0, 0, 0.3);
+              padding: 0.75rem;
+              border-radius: 6px;
+              margin-bottom: 0.75rem;
+            ">
+              <div style="color: #c0c0c0; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
+                Quick Wins:
+              </div>
+              ${practice.tips.map((tip, idx) => `
+                <div style="color: #e0e0e0; font-size: 0.8rem; margin: 0.25rem 0; display: flex; align-items: start; gap: 0.5rem;">
+                  <span style="color: #00ff41; font-weight: bold; min-width: 1.2rem;">${idx + 1}.</span>
+                  <span>${tip}</span>
+                </div>
+              `).join('')}
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem;">
+              <div style="color: #9600ff;">
+                📱 ${practice.mobile.displayValue || 'N/A'}
+              </div>
+              <div style="color: #0096ff;">
+                🖥️ ${practice.desktop.displayValue || 'N/A'}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('')}
+      
+      <!-- Google Standards Reference -->
+      <div style="
+        background: rgba(187, 134, 252, 0.08);
+        border: 1px solid rgba(187, 134, 252, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-top: 0.5rem;
+      ">
+        <div style="color: #bb86fc; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🎯</span>
+          <span>Google's Thresholds</span>
+        </div>
+        <div style="color: #c0c0c0; font-size: 0.75rem; line-height: 1.6;">
+          <div style="margin-bottom: 0.5rem;">
+            <span style="color: #00ff41;">✅ Good:</span> 75% of page loads
+          </div>
+          <div style="margin-bottom: 0.5rem;">
+            <span style="color: #ffd700;">⚠️ Needs Improvement:</span> Between thresholds
+          </div>
+          <div>
+            <span style="color: #ff4444;">❌ Poor:</span> 25% of page loads fail
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
 }
 
 function getGradeColor(grade) {
