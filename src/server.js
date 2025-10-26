@@ -3,21 +3,55 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
-const rateLimit = require('express-rate-limit');
 const path = require('path');
+const http = require('http');
+const { Server: SocketIO } = require('socket.io');
 
 const scanController = require('./controllers/scanController');
 const config = require('./config');
 const { createLogger } = require('./utils/logger');
 const { errorMiddleware } = require('./utils/errorHandler');
 const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
+const requestIdMiddleware = require('./middleware/requestId');
+const { 
+  globalLimiter, 
+  scanLimiter, 
+  downloadLimiter,
+  competitiveAnalysisLimiter,
+  rateLimitLogger,
+  getRateLimitStats,
+  getRateLimitAnalytics
+} = require('./middleware/rateLimiter');
+const browserPool = require('./utils/browserPool');
+const { 
+  startScheduledCleanup, 
+  stopScheduledCleanup, 
+  getCleanupStats 
+} = require('./utils/reportCleanup');
 
 const logger = createLogger('Server');
 const app = express();
+const server = http.createServer(app);
+const io = new SocketIO(server, {
+  cors: {
+    origin: config.corsOrigin || '*',
+    methods: ['GET', 'POST']
+  }
+});
+
 const PORT = config.port;
 
 // Health check state
 let isShuttingDown = false;
+
+// Start report cleanup scheduler (runs daily)
+let cleanupInterval = null;
+try {
+  cleanupInterval = startScheduledCleanup();
+  logger.info('Report cleanup scheduler started');
+} catch (error) {
+  logger.error('Failed to start report cleanup scheduler:', error);
+}
 
 // Security middleware
 app.use(
@@ -27,21 +61,22 @@ app.use(
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        scriptSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          'https://cdn.socket.io',
+          'https://cdn.jsdelivr.net'
+        ],
         imgSrc: ["'self'", 'data:', 'https:'],
       },
     },
   })
 );
 
-// Rate limiting
-const limiter = rateLimit({
-  windowMs: config.rateLimit.windowMs,
-  max: config.rateLimit.maxRequests,
-  message: 'Too many requests from this IP, please try again later.',
-});
+// Rate limiting - Global limiter for all requests
+app.use(globalLimiter);
 
-app.use(limiter);
+// Rate limit monitoring
+app.use(rateLimitLogger);
 
 // CORS
 app.use(
@@ -55,6 +90,9 @@ app.use(compression());
 
 // Logging
 app.use(morgan('combined'));
+
+// Request ID tracking - adds unique ID to each request
+app.use(requestIdMiddleware);
 
 // Metrics middleware
 app.use(metricsMiddleware);
@@ -97,11 +135,152 @@ app.get('/api/ready', (req, res) => {
 // Prometheus metrics endpoint
 app.get('/metrics', metricsHandler);
 
-app.post('/api/scan', scanController.scanWebsite);
-app.post('/api/scan/best-in-class', scanController.performBestInClassScan);
+// Rate limit stats endpoint (for monitoring)
+app.get('/api/rate-limits', (req, res) => {
+  res.json({
+    limits: getRateLimitStats(),
+    message: 'Current rate limit configuration',
+  });
+});
 
-// Download PDF report
-app.get('/api/reports/:filename', scanController.downloadReport);
+// Enhanced rate limit analytics endpoint (detailed monitoring)
+app.get('/api/admin/rate-limits', (req, res) => {
+  try {
+    const analytics = getRateLimitAnalytics();
+    res.json(analytics);
+  } catch (error) {
+    logger.error('Error fetching rate limit analytics:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch rate limit analytics',
+    });
+  }
+});
+
+// Error telemetry analytics endpoint
+app.get('/api/admin/errors', (req, res) => {
+  try {
+    const { timeWindow, category, type } = req.query;
+    const errorTelemetry = require('./utils/errorTelemetry');
+    
+    const statistics = errorTelemetry.getStatistics({ 
+      timeWindow, 
+      category, 
+      type 
+    });
+    const rates = errorTelemetry.getErrorRates();
+    const thresholds = errorTelemetry.checkThresholds();
+    
+    res.json({
+      status: 'ok',
+      statistics,
+      rates,
+      thresholds,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error fetching error telemetry:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch error telemetry',
+    });
+  }
+});
+
+// Get specific error details
+app.get('/api/admin/errors/:errorId', (req, res) => {
+  try {
+    const { errorId } = req.params;
+    const errorTelemetry = require('./utils/errorTelemetry');
+    
+    const errorDetails = errorTelemetry.getErrorById(errorId);
+    if (!errorDetails) {
+      return res.status(404).json({
+        error: 'Not Found',
+        message: 'Error not found'
+      });
+    }
+    
+    const similarErrors = errorTelemetry.getSimilarErrors(errorId, 10);
+    
+    res.json({
+      status: 'ok',
+      error: errorDetails,
+      similarErrors,
+      timestamp: new Date().toISOString()
+    });
+  } catch (error) {
+    logger.error('Error fetching error details:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch error details',
+    });
+  }
+});
+
+// Report cleanup statistics endpoint
+app.get('/api/reports/stats', async (req, res) => {
+  try {
+    const stats = await getCleanupStats();
+    res.json({
+      status: 'ok',
+      stats,
+      message: 'Report cleanup statistics',
+    });
+  } catch (error) {
+    logger.error('Error fetching report stats:', error);
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'Failed to fetch report statistics',
+    });
+  }
+});
+
+app.post('/api/scan', scanLimiter, scanController.scanWebsite);
+app.post('/api/scan/best-in-class', scanLimiter, scanController.performBestInClassScan);
+app.post('/api/seo', scanLimiter, scanController.performSEOScan);
+
+// Performance Analyzer
+const performanceController = require('./controllers/performanceController');
+app.post('/api/performance', scanLimiter, performanceController.analyzePerformance);
+app.post('/api/performance/cross-browser', scanLimiter, performanceController.analyzeCrossBrowser);
+
+// Core Web Vitals Analyzer (Google Ranking Factor)
+const coreWebVitalsController = require('./controllers/coreWebVitalsController');
+app.post('/api/core-web-vitals', scanLimiter, coreWebVitalsController.analyzeCoreWebVitals);
+
+// Competitive Analysis Tool (VERY resource-intensive - strict rate limiting)
+const competitiveAnalysisController = require('./controllers/competitiveAnalysisController');
+competitiveAnalysisController.setSocketIO(io); // Inject Socket.IO for real-time progress
+app.post('/api/competitive-analysis', competitiveAnalysisLimiter, competitiveAnalysisController.analyzeCompetitors);
+
+// Broken Link Checker
+const brokenLinkController = require('./controllers/brokenLinkController');
+app.post('/api/broken-links', scanLimiter, brokenLinkController.checkBrokenLinks);
+
+// Advanced Analyzers (CRO, Brand, Local SEO, GDPR)
+const advancedAnalyzersController = require('./controllers/advancedAnalyzersController');
+app.post('/api/cro-analysis', scanLimiter, advancedAnalyzersController.analyzeCRO);
+app.post('/api/brand-consistency', scanLimiter, advancedAnalyzersController.analyzeBrand);
+app.post('/api/local-seo', scanLimiter, advancedAnalyzersController.analyzeLocalSEO);
+app.post('/api/gdpr-compliance', scanLimiter, advancedAnalyzersController.analyzeGDPR);
+
+// Accessibility Analyzer
+const accessibilityController = require('./controllers/accessibilityController');
+app.post('/api/accessibility', scanLimiter, accessibilityController.analyzeAccessibility);
+
+// Security Scanner
+const securityController = require('./controllers/securityController');
+app.post('/api/security', scanLimiter, securityController.analyzeSecurity);
+
+// Download PDF report (legacy - for font scanner)
+app.get('/api/reports/:filename', downloadLimiter, scanController.downloadReport);
+
+// PDF Payment & Download endpoints
+const pdfController = require('./controllers/pdfController');
+app.get('/api/pdf/pricing', pdfController.getPricing);
+app.post('/api/pdf/purchase', scanLimiter, pdfController.purchasePDFReport);
+app.get('/api/pdf/download/:token', downloadLimiter, pdfController.downloadPDFReport);
 
 // Test endpoint for debugging
 app.get('/api/test', (req, res) => {
@@ -138,24 +317,71 @@ app.use('*', (req, res) => {
 // Error handling middleware (must be last)
 app.use(errorMiddleware);
 
+// Socket.IO connection handling
+io.on('connection', (socket) => {
+  logger.info('Client connected to WebSocket', { socketId: socket.id });
+  
+  // Handle scan room joining
+  socket.on('join-scan', (scanId) => {
+    socket.join(scanId);
+    logger.info(`Socket ${socket.id} joined scan room: ${scanId}`);
+  });
+  
+  // Handle competitive analysis session joining
+  socket.on('join-session', (sessionId) => {
+    socket.join(sessionId);
+    logger.info(`Socket ${socket.id} joined competitive analysis session: ${sessionId}`);
+  });
+  
+  socket.on('disconnect', () => {
+    logger.info('Client disconnected from WebSocket', { socketId: socket.id });
+  });
+  
+  socket.on('error', (error) => {
+    logger.error('Socket.IO error:', error);
+  });
+});
+
+// Make io globally accessible for scan services
+global.io = io;
+
 // Start server
-const server = app.listen(PORT, () => {
+server.listen(PORT, () => {
   logger.info(`Font Scanner server running on port ${PORT}`);
   logger.info(`Access the application at http://localhost:${PORT}`);
   logger.info(`Environment: ${config.nodeEnv}`);
+  logger.info('WebSocket server ready');
 });
 
 // Graceful shutdown handling
-const gracefulShutdown = (signal) => {
+const gracefulShutdown = async (signal) => {
   logger.info(`${signal} received. Starting graceful shutdown...`);
   isShuttingDown = true;
 
   // Stop accepting new connections
-  server.close(() => {
+  server.close(async () => {
     logger.info('HTTP server closed. All connections finished.');
 
     // Cleanup tasks
     logger.info('Performing cleanup tasks...');
+
+    // Stop report cleanup scheduler
+    try {
+      logger.info('Stopping report cleanup scheduler...');
+      stopScheduledCleanup(cleanupInterval);
+      logger.info('Report cleanup scheduler stopped');
+    } catch (error) {
+      logger.error('Error stopping report cleanup scheduler:', error);
+    }
+
+    // Drain browser pool
+    try {
+      logger.info('Draining browser pool...');
+      await browserPool.drain();
+      logger.info('Browser pool drained successfully');
+    } catch (error) {
+      logger.error('Error draining browser pool:', error);
+    }
 
     // Close database connections, cleanup resources, etc.
     // Add your cleanup logic here

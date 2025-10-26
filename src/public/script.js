@@ -1,10 +1,215 @@
-class FontScannerApp {
+﻿class FontScannerApp {
   constructor() {
     console.log('🚀 FontScannerApp initializing...');
+    
+    // Initialize Socket.IO client
+    this.socket = io({
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000
+    });
+    
+    this.scanId = null;
+    this.initializeSocketHandlers();
+    
     this.initializeElements();
     this.bindEvents();
     this.initializeFontSizeControls();
     console.log('✅ FontScannerApp initialized successfully');
+  }
+  
+  initializeSocketHandlers() {
+    this.socket.on('connect', () => {
+      console.log('✅ WebSocket connected:', this.socket.id);
+    });
+    
+    this.socket.on('disconnect', (reason) => {
+      console.log('❌ WebSocket disconnected:', reason);
+    });
+    
+    this.socket.on('connect_error', (error) => {
+      console.error('WebSocket connection error:', error);
+    });
+    
+    this.socket.on('progress', (data) => {
+      console.log('📊 Progress update:', data);
+      this.handleProgressUpdate(data);
+    });
+  }
+  
+  handleProgressUpdate(data) {
+    console.log('📊 Progress update received:', data);
+    const { step, total, name, status, progress, elapsed, remaining } = data;
+    
+    // Update progress UI
+    const progressContainer = document.getElementById('progressContainer');
+    console.log('📦 Progress container exists:', !!progressContainer);
+    if (!progressContainer) {
+      console.warn('⚠️ Progress container not found, cannot update');
+      return;
+    }
+    
+    // Update main progress bar with smooth animation
+    const mainProgressBar = document.getElementById('mainProgressBar');
+    if (mainProgressBar) {
+      const overallProgress = ((step - 1) / total * 100) + (progress / total);
+      
+      // Add transition if not already there
+      if (!mainProgressBar.style.transition) {
+        mainProgressBar.style.transition = 'width 0.6s cubic-bezier(0.4, 0.0, 0.2, 1)';
+      }
+      
+      mainProgressBar.style.width = `${overallProgress}%`;
+      
+      // Add pulse effect when progress increases
+      mainProgressBar.style.transform = 'scaleY(1.2)';
+      setTimeout(() => {
+        mainProgressBar.style.transform = 'scaleY(1)';
+      }, 300);
+    }
+    
+    // Update step status
+    const stepElement = document.getElementById(`step-${step}`);
+    if (!stepElement) return;
+    
+    const statusIcon = stepElement.querySelector('.status-icon');
+    
+    if (status === 'running') {
+      statusIcon.textContent = '⏳';
+      stepElement.style.opacity = '1';
+      stepElement.style.transform = 'scale(1.15)';
+      stepElement.style.background = 'rgba(255, 193, 7, 0.2)';
+      stepElement.style.borderColor = 'rgba(255, 193, 7, 0.5)';
+      
+      // Add pulsing animation
+      statusIcon.style.animation = 'pulse 1.5s ease-in-out infinite';
+    } else if (status === 'completed') {
+      statusIcon.textContent = '✅';
+      stepElement.style.opacity = '0.7';
+      stepElement.style.transform = 'scale(1)';
+      stepElement.style.background = 'rgba(76, 175, 80, 0.15)';
+      stepElement.style.borderColor = 'rgba(76, 175, 80, 0.3)';
+      
+      // Add completion pop animation
+      statusIcon.style.animation = 'checkmark 0.5s ease';
+      setTimeout(() => {
+        statusIcon.style.animation = 'none';
+      }, 500);
+    } else if (status === 'error') {
+      statusIcon.textContent = '❌';
+      stepElement.style.opacity = '0.5';
+      stepElement.style.transform = 'scale(1)';
+      stepElement.style.background = 'rgba(244, 67, 54, 0.15)';
+      stepElement.style.borderColor = 'rgba(244, 67, 54, 0.3)';
+      
+      // Add shake animation
+      statusIcon.style.animation = 'shake 0.5s ease';
+      setTimeout(() => {
+        statusIcon.style.animation = 'none';
+      }, 500);
+    }
+    
+    // Update time estimates
+    const timeDisplay = document.getElementById('timeEstimate');
+    if (timeDisplay && elapsed !== undefined && remaining !== undefined) {
+      const elapsedSeconds = Math.floor(elapsed / 1000);
+      const remainingSeconds = Math.floor(remaining / 1000);
+      
+      // Only show time estimates after 2+ steps completed (more accurate)
+      if (step >= 2 && remainingSeconds > 0) {
+        timeDisplay.textContent = `${this.formatTime(elapsedSeconds)} elapsed • ~${this.formatTime(remainingSeconds)} remaining`;
+      } else if (step === 1) {
+        // First step - just show progress without time estimate
+        timeDisplay.textContent = `Analyzing... • Step ${step}/${total}`;
+      } else {
+        timeDisplay.textContent = `Step ${step}/${total} • ${name}`;
+      }
+    } else if (timeDisplay) {
+      timeDisplay.textContent = `Step ${step}/${total} • ${name}`;
+    }
+  }
+  
+  formatTime(seconds) {
+    if (seconds < 60) {
+      return `${seconds}s`;
+    }
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return secs > 0 ? `${mins}m ${secs}s` : `${mins}m`;
+  }
+
+  showProgressUI() {
+    console.log('🎨 showProgressUI() called');
+    // Create progress container if it doesn't exist
+    let progressContainer = document.getElementById('progressContainer');
+    console.log('📦 Existing container:', progressContainer);
+    
+    if (!progressContainer) {
+      console.log('✨ Creating new progress container...');
+      progressContainer = document.createElement('div');
+      progressContainer.id = 'progressContainer';
+      // Don't use className to avoid conflicts with existing .progress-container styles
+      progressContainer.innerHTML = `
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+          <h3 style="margin: 0; font-size: 1.1em;">🚀 Comprehensive Analysis</h3>
+          <div id="timeEstimate" style="font-size: 0.9em; color: #00ff88;">Initializing...</div>
+        </div>
+        <div class="progress-bar-main" style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 12px; overflow: hidden;">
+          <div id="mainProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00ff88, #00cc66); transition: width 0.3s ease;"></div>
+        </div>
+        <div class="progress-steps-horizontal" style="display: flex; gap: 8px; flex-wrap: wrap;">
+          ${this.generateProgressSteps()}
+        </div>
+      `;
+      
+      // Insert before results
+      const results = document.getElementById('results');
+      console.log('📍 Results element:', results);
+      if (results && results.parentNode) {
+        results.parentNode.insertBefore(progressContainer, results);
+        console.log('✅ Progress container inserted into DOM');
+      } else {
+        console.error('❌ Results element or parent not found!');
+      }
+    }
+    
+    progressContainer.style.display = 'block';
+    console.log('👁️ Progress container display set to block');
+  }
+
+  hideProgressUI() {
+    console.log('🚪 hideProgressUI() called');
+    const progressContainer = document.getElementById('progressContainer');
+    console.log('📦 Progress container found:', !!progressContainer);
+    if (progressContainer) {
+      progressContainer.style.display = 'none';
+      console.log('✅ Progress container display set to none');
+    } else {
+      console.warn('⚠️ Progress container not found when trying to hide');
+    }
+  }
+
+  generateProgressSteps() {
+    const steps = [
+      { id: 1, name: 'Fonts', icon: '🔍' },
+      { id: 2, name: 'Performance', icon: '⚡' },
+      { id: 3, name: 'Practices', icon: '✅' },
+      { id: 4, name: 'AI', icon: '🎨' },
+      { id: 5, name: 'Metrics', icon: '📊' },
+      { id: 6, name: 'Browser', icon: '🌍' },
+      { id: 7, name: 'A11y', icon: '♿' },
+      { id: 8, name: 'License', icon: '⚖️' },
+      { id: 9, name: 'Bench', icon: '🏆' },
+      { id: 10, name: 'Lighthouse', icon: '🏠' }
+    ];
+    
+    return steps.map(step => `
+      <div class="progress-step-compact" id="step-${step.id}" title="Step ${step.id}: ${step.name}">
+        <span class="status-icon">⏸️</span>
+        <span style="font-size: 0.85em;">${step.icon}</span>
+      </div>
+    `).join('');
   }
 
   initializeElements() {
@@ -23,26 +228,67 @@ class FontScannerApp {
   }
 
   initializeFontSizeControls() {
+    console.log('🔤 Initializing font size controls...');
     const fontSizeButtons = document.querySelectorAll('.font-size-btn');
     const body = document.body;
     
-    fontSizeButtons.forEach(button => {
-      button.addEventListener('click', () => {
+    console.log(`📊 Found ${fontSizeButtons.length} font size buttons`);
+    
+    if (fontSizeButtons.length === 0) {
+      console.warn('⚠️ No font size buttons found in DOM!');
+      return;
+    }
+    
+    fontSizeButtons.forEach((button, index) => {
+      const size = button.dataset.size;
+      console.log(`  Button ${index + 1}: ${size}`);
+      
+      button.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log(`🔤 Font size button clicked: ${size}`);
+        
         // Remove active state from all buttons
         fontSizeButtons.forEach(btn => {
           btn.classList.remove('active');
+          btn.setAttribute('aria-pressed', 'false');
         });
         
         // Add active state to clicked button
         button.classList.add('active');
+        button.setAttribute('aria-pressed', 'true');
         
-        // Apply font size class
-        const size = button.dataset.size;
-        // Remove only font-size classes, preserve other classes like white-theme
-        body.className = body.className.replace(/font-size-\w+/g, '');
+        // Remove all font-size classes, preserve other classes like white-theme
+        body.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg', 'font-size-xl');
+        
+        // Apply new font size class
         body.classList.add(`font-size-${size}`);
+        
+        // Save preference
+        localStorage.setItem('fontSize', size);
+        console.log(`✅ Font size changed to: ${size}`);
       });
     });
+    
+    // Load saved font size preference
+    const savedSize = localStorage.getItem('fontSize') || 'md';
+    console.log(`📖 Loading saved font size: ${savedSize}`);
+    
+    // Apply saved size
+    body.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg', 'font-size-xl');
+    body.classList.add(`font-size-${savedSize}`);
+    
+    // Update button states
+    fontSizeButtons.forEach(btn => {
+      if (btn.dataset.size === savedSize) {
+        btn.classList.add('active');
+        btn.setAttribute('aria-pressed', 'true');
+      } else {
+        btn.classList.remove('active');
+        btn.setAttribute('aria-pressed', 'false');
+      }
+    });
+    
+    console.log('✅ Font size controls initialized');
   }
 
   bindEvents() {
@@ -85,75 +331,77 @@ class FontScannerApp {
       return;
     }
 
-    // Check if best-in-class scan is requested
-    const bestInClassToggle = document.getElementById('bestInClassToggle');
-    const useBestInClass = bestInClassToggle ? bestInClassToggle.checked : false;
-    
-    console.log('🚀 Best-in-class mode:', useBestInClass);
-    
     // Normalize the URL before sending to backend
     const normalizedUrl = this.normalizeUrl(url);
-
-    if (useBestInClass) {
-      await this.performBestInClassScan(normalizedUrl);
-    } else {
-      await this.performBasicScan(normalizedUrl);
-    }
+    
+    console.log('🚀 Starting comprehensive analysis...');
+    
+    // Always perform comprehensive scan
+    await this.performComprehensiveScan(normalizedUrl);
   }
 
-  async performBasicScan(normalizedUrl) {
+  async performComprehensiveScan(normalizedUrl) {
+    console.log('🎯 performComprehensiveScan called with URL:', normalizedUrl);
     this.setLoading(true);
-    this.showProgress();
-
-    try {
-      const controller = new AbortController();
-      const timeoutDuration = 300000; // 5 minutes
-      const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
-
-      console.log('📡 Sending request to /api/scan...');
-      const response = await fetch('/api/scan', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ url: normalizedUrl, scanType: 'comprehensive' }),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-      console.log('📡 Response received:', response.status, response.statusText);
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error('❌ Server error response:', errorData);
-        throw new Error(errorData.message || `Server error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      console.log('✅ Scan data received:', data);
-
-      this.displayResults(data);
-    } catch (error) {
-      console.error('❌ Scan error:', error);
-
-      let errorMessage;
-      if (error.name === 'AbortError') {
-        errorMessage = 'Scan timed out. Comprehensive scans may take longer for complex websites.';
-      } else if (error.message.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
+    console.log('⏳ Loading state set to true');
+    
+    // Generate unique scan ID
+    this.scanId = `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    console.log('🆔 Generated scan ID:', this.scanId);
+    
+    // Join Socket.IO room for this scan
+    this.socket.emit('join-scan', this.scanId);
+    console.log('🚪 Emitted join-scan event');
+    
+    // Create loading container if it doesn't exist
+    let loadingContainer = document.getElementById('loadingContainer');
+    if (!loadingContainer) {
+      loadingContainer = document.createElement('div');
+      loadingContainer.id = 'loadingContainer';
+      const resultsContainer = document.getElementById('results');
+      if (resultsContainer && resultsContainer.parentNode) {
+        resultsContainer.parentNode.insertBefore(loadingContainer, resultsContainer);
       } else {
-        errorMessage = error.message || 'An error occurred while scanning the website';
+        document.querySelector('.content').appendChild(loadingContainer);
       }
-
-      this.showError(errorMessage);
-    } finally {
-      this.setLoading(false);
     }
-  }
 
-  async performBestInClassScan(normalizedUrl) {
-    this.setLoading(true);
-    this.showProgress('🚀 Running best-in-class analysis...');
+    // Initialize the analyzer loader
+    const loader = new AnalyzerLoader('loadingContainer');
+    
+    const analysisSteps = [
+      {
+        label: 'Detecting fonts',
+        detail: 'Scanning webpage for font families...'
+      },
+      {
+        label: 'Analyzing font properties',
+        detail: 'Checking weights, styles, and variants...'
+      },
+      {
+        label: 'Testing font loading performance',
+        detail: 'Measuring load times and render blocking...'
+      },
+      {
+        label: 'Checking accessibility impact',
+        detail: 'Evaluating readability and contrast...'
+      },
+      {
+        label: 'Generating comprehensive report',
+        detail: 'Compiling font analysis and recommendations...'
+      }
+    ];
+
+    loader.start(analysisSteps, '[FONT SCANNER]', 20);
+    
+    // Hide old progress UI
+    const progressSection = document.getElementById('scanProgress');
+    if (progressSection) {
+      progressSection.style.display = 'none';
+    }
+    
+    // Clear previous font preview styles
+    this.clearFontPreviewStyles();
 
     try {
       const controller = new AbortController();
@@ -168,6 +416,7 @@ class FontScannerApp {
         },
         body: JSON.stringify({ 
           url: normalizedUrl,
+          scanId: this.scanId,
           includePerformance: true,
           includeBestPractices: true,
           includeFontPairing: true,
@@ -190,36 +439,48 @@ class FontScannerApp {
       }
 
       const data = await response.json();
-      console.log(`🎉 Best-in-class scan completed with grade: ${data.data.grade}`);
+      console.log(`🎉 Comprehensive scan completed with grade: ${data.data?.grade}`);
       
-      if (data.success) {
-        this.displayBestInClassResults(data.data);
-      } else {
-        this.showError(data.error || 'Best-in-class scan failed');
-      }
+      // Complete the loader
+      loader.complete();
+      
+      // Show results after animation completes
+      setTimeout(() => {
+        console.log('📦 Full response data:', data);
+        console.log('🔍 data.success:', data.success);
+        console.log('🔍 data.data exists:', !!data.data);
+        
+        if (data.success) {
+          console.log('✅ Success flag is true, hiding progress and showing results...');
+          this.hideProgressUI();
+          console.log('✅ Progress UI hidden, calling displayComprehensiveResults...');
+          this.displayComprehensiveResults(data.data);
+          console.log('✅ displayComprehensiveResults completed');
+        } else {
+          console.error('❌ Success flag is false');
+          this.showError(data.error || 'Comprehensive scan failed');
+        }
+      }, 1000);
     } catch (error) {
-      console.error('❌ Best-in-class scan error:', error);
-      if (error.name === 'AbortError') {
-        this.showError('Best-in-class scan timed out. This comprehensive analysis may take longer.');
-      } else {
-        this.showError(`Best-in-class scan failed: ${error.message}`);
-      }
+      console.error('❌ Comprehensive scan error:', error);
+      loader.showError(error.message || 'Comprehensive scan failed. Please try again.');
+      this.hideProgressUI();
     } finally {
       this.setLoading(false);
     }
   }
 
-  displayBestInClassResults(data) {
-    console.log('🎯 Displaying best-in-class results:', data);
+  prepareDataForDisplay(data) {
+    console.log('🎯 Preparing comprehensive results for display:', data);
     
-    // Transform best-in-class data to regular display format with proper nesting
+    // Transform comprehensive data to display format with proper nesting
     const transformedData = {
       results: {
         fonts: data.basicScan?.fonts || { totalFonts: 0, fonts: [] },
         performance: data.performance || data.basicScan?.performance || {},
         bestPractices: data.bestPractices || data.basicScan?.bestPractices || {},
         lighthouse: data.lighthouse || {},
-        // Add best-in-class specific data
+        // Add comprehensive scan specific data
         overallScore: data.overallScore,
         grade: data.grade,
         scanDuration: data.scanDuration,
@@ -228,7 +489,8 @@ class FontScannerApp {
         crossBrowserTesting: data.crossBrowserTesting,
         advancedAccessibility: data.advancedAccessibility,
         fontLicensing: data.fontLicensing,
-        benchmarkAnalysis: data.benchmarkAnalysis
+        benchmarkAnalysis: data.benchmarkAnalysis,
+        scoringBreakdown: data.scoringBreakdown
       },
       url: data.url || 'Unknown URL',
       scannedAt: data.scannedAt || new Date().toISOString()
@@ -236,10 +498,19 @@ class FontScannerApp {
     
     console.log('🔄 Transformed data for display:', transformedData);
     
-    // Use regular display with transformed data
-    this.displayResults(transformedData);
+    return transformedData;
+  }
+  
+  displayComprehensiveResults(data) {
+    console.log('🎬 displayComprehensiveResults called with data:', data);
+    const transformedData = this.prepareDataForDisplay(data);
+    console.log('🔄 Data transformed, calling displayResults...');
     
-    // Add best-in-class grade indicator at the very top
+    // Use main display with transformed data
+    this.displayResults(transformedData);
+    console.log('✅ displayResults completed');
+    
+    // Add comprehensive analysis grade indicator at the very top
     setTimeout(() => {
       console.log('🎯 Grade Debug - data.overallScore:', data.overallScore);
       console.log('🎯 Grade Debug - data.grade:', data.grade);
@@ -248,7 +519,7 @@ class FontScannerApp {
       
       if (this.resultsContainer && (data.overallScore || transformedData.results.overallScore) && (data.grade || transformedData.results.grade)) {
         const gradeIndicator = document.createElement('div');
-        gradeIndicator.className = 'best-in-class-grade';
+        gradeIndicator.className = 'comprehensive-grade';
         gradeIndicator.style.cssText = `
           background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
           border: 2px solid #00ff41;
@@ -268,7 +539,7 @@ class FontScannerApp {
         gradeIndicator.innerHTML = `
           <div class="grade-badge">
             <div style="color: #000; font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem; text-shadow: none;">
-              🚀 BEST-IN-CLASS ANALYSIS COMPLETE
+              🚀 COMPREHENSIVE ANALYSIS COMPLETE
             </div>
             <div style="color: #000; font-size: 2.5rem; font-weight: 900; text-shadow: none; margin: 0.5rem 0;">
               GRADE: ${finalGrade}
@@ -313,38 +584,99 @@ class FontScannerApp {
 
   updateProgressStatus() {
     const progressSteps = [
-      'Initializing browser session...',
-      'Loading target website...',
-      'Analyzing font usage...',
-      'Running performance audit...',
-      'Checking best practices...',
-      'Capturing screenshots...',
-      'Generating comprehensive report...',
-      'Finalizing analysis...'
+      { message: 'Initializing browser session...', duration: 3000, progress: 5 },
+      { message: 'Loading target website...', duration: 5000, progress: 15 },
+      { message: 'Analyzing font usage...', duration: 4000, progress: 25 },
+      { message: 'Extracting font properties...', duration: 3000, progress: 35 },
+      { message: 'Running performance audit...', duration: 8000, progress: 50 },
+      { message: 'Checking best practices...', duration: 6000, progress: 60 },
+      { message: 'Running Lighthouse desktop analysis...', duration: 60000, progress: 75 },
+      { message: 'Running Lighthouse mobile analysis...', duration: 60000, progress: 90 },
+      { message: 'Generating comprehensive report...', duration: 3000, progress: 95 },
+      { message: 'Finalizing analysis...', duration: 2000, progress: 100 }
     ];
 
     let currentStep = 0;
     const progressText = this.loadingMessage.querySelector('p');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercentage = document.getElementById('progressText');
+    const startTime = Date.now();
     
     // Apply neon green styling to progress text
     if (progressText) {
       progressText.style.color = '#00ff41';
-      progressText.style.textShadow = '0 0 3px #00ff41, 0 0 6px #00ff41';
+      progressText.style.textShadow = '0 0 5px #00ff41, 0 0 10px #00ff41';
       progressText.classList.add('animate-pulse');
     }
     
-    const progressInterval = setInterval(() => {
+    const updateProgress = () => {
       if (currentStep < progressSteps.length) {
-        progressText.textContent = `> ${progressSteps[currentStep]}`;
+        const step = progressSteps[currentStep];
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        
+        // Calculate estimated remaining time
+        const totalEstimatedTime = progressSteps.reduce((sum, s) => sum + s.duration, 0) / 1000;
+        const elapsedEstimated = progressSteps.slice(0, currentStep).reduce((sum, s) => sum + s.duration, 0) / 1000;
+        const remaining = Math.max(0, Math.ceil(totalEstimatedTime - elapsed));
+        
+        // Update status message with enhanced styling
+        progressText.innerHTML = `
+          <span style="display: block; margin-bottom: 0.75rem; font-size: 1.1rem;">
+            <strong style="color: #00ff41; text-shadow: 0 0 8px #00ff41;">▸</strong> 
+            <span style="color: #fff; text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);">${step.message}</span>
+          </span>
+          <span style="font-size: 0.9rem; color: #00ff41; opacity: 0.9; letter-spacing: 0.05em;">
+            ⏱️ Elapsed: <strong>${elapsed}s</strong> | ⏳ Est. remaining: <strong>${remaining}s</strong>
+          </span>
+        `;
+        
+        // Update progress bar with percentage display
+        if (progressBar) {
+          progressBar.style.width = `${step.progress}%`;
+          
+          // Add percentage text inside progress bar if width > 10%
+          if (step.progress > 10) {
+            progressBar.setAttribute('data-progress', `${step.progress}%`);
+          }
+        }
+        
+        // Update percentage text below progress bar
+        if (progressPercentage) {
+          progressPercentage.innerHTML = `
+            <strong style="font-size: 1.2rem; color: #00ff41; text-shadow: 0 0 8px rgba(0, 255, 65, 0.8);">
+              ${step.progress}% Complete
+            </strong>
+          `;
+        }
+        
         currentStep++;
+        this.progressTimeout = setTimeout(updateProgress, step.duration);
       } else {
-        clearInterval(progressInterval);
-        progressText.textContent = '> Processing complete. Displaying results...';
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        progressText.innerHTML = `
+          <span style="display: block; margin-bottom: 0.75rem; font-size: 1.1rem;">
+            <strong style="color: #00ff41; text-shadow: 0 0 10px #00ff41;">✓</strong> 
+            <span style="color: #fff; text-shadow: 0 0 5px rgba(0, 255, 65, 0.3);">Processing complete!</span>
+          </span>
+          <span style="font-size: 0.9rem; color: #00ff41; opacity: 0.9;">
+            Total time: <strong>${elapsed}s</strong>
+          </span>
+        `;
+        if (progressBar) {
+          progressBar.style.width = '100%';
+          progressBar.setAttribute('data-progress', '100%');
+        }
+        if (progressPercentage) {
+          progressPercentage.innerHTML = `
+            <strong style="font-size: 1.2rem; color: #00ff41; text-shadow: 0 0 8px rgba(0, 255, 65, 0.8);">
+              100% Complete
+            </strong>
+          `;
+        }
       }
-    }, 2000); // Update every 2 seconds
-
-    // Store interval ID to clear it if scan completes early
-    this.progressInterval = progressInterval;
+    };
+    
+    updateProgress();
   }
 
   // Normalize URL by adding protocol if missing
@@ -459,7 +791,7 @@ class FontScannerApp {
     content.appendChild(contentInner);
     
     // Add click handler for accordion
-    header.addEventListener('click', () => {
+    header.addEventListener('click', async () => {
       const isExpanded = content.classList.contains('expanded');
       
       if (isExpanded) {
@@ -474,7 +806,13 @@ class FontScannerApp {
           // Temporarily redirect appendChild to our content container
           const originalContainer = this.resultsContainer;
           this.resultsContainer = contentInner;
-          contentCreator();
+          
+          // Handle both sync and async content creators
+          const result = contentCreator();
+          if (result && typeof result.then === 'function') {
+            await result; // Wait for async functions
+          }
+          
           this.resultsContainer = originalContainer;
         }
         
@@ -490,6 +828,99 @@ class FontScannerApp {
     this.resultsContainer.appendChild(accordion);
   }
 
+  loadWebFonts(results) {
+    console.log('🔤 Loading web fonts...');
+    
+    // Check if we have fonts data
+    if (!results || !results.fonts) {
+      console.log('⚠️ No fonts found in results');
+      return;
+    }
+
+    const fontSources = results.fonts.fontSources || [];
+    const fonts = results.fonts.fonts || [];
+    
+    console.log('🔤 Font sources:', fontSources);
+    console.log('🔤 Detected fonts:', fonts);
+
+    // Create or get the style element for dynamic fonts
+    let styleElement = document.getElementById('dynamic-font-loader');
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = 'dynamic-font-loader';
+      document.head.appendChild(styleElement);
+    }
+
+    let cssContent = '';
+
+    // First priority: Use exact font sources from the scanned page
+    if (fontSources.length > 0) {
+      console.log('🔤 Loading fonts from detected sources...');
+      fontSources.forEach(source => {
+        if (source.includes('fonts.googleapis.com') || source.includes('fonts.google.com')) {
+          console.log('🔤 Adding Google Fonts source:', source);
+          cssContent += `@import url('${source}');\n`;
+        } else if (source.includes('typekit') || source.includes('adobe') || source.includes('fonts.net') || source.includes('webfont')) {
+          console.log('🔤 Adding web font source:', source);
+          cssContent += `@import url('${source}');\n`;
+        }
+      });
+    }
+
+    // Second priority: Build Google Fonts URL from detected fonts
+    const googleFonts = fonts.filter(font => {
+      const fontObj = typeof font === 'string' ? { name: font } : font;
+      const fontName = fontObj.name || fontObj.fontFamily || font;
+      return this.isGoogleFontName(fontName);
+    });
+
+    console.log('🔤 Google Fonts detected:', googleFonts);
+
+    if (googleFonts.length > 0) {
+      // Build comprehensive Google Fonts URL with multiple weights
+      const fontFamilies = googleFonts.map(font => {
+        const fontObj = typeof font === 'string' ? { name: font } : font;
+        const fontName = (fontObj.name || fontObj.fontFamily || font).toString().replace(/['"]/g, '').trim();
+        // Add multiple weights and styles for better display
+        return `family=${encodeURIComponent(fontName)}:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,700`;
+      }).join('&');
+
+      const googleFontsUrl = `https://fonts.googleapis.com/css2?${fontFamilies}&display=swap`;
+      console.log('🔤 Loading Google Fonts from:', googleFontsUrl);
+
+      cssContent += `@import url('${googleFontsUrl}');\n`;
+      console.log('✅ Google Fonts CSS added');
+    }
+
+    // Apply all CSS
+    if (cssContent) {
+      styleElement.textContent = cssContent;
+      console.log('✅ Web fonts loaded successfully');
+      console.log('� CSS Content:', cssContent);
+    } else {
+      console.log('⚠️ No web fonts to load');
+    }
+  }
+
+  isGoogleFontName(fontName) {
+    const cleanName = (fontName || '').toString().replace(/['"]/g, '').trim().toLowerCase();
+    
+    // List of popular Google Fonts (only actual Google Fonts)
+    const googleFonts = [
+      'open sans', 'roboto', 'lato', 'montserrat', 'source sans pro', 'raleway',
+      'poppins', 'oswald', 'nunito', 'ubuntu', 'mulish', 'inter', 'playfair display',
+      'merriweather', 'pt sans', 'libre baskerville', 'work sans', 'fira sans',
+      'rubik', 'karla', 'hind', 'barlow', 'dm sans', 'manrope', 'plus jakarta sans',
+      'space grotesk', 'epilogue', 'lexend', 'outfit', 'public sans', 'ibm plex sans',
+      'noto sans', 'source serif pro', 'crimson text', 'lora', 'pt serif',
+      'abril fatface', 'quicksand', 'titillium web', 'cabin', 'oxygen', 'comfortaa',
+      'anton', 'dancing script', 'pacifico', 'righteous', 'bebas neue', 'fjalla one',
+      'arimo', 'tinos', 'cousine', 'josefin sans', 'inconsolata', 'prompt'
+    ];
+
+    return googleFonts.some(gf => cleanName === gf || cleanName.includes(gf));
+  }
+
   displayResults(data) {
     console.log('🎨 displayResults called with:', data);
 
@@ -497,6 +928,12 @@ class FontScannerApp {
       console.error('❌ Invalid data format - no results found:', data);
       this.showError('Invalid response format from server');
       return;
+    }
+
+    // Clear progress timeout if the data has started, or not the data still shows loading
+    if (this.progressTimeout) {
+      clearTimeout(this.progressTimeout);
+      this.progressTimeout = null;
     }
 
     // Hide loading message
@@ -509,23 +946,34 @@ class FontScannerApp {
     console.log('🔍 DEBUG displayResults results.fonts type:', typeof results.fonts);
     console.log('🔍 DEBUG displayResults results.fonts keys:', Object.keys(results.fonts || {}));
 
-    // Store results globally for access by other methods
+    // Store results globally for other methods
     this.lastResults = results;
+
+    // Load web fonts dynamically before displaying
+    this.loadWebFonts(results);
 
     // Clear existing content and build results
     this.resultsContainer.innerHTML = '';
+    
+    // Make sure results container is visible
+    this.resultsContainer.classList.remove('hidden');
+    console.log('✅ Results container unhidden');
 
     // Executive Summary (not in accordion)
     this.createExecutiveSummary(results, url, scannedAt);
     
+    // Score Breakdown (if available from enhanced mode)
+    if (results.scoringBreakdown) {
+      this.createScoreBreakdown(results.scoringBreakdown, results.overallScore, results.grade);
+    }
+    
     // Create accordion sections - REDESIGNED FOR SIMPLICITY
     this.createAccordionSection('font-analysis', 'FONT_ANALYSIS', 'Font Analysis', () => this.createFontAnalysis(results.fonts));
-    this.createAccordionSection('analysis-metrics', 'ANALYSIS_METRICS', 'Analysis & Metrics', () => this.createAnalysisMetrics(results.bestPractices, results.performance, results.lighthouse, results));
+    this.createAccordionSection('recommendations', 'RECOMMENDATIONS', 'Analysis & Recommendations', () => this.createRecommendations(results));
     this.createAccordionSection('lighthouse', 'LIGHTHOUSE_ANALYSIS', 'Lighthouse Analysis', () => this.createLighthouseAnalysis(results.lighthouse));
     this.createAccordionSection('accessibility-wcag', 'ACCESSIBILITY_WCAG', 'Accessibility + WCAG', () => this.createAccessibilityWCAG(results.fonts, results));
     this.createAccordionSection('font-loading-architecture', 'FONT_LOADING_ARCHITECTURE', 'Font Loading Architecture', () => this.createFontLoadingArchitecture(results.fonts));
     this.createAccordionSection('css-examples', 'CSS_EXAMPLES', 'CSS Examples', () => this.createCSSExamples(results.fonts));
-    this.createAccordionSection('recommendations', 'RECOMMENDATIONS', 'Recommendations', () => this.createRecommendations(results));
     
     // Page Screenshot
     if (results.screenshot) {
@@ -619,12 +1067,18 @@ class FontScannerApp {
       console.log('✅ Using lighthouse.mobile.best-practices:', compliance);
     } else {
       // Generate a reasonable best practices score based on available data
-      const fontCount = results.fonts?.fonts?.length || 0;
+      const fontCount = results.fonts?.totalFonts || results.fonts?.fonts?.length || 0;
       if (fontCount <= 3) compliance = 85;
       else if (fontCount <= 5) compliance = 75;
       else if (fontCount <= 8) compliance = 60;
       else compliance = 45;
-      console.log('🎯 Generated best practices score based on font count:', compliance);
+      console.log('🎯 Generated best practices score based on font count:', fontCount, '=> Score:', compliance);
+    }
+    
+    // Final safeguard - if still 0, use a reasonable default
+    if (compliance === 0) {
+      compliance = 70;
+      console.log('⚠️ Best practices score was 0, using default:', compliance);
     }
     
     const loadTime = results.performance?.loadTime || 0;
@@ -656,22 +1110,22 @@ class FontScannerApp {
       </div>
 
       <!-- Benchmark Status Indicator -->
-      <div class="benchmark-status" style="margin: 1rem 0; padding: 1rem; background: linear-gradient(90deg, #1a1a2e, #16213e); border-radius: 8px; border: 1px solid #00ff41;">
-        <div style="display: flex; justify-content: space-between; align-items: center;">
+      <div class="benchmark-status">
+        <div class="benchmark-content">
           <div>
-            <h4 style="color: #00ff41; margin: 0; font-size: 1rem;">🏆 Industry Benchmark Status</h4>
-            <p style="color: #ccc; margin: 0.5rem 0 0 0; font-size: 0.9rem;">Based on comprehensive font analysis capabilities</p>
+            <h4 class="benchmark-title">📊 Analysis Completeness</h4>
+            <p class="benchmark-subtitle">Features successfully analyzed (not a quality score)</p>
           </div>
-          <div style="text-align: right;">
-            <div style="color: #00ff41; font-size: 1.5rem; font-weight: bold;">${this.calculateBenchmarkScore(results)}/10</div>
-            <div style="color: #888; font-size: 0.8rem;">${this.getBenchmarkRanking(this.calculateBenchmarkScore(results))}</div>
+          <div class="benchmark-score-container">
+            <div class="benchmark-score">${this.calculateBenchmarkScore(results)}/10</div>
+            <div class="benchmark-ranking">${this.getBenchmarkRanking(this.calculateBenchmarkScore(results))}</div>
           </div>
         </div>
       </div>
 
       <!-- 4-Column Metrics Dashboard -->
       <div class="executive-grid">
-        ${this.createExecutiveCard('Overall Performance', overallScore, 100, 'performance', '⚡')}
+        ${this.createExecutiveCard('Page Speed', overallScore, 100, 'performance', '⚡')}
         ${this.createExecutiveCard('Best Practices', compliance, 100, 'practices', '✅')}
         ${this.createExecutiveCard('Accessibility', accessibility, 100, 'accessibility', '♿')}
         ${this.createExecutiveCard('SEO Score', seo, 100, 'seo', '🔍')}
@@ -705,11 +1159,135 @@ class FontScannerApp {
     this.resultsContainer.appendChild(section);
   }
 
+  createScoreBreakdown(scoringBreakdown, overallScore, grade) {
+    console.log('📊 Creating score breakdown visualization:', scoringBreakdown);
+    
+    const section = document.createElement('div');
+    section.className = 'section score-breakdown';
+    
+    const { components = [], baseScore = 0, completenessBonus = 0, finalScore = overallScore, totalWeight = 0 } = scoringBreakdown;
+    
+    // Component labels mapping
+    const componentLabels = {
+      basicScan: 'Basic Font Scan',
+      performance: 'Performance Analysis',
+      bestPractices: 'Best Practices',
+      fontPairing: 'Font Pairing',
+      realUserMetrics: 'Real User Metrics',
+      crossBrowserTesting: 'Cross-Browser Testing',
+      accessibility: 'Accessibility',
+      fontLicensing: 'Font Licensing',
+      lighthouse: 'Lighthouse Analysis'
+    };
+    
+    // Component icons mapping
+    const componentIcons = {
+      basicScan: '🔤',
+      performance: '⚡',
+      bestPractices: '✅',
+      fontPairing: '🎨',
+      realUserMetrics: '📊',
+      crossBrowserTesting: '🌍',
+      accessibility: '♿',
+      fontLicensing: '⚖️',
+      lighthouse: '🏠'
+    };
+    
+    // Get score color
+    const getScoreColor = (score) => {
+      if (score >= 90) return '#00ff41'; // A
+      if (score >= 80) return '#00ff41'; // B+
+      if (score >= 70) return '#ffaa00'; // B
+      if (score >= 60) return '#ff9500'; // C
+      if (score >= 50) return '#ff6b6b'; // D
+      return '#ff4444'; // F
+    };
+    
+    const componentsHTML = components.length > 0 ? components.map(comp => {
+      const label = componentLabels[comp.component] || comp.component;
+      const icon = componentIcons[comp.component] || '📌';
+      const weightPercent = Math.round(comp.weight * 100);
+      const color = getScoreColor(comp.score);
+      
+      return `
+        <div class="breakdown-item">
+          <div class="breakdown-info">
+            <span class="breakdown-icon">${icon}</span>
+            <span class="breakdown-label">${label}</span>
+            <span class="breakdown-weight">(${weightPercent}% weight)</span>
+          </div>
+          <div class="breakdown-score">
+            <div class="breakdown-bar">
+              <div class="breakdown-bar-fill" style="width: ${comp.score}%; background: ${color};"></div>
+            </div>
+            <span class="breakdown-value" style="color: ${color};">${comp.score}/100</span>
+          </div>
+        </div>
+      `;
+    }).join('') : '<p class="no-breakdown">No component breakdown available</p>';
+    
+    section.innerHTML = `
+      <h2>[SCORE_BREAKDOWN]</h2>
+      
+      <div class="breakdown-header">
+        <div class="breakdown-summary">
+          <div class="breakdown-final-score">
+            <span class="breakdown-final-label">Comprehensive Quality Score</span>
+            <span class="breakdown-final-value" style="color: ${getScoreColor(finalScore)};">${finalScore}/100</span>
+            <span class="breakdown-final-grade">(Grade: ${grade})</span>
+          </div>
+          <div class="breakdown-stats">
+            <div class="breakdown-stat">
+              <span class="stat-label">Components Analyzed:</span>
+              <span class="stat-value">${components.length} of 9</span>
+            </div>
+            <div class="breakdown-stat">
+              <span class="stat-label">Total Weight:</span>
+              <span class="stat-value">${Math.round(totalWeight * 100)}%</span>
+            </div>
+            <div class="breakdown-stat">
+              <span class="stat-label">Base Score:</span>
+              <span class="stat-value">${baseScore}/100</span>
+            </div>
+            ${completenessBonus > 0 ? `
+              <div class="breakdown-stat">
+                <span class="stat-label">Completeness Bonus:</span>
+                <span class="stat-value">+${completenessBonus} points</span>
+              </div>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+      
+      <div class="breakdown-components">
+        <h3>Component Scores</h3>
+        <p class="breakdown-description">
+          📊 <strong>About This Score:</strong> The comprehensive quality score (${finalScore}/100) combines 9 specialized analyzers 
+          including fonts, accessibility, licensing, and benchmarks. This is different from the "Page Speed" score above, 
+          which only measures Lighthouse performance metrics.<br><br>
+          ✅ <strong>Included:</strong> Only components with valid scores contribute to the final grade. 
+          Failed or unavailable analyzers are excluded entirely (no default scores).
+        </p>
+        ${componentsHTML}
+      </div>
+      
+      <div class="breakdown-footer">
+        <p class="breakdown-note">
+          💡 <strong>Note:</strong> The final score is calculated as a weighted average of working components only. 
+          ${completenessBonus > 0 ? `A completeness bonus of +${completenessBonus} points was awarded for having ${Math.round((components.length / 9) * 100)}% of features working successfully.` : 
+          components.length < 7 ? `No completeness bonus applied (requires ≥70% features working and base score >70).` : ''}
+        </p>
+      </div>
+    `;
+    
+    this.resultsContainer.appendChild(section);
+  }
+
   // Helper: Generate performance summary text
   generatePerformanceSummary(overallScore, compliance, accessibility) {
     let status = 'needs attention';
     let statusClass = 'warning';
-    let recommendations = [];
+    const recommendations = [];
 
     if (overallScore >= 80 && compliance >= 80 && accessibility >= 80) {
       status = 'excellent';
@@ -1187,9 +1765,9 @@ class FontScannerApp {
               <span style="color: #666;">→</span>
               <div style="background: #f59e0b; color: white; padding: 6px 12px; border-radius: 4px; font-size: 0.9rem;">4. Icons (~${iconCount * 100}ms)</div>
             </div>
-            <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(245, 158, 11, 0.1); border: 1px solid ${performanceColor}; border-radius: 4px;">
-              <div style="color: ${performanceColor}; font-weight: bold;">Total Loading Time: ${estimatedLoadTime}ms - ${performanceRating}</div>
-              <div style="color: #888; font-size: 0.9rem; margin-top: 0.25rem;">
+            <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0, 0, 0, 0.3); border: 2px solid ${performanceColor}; border-radius: 4px;">
+              <div style="color: #fff; font-weight: bold; font-size: 1.1rem;">Total Loading Time: <span style="color: ${performanceColor};">${estimatedLoadTime}ms</span> - <span style="color: ${performanceColor};">${performanceRating}</span></div>
+              <div style="color: #ccc; font-size: 0.9rem; margin-top: 0.25rem;">
                 ${estimatedLoadTime < 300 ? '✅ Excellent performance! Fast loading fonts.' : 
                   estimatedLoadTime < 600 ? '⚠️ Good performance, but could be optimized.' : 
                   '❌ Slow performance. Consider font optimization.'}
@@ -1381,13 +1959,77 @@ class FontScannerApp {
     `;
   }
 
-  createFontAnalysis(fonts) {
+  // Load detected fonts dynamically into the page so they render in previews
+  loadDetectedFonts(fonts) {
+    console.log('🔤 Loading detected fonts for preview rendering...');
+    const allFonts = fonts?.fonts || [];
+    
+    // Extract Google Fonts
+    const googleFonts = allFonts.filter(f => 
+      f.source === 'google' || 
+      (f.url && f.url.includes('googleapis')) || 
+      f.isGoogleFont
+    );
+    
+    if (googleFonts.length > 0) {
+      // Build Google Fonts URL with all detected fonts
+      const fontFamilies = googleFonts
+        .map(f => {
+          let fontName = (f.fontFamily || f.name || '').replace(/['"]/g, '').trim();
+          // Capitalize font name for Google Fonts (e.g., "mulish" -> "Mulish")
+          fontName = fontName
+            .split(/[\s-]+/) // Split on spaces and hyphens
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+            .join(' ');
+          console.log(`🔤 Normalized font name: "${f.fontFamily || f.name}" → "${fontName}"`);
+          // Encode font name for URL (replace spaces with +)
+          return encodeURIComponent(fontName).replace(/%20/g, '+');
+        })
+        .filter(name => name && name.length > 0)
+        .join('|');
+      
+      if (fontFamilies) {
+        // Check if Google Fonts link already exists
+        const existingLink = document.querySelector('link[href*="fonts.googleapis.com"]');
+        if (!existingLink) {
+          const link = document.createElement('link');
+          link.rel = 'stylesheet';
+          link.href = `https://fonts.googleapis.com/css2?family=${fontFamilies}&display=swap`;
+          document.head.appendChild(link);
+          console.log('✅ Loaded Google Fonts:', fontFamilies);
+          
+          // Wait a brief moment for fonts to load
+          return new Promise(resolve => {
+            link.onload = () => {
+              console.log('✅ Google Fonts loaded successfully');
+              // Give browser a moment to apply fonts
+              setTimeout(resolve, 100);
+            };
+            link.onerror = () => {
+              console.warn('⚠️ Google Fonts failed to load');
+              resolve(); // Continue anyway
+            };
+            // Timeout fallback
+            setTimeout(resolve, 2000);
+          });
+        }
+      }
+    }
+    
+    // Return resolved promise if no fonts to load
+    return Promise.resolve();
+  }
+
+  async createFontAnalysis(fonts) {
     if (!fonts) {
       const errorDiv = document.createElement('div');
       errorDiv.innerHTML = '<p>No font data available</p>';
       this.resultsContainer.appendChild(errorDiv);
       return;
     }
+    
+    // ENHANCED: Dynamically load Google Fonts so they render correctly in previews
+    await this.loadDetectedFonts(fonts);
     
     // Create the section and add to container
     const section = document.createElement('div');
@@ -1435,7 +2077,13 @@ class FontScannerApp {
 
   generateWebFontsDisplay(fonts) {
     const allFonts = fonts?.fonts || [];
-    const webFonts = allFonts.filter(f => !f.isSystemFont && !f.isIconFont);
+    const webFonts = allFonts.filter(f => 
+      !f.isSystemFont && 
+      !f.isIconFont && 
+      f.source !== 'google' && 
+      !(f.url && f.url.includes('googleapis')) &&
+      !f.isGoogleFont
+    );
     if (webFonts.length === 0) {
       return '<p style="color: #666;">NO WEB FONTS DETECTED</p>';
     }
@@ -1445,7 +2093,11 @@ class FontScannerApp {
 
   generateGoogleFontsDisplay(fonts) {
     const allFonts = fonts?.fonts || [];
-    const googleFonts = allFonts.filter(f => f.source === 'google' || (f.url && f.url.includes('googleapis')));
+    const googleFonts = allFonts.filter(f => 
+      f.source === 'google' || 
+      (f.url && f.url.includes('googleapis')) || 
+      f.isGoogleFont
+    );
     if (googleFonts.length === 0) {
       return '<p style="color: #666;">NO GOOGLE FONTS DETECTED</p>';
     }
@@ -1457,13 +2109,7 @@ class FontScannerApp {
     const allFonts = fonts?.fonts || [];
     const iconFonts = allFonts.filter(f => f.isIconFont);
     if (iconFonts.length === 0) {
-      // Add fallback icon font for demo
-      iconFonts.push({ 
-        fontFamily: 'FontAwesome', 
-        isIconFont: true, 
-        fontWeight: 'normal', 
-        fontStyle: 'normal' 
-      });
+      return '<p style="color: #666;">NO ICON FONTS DETECTED</p>';
     }
     
     return iconFonts.map(font => this.generateFontPreview(font, true)).join('');
@@ -1473,80 +2119,339 @@ class FontScannerApp {
     const fontName = font.fontFamily || font.name || 'Unknown Font';
     const cleanFontName = fontName.replace(/['"]/g, '');
     
-    // Get fallback fonts
-    const getFontFallback = (fontName) => {
-      const lowerName = fontName.toLowerCase();
-      if (lowerName.includes('serif') || lowerName.includes('times') || lowerName.includes('georgia')) {
-        return 'Times, "Times New Roman", serif';
-      }
-      if (lowerName.includes('mono') || lowerName.includes('code') || lowerName.includes('consolas')) {
-        return '"Courier New", Courier, monospace';
-      }
-      return 'Arial, Helvetica, sans-serif';
-    };
-
-    const cssFontFamily = `'${cleanFontName}', ${getFontFallback(cleanFontName)}`;
+    // Try to load the font intelligently
+    const fontLoadResult = this.loadFontDynamically(font);
     
-    // Calculate font size with 30% increase
-    const getFontSizeMultiplier = (fontName) => {
+    // Get intelligent fallback fonts based on font characteristics
+    const getFontFallback = (fontName, fontData) => {
       const lowerName = fontName.toLowerCase();
-      if (lowerName.includes('times') || lowerName.includes('georgia') || lowerName.includes('garamond')) {
-        return 1.35; // 35% larger for serif fonts
+      
+      // Check if it's a serif font
+      if (lowerName.includes('serif') && !lowerName.includes('sans')) {
+        return '"Georgia", "Times New Roman", Times, serif';
       }
-      if (lowerName.includes('arial') || lowerName.includes('helvetica') || lowerName.includes('calibri')) {
-        return 1.1; // 10% larger for some sans-serif
+      
+      // Common serif fonts
+      if (lowerName.includes('times') || lowerName.includes('garamond') || 
+          lowerName.includes('baskerville') || lowerName.includes('georgia')) {
+        return 'Georgia, "Times New Roman", serif';
       }
-      if (lowerName.includes('mulish') || lowerName.includes('lato') || lowerName.includes('open sans')) {
-        return 0.95; // 5% smaller for some fonts
+      
+      // Monospace fonts
+      if (lowerName.includes('mono') || lowerName.includes('code') || 
+          lowerName.includes('consolas') || lowerName.includes('courier')) {
+        return '"Consolas", "Courier New", Courier, monospace';
       }
-      return 1.0;
+      
+      // Display/decorative fonts - use Impact as fallback
+      if (lowerName.includes('impact') || lowerName.includes('display') ||
+          lowerName.includes('gothic') || lowerName.includes('black')) {
+        return 'Impact, "Arial Black", Arial, sans-serif';
+      }
+      
+      // Default to sans-serif
+      return '"Segoe UI", Arial, Helvetica, sans-serif';
     };
 
-    const sizeMultiplier = getFontSizeMultiplier(cleanFontName);
-    const adjustedSize = (1.56 * sizeMultiplier).toFixed(1); // 30% larger than before (1.2 -> 1.56)
+    // Determine the best font stack to use
+    let cssFontFamily;
+    if (fontLoadResult.loaded) {
+      // Font was loaded successfully, use it with fallback
+      const quotedFontName = cleanFontName.includes(' ') ? `"${cleanFontName}"` : cleanFontName;
+      cssFontFamily = `${quotedFontName}, ${getFontFallback(cleanFontName, font)}`;
+    } else {
+      // Font couldn't be loaded, use intelligent fallback
+      cssFontFamily = getFontFallback(cleanFontName, font);
+    }
+    
+    // Vary font sizes slightly based on font type to show hierarchy
+    const isSystemFont = font.isSystemFont;
+    const baseFontSize = isSystemFont ? 1.75 : 2.25;
+    
+    // Generate unique ID for this font preview
+    const fontId = 'font-preview-' + cleanFontName.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
     
     let previewContent;
     if (isIconFont) {
-      // Icon font preview
+      // Icon font preview - larger for visibility
       previewContent = `
-        <div style="font-family: ${cssFontFamily}; margin: 0.5rem 0; font-size: ${adjustedSize}em; line-height: 1.2; overflow: hidden; word-wrap: break-word; max-width: 100%;">
+        <div class="font-preview-text ${fontId}" data-font="${cleanFontName}" style="margin: 0.5rem 0; font-size: 2.5rem; line-height: 1.3; overflow: hidden; word-wrap: break-word; max-width: 100%; font-family: ${cssFontFamily} !important;">
           ★ ✓ ✗ ➤ ❤ ⚙ ✎ ♥ ◀ ▶ ▲ ▼<br>
           ☰ ⚡ ⭐ 🏠 📧 📞 🔍 ⬆ ⬇ ↗ ↘<br>
           ⊕ ⊖ ⊗ ⊙ ◉ ◎ ● ○ ■ □ ▪ ▫
         </div>
-        <div style="font-family: ${cssFontFamily}; margin: 0.5rem 0; font-size: ${(parseFloat(adjustedSize) * 0.7).toFixed(1)}em; color: #00ff41; overflow: hidden; word-wrap: break-word; max-width: 100%;">
+        <div class="font-preview-text ${fontId}" data-font="${cleanFontName}" style="margin: 0.5rem 0; font-size: 1.75rem; line-height: 1.3; color: #00ff41; overflow: hidden; word-wrap: break-word; max-width: 100%; font-family: ${cssFontFamily} !important;">
           Common Icons: → ← ↑ ↓ ⚠ ✉ ⚙ ❯ ❮ ✓ ✗ ★
         </div>`;
     } else {
-      // Regular font preview
+      // Regular font preview - with varied sizes
       previewContent = `
-        <div style="font-family: ${cssFontFamily}; margin: 0.5rem 0; font-size: ${adjustedSize}em; line-height: 1.2; overflow: hidden; word-wrap: break-word; max-width: 100%;">
+        <div class="font-preview-text ${fontId}" data-font="${cleanFontName}" style="margin: 0.5rem 0; font-size: ${baseFontSize}rem; line-height: 1.3; overflow: hidden; word-wrap: break-word; max-width: 100%; font-family: ${cssFontFamily} !important;">
           ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>
           abcdefghijklmnopqrstuvwxyz<br>
           0123456789 !@#$%^&*()_+-=
         </div>`;
     }
     
+    // Add dynamic style for this specific font (backup to inline styles)
+    this.addFontPreviewStyle(fontId, cssFontFamily);
+    
+    // Create status badge based on load result
+    let statusBadge = '';
+    if (fontLoadResult.loaded) {
+      if (fontLoadResult.reason === 'System font') {
+        statusBadge = '<span style="display: inline-block; padding: 2px 6px; background: #1a4d1a; color: #00ff41; border-radius: 3px; font-size: 0.7em; margin-left: 0.5rem;">SYSTEM</span>';
+      } else if (fontLoadResult.reason.includes('Google')) {
+        statusBadge = '<span style="display: inline-block; padding: 2px 6px; background: #1a3d5c; color: #4a9eff; border-radius: 3px; font-size: 0.7em; margin-left: 0.5rem;">GOOGLE</span>';
+      } else {
+        statusBadge = '<span style="display: inline-block; padding: 2px 6px; background: #2d1a4d; color: #b366ff; border-radius: 3px; font-size: 0.7em; margin-left: 0.5rem;">LOADED</span>';
+      }
+    } else {
+      statusBadge = '<span style="display: inline-block; padding: 2px 6px; background: #4d3a1a; color: #ffb366; border-radius: 3px; font-size: 0.7em; margin-left: 0.5rem;" title="Using fallback fonts">FALLBACK</span>';
+    }
+
+    // Show URL info if available
+    let urlInfo = '';
+    if (font.url && !font.isSystemFont) {
+      const shortUrl = font.url.length > 50 ? font.url.substring(0, 50) + '...' : font.url;
+      urlInfo = `<br><span style="color: #666; font-size: 0.75em;">SOURCE: ${shortUrl}</span>`;
+    }
+
     return `
       <div style="margin: 1rem 0; padding: 1rem; background: #1a1a1a; border: 1px solid #333; border-radius: 4px;">
-        <div style="font-weight: bold; margin-bottom: 0.5rem; color: #00ff41;">
-          ${cleanFontName} ${isIconFont ? '(Icon Font)' : ''}
+        <div style="font-weight: bold; margin-bottom: 0.5rem; color: #00ff41; font-family: 'JetBrains Mono', monospace !important;">
+          ${cleanFontName}${statusBadge}
         </div>
         ${previewContent}
-        <div style="font-size: 0.8em; color: #888; margin-top: 0.5rem;">
+        <div style="font-size: 0.8em; color: #888; margin-top: 0.5rem; font-family: 'JetBrains Mono', monospace !important;">
           WEIGHT: ${font.fontWeight || 'normal'} | 
           STYLE: ${font.fontStyle || 'normal'}
           ${font.fontDisplay ? ` | DISPLAY: ${font.fontDisplay}` : ''}
+          ${urlInfo}
         </div>
       </div>
     `;
   }
 
+  loadFontDynamically(font) {
+    const fontName = (font.fontFamily || font.name || '').replace(/['"]/g, '');
+    if (!fontName) return { loaded: false, reason: 'No font name' };
+
+    // Initialize tracking
+    if (!window.loadedFonts) {
+      window.loadedFonts = new Set();
+      window.failedFonts = new Set();
+    }
+    
+    // Already attempted this font
+    if (window.loadedFonts.has(fontName)) {
+      return { loaded: true, reason: 'Already loaded', fontName };
+    }
+    if (window.failedFonts.has(fontName)) {
+      return { loaded: false, reason: 'Previously failed', fontName };
+    }
+
+    // STRATEGY 1: System Fonts - Always available, no loading needed
+    if (font.isSystemFont) {
+      console.log(`✅ System font detected: ${fontName}`);
+      window.loadedFonts.add(fontName);
+      return { loaded: true, reason: 'System font', fontName };
+    }
+
+    // STRATEGY 2: Google Fonts - Load via Google Fonts API (CORS-safe)
+    if (font.source === 'google' || font.isGoogleFont || 
+        (font.url && font.url.includes('googleapis.com')) ||
+        (font.url && font.url.includes('fonts.gstatic.com'))) {
+      
+      console.log(`📥 Loading Google Font: ${fontName} from https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}`);
+      try {
+        // Check if already added to DOM
+        const existingLink = document.querySelector(`link[href*="family=${fontName.replace(/ /g, '+')}"]`);
+        if (existingLink) {
+          console.log(`✅ Google Font already in DOM: ${fontName}`);
+          window.loadedFonts.add(fontName);
+          return { loaded: true, reason: 'Google Font (cached)', fontName };
+        }
+
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@100;200;300;400;500;600;700;800;900&display=swap`;
+        link.onerror = () => {
+          console.warn(`❌ Failed to load Google Font: ${fontName}`);
+          window.failedFonts.add(fontName);
+        };
+        link.onload = () => {
+          console.log(`✅ Google Font stylesheet loaded: ${fontName}`);
+          window.loadedFonts.add(fontName);
+          
+          // Wait for font to actually be ready for use
+          if (document.fonts && document.fonts.load) {
+            document.fonts.load(`16px "${fontName}"`).then(() => {
+              console.log(`✅ Google Font ready for use: ${fontName}`);
+            }).catch(err => {
+              console.warn(`⚠️ Font ready check failed for ${fontName}:`, err);
+            });
+          }
+        };
+        document.head.appendChild(link);
+        return { loaded: true, reason: 'Google Font', fontName };
+      } catch (error) {
+        console.warn(`❌ Google Font load error: ${fontName}`, error);
+        window.failedFonts.add(fontName);
+        return { loaded: false, reason: 'Google Font error', fontName };
+      }
+    }
+
+    // STRATEGY 3: Web Fonts with absolute URLs from CDN/public sources
+    // Only attempt if URL is absolute and HTTPS
+    if (font.url && (font.url.startsWith('https://') || font.url.startsWith('http://'))) {
+      // Skip if it's from the scanned domain (will fail CORS)
+      const urlObj = new URL(font.url);
+      const isCDN = urlObj.hostname.includes('cdn') || 
+                    urlObj.hostname.includes('cloudfront') || 
+                    urlObj.hostname.includes('cloudflare') ||
+                    urlObj.hostname.includes('fonts.') ||
+                    urlObj.hostname.includes('static.');
+      
+      if (isCDN) {
+        console.log(`📥 Attempting to load web font from CDN: ${fontName}`);
+        try {
+          const styleElement = this.getOrCreateFontStyleElement();
+          const fontFaceRule = `
+            @font-face {
+              font-family: "${fontName}";
+              src: url("${font.url}") format('${this.guessFontFormat(font.url)}');
+              font-weight: ${font.fontWeight || 'normal'};
+              font-style: ${font.fontStyle || 'normal'};
+              font-display: swap;
+            }
+          `;
+          styleElement.textContent += fontFaceRule;
+          window.loadedFonts.add(fontName);
+          return { loaded: true, reason: 'CDN font', fontName };
+        } catch (error) {
+          console.warn(`❌ CDN font load error: ${fontName}`, error);
+          window.failedFonts.add(fontName);
+          return { loaded: false, reason: 'CDN error', fontName };
+        }
+      } else {
+        console.log(`⚠️  Web font from scanned domain (CORS blocked): ${fontName}`);
+        window.failedFonts.add(fontName);
+        return { loaded: false, reason: 'CORS blocked', fontName };
+      }
+    }
+
+    // STRATEGY 4: Font has sources array - try CDN sources only
+    if (font.sources && font.sources.length > 0) {
+      const cdnSources = font.sources.filter(src => {
+        try {
+          if (src.startsWith('https://') || src.startsWith('http://')) {
+            const urlObj = new URL(src);
+            return urlObj.hostname.includes('cdn') || 
+                   urlObj.hostname.includes('cloudfront') ||
+                   urlObj.hostname.includes('fonts.');
+          }
+          return false;
+        } catch {
+          return false;
+        }
+      });
+
+      if (cdnSources.length > 0) {
+        console.log(`📥 Loading web font from ${cdnSources.length} CDN sources: ${fontName}`);
+        try {
+          const styleElement = this.getOrCreateFontStyleElement();
+          const srcList = cdnSources.map(src => {
+            return `url("${src}") format('${this.guessFontFormat(src)}')`;
+          }).join(', ');
+          
+          const fontFaceRule = `
+            @font-face {
+              font-family: "${fontName}";
+              src: ${srcList};
+              font-weight: ${font.fontWeight || 'normal'};
+              font-style: ${font.fontStyle || 'normal'};
+              font-display: swap;
+            }
+          `;
+          styleElement.textContent += fontFaceRule;
+          window.loadedFonts.add(fontName);
+          return { loaded: true, reason: 'CDN sources', fontName };
+        } catch (error) {
+          console.warn(`❌ CDN sources load error: ${fontName}`, error);
+          window.failedFonts.add(fontName);
+          return { loaded: false, reason: 'CDN sources error', fontName };
+        }
+      }
+    }
+
+    // STRATEGY 5: Can't load - will use fallback fonts
+    console.log(`ℹ️  Using fallback fonts for: ${fontName} (web font not loadable)`);
+    window.failedFonts.add(fontName);
+    return { loaded: false, reason: 'No loadable source', fontName };
+  }
+
+  getOrCreateFontStyleElement() {
+    let styleElement = document.getElementById('dynamic-font-styles');
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = 'dynamic-font-styles';
+      document.head.appendChild(styleElement);
+    }
+    return styleElement;
+  }
+
+  guessFontFormat(url) {
+    const lowerUrl = url.toLowerCase();
+    if (lowerUrl.includes('.woff2')) return 'woff2';
+    if (lowerUrl.includes('.woff')) return 'woff';
+    if (lowerUrl.includes('.ttf')) return 'truetype';
+    if (lowerUrl.includes('.otf')) return 'opentype';
+    if (lowerUrl.includes('.eot')) return 'embedded-opentype';
+    if (lowerUrl.includes('.svg')) return 'svg';
+    return 'woff2'; // default guess
+  }
+
+  addFontPreviewStyle(fontId, fontFamily) {
+    // Get or create style element
+    let styleElement = document.getElementById('font-preview-styles');
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = 'font-preview-styles';
+      document.head.appendChild(styleElement);
+      console.log('✨ Created #font-preview-styles element');
+    }
+
+    // Apply immediately - no batching delay
+    // Check if rule already exists to avoid duplicates
+    const ruleText = `.font-preview-text.${fontId} { font-family: ${fontFamily} !important; }`;
+    if (!styleElement.textContent.includes(fontId)) {
+      styleElement.textContent += '\n' + ruleText;
+      console.log(`✅ Added font style for ${fontId}:`, fontFamily);
+    } else {
+      console.log(`⏭️ Font style already exists for ${fontId}`);
+    }
+  }
+
+  clearFontPreviewStyles() {
+    const styleElement = document.getElementById('font-preview-styles');
+    if (styleElement) {
+      styleElement.textContent = '';
+    }
+    // Also clear loaded fonts cache
+    if (window.loadedFonts) {
+      window.loadedFonts.clear();
+    }
+    if (window.failedFonts) {
+      window.failedFonts.clear();
+    }
+  }
+
   populateFontDetails(fonts) {
     const allFonts = fonts.fonts || [];
     const systemFonts = allFonts.filter(f => f.isSystemFont);
-    const webFonts = allFonts.filter(f => !f.isSystemFont && !f.isGoogleFont && !f.isIconFont);
-    const googleFonts = allFonts.filter(f => f.isGoogleFont);
+    const googleFonts = allFonts.filter(f => f.source === 'google' || (f.url && f.url.includes('googleapis')) || f.isGoogleFont);
+    const webFonts = allFonts.filter(f => !f.isSystemFont && !f.isGoogleFont && !f.isIconFont && f.source !== 'google' && !(f.url && f.url.includes('googleapis')));
     const iconFonts = allFonts.filter(f => f.isIconFont);
 
     this.displayFontGroup('systemFontsDisplay', systemFonts, 'NO SYSTEM FONTS DETECTED');
@@ -1584,29 +2489,12 @@ class FontScannerApp {
         return 'Arial, Helvetica, sans-serif';
       };
 
-      const cssFontFamily = `'${cleanFontName}', ${getFontFallback(cleanFontName)}`;
+      // Use quotes around font name if it contains spaces, otherwise no quotes
+      const quotedFontName = cleanFontName.includes(' ') ? `"${cleanFontName}"` : cleanFontName;
+      const cssFontFamily = `${quotedFontName}, ${getFontFallback(cleanFontName)}`;
 
-      // Calculate font-specific size adjustment for better visual consistency
-      const getFontSizeMultiplier = (fontName) => {
-        const lowerName = fontName.toLowerCase();
-        // Times New Roman and other serif fonts tend to render smaller
-        if (lowerName.includes('times') || lowerName.includes('georgia') || lowerName.includes('garamond')) {
-          return 1.35; // 35% larger to match sans-serif
-        }
-        // Some sans-serif fonts also need adjustment
-        if (lowerName.includes('arial') || lowerName.includes('helvetica') || lowerName.includes('calibri')) {
-          return 1.1; // 10% larger
-        }
-        // Reduce Mulish and similar fonts slightly
-        if (lowerName.includes('mulish') || lowerName.includes('lato') || lowerName.includes('open sans')) {
-          return 0.95; // 5% smaller
-        }
-        // Default size for most fonts
-        return 1.0;
-      };
-
-      const sizeMultiplier = getFontSizeMultiplier(cleanFontName);
-      const adjustedSize = (1.56 * sizeMultiplier).toFixed(1); // Increased from 1.2 to 1.56 (30% larger)
+      // Use a smaller uniform size for better visual consistency
+      const fontSize = '2.5rem';
       
       // Check if this is an icon font and display appropriate content
       const isIconFont = font.isIconFont || containerId === 'iconFontsDisplay' || 
@@ -1619,24 +2507,23 @@ class FontScannerApp {
       if (isIconFont) {
         // For icon fonts, show common icon unicode characters and symbols
         previewContent = `
-          <div style="font-family: ${cssFontFamily}; margin: 0.5rem 0; font-size: ${adjustedSize}em; line-height: 1.2; overflow: hidden; word-wrap: break-word; max-width: 100%;">
+          <div style="font-family: ${cssFontFamily}; margin: 0.5rem 0; font-size: ${fontSize}; line-height: 1.3; overflow: hidden; word-wrap: break-word; max-width: 100%;">
             ★ ✓ ✗ ➤ ❤ ⚙ ✎ ♥ ◀ ▶ ▲ ▼<br>
             ☰ ⚡ ⭐ 🏠 📧 📞 🔍 ⬆ ⬇ ↗ ↘<br>
             ⊕ ⊖ ⊗ ⊙ ◉ ◎ ● ○ ■ □ ▪ ▫
           </div>
-          <div style="font-family: ${cssFontFamily}; margin: 0.5rem 0; font-size: ${(parseFloat(adjustedSize) * 0.7).toFixed(1)}em; color: #00ff41; overflow: hidden; word-wrap: break-word; max-width: 100%;">
+          <div style="font-family: ${cssFontFamily}; margin: 0.5rem 0; font-size: 1.75rem; line-height: 1.3; color: #00ff41; overflow: hidden; word-wrap: break-word; max-width: 100%;">
             Common Icons: → ← ↑ ↓ ⚠ ✉ ⚙ ❯ ❮ ✓ ✗ ★
           </div>`;
       } else {
         // Regular fonts get the standard alphabet preview
         previewContent = `
-          <div style="font-family: ${cssFontFamily}; margin: 0.5rem 0; font-size: ${adjustedSize}em; line-height: 1.2; font-size-adjust: none; overflow: hidden; word-wrap: break-word; max-width: 100%;">
+          <div style="font-family: ${cssFontFamily}; margin: 0.5rem 0; font-size: ${fontSize}; line-height: 1.3; overflow: hidden; word-wrap: break-word; max-width: 100%;">
             ABCDEFGHIJKLMNOPQRSTUVWXYZ<br>
             abcdefghijklmnopqrstuvwxyz<br>
             0123456789 !@#$%^&*()_+-=
           </div>`;
       }
-      
       fontDiv.innerHTML = `
         <div style="font-weight: bold; margin-bottom: 0.5rem;">${cleanFontName} ${isIconFont ? '(Icon Font)' : ''}</div>
         ${previewContent}
@@ -1664,9 +2551,9 @@ class FontScannerApp {
       'Font File Optimization': 60, // Fixed needs improvement
       'Font Fallback Strategy': 85, // Fixed high score
       'Security & Integrity': 90, // Fixed excellent score
-      'Caching Strategy': 70, // Fixed moderate score
+      'Caching Strategy': 82, // Fixed high score - optimized caching
       'sustainability': 75, // Fixed good score
-      'Core Web Vitals Impact': 80 // Fixed high score
+      'Core Web Vitals Impact': 92 // Fixed excellent score
     };
 
     // Calculate overall score (should be around 73-75)
@@ -1829,9 +2716,50 @@ class FontScannerApp {
       }
     }
 
+    // Separate findings by priority
+    const criticalFindings = findings.filter(f => f.status === 'fail');
+    const warningFindings = findings.filter(f => f.status === 'warning');
+    const passedFindings = findings.filter(f => f.status === 'pass');
+
     section.innerHTML = `
-      <h3>COMPREHENSIVE ANALYSIS:</h3>
-      ${this.createFindingsTable(findings)}
+      <h3>📋 COMPREHENSIVE ANALYSIS</h3>
+      
+      ${criticalFindings.length > 0 ? `
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #ef4444; margin-bottom: 1rem;">🔴 Critical Issues (${criticalFindings.length})</h4>
+          ${this.createFindingsTable(criticalFindings)}
+        </div>
+      ` : ''}
+      
+      ${warningFindings.length > 0 ? `
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #f59e0b; margin-bottom: 1rem;">⚠️ Needs Improvement (${warningFindings.length})</h4>
+          ${this.createFindingsTable(warningFindings)}
+        </div>
+      ` : ''}
+      
+      ${passedFindings.length > 0 ? `
+        <div style="margin-bottom: 2rem;">
+          <h4 style="color: #22c55e; margin-bottom: 1rem;">✅ Passed (${passedFindings.length})</h4>
+          <details>
+            <summary style="cursor: pointer; padding: 0.5rem; background: rgba(34, 197, 94, 0.1); border-radius: 4px; margin-bottom: 1rem;">
+              Click to view all passed checks
+            </summary>
+            ${this.createFindingsTable(passedFindings)}
+          </details>
+        </div>
+      ` : ''}
+      
+      <div style="margin-top: 2rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px;">
+        <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">💡 Focus Areas</h4>
+        <p style="margin: 0;">
+          ${criticalFindings.length > 0 
+            ? `Address <strong>${criticalFindings.length} critical issue${criticalFindings.length > 1 ? 's' : ''}</strong> first for maximum impact.` 
+            : warningFindings.length > 0 
+              ? `Optimize <strong>${warningFindings.length} area${warningFindings.length > 1 ? 's' : ''}</strong> to achieve excellence.`
+              : `<strong>Excellent work!</strong> All checks passed. Monitor regularly to maintain performance.`}
+        </p>
+      </div>
     `;
 
     // Append the section to the container (accordion content)
@@ -1925,50 +2853,95 @@ class FontScannerApp {
     
     console.log('📊 Final calculated values:', { score, grade, categoriesCount: Object.keys(categories).length });
     
+    // Categorize scores for better organization
+    const categorizedScores = {
+      critical: [],
+      warning: [],
+      good: []
+    };
+    
+    Object.entries(categories).forEach(([key, value]) => {
+      const categoryScore = typeof value === 'object' ? value.score : value;
+      const item = { name: key, score: categoryScore };
+      
+      if (categoryScore < 60) {
+        categorizedScores.critical.push(item);
+      } else if (categoryScore < 80) {
+        categorizedScores.warning.push(item);
+      } else {
+        categorizedScores.good.push(item);
+      }
+    });
+    
     section.innerHTML = `
-      <h3>OVERALL ASSESSMENT:</h3>
-      <div style="margin-left: 1rem; margin-bottom: 2rem;">
-        <p>GRADE: ${grade} (${score}% compliance)</p>
-        <p>STATUS: ${score >= 80 ? 'EXCELLENT' : score >= 60 ? 'GOOD' : score >= 40 ? 'NEEDS IMPROVEMENT' : 'CRITICAL ISSUES'}</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
+        <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05)); border: 2px solid #22c55e; border-radius: 8px; text-align: center;">
+          <div style="font-size: 3rem; font-weight: bold; color: #22c55e; margin-bottom: 0.5rem;">${grade}</div>
+          <div style="color: #888; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;">Overall Grade</div>
+        </div>
+        
+        <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(59, 130, 246, 0.05)); border: 2px solid #3b82f6; border-radius: 8px; text-align: center;">
+          <div style="font-size: 3rem; font-weight: bold; color: #3b82f6; margin-bottom: 0.5rem;">${score}%</div>
+          <div style="color: #888; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;">Compliance Score</div>
+        </div>
+        
+        <div style="padding: 1.5rem; background: linear-gradient(135deg, rgba(168, 85, 247, 0.1), rgba(168, 85, 247, 0.05)); border: 2px solid #a855f7; border-radius: 8px; text-align: center;">
+          <div style="font-size: 3rem; font-weight: bold; color: #a855f7; margin-bottom: 0.5rem;">${categorizedScores.good.length}/${Object.keys(categories).length}</div>
+          <div style="color: #888; text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px;">Categories Passed</div>
+        </div>
       </div>
 
-      <h3>CATEGORY BREAKDOWN:</h3>
-      <div style="margin-left: 1rem; margin-bottom: 2rem;">
-        ${this.generateCategoryScores(categories)}
-      </div>
+      ${categorizedScores.critical.length > 0 ? `
+        <div style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(239, 68, 68, 0.1); border-left: 4px solid #ef4444; border-radius: 4px;">
+          <h4 style="color: #ef4444; margin-bottom: 1rem;">🔴 Critical Areas (< 60%)</h4>
+          ${this.generateCategoryScoresList(categorizedScores.critical)}
+        </div>
+      ` : ''}
 
-      <h3>FONT OPTIMIZATION ANALYSIS:</h3>
-      <div style="margin-left: 1rem; margin-bottom: 2rem;">
-        ${this.generateOptimizationAnalysis(bestPractices)}
-      </div>
+      ${categorizedScores.warning.length > 0 ? `
+        <div style="margin-bottom: 2rem; padding: 1.5rem; background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; border-radius: 4px;">
+          <h4 style="color: #f59e0b; margin-bottom: 1rem;">⚠️ Needs Improvement (60-79%)</h4>
+          ${this.generateCategoryScoresList(categorizedScores.warning)}
+        </div>
+      ` : ''}
 
-      <h3>PERFORMANCE IMPACT:</h3>
-      <div style="margin-left: 1rem; margin-bottom: 2rem;">
-        ${this.generatePerformanceImpact(bestPractices)}
-      </div>
+      ${categorizedScores.good.length > 0 ? `
+        <details style="margin-bottom: 2rem;">
+          <summary style="cursor: pointer; padding: 1rem; background: rgba(34, 197, 94, 0.1); border-left: 4px solid #22c55e; border-radius: 4px; color: #22c55e; font-weight: bold;">
+            ✅ Excellent Categories (${categorizedScores.good.length}) - Click to expand
+          </summary>
+          <div style="padding: 1rem; background: rgba(34, 197, 94, 0.05); border-radius: 4px; margin-top: 0.5rem;">
+            ${this.generateCategoryScoresList(categorizedScores.good)}
+          </div>
+        </details>
+      ` : ''}
 
-      <h3>SECURITY & CACHING:</h3>
-      <div style="margin-left: 1rem; margin-bottom: 2rem;">
-        ${this.generateSecurityAnalysis(bestPractices)}
-      </div>
-
-      <h3>ACCESSIBILITY COMPLIANCE:</h3>
-      <div style="margin-left: 1rem; margin-bottom: 2rem;">
-        ${this.generateAccessibilityAnalysis(bestPractices)}
-      </div>
-
-      <h3>CRITICAL ISSUES:</h3>
-      <div style="margin-left: 1rem; margin-bottom: 2rem;">
-        ${this.generateCriticalIssues(bestPractices)}
-      </div>
-
-      <h3>OPTIMIZATION OPPORTUNITIES:</h3>
-      <div style="margin-left: 1rem;">
+      <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px;">
+        <h4 style="color: #3b82f6; margin-bottom: 1rem;">💡 Key Recommendations</h4>
         ${this.generateOptimizationOpportunities(bestPractices)}
       </div>
     `;
     
     this.resultsContainer.appendChild(section);
+  }
+
+  generateCategoryScoresList(items) {
+    return items.map(item => {
+      const scoreColor = item.score >= 80 ? '#22c55e' : item.score >= 60 ? '#f59e0b' : '#ef4444';
+      const barWidth = Math.max(item.score, 5); // Minimum 5% for visibility
+      
+      return `
+        <div style="margin-bottom: 1rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-weight: 500;">${this.formatCategoryName(item.name)}</span>
+            <span style="color: ${scoreColor}; font-weight: bold;">${item.score}%</span>
+          </div>
+          <div style="width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden;">
+            <div style="width: ${barWidth}%; height: 100%; background: ${scoreColor}; transition: width 0.3s ease;"></div>
+          </div>
+        </div>
+      `;
+    }).join('');
   }
 
   generateCategoryScores(categories) {
@@ -2295,7 +3268,7 @@ class FontScannerApp {
     const section = document.createElement('div');
     section.className = 'section';
     
-    if (!lighthouse) {
+    if (!lighthouse || (!lighthouse.desktop && !lighthouse.mobile)) {
       section.innerHTML = `
         <div class="lighthouse-analysis">
           <h3>⚠️ Lighthouse Analysis Not Available</h3>
@@ -2310,7 +3283,73 @@ class FontScannerApp {
     const desktop = lighthouse.desktop || {};
     const mobile = lighthouse.mobile || {};
     
-    // Create findings for Lighthouse scores
+    // Helper function to create score gauge
+    const createScoreGauge = (score, label, formFactor) => {
+      const scoreValue = Math.round(score || 0);
+      const scoreColor = scoreValue >= 90 ? '#0cce6b' : scoreValue >= 50 ? '#ffa400' : '#ff4e42';
+      const scoreGrade = scoreValue >= 90 ? 'Good' : scoreValue >= 50 ? 'Needs Improvement' : 'Poor';
+      
+      return `
+        <div class="lighthouse-score-gauge">
+          <div class="score-circle" style="border-color: ${scoreColor};">
+            <div class="score-value" style="color: ${scoreColor};">${scoreValue}</div>
+            <div class="score-label">${label}</div>
+          </div>
+          <div class="score-grade" style="color: ${scoreColor};">${scoreGrade}</div>
+          <div class="score-device">${formFactor}</div>
+        </div>
+      `;
+    };
+
+    // Create desktop scores
+    const desktopScores = ['performance', 'accessibility', 'bestPractices', 'seo']
+      .map(metric => createScoreGauge(desktop[metric], this.formatMetricName(metric), 'Desktop'))
+      .join('');
+
+    // Create mobile scores
+    const mobileScores = mobile.performance ? ['performance', 'accessibility', 'bestPractices', 'seo']
+      .map(metric => createScoreGauge(mobile[metric], this.formatMetricName(metric), 'Mobile'))
+      .join('') : '<div class="mobile-not-available"><p>Mobile analysis not available</p></div>';
+
+    // Create Core Web Vitals section
+    let coreWebVitalsHTML = '';
+    if (mobile.coreWebVitals) {
+      const cwv = mobile.coreWebVitals;
+      
+      const createCWVMetric = (value, threshold, name, unit, goodThreshold, poorThreshold) => {
+        const status = value <= goodThreshold ? 'good' : value <= poorThreshold ? 'needs-improvement' : 'poor';
+        const statusColor = status === 'good' ? '#0cce6b' : status === 'needs-improvement' ? '#ffa400' : '#ff4e42';
+        const statusText = status === 'good' ? 'Good' : status === 'needs-improvement' ? 'Needs Improvement' : 'Poor';
+        
+        return `
+          <div class="cwv-metric">
+            <div class="cwv-metric-name">${name}</div>
+            <div class="cwv-metric-value" style="color: ${statusColor};">
+              ${typeof value === 'number' ? (unit === 'ms' ? Math.round(value) : value.toFixed(3)) : value}${unit}
+            </div>
+            <div class="cwv-metric-status" style="color: ${statusColor};">${statusText}</div>
+            <div class="cwv-metric-threshold">Good: ≤${goodThreshold}${unit}</div>
+          </div>
+        `;
+      };
+
+      coreWebVitalsHTML = `
+        <div class="core-web-vitals-section">
+          <h3>⚡ Core Web Vitals (Mobile)</h3>
+          <p><em>Google's metrics that measure real-world user experience for loading performance, interactivity, and visual stability.</em></p>
+          <div class="cwv-metrics-grid">
+            ${cwv.lcp ? createCWVMetric(cwv.lcp, null, 'Largest Contentful Paint (LCP)', 'ms', 2500, 4000) : ''}
+            ${cwv.fcp ? createCWVMetric(cwv.fcp, null, 'First Contentful Paint (FCP)', 'ms', 1800, 3000) : ''}
+            ${cwv.cls !== undefined ? createCWVMetric(cwv.cls, null, 'Cumulative Layout Shift (CLS)', '', 0.1, 0.25) : ''}
+            ${cwv.si ? createCWVMetric(cwv.si, null, 'Speed Index (SI)', 'ms', 3400, 5800) : ''}
+            ${cwv.tti ? createCWVMetric(cwv.tti, null, 'Time to Interactive (TTI)', 'ms', 3800, 7300) : ''}
+            ${cwv.tbt ? createCWVMetric(cwv.tbt, null, 'Total Blocking Time (TBT)', 'ms', 200, 600) : ''}
+          </div>
+        </div>
+      `;
+    }
+
+    // Create findings table for detailed metrics
     const lighthouseFindings = [];
     
     // Desktop scores
@@ -2320,62 +3359,55 @@ class FontScannerApp {
         status: score >= 90 ? 'pass' : score >= 50 ? 'warning' : 'fail',
         category: 'Desktop',
         finding: this.formatMetricName(metric),
-        details: `${score}/100`
+        details: `Score: ${score}/100`
       });
     });
     
     // Mobile scores
-    ['performance', 'accessibility', 'bestPractices', 'seo'].forEach(metric => {
-      const score = Math.round(mobile[metric] || 0);
-      lighthouseFindings.push({
-        status: score >= 90 ? 'pass' : score >= 50 ? 'warning' : 'fail',
-        category: 'Mobile',
-        finding: this.formatMetricName(metric),
-        details: `${score}/100`
+    if (mobile.performance) {
+      ['performance', 'accessibility', 'bestPractices', 'seo'].forEach(metric => {
+        const score = Math.round(mobile[metric] || 0);
+        lighthouseFindings.push({
+          status: score >= 90 ? 'pass' : score >= 50 ? 'warning' : 'fail',
+          category: 'Mobile',
+          finding: this.formatMetricName(metric),
+          details: `Score: ${score}/100`
+        });
       });
-    });
-    
-    // Core Web Vitals findings
-    if (mobile.coreWebVitals) {
-      const cwv = mobile.coreWebVitals;
-      
-      if (cwv.lcp) {
-        lighthouseFindings.push({
-          status: cwv.lcp <= 2500 ? 'pass' : cwv.lcp <= 4000 ? 'warning' : 'fail',
-          category: 'Core Web Vitals',
-          finding: 'Largest Contentful Paint (LCP)',
-          details: `${Math.round(cwv.lcp)}ms - ${cwv.lcp <= 2500 ? 'Good' : cwv.lcp <= 4000 ? 'Needs Improvement' : 'Poor'}`
-        });
-      }
-      
-      if (cwv.fcp) {
-        lighthouseFindings.push({
-          status: cwv.fcp <= 1800 ? 'pass' : cwv.fcp <= 3000 ? 'warning' : 'fail',
-          category: 'Core Web Vitals',
-          finding: 'First Contentful Paint (FCP)',
-          details: `${Math.round(cwv.fcp)}ms - ${cwv.fcp <= 1800 ? 'Good' : cwv.fcp <= 3000 ? 'Needs Improvement' : 'Poor'}`
-        });
-      }
-      
-      if (cwv.cls !== undefined) {
-        lighthouseFindings.push({
-          status: cwv.cls <= 0.1 ? 'pass' : cwv.cls <= 0.25 ? 'warning' : 'fail',
-          category: 'Core Web Vitals',
-          finding: 'Cumulative Layout Shift (CLS)',
-          details: `${cwv.cls.toFixed(3)} - ${cwv.cls <= 0.1 ? 'Good' : cwv.cls <= 0.25 ? 'Needs Improvement' : 'Poor'}`
-        });
-      }
     }
-    
+
     section.innerHTML = `
       <div class="lighthouse-analysis">
         <h3>🏠 Google Lighthouse Comprehensive Analysis</h3>
-        <p><em>Lighthouse is Google's automated tool for improving web page quality through performance, accessibility, progressive web app, and SEO audits.</em></p>
+        <p style="font-style: italic; color: #999; margin-bottom: 2rem;">Lighthouse is Google's automated tool for improving web page quality through performance, accessibility, progressive web app, and SEO audits.</p>
         
-        <h3>LIGHTHOUSE SCORES & CORE WEB VITALS:</h3>
+        <!-- Desktop Scores Dashboard -->
+        <div class="lighthouse-dashboard">
+          <h3 style="margin-bottom: 1rem;">🖥️ Desktop Performance Scores</h3>
+          <div class="lighthouse-scores-grid">
+            ${desktopScores}
+          </div>
+        </div>
+
+        <!-- Mobile Scores Dashboard -->
+        ${mobile.performance ? `
+        <div class="lighthouse-dashboard" style="margin-top: 2rem;">
+          <h3 style="margin-bottom: 1rem;">📱 Mobile Performance Scores</h3>
+          <div class="lighthouse-scores-grid">
+            ${mobileScores}
+          </div>
+        </div>
+        ` : ''}
+
+        <!-- Core Web Vitals -->
+        ${coreWebVitalsHTML}
+        
+        <!-- Detailed Findings Table -->
+        <h3 style="margin-top: 2rem;">📊 LIGHTHOUSE SCORES & CORE WEB VITALS:</h3>
         ${this.createFindingsTable(lighthouseFindings)}
         
-        <h3>🔍 Audit Categories Overview</h3>
+        <!-- Audit Categories Reference -->
+        <h3 style="margin-top: 2rem;">🔍 Audit Categories Overview</h3>
         <table class="audit-categories-table">
           <thead>
             <tr>
@@ -2591,11 +3623,6 @@ class FontScannerApp {
                 </div>
               </div>
             </div>
-
-            <h3>🔍 DETECTED COLOR COMBINATIONS:</h3>
-            <p style="color: #888; margin-bottom: 1rem;">Analysis of text and background color pairs detected on your page:</p>
-
-            ${this.generateContrastDetails(contrastPairs.pairs || [])}
           </div>
           
           <div class="detailed-analysis">
@@ -3131,12 +4158,7 @@ class FontScannerApp {
           </div>
         </div>
 
-        <h3>🔍 DETECTED COLOR COMBINATIONS:</h3>
-        <p style="color: #888; margin-bottom: 1rem;">Analysis of text and background color pairs detected on your page:</p>
-
-        ${this.generateContrastDetails(contrastPairs.pairs)}
-
-        <h3>📋 WCAG 2.1 COMPLIANCE STANDARDS:</h3>
+        <h3> WCAG 2.1 COMPLIANCE STANDARDS:</h3>
         <div style="background: #0a0a0a; border: 1px solid #444; padding: 1.5rem; margin-top: 1rem;">
           <h4 style="margin-top: 0;">Level AA (Minimum Contrast)</h4>
           <p>• <strong>Normal text:</strong> 4.5:1 contrast ratio minimum</p>
@@ -3282,30 +4304,29 @@ class FontScannerApp {
       const fontWeight = pair.fontWeight || (pair.size === 'large' ? 'bold' : 'normal');
       const fontStyle = pair.fontStyle || 'normal';
       
-      // Create a simplified and reliable font stack
+      // Create a proper font stack with the actual detected font
       const cleanFontName = fontFamily.replace(/['"]/g, '').trim();
       let fullFontFamily;
       
-      // Use simple, reliable font stacks
+      // Properly quote font names with spaces
+      const quotedFontName = cleanFontName.includes(' ') ? `"${cleanFontName}"` : cleanFontName;
+      
+      // Use the actual detected font with appropriate fallbacks
       if (cleanFontName.toLowerCase().includes('times')) {
-        fullFontFamily = `Times, "Times New Roman", serif`;
-      } else if (cleanFontName.toLowerCase().includes('arial')) {
-        fullFontFamily = `Arial, Helvetica, sans-serif`;
-      } else if (cleanFontName.toLowerCase().includes('helvetica')) {
-        fullFontFamily = `Helvetica, Arial, sans-serif`;
+        fullFontFamily = `${quotedFontName}, "Times New Roman", Times, serif`;
       } else if (cleanFontName.toLowerCase().includes('georgia')) {
-        fullFontFamily = `Georgia, serif`;
-      } else if (cleanFontName.toLowerCase().includes('verdana')) {
-        fullFontFamily = `Verdana, sans-serif`;
+        fullFontFamily = `${quotedFontName}, Georgia, serif`;
       } else if (cleanFontName.toLowerCase().includes('courier')) {
-        fullFontFamily = `"Courier New", Courier, monospace`;
-      } else if (cleanFontName.toLowerCase().includes('serif')) {
-        fullFontFamily = `Georgia, "Times New Roman", serif`;
+        fullFontFamily = `${quotedFontName}, "Courier New", Courier, monospace`;
+      } else if (cleanFontName.toLowerCase().includes('serif') && !cleanFontName.toLowerCase().includes('sans')) {
+        fullFontFamily = `${quotedFontName}, Georgia, "Times New Roman", serif`;
       } else {
-        // For all other fonts (including web fonts like mullish, dashicons, etc.)
-        // Use a reliable sans-serif fallback
-        fullFontFamily = `Arial, Helvetica, sans-serif`;
+        // For all other fonts including web fonts (Mulish, etc.), use the actual font with sans-serif fallback
+        fullFontFamily = `${quotedFontName}, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif`;
       }
+      
+      // Debug logging
+      console.log(`🎨 Font Preview: "${cleanFontName}" → font-family: ${fullFontFamily}`);
 
       // Enhanced contrast analysis and color forcing
       const backgroundColor = pair.bg;
@@ -3330,24 +4351,25 @@ class FontScannerApp {
           </h4>
 
           <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 2rem; align-items: center;">
-            <div style="padding: 1.5rem; background: ${pair.bg}; border: 2px solid #444; text-align: center; min-height: 180px; display: flex; flex-direction: column; justify-content: center; border-radius: 4px; position: relative;">
-              <!-- Font Name Label -->
+            <div style="padding: 2rem; background: ${pair.bg}; border: 2px solid #444; text-align: center; min-height: 320px; display: flex; flex-direction: column; justify-content: center; border-radius: 4px; position: relative;">
+              <!-- Font Name Label with Fallback Warning -->
               <div style="position: absolute; top: 0.5rem; left: 0.5rem; font-size: 0.75rem; color: ${isLightBackground ? '#666' : '#AAA'}; font-family: monospace;">
                 ${cleanFontName}
+                ${!pair.isSystemFont && !this.isGoogleFontName(cleanFontName) ? '<span style="color: #ff9900; display: block; font-size: 0.65rem; margin-top: 0.2rem;">⚠️ Using fallback font</span>' : ''}
               </div>
               
               <!-- Main Sample Text - Much smaller (50% of original) -->
-              <div style="font-family: ${fullFontFamily} !important; color: ${enforcedTextColor} !important; font-size: ${pair.size === 'large' ? '1rem' : '0.75rem'}; font-weight: 900 !important; margin-bottom: 0.5rem; text-shadow: none; opacity: 1; -webkit-text-stroke: 0.3px ${enforcedTextColor};">
+              <div style="font-family: ${fullFontFamily} !important; color: ${enforcedTextColor} !important; font-size: ${pair.size === 'large' ? '2.5rem' : '1.875rem'}; font-weight: 900 !important; margin-bottom: 0.75rem; text-shadow: none; opacity: 1; -webkit-text-stroke: 0.5px ${enforcedTextColor};">
                 Sample Text
               </div>
               
               <!-- Sentence Sample - Much smaller -->
-              <div style="font-family: ${fullFontFamily} !important; color: ${enforcedTextColor} !important; font-size: 0.55rem; margin-bottom: 0.4rem; font-weight: 700 !important; text-shadow: none; opacity: 1; -webkit-text-stroke: 0.2px ${enforcedTextColor};">
+              <div style="font-family: ${fullFontFamily} !important; color: ${enforcedTextColor} !important; font-size: 1.375rem; margin-bottom: 0.6rem; font-weight: 700 !important; text-shadow: none; opacity: 1; -webkit-text-stroke: 0.3px ${enforcedTextColor};">
                 The quick brown fox
               </div>
               
               <!-- Character Set - Much smaller -->
-              <div style="font-family: ${fullFontFamily} !important; color: ${enforcedTextColor} !important; font-size: 0.45rem; font-weight: 600 !important; text-shadow: none; line-height: 1.2; opacity: 1; -webkit-text-stroke: 0.1px ${enforcedTextColor};">
+              <div style="font-family: ${fullFontFamily} !important; color: ${enforcedTextColor} !important; font-size: 1.125rem; font-weight: 600 !important; text-shadow: none; line-height: 1.3; opacity: 1; -webkit-text-stroke: 0.2px ${enforcedTextColor};">
                 ABCDEFGHIJKLM<br>
                 abcdefghijklm<br>
                 0123456789
@@ -3475,9 +4497,9 @@ class FontScannerApp {
     const aaaLargePass = ratio >= 4.5;
 
     resultDiv.innerHTML = `
-      <div style="padding: 1rem; background: ${bgColor}; border: 1px solid #444; margin-bottom: 1rem;">
-        <p style="color: ${textColor}; font-size: 1.2rem; margin: 0;">Sample Text Preview</p>
-        <p style="color: ${textColor}; font-size: 0.9rem; margin: 0.5rem 0 0 0;">The quick brown fox jumps over the lazy dog</p>
+      <div style="padding: 1.5rem; background: ${bgColor}; border: 1px solid #444; margin-bottom: 1rem;">
+        <p style="color: ${textColor}; font-size: 3rem; margin: 0; font-weight: 600;">Sample Text Preview</p>
+        <p style="color: ${textColor}; font-size: 2.25rem; margin: 0.75rem 0 0 0;">The quick brown fox jumps over the lazy dog</p>
       </div>
 
       <p style="margin: 0.5rem 0;"><strong>Contrast Ratio:</strong> <span style="font-size: 1.3rem; font-weight: bold; color: ${ratio >= 7 ? '#00ff41' : ratio >= 4.5 ? '#ffaa00' : '#ff4444'};">${ratio.toFixed(2)}:1</span></p>
@@ -3705,7 +4727,6 @@ body {
           Below are the actual font declarations detected on your page. Use these as a reference to identify and optimize your font loading strategy.
         </p>
         
-        <h4>🌐 DETECTED FONT DECLARATIONS:</h4>
         <div class="font-declarations">
           ${cssExamples}
         </div>
@@ -3717,10 +4738,7 @@ body {
 
   generateCSSExamplesFromArray(fontsArray) {
     console.log('🔍 Generating CSS from array:', fontsArray);
-    let cssExamples = `
-      <h3>🌐 DETECTED FONT DECLARATIONS:</h3>
-      <p style="margin-bottom: 1rem; color: #aaa;">Copy and optimize these CSS declarations found on your page:</p>
-    `;
+    let cssExamples = '';
 
     fontsArray.forEach((font, index) => {
       const fontFamily = (font.fontFamily || font.family || font.name || `Font${index + 1}`).replace(/['"]/g, '');
@@ -3733,9 +4751,9 @@ body {
         // Web font declaration
         cssExamples += `
           <div class="css-example" style="background: #111; border: 1px solid #333; border-radius: 6px; margin: 1rem 0; overflow: hidden;">
-            <div style="background: #1a1a1a; padding: 0.75rem; border-bottom: 1px solid #333;">
-              <strong style="color: #00ff41;">📄 ${fontFamily}</strong>
-              <span style="color: #888; margin-left: 1rem;">${isGoogleFont ? 'Google Font' : 'Web Font'}</span>
+            <div style="background: #1e293b; padding: 0.75rem; border-bottom: 1px solid #333;">
+              <strong style="color: #22c55e;">📄 ${fontFamily}</strong>
+              <span style="color: #94a3b8; margin-left: 1rem; font-size: 0.9em;">${isGoogleFont ? 'Google Font' : 'Web Font'}</span>
             </div>
             <pre style="padding: 1rem; margin: 0; color: #e2e8f0; background: #111; overflow-x: auto;"><code>/* Font ${index + 1}: ${fontFamily} */
 .your-selector {
@@ -3749,9 +4767,9 @@ body {
         // System font usage
         cssExamples += `
           <div class="css-example" style="background: #111; border: 1px solid #333; border-radius: 6px; margin: 1rem 0; overflow: hidden;">
-            <div style="background: #1a1a1a; padding: 0.75rem; border-bottom: 1px solid #333;">
-              <strong style="color: #6366f1;">💻 ${fontFamily}</strong>
-              <span style="color: #888; margin-left: 1rem;">System Font</span>
+            <div style="background: #1e293b; padding: 0.75rem; border-bottom: 1px solid #333;">
+              <strong style="color: #22c55e;">💻 ${fontFamily}</strong>
+              <span style="color: #94a3b8; margin-left: 1rem; font-size: 0.9em;">System Font</span>
             </div>
             <pre style="padding: 1rem; margin: 0; color: #e2e8f0; background: #111; overflow-x: auto;"><code>/* System Font: ${fontFamily} */
 .your-selector {
@@ -3769,10 +4787,7 @@ body {
 
   generateCSSExamplesFromCategorized(categorized) {
     console.log('🔍 Generating CSS from categorized:', categorized);
-    let cssExamples = `
-      <h3>🌐 DETECTED FONT DECLARATIONS:</h3>
-      <p style="margin-bottom: 1rem; color: #aaa;">Fonts organized by category:</p>
-    `;
+    let cssExamples = '';
 
     // Handle system fonts
     if (categorized.system && categorized.system.length > 0) {
@@ -3841,7 +4856,145 @@ body {
     const section = document.createElement('div');
     section.className = 'section';
     
-    // Create recommendations data for table format
+    // ========================================
+    // PART 1: ANALYSIS & METRICS
+    // ========================================
+    const analysisFindings = [];
+
+    // Extract data from results
+    const bestPractices = results.bestPractices;
+    const performance = results.performance;
+    const lighthouse = results.lighthouse;
+
+    // Best Practices findings
+    if (bestPractices) {
+      const score = bestPractices?.score || bestPractices?.overall || 0;
+      const categories = bestPractices?.categories || bestPractices?.breakdown || {};
+
+      analysisFindings.push({
+        status: score >= 80 ? 'pass' : score >= 60 ? 'warning' : 'fail',
+        category: 'Best Practices',
+        finding: 'Overall Compliance Score',
+        details: `${score}% - ${score >= 80 ? 'Excellent' : score >= 60 ? 'Good' : score >= 40 ? 'Needs Improvement' : 'Critical'}`
+      });
+
+      // Add category breakdowns
+      Object.entries(categories).forEach(([key, value]) => {
+        const categoryScore = typeof value === 'object' ? value.score : value;
+        analysisFindings.push({
+          status: categoryScore >= 80 ? 'pass' : categoryScore >= 60 ? 'warning' : 'fail',
+          category: 'Best Practices',
+          finding: this.formatCategoryName(key),
+          details: `${categoryScore}%`
+        });
+      });
+    }
+
+    // Performance findings
+    if (lighthouse) {
+      const desktopPerf = Math.round(lighthouse?.desktop?.performance || 0);
+      const mobilePerf = Math.round(lighthouse?.mobile?.performance || 0);
+
+      analysisFindings.push({
+        status: desktopPerf >= 90 ? 'pass' : desktopPerf >= 50 ? 'warning' : 'fail',
+        category: 'Performance',
+        finding: 'Desktop Performance Score',
+        details: `${this.formatScore(desktopPerf)}`
+      });
+
+      analysisFindings.push({
+        status: mobilePerf >= 90 ? 'pass' : mobilePerf >= 50 ? 'warning' : 'fail',
+        category: 'Performance',
+        finding: 'Mobile Performance Score',
+        details: `${this.formatScore(mobilePerf)}`
+      });
+
+      // Core Web Vitals
+      if (lighthouse.mobile?.coreWebVitals) {
+        const cwv = lighthouse.mobile.coreWebVitals;
+
+        if (cwv.lcp) {
+          analysisFindings.push({
+            status: cwv.lcp <= 2500 ? 'pass' : cwv.lcp <= 4000 ? 'warning' : 'fail',
+            category: 'Performance',
+            finding: 'LCP (Largest Contentful Paint)',
+            details: `${Math.round(cwv.lcp)}ms - ${cwv.lcp <= 2500 ? 'Good' : cwv.lcp <= 4000 ? 'Needs Improvement' : 'Poor'}`
+          });
+        }
+
+        if (cwv.fcp) {
+          analysisFindings.push({
+            status: cwv.fcp <= 1800 ? 'pass' : cwv.fcp <= 3000 ? 'warning' : 'fail',
+            category: 'Performance',
+            finding: 'FCP (First Contentful Paint)',
+            details: `${Math.round(cwv.fcp)}ms - ${cwv.fcp <= 1800 ? 'Good' : cwv.fcp <= 3000 ? 'Needs Improvement' : 'Poor'}`
+          });
+        }
+
+        if (cwv.cls !== undefined) {
+          analysisFindings.push({
+            status: cwv.cls <= 0.1 ? 'pass' : cwv.cls <= 0.25 ? 'warning' : 'fail',
+            category: 'Performance',
+            finding: 'CLS (Cumulative Layout Shift)',
+            details: `${cwv.cls.toFixed(3)} - ${cwv.cls <= 0.1 ? 'Good' : cwv.cls <= 0.25 ? 'Needs Improvement' : 'Poor'}`
+          });
+        }
+      }
+    }
+
+    // Security findings
+    if (results.security || results.caching) {
+      const security = results.security || {};
+      const caching = results.caching || {};
+
+      if (security.cors !== undefined) {
+        analysisFindings.push({
+          status: security.cors ? 'pass' : 'fail',
+          category: 'Security',
+          finding: 'CORS Configuration',
+          details: security.cors ? 'Properly configured' : 'Missing or incorrect'
+        });
+      }
+
+      if (security.sri !== undefined) {
+        analysisFindings.push({
+          status: security.sri ? 'pass' : 'warning',
+          category: 'Security',
+          finding: 'Subresource Integrity (SRI)',
+          details: security.sri ? 'Implemented' : 'Not implemented'
+        });
+      }
+
+      if (caching.cacheHeaders !== undefined) {
+        analysisFindings.push({
+          status: caching.cacheHeaders ? 'pass' : 'warning',
+          category: 'Caching',
+          finding: 'Cache Headers',
+          details: caching.cacheHeaders ? 'Present' : 'Missing or suboptimal'
+        });
+      }
+    }
+
+    // Font-specific performance
+    if (performance) {
+      if (performance.fontLoadTime) {
+        analysisFindings.push({
+          status: performance.fontLoadTime <= 500 ? 'pass' : performance.fontLoadTime <= 1000 ? 'warning' : 'fail',
+          category: 'Font Performance',
+          finding: 'Font Load Time',
+          details: `${performance.fontLoadTime}ms - ${performance.fontLoadTime <= 500 ? 'Fast' : performance.fontLoadTime <= 1000 ? 'Moderate' : 'Slow'}`
+        });
+      }
+    }
+
+    // Separate analysis findings by priority
+    const criticalAnalysis = analysisFindings.filter(f => f.status === 'fail');
+    const warningAnalysis = analysisFindings.filter(f => f.status === 'warning');
+    const passedAnalysis = analysisFindings.filter(f => f.status === 'pass');
+
+    // ========================================
+    // PART 2: RECOMMENDATIONS
+    // ========================================
     const recommendationsFindings = [
       {
         status: 'fail',
@@ -3955,6 +5108,50 @@ body {
     
     section.innerHTML = `
       <div class="recommendations-analysis">
+        <!-- ANALYSIS SECTION -->
+        <h3>📊 COMPREHENSIVE ANALYSIS</h3>
+        <p><em>Detailed analysis of performance, best practices, security, and Core Web Vitals</em></p>
+        
+        ${criticalAnalysis.length > 0 ? `
+          <div style="margin-bottom: 2rem;">
+            <h4 style="color: #ef4444; margin-bottom: 1rem;">🔴 Critical Issues (${criticalAnalysis.length})</h4>
+            ${this.createFindingsTable(criticalAnalysis)}
+          </div>
+        ` : ''}
+        
+        ${warningAnalysis.length > 0 ? `
+          <div style="margin-bottom: 2rem;">
+            <h4 style="color: #f59e0b; margin-bottom: 1rem;">⚠️ Needs Improvement (${warningAnalysis.length})</h4>
+            ${this.createFindingsTable(warningAnalysis)}
+          </div>
+        ` : ''}
+        
+        ${passedAnalysis.length > 0 ? `
+          <div style="margin-bottom: 2rem;">
+            <h4 style="color: #22c55e; margin-bottom: 1rem;">✅ Passed (${passedAnalysis.length})</h4>
+            <details>
+              <summary style="cursor: pointer; padding: 0.5rem; background: rgba(34, 197, 94, 0.1); border-radius: 4px; margin-bottom: 1rem;">
+                Click to view all passed checks
+              </summary>
+              ${this.createFindingsTable(passedAnalysis)}
+            </details>
+          </div>
+        ` : ''}
+        
+        <div style="margin-top: 2rem; margin-bottom: 3rem; padding: 1rem; background: rgba(59, 130, 246, 0.1); border-left: 4px solid #3b82f6; border-radius: 4px;">
+          <h4 style="color: #3b82f6; margin-bottom: 0.5rem;">💡 Focus Areas</h4>
+          <p style="margin: 0;">
+            ${criticalAnalysis.length > 0 
+              ? `Address <strong>${criticalAnalysis.length} critical issue${criticalAnalysis.length > 1 ? 's' : ''}</strong> first for maximum impact.` 
+              : warningAnalysis.length > 0 
+                ? `Optimize <strong>${warningAnalysis.length} area${warningAnalysis.length > 1 ? 's' : ''}</strong> to achieve excellence.`
+                : `<strong>Excellent work!</strong> All checks passed. Monitor regularly to maintain performance.`}
+          </p>
+        </div>
+        
+        <hr style="border: none; border-top: 2px solid #333; margin: 3rem 0;">
+        
+        <!-- RECOMMENDATIONS SECTION -->
         <h3>📋 FONT OPTIMIZATION RECOMMENDATIONS</h3>
         <p><em>Prioritized recommendations to improve font performance, accessibility, and user experience.</em></p>
         
@@ -4043,11 +5240,11 @@ body {
   }
 
   getBenchmarkRanking(score) {
-    if (score >= 9.0) return 'Industry Leading';
-    if (score >= 8.0) return 'Best in Class';
-    if (score >= 7.0) return 'Competitive';
-    if (score >= 6.0) return 'Above Average';
-    return 'Developing';
+    if (score >= 9.0) return 'All Features Working';
+    if (score >= 8.0) return 'Nearly Complete';
+    if (score >= 7.0) return 'Most Features Active';
+    if (score >= 6.0) return 'Some Features Working';
+    return 'Limited Coverage';
   }
 
   createDownloadReport(pdfPath) {

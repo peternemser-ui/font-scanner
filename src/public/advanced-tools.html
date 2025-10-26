@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Tools - Font Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin: 2rem 0;
+        }
+        
+        .tool-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .tool-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+            border-color: var(--primary-color);
+        }
+        
+        .tool-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .tool-badge {
+            display: inline-block;
+            padding: 0.25rem 0.75rem;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            margin-left: 0.5rem;
+        }
+        
+        .badge-new {
+            background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
+            color: #000;
+        }
+        
+        .badge-premium {
+            background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
+            color: #000;
+        }
+        
+        .badge-hot {
+            background: linear-gradient(135deg, #ff4444 0%, #cc0000 100%);
+            color: white;
+        }
+        
+        .tool-price {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.1) 0%, rgba(0, 150, 255, 0.1) 100%);
+            border-radius: 12px;
+            margin-bottom: 3rem;
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Font Scanner</div>
+        <ul class="nav-links">
+            <li><a href="/">Dashboard</a></li>
+            <li><a href="/seo-analyzer.html">SEO</a></li>
+            <li><a href="/performance-analyzer.html">Performance</a></li>
+            <li><a href="/accessibility-analyzer.html">Accessibility</a></li>
+            <li><a href="/security-analyzer.html">Security</a></li>
+            <li><a href="/advanced-tools.html" class="active">🚀 Advanced Tools</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <div class="hero">
+            <h1>🚀 Advanced Website Analysis Tools</h1>
+            <p style="font-size: 1.2rem; margin: 1rem 0;">Enterprise-grade diagnostics to dominate your market</p>
+        </div>
+
+        <div class="tools-grid">
+            <!-- Core Web Vitals -->
+            <div class="tool-card" onclick="window.location.href='/core-web-vitals.html'">
+                <div class="tool-icon">⚡</div>
+                <h2>Core Web Vitals <span class="tool-badge badge-hot">🔥 HOT</span></h2>
+                <p>Google ranking factor analysis. LCP, INP, CLS metrics with mobile-first scoring.</p>
+                <div class="tool-price">💰 $150-500/mo monitoring packages</div>
+            </div>
+
+            <!-- Competitive Analysis -->
+            <div class="tool-card" onclick="window.location.href='/competitive-analysis.html'">
+                <div class="tool-icon">🏆</div>
+                <h2>Beat Competition <span class="tool-badge badge-new">NEW</span></h2>
+                <p>Compare against 5 competitors. Side-by-side metrics with action plans.</p>
+                <div class="tool-price">💰 $500-2000 per report</div>
+            </div>
+
+            <!-- CRO Analyzer -->
+            <div class="tool-card" onclick="alert('CRO Analysis API ready at /api/cro-analysis - Frontend coming soon!')">
+                <div class="tool-icon">💰</div>
+                <h2>CRO Analyzer <span class="tool-badge badge-premium">PREMIUM</span></h2>
+                <p>Conversion optimization: CTAs, forms, trust signals, mobile UX scoring.</p>
+                <div class="tool-price">💰 $2k-10k per audit</div>
+            </div>
+
+            <!-- Broken Link Checker -->
+            <div class="tool-card" onclick="alert('Broken Link Checker API ready at /api/broken-links - Frontend coming soon!')">
+                <div class="tool-icon">🔗</div>
+                <h2>Broken Link Checker <span class="tool-badge badge-new">NEW</span></h2>
+                <p>Crawl your site for broken links, redirects, and dead external links.</p>
+                <div class="tool-price">💰 $50-100 per scan</div>
+            </div>
+
+            <!-- Brand Consistency -->
+            <div class="tool-card" onclick="alert('Brand Consistency API ready at /api/brand-consistency - Frontend coming soon!')">
+                <div class="tool-icon">🎨</div>
+                <h2>Brand Consistency</h2>
+                <p>Analyze color palette, fonts, and logo usage. Generate brand guide.</p>
+                <div class="tool-price">💰 $150-300 per audit</div>
+            </div>
+
+            <!-- Local SEO -->
+            <div class="tool-card" onclick="alert('Local SEO API ready at /api/local-seo - Frontend coming soon!')">
+                <div class="tool-icon">📍</div>
+                <h2>Local SEO Analyzer</h2>
+                <p>Check NAP consistency, LocalBusiness schema, Google Business Profile.</p>
+                <div class="tool-price">💰 $200-500 per local business</div>
+            </div>
+
+            <!-- GDPR Compliance -->
+            <div class="tool-card" onclick="alert('GDPR Compliance API ready at /api/gdpr-compliance - Frontend coming soon!')">
+                <div class="tool-icon">🔒</div>
+                <h2>GDPR Compliance <span class="tool-badge badge-premium">PREMIUM</span></h2>
+                <p>Cookie consent, privacy policies, tracker inventory. Legal risk assessment.</p>
+                <div class="tool-price">💰 $2k-10k per compliance audit</div>
+            </div>
+
+            <!-- SEO Analyzer -->
+            <div class="tool-card" onclick="window.location.href='/seo-analyzer.html'">
+                <div class="tool-icon">🔍</div>
+                <h2>SEO Analyzer</h2>
+                <p>Comprehensive SEO audit with 15+ checks. Meta tags, structured data, content.</p>
+                <div class="tool-price">✅ Included</div>
+            </div>
+
+            <!-- Performance Analyzer -->
+            <div class="tool-card" onclick="window.location.href='/performance-analyzer.html'">
+                <div class="tool-icon">📈</div>
+                <h2>Performance Analyzer</h2>
+                <p>Lighthouse-powered performance analysis. Mobile and desktop metrics.</p>
+                <div class="tool-price">✅ Included</div>
+            </div>
+
+            <!-- Accessibility Analyzer -->
+            <div class="tool-card" onclick="window.location.href='/accessibility-analyzer.html'">
+                <div class="tool-icon">♿</div>
+                <h2>Accessibility Analyzer</h2>
+                <p>WCAG 2.1 Level A, AA, AAA compliance checking. Screen reader tests.</p>
+                <div class="tool-price">✅ Included</div>
+            </div>
+
+            <!-- Security Analyzer -->
+            <div class="tool-card" onclick="window.location.href='/security-analyzer.html'">
+                <div class="tool-icon">🛡️</div>
+                <h2>Security Analyzer</h2>
+                <p>Security headers, SSL/TLS analysis, vulnerability scanning.</p>
+                <div class="tool-price">✅ Included</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin: 4rem 0 2rem 0;">
+            <h2>🚀 Coming Soon</h2>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 2rem;">
+                <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <div style="font-size: 2rem;">📊</div>
+                    <h3>PageSpeed Insights</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Google's field data integration</p>
+                </div>
+                <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <div style="font-size: 2rem;">📝</div>
+                    <h3>Content Quality</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Readability & keyword density</p>
+                </div>
+                <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <div style="font-size: 2rem;">📱</div>
+                    <h3>Mobile-First Report</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Mobile vs desktop comparison</p>
+                </div>
+                <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+                    <div style="font-size: 2rem;">🏷️</div>
+                    <h3>White-Label System</h3>
+                    <p style="font-size: 0.9rem; color: var(--text-secondary);">Agency branding ($500-2000/mo)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="theme-controls.js"></script>
+</body>
+</html>

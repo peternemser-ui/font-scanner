@@ -10,7 +10,7 @@ const logger = createLogger('CrossBrowserTestingService');
 class CrossBrowserTestingService {
   constructor() {
     this.supportedBrowsers = ['chrome', 'firefox', 'safari', 'edge'];
-    this.testTimeout = 30000;
+    this.testTimeout = 10000; // Reduced from 30s to 10s for faster scans
     this.browserInstances = new Map();
   }
 

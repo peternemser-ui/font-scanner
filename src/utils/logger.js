@@ -1,7 +1,9 @@
 /**
  * Logger utility for consistent logging across the application
- * Provides different log levels and formatting
+ * Provides different log levels and formatting with automatic data sanitization
  */
+
+const { sanitizeObject, sanitizeString, sanitizeError } = require('./sanitizer');
 
 const LOG_LEVELS = {
   ERROR: 'ERROR',
@@ -22,6 +24,31 @@ class Logger {
   constructor(context = 'App') {
     this.context = context;
     this.logLevel = process.env.LOG_LEVEL || 'INFO';
+    this.enableSanitization = process.env.DISABLE_LOG_SANITIZATION !== 'true';
+  }
+
+  /**
+   * Sanitize data before logging
+   * @private
+   */
+  _sanitizeData(data) {
+    if (!this.enableSanitization) {
+      return data;
+    }
+
+    if (data instanceof Error) {
+      return sanitizeError(data);
+    }
+
+    if (typeof data === 'string') {
+      return sanitizeString(data);
+    }
+
+    if (data && typeof data === 'object') {
+      return sanitizeObject(data);
+    }
+
+    return data;
   }
 
   /**
@@ -33,10 +60,24 @@ class Logger {
     const color = COLORS[level] || '';
     const reset = COLORS.RESET;
 
-    let logMessage = `${color}[${timestamp}] [${level}] [${this.context}]${reset} ${message}`;
+    // Sanitize message if it's a string
+    const sanitizedMessage = typeof message === 'string' && this.enableSanitization
+      ? sanitizeString(message)
+      : message;
 
-    if (data) {
-      logMessage += ` ${JSON.stringify(data)}`;
+    // Sanitize data
+    const sanitizedData = this._sanitizeData(data);
+
+    // Extract requestId if present in data
+    let requestId = '';
+    if (sanitizedData && sanitizedData.requestId) {
+      requestId = ` [reqId:${sanitizedData.requestId.substring(0, 8)}]`;
+    }
+
+    let logMessage = `${color}[${timestamp}] [${level}] [${this.context}]${requestId}${reset} ${sanitizedMessage}`;
+
+    if (sanitizedData) {
+      logMessage += ` ${JSON.stringify(sanitizedData)}`;
     }
 
     return logMessage;

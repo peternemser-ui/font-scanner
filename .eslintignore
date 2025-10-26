@@ -1,0 +1,25 @@
+# Backup and temporary files
+*_backup.js
+*_old.js
+*_new.js
+
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Reports
+reports/
+
+# Logs
+logs/
+*.log
+
+# Coverage
+coverage/
+
+# OS files
+.DS_Store
+Thumbs.db

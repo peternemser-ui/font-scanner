@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Comprehensive website analysis dashboard - SEO, Performance, Accessibility, Security, and Typography in one unified view." />
+    <meta name="theme-color" content="#000000" />
+    
+    <title>Dashboard - Comprehensive Website Analysis</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+  </head>
+  <body>
+    <!-- Theme Toggle Button -->
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌓 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+    
+    <div class="container">
+      <!-- Font Size Controls -->
+      <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
+        <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
+        <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
+        <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
+        <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
+      </div>
+
+      <!-- Header -->
+      <header class="form-container">
+        <h1>[COMPREHENSIVE_DASHBOARD]</h1>
+        <p>> unified website analysis & health monitoring</p>
+        
+        <!-- URL Input Form -->
+        <div style="margin-top: 2rem;">
+          <label for="dashboardUrlInput" class="visually-hidden">Website URL to analyze</label>
+          <input 
+            type="url" 
+            id="dashboardUrlInput" 
+            placeholder="https://example.com" 
+            aria-label="Enter website URL for comprehensive analysis"
+            required
+            aria-required="true"
+          />
+          
+          <button id="dashboardAnalyzeButton" aria-label="Start comprehensive website analysis">
+            RUN FULL AUDIT
+          </button>
+        </div>
+
+        <!-- Quick Stats -->
+        <div id="quickStats" style="display: none; margin-top: 2rem;"></div>
+      </header>
+
+      <!-- Loading Message -->
+      <div id="loadingMessage" class="loading-message" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Running comprehensive analysis across all modules...</p>
+        <p style="font-size: 0.9rem; color: #808080;">This may take 30-60 seconds</p>
+      </div>
+
+      <!-- Error Message -->
+      <div id="errorMessage" class="error-message" style="display: none;"></div>
+
+      <!-- Results Container -->
+      <div id="dashboardResults" class="results-container" style="display: none;">
+        <!-- Results will be dynamically inserted here -->
+      </div>
+    </div>
+
+    <!-- Shared JavaScript -->
+    <script src="/theme-controls.js"></script>
+    <script src="/nav-template.js"></script>
+    
+    <!-- Dashboard Script -->
+    <script src="/dashboard-script.js"></script>
+  </body>
+</html>

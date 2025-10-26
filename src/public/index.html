@@ -3,20 +3,51 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Professional font analysis tool for web developers. Scan websites for font usage, performance, accessibility, and best practices." />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="font scanner, web fonts, font analysis, typography, accessibility, performance" />
+    <meta name="author" content="Font Scanner" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Font Scanner - Professional Font Analysis" />
+    <meta property="og:description" content="Comprehensive website font analysis with performance and accessibility insights" />
+    <meta property="og:type" content="website" />
+    
     <title>Font Scanner - Comprehensive Font Analysis Tool</title>
+    
+    <!-- Preload critical fonts with font-display swap -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Load fonts with optimal font-display strategy -->
     <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
   </head>
   <body>
     <!-- Theme Toggle Button -->
-    <button id="themeToggle" class="theme-toggle">🌓 Theme</button>
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌓 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
     
     <div class="container">
       <!-- Font Size Controls -->
-      <div class="font-size-controls">
-        <button class="font-size-btn" data-size="sm">SM</button>
-        <button class="font-size-btn active" data-size="md">MD</button>
-        <button class="font-size-btn" data-size="lg">LG</button>
-        <button class="font-size-btn" data-size="xl">XL</button>
+      <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
+        <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
+        <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
+        <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
+        <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
       </div>
 
       <!-- Header -->
@@ -26,89 +57,99 @@
         
         <!-- URL Input Form -->
         <div style="margin-top: 2rem;">
-          <input type="url" id="urlInput" placeholder="https://example.com" />
+          <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
+          <input 
+            type="url" 
+            id="urlInput" 
+            placeholder="https://example.com" 
+            aria-label="Enter website URL to analyze"
+            required
+            aria-required="true"
+          />
           
-          <!-- Best-in-Class Toggle -->
-          <div class="scan-options" style="margin: 1rem 0;">
-            <label class="toggle-container">
-              <input type="checkbox" id="bestInClassToggle" />
-              <span class="toggle-slider"></span>
-              <span class="toggle-label">🚀 Best-in-Class Analysis</span>
-            </label>
-            <small class="toggle-description">Advanced AI analysis with industry benchmarking, cross-browser testing, and comprehensive accessibility</small>
-          </div>
-          
-          <button id="analyzeButton">ANALYZE</button>
+          <button id="analyzeButton" aria-label="Start comprehensive font analysis">ANALYZE</button>
         </div>
       </header>
 
       <!-- Results Container -->
-      <div id="results" class="results-container hidden">
-        <div id="loadingMessage" class="hidden">
-          <h2>Processing Analysis...</h2>
+      <div id="results" class="results-container hidden" role="region" aria-live="polite">
+        <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
+          <h2><span class="heartbeat" aria-hidden="true">⚡</span> Processing Analysis...</h2>
           <p class="animate-pulse">Analyzing website fonts and performance...</p>
-          <div class="progress-container">
+          <div class="progress-container" role="progressbar" aria-label="Analysis progress">
             <div class="progress-bar" id="progressBar"></div>
           </div>
-          <div id="progressText" class="progress-text"></div>
+          <div id="progressText" class="progress-text" aria-live="polite"></div>
+          <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0, 255, 20, 0.1); border: 1px solid rgba(0, 255, 20, 0.3); border-radius: 4px; font-size: 0.85rem;">
+            <strong>💡 Note:</strong> <span style="color: #00ff41;">Comprehensive analysis includes Lighthouse, accessibility audit, cross-browser testing, and AI-powered insights. Analysis takes 5-10 minutes.</span>
+          </div>
         </div>
 
         <!-- Executive Summary -->
-        <div id="executiveSummary" class="section hidden">
+        <section id="executiveSummary" class="section hidden">
           <h2>[EXECUTIVE_SUMMARY]</h2>
           <div id="executiveSummaryContent"></div>
-        </div>
+        </section>
 
         <!-- Font Analysis -->
-        <div id="fontAnalysis" class="section hidden">
+        <section id="fontAnalysis" class="section hidden">
           <h2>[FONT_ANALYSIS]</h2>
           <div id="fontAnalysisContent"></div>
-        </div>
+        </section>
 
         <!-- Best Practices -->
-        <div id="bestPractices" class="section hidden">
+        <section id="bestPractices" class="section hidden">
           <h2>[BEST_PRACTICES_ANALYSIS]</h2>
           <div id="bestPracticesContent"></div>
-        </div>
+        </section>
 
         <!-- Performance Analysis -->
-        <div id="performanceAnalysis" class="section hidden">
+        <section id="performanceAnalysis" class="section hidden">
           <h2>[PERFORMANCE_ANALYSIS]</h2>
           <div id="performanceAnalysisContent"></div>
-        </div>
+        </section>
 
         <!-- Security and Caching -->
-        <div id="securityCaching" class="section hidden">
+        <section id="securityCaching" class="section hidden">
           <h2>[SECURITY_AND_PERFORMANCE]</h2>
           <div id="securityCachingContent"></div>
-        </div>
+        </section>
 
         <!-- Accessibility -->
-        <div id="accessibility" class="section hidden">
+        <section id="accessibility" class="section hidden">
           <h2>[ACCESSIBILITY]</h2>
           <div id="accessibilityContent"></div>
-        </div>
+        </section>
 
         <!-- Recommendations -->
-        <div id="recommendations" class="section hidden">
+        <section id="recommendations" class="section hidden">
           <h2>[RECOMMENDATIONS]</h2>
           <div id="recommendationsContent"></div>
-        </div>
+        </section>
 
         <!-- Page Screenshot -->
-        <div id="pageScreenshot" class="section hidden">
+        <section id="pageScreenshot" class="section hidden">
           <h2>[PAGE_SCREENSHOT]</h2>
           <div id="pageScreenshotContent"></div>
-        </div>
+        </section>
 
         <!-- Download Report -->
-        <div id="downloadReport" class="section hidden">
+        <section id="downloadReport" class="section hidden">
           <h2>[DOWNLOAD_REPORT]</h2>
           <div id="downloadReportContent"></div>
-        </div>
+        </section>
       </div>
     </div>
 
+    <!-- Socket.IO Client Library -->
+    <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Shared Navigation Template -->
+    <script src="nav-template.js"></script>
+    
+    <!-- Analyzer Loader -->
+    <script src="analyzer-loader.js"></script>
+    
     <script src="script.js"></script>
   </body>
 </html>

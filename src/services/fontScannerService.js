@@ -1,5 +1,5 @@
-const puppeteer = require('puppeteer');
 const { createLogger } = require('../utils/logger');
+const browserPool = require('../utils/browserPool');
 const FontAnalyzer = require('./fontAnalyzer');
 const performanceAnalyzer = require('./performanceAnalyzer');
 const bestPracticesAnalyzer = require('./bestPracticesAnalyzer');
@@ -8,39 +8,14 @@ const fallbackScannerService = require('./fallbackScannerService');
 const logger = createLogger('FontScannerService');
 
 class FontScannerService {
-  constructor() {
-    this.browser = null;
-  }
-
-  async initBrowser() {
-    if (!this.browser) {
-      this.browser = await puppeteer.launch({
-        headless: 'new',
-        args: [
-          '--no-sandbox',
-          '--disable-setuid-sandbox',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--no-first-run',
-          '--no-zygote',
-          '--disable-gpu',
-          '--disable-features=VizDisplayCompositor',
-          '--disable-background-timer-throttling',
-          '--disable-backgrounding-occluded-windows',
-          '--disable-renderer-backgrounding',
-        ],
-        defaultViewport: { width: 1920, height: 1080 },
-        timeout: 120000, // 2 minutes for browser operations
-      });
-    }
-    return this.browser;
-  }
-
   async scanWebsite(url) {
-    const browser = await this.initBrowser();
-    const page = await browser.newPage();
+    // Acquire browser from pool
+    const browser = await browserPool.acquire();
+    let page = null;
 
     try {
+      page = await browser.newPage();
+
       // Listen to browser console messages to see FontAnalyzer debug output
       page.on('console', (msg) => {
         const text = msg.text();
@@ -57,43 +32,32 @@ class FontScannerService {
 
       logger.info(`Navigating to: ${url}`);
 
-      // Navigate to the page with improved timeout handling
+      // Navigate to the page with optimized timeout handling
       const startTime = Date.now();
       let loadTime = 0;
 
       try {
-        // Try with networkidle2 first (increased timeout)
+        // Try domcontentloaded first (faster)
         await page.goto(url, {
-          waitUntil: 'networkidle2',
-          timeout: 120000, // 2 minutes
+          waitUntil: 'domcontentloaded',
+          timeout: 30000, // 30 seconds
         });
         loadTime = Date.now() - startTime;
-        logger.info(`Page loaded with networkidle2 in ${loadTime}ms`);
+        logger.info(`Page loaded with domcontentloaded in ${loadTime}ms`);
       } catch (error) {
         if (error.name === 'TimeoutError') {
-          logger.info('Timeout with networkidle2, trying domcontentloaded...');
-          // Fallback to domcontentloaded if networkidle2 times out
+          logger.info('Timeout with domcontentloaded, trying load...');
+          // Fallback to basic load
           try {
             await page.goto(url, {
-              waitUntil: 'domcontentloaded',
-              timeout: 90000, // 1.5 minutes
+              waitUntil: 'load',
+              timeout: 45000, // 45 seconds
             });
             loadTime = Date.now() - startTime;
-            logger.info(`Page loaded with domcontentloaded in ${loadTime}ms`);
-          } catch (fallbackError) {
-            logger.info('Timeout with domcontentloaded, trying load...');
-            // Final fallback to basic load
-            try {
-              await page.goto(url, {
-                waitUntil: 'load',
-                timeout: 60000, // 1 minute
-              });
-              loadTime = Date.now() - startTime;
-              logger.info(`Page loaded with basic load in ${loadTime}ms`);
-            } catch (finalError) {
-              logger.error(`All page load strategies failed for ${url}:`, finalError.message);
-              throw new Error(`The website took too long to load. This could be due to slow server response, large resources, or network issues. Please try again later or check if the website is accessible.`);
-            }
+            logger.info(`Page loaded with load in ${loadTime}ms`);
+          } catch (finalError) {
+            logger.error(`Page load failed for ${url}:`, finalError.message);
+            throw new Error(`The website took too long to load. This could be due to slow server response, large resources, or network issues. Please try again later or check if the website is accessible.`);
           }
         } else {
           logger.error(`Page navigation error for ${url}:`, error.message);
@@ -101,9 +65,9 @@ class FontScannerService {
         }
       }
 
-      // Wait for additional content to load
+      // Wait for fonts to load (reduced wait time)
       try {
-        await page.waitForTimeout(3000);
+        await page.waitForTimeout(1500); // Reduced from 3000ms to 1500ms
 
         // Try to wait for fonts to be ready
         await page.evaluate(() => {
@@ -154,37 +118,25 @@ class FontScannerService {
       logger.info('Falling back to simple HTTP-based analysis...');
 
       // Use fallback scanner
-      await page.close();
-      return await fallbackScannerService.scanWebsite(url);
-    } finally {
       if (page && !page.isClosed()) {
         await page.close();
       }
-    }
-  }
-
-  async closeBrowser() {
-    if (this.browser) {
-      await this.browser.close();
-      this.browser = null;
+      
+      // Release browser back to pool before fallback
+      await browserPool.release(browser);
+      
+      return await fallbackScannerService.scanWebsite(url);
+    } finally {
+      // Always close page and release browser
+      if (page && !page.isClosed()) {
+        await page.close();
+      }
+      await browserPool.release(browser);
     }
   }
 }
 
 // Create singleton instance
 const fontScannerService = new FontScannerService();
-
-// Graceful shutdown
-process.on('SIGINT', async () => {
-  logger.info('Closing browser...');
-  await fontScannerService.closeBrowser();
-  process.exit(0);
-});
-
-process.on('SIGTERM', async () => {
-  logger.info('Closing browser...');
-  await fontScannerService.closeBrowser();
-  process.exit(0);
-});
 
 module.exports = fontScannerService;

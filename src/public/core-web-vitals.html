@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Core Web Vitals Analyzer - Track Google's ranking factors: LCP, INP/FID, CLS. Real-time monitoring and optimization recommendations." />
+    <meta name="theme-color" content="#000000" />
+    
+    <title>Core Web Vitals Analyzer - Google Ranking Factors</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="pdf-payment-modal.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+  </head>
+  <body>
+    <!-- Theme Toggle Button -->
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌙 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+    
+    <div class="container">
+      <!-- Font Size Controls -->
+      <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
+        <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
+        <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
+        <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
+        <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
+      </div>
+
+      <!-- Header -->
+      <header class="form-container">
+        <h1>[CORE_WEB_VITALS_ANALYZER]</h1>
+        <p>> google ranking factors • lcp • inp • cls • real user monitoring</p>
+        
+        <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b; border-radius: 4px;">
+          <p style="color: #ff6b6b; font-weight: bold; margin: 0 0 0.5rem 0;">⚠️ GOOGLE RANKING FACTOR</p>
+          <p style="color: #e0e0e0; margin: 0; line-height: 1.5;">
+            Core Web Vitals directly affect your Google search rankings. Sites that pass CWV get priority in search results.
+          </p>
+        </div>
+        
+        <!-- URL Input Form -->
+        <div style="margin-top: 2rem;">
+          <label for="cwvUrlInput" class="visually-hidden">Website URL to analyze</label>
+          <input 
+            type="url" 
+            id="cwvUrlInput" 
+            placeholder="https://example.com" 
+            aria-label="Enter website URL for Core Web Vitals analysis"
+            required
+            aria-required="true"
+          />
+          
+          <button id="cwvAnalyzeButton" aria-label="Start Core Web Vitals analysis">ANALYZE CWV</button>
+        </div>
+      </header>
+
+      <!-- Results Container -->
+      <div id="cwvResults" class="results-container" style="display: none;">
+        <!-- Results will be dynamically inserted here by cwv-script.js -->
+      </div>
+    </div>
+
+    <!-- Shared JavaScript for theme and font controls -->
+    <script src="/theme-controls.js"></script>
+    
+    <!-- Shared Navigation Template -->
+    <script src="/nav-template.js"></script>
+    
+    <!-- PDF Payment Modal -->
+    <script src="/pdf-payment-modal.js"></script>
+    
+    <!-- Analyzer Loader -->
+    <script src="/analyzer-loader.js"></script>
+    
+    <!-- Core Web Vitals Analyzer Script -->
+    <script src="/cwv-script.js"></script>
+  </body>
+</html>
