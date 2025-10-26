@@ -254,6 +254,7 @@ function displayResults(data) {
       </p>
       <button 
         id="cwvPdfDownloadButton"
+        class="pdf-download-btn"
         style="
           padding: 1rem 2rem;
           background: linear-gradient(135deg, #bb86fc 0%, #9d5fdb 100%);
@@ -267,9 +268,6 @@ function displayResults(data) {
           transition: all 0.2s ease;
           box-shadow: 0 4px 15px rgba(187, 134, 252, 0.3);
         "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(187, 134, 252, 0.5)';"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(187, 134, 252, 0.3)';"
-        onclick="openPdfPurchaseModal('core-web-vitals')"
       >
         📥 Download CWV PDF Report ($5)
       </button>
@@ -278,6 +276,26 @@ function displayResults(data) {
       </p>
     </div>
   `;
+
+  // Add event listeners after DOM is updated
+  setTimeout(() => {
+    const pdfButton = document.getElementById('cwvPdfDownloadButton');
+    if (pdfButton) {
+      pdfButton.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-2px)';
+        this.style.boxShadow = '0 6px 20px rgba(187, 134, 252, 0.5)';
+      });
+      pdfButton.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = '0 4px 15px rgba(187, 134, 252, 0.3)';
+      });
+      pdfButton.addEventListener('click', function() {
+        if (typeof openPdfPurchaseModal === 'function') {
+          openPdfPurchaseModal('core-web-vitals');
+        }
+      });
+    }
+  }, 100);
 }
 
 function renderCWVMetrics(device) {
@@ -314,28 +332,44 @@ function renderMetricCard(abbr, name, metric, icon, category) {
     'needs-improvement': '#ffd700',
     'poor': '#ff4444',
     'unknown': '#808080'
-  }[metric.rating];
+  }[metric.rating || 'unknown'];
+
+  const cardId = `metric-card-${abbr.toLowerCase()}`;
+
+  // Add the card HTML
+  setTimeout(() => {
+    const card = document.getElementById(cardId);
+    if (card) {
+      card.addEventListener('mouseenter', function() {
+        this.style.transform = 'translateY(-4px)';
+        this.style.boxShadow = `0 6px 20px ${ratingColor}50`;
+      });
+      card.addEventListener('mouseleave', function() {
+        this.style.transform = 'translateY(0)';
+        this.style.boxShadow = 'none';
+      });
+    }
+  }, 100);
 
   return `
-    <div style="
+    <div id="${cardId}" style="
       background: ${ratingColor}15;
       border: 2px solid ${ratingColor};
       border-radius: 12px;
       padding: 1.5rem;
       transition: all 0.3s ease;
       cursor: pointer;
-    " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 20px ${ratingColor}50';" 
-       onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+    ">
       <div style="font-size: 3rem; text-align: center; margin-bottom: 0.5rem;">${icon}</div>
       <div style="text-align: center; color: ${ratingColor}; font-weight: bold; font-size: 1.2rem; margin-bottom: 0.25rem;">${abbr}</div>
       <div style="text-align: center; color: #c0c0c0; font-size: 0.85rem; margin-bottom: 1rem;">${name}</div>
-      <div style="text-align: center; font-size: 2rem; font-weight: bold; color: ${ratingColor}; margin-bottom: 0.5rem;">${metric.displayValue}</div>
+      <div style="text-align: center; font-size: 2rem; font-weight: bold; color: ${ratingColor}; margin-bottom: 0.5rem;">${metric.displayValue || 'N/A'}</div>
       <div style="text-align: center; color: #909090; font-size: 0.8rem; margin-bottom: 0.75rem;">${category}</div>
       <div style="text-align: center; padding: 0.5rem; background: ${ratingColor}30; border-radius: 6px;">
-        <div style="color: #e0e0e0; font-weight: 600; font-size: 0.9rem;">${metric.rating.toUpperCase()}</div>
+        <div style="color: #e0e0e0; font-weight: 600; font-size: 0.9rem;">${(metric.rating || 'UNKNOWN').toUpperCase()}</div>
       </div>
       <div style="margin-top: 0.75rem; color: #808080; font-size: 0.75rem; line-height: 1.3; text-align: center;">
-        ${metric.description}
+        ${metric.description || 'Metric information'}
       </div>
     </div>
   `;

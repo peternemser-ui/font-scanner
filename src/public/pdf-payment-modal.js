@@ -33,11 +33,11 @@ class PDFPaymentModal {
   createModal() {
     const modalHTML = `
       <div id="pdfPaymentModal" class="pdf-payment-modal" style="display: none;">
-        <div class="pdf-modal-overlay" onclick="window.pdfPaymentModal.close()"></div>
+        <div class="pdf-modal-overlay" id="pdfModalOverlay"></div>
         <div class="pdf-modal-content">
           <div class="pdf-modal-header">
             <h2>[PURCHASE_PDF_REPORT]</h2>
-            <button class="pdf-modal-close" onclick="window.pdfPaymentModal.close()">×</button>
+            <button class="pdf-modal-close" id="pdfModalCloseBtn">×</button>
           </div>
           
           <div class="pdf-modal-body">
@@ -172,11 +172,23 @@ class PDFPaymentModal {
     const form = document.getElementById('pdfPaymentForm');
     form.addEventListener('submit', (e) => this.handleSubmit(e));
 
+    // Close button
+    const closeBtn = document.getElementById('pdfModalCloseBtn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.close());
+    }
+
+    // Overlay click to close
+    const overlay = document.getElementById('pdfModalOverlay');
+    if (overlay) {
+      overlay.addEventListener('click', () => this.close());
+    }
+
     // Auto-format card number
     const cardInput = document.getElementById('pdfCardNumber');
     cardInput.addEventListener('input', (e) => {
-      let value = e.target.value.replace(/\s/g, '');
-      let formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
+      const value = e.target.value.replace(/\s/g, '');
+      const formattedValue = value.match(/.{1,4}/g)?.join(' ') || value;
       e.target.value = formattedValue;
     });
 
