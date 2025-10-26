@@ -188,9 +188,9 @@ function displayResults(data) {
     <!-- The Big 3 Core Web Vitals -->
     <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">⚡ The Big 3: Google's Core Web Vitals</h2>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
-      ${renderMetricCard('LCP', 'Largest Contentful Paint', mobile.lcp, '🖼️', 'Loading Performance')}
-      ${renderMetricCard('INP', 'Interaction to Next Paint', mobile.inp, '👆', 'Responsiveness')}
-      ${renderMetricCard('CLS', 'Cumulative Layout Shift', mobile.cls, '📐', 'Visual Stability')}
+      ${renderMetricCard('LCP', 'Largest Contentful Paint', mobile.lcp, desktop.lcp, '🖼️', 'Loading Performance')}
+      ${renderMetricCard('INP', 'Interaction to Next Paint', mobile.inp, desktop.inp, '👆', 'Responsiveness')}
+      ${renderMetricCard('CLS', 'Cumulative Layout Shift', mobile.cls, desktop.cls, '📐', 'Visual Stability')}
     </div>
 
     <!-- Additional Performance Metrics -->
@@ -330,13 +330,20 @@ function renderCWVMetrics(device) {
   `;
 }
 
-function renderMetricCard(abbr, name, metric, icon, category) {
+function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, category) {
+  // Determine overall rating based on mobile (70% weight) and desktop (30% weight)
+  const mobileRating = mobileMetric.rating || 'unknown';
+  const desktopRating = desktopMetric.rating || 'unknown';
+  
+  // Use mobile rating as primary since it's weighted more heavily
+  const primaryRating = mobileRating;
+  
   const ratingColor = {
     'good': '#00ff41',
     'needs-improvement': '#ffd700',
     'poor': '#ff4444',
     'unknown': '#808080'
-  }[metric.rating || 'unknown'];
+  }[primaryRating];
 
   const cardId = `metric-card-${abbr.toLowerCase()}`;
 
@@ -367,13 +374,44 @@ function renderMetricCard(abbr, name, metric, icon, category) {
       <div style="font-size: 3rem; text-align: center; margin-bottom: 0.5rem;">${icon}</div>
       <div style="text-align: center; color: ${ratingColor}; font-weight: bold; font-size: 1.2rem; margin-bottom: 0.25rem;">${abbr}</div>
       <div style="text-align: center; color: #c0c0c0; font-size: 0.85rem; margin-bottom: 1rem;">${name}</div>
-      <div style="text-align: center; font-size: 2rem; font-weight: bold; color: ${ratingColor}; margin-bottom: 0.5rem;">${metric.displayValue || 'N/A'}</div>
+      
+      <!-- Mobile and Desktop Values -->
+      <div style="margin-bottom: 1rem;">
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 0.5rem;
+          padding: 0.5rem;
+          background: rgba(150, 0, 255, 0.1);
+          border-radius: 6px;
+        ">
+          <span style="color: #9600ff; font-size: 0.85rem; font-weight: bold;">📱 Mobile</span>
+          <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1rem;">
+            ${abbr === 'CLS' ? mobileMetric.value.toFixed(3) : (mobileMetric.displayValue || 'N/A')}
+          </span>
+        </div>
+        <div style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 0.5rem;
+          background: rgba(0, 150, 255, 0.1);
+          border-radius: 6px;
+        ">
+          <span style="color: #0096ff; font-size: 0.85rem; font-weight: bold;">🖥️ Desktop</span>
+          <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1rem;">
+            ${abbr === 'CLS' ? desktopMetric.value.toFixed(3) : (desktopMetric.displayValue || 'N/A')}
+          </span>
+        </div>
+      </div>
+      
       <div style="text-align: center; color: #909090; font-size: 0.8rem; margin-bottom: 0.75rem;">${category}</div>
       <div style="text-align: center; padding: 0.5rem; background: ${ratingColor}30; border-radius: 6px;">
-        <div style="color: #e0e0e0; font-weight: 600; font-size: 0.9rem;">${(metric.rating || 'UNKNOWN').toUpperCase()}</div>
+        <div style="color: #e0e0e0; font-weight: 600; font-size: 0.9rem;">${primaryRating.toUpperCase()}</div>
       </div>
       <div style="margin-top: 0.75rem; color: #808080; font-size: 0.75rem; line-height: 1.3; text-align: center;">
-        ${metric.description || 'Metric information'}
+        ${mobileMetric.description || 'Metric information'}
       </div>
     </div>
   `;
