@@ -144,7 +144,7 @@ function displayPerformanceResults(results) {
       margin: 2rem 0;
       box-shadow: 0 4px 20px rgba(0,255,65,0.15);
     ">
-      <div style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: center;">
+      <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 2rem; align-items: center;">
         <!-- Left: Performance Score Circle -->
         <div style="text-align: center;">
           <div style="
@@ -182,9 +182,123 @@ function displayPerformanceResults(results) {
             color: ${getPerformanceColor(avgScore)};
             text-shadow: 0 0 10px ${getPerformanceColor(avgScore)}80;
           ">${getPerformanceGrade(avgScore)}</div>
-          ${isCrossBrowser ? `<div style="font-size: 0.85rem; color: #808080; margin-top: 0.5rem;">Average Score</div>` : ''}
+          <div style="font-size: 0.85rem; color: #808080; margin-top: 0.5rem;">Load Speed</div>
         </div>
+
+        <!-- Middle: Info & Note -->
+        <div style="padding: 0 1rem;">
+          <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.3rem;">⚡ Performance Score</h3>
+          <p style="color: #c0c0c0; margin: 0 0 0.75rem 0; line-height: 1.6;">
+            This score measures <strong style="color: #00ff41;">page load speed</strong> based on Lighthouse metrics 
+            (FCP, LCP, TTI, TBT, CLS, SI). A perfect 100 means excellent timing, but doesn't reflect overall site quality.
+          </p>
+          <div style="
+            background: rgba(255, 152, 0, 0.1);
+            border-left: 4px solid #ff9800;
+            padding: 0.75rem 1rem;
+            border-radius: 4px;
+          ">
+            <strong style="color: #ff9800;">💡 Note:</strong>
+            <span style="color: #d0d0d0; font-size: 0.9rem;">
+              100/100 performance ≠ perfect website. Check Site Health Score for comprehensive quality assessment.
+            </span>
+          </div>
+        </div>
+
+        <!-- Right: Site Health Score Circle -->
+        ${results.siteHealthScore ? `
+          <div style="text-align: center;">
+            <div style="
+              width: 150px;
+              height: 150px;
+              border-radius: 50%;
+              background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+              border: 4px solid ${getPerformanceColor(results.siteHealthScore)};
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 0 25px ${getPerformanceColor(results.siteHealthScore)}40, inset 0 0 15px rgba(0,0,0,0.5);
+            ">
+              <div style="
+                font-size: 3.5rem;
+                font-weight: 900;
+                color: #ffffff;
+                text-shadow: 0 0 15px ${getPerformanceColor(results.siteHealthScore)};
+                line-height: 1;
+              ">${results.siteHealthScore}</div>
+              <div style="
+                font-size: 0.8rem;
+                color: #b0b0b0;
+                margin-top: 0.4rem;
+                text-transform: uppercase;
+                letter-spacing: 1.5px;
+                font-weight: 600;
+              ">/ 100</div>
+            </div>
+            <div style="
+              margin-top: 0.75rem;
+              font-size: 1.2rem;
+              font-weight: bold;
+              color: ${getPerformanceColor(results.siteHealthScore)};
+              text-shadow: 0 0 8px ${getPerformanceColor(results.siteHealthScore)}80;
+            ">${getPerformanceGrade(results.siteHealthScore)}</div>
+            <div style="font-size: 0.85rem; color: #00ff41; margin-top: 0.5rem; font-weight: 600;">Site Health</div>
+          </div>
+        ` : ''}
       </div>
+
+      <!-- Dimensional Grades Breakdown -->
+      ${results.dimensionalGrades ? `
+        <div style="
+          margin-top: 2rem;
+          padding-top: 2rem;
+          border-top: 1px solid rgba(0, 255, 65, 0.2);
+        ">
+          <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.1rem;">📊 Multi-Dimensional Analysis</h4>
+          <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem;">
+            ${Object.entries(results.dimensionalGrades).map(([dimension, grade]) => {
+              const icons = {
+                performance: '⚡',
+                resources: '📦',
+                caching: '💾',
+                network: '🌐',
+                webVitals: '🎯'
+              };
+              const labels = {
+                performance: 'Performance',
+                resources: 'Resources',
+                caching: 'Caching',
+                network: 'Network',
+                webVitals: 'Web Vitals'
+              };
+              const gradeColor = getGradeColor(grade);
+              return `
+                <div style="
+                  text-align: center;
+                  padding: 1rem;
+                  background: rgba(255, 255, 255, 0.03);
+                  border: 2px solid ${gradeColor}40;
+                  border-radius: 8px;
+                  transition: all 0.3s ease;
+                ">
+                  <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${icons[dimension]}</div>
+                  <div style="
+                    font-size: 2rem;
+                    font-weight: 900;
+                    color: ${gradeColor};
+                    text-shadow: 0 0 10px ${gradeColor}60;
+                    margin-bottom: 0.25rem;
+                  ">${grade}</div>
+                  <div style="font-size: 0.75rem; color: #a0a0a0; text-transform: uppercase; letter-spacing: 1px;">
+                    ${labels[dimension]}
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </div>
+      ` : ''}
     </div>
     
     <!-- PDF Download Button -->
@@ -1800,6 +1914,17 @@ function getPerformanceGrade(score) {
   if (score >= 70) return 'Good';
   if (score >= 50) return 'Needs Improvement';
   return 'Poor';
+}
+
+/**
+ * Get color for letter grade
+ */
+function getGradeColor(grade) {
+  if (grade.startsWith('A')) return '#00ff41';  // A+, A, A-
+  if (grade.startsWith('B')) return '#ffd700';  // B+, B, B-
+  if (grade.startsWith('C')) return '#ff8c00';  // C+, C, C-
+  if (grade.startsWith('D')) return '#ff6600';  // D+, D, D-
+  return '#ff4444';                              // F
 }
 
 /**

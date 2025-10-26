@@ -310,6 +310,24 @@ class PerformanceAnalyzerService {
       mobileCoreWebVitals
     );
 
+    // Calculate comprehensive Site Health Score (weighted average of all factors)
+    const siteHealthScore = this.calculateSiteHealthScore({
+      performanceScore: desktopPerformanceScore,
+      resourceScore,
+      cachingScore,
+      networkScore,
+      webVitalsScore: this.calculateWebVitalsScore(desktopCoreWebVitals)
+    });
+
+    // Calculate dimensional grades
+    const dimensionalGrades = {
+      performance: this.getGrade(desktopPerformanceScore),
+      resources: this.getGrade(resourceScore),
+      caching: this.getGrade(cachingScore),
+      network: this.getGrade(networkScore),
+      webVitals: this.getGrade(this.calculateWebVitalsScore(desktopCoreWebVitals))
+    };
+
     return {
       url,
       timestamp: new Date().toISOString(),
@@ -317,6 +335,8 @@ class PerformanceAnalyzerService {
       
       // Overall summary (use desktop as primary)
       performanceScore: Math.round(desktopPerformanceScore),
+      siteHealthScore: Math.round(siteHealthScore), // NEW: Comprehensive health score
+      dimensionalGrades, // NEW: Multi-dimensional grades
       loadTime: `${(resourceMetrics.timing.navigation.totalLoadTime / 1000).toFixed(2)}s`,
       pageSize: this.formatBytes(resourceMetrics.pageSize),
       totalRequests: resourceMetrics.resources.length,
@@ -713,6 +733,48 @@ class PerformanceAnalyzerService {
     }
 
     return recommendations;
+  }
+
+  /**
+   * Calculate comprehensive Site Health Score
+   * Weighted average of all performance factors
+   */
+  calculateSiteHealthScore(scores) {
+    const weights = {
+      performanceScore: 0.30,  // 30% - Load speed (Lighthouse)
+      resourceScore: 0.25,      // 25% - Resource optimization
+      cachingScore: 0.20,       // 20% - Caching strategy
+      networkScore: 0.15,       // 15% - Network efficiency
+      webVitalsScore: 0.10      // 10% - Core Web Vitals
+    };
+
+    const weightedScore = 
+      (scores.performanceScore * weights.performanceScore) +
+      (scores.resourceScore * weights.resourceScore) +
+      (scores.cachingScore * weights.cachingScore) +
+      (scores.networkScore * weights.networkScore) +
+      (scores.webVitalsScore * weights.webVitalsScore);
+
+    return Math.round(weightedScore);
+  }
+
+  /**
+   * Get letter grade from score
+   */
+  getGrade(score) {
+    if (score >= 95) return 'A+';
+    if (score >= 90) return 'A';
+    if (score >= 85) return 'A-';
+    if (score >= 80) return 'B+';
+    if (score >= 75) return 'B';
+    if (score >= 70) return 'B-';
+    if (score >= 65) return 'C+';
+    if (score >= 60) return 'C';
+    if (score >= 55) return 'C-';
+    if (score >= 50) return 'D+';
+    if (score >= 45) return 'D';
+    if (score >= 40) return 'D-';
+    return 'F';
   }
 
   /**
