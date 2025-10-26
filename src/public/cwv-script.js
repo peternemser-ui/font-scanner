@@ -196,9 +196,9 @@ function displayResults(data) {
     <!-- Additional Performance Metrics -->
     <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">📊 Additional Performance Metrics</h2>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
-      ${renderAdditionalMetric('FCP', 'First Contentful Paint', mobile.additionalMetrics.fcp)}
-      ${renderAdditionalMetric('SI', 'Speed Index', mobile.additionalMetrics.si)}
-      ${renderAdditionalMetric('TTI', 'Time to Interactive', mobile.additionalMetrics.tti)}
+      ${renderAdditionalMetric('FCP', 'First Contentful Paint', mobile.additionalMetrics.fcp, desktop.additionalMetrics.fcp)}
+      ${renderAdditionalMetric('SI', 'Speed Index', mobile.additionalMetrics.si, desktop.additionalMetrics.si)}
+      ${renderAdditionalMetric('TTI', 'Time to Interactive', mobile.additionalMetrics.tti, desktop.additionalMetrics.tti)}
     </div>
 
     <!-- Recommendations -->
@@ -364,7 +364,7 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
 
   return `
     <div id="${cardId}" style="
-      background: ${ratingColor}15;
+      background: rgba(0, 0, 0, 0.4);
       border: 2px solid ${ratingColor};
       border-radius: 12px;
       padding: 1.5rem;
@@ -407,8 +407,8 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
       </div>
       
       <div style="text-align: center; color: #909090; font-size: 0.8rem; margin-bottom: 0.75rem;">${category}</div>
-      <div style="text-align: center; padding: 0.5rem; background: ${ratingColor}30; border-radius: 6px;">
-        <div style="color: #e0e0e0; font-weight: 600; font-size: 0.9rem;">${primaryRating.toUpperCase()}</div>
+      <div style="text-align: center; padding: 0.5rem; border: 1px solid ${ratingColor}; border-radius: 6px;">
+        <div style="color: ${ratingColor}; font-weight: 600; font-size: 0.9rem;">${primaryRating.toUpperCase().replace('-', ' ')}</div>
       </div>
       <div style="margin-top: 0.75rem; color: #808080; font-size: 0.75rem; line-height: 1.3; text-align: center;">
         ${mobileMetric.description || 'Metric information'}
@@ -417,18 +417,51 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
   `;
 }
 
-function renderAdditionalMetric(abbr, name, metric) {
+function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
   return `
     <div style="
-      background: rgba(0, 150, 255, 0.1);
+      background: rgba(0, 0, 0, 0.4);
       border: 1px solid rgba(0, 150, 255, 0.3);
       border-radius: 8px;
       padding: 1rem;
     ">
-      <div style="color: #0096ff; font-weight: bold; margin-bottom: 0.25rem;">${abbr}</div>
-      <div style="color: #e0e0e0; font-size: 1.5rem; font-weight: bold; margin-bottom: 0.5rem;">${metric.displayValue}</div>
-      <div style="color: #c0c0c0; font-size: 0.85rem;">${name}</div>
-      <div style="color: #909090; font-size: 0.75rem; margin-top: 0.5rem;">${metric.description}</div>
+      <div style="color: #0096ff; font-weight: bold; margin-bottom: 0.5rem;">${abbr}</div>
+      <div style="color: #c0c0c0; font-size: 0.85rem; margin-bottom: 1rem;">${name}</div>
+      
+      <!-- Mobile Value -->
+      <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        padding: 0.5rem;
+        background: rgba(150, 0, 255, 0.1);
+        border-radius: 6px;
+      ">
+        <span style="color: #9600ff; font-size: 0.8rem; font-weight: bold;">📱 Mobile</span>
+        <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1rem;">
+          ${mobileMetric.displayValue}
+        </span>
+      </div>
+      
+      <!-- Desktop Value -->
+      <div style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.5rem;
+        background: rgba(0, 150, 255, 0.1);
+        border-radius: 6px;
+      ">
+        <span style="color: #0096ff; font-size: 0.8rem; font-weight: bold;">🖥️ Desktop</span>
+        <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1rem;">
+          ${desktopMetric.displayValue}
+        </span>
+      </div>
+      
+      <div style="color: #909090; font-size: 0.75rem; margin-top: 0.75rem; line-height: 1.3;">
+        ${mobileMetric.description}
+      </div>
     </div>
   `;
 }
