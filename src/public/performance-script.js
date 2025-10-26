@@ -144,48 +144,93 @@ function displayPerformanceResults(results) {
       margin: 2rem 0;
       box-shadow: 0 4px 20px rgba(0,255,65,0.15);
     ">
-      <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 2rem; align-items: center;">
-        <!-- Left: Performance Score Circle -->
-        <div style="text-align: center;">
-          <div style="
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
-            border: 5px solid ${getPerformanceColor(avgScore)};
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 30px ${getPerformanceColor(avgScore)}40, inset 0 0 20px rgba(0,0,0,0.5);
-          ">
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: start;">
+        <!-- Left: Stacked Score Circles -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+          <!-- Performance Score Circle (100) -->
+          <div style="text-align: center;">
             <div style="
-              font-size: 4.5rem;
-              font-weight: 900;
-              color: #ffffff;
-              text-shadow: 0 0 20px ${getPerformanceColor(avgScore)}, 0 0 40px ${getPerformanceColor(avgScore)}80;
-              line-height: 1;
-            ">${avgScore}</div>
+              width: 160px;
+              height: 160px;
+              border-radius: 50%;
+              background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+              border: 5px solid ${getPerformanceColor(avgScore)};
+              display: flex;
+              flex-direction: column;
+              align-items: center;
+              justify-content: center;
+              box-shadow: 0 0 30px ${getPerformanceColor(avgScore)}40, inset 0 0 20px rgba(0,0,0,0.5);
+            ">
+              <div style="
+                font-size: 4rem;
+                font-weight: 900;
+                color: #ffffff;
+                text-shadow: 0 0 20px ${getPerformanceColor(avgScore)}, 0 0 40px ${getPerformanceColor(avgScore)}80;
+                line-height: 1;
+              ">${avgScore}</div>
+              <div style="
+                font-size: 0.85rem;
+                color: #b0b0b0;
+                margin-top: 0.5rem;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                font-weight: 600;
+              ">/ 100</div>
+            </div>
             <div style="
-              font-size: 0.9rem;
-              color: #b0b0b0;
-              margin-top: 0.5rem;
-              text-transform: uppercase;
-              letter-spacing: 2px;
-              font-weight: 600;
-            ">/ 100</div>
+              margin-top: 0.75rem;
+              font-size: 1.3rem;
+              font-weight: bold;
+              color: ${getPerformanceColor(avgScore)};
+              text-shadow: 0 0 10px ${getPerformanceColor(avgScore)}80;
+            ">${getPerformanceGrade(avgScore)}</div>
+            <div style="font-size: 0.85rem; color: #808080; margin-top: 0.25rem;">Load Speed</div>
           </div>
-          <div style="
-            margin-top: 1rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: ${getPerformanceColor(avgScore)};
-            text-shadow: 0 0 10px ${getPerformanceColor(avgScore)}80;
-          ">${getPerformanceGrade(avgScore)}</div>
-          <div style="font-size: 0.85rem; color: #808080; margin-top: 0.5rem;">Load Speed</div>
+
+          ${results.siteHealthScore ? `
+            <!-- Site Health Score Circle (85) -->
+            <div style="text-align: center;">
+              <div style="
+                width: 160px;
+                height: 160px;
+                border-radius: 50%;
+                background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+                border: 4px solid ${getPerformanceColor(results.siteHealthScore)};
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 25px ${getPerformanceColor(results.siteHealthScore)}40, inset 0 0 15px rgba(0,0,0,0.5);
+              ">
+                <div style="
+                  font-size: 3.5rem;
+                  font-weight: 900;
+                  color: #ffffff;
+                  text-shadow: 0 0 15px ${getPerformanceColor(results.siteHealthScore)};
+                  line-height: 1;
+                ">${results.siteHealthScore}</div>
+                <div style="
+                  font-size: 0.8rem;
+                  color: #b0b0b0;
+                  margin-top: 0.4rem;
+                  text-transform: uppercase;
+                  letter-spacing: 1.5px;
+                  font-weight: 600;
+                ">/ 100</div>
+              </div>
+              <div style="
+                margin-top: 0.75rem;
+                font-size: 1.2rem;
+                font-weight: bold;
+                color: ${getPerformanceColor(results.siteHealthScore)};
+                text-shadow: 0 0 8px ${getPerformanceColor(results.siteHealthScore)}80;
+              ">${getPerformanceGrade(results.siteHealthScore)}</div>
+              <div style="font-size: 0.85rem; color: #00ff41; margin-top: 0.25rem; font-weight: 600;">Site Health</div>
+            </div>
+          ` : ''}
         </div>
 
-        <!-- Middle: Info & Quick Stats -->
+        <!-- Right: Performance Score Details -->
         <div style="padding: 0 1rem; flex: 1;">
           <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.3rem;">⚡ Performance Score</h3>
           
@@ -295,48 +340,6 @@ function displayPerformanceResults(results) {
             </span>
           </div>
         </div>
-
-        <!-- Right: Site Health Score Circle -->
-        ${results.siteHealthScore ? `
-          <div style="text-align: center;">
-            <div style="
-              width: 150px;
-              height: 150px;
-              border-radius: 50%;
-              background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
-              border: 4px solid ${getPerformanceColor(results.siteHealthScore)};
-              display: flex;
-              flex-direction: column;
-              align-items: center;
-              justify-content: center;
-              box-shadow: 0 0 25px ${getPerformanceColor(results.siteHealthScore)}40, inset 0 0 15px rgba(0,0,0,0.5);
-            ">
-              <div style="
-                font-size: 3.5rem;
-                font-weight: 900;
-                color: #ffffff;
-                text-shadow: 0 0 15px ${getPerformanceColor(results.siteHealthScore)};
-                line-height: 1;
-              ">${results.siteHealthScore}</div>
-              <div style="
-                font-size: 0.8rem;
-                color: #b0b0b0;
-                margin-top: 0.4rem;
-                text-transform: uppercase;
-                letter-spacing: 1.5px;
-                font-weight: 600;
-              ">/ 100</div>
-            </div>
-            <div style="
-              margin-top: 0.75rem;
-              font-size: 1.2rem;
-              font-weight: bold;
-              color: ${getPerformanceColor(results.siteHealthScore)};
-              text-shadow: 0 0 8px ${getPerformanceColor(results.siteHealthScore)}80;
-            ">${getPerformanceGrade(results.siteHealthScore)}</div>
-            <div style="font-size: 0.85rem; color: #00ff41; margin-top: 0.5rem; font-weight: 600;">Site Health</div>
-          </div>
-        ` : ''}
       </div>
 
       <!-- Dimensional Grades Breakdown -->
