@@ -353,10 +353,52 @@
     this.socket.emit('join-scan', this.scanId);
     console.log('🚪 Emitted join-scan event');
     
-    // Show progress UI
-    console.log('📢 About to call showProgressUI()...');
-    this.showProgressUI();
-    console.log('📢 showProgressUI() completed');
+    // Create loading container if it doesn't exist
+    let loadingContainer = document.getElementById('loadingContainer');
+    if (!loadingContainer) {
+      loadingContainer = document.createElement('div');
+      loadingContainer.id = 'loadingContainer';
+      const resultsContainer = document.getElementById('results');
+      if (resultsContainer && resultsContainer.parentNode) {
+        resultsContainer.parentNode.insertBefore(loadingContainer, resultsContainer);
+      } else {
+        document.querySelector('.content').appendChild(loadingContainer);
+      }
+    }
+
+    // Initialize the analyzer loader
+    const loader = new AnalyzerLoader('loadingContainer');
+    
+    const analysisSteps = [
+      {
+        label: 'Detecting fonts',
+        detail: 'Scanning webpage for font families...'
+      },
+      {
+        label: 'Analyzing font properties',
+        detail: 'Checking weights, styles, and variants...'
+      },
+      {
+        label: 'Testing font loading performance',
+        detail: 'Measuring load times and render blocking...'
+      },
+      {
+        label: 'Checking accessibility impact',
+        detail: 'Evaluating readability and contrast...'
+      },
+      {
+        label: 'Generating comprehensive report',
+        detail: 'Compiling font analysis and recommendations...'
+      }
+    ];
+
+    loader.start(analysisSteps, '[FONT SCANNER]', 20);
+    
+    // Hide old progress UI
+    const progressSection = document.getElementById('scanProgress');
+    if (progressSection) {
+      progressSection.style.display = 'none';
+    }
     
     // Clear previous font preview styles
     this.clearFontPreviewStyles();
@@ -398,28 +440,31 @@
 
       const data = await response.json();
       console.log(`🎉 Comprehensive scan completed with grade: ${data.data?.grade}`);
-      console.log('📦 Full response data:', data);
-      console.log('🔍 data.success:', data.success);
-      console.log('🔍 data.data exists:', !!data.data);
       
-      if (data.success) {
-        console.log('✅ Success flag is true, hiding progress and showing results...');
-        this.hideProgressUI();
-        console.log('✅ Progress UI hidden, calling displayComprehensiveResults...');
-        this.displayComprehensiveResults(data.data);
-        console.log('✅ displayComprehensiveResults completed');
-      } else {
-        console.error('❌ Success flag is false');
-        this.showError(data.error || 'Comprehensive scan failed');
-      }
+      // Complete the loader
+      loader.complete();
+      
+      // Show results after animation completes
+      setTimeout(() => {
+        console.log('📦 Full response data:', data);
+        console.log('🔍 data.success:', data.success);
+        console.log('🔍 data.data exists:', !!data.data);
+        
+        if (data.success) {
+          console.log('✅ Success flag is true, hiding progress and showing results...');
+          this.hideProgressUI();
+          console.log('✅ Progress UI hidden, calling displayComprehensiveResults...');
+          this.displayComprehensiveResults(data.data);
+          console.log('✅ displayComprehensiveResults completed');
+        } else {
+          console.error('❌ Success flag is false');
+          this.showError(data.error || 'Comprehensive scan failed');
+        }
+      }, 1000);
     } catch (error) {
       console.error('❌ Comprehensive scan error:', error);
+      loader.showError(error.message || 'Comprehensive scan failed. Please try again.');
       this.hideProgressUI();
-      if (error.name === 'AbortError') {
-        this.showError('Comprehensive scan timed out. Please try again.');
-      } else {
-        this.showError(`Comprehensive scan failed: ${error.message}`);
-      }
     } finally {
       this.setLoading(false);
     }
@@ -1068,8 +1113,8 @@
       <div class="benchmark-status">
         <div class="benchmark-content">
           <div>
-            <h4 class="benchmark-title">🏆 Industry Benchmark Status</h4>
-            <p class="benchmark-subtitle">Based on comprehensive font analysis capabilities</p>
+            <h4 class="benchmark-title">📊 Analysis Completeness</h4>
+            <p class="benchmark-subtitle">Features successfully analyzed (not a quality score)</p>
           </div>
           <div class="benchmark-score-container">
             <div class="benchmark-score">${this.calculateBenchmarkScore(results)}/10</div>
@@ -5195,11 +5240,11 @@ body {
   }
 
   getBenchmarkRanking(score) {
-    if (score >= 9.0) return 'Industry Leading';
-    if (score >= 8.0) return 'Best in Class';
-    if (score >= 7.0) return 'Competitive';
-    if (score >= 6.0) return 'Above Average';
-    return 'Developing';
+    if (score >= 9.0) return 'All Features Working';
+    if (score >= 8.0) return 'Nearly Complete';
+    if (score >= 7.0) return 'Most Features Active';
+    if (score >= 6.0) return 'Some Features Working';
+    return 'Limited Coverage';
   }
 
   createDownloadReport(pdfPath) {

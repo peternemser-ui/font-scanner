@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Professional performance analysis tool for web developers. Comprehensive website speed analysis with Core Web Vitals, resource optimization, and performance insights." />
+    <meta name="theme-color" content="#000000" />
+    
+    <title>Performance Analyzer - Comprehensive Speed Analysis Tool</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="pdf-payment-modal.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+  </head>
+  <body>
+    <!-- Theme Toggle Button -->
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌓 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+    
+    <div class="container">
+      <!-- Font Size Controls -->
+      <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
+        <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
+        <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
+        <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
+        <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
+      </div>
+
+      <!-- Header -->
+      <header class="form-container">
+        <h1>[PERFORMANCE_ANALYZER]</h1>
+        <p>> comprehensive website performance analysis protocol</p>
+        
+        <!-- URL Input Form -->
+        <div style="margin-top: 2rem;">
+          <label for="perfUrlInput" class="visually-hidden">Website URL to analyze</label>
+          <input 
+            type="url" 
+            id="perfUrlInput" 
+            placeholder="https://example.com" 
+            aria-label="Enter website URL for performance analysis"
+            required
+            aria-required="true"
+          />
+          
+          <button id="perfAnalyzeButton" aria-label="Start comprehensive performance analysis">🖥️📱 ANALYZE PERFORMANCE (Desktop & Mobile)</button>
+          
+          <p style="color: #808080; font-size: 0.85rem; margin-top: 0.5rem; font-style: italic;">
+            Note: Analysis runs Lighthouse on both desktop and mobile (takes 2-3x longer)
+          </p>
+        </div>
+      </header>
+
+      <!-- Results Container -->
+      <div id="perfResults" class="results-container" style="display: none;">
+        <!-- Results will be dynamically inserted here by performance-script.js -->
+      </div>
+    </div>
+
+    <!-- Shared JavaScript for theme and font controls -->
+    <script src="/theme-controls.js"></script>
+    
+    <!-- PDF Payment Modal -->
+    <script src="/pdf-payment-modal.js"></script>
+    
+    <!-- Shared Navigation Template -->
+    <script src="/nav-template.js"></script>
+    
+    <!-- Performance Visualizations Library -->
+    <script src="/performance-visualizations.js"></script>
+    
+    <!-- Analyzer Loader -->
+    <script src="/analyzer-loader.js"></script>
+    
+    <!-- Performance Analyzer Script -->
+    <script src="/performance-script.js"></script>
+  </body>
+</html>

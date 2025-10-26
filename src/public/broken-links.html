@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Broken Link Checker - Font Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="progress-styles.css">
+</head>
+<body>
+    <!-- Theme Toggle Button -->
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌓 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+
+    <div class="container">
+        <h1>🔗 Broken Link Checker</h1>
+        
+        <div style="background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%); border-left: 4px solid #ff4444; padding: 1.5rem; margin: 2rem 0; border-radius: 8px;">
+            <h2 style="margin: 0 0 0.5rem 0; color: white;">⚠️ Broken Links Hurt SEO</h2>
+            <p style="margin: 0; color: rgba(255, 255, 255, 0.95);">Find and fix broken links, redirects, and dead external links to improve user experience and search rankings.</p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <label for="url" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Website URL</label>
+            <input type="text" id="url" placeholder="https://yoursite.com" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem;">
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">Max Pages to Scan</label>
+                    <input type="number" id="maxPages" value="20" min="1" max="100" style="width: 100%; padding: 0.75rem;">
+                </div>
+                <div>
+                    <label style="display: block; margin-bottom: 0.5rem; font-size: 0.9rem;">Max Depth</label>
+                    <input type="number" id="maxDepth" value="3" min="1" max="5" style="width: 100%; padding: 0.75rem;">
+                </div>
+                <div style="display: flex; align-items: flex-end;">
+                    <label style="display: flex; align-items: center; cursor: pointer;">
+                        <input type="checkbox" id="followExternal" style="margin-right: 0.5rem;">
+                        <span>Check External Links</span>
+                    </label>
+                </div>
+            </div>
+            
+            <button id="analyzeBtn" class="analyze-button">🔍 Check Links</button>
+        </div>
+
+        <div id="loadingIndicator" style="display: none;">
+            <div class="spinner"></div>
+            <p>Crawling your website... This may take 30-90 seconds...</p>
+        </div>
+
+        <div id="results" style="display: none;"></div>
+    </div>
+
+    <script src="theme-controls.js"></script>
+    <script src="nav-template.js"></script>
+    <script src="broken-links-script.js"></script>
+</body>
+</html>

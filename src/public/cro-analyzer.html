@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CRO Analyzer - Font Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="progress-styles.css">
+</head>
+<body>
+    <!-- Theme Toggle Button -->
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌓 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+
+    <div class="container">
+        <h1>💰 Conversion Rate Optimization (CRO) Analyzer</h1>
+        
+        <div style="background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%); border-left: 4px solid #ffd700; padding: 1.5rem; margin: 2rem 0; border-radius: 8px;">
+            <h2 style="margin: 0 0 0.5rem 0; color: #000;">⚡ Premium $2k-10k Audits</h2>
+            <p style="margin: 0; color: rgba(0, 0, 0, 0.85);">Analyze CTAs, forms, trust signals, and mobile UX to maximize conversions.</p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <label for="url" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Website URL</label>
+            <input type="text" id="url" placeholder="https://yoursite.com" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem;">
+            <button id="analyzeBtn" class="analyze-button">💰 Analyze Conversions</button>
+        </div>
+
+        <div id="loadingIndicator" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing conversion elements... This may take 20-30 seconds...</p>
+        </div>
+
+        <div id="results" style="display: none;"></div>
+    </div>
+
+    <script src="theme-controls.js"></script>
+    <script src="nav-template.js"></script>
+    <script src="cro-script.js"></script>
+</body>
+</html>

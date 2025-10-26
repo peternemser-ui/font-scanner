@@ -51,10 +51,25 @@ class BrowserPool {
                 '--disable-accelerated-2d-canvas',
                 '--no-first-run',
                 '--disable-gpu',
-                // Removed --single-process, --no-zygote, --disable-web-security
-                // and --disable-features as they were causing browser disconnections
+                // Lighthouse compatibility fixes for NO_FCP errors
+                '--disable-blink-features=AutomationControlled',
+                '--disable-features=IsolateOrigins,site-per-process',
+                '--enable-features=NetworkService,NetworkServiceInProcess',
+                '--force-color-profile=srgb',
+                '--metrics-recording-only',
+                '--disable-background-timer-throttling',
+                '--disable-backgrounding-occluded-windows',
+                '--disable-renderer-backgrounding',
+                '--disable-infobars',
+                '--window-size=1920,1080',
+                '--start-maximized',
               ],
               timeout: config.puppeteer.timeout,
+              // Increase default viewport for better Lighthouse results
+              defaultViewport: {
+                width: 1920,
+                height: 1080
+              }
             });
 
             const duration = Date.now() - startTime;

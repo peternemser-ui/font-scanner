@@ -44,6 +44,30 @@ class LighthouseAnalyzer {
       throttling: options.formFactor === 'mobile' ? 'Mobile preset (4x CPU, Slow 4G)' : 'Desktop (no throttling, full performance)'
     });
 
+    // Retry logic for Lighthouse failures (NO_FCP, Chrome errors)
+    const maxRetries = 2;
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        return await this._runLighthouse(url, options, attempt);
+      } catch (error) {
+        const isRetriableError = error.message.includes('NO_FCP') || 
+                                 error.message.includes('Chrome internal error') ||
+                                 error.message.includes('performance mark');
+        
+        if (attempt < maxRetries && isRetriableError) {
+          logger.warn(`Lighthouse attempt ${attempt} failed (${error.message}), retrying...`);
+          // Wait 5 seconds before retry to let Chrome fully settle and resources free
+          await new Promise(resolve => setTimeout(resolve, 5000));
+          continue;
+        }
+        
+        // Last attempt or non-retriable error - return fallback
+        throw error;
+      }
+    }
+  }
+
+  async _runLighthouse(url, options = {}, attempt = 1) {
     let chrome;
     try {
       chrome = await this.launchChrome();
@@ -54,7 +78,12 @@ class LighthouseAnalyzer {
         onlyCategories: ['performance', 'accessibility', 'best-practices', 'seo'],
         port: chrome.port,
         disableStorageReset: true,
-        maxWaitForLoad: 30000, // 30 second timeout for faster scans
+        maxWaitForLoad: 35000, // Increased timeout for better reliability
+        // Critical settings to prevent NO_FCP errors in headless mode
+        waitForFullyLoaded: true,
+        emulatedUserAgent: options.formFactor === 'mobile' 
+          ? 'Mozilla/5.0 (Linux; Android 11; Pixel 5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36'
+          : 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
         ...options,
       };
 
@@ -66,11 +95,15 @@ class LighthouseAnalyzer {
           extends: 'lighthouse:default',
           settings: {
             formFactor: 'mobile',
+            // Prevent NO_FCP errors
+            skipAudits: ['uses-http2'], // Skip flaky audits
+            pauseAfterFcpMs: 1000, // Wait 1s after FCP to ensure paint
+            pauseAfterLoadMs: 1000, // Wait 1s after load
             throttling: {
-              rttMs: 300, // Very high latency (was 150)
-              throughputKbps: 400, // Very slow connection (was 1024)
-              cpuSlowdownMultiplier: 8, // Very aggressive CPU throttling (was 6)
-              requestLatencyMs: 1000, // Very high request latency (was 750)
+              rttMs: 300, // Very high latency
+              throughputKbps: 400, // Very slow connection
+              cpuSlowdownMultiplier: 8, // Very aggressive CPU throttling
+              requestLatencyMs: 1000, // Very high request latency
               downloadThroughputKbps: 380,
               uploadThroughputKbps: 200
             },
@@ -90,6 +123,10 @@ class LighthouseAnalyzer {
           extends: 'lighthouse:default',
           settings: {
             formFactor: 'desktop',
+            // Prevent NO_FCP errors
+            skipAudits: ['uses-http2'], // Skip flaky audits
+            pauseAfterFcpMs: 500, // Wait 500ms after FCP
+            pauseAfterLoadMs: 500, // Wait 500ms after load
             throttling: {
               rttMs: 40,
               throughputKbps: 10240,
@@ -149,38 +186,42 @@ class LighthouseAnalyzer {
         formFactor: options.formFactor,
       });
 
-      // Return a realistic fallback result instead of throwing
+      // Return a fallback result with error flag instead of throwing
+      // NOTE: Scores are set to 0 to indicate failure - caller should use alternative metrics
       const formFactor = options.formFactor || 'desktop';
       return {
         formFactor: formFactor,
-        score: formFactor === 'desktop' ? 85 : 72, // Realistic fallback scores
+        score: 0, // Set to 0 to indicate Lighthouse failure
+        performance: 0,
         metrics: {
-          firstContentfulPaint: formFactor === 'desktop' ? 1200 : 2100,
-          largestContentfulPaint: formFactor === 'desktop' ? 2400 : 4200,
+          firstContentfulPaint: 0,
+          largestContentfulPaint: 0,
           cumulativeLayoutShift: 0.1,
-          totalBlockingTime: formFactor === 'desktop' ? 150 : 350,
+          totalBlockingTime: 0,
           coreWebVitals: {
-            lcp: formFactor === 'desktop' ? 2400 : 4200,
-            fid: formFactor === 'desktop' ? 100 : 200,
+            lcp: 0,
+            fid: 0,
             cls: 0.1
           }
         },
         fontAudits: {
-          fontDisplay: { score: 0.8, description: 'Font display strategy could be optimized' },
-          preloadFonts: { score: 0.6, description: 'Consider preloading key web fonts' }
+          fontDisplay: { score: 0.5, description: 'Unable to analyze (Lighthouse failed)' },
+          preloadFonts: { score: 0.5, description: 'Unable to analyze (Lighthouse failed)' }
         },
-        accessibility: formFactor === 'desktop' ? 92 : 88,
-        bestPractices: formFactor === 'desktop' ? 88 : 85,
-        seo: formFactor === 'desktop' ? 95 : 92,
-        opportunities: [
-          { id: 'font-display', title: 'Use font-display CSS feature', savings: 400 },
-          { id: 'preload-fonts', title: 'Preload key requests', savings: 200 }
-        ],
-        diagnostics: [
-          { id: 'font-size', title: 'Font sizes are legible', score: 1 }
-        ],
-        error: `Lighthouse analysis failed (${error.message}), using realistic fallback data`,
+        accessibility: 0,
+        bestPractices: 0,
+        seo: 0,
+        opportunities: [],
+        diagnostics: [],
+        error: `Lighthouse analysis failed (${error.message})`,
+        failed: true
       };
+    } finally {
+      // CRITICAL: Always kill Chrome after EVERY run to prevent resource exhaustion
+      await this.closeLighthouse();
+      
+      // Add a small delay between runs to let system resources settle
+      await new Promise(resolve => setTimeout(resolve, 1000));
     }
   }
 

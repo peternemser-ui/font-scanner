@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Professional web security scanner. SSL/TLS analysis, security headers audit, vulnerability detection, and OWASP compliance testing." />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="security scanner, SSL checker, security headers, vulnerability scanner, OWASP, HTTPS, CSP, HSTS" />
+    <meta name="author" content="Font Scanner" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Security Scanner - SSL & Vulnerability Analysis" />
+    <meta property="og:description" content="Comprehensive security analysis with SSL/TLS validation, security headers audit, and vulnerability detection" />
+    <meta property="og:type" content="website" />
+    
+    <title>Security Scanner - SSL, Headers & Vulnerability Testing</title>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="pdf-payment-modal.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+  </head>
+  <body>
+    <!-- Theme Toggle Button -->
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌓 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+    
+    <div class="container">
+      <!-- Font Size Controls -->
+      <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
+        <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
+        <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
+        <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
+        <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
+      </div>
+
+      <!-- Header -->
+      <header class="form-container">
+        <h1>[SECURITY_SCANNER]</h1>
+        <p>> comprehensive website security audit & vulnerability assessment protocol</p>
+        
+        <!-- URL Input Form -->
+        <div style="margin-top: 2rem;">
+          <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
+          <input 
+            type="url" 
+            id="urlInput" 
+            placeholder="https://example.com" 
+            aria-label="Enter website URL for security analysis"
+            required
+            aria-required="true"
+          />
+          
+          <button id="analyzeButton" aria-label="Start comprehensive security analysis">ANALYZE</button>
+        </div>
+        
+        <!-- Info Banner -->
+        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 0, 0, 0.1); border: 1px solid rgba(255, 0, 0, 0.3); border-radius: 4px;">
+          <p style="color: #ff4444; margin: 0; font-size: 0.9rem;">
+            <strong>🔒 Comprehensive Security Audit:</strong> Tests SSL/TLS certificates, security headers (CSP, HSTS, X-Frame-Options), 
+            cookie security, mixed content, third-party scripts, CORS configuration, and provides OWASP-aligned recommendations.
+          </p>
+        </div>
+      </header>
+
+      <!-- Results Container -->
+      <div id="results" class="results-container hidden" role="region" aria-live="polite">
+        <!-- Loading State -->
+        <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
+          <h2><span class="heartbeat" aria-hidden="true">🔒</span> Analyzing Security...</h2>
+          <p class="animate-pulse">Running SSL validation and vulnerability checks...</p>
+          <div class="progress-container" role="progressbar" aria-label="Analysis progress">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <div id="progressText" class="progress-text" aria-live="polite">Initializing security audit...</div>
+        </div>
+
+        <!-- Results Content (populated by JavaScript) -->
+        <div id="resultsContent"></div>
+      </div>
+
+      <!-- Error Display -->
+      <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="margin-top: 3rem; padding: 2rem 0; text-align: center; border-top: 1px solid #333;">
+      <p style="color: #808080; font-size: 0.85rem;">
+        Security Scanner | SSL/TLS & Vulnerability Testing | Built with 🔒 for secure web
+      </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="theme-controls.js"></script>
+    <script src="nav-template.js"></script>
+    <script src="/pdf-payment-modal.js"></script>
+    <script src="analyzer-loader.js"></script>
+    <script src="security-script.js"></script>
+  </body>
+</html>

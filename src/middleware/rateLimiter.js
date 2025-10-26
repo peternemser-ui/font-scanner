@@ -249,6 +249,23 @@ const strictLimiter = createRateLimiter('strict', {
 });
 
 /**
+ * Competitive Analysis limiter - VERY restrictive for resource-intensive operations
+ * Each competitive analysis can take 5-15 minutes and uses significant CPU/memory
+ * 
+ * Development: 10 requests per 15 minutes
+ * Production: 2 requests per 15 minutes per IP
+ */
+const competitiveAnalysisLimiter = createRateLimiter('competitive-analysis', {
+  windowMs: process.env.COMPETITIVE_RATE_WINDOW_MS 
+    ? parseInt(process.env.COMPETITIVE_RATE_WINDOW_MS, 10) 
+    : 15 * 60 * 1000, // 15 minutes
+  max: process.env.COMPETITIVE_RATE_MAX_REQUESTS 
+    ? parseInt(process.env.COMPETITIVE_RATE_MAX_REQUESTS, 10) 
+    : (process.env.NODE_ENV === 'production' ? 2 : 10), // 10 in dev, 2 in production
+  message: 'Competitive analysis is very resource-intensive. You have exceeded the limit. Please try again in 15 minutes.',
+});
+
+/**
  * Logging middleware to track rate limit headers
  * Helps monitor how close users are to hitting limits
  */
@@ -299,6 +316,10 @@ const getRateLimitStats = () => {
       window: '15 minutes',
       limit: process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS || 50,
     },
+    competitiveAnalysis: {
+      window: '15 minutes',
+      limit: process.env.COMPETITIVE_RATE_MAX_REQUESTS || 2,
+    },
   };
 };
 
@@ -324,6 +345,7 @@ module.exports = {
   scanLimiter,
   downloadLimiter,
   strictLimiter,
+  competitiveAnalysisLimiter,
   rateLimitLogger,
   getRateLimitStats,
   getRateLimitAnalytics,

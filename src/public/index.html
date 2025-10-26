@@ -25,6 +25,7 @@
     <!-- Load fonts with optimal font-display strategy -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
   </head>
   <body>
     <!-- Theme Toggle Button -->
@@ -36,6 +37,9 @@
     >
       🌓 Theme
     </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
     
     <div class="container">
       <!-- Font Size Controls -->
@@ -139,6 +143,12 @@
 
     <!-- Socket.IO Client Library -->
     <script src="/socket.io/socket.io.js"></script>
+    
+    <!-- Shared Navigation Template -->
+    <script src="nav-template.js"></script>
+    
+    <!-- Analyzer Loader -->
+    <script src="analyzer-loader.js"></script>
     
     <script src="script.js"></script>
   </body>

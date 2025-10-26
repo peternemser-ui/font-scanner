@@ -203,27 +203,43 @@ class EnhancedScannerService {
         }
       }
 
-      // Step 10: Lighthouse analysis (final step for complete metrics)
+      // Step 10: Lighthouse analysis
       if (options.includeLighthouse !== false) {
         logger.info('🏠 Step 10: Running Lighthouse analysis...');
-        emitProgress(10, 10, 'Lighthouse Analysis', 'running', 10);
+        emitProgress(10, 11, 'Lighthouse Analysis', 'running', 10);
         try {
           result.lighthouse = await this.performLighthouseAnalysis(url, {
             includeMobile: options.includeMobileLighthouse !== false // Run mobile by default
           });
-          emitProgress(10, 10, 'Lighthouse Analysis', 'completed', 100);
+          emitProgress(10, 11, 'Lighthouse Analysis', 'completed', 100);
         } catch (error) {
           logger.warn('Lighthouse analysis failed:', error.message);
           result.lighthouse = { 
             desktop: { error: 'Lighthouse desktop analysis failed', details: error.message },
             mobile: { error: 'Lighthouse mobile analysis failed', details: error.message }
           };
-          emitProgress(10, 10, 'Lighthouse Analysis', 'error', 0);
+          emitProgress(10, 11, 'Lighthouse Analysis', 'error', 0);
+        }
+      }
+
+      // Step 11: SEO Analysis (new!)
+      if (options.includeSEO !== false) {
+        logger.info('🔍 Step 11: Running SEO analysis...');
+        emitProgress(11, 11, 'SEO Analysis', 'running', 10);
+        try {
+          const seoAnalyzer = require('./seoAnalyzer');
+          result.seoAnalysis = await seoAnalyzer.analyzeSEO(url);
+          logger.info(`✅ SEO Score: ${result.seoAnalysis.score.overall}/100 (${result.seoAnalysis.score.grade})`);
+          emitProgress(11, 11, 'SEO Analysis', 'completed', 100);
+        } catch (error) {
+          logger.warn('SEO analysis failed:', error.message);
+          result.seoAnalysis = { error: 'SEO analysis failed', details: error.message };
+          emitProgress(11, 11, 'SEO Analysis', 'error', 0);
         }
       }
 
       // Final: Analysis and Scoring
-      emitProgress(10, 10, 'Finalizing Results', 'running', 50);
+      emitProgress(11, 11, 'Finalizing Results', 'running', 50);
       
       // Calculate overall score with new features
       result.overallScore = this.calculateBestInClassScore(result);
@@ -239,7 +255,7 @@ class EnhancedScannerService {
       logger.info(`📊 Final Score: ${result.overallScore}/100 (Grade: ${result.grade})`);
       
       // Emit final completion progress
-      emitProgress(10, 10, 'Scan Complete', 'completed', 100);
+      emitProgress(11, 11, 'Scan Complete', 'completed', 100);
       
       return result;
 

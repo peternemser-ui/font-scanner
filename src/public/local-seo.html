@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Local SEO Analyzer - Font Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="progress-styles.css">
+</head>
+<body>
+    <!-- Theme Toggle Button -->
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌓 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+
+    <div class="container">
+        <h1>📍 Local SEO Analyzer</h1>
+        
+        <div style="background: linear-gradient(135deg, #3498db 0%, #2980b9 100%); border-left: 4px solid #3498db; padding: 1.5rem; margin: 2rem 0; border-radius: 8px;">
+            <h2 style="margin: 0 0 0.5rem 0; color: white;">🏪 $200-500 per Local Business</h2>
+            <p style="margin: 0; color: rgba(255, 255, 255, 0.95);">Check NAP consistency, LocalBusiness schema, and Google Business Profile integration.</p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <label for="url" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Website URL</label>
+            <input type="text" id="url" placeholder="https://yourlocalbusiness.com" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem;">
+            <button id="analyzeBtn" class="analyze-button">📍 Analyze Local SEO</button>
+        </div>
+
+        <div id="loadingIndicator" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing local SEO...</p>
+        </div>
+
+        <div id="results" style="display: none;"></div>
+    </div>
+
+    <script src="theme-controls.js"></script>
+    <script>
+      document.getElementById('analyzeBtn').addEventListener('click', analyze);
+      document.getElementById('url').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') analyze();
+      });
+
+      async function analyze() {
+        const url = document.getElementById('url').value.trim();
+        if (!url) { alert('Please enter a URL'); return; }
+        
+        const loading = document.getElementById('loadingIndicator');
+        const results = document.getElementById('results');
+        const btn = document.getElementById('analyzeBtn');
+        
+        loading.style.display = 'block';
+        results.style.display = 'none';
+        btn.disabled = true;
+        
+        try {
+          const response = await fetch('/api/local-seo', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+          });
+          
+          if (!response.ok) throw new Error('Analysis failed');
+          const data = await response.json();
+          
+          results.innerHTML = `
+            <div class="score-banner" style="background: linear-gradient(135deg, ${getColor(data.grade)} 0%, ${getColor(data.grade)}dd 100%);">
+              <div class="score-value">${data.score}</div>
+              <div class="score-grade">Grade: ${data.grade}</div>
+              <div class="score-label">Local SEO Score</div>
+            </div>
+            
+            <section class="section">
+              <h2>📊 NAP Analysis (Name, Address, Phone)</h2>
+              <div style="display: grid; gap: 0.5rem;">
+                ${renderItem('Phone Number', data.analysis.nap.phoneCount > 0, `${data.analysis.nap.phoneCount} found`)}
+                ${renderItem('Business Address', data.analysis.nap.hasAddress)}
+              </div>
+              ${data.analysis.nap.phones.length > 0 ? `
+                <h3 style="margin-top: 1rem;">Detected Phone Numbers:</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                  ${data.analysis.nap.phones.map(phone => `
+                    <span style="background: rgba(0,255,65,0.1); padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid rgba(0,255,65,0.3);">
+                      ${phone}
+                    </span>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </section>
+            
+            <section class="section">
+              <h2>🏷️ Structured Data</h2>
+              <div style="display: grid; gap: 0.5rem;">
+                ${renderItem('LocalBusiness Schema', data.analysis.schema.hasLocalBusinessSchema)}
+              </div>
+            </section>
+            
+            ${data.recommendations.length > 0 ? `
+              <section class="section">
+                <h2>💡 Recommendations</h2>
+                ${data.recommendations.map(rec => `
+                  <div style="padding: 1rem; margin: 0.5rem 0; background: ${rec.priority === 'critical' ? 'rgba(255,75,75,0.1)' : 'rgba(255,215,0,0.1)'}; border-left: 4px solid ${rec.priority === 'critical' ? '#ff4444' : '#ffd700'}; border-radius: 4px;">
+                    <h3 style="margin: 0 0 0.5rem 0;">${rec.message}</h3>
+                    <p style="margin: 0;">${rec.detail}</p>
+                  </div>
+                `).join('')}
+              </section>
+            ` : ''}
+          `;
+          
+          loading.style.display = 'none';
+          results.style.display = 'block';
+          
+        } catch (error) {
+          alert(`Error: ${error.message}`);
+          loading.style.display = 'none';
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      function renderItem(label, hasIt, extra = '') {
+        return `
+          <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+            <span>${label} ${extra ? `<small style="color: var(--text-secondary);">(${extra})</small>` : ''}</span>
+            <span style="color: ${hasIt ? '#00ff41' : '#ff4444'}; font-weight: bold;">${hasIt ? '✅' : '❌'}</span>
+          </div>
+        `;
+      }
+
+      function getColor(grade) {
+        return { 'A': '#00ff41', 'B': '#ffd700', 'C': '#ff8c00', 'D': '#ff4444' }[grade] || '#888';
+      }
+    </script>
+    <script src="nav-template.js"></script>
+</body>
+</html>

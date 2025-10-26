@@ -1,0 +1,86 @@
+﻿<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Professional SEO analysis tool for web developers. Comprehensive website SEO audit with meta tags, performance, accessibility, and best practices." />
+    <meta name="theme-color" content="#000000" />
+    
+    <title>SEO Analyzer - Comprehensive SEO Audit Tool</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="pdf-payment-modal.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+  </head>
+  <body>
+    <!-- Theme Toggle Button -->
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌓 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+    
+    <div class="container">
+      <!-- Font Size Controls -->
+      <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
+        <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
+        <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
+        <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
+        <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
+      </div>
+
+      <!-- Header -->
+      <header class="form-container">
+        <h1>[SEO_ANALYZER]</h1>
+        <p>> comprehensive website seo analysis protocol</p>
+        
+        <!-- URL Input Form -->
+        <div style="margin-top: 2rem;">
+          <label for="seoUrlInput" class="visually-hidden">Website URL to analyze</label>
+          <input 
+            type="url" 
+            id="seoUrlInput" 
+            placeholder="https://example.com" 
+            aria-label="Enter website URL for SEO analysis"
+            required
+            aria-required="true"
+          />
+          
+          <button id="seoAnalyzeButton" aria-label="Start comprehensive SEO analysis">ANALYZE SEO</button>
+        </div>
+      </header>
+
+      <!-- Results Container -->
+      <div id="seoResults" class="results-container" style="display: none;">
+        <!-- Results will be dynamically inserted here by seo-script.js -->
+      </div>
+    </div>
+
+    <!-- Shared JavaScript for theme and font controls -->
+    <script src="/theme-controls.js"></script>
+    
+    <!-- Shared Navigation Template -->
+    <script src="/nav-template.js"></script>
+    
+    <!-- PDF Payment Modal -->
+    <script src="/pdf-payment-modal.js"></script>
+    
+    <!-- Analyzer Loading System -->
+    <script src="/analyzer-loader.js"></script>
+    
+    <!-- SEO Visualizations Library -->
+    <script src="/seo-visualizations.js"></script>
+    
+    <!-- SEO Analyzer Script -->
+    <script src="/seo-script.js"></script>
+  </body>
+</html>

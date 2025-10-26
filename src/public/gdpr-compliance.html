@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GDPR Compliance Scanner - Font Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="progress-styles.css">
+</head>
+<body>
+    <!-- Theme Toggle Button -->
+    <button 
+      id="themeToggle" 
+      class="theme-toggle" 
+      aria-label="Toggle dark/light theme"
+      aria-pressed="false"
+    >
+      🌓 Theme
+    </button>
+    
+    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+
+    <div class="container">
+        <h1>🔒 GDPR/Privacy Compliance Scanner</h1>
+        
+        <div style="background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%); border-left: 4px solid #e74c3c; padding: 1.5rem; margin: 2rem 0; border-radius: 8px;">
+            <h2 style="margin: 0 0 0.5rem 0; color: white;">⚠️ Premium $2k-10k Compliance Audits</h2>
+            <p style="margin: 0; color: rgba(255, 255, 255, 0.95);">Detect cookie consent, privacy policies, trackers. Identify GDPR violations with potential fines.</p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.05); padding: 1.5rem; border-radius: 8px; margin-bottom: 2rem;">
+            <label for="url" style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Website URL</label>
+            <input type="text" id="url" placeholder="https://yoursite.com" style="width: 100%; padding: 0.75rem; margin-bottom: 1rem;">
+            <button id="analyzeBtn" class="analyze-button">🔒 Check Compliance</button>
+        </div>
+
+        <div id="loadingIndicator" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing GDPR compliance... This may take 30-45 seconds...</p>
+        </div>
+
+        <div id="results" style="display: none;"></div>
+    </div>
+
+    <script src="theme-controls.js"></script>
+    <script>
+      document.getElementById('analyzeBtn').addEventListener('click', analyze);
+      document.getElementById('url').addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') analyze();
+      });
+
+      async function analyze() {
+        const url = document.getElementById('url').value.trim();
+        if (!url) { alert('Please enter a URL'); return; }
+        
+        const loading = document.getElementById('loadingIndicator');
+        const results = document.getElementById('results');
+        const btn = document.getElementById('analyzeBtn');
+        
+        loading.style.display = 'block';
+        results.style.display = 'none';
+        btn.disabled = true;
+        
+        try {
+          const response = await fetch('/api/gdpr-compliance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url })
+          });
+          
+          if (!response.ok) throw new Error('Analysis failed');
+          const data = await response.json();
+          
+          results.innerHTML = `
+            <div class="score-banner" style="background: linear-gradient(135deg, ${getColor(data.grade)} 0%, ${getColor(data.grade)}dd 100%);">
+              <div class="score-value">${data.score}</div>
+              <div class="score-grade">Grade: ${data.grade}</div>
+              <div class="score-label">GDPR Compliance Score</div>
+              <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">${data.complianceLevel}</p>
+            </div>
+            
+            ${data.risks.length > 0 ? `
+              <section class="section">
+                <h2>⚠️ Compliance Risks (${data.risks.length})</h2>
+                ${data.risks.map(risk => `
+                  <div style="padding: 1rem; margin: 0.5rem 0; background: ${risk.severity === 'critical' ? 'rgba(255,75,75,0.15)' : 'rgba(255,140,0,0.15)'}; border-left: 4px solid ${risk.severity === 'critical' ? '#ff4444' : '#ff8c00'}; border-radius: 4px;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                      <h3 style="margin: 0; color: ${risk.severity === 'critical' ? '#ff4444' : '#ff8c00'};">${risk.risk}</h3>
+                      <span style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.85rem; text-transform: uppercase;">${risk.severity}</span>
+                    </div>
+                    <p style="margin: 0.5rem 0;">${risk.detail}</p>
+                    <p style="margin: 0.5rem 0 0 0; font-style: italic; color: var(--text-secondary);">💶 Potential Fine: ${risk.fine}</p>
+                  </div>
+                `).join('')}
+              </section>
+            ` : ''}
+            
+            <section class="section">
+              <h2>🍪 Cookie & Privacy Analysis</h2>
+              <div class="stats-grid">
+                <div class="stat-card">
+                  <div class="stat-value">${data.compliance.cookies.count}</div>
+                  <div class="stat-label">Cookies Found</div>
+                </div>
+                <div class="stat-card">
+                  <div class="stat-value">${data.compliance.trackers.count}</div>
+                  <div class="stat-label">Third-Party Trackers</div>
+                </div>
+              </div>
+              
+              <h3 style="margin-top: 1.5rem;">Compliance Checks:</h3>
+              <div style="display: grid; gap: 0.5rem;">
+                ${renderItem('Cookie Consent Banner', data.compliance.cookieConsent.detected)}
+                ${renderItem('Privacy Policy Link', data.compliance.privacyPolicy.hasLink)}
+                ${renderItem('Known Cookie Library', data.compliance.cookieConsent.hasKnownLibrary)}
+              </div>
+              
+              ${data.compliance.trackers.detected.length > 0 ? `
+                <h3 style="margin-top: 1.5rem;">Detected Trackers:</h3>
+                <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                  ${data.compliance.trackers.detected.map(tracker => `
+                    <span style="background: rgba(255,140,0,0.1); padding: 0.5rem 1rem; border-radius: 4px; border: 1px solid rgba(255,140,0,0.3); font-size: 0.85rem;">
+                      ${tracker}
+                    </span>
+                  `).join('')}
+                </div>
+              ` : ''}
+            </section>
+            
+            ${data.recommendations.length > 0 ? `
+              <section class="section">
+                <h2>💡 Recommendations</h2>
+                ${data.recommendations.map(rec => `
+                  <div style="padding: 1rem; margin: 0.5rem 0; background: ${rec.priority === 'critical' ? 'rgba(255,75,75,0.1)' : 'rgba(255,215,0,0.1)'}; border-left: 4px solid ${rec.priority === 'critical' ? '#ff4444' : '#ffd700'}; border-radius: 4px;">
+                    <h3 style="margin: 0 0 0.5rem 0;">${rec.message}</h3>
+                    <p style="margin: 0.5rem 0;">${rec.detail}</p>
+                    <p style="margin: 0.5rem 0 0 0; font-style: italic; font-size: 0.9rem;">💡 ${rec.impact}</p>
+                  </div>
+                `).join('')}
+              </section>
+            ` : ''}
+          `;
+          
+          loading.style.display = 'none';
+          results.style.display = 'block';
+          
+        } catch (error) {
+          alert(`Error: ${error.message}`);
+          loading.style.display = 'none';
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      function renderItem(label, hasIt) {
+        return `
+          <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
+            <span>${label}</span>
+            <span style="color: ${hasIt ? '#00ff41' : '#ff4444'}; font-weight: bold;">${hasIt ? '✅' : '❌'}</span>
+          </div>
+        `;
+      }
+
+      function getColor(grade) {
+        return { 'A': '#00ff41', 'B': '#ffd700', 'C': '#ff8c00', 'F': '#ff4444' }[grade] || '#888';
+      }
+    </script>
+    <script src="nav-template.js"></script>
+</body>
+</html>

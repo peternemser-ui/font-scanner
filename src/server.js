@@ -16,7 +16,8 @@ const requestIdMiddleware = require('./middleware/requestId');
 const { 
   globalLimiter, 
   scanLimiter, 
-  downloadLimiter, 
+  downloadLimiter,
+  competitiveAnalysisLimiter,
   rateLimitLogger,
   getRateLimitStats,
   getRateLimitAnalytics
@@ -60,7 +61,11 @@ app.use(
         defaultSrc: ["'self'"],
         styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
-        scriptSrc: ["'self'"],
+        scriptSrc: [
+          "'self'",
+          'https://cdn.socket.io',
+          'https://cdn.jsdelivr.net'
+        ],
         imgSrc: ["'self'", 'data:', 'https:'],
       },
     },
@@ -233,9 +238,49 @@ app.get('/api/reports/stats', async (req, res) => {
 
 app.post('/api/scan', scanLimiter, scanController.scanWebsite);
 app.post('/api/scan/best-in-class', scanLimiter, scanController.performBestInClassScan);
+app.post('/api/seo', scanLimiter, scanController.performSEOScan);
 
-// Download PDF report
+// Performance Analyzer
+const performanceController = require('./controllers/performanceController');
+app.post('/api/performance', scanLimiter, performanceController.analyzePerformance);
+app.post('/api/performance/cross-browser', scanLimiter, performanceController.analyzeCrossBrowser);
+
+// Core Web Vitals Analyzer (Google Ranking Factor)
+const coreWebVitalsController = require('./controllers/coreWebVitalsController');
+app.post('/api/core-web-vitals', scanLimiter, coreWebVitalsController.analyzeCoreWebVitals);
+
+// Competitive Analysis Tool (VERY resource-intensive - strict rate limiting)
+const competitiveAnalysisController = require('./controllers/competitiveAnalysisController');
+competitiveAnalysisController.setSocketIO(io); // Inject Socket.IO for real-time progress
+app.post('/api/competitive-analysis', competitiveAnalysisLimiter, competitiveAnalysisController.analyzeCompetitors);
+
+// Broken Link Checker
+const brokenLinkController = require('./controllers/brokenLinkController');
+app.post('/api/broken-links', scanLimiter, brokenLinkController.checkBrokenLinks);
+
+// Advanced Analyzers (CRO, Brand, Local SEO, GDPR)
+const advancedAnalyzersController = require('./controllers/advancedAnalyzersController');
+app.post('/api/cro-analysis', scanLimiter, advancedAnalyzersController.analyzeCRO);
+app.post('/api/brand-consistency', scanLimiter, advancedAnalyzersController.analyzeBrand);
+app.post('/api/local-seo', scanLimiter, advancedAnalyzersController.analyzeLocalSEO);
+app.post('/api/gdpr-compliance', scanLimiter, advancedAnalyzersController.analyzeGDPR);
+
+// Accessibility Analyzer
+const accessibilityController = require('./controllers/accessibilityController');
+app.post('/api/accessibility', scanLimiter, accessibilityController.analyzeAccessibility);
+
+// Security Scanner
+const securityController = require('./controllers/securityController');
+app.post('/api/security', scanLimiter, securityController.analyzeSecurity);
+
+// Download PDF report (legacy - for font scanner)
 app.get('/api/reports/:filename', downloadLimiter, scanController.downloadReport);
+
+// PDF Payment & Download endpoints
+const pdfController = require('./controllers/pdfController');
+app.get('/api/pdf/pricing', pdfController.getPricing);
+app.post('/api/pdf/purchase', scanLimiter, pdfController.purchasePDFReport);
+app.get('/api/pdf/download/:token', downloadLimiter, pdfController.downloadPDFReport);
 
 // Test endpoint for debugging
 app.get('/api/test', (req, res) => {
@@ -280,6 +325,12 @@ io.on('connection', (socket) => {
   socket.on('join-scan', (scanId) => {
     socket.join(scanId);
     logger.info(`Socket ${socket.id} joined scan room: ${scanId}`);
+  });
+  
+  // Handle competitive analysis session joining
+  socket.on('join-session', (sessionId) => {
+    socket.join(sessionId);
+    logger.info(`Socket ${socket.id} joined competitive analysis session: ${sessionId}`);
   });
   
   socket.on('disconnect', () => {

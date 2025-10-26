@@ -735,9 +735,88 @@ const performBestInClassScan = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * SEO-only scan endpoint
+ */
+const performSEOScan = asyncHandler(async (req, res) => {
+  let { url } = req.body;
+  const requestId = req.id;
+
+  // Validate input
+  if (!url) {
+    throw new ValidationError('URL is required. Please provide a valid URL to scan.');
+  }
+
+  // Sanitize and normalize URL
+  url = sanitizeUrl(url);
+  url = normalizeUrl(url);
+
+  // Basic URL format validation
+  if (!validateUrl(url)) {
+    const httpUrl = url.replace('https://', 'http://');
+    if (!validateUrl(httpUrl)) {
+      throw new ValidationError('Invalid URL format. Please enter a valid domain name (e.g., example.com).');
+    }
+    url = httpUrl;
+  }
+
+  // Test if URL is actually reachable
+  logger.info('Testing URL reachability for SEO scan', { url, requestId });
+  let isReachable = await testUrlReachability(url);
+  
+  if (!isReachable && url.startsWith('https://')) {
+    const httpUrl = url.replace('https://', 'http://');
+    logger.info('HTTPS failed, trying HTTP', { httpUrl });
+    isReachable = await testUrlReachability(httpUrl);
+    if (isReachable) {
+      url = httpUrl;
+    }
+  }
+  
+  if (!isReachable) {
+    throw new ValidationError('Website is not accessible. Please check the URL and ensure the website is online.');
+  }
+
+  if (!isValidDomain(url)) {
+    throw new ValidationError('Invalid domain. Please provide a valid public domain.');
+  }
+
+  logger.info('Starting SEO analysis', { url, requestId });
+
+  const seoAnalyzer = require('../services/seoAnalyzer');
+  const startTime = Date.now();
+  
+  try {
+    const seoResults = await seoAnalyzer.analyzeSEO(url);
+    const duration = Date.now() - startTime;
+
+    logger.info('SEO analysis completed', { 
+      url, 
+      score: seoResults.score.overall, 
+      duration,
+      requestId 
+    });
+
+    res.json({
+      success: true,
+      url,
+      scanType: 'seo',
+      timestamp: new Date().toISOString(),
+      duration: `${(duration / 1000).toFixed(2)}s`,
+      results: seoResults
+    });
+
+  } catch (error) {
+    logger.error('SEO analysis failed:', error);
+    const parsedError = parsePuppeteerError(error);
+    throw new Error(parsedError.userMessage || 'SEO analysis failed. Please try again.');
+  }
+});
+
 module.exports = {
   scanWebsite,
   downloadReport,
   generateRecommendations,
   performBestInClassScan,
+  performSEOScan,
 };

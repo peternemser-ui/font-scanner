@@ -69,6 +69,40 @@ const config = {
       day: parseInt(process.env.ERROR_TELEMETRY_THRESHOLD_DAY || '1000', 10),
     },
   },
+
+  // Competitive Analysis (Resource-intensive operations)
+  competitiveAnalysis: {
+    // Maximum number of competitors to analyze per request
+    maxCompetitors: parseInt(process.env.COMPETITIVE_MAX_COMPETITORS || '5', 10),
+    
+    // Timeout for individual analyzers (ms)
+    analyzerTimeouts: {
+      seo: parseInt(process.env.COMPETITIVE_SEO_TIMEOUT || '30000', 10), // 30s
+      security: parseInt(process.env.COMPETITIVE_SECURITY_TIMEOUT || '30000', 10), // 30s
+      accessibility: parseInt(process.env.COMPETITIVE_A11Y_TIMEOUT || '45000', 10), // 45s
+      coreWebVitals: parseInt(process.env.COMPETITIVE_CWV_TIMEOUT || '60000', 10), // 60s
+      performance: parseInt(process.env.COMPETITIVE_PERF_TIMEOUT || '90000', 10), // 90s
+    },
+    
+    // Delays between operations (ms)
+    delays: {
+      betweenAnalyzers: parseInt(process.env.COMPETITIVE_ANALYZER_DELAY || '1000', 10), // 1s
+      betweenSites: parseInt(process.env.COMPETITIVE_SITE_DELAY || '5000', 10), // 5s
+      afterFailure: parseInt(process.env.COMPETITIVE_FAILURE_DELAY || '3000', 10), // 3s
+    },
+    
+    // Circuit breaker configuration
+    circuitBreaker: {
+      maxConsecutiveFailures: parseInt(process.env.COMPETITIVE_MAX_FAILURES || '2', 10),
+      resetTimeout: parseInt(process.env.COMPETITIVE_RESET_TIMEOUT || '300000', 10), // 5 minutes
+    },
+    
+    // Rate limiting (very restrictive)
+    rateLimit: {
+      windowMs: parseInt(process.env.COMPETITIVE_RATE_WINDOW_MS || '900000', 10), // 15 minutes
+      maxRequests: parseInt(process.env.COMPETITIVE_RATE_MAX_REQUESTS || '2', 10), // Only 2 per 15 min
+    },
+  },
 };
 
 module.exports = config;
