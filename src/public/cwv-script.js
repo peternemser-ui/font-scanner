@@ -140,8 +140,8 @@ function displayResults(data) {
     </div>
     ` : ''}
 
-    <!-- Comprehensive 3-Column Layout: Mobile, Desktop, Best Practices -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr 1.2fr; gap: 1.5rem; margin-bottom: 2rem;">
+    <!-- Desktop vs Mobile Comparison -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 2rem;">
       <!-- Mobile (70% weight) -->
       <div style="
         background: rgba(150, 0, 255, 0.1);
@@ -179,20 +179,11 @@ function displayResults(data) {
           </p>
         </div>
       </div>
-
-      <!-- Best Practices & Google Standards -->
-      <div style="
-        background: rgba(0, 255, 65, 0.08);
-        border: 2px solid rgba(0, 255, 65, 0.4);
-        border-radius: 12px;
-        padding: 1.5rem;
-      ">
-        <h3 style="color: #00ff41; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
-          <span>💡 Best Practices & Standards</span>
-        </h3>
-        ${renderBestPracticesColumn(mobile, desktop)}
-      </div>
     </div>
+
+    <!-- Best Practices & Optimization Guide -->
+    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">Best Practices & Optimization Guide</h2>
+    ${renderBestPracticesTable(mobile, desktop)}
 
     <!-- The Big 3 Core Web Vitals -->
     <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">⚡ The Big 3: Google's Core Web Vitals</h2>
@@ -413,129 +404,141 @@ function getRatingEmoji(rating) {
   }
 }
 
-function renderBestPracticesColumn(mobile, desktop) {
-  const practices = [
-    {
-      metric: 'LCP',
-      icon: '🖼️',
-      target: '< 2.5s',
-      mobile: mobile.lcp,
-      desktop: desktop.lcp,
-      tips: [
-        'Optimize largest image/video',
-        'Use CDN for faster delivery',
-        'Remove render-blocking resources',
-        'Implement lazy loading properly'
-      ]
-    },
-    {
-      metric: 'INP/FID',
-      icon: '👆',
-      target: '< 200ms',
-      mobile: mobile.inp,
-      desktop: desktop.inp,
-      tips: [
-        'Minimize JavaScript execution',
-        'Break up long tasks (< 50ms)',
-        'Use web workers for heavy tasks',
-        'Debounce user input handlers'
-      ]
-    },
-    {
-      metric: 'CLS',
-      icon: '📐',
-      target: '< 0.1',
-      mobile: mobile.cls,
-      desktop: desktop.cls,
-      tips: [
-        'Set image/video dimensions',
-        'Reserve space for ads/embeds',
-        'Avoid inserting content above existing',
-        'Use CSS aspect-ratio property'
-      ]
-    }
-  ];
-
+function renderBestPracticesTable(mobile, desktop) {
   return `
-    <div style="display: grid; gap: 1.2rem;">
-      ${practices.map(practice => {
-        const mobilePass = practice.mobile.rating === 'good';
-        const desktopPass = practice.desktop.rating === 'good';
-        const bothPass = mobilePass && desktopPass;
-        
-        return `
-          <div style="
-            background: ${bothPass ? 'rgba(0, 255, 65, 0.08)' : 'rgba(255, 140, 0, 0.08)'};
-            border: 1px solid ${bothPass ? 'rgba(0, 255, 65, 0.3)' : 'rgba(255, 140, 0, 0.3)'};
-            border-radius: 8px;
-            padding: 1rem;
-          ">
-            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
-              <span style="font-size: 1.5rem;">${practice.icon}</span>
-              <div>
-                <div style="color: ${bothPass ? '#00ff41' : '#ff8c00'}; font-weight: bold; font-size: 1rem;">
-                  ${practice.metric}
-                </div>
-                <div style="color: #808080; font-size: 0.75rem;">
-                  Target: ${practice.target}
-                </div>
-              </div>
-              <div style="margin-left: auto;">
-                ${bothPass ? '✅' : mobilePass || desktopPass ? '⚠️' : '❌'}
-              </div>
-            </div>
-            
-            <div style="
-              background: rgba(0, 0, 0, 0.3);
-              padding: 0.75rem;
-              border-radius: 6px;
-              margin-bottom: 0.75rem;
-            ">
-              <div style="color: #c0c0c0; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-                Quick Wins:
-              </div>
-              ${practice.tips.map((tip, idx) => `
-                <div style="color: #e0e0e0; font-size: 0.8rem; margin: 0.25rem 0; display: flex; align-items: start; gap: 0.5rem;">
-                  <span style="color: #00ff41; font-weight: bold; min-width: 1.2rem;">${idx + 1}.</span>
-                  <span>${tip}</span>
-                </div>
-              `).join('')}
-            </div>
-            
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.75rem;">
-              <div style="color: #9600ff;">
-                📱 ${practice.mobile.displayValue || 'N/A'}
-              </div>
-              <div style="color: #0096ff;">
-                🖥️ ${practice.desktop.displayValue || 'N/A'}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('')}
+    <div style="
+      background: rgba(0, 255, 65, 0.05);
+      border: 2px solid rgba(0, 255, 65, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+      overflow-x: auto;
+    ">
+      <table style="
+        width: 100%;
+        border-collapse: collapse;
+        color: #e0e0e0;
+        font-size: 0.9rem;
+      ">
+        <thead>
+          <tr style="background: rgba(0, 255, 65, 0.1); border-bottom: 2px solid rgba(0, 255, 65, 0.4);">
+            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 12%;">Metric</th>
+            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 15%;">Google Target</th>
+            <th style="padding: 1rem; text-align: center; color: #9600ff; font-weight: bold; width: 10%;">Mobile</th>
+            <th style="padding: 1rem; text-align: center; color: #0096ff; font-weight: bold; width: 10%;">Desktop</th>
+            <th style="padding: 1rem; text-align: center; color: #00ff41; font-weight: bold; width: 8%;">Status</th>
+            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 45%;">Optimization Recommendations</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- LCP Row -->
+          <tr style="border-bottom: 1px solid rgba(0, 255, 65, 0.2);">
+            <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
+              LCP<br/>
+              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">Largest Contentful Paint</span>
+            </td>
+            <td style="padding: 1rem; color: #c0c0c0;">
+              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">Good:</span> ≤ 2.5s</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">Needs Work:</span> 2.5s - 4.0s</div>
+              <div><span style="color: #ff4444;">Poor:</span> > 4.0s</div>
+            </td>
+            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #9600ff; font-weight: bold;">
+              ${mobile.lcp.displayValue || 'N/A'}
+            </td>
+            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #0096ff; font-weight: bold;">
+              ${desktop.lcp.displayValue || 'N/A'}
+            </td>
+            <td style="padding: 1rem; text-align: center; font-size: 1.5rem;">
+              ${mobile.lcp.rating === 'good' && desktop.lcp.rating === 'good' ? '✅' : 
+                mobile.lcp.rating === 'good' || desktop.lcp.rating === 'good' ? '⚠️' : '❌'}
+            </td>
+            <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. Optimize Critical Resources:</strong> Reduce render-blocking JavaScript and CSS. Inline critical CSS and defer non-essential scripts.</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. Image Optimization:</strong> Compress largest image/video, use modern formats (WebP, AVIF), implement responsive images with srcset.</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. Server Performance:</strong> Use CDN, enable HTTP/2, implement server-side caching, reduce server response time (TTFB).</div>
+              <div><strong style="color: #e0e0e0;">4. Resource Hints:</strong> Add preload for critical resources, preconnect to required origins, use priority hints for important images.</div>
+            </td>
+          </tr>
+          
+          <!-- INP/FID Row -->
+          <tr style="border-bottom: 1px solid rgba(0, 255, 65, 0.2);">
+            <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
+              INP/FID<br/>
+              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">Interaction to Next Paint</span>
+            </td>
+            <td style="padding: 1rem; color: #c0c0c0;">
+              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">Good:</span> ≤ 200ms</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">Needs Work:</span> 200ms - 500ms</div>
+              <div><span style="color: #ff4444;">Poor:</span> > 500ms</div>
+            </td>
+            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #9600ff; font-weight: bold;">
+              ${mobile.inp.displayValue || 'N/A'}
+            </td>
+            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #0096ff; font-weight: bold;">
+              ${desktop.inp.displayValue || 'N/A'}
+            </td>
+            <td style="padding: 1rem; text-align: center; font-size: 1.5rem;">
+              ${mobile.inp.rating === 'good' && desktop.inp.rating === 'good' ? '✅' : 
+                mobile.inp.rating === 'good' || desktop.inp.rating === 'good' ? '⚠️' : '❌'}
+            </td>
+            <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. Minimize JavaScript:</strong> Remove unused code, split bundles, lazy load non-critical JavaScript. Keep main thread under 50ms per task.</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. Optimize Event Handlers:</strong> Debounce/throttle input handlers, use passive event listeners, avoid synchronous layout calculations.</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. Web Workers:</strong> Move heavy computations to web workers, use requestIdleCallback for non-urgent tasks.</div>
+              <div><strong style="color: #e0e0e0;">4. Third-Party Scripts:</strong> Audit and remove unnecessary third-party scripts, load them asynchronously, use facade patterns for heavy widgets.</div>
+            </td>
+          </tr>
+          
+          <!-- CLS Row -->
+          <tr>
+            <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
+              CLS<br/>
+              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">Cumulative Layout Shift</span>
+            </td>
+            <td style="padding: 1rem; color: #c0c0c0;">
+              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">Good:</span> ≤ 0.1</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">Needs Work:</span> 0.1 - 0.25</div>
+              <div><span style="color: #ff4444;">Poor:</span> > 0.25</div>
+            </td>
+            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #9600ff; font-weight: bold;">
+              ${mobile.cls.value.toFixed(3)}
+            </td>
+            <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #0096ff; font-weight: bold;">
+              ${desktop.cls.value.toFixed(3)}
+            </td>
+            <td style="padding: 1rem; text-align: center; font-size: 1.5rem;">
+              ${mobile.cls.rating === 'good' && desktop.cls.rating === 'good' ? '✅' : 
+                mobile.cls.rating === 'good' || desktop.cls.rating === 'good' ? '⚠️' : '❌'}
+            </td>
+            <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. Reserve Space:</strong> Set explicit width/height on images and videos, use CSS aspect-ratio property, reserve space for ads and embeds.</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. Font Loading:</strong> Use font-display: swap, preload critical fonts, avoid invisible text during font load (FOIT).</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. Dynamic Content:</strong> Never insert content above existing content without user interaction, use transform animations instead of layout-shifting properties.</div>
+              <div><strong style="color: #e0e0e0;">4. CSS Best Practices:</strong> Avoid animations on layout properties (width, height, top, left), use transform and opacity instead.</div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
       
-      <!-- Google Standards Reference -->
+      <!-- Additional Context -->
       <div style="
+        margin-top: 1.5rem;
+        padding: 1rem;
         background: rgba(187, 134, 252, 0.08);
         border: 1px solid rgba(187, 134, 252, 0.3);
         border-radius: 8px;
-        padding: 1rem;
-        margin-top: 0.5rem;
       ">
-        <div style="color: #bb86fc; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-          <span>🎯</span>
-          <span>Google's Thresholds</span>
-        </div>
-        <div style="color: #c0c0c0; font-size: 0.75rem; line-height: 1.6;">
-          <div style="margin-bottom: 0.5rem;">
-            <span style="color: #00ff41;">✅ Good:</span> 75% of page loads
-          </div>
-          <div style="margin-bottom: 0.5rem;">
-            <span style="color: #ffd700;">⚠️ Needs Improvement:</span> Between thresholds
-          </div>
-          <div>
-            <span style="color: #ff4444;">❌ Poor:</span> 25% of page loads fail
-          </div>
+        <h4 style="color: #bb86fc; margin: 0 0 0.75rem 0; font-size: 1rem;">Google's Evaluation Methodology</h4>
+        <div style="color: #c0c0c0; font-size: 0.85rem; line-height: 1.6;">
+          <p style="margin: 0 0 0.5rem 0;">Google evaluates Core Web Vitals at the 75th percentile of all page loads. This means:</p>
+          <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
+            <li style="margin: 0.25rem 0;"><strong style="color: #00ff41;">Good (Green):</strong> 75% or more of your users experience the "good" threshold</li>
+            <li style="margin: 0.25rem 0;"><strong style="color: #ffd700;">Needs Improvement (Yellow):</strong> Between "good" and "poor" thresholds</li>
+            <li style="margin: 0.25rem 0;"><strong style="color: #ff4444;">Poor (Red):</strong> 25% or more of your users experience the "poor" threshold</li>
+          </ul>
+          <p style="margin: 0.75rem 0 0 0; padding-top: 0.75rem; border-top: 1px solid rgba(187, 134, 252, 0.2);">
+            <strong>Mobile Weighting:</strong> Mobile performance counts for 70% of your overall score because Google uses mobile-first indexing for search rankings.
+          </p>
         </div>
       </div>
     </div>
