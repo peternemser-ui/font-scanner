@@ -9,6 +9,10 @@ const maxCompetitors = 5;
 // WebSocket connection
 let socket = null;
 
+// Unified loader instance (reassigned in analyze function)
+// eslint-disable-next-line prefer-const
+let loader = null;
+
 // Initialize Socket.IO connection
 function initializeWebSocket() {
   if (socket) return; // Already connected
@@ -36,63 +40,27 @@ function initializeWebSocket() {
 function handleProgressUpdate(data) {
   console.log('📊 Progress update:', data);
   
-  const progressContainer = document.getElementById('progressContainer');
-  if (!progressContainer) return;
+  // Update loader based on WebSocket data
+  if (!loader) return;
   
-  // Update progress text
-  const progressText = document.getElementById('progressText');
-  if (progressText && data.message) {
-    progressText.textContent = data.message;
-  }
+  // Map WebSocket stage/metric to step index
+  const stepMapping = {
+    'SEO': 0,
+    'Security': 1,
+    'Accessibility': 2,
+    'Core Web Vitals': 3,
+    'Performance': 4
+  };
   
-  // Update metric progress bars
-  if (data.status === 'metric' || data.status === 'metric-complete') {
-    updateMetricProgress(data.stage, data.metric, data.status, data.score);
-  }
-}
-
-// Update individual metric progress
-function updateMetricProgress(stage, metric, status, score) {
-  const metricId = `${stage}-${metric}`.replace(/\s+/g, '-').toLowerCase();
-  let metricBar = document.getElementById(metricId);
-  
-  if (!metricBar) {
-    // Create metric progress bar if it doesn't exist
-    const metricsContainer = document.getElementById('metricsProgress');
-    if (!metricsContainer) return;
+  if (data.stage && stepMapping[data.stage] !== undefined) {
+    const stepIndex = stepMapping[data.stage];
     
-    const metricRow = document.createElement('div');
-    metricRow.className = 'metric-progress-row';
-    metricRow.innerHTML = `
-      <div class="metric-label">${stage}: ${metric}</div>
-      <div class="metric-bar-container">
-        <div id="${metricId}" class="metric-bar" style="width: 0%"></div>
-      </div>
-      <div id="${metricId}-score" class="metric-score">-</div>
-    `;
-    metricsContainer.appendChild(metricRow);
-    metricBar = document.getElementById(metricId);
-  }
-  
-  // Update progress
-  if (status === 'metric') {
-    metricBar.style.width = '50%';
-    metricBar.style.background = 'linear-gradient(90deg, #00ff41, #00cc33)';
-  } else if (status === 'metric-complete' && score !== null) {
-    metricBar.style.width = '100%';
-    metricBar.style.background = getScoreColor(score);
-    const scoreLabel = document.getElementById(`${metricId}-score`);
-    if (scoreLabel) {
-      scoreLabel.textContent = score;
+    if (data.status === 'metric-complete') {
+      loader.completeStep(stepIndex);
+    } else if (data.status === 'metric') {
+      // Step is in progress - handled by loader's auto-advance
     }
   }
-}
-
-// Get color based on score
-function getScoreColor(score) {
-  if (score >= 80) return 'linear-gradient(90deg, #00ff41, #00cc33)';
-  if (score >= 60) return 'linear-gradient(90deg, #ffa500, #ff8c00)';
-  return 'linear-gradient(90deg, #ff6b6b, #ee5555)';
 }
 
 // Add competitor input field
@@ -181,32 +149,25 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     return;
   }
   
-  const loadingIndicator = document.getElementById('loadingIndicator');
   const resultsDiv = document.getElementById('results');
   const analyzeBtn = document.getElementById('analyzeBtn');
+  
+  // Initialize unified loader
+  const steps = [
+    { label: 'SEO Analysis', detail: 'Analyzing search engine optimization metrics...' },
+    { label: 'Security Scan', detail: 'Checking security headers and protocols...' },
+    { label: 'Accessibility Check', detail: 'Evaluating accessibility standards...' },
+    { label: 'Core Web Vitals', detail: 'Measuring page speed and user experience...' },
+    { label: 'Performance Test', detail: 'Running Lighthouse performance audit...' }
+  ];
+  
+  // eslint-disable-next-line no-undef
+  loader = new AnalyzerLoader('loadingContainer');
+  loader.start(steps, '[COMPETITIVE_ANALYSIS]', 900); // 15 minutes = 900 seconds
   
   // Initialize WebSocket connection
   initializeWebSocket();
   
-  // Add progress container to loading indicator
-  const existingProgress = document.getElementById('progressContainer');
-  if (existingProgress) {
-    existingProgress.remove();
-  }
-  
-  const progressContainer = document.createElement('div');
-  progressContainer.id = 'progressContainer';
-  progressContainer.style.marginTop = '2rem';
-  progressContainer.innerHTML = `
-    <div id="progressText" style="color: #00ff41; font-weight: bold; margin-bottom: 1rem;">
-      Initializing analysis...
-    </div>
-    <div id="metricsProgress" style="display: flex; flex-direction: column; gap: 0.5rem;">
-    </div>
-  `;
-  loadingIndicator.appendChild(progressContainer);
-  
-  loadingIndicator.style.display = 'block';
   resultsDiv.style.display = 'none';
   analyzeBtn.disabled = true;
   
@@ -251,15 +212,14 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     
     displayResults(data);
     
-    loadingIndicator.style.display = 'none';
+    loader.complete();
     resultsDiv.style.display = 'block';
     
   } catch (error) {
     // Show detailed error message
     const errorMsg = error.message || 'An unknown error occurred';
-    alert(`Error: ${errorMsg}`);
+    loader.showError(errorMsg);
     console.error('Competitive analysis error:', error);
-    loadingIndicator.style.display = 'none';
   } finally {
     analyzeBtn.disabled = false;
   }
