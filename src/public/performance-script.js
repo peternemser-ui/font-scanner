@@ -185,22 +185,113 @@ function displayPerformanceResults(results) {
           <div style="font-size: 0.85rem; color: #808080; margin-top: 0.5rem;">Load Speed</div>
         </div>
 
-        <!-- Middle: Info & Note -->
-        <div style="padding: 0 1rem;">
+        <!-- Middle: Info & Quick Stats -->
+        <div style="padding: 0 1rem; flex: 1;">
           <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.3rem;">⚡ Performance Score</h3>
-          <p style="color: #c0c0c0; margin: 0 0 0.75rem 0; line-height: 1.6;">
-            This score measures <strong style="color: #00ff41;">page load speed</strong> based on Lighthouse metrics 
-            (FCP, LCP, TTI, TBT, CLS, SI). A perfect 100 means excellent timing, but doesn't reflect overall site quality.
-          </p>
+          
+          <!-- Quick Stats Grid -->
+          <div style="
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1rem;
+            margin-bottom: 1rem;
+          ">
+            <div style="
+              background: rgba(0, 255, 65, 0.05);
+              border: 1px solid rgba(0, 255, 65, 0.2);
+              border-radius: 6px;
+              padding: 0.75rem;
+              text-align: center;
+            ">
+              <div style="font-size: 0.75rem; color: #808080; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
+                Load Time
+              </div>
+              <div style="font-size: 1.3rem; font-weight: bold; color: #00ff41;">
+                ${results.loadTime || 'N/A'}
+              </div>
+            </div>
+            
+            <div style="
+              background: rgba(0, 255, 65, 0.05);
+              border: 1px solid rgba(0, 255, 65, 0.2);
+              border-radius: 6px;
+              padding: 0.75rem;
+              text-align: center;
+            ">
+              <div style="font-size: 0.75rem; color: #808080; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
+                Page Size
+              </div>
+              <div style="font-size: 1.3rem; font-weight: bold; color: #00ff41;">
+                ${results.pageSize || 'N/A'}
+              </div>
+            </div>
+            
+            <div style="
+              background: rgba(0, 255, 65, 0.05);
+              border: 1px solid rgba(0, 255, 65, 0.2);
+              border-radius: 6px;
+              padding: 0.75rem;
+              text-align: center;
+            ">
+              <div style="font-size: 0.75rem; color: #808080; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
+                Requests
+              </div>
+              <div style="font-size: 1.3rem; font-weight: bold; color: #00ff41;">
+                ${results.totalRequests || 'N/A'}
+              </div>
+            </div>
+          </div>
+
+          <!-- Core Metrics -->
+          <div style="
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+          ">
+            <div style="font-size: 0.85rem; font-weight: bold; color: #00ff41; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
+              Core Metrics
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
+              ${results.coreWebVitals ? `
+                <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+                  <span style="color: #a0a0a0;">LCP:</span>
+                  <span style="color: ${results.coreWebVitals.lcp && parseInt(results.coreWebVitals.lcp) < 2500 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
+                    ${results.coreWebVitals.lcp || 'N/A'}
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+                  <span style="color: #a0a0a0;">FID:</span>
+                  <span style="color: ${results.coreWebVitals.fid && parseInt(results.coreWebVitals.fid) < 100 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
+                    ${results.coreWebVitals.fid || 'N/A'}
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+                  <span style="color: #a0a0a0;">CLS:</span>
+                  <span style="color: ${results.coreWebVitals.cls && parseFloat(results.coreWebVitals.cls) < 0.1 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
+                    ${results.coreWebVitals.cls || 'N/A'}
+                  </span>
+                </div>
+                <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
+                  <span style="color: #a0a0a0;">TTI:</span>
+                  <span style="color: ${results.coreWebVitals.tti && parseInt(results.coreWebVitals.tti) < 3800 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
+                    ${results.coreWebVitals.tti || 'N/A'}
+                  </span>
+                </div>
+              ` : '<div style="color: #808080; grid-column: 1 / -1; text-align: center;">Metrics not available</div>'}
+            </div>
+          </div>
+
+          <!-- Note -->
           <div style="
             background: rgba(255, 152, 0, 0.1);
             border-left: 4px solid #ff9800;
-            padding: 0.75rem 1rem;
+            padding: 0.6rem 0.75rem;
             border-radius: 4px;
           ">
-            <strong style="color: #ff9800;">💡 Note:</strong>
-            <span style="color: #d0d0d0; font-size: 0.9rem;">
-              100/100 performance ≠ perfect website. Check Site Health Score for comprehensive quality assessment.
+            <strong style="color: #ff9800; font-size: 0.85rem;">💡 Note:</strong>
+            <span style="color: #d0d0d0; font-size: 0.8rem;">
+              100/100 performance ≠ perfect website. Check Site Health Score for overall quality.
             </span>
           </div>
         </div>
