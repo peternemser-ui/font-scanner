@@ -18,6 +18,10 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
@@ -25,22 +29,23 @@
     
     <div class="container">      <!-- Header -->
       <header class="form-container">
-        <h1>Comprehensive Dashboard</h1>
-        <p>> unified website analysis & health monitoring</p>
-        
+        <h1 data-i18n="dashboard.title">Comprehensive Dashboard</h1>
+        <p>> <span data-i18n="dashboard.breadcrumb">unified website analysis & health monitoring</span></p>
+
         <!-- URL Input Form -->
         <div style="margin-top: 2rem;">
-          <label for="dashboardUrlInput" class="visually-hidden">Website URL to analyze</label>
-          <input 
-            type="text" 
-            id="dashboardUrlInput" 
-            placeholder="example.com or https://example.com" 
+          <label for="dashboardUrlInput" class="visually-hidden" data-i18n="dashboard.enterUrl">Website URL to analyze</label>
+          <input
+            type="text"
+            id="dashboardUrlInput"
+            data-i18n-placeholder="dashboard.enterUrl"
+            placeholder="example.com or https://example.com"
             aria-label="Enter website URL for comprehensive analysis"
             required
             aria-required="true"
           />
-          
-          <button id="dashboardAnalyzeButton" aria-label="Start comprehensive website analysis">
+
+          <button id="dashboardAnalyzeButton" data-i18n="dashboard.runAudit" type="button" aria-label="Start comprehensive website analysis">
             ANALYZE
           </button>
         </div>

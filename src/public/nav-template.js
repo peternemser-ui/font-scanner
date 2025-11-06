@@ -106,24 +106,40 @@ function renderUnifiedHeader(appTitle, subtitle) {
 function renderNavigation(activePageId) {
   // Get current URL parameter if exists
   const currentUrl = new URLSearchParams(window.location.search).get('url');
-  
+
+  // Map navigation IDs to i18n keys
+  const i18nKeyMap = {
+    'dashboard': 'nav.dashboard',
+    'font-scanner': 'nav.fontScanner',
+    'seo': 'nav.seo',
+    'core-web-vitals': 'nav.coreWebVitals',
+    'performance': 'nav.performance',
+    'accessibility': 'nav.accessibility',
+    'security': 'nav.security',
+    'competitive-analysis': 'nav.rankCompetition'
+  };
+
   const navItems = NAV_CONFIG.map(item => {
     const isActive = item.id === activePageId;
     const activeClass = isActive ? 'active' : '';
     const ariaCurrent = isActive ? 'aria-current="page"' : '';
-    const badge = item.badge 
-      ? `<span class="hot-badge">${item.badge}</span>` 
+    const badge = item.badge
+      ? `<span class="hot-badge">${item.badge}</span>`
       : '';
-    
+
     // Add URL parameter to links if it exists (except dashboard/font-scanner which don't need it)
     let href = item.href;
     if (currentUrl && !['dashboard', 'font-scanner'].includes(item.id)) {
       href += `?url=${encodeURIComponent(currentUrl)}`;
     }
-    
+
+    // Add i18n attribute
+    const i18nKey = i18nKeyMap[item.id] || '';
+    const i18nAttr = i18nKey ? `data-i18n="${i18nKey}"` : '';
+
     return `
       <a href="${href}" class="nav-link ${activeClass}" ${ariaCurrent}>
-        <span class="nav-icon">${item.icon}</span> ${item.label}${badge}
+        <span class="nav-icon">${item.icon}</span> <span ${i18nAttr}>${item.label}</span>${badge}
       </a>
     `;
   }).join('');

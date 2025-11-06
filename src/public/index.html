@@ -32,6 +32,10 @@
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
     <link rel="stylesheet" href="ui-components.css" />
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
@@ -39,22 +43,23 @@
     
     <div class="container">      <!-- Header -->
       <header class="form-container">
-        <h1>Font Scanner</h1>
-        <p>> comprehensive website font analysis protocol</p>
-        
+        <h1 data-i18n="fontScanner.title">Font Scanner</h1>
+        <p>> <span data-i18n="fontScanner.subtitle">comprehensive website font analysis protocol</span></p>
+
         <!-- URL Input Form -->
         <div style="margin-top: 2rem;">
-          <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
-          <input 
-            type="text" 
-            id="urlInput" 
-            placeholder="example.com or https://example.com" 
+          <label for="urlInput" class="visually-hidden" data-i18n="fontScanner.enterUrl">Website URL to analyze</label>
+          <input
+            type="text"
+            id="urlInput"
+            data-i18n-placeholder="fontScanner.enterUrl"
+            placeholder="example.com or https://example.com"
             aria-label="Enter website URL to analyze"
             required
             aria-required="true"
           />
-          
-          <button id="analyzeButton" aria-label="Start comprehensive font analysis">ANALYZE</button>
+
+          <button id="analyzeButton" data-i18n="fontScanner.analyzeWebsite" aria-label="Start comprehensive font analysis">ANALYZE</button>
         </div>
       </header>
 
