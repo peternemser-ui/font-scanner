@@ -1,4 +1,4 @@
-<!doctype html>
+﻿<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -23,45 +23,32 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
     <!-- Load fonts with optimal font-display strategy -->
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
   </head>
   <body>
-    <!-- Theme Toggle Button -->
-    <button 
-      id="themeToggle" 
-      class="theme-toggle" 
-      aria-label="Toggle dark/light theme"
-      aria-pressed="false"
-    >
-      🌓 Theme
-    </button>
-    
-    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
     
-    <div class="container">
-      <!-- Font Size Controls -->
-      <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
-        <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
-        <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
-        <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
-        <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
-      </div>
-
-      <!-- Header -->
+    <div class="container">      <!-- Header -->
       <header class="form-container">
-        <h1>[FONT_SCANNER]</h1>
+        <h1>Font Scanner</h1>
         <p>> comprehensive website font analysis protocol</p>
         
         <!-- URL Input Form -->
         <div style="margin-top: 2rem;">
           <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
           <input 
-            type="url" 
+            type="text" 
             id="urlInput" 
-            placeholder="https://example.com" 
+            placeholder="example.com or https://example.com" 
             aria-label="Enter website URL to analyze"
             required
             aria-required="true"
@@ -74,16 +61,86 @@
       <!-- Results Container -->
       <div id="results" class="results-container hidden" role="region" aria-live="polite">
         <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
-          <h2><span class="heartbeat" aria-hidden="true">⚡</span> Processing Analysis...</h2>
+          <h2><span class="heartbeat" aria-hidden="true">P</span> Processing Analysis...</h2>
           <p class="animate-pulse">Analyzing website fonts and performance...</p>
           <div class="progress-container" role="progressbar" aria-label="Analysis progress">
             <div class="progress-bar" id="progressBar"></div>
           </div>
           <div id="progressText" class="progress-text" aria-live="polite"></div>
           <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0, 255, 20, 0.1); border: 1px solid rgba(0, 255, 20, 0.3); border-radius: 4px; font-size: 0.85rem;">
-            <strong>💡 Note:</strong> <span style="color: #00ff41;">Comprehensive analysis includes Lighthouse, accessibility audit, cross-browser testing, and AI-powered insights. Analysis takes 5-10 minutes.</span>
+            <strong>ⓘ Note:</strong> <span style="color: #00ff41;">Comprehensive analysis includes Lighthouse, accessibility audit, cross-browser testing, and AI-powered insights. Analysis takes 5-10 minutes.</span>
           </div>
         </div>
+
+        <!-- Summary Ribbon -->
+        <div id="summaryRibbon" class="summary-ribbon hidden">
+          <div class="summary-ribbon-content">
+            <div class="summary-item">
+              <span class="summary-icon">◉</span>
+              <div class="summary-details">
+                <span class="summary-label">Site Health</span>
+                <span class="summary-value" id="ribbonHealthScore">--</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <span class="summary-icon">⧗</span>
+              <div class="summary-details">
+                <span class="summary-label">Last Scan</span>
+                <span class="summary-value" id="ribbonLastScan">Just now</span>
+              </div>
+            </div>
+            <div class="summary-item">
+              <span class="summary-icon">▬</span>
+              <div class="summary-details">
+                <span class="summary-label">Actions</span>
+                <div class="summary-actions">
+                  <button class="ribbon-btn ribbon-btn-primary" id="ribbonDownloadPDF">
+                    ▬ Download Report
+                  </button>
+                  <button class="ribbon-btn ribbon-btn-secondary" id="ribbonShareReport">
+                    🔗 Share
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Navigation Panel -->
+        <nav id="quickNav" class="quick-nav hidden" aria-label="Quick navigation to report sections">
+          <div class="quick-nav-header">
+            <span>→ Quick Jump</span>
+            <button class="quick-nav-toggle" id="quickNavToggle" aria-label="Toggle quick navigation">
+              ▼
+            </button>
+          </div>
+          <div class="quick-nav-content" id="quickNavContent">
+            <a href="#executiveSummary" class="quick-nav-link" data-icon="▬">
+              <span class="nav-icon">▬</span>
+              <span>Executive Summary</span>
+            </a>
+            <a href="#fontAnalysis" class="quick-nav-link" data-icon="T">
+              <span class="nav-icon">T</span>
+              <span>Fix My Fonts</span>
+            </a>
+            <a href="#performanceAnalysis" class="quick-nav-link" data-icon="P">
+              <span class="nav-icon">P</span>
+              <span>Boost Core Web Vitals</span>
+            </a>
+            <a href="#accessibilityAnalysis" class="quick-nav-link" data-icon="A">
+              <span class="nav-icon">A</span>
+              <span>Accessibility Fixes</span>
+            </a>
+            <a href="#seoAnalysis" class="quick-nav-link" data-icon="S">
+              <span class="nav-icon">S</span>
+              <span>SEO Optimization</span>
+            </a>
+            <a href="#competitive-analysis.html" class="quick-nav-link" data-icon="🥇">
+              <span class="nav-icon">🥇</span>
+              <span>Compare Competitors</span>
+            </a>
+          </div>
+        </nav>
 
         <!-- Executive Summary -->
         <section id="executiveSummary" class="section hidden">
@@ -149,6 +206,15 @@
     
     <!-- Analyzer Loader -->
     <script src="analyzer-loader.js"></script>
+    
+    <!-- UI Components Library -->
+    <script src="ui-components.js"></script>
+    
+    <!-- Interactive Recommendations -->
+    <script src="interactive-recommendations.js"></script>
+    
+    <!-- Modern UI Enhancements -->
+    <script src="modern-ui.js"></script>
     
     <script src="script.js"></script>
   </body>

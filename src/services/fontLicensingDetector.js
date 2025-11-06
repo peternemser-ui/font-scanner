@@ -112,7 +112,26 @@ class FontLicensingDetector {
    * Identify font license information
    */
   identifyFontLicense(font) {
-    const fontFamily = font.family.toLowerCase();
+    const fontFamily = String(font?.family || '').toLowerCase();
+    if (!fontFamily) {
+      return {
+        category: 'unknown',
+        license: {
+          name: 'Unknown License',
+          type: 'unknown',
+          commercial: false,
+          webUse: false,
+          embedding: false,
+          modification: false
+        },
+        compliance: {
+          webUse: false,
+          commercial: false,
+          embedding: false,
+          modification: false
+        }
+      };
+    }
     
     // Check Google Fonts (free for web use)
     if (font.source === 'google' || this.isGoogleFont(fontFamily)) {
@@ -529,7 +548,7 @@ class FontLicensingDetector {
    */
   suggestAlternatives(font) {
     const alternatives = [];
-    const fontFamily = font.family.toLowerCase();
+    const fontFamily = String(font?.family || '').toLowerCase();
 
     // Suggest Google Fonts alternatives
     const suggestions = {
@@ -548,7 +567,7 @@ class FontLicensingDetector {
           family: alt,
           source: 'Google Fonts',
           license: 'Open Font License (OFL)',
-          reason: `Free alternative to ${font.family}`,
+          reason: `Free alternative to ${font.family || 'font'}`,
           similarity: 'high'
         })));
         break;

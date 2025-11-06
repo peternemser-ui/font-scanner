@@ -22,38 +22,23 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     
-    <!-- Stylesheets -->
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Existing Stylesheets -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
-    <link rel="stylesheet" href="pdf-payment-modal.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
   </head>
   <body>
-    <!-- Theme Toggle Button -->
-    <button 
-      id="themeToggle" 
-      class="theme-toggle" 
-      aria-label="Toggle dark/light theme"
-      aria-pressed="false"
-    >
-      🌓 Theme
-    </button>
-    
-    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
     
     <div class="container">
-      <!-- Font Size Controls -->
-      <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
-        <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
-        <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
-        <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
-        <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
-      </div>
-
       <!-- Header -->
       <header class="form-container">
-        <h1>[ACCESSIBILITY_ANALYZER]</h1>
+        <h1>Accessibility Analyzer</h1>
         <p>> comprehensive WCAG 2.1 compliance & usability audit protocol</p>
         
         <!-- URL Input Form -->
@@ -84,7 +69,7 @@
       <div id="results" class="results-container hidden" role="region" aria-live="polite">
         <!-- Loading State -->
         <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
-          <h2><span class="heartbeat" aria-hidden="true">♿</span> Analyzing Accessibility...</h2>
+          <h2><span class="heartbeat" aria-hidden="true">A</span> Analyzing Accessibility...</h2>
           <p class="animate-pulse">Running WCAG compliance checks and usability tests...</p>
           <div class="progress-container" role="progressbar" aria-label="Analysis progress">
             <div class="progress-bar" id="progressBar"></div>
@@ -103,14 +88,13 @@
     <!-- Footer -->
     <footer style="margin-top: 3rem; padding: 2rem 0; text-align: center; border-top: 1px solid #333;">
       <p style="color: #808080; font-size: 0.85rem;">
-        Accessibility Analyzer | WCAG 2.1 Compliance Testing | Built with ♿ for inclusive web
+        Accessibility Analyzer | WCAG 2.1 Compliance Testing | Built with care for inclusive web
       </p>
     </footer>
 
     <!-- Scripts -->
     <script src="theme-controls.js"></script>
     <script src="nav-template.js"></script>
-    <script src="pdf-payment-modal.js"></script>
     <script src="analyzer-loader.js"></script>
     <script src="accessibility-script.js"></script>
   </body>

@@ -25,26 +25,22 @@ class PerformanceAnalyzerService {
       
       // Try Lighthouse with timeout, fallback if fails
       let desktopLighthouse, mobileLighthouse;
-      
-      try {
-        logger.info('Attempting Lighthouse desktop analysis...');
-        desktopLighthouse = await Promise.race([
-          lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'desktop' }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Lighthouse timeout')), 30000))
-        ]);
-      } catch (lhError) {
-        logger.warn(`Lighthouse desktop failed, using Puppeteer-only score: ${lhError.message}`);
+
+      // Desktop first (no external race; analyzer has its own timeout and fallback)
+      logger.info('Attempting Lighthouse desktop analysis...');
+      desktopLighthouse = await lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'desktop' });
+      if (!desktopLighthouse || desktopLighthouse.score === 0) {
+        logger.warn('Lighthouse desktop returned no/failed results, using Puppeteer-only fallback score');
         desktopLighthouse = this.createPuppeteerFallback(resourceMetrics, 'desktop');
       }
-      
-      try {
-        logger.info('Attempting Lighthouse mobile analysis...');
-        mobileLighthouse = await Promise.race([
-          lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'mobile' }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('Lighthouse timeout')), 30000))
-        ]);
-      } catch (lhError) {
-        logger.warn(`Lighthouse mobile failed, using Puppeteer-only score: ${lhError.message}`);
+
+      // Small settle delay to reduce contention before mobile run
+      await new Promise((r) => setTimeout(r, 500));
+
+      logger.info('Attempting Lighthouse mobile analysis...');
+      mobileLighthouse = await lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'mobile' });
+      if (!mobileLighthouse || mobileLighthouse.score === 0) {
+        logger.warn('Lighthouse mobile returned no/failed results, using Puppeteer-only fallback score');
         mobileLighthouse = this.createPuppeteerFallback(resourceMetrics, 'mobile');
       }
 
@@ -125,7 +121,7 @@ class PerformanceAnalyzerService {
           return new Promise((resolve) => {
             const vitals = { lcp: null, fid: null, cls: null, fcp: null };
             let clsValue = 0;
-            let clsEntries = [];
+            const clsEntries = [];
             
             // LCP
             if (window.PerformanceObserver) {
@@ -210,8 +206,8 @@ class PerformanceAnalyzerService {
     // Calculate score based on resource size and count
     let score = 100;
     
-    const totalSize = resourceMetrics.totalSize || 0;
-    const totalRequests = resourceMetrics.totalResources || 0;
+    const totalSize = resourceMetrics.pageSize || 0;
+    const totalRequests = Array.isArray(resourceMetrics.resources) ? resourceMetrics.resources.length : 0;
     
     // Penalize for large page size (MB)
     const sizeMB = totalSize / (1024 * 1024);
@@ -221,7 +217,7 @@ class PerformanceAnalyzerService {
     if (totalRequests > 100) score -= Math.min((totalRequests - 100) * 0.5, 20);
     
     // Penalize for slow load time
-    const loadTime = resourceMetrics.timings?.loadComplete || 0;
+  const loadTime = resourceMetrics.timing?.navigation?.loadComplete || 0;
     if (loadTime > 3000) score -= Math.min((loadTime - 3000) / 200, 25);
     
     // Mobile penalty
@@ -239,12 +235,12 @@ class PerformanceAnalyzerService {
       bestPractices: 50,
       seo: 50,
       metrics: {
-        firstContentfulPaint: loadTime * 0.6,
-        largestContentfulPaint: loadTime * 0.8,
+        firstContentfulPaint: Math.round(loadTime * 0.6),
+        largestContentfulPaint: Math.round(loadTime * 0.8),
         cumulativeLayoutShift: 0.1,
-        totalBlockingTime: loadTime * 0.1,
+        totalBlockingTime: Math.round(loadTime * 0.1),
         coreWebVitals: {
-          lcp: loadTime * 0.8,
+          lcp: Math.round(loadTime * 0.8),
           fid: 100,
           cls: 0.1
         }
@@ -297,7 +293,7 @@ class PerformanceAnalyzerService {
     
     const mobileCoreWebVitals = this.extractCoreWebVitals(
       mobileLighthouse.metrics,
-      null // Mobile uses only Lighthouse data
+      resourceMetrics.timing.webVitals // allow puppeteer fallback if LH failed
     );
     
     // Generate recommendations based on both desktop and mobile results

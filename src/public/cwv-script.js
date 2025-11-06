@@ -122,7 +122,7 @@ function displayResults(data) {
         margin-bottom: 1rem;
       ">GRADE: ${grade}</div>
       <div style="color: #c0c0c0; font-size: 1rem; margin-top: 1rem;">
-        ${mobile.passedCWV ? '✅ PASSING Core Web Vitals (Good for Google Rankings)' : '❌ FAILING Core Web Vitals (May hurt Google Rankings)'}
+        ${mobile.passedCWV ? '✓ PASSING Core Web Vitals (Good for Google Rankings)' : '✗ FAILING Core Web Vitals (May hurt Google Rankings)'}
       </div>
     </div>
 
@@ -135,7 +135,7 @@ function displayResults(data) {
       margin-bottom: 2rem;
       border-radius: 8px;
     ">
-      <h3 style="color: #ff4444; margin: 0 0 1rem 0;">🚨 Critical Issues</h3>
+      <h3 style="color: #ff4444; margin: 0 0 1rem 0;">! Critical Issues</h3>
       ${issues.map(issue => `<p style="color: #e0e0e0; margin: 0.5rem 0;">${issue}</p>`).join('')}
     </div>
     ` : ''}
@@ -150,13 +150,13 @@ function displayResults(data) {
         padding: 1.5rem;
       ">
         <h3 style="color: #9600ff; margin: 0 0 1rem 0; display: flex; align-items: center; justify-content: space-between;">
-          <span>📱 Mobile (70% weight)</span>
+          <span>M Mobile (70% weight)</span>
           <span style="font-size: 2rem;">${mobile.score}/100</span>
         </h3>
         ${renderCWVMetrics(mobile)}
         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(150, 0, 255, 0.3);">
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            ${mobile.passedCWV ? '✅ All Core Web Vitals passed' : '❌ Some metrics need improvement'}
+            ${mobile.passedCWV ? '✓ All Core Web Vitals passed' : '✗ Some metrics need improvement'}
           </p>
         </div>
       </div>
@@ -169,13 +169,13 @@ function displayResults(data) {
         padding: 1.5rem;
       ">
         <h3 style="color: #0096ff; margin: 0 0 1rem 0; display: flex; align-items: center; justify-content: space-between;">
-          <span>🖥️ Desktop (30% weight)</span>
+          <span>D Desktop (30% weight)</span>
           <span style="font-size: 2rem;">${desktop.score}/100</span>
         </h3>
         ${renderCWVMetrics(desktop)}
         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 150, 255, 0.3);">
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            ${desktop.passedCWV ? '✅ All Core Web Vitals passed' : '⚠️ Some metrics need improvement'}
+            ${desktop.passedCWV ? '✓ All Core Web Vitals passed' : '~ Some metrics need improvement'}
           </p>
         </div>
       </div>
@@ -186,15 +186,15 @@ function displayResults(data) {
     ${renderBestPracticesTable(mobile, desktop)}
 
     <!-- The Big 3 Core Web Vitals -->
-    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">⚡ The Big 3: Google's Core Web Vitals</h2>
+    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">P The Big 3: Google's Core Web Vitals</h2>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
-      ${renderMetricCard('LCP', 'Largest Contentful Paint', mobile.lcp, desktop.lcp, '🖼️', 'Loading Performance')}
+      ${renderMetricCard('LCP', 'Largest Contentful Paint', mobile.lcp, desktop.lcp, 'I', 'Loading Performance')}
       ${renderMetricCard('INP', 'Interaction to Next Paint', mobile.inp, desktop.inp, '👆', 'Responsiveness')}
       ${renderMetricCard('CLS', 'Cumulative Layout Shift', mobile.cls, desktop.cls, '📐', 'Visual Stability')}
     </div>
 
     <!-- Additional Performance Metrics -->
-    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">📊 Additional Performance Metrics</h2>
+    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">C Additional Performance Metrics</h2>
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
       ${renderAdditionalMetric('FCP', 'First Contentful Paint', mobile.additionalMetrics.fcp, desktop.additionalMetrics.fcp)}
       ${renderAdditionalMetric('SI', 'Speed Index', mobile.additionalMetrics.si, desktop.additionalMetrics.si)}
@@ -203,7 +203,7 @@ function displayResults(data) {
 
     <!-- Recommendations -->
     ${recommendations.length > 0 ? `
-    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">💡 Recommendations</h2>
+    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">ⓘ Recommendations</h2>
     <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
       ${recommendations.map(rec => `
         <div style="
@@ -226,8 +226,8 @@ function displayResults(data) {
               text-transform: uppercase;
             ">${rec.priority}</span>
           </div>
-          <p style="color: #e0e0e0; margin: 0 0 0.75rem 0; font-weight: 600;">⚠️ ${rec.issue}</p>
-          <p style="color: #c0c0c0; margin: 0;">💡 ${rec.solution}</p>
+          <p style="color: #e0e0e0; margin: 0 0 0.75rem 0; font-weight: 600;">~ ${rec.issue}</p>
+          <p style="color: #c0c0c0; margin: 0;">ⓘ ${rec.solution}</p>
         </div>
       `).join('')}
     </div>
@@ -241,7 +241,7 @@ function displayResults(data) {
       border-radius: 8px;
       margin-bottom: 2rem;
     ">
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0;">ℹ️ Understanding Your Scores</h3>
+      <h3 style="color: #00ff41; margin: 0 0 1rem 0;">ⓘ Understanding Your Scores</h3>
       <p style="color: #e0e0e0; margin: 0 0 0.5rem 0;">${comparison.context}</p>
       <p style="color: #c0c0c0; margin: 0; font-size: 0.9rem;">${comparison.note}</p>
       <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
@@ -250,56 +250,8 @@ function displayResults(data) {
       </div>
     </div>
 
-    <!-- PDF Download Button -->
-    <div style="text-align: center; margin: 2rem 0; padding: 2rem; background: rgba(187, 134, 252, 0.05); border: 2px solid rgba(187, 134, 252, 0.3); border-radius: 12px;">
-      <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">📄 Professional CWV Report</h3>
-      <p style="color: #c0c0c0; margin: 0 0 1.5rem 0;">
-        Get a comprehensive PDF report with detailed Core Web Vitals analysis, optimization roadmap, and Google ranking impact assessment.
-      </p>
-      <button 
-        id="cwvPdfDownloadButton"
-        class="pdf-download-btn"
-        style="
-          padding: 1rem 2rem;
-          background: linear-gradient(135deg, #bb86fc 0%, #9d5fdb 100%);
-          border: none;
-          border-radius: 8px;
-          color: #000000;
-          font-size: 1.1rem;
-          font-weight: bold;
-          font-family: 'Courier New', monospace;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          box-shadow: 0 4px 15px rgba(187, 134, 252, 0.3);
-        "
-      >
-        📥 Download CWV PDF Report ($5)
-      </button>
-      <p style="color: #808080; font-size: 0.85rem; margin: 1rem 0 0 0; font-style: italic;">
-        Secure payment • Instant download • One-time purchase
-      </p>
-    </div>
+    <!-- PDF Download button removed - monetization disabled -->
   `;
-
-  // Add event listeners after DOM is updated
-  setTimeout(() => {
-    const pdfButton = document.getElementById('cwvPdfDownloadButton');
-    if (pdfButton) {
-      pdfButton.addEventListener('mouseenter', function() {
-        this.style.transform = 'translateY(-2px)';
-        this.style.boxShadow = '0 6px 20px rgba(187, 134, 252, 0.5)';
-      });
-      pdfButton.addEventListener('mouseleave', function() {
-        this.style.transform = 'translateY(0)';
-        this.style.boxShadow = '0 4px 15px rgba(187, 134, 252, 0.3)';
-      });
-      pdfButton.addEventListener('click', function() {
-        if (typeof openPdfPurchaseModal === 'function') {
-          openPdfPurchaseModal('core-web-vitals');
-        }
-      });
-    }
-  }, 100);
 }
 
 function renderCWVMetrics(device) {
@@ -386,7 +338,7 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
           background: rgba(150, 0, 255, 0.1);
           border-radius: 6px;
         ">
-          <span style="color: #9600ff; font-size: 0.85rem; font-weight: bold;">📱 Mobile</span>
+          <span style="color: #9600ff; font-size: 0.85rem; font-weight: bold;">M Mobile</span>
           <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1rem;">
             ${abbr === 'CLS' ? mobileMetric.value.toFixed(3) : (mobileMetric.displayValue || 'N/A')}
           </span>
@@ -399,7 +351,7 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
           background: rgba(0, 150, 255, 0.1);
           border-radius: 6px;
         ">
-          <span style="color: #0096ff; font-size: 0.85rem; font-weight: bold;">🖥️ Desktop</span>
+          <span style="color: #0096ff; font-size: 0.85rem; font-weight: bold;">D Desktop</span>
           <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1rem;">
             ${abbr === 'CLS' ? desktopMetric.value.toFixed(3) : (desktopMetric.displayValue || 'N/A')}
           </span>
@@ -438,7 +390,7 @@ function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
         background: rgba(150, 0, 255, 0.1);
         border-radius: 6px;
       ">
-        <span style="color: #9600ff; font-size: 0.8rem; font-weight: bold;">📱 Mobile</span>
+        <span style="color: #9600ff; font-size: 0.8rem; font-weight: bold;">M Mobile</span>
         <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1rem;">
           ${mobileMetric.displayValue}
         </span>
@@ -453,7 +405,7 @@ function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
         background: rgba(0, 150, 255, 0.1);
         border-radius: 6px;
       ">
-        <span style="color: #0096ff; font-size: 0.8rem; font-weight: bold;">🖥️ Desktop</span>
+        <span style="color: #0096ff; font-size: 0.8rem; font-weight: bold;">D Desktop</span>
         <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1rem;">
           ${desktopMetric.displayValue}
         </span>
@@ -468,10 +420,10 @@ function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
 
 function getRatingEmoji(rating) {
   switch(rating) {
-    case 'good': return '✅';
-    case 'needs-improvement': return '⚠️';
-    case 'poor': return '❌';
-    default: return '⏱️'; // Clock icon instead of question mark
+    case 'good': return '✓';
+    case 'needs-improvement': return '~';
+    case 'poor': return '✗';
+    default: return '⧗'; // Clock icon instead of question mark
   }
 }
 
@@ -520,8 +472,8 @@ function renderBestPracticesTable(mobile, desktop) {
               ${desktop.lcp.displayValue || 'N/A'}
             </td>
             <td style="padding: 1rem; text-align: center; font-size: 1.5rem;">
-              ${mobile.lcp.rating === 'good' && desktop.lcp.rating === 'good' ? '✅' : 
-                mobile.lcp.rating === 'good' || desktop.lcp.rating === 'good' ? '⚠️' : '❌'}
+              ${mobile.lcp.rating === 'good' && desktop.lcp.rating === 'good' ? '✓' : 
+                mobile.lcp.rating === 'good' || desktop.lcp.rating === 'good' ? '~' : '✗'}
             </td>
             <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
               <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. Optimize Critical Resources:</strong> Reduce render-blocking JavaScript and CSS. Inline critical CSS and defer non-essential scripts.</div>
@@ -549,8 +501,8 @@ function renderBestPracticesTable(mobile, desktop) {
               ${desktop.inp.displayValue || 'N/A'}
             </td>
             <td style="padding: 1rem; text-align: center; font-size: 1.5rem;">
-              ${mobile.inp.rating === 'good' && desktop.inp.rating === 'good' ? '✅' : 
-                mobile.inp.rating === 'good' || desktop.inp.rating === 'good' ? '⚠️' : '❌'}
+              ${mobile.inp.rating === 'good' && desktop.inp.rating === 'good' ? '✓' : 
+                mobile.inp.rating === 'good' || desktop.inp.rating === 'good' ? '~' : '✗'}
             </td>
             <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
               <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. Minimize JavaScript:</strong> Remove unused code, split bundles, lazy load non-critical JavaScript. Keep main thread under 50ms per task.</div>
@@ -578,8 +530,8 @@ function renderBestPracticesTable(mobile, desktop) {
               ${desktop.cls.value.toFixed(3)}
             </td>
             <td style="padding: 1rem; text-align: center; font-size: 1.5rem;">
-              ${mobile.cls.rating === 'good' && desktop.cls.rating === 'good' ? '✅' : 
-                mobile.cls.rating === 'good' || desktop.cls.rating === 'good' ? '⚠️' : '❌'}
+              ${mobile.cls.rating === 'good' && desktop.cls.rating === 'good' ? '✓' : 
+                mobile.cls.rating === 'good' || desktop.cls.rating === 'good' ? '~' : '✗'}
             </td>
             <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
               <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. Reserve Space:</strong> Set explicit width/height on images and videos, use CSS aspect-ratio property, reserve space for ads and embeds.</div>
@@ -625,4 +577,18 @@ function getGradeColor(grade) {
     case 'F': return '#ff4444';
     default: return '#808080';
   }
+}
+
+// Auto-start scan if URL parameter is present
+if (typeof window.getUrlParameter === 'function') {
+  window.addEventListener('DOMContentLoaded', () => {
+    const autoUrl = window.getUrlParameter();
+    if (autoUrl) {
+      console.log('→ Auto-starting Core Web Vitals analysis for:', autoUrl);
+      urlInput.value = autoUrl;
+      setTimeout(() => {
+        analyzeButton.click();
+      }, 500);
+    }
+  });
 }

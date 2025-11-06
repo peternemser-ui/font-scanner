@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Theme Toggle Debug</title>
+  <link rel="stylesheet" href="design-tokens.css">
+  <link rel="stylesheet" href="components.css">
+  <link rel="stylesheet" href="layout.css">
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    .debug-panel {
+      position: fixed;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.9);
+      color: lime;
+      padding: 20px;
+      font-family: monospace;
+      font-size: 14px;
+      border: 2px solid lime;
+      max-width: 400px;
+      max-height: 500px;
+      overflow-y: auto;
+      z-index: 9999;
+    }
+    .debug-panel h3 {
+      margin: 0 0 10px 0;
+      color: #00ff41;
+    }
+    .debug-item {
+      margin: 5px 0;
+    }
+    .debug-item strong {
+      color: #00d9ff;
+    }
+    #testButton {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #00ff41;
+      border: none;
+      color: #000;
+      font-weight: bold;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+  
+  <div class="debug-panel">
+    <h3>🔍 Theme Debug Panel</h3>
+    <div class="debug-item">
+      <strong>Body classes:</strong> <span id="bodyClasses">-</span>
+    </div>
+    <div class="debug-item">
+      <strong>localStorage theme:</strong> <span id="localStorageTheme">-</span>
+    </div>
+    <div class="debug-item">
+      <strong>--bg-primary:</strong> <span id="bgPrimary">-</span>
+    </div>
+    <div class="debug-item">
+      <strong>--text-primary:</strong> <span id="textPrimary">-</span>
+    </div>
+    <div class="debug-item">
+      <strong>Computed bg:</strong> <span id="computedBg">-</span>
+    </div>
+    <div class="debug-item">
+      <strong>Computed color:</strong> <span id="computedColor">-</span>
+    </div>
+    <button id="testButton">Toggle Theme Manually</button>
+    <div id="log" style="margin-top: 10px; font-size: 11px; max-height: 200px; overflow-y: auto;"></div>
+  </div>
+
+  <div class="container">
+    <h1>Theme Toggle Debug Page</h1>
+    <p>This page helps debug theme toggle functionality.</p>
+    <p>Click the theme toggle in the header or use the manual button to test.</p>
+  </div>
+
+  <script src="nav-template.js"></script>
+  
+  <script>
+    function updateDebugInfo() {
+      const body = document.body;
+      const computed = getComputedStyle(body);
+      
+      document.getElementById('bodyClasses').textContent = body.className || '(none)';
+      document.getElementById('localStorageTheme').textContent = localStorage.getItem('theme') || '(null)';
+      document.getElementById('bgPrimary').textContent = computed.getPropertyValue('--bg-primary').trim();
+      document.getElementById('textPrimary').textContent = computed.getPropertyValue('--text-primary').trim();
+      document.getElementById('computedBg').textContent = computed.backgroundColor;
+      document.getElementById('computedColor').textContent = computed.color;
+    }
+    
+    function log(message) {
+      const logEl = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      logEl.innerHTML = `[${time}] ${message}<br>` + logEl.innerHTML;
+    }
+    
+    // Update debug info every 500ms
+    setInterval(updateDebugInfo, 500);
+    updateDebugInfo();
+    
+    // Manual toggle button
+    document.getElementById('testButton').addEventListener('click', () => {
+      document.body.classList.toggle('white-theme');
+      const newTheme = document.body.classList.contains('white-theme') ? 'light' : 'dark';
+      localStorage.setItem('theme', newTheme);
+      log(`Manual toggle to: ${newTheme}`);
+      updateDebugInfo();
+    });
+    
+    // Monitor localStorage changes
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'theme') {
+        log(`localStorage changed: ${e.oldValue} → ${e.newValue}`);
+        updateDebugInfo();
+      }
+    });
+    
+    // Monitor class changes
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          log(`Body class changed to: ${document.body.className}`);
+          updateDebugInfo();
+        }
+      });
+    });
+    
+    observer.observe(document.body, { attributes: true });
+    
+    log('Debug panel initialized');
+  </script>
+</body>
+</html>

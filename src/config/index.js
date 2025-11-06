@@ -13,17 +13,17 @@ const config = {
 
   // Rate Limiting
   rateLimit: {
-    // Global rate limit (all endpoints)
-    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10),
+    // Global rate limit (all endpoints) - VERY HIGH FOR DEVELOPMENT
+    windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '10000', 10), // 10,000 per minute for development
     
     // Scan endpoint rate limit (more restrictive)
-    scanWindowMs: parseInt(process.env.SCAN_RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
-    scanMaxRequests: parseInt(process.env.SCAN_RATE_LIMIT_MAX_REQUESTS || '20', 10),
+    scanWindowMs: parseInt(process.env.SCAN_RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
+    scanMaxRequests: parseInt(process.env.SCAN_RATE_LIMIT_MAX_REQUESTS || '500', 10), // 500 per minute (increased from 50)
     
     // Download endpoint rate limit
-    downloadWindowMs: parseInt(process.env.DOWNLOAD_RATE_LIMIT_WINDOW_MS || '900000', 10), // 15 minutes
-    downloadMaxRequests: parseInt(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS || '50', 10),
+    downloadWindowMs: parseInt(process.env.DOWNLOAD_RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
+    downloadMaxRequests: parseInt(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS || '1000', 10), // 1000 per minute (increased from 100)
   },
 
   // Security
@@ -55,6 +55,42 @@ const config = {
   performance: {
     maxPagesToScan: parseInt(process.env.MAX_PAGES_TO_SCAN || '10', 10),
     scanTimeout: parseInt(process.env.SCAN_TIMEOUT || '60000', 10),
+  },
+
+  // Lighthouse (centralized config)
+  lighthouse: {
+    // Overall execution timeout guard for a single LH run
+    timeoutMs: parseInt(process.env.LIGHTHOUSE_TIMEOUT_MS || '120000', 10),
+    // How long LH will wait for page load internally
+    maxWaitForLoadMs: parseInt(process.env.LIGHTHOUSE_MAX_WAIT_MS || '90000', 10),
+    // Retries for common flaky failures (NO_FCP, Chrome internal error)
+    retries: parseInt(process.env.LIGHTHOUSE_RETRIES || '3', 10), // Increased from 2 to 3
+    // Desktop settle pauses (increased for better reliability)
+    pauseAfterFcpMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_FCP_MS || '2000', 10), // Increased from 1500
+    pauseAfterLoadMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_LOAD_MS || '2000', 10), // Increased from 1500
+    // Mobile settle pauses
+    pauseAfterFcpMsMobile: parseInt(process.env.LH_MOBILE_PAUSE_FCP_MS || '1000', 10),
+    pauseAfterLoadMsMobile: parseInt(process.env.LH_MOBILE_PAUSE_LOAD_MS || '1000', 10),
+    // Mobile throttling (use LH "mobileSlow4G"-like defaults for reliability)
+    mobileThrottling: {
+      rttMs: parseInt(process.env.LH_MOBILE_RTT_MS || '150', 10),
+      throughputKbps: parseInt(process.env.LH_MOBILE_THROUGHPUT_KBPS || '1638', 10),
+      cpuSlowdownMultiplier: parseInt(process.env.LH_MOBILE_CPU_SLOWDOWN || '4', 10),
+      requestLatencyMs: parseInt(process.env.LH_MOBILE_REQUEST_LATENCY_MS || '150', 10),
+      downloadThroughputKbps: parseInt(process.env.LH_MOBILE_DOWNLOAD_KBPS || '1638', 10),
+      uploadThroughputKbps: parseInt(process.env.LH_MOBILE_UPLOAD_KBPS || '732', 10),
+    },
+    // Error tolerance and fallback strategies
+    errorTolerance: {
+      // Use fallback scoring when Lighthouse fails
+      useFallbackScoring: process.env.LH_USE_FALLBACK !== 'false',
+      // Continue analysis even if desktop Lighthouse fails
+      continueOnDesktopFailure: process.env.LH_CONTINUE_ON_DESKTOP_FAILURE !== 'false',
+      // Use mobile scores as fallback for desktop when desktop fails
+      useMobileAsFallback: process.env.LH_USE_MOBILE_FALLBACK !== 'false',
+      // Delay between retries (ms)
+      retryDelayMs: parseInt(process.env.LH_RETRY_DELAY_MS || '3000', 10),
+    }
   },
 
   // Error Telemetry
@@ -97,10 +133,10 @@ const config = {
       resetTimeout: parseInt(process.env.COMPETITIVE_RESET_TIMEOUT || '300000', 10), // 5 minutes
     },
     
-    // Rate limiting (very restrictive)
+    // Rate limiting - INCREASED FOR DEVELOPMENT
     rateLimit: {
-      windowMs: parseInt(process.env.COMPETITIVE_RATE_WINDOW_MS || '900000', 10), // 15 minutes
-      maxRequests: parseInt(process.env.COMPETITIVE_RATE_MAX_REQUESTS || '2', 10), // Only 2 per 15 min
+      windowMs: parseInt(process.env.COMPETITIVE_RATE_WINDOW_MS || '60000', 10), // 1 minute
+      maxRequests: parseInt(process.env.COMPETITIVE_RATE_MAX_REQUESTS || '100', 10), // 100 per minute (increased from 10)
     },
   },
 };

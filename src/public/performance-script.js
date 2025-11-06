@@ -93,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       // Re-enable button
       submitButton.disabled = false;
-      submitButton.textContent = '🖥️📱 ANALYZE PERFORMANCE (Desktop & Mobile)';
+      submitButton.textContent = 'D M ANALYZE PERFORMANCE (Desktop & Mobile)';
       submitButton.style.opacity = '1';
       urlInput.disabled = false;
     }
@@ -105,6 +105,18 @@ document.addEventListener('DOMContentLoaded', () => {
       submitButton.click();
     }
   });
+  
+  // Auto-start scan if URL parameter is present
+  if (typeof window.getUrlParameter === 'function') {
+    const autoUrl = window.getUrlParameter();
+    if (autoUrl) {
+      console.log('→ Auto-starting Performance analysis for:', autoUrl);
+      urlInput.value = autoUrl;
+      setTimeout(() => {
+        submitButton.click();
+      }, 500);
+    }
+  }
 });
 
 /**
@@ -232,7 +244,7 @@ function displayPerformanceResults(results) {
 
         <!-- Right: Performance Score Details -->
         <div style="padding: 0 1rem; flex: 1;">
-          <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.3rem;">⚡ Performance Score</h3>
+          <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.3rem;">P Performance Score</h3>
           
           <!-- Quick Stats Grid -->
           <div style="
@@ -334,7 +346,7 @@ function displayPerformanceResults(results) {
             padding: 0.6rem 0.75rem;
             border-radius: 4px;
           ">
-            <strong style="color: #ff9800; font-size: 0.85rem;">💡 Note:</strong>
+            <strong style="color: #ff9800; font-size: 0.85rem;">ⓘ Note:</strong>
             <span style="color: #d0d0d0; font-size: 0.8rem;">
               100/100 performance ≠ perfect website. Check Site Health Score for overall quality.
             </span>
@@ -349,15 +361,15 @@ function displayPerformanceResults(results) {
           padding-top: 2rem;
           border-top: 1px solid rgba(0, 255, 65, 0.2);
         ">
-          <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.1rem;">📊 Multi-Dimensional Analysis</h4>
+          <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.1rem;">◉ Multi-Dimensional Analysis</h4>
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem;">
             ${Object.entries(results.dimensionalGrades).map(([dimension, grade]) => {
               const icons = {
-                performance: '⚡',
-                resources: '📦',
-                caching: '💾',
-                network: '🌐',
-                webVitals: '🎯'
+                performance: 'P',
+                resources: 'R',
+                caching: 'C',
+                network: 'N',
+                webVitals: 'W'
               };
               const labels = {
                 performance: 'Performance',
@@ -397,34 +409,11 @@ function displayPerformanceResults(results) {
     
     <!-- PDF Download Button -->
     <div style="text-align: center; margin: 2rem 0; padding: 2rem; background: rgba(187, 134, 252, 0.05); border: 2px solid rgba(187, 134, 252, 0.3); border-radius: 12px;">
-      <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">📄 Professional PDF Report</h3>
+      <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">D Professional PDF Report</h3>
       <p style="color: #c0c0c0; margin: 0 0 1.5rem 0;">
         Get a comprehensive PDF report with Core Web Vitals, resource analysis, and optimization recommendations.
       </p>
-      <button 
-        id="performancePdfDownloadButton"
-        style="
-          padding: 1rem 2rem;
-          background: linear-gradient(135deg, #bb86fc 0%, #9d5fdb 100%);
-          border: none;
-          border-radius: 8px;
-          color: #000000;
-          font-size: 1.1rem;
-          font-weight: bold;
-          font-family: 'Courier New', monospace;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          box-shadow: 0 4px 15px rgba(187, 134, 252, 0.3);
-        "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(187, 134, 252, 0.5)';"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(187, 134, 252, 0.3)';"
-        onclick="openPdfPurchaseModal('performance')"
-      >
-        📥 Download PDF Report ($5)
-      </button>
-      <p style="color: #808080; font-size: 0.85rem; margin: 1rem 0 0 0; font-style: italic;">
-        Secure payment • Instant download • One-time purchase
-      </p>
+      <!-- PDF Download button removed - monetization disabled -->
     </div>
   `;
   container.appendChild(summarySection);
@@ -450,7 +439,7 @@ function displayPerformanceResults(results) {
             padding: 1.5rem;
           ">
             <div style="text-align: center; margin-bottom: 1rem;">
-              <div style="font-size: 1.5rem; color: #00ccff; margin-bottom: 0.5rem;">🖥️ DESKTOP</div>
+              <div style="font-size: 1.5rem; color: #00ccff; margin-bottom: 0.5rem;">D DESKTOP</div>
               <div style="
                 width: 120px;
                 height: 120px;
@@ -484,25 +473,25 @@ function displayPerformanceResults(results) {
               <h4 style="color: #00ccff; margin: 0 0 0.75rem 0; font-size: 1rem;">Lighthouse Scores</h4>
               <div style="display: grid; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">⚡ Performance</span>
+                  <span style="color: #c0c0c0;">P Performance</span>
                   <span style="color: ${getPerformanceColor(results.browsers.desktop.performanceScore)}; font-weight: bold;">
                     ${results.browsers.desktop.performanceScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">♿ Accessibility</span>
+                  <span style="color: #c0c0c0;">A Accessibility</span>
                   <span style="color: ${getPerformanceColor(results.browsers.desktop.accessibilityScore)}; font-weight: bold;">
                     ${results.browsers.desktop.accessibilityScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">✅ Best Practices</span>
+                  <span style="color: #c0c0c0;">B Best Practices</span>
                   <span style="color: ${getPerformanceColor(results.browsers.desktop.bestPracticesScore)}; font-weight: bold;">
                     ${results.browsers.desktop.bestPracticesScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">🔍 SEO</span>
+                  <span style="color: #c0c0c0;">S SEO</span>
                   <span style="color: ${getPerformanceColor(results.browsers.desktop.seoScore)}; font-weight: bold;">
                     ${results.browsers.desktop.seoScore}
                   </span>
@@ -535,7 +524,7 @@ function displayPerformanceResults(results) {
             padding: 1.5rem;
           ">
             <div style="text-align: center; margin-bottom: 1rem;">
-              <div style="font-size: 1.5rem; color: #ff6600; margin-bottom: 0.5rem;">📱 MOBILE</div>
+              <div style="font-size: 1.5rem; color: #ff6600; margin-bottom: 0.5rem;">M MOBILE</div>
               <div style="
                 width: 120px;
                 height: 120px;
@@ -569,25 +558,25 @@ function displayPerformanceResults(results) {
               <h4 style="color: #ff6600; margin: 0 0 0.75rem 0; font-size: 1rem;">Lighthouse Scores</h4>
               <div style="display: grid; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">⚡ Performance</span>
+                  <span style="color: #c0c0c0;">P Performance</span>
                   <span style="color: ${getPerformanceColor(results.browsers.mobile.performanceScore)}; font-weight: bold;">
                     ${results.browsers.mobile.performanceScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">♿ Accessibility</span>
+                  <span style="color: #c0c0c0;">A Accessibility</span>
                   <span style="color: ${getPerformanceColor(results.browsers.mobile.accessibilityScore)}; font-weight: bold;">
                     ${results.browsers.mobile.accessibilityScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">✅ Best Practices</span>
+                  <span style="color: #c0c0c0;">B Best Practices</span>
                   <span style="color: ${getPerformanceColor(results.browsers.mobile.bestPracticesScore)}; font-weight: bold;">
                     ${results.browsers.mobile.bestPracticesScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">🔍 SEO</span>
+                  <span style="color: #c0c0c0;">S SEO</span>
                   <span style="color: ${getPerformanceColor(results.browsers.mobile.seoScore)}; font-weight: bold;">
                     ${results.browsers.mobile.seoScore}
                   </span>
@@ -623,7 +612,7 @@ function displayPerformanceResults(results) {
           margin-top: 1rem;
         ">
           <div style="color: #ffa500; font-weight: bold; margin-bottom: 0.5rem;">
-            ⚠️ PERFORMANCE GAP DETECTED
+            ~ PERFORMANCE GAP DETECTED
           </div>
           <p style="color: #c0c0c0; margin: 0;">
             There is a ${Math.abs(results.browsers.desktop.performanceScore - results.browsers.mobile.performanceScore)}-point difference between desktop (${results.browsers.desktop.performanceScore}) and mobile (${results.browsers.mobile.performanceScore}) performance. 
@@ -641,7 +630,7 @@ function displayPerformanceResults(results) {
           margin-top: 1rem;
         ">
           <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">
-            ✅ CONSISTENT PERFORMANCE
+            ✓ CONSISTENT PERFORMANCE
           </div>
           <p style="color: #c0c0c0; margin: 0;">
             Desktop and mobile performance scores are within 10 points of each other, indicating consistent user experience across platforms.
@@ -828,10 +817,10 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
             <th style="text-align: left; width: 25%;">Metric</th>
             <th style="text-align: left; width: 25%;">Description</th>
             <th colspan="2" style="text-align: center; background: rgba(0,204,255,0.1); border-left: 2px solid #00ccff;">
-              <span style="color: #00ccff;">🖥️ Desktop</span>
+              <span style="color: #00ccff;">D Desktop</span>
             </th>
             <th colspan="2" style="text-align: center; background: rgba(255,102,0,0.1); border-left: 2px solid #ff6600;">
-              <span style="color: #ff6600;">📱 Mobile</span>
+              <span style="color: #ff6600;">M Mobile</span>
             </th>
           </tr>
           <tr style="font-size: 0.85rem;">
@@ -845,7 +834,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
         </thead>
         <tbody>
           ${renderMetricRow(
-            '📊',
+            'L',
             'Largest Contentful Paint (LCP)',
             'Measures loading performance. Good LCP is ≤ 2.5s',
             desktopVitals?.lcp,
@@ -854,7 +843,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
           )}
           
           ${renderMetricRow(
-            '⚡',
+            'P',
             'First Input Delay (FID)',
             'Measures interactivity. Good FID is ≤ 100ms',
             desktopVitals?.fid,
@@ -863,7 +852,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
           )}
           
           ${renderMetricRow(
-            '🎯',
+            'T',
             'Cumulative Layout Shift (CLS)',
             'Measures visual stability. Good CLS is ≤ 0.1',
             desktopVitals?.cls || '0.000',
@@ -872,7 +861,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
           )}
           
           ${desktopVitals?.ttfb || mobileVitals?.ttfb ? renderMetricRow(
-            '⏱️',
+            '⧗',
             'Time to First Byte (TTFB)',
             'Server response time. Good TTFB is < 600ms',
             desktopVitals?.ttfb || 'N/A',
@@ -881,7 +870,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
           ) : ''}
           
           ${desktopVitals?.fcp || mobileVitals?.fcp ? renderMetricRow(
-            '🎨',
+            'Y',
             'First Contentful Paint (FCP)',
             'First text/image render. Good FCP is < 1.8s',
             desktopVitals?.fcp || 'N/A',
@@ -919,10 +908,10 @@ function renderResourceAnalysisContent(resources) {
 
   const resourceTypes = [
     { name: 'JavaScript', data: resources.javascript, color: '#f7df1e', icon: '📜' },
-    { name: 'CSS', data: resources.css, color: '#264de4', icon: '🎨' },
-    { name: 'Images', data: resources.images, color: '#00ccff', icon: '🖼️' },
+    { name: 'CSS', data: resources.css, color: '#264de4', icon: 'Y' },
+    { name: 'Images', data: resources.images, color: '#00ccff', icon: 'I' },
     { name: 'Fonts', data: resources.fonts, color: '#ff6600', icon: '🔤' },
-    { name: 'Other', data: resources.other, color: '#808080', icon: '📦' }
+    { name: 'Other', data: resources.other, color: '#808080', icon: 'R' }
   ].filter(r => r.data && r.data.count > 0);
 
   // Calculate percentages
@@ -934,7 +923,7 @@ function renderResourceAnalysisContent(resources) {
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
         <p style="color: #00ccff; font-size: 0.9rem; margin: 0;">
-          ℹ️ <strong>Platform-Agnostic Metrics:</strong> Resource data is collected during page analysis and applies universally to both desktop and mobile experiences.
+          ⓘ <strong>Platform-Agnostic Metrics:</strong> Resource data is collected during page analysis and applies universally to both desktop and mobile experiences.
         </p>
       </div>
       
@@ -945,7 +934,7 @@ function renderResourceAnalysisContent(resources) {
       
       <!-- Resource Size Chart -->
       <div style="margin-bottom: 2rem;">
-        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">📊 Size Distribution</h4>
+        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">C Size Distribution</h4>
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; height: 40px; display: flex; margin-bottom: 1rem;">
           ${resourceTypes.map(r => `
             <div style="
@@ -1064,14 +1053,14 @@ function generateResourceRecommendations(resources) {
   if (recommendations.length === 0) {
     return `
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px; border-left: 4px solid #00ff41;">
-        <span style="color: #00ff41;">✅ Resource sizes are well optimized!</span>
+        <span style="color: #00ff41;">✓ Resource sizes are well optimized!</span>
       </div>
     `;
   }
   
   return `
     <div style="margin-top: 1.5rem;">
-      <h4 style="color: #ffa500; margin: 0 0 0.75rem 0; font-size: 1rem;">⚠️ Optimization Opportunities</h4>
+      <h4 style="color: #ffa500; margin: 0 0 0.75rem 0; font-size: 1rem;">~ Optimization Opportunities</h4>
       ${recommendations.map(rec => `
         <div style="
           padding: 0.75rem;
@@ -1117,7 +1106,7 @@ function renderNetworkPerformanceContent(network) {
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
         <p style="color: #00ccff; font-size: 0.9rem; margin: 0;">
-          ℹ️ <strong>Platform-Agnostic Metrics:</strong> Network timing data reflects server infrastructure and applies to all devices accessing the site.
+          ⓘ <strong>Platform-Agnostic Metrics:</strong> Network timing data reflects server infrastructure and applies to all devices accessing the site.
         </p>
       </div>
       
@@ -1134,7 +1123,7 @@ function renderNetworkPerformanceContent(network) {
           ${dns > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="color: #00ccff; font-size: 0.95rem; font-weight: 600;">🔍 DNS Lookup</span>
+              <span style="color: #00ccff; font-size: 0.95rem; font-weight: 600;">S DNS Lookup</span>
               <span style="color: #00ccff; font-weight: bold; font-size: 1rem;">${network.dns}</span>
             </div>
             <div style="background: rgba(255,255,255,0.1); height: 28px; border-radius: 4px; overflow: hidden;">
@@ -1168,7 +1157,7 @@ function renderNetworkPerformanceContent(network) {
           ${ssl > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="color: #ffa500; font-size: 0.95rem; font-weight: 600;">🔒 SSL Handshake</span>
+              <span style="color: #ffa500; font-size: 0.95rem; font-weight: 600;">◈ SSL Handshake</span>
               <span style="color: #ffa500; font-weight: bold; font-size: 1rem;">${network.ssl}</span>
             </div>
             <div style="background: rgba(255,255,255,0.1); height: 28px; border-radius: 4px; overflow: hidden;">
@@ -1184,7 +1173,7 @@ function renderNetworkPerformanceContent(network) {
           
           <div style="margin-bottom: 0;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="color: ${ttfbStatus.color}; font-size: 0.95rem; font-weight: 600;">⏱️ Time to First Byte</span>
+              <span style="color: ${ttfbStatus.color}; font-size: 0.95rem; font-weight: 600;">⧗ Time to First Byte</span>
               <span style="color: ${ttfbStatus.color}; font-weight: bold; font-size: 1rem;">${network.ttfb} <span style="font-size: 0.85rem; opacity: 0.8;">(${ttfbStatus.label})</span></span>
             </div>
             <div style="background: rgba(255,255,255,0.1); height: 28px; border-radius: 4px; overflow: hidden;">
@@ -1200,7 +1189,7 @@ function renderNetworkPerformanceContent(network) {
       </div>
       
       <!-- Network Metrics Table -->
-      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">📊 Network Metrics</h4>
+      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">C Network Metrics</h4>
       <table class="seo-table" style="width: 100%;">
         <thead>
           <tr>
@@ -1211,7 +1200,7 @@ function renderNetworkPerformanceContent(network) {
         </thead>
         <tbody>
           <tr>
-            <td><span style="color: #00ccff;">🔍 DNS Lookup</span></td>
+            <td><span style="color: #00ccff;">S DNS Lookup</span></td>
             <td style="color: #808080;">Domain name resolution time</td>
             <td style="text-align: center;"><strong style="color: #00ccff;">${network.dns || 'N/A'}</strong></td>
           </tr>
@@ -1222,28 +1211,28 @@ function renderNetworkPerformanceContent(network) {
           </tr>
           ${ssl > 0 ? `
           <tr>
-            <td><span style="color: #ffa500;">🔒 SSL Handshake</span></td>
+            <td><span style="color: #ffa500;">◈ SSL Handshake</span></td>
             <td style="color: #808080;">Secure connection setup time</td>
             <td style="text-align: center;"><strong style="color: #ffa500;">${network.ssl}</strong></td>
           </tr>
           ` : ''}
           <tr>
-            <td><span style="color: ${ttfbStatus.color};">⏱️ Time to First Byte</span></td>
+            <td><span style="color: ${ttfbStatus.color};">⧗ Time to First Byte</span></td>
             <td style="color: #808080;">Server response time</td>
             <td style="text-align: center;"><strong style="color: ${ttfbStatus.color};">${network.ttfb}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">⚡ DOM Interactive</span></td>
+            <td><span style="color: #00ff41;">P DOM Interactive</span></td>
             <td style="color: #808080;">Time until DOM is ready</td>
             <td style="text-align: center;"><strong style="color: #00ff41;">${network.domInteractive || 'N/A'}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">📄 DOM Content Loaded</span></td>
+            <td><span style="color: #00ff41;">D DOM Content Loaded</span></td>
             <td style="color: #808080;">Initial HTML parsed and ready</td>
             <td style="text-align: center;"><strong style="color: #00ff41;">${network.domContentLoaded || 'N/A'}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">🌐 Total Requests</span></td>
+            <td><span style="color: #00ff41;">W Total Requests</span></td>
             <td style="color: #808080;">Number of HTTP requests</td>
             <td style="text-align: center;"><strong style="color: #00ff41;">${network.requests || 'N/A'}</strong></td>
           </tr>
@@ -1252,17 +1241,17 @@ function renderNetworkPerformanceContent(network) {
       
       <!-- Network Performance Insights -->
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,204,255,0.05); border-radius: 4px; border-left: 4px solid #00ccff;">
-        <h4 style="color: #00ccff; margin: 0 0 0.5rem 0; font-size: 1rem;">💡 Network Insights</h4>
+        <h4 style="color: #00ccff; margin: 0 0 0.5rem 0; font-size: 1rem;">ⓘ Network Insights</h4>
         <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
           ${ttfb < 200 ? 
-            '✅ Excellent server response time! Your backend is highly optimized.' : 
+            '✓ Excellent server response time! Your backend is highly optimized.' : 
             ttfb < 600 ? 
-            '⚠️ Server response time is acceptable but could be improved with better caching or a CDN.' :
-            '🔴 Slow server response time. Consider upgrading hosting, implementing Redis caching, or using a CDN.'}
+            '~ Server response time is acceptable but could be improved with better caching or a CDN.' :
+            'H Slow server response time. Consider upgrading hosting, implementing Redis caching, or using a CDN.'}
         </p>
         ${network.requests > 50 ? `
         <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0.5rem 0 0 0;">
-          ⚠️ High number of requests (${network.requests}). Consider bundling assets and reducing third-party scripts.
+          ~ High number of requests (${network.requests}). Consider bundling assets and reducing third-party scripts.
         </p>
         ` : ''}
       </div>
@@ -1280,10 +1269,10 @@ function renderCachingOptimizationContent(caching) {
 
   const cacheRate = parseFloat(caching.cacheHitRateNum) || 0;
   const getCacheStatus = (rate) => {
-    if (rate >= 80) return { color: '#00ff41', label: 'Excellent', icon: '✅' };
-    if (rate >= 60) return { color: '#00ff41', label: 'Good', icon: '👍' };
-    if (rate >= 40) return { color: '#ffa500', label: 'Fair', icon: '⚠️' };
-    return { color: '#ff4444', label: 'Poor', icon: '🔴' };
+    if (rate >= 80) return { color: '#00ff41', label: 'Excellent', icon: '✓' };
+    if (rate >= 60) return { color: '#00ff41', label: 'Good', icon: '+' };
+    if (rate >= 40) return { color: '#ffa500', label: 'Fair', icon: '~' };
+    return { color: '#ff4444', label: 'Poor', icon: 'H' };
   };
 
   const status = getCacheStatus(cacheRate);
@@ -1292,7 +1281,7 @@ function renderCachingOptimizationContent(caching) {
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
         <p style="color: #00ccff; font-size: 0.9rem; margin: 0;">
-          ℹ️ <strong>Platform-Agnostic Metrics:</strong> Caching policies are defined by HTTP headers and benefit all users equally regardless of device.
+          ⓘ <strong>Platform-Agnostic Metrics:</strong> Caching policies are defined by HTTP headers and benefit all users equally regardless of device.
         </p>
       </div>
       
@@ -1303,7 +1292,7 @@ function renderCachingOptimizationContent(caching) {
       
       <!-- Cache Hit Rate Visual -->
       <div style="margin-bottom: 2rem;">
-        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">📈 Cache Hit Rate</h4>
+        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">U Cache Hit Rate</h4>
         
         <div style="text-align: center; margin-bottom: 1.5rem;">
           <div style="
@@ -1434,17 +1423,17 @@ function renderCachingOptimizationContent(caching) {
           </p>
         ` : cacheRate >= 40 ? `
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            ⚠️ Fair caching with ${cacheRate}% hit rate. Implement proper Cache-Control headers for static assets (CSS, JS, images, fonts) with long TTL values (1 year for versioned files).
+            ~ Fair caching with ${cacheRate}% hit rate. Implement proper Cache-Control headers for static assets (CSS, JS, images, fonts) with long TTL values (1 year for versioned files).
           </p>
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0.5rem 0 0 0;">
-            💡 Recommended: <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px; color: #00ff41;">Cache-Control: public, max-age=31536000, immutable</code>
+            ⓘ Recommended: <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px; color: #00ff41;">Cache-Control: public, max-age=31536000, immutable</code>
           </p>
         ` : `
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            🔴 Poor caching performance (${cacheRate}%). Most resources are not cacheable, forcing full re-downloads on every visit. This significantly impacts repeat visitor performance.
+            H Poor caching performance (${cacheRate}%). Most resources are not cacheable, forcing full re-downloads on every visit. This significantly impacts repeat visitor performance.
           </p>
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0.5rem 0 0 0;">
-            💡 Urgent: Add <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px; color: #ff4444;">Cache-Control</code> headers to static assets with appropriate TTL values.
+            ⓘ Urgent: Add <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px; color: #ff4444;">Cache-Control</code> headers to static assets with appropriate TTL values.
           </p>
         `}
       </div>
@@ -1472,7 +1461,7 @@ function renderRecommendationsContent(recommendations) {
     <div style="padding-left: 1rem; margin-bottom: 1.5rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(255,165,0,0.1); border-left: 3px solid #ffa500; border-radius: 4px;">
         <p style="color: #ffa500; font-size: 0.9rem; margin: 0;">
-          💡 <strong>Cross-Platform Recommendations:</strong> These optimizations are analyzed based on both desktop and mobile performance to ensure comprehensive improvements.
+          ⓘ <strong>Cross-Platform Recommendations:</strong> These optimizations are analyzed based on both desktop and mobile performance to ensure comprehensive improvements.
         </p>
       </div>
     </div>
@@ -1482,7 +1471,7 @@ function renderRecommendationsContent(recommendations) {
     return `
       ${introSection}
       <div style="padding: 2rem; text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+        <div style="font-size: 3rem; margin-bottom: 1rem;">!</div>
         <h3 style="color: #00ff41; margin: 0 0 0.5rem 0;">Excellent Performance!</h3>
         <p style="color: #c0c0c0;">No critical optimization recommendations at this time. Your site is performing well across both desktop and mobile!</p>
       </div>
@@ -1496,9 +1485,9 @@ function renderRecommendationsContent(recommendations) {
 
   const getPriorityBadge = (priority) => {
     const styles = {
-      high: { bg: 'rgba(255,68,68,0.15)', color: '#ff4444', border: '#ff4444', icon: '🔴', label: 'HIGH PRIORITY' },
-      medium: { bg: 'rgba(255,165,0,0.15)', color: '#ffa500', border: '#ffa500', icon: '🟡', label: 'MEDIUM' },
-      low: { bg: 'rgba(0,204,255,0.15)', color: '#00ccff', border: '#00ccff', icon: '🔵', label: 'LOW' }
+      high: { bg: 'rgba(255,68,68,0.15)', color: '#ff4444', border: '#ff4444', icon: 'H', label: 'HIGH PRIORITY' },
+      medium: { bg: 'rgba(255,165,0,0.15)', color: '#ffa500', border: '#ffa500', icon: 'M', label: 'MEDIUM' },
+      low: { bg: 'rgba(0,204,255,0.15)', color: '#00ccff', border: '#00ccff', icon: 'L', label: 'LOW' }
     };
     return styles[priority] || styles.medium;
   };
@@ -1553,7 +1542,7 @@ function renderRecommendationsContent(recommendations) {
           margin: 0 0 0.75rem 0;
           font-weight: bold;
         ">
-          💡 ${rec.title}
+          ⓘ ${rec.title}
         </h4>
 
         <!-- Description -->
@@ -1576,7 +1565,7 @@ function renderRecommendationsContent(recommendations) {
           border-radius: 4px;
         ">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
-            📊 EXPECTED IMPACT
+            C EXPECTED IMPACT
           </div>
           <div style="color: #c0c0c0; font-size: 0.9rem;">
             ${rec.impact}
@@ -1605,7 +1594,7 @@ function renderRecommendationsContent(recommendations) {
         margin-bottom: 2rem;
       ">
         <h3 style="color: #ff4444; margin: 0 0 0.75rem 0; font-size: 1.5rem;">
-          ⚠️ Performance Optimization Opportunities
+          ~ Performance Optimization Opportunities
         </h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
           ${high.length > 0 ? `
@@ -1632,7 +1621,7 @@ function renderRecommendationsContent(recommendations) {
       <!-- High Priority Recommendations -->
       ${high.length > 0 ? `
         <h4 style="color: #ff4444; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #ff4444; padding-bottom: 0.5rem;">
-          🔴 HIGH PRIORITY - Address Immediately
+          H HIGH PRIORITY - Address Immediately
         </h4>
         ${high.map(rec => renderRecommendationCard(rec)).join('')}
       ` : ''}
@@ -1640,7 +1629,7 @@ function renderRecommendationsContent(recommendations) {
       <!-- Medium Priority Recommendations -->
       ${medium.length > 0 ? `
         <h4 style="color: #ffa500; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #ffa500; padding-bottom: 0.5rem;">
-          🟡 MEDIUM PRIORITY - Plan for Next Sprint
+          M MEDIUM PRIORITY - Plan for Next Sprint
         </h4>
         ${medium.map(rec => renderRecommendationCard(rec)).join('')}
       ` : ''}
@@ -1648,7 +1637,7 @@ function renderRecommendationsContent(recommendations) {
       <!-- Low Priority Recommendations -->
       ${low.length > 0 ? `
         <h4 style="color: #00ccff; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #00ccff; padding-bottom: 0.5rem;">
-          🔵 LOW PRIORITY - Nice to Have
+          L LOW PRIORITY - Nice to Have
         </h4>
         ${low.map(rec => renderRecommendationCard(rec)).join('')}
       ` : ''}
@@ -1665,7 +1654,7 @@ function getCodeExample(category, title) {
       'Minimize JavaScript': `
         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            💻 CODE EXAMPLE
+            C CODE EXAMPLE
           </div>
           <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>// webpack.config.js
 optimization: {
@@ -1689,7 +1678,7 @@ optimization: {
       'Optimize Images': `
         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            💻 CODE EXAMPLE
+            C CODE EXAMPLE
           </div>
           <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>&lt;!-- Use modern image formats with fallbacks --&gt;
 &lt;picture&gt;
@@ -1709,7 +1698,7 @@ optimization: {
       'Reduce CSS Size': `
         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            💻 CODE EXAMPLE
+            C CODE EXAMPLE
           </div>
           <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>// Remove unused CSS with PurgeCSS
 module.exports = {
@@ -1758,7 +1747,7 @@ location ~* \\.(html)$ {
       'Enable Text Compression': `
         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            💻 CODE EXAMPLE
+            C CODE EXAMPLE
           </div>
           <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>// Nginx - Enable Gzip
 gzip on;
@@ -1786,7 +1775,7 @@ app.use(compression({
       'Optimize Largest Contentful Paint (LCP)': `
         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            💻 CODE EXAMPLE
+            C CODE EXAMPLE
           </div>
           <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>&lt;!-- Preload LCP image --&gt;
 &lt;link rel="preload" as="image" href="hero.jpg" 
@@ -1807,7 +1796,7 @@ app.use(compression({
       'Reduce Cumulative Layout Shift (CLS)': `
         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            💻 CODE EXAMPLE
+            C CODE EXAMPLE
           </div>
           <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>&lt;!-- Reserve space for images --&gt;
 &lt;img src="image.jpg" width="800" height="600" alt="Description"&gt;
@@ -1836,7 +1825,7 @@ app.use(compression({
       'Optimize Web Fonts': `
         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            💻 CODE EXAMPLE
+            C CODE EXAMPLE
           </div>
           <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>&lt;!-- Preload critical fonts --&gt;
 &lt;link rel="preload" href="font.woff2" as="font" type="font/woff2" crossorigin&gt;
@@ -1859,7 +1848,7 @@ app.use(compression({
       'Reduce HTTP Requests': `
         <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            💻 CODE EXAMPLE
+            C CODE EXAMPLE
           </div>
           <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>// Bundle JavaScript modules
 import { module1 } from './module1';
@@ -1981,7 +1970,7 @@ function getActionItems(category, title) {
     return `
       <div style="background: rgba(0,204,255,0.1); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
         <div style="color: #00ccff; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.75rem;">
-          ✅ ACTION ITEMS
+          ✓ ACTION ITEMS
         </div>
         <ul style="margin: 0; padding-left: 1.5rem; color: #c0c0c0; font-size: 0.9rem;">
           ${categoryActions[title].map(action => `
@@ -2122,7 +2111,7 @@ function displayCrossBrowserResults(results) {
       <!-- Performance Gap Warning -->
       ${results.comparison.performanceGap > 20 ? `
         <div style="background: rgba(255, 102, 0, 0.1); border-left: 4px solid #ff6600; padding: 1rem; margin-top: 1.5rem; border-radius: 4px;">
-          <p style="margin: 0; color: #ff6600; font-weight: bold;">⚠️ Significant Performance Gap Detected</p>
+          <p style="margin: 0; color: #ff6600; font-weight: bold;">~ Significant Performance Gap Detected</p>
           <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
             ${results.comparison.performanceGap} point difference between desktop and mobile performance
           </p>
@@ -2223,7 +2212,7 @@ function renderDeviceComparisonContent(browsers) {
         </h3>
         
         ${!data.success ? `
-          <p style="color: #ff4444;">❌ Analysis failed: ${data.error || 'Unknown error'}</p>
+          <p style="color: #ff4444;">✗ Analysis failed: ${data.error || 'Unknown error'}</p>
         ` : `
           <!-- Lighthouse Category Scores -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
@@ -2287,8 +2276,8 @@ function renderCWVComparisonContent(browsers) {
         <thead>
           <tr style="border-bottom: 2px solid rgba(187,134,252,0.3);">
             <th style="text-align: left; padding: 1rem; color: #bb86fc;">Metric</th>
-            <th style="text-align: center; padding: 1rem; color: #bb86fc;">🖥️ Desktop</th>
-            <th style="text-align: center; padding: 1rem; color: #bb86fc;">📱 Mobile</th>
+            <th style="text-align: center; padding: 1rem; color: #bb86fc;">D Desktop</th>
+            <th style="text-align: center; padding: 1rem; color: #bb86fc;">M Mobile</th>
             <th style="text-align: center; padding: 1rem; color: #bb86fc;">Difference</th>
             <th style="text-align: center; padding: 1rem; color: #bb86fc;">Status</th>
           </tr>
@@ -2309,8 +2298,8 @@ function renderCWVComparisonContent(browsers) {
       <h4 style="margin: 0 0 1rem 0; color: #bb86fc;">Lighthouse Category Scores</h4>
       <div style="display: grid; grid-template-columns: auto 1fr 1fr 1fr; gap: 0.5rem; align-items: center;">
         <div style="font-weight: bold;">Category</div>
-        <div style="text-align: center; font-weight: bold;">🖥️ Desktop</div>
-        <div style="text-align: center; font-weight: bold;">📱 Mobile</div>
+        <div style="text-align: center; font-weight: bold;">D Desktop</div>
+        <div style="text-align: center; font-weight: bold;">M Mobile</div>
         <div style="text-align: center; font-weight: bold;">Gap</div>
         
         ${renderScoreComparisonRow('Performance', desktopData.performanceScore, mobileData.performanceScore)}
@@ -2334,24 +2323,24 @@ function renderComparisonRow(metric, desktopValue, mobileValue, unit, goodThresh
   
   if (metric === 'CLS') {
     if (avgValue <= goodThreshold) {
-      status = '✅ Good';
+      status = '✓ Good';
       statusColor = '#00ff41';
     } else if (avgValue <= needsImprovementThreshold) {
-      status = '⚠️ Needs Work';
+      status = '~ Needs Work';
       statusColor = '#ffa500';
     } else {
-      status = '❌ Poor';
+      status = '✗ Poor';
       statusColor = '#ff4444';
     }
   } else {
     if (avgValue <= goodThreshold) {
-      status = '✅ Good';
+      status = '✓ Good';
       statusColor = '#00ff41';
     } else if (avgValue <= needsImprovementThreshold) {
-      status = '⚠️ Needs Work';
+      status = '~ Needs Work';
       statusColor = '#ffa500';
     } else {
-      status = '❌ Poor';
+      status = '✗ Poor';
       statusColor = '#ff4444';
     }
   }
@@ -2459,7 +2448,7 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
   
   recommendations.forEach((rec, index) => {
     const priorityColor = rec.priority === 'high' ? '#ff4444' : rec.priority === 'medium' ? '#ffa500' : '#00ff41';
-    const priorityIcon = rec.priority === 'high' ? '🚨' : rec.priority === 'medium' ? '⚠️' : 'ℹ️';
+    const priorityIcon = rec.priority === 'high' ? '!' : rec.priority === 'medium' ? '~' : 'ⓘ';
     
     html += `
       <div style="margin-bottom: 1.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-left: 4px solid ${priorityColor}; border-radius: 4px;">
@@ -2489,7 +2478,7 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
   if (comparison && comparison.metricsDifferences && comparison.metricsDifferences.length > 0) {
     html += `
       <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255,165,0,0.05); border: 1px solid rgba(255,165,0,0.3); border-radius: 8px;">
-        <h4 style="margin: 0 0 1rem 0; color: #ffa500;">📊 Detected Metric Discrepancies</h4>
+        <h4 style="margin: 0 0 1rem 0; color: #ffa500;">C Detected Metric Discrepancies</h4>
         ${comparison.metricsDifferences.map(diff => `
           <div style="padding: 0.75rem; margin: 0.5rem 0; background: rgba(0,0,0,0.3); border-radius: 4px;">
             <div style="font-weight: bold; color: ${diff.severity === 'high' ? '#ff4444' : '#ffa500'};">
@@ -2499,8 +2488,8 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
               ${diff.message}
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem; font-size: 0.85rem;">
-              <div>🖥️ Desktop: <span style="color: #00ff41;">${typeof diff.desktop === 'number' ? diff.desktop.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.desktop}</span></div>
-              <div>📱 Mobile: <span style="color: #ffa500;">${typeof diff.mobile === 'number' ? diff.mobile.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.mobile}</span></div>
+              <div>D Desktop: <span style="color: #00ff41;">${typeof diff.desktop === 'number' ? diff.desktop.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.desktop}</span></div>
+              <div>M Mobile: <span style="color: #ffa500;">${typeof diff.mobile === 'number' ? diff.mobile.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.mobile}</span></div>
             </div>
           </div>
         `).join('')}
@@ -2515,47 +2504,7 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
 /**
  * Open PDF purchase modal (shared function)
  */
-function openPdfPurchaseModal(reportType) {
-  if (!window.pdfPaymentModal) {
-    console.error('PDF Payment Modal not initialized');
-    alert('Payment system is loading. Please try again in a moment.');
-    return;
-  }
-
-  // Get the current results
-  let reportData;
-  switch (reportType) {
-    case 'seo':
-      reportData = window.currentSeoResults;
-      break;
-    case 'performance':
-      reportData = window.currentPerformanceResults;
-      break;
-    case 'accessibility':
-      reportData = window.currentAccessibilityResults;
-      break;
-    case 'security':
-      reportData = window.currentSecurityResults;
-      break;
-    case 'fonts':
-      reportData = window.currentFontResults;
-      break;
-    default:
-      console.error('Unknown report type:', reportType);
-      return;
-  }
-
-  if (!reportData) {
-    alert('Please run an analysis first before purchasing a PDF report.');
-    return;
-  }
-
-  // Open payment modal
-  window.pdfPaymentModal.open(reportType, reportData, (result) => {
-    console.log('PDF purchase successful:', result);
-    // Payment successful, PDF download started automatically
-  });
-}
+// PDF purchase modal removed - monetization disabled
 
 
 

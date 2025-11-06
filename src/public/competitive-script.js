@@ -24,11 +24,11 @@ function initializeWebSocket() {
   });
   
   socket.on('connect', () => {
-    console.log('✅ WebSocket connected');
+    console.log('✓ WebSocket connected');
   });
   
   socket.on('disconnect', () => {
-    console.log('❌ WebSocket disconnected');
+    console.log('✗ WebSocket disconnected');
   });
   
   socket.on('analysis:progress', (data) => {
@@ -38,7 +38,7 @@ function initializeWebSocket() {
 
 // Handle real-time progress updates
 function handleProgressUpdate(data) {
-  console.log('📊 Progress update:', data);
+  console.log('◉ Progress update:', data);
   
   // Update loader based on WebSocket data
   if (!loader) return;
@@ -55,10 +55,29 @@ function handleProgressUpdate(data) {
   if (data.stage && stepMapping[data.stage] !== undefined) {
     const stepIndex = stepMapping[data.stage];
     
-    if (data.status === 'metric-complete') {
-      loader.completeStep(stepIndex);
-    } else if (data.status === 'metric') {
-      // Step is in progress - handled by loader's auto-advance
+    // Update modal step display
+    const modalSteps = document.querySelectorAll('.modal-step');
+    if (modalSteps[stepIndex]) {
+      if (data.status === 'metric-complete') {
+        // Mark step as complete
+        modalSteps[stepIndex].classList.remove('pending', 'active');
+        modalSteps[stepIndex].classList.add('complete');
+        modalSteps[stepIndex].querySelector('.modal-step-icon').textContent = '✓';
+        
+        loader.completeStep(stepIndex);
+        
+        // Activate next step
+        if (modalSteps[stepIndex + 1]) {
+          modalSteps[stepIndex + 1].classList.remove('pending');
+          modalSteps[stepIndex + 1].classList.add('active');
+          modalSteps[stepIndex + 1].querySelector('.modal-step-icon').textContent = '◉';
+        }
+      } else if (data.status === 'metric') {
+        // Mark step as active
+        modalSteps[stepIndex].classList.remove('pending');
+        modalSteps[stepIndex].classList.add('active');
+        modalSteps[stepIndex].querySelector('.modal-step-icon').textContent = '◉';
+      }
     }
   }
 }
@@ -152,7 +171,11 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
   const resultsDiv = document.getElementById('results');
   const analyzeBtn = document.getElementById('analyzeBtn');
   
-  // Initialize unified loader
+  // Show Pac-Man modal instead of regular loader
+  const modal = document.getElementById('pacmanModal');
+  modal.classList.add('active');
+  
+  // Initialize unified loader (hidden, but still tracking progress)
   const steps = [
     { label: 'SEO Analysis', detail: 'Analyzing search engine optimization metrics...' },
     { label: 'Security Scan', detail: 'Checking security headers and protocols...' },
@@ -160,6 +183,34 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     { label: 'Core Web Vitals', detail: 'Measuring page speed and user experience...' },
     { label: 'Performance Test', detail: 'Running Lighthouse performance audit...' }
   ];
+  
+  // Initialize modal progress tracking
+  const totalSeconds = 900; // 15 minutes
+  let elapsedSeconds = 0;
+  
+  const modalTimer = setInterval(() => {
+    elapsedSeconds++;
+    const remaining = totalSeconds - elapsedSeconds;
+    const minutes = Math.floor(remaining / 60);
+    const seconds = remaining % 60;
+    
+    const timeDisplay = document.getElementById('modalTimeRemaining');
+    if (timeDisplay) {
+      timeDisplay.textContent = `Time remaining: ${minutes}m ${seconds}s`;
+    }
+    
+    // Update progress bar
+    const progressFill = document.getElementById('modalProgressFill');
+    const progressPercent = document.getElementById('modalProgressPercent');
+    if (progressFill) {
+      const percentage = (elapsedSeconds / totalSeconds) * 100;
+      progressFill.style.width = `${Math.min(percentage, 100)}%`;
+      
+      if (progressPercent) {
+        progressPercent.textContent = `${Math.min(Math.round(percentage), 100)}%`;
+      }
+    }
+  }, 1000);
   
   // eslint-disable-next-line no-undef
   loader = new AnalyzerLoader('loadingContainer');
@@ -195,7 +246,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     // Join WebSocket session room for real-time updates
     if (data.sessionId && socket) {
       socket.emit('join-session', data.sessionId);
-      console.log(`🔗 Joined WebSocket session: ${data.sessionId}`);
+      console.log(`K Joined WebSocket session: ${data.sessionId}`);
     }
     
     // Debug: Log the data structure
@@ -213,6 +264,10 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     displayResults(data);
     
     loader.complete();
+    
+    // Close modal and show results
+    clearInterval(modalTimer);
+    modal.classList.remove('active');
     resultsDiv.style.display = 'block';
     
   } catch (error) {
@@ -220,6 +275,10 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     const errorMsg = error.message || 'An unknown error occurred';
     loader.showError(errorMsg);
     console.error('Competitive analysis error:', error);
+    
+    // Close modal on error
+    clearInterval(modalTimer);
+    modal.classList.remove('active');
   } finally {
     analyzeBtn.disabled = false;
   }
@@ -275,15 +334,15 @@ function renderInteractiveCharts() {
     <div class="section chart-container">
       <div class="chart-header">
         <div>
-          <h3 class="chart-title">📊 Interactive Score Analysis</h3>
+          <h3 class="chart-title">◈ Interactive Score Analysis</h3>
           <p class="chart-subtitle">Compare performance across all metrics with interactive charts</p>
         </div>
         <div class="chart-controls">
           <button class="chart-toggle active" data-chart="radar" id="radarToggle">
-            🎯 Radar View
+            ◉ Radar View
           </button>
           <button class="chart-toggle" data-chart="bar" id="barToggle">
-            📊 Bar Chart
+            ▬ Bar Chart
           </button>
         </div>
       </div>
@@ -312,6 +371,9 @@ function switchChart(view) {
 
 // Initialize Chart.js charts
 function initializeCharts(data) {
+  // Store data globally for theme changes
+  chartData = data;
+  
   const sites = [
     { name: getDomainName(data.yourSite.url), scores: data.yourSite.scores, isYourSite: true },
     ...data.competitors.map(comp => ({
@@ -347,6 +409,11 @@ function createRadarChart(sites) {
     radarChart.destroy();
   }
   
+  // Detect theme
+  const isLightTheme = document.body.classList.contains('white-theme');
+  const textColor = isLightTheme ? '#000000' : 'rgba(255, 255, 255, 0.9)';
+  const gridColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+  
   const metrics = ['seo', 'security', 'accessibility', 'coreWebVitals', 'performance'];
   const metricLabels = ['SEO', 'Security', 'Accessibility', 'Core Web Vitals', 'Performance'];
   
@@ -361,7 +428,7 @@ function createRadarChart(sites) {
       borderColor: color,
       borderWidth: site.isYourSite ? 3 : 2,
       pointBackgroundColor: color,
-      pointBorderColor: '#fff',
+      pointBorderColor: isLightTheme ? '#fff' : '#fff',
       pointHoverBackgroundColor: '#fff',
       pointHoverBorderColor: color,
       pointRadius: site.isYourSite ? 6 : 4,
@@ -386,18 +453,18 @@ function createRadarChart(sites) {
           max: 100,
           ticks: {
             stepSize: 20,
-            color: 'rgba(255, 255, 255, 0.6)',
+            color: textColor,
             font: { size: 12 },
             backdropColor: 'transparent'
           },
           grid: {
-            color: 'rgba(255, 255, 255, 0.1)'
+            color: gridColor
           },
           angleLines: {
-            color: 'rgba(255, 255, 255, 0.1)'
+            color: gridColor
           },
           pointLabels: {
-            color: 'rgba(255, 255, 255, 0.9)',
+            color: textColor,
             font: { size: 14, weight: 'bold' }
           }
         }
@@ -407,8 +474,8 @@ function createRadarChart(sites) {
           display: true,
           position: 'bottom',
           labels: {
-            color: 'rgba(255, 255, 255, 0.9)',
-            font: { size: 13 },
+            color: textColor,
+            font: { size: 14, weight: 'bold' },
             padding: 15,
             usePointStyle: true,
             pointStyle: 'circle'
@@ -449,6 +516,11 @@ function createBarChart(sites) {
     barChart.destroy();
   }
   
+  // Detect theme
+  const isLightTheme = document.body.classList.contains('white-theme');
+  const textColor = isLightTheme ? '#000000' : 'rgba(255, 255, 255, 0.9)';
+  const gridColor = isLightTheme ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
+  
   const metrics = ['seo', 'security', 'accessibility', 'coreWebVitals', 'performance'];
   const metricLabels = ['SEO', 'Security', 'Accessibility', 'Core Web Vitals', 'Performance'];
   
@@ -484,20 +556,20 @@ function createBarChart(sites) {
           max: 100,
           ticks: {
             stepSize: 20,
-            color: 'rgba(255, 255, 255, 0.6)',
+            color: textColor,
             font: { size: 12 },
             callback: function(value) {
               return value;
             }
           },
           grid: {
-            color: 'rgba(255, 255, 255, 0.1)'
+            color: gridColor
           }
         },
         x: {
           ticks: {
-            color: 'rgba(255, 255, 255, 0.9)',
-            font: { size: 13 }
+            color: textColor,
+            font: { size: 13, weight: 'bold' }
           },
           grid: {
             display: false
@@ -509,8 +581,8 @@ function createBarChart(sites) {
           display: true,
           position: 'bottom',
           labels: {
-            color: 'rgba(255, 255, 255, 0.9)',
-            font: { size: 13 },
+            color: textColor,
+            font: { size: 14, weight: 'bold' },
             padding: 15,
             usePointStyle: true,
             pointStyle: 'rect'
@@ -532,9 +604,9 @@ function createBarChart(sites) {
             },
             afterLabel: function(context) {
               const score = context.parsed.y;
-              if (score >= 80) return '✅ Excellent';
-              if (score >= 60) return '⚠️ Good';
-              return '❌ Needs Improvement';
+              if (score >= 80) return '✓ Excellent';
+              if (score >= 60) return '~ Good';
+              return '✗ Needs Improvement';
             }
           }
         }
@@ -586,11 +658,11 @@ function renderDetailedMetricsTable(data) {
   ];
 
   const metrics = [
-    { key: 'seo', label: 'SEO', icon: '🔍' },
-    { key: 'security', label: 'Security', icon: '🔒' },
-    { key: 'accessibility', label: 'Accessibility', icon: '♿' },
-    { key: 'coreWebVitals', label: 'Core Web Vitals', icon: '⚡' },
-    { key: 'performance', label: 'Performance', icon: '🚀' }
+    { key: 'seo', label: 'SEO', icon: 'S' },
+    { key: 'security', label: 'Security', icon: '◈' },
+    { key: 'accessibility', label: 'Accessibility', icon: 'A' },
+    { key: 'coreWebVitals', label: 'Core Web Vitals', icon: 'V' },
+    { key: 'performance', label: 'Performance', icon: 'P' }
   ];
 
   return `
@@ -613,7 +685,7 @@ function renderDetailedMetricsTable(data) {
                 </th>
               `).join('')}
               <th style="padding: 0.6rem 0.8rem; text-align: center; color: #ffd700; font-weight: bold; font-size: 0.95rem;">
-                🏆 Overall
+                ◉ Overall
               </th>
             </tr>
           </thead>
@@ -626,7 +698,7 @@ function renderDetailedMetricsTable(data) {
               return `
                 <tr style="background: ${isYou ? 'rgba(0, 255, 65, 0.05)' : siteIdx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}; border-bottom: 1px solid rgba(255,255,255,0.05);">
                   <td style="padding: 0.6rem 0.8rem; font-weight: ${isYou ? 'bold' : 'normal'}; color: ${isYou ? '#00ff41' : 'var(--text-primary)'}; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
-                    ${isYou ? '👑 ' : ''}${site.name}${isYou ? ' (YOU)' : ''}
+                    ${isYou ? '◉ ' : ''}${site.name}${isYou ? ' (YOU)' : ''}
                     <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.15rem;">
                       ${getDomainName(site.data.url)}
                     </div>
@@ -650,14 +722,14 @@ function renderDetailedMetricsTable(data) {
                     return `
                       <td style="padding: 0.5rem 0.6rem; text-align: center; border-right: 1px solid rgba(255,255,255,0.1);">
                         <div style="font-size: 1.2rem; font-weight: bold; color: ${scoreColor}; margin-bottom: 0.15rem;">
-                          ${failed ? '❌' : score}
+                          ${failed ? '✗' : score}
                         </div>
                         <div style="font-size: 0.7rem; padding: 0.15rem 0.4rem; background: ${scoreColor}20; border: 1px solid ${scoreColor}40; border-radius: 3px; display: inline-block; color: ${scoreColor};">
                           ${failed ? 'Failed' : grade}
                         </div>
                         ${failed ? `
                           <div style="font-size: 0.65rem; color: #ff8c00; margin-top: 0.3rem;">
-                            ⚠️ Analysis error
+                            ~ Analysis error
                           </div>
                         ` : hasDetails && key === 'coreWebVitals' && details[key].metrics ? `
                           <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.3rem; line-height: 1.3;">
@@ -685,9 +757,9 @@ function renderDetailedMetricsTable(data) {
       </div>
       
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 152, 0, 0.1); border-left: 4px solid #ff8c00; border-radius: 4px;">
-        <strong style="color: #ff8c00;">💡 Note:</strong>
+        <strong style="color: #ff8c00;">ⓘ Note:</strong>
         <span style="color: var(--text-secondary); font-size: 0.9rem;">
-          Scores marked with ❌ indicate analyzer failures (typically due to Lighthouse timeouts or site restrictions). 
+          Scores marked with ✗ indicate analyzer failures (typically due to Lighthouse timeouts or site restrictions). 
           These metrics are excluded from overall score calculation to ensure accuracy.
         </span>
       </div>
@@ -730,78 +802,162 @@ function renderExecutiveSummary(data) {
   });
   
   const statusColor = isWinning ? '#00ff41' : isLosing ? '#ff4444' : '#ff8c00';
-  const statusBgColor = isWinning ? '#1a5c2e' : isLosing ? '#5c1a1a' : '#5c3d1a'; // Darker, more muted background
-  const statusText = isWinning ? '🏆 MARKET LEADER' : isLosing ? '⚠️ BEHIND COMPETITION' : '⚔️ COMPETITIVE';
+  const statusIcon = isWinning ? '↑' : isLosing ? '↓' : '≈';
+  const statusText = isWinning ? 'COMPETITIVE' : isLosing ? 'COMPETITIVE' : 'COMPETITIVE';
   
   return `
-    <div class="score-banner" style="
-      background: linear-gradient(135deg, ${statusBgColor} 0%, ${statusBgColor}ee 100%); 
-      padding: 2rem; 
+    <div style="
+      background: linear-gradient(135deg, rgba(0,255,65,0.05) 0%, rgba(0,0,0,0.1) 100%);
+      border: 2px solid ${statusColor};
+      border-radius: 16px;
+      padding: 2.5rem;
       margin-bottom: 2rem;
-      border: 2px solid ${statusColor}66;
-      border-radius: 12px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      position: relative;
+      overflow: hidden;
     ">
-      <div style="display: grid; grid-template-columns: auto 1fr auto; gap: 2rem; align-items: center;">
+      <!-- Status Badge -->
+      <div style="
+        position: absolute;
+        top: -1px;
+        right: -1px;
+        background: ${statusColor};
+        color: #000;
+        padding: 0.5rem 1.5rem;
+        border-bottom-left-radius: 12px;
+        font-weight: 700;
+        font-size: 0.9rem;
+        letter-spacing: 1px;
+      ">
+        ${statusIcon} ${statusText}
+      </div>
+
+      <div style="display: grid; grid-template-columns: 180px 1fr 240px; gap: 2.5rem; align-items: center;">
         <!-- Score Circle -->
         <div style="text-align: center;">
-          <div style="
-            width: 120px;
-            height: 120px;
+          <div class="score-circle-gradient" style="
+            width: 180px;
+            height: 180px;
             border-radius: 50%;
-            background: rgba(0, 0, 0, 0.3);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            border: 4px solid ${statusColor};
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+            border: 6px solid ${statusColor};
+            box-shadow: 0 0 30px ${statusColor}40, inset 0 0 20px rgba(0,0,0,0.3);
+            position: relative;
           ">
-            <div style="font-size: 2.5rem; font-weight: bold; color: ${statusColor};">${yourOverall}</div>
-            <div style="font-size: 0.9rem; color: #ffffff; opacity: 0.9;">Grade ${data.yourSite.grade}</div>
+            <div style="font-size: 4rem; font-weight: 900; color: ${statusColor}; line-height: 1; text-shadow: 0 0 20px ${statusColor}80;">
+              ${yourOverall}
+            </div>
+            <div style="
+              font-size: 0.95rem; 
+              color: var(--text-primary); 
+              margin-top: 0.5rem;
+              font-weight: 600;
+              letter-spacing: 1px;
+            ">
+              Grade ${data.yourSite.grade}
+            </div>
           </div>
         </div>
         
-        <!-- Summary Text -->
+        <!-- Stats Grid -->
         <div>
-          <div style="font-size: 1.8rem; font-weight: bold; color: ${statusColor}; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">
-            ${statusText}
+          <div style="font-size: 1rem; color: var(--text-secondary); margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 600;">
+            Ranked <span style="color: ${statusColor}; font-size: 1.4rem; font-weight: 900;">#${overallRank}</span> out of ${totalCompetitors + 1} competitors analyzed
           </div>
-          <div style="font-size: 1.1rem; color: #ffffff; margin-bottom: 1rem;">
-            Ranked <strong style="color: ${statusColor};">#${overallRank} out of ${totalCompetitors + 1}</strong> competitors analyzed
-          </div>
-          <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-            <div>
-              <div style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.7);">Winning in</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">${winsCount}/${metrics.length}</div>
-              <div style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.7);">categories</div>
-            </div>
-            <div>
-              <div style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.7);">Avg competitor</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">${Math.round(avgCompetitor)}</div>
-              <div style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.7);">score</div>
-            </div>
-            <div>
-              <div style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.7);">Gap to leader</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">
-                ${maxCompetitor > yourOverall ? `-${maxCompetitor - yourOverall}` : `+${yourOverall - maxCompetitor}`}
+          
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-top: 1.5rem;">
+            <div style="
+              background: rgba(255,255,255,0.03);
+              padding: 1rem;
+              border-radius: 8px;
+              border-left: 3px solid #00ff41;
+            ">
+              <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
+                Winning in
               </div>
-              <div style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.8);">points</div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--text-primary); line-height: 1;">
+                ${winsCount}/${metrics.length}
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                categories
+              </div>
+            </div>
+            
+            <div style="
+              background: rgba(255,255,255,0.03);
+              padding: 1rem;
+              border-radius: 8px;
+              border-left: 3px solid #ff8c00;
+            ">
+              <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
+                Avg competitor
+              </div>
+              <div style="font-size: 2rem; font-weight: 900; color: var(--text-primary); line-height: 1;">
+                ${Math.round(avgCompetitor)}
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                score
+              </div>
+            </div>
+            
+            <div style="
+              background: rgba(255,255,255,0.03);
+              padding: 1rem;
+              border-radius: 8px;
+              border-left: 3px solid ${maxCompetitor > yourOverall ? '#ff4444' : '#00ff41'};
+            ">
+              <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
+                Gap to leader
+              </div>
+              <div style="font-size: 2rem; font-weight: 900; color: ${maxCompetitor > yourOverall ? '#ff4444' : '#00ff41'}; line-height: 1;">
+                ${maxCompetitor > yourOverall ? `${maxCompetitor - yourOverall}` : `+${yourOverall - maxCompetitor}`}
+              </div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                points
+              </div>
             </div>
           </div>
         </div>
         
-        <!-- Quick Action -->
-        <div style="text-align: center; padding: 1.5rem; background: rgba(255, 255, 255, 0.2); border-radius: 8px;">
-          <div style="font-size: 0.9rem; color: rgba(255, 255, 255, 0.9); margin-bottom: 0.5rem;">
+        <!-- Priority Focus -->
+        <div style="
+          background: linear-gradient(135deg, ${statusColor}20 0%, ${statusColor}05 100%);
+          border: 2px solid ${statusColor}60;
+          border-radius: 12px;
+          padding: 2rem;
+          text-align: center;
+        ">
+          <div style="
+            font-size: 0.85rem; 
+            color: var(--text-secondary); 
+            text-transform: uppercase; 
+            letter-spacing: 1.5px; 
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+          ">
             Priority Focus
           </div>
-          <div style="font-size: 1.3rem; font-weight: bold; color: white;">
+          <div style="
+            font-size: 1.5rem; 
+            font-weight: 900; 
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 1rem;
+          ">
             ${lossesCount > 0 ? 
               `Fix ${lossesCount} ${lossesCount === 1 ? 'weakness' : 'weaknesses'}` : 
-              'Maintain lead'}
+              'Maintain Lead'}
           </div>
-          <div style="font-size: 0.85rem; color: rgba(255, 255, 255, 0.8); margin-top: 0.5rem;">
+          <div style="
+            font-size: 0.8rem; 
+            color: var(--text-secondary);
+            padding: 0.5rem 1rem;
+            background: rgba(0,0,0,0.2);
+            border-radius: 6px;
+            display: inline-block;
+          ">
             ${data.analysisTime}s analysis
           </div>
         </div>
@@ -811,7 +967,7 @@ function renderExecutiveSummary(data) {
     ${data.warning ? `
       <div style="background: rgba(255, 140, 0, 0.15); border-left: 4px solid #ff8c00; padding: 1rem; margin-bottom: 2rem; border-radius: 4px;">
         <p style="margin: 0; color: #ff8c00;">
-          <strong>⚠️ Note:</strong> ${data.warning}
+          <strong>ⓘ Note:</strong> ${data.warning}
         </p>
       </div>
     ` : ''}
@@ -831,7 +987,7 @@ function renderRankings(rankings) {
 
   return `
     <section class="section">
-      <h2>🏆 Your Rankings</h2>
+      <h2>R Your Rankings</h2>
       <div style="overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden; font-size: 0.9rem;">
           <thead>
@@ -853,20 +1009,20 @@ function renderRankings(rankings) {
               const isLast = data.rank === data.total && data.total > 0 && !failed;
               
               let statusColor = '#ff4444';
-              let statusText = '⚠️ Behind';
-              let medal = data.medal || '📊';
+              let statusText = '~ Behind';
+              let medal = data.medal || '◉';
               let rankDisplay = data.rank ? `${data.rank}/${data.total}` : '—';
               let recommendation = '';
               
               if (failed) {
                 statusColor = '#ff4444';
-                statusText = data.total === 0 ? '❌ All Failed' : '❌ Failed';
-                medal = '❌';
+                statusText = data.total === 0 ? '✗ All Failed' : '✗ Failed';
+                medal = '✗';
                 rankDisplay = '—';
                 recommendation = 'Fix analysis errors - check site accessibility';
               } else if (isFirst) {
                 statusColor = '#00ff41';
-                statusText = '🏆 Leading!';
+                statusText = '↑ Leading!';
                 recommendation = 'Maintain position - monitor competitors';
               } else if (isSecond) {
                 statusColor = '#ffd700';
@@ -874,15 +1030,15 @@ function renderRankings(rankings) {
                 recommendation = 'Push to #1 - minor optimizations needed';
               } else if (isThird) {
                 statusColor = '#ff8c00';
-                statusText = '🥉 Competitive';
+                statusText = '≈ Competitive';
                 recommendation = `Improve ${label.toLowerCase()} - gap closing opportunity`;
               } else if (isLast) {
                 statusColor = '#ff4444';
-                statusText = '⚠️ Behind';
+                statusText = '↓ Behind';
                 recommendation = `Priority: ${label.toLowerCase()} overhaul required`;
               } else {
                 statusColor = '#ff8c00';
-                statusText = '📊 Mid-pack';
+                statusText = '◉ Mid-pack';
                 recommendation = `Target ${label.toLowerCase()} improvements for rank gain`;
               }
               
@@ -954,7 +1110,7 @@ function renderInsights(insights) {
   
   return `
     <section class="section">
-      <h2>💡 Key Insights</h2>
+      <h2>ⓘ Key Insights</h2>
       ${insights.map(insight => `
         <div class="insight-card insight-${insight.type}">
           <h3 style="margin: 0 0 0.5rem 0;">${insight.message}</h3>
@@ -987,11 +1143,11 @@ function getMetricStatus(data, metric) {
     rank: rankingData.rank || 0,
     total: rankingData.total || 0,
     displayRank: failed 
-      ? (rankingData.total === 0 ? '❌ All Sites Failed' : '❌ Failed')
+      ? (rankingData.total === 0 ? '✗ All Sites Failed' : '✗ Failed')
       : `${rankingData.rank || 0}/${rankingData.total || 0}`,
     statusText: failed 
-      ? '❌ Analysis Failed'
-      : (rankingData.rank === 1 ? '🏆 Leading!' : rankingData.rank === 2 ? '🥈 Strong' : '📊 Competitive'),
+      ? '✗ Analysis Failed'
+      : (rankingData.rank === 1 ? '↑ Leading!' : rankingData.rank === 2 ? '≈ Strong' : '◉ Competitive'),
     statusColor: failed ? '#ff4444' : (rankingData.rank === 1 ? '#00ff41' : rankingData.rank === 2 ? '#ffd700' : '#ff8c00')
   };
 }
@@ -1000,7 +1156,7 @@ function getMetricStatus(data, metric) {
 function renderVisualComparison(data, metrics) {
   return `
     <section class="section">
-      <h2>📊 Visual Score Comparison</h2>
+      <h2>◉ Visual Score Comparison</h2>
       <p style="color: var(--text-secondary); margin-bottom: 2rem;">
         See exactly where you stand against each competitor in every category
       </p>
@@ -1086,12 +1242,12 @@ function renderVisualComparison(data, metrics) {
 function renderCompetitivePosition(data) {
   return `
     <section class="section">
-      <h2>🎯 Competitive Position Summary</h2>
+      <h2>◈ Competitive Position Summary</h2>
       <div class="stats-grid">
         ${Object.entries(data.comparison).map(([metric, stats]) => `
           <div class="stat-card" style="border: 2px solid ${stats.status === 'winning' ? '#00ff41' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
             <div style="text-align: center; margin-bottom: 0.5rem;">
-              ${stats.status === 'winning' ? '✅' : stats.status === 'losing' ? '⚠️' : '⚖️'}
+              ${stats.status === 'winning' ? '✓' : stats.status === 'losing' ? '✗' : '≈'}
             </div>
             <div class="stat-value status-${stats.status}">
               ${stats.diff > 0 ? '+' : ''}${stats.diff}
@@ -1241,7 +1397,7 @@ function renderStrengthsWeaknesses(data, metrics) {
                   </div>
                   <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
                     ${s.status === 'dominant' ? '👑 <strong>DOMINATING</strong> - Best in category!' : 
-                      `✅ <strong>+${s.lead.toFixed(0)} above average</strong>`}
+                      `✓ <strong>+${s.lead.toFixed(0)} above average</strong>`}
                   </div>
                 </div>
               `).join('')}
@@ -1256,7 +1412,7 @@ function renderStrengthsWeaknesses(data, metrics) {
         <!-- Weaknesses -->
         <div style="background: rgba(255, 75, 75, 0.05); padding: 1.5rem; border-radius: 8px; border: 2px solid rgba(255, 75, 75, 0.3);">
           <h3 style="margin: 0 0 1rem 0; color: #ff4444; display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-size: 1.5rem;">⚠️</span> Weaknesses (${weaknesses.length})
+            <span style="font-size: 1.5rem;">~</span> Weaknesses (${weaknesses.length})
           </h3>
           ${weaknesses.length > 0 ? `
             <div style="display: flex; flex-direction: column; gap: 0.75rem;">
@@ -1267,7 +1423,7 @@ function renderStrengthsWeaknesses(data, metrics) {
                     <span style="color: #ff4444; font-weight: bold; font-size: 1.1rem;">${w.score}</span>
                   </div>
                   <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                    ⚠️ <strong>-${w.gap.toFixed(0)} behind leader</strong>
+                    ~ <strong>-${w.gap.toFixed(0)} behind leader</strong>
                   </div>
                   <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
                     Leader: <strong>${getDomainName(w.leader.url)}</strong> (${w.leader.scores[w.metric]})
@@ -1277,7 +1433,7 @@ function renderStrengthsWeaknesses(data, metrics) {
             </div>
           ` : `
             <p style="color: #00ff41; font-style: italic;">
-              🎉 No weaknesses! You're leading or competitive in all areas!
+              ! No weaknesses! You're leading or competitive in all areas!
             </p>
           `}
         </div>
@@ -1291,7 +1447,7 @@ function renderRecommendations(recommendations) {
   if (!recommendations || recommendations.length === 0) {
     return `
       <section class="section">
-        <h2>✅ You're Dominating!</h2>
+        <h2>✓ You're Dominating!</h2>
         <p style="color: #00ff41;">You're already ahead of the competition. Keep up the great work!</p>
       </section>
     `;
@@ -1299,7 +1455,7 @@ function renderRecommendations(recommendations) {
   
   return `
     <section class="section">
-      <h2>🎯 Action Plan to Beat Competition</h2>
+      <h2>T Action Plan to Beat Competition</h2>
       <div style="display: grid; gap: 1rem;">
         ${recommendations.map((rec, idx) => `
           <div class="insight-card ${rec.priority === 'high' ? 'insight-critical' : 'insight-warning'}">
@@ -1310,7 +1466,7 @@ function renderRecommendations(recommendations) {
                 </h3>
                 <p style="margin: 0.5rem 0; color: var(--text-secondary);">${rec.recommendation}</p>
                 <p style="margin: 0.5rem 0 0 0; font-style: italic; color: var(--text-secondary);">
-                  💡 ${rec.impact}
+                  ⓘ ${rec.impact}
                 </p>
               </div>
               <span style="padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 0.85rem; white-space: nowrap;">
@@ -1363,3 +1519,30 @@ document.getElementById('yourUrl').addEventListener('keypress', (e) => {
     document.getElementById('analyzeBtn').click();
   }
 });
+
+// Store chart data globally so we can re-render on theme change
+let chartData = null;
+
+// Listen for theme changes and update charts
+function setupThemeChangeListener() {
+  // Watch for class changes on body element
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((mutation) => {
+      if (mutation.attributeName === 'class') {
+        // Theme changed, re-render charts if data exists
+        if (chartData) {
+          console.log('Theme changed, updating charts...');
+          initializeCharts(chartData);
+        }
+      }
+    });
+  });
+
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['class']
+  });
+}
+
+// Initialize theme listener on page load
+setupThemeChangeListener();

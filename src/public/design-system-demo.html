@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Design System Demo - All Components Showcase</title>
+    
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Existing Styles for compatibility -->
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="page-wrapper">
+    <main class="page-main">
+        <div class="container">
+            
+            <!-- Hero Bar Component -->
+            <div class="hero-bar">
+                <div class="hero-bar__header">
+                    <h1 class="hero-bar__title">Design System Demo</h1>
+                    <p class="hero-bar__subtitle">
+                        Showcase of all components in the new business-ready design system
+                    </p>
+                </div>
+                
+                <div class="action-bar">
+                    <input type="text" placeholder="Enter website URL (e.g., example.com)" class="action-bar__input">
+                    <button class="action-bar__button">Analyze Now</button>
+                </div>
+            </div>
+            
+            <!-- Section: Ring Charts -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Ring Charts (Score Display)</h2>
+                    <p class="section-header__subtitle">Circular score indicators with grade labels</p>
+                </div>
+                
+                <div class="grid grid-cols-4 sm:grid-cols-2 gap-6">
+                    <div class="ring-chart ring-chart--excellent">
+                        <div class="ring-chart__circle">
+                            <div class="ring-chart__score">95</div>
+                            <div class="ring-chart__label">Score</div>
+                        </div>
+                        <div class="ring-chart__grade">Excellent</div>
+                    </div>
+                    
+                    <div class="ring-chart ring-chart--good">
+                        <div class="ring-chart__circle">
+                            <div class="ring-chart__score">82</div>
+                            <div class="ring-chart__label">Score</div>
+                        </div>
+                        <div class="ring-chart__grade">Good</div>
+                    </div>
+                    
+                    <div class="ring-chart ring-chart--fair">
+                        <div class="ring-chart__circle">
+                            <div class="ring-chart__score">65</div>
+                            <div class="ring-chart__label">Score</div>
+                        </div>
+                        <div class="ring-chart__grade">Fair</div>
+                    </div>
+                    
+                    <div class="ring-chart ring-chart--poor">
+                        <div class="ring-chart__circle">
+                            <div class="ring-chart__score">42</div>
+                            <div class="ring-chart__label">Score</div>
+                        </div>
+                        <div class="ring-chart__grade">Poor</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section: Metric Cards -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Metric Cards</h2>
+                    <p class="section-header__subtitle">Key metrics display with semantic color variants</p>
+                </div>
+                
+                <div class="grid grid-cols-4 sm:grid-cols-2 gap-6">
+                    <div class="metric-card metric-card--primary">
+                        <div class="metric-card__label">Total Fonts</div>
+                        <div class="metric-card__value">12</div>
+                        <div class="metric-card__subtitle">Across all pages</div>
+                    </div>
+                    
+                    <div class="metric-card metric-card--success">
+                        <div class="metric-card__label">Load Time</div>
+                        <div class="metric-card__value">2.4s</div>
+                        <div class="metric-card__subtitle">First Contentful Paint</div>
+                    </div>
+                    
+                    <div class="metric-card metric-card--warning">
+                        <div class="metric-card__label">File Size</div>
+                        <div class="metric-card__value">345KB</div>
+                        <div class="metric-card__subtitle">Needs optimization</div>
+                    </div>
+                    
+                    <div class="metric-card metric-card--error">
+                        <div class="metric-card__label">Vulnerabilities</div>
+                        <div class="metric-card__value">3</div>
+                        <div class="metric-card__subtitle">Critical issues</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section: Stat Grid -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Stat Grid (Quick Overview)</h2>
+                    <p class="section-header__subtitle">Auto-responsive stat display</p>
+                </div>
+                
+                <div class="stat-grid">
+                    <div class="stat">
+                        <div class="stat__value">95</div>
+                        <div class="stat__label">Performance</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat__value">88</div>
+                        <div class="stat__label">Accessibility</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat__value">12</div>
+                        <div class="stat__label">Total Fonts</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat__value">2.4s</div>
+                        <div class="stat__label">Load Time</div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section: Badges -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Badges (Status Indicators)</h2>
+                    <p class="section-header__subtitle">Small status labels with color coding</p>
+                </div>
+                
+                <div class="flex gap-4 items-center">
+                    <span class="badge badge--success">Excellent</span>
+                    <span class="badge badge--warning">Fair</span>
+                    <span class="badge badge--error">Poor</span>
+                    <span class="badge badge--info">N/A</span>
+                </div>
+            </section>
+            
+            <!-- Section: Progress Bars -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Progress Bars</h2>
+                    <p class="section-header__subtitle">Linear progress indicators</p>
+                </div>
+                
+                <div class="grid gap-4">
+                    <div>
+                        <p class="mb-2"><strong>Success (95%)</strong></p>
+                        <div class="progress-bar">
+                            <div class="progress-bar__fill progress-bar__fill--success" style="width: 95%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="mb-2"><strong>Warning (65%)</strong></p>
+                        <div class="progress-bar">
+                            <div class="progress-bar__fill progress-bar__fill--warning" style="width: 65%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="mb-2"><strong>Error (42%)</strong></p>
+                        <div class="progress-bar">
+                            <div class="progress-bar__fill progress-bar__fill--error" style="width: 42%"></div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <p class="mb-2"><strong>Loading (Indeterminate)</strong></p>
+                        <div class="progress-bar">
+                            <div class="progress-bar__fill progress-bar__fill--indeterminate" style="width: 100%"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section: Accordion -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Accordion (Collapsible Content)</h2>
+                    <p class="section-header__subtitle">Expandable panels for detailed information</p>
+                </div>
+                
+                <div class="accordion accordion--open">
+                    <div class="accordion__header" onclick="this.parentElement.classList.toggle('accordion--open')">
+                        <h3 class="accordion__title">Font Details</h3>
+                        <svg class="accordion__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="accordion__content">
+                        <div class="accordion__body">
+                            <p><strong>Font Family:</strong> Inter</p>
+                            <p><strong>Font Weight:</strong> 400</p>
+                            <p><strong>Font Size:</strong> 18px</p>
+                            <p><strong>Line Height:</strong> 1.6</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="accordion mt-4">
+                    <div class="accordion__header" onclick="this.parentElement.classList.toggle('accordion--open')">
+                        <h3 class="accordion__title">Performance Metrics</h3>
+                        <svg class="accordion__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                    
+                    <div class="accordion__content">
+                        <div class="accordion__body">
+                            <p><strong>First Contentful Paint:</strong> 2.4s</p>
+                            <p><strong>Largest Contentful Paint:</strong> 3.2s</p>
+                            <p><strong>Cumulative Layout Shift:</strong> 0.05</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section: CTA Box -->
+            <section class="section">
+                <div class="cta-box">
+                    <h2 class="cta-box__title">Get Your Comprehensive PDF Report</h2>
+                    <p class="cta-box__description">
+                        Save this analysis with detailed recommendations, visual charts, and actionable insights.
+                        Perfect for sharing with your team or tracking improvements over time.
+                    </p>
+                    
+                    <div class="cta-box__buttons">
+                        <button class="cta-box__button cta-box__button--primary">
+                            Download PDF Report
+                        </button>
+                        <button class="cta-box__button cta-box__button--secondary">
+                            Share Results
+                        </button>
+                    </div>
+                    
+                    <div class="cta-box__trust-badge">
+                        Your data is never stored or shared
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Section: Grid Layouts -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Grid System Examples</h2>
+                    <p class="section-header__subtitle">Responsive 12-column grid with auto-collapse</p>
+                </div>
+                
+                <h3 class="text-lg font-semibold mb-4">2-Column Layout</h3>
+                <div class="grid grid-cols-2 sm:grid-cols-1 gap-6 mb-8">
+                    <div class="card p-6">
+                        <h4 class="font-bold mb-2">Before Optimization</h4>
+                        <p>Load time: 5.8s</p>
+                    </div>
+                    <div class="card p-6">
+                        <h4 class="font-bold mb-2">After Optimization</h4>
+                        <p>Load time: 2.1s</p>
+                    </div>
+                </div>
+                
+                <h3 class="text-lg font-semibold mb-4">3-Column Layout</h3>
+                <div class="grid grid-cols-3 md:grid-cols-2 sm:grid-cols-1 gap-6 mb-8">
+                    <div class="card p-6">Column 1</div>
+                    <div class="card p-6">Column 2</div>
+                    <div class="card p-6">Column 3</div>
+                </div>
+                
+                <h3 class="text-lg font-semibold mb-4">Auto-Fit Layout</h3>
+                <div class="grid grid-auto-fit gap-6">
+                    <div class="card p-6">Auto 1</div>
+                    <div class="card p-6">Auto 2</div>
+                    <div class="card p-6">Auto 3</div>
+                    <div class="card p-6">Auto 4</div>
+                </div>
+            </section>
+            
+            <!-- Section: Utility Classes -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Utility Classes</h2>
+                    <p class="section-header__subtitle">Spacing, typography, colors, and effects</p>
+                </div>
+                
+                <div class="grid grid-cols-2 sm:grid-cols-1 gap-6">
+                    <div class="card p-6">
+                        <h4 class="text-xl font-bold text-primary mb-3">Primary Color</h4>
+                        <p class="text-base text-gray-400">Body text in gray</p>
+                        <p class="text-sm text-gray-500 mt-2">Small text in lighter gray</p>
+                    </div>
+                    
+                    <div class="card p-6 glow-primary">
+                        <h4 class="text-xl font-bold text-success mb-3">Success with Glow</h4>
+                        <p>This card has a primary glow effect on hover</p>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- Footer -->
+            <footer class="page-footer">
+                <p>Design System v2.0 - Business-Ready Streamline</p>
+                <p class="text-xs mt-2">Built with 450+ design tokens, 10 components, 100+ utilities</p>
+            </footer>
+            
+        </div>
+    </main>
+</body>
+</html>

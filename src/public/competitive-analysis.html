@@ -1,13 +1,27 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Competitive Analysis - Beat Your Competition</title>
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css">
+    <link rel="stylesheet" href="components.css">
+    <link rel="stylesheet" href="layout.css">
+    <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="progress-styles.css">
     <link rel="stylesheet" href="analyzer-loading.css">
     <style>
+        /* Score Circle Gradient - Theme Adaptive */
+        .score-circle-gradient {
+            background: radial-gradient(circle, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 100%);
+        }
+
+        body.white-theme .score-circle-gradient {
+            background: radial-gradient(circle, rgba(200,200,200,0.3) 0%, rgba(220,220,220,0.2) 100%);
+        }
+
         .beat-competition-banner {
             background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
             border-left: 4px solid #ff4444;
@@ -110,30 +124,7 @@
             box-shadow: 0 4px 12px rgba(0, 255, 65, 0.2);
         }
         
-        .analyze-button {
-            background: linear-gradient(135deg, #ff6b6b, #ee5a6f);
-            color: white;
-            border: none;
-            padding: 0.9rem 2rem;
-            font-size: 1rem;
-            font-weight: 700;
-            border-radius: 6px;
-            cursor: pointer;
-            box-shadow: 0 4px 16px rgba(255, 75, 75, 0.4);
-            transition: all 0.3s ease;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            display: inline-block;
-        }
-        
-        .analyze-button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(255, 75, 75, 0.5);
-        }
-        
-        .analyze-button:active {
-            transform: translateY(0);
-        }
+        /* Note: .analyze-button now inherits from global styles.css for consistency */
         
         .rankings-grid {
             display: grid;
@@ -445,43 +436,390 @@
             color: var(--text-primary);
             font-size: 0.9rem;
         }
+
+        /* Pac-Man Modal Styles - Premium Design */
+        .pacman-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .pacman-modal.active {
+            display: flex;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .pacman-modal-content {
+            background: var(--bg-primary, #0f0f0f);
+            border: 2px solid #00ff41;
+            border-radius: 24px;
+            padding: 3rem 2.5rem;
+            max-width: 700px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 50px rgba(0, 255, 65, 0.2);
+            text-align: center;
+            position: relative;
+        }
+
+        body.white-theme .pacman-modal-content {
+            background: #ffffff;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 50px rgba(0, 255, 65, 0.15);
+        }
+
+        .pacman-modal-title {
+            color: #00ff41;
+            font-size: 2rem;
+            margin: 0 0 0.5rem 0;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+        }
+
+        .pacman-modal-subtitle {
+            color: var(--text-secondary, #999);
+            font-size: 1rem;
+            margin: 0 0 2.5rem 0;
+            font-weight: 500;
+        }
+
+        /* Pac-Man Animation - Improved */
+        .pacman-container {
+            position: relative;
+            height: 80px;
+            margin: 2rem 0;
+            overflow: hidden;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.03) 0%, rgba(255, 215, 0, 0.03) 100%);
+            border-radius: 12px;
+            padding: 1rem 0;
+            border: 1px solid rgba(0, 255, 65, 0.15);
+            display: flex;
+            align-items: center;
+        }
+
+        body.white-theme .pacman-container {
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.02) 0%, rgba(255, 215, 0, 0.05) 100%);
+            border-color: rgba(255, 215, 0, 0.25);
+        }
+
+        .pacman {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #ffd700;
+            animation: pacman-move 6s linear infinite;
+            top: 50%;
+            transform: translateY(-50%);
+            filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
+        }
+
+        .pacman::before {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-left: 20px solid rgba(0, 0, 0, 0.1);
+            border-top: 12px solid transparent;
+            border-bottom: 12px solid transparent;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: pacman-chomp 0.3s ease-in-out infinite;
+        }
+
+        body.white-theme .pacman {
+            background: #f5c000;
+            filter: drop-shadow(0 0 10px rgba(245, 192, 0, 0.4));
+        }
+
+        @keyframes pacman-chomp {
+            0%, 100% {
+                transform: translate(-50%, -50%) rotate(0deg);
+            }
+            50% {
+                transform: translate(-50%, -50%) rotate(45deg);
+            }
+        }
+
+        @keyframes pacman-move {
+            0% {
+                left: -60px;
+            }
+            100% {
+                left: calc(100% + 60px);
+            }
+        }
+
+        .dot {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: #00ff41;
+            border-radius: 50%;
+            top: 50%;
+            transform: translateY(-50%);
+            box-shadow: 0 0 15px rgba(0, 255, 65, 0.8);
+        }
+
+        body.white-theme .dot {
+            background: #00cc33;
+            box-shadow: 0 0 12px rgba(0, 204, 51, 0.6);
+        }
+
+        /* Position dots evenly across the track */
+        .dot:nth-child(2) { 
+            left: 15%; 
+            animation: dot-fade 6s linear infinite;
+            animation-delay: 0.9s;
+        }
+        .dot:nth-child(3) { 
+            left: 30%; 
+            animation: dot-fade 6s linear infinite;
+            animation-delay: 1.8s;
+        }
+        .dot:nth-child(4) { 
+            left: 45%; 
+            animation: dot-fade 6s linear infinite;
+            animation-delay: 2.7s;
+        }
+        .dot:nth-child(5) { 
+            left: 60%; 
+            animation: dot-fade 6s linear infinite;
+            animation-delay: 3.6s;
+        }
+        .dot:nth-child(6) { 
+            left: 75%; 
+            animation: dot-fade 6s linear infinite;
+            animation-delay: 4.5s;
+        }
+        .dot:nth-child(7) { 
+            left: 90%; 
+            animation: dot-fade 6s linear infinite;
+            animation-delay: 5.4s;
+        }
+
+        @keyframes dot-fade {
+            0% {
+                opacity: 1;
+                transform: translateY(-50%) scale(1);
+            }
+            2% {
+                opacity: 0;
+                transform: translateY(-50%) scale(0);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(-50%) scale(1);
+            }
+        }
+
+        /* Progress Steps - Modern Cards */
+        .modal-progress-steps {
+            text-align: left;
+            margin: 2.5rem 0;
+            display: grid;
+            gap: 0.75rem;
+        }
+
+        .modal-step {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.25rem;
+            background: rgba(255, 255, 255, 0.02);
+            border-radius: 12px;
+            border: 2px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        body.white-theme .modal-step {
+            background: rgba(0, 0, 0, 0.02);
+            border-color: rgba(0, 0, 0, 0.08);
+        }
+
+        .modal-step::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: transparent;
+            transition: all 0.3s ease;
+        }
+
+        .modal-step.pending {
+            opacity: 0.4;
+        }
+
+        .modal-step.pending::before {
+            background: #666;
+        }
+
+        .modal-step.active {
+            background: rgba(255, 215, 0, 0.08);
+            border-color: rgba(255, 215, 0, 0.3);
+            transform: translateX(4px);
+            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.15);
+        }
+
+        body.white-theme .modal-step.active {
+            background: rgba(255, 215, 0, 0.12);
+            border-color: rgba(255, 215, 0, 0.4);
+        }
+
+        .modal-step.active::before {
+            background: linear-gradient(180deg, #ffd700 0%, #ffed4e 100%);
+            width: 5px;
+        }
+
+        .modal-step.complete {
+            background: rgba(0, 255, 65, 0.05);
+            border-color: rgba(0, 255, 65, 0.2);
+        }
+
+        body.white-theme .modal-step.complete {
+            background: rgba(0, 255, 65, 0.08);
+            border-color: rgba(0, 255, 65, 0.3);
+        }
+
+        .modal-step.complete::before {
+            background: linear-gradient(180deg, #00ff41 0%, #00cc33 100%);
+            width: 5px;
+        }
+
+        .modal-step-icon {
+            font-size: 1.75rem;
+            margin-right: 1.25rem;
+            min-width: 35px;
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .modal-step.active .modal-step-icon {
+            transform: scale(1.2);
+        }
+
+        .modal-step-content {
+            flex: 1;
+        }
+
+        .modal-step-label {
+            color: var(--text-primary, #fff);
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 0.25rem;
+            letter-spacing: 0.5px;
+        }
+
+        .modal-step-detail {
+            color: var(--text-secondary, #888);
+            font-size: 0.875rem;
+            line-height: 1.4;
+        }
+
+        /* Progress Bar - Modern Design */
+        .modal-progress-bar {
+            width: 100%;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 100px;
+            overflow: hidden;
+            margin: 0.75rem 0 1.5rem 0;
+            position: relative;
+            border: 1px solid rgba(0, 255, 65, 0.15);
+        }
+
+        body.white-theme .modal-progress-bar {
+            background: rgba(0, 0, 0, 0.06);
+            border-color: rgba(0, 204, 51, 0.2);
+        }
+
+        .modal-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41 0%, #00cc33 50%, #ffd700 100%);
+            border-radius: 100px;
+            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        body.white-theme .modal-progress-fill {
+            background: linear-gradient(90deg, #00cc33 0%, #00aa28 50%, #f5c000 100%);
+            box-shadow: 0 0 15px rgba(0, 204, 51, 0.4);
+        }
+
+        .modal-progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* Time Remaining Badge */
+        .modal-time-remaining {
+            display: inline-block;
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.15) 0%, rgba(0, 255, 65, 0.05) 100%);
+            border: 2px solid rgba(0, 255, 65, 0.3);
+            color: #00ff41;
+            font-size: 1.1rem;
+            margin-top: 1rem;
+            font-weight: 700;
+            padding: 0.75rem 1.5rem;
+            border-radius: 100px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(0, 255, 65, 0.2);
+        }
+
+        body.white-theme .modal-time-remaining {
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.2) 0%, rgba(0, 255, 65, 0.08) 100%);
+            border-color: rgba(0, 255, 65, 0.4);
+        }
     </style>
 </head>
 <body>
-    <!-- Theme Toggle Button -->
-    <button 
-      id="themeToggle" 
-      class="theme-toggle" 
-      aria-label="Toggle dark/light theme"
-      aria-pressed="false"
-    >
-      � Theme
-    </button>
-    
-    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
 
-    <div class="container">
-        <!-- Font Size Controls -->
-        <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
-            <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
-            <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
-            <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
-            <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
-        </div>
-
-        <!-- Header -->
+    <div class="container">        <!-- Header -->
         <header class="form-container">
             <h1>[BEAT_YOUR_COMPETITION]</h1>
             <p>> competitive analysis • seo ranking • performance benchmarking • outrank competitors</p>
             
             <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b; border-radius: 4px;">
-                <p style="color: #ff6b6b; font-weight: bold; margin: 0 0 0.5rem 0;">⚡ COMPETITIVE ADVANTAGE</p>
+                <p style="color: #ff6b6b; font-weight: bold; margin: 0 0 0.5rem 0;">→ COMPETITIVE ADVANTAGE</p>
                 <p style="color: #e0e0e0; margin: 0 0 0.5rem 0; line-height: 1.5;">
                     Compare your website against up to <strong>5 competitors</strong> across SEO, Performance, Core Web Vitals, Accessibility, and Security. Get actionable insights to outrank them.
                 </p>
                 <p style="color: #ff8c00; margin: 0; font-size: 0.85rem; font-style: italic;">
-                    ⚠️ Note: Analysis takes 5-15 minutes and is limited to 2 requests per 15 minutes due to high resource usage.
+                    ⓘ Note: Analysis takes 5-15 minutes and is limited to 2 requests per 15 minutes due to high resource usage.
                 </p>
             </div>
             
@@ -520,7 +858,7 @@
                 </div>
                 
                 <!-- Analyze Button -->
-                <button id="analyzeBtn" class="analyze-button">🏆 ANALYZE COMPETITION</button>
+                <button id="analyzeBtn" class="analyze-button">ANALYZE</button>
             </div>
         </header>
 
@@ -528,6 +866,82 @@
         <div id="loadingContainer" style="display: none;"></div>
 
         <div id="results" style="display: none;"></div>
+    </div>
+
+    <!-- Pac-Man Loading Modal -->
+    <div id="pacmanModal" class="pacman-modal">
+        <div class="pacman-modal-content">
+            <h2 class="pacman-modal-title">[COMPETITIVE_ANALYSIS]</h2>
+            <p class="pacman-modal-subtitle">Analyzing your competition... This may take 5-15 minutes</p>
+            
+            <!-- Pac-Man Animation -->
+            <div class="pacman-container">
+                <div class="pacman"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="modal-progress-steps" id="modalSteps">
+                <div class="modal-step pending" data-step="0">
+                    <span class="modal-step-icon">S</span>
+                    <div class="modal-step-content">
+                        <div class="modal-step-label">SEO Analysis</div>
+                        <div class="modal-step-detail">Analyzing search engine optimization metrics...</div>
+                    </div>
+                </div>
+                <div class="modal-step pending" data-step="1">
+                    <span class="modal-step-icon">◈</span>
+                    <div class="modal-step-content">
+                        <div class="modal-step-label">Security Scan</div>
+                        <div class="modal-step-detail">Checking security headers and protocols...</div>
+                    </div>
+                </div>
+                <div class="modal-step pending" data-step="2">
+                    <span class="modal-step-icon">A</span>
+                    <div class="modal-step-content">
+                        <div class="modal-step-label">Accessibility Check</div>
+                        <div class="modal-step-detail">Evaluating accessibility standards...</div>
+                    </div>
+                </div>
+                <div class="modal-step pending" data-step="3">
+                    <span class="modal-step-icon">W</span>
+                    <div class="modal-step-content">
+                        <div class="modal-step-label">Core Web Vitals</div>
+                        <div class="modal-step-detail">Measuring page speed and user experience...</div>
+                    </div>
+                </div>
+                <div class="modal-step pending" data-step="4">
+                    <span class="modal-step-icon">P</span>
+                    <div class="modal-step-content">
+                        <div class="modal-step-label">Performance Test</div>
+                        <div class="modal-step-detail">Running Lighthouse performance audit...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                    Progress
+                </div>
+                <div style="color: #00ff41; font-size: 1.1rem; font-weight: 700;" id="modalProgressPercent">
+                    0%
+                </div>
+            </div>
+            <div class="modal-progress-bar">
+                <div class="modal-progress-fill" id="modalProgressFill" style="width: 0%"></div>
+            </div>
+
+            <!-- Time Remaining -->
+            <div class="modal-time-remaining" id="modalTimeRemaining">
+                Time remaining: 13m 20s
+            </div>
+        </div>
     </div>
 
     <script src="theme-controls.js"></script>

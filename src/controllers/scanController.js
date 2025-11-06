@@ -89,9 +89,10 @@ const scanWebsite = asyncHandler(async (req, res) => {
 
   try {
     if (scanType === 'comprehensive') {
-      // Comprehensive scan with Lighthouse, multi-page analysis, and PDF report
-      const scanId = `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      scanResult = await enhancedScannerService.performComprehensiveScan(url, scanId);
+      // Comprehensive scan WITHOUT Lighthouse (moved to Core Web Vitals page)
+      scanResult = await enhancedScannerService.performComprehensiveScan(url, {
+        includeLighthouse: false // Disable Lighthouse for Font Scanner page
+      });
 
       logger.debug('Scan completed, result structure:', {
         hasScanResult: !!scanResult,
@@ -309,23 +310,6 @@ const scanWebsite = asyncHandler(async (req, res) => {
             }
           };
           logger.debug('Transformed desktop lighthouse:', lighthouse.desktop);
-        } else {
-          // Provide fallback desktop data when desktop analysis fails
-          lighthouse.desktop = {
-            performance: 50,
-            accessibility: 80,
-            bestPractices: 70,
-            seo: 85,
-            coreWebVitals: {},
-            fontMetrics: {
-              fontDisplay: 60,
-              fontLoadTime: 0,
-              unusedCssRules: 70,
-              renderBlocking: 60,
-              webfonts: 50
-            }
-          };
-          logger.debug('Using fallback desktop lighthouse data');
         }
         
         if (scanResult.lighthouse.mobile) {
@@ -354,34 +338,9 @@ const scanWebsite = asyncHandler(async (req, res) => {
           });
         }
       } else {
-        logger.debug('No lighthouse data available - providing fallback data');
-        // Provide fallback lighthouse data when analysis fails
-        lighthouseData = {
-          desktop: {
-            performance: 0,
-            accessibility: 0,
-            bestPractices: 0,
-            seo: 0,
-            score: 0,
-            error: 'Desktop Lighthouse analysis failed',
-            coreWebVitals: {
-              fcp: 0,
-              lcp: 0,
-              cls: 0
-            }
-          },
-          mobile: {
-            performance: 60,
-            accessibility: 68,
-            bestPractices: 72,
-            seo: 78,
-            coreWebVitals: {
-              fcp: 2200,
-              lcp: 3000,
-              cls: 0.15
-            }
-          }
-        };
+        // Lighthouse was disabled or not run - leave lighthouseData as null
+        logger.debug('No lighthouse data available (Lighthouse disabled for Font Scanner)');
+        lighthouseData = null;
       }
 
       // Log font data before building response
@@ -429,13 +388,12 @@ const scanWebsite = asyncHandler(async (req, res) => {
 
       const response = {
         success: true,
-        scanId: scanId,
         scanType: 'comprehensive',
         url: url,
         scannedAt: new Date().toISOString(),
         results: transformedResults,
         pages: transformedResults.pages,
-        lighthouse: scanResult.lighthouse,
+        lighthouse: scanResult.lighthouse, // Will be null/undefined since Lighthouse is disabled
         reportGenerated: !!scanResult.reportPath,
         reportFilename: scanResult.reportFilename,
         pdfPath: scanResult.reportFilename, // For download button in final report

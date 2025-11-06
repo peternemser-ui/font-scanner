@@ -70,7 +70,7 @@ function displayResults(data) {
 function renderScoreBreakdown(scores) {
   return `
     <section class="section">
-      <h2>📊 Score Breakdown</h2>
+      <h2>C Score Breakdown</h2>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value" style="color: ${getScoreColor(scores.cta)}">${scores.cta}</div>
@@ -96,7 +96,7 @@ function renderScoreBreakdown(scores) {
 function renderCTAAnalysis(ctas) {
   return `
     <section class="section">
-      <h2>🎯 Call-to-Action Analysis</h2>
+      <h2>T Call-to-Action Analysis</h2>
       <div class="stats-grid" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
         <div class="stat-card">
           <div class="stat-value">${ctas.count}</div>
@@ -126,7 +126,7 @@ function renderFormAnalysis(forms) {
     return `
       <section class="section">
         <h2>📝 Forms</h2>
-        <p style="color: #ff4444;">❌ No forms detected. Add a contact or signup form to capture leads.</p>
+        <p style="color: #ff4444;">✗ No forms detected. Add a contact or signup form to capture leads.</p>
       </section>
     `;
   }
@@ -151,10 +151,10 @@ function renderFormAnalysis(forms) {
               <tr>
                 <td>Form ${idx + 1}</td>
                 <td>${form.fieldCount}</td>
-                <td>${form.hasEmail ? '✅' : '❌'}</td>
-                <td>${form.hasPhone ? '✅' : '❌'}</td>
-                <td>${form.hasValidation ? '✅' : '❌'}</td>
-                <td>${form.hasAutocomplete ? '✅' : '❌'}</td>
+                <td>${form.hasEmail ? '✓' : '✗'}</td>
+                <td>${form.hasPhone ? '✓' : '✗'}</td>
+                <td>${form.hasValidation ? '✓' : '✗'}</td>
+                <td>${form.hasAutocomplete ? '✓' : '✗'}</td>
               </tr>
             `).join('')}
           </tbody>
@@ -167,7 +167,7 @@ function renderFormAnalysis(forms) {
 function renderTrustSignals(trust) {
   return `
     <section class="section">
-      <h2>🛡️ Trust Signals</h2>
+      <h2>◈ Trust Signals</h2>
       <div style="display: grid; gap: 0.5rem;">
         ${renderTrustItem('SSL Certificate', trust.hasSSL)}
         ${renderTrustItem('Testimonials', trust.hasTestimonials)}
@@ -184,7 +184,7 @@ function renderTrustItem(label, hasIt) {
   return `
     <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
       <span>${label}</span>
-      <span style="color: ${hasIt ? '#00ff41' : '#ff4444'}; font-weight: bold;">${hasIt ? '✅' : '❌'}</span>
+      <span style="color: ${hasIt ? '#00ff41' : '#ff4444'}; font-weight: bold;">${hasIt ? '✓' : '✗'}</span>
     </div>
   `;
 }
@@ -193,7 +193,7 @@ function renderMobileUX(mobile) {
   const tapTargetPercent = (mobile.tapTargetCompliance * 100).toFixed(1);
   return `
     <section class="section">
-      <h2>📱 Mobile UX</h2>
+      <h2>M Mobile UX</h2>
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-value" style="color: ${mobile.tapTargetCompliance > 0.7 ? '#00ff41' : '#ff4444'}">${tapTargetPercent}%</div>
@@ -206,7 +206,7 @@ function renderMobileUX(mobile) {
           <div class="stat-sublabel">16px minimum recommended</div>
         </div>
         <div class="stat-card">
-          <div class="stat-value" style="color: ${mobile.hasViewportMeta ? '#00ff41' : '#ff4444'}">${mobile.hasViewportMeta ? '✅' : '❌'}</div>
+          <div class="stat-value" style="color: ${mobile.hasViewportMeta ? '#00ff41' : '#ff4444'}">${mobile.hasViewportMeta ? '✓' : '✗'}</div>
           <div class="stat-label">Viewport Meta Tag</div>
         </div>
       </div>
@@ -219,13 +219,13 @@ function renderRecommendations(recommendations) {
   
   return `
     <section class="section">
-      <h2>🎯 Recommendations</h2>
+      <h2>T Recommendations</h2>
       <div style="display: grid; gap: 1rem;">
         ${recommendations.map(rec => `
           <div class="insight-card ${rec.priority === 'critical' ? 'insight-critical' : rec.priority === 'high' ? 'insight-warning' : 'insight-success'}" style="padding: 1rem; border-radius: 8px; border-left: 4px solid;">
             <h3 style="margin: 0 0 0.5rem 0;">${rec.message}</h3>
             <p style="margin: 0.5rem 0; color: var(--text-secondary);">${rec.detail}</p>
-            <p style="margin: 0.5rem 0 0 0; font-style: italic; font-size: 0.9rem;">💡 ${rec.impact}</p>
+            <p style="margin: 0.5rem 0 0 0; font-style: italic; font-size: 0.9rem;">ⓘ ${rec.impact}</p>
           </div>
         `).join('')}
       </div>

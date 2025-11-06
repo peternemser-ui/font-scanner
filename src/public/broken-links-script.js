@@ -71,7 +71,7 @@ function displayResults(data) {
 function renderSummary(summary) {
   return `
     <section class="section">
-      <h2>📊 Summary</h2>
+      <h2>C Summary</h2>
       <div class="stats-grid">
         <div class="stat-card" style="border-left: 4px solid ${summary.broken > 0 ? '#ff4444' : '#00ff41'}">
           <div class="stat-value" style="color: ${summary.broken > 0 ? '#ff4444' : '#00ff41'}">${summary.broken}</div>
@@ -98,7 +98,7 @@ function renderBrokenLinks(broken) {
   if (!broken || broken.length === 0) {
     return `
       <section class="section">
-        <h2>✅ No Broken Links Found!</h2>
+        <h2>✓ No Broken Links Found!</h2>
         <p style="color: #00ff41;">Great job! All your links are working correctly.</p>
       </section>
     `;
@@ -106,7 +106,7 @@ function renderBrokenLinks(broken) {
   
   return `
     <section class="section">
-      <h2>❌ Broken Links (${broken.length})</h2>
+      <h2>✗ Broken Links (${broken.length})</h2>
       <div style="overflow-x: auto;">
         <table class="comparison-table">
           <thead>
@@ -179,13 +179,13 @@ function renderRecommendations(recommendations) {
   
   return `
     <section class="section">
-      <h2>🎯 Recommendations</h2>
+      <h2>T Recommendations</h2>
       <div style="display: grid; gap: 1rem;">
         ${recommendations.map(rec => `
           <div class="insight-card ${rec.priority === 'critical' ? 'insight-critical' : rec.priority === 'high' ? 'insight-warning' : 'insight-success'}" style="padding: 1rem; border-radius: 8px; border-left: 4px solid;">
             <h3 style="margin: 0 0 0.5rem 0;">${rec.message}</h3>
             <p style="margin: 0.5rem 0; color: var(--text-secondary);">${rec.detail}</p>
-            <p style="margin: 0.5rem 0 0 0; font-style: italic; font-size: 0.9rem;">💡 Impact: ${rec.impact}</p>
+            <p style="margin: 0.5rem 0 0 0; font-style: italic; font-size: 0.9rem;">ⓘ Impact: ${rec.impact}</p>
           </div>
         `).join('')}
       </div>

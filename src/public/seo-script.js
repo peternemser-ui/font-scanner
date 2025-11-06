@@ -84,6 +84,19 @@ document.addEventListener('DOMContentLoaded', () => {
       submitButton.click();
     }
   });
+  
+  // Auto-start scan if URL parameter is present
+  if (typeof window.getUrlParameter === 'function') {
+    const autoUrl = window.getUrlParameter();
+    if (autoUrl) {
+      console.log('→ Auto-starting SEO analysis for:', autoUrl);
+      urlInput.value = autoUrl;
+      // Trigger scan after a short delay to ensure all scripts are loaded
+      setTimeout(() => {
+        submitButton.click();
+      }, 500);
+    }
+  }
 });
 
 /**
@@ -210,34 +223,11 @@ function displaySEOResults(results) {
     
     <!-- PDF Download Button -->
     <div style="text-align: center; margin: 2rem 0; padding: 2rem; background: rgba(187, 134, 252, 0.05); border: 2px solid rgba(187, 134, 252, 0.3); border-radius: 12px;">
-      <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">📄 Professional PDF Report</h3>
+      <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">D Professional PDF Report</h3>
       <p style="color: #c0c0c0; margin: 0 0 1.5rem 0;">
         Get a comprehensive PDF report with detailed analysis, recommendations, and insights.
       </p>
-      <button 
-        id="seoPdfDownloadButton"
-        style="
-          padding: 1rem 2rem;
-          background: linear-gradient(135deg, #bb86fc 0%, #9d5fdb 100%);
-          border: none;
-          border-radius: 8px;
-          color: #000000;
-          font-size: 1.1rem;
-          font-weight: bold;
-          font-family: 'Courier New', monospace;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          box-shadow: 0 4px 15px rgba(187, 134, 252, 0.3);
-        "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(187, 134, 252, 0.5)';"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(187, 134, 252, 0.3)';"
-        onclick="openPdfPurchaseModal('seo')"
-      >
-        📥 Download PDF Report ($5)
-      </button>
-      <p style="color: #808080; font-size: 0.85rem; margin: 1rem 0 0 0; font-style: italic;">
-        Secure payment • Instant download • One-time purchase
-      </p>
+      <!-- PDF Download button removed - monetization disabled -->
     </div>
   `;
   container.appendChild(summarySection);
@@ -377,12 +367,12 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
 function renderMetaTagsContent(metaTags) {
   // Create meta tags data table
   const metaTableData = [
-    ['Title', metaTags.title || '❌ Missing', `${metaTags.titleLength || 0} chars`, metaTags.titleLength >= 50 && metaTags.titleLength <= 60 ? '✅ Optimal' : '⚠️ Review', '50-60 chars, include primary keyword near start'],
-    ['Description', metaTags.description ? `${metaTags.description.substring(0, 50)}...` : '❌ Missing', `${metaTags.descriptionLength || 0} chars`, metaTags.descriptionLength >= 150 && metaTags.descriptionLength <= 160 ? '✅ Optimal' : '⚠️ Review', '150-160 chars, compelling CTA, unique per page'],
-    ['Open Graph', metaTags.ogTitle ? '✅ Configured' : '❌ Missing', metaTags.ogTitle ? 'og:title, og:description' : 'None', metaTags.ogTitle ? '✅ Valid' : '❌ Missing', 'og:title, og:description, og:image (1200x630px)'],
-    ['Twitter Card', metaTags.twitterCard || '❌ Missing', metaTags.twitterCard ? 'Configured' : 'None', metaTags.twitterCard ? '✅ Valid' : '❌ Missing', 'summary_large_image, twitter:title, twitter:image'],
-    ['Viewport', metaTags.viewport ? '✅ Present' : '❌ Missing', metaTags.viewport || 'None', metaTags.viewport ? '✅ Valid' : '❌ Missing', 'width=device-width, initial-scale=1'],
-    ['Canonical', metaTags.canonical ? '✅ Set' : '❌ Missing', metaTags.canonical || 'None', metaTags.canonical ? '✅ Valid' : '⚠️ Review', 'Prevents duplicate content, use absolute URLs']
+    ['Title', metaTags.title || '✗ Missing', `${metaTags.titleLength || 0} chars`, metaTags.titleLength >= 50 && metaTags.titleLength <= 60 ? '✓ Optimal' : '~ Review', '50-60 chars, include primary keyword near start'],
+    ['Description', metaTags.description ? `${metaTags.description.substring(0, 50)}...` : '✗ Missing', `${metaTags.descriptionLength || 0} chars`, metaTags.descriptionLength >= 150 && metaTags.descriptionLength <= 160 ? '✓ Optimal' : '~ Review', '150-160 chars, compelling CTA, unique per page'],
+    ['Open Graph', metaTags.ogTitle ? '✓ Configured' : '✗ Missing', metaTags.ogTitle ? 'og:title, og:description' : 'None', metaTags.ogTitle ? '✓ Valid' : '✗ Missing', 'og:title, og:description, og:image (1200x630px)'],
+    ['Twitter Card', metaTags.twitterCard || '✗ Missing', metaTags.twitterCard ? 'Configured' : 'None', metaTags.twitterCard ? '✓ Valid' : '✗ Missing', 'summary_large_image, twitter:title, twitter:image'],
+    ['Viewport', metaTags.viewport ? '✓ Present' : '✗ Missing', metaTags.viewport || 'None', metaTags.viewport ? '✓ Valid' : '✗ Missing', 'width=device-width, initial-scale=1'],
+    ['Canonical', metaTags.canonical ? '✓ Set' : '✗ Missing', metaTags.canonical || 'None', metaTags.canonical ? '✓ Valid' : '~ Review', 'Prevents duplicate content, use absolute URLs']
   ];
 
   // Meta tags health metrics
@@ -418,11 +408,11 @@ function renderMetaTagsContent(metaTags) {
           </thead>
           <tbody>
             ${metaTableData.map((row) => `
-              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${row[3].includes('❌') ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
+              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${row[3].includes('✗') ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                 <td style="padding: 0.75rem; font-weight: 500;">${row[0]}</td>
                 <td style="padding: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.9rem; word-break: break-word; max-width: 300px;">${row[1]}</td>
                 <td style="padding: 0.75rem; text-align: center;">${row[2]}</td>
-                <td style="padding: 0.75rem; text-align: center; font-weight: 600; color: ${row[3].includes('✅') ? '#00ff41' : row[3].includes('⚠️') ? '#ffa500' : '#ff4444'};">${row[3]}</td>
+                <td style="padding: 0.75rem; text-align: center; font-weight: 600; color: ${row[3].includes('✓') ? '#00ff41' : row[3].includes('~') ? '#ffa500' : '#ff4444'};">${row[3]}</td>
                 <td style="padding: 0.75rem; color: #00ff41; font-size: 0.85rem;">${row[4]}</td>
               </tr>
             `).join('')}
@@ -454,10 +444,10 @@ function renderHeadingStructureContent(headings) {
 
   // Create heading hierarchy table
   const headingTable = [
-    ['H1', headings.h1.length, headings.h1.length === 1 ? '✅ Optimal' : headings.h1.length === 0 ? '❌ Missing' : '⚠️ Multiple', headings.h1[0] ? `"${headings.h1[0].substring(0, 40)}..."` : 'N/A'],
-    ['H2', headings.h2.length, headings.h2.length > 0 ? '✅ Present' : '⚠️ None', headings.h2[0] ? `"${headings.h2[0].substring(0, 40)}..."` : 'N/A'],
-    ['H3', headings.h3.length, headings.h3.length > 0 ? '✅ Present' : '⚠️ None', headings.h3[0] ? `"${headings.h3[0].substring(0, 40)}..."` : 'N/A'],
-    ['H4', headings.h4.length, headings.h4.length > 0 ? '✅ Present' : '⚠️ None', headings.h4[0] ? `"${headings.h4[0].substring(0, 40)}..."` : 'N/A']
+    ['H1', headings.h1.length, headings.h1.length === 1 ? '✓ Optimal' : headings.h1.length === 0 ? '✗ Missing' : '~ Multiple', headings.h1[0] ? `"${headings.h1[0].substring(0, 40)}..."` : 'N/A'],
+    ['H2', headings.h2.length, headings.h2.length > 0 ? '✓ Present' : '~ None', headings.h2[0] ? `"${headings.h2[0].substring(0, 40)}..."` : 'N/A'],
+    ['H3', headings.h3.length, headings.h3.length > 0 ? '✓ Present' : '~ None', headings.h3[0] ? `"${headings.h3[0].substring(0, 40)}..."` : 'N/A'],
+    ['H4', headings.h4.length, headings.h4.length > 0 ? '✓ Present' : '~ None', headings.h4[0] ? `"${headings.h4[0].substring(0, 40)}..."` : 'N/A']
   ];
 
   return `
@@ -491,8 +481,8 @@ function renderHeadingStructureContent(headings) {
  * Render Content Analysis section content
  */
 function renderContentAnalysisContent(content) {
-  const wordStatus = content.wordCount >= 600 ? '✅' : content.wordCount >= 300 ? '⚠️' : '❌';
-  const sentenceStatus = content.averageWordsPerSentence <= 20 ? '✅' : '⚠️';
+  const wordStatus = content.wordCount >= 600 ? '✓' : content.wordCount >= 300 ? '~' : '✗';
+  const sentenceStatus = content.averageWordsPerSentence <= 20 ? '✓' : '~';
   
   // Content quality metrics
   const contentMetrics = {
@@ -533,7 +523,7 @@ function renderContentAnalysisContent(content) {
  * Render Image Analysis section content
  */
 function renderImageAnalysisContent(images) {
-  const altStatus = images.withAlt === images.total ? '✅' : images.withoutAlt === 0 ? '⚠️' : '❌';
+  const altStatus = images.withAlt === images.total ? '✓' : images.withoutAlt === 0 ? '~' : '✗';
   const altPercentage = images.total > 0 ? ((images.withAlt / images.total) * 100).toFixed(1) : 0;
   
   // Image optimization data
@@ -547,7 +537,7 @@ function renderImageAnalysisContent(images) {
   const imageTable = images.images.slice(0, 10).map(img => [
     truncateUrl(img.src, 40),
     `${img.width}x${img.height}`,
-    img.alt ? `✅ "${img.alt.substring(0, 30)}${img.alt.length > 30 ? '...' : ''}"` : '❌ Missing',
+    img.alt ? `✓ "${img.alt.substring(0, 30)}${img.alt.length > 30 ? '...' : ''}"` : '✗ Missing',
     img.alt ? 'Pass' : 'Fail',
     img.alt ? 'Descriptive, helps SEO and accessibility' : 'Add descriptive alt text for SEO + screen readers'
   ]);
@@ -555,7 +545,7 @@ function renderImageAnalysisContent(images) {
   return `
     <div style="padding-left: 1rem;">
       <div style="background: rgba(255, 140, 0, 0.1); border-left: 4px solid #ff8c00; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
-        <h4 style="margin: 0 0 0.5rem 0; color: #ff8c00;">🖼️ Image SEO: Alt Text is Critical</h4>
+        <h4 style="margin: 0 0 0.5rem 0; color: #ff8c00;">I Image SEO: Alt Text is Critical</h4>
         <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
           Alt text helps search engines understand images and improves accessibility. Google Image Search drives 20-30% of web traffic for many sites.
         </p>
@@ -593,7 +583,7 @@ function renderImageAnalysisContent(images) {
                 <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${row[3] === 'Fail' ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                   <td style="padding: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; word-break: break-all;">${row[0]}</td>
                   <td style="padding: 0.75rem; text-align: center; font-family: monospace;">${row[1]}</td>
-                  <td style="padding: 0.75rem; color: ${row[2].includes('✅') ? '#00ff41' : '#ff4444'}; font-size: 0.9rem;">${row[2]}</td>
+                  <td style="padding: 0.75rem; color: ${row[2].includes('✓') ? '#00ff41' : '#ff4444'}; font-size: 0.9rem;">${row[2]}</td>
                   <td style="padding: 0.75rem; text-align: center; font-weight: 600; color: ${row[3] === 'Pass' ? '#00ff41' : '#ff4444'};">${row[3]}</td>
                   <td style="padding: 0.75rem; color: #00ff41; font-size: 0.85rem;">${row[4]}</td>
                 </tr>
@@ -615,7 +605,7 @@ function renderImageAnalysisContent(images) {
  * Render Link Analysis section content
  */
 function renderLinkAnalysisContent(links) {
-  const brokenStatus = links.brokenFormat === 0 ? '✅' : '⚠️';
+  const brokenStatus = links.brokenFormat === 0 ? '✓' : '~';
   
   return `
     <div style="padding-left: 1rem;">
@@ -647,7 +637,7 @@ function renderMobileResponsivenessContent(mobile) {
   return `
     <div style="padding-left: 1rem;">
       <div style="background: rgba(0, 150, 255, 0.1); border-left: 4px solid #0096ff; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
-        <h4 style="margin: 0 0 0.5rem 0; color: #0096ff;">📱 Mobile-First Indexing</h4>
+        <h4 style="margin: 0 0 0.5rem 0; color: #0096ff;">M Mobile-First Indexing</h4>
         <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
           Google now uses the mobile version of your site for indexing and ranking. Mobile responsiveness is critical for SEO.
         </p>
@@ -676,9 +666,9 @@ function renderMobileResponsivenessContent(mobile) {
               <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
                 <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.viewport}</td>
                 <td style="padding: 0.75rem; text-align: center; color: #c0c0c0; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.width}px</td>
-                <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.hasHorizontalScroll ? '❌' : '✅'}</td>
-                <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.hasViewportMeta ? '✅' : '❌'}</td>
-                <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.fontSizeReadable ? '✅' : '❌'}</td>
+                <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.hasHorizontalScroll ? '✗' : '✓'}</td>
+                <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.hasViewportMeta ? '✓' : '✗'}</td>
+                <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.fontSizeReadable ? '✓' : '✗'}</td>
                 <td style="padding: 0.75rem; color: #00ff41; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">${recommended}</td>
               </tr>
             `;
@@ -690,14 +680,14 @@ function renderMobileResponsivenessContent(mobile) {
         <div style="background: rgba(255, 255, 255, 0.03); padding: 1rem; border-radius: 4px; border-left: 3px solid ${mobile.viewports.every(vp => !vp.hasHorizontalScroll) ? '#00ff41' : '#ff4444'};">
           <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Horizontal Scroll</div>
           <div style="font-size: 1.5rem; font-weight: bold; color: ${mobile.viewports.every(vp => !vp.hasHorizontalScroll) ? '#00ff41' : '#ff4444'};">
-            ${mobile.viewports.every(vp => !vp.hasHorizontalScroll) ? '✅ None' : '❌ Detected'}
+            ${mobile.viewports.every(vp => !vp.hasHorizontalScroll) ? '✓ None' : '✗ Detected'}
           </div>
         </div>
         
         <div style="background: rgba(255, 255, 255, 0.03); padding: 1rem; border-radius: 4px; border-left: 3px solid ${mobile.viewports.every(vp => vp.hasViewportMeta) ? '#00ff41' : '#ff8c00'};">
           <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Viewport Meta Tag</div>
           <div style="font-size: 1.5rem; font-weight: bold; color: ${mobile.viewports.every(vp => vp.hasViewportMeta) ? '#00ff41' : '#ff8c00'};">
-            ${mobile.viewports.every(vp => vp.hasViewportMeta) ? '✅ Present' : '⚠️ Missing'}
+            ${mobile.viewports.every(vp => vp.hasViewportMeta) ? '✓ Present' : '~ Missing'}
           </div>
         </div>
         
@@ -718,14 +708,14 @@ function renderMobileResponsivenessContent(mobile) {
  * Render Performance Metrics section content
  */
 function renderPerformanceMetricsContent(perf) {
-  const loadStatus = perf.loadComplete < 3000 ? '✅' : perf.loadComplete < 5000 ? '⚠️' : '❌';
-  const sizeStatus = parseFloat(perf.transferSizeMB) < 3 ? '✅' : '⚠️';
-  const resourceStatus = perf.resources < 150 ? '✅' : perf.resources < 300 ? '⚠️' : '❌';
-  const domStatus = perf.domNodes < 1500 ? '✅' : perf.domNodes < 3000 ? '⚠️' : '❌';
+  const loadStatus = perf.loadComplete < 3000 ? '✓' : perf.loadComplete < 5000 ? '~' : '✗';
+  const sizeStatus = parseFloat(perf.transferSizeMB) < 3 ? '✓' : '~';
+  const resourceStatus = perf.resources < 150 ? '✓' : perf.resources < 300 ? '~' : '✗';
+  const domStatus = perf.domNodes < 1500 ? '✓' : perf.domNodes < 3000 ? '~' : '✗';
   
   const metrics = [
     ['Page Load Time', `${perf.loadCompleteSeconds}s`, loadStatus, 'Time until page fully loaded', '< 3s (Good) | < 5s (Fair)'],
-    ['DOM Content Loaded', `${(perf.domContentLoaded / 1000).toFixed(2)}s`, perf.domContentLoaded < 2000 ? '✅' : '⚠️', 'Time until DOM is ready', '< 2s (Good)'],
+    ['DOM Content Loaded', `${(perf.domContentLoaded / 1000).toFixed(2)}s`, perf.domContentLoaded < 2000 ? '✓' : '~', 'Time until DOM is ready', '< 2s (Good)'],
     ['Total Resources', perf.resources, resourceStatus, 'Number of HTTP requests', '< 150 (Good) | < 300 (Fair)'],
     ['Page Size', `${perf.transferSizeMB} MB`, sizeStatus, 'Total transfer size', '< 3 MB (Good)'],
     ['DOM Nodes', perf.domNodes, domStatus, 'Total HTML elements', '< 1,500 (Good) | < 3,000 (Fair)']
@@ -766,17 +756,17 @@ function renderPerformanceMetricsContent(perf) {
  */
 function renderSecurityHeadersContent(security) {
   const securityChecks = [
-    ['HTTPS Enabled', security.hasHTTPS ? '✅ Yes' : '❌ No', 'Encrypted connection', security.hasHTTPS ? 'Secure SSL/TLS enabled' : 'No HTTPS detected', 'Required - Always use HTTPS in production'],
-    ['HSTS Header', security.strictTransportSecurity ? '✅ Present' : '⚠️ Missing', 'Force HTTPS', security.strictTransportSecurity || 'Not configured - browsers can connect via HTTP', 'max-age=31536000; includeSubDomains; preload'],
-    ['Content Security Policy', security.contentSecurityPolicy ? '✅ Present' : '⚠️ Missing', 'XSS Protection', security.contentSecurityPolicy ? 'Configured' : 'Vulnerable to injection attacks', "default-src 'self'; script-src 'self'"],
-    ['X-Frame-Options', security.xFrameOptions ? '✅ Present' : '⚠️ Missing', 'Clickjacking Protection', security.xFrameOptions || 'Can be embedded in iframes', 'DENY or SAMEORIGIN'],
-    ['X-Content-Type-Options', security.xContentTypeOptions ? '✅ Present' : '⚠️ Missing', 'MIME Sniffing Protection', security.xContentTypeOptions ? 'Enabled' : 'Browser may misinterpret content', 'nosniff']
+    ['HTTPS Enabled', security.hasHTTPS ? '✓ Yes' : '✗ No', 'Encrypted connection', security.hasHTTPS ? 'Secure SSL/TLS enabled' : 'No HTTPS detected', 'Required - Always use HTTPS in production'],
+    ['HSTS Header', security.strictTransportSecurity ? '✓ Present' : '~ Missing', 'Force HTTPS', security.strictTransportSecurity || 'Not configured - browsers can connect via HTTP', 'max-age=31536000; includeSubDomains; preload'],
+    ['Content Security Policy', security.contentSecurityPolicy ? '✓ Present' : '~ Missing', 'XSS Protection', security.contentSecurityPolicy ? 'Configured' : 'Vulnerable to injection attacks', "default-src 'self'; script-src 'self'"],
+    ['X-Frame-Options', security.xFrameOptions ? '✓ Present' : '~ Missing', 'Clickjacking Protection', security.xFrameOptions || 'Can be embedded in iframes', 'DENY or SAMEORIGIN'],
+    ['X-Content-Type-Options', security.xContentTypeOptions ? '✓ Present' : '~ Missing', 'MIME Sniffing Protection', security.xContentTypeOptions ? 'Enabled' : 'Browser may misinterpret content', 'nosniff']
   ];
   
   return `
     <div style="padding-left: 1rem;">
       <div style="background: rgba(255, 68, 68, 0.1); border-left: 4px solid #ff4444; padding: 1rem; margin: 1rem 0; border-radius: 4px;">
-        <h4 style="margin: 0 0 0.5rem 0; color: #ff4444;">🔒 Security Headers Critical for SEO</h4>
+        <h4 style="margin: 0 0 0.5rem 0; color: #ff4444;">◈ Security Headers Critical for SEO</h4>
         <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
           Google prioritizes secure sites in rankings. Missing security headers can harm SEO and user trust. HTTPS is a direct ranking factor.
         </p>
@@ -841,7 +831,7 @@ function renderStructuredDataContent(data) {
       fields: ['headline', 'author', 'datePublished', 'image']
     },
     'WebSite': { 
-      icon: '🌐', 
+      icon: 'W', 
       desc: 'Website metadata',
       benefit: 'Enables sitelinks search box in Google',
       fields: ['name', 'url', 'potentialAction']
@@ -871,7 +861,7 @@ function renderStructuredDataContent(data) {
       fields: ['name', 'image', 'author', 'recipeIngredient', 'recipeInstructions']
     },
     'Review': { 
-      icon: '⭐', 
+      icon: '*', 
       desc: 'User reviews',
       benefit: 'Display star ratings directly in search results',
       fields: ['itemReviewed', 'reviewRating', 'author', 'reviewBody']
@@ -883,7 +873,7 @@ function renderStructuredDataContent(data) {
       fields: ['name', 'description', 'thumbnailUrl', 'uploadDate', 'duration']
     },
     'FAQPage': { 
-      icon: '❓', 
+      icon: '?', 
       desc: 'FAQ content',
       benefit: 'Expandable FAQ sections in search results',
       fields: ['mainEntity', 'name', 'acceptedAnswer']
@@ -895,7 +885,7 @@ function renderStructuredDataContent(data) {
       fields: ['name', 'step', 'totalTime', 'tool', 'supply']
     },
     'SoftwareApplication': {
-      icon: '💻',
+      icon: 'C',
       desc: 'Software/app details',
       benefit: 'App install buttons and ratings in search',
       fields: ['name', 'operatingSystem', 'applicationCategory', 'offers', 'aggregateRating']
@@ -920,7 +910,7 @@ function renderStructuredDataContent(data) {
         border-radius: 8px;
         box-shadow: 0 2px 8px rgba(0,204,255,0.15);
       ">
-        <div style="color: #00ccff; font-weight: bold; margin-bottom: 0.75rem; font-size: 1.1rem;">💡 What is Structured Data Schema?</div>
+        <div style="color: #00ccff; font-weight: bold; margin-bottom: 0.75rem; font-size: 1.1rem;">ⓘ What is Structured Data Schema?</div>
         <div style="color: #c0c0c0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
           Structured data (also called schema markup) is code that helps search engines understand your content better, 
           enabling <strong style="color: #00ff41;">rich search results</strong> like star ratings, product prices, event dates, 
@@ -933,15 +923,15 @@ function renderStructuredDataContent(data) {
           margin-top: 1rem;
         ">
           <div style="padding: 0.75rem; background: rgba(0,255,65,0.1); border-radius: 6px; border: 1px solid rgba(0,255,65,0.2);">
-            <div style="color: #00ff41; font-weight: bold; font-size: 0.85rem; margin-bottom: 0.3rem;">📈 Improved CTR</div>
+            <div style="color: #00ff41; font-weight: bold; font-size: 0.85rem; margin-bottom: 0.3rem;">U Improved CTR</div>
             <div style="color: #b0b0b0; font-size: 0.8rem;">Rich results stand out and attract more clicks</div>
           </div>
           <div style="padding: 0.75rem; background: rgba(0,255,65,0.1); border-radius: 6px; border: 1px solid rgba(0,255,65,0.2);">
-            <div style="color: #00ff41; font-weight: bold; font-size: 0.85rem; margin-bottom: 0.3rem;">🎯 Better Targeting</div>
+            <div style="color: #00ff41; font-weight: bold; font-size: 0.85rem; margin-bottom: 0.3rem;">T Better Targeting</div>
             <div style="color: #b0b0b0; font-size: 0.8rem;">Helps search engines understand your niche</div>
           </div>
           <div style="padding: 0.75rem; background: rgba(0,255,65,0.1); border-radius: 6px; border: 1px solid rgba(0,255,65,0.2);">
-            <div style="color: #00ff41; font-weight: bold; font-size: 0.85rem; margin-bottom: 0.3rem;">🏆 SEO Advantage</div>
+            <div style="color: #00ff41; font-weight: bold; font-size: 0.85rem; margin-bottom: 0.3rem;">W SEO Advantage</div>
             <div style="color: #b0b0b0; font-size: 0.8rem;">Competitive edge in search results</div>
           </div>
         </div>
@@ -961,7 +951,7 @@ function renderStructuredDataContent(data) {
         <tbody>
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
             <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">Structured Data Found</td>
-            <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${data.hasStructuredData ? '✅' : '❌'}</td>
+            <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${data.hasStructuredData ? '✓' : '✗'}</td>
             <td style="padding: 0.75rem; color: ${data.hasStructuredData ? '#00ff41' : '#ff6600'}; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${data.hasStructuredData ? 'Detected' : 'Not Found'}
             </td>
@@ -971,7 +961,7 @@ function renderStructuredDataContent(data) {
           </tr>
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
             <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">Schema Types Implemented</td>
-            <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">📊</td>
+            <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">C</td>
             <td style="padding: 0.75rem; color: #00ccff; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${data.count} ${data.count === 1 ? 'Type' : 'Types'}
             </td>
@@ -981,7 +971,7 @@ function renderStructuredDataContent(data) {
           </tr>
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
             <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">Overall Score</td>
-            <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">🎯</td>
+            <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">T</td>
             <td style="padding: 0.75rem; color: #bb86fc; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${data.score}/100
             </td>
@@ -1006,7 +996,7 @@ function renderStructuredDataContent(data) {
           <tbody>
             ${data.types.map(type => {
               const schema = commonSchemas[type] || { 
-                icon: '📦', 
+                icon: 'R', 
                 desc: 'Schema markup',
                 benefit: 'Structured data implementation',
                 fields: []
@@ -1057,7 +1047,7 @@ function renderStructuredDataContent(data) {
           margin: 1rem 0;
           border-radius: 4px;
         ">
-          <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">✅ Next Step: Validate Your Schema</div>
+          <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">✓ Next Step: Validate Your Schema</div>
           <div style="color: #c0c0c0; font-size: 0.9rem; line-height: 1.6;">
             Use <a href="https://search.google.com/test/rich-results" target="_blank" style="color: #00ccff; text-decoration: underline;">Google's Rich Results Test</a> 
             to ensure your structured data is error-free and eligible for rich snippets. Monitor Search Console for structured data errors.
@@ -1074,7 +1064,7 @@ function renderStructuredDataContent(data) {
           margin-bottom: 1rem;
         ">
           <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <div style="font-size: 1.5rem;">⚠️</div>
+            <div style="font-size: 1.5rem;">~</div>
             <div>
               <div style="color: #ff6600; font-weight: bold; font-size: 1rem;">No Structured Data Detected</div>
               <div style="color: #c0c0c0; font-size: 0.85rem;">You're missing enhanced search appearances that boost visibility and click-through rates</div>
@@ -1094,7 +1084,7 @@ function renderStructuredDataContent(data) {
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
               <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <span style="font-size: 1.3rem;">⭐</span>
+                  <span style="font-size: 1.3rem;">*</span>
                   <span style="color: #ffd700; font-weight: 600; font-size: 0.9rem;">Star Ratings</span>
                 </div>
               </td>
@@ -1136,7 +1126,7 @@ function renderStructuredDataContent(data) {
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
               <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <span style="font-size: 1.3rem;">🖼️</span>
+                  <span style="font-size: 1.3rem;">I</span>
                   <span style="color: #bb86fc; font-weight: 600; font-size: 0.9rem;">Rich Media</span>
                 </div>
               </td>
@@ -1150,7 +1140,7 @@ function renderStructuredDataContent(data) {
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
               <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
-                  <span style="font-size: 1.3rem;">❓</span>
+                  <span style="font-size: 1.3rem;">?</span>
                   <span style="color: #ff8c00; font-weight: 600; font-size: 0.9rem;">FAQ Dropdowns</span>
                 </div>
               </td>
@@ -1172,7 +1162,7 @@ function renderStructuredDataContent(data) {
           margin: 1rem 0;
         ">
           <div style="color: #c0c0c0; font-size: 0.85rem; line-height: 1.6;">
-            <strong style="color: #00ff41;">💡 Pro Tip:</strong> Rich results can increase click-through rates by 15-35% according to Google research. 
+            <strong style="color: #00ff41;">ⓘ Pro Tip:</strong> Rich results can increase click-through rates by 15-35% according to Google research. 
             Start with the foundational schemas below to unlock these benefits.
           </div>
         </div>
@@ -1328,7 +1318,7 @@ function renderStructuredDataContent(data) {
           border-radius: 10px;
         ">
           <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
-            <div style="font-size: 1.8rem;">🔗</div>
+            <div style="font-size: 1.8rem;">K</div>
             <div>
               <div style="color: #bb86fc; font-weight: bold; font-size: 1rem;">RDFa</div>
               <div style="color: #808080; font-size: 0.7rem;">Resource Description</div>
@@ -1381,7 +1371,7 @@ function renderStructuredDataContent(data) {
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
             <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span style="font-size: 1.3rem;">✅</span>
+                <span style="font-size: 1.3rem;">✓</span>
                 <span style="color: #00ff41; font-weight: 600; font-size: 0.9rem;">Rich Results Test</span>
               </div>
             </td>
@@ -1395,7 +1385,7 @@ function renderStructuredDataContent(data) {
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
             <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
-                <span style="font-size: 1.3rem;">📊</span>
+                <span style="font-size: 1.3rem;">C</span>
                 <span style="color: #ffd700; font-weight: 600; font-size: 0.9rem;">Schema Validator</span>
               </div>
             </td>
@@ -1447,17 +1437,17 @@ function renderStructuredDataContent(data) {
  */
 function renderAdditionalChecksContent(checks) {
   const additionalMetrics = [
-    ['robots.txt', checks.hasRobotsTxt ? '✅ Found' : '⚠️ Not found', 'Controls search engine crawling', checks.hasRobotsTxt ? 'File is present and accessible' : 'Missing - create /robots.txt', 'Allow crawlers, disallow admin/private pages'],
-    ['XML Sitemap', checks.hasSitemap ? '✅ Found' : '⚠️ Not found', 'Helps search engines discover pages', checks.hasSitemap ? 'Sitemap detected' : 'Missing - improves indexing', 'Submit to Google Search Console, update weekly'],
-    ['Favicon', checks.hasFavicon ? '✅ Present' : '⚠️ Missing', 'Browser tab icon', checks.hasFavicon ? 'Configured' : 'No favicon found', '32x32 PNG or ICO, helps brand recognition'],
-    ['Google Analytics', checks.googleAnalytics ? '✅ Detected' : '⚠️ Not detected', 'Traffic tracking', checks.googleAnalytics ? 'Analytics tracking enabled' : 'No analytics detected', 'GA4 recommended, track user behavior for SEO insights']
+    ['robots.txt', checks.hasRobotsTxt ? '✓ Found' : '~ Not found', 'Controls search engine crawling', checks.hasRobotsTxt ? 'File is present and accessible' : 'Missing - create /robots.txt', 'Allow crawlers, disallow admin/private pages'],
+    ['XML Sitemap', checks.hasSitemap ? '✓ Found' : '~ Not found', 'Helps search engines discover pages', checks.hasSitemap ? 'Sitemap detected' : 'Missing - improves indexing', 'Submit to Google Search Console, update weekly'],
+    ['Favicon', checks.hasFavicon ? '✓ Present' : '~ Missing', 'Browser tab icon', checks.hasFavicon ? 'Configured' : 'No favicon found', '32x32 PNG or ICO, helps brand recognition'],
+    ['Google Analytics', checks.googleAnalytics ? '✓ Detected' : '~ Not detected', 'Traffic tracking', checks.googleAnalytics ? 'Analytics tracking enabled' : 'No analytics detected', 'GA4 recommended, track user behavior for SEO insights']
   ];
 
   const socialPlatforms = [
-    ['Facebook', checks.socialLinks.facebook ? '✅' : '❌', 'Meta Open Graph tags', checks.socialLinks.facebook ? 'Link present' : 'No Facebook link found', 'Add og:image, og:title, og:description tags'],
-    ['Twitter/X', checks.socialLinks.twitter ? '✅' : '❌', 'Twitter Card tags', checks.socialLinks.twitter ? 'Link present' : 'No Twitter link found', 'Add twitter:card, twitter:image meta tags'],
-    ['LinkedIn', checks.socialLinks.linkedin ? '✅' : '❌', 'Professional network', checks.socialLinks.linkedin ? 'Link present' : 'No LinkedIn link found', 'Add to company footer, improves B2B credibility'],
-    ['Instagram', checks.socialLinks.instagram ? '✅' : '❌', 'Visual content', checks.socialLinks.instagram ? 'Link present' : 'No Instagram link found', 'Link to business profile, helps visual branding']
+    ['Facebook', checks.socialLinks.facebook ? '✓' : '✗', 'Meta Open Graph tags', checks.socialLinks.facebook ? 'Link present' : 'No Facebook link found', 'Add og:image, og:title, og:description tags'],
+    ['Twitter/X', checks.socialLinks.twitter ? '✓' : '✗', 'Twitter Card tags', checks.socialLinks.twitter ? 'Link present' : 'No Twitter link found', 'Add twitter:card, twitter:image meta tags'],
+    ['LinkedIn', checks.socialLinks.linkedin ? '✓' : '✗', 'Professional network', checks.socialLinks.linkedin ? 'Link present' : 'No LinkedIn link found', 'Add to company footer, improves B2B credibility'],
+    ['Instagram', checks.socialLinks.instagram ? '✓' : '✗', 'Visual content', checks.socialLinks.instagram ? 'Link present' : 'No Instagram link found', 'Link to business profile, helps visual branding']
   ];
   
   return `
@@ -1494,7 +1484,7 @@ function renderAdditionalChecksContent(checks) {
       </table>
 
       <div style="background: rgba(138, 43, 226, 0.1); border-left: 4px solid #8a2be2; padding: 1rem; margin: 1.5rem 0 1rem 0; border-radius: 4px;">
-        <h4 style="margin: 0 0 0.5rem 0; color: #8a2be2;">📱 Social Signals & SEO</h4>
+        <h4 style="margin: 0 0 0.5rem 0; color: #8a2be2;">M Social Signals & SEO</h4>
         <p style="margin: 0; font-size: 0.9rem; color: var(--text-secondary);">
           While not direct ranking factors, social links increase brand visibility, drive traffic, and improve Open Graph previews when content is shared.
         </p>
@@ -1538,14 +1528,14 @@ function renderIssuesAndRecommendations(section) {
   if (section.issues && section.issues.length > 0) {
     html += '<p style="color: #ff6600; margin-top: 0.5rem;">>> issues:</p>';
     section.issues.forEach(issue => {
-      html += `<p style="margin-left: 1rem; color: #ff6600;">❌ ${issue}</p>`;
+      html += `<p style="margin-left: 1rem; color: #ff6600;">✗ ${issue}</p>`;
     });
   }
 
   if (section.recommendations && section.recommendations.length > 0) {
     html += '<p style="color: #00ccff; margin-top: 0.5rem;">>> recommendations:</p>';
     section.recommendations.forEach(rec => {
-      html += `<p style="margin-left: 1rem; color: #00ccff;">💡 ${rec}</p>`;
+      html += `<p style="margin-left: 1rem; color: #00ccff;">ⓘ ${rec}</p>`;
     });
   }
 
@@ -1666,44 +1656,4 @@ function showError(message) {
 /**
  * Open PDF purchase modal
  */
-function openPdfPurchaseModal(reportType) {
-  if (!window.pdfPaymentModal) {
-    console.error('PDF Payment Modal not initialized');
-    alert('Payment system is loading. Please try again in a moment.');
-    return;
-  }
-
-  // Get the current results
-  let reportData;
-  switch (reportType) {
-    case 'seo':
-      reportData = window.currentSeoResults;
-      break;
-    case 'performance':
-      reportData = window.currentPerformanceResults;
-      break;
-    case 'accessibility':
-      reportData = window.currentAccessibilityResults;
-      break;
-    case 'security':
-      reportData = window.currentSecurityResults;
-      break;
-    case 'fonts':
-      reportData = window.currentFontResults;
-      break;
-    default:
-      console.error('Unknown report type:', reportType);
-      return;
-  }
-
-  if (!reportData) {
-    alert('Please run an analysis first before purchasing a PDF report.');
-    return;
-  }
-
-  // Open payment modal
-  window.pdfPaymentModal.open(reportType, reportData, (result) => {
-    console.log('PDF purchase successful:', result);
-    // Payment successful, PDF download started automatically
-  });
-}
+// PDF purchase modal removed - monetization disabled

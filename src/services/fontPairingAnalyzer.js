@@ -92,6 +92,9 @@ class FontPairingAnalyzer {
    * Classify font into category
    */
   classifyFont(fontFamily) {
+    if (!fontFamily || typeof fontFamily !== 'string') {
+      return 'serif'; // Safe default when unknown
+    }
     const familyLower = fontFamily.toLowerCase();
 
     for (const [category, keywords] of Object.entries(this.fontCategories)) {

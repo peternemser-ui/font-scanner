@@ -97,54 +97,54 @@ function createProgressBar(value, label, options = {}) {
   return `
     <div class="seo-progress-container" style="margin: 1.5rem 0; padding: 0.5rem;">
       ${label ? `
-      <div style="
+      <div class="seo-progress-label" style="
         display: flex; 
         justify-content: space-between; 
         align-items: center;
         margin-bottom: 0.75rem; 
         padding: 0.5rem;
-        background: rgba(255, 255, 255, 0.05);
+        background: var(--bg-tertiary, rgba(255, 255, 255, 0.05));
         border-radius: 6px;
       ">
         <span style="
-          color: #ffffff; 
+          color: var(--text-primary, #ffffff); 
           font-weight: 600;
           font-size: 1.1rem;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+          text-shadow: var(--text-shadow, 0 2px 4px rgba(0,0,0,0.5));
         ">${label}</span>
         ${showValue ? `
         <span style="
           color: ${color}; 
           font-weight: bold; 
           font-size: 1.3rem;
-          text-shadow: 0 2px 4px rgba(0,0,0,0.5), 0 0 10px ${color}80;
+          text-shadow: var(--text-shadow, 0 2px 4px rgba(0,0,0,0.5)), 0 0 10px ${color}80;
           padding: 0.25rem 0.75rem;
-          background: rgba(0,0,0,0.3);
+          background: var(--bg-secondary, rgba(0,0,0,0.3));
           border-radius: 6px;
         ">${Math.round(value)}%</span>
         ` : ''}
       </div>
       ` : ''}
-      <div style="
+      <div class="seo-progress-track" style="
         width: 100%;
         height: ${height}px;
-        background: #1a1a1a;
-        border: 2px solid #404040;
+        background: var(--progress-bg, #e8e8e8);
+        border: 2px solid var(--progress-border, #d0d0d0);
         border-radius: 10px;
         overflow: hidden;
         position: relative;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.3);
+        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
       ">
-        <div style="
+        <div class="seo-progress-fill" data-color="${color}" style="
           width: ${Math.max(5, value)}%;
           height: 100%;
-          background: linear-gradient(180deg, ${color} 0%, ${color}dd 100%);
+          background-color: ${color};
           ${animated ? 'transition: width 1s ease-out;' : ''}
           position: relative;
           border-radius: 8px;
-          box-shadow: 0 0 20px ${color}80;
+          box-shadow: 0 0 20px ${color}60;
         ">
-          <div style="
+          <div class="seo-progress-shimmer" style="
             position: absolute;
             top: 0;
             left: 0;
@@ -152,9 +152,10 @@ function createProgressBar(value, label, options = {}) {
             bottom: 0;
             background: linear-gradient(90deg, 
               transparent 0%, 
-              rgba(255,255,255,0.4) 50%, 
+              rgba(255,255,255,0.3) 50%, 
               transparent 100%);
             ${animated ? 'animation: shimmer 2s infinite;' : ''}
+            pointer-events: none;
           "></div>
         </div>
       </div>
@@ -366,7 +367,7 @@ function createComparisonDiagram(comparison) {
       border-radius: 8px;
     ">
       <div style="text-align: center;">
-        <div style="color: #ff4444; font-weight: bold; margin-bottom: 0.5rem;">❌ CURRENT</div>
+        <div style="color: #ff4444; font-weight: bold; margin-bottom: 0.5rem;">✗ CURRENT</div>
         <div style="
           padding: 1rem;
           background: rgba(255,68,68,0.1);
@@ -378,7 +379,7 @@ function createComparisonDiagram(comparison) {
         </div>
       </div>
       <div style="text-align: center;">
-        <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">✅ RECOMMENDED</div>
+        <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">✓ RECOMMENDED</div>
         <div style="
           padding: 1rem;
           background: rgba(0,255,65,0.1);
@@ -513,7 +514,7 @@ function createLinkDiagram(linkData) {
            onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
           <div style="font-size: 2.5rem; color: ${broken > 0 ? '#ff4444' : '#00ff41'}; font-weight: bold; margin-bottom: 0.5rem; text-shadow: 0 2px 4px ${broken > 0 ? 'rgba(255,68,68,0.4)' : 'rgba(0,255,65,0.4)'};">${broken}</div>
           <div style="font-size: 1rem; color: #e0e0e0; font-weight: 600; margin-bottom: 0.25rem;">Broken Links</div>
-          <div style="font-size: 0.85rem; color: #909090;">${broken > 0 ? '⚠️ Needs attention' : '✅ All working'}</div>
+          <div style="font-size: 0.85rem; color: #909090;">${broken > 0 ? '~ Needs attention' : '✓ All working'}</div>
         </div>
       </div>
       
@@ -526,7 +527,7 @@ function createLinkDiagram(linkData) {
         border-radius: 8px;
         text-align: center;
       ">
-        <span style="color: #ffaa00; font-weight: 600;">ℹ️ ${nofollow} No-Follow Links</span>
+        <span style="color: #ffaa00; font-weight: 600;">ⓘ ${nofollow} No-Follow Links</span>
         <span style="color: #909090; margin-left: 0.5rem;">These links don't pass SEO value</span>
       </div>
       ` : ''}

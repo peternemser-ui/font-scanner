@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Professional WordPress security scanner. Version detection, plugin analysis, vulnerability scanning, and security hardening recommendations." />
+  <meta name="theme-color" content="#000000" />
+  
+  <!-- SEO Meta Tags -->
+  <meta name="keywords" content="wordpress scanner, wordpress security, plugin vulnerabilities, wp security audit, wordpress hardening" />
+  <meta name="author" content="Font Scanner" />
+  <meta name="robots" content="index, follow" />
+  
+  <!-- Open Graph -->
+  <meta property="og:title" content="WordPress Security Analyzer - Comprehensive WP Audit" />
+  <meta property="og:description" content="Exhaustive WordPress security analysis including version detection, vulnerabilities, and hardening recommendations" />
+  <meta property="og:type" content="website" />
+  
+  <title>WordPress Security Analyzer - Font Scanner</title>
+  
+  <!-- Preload critical fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  
+  <!-- Design System Foundation -->
+  <link rel="stylesheet" href="design-tokens.css" />
+  <link rel="stylesheet" href="components.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <!-- Existing Stylesheets -->
+  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="progress-styles.css" />
+  <link rel="stylesheet" href="analyzer-loading.css" />
+</head>
+<body>
+    .wordpress-hero {
+      background: linear-gradient(135deg, #21759b 0%, #0073aa 100%);
+      padding: 3rem 2rem;
+      text-align: center;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      box-shadow: 0 8px 32px rgba(33, 117, 155, 0.3);
+    }
+
+    .wordpress-hero h1 {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      color: #ffffff;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+
+    .wordpress-hero p {
+      font-size: 1.1rem;
+      color: rgba(255, 255, 255, 0.9);
+      margin-bottom: 0;
+    }
+
+    .wp-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    .scan-input-section {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2rem;
+      border-radius: 12px;
+      margin-bottom: 2rem;
+      border: 1px solid rgba(33, 117, 155, 0.3);
+    }
+
+    .scan-input-group {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .scan-input {
+      flex: 1;
+      padding: 1rem 1.5rem;
+      background: rgba(0, 0, 0, 0.3);
+      border: 2px solid rgba(33, 117, 155, 0.5);
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 1.1rem;
+      transition: all 0.3s ease;
+    }
+
+    .scan-input:focus {
+      outline: none;
+      border-color: #21759b;
+      box-shadow: 0 0 20px rgba(33, 117, 155, 0.3);
+    }
+
+    .scan-button {
+      padding: 1rem 3rem;
+      background: linear-gradient(135deg, #21759b 0%, #0073aa 100%);
+      border: none;
+      border-radius: 8px;
+      color: #ffffff;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .scan-button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px rgba(33, 117, 155, 0.4);
+    }
+
+    .scan-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .not-wordpress-message {
+      background: rgba(255, 68, 68, 0.1);
+      border: 2px solid #ff4444;
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      margin: 2rem 0;
+    }
+
+    .not-wordpress-message h2 {
+      color: #ff4444;
+      margin-bottom: 1rem;
+      font-size: 1.8rem;
+    }
+
+    .not-wordpress-message p {
+      color: #ffcccc;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    .detection-signals {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1.5rem;
+      border-radius: 8px;
+      margin-top: 1.5rem;
+    }
+
+    .detection-signals h4 {
+      color: #ffa500;
+      margin-bottom: 1rem;
+    }
+
+    .detection-signals ul {
+      list-style: none;
+      padding: 0;
+    }
+
+    .detection-signals li {
+      padding: 0.5rem 0;
+      color: #ccc;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .wordpress-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(33, 117, 155, 0.2);
+      padding: 0.75rem 1.5rem;
+      border-radius: 50px;
+      border: 2px solid #21759b;
+      font-weight: 600;
+      color: #21759b;
+      margin: 1rem 0;
+    }
+
+    .score-card {
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(33, 117, 155, 0.3);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      text-align: center;
+    }
+
+    .score-circle {
+      width: 200px;
+      height: 200px;
+      margin: 0 auto 1.5rem;
+      border-radius: 50%;
+      background: #ffffff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .score-number {
+      font-size: 4rem;
+      font-weight: 700;
+      color: #000000;
+      line-height: 1;
+    }
+
+    .score-grade {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #666666;
+      margin-top: 0.5rem;
+    }
+
+    .score-breakdown {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .breakdown-item {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .breakdown-label {
+      color: #999;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .breakdown-score {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #21759b;
+    }
+
+    .wp-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin: 2rem 0;
+    }
+
+    .wp-info-card {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 1.5rem;
+      border-radius: 12px;
+      border: 1px solid rgba(33, 117, 155, 0.3);
+    }
+
+    .wp-info-card h3 {
+      color: #21759b;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .wp-info-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #ffffff;
+    }
+
+    .severity-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .severity-critical {
+      background: #ff4444;
+      color: #ffffff;
+    }
+
+    .severity-high {
+      background: #ffa500;
+      color: #000000;
+    }
+
+    .severity-medium {
+      background: #ffff00;
+      color: #000000;
+    }
+
+    .severity-low {
+      background: #00ccff;
+      color: #000000;
+    }
+
+    .accordion {
+      margin-bottom: 1rem;
+    }
+
+    .accordion-header {
+      background: rgba(33, 117, 155, 0.2);
+      padding: 1.25rem 1.5rem;
+      border: 1px solid rgba(33, 117, 155, 0.4);
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.3s ease;
+    }
+
+    .accordion-header:hover {
+      background: rgba(33, 117, 155, 0.3);
+    }
+
+    .accordion-header.active {
+      background: rgba(33, 117, 155, 0.4);
+      border-bottom-left-radius: 0;
+      border-bottom-right-radius: 0;
+    }
+
+    .accordion-title {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      font-size: 1.2rem;
+      font-weight: 600;
+      color: #ffffff;
+    }
+
+    .accordion-icon {
+      transition: transform 0.3s ease;
+    }
+
+    .accordion-header.active .accordion-icon {
+      transform: rotate(180deg);
+    }
+
+    .accordion-content {
+      display: none;
+      background: rgba(0, 0, 0, 0.2);
+      border: 1px solid rgba(33, 117, 155, 0.4);
+      border-top: none;
+      border-bottom-left-radius: 8px;
+      border-bottom-right-radius: 8px;
+      padding: 1.5rem;
+    }
+
+    .accordion-content.active {
+      display: block;
+    }
+
+    .recommendations-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .recommendations-table th,
+    .recommendations-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .recommendations-table th {
+      background: rgba(33, 117, 155, 0.2);
+      color: #21759b;
+      font-weight: 600;
+    }
+
+    .recommendations-table tr:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .issue-list {
+      list-style: none;
+      padding: 0;
+    }
+
+    .issue-item {
+      background: rgba(255, 68, 68, 0.1);
+      border-left: 4px solid #ff4444;
+      padding: 1rem;
+      margin-bottom: 0.75rem;
+      border-radius: 4px;
+    }
+
+    .issue-item.severity-high {
+      border-left-color: #ffa500;
+      background: rgba(255, 165, 0, 0.1);
+    }
+
+    .issue-item.severity-medium {
+      border-left-color: #ffff00;
+      background: rgba(255, 255, 0, 0.05);
+    }
+
+    .issue-item.severity-low {
+      border-left-color: #00ccff;
+      background: rgba(0, 204, 255, 0.05);
+    }
+
+    .plugins-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .plugin-badge {
+      background: rgba(33, 117, 155, 0.2);
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(33, 117, 155, 0.4);
+      font-family: 'Courier New', monospace;
+      font-size: 0.9rem;
+      color: #00ccff;
+    }
+  </style>
+</head>
+<body>
+  <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
+  <div id="nav-placeholder"></div>
+  
+  <div class="container">
+    <!-- Header -->
+    <header class="form-container">
+      <h1>WordPress Security Analyzer</h1>
+      <p>> comprehensive wordpress security, performance & best practices analysis</p>
+      
+      <!-- URL Input Form -->
+      <div style="margin-top: 2rem;">
+        <label for="urlInput" class="visually-hidden">WordPress site URL to analyze</label>
+        <input 
+          type="url" 
+          id="urlInput" 
+          placeholder="https://example.com" 
+          aria-label="Enter WordPress site URL for security analysis"
+          required
+          aria-required="true"
+        />
+        
+        <button id="scanButton" aria-label="Start WordPress security analysis">ANALYZE</button>
+      </div>
+      
+      <!-- Info Banner -->
+      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(33, 117, 155, 0.1); border: 1px solid rgba(33, 117, 155, 0.3); border-radius: 4px;">
+        <p style="color: #21759b; margin: 0; font-size: 0.9rem;">
+          <strong>W WordPress Detection:</strong> This scanner will first detect if the site is running WordPress. 
+          If not WordPress, you'll receive a clear message. If WordPress is detected, you'll get an exhaustive security audit 
+          including version analysis, plugin vulnerabilities, security headers, configuration issues, and actionable recommendations.
+        </p>
+      </div>
+    </header>
+
+    </header>
+
+    <!-- Results Container -->
+    <div id="results" class="results-container hidden" role="region" aria-live="polite">
+      <!-- Loading State -->
+      <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
+        <h2><span class="heartbeat" aria-hidden="true">W</span> Analyzing WordPress Site...</h2>
+        <p class="animate-pulse" id="loadingStatus">Initializing WordPress detection...</p>
+        <div class="progress-container" role="progressbar" aria-label="Analysis progress">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+      </div>
+
+      <!-- Not WordPress Message -->
+      <div id="notWordPressMessage" style="display: none;">
+        <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444; border-radius: 12px; padding: 2rem; text-align: center; margin: 2rem 0;">
+          <h2 style="color: #ff4444; margin-bottom: 1rem; font-size: 1.8rem;">⚠ This Site is Not WordPress</h2>
+          <p style="color: #ffcccc; font-size: 1.1rem; line-height: 1.6;">The scanner could not detect WordPress on this website.</p>
+          <p style="margin-top: 1rem; font-size: 0.95rem; color: #ffcccc;">This analyzer is specifically designed for WordPress sites only.</p>
+          <div id="detectionSignals" style="display: none; background: rgba(0, 0, 0, 0.2); padding: 1.5rem; border-radius: 8px; margin-top: 1.5rem; text-align: left;">
+            <h4 style="color: #ffa500; margin-bottom: 1rem;">Detection Results:</h4>
+            <ul id="signalsList" style="list-style: none; padding: 0;"></ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Results Content (populated by JavaScript) -->
+      <div id="resultsContent"></div>
+    </div>
+
+    <!-- Error Display -->
+    <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
+  </div>
+
+  <!-- Footer -->
+  <footer style="margin-top: 3rem; padding: 2rem 0; text-align: center; border-top: 1px solid #333;">
+    <p style="color: #808080; font-size: 0.85rem;">
+      WordPress Security Analyzer | Comprehensive WP Security Audit | Built with W for WordPress
+    </p>
+  </footer>
+
+  <!-- Scripts -->
+  <script src="theme-controls.js"></script>
+  <script src="nav-template.js"></script>
+  <script src="analyzer-loader.js"></script>
+  <script src="wordpress-analyzer.js"></script>
+</body>
+</html>

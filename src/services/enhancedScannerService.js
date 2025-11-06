@@ -4,6 +4,8 @@ const fontScannerService = require('./fontScannerService');
 const fontAnalyzer = require('./fontAnalyzer');
 // const performanceAnalyzer = require('./performanceAnalyzer'); // Disabled - requires page context
 const lighthouseAnalyzer = require('./lighthouseAnalyzer');
+const performanceAnalyzerService = require('./performanceAnalyzerService');
+const accessibilityAnalyzerService = require('./accessibilityAnalyzerService');
 const bestPracticesAnalyzer = require('./bestPracticesAnalyzer');
 const siteDiscovery = require('./siteDiscovery');
 const pdfReportGenerator = require('./pdfReportGenerator');
@@ -85,16 +87,24 @@ class EnhancedScannerService {
       const fontsData = result.basicScan?.fonts?.fonts || [];
       emitProgress(1, 10, 'Basic Font Scan', 'completed', 100);
 
-      // Step 2: Performance analysis (SKIPPED - requires Puppeteer page context)
+      // Step 2: Performance analysis
       if (options.includePerformance !== false) {
-        logger.info('⚡ Step 2: Performance analysis (using Lighthouse metrics instead)...');
+        logger.info('⚡ Step 2: Running comprehensive performance analysis...');
         emitProgress(2, 10, 'Performance Analysis', 'running', 10);
-        // Skip detailed performance analysis - Lighthouse will provide performance metrics
-        result.performance = { 
-          source: 'lighthouse',
-          note: 'Performance metrics provided by Lighthouse analysis'
-        };
-        emitProgress(2, 10, 'Performance Analysis', 'completed', 100);
+        try {
+          result.performance = await performanceAnalyzerService.analyzePerformance(url);
+          logger.info(`✅ Performance Score - Desktop: ${result.performance.desktop?.performanceScore || 0}, Mobile: ${result.performance.mobile?.performanceScore || 0}`);
+          emitProgress(2, 10, 'Performance Analysis', 'completed', 100);
+        } catch (error) {
+          logger.warn('Performance analysis failed:', error.message);
+          result.performance = { 
+            error: 'Performance analysis failed',
+            details: error.message,
+            desktop: { performanceScore: 0, error: error.message },
+            mobile: { performanceScore: 0, error: error.message }
+          };
+          emitProgress(2, 10, 'Performance Analysis', 'error', 0);
+        }
       }
 
       // Step 3: Best practices analysis
@@ -163,14 +173,20 @@ class EnhancedScannerService {
 
       // Step 7: Advanced Accessibility Analysis
       if (options.includeAdvancedAccessibility !== false) {
-        logger.info('♿ Step 7: Analyzing advanced accessibility...');
+        logger.info('♿ Step 7: Analyzing accessibility (comprehensive)...');
         emitProgress(7, 10, 'Accessibility Analysis', 'running', 10);
         try {
-          result.accessibility = await advancedAccessibilityAnalyzer.analyzeAccessibility(fontsData, result.basicScan);
+          result.accessibility = await accessibilityAnalyzerService.analyzeAccessibility(url);
+          logger.info(`✅ Accessibility Score - Desktop: ${result.accessibility.desktop?.accessibilityScore || 0}, Mobile: ${result.accessibility.mobile?.accessibilityScore || 0}`);
           emitProgress(7, 10, 'Accessibility Analysis', 'completed', 100);
         } catch (error) {
-          logger.warn('Advanced accessibility analysis failed:', error.message);
-          result.advancedAccessibility = { error: 'Advanced accessibility analysis failed', details: error.message };
+          logger.warn('Accessibility analysis failed:', error.message);
+          result.accessibility = { 
+            error: 'Accessibility analysis failed',
+            details: error.message,
+            desktop: { accessibilityScore: 0, error: error.message },
+            mobile: { accessibilityScore: 0, error: error.message }
+          };
           emitProgress(7, 10, 'Accessibility Analysis', 'error', 0);
         }
       }
@@ -240,11 +256,14 @@ class EnhancedScannerService {
 
       // Final: Analysis and Scoring
       emitProgress(11, 11, 'Finalizing Results', 'running', 50);
-      
+
+      // Restructure font data for dual viewport support
+      result.fonts = this.restructureFontData(result.basicScan);
+
       // Calculate overall score with new features
       result.overallScore = this.calculateBestInClassScore(result);
       result.grade = this.getGradeFromScore(result.overallScore);
-      
+
       // Generate combined recommendations
       result.recommendations = this.generateBestInClassRecommendations(result);
 
@@ -253,10 +272,10 @@ class EnhancedScannerService {
 
       logger.info(`🎉 BEST-IN-CLASS scan completed in ${result.scanDuration}ms`);
       logger.info(`📊 Final Score: ${result.overallScore}/100 (Grade: ${result.grade})`);
-      
+
       // Emit final completion progress
       emitProgress(11, 11, 'Scan Complete', 'completed', 100);
-      
+
       return result;
 
     } catch (error) {
@@ -302,6 +321,7 @@ class EnhancedScannerService {
 
   async performLighthouseAnalysis(baseUrl, options = {}) {
     logger.info('Starting Lighthouse analysis...');
+    const appConfig = require('../config');
 
     const lighthouse = {
       desktop: null,
@@ -311,18 +331,43 @@ class EnhancedScannerService {
     try {
       // Desktop analysis (always run)
       logger.info('Running desktop Lighthouse analysis...');
-      lighthouse.desktop = await lighthouseAnalyzer.analyzeWithLighthouse(baseUrl, {
-        formFactor: 'desktop',
-      });
+      try {
+        lighthouse.desktop = await lighthouseAnalyzer.analyzeWithLighthouse(baseUrl, {
+          formFactor: 'desktop',
+        });
+      } catch (desktopError) {
+        logger.error('Desktop Lighthouse failed:', desktopError.message);
+        if (!appConfig.lighthouse?.errorTolerance?.continueOnDesktopFailure) {
+          throw desktopError;
+        }
+        logger.warn('Continuing with mobile analysis despite desktop failure (error tolerance enabled)');
+      }
 
       // Mobile analysis (run by default, can be disabled)
       if (options.includeMobile !== false) {
         logger.info('Running mobile Lighthouse analysis...');
-        lighthouse.mobile = await lighthouseAnalyzer.analyzeWithLighthouse(baseUrl, {
-          formFactor: 'mobile',
-        });
+        try {
+          lighthouse.mobile = await lighthouseAnalyzer.analyzeWithLighthouse(baseUrl, {
+            formFactor: 'mobile',
+          });
+        } catch (mobileError) {
+          logger.error('Mobile Lighthouse failed:', mobileError.message);
+        }
       } else {
         logger.info('⚡ Mobile Lighthouse disabled via options');
+      }
+
+      // Apply mobile-as-fallback strategy if configured
+      if (appConfig.lighthouse?.errorTolerance?.useMobileAsFallback) {
+        if (lighthouse.desktop?.failed && lighthouse.mobile && !lighthouse.mobile.failed) {
+          logger.info('📱 Using mobile scores as fallback for failed desktop analysis');
+          lighthouse.desktop = {
+            ...lighthouse.mobile,
+            formFactor: 'desktop',
+            usedMobileFallback: true,
+            originalError: lighthouse.desktop.error
+          };
+        }
       }
 
       return lighthouse;
@@ -817,7 +862,7 @@ class EnhancedScannerService {
       includeFontPairing: false, // Don't include advanced features by default
       includeRealUserMetrics: false,
       includeCrossBrowserTesting: false,
-      includeAdvancedAccessibility: false,
+      includeAdvancedAccessibility: true, // ENABLE accessibility analysis by default
       includeFontLicensing: false,
       includeBenchmarking: false,
       includeLighthouse: true,
@@ -836,6 +881,35 @@ class EnhancedScannerService {
   /**
    * Generate fallback best practices analysis when page analysis fails
    */
+  /**
+   * Restructure font data to support dual viewport (desktop + mobile) display
+   * Maintains backwards compatibility with legacy single-viewport format
+   */
+  restructureFontData(basicScan) {
+    if (!basicScan) {
+      return null;
+    }
+
+    // Check if we have dual viewport data
+    if (basicScan.desktop && basicScan.mobile) {
+      logger.info('✓ Dual viewport font data detected');
+      return {
+        desktop: basicScan.desktop.fonts,
+        mobile: basicScan.mobile.fonts,
+        // Legacy compatibility - use desktop data as default
+        ...basicScan.fonts,
+        hasDualViewport: true
+      };
+    }
+
+    // Legacy single viewport format
+    logger.info('✓ Single viewport font data detected (legacy mode)');
+    return {
+      ...basicScan.fonts,
+      hasDualViewport: false
+    };
+  }
+
   generateFallbackBestPractices(fonts) {
     const fontCount = fonts?.fonts?.length || 0;
     const webFonts = fonts?.fonts?.filter(f => !f.isSystemFont) || [];

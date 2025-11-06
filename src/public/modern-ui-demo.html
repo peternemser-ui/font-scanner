@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern UI Components Demo - Font Scanner</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="ui-components.css">
+    <style>
+        .demo-section {
+            margin: 3rem 0;
+            padding: 2rem;
+            background: var(--bg-secondary);
+            border-radius: var(--radius-2xl);
+            border: 1px solid var(--border-primary);
+        }
+        
+        .demo-section h2 {
+            margin-top: 0;
+            color: var(--accent-primary);
+            border-bottom: 2px solid var(--border-primary);
+            padding-bottom: 1rem;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+            margin: 2rem 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="form-container">
+            <h1>[MODERN_UI_DEMO]</h1>
+            <p>> showcase of new interactive components</p>
+        </header>
+
+        <!-- Demo: Module Headers -->
+        <div class="demo-section">
+            <h2>1. Module-Specific Section Headers</h2>
+            <p>Each module has its own color theme and icon:</p>
+            
+            <div id="moduleHeadersDemo"></div>
+        </div>
+
+        <!-- Demo: Interactive Recommendations -->
+        <div class="demo-section">
+            <h2>2. Interactive Recommendation Cards</h2>
+            <p>Click-to-copy code, expandable file lists, and actionable insights:</p>
+            
+            <div id="recommendationsDemo"></div>
+        </div>
+
+        <!-- Demo: Threshold Bars -->
+        <div class="demo-section module-performance">
+            <h2>3. Core Web Vitals Threshold Bars</h2>
+            <p>Visual progress bars showing good/needs-work/poor zones:</p>
+            
+            <div id="thresholdBarsDemo"></div>
+        </div>
+
+        <!-- Demo: Status Chips -->
+        <div class="demo-section">
+            <h2>4. Status Chips</h2>
+            <p>Quick visual feedback with color-coded chips:</p>
+            
+            <div id="statusChipsDemo"></div>
+        </div>
+
+        <!-- Demo: Metric Cards -->
+        <div class="demo-section">
+            <h2>5. Metric Cards Grid</h2>
+            <p>Dashboard-style metric displays with trends:</p>
+            
+            <div class="demo-grid" id="metricCardsDemo"></div>
+        </div>
+
+        <!-- Demo: Before/After Comparison -->
+        <div class="demo-section">
+            <h2>6. Before/After Performance Comparisons</h2>
+            <p>Show optimization potential visually:</p>
+            
+            <div id="comparisonDemo"></div>
+        </div>
+
+        <!-- Demo: Code Snippets -->
+        <div class="demo-section">
+            <h2>7. Copy-able Code Snippets</h2>
+            <p>Users can click to copy code directly:</p>
+            
+            <div id="codeSnippetsDemo"></div>
+        </div>
+
+        <!-- Demo: File Lists -->
+        <div class="demo-section">
+            <h2>8. Expandable File Lists</h2>
+            <p>Click header to expand/collapse:</p>
+            
+            <div id="fileListsDemo"></div>
+        </div>
+    </div>
+
+    <script src="ui-components.js"></script>
+    <script src="interactive-recommendations.js"></script>
+    <script>
+        // Demo 1: Module Headers
+        function demoModuleHeaders() {
+            const container = document.getElementById('moduleHeadersDemo');
+            
+            const modules = [
+                { name: 'performance', icon: '⚡', title: 'Performance Analysis', desc: 'Loading speed and optimization' },
+                { name: 'seo', icon: '🔍', title: 'SEO Optimization', desc: 'Search engine visibility' },
+                { name: 'accessibility', icon: '♿', title: 'Accessibility Audit', desc: 'WCAG compliance' },
+                { name: 'fonts', icon: '🔤', title: 'Font Analysis', desc: 'Typography and rendering' },
+                { name: 'competitive', icon: '🏆', title: 'Competitive Analysis', desc: 'Benchmark against competitors' }
+            ];
+
+            modules.forEach(m => {
+                const header = document.createElement('div');
+                header.className = `module-section-header module-${m.name}`;
+                header.setAttribute('data-module', m.name);
+                header.style.marginBottom = '1rem';
+                
+                header.innerHTML = `
+                    <div class="module-icon">${m.icon}</div>
+                    <div class="module-title">
+                        <h2>${m.title}</h2>
+                        <p>${m.desc}</p>
+                    </div>
+                    <div class="module-actions">
+                        <button class="module-action-btn" onclick="alert('Export clicked!')">📄 Export</button>
+                    </div>
+                `;
+                
+                container.appendChild(header);
+            });
+        }
+
+        // Demo 2: Interactive Recommendations
+        function demoRecommendations() {
+            const container = document.getElementById('recommendationsDemo');
+            
+            const recommendations = [
+                {
+                    title: 'Preload Critical Fonts',
+                    description: 'Add preload hints for faster font rendering and reduced layout shift.',
+                    priority: 'high',
+                    category: 'performance',
+                    code: `<link rel="preload" href="/fonts/main.woff2" as="font" type="font/woff2" crossorigin>`
+                },
+                {
+                    title: 'Optimize Image Formats',
+                    description: 'Convert images to WebP or AVIF for better compression.',
+                    priority: 'medium',
+                    category: 'performance',
+                    code: `<picture>\n  <source srcset="image.avif" type="image/avif">\n  <source srcset="image.webp" type="image/webp">\n  <img src="image.jpg" alt="Description">\n</picture>`
+                },
+                {
+                    title: 'Add Missing Alt Text',
+                    description: 'Improve accessibility by adding descriptive alt text to images.',
+                    priority: 'low',
+                    category: 'accessibility',
+                    code: `<img src="logo.png" alt="Company Name - Tagline">`
+                }
+            ];
+
+            recommendations.forEach(rec => {
+                const card = interactiveRecs.createRecommendation({
+                    title: rec.title,
+                    description: rec.description,
+                    priority: rec.priority,
+                    category: rec.category,
+                    action: {
+                        code: rec.code,
+                        learnMore: 'https://web.dev/learn/'
+                    }
+                });
+                container.appendChild(card);
+            });
+        }
+
+        // Demo 3: Threshold Bars
+        function demoThresholdBars() {
+            const container = document.getElementById('thresholdBarsDemo');
+            
+            const vitals = [
+                { label: 'Largest Contentful Paint (LCP)', value: 2300, thresholds: { good: 2500, needsWork: 4000, poor: 6000 }, unit: 'ms' },
+                { label: 'First Input Delay (FID)', value: 150, thresholds: { good: 100, needsWork: 300, poor: 500 }, unit: 'ms' },
+                { label: 'Cumulative Layout Shift (CLS)', value: 0.08, thresholds: { good: 0.1, needsWork: 0.25, poor: 0.5 }, unit: '' }
+            ];
+
+            vitals.forEach(v => {
+                const bar = UIComponents.createThresholdBar({
+                    label: v.label,
+                    value: v.value,
+                    thresholds: v.thresholds,
+                    unit: v.unit,
+                    format: v.unit === 'ms' ? 'time' : 'number'
+                });
+                container.appendChild(bar);
+            });
+        }
+
+        // Demo 4: Status Chips
+        function demoStatusChips() {
+            const container = document.getElementById('statusChipsDemo');
+            container.style.cssText = 'display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 1rem;';
+            
+            const chips = [
+                { status: 'good', text: 'Optimized' },
+                { status: 'needs-work', text: 'Needs Improvement' },
+                { status: 'critical', text: 'Fix Urgently' },
+                { status: 'info', text: 'Information' }
+            ];
+
+            chips.forEach(c => {
+                const chip = UIComponents.createStatusChip(c.status, c.text);
+                container.appendChild(chip);
+            });
+        }
+
+        // Demo 5: Metric Cards
+        function demoMetricCards() {
+            const container = document.getElementById('metricCardsDemo');
+            
+            const metrics = [
+                { icon: '⚡', label: 'Load Time', value: '1.8s', subtitle: '43% faster', trend: 'up' },
+                { icon: '📊', label: 'Performance Score', value: '94', subtitle: 'Excellent', trend: 'up' },
+                { icon: '📦', label: 'Bundle Size', value: '245 KB', subtitle: 'Optimized', trend: 'down' },
+                { icon: '🎯', label: 'Accessibility', value: '98', subtitle: 'WCAG AAA', trend: 'neutral' }
+            ];
+
+            metrics.forEach(m => {
+                const card = UIComponents.createMetricCard(m);
+                container.appendChild(card);
+            });
+        }
+
+        // Demo 6: Before/After Comparison
+        function demoComparison() {
+            const container = document.getElementById('comparisonDemo');
+            
+            const comparison = interactiveRecs.createBeforeAfter({
+                before: 3200,
+                after: 1800,
+                metric: 'Load Time (ms)',
+                improvement: 'By compressing images and enabling CDN'
+            });
+            
+            container.appendChild(comparison);
+        }
+
+        // Demo 7: Code Snippets
+        function demoCodeSnippets() {
+            const container = document.getElementById('codeSnippetsDemo');
+            
+            const snippets = [
+                { code: `/* Preload critical fonts */\n<link rel="preload" href="/fonts/main.woff2" as="font" type="font/woff2" crossorigin>`, lang: 'html' },
+                { code: `/* Optimize font loading */\n@font-face {\n  font-family: 'Custom';\n  font-display: swap;\n  src: url('/fonts/custom.woff2') format('woff2');\n}`, lang: 'css' }
+            ];
+
+            snippets.forEach(s => {
+                const snippet = interactiveRecs.createCodeSnippet(s.code, s.lang);
+                container.appendChild(snippet);
+            });
+        }
+
+        // Demo 8: File Lists
+        function demoFileLists() {
+            const container = document.getElementById('fileListsDemo');
+            
+            const files = [
+                { name: 'hero-image.jpg', size: 450000, path: '/images/hero-image.jpg', recommendation: 'Compress by 70%' },
+                { name: 'background.png', size: 320000, path: '/images/background.png', recommendation: 'Convert to WebP' },
+                { name: 'logo.svg', size: 15000, path: '/images/logo.svg', recommendation: 'Already optimized' }
+            ];
+
+            const fileList = interactiveRecs.createFileList(files, 'Images to Optimize (3)');
+            container.appendChild(fileList);
+        }
+
+        // Run all demos
+        document.addEventListener('DOMContentLoaded', () => {
+            demoModuleHeaders();
+            demoRecommendations();
+            demoThresholdBars();
+            demoStatusChips();
+            demoMetricCards();
+            demoComparison();
+            demoCodeSnippets();
+            demoFileLists();
+        });
+    </script>
+</body>
+</html>

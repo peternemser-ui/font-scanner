@@ -30,11 +30,10 @@ exports.analyzeSecurity = asyncHandler(async (req, res) => {
     return res.status(400).json({ error: 'Invalid URL format' });
   }
 
-  // Test reachability
+  // Test reachability (non-blocking - just log a warning)
   const isReachable = await testUrlReachability(normalizedUrl);
   if (!isReachable) {
-    logger.warn('URL not reachable for security analysis', { url: normalizedUrl, requestId: req.id });
-    return res.status(400).json({ error: 'URL is not reachable. Please check the URL and try again.' });
+    logger.warn('URL reachability test failed, but proceeding with security analysis anyway', { url: normalizedUrl, requestId: req.id });
   }
 
   logger.info('Starting security analysis', { url: normalizedUrl, requestId: req.id });

@@ -12,32 +12,13 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
-    <link rel="stylesheet" href="pdf-payment-modal.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
   </head>
   <body>
-    <!-- Theme Toggle Button -->
-    <button 
-      id="themeToggle" 
-      class="theme-toggle" 
-      aria-label="Toggle dark/light theme"
-      aria-pressed="false"
-    >
-      🌙 Theme
-    </button>
-    
-    <!-- Navigation Bar (rendered by nav-template.js) -->
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
     
     <div class="container">
-      <!-- Font Size Controls -->
-      <div class="font-size-controls" role="toolbar" aria-label="Font size controls">
-        <button class="font-size-btn" data-size="sm" aria-label="Small font size">SM</button>
-        <button class="font-size-btn active" data-size="md" aria-label="Medium font size" aria-pressed="true">MD</button>
-        <button class="font-size-btn" data-size="lg" aria-label="Large font size">LG</button>
-        <button class="font-size-btn" data-size="xl" aria-label="Extra large font size">XL</button>
-      </div>
-
       <!-- Header -->
       <header class="form-container">
         <h1>[CORE_WEB_VITALS_ANALYZER]</h1>
@@ -62,7 +43,7 @@
             aria-required="true"
           />
           
-          <button id="cwvAnalyzeButton" aria-label="Start Core Web Vitals analysis">ANALYZE CWV</button>
+          <button id="cwvAnalyzeButton" aria-label="Start Core Web Vitals analysis">ANALYZE</button>
         </div>
       </header>
 
@@ -77,9 +58,6 @@
     
     <!-- Shared Navigation Template -->
     <script src="/nav-template.js"></script>
-    
-    <!-- PDF Payment Modal -->
-    <script src="/pdf-payment-modal.js"></script>
     
     <!-- Analyzer Loader -->
     <script src="/analyzer-loader.js"></script>

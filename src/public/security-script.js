@@ -15,6 +15,18 @@ document.addEventListener('DOMContentLoaded', () => {
       analyzeSecurity();
     }
   });
+  
+  // Auto-start scan if URL parameter is present
+  if (typeof window.getUrlParameter === 'function') {
+    const autoUrl = window.getUrlParameter();
+    if (autoUrl) {
+      console.log('→ Auto-starting Security analysis for:', autoUrl);
+      urlInput.value = autoUrl;
+      setTimeout(() => {
+        analyzeSecurity();
+      }, 500);
+    }
+  }
 });
 
 // Main analysis function
@@ -42,7 +54,7 @@ async function analyzeSecurity() {
   }
 
   // Initialize the analyzer loader
-  const loader = new AnalyzerLoader('loadingContainer');
+  const loader = new window.AnalyzerLoaderClass('loadingContainer');
   
   const analysisSteps = [
     {
@@ -110,7 +122,7 @@ function displaySecurityResults(data) {
   // Overall Security Summary with Circular Dials
   const summaryHtml = `
     <div class="summary-section" style="border-left: 4px solid #ff4444; margin-bottom: 2rem;">
-      <h2>🔒 Security Audit Summary</h2>
+      <h2>◈ Security Audit Summary</h2>
       
       <!-- Circular Progress Dials -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0;">
@@ -292,19 +304,19 @@ function displaySecurityResults(data) {
           </thead>
           <tbody>
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-              <td style="padding: 0.75rem; font-weight: 500;">🔒 SSL/TLS Certificate</td>
+              <td style="padding: 0.75rem; font-weight: 500;">◈ SSL/TLS Certificate</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.ssl.score)}; font-weight: bold;">${data.ssl.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.ssl.score)}; font-weight: bold;">${getGrade(data.ssl.score)}</td>
               <td style="padding: 0.75rem; color: ${data.ssl.valid ? '#00ff41' : '#ff4444'};">${data.ssl.valid ? '✓ Valid Certificate' : '✗ Invalid Certificate'}</td>
             </tr>
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-              <td style="padding: 0.75rem; font-weight: 500;">🛡️ Security Headers</td>
+              <td style="padding: 0.75rem; font-weight: 500;">◈ Security Headers</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.headers.score)}; font-weight: bold;">${data.headers.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.headers.score)}; font-weight: bold;">${getGrade(data.headers.score)}</td>
               <td style="padding: 0.75rem; color: #00ccff;">${data.headers.implemented} of ${data.headers.total} headers implemented</td>
             </tr>
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-              <td style="padding: 0.75rem; font-weight: 500;">⚠️ Vulnerabilities</td>
+              <td style="padding: 0.75rem; font-weight: 500;">~ Vulnerabilities</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${data.vulnerabilities.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${getGrade(data.vulnerabilities.score)}</td>
               <td style="padding: 0.75rem; color: ${data.vulnerabilities.critical === 0 ? '#00ff41' : '#ff4444'};">
@@ -318,7 +330,7 @@ function displaySecurityResults(data) {
               <td style="padding: 0.75rem; color: #00ccff;">${data.cookies.secure} of ${data.cookies.total} cookies properly secured</td>
             </tr>
             <tr>
-              <td style="padding: 0.75rem; font-weight: 500;">📦 Third-Party Scripts</td>
+              <td style="padding: 0.75rem; font-weight: 500;">R Third-Party Scripts</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.thirdPartyScripts.score)}; font-weight: bold;">${data.thirdPartyScripts.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.thirdPartyScripts.score)}; font-weight: bold;">${getGrade(data.thirdPartyScripts.score)}</td>
               <td style="padding: 0.75rem; color: #00ccff;">${data.thirdPartyScripts.withSRI} of ${data.thirdPartyScripts.total} scripts with SRI</td>
@@ -330,7 +342,7 @@ function displaySecurityResults(data) {
       <!-- OWASP Compliance Banner -->
       <div style="margin-top: 2rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(255, 165, 0, 0.15)); border: 2px solid ${data.owaspCompliance >= 70 ? '#00ff41' : '#ff4444'}; border-radius: 8px;">
         <div style="display: flex; align-items: center; gap: 1rem;">
-          <div style="font-size: 3rem;">${data.owaspCompliance >= 70 ? '✅' : '⚠️'}</div>
+          <div style="font-size: 3rem;">${data.owaspCompliance >= 70 ? '✓' : '~'}</div>
           <div style="flex: 1;">
             <div style="font-weight: 600; font-size: 1.1rem; color: #ffffff; margin-bottom: 0.5rem;">
               OWASP Top 10 Compliance
@@ -355,40 +367,7 @@ function displaySecurityResults(data) {
   // Store results globally for PDF generation
   window.currentSecurityResults = data;
 
-  // Add PDF Download Button
-  const pdfButtonHtml = `
-    <div style="margin: 2rem 0; padding: 1.5rem; background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(109, 40, 217, 0.1) 100%); border-radius: 12px; border: 1px solid rgba(139, 92, 246, 0.3); text-align: center;">
-      <h3 style="margin: 0 0 1rem 0; color: #bb86fc; font-size: 1.25rem;">
-        📥 Get Detailed Security Report
-      </h3>
-      <p style="margin: 0 0 1.5rem 0; color: #b0b0b0; font-size: 0.95rem;">
-        Get a comprehensive PDF report with SSL/TLS details, security headers audit, vulnerability analysis, and OWASP compliance recommendations.
-      </p>
-      <button 
-        onclick="openPdfPurchaseModal('security')"
-        style="
-          background: linear-gradient(135deg, #bb86fc 0%, #9d5fdb 100%);
-          color: #000000;
-          border: none;
-          padding: 0.875rem 2rem;
-          border-radius: 8px;
-          font-size: 1rem;
-          font-weight: 600;
-          cursor: pointer;
-          box-shadow: 0 4px 15px rgba(187, 134, 252, 0.4);
-          transition: all 0.3s ease;
-        "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(187, 134, 252, 0.6)';"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(187, 134, 252, 0.4)';"
-      >
-        📥 Download PDF Report ($5)
-      </button>
-    </div>
-  `;
-  
-  const pdfButtonDiv = document.createElement('div');
-  pdfButtonDiv.innerHTML = pdfButtonHtml;
-  resultsContent.appendChild(pdfButtonDiv);
+  // PDF Download Button removed - monetization disabled
 
   // Desktop vs Mobile Comparison (for Lighthouse security metrics)
   if (data.desktop && data.mobile) {
@@ -463,11 +442,11 @@ function displaySecurityResults(data) {
 function createDesktopMobileComparison(container, desktop, mobile) {
   const comparisonHtml = `
     <div class="platform-comparison" style="margin: 2rem 0;">
-      <h3 style="margin-bottom: 1.5rem;">🖥️📱 Desktop vs Mobile Security Analysis</h3>
+      <h3 style="margin-bottom: 1.5rem;">DM Desktop vs Mobile Security Analysis</h3>
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-bottom: 1rem;">
         <div style="background: rgba(0, 204, 255, 0.05); border: 2px solid rgba(0, 204, 255, 0.3); border-radius: 8px; padding: 1.5rem;">
           <div style="background: rgba(0, 204, 255, 0.2); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; text-align: center;">
-            <span style="font-size: 1.5rem; margin-right: 0.5rem;">🖥️</span>
+            <span style="font-size: 1.5rem; margin-right: 0.5rem;">D</span>
             <span style="font-weight: bold; color: #00ccff;">Desktop</span>
           </div>
           <div class="circular-progress-container" style="margin: 1.5rem 0;">
@@ -528,7 +507,7 @@ function createDesktopMobileComparison(container, desktop, mobile) {
         
         <div style="background: rgba(255, 102, 0, 0.05); border: 2px solid rgba(255, 102, 0, 0.3); border-radius: 8px; padding: 1.5rem;">
           <div style="background: rgba(255, 102, 0, 0.2); padding: 0.75rem; border-radius: 6px; margin-bottom: 1rem; text-align: center;">
-            <span style="font-size: 1.5rem; margin-right: 0.5rem;">📱</span>
+            <span style="font-size: 1.5rem; margin-right: 0.5rem;">M</span>
             <span style="font-weight: bold; color: #ff6600;">Mobile</span>
           </div>
           <div class="circular-progress-container" style="margin: 1.5rem 0;">
@@ -590,7 +569,7 @@ function createDesktopMobileComparison(container, desktop, mobile) {
       
       ${Math.abs(desktop.securityScore - mobile.securityScore) > 10 ? `
         <div class="warning-message" style="background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); margin-top: 1rem; padding: 1rem; border-radius: 4px;">
-          <strong style="color: #ffa500;">⚠️ Platform Security Gap:</strong> 
+          <strong style="color: #ffa500;">~ Platform Security Gap:</strong> 
           ${Math.abs(desktop.securityScore - mobile.securityScore)} point difference detected. Investigate platform-specific issues.
         </div>
       ` : ''}
@@ -690,7 +669,7 @@ function renderSSLContent(ssl) {
 
       ${ssl.issues && ssl.issues.length > 0 ? `
         <div class="issues-list" style="margin-top: 1rem;">
-          <h5 style="color: #ff4444;">⚠️ Certificate Issues:</h5>
+          <h5 style="color: #ff4444;">~ Certificate Issues:</h5>
           <ul>
             ${ssl.issues.map(issue => `<li style="color: #ff4444;">${issue}</li>`).join('')}
           </ul>
@@ -733,7 +712,7 @@ function renderHeadersContent(headers) {
                 </td>
                 <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.9rem;">
                   <div>${info.description}</div>
-                  ${!info.present ? `<div style="color: #ff4444; margin-top: 0.5rem; font-weight: 500;">⚠️ Risk: ${info.risk}</div>` : ''}
+                  ${!info.present ? `<div style="color: #ff4444; margin-top: 0.5rem; font-weight: 500;">~ Risk: ${info.risk}</div>` : ''}
                 </td>
               </tr>
             `).join('')}
@@ -750,24 +729,48 @@ function renderVulnerabilitiesContent(vulnerabilities) {
     <div class="security-section">
       <h4>Detected Vulnerabilities & Threats</h4>
       
-      <div class="vulnerability-summary">
-        <div class="vuln-stat critical">
-          <span class="vuln-count">${vulnerabilities.critical}</span>
-          <span class="vuln-label">Critical</span>
-        </div>
-        <div class="vuln-stat high">
-          <span class="vuln-count">${vulnerabilities.high}</span>
-          <span class="vuln-label">High</span>
-        </div>
-        <div class="vuln-stat medium">
-          <span class="vuln-count">${vulnerabilities.medium}</span>
-          <span class="vuln-label">Medium</span>
-        </div>
-        <div class="vuln-stat low">
-          <span class="vuln-count">${vulnerabilities.low}</span>
-          <span class="vuln-label">Low</span>
-        </div>
-      </div>
+      <table style="width: 100%; border-collapse: collapse; margin: 1rem 0;">
+        <thead>
+          <tr style="background: rgba(255, 255, 255, 0.05); border-bottom: 2px solid rgba(255, 255, 255, 0.1);">
+            <th style="text-align: left; padding: 0.75rem; color: #bb86fc; font-weight: 600;">Severity Level</th>
+            <th style="text-align: center; padding: 0.75rem; color: #bb86fc; font-weight: 600;">Count</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: #c0c0c0;">
+              <span style="color: #ff4444; font-weight: 600;">● Critical</span>
+            </td>
+            <td style="text-align: center; padding: 0.75rem;">
+              <span style="color: ${vulnerabilities.critical > 0 ? '#ff4444' : '#00ff41'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.critical}</span>
+            </td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: #c0c0c0;">
+              <span style="color: #ff6b6b; font-weight: 600;">● High</span>
+            </td>
+            <td style="text-align: center; padding: 0.75rem;">
+              <span style="color: ${vulnerabilities.high > 0 ? '#ff6b6b' : '#00ff41'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.high}</span>
+            </td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: #c0c0c0;">
+              <span style="color: #ffa500; font-weight: 600;">● Medium</span>
+            </td>
+            <td style="text-align: center; padding: 0.75rem;">
+              <span style="color: ${vulnerabilities.medium > 0 ? '#ffa500' : '#00ff41'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.medium}</span>
+            </td>
+          </tr>
+          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: #c0c0c0;">
+              <span style="color: #00ccff; font-weight: 600;">● Low</span>
+            </td>
+            <td style="text-align: center; padding: 0.75rem;">
+              <span style="color: ${vulnerabilities.low > 0 ? '#00ccff' : '#00ff41'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.low}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
 
       ${vulnerabilities.issues && vulnerabilities.issues.length > 0 ? `
         <div class="vulnerabilities-list">
@@ -787,7 +790,7 @@ function renderVulnerabilitiesContent(vulnerabilities) {
 
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); border-radius: 4px;">
         <p style="color: #ffa500; margin: 0; font-size: 0.9rem;">
-          <strong>🛡️ OWASP Reference:</strong> This analysis covers OWASP Top 10 categories including Injection, 
+          <strong>◈ OWASP Reference:</strong> This analysis covers OWASP Top 10 categories including Injection, 
           Broken Authentication, Sensitive Data Exposure, XML External Entities (XXE), and Security Misconfiguration.
         </p>
       </div>
@@ -804,30 +807,36 @@ function renderCookiesContent(cookies) {
 
       ${cookies.list && cookies.list.length > 0 ? `
         <div class="cookies-table">
-          <table style="width: 100%; border-collapse: collapse;">
+          <table style="width: 100%; border-collapse: collapse; border: 1px solid rgba(255, 165, 0, 0.3);">
             <thead>
-              <tr>
-                <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #333;">Name</th>
-                <th style="text-align: center; padding: 0.5rem; border-bottom: 1px solid #333;">HttpOnly</th>
-                <th style="text-align: center; padding: 0.5rem; border-bottom: 1px solid #333;">Secure</th>
-                <th style="text-align: center; padding: 0.5rem; border-bottom: 1px solid #333;">SameSite</th>
-                <th style="text-align: left; padding: 0.5rem; border-bottom: 1px solid #333;">Issues</th>
+              <tr style="background: rgba(187, 134, 252, 0.1); border-bottom: 2px solid rgba(187, 134, 252, 0.3);">
+                <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: #bb86fc;">Name</th>
+                <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: #bb86fc; white-space: nowrap;">HttpOnly</th>
+                <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: #bb86fc; white-space: nowrap;">Secure</th>
+                <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: #bb86fc; white-space: nowrap;">SameSite</th>
+                <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: #bb86fc;">Issues</th>
               </tr>
             </thead>
             <tbody>
               ${cookies.list.map(cookie => `
-                <tr>
-                  <td style="padding: 0.5rem; border-bottom: 1px solid #222;">${cookie.name}</td>
-                  <td style="text-align: center; padding: 0.5rem; border-bottom: 1px solid #222;">
-                    <span class="${cookie.httpOnly ? 'success' : 'error'}">${cookie.httpOnly ? '✓' : '✗'}</span>
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${(!cookie.httpOnly || !cookie.secure) ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
+                  <td style="padding: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #00ccff;">${cookie.name}</td>
+                  <td style="text-align: center; padding: 0.75rem;">
+                    <span style="color: ${cookie.httpOnly ? '#00ff41' : '#ff4444'}; font-weight: bold; font-size: 1.1rem;">
+                      ${cookie.httpOnly ? '✓' : '✗'}
+                    </span>
                   </td>
-                  <td style="text-align: center; padding: 0.5rem; border-bottom: 1px solid #222;">
-                    <span class="${cookie.secure ? 'success' : 'error'}">${cookie.secure ? '✓' : '✗'}</span>
+                  <td style="text-align: center; padding: 0.75rem;">
+                    <span style="color: ${cookie.secure ? '#00ff41' : '#ff4444'}; font-weight: bold; font-size: 1.1rem;">
+                      ${cookie.secure ? '✓' : '✗'}
+                    </span>
                   </td>
-                  <td style="text-align: center; padding: 0.5rem; border-bottom: 1px solid #222;">
-                    <span class="${cookie.sameSite !== 'None' ? 'success' : 'warning'}">${cookie.sameSite || 'Not set'}</span>
+                  <td style="text-align: center; padding: 0.75rem;">
+                    <span style="color: ${cookie.sameSite && cookie.sameSite !== 'Not set' && cookie.sameSite !== 'None' ? '#00ff41' : (cookie.sameSite === 'Lax' ? '#ffa500' : '#ff4444')}; font-weight: bold; font-size: 0.9rem;">
+                      ${cookie.sameSite || 'Not set'}
+                    </span>
                   </td>
-                  <td style="padding: 0.5rem; border-bottom: 1px solid #222; color: #ff4444;">
+                  <td style="padding: 0.75rem; color: ${cookie.issues && cookie.issues.length > 0 ? '#ff4444' : '#666'}; font-size: 0.85rem;">
                     ${cookie.issues && cookie.issues.length > 0 ? cookie.issues.join(', ') : 'None'}
                   </td>
                 </tr>
@@ -835,11 +844,11 @@ function renderCookiesContent(cookies) {
             </tbody>
           </table>
         </div>
-      ` : '<p>No cookies detected</p>'}
+      ` : '<p style="padding: 1rem; background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 4px; color: #00ff41;">✓ No cookies detected</p>'}
 
       ${cookies.issues && cookies.issues.length > 0 ? `
         <div class="cookie-issues" style="margin-top: 1rem;">
-          <h5 style="color: #ff4444;">⚠️ Cookie Security Issues:</h5>
+          <h5 style="color: #ff4444;">~ Cookie Security Issues:</h5>
           <ul>
             ${cookies.issues.map(issue => `<li style="color: #ff4444;">${issue}</li>`).join('')}
           </ul>
@@ -909,7 +918,7 @@ function renderThirdPartyContent(thirdParty) {
 
       <div style="margin-top: 1.5rem; padding: 1.25rem; background: rgba(255, 165, 0, 0.1); border: 2px solid rgba(255, 165, 0, 0.3); border-radius: 8px;">
         <h5 style="margin: 0 0 0.75rem 0; color: #ffa500; font-size: 1rem;">
-          🔗 Subresource Integrity (SRI) Best Practices
+          K Subresource Integrity (SRI) Best Practices
         </h5>
         <ul style="margin: 0; padding-left: 1.5rem; color: #ffa500; font-size: 0.9rem; line-height: 1.6;">
           <li>Use SRI hashes to ensure third-party scripts haven't been tampered with</li>
@@ -924,90 +933,80 @@ function renderThirdPartyContent(thirdParty) {
 
 // Render Recommendations content
 function renderRecommendationsContent(recommendations) {
-  // Group by priority
-  const critical = recommendations.filter(r => r.priority === 'critical');
-  const high = recommendations.filter(r => r.priority === 'high');
-  const medium = recommendations.filter(r => r.priority === 'medium');
-  const low = recommendations.filter(r => r.priority === 'low');
+  if (!recommendations || recommendations.length === 0) {
+    return `
+      <div class="security-section">
+        <h4>Security Recommendations</h4>
+        <p style="padding: 1rem; background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 4px; color: #00ff41;">
+          ✓ No major security issues detected - Excellent!
+        </p>
+      </div>
+    `;
+  }
 
   return `
     <div class="security-section">
       <h4>Security Recommendations</h4>
-      <p style="margin-bottom: 1.5rem;">
+      <p style="margin-bottom: 1rem; color: #999; font-size: 0.9rem;">
         Prioritized security improvements based on OWASP guidelines and industry best practices.
       </p>
 
-      ${critical.length > 0 ? `
-        <div class="recommendations-group critical">
-          <h5 style="color: #ff4444;">🔴 Critical Priority</h5>
-          ${critical.map(rec => `
-            <div class="recommendation-item critical">
-              <div class="rec-header">
-                <span class="rec-title">${rec.title}</span>
-                ${rec.owaspRef ? `<span class="rec-owasp">OWASP: ${rec.owaspRef}</span>` : ''}
-              </div>
-              <div class="rec-description">${rec.description}</div>
-              <div class="rec-impact"><strong>Impact:</strong> ${rec.impact}</div>
-              ${rec.solution ? `<div class="rec-solution"><strong>Solution:</strong> ${rec.solution}</div>` : ''}
-              ${rec.resources ? `
-                <div class="rec-resources">
-                  <strong>Resources:</strong>
-                  <ul>
-                    ${rec.resources.map(resource => `<li><a href="${resource.url}" target="_blank" rel="noopener">${resource.title}</a></li>`).join('')}
-                  </ul>
-                </div>
-              ` : ''}
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
+      <div style="overflow-x: auto;">
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid rgba(187, 134, 252, 0.3);">
+          <thead>
+            <tr style="background: rgba(187, 134, 252, 0.1); border-bottom: 2px solid rgba(187, 134, 252, 0.3);">
+              <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #bb86fc; width: 8%;">Priority</th>
+              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #bb86fc; width: 22%;">Issue</th>
+              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #bb86fc; width: 25%;">Description</th>
+              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #bb86fc; width: 20%;">Impact</th>
+              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #bb86fc; width: 25%;">Solution</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${recommendations.map((rec) => {
+              const priorityColor = 
+                rec.priority === 'critical' ? '#ff4444' :
+                rec.priority === 'high' ? '#ffa500' :
+                rec.priority === 'medium' ? '#ffff00' : '#00ccff';
+              
+              const priorityLabel = 
+                rec.priority === 'critical' ? 'H' :
+                rec.priority === 'high' ? '●' :
+                rec.priority === 'medium' ? 'M' : 'L';
 
-      ${high.length > 0 ? `
-        <div class="recommendations-group high">
-          <h5 style="color: #ffa500;">🟠 High Priority</h5>
-          ${high.map(rec => `
-            <div class="recommendation-item high">
-              <div class="rec-header">
-                <span class="rec-title">${rec.title}</span>
-                ${rec.owaspRef ? `<span class="rec-owasp">OWASP: ${rec.owaspRef}</span>` : ''}
-              </div>
-              <div class="rec-description">${rec.description}</div>
-              <div class="rec-impact"><strong>Impact:</strong> ${rec.impact}</div>
-              ${rec.solution ? `<div class="rec-solution"><strong>Solution:</strong> ${rec.solution}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
-
-      ${medium.length > 0 ? `
-        <div class="recommendations-group medium">
-          <h5 style="color: #ffff00;">🟡 Medium Priority</h5>
-          ${medium.map(rec => `
-            <div class="recommendation-item medium">
-              <div class="rec-header">
-                <span class="rec-title">${rec.title}</span>
-                ${rec.owaspRef ? `<span class="rec-owasp">OWASP: ${rec.owaspRef}</span>` : ''}
-              </div>
-              <div class="rec-description">${rec.description}</div>
-              ${rec.solution ? `<div class="rec-solution"><strong>Solution:</strong> ${rec.solution}</div>` : ''}
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
-
-      ${low.length > 0 ? `
-        <div class="recommendations-group low">
-          <h5 style="color: #00ccff;">🔵 Low Priority</h5>
-          ${low.map(rec => `
-            <div class="recommendation-item low">
-              <div class="rec-header">
-                <span class="rec-title">${rec.title}</span>
-              </div>
-              <div class="rec-description">${rec.description}</div>
-            </div>
-          `).join('')}
-        </div>
-      ` : ''}
+              return `
+                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${rec.priority === 'critical' ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
+                  <td style="padding: 0.75rem; text-align: center;">
+                    <span style="color: ${priorityColor}; font-weight: bold; font-size: 1.1rem; text-transform: uppercase;">
+                      ${priorityLabel}
+                    </span>
+                  </td>
+                  <td style="padding: 0.75rem; font-weight: 600; color: #00ccff; font-size: 0.9rem; line-height: 1.4;">
+                    ${rec.title}
+                    ${rec.owaspRef ? `<br><span style="font-size: 0.75rem; color: #ffa500; font-weight: normal;">OWASP: ${rec.owaspRef}</span>` : ''}
+                  </td>
+                  <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #ccc;">
+                    ${rec.description}
+                  </td>
+                  <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #ff6b6b;">
+                    ${rec.impact || '-'}
+                  </td>
+                  <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #00ff41;">
+                    ${rec.solution || '-'}
+                    ${rec.resources && rec.resources.length > 0 ? `
+                      <div style="margin-top: 0.5rem;">
+                        ${rec.resources.map(resource => 
+                          `<a href="${resource.url}" target="_blank" rel="noopener" style="color: #00ccff; text-decoration: none; font-size: 0.75rem; display: block;">→ ${resource.title}</a>`
+                        ).join('')}
+                      </div>
+                    ` : ''}
+                  </td>
+                </tr>
+              `;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
     </div>
   `;
 }
@@ -1015,43 +1014,7 @@ function renderRecommendationsContent(recommendations) {
 /**
  * Open PDF purchase modal
  */
-function openPdfPurchaseModal(reportType) {
-  if (!window.pdfPaymentModal) {
-    console.error('PDF payment modal not initialized');
-    return;
-  }
-
-  let reportData;
-  switch (reportType) {
-    case 'seo':
-      reportData = window.currentSeoResults;
-      break;
-    case 'performance':
-      reportData = window.currentPerformanceResults;
-      break;
-    case 'accessibility':
-      reportData = window.currentAccessibilityResults;
-      break;
-    case 'security':
-      reportData = window.currentSecurityResults;
-      break;
-    case 'fonts':
-      reportData = window.currentFontResults;
-      break;
-    default:
-      console.error('Unknown report type:', reportType);
-      return;
-  }
-
-  if (!reportData) {
-    console.error('No report data available for', reportType);
-    return;
-  }
-
-  window.pdfPaymentModal.open(reportType, reportData, () => {
-    console.log('PDF download successful!');
-  });
-}
+// PDF purchase modal removed - monetization disabled
 
 // Helper: Get letter grade from score
 function getGrade(score) {

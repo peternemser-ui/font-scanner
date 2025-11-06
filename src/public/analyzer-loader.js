@@ -33,6 +33,7 @@ class AnalyzerLoader {
       <div class="analyzer-loading active">
         <div class="loading-header">
           <h2 class="loading-title">${title}</h2>
+          <span id="progressPercentage" style="font-size: 1rem; font-weight: 700; color: #00ff41; min-width: 45px; text-align: right;">0%</span>
         </div>
 
         <div class="loading-progress-bar">
@@ -52,7 +53,7 @@ class AnalyzerLoader {
         </div>
 
         <div class="estimated-time">
-          <p class="time-label">Estimated time remaining</p>
+          <p class="time-label">Time remaining:</p>
           <p class="time-value" id="timeRemaining">${this.formatTime(estimatedSeconds)}</p>
         </div>
       </div>
@@ -138,6 +139,11 @@ class AnalyzerLoader {
     if (progressBar) {
       progressBar.style.width = `${percentage}%`;
     }
+    
+    const percentageDisplay = document.getElementById('progressPercentage');
+    if (percentageDisplay) {
+      percentageDisplay.textContent = `${Math.round(percentage)}%`;
+    }
   }
 
   /**
@@ -184,6 +190,11 @@ class AnalyzerLoader {
     if (progressBar) {
       progressBar.style.width = '100%';
     }
+    
+    const percentageDisplay = document.getElementById('progressPercentage');
+    if (percentageDisplay) {
+      percentageDisplay.textContent = '100%';
+    }
 
     const timeElement = document.getElementById('timeRemaining');
     if (timeElement) {
@@ -223,7 +234,7 @@ class AnalyzerLoader {
     if (loader) {
       loader.innerHTML = `
         <div class="loading-header">
-          <h2 class="loading-title" style="color: #ff4444;">❌ Analysis Failed</h2>
+          <h2 class="loading-title" style="color: #ff4444;">✗ Analysis Failed</h2>
           <p class="loading-subtitle">${message}</p>
         </div>
         <div style="text-align: center; margin-top: 2rem;">
@@ -247,7 +258,72 @@ class AnalyzerLoader {
   }
 }
 
-// Export for use in other scripts
+// Export for use in other scripts (Node.js)
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = AnalyzerLoader;
+}
+
+// Also expose to browser window for CSP-compliant usage
+if (typeof window !== 'undefined') {
+  // Expose the class
+  window.AnalyzerLoaderClass = AnalyzerLoader;
+  
+  // Create singleton instance with static-like methods for dashboard compatibility
+  const loaderInstance = new AnalyzerLoader('loadingContainer');
+  
+  // Track step IDs to indices mapping
+  const stepMap = new Map();
+  let currentProgress = 0;
+  
+  window.AnalyzerLoader = {
+    // Dashboard-compatible API (adapted from different method names)
+    show: (steps, title, estimatedSeconds) => {
+      // Map step IDs to indices
+      stepMap.clear();
+      steps.forEach((step, index) => {
+        stepMap.set(step.id, index);
+      });
+      
+      // Convert dashboard step format to loader format
+      const loaderSteps = steps.map(s => ({
+        label: s.label,
+        detail: s.detail || ''
+      }));
+      
+      return loaderInstance.start(loaderSteps, title, estimatedSeconds);
+    },
+    
+    updateStep: (stepId, status) => {
+      const stepIndex = stepMap.get(stepId);
+      if (stepIndex === undefined) return;
+      
+      if (status === 'active') {
+        loaderInstance.nextStep(stepIndex);
+      } else if (status === 'complete') {
+        loaderInstance.completeStep(stepIndex);
+      } else if (status === 'error') {
+        loaderInstance.errorStep(stepIndex, 'Failed');
+      }
+    },
+    
+    updateProgress: (percent) => {
+      currentProgress = percent;
+      // The loader auto-calculates progress, but we can override if needed
+      const progressBar = document.getElementById('progressBarFill');
+      if (progressBar) {
+        progressBar.style.width = `${percent}%`;
+      }
+      const percentageDisplay = document.getElementById('progressPercentage');
+      if (percentageDisplay) {
+        percentageDisplay.textContent = `${Math.round(percent)}%`;
+      }
+    },
+    
+    complete: (message) => loaderInstance.complete(message),
+    error: (message) => loaderInstance.error(message),
+    hide: () => loaderInstance.hide(),
+    
+    // Also expose the class for `new AnalyzerLoader()` usage
+    Class: AnalyzerLoader
+  };
 }

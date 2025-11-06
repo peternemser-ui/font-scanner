@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Health Timeline Demo - Font Scanner</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="ui-components.css">
+  <link rel="stylesheet" href="health-timeline.css">
+  <style>
+    body {
+      padding: 2rem;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+    .demo-section {
+      margin-bottom: 3rem;
+    }
+    .demo-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    .demo-header h1 {
+      font-size: 2.5rem;
+      color: #00ff41;
+      margin-bottom: 0.5rem;
+    }
+    .demo-controls {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+    }
+    .demo-btn {
+      padding: 0.75rem 1.5rem;
+      background: rgba(0, 255, 65, 0.1);
+      border: 1px solid rgba(0, 255, 65, 0.3);
+      border-radius: 8px;
+      color: #00ff41;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+    .demo-btn:hover {
+      background: rgba(0, 255, 65, 0.2);
+      border-color: rgba(0, 255, 65, 0.5);
+      transform: translateY(-2px);
+    }
+    .demo-btn.active {
+      background: rgba(0, 255, 65, 0.3);
+      border-color: rgba(0, 255, 65, 0.6);
+    }
+    #demoContainer {
+      min-height: 400px;
+      position: relative;
+    }
+    .loading-state {
+      text-align: center;
+      padding: 4rem;
+      color: rgba(255, 255, 255, 0.5);
+      animation: pulse 2s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-header">
+    <h1> Health Timeline Demo</h1>
+    <p>Track performance improvements over time with visual charts and comparisons</p>
+  </div>
+
+  <div class="demo-controls">
+    <button class="demo-btn active" data-scenario="single">Single Scan (First Time)</button>
+    <button class="demo-btn" data-scenario="comparison">With Previous Scan</button>
+    <button class="demo-btn" data-scenario="trend">Trend Analysis (5+ scans)</button>
+    <button class="demo-btn" data-scenario="improvement">Showing Improvements</button>
+    <button class="demo-btn" data-scenario="decline">Showing Decline</button>
+  </div>
+
+  <div id="demoContainer">
+    <div class="loading-state">
+      <h2> Loading demo...</h2>
+      <p>Please wait while the visualizations are generated</p>
+    </div>
+  </div>
+
+  <script src="health-timeline.js"></script>
+  <script src="timeline-visualizer.js"></script>
+  <script src="health-timeline-demo.js"></script>
+</body>
+</html>

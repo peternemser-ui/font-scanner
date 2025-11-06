@@ -13,6 +13,7 @@
 const rateLimit = require('express-rate-limit');
 const { createLogger } = require('../utils/logger');
 const { rateLimitCounter } = require('./metrics');
+const config = require('../config');
 
 const logger = createLogger('RateLimiter');
 
@@ -193,47 +194,35 @@ const createRateLimiter = (name, options) => {
  * Global rate limiter - applies to all requests
  * Protects against general abuse
  * 
- * Default: 100 requests per 15 minutes per IP
+ * Config: Uses config.rateLimit.windowMs and config.rateLimit.maxRequests
  */
 const globalLimiter = createRateLimiter('global', {
-  windowMs: process.env.RATE_LIMIT_WINDOW_MS 
-    ? parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) 
-    : 15 * 60 * 1000, // 15 minutes
-  max: process.env.RATE_LIMIT_MAX_REQUESTS 
-    ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) 
-    : 100,
-  message: 'Too many requests from this IP. Please try again in 15 minutes.',
+  windowMs: config.rateLimit.windowMs,
+  max: config.rateLimit.maxRequests,
+  message: `Too many requests from this IP. Please try again in ${Math.ceil(config.rateLimit.windowMs / 60000)} minutes.`,
 });
 
 /**
  * Scan endpoint rate limiter - more restrictive for expensive operations
  * Protects against resource exhaustion
  * 
- * Default: 20 scans per 15 minutes per IP
+ * Config: Uses config.rateLimit.scanWindowMs and config.rateLimit.scanMaxRequests
  */
 const scanLimiter = createRateLimiter('scan', {
-  windowMs: process.env.SCAN_RATE_LIMIT_WINDOW_MS 
-    ? parseInt(process.env.SCAN_RATE_LIMIT_WINDOW_MS, 10) 
-    : 15 * 60 * 1000, // 15 minutes
-  max: process.env.SCAN_RATE_LIMIT_MAX_REQUESTS 
-    ? parseInt(process.env.SCAN_RATE_LIMIT_MAX_REQUESTS, 10) 
-    : 20,
-  message: 'Too many scan requests. Scanning is resource-intensive. Please try again in 15 minutes.',
+  windowMs: config.rateLimit.scanWindowMs,
+  max: config.rateLimit.scanMaxRequests,
+  message: `Too many scan requests. Scanning is resource-intensive. Please try again in ${Math.ceil(config.rateLimit.scanWindowMs / 60000)} minutes.`,
 });
 
 /**
  * Report download rate limiter - prevent excessive downloads
  * 
- * Default: 50 downloads per 15 minutes per IP
+ * Config: Uses config.rateLimit.downloadWindowMs and config.rateLimit.downloadMaxRequests
  */
 const downloadLimiter = createRateLimiter('download', {
-  windowMs: process.env.DOWNLOAD_RATE_LIMIT_WINDOW_MS 
-    ? parseInt(process.env.DOWNLOAD_RATE_LIMIT_WINDOW_MS, 10) 
-    : 15 * 60 * 1000, // 15 minutes
-  max: process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS 
-    ? parseInt(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS, 10) 
-    : 50,
-  message: 'Too many download requests. Please try again in 15 minutes.',
+  windowMs: config.rateLimit.downloadWindowMs,
+  max: config.rateLimit.downloadMaxRequests,
+  message: `Too many download requests. Please try again in ${Math.ceil(config.rateLimit.downloadWindowMs / 60000)} minutes.`,
 });
 
 /**

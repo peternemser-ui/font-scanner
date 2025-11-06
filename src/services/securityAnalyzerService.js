@@ -11,19 +11,38 @@ class SecurityAnalyzerService {
     logger.info('Starting comprehensive security analysis', { url });
 
     try {
-      const [desktopResults, mobileResults] = await Promise.all([
+      // Use allSettled for resilience - don't let one failure break everything
+      const [desktopResult, mobileResult] = await Promise.allSettled([
         this.runLighthouseSecurityAnalysis(url, 'desktop'),
         this.runLighthouseSecurityAnalysis(url, 'mobile'),
       ]);
 
-      // Puppeteer-based deep analysis (platform-agnostic)
-      const [sslData, headersData, vulnerabilitiesData, cookiesData, thirdPartyData] = await Promise.all([
+      const desktopResults = desktopResult.status === 'fulfilled' ? desktopResult.value : {
+        device: 'desktop',
+        securityScore: 0,
+        error: desktopResult.reason?.message || 'Analysis failed'
+      };
+      const mobileResults = mobileResult.status === 'fulfilled' ? mobileResult.value : {
+        device: 'mobile',
+        securityScore: 0,
+        error: mobileResult.reason?.message || 'Analysis failed'
+      };
+
+      // Puppeteer-based deep analysis (platform-agnostic) - also use allSettled
+      const [sslResult, headersResult, vulnerabilitiesResult, cookiesResult, thirdPartyResult] = await Promise.allSettled([
         this.analyzeSSL(url),
         this.analyzeSecurityHeaders(url),
         this.analyzeVulnerabilities(url),
         this.analyzeCookies(url),
         this.analyzeThirdPartyScripts(url),
       ]);
+
+      // Extract results with fallbacks
+      const sslData = sslResult.status === 'fulfilled' ? sslResult.value : { score: 0, issues: ['Analysis failed'], error: true };
+      const headersData = headersResult.status === 'fulfilled' ? headersResult.value : { score: 0, implemented: 0, total: 6, error: true };
+      const vulnerabilitiesData = vulnerabilitiesResult.status === 'fulfilled' ? vulnerabilitiesResult.value : { issues: [], score: 0, error: true };
+      const cookiesData = cookiesResult.status === 'fulfilled' ? cookiesResult.value : { cookies: [], secureCount: 0, insecureCount: 0, score: 0, error: true };
+      const thirdPartyData = thirdPartyResult.status === 'fulfilled' ? thirdPartyResult.value : { scripts: [], withSRI: 0, withoutSRI: 0, score: 0, error: true };
 
       // Calculate overall security score
       const overallScore = this.calculateOverallScore({
@@ -72,8 +91,25 @@ class SecurityAnalyzerService {
         recommendations,
       };
     } catch (error) {
-      logger.error('Security analysis failed:', error);
-      throw error;
+      logger.error('Security analysis failed completely, returning fallback data:', error);
+
+      // Return fallback data instead of throwing
+      return {
+        url,
+        timestamp: new Date().toISOString(),
+        overallScore: 0,
+        owaspCompliance: 0,
+        desktop: { device: 'desktop', securityScore: 0, error: error.message },
+        mobile: { device: 'mobile', securityScore: 0, error: error.message },
+        ssl: { score: 0, issues: ['Analysis failed'], error: true },
+        headers: { score: 0, implemented: 0, total: 6, error: true },
+        vulnerabilities: { issues: [], score: 0, error: true },
+        cookies: { cookies: [], secureCount: 0, insecureCount: 0, score: 0, error: true },
+        thirdPartyScripts: { scripts: [], withSRI: 0, withoutSRI: 0, score: 0, error: true },
+        recommendations: ['Security analysis failed: ' + error.message],
+        error: true,
+        errorMessage: error.message
+      };
     }
   }
 
@@ -96,9 +132,9 @@ class SecurityAnalyzerService {
         }
 
         // Navigate to page
-        await page.goto(url, { 
-          waitUntil: 'networkidle2', 
-          timeout: 30000 
+        await page.goto(url, {
+          waitUntil: 'load',
+          timeout: 30000
         });
 
         // Collect security metrics
@@ -301,9 +337,9 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
-        await page.goto(url, { 
-          waitUntil: 'networkidle2', 
-          timeout: 30000 
+        await page.goto(url, {
+          waitUntil: 'load',
+          timeout: 30000
         });
 
         const vulnerabilities = await page.evaluate(() => {
@@ -403,9 +439,9 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
-        await page.goto(url, { 
-          waitUntil: 'networkidle2', 
-          timeout: 30000 
+        await page.goto(url, {
+          waitUntil: 'load',
+          timeout: 30000
         });
 
         const cookies = await page.cookies();
@@ -468,9 +504,9 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
-        await page.goto(url, { 
-          waitUntil: 'networkidle2', 
-          timeout: 30000 
+        await page.goto(url, {
+          waitUntil: 'load',
+          timeout: 30000
         });
 
         const scripts = await page.evaluate(() => {

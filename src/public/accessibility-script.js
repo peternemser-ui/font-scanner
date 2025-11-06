@@ -19,6 +19,18 @@ urlInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyzeAccessibility();
 });
 
+// Auto-start scan if URL parameter is present
+if (typeof window.getUrlParameter === 'function') {
+  const autoUrl = window.getUrlParameter();
+  if (autoUrl) {
+    console.log('→ Auto-starting Accessibility analysis for:', autoUrl);
+    urlInput.value = autoUrl;
+    setTimeout(() => {
+      analyzeAccessibility();
+    }, 500);
+  }
+}
+
 /**
  * Main analysis function
  */
@@ -155,24 +167,23 @@ function displayAccessibilityResults(results) {
             width: 180px;
             height: 180px;
             border-radius: 50%;
-            background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+            background: #ffffff;
             border: 5px solid ${getAccessibilityColor(results.accessibilityScore)};
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 30px ${getAccessibilityColor(results.accessibilityScore)}40, inset 0 0 20px rgba(0,0,0,0.5);
+            box-shadow: 0 0 30px ${getAccessibilityColor(results.accessibilityScore)}40, 0 4px 15px rgba(0,0,0,0.2);
           ">
             <div style="
               font-size: 4.5rem;
               font-weight: 900;
-              color: #ffffff;
-              text-shadow: 0 0 20px ${getAccessibilityColor(results.accessibilityScore)}, 0 0 40px ${getAccessibilityColor(results.accessibilityScore)}80;
+              color: #000000;
               line-height: 1;
             ">${results.accessibilityScore}</div>
             <div style="
               font-size: 0.9rem;
-              color: #b0b0b0;
+              color: #666666;
               margin-top: 0.5rem;
               text-transform: uppercase;
               letter-spacing: 2px;
@@ -215,34 +226,11 @@ function displayAccessibilityResults(results) {
     
     <!-- PDF Download Button -->
     <div style="text-align: center; margin: 2rem 0; padding: 2rem; background: rgba(187, 134, 252, 0.05); border: 2px solid rgba(187, 134, 252, 0.3); border-radius: 12px;">
-      <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">📄 Professional PDF Report</h3>
+      <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">D Professional PDF Report</h3>
       <p style="color: #c0c0c0; margin: 0 0 1.5rem 0;">
         Get a comprehensive PDF report with WCAG compliance analysis, color contrast details, and remediation recommendations.
       </p>
-      <button 
-        id="accessibilityPdfDownloadButton"
-        style="
-          padding: 1rem 2rem;
-          background: linear-gradient(135deg, #bb86fc 0%, #9d5fdb 100%);
-          border: none;
-          border-radius: 8px;
-          color: #000000;
-          font-size: 1.1rem;
-          font-weight: bold;
-          font-family: 'Courier New', monospace;
-          cursor: pointer;
-          transition: all 0.2s ease;
-          box-shadow: 0 4px 15px rgba(187, 134, 252, 0.3);
-        "
-        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 20px rgba(187, 134, 252, 0.5)';"
-        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(187, 134, 252, 0.3)';"
-        onclick="openPdfPurchaseModal('accessibility')"
-      >
-        📥 Download PDF Report ($5)
-      </button>
-      <p style="color: #808080; font-size: 0.85rem; margin: 1rem 0 0 0; font-style: italic;">
-        Secure payment • Instant download • One-time purchase
-      </p>
+      <!-- PDF Download button removed - monetization disabled -->
     </div>
   `;
   container.appendChild(summary);
@@ -312,15 +300,15 @@ function createWCAGLevelsSection(results) {
               height: 80px;
               margin: 0 auto;
               border-radius: 50%;
-              background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+              background: #ffffff;
               border: 3px solid #ffd700;
               display: flex;
               align-items: center;
               justify-content: center;
               font-size: 2rem;
               font-weight: 900;
-              color: #ffd700;
-              box-shadow: 0 0 15px rgba(255,215,0,0.4);
+              color: #000000;
+              box-shadow: 0 0 15px rgba(255,215,0,0.4), 0 2px 8px rgba(0,0,0,0.15);
             ">A</div>
           </div>
           <h3 style="color: #ffd700; text-align: center; margin: 0 0 1rem 0; font-size: 1.2rem;">
@@ -348,7 +336,7 @@ function createWCAGLevelsSection(results) {
             </ul>
           </div>
           <div style="margin-top: 1rem; text-align: center; color: #808080; font-size: 0.8rem;">
-            🎯 Score: 60-79
+            ◉ Score: 60-79
           </div>
         </div>
 
@@ -366,15 +354,15 @@ function createWCAGLevelsSection(results) {
               height: 80px;
               margin: 0 auto;
               border-radius: 50%;
-              background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+              background: #ffffff;
               border: 3px solid #00ff41;
               display: flex;
               align-items: center;
               justify-content: center;
               font-size: 1.8rem;
               font-weight: 900;
-              color: #00ff41;
-              box-shadow: 0 0 15px rgba(0,255,65,0.4);
+              color: #000000;
+              box-shadow: 0 0 15px rgba(0,255,65,0.4), 0 2px 8px rgba(0,0,0,0.15);
             ">AA</div>
           </div>
           <h3 style="color: #00ff41; text-align: center; margin: 0 0 1rem 0; font-size: 1.2rem;">
@@ -403,7 +391,7 @@ function createWCAGLevelsSection(results) {
             </ul>
           </div>
           <div style="margin-top: 1rem; text-align: center; color: #808080; font-size: 0.8rem;">
-            🎯 Score: 80-94
+            ◉ Score: 80-94
           </div>
         </div>
 
@@ -421,15 +409,15 @@ function createWCAGLevelsSection(results) {
               height: 80px;
               margin: 0 auto;
               border-radius: 50%;
-              background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
+              background: #ffffff;
               border: 3px solid #00d9ff;
               display: flex;
               align-items: center;
               justify-content: center;
               font-size: 1.5rem;
               font-weight: 900;
-              color: #00d9ff;
-              box-shadow: 0 0 15px rgba(0,217,255,0.4);
+              color: #000000;
+              box-shadow: 0 0 15px rgba(0,217,255,0.4), 0 2px 8px rgba(0,0,0,0.15);
             ">AAA</div>
           </div>
           <h3 style="color: #00d9ff; text-align: center; margin: 0 0 1rem 0; font-size: 1.2rem;">
@@ -458,7 +446,7 @@ function createWCAGLevelsSection(results) {
             </ul>
           </div>
           <div style="margin-top: 1rem; text-align: center; color: #808080; font-size: 0.8rem;">
-            🎯 Score: 95-100
+            ◉ Score: 95-100
           </div>
         </div>
       </div>
@@ -473,7 +461,7 @@ function createWCAGLevelsSection(results) {
         box-shadow: 0 4px 15px ${currentLevel === 'AAA' ? 'rgba(0,217,255,0.2)' : currentLevel === 'AA' ? 'rgba(0,255,65,0.2)' : currentLevel === 'A' ? 'rgba(255,215,0,0.2)' : 'rgba(255,68,68,0.2)'};
       ">
         <h3 style="color: ${currentLevel === 'AAA' ? '#00d9ff' : currentLevel === 'AA' ? '#00ff41' : currentLevel === 'A' ? '#ffd700' : '#ff4444'}; margin: 0 0 1rem 0; font-size: 1.4rem;">
-          ${currentLevel === 'None' ? '❌ Not Compliant' : `✓ Meets WCAG Level ${currentLevel}`}
+          ${currentLevel === 'None' ? '✗ Not Compliant' : `✓ Meets WCAG Level ${currentLevel}`}
         </h3>
         <p style="color: #c0c0c0; font-size: 1rem; margin: 0;">
           ${currentLevel === 'None' ? 'This website does not meet minimum WCAG accessibility standards. Immediate improvements are needed.' : 
@@ -485,7 +473,7 @@ function createWCAGLevelsSection(results) {
 
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(138,43,226,0.05); border-radius: 8px; border-left: 3px solid #bb86fc;">
         <p style="color: #bb86fc; font-size: 0.9rem; margin: 0; line-height: 1.6;">
-          <strong>ℹ️ Note:</strong> Most organizations aim for Level AA compliance as it balances comprehensive accessibility with practical implementation. 
+          <strong>ⓘ Note:</strong> Most organizations aim for Level AA compliance as it balances comprehensive accessibility with practical implementation. 
           Level AAA is not always feasible for all content types.
         </p>
       </div>
@@ -500,11 +488,34 @@ function createDesktopMobileComparison(results) {
   const desktopScore = results.desktop?.accessibilityScore || 0;
   const mobileScore = results.mobile?.accessibilityScore || 0;
   const scoreDiff = Math.abs(desktopScore - mobileScore);
+  
+  // Check if Lighthouse failed for either platform
+  const desktopFailed = results.desktop?.lighthouse?.failed || (results.desktop?.lighthouse?.score === 0 && results.desktop?.lighthouse?.error);
+  const mobileFailed = results.mobile?.lighthouse?.failed || (results.mobile?.lighthouse?.score === 0 && results.mobile?.lighthouse?.error);
+  const anyFailed = desktopFailed || mobileFailed;
 
   return `
     <h2>[DESKTOP_VS_MOBILE_COMPARISON]</h2>
     <div style="padding-left: 1rem;">
       <p style="color: #bb86fc; margin-bottom: 1.5rem;">>> Comprehensive accessibility analysis across both platforms</p>
+      
+      ${anyFailed ? `
+        <div style="
+          background: rgba(255,165,0,0.1);
+          border: 2px solid rgba(255,165,0,0.5);
+          border-radius: 8px;
+          padding: 1rem;
+          margin-bottom: 1.5rem;
+          text-align: center;
+        ">
+          <div style="color: #ffa500; font-size: 1.2rem; margin-bottom: 0.5rem;">~ Partial Analysis</div>
+          <p style="color: #c0c0c0; margin: 0; font-size: 0.9rem;">
+            ${desktopFailed && mobileFailed ? 'Both desktop and mobile Lighthouse analyses timed out.' : 
+              desktopFailed ? 'Desktop Lighthouse analysis timed out.' : 'Mobile Lighthouse analysis timed out.'}
+            Using alternative accessibility metrics from axe-core for affected platform(s).
+          </p>
+        </div>
+      ` : ''}
       
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
         <!-- Desktop Column -->
@@ -514,7 +525,7 @@ function createDesktopMobileComparison(results) {
           border-radius: 8px;
           padding: 1.5rem;
         ">
-          ${createPlatformCard('🖥️ DESKTOP', desktopScore, results.desktop, '#00ccff')}
+          ${createPlatformCard('D DESKTOP', desktopScore, results.desktop, '#00ccff')}
         </div>
         
         <!-- Mobile Column -->
@@ -524,12 +535,12 @@ function createDesktopMobileComparison(results) {
           border-radius: 8px;
           padding: 1.5rem;
         ">
-          ${createPlatformCard('📱 MOBILE', mobileScore, results.mobile, '#ff6600')}
+          ${createPlatformCard('M MOBILE', mobileScore, results.mobile, '#ff6600')}
         </div>
       </div>
       
-      <!-- Accessibility Gap Warning -->
-      ${scoreDiff > 10 ? `
+      <!-- Accessibility Gap Warning (only show if both analyses succeeded) -->
+      ${!anyFailed && scoreDiff > 10 ? `
         <div style="
           background: linear-gradient(135deg, rgba(255,165,0,0.15), rgba(255,68,68,0.15));
           border: 2px solid #ffa500;
@@ -538,7 +549,7 @@ function createDesktopMobileComparison(results) {
           margin-top: 1rem;
         ">
           <h4 style="color: #ffa500; margin: 0 0 0.75rem 0; font-size: 1.1rem;">
-            ⚠️ Accessibility Gap Detected
+            ~ Accessibility Gap Detected
           </h4>
           <p style="color: #c0c0c0; margin: 0;">
             There is a ${scoreDiff}-point difference between desktop (${desktopScore}) and mobile (${mobileScore}) accessibility. 
@@ -546,7 +557,7 @@ function createDesktopMobileComparison(results) {
             Review platform-specific issues in the detailed analysis below.
           </p>
         </div>
-      ` : `
+      ` : !anyFailed ? `
         <div style="
           background: rgba(0,255,65,0.1);
           border: 2px solid #00ff41;
@@ -555,11 +566,10 @@ function createDesktopMobileComparison(results) {
           text-align: center;
         ">
           <p style="color: #00ff41; margin: 0;">
-            ✅ <strong>Consistent Accessibility:</strong> Desktop and mobile accessibility scores are within 10 points, 
-            indicating relatively consistent user experience across platforms.
+            ✓ Consistent Accessibility - Both platforms scored within ${scoreDiff} points of each other
           </p>
         </div>
-      `}
+      ` : ''}
     </div>
   `;
 }
@@ -568,6 +578,10 @@ function createDesktopMobileComparison(results) {
  * Create platform card for comparison
  */
 function createPlatformCard(title, score, data, color) {
+  // Check if Lighthouse analysis failed
+  const lighthouseFailed = data?.lighthouse?.failed || (data?.lighthouse?.score === 0 && data?.lighthouse?.error);
+  const lighthouseError = data?.lighthouse?.error || 'Analysis incomplete';
+  
   return `
     <div style="text-align: center; margin-bottom: 1rem;">
       <div style="font-size: 1.5rem; color: ${color}; margin-bottom: 0.5rem;">${title}</div>
@@ -576,59 +590,98 @@ function createPlatformCard(title, score, data, color) {
         height: 120px;
         margin: 0 auto;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(0,0,0,0.95) 0%, rgba(0,0,0,1) 100%);
-        border: 4px solid ${getAccessibilityColor(score)};
+        background: #ffffff;
+        border: 4px solid ${lighthouseFailed ? '#666666' : getAccessibilityColor(score)};
         display: flex;
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        box-shadow: 0 0 20px ${getAccessibilityColor(score)}40;
+        box-shadow: 0 0 20px ${lighthouseFailed ? '#66666640' : getAccessibilityColor(score) + '40'}, 0 2px 8px rgba(0,0,0,0.15);
       ">
-        <div style="
-          font-size: 2.8rem;
-          font-weight: 900;
-          color: #ffffff;
-          line-height: 1;
-          text-shadow: 0 0 10px ${getAccessibilityColor(score)};
-        ">${score}</div>
-        <div style="color: #b0b0b0; font-size: 0.75rem; margin-top: 0.25rem; font-weight: 600;">/ 100</div>
+        ${lighthouseFailed ? `
+          <div style="
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #999999;
+            line-height: 1.2;
+            text-align: center;
+            padding: 0.5rem;
+          ">N/A</div>
+          <div style="color: #666666; font-size: 0.65rem; margin-top: 0.25rem; font-weight: 600; text-align: center; padding: 0 0.5rem;">
+            Timeout
+          </div>
+        ` : `
+          <div style="
+            font-size: 2.8rem;
+            font-weight: 900;
+            color: #000000;
+            line-height: 1;
+          ">${score}</div>
+          <div style="color: #666666; font-size: 0.75rem; margin-top: 0.25rem; font-weight: 600;">/ 100</div>
+        `}
       </div>
       <div style="
         margin-top: 0.75rem;
         font-weight: bold;
-        color: ${getAccessibilityColor(score)};
-      ">${getAccessibilityGrade(score)}</div>
+        color: ${lighthouseFailed ? '#999999' : getAccessibilityColor(score)};
+      ">${lighthouseFailed ? 'Analysis Failed' : getAccessibilityGrade(score)}</div>
     </div>
     
-    <div style="border-top: 1px solid ${color}40; padding-top: 1rem;">
-      <h4 style="color: ${color}; margin: 0 0 0.75rem 0; font-size: 1rem;">Lighthouse Scores</h4>
-      <div style="display: grid; gap: 0.5rem;">
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: #c0c0c0;">♿ Accessibility</span>
-          <span style="color: ${getAccessibilityColor(data?.lighthouse?.accessibility || 0)}; font-weight: bold;">
-            ${data?.lighthouse?.accessibility || 0}
-          </span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: #c0c0c0;">⚡ Performance</span>
-          <span style="color: ${getAccessibilityColor(data?.lighthouse?.performance || 0)}; font-weight: bold;">
-            ${data?.lighthouse?.performance || 0}
-          </span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: #c0c0c0;">✅ Best Practices</span>
-          <span style="color: ${getAccessibilityColor(data?.lighthouse?.bestPractices || 0)}; font-weight: bold;">
-            ${data?.lighthouse?.bestPractices || 0}
-          </span>
-        </div>
-        <div style="display: flex; justify-content: space-between;">
-          <span style="color: #c0c0c0;">🔍 SEO</span>
-          <span style="color: ${getAccessibilityColor(data?.lighthouse?.seo || 0)}; font-weight: bold;">
-            ${data?.lighthouse?.seo || 0}
-          </span>
+    ${lighthouseFailed ? `
+      <div style="border-top: 1px solid ${color}40; padding-top: 1rem;">
+        <div style="
+          background: rgba(255,165,0,0.1);
+          border: 1px solid rgba(255,165,0,0.3);
+          border-radius: 6px;
+          padding: 0.75rem;
+          text-align: center;
+        ">
+          <div style="color: #ffa500; font-size: 1.2rem; margin-bottom: 0.5rem;">⧗</div>
+          <div style="color: #c0c0c0; font-size: 0.85rem; line-height: 1.4;">
+            Lighthouse analysis timed out after 45 seconds. This can happen with:
+          </div>
+          <ul style="text-align: left; color: #999999; font-size: 0.8rem; margin: 0.5rem 0 0 1.5rem; padding: 0; line-height: 1.6;">
+            <li>Slow-loading websites</li>
+            <li>Heavy JavaScript execution</li>
+            <li>Anti-bot protection</li>
+            <li>Server-side rendering delays</li>
+          </ul>
+          <div style="color: #b0b0b0; font-size: 0.75rem; margin-top: 0.75rem; font-style: italic;">
+            Using alternative accessibility metrics from axe-core instead
+          </div>
         </div>
       </div>
-    </div>
+    ` : `
+      <div style="border-top: 1px solid ${color}40; padding-top: 1rem;">
+        <h4 style="color: ${color}; margin: 0 0 0.75rem 0; font-size: 1rem;">Lighthouse Scores</h4>
+        <div style="display: grid; gap: 0.5rem;">
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #c0c0c0;">A Accessibility</span>
+            <span style="color: ${getAccessibilityColor(data?.lighthouse?.accessibility || 0)}; font-weight: bold;">
+              ${data?.lighthouse?.accessibility || 0}
+            </span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #c0c0c0;">P Performance</span>
+            <span style="color: ${getAccessibilityColor(data?.lighthouse?.performance || 0)}; font-weight: bold;">
+              ${data?.lighthouse?.performance || 0}
+            </span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #c0c0c0;">B Best Practices</span>
+            <span style="color: ${getAccessibilityColor(data?.lighthouse?.bestPractices || 0)}; font-weight: bold;">
+              ${data?.lighthouse?.bestPractices || 0}
+            </span>
+          </div>
+          <div style="display: flex; justify-content: space-between;">
+            <span style="color: #c0c0c0;">S SEO</span>
+            <span style="color: ${getAccessibilityColor(data?.lighthouse?.seo || 0)}; font-weight: bold;">
+              ${data?.lighthouse?.seo || 0}
+            </span>
+          </div>
+        </div>
+      </div>
+    `}
   `;
 }
 
@@ -698,10 +751,10 @@ function renderWCAGContent(desktopWcag, mobileWcag) {
   const renderCriterionRow = (criterion, desktopStatus, mobileStatus) => {
     const getStatusBadge = (status) => {
       const styles = {
-        pass: { color: '#00ff41', icon: '✅', label: 'Pass' },
-        fail: { color: '#ff4444', icon: '❌', label: 'Fail' },
-        warning: { color: '#ffa500', icon: '⚠️', label: 'Warning' },
-        na: { color: '#808080', icon: '➖', label: 'N/A' }
+        pass: { color: '#00ff41', icon: '✓', label: 'Pass' },
+        fail: { color: '#ff4444', icon: '✗', label: 'Fail' },
+        warning: { color: '#ffa500', icon: '~', label: 'Warning' },
+        na: { color: '#808080', icon: '–', label: 'N/A' }
       };
       return styles[status] || styles.na;
     };
@@ -752,10 +805,10 @@ function renderWCAGContent(desktopWcag, mobileWcag) {
           <tr>
             <th style="text-align: left; width: 40%;">Success Criterion</th>
             <th colspan="2" style="text-align: center; background: rgba(0,204,255,0.1); border-left: 2px solid #00ccff;">
-              <span style="color: #00ccff;">🖥️ Desktop</span>
+              <span style="color: #00ccff;">D Desktop</span>
             </th>
             <th colspan="2" style="text-align: center; background: rgba(255,102,0,0.1); border-left: 2px solid #ff6600;">
-              <span style="color: #ff6600;">📱 Mobile</span>
+              <span style="color: #ff6600;">M Mobile</span>
             </th>
           </tr>
           <tr style="font-size: 0.85rem;">
@@ -803,7 +856,7 @@ function renderContrastContent(contrast) {
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
         <p style="color: #00ccff; font-size: 0.9rem; margin: 0;">
-          ℹ️ <strong>Platform-Agnostic Metrics:</strong> Color contrast ratios are design-based and apply equally to all platforms.
+          ⓘ <strong>Platform-Agnostic Metrics:</strong> Color contrast ratios are design-based and apply equally to all platforms.
         </p>
       </div>
       
@@ -848,13 +901,13 @@ function renderContrastContent(contrast) {
         </table>
         ${contrast.issues.length > 10 ? `
           <p style="color: #ffa500; font-size: 0.9rem; margin-top: 0.5rem;">
-            ⚠️ Showing 10 of ${contrast.issues.length} contrast issues. Review all issues in detailed audit.
+            ~ Showing 10 of ${contrast.issues.length} contrast issues. Review all issues in detailed audit.
           </p>
         ` : ''}
       ` : `
         <div style="background: rgba(0,255,65,0.1); border: 2px solid #00ff41; border-radius: 8px; padding: 1.5rem; text-align: center;">
           <p style="color: #00ff41; margin: 0; font-size: 1.1rem;">
-            ✅ <strong>Excellent Contrast!</strong><br>
+            ✓ <strong>Excellent Contrast!</strong><br>
             All text elements meet WCAG contrast requirements.
           </p>
         </div>
@@ -875,7 +928,7 @@ function renderKeyboardContent(keyboard) {
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
         <p style="color: #00ccff; font-size: 0.9rem; margin: 0;">
-          ℹ️ <strong>Platform-Agnostic Metrics:</strong> Keyboard navigation patterns apply universally across devices with keyboard input.
+          ⓘ <strong>Platform-Agnostic Metrics:</strong> Keyboard navigation patterns apply universally across devices with keyboard input.
         </p>
       </div>
       
@@ -887,7 +940,7 @@ function renderKeyboardContent(keyboard) {
       <div style="display: grid; gap: 1rem; margin-bottom: 1.5rem;">
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid #bb86fc;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #c0c0c0;">🎯 Focusable Elements</span>
+            <span style="color: #c0c0c0;">T Focusable Elements</span>
             <span style="color: #bb86fc; font-weight: bold; font-size: 1.2rem;">${keyboard.focusableCount || 0}</span>
           </div>
         </div>
@@ -935,7 +988,7 @@ function renderARIAContent(aria) {
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
         <p style="color: #00ccff; font-size: 0.9rem; margin: 0;">
-          ℹ️ <strong>Platform-Agnostic Metrics:</strong> ARIA attributes and semantic HTML apply universally to assistive technologies.
+          ⓘ <strong>Platform-Agnostic Metrics:</strong> ARIA attributes and semantic HTML apply universally to assistive technologies.
         </p>
       </div>
       
@@ -1008,7 +1061,7 @@ function renderRecommendationsContent(recommendations) {
     <div style="padding-left: 1rem; margin-bottom: 1.5rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(255,165,0,0.1); border-left: 3px solid #ffa500; border-radius: 4px;">
         <p style="color: #ffa500; font-size: 0.9rem; margin: 0;">
-          💡 <strong>Cross-Platform Recommendations:</strong> These accessibility improvements are analyzed based on both desktop and mobile to ensure inclusive design.
+          ⓘ <strong>Cross-Platform Recommendations:</strong> These accessibility improvements are analyzed based on both desktop and mobile to ensure inclusive design.
         </p>
       </div>
     </div>
@@ -1018,7 +1071,7 @@ function renderRecommendationsContent(recommendations) {
     return `
       ${introSection}
       <div style="padding: 2rem; text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">♿</div>
+        <div style="font-size: 3rem; margin-bottom: 1rem;">A</div>
         <h3 style="color: #bb86fc; margin: 0 0 0.5rem 0;">Excellent Accessibility!</h3>
         <p style="color: #c0c0c0;">No critical accessibility issues found. Your site meets WCAG 2.1 guidelines across both desktop and mobile!</p>
       </div>
@@ -1032,9 +1085,9 @@ function renderRecommendationsContent(recommendations) {
 
   const getPriorityBadge = (priority) => {
     const styles = {
-      high: { bg: 'rgba(255,68,68,0.15)', color: '#ff4444', border: '#ff4444', icon: '🔴', label: 'CRITICAL' },
-      medium: { bg: 'rgba(255,165,0,0.15)', color: '#ffa500', border: '#ffa500', icon: '🟡', label: 'IMPORTANT' },
-      low: { bg: 'rgba(0,204,255,0.15)', color: '#00ccff', border: '#00ccff', icon: '🔵', label: 'MINOR' }
+      high: { bg: 'rgba(255,68,68,0.15)', color: '#ff4444', border: '#ff4444', icon: 'H', label: 'CRITICAL' },
+      medium: { bg: 'rgba(255,165,0,0.15)', color: '#ffa500', border: '#ffa500', icon: 'M', label: 'IMPORTANT' },
+      low: { bg: 'rgba(0,204,255,0.15)', color: '#00ccff', border: '#00ccff', icon: 'L', label: 'MINOR' }
     };
     return styles[priority] || styles.medium;
   };
@@ -1084,7 +1137,7 @@ function renderRecommendationsContent(recommendations) {
         
         ${rec.solution ? `
           <div style="background: rgba(0,255,65,0.05); padding: 1rem; border-radius: 4px; border-left: 3px solid #00ff41;">
-            <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">✅ Solution:</div>
+            <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">✓ Solution:</div>
             <p style="color: #c0c0c0; margin: 0; line-height: 1.6;">${rec.solution}</p>
           </div>
         ` : ''}
@@ -1103,7 +1156,7 @@ function renderRecommendationsContent(recommendations) {
         margin-bottom: 2rem;
       ">
         <h3 style="color: #ff4444; margin: 0 0 0.75rem 0; font-size: 1.5rem;">
-          ⚠️ Accessibility Improvement Opportunities
+          ~ Accessibility Improvement Opportunities
         </h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
           ${high.length > 0 ? `
@@ -1129,21 +1182,21 @@ function renderRecommendationsContent(recommendations) {
 
       ${high.length > 0 ? `
         <h4 style="color: #ff4444; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #ff4444; padding-bottom: 0.5rem;">
-          🔴 CRITICAL - Fix Immediately
+          H CRITICAL - Fix Immediately
         </h4>
         ${high.map(rec => renderRecommendationCard(rec)).join('')}
       ` : ''}
 
       ${medium.length > 0 ? `
         <h4 style="color: #ffa500; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #ffa500; padding-bottom: 0.5rem;">
-          🟡 IMPORTANT - Address Soon
+          M IMPORTANT - Address Soon
         </h4>
         ${medium.map(rec => renderRecommendationCard(rec)).join('')}
       ` : ''}
 
       ${low.length > 0 ? `
         <h4 style="color: #00ccff; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #00ccff; padding-bottom: 0.5rem;">
-          🔵 MINOR - Enhance When Possible
+          L MINOR - Enhance When Possible
         </h4>
         ${low.map(rec => renderRecommendationCard(rec)).join('')}
       ` : ''}
@@ -1208,43 +1261,4 @@ function getWCAGLevelDescription(level) {
   }
 }
 
-/**
- * Open PDF purchase modal
- */
-function openPdfPurchaseModal(reportType) {
-  if (!window.pdfPaymentModal) {
-    console.error('PDF payment modal not initialized');
-    return;
-  }
-
-  let reportData;
-  switch (reportType) {
-    case 'seo':
-      reportData = window.currentSeoResults;
-      break;
-    case 'performance':
-      reportData = window.currentPerformanceResults;
-      break;
-    case 'accessibility':
-      reportData = window.currentAccessibilityResults;
-      break;
-    case 'security':
-      reportData = window.currentSecurityResults;
-      break;
-    case 'fonts':
-      reportData = window.currentFontResults;
-      break;
-    default:
-      console.error('Unknown report type:', reportType);
-      return;
-  }
-
-  if (!reportData) {
-    console.error('No report data available for', reportType);
-    return;
-  }
-
-  window.pdfPaymentModal.open(reportType, reportData, () => {
-    console.log('PDF download successful!');
-  });
-}
+// PDF purchase modal removed - monetization disabled

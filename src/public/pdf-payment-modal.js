@@ -56,7 +56,7 @@ class PDFPaymentModal {
 
             <!-- Demo Mode Notice -->
             <div id="pdfDemoNotice" class="pdf-demo-notice" style="display: none;">
-              <strong>🎯 Demo Mode Active</strong>
+              <strong>T Demo Mode Active</strong>
               <p>Use test card: <code>4242 4242 4242 4242</code></p>
               <p>Any future expiry date and any 3-digit CVV</p>
             </div>
@@ -148,7 +148,7 @@ class PDFPaymentModal {
 
           <div class="pdf-modal-footer">
             <div class="pdf-security-badges">
-              <span>🔒 Secure Payment</span>
+              <span>◈ Secure Payment</span>
               <span>💳 All Major Cards</span>
               <span>📧 Receipt Sent</span>
             </div>
