@@ -171,7 +171,7 @@ class LanguageSwitcher {
         position: relative;
         display: inline-block;
         margin-left: auto;
-        z-index: 1000;
+        z-index: 9999;
       }
 
       .language-switcher-trigger {
@@ -185,6 +185,7 @@ class LanguageSwitcher {
         cursor: pointer;
         transition: all 0.2s ease;
         font-family: 'Courier New', monospace;
+        white-space: nowrap;
       }
 
       .language-switcher-trigger:hover {
@@ -217,15 +218,17 @@ class LanguageSwitcher {
         top: calc(100% + 0.5rem);
         right: 0;
         min-width: 200px;
+        max-width: 250px;
         background: var(--bg-secondary, #1a1a1a);
         border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 6px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
         opacity: 0;
         visibility: hidden;
         transform: translateY(-10px);
         transition: all 0.2s ease;
         overflow: hidden;
+        z-index: 10000;
       }
 
       .language-dropdown.show {
@@ -314,11 +317,95 @@ class LanguageSwitcher {
       @media (max-width: 768px) {
         .language-switcher {
           margin-left: 0;
+          margin-right: 0.5rem;
+        }
+
+        .language-switcher-trigger {
+          padding: 0.4rem 0.6rem;
+          gap: 0.4rem;
+        }
+
+        .language-flag {
+          font-size: 1.1rem;
+        }
+
+        .language-code {
+          font-size: 0.8rem;
         }
 
         .language-dropdown {
-          right: auto;
-          left: 0;
+          right: 0;
+          left: auto;
+          min-width: 180px;
+          max-width: 90vw;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .language-switcher {
+          margin-right: 0.25rem;
+        }
+
+        .language-switcher-trigger {
+          padding: 0.35rem 0.5rem;
+          gap: 0.3rem;
+        }
+
+        .language-flag {
+          font-size: 1rem;
+        }
+
+        .language-code {
+          display: none;
+        }
+
+        .dropdown-arrow {
+          width: 10px;
+          height: 10px;
+        }
+
+        .language-dropdown {
+          right: 0;
+          left: auto;
+          min-width: 160px;
+          max-width: 85vw;
+        }
+
+        .language-option {
+          padding: 0.65rem 0.85rem;
+          gap: 0.6rem;
+        }
+
+        .language-option .language-name {
+          font-size: 0.85rem;
+        }
+
+        .language-flag {
+          font-size: 1.1rem;
+        }
+      }
+
+      /* Extra small screens */
+      @media (max-width: 360px) {
+        .language-switcher-trigger {
+          padding: 0.3rem 0.4rem;
+        }
+
+        .language-flag {
+          font-size: 0.95rem;
+        }
+
+        .language-dropdown {
+          min-width: 150px;
+          max-width: 80vw;
+        }
+
+        .language-option {
+          padding: 0.6rem 0.75rem;
+        }
+
+        .language-option .language-name {
+          font-size: 0.8rem;
         }
       }
     `;
