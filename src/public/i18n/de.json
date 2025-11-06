@@ -1,0 +1,44 @@
+{
+  "app": {
+    "name": "SCHRIFTARTEN-SCANNER",
+    "tagline": "Erweiterte Web-Typografie & Leistungsanalyse"
+  },
+  "nav": {
+    "dashboard": "Dashboard",
+    "fontScanner": "Schriftarten-Scanner",
+    "seo": "SEO",
+    "coreWebVitals": "Core Web Vitals",
+    "rankCompetition": "Rang-Wettbewerb",
+    "performance": "Leistung",
+    "accessibility": "Barrierefreiheit",
+    "security": "Sicherheit"
+  },
+  "dashboard": {
+    "title": "Umfassende Übersicht",
+    "breadcrumb": "dashboard / umfassende übersicht",
+    "runAudit": "VOLLSTÄNDIGE PRÜFUNG STARTEN",
+    "analyzing": "ANALYSIERT...",
+    "enterUrl": "Website-URL eingeben...",
+    "overallHealth": "Allgemeine Website-Gesundheit",
+    "overallHealthScore": "Gesamtgesundheit",
+    "typography": "Typografie",
+    "detailedAnalysis": "Detaillierte Analyse",
+    "priorityRecommendations": "Prioritätsempfehlungen",
+    "viewDetails": "Details anzeigen",
+    "score": "Punktzahl",
+    "grade": "Note",
+    "desktop": "Desktop",
+    "mobile": "Mobil",
+    "good": "Gut",
+    "fair": "Befriedigend",
+    "needsWork": "Verbesserungsbedarf",
+    "error": "Fehler",
+    "na": "N/V"
+  },
+  "common": {
+    "loading": "Wird geladen...",
+    "error": "Fehler",
+    "success": "Erfolg",
+    "language": "Sprache"
+  }
+}

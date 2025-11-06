@@ -1,0 +1,44 @@
+{
+  "app": {
+    "name": "字体扫描器",
+    "tagline": "高级网页排版与性能分析"
+  },
+  "nav": {
+    "dashboard": "仪表板",
+    "fontScanner": "字体扫描器",
+    "seo": "SEO",
+    "coreWebVitals": "核心网页指标",
+    "rankCompetition": "排名竞争",
+    "performance": "性能",
+    "accessibility": "无障碍",
+    "security": "安全"
+  },
+  "dashboard": {
+    "title": "综合概览",
+    "breadcrumb": "仪表板 / 综合概览",
+    "runAudit": "运行完整审计",
+    "analyzing": "分析中...",
+    "enterUrl": "输入网站URL...",
+    "overallHealth": "网站整体健康度",
+    "overallHealthScore": "整体健康",
+    "typography": "排版",
+    "detailedAnalysis": "详细分析",
+    "priorityRecommendations": "优先建议",
+    "viewDetails": "查看详情",
+    "score": "分数",
+    "grade": "等级",
+    "desktop": "桌面",
+    "mobile": "移动",
+    "good": "良好",
+    "fair": "一般",
+    "needsWork": "需要改进",
+    "error": "错误",
+    "na": "不适用"
+  },
+  "common": {
+    "loading": "加载中...",
+    "error": "错误",
+    "success": "成功",
+    "language": "语言"
+  }
+}

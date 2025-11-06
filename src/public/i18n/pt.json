@@ -1,0 +1,44 @@
+{
+  "app": {
+    "name": "SCANNER DE FONTES",
+    "tagline": "Análise Avançada de Tipografia Web e Desempenho"
+  },
+  "nav": {
+    "dashboard": "Painel",
+    "fontScanner": "Scanner de Fontes",
+    "seo": "SEO",
+    "coreWebVitals": "Core Web Vitals",
+    "rankCompetition": "Competição de Ranking",
+    "performance": "Desempenho",
+    "accessibility": "Acessibilidade",
+    "security": "Segurança"
+  },
+  "dashboard": {
+    "title": "Visão Geral Completa",
+    "breadcrumb": "painel / visão geral completa",
+    "runAudit": "EXECUTAR AUDITORIA COMPLETA",
+    "analyzing": "ANALISANDO...",
+    "enterUrl": "Digite a URL do site...",
+    "overallHealth": "Saúde Geral do Site",
+    "overallHealthScore": "Saúde Geral",
+    "typography": "Tipografia",
+    "detailedAnalysis": "Análise Detalhada",
+    "priorityRecommendations": "Recomendações Prioritárias",
+    "viewDetails": "Ver Detalhes",
+    "score": "Pontuação",
+    "grade": "Nota",
+    "desktop": "Desktop",
+    "mobile": "Móvel",
+    "good": "Bom",
+    "fair": "Regular",
+    "needsWork": "Precisa Melhorar",
+    "error": "Erro",
+    "na": "N/D"
+  },
+  "common": {
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "language": "Idioma"
+  }
+}
