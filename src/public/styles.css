@@ -439,6 +439,7 @@ p {
   padding: 0.75rem 1.5rem;
   gap: 2rem;
   backdrop-filter: blur(10px);
+  overflow: visible; /* Allow dropdowns to overflow header */
 }
 
 /* Left section - Font size controls */
@@ -481,6 +482,8 @@ p {
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+  position: relative;
+  overflow: visible; /* Allow dropdowns to overflow */
 }
 
 /* Theme Toggle - Now in unified header */
@@ -709,7 +712,7 @@ p {
   align-items: center;
   justify-content: flex-start; /* Left-align for better mobile scrolling */
   gap: 0.5rem;
-  z-index: 999;
+  z-index: 900; /* Reduced to allow dropdowns to appear above */
   background: var(--bg-secondary);
   padding: 0.5rem 1rem;
   border-bottom: 1px solid var(--border-primary);
@@ -721,6 +724,45 @@ p {
   -webkit-overflow-scrolling: touch;
   scrollbar-width: thin;
   scrollbar-color: var(--accent-primary) var(--bg-secondary);
+}
+
+/* Ensure dropdowns, selects, and translation widgets appear above navigation and header */
+select,
+.goog-te-combo,
+.goog-te-gadget,
+.goog-te-gadget-simple,
+.goog-te-menu-frame,
+.goog-te-menu-frame *,
+.goog-te-banner-frame,
+[role="combobox"],
+[role="listbox"],
+.skiptranslate,
+.skiptranslate *,
+.goog-te-menu2,
+.goog-te-menu-value {
+  z-index: 99999 !important;
+}
+
+/* Make sure the dropdown container itself has proper stacking */
+.skiptranslate iframe,
+.goog-te-menu-frame iframe {
+  z-index: 100000 !important;
+  position: fixed !important;
+}
+
+/* Ensure parent containers don't restrict z-index */
+.unified-header,
+.unified-header-right,
+.unified-header-left,
+.unified-header-center {
+  overflow: visible !important;
+}
+
+/* Force the header to not clip children */
+body > header,
+#nav-placeholder,
+#nav-placeholder * {
+  overflow: visible !important;
 }
 
 /* Hide scrollbar but keep functionality */
@@ -841,6 +883,52 @@ body {
 }
 
 /* ===== RESPONSIVE DESIGN ===== */
+
+/* Large tablets and small laptops - Compact navigation */
+@media (max-width: 1100px) {
+  .top-nav {
+    gap: 0.35rem; /* Reduced from 0.5rem */
+    padding: 0.4rem 0.75rem; /* Reduced from 0.5rem 1rem */
+  }
+
+  .nav-link {
+    padding: 6px 10px; /* Reduced from 8px 14px */
+    font-size: 0.8rem; /* Reduced from 0.85rem */
+    gap: 5px; /* Reduced from 6px */
+  }
+
+  .nav-icon {
+    font-size: 0.95rem; /* Slightly smaller */
+  }
+
+  .nav-badge {
+    font-size: 0.6rem; /* Slightly smaller */
+    padding: 1px 4px; /* More compact */
+  }
+}
+
+/* Medium tablets - More compact navigation */
+@media (max-width: 900px) {
+  .top-nav {
+    gap: 0.25rem; /* Further reduced */
+    padding: 0.35rem 0.5rem; /* Further reduced */
+  }
+
+  .nav-link {
+    padding: 5px 8px; /* Further reduced */
+    font-size: 0.75rem; /* Further reduced */
+    gap: 4px; /* Further reduced */
+  }
+
+  .nav-icon {
+    font-size: 0.9rem; /* Smaller icons */
+  }
+
+  .nav-badge {
+    font-size: 0.55rem; /* Smaller */
+    padding: 1px 3px; /* More compact */
+  }
+}
 
 /* Tablets and smaller */
 @media (max-width: 768px) {
