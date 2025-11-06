@@ -169,23 +169,25 @@ class LanguageSwitcher {
       /* Language Switcher */
       .language-switcher {
         position: relative;
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
         margin-left: auto;
-        z-index: 9999;
+        z-index: 99999 !important;
       }
 
       .language-switcher-trigger {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 0.75rem;
-        background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 6px;
+        gap: 0.35rem;
+        padding: 0.35rem 0.6rem;
+        background: rgba(255, 255, 255, 0.08);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 4px;
         cursor: pointer;
         transition: all 0.2s ease;
         font-family: 'Courier New', monospace;
         white-space: nowrap;
+        font-size: 0.8rem;
       }
 
       .language-switcher-trigger:hover {
@@ -194,14 +196,15 @@ class LanguageSwitcher {
       }
 
       .language-flag {
-        font-size: 1.2rem;
+        font-size: 1rem;
         line-height: 1;
       }
 
       .language-code {
-        font-size: 0.85rem;
+        font-size: 0.75rem;
         font-weight: 600;
         color: var(--text-primary, #00ff41);
+        letter-spacing: 0.5px;
       }
 
       .dropdown-arrow {
@@ -217,18 +220,18 @@ class LanguageSwitcher {
         position: absolute;
         top: calc(100% + 0.5rem);
         right: 0;
-        min-width: 200px;
-        max-width: 250px;
+        min-width: 180px;
+        max-width: 220px;
         background: var(--bg-secondary, #1a1a1a);
         border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 6px;
-        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+        border-radius: 4px;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
         opacity: 0;
         visibility: hidden;
         transform: translateY(-10px);
         transition: all 0.2s ease;
         overflow: hidden;
-        z-index: 10000;
+        z-index: 100000 !important;
       }
 
       .language-dropdown.show {
@@ -273,23 +276,23 @@ class LanguageSwitcher {
 
       /* Light mode adjustments */
       body.white-theme .language-switcher-trigger {
-        background: rgba(0, 0, 0, 0.05);
-        border-color: rgba(0, 0, 0, 0.1);
+        background: rgba(0, 0, 0, 0.04);
+        border-color: rgba(0, 0, 0, 0.12);
       }
 
       body.white-theme .language-switcher-trigger:hover {
-        background: rgba(0, 0, 0, 0.08);
-        border-color: rgba(0, 122, 255, 0.5);
+        background: rgba(0, 0, 0, 0.06);
+        border-color: rgba(0, 0, 0, 0.2);
       }
 
       body.white-theme .language-code {
-        color: #007aff;
+        color: #333;
       }
 
       body.white-theme .language-dropdown {
         background: #ffffff;
-        border-color: rgba(0, 0, 0, 0.1);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-color: rgba(0, 0, 0, 0.15);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
       }
 
       body.white-theme .language-option {
@@ -321,22 +324,23 @@ class LanguageSwitcher {
         }
 
         .language-switcher-trigger {
-          padding: 0.4rem 0.6rem;
-          gap: 0.4rem;
+          padding: 0.3rem 0.5rem;
+          gap: 0.3rem;
+          font-size: 0.75rem;
         }
 
         .language-flag {
-          font-size: 1.1rem;
+          font-size: 0.95rem;
         }
 
         .language-code {
-          font-size: 0.8rem;
+          font-size: 0.7rem;
         }
 
         .language-dropdown {
           right: 0;
           left: auto;
-          min-width: 180px;
+          min-width: 160px;
           max-width: 90vw;
         }
       }
@@ -347,12 +351,13 @@ class LanguageSwitcher {
         }
 
         .language-switcher-trigger {
-          padding: 0.35rem 0.5rem;
-          gap: 0.3rem;
+          padding: 0.25rem 0.4rem;
+          gap: 0.25rem;
+          font-size: 0.7rem;
         }
 
         .language-flag {
-          font-size: 1rem;
+          font-size: 0.9rem;
         }
 
         .language-code {
@@ -360,28 +365,28 @@ class LanguageSwitcher {
         }
 
         .dropdown-arrow {
-          width: 10px;
-          height: 10px;
+          width: 8px;
+          height: 8px;
         }
 
         .language-dropdown {
           right: 0;
           left: auto;
-          min-width: 160px;
+          min-width: 150px;
           max-width: 85vw;
         }
 
         .language-option {
-          padding: 0.65rem 0.85rem;
-          gap: 0.6rem;
+          padding: 0.6rem 0.75rem;
+          gap: 0.5rem;
         }
 
         .language-option .language-name {
-          font-size: 0.85rem;
+          font-size: 0.8rem;
         }
 
-        .language-flag {
-          font-size: 1.1rem;
+        .language-option .language-flag {
+          font-size: 1rem;
         }
       }
 
