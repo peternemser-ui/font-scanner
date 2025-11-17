@@ -1,0 +1,32 @@
+{
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll.eslint": "explicit"
+  },
+  "files.eol": "\n",
+  "files.exclude": {
+    "**/node_modules": true,
+    "**/reports": true,
+    "**/.git": true
+  },
+  "search.exclude": {
+    "**/node_modules": true,
+    "**/reports": true,
+    "**/.git": true
+  },
+  "javascript.preferences.quoteStyle": "single",
+  "javascript.updateImportsOnFileMove.enabled": "always",
+  "eslint.validate": [
+    "javascript"
+  ],
+  "remote.SSH.remotePlatform": {
+    "font-scanner": "linux"
+  },
+  "remote.SSH.useLocalServer": false,
+  "terminal.integrated.defaultProfile.linux": "bash",
+  "sftp.printDebugLog": false,
+  "files.watcherExclude": {
+    "**/node_modules/**": true,
+    "**/reports/**": true
+  }
+}

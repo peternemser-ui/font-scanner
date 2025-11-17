@@ -1,0 +1,43 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "🚀 Deploy to Production",
+      "type": "shell",
+      "command": "git push origin main && ssh fontscanner@143.198.147.93 'cd /var/www/fontscanner && git pull && npm install --production && pm2 restart fontscanner'",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      },
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    },
+    {
+      "label": "⚡ Quick Deploy",
+      "type": "shell",
+      "command": "git push origin main && ssh fontscanner@143.198.147.93 'cd /var/www/fontscanner && git pull && pm2 restart fontscanner'",
+      "problemMatcher": []
+    },
+    {
+      "label": "📋 View Logs",
+      "type": "shell",
+      "command": "ssh fontscanner@143.198.147.93 'pm2 logs fontscanner --lines 50'",
+      "problemMatcher": []
+    },
+    {
+      "label": "📊 Check Status",
+      "type": "shell",
+      "command": "ssh fontscanner@143.198.147.93 'pm2 status'",
+      "problemMatcher": []
+    },
+    {
+      "label": "🔄 Restart App",
+      "type": "shell",
+      "command": "ssh fontscanner@143.198.147.93 'pm2 restart fontscanner'",
+      "problemMatcher": []
+    }
+  ]
+}

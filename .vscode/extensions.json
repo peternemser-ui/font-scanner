@@ -1,0 +1,12 @@
+{
+  "recommendations": [
+    "ms-vscode-remote.remote-ssh",
+    "ms-vscode-remote.remote-ssh-edit",
+    "liximomo.sftp",
+    "dbaeumer.vscode-eslint",
+    "esbenp.prettier-vscode",
+    "christian-kohler.path-intellisense",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github"
+  ]
+}
