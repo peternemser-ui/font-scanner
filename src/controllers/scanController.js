@@ -1,6 +1,6 @@
 const fontScannerService = require('../services/fontScannerService');
 const enhancedScannerService = require('../services/enhancedScannerService');
-const FontAnalyzer = require('../services/fontAnalyzer');
+// Removed unused FontAnalyzer import (fonts processed via fontScannerService/enhancedScannerService)
 const {
   testUrlReachability,
   normalizeUrl,
@@ -121,7 +121,7 @@ const scanWebsite = asyncHandler(async (req, res) => {
       
       // Process fonts from the basicScan
       if (fontsData?.fonts && Array.isArray(fontsData.fonts)) {
-        fontsData.fonts.forEach((font, fontIndex) => {
+  fontsData.fonts.forEach((font) => {
           const fontKey = font.fontFamily || font.name;
           if (fontKey) {
             allFonts.push({
@@ -699,6 +699,7 @@ const performBestInClassScan = asyncHandler(async (req, res) => {
 const performSEOScan = asyncHandler(async (req, res) => {
   let { url } = req.body;
   const requestId = req.id;
+  const { forceLightweight = false } = req.body; // allow manual override
 
   // Validate input
   if (!url) {
@@ -742,32 +743,57 @@ const performSEOScan = asyncHandler(async (req, res) => {
   logger.info('Starting SEO analysis', { url, requestId });
 
   const seoAnalyzer = require('../services/seoAnalyzer');
+  const lightweightSeoAnalyzer = require('../services/lightweightSeoAnalyzer');
   const startTime = Date.now();
   
+  // Auto-force lightweight for well-known bot-protected commercial domains
+  const hostname = new URL(url).hostname.toLowerCase();
+  const protectedDomains = ['cars.com','amazon.com','walmart.com'];
+  const autoForce = protectedDomains.some(d => hostname === d || hostname.endsWith(`.${d}`));
+
+  // Allow forcing lightweight mode (for known protected domains like cars.com)
+  if (!forceLightweight && !autoForce) {
+    try {
+      const seoResults = await seoAnalyzer.analyzeSEO(url);
+      const duration = Date.now() - startTime;
+      logger.info('SEO analysis completed (full mode)', { url, score: seoResults.score.overall, duration, requestId });
+      return res.json({
+        success: true,
+        url,
+        scanType: 'seo',
+        mode: 'full',
+        timestamp: new Date().toISOString(),
+        duration: `${(duration / 1000).toFixed(2)}s`,
+        results: seoResults
+      });
+    } catch (error) {
+      // Detect protocol / bot issues quickly and route to fallback
+      const errMsg = error.message || '';
+      const isProtocolOrBotIssue = /ERR_HTTP2_PROTOCOL_ERROR|Access denied|bot protection|captcha|cloudflare/i.test(errMsg);
+      logger.error('Full SEO analysis failed - deciding fallback path', { url, errMsg, isProtocolOrBotIssue, requestId });
+      // Proceed to lightweight fallback below
+    }
+  }
+
+  // Lightweight fallback path (either forced or full failed)
   try {
-    const seoResults = await seoAnalyzer.analyzeSEO(url);
+    logger.info('Starting lightweight SEO analysis (fallback)', { url, requestId, forced: forceLightweight });
+    const lightweightResults = await lightweightSeoAnalyzer.analyzeSEO(url);
     const duration = Date.now() - startTime;
-
-    logger.info('SEO analysis completed', { 
-      url, 
-      score: seoResults.score.overall, 
-      duration,
-      requestId 
-    });
-
-    res.json({
+    logger.info('Lightweight SEO analysis completed', { url, score: lightweightResults.score.overall, duration, requestId });
+    return res.json({
       success: true,
       url,
       scanType: 'seo',
+      mode: 'lightweight',
       timestamp: new Date().toISOString(),
       duration: `${(duration / 1000).toFixed(2)}s`,
-      results: seoResults
+      warning: 'Full headless analysis unavailable (protocol/bot protection). Limited fallback results returned.',
+      results: lightweightResults
     });
-
-  } catch (error) {
-    logger.error('SEO analysis failed:', error);
-    const parsedError = parsePuppeteerError(error);
-    throw new Error(parsedError.userMessage || 'SEO analysis failed. Please try again.');
+  } catch (fallbackError) {
+    logger.error('Lightweight fallback also failed', { url, fallbackError: fallbackError.message, requestId });
+    throw new Error(fallbackError.message || 'SEO analysis failed and fallback unavailable.');
   }
 });
 

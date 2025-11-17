@@ -23,7 +23,18 @@ class AccessibilityAnalyzerService {
     try {
       // Collect Puppeteer metrics first (always works)
       logger.info('Collecting accessibility metrics via Puppeteer...');
-      const accessibilityMetrics = await this.collectAccessibilityMetrics(url);
+      let accessibilityMetrics;
+      try {
+        accessibilityMetrics = await this.collectAccessibilityMetrics(url);
+      } catch (navError) {
+        // Provide minimal metrics so downstream processing can continue.
+        logger.warn(`Accessibility Puppeteer metrics collection failed, using minimal fallback: ${navError.message}`);
+        accessibilityMetrics = {
+          contrast: [],
+          keyboard: { focusableElements: [], tabTraps: [], missingFocusIndicators: [] },
+          aria: { landmarks: [], missingLabels: [], invalidRoles: [], headings: [] }
+        };
+      }
       
       // Try Lighthouse, but use Puppeteer-only fallback if it fails
       let desktopLighthouse, mobileLighthouse;
@@ -376,9 +387,8 @@ class AccessibilityAnalyzerService {
   /**
    * Simplified contrast ratio calculation
    */
-  calculateSimplifiedContrastRatio(color, bgColor) {
-    // This is a simplified version. In production, use proper color parsing and WCAG formula
-    // Returning random values for demonstration
+  calculateSimplifiedContrastRatio() {
+    // This is a placeholder; replace with actual contrast calculation.
     return Math.random() * 10 + 2; // Returns between 2 and 12
   }
 

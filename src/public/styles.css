@@ -280,14 +280,8 @@ body.white-theme [style*="color: #e0e0e0"] {
   color: #495057 !important; /* WCAG AA compliant dark gray (7.4:1) */
 }
 
-/* Explicit font-face declarations for better control */
-@font-face {
-  font-family: 'JetBrains Mono';
-  font-style: normal;
-  font-weight: 300 700;
-  font-display: swap;
-  src: local('JetBrains Mono'), url('https://fonts.gstatic.com/s/jetbrainsmono/v13/tDbY2o-flEEny0FZhsfKu5WU4zr3E_BX0PnT8RD8yK1jPVmUsaaDhw.woff2') format('woff2');
-}
+/* JetBrains Mono Font - using Google Fonts CDN */
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
 /* Base body styling */
 body {

@@ -93,9 +93,15 @@ function parsePuppeteerError(error) {
     return new AppError('Too many redirects encountered. The website may have a redirect loop.', 508);
   }
 
-  // Access denied errors
-  if (message.includes('net::ERR_ACCESS_DENIED') || message.includes('403')) {
-    return new AppError('Access denied. The website blocked the scan request.', 403);
+  // Access denied / bot detection errors
+  if (message.includes('net::ERR_ACCESS_DENIED') || 
+      message.includes('403') ||
+      message.includes('blocked') ||
+      message.includes('captcha') ||
+      message.includes('bot detection') ||
+      message.includes('cloudflare') ||
+      message.includes('access denied')) {
+    return new AppError('Access denied. This website uses bot protection and cannot be analyzed. Try a different website or contact the site owner.', 403);
   }
 
   // Protocol errors

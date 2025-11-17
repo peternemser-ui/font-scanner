@@ -25,14 +25,45 @@ class SEOAnalyzer {
       const page = await browser.newPage();
       
       try {
-        // Set viewport for mobile testing
-        await page.setViewport({ width: 1920, height: 1080 });
+  // Use a realistic desktop profile
+  await page.setViewport({ width: 1920, height: 1080 });
+  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
         
         // Navigate to page with timeout and capture response
+        logger.info('Navigating to page', { url });
         const response = await page.goto(url, {
           waitUntil: 'networkidle2',
           timeout: this.timeout
         });
+        logger.info('Navigation completed', { url, status: response ? response.status() : 'unknown' });
+
+        // Check for bot detection / access denied
+        if (response && (response.status() === 403 || response.status() === 429)) {
+          throw new Error(`Access denied (${response.status()}). This website uses bot protection and cannot be analyzed.`);
+        }
+
+        // Check page content for common bot detection patterns
+        const pageContent = await page.content();
+        const botDetectionPatterns = [
+          /cloudflare/i,
+          /captcha/i,
+          /bot[\s-]?detection/i,
+          /access[\s-]?denied/i,
+          /checking your browser/i,
+          /ray id:/i // Cloudflare Ray ID
+        ];
+
+        const hasBotDetection = botDetectionPatterns.some(pattern => pattern.test(pageContent));
+        if (hasBotDetection) {
+          // Double-check by looking for title
+          const title = await page.title();
+          logger.warn('Bot detection patterns found', { url, title });
+          if (title.toLowerCase().includes('attention required') || 
+              title.toLowerCase().includes('just a moment') ||
+              title.toLowerCase().includes('access denied')) {
+            throw new Error('Bot protection detected. This website blocks automated analysis. Try a different website or contact the site owner.');
+          }
+        }
 
         // Run analysis functions that can safely run in parallel
         const [

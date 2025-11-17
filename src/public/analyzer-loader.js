@@ -238,9 +238,15 @@ class AnalyzerLoader {
           <p class="loading-subtitle">${message}</p>
         </div>
         <div style="text-align: center; margin-top: 2rem;">
-          <button class="analyze-button" onclick="location.reload()">Try Again</button>
+          <button class="analyze-button" id="retry-button">Try Again</button>
         </div>
       `;
+      
+      // Add event listener (CSP-compliant)
+      const retryButton = loader.querySelector('#retry-button');
+      if (retryButton) {
+        retryButton.addEventListener('click', () => location.reload());
+      }
     }
     clearInterval(this.progressInterval);
   }

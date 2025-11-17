@@ -51,6 +51,11 @@ class BrowserPool {
                 '--disable-accelerated-2d-canvas',
                 '--no-first-run',
                 '--disable-gpu',
+                // Some enterprise sites negotiate HTTP/2 in ways that can
+                // cause Chromium to surface net::ERR_HTTP2_PROTOCOL_ERROR.
+                // Disabling HTTP/2 forces HTTP/1.1 which is broadly
+                // compatible and prevents hard failures on navigation.
+                '--disable-http2',
                 // Lighthouse compatibility fixes for NO_FCP errors
                 '--disable-blink-features=AutomationControlled',
                 '--disable-features=IsolateOrigins,site-per-process',

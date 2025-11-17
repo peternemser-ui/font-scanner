@@ -271,6 +271,25 @@ function displayDashboard(data) {
   `;
 
   container.innerHTML = summaryHTML;
+
+  // Add event listeners for action cards (CSP-compliant)
+  const actionCards = container.querySelectorAll('.action-card');
+  actionCards.forEach(card => {
+    const hoverBorder = card.dataset.hoverBorder;
+    const hoverBg = card.dataset.hoverBg;
+    const defaultBorder = card.dataset.defaultBorder;
+    const defaultBg = card.dataset.defaultBg;
+
+    card.addEventListener('mouseover', function() {
+      this.style.borderColor = hoverBorder;
+      this.style.background = hoverBg;
+    });
+
+    card.addEventListener('mouseout', function() {
+      this.style.borderColor = defaultBorder;
+      this.style.background = defaultBg;
+    });
+  });
 }
 
 /**
@@ -365,15 +384,17 @@ function createActionCard(title, key, scores, data, link, icon) {
 
   return `
     <a href="${link}" style="text-decoration: none; display: block;">
-      <div style="
+      <div class="action-card" data-card-key="${key}" style="
         padding: 1.5rem;
         background: ${cardBg};
         border: 1px solid ${cardBorder};
         border-radius: 8px;
         transition: all 0.3s ease;
         cursor: pointer;
-      " onmouseover="this.style.borderColor='${isLightMode ? '#00796b' : '#00ff41'}'; this.style.background='${isLightMode ? '#e0f7fa' : 'rgba(0,255,65,0.1)'}'" 
-         onmouseout="this.style.borderColor='${cardBorder}'; this.style.background='${cardBg}'">
+      " data-hover-border="${isLightMode ? '#00796b' : '#00ff41'}" 
+         data-hover-bg="${isLightMode ? '#e0f7fa' : 'rgba(0,255,65,0.1)'}" 
+         data-default-border="${cardBorder}" 
+         data-default-bg="${cardBg}">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
           <div style="color: ${cardTextColor}; line-height: 0;">${icon}</div>
           <div style="

@@ -18,7 +18,7 @@ const testUrlReachability = async (url, timeout = 5000) => {
     const urlObj = new URL(url);
     const client = urlObj.protocol === 'https:' ? https : http;
     
-    return new Promise((resolve) => {
+    const headProbe = () => new Promise((resolve) => {
       const req = client.request({
         hostname: urlObj.hostname,
         port: urlObj.port,
@@ -38,6 +38,34 @@ const testUrlReachability = async (url, timeout = 5000) => {
         resolve(false);
       });
       
+      req.end();
+    });
+
+    // If HEAD fails (some sites block it), try a very small GET range request
+    const gotHead = await headProbe();
+    if (gotHead) return true;
+
+    return await new Promise((resolve) => {
+      const req = client.request({
+        hostname: urlObj.hostname,
+        port: urlObj.port,
+        path: urlObj.pathname + urlObj.search,
+        method: 'GET',
+        timeout: timeout,
+        headers: {
+          'User-Agent': 'Font-Scanner/1.0',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Encoding': 'identity',
+          'Range': 'bytes=0-1024', // fetch only first KB to minimize bandwidth
+          'Connection': 'close'
+        }
+      }, (res) => {
+        // Consider reachable if we get any 2xx/3xx back
+        resolve(res.statusCode >= 200 && res.statusCode < 400);
+        res.resume(); // discard body
+      });
+      req.on('error', () => resolve(false));
+      req.on('timeout', () => { req.destroy(); resolve(false); });
       req.end();
     });
   } catch (error) {

@@ -21,7 +21,37 @@ class PerformanceAnalyzerService {
     try {
       // Collect Puppeteer metrics first (always works)
       logger.info('Collecting resource metrics via Puppeteer...');
-      const resourceMetrics = await this.collectResourceMetrics(url);
+      let resourceMetrics;
+      try {
+        resourceMetrics = await this.collectResourceMetrics(url);
+      } catch (navError) {
+        // If navigation fails (e.g., HTTP/2 protocol error / bot protection),
+        // create a minimal metrics object so we can still run Lighthouse
+        // and produce an estimated result instead of failing the endpoint.
+        logger.warn(`Puppeteer metrics collection failed, continuing with minimal metrics: ${navError.message}`);
+        resourceMetrics = {
+          resources: [],
+          pageSize: 0,
+          url,
+          status: 0,
+          timing: {
+            navigation: {
+              domContentLoaded: 0,
+              loadComplete: 0,
+              domInteractive: 0,
+              ttfb: 0,
+              dns: 0,
+              tcp: 0,
+              ssl: 0,
+              request: 0,
+              response: 0,
+              domProcessing: 0,
+              totalLoadTime: 0,
+            },
+            webVitals: { lcp: 0, fid: 0, cls: 0 }
+          }
+        };
+      }
       
       // Try Lighthouse with timeout, fallback if fails
       let desktopLighthouse, mobileLighthouse;

@@ -27,6 +27,8 @@ class LighthouseAnalyzer {
             '--disable-background-timer-throttling',
             '--disable-backgrounding-occluded-windows',
             '--disable-renderer-backgrounding',
+            // Match pool behavior to avoid HTTP/2 protocol navigation issues
+            '--disable-http2',
           ],
           logLevel: 'info',
         });

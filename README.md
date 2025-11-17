@@ -36,6 +36,26 @@ A comprehensive, enterprise-grade web application that analyzes websites for fon
 - **Orchestration**: Kubernetes with HPA, PDB, and network policies
 - **CI/CD**: GitHub Actions with security scanning
 
+## Important: Supported Websites
+
+Font Scanner works best with:
+
+✅ **Recommended Sites:**
+- Your own websites and client projects
+- Small to medium business websites
+- Development/staging environments
+- Bot-friendly sites: `example.com`, `wikipedia.org`, `github.com`
+
+❌ **Sites That Will Be Blocked:**
+- Major e-commerce platforms (Amazon, Walmart, Target)
+- Commercial automotive sites (cars.com, autotrader.com)
+- Large retail chains with aggressive bot protection
+- Any site using Cloudflare Enterprise WAF or similar
+
+**Why?** These sites use advanced bot detection (Cloudflare, PerimeterX, etc.) that blocks automated analysis tools. This is expected behavior, not a bug. Use [Google PageSpeed Insights](https://pagespeed.web.dev/) for these sites instead.
+
+**Fallback Mode:** Font Scanner automatically attempts a lightweight HTTP-based analysis if full Puppeteer analysis is blocked. This provides basic SEO metrics (meta tags, headings, content) but no Core Web Vitals or performance data.
+
 ## Quick Start
 
 ### Local Development
@@ -177,6 +197,52 @@ make security-scan     # Run security scans
 ```
 
 See `make help` for complete list of commands.
+
+## Troubleshooting
+
+### "Analysis Failed" or 500 Error
+
+**Problem:** Site returns error during analysis
+
+**Common Causes:**
+1. **Bot Protection** (Most Common)
+   - Major e-commerce sites (Amazon, Walmart, Target)
+   - Automotive sites (cars.com, autotrader.com)
+   - Any site with Cloudflare Enterprise, PerimeterX, or similar
+   - **Solution:** This is expected. Use [Google PageSpeed Insights](https://pagespeed.web.dev/) for these sites.
+
+2. **Slow/Unresponsive Site**
+   - Site takes >30 seconds to load
+   - **Solution:** Check if site loads normally in your browser first
+
+3. **Invalid URL**
+   - Missing `https://` (auto-added but verify)
+   - Typo in domain name
+   - **Solution:** Copy URL directly from browser address bar
+
+### Which Sites Work?
+
+✅ **Will Work:**
+- Your own websites
+- Client projects you manage
+- Small to medium business sites
+- Development/staging environments
+- Bot-friendly sites: example.com, wikipedia.org, github.com
+
+❌ **Will Be Blocked:**
+- Major e-commerce: Amazon, eBay, Walmart
+- Large retail: Target, Best Buy, Home Depot
+- Automotive: cars.com, autotrader.com, edmunds.com
+- Travel: booking.com, expedia.com
+- Any site actively blocking automation
+
+### Need to Analyze a Bot-Protected Site?
+
+Use these alternatives:
+- **[Google PageSpeed Insights](https://pagespeed.web.dev/)** - Official Google tool (bypasses bot protection)
+- **Chrome DevTools Lighthouse** - Built into Chrome (F12 → Lighthouse tab)
+- **[WebPageTest](https://www.webpagetest.org/)** - May work for some sites
+- **Real User Monitoring** - Install analytics on sites you control
 
 ## Project Structure
 

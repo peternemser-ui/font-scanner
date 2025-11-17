@@ -1,0 +1,17 @@
+# Font Scanner - robots.txt
+# https://fontscanner.app/robots.txt
+
+User-agent: *
+Allow: /
+
+# Sitemaps
+Sitemap: https://fontscanner.app/sitemap.xml
+
+# Disallow backup and demo files
+Disallow: /index_backup.html
+Disallow: /index_simple.html
+Disallow: /*demo.html
+Disallow: /theme-debug.html
+
+# Crawl-delay to be respectful (optional)
+Crawl-delay: 1
