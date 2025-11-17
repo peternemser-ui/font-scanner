@@ -46,6 +46,87 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Performance Analyzer",
+      "alternateName": "Website Speed & Core Web Vitals Analyzer",
+      "url": "https://fontscanner.app/performance-analyzer.html",
+      "description": "Professional performance analysis tool for web developers. Analyze website speed, Core Web Vitals (LCP, FID, CLS), resource optimization, loading performance, and get actionable optimization insights.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Core Web Vitals Analysis (LCP, FID, CLS)",
+        "Page Speed Metrics",
+        "Resource Optimization",
+        "Loading Performance",
+        "Mobile & Desktop Testing",
+        "Performance Budget",
+        "Lighthouse Integration",
+        "Actionable Recommendations"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://fontscanner.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Performance Analyzer",
+          "item": "https://fontscanner.app/performance-analyzer.html"
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What are Core Web Vitals?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Core Web Vitals are Google's metrics for measuring user experience: LCP (Largest Contentful Paint) measures loading performance, FID (First Input Delay) measures interactivity, and CLS (Cumulative Layout Shift) measures visual stability."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is a good LCP score?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A good LCP (Largest Contentful Paint) score is 2.5 seconds or less. Scores between 2.5-4.0 seconds need improvement, and scores over 4.0 seconds are considered poor."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How can I improve my website performance?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "To improve website performance: optimize images, minify CSS/JS, enable compression, use a CDN, implement lazy loading, reduce server response time, eliminate render-blocking resources, and optimize Core Web Vitals."
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->

@@ -50,6 +50,54 @@
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
     <script src="/language-switcher.js"></script>
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Font Scanner Dashboard",
+      "url": "https://fontscanner.app/dashboard.html",
+      "description": "Unified dashboard for comprehensive website analysis. Get SEO, Performance, Accessibility, Security, Typography, and Core Web Vitals insights in one powerful view.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "SEO Analysis",
+        "Performance Metrics",
+        "Accessibility Audit",
+        "Security Scanning",
+        "Typography Analysis",
+        "Core Web Vitals",
+        "Mobile & Desktop Analysis",
+        "Unified Reporting"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://fontscanner.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Dashboard",
+          "item": "https://fontscanner.app/dashboard.html"
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->

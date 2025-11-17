@@ -48,6 +48,103 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Accessibility Analyzer",
+      "alternateName": "WCAG & ADA Compliance Testing Tool",
+      "url": "https://fontscanner.app/accessibility-analyzer.html",
+      "description": "Professional accessibility testing tool for web developers. Comprehensive WCAG 2.1, ADA compliance audits. Test color contrast, keyboard navigation, screen reader compatibility, ARIA implementation, and accessibility best practices.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Web Browser",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "WCAG 2.1 Compliance Testing",
+        "ADA Compliance Audit",
+        "Color Contrast Analysis",
+        "Keyboard Navigation Testing",
+        "Screen Reader Compatibility",
+        "ARIA Validation",
+        "Accessibility Best Practices",
+        "Section 508 Compliance"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://fontscanner.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Accessibility Analyzer",
+          "item": "https://fontscanner.app/accessibility-analyzer.html"
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is WCAG 2.1?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "WCAG 2.1 (Web Content Accessibility Guidelines) is an international standard for web accessibility developed by W3C. It provides guidelines to make web content more accessible to people with disabilities, including visual, auditory, physical, speech, cognitive, language, learning, and neurological disabilities."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is the minimum color contrast ratio for WCAG AA compliance?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "For WCAG AA compliance, normal text requires a minimum contrast ratio of 4.5:1, and large text (18pt or 14pt bold) requires 3:1. For WCAG AAA compliance, normal text requires 7:1 and large text requires 4.5:1."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What is ADA compliance for websites?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ADA (Americans with Disabilities Act) compliance for websites means ensuring your website is accessible to people with disabilities. While the ADA doesn't specify technical standards, courts typically reference WCAG 2.1 Level AA as the benchmark for compliance."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Why is web accessibility important?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Web accessibility is important because: it ensures equal access for people with disabilities (15% of the global population), it's often legally required (ADA, Section 508), it improves SEO, expands your audience, enhances user experience for everyone, and demonstrates social responsibility."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are ARIA attributes?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "ARIA (Accessible Rich Internet Applications) attributes are HTML attributes that provide additional semantic information to assistive technologies like screen readers. They help make dynamic web content and custom UI components more accessible by defining roles, states, and properties."
+          }
+        }
+      ]
+    }
+    </script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->

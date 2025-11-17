@@ -65,10 +65,12 @@
       "description": "Professional font analysis tool for web developers. Scan websites for font usage, performance, accessibility, and typography best practices.",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Web Browser",
+      "browserRequirements": "Requires JavaScript. Requires HTML5.",
       "offers": {
         "@type": "Offer",
         "price": "0",
-        "priceCurrency": "USD"
+        "priceCurrency": "USD",
+        "availability": "https://schema.org/InStock"
       },
       "featureList": [
         "Web Font Analysis",
@@ -85,7 +87,13 @@
       "aggregateRating": {
         "@type": "AggregateRating",
         "ratingValue": "5.0",
-        "ratingCount": "1"
+        "ratingCount": "1",
+        "bestRating": "5",
+        "worstRating": "1"
+      },
+      "author": {
+        "@type": "Organization",
+        "name": "Font Scanner"
       }
     }
     </script>
@@ -95,8 +103,102 @@
       "@type": "Organization",
       "name": "Font Scanner",
       "url": "https://fontscanner.app",
-      "logo": "https://fontscanner.app/logo.png",
-      "sameAs": []
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://fontscanner.app/logo.png",
+        "width": "512",
+        "height": "512"
+      },
+      "sameAs": [],
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer support",
+        "url": "https://fontscanner.app"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Font Scanner",
+      "url": "https://fontscanner.app",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://fontscanner.app/?url={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://fontscanner.app/"
+        },
+        {
+          "@type": "ListItem",
+          "position": 2,
+          "name": "Font Scanner",
+          "item": "https://fontscanner.app/"
+        }
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "What is Font Scanner?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Font Scanner is a comprehensive web typography analysis tool that helps developers analyze website fonts, performance, accessibility, and best practices. It provides detailed insights on web fonts, loading performance, and optimization opportunities."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is Font Scanner free to use?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes, Font Scanner is completely free to use. You can analyze any website's typography, performance, accessibility, and SEO without any cost."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What does Font Scanner analyze?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Font Scanner provides comprehensive analysis including: Web Font Analysis, Typography Audit, Performance Analysis, Accessibility Testing (WCAG), Core Web Vitals, SEO Analysis, Security Scanning, and supports multiple languages."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Does Font Scanner work with all websites?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Font Scanner works with most websites. However, some major commercial sites with bot protection (like Amazon, Walmart) may block automated analysis. It works best with your own websites, client projects, or publicly accessible web pages."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What are Core Web Vitals?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Core Web Vitals are Google's metrics for measuring user experience: LCP (Largest Contentful Paint) for loading performance, FID (First Input Delay) for interactivity, and CLS (Cumulative Layout Shift) for visual stability. Font Scanner analyzes all these metrics."
+          }
+        }
+      ]
     }
     </script>
   </head>
