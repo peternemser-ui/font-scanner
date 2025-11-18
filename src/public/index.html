@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -12,34 +12,34 @@
     <meta name="keywords" content="font scanner, web fonts, font analysis, typography, web typography, font performance, accessibility, WCAG, Core Web Vitals, font optimization, web development tools, SEO tools, font audit" />
     <meta name="author" content="Font Scanner" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-    <link rel="canonical" href="https://fontscanner.app/" />
+    <link rel="canonical" href="https://font-scanner.com/" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://fontscanner.app/" />
+    <meta property="og:url" content="https://font-scanner.com/" />
     <meta property="og:title" content="Font Scanner - Comprehensive Web Typography Analysis" />
     <meta property="og:description" content="Professional font analysis tool for web developers. Scan websites for font usage, performance, accessibility, and typography best practices." />
-    <meta property="og:image" content="https://fontscanner.app/og-image.png" />
+    <meta property="og:image" content="https://font-scanner.com/og-image.png" />
     <meta property="og:site_name" content="Font Scanner" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://fontscanner.app/" />
+    <meta property="twitter:url" content="https://font-scanner.com/" />
     <meta property="twitter:title" content="Font Scanner - Comprehensive Web Typography Analysis" />
     <meta property="twitter:description" content="Professional font analysis tool for web developers. Scan websites for font usage, performance, accessibility, and typography best practices." />
-    <meta property="twitter:image" content="https://fontscanner.app/twitter-image.png" />
+    <meta property="twitter:image" content="https://font-scanner.com/twitter-image.png" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
     <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    
+
     <!-- Preload critical fonts with font-display swap -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    
+
     <!-- Load fonts with optimal font-display strategy -->
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css" />
@@ -61,7 +61,7 @@
       "@context": "https://schema.org",
       "@type": "WebApplication",
       "name": "Font Scanner",
-      "url": "https://fontscanner.app",
+      "url": "https://font-scanner.com",
       "description": "Professional font analysis tool for web developers. Scan websites for font usage, performance, accessibility, and typography best practices.",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Web Browser",
@@ -82,7 +82,7 @@
         "Security Scanning",
         "Multi-language Support"
       ],
-      "screenshot": "https://fontscanner.app/screenshot.png",
+      "screenshot": "https://font-scanner.com/screenshot.png",
       "softwareVersion": "1.0.0",
       "aggregateRating": {
         "@type": "AggregateRating",
@@ -102,10 +102,10 @@
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Font Scanner",
-      "url": "https://fontscanner.app",
+      "url": "https://font-scanner.com",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://fontscanner.app/logo.png",
+        "url": "https://font-scanner.com/logo.png",
         "width": "512",
         "height": "512"
       },
@@ -113,7 +113,7 @@
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "customer support",
-        "url": "https://fontscanner.app"
+        "url": "https://font-scanner.com"
       }
     }
     </script>
@@ -122,12 +122,12 @@
       "@context": "https://schema.org",
       "@type": "WebSite",
       "name": "Font Scanner",
-      "url": "https://fontscanner.app",
+      "url": "https://font-scanner.com",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
           "@type": "EntryPoint",
-          "urlTemplate": "https://fontscanner.app/?url={search_term_string}"
+          "urlTemplate": "https://font-scanner.com/?url={search_term_string}"
         },
         "query-input": "required name=search_term_string"
       }
@@ -142,13 +142,13 @@
           "@type": "ListItem",
           "position": 1,
           "name": "Home",
-          "item": "https://fontscanner.app/"
+          "item": "https://font-scanner.com/"
         },
         {
           "@type": "ListItem",
           "position": 2,
           "name": "Font Scanner",
-          "item": "https://fontscanner.app/"
+          "item": "https://font-scanner.com/"
         }
       ]
     }
@@ -201,11 +201,21 @@
       ]
     }
     </script>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TZ2S73Q6BK"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-TZ2S73Q6BK');
+    </script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
-    
+
     <div class="container">      <!-- Header -->
       <header class="form-container">
         <h1 data-i18n="fontScanner.title">Font Scanner</h1>
@@ -370,22 +380,28 @@
 
     <!-- Socket.IO Client Library -->
     <script src="/socket.io/socket.io.js"></script>
-    
+
     <!-- Shared Navigation Template -->
     <script src="nav-template.js"></script>
-    
+
     <!-- Analyzer Loader -->
     <script src="analyzer-loader.js"></script>
-    
+
     <!-- UI Components Library -->
     <script src="ui-components.js"></script>
-    
+
     <!-- Interactive Recommendations -->
     <script src="interactive-recommendations.js"></script>
-    
+
     <!-- Modern UI Enhancements -->
     <script src="modern-ui.js"></script>
-    
+
     <script src="script.js"></script>
+
+    <!-- Footer Bar -->
+    <div style="position: fixed; bottom: 0; left: 0; right: 0; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #fff; padding: 8px 20px; font-size: 13px; text-align: center; z-index: 9999; border-top: 1px solid rgba(94, 243, 154, 0.3); box-shadow: 0 -2px 10px rgba(0,0,0,0.3);">
+      Font Scanner by <strong>Peter Freedman</strong> | Web optimization & development services |
+      <a href="mailto:peter@font-scanner.com" style="color: #5ef39a; text-decoration: none; font-weight: 600;">peter@font-scanner.com</a>
+    </div>
   </body>
 </html>
