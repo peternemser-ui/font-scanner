@@ -54,7 +54,7 @@ try {
 }
 
 // Security middleware
-app.use(
+/* app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
@@ -71,7 +71,7 @@ app.use(
     },
   })
 );
-
+*/
 // Rate limiting - Global limiter for all requests
 app.use(globalLimiter);
 
@@ -80,8 +80,12 @@ app.use(rateLimitLogger);
 
 // CORS
 app.use(
+
   cors({
-    origin: config.nodeEnv === 'production' ? false : true,
+    origin: config.cors.origin,
+    credentials: true,
+    methods: ['GET' , 'POST'],
+    allowedHeaders: ['Content-Type', 'Authorization']
   })
 );
 
