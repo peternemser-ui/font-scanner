@@ -200,6 +200,9 @@ function initializeNavigation() {
   let activePageId = 'font-scanner'; // default
   let appTitle = 'FONT SCANNER';
   let subtitle = 'comprehensive web analysis platform';
+
+  // Remove any leftover merge conflict artifacts that may be rendered on the page
+  removeMergeConflictArtifacts();
   
   if (path.includes('dashboard')) {
     activePageId = 'dashboard';
@@ -245,6 +248,39 @@ function initializeNavigation() {
   initializeThemeControls();
   initializeHamburgerMenu();
   ensureGlobalFooter();
+}
+
+/**
+ * Strip merge conflict markers that might appear on legacy deployments
+ */
+function removeMergeConflictArtifacts() {
+  const conflictRegex = /<<<<<<< HEAD[\s\S]*?>>>>>>>[ \t]*[0-9a-f]+/gi;
+  const additionalPhrases = [
+    'Updated deployment scripts and server files'
+  ];
+
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodesToClean = [];
+
+  while (walker.nextNode()) {
+    nodesToClean.push(walker.currentNode);
+  }
+
+  nodesToClean.forEach(node => {
+    let text = node.nodeValue || '';
+    const originalText = text;
+
+    text = text.replace(conflictRegex, '');
+    additionalPhrases.forEach(phrase => {
+      text = text.replace(phrase, '');
+    });
+
+    if (text.trim().length === 0) {
+      node.parentNode && node.parentNode.removeChild(node);
+    } else if (text !== originalText) {
+      node.nodeValue = text.trim();
+    }
+  });
 }
 
 /**
