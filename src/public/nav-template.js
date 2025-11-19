@@ -244,6 +244,27 @@ function initializeNavigation() {
   // Initialize controls after rendering
   initializeThemeControls();
   initializeHamburgerMenu();
+  ensureGlobalFooter();
+}
+
+/**
+ * Ensure the shared footer bar exists on every page
+ */
+function ensureGlobalFooter() {
+  const footerContent = `
+    Font Scanner by <strong>Peter Freedman</strong> |
+    Web optimization & development services |
+    <a href="mailto:peter@font-scanner.com" class="site-footer-link">peter@font-scanner.com</a>
+  `;
+
+  let footerBar = document.querySelector('.site-footer-bar');
+  if (!footerBar) {
+    footerBar = document.createElement('div');
+    footerBar.className = 'site-footer-bar';
+    document.body.appendChild(footerBar);
+  }
+
+  footerBar.innerHTML = footerContent;
 }
 
 /**
