@@ -19,6 +19,7 @@
   /* Font Size Control - Dynamic multiplier */
   --font-size-multiplier: 1.0;
   --base-font-size: 18px; /* Increased from 16px for better readability */
+  --app-title-size: 1.35rem; /* Keep header title consistent across pages */
   
   /* Background Colors */
   --bg-primary: #000000;
@@ -498,7 +499,7 @@ p {
 }
 
 .app-title {
-  font-size: 1.5rem;
+  font-size: var(--app-title-size, 1.35rem);
   font-weight: 700;
   color: var(--accent-primary);
   margin: 0;
@@ -1001,10 +1002,6 @@ body {
     text-align: center;
   }
   
-  .app-title {
-    font-size: 1rem;
-  }
-  
   .app-subtitle {
     font-size: 0.65rem;
   }
@@ -1045,11 +1042,6 @@ body {
     gap: 0.5rem;
   }
   
-  .app-title {
-    font-size: 0.85rem;
-    letter-spacing: 0.02em;
-  }
-  
   .app-subtitle {
     font-size: 0.6rem;
     display: none; /* Hide subtitle on very small screens */
@@ -1079,10 +1071,6 @@ body {
   .unified-header {
     padding: 0.3rem 0.4rem;
     gap: 0.4rem;
-  }
-  
-  .app-title {
-    font-size: 0.75rem;
   }
   
   body {

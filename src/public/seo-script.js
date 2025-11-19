@@ -166,8 +166,11 @@ function displaySEOResults(results) {
               dy="0.35em"
               font-size="3.5rem"
               font-weight="bold"
-              fill="#ffffff"
-              style="text-shadow: 0 0 10px ${getScoreColor(results.score.overall)}, 0 0 20px ${getScoreColor(results.score.overall)};"
+              fill="#f9fff2"
+              stroke="rgba(0, 0, 0, 0.65)"
+              stroke-width="2.5"
+              paint-order="stroke fill"
+              style="text-shadow: 0 0 18px ${getScoreColor(results.score.overall)}, 0 0 30px rgba(0,0,0,0.6);"
             >
               ${results.score.overall}
             </text>
@@ -207,8 +210,11 @@ function displaySEOResults(results) {
                 dy="0.35em"
                 font-size="3.5rem"
                 font-weight="bold"
-                fill="#ffffff"
-                style="text-shadow: 0 0 10px ${getScoreColor(data.score)}, 0 0 20px ${getScoreColor(data.score)};"
+                fill="#f9fff2"
+                stroke="rgba(0, 0, 0, 0.65)"
+                stroke-width="2.5"
+                paint-order="stroke fill"
+                style="text-shadow: 0 0 18px ${getScoreColor(data.score)}, 0 0 30px rgba(0,0,0,0.6);"
               >
                 ${data.score}
               </text>
