@@ -297,6 +297,43 @@ body {
   font-size: calc(var(--base-font-size) * var(--font-size-multiplier));
 }
 
+.site-footer-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+  color: #f8fbff;
+  padding: 0.5rem 1.5rem;
+  font-size: 0.85rem;
+  text-align: center;
+  z-index: 9999;
+  border-top: 1px solid rgba(94, 243, 154, 0.3);
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.site-footer-link {
+  color: #5ef39a;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.site-footer-link:hover,
+.site-footer-link:focus {
+  text-decoration: underline;
+}
+
+body.white-theme .site-footer-bar {
+  background: linear-gradient(135deg, #f8fff5 0%, #e8f7ff 100%);
+  color: #102a43;
+  border-top: 1px solid rgba(16, 122, 87, 0.2);
+  box-shadow: 0 -2px 12px rgba(15, 23, 42, 0.12);
+}
+
+body.white-theme .site-footer-link {
+  color: #0f915d;
+}
+
 /* Headings - use rem units so they scale with root multiplier */
 h1 {
   font-size: 2.5rem;
