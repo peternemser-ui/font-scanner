@@ -10,6 +10,9 @@ class AnalyzerLoader {
     this.currentStep = 0;
     this.startTime = null;
     this.progressInterval = null;
+    this.estimatedSeconds = 0;
+    this.isComplete = false;
+    this.overrunActive = false;
   }
 
   /**
@@ -22,6 +25,9 @@ class AnalyzerLoader {
     this.steps = steps;
     this.currentStep = 0;
     this.startTime = Date.now();
+    this.estimatedSeconds = Math.max(estimatedSeconds, this.steps.length * 2 || 10);
+    this.isComplete = false;
+    this.overrunActive = false;
     
     if (!this.container) {
       console.error('Loading container not found');
@@ -53,8 +59,8 @@ class AnalyzerLoader {
         </div>
 
         <div class="estimated-time">
-          <p class="time-label">Time remaining:</p>
-          <p class="time-value" id="timeRemaining">${this.formatTime(estimatedSeconds)}</p>
+          <p class="time-label" id="timeLabel">Time remaining:</p>
+          <p class="time-value" id="timeRemaining">${this.formatTime(this.estimatedSeconds)}</p>
         </div>
       </div>
     `;
@@ -62,7 +68,7 @@ class AnalyzerLoader {
     this.container.style.display = 'block';
     
     // Start progress simulation
-    this.simulateProgress(estimatedSeconds);
+    this.simulateProgress();
   }
 
   /**
@@ -149,28 +155,38 @@ class AnalyzerLoader {
   /**
    * Simulate progress with estimated time
    */
-  simulateProgress(estimatedSeconds) {
+  simulateProgress() {
     const updateInterval = 1000; // Update every second
     let elapsed = 0;
 
     this.progressInterval = setInterval(() => {
+      if (this.isComplete) {
+        clearInterval(this.progressInterval);
+        return;
+      }
+
       elapsed += updateInterval / 1000;
-      const remaining = Math.max(0, estimatedSeconds - elapsed);
+      const remaining = Math.max(0, this.estimatedSeconds - elapsed);
       
-      const timeElement = document.getElementById('timeRemaining');
-      if (timeElement) {
-        timeElement.textContent = this.formatTime(Math.ceil(remaining));
+      if (!this.overrunActive && remaining <= 0) {
+        this.enterOverrunState();
+      }
+
+      if (this.overrunActive) {
+        this.updateOverrunTime(elapsed);
+      } else {
+        this.updateTimeValue(this.formatTime(Math.ceil(remaining)));
       }
 
       // Auto-advance steps based on time
-      const stepDuration = estimatedSeconds / this.steps.length;
+      const stepDuration = this.steps.length ? this.estimatedSeconds / this.steps.length : this.estimatedSeconds;
       const expectedStep = Math.floor(elapsed / stepDuration);
       
       if (expectedStep > this.currentStep && expectedStep < this.steps.length) {
         this.nextStep(expectedStep);
       }
 
-      if (remaining <= 0) {
+      if (!this.overrunActive && remaining <= 0) {
         clearInterval(this.progressInterval);
       }
     }, updateInterval);
@@ -180,6 +196,8 @@ class AnalyzerLoader {
    * Complete the loading process
    */
   complete() {
+    this.isComplete = true;
+    this.overrunActive = false;
     // Mark all steps complete
     document.querySelectorAll('.progress-step').forEach(step => {
       step.classList.remove('active', 'pending');
@@ -214,6 +232,8 @@ class AnalyzerLoader {
    * Hide loading UI
    */
   hide() {
+    this.isComplete = true;
+    this.overrunActive = false;
     if (this.container) {
       const loader = this.container.querySelector('.analyzer-loading');
       if (loader) {
@@ -230,6 +250,7 @@ class AnalyzerLoader {
    * Show error state
    */
   showError(message) {
+    this.isComplete = true;
     const loader = this.container.querySelector('.analyzer-loading');
     if (loader) {
       loader.innerHTML = `
@@ -261,6 +282,32 @@ class AnalyzerLoader {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}m ${secs}s`;
+  }
+
+  updateTimeValue(displayText) {
+    const timeElement = document.getElementById('timeRemaining');
+    if (timeElement) {
+      timeElement.textContent = displayText;
+    }
+  }
+
+  enterOverrunState() {
+    if (this.overrunActive) return;
+    this.overrunActive = true;
+    const label = document.getElementById('timeLabel');
+    if (label) {
+      label.textContent = 'Additional time:';
+      label.classList.add('overrun');
+    }
+    const value = document.getElementById('timeRemaining');
+    if (value) {
+      value.classList.add('overrun');
+    }
+  }
+
+  updateOverrunTime(elapsedSeconds) {
+    const extraSeconds = Math.max(0, Math.ceil(elapsedSeconds - this.estimatedSeconds));
+    this.updateTimeValue(extraSeconds > 0 ? `+${extraSeconds}s` : '+0s');
   }
 }
 

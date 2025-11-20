@@ -121,7 +121,7 @@ function displaySecurityResults(data) {
 
   // Overall Security Summary with Circular Dials
   const summaryHtml = `
-    <div class="summary-section" style="border-left: 4px solid #ff4444; margin-bottom: 2rem;">
+    <div class="summary-section security-summary-panel">
       <h2>◈ Security Audit Summary</h2>
       
       <!-- Circular Progress Dials -->
@@ -156,8 +156,11 @@ function displaySecurityResults(data) {
               dy="0.35em"
               font-size="3.5rem"
               font-weight="bold"
-              fill="#ffffff"
-              style="text-shadow: 0 0 10px ${getScoreColor(data.overallScore)}, 0 0 20px ${getScoreColor(data.overallScore)};"
+              fill="#f9fff2"
+              stroke="rgba(0, 0, 0, 0.65)"
+              stroke-width="2.5"
+              paint-order="stroke fill"
+              style="text-shadow: 0 0 18px ${getScoreColor(data.overallScore)}, 0 0 30px rgba(0,0,0,0.6);"
             >
               ${data.overallScore}
             </text>
@@ -197,8 +200,11 @@ function displaySecurityResults(data) {
               dy="0.35em"
               font-size="3.5rem"
               font-weight="bold"
-              fill="#ffffff"
-              style="text-shadow: 0 0 10px ${getScoreColor(data.ssl.score)}, 0 0 20px ${getScoreColor(data.ssl.score)};"
+              fill="#f9fff2"
+              stroke="rgba(0, 0, 0, 0.65)"
+              stroke-width="2.5"
+              paint-order="stroke fill"
+              style="text-shadow: 0 0 18px ${getScoreColor(data.ssl.score)}, 0 0 30px rgba(0,0,0,0.6);"
             >
               ${data.ssl.score}
             </text>
@@ -238,8 +244,11 @@ function displaySecurityResults(data) {
               dy="0.35em"
               font-size="3.5rem"
               font-weight="bold"
-              fill="#ffffff"
-              style="text-shadow: 0 0 10px ${getScoreColor(data.headers.score)}, 0 0 20px ${getScoreColor(data.headers.score)};"
+              fill="#f9fff2"
+              stroke="rgba(0, 0, 0, 0.65)"
+              stroke-width="2.5"
+              paint-order="stroke fill"
+              style="text-shadow: 0 0 18px ${getScoreColor(data.headers.score)}, 0 0 30px rgba(0,0,0,0.6);"
             >
               ${data.headers.score}
             </text>
@@ -279,8 +288,11 @@ function displaySecurityResults(data) {
               dy="0.35em"
               font-size="3.5rem"
               font-weight="bold"
-              fill="#ffffff"
-              style="text-shadow: 0 0 10px ${getScoreColor(data.vulnerabilities.score)}, 0 0 20px ${getScoreColor(data.vulnerabilities.score)};"
+              fill="#f9fff2"
+              stroke="rgba(0, 0, 0, 0.65)"
+              stroke-width="2.5"
+              paint-order="stroke fill"
+              style="text-shadow: 0 0 18px ${getScoreColor(data.vulnerabilities.score)}, 0 0 30px rgba(0,0,0,0.6);"
             >
               ${data.vulnerabilities.score}
             </text>

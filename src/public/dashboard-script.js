@@ -87,8 +87,20 @@ async function runComprehensiveAnalysis() {
       fetch('/api/seo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
-      }).then(r => r.json()).then(data => {
+        body: JSON.stringify({ url, forceLightweight: true, source: 'dashboard' })
+      }).then(async (response) => {
+        let data;
+        try {
+          data = await response.json();
+        } catch (parseError) {
+          throw new Error('SEO analyzer returned an unexpected response.');
+        }
+
+        if (!response.ok || data.success === false) {
+          const message = data?.message || data?.error || 'SEO analysis failed.';
+          throw new Error(message);
+        }
+
         window.AnalyzerLoader.updateStep('seo', 'complete');
         window.AnalyzerLoader.updateProgress(50);
         return data;
@@ -364,6 +376,9 @@ function createAnalyzerDial(name, scores, icon, link) {
  */
 function createActionCard(title, key, scores, data, link, icon) {
   const hasError = data && data.error;
+  const limitedNote = data && data.warning
+    ? `<div style="margin-top: 0.5rem; color: #ffa500; font-size: 0.8rem;">${data.warning}</div>`
+    : '';
 
   // Calculate average score from desktop/mobile
   const avgScore = scores.desktop !== null && scores.mobile !== null
@@ -415,6 +430,7 @@ function createActionCard(title, key, scores, data, link, icon) {
         <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid ${borderTopColor};">
           <span style="color: ${detailsColor}; font-size: 0.9rem;">View Details →</span>
         </div>
+        ${limitedNote}
       </div>
     </a>
   `;

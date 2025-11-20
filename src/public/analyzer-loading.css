@@ -234,6 +234,15 @@
   font-variant-numeric: tabular-nums;
 }
 
+.time-label.overrun {
+  color: #ffd166;
+}
+
+.time-value.overrun {
+  color: #ffd166;
+  animation: etaPulse 1.2s ease-in-out infinite;
+}
+
 /* Loading Messages */
 .loading-messages {
   text-align: center;
@@ -282,6 +291,15 @@
 @keyframes fadeInOut {
   0%, 100% {
     opacity: 0.5;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@keyframes etaPulse {
+  0%, 100% {
+    opacity: 0.8;
   }
   50% {
     opacity: 1;
@@ -431,6 +449,14 @@ body.white-theme .time-label {
 
 body.white-theme .time-value {
   color: #2e7d32;
+}
+
+body.white-theme .time-label.overrun {
+  color: #c2410c;
+}
+
+body.white-theme .time-value.overrun {
+  color: #c2410c;
 }
 
 body.white-theme #progressPercentage {
