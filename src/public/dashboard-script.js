@@ -515,21 +515,21 @@ function extractScores(data, type) {
     }
 
     case 'performance': {
-      // Performance may have desktop/mobile results
+      // Performance has desktop/mobile results nested in data.results
       let desktopScore = null;
       let mobileScore = null;
 
-      // Check if data has desktop/mobile breakdown
-      if (data.desktop && data.desktop.performanceScore !== undefined) {
-        desktopScore = data.desktop.performanceScore;
+      // Check for nested desktop/mobile breakdown in results
+      if (data.results?.desktop?.performanceScore !== undefined) {
+        desktopScore = data.results.desktop.performanceScore;
         console.log(`  → Performance desktop score: ${desktopScore}`);
       }
-      if (data.mobile && data.mobile.performanceScore !== undefined) {
-        mobileScore = data.mobile.performanceScore;
+      if (data.results?.mobile?.performanceScore !== undefined) {
+        mobileScore = data.results.mobile.performanceScore;
         console.log(`  → Performance mobile score: ${mobileScore}`);
       }
 
-      // Fallback: use overall score for both if no breakdown
+      // Fallback: use top-level score for both if no breakdown
       if (desktopScore === null && mobileScore === null) {
         const overallScore = data.results?.performanceScore ||
                             data.results?.overallScore ||
@@ -543,17 +543,17 @@ function extractScores(data, type) {
     }
 
     case 'accessibility': {
-      // Accessibility may have desktop/mobile results
+      // Accessibility has desktop/mobile results nested in data.results
       let desktopScore = null;
       let mobileScore = null;
 
-      // Check if data has desktop/mobile breakdown
-      if (data.desktop && data.desktop.accessibilityScore !== undefined) {
-        desktopScore = data.desktop.accessibilityScore;
+      // Check for nested desktop/mobile breakdown in results
+      if (data.results?.desktop?.accessibilityScore !== undefined) {
+        desktopScore = data.results.desktop.accessibilityScore;
         console.log(`  → Accessibility desktop score: ${desktopScore}`);
       }
-      if (data.mobile && data.mobile.accessibilityScore !== undefined) {
-        mobileScore = data.mobile.accessibilityScore;
+      if (data.results?.mobile?.accessibilityScore !== undefined) {
+        mobileScore = data.results.mobile.accessibilityScore;
         console.log(`  → Accessibility mobile score: ${mobileScore}`);
       }
 
@@ -571,7 +571,7 @@ function extractScores(data, type) {
     }
 
     case 'security': {
-      // Security has desktop/mobile breakdown
+      // Security has desktop/mobile breakdown at top level
       let desktopScore = null;
       let mobileScore = null;
 
