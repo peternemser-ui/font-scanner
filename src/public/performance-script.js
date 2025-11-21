@@ -406,15 +406,6 @@ function displayPerformanceResults(results) {
         </div>
       ` : ''}
     </div>
-    
-    <!-- PDF Download Button -->
-    <div style="text-align: center; margin: 2rem 0; padding: 2rem; background: rgba(187, 134, 252, 0.05); border: 2px solid rgba(187, 134, 252, 0.3); border-radius: 12px;">
-      <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">D Professional PDF Report</h3>
-      <p style="color: #c0c0c0; margin: 0 0 1.5rem 0;">
-        Get a comprehensive PDF report with Core Web Vitals, resource analysis, and optimization recommendations.
-      </p>
-      <!-- PDF Download button removed - monetization disabled -->
-    </div>
   `;
   container.appendChild(summarySection);
   
