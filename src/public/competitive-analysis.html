@@ -463,22 +463,24 @@
         }
 
         .pacman-modal-content {
-            background: var(--bg-primary, #0f0f0f);
-            border: 2px solid #00ff41;
+            background: rgba(15, 15, 15, 0.98);
+            backdrop-filter: blur(10px);
+            border: 3px solid #00ff41;
             border-radius: 24px;
             padding: 3rem 2.5rem;
             max-width: 700px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 50px rgba(0, 255, 65, 0.2);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 60px rgba(0, 255, 65, 0.4), inset 0 0 80px rgba(0, 255, 65, 0.05);
             text-align: center;
             position: relative;
         }
 
         body.white-theme .pacman-modal-content {
-            background: #ffffff;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3), 0 0 50px rgba(0, 255, 65, 0.15);
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 50px rgba(0, 255, 65, 0.2);
         }
 
         .pacman-modal-title {
@@ -488,14 +490,22 @@
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 3px;
-            text-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            text-shadow: 0 0 30px rgba(0, 255, 65, 0.8), 0 0 10px rgba(0, 255, 65, 1);
+        }
+
+        body.white-theme .pacman-modal-title {
+            text-shadow: 0 0 20px rgba(0, 255, 65, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .pacman-modal-subtitle {
-            color: var(--text-secondary, #999);
+            color: #e0e0e0;
             font-size: 1rem;
             margin: 0 0 2.5rem 0;
             font-weight: 500;
+        }
+
+        body.white-theme .pacman-modal-subtitle {
+            color: #444444;
         }
 
         /* Pac-Man Animation - Improved */
@@ -504,17 +514,19 @@
             height: 80px;
             margin: 2rem 0;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(0, 255, 65, 0.03) 0%, rgba(255, 215, 0, 0.03) 100%);
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.08) 0%, rgba(255, 215, 0, 0.08) 100%);
             border-radius: 12px;
             padding: 1rem 0;
-            border: 1px solid rgba(0, 255, 65, 0.15);
+            border: 2px solid rgba(0, 255, 65, 0.3);
             display: flex;
             align-items: center;
+            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 255, 65, 0.1);
         }
 
         body.white-theme .pacman-container {
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.02) 0%, rgba(255, 215, 0, 0.05) 100%);
-            border-color: rgba(255, 215, 0, 0.25);
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.04) 0%, rgba(255, 215, 0, 0.1) 100%);
+            border-color: rgba(255, 215, 0, 0.4);
+            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1), 0 4px 15px rgba(255, 215, 0, 0.15);
         }
 
         .pacman {
@@ -641,17 +653,17 @@
             display: flex;
             align-items: center;
             padding: 1rem 1.25rem;
-            background: rgba(255, 255, 255, 0.02);
+            background: rgba(255, 255, 255, 0.05);
             border-radius: 12px;
-            border: 2px solid rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
         }
 
         body.white-theme .modal-step {
-            background: rgba(0, 0, 0, 0.02);
-            border-color: rgba(0, 0, 0, 0.08);
+            background: rgba(0, 0, 0, 0.03);
+            border-color: rgba(0, 0, 0, 0.12);
         }
 
         .modal-step::before {
@@ -722,17 +734,25 @@
         }
 
         .modal-step-label {
-            color: var(--text-primary, #fff);
+            color: #ffffff;
             font-weight: 700;
             font-size: 1rem;
             margin-bottom: 0.25rem;
             letter-spacing: 0.5px;
         }
 
+        body.white-theme .modal-step-label {
+            color: #1a1a1a;
+        }
+
         .modal-step-detail {
-            color: var(--text-secondary, #888);
+            color: #b0b0b0;
             font-size: 0.875rem;
             line-height: 1.4;
+        }
+
+        body.white-theme .modal-step-detail {
+            color: #666666;
         }
 
         /* Progress Bar - Modern Design */
@@ -810,9 +830,9 @@
 
     <div class="container">        <!-- Header -->
         <header class="form-container">
-            <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b; border-radius: 4px;">
-                <p style="color: #ff6b6b; font-weight: bold; margin: 0 0 0.5rem 0;">→ COMPETITIVE ADVANTAGE</p>
-                <p style="color: #e0e0e0; margin: 0 0 0.5rem 0; line-height: 1.5;">
+            <div style="margin: 1rem 0; padding: 0.75rem 1rem; background: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b; border-radius: 4px;">
+                <p style="color: #ff6b6b; font-weight: bold; margin: 0 0 0.35rem 0;">→ COMPETITIVE ADVANTAGE</p>
+                <p style="color: #e0e0e0; margin: 0 0 0.35rem 0; line-height: 1.4;">
                     Compare your website against up to <strong>5 competitors</strong> across SEO, Performance, Core Web Vitals, Accessibility, and Security. Get actionable insights to outrank them.
                 </p>
                 <p style="color: #ff8c00; margin: 0; font-size: 0.85rem; font-style: italic;">
@@ -821,10 +841,10 @@
             </div>
             
             <!-- URL Input Form -->
-            <div style="margin-top: 2rem; max-width: 900px;">
+            <div style="margin-top: 1.25rem; max-width: 900px;">
                 <!-- Your Website Section -->
-                <div style="margin-bottom: 2rem;">
-                    <label for="yourUrl" style="display: block; margin-bottom: 0.75rem; font-weight: 600; font-size: 1rem; color: var(--text-primary);">Your Website URL</label>
+                <div style="margin-bottom: 1.25rem;">
+                    <label for="yourUrl" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--text-primary);">Your Website URL</label>
                     <input 
                         type="url" 
                         id="yourUrl" 
@@ -836,8 +856,8 @@
                 </div>
                 
                 <!-- Competitor URLs Section -->
-                <div style="margin-bottom: 2rem;">
-                    <label style="display: block; margin-bottom: 0.75rem; font-weight: 600; font-size: 1rem; color: var(--text-primary);">Competitor URLs (Max 5)</label>
+                <div style="margin-bottom: 1.25rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--text-primary);">Competitor URLs (Max 5)</label>
                     <div class="competitor-section">
                         <div class="competitor-inputs" id="competitorInputs">
                             <div class="competitor-input-row">

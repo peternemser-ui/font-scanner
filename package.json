@@ -1,6 +1,6 @@
 {
   "name": "font-scanner",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "A comprehensive font scanner application that analyzes websites for fonts, font display properties, and best practices",
   "main": "src/server.js",
   "scripts": {
