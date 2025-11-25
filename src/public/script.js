@@ -398,6 +398,57 @@
       }
     ];
 
+    // Add ASCII art patience message FIRST - before loader
+    const loaderMessageEl = document.createElement('div');
+    loaderMessageEl.id = 'patience-message';
+    loaderMessageEl.style.cssText = `
+      margin: 1.5rem 0;
+      padding: 1rem;
+      background: rgba(0, 255, 65, 0.05);
+      border: 1px solid rgba(0, 255, 65, 0.3);
+      border-radius: 6px;
+      text-align: center;
+    `;
+    loaderMessageEl.innerHTML = `
+      <pre style="margin: 0; font-size: 0.7rem; line-height: 1.1; color: #00ff41; font-family: monospace; animation: glow-pulse 2s ease-in-out infinite;">
+ ___  _    ___   _   ___ ___ 
+| _ \| |  | __| /_\ / __| __|
+|  _/| |__| _| / _ \\\\__ \\ _| 
+|_|  |____|___/_/ \\_\\___/___|
+                              
+ ___  ___   ___  _ _____ ___ ___ _  _ _____ 
+| _ \\| _ \\ | _ \\/_\\_   _|_ _| __| \\| |_   _|
+|  _/|   / |  _/ _ \\| |  | || _|| .\` | | |  
+|_|  |_|_\\ |_|/_/ \\_\\_| |___|___|_|\\_| |_|  </pre>
+      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41; animation: fade-in-out 3s ease-in-out infinite;">
+        ⏳ Comprehensive analysis in progress...<br>
+        <span style="font-size: 0.75rem; color: #00ffaa;">This may take 30-60 seconds</span>
+      </div>
+    `;
+    
+    // Add animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes glow-pulse {
+        0%, 100% { 
+          text-shadow: 0 0 5px rgba(0, 255, 65, 0.5), 0 0 10px rgba(0, 255, 65, 0.3);
+          opacity: 1;
+        }
+        50% { 
+          text-shadow: 0 0 10px rgba(0, 255, 65, 0.8), 0 0 20px rgba(0, 255, 65, 0.5);
+          opacity: 0.8;
+        }
+      }
+      @keyframes fade-in-out {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Insert BEFORE the loading container content
+    loadingContainer.insertBefore(loaderMessageEl, loadingContainer.firstChild);
+
     loader.start(analysisSteps, '[FONT SCANNER]', 20);
     
     // Hide old progress UI

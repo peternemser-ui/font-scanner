@@ -59,12 +59,12 @@ const config = {
 
   // Lighthouse (centralized config)
   lighthouse: {
-    // Overall execution timeout guard for a single LH run
-    timeoutMs: parseInt(process.env.LIGHTHOUSE_TIMEOUT_MS || '120000', 10),
+    // Overall execution timeout guard for a single LH run (reduced from 120s for faster fail-over)
+    timeoutMs: parseInt(process.env.LIGHTHOUSE_TIMEOUT_MS || '90000', 10),
     // How long LH will wait for page load internally
-    maxWaitForLoadMs: parseInt(process.env.LIGHTHOUSE_MAX_WAIT_MS || '90000', 10),
+    maxWaitForLoadMs: parseInt(process.env.LIGHTHOUSE_MAX_WAIT_MS || '75000', 10),
     // Retries for common flaky failures (NO_FCP, Chrome internal error)
-    retries: parseInt(process.env.LIGHTHOUSE_RETRIES || '3', 10), // Increased from 2 to 3
+    retries: parseInt(process.env.LIGHTHOUSE_RETRIES || '2', 10), // Keep at 2 for speed
     // Desktop settle pauses (increased for better reliability)
     pauseAfterFcpMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_FCP_MS || '2000', 10), // Increased from 1500
     pauseAfterLoadMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_LOAD_MS || '2000', 10), // Increased from 1500
@@ -88,8 +88,14 @@ const config = {
       continueOnDesktopFailure: process.env.LH_CONTINUE_ON_DESKTOP_FAILURE !== 'false',
       // Use mobile scores as fallback for desktop when desktop fails
       useMobileAsFallback: process.env.LH_USE_MOBILE_FALLBACK !== 'false',
-      // Delay between retries (ms)
-      retryDelayMs: parseInt(process.env.LH_RETRY_DELAY_MS || '3000', 10),
+      // Delay between retries (ms) - increased for better recovery
+      retryDelayMs: parseInt(process.env.LH_RETRY_DELAY_MS || '5000', 10),
+    },
+    // Circuit breaker to skip Lighthouse temporarily after repeated failures
+    circuitBreaker: {
+      enabled: process.env.LH_CIRCUIT_BREAKER_ENABLED !== 'false',
+      failureThreshold: parseInt(process.env.LH_FAILURE_THRESHOLD || '3', 10),
+      resetTimeoutMs: parseInt(process.env.LH_CIRCUIT_RESET_MS || '300000', 10), // 5 min
     }
   },
 

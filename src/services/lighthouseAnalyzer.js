@@ -8,6 +8,10 @@ const logger = createLogger('LighthouseAnalyzer');
 class LighthouseAnalyzer {
   constructor() {
     this.chrome = null;
+    // Circuit breaker state
+    this.failureCount = 0;
+    this.circuitOpen = false;
+    this.circuitOpenTime = null;
   }
 
   async launchChrome() {
@@ -42,6 +46,20 @@ class LighthouseAnalyzer {
   }
 
   async analyzeWithLighthouse(url, options = {}) {
+    // Circuit breaker: skip if too many recent failures
+    const cbConfig = appConfig.lighthouse?.circuitBreaker || {};
+    if (cbConfig.enabled && this.circuitOpen) {
+      const elapsed = Date.now() - this.circuitOpenTime;
+      if (elapsed < (cbConfig.resetTimeoutMs || 300000)) {
+        logger.warn(`Circuit breaker OPEN - skipping Lighthouse (${Math.round(elapsed/1000)}s/${Math.round(cbConfig.resetTimeoutMs/1000)}s)`);
+        throw new Error('Lighthouse circuit breaker open');
+      } else {
+        logger.info('Circuit breaker timeout expired - attempting reset');
+        this.circuitOpen = false;
+        this.failureCount = 0;
+      }
+    }
+
     logger.info(`Running Lighthouse analysis for: ${url}`, {
       formFactor: options.formFactor || 'desktop',
       throttling: options.formFactor === 'mobile' ? 'Mobile preset (4x CPU, Slow 4G)' : 'Desktop (no throttling, full performance)'
@@ -69,13 +87,34 @@ class LighthouseAnalyzer {
 
         // Last attempt or non-retriable error - return fallback
         logger.error(`Lighthouse failed after ${attempt} attempts:`, error.message);
+        
+        // Circuit breaker: track failures
+        const cbConfig = appConfig.lighthouse?.circuitBreaker || {};
+        if (cbConfig.enabled) {
+          this.failureCount++;
+          logger.debug(`Circuit breaker failure count: ${this.failureCount}/${cbConfig.failureThreshold || 3}`);
+          if (this.failureCount >= (cbConfig.failureThreshold || 3)) {
+            this.circuitOpen = true;
+            this.circuitOpenTime = Date.now();
+            logger.warn(`Circuit breaker OPENED after ${this.failureCount} failures - Lighthouse disabled temporarily`);
+          }
+        }
+        
         throw error;
       }
+    }
+    
+    // Success - reset circuit breaker
+    if (appConfig.lighthouse?.circuitBreaker?.enabled && this.failureCount > 0) {
+      logger.info('Lighthouse success - resetting circuit breaker');
+      this.failureCount = 0;
+      this.circuitOpen = false;
     }
   }
 
   async _runLighthouse(url, options = {}, attempt = 1) {
     let chrome;
+    let timeoutId;
     try {
       logger.debug(`Executing Lighthouse run (attempt ${attempt})`, { url, formFactor: options.formFactor });
       chrome = await this.launchChrome();
@@ -158,15 +197,21 @@ class LighthouseAnalyzer {
       }
 
       // Add timeout wrapper to prevent hanging
+      const timeoutMs = appConfig.lighthouse?.timeoutMs ?? 90000;
+      timeoutId = setTimeout(() => {
+        logger.warn(`Lighthouse timeout reached (${timeoutMs}ms) - will abort`);
+      }, timeoutMs);
+      
       const timeoutPromise = new Promise((_, reject) => {
-        const ms = appConfig.lighthouse?.timeoutMs ?? 60000;
-        setTimeout(() => reject(new Error(`Lighthouse analysis timed out after ${ms} milliseconds`)), ms);
+        setTimeout(() => reject(new Error(`Lighthouse analysis timed out after ${timeoutMs} milliseconds`)), timeoutMs);
       });
       
       const runnerResult = await Promise.race([
         lighthouse(url, lighthouseOptions, lhConfig),
         timeoutPromise
       ]);
+      
+      clearTimeout(timeoutId);
       
       // Log the actual configuration that was used
       if (runnerResult?.lhr?.configSettings) {
@@ -188,6 +233,9 @@ class LighthouseAnalyzer {
 
       return this.processLighthouseResults(runnerResult.lhr, options.formFactor);
     } catch (error) {
+      // Clean up timeout if it exists
+      if (timeoutId) clearTimeout(timeoutId);
+      
       logger.error('Lighthouse analysis error:', {
         message: error.message,
         stack: error.stack,

@@ -411,10 +411,17 @@ process.on('uncaughtException', (error) => {
   gracefulShutdown('UNCAUGHT_EXCEPTION');
 });
 
-// Handle unhandled promise rejections
+// Handle unhandled promise rejections - LOG BUT DON'T CRASH
+// Lighthouse timeouts should fail gracefully without killing the server
 process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  gracefulShutdown('UNHANDLED_REJECTION');
+  logger.error('Unhandled Rejection at:', promise);
+  logger.error('Rejection reason:', reason);
+  // DO NOT shutdown - let the request fail but keep server running
+  // Only track for monitoring purposes
+  if (global.io) {
+    // Notify monitoring/admin endpoints if needed
+    logger.warn('Server continuing despite unhandled rejection');
+  }
 });
 
 module.exports = app;
