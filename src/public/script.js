@@ -398,58 +398,72 @@
       }
     ];
 
-    // Add ASCII art patience message FIRST - before loader
+    loader.start(analysisSteps, '[FONT SCANNER]', 20);
+    
+    // Add ASCII art patience message AFTER loader starts - insert at top
     const loaderMessageEl = document.createElement('div');
     loaderMessageEl.id = 'patience-message';
     loaderMessageEl.style.cssText = `
-      margin: 1.5rem 0;
+      margin: 0 0 1.5rem 0;
       padding: 1rem;
       background: rgba(0, 255, 65, 0.05);
       border: 1px solid rgba(0, 255, 65, 0.3);
       border-radius: 6px;
       text-align: center;
+      overflow: visible;
     `;
     loaderMessageEl.innerHTML = `
-      <pre style="margin: 0; font-size: 0.7rem; line-height: 1.1; color: #00ff41; font-family: monospace; animation: glow-pulse 2s ease-in-out infinite;">
- ___  _    ___   _   ___ ___ 
-| _ \| |  | __| /_\ / __| __|
-|  _/| |__| _| / _ \\\\__ \\ _| 
-|_|  |____|___/_/ \\_\\___/___|
-                              
- ___  ___   ___  _ _____ ___ ___ _  _ _____ 
-| _ \\| _ \\ | _ \\/_\\_   _|_ _| __| \\| |_   _|
-|  _/|   / |  _/ _ \\| |  | || _|| .\` | | |  
-|_|  |_|_\\ |_|/_/ \\_\\_| |___|___|_|\\_| |_|  </pre>
+      <div style="overflow-x: auto; overflow-y: visible;">
+        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+   ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
+  / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
+ / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
+/_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
+      </div>
       <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41; animation: fade-in-out 3s ease-in-out infinite;">
         ⏳ Comprehensive analysis in progress...<br>
         <span style="font-size: 0.75rem; color: #00ffaa;">This may take 30-60 seconds</span>
       </div>
     `;
     
-    // Add animations
-    const style = document.createElement('style');
-    style.textContent = `
-      @keyframes glow-pulse {
-        0%, 100% { 
-          text-shadow: 0 0 5px rgba(0, 255, 65, 0.5), 0 0 10px rgba(0, 255, 65, 0.3);
-          opacity: 1;
+    // Add animations if not already added
+    if (!document.getElementById('patience-animations')) {
+      const style = document.createElement('style');
+      style.id = 'patience-animations';
+      style.textContent = `
+        @keyframes color-cycle {
+          0% { color: #00ff41; }
+          20% { color: #00ffaa; }
+          40% { color: #00aaff; }
+          60% { color: #aa00ff; }
+          80% { color: #ff00aa; }
+          100% { color: #00ff41; }
         }
-        50% { 
-          text-shadow: 0 0 10px rgba(0, 255, 65, 0.8), 0 0 20px rgba(0, 255, 65, 0.5);
-          opacity: 0.8;
+        @keyframes fade-in-out {
+          0%, 100% { opacity: 0.7; }
+          50% { opacity: 1; }
         }
-      }
-      @keyframes fade-in-out {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 1; }
-      }
-    `;
-    document.head.appendChild(style);
+        .ascii-art-responsive {
+          font-size: clamp(0.35rem, 1.2vw, 0.65rem);
+          animation: color-cycle 4s linear infinite;
+          white-space: pre;
+          max-width: 100%;
+        }
+        #patience-message {
+          overflow: visible;
+        }
+        #patience-message > div {
+          -webkit-overflow-scrolling: touch;
+        }
+      `;
+      document.head.appendChild(style);
+    }
     
-    // Insert BEFORE the loading container content
-    loadingContainer.insertBefore(loaderMessageEl, loadingContainer.firstChild);
-
-    loader.start(analysisSteps, '[FONT SCANNER]', 20);
+    // Insert at the very top of loading container
+    const analyzerLoading = loadingContainer.querySelector('.analyzer-loading');
+    if (analyzerLoading) {
+      analyzerLoading.insertBefore(loaderMessageEl, analyzerLoading.firstChild);
+    }
     
     // Hide old progress UI
     const progressSection = document.getElementById('scanProgress');

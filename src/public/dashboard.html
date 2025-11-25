@@ -46,6 +46,21 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+    
+    <!-- CRITICAL: Theme background fix -->
+    <style>
+      /* Dark mode (when white-theme is NOT present) */
+      body:not(.white-theme) {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+      /* Light mode (when white-theme IS present) */
+      body.white-theme {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
+        color: #1a1a1a !important;
+      }
+    </style>
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
@@ -105,9 +120,6 @@
     
     <div class="container">      <!-- Header -->
       <header class="form-container">
-        <h1 data-i18n="dashboard.title">Comprehensive Dashboard</h1>
-        <p>> <span data-i18n="dashboard.breadcrumb">unified website analysis & health monitoring</span></p>
-
         <!-- URL Input Form -->
         <div style="margin-top: 2rem;">
           <label for="dashboardUrlInput" class="visually-hidden" data-i18n="dashboard.enterUrl">Website URL to analyze</label>

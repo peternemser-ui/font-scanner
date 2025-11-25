@@ -54,6 +54,72 @@ async function runComprehensiveAnalysis() {
     { id: 'compile', label: 'Compiling unified report...' }
   ]);
   
+  // Add ASCII art patience message
+  const loadingContainer = document.getElementById('loadingContainer');
+  if (loadingContainer) {
+    const loaderMessageEl = document.createElement('div');
+    loaderMessageEl.id = 'patience-message';
+    loaderMessageEl.style.cssText = `
+      margin: 0 0 1.5rem 0;
+      padding: 1rem;
+      background: rgba(0, 255, 65, 0.05);
+      border: 1px solid rgba(0, 255, 65, 0.3);
+      border-radius: 6px;
+      text-align: center;
+      overflow: visible;
+    `;
+    loaderMessageEl.innerHTML = `
+      <div style="overflow-x: auto; overflow-y: visible;">
+        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+   ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
+  / _ \\\\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\\\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
+ / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
+/_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
+      </div>
+      <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: #00ff41; font-weight: 600; letter-spacing: 0.05em;">
+        Comprehensive analysis in progress...
+      </p>
+      <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(0, 255, 65, 0.7);">
+        This may take 30-60 seconds
+      </p>
+    `;
+
+    // Add color cycling style if not already added
+    if (!document.getElementById('ascii-art-style')) {
+      const style = document.createElement('style');
+      style.id = 'ascii-art-style';
+      style.textContent = `
+        @keyframes color-cycle {
+          0% { color: #00ff41; }
+          20% { color: #00ffff; }
+          40% { color: #0099ff; }
+          60% { color: #9933ff; }
+          80% { color: #ff33cc; }
+          100% { color: #00ff41; }
+        }
+        .ascii-art-responsive {
+          font-size: clamp(0.35rem, 1.2vw, 0.65rem);
+          animation: color-cycle 4s linear infinite;
+          white-space: pre;
+          max-width: 100%;
+        }
+        #patience-message {
+          overflow: visible;
+        }
+        #patience-message > div {
+          -webkit-overflow-scrolling: touch;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    // Insert ASCII art at the top of loading container
+    const analyzerLoading = loadingContainer.querySelector('.analyzer-loading');
+    if (analyzerLoading) {
+      analyzerLoading.insertBefore(loaderMessageEl, analyzerLoading.firstChild);
+    }
+  }
+  
   errorMessage.style.display = 'none';
   resultsContainer.style.display = 'none';
 

@@ -30,6 +30,25 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+    
+    <!-- CRITICAL: Theme background fix -->
+    <style>
+      /* Dark mode (when white-theme is NOT present) */
+      body:not(.white-theme) {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+      /* Light mode (when white-theme IS present) */
+      body.white-theme {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
+        color: #1a1a1a !important;
+      }
+    </style>
+    
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
@@ -38,9 +57,6 @@
     <div class="container">
       <!-- Header -->
       <header class="form-container">
-        <h1>Security Scanner</h1>
-        <p>> comprehensive website security audit & vulnerability assessment protocol</p>
-        
         <!-- URL Input Form -->
         <div style="margin-top: 2rem;">
           <label for="urlInput" class="visually-hidden">Website URL to analyze</label>

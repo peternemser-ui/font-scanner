@@ -59,12 +59,12 @@ const config = {
 
   // Lighthouse (centralized config)
   lighthouse: {
-    // Overall execution timeout guard for a single LH run (reduced from 120s for faster fail-over)
-    timeoutMs: parseInt(process.env.LIGHTHOUSE_TIMEOUT_MS || '90000', 10),
+    // Overall execution timeout guard for a single LH run (reduced for speed)
+    timeoutMs: parseInt(process.env.LIGHTHOUSE_TIMEOUT_MS || '60000', 10), // Reduced from 90s to 60s
     // How long LH will wait for page load internally
-    maxWaitForLoadMs: parseInt(process.env.LIGHTHOUSE_MAX_WAIT_MS || '75000', 10),
+    maxWaitForLoadMs: parseInt(process.env.LIGHTHOUSE_MAX_WAIT_MS || '50000', 10), // Reduced from 75s to 50s
     // Retries for common flaky failures (NO_FCP, Chrome internal error)
-    retries: parseInt(process.env.LIGHTHOUSE_RETRIES || '2', 10), // Keep at 2 for speed
+    retries: parseInt(process.env.LIGHTHOUSE_RETRIES || '1', 10), // Reduced from 2 to 1 for speed
     // Desktop settle pauses (increased for better reliability)
     pauseAfterFcpMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_FCP_MS || '2000', 10), // Increased from 1500
     pauseAfterLoadMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_LOAD_MS || '2000', 10), // Increased from 1500

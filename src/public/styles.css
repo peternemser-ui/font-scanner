@@ -19,7 +19,7 @@
   /* Font Size Control - Dynamic multiplier */
   --font-size-multiplier: 1.0;
   --base-font-size: 18px; /* Increased from 16px for better readability */
-  --app-title-size: 1.35rem; /* Keep header title consistent across pages */
+  --app-title-size: 1.75rem; /* Keep header title consistent across pages */
   
   /* Background Colors */
   --bg-primary: #000000;
@@ -287,15 +287,21 @@ body.white-theme [style*="color: #e0e0e0"] {
 /* Base body styling */
 body {
   font-family: 'JetBrains Mono', 'Space Mono', Consolas, Monaco, 'Courier New', monospace;
-  background-color: var(--bg-primary);
   color: var(--text-secondary);
   line-height: 1.6;
   margin: 0;
   padding: 0;
+  padding-top: 12rem;
   min-height: 100vh;
   overflow-x: hidden;
   /* Dynamic font size using multiplier */
   font-size: calc(var(--base-font-size) * var(--font-size-multiplier));
+}
+
+/* Dark mode background (when white-theme class is NOT present) */
+body:not(.white-theme) {
+  background-color: #000000 !important;
+  background: #000000 !important;
 }
 
 .site-footer-bar {
@@ -390,7 +396,9 @@ h6 {
 .container {
   max-width: 1200px;
   margin: 0 auto;
+  margin-top: 3rem !important;
   padding: 2rem;
+  padding-top: 3rem !important;
 }
 
 /* Paragraphs and general text - increased readability */
@@ -472,16 +480,17 @@ p {
   left: 0;
   right: 0;
   background: var(--bg-primary);
-  border-bottom: 1px solid var(--border-primary);
+  border-bottom: 2px solid var(--border-primary);
   z-index: 1000;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem 1.5rem;
+  padding: 1rem 1.5rem;
   gap: 2rem;
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   overflow: visible; /* Allow dropdowns to overflow header */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 /* Left section - Font size controls */
@@ -500,7 +509,7 @@ p {
 }
 
 .app-title {
-  font-size: var(--app-title-size, 1.35rem);
+  font-size: var(--app-title-size, 2.7rem);
   font-weight: 700;
   color: var(--accent-primary);
   margin: 0;
@@ -747,7 +756,7 @@ p {
 /* Top Navigation Bar - Now full width below unified header */
 .top-nav {
   position: fixed;
-  top: 70px; /* Positioned below unified header */
+  top: 95px; /* Positioned below unified header */
   left: 0;
   right: 0;
   display: flex;
@@ -757,12 +766,13 @@ p {
   z-index: 900; /* Reduced to allow dropdowns to appear above */
   background: var(--bg-secondary);
   padding: 0.5rem 1rem;
-  border-bottom: 1px solid var(--border-primary);
+  border-bottom: 2px solid var(--border-primary);
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
   overflow-x: auto;
   overflow-y: hidden;
   white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 /* Ensure dropdowns, selects, and translation widgets appear above navigation and header */
@@ -1080,6 +1090,8 @@ body {
 .form-container {
   text-align: center;
   margin-bottom: 2rem;
+  padding-top: 3rem !important;
+  margin-top: 2rem !important;
 }
 
 /* Input field styling - Accessible with proper contrast */
@@ -1189,6 +1201,7 @@ button:active {
 /* Results container */
 .results-container {
   margin-top: 2rem !important;
+  background-color: var(--bg-primary);
 }
 
 .results-container.hidden {
@@ -2718,6 +2731,11 @@ body.white-theme div {
   box-shadow: 
     0 0 30px rgba(0, 255, 65, 0.5),
     inset 0 1px 0 rgba(0, 255, 65, 0.5) !important;
+}
+
+#results {
+  background-color: var(--bg-primary) !important;
+  min-height: 400px;
 }
 
 #loadingMessage h2 {
@@ -6222,4 +6240,23 @@ body.white-theme .quick-nav-link:hover .nav-icon {
   border-color: rgba(16, 185, 129, 0.2);
   filter: grayscale(0%) opacity(1);
   transform: translateY(-2px);
+}
+
+/* CRITICAL: Force dark background on body element - override ALL other rules */
+html, body {
+  background: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Dark mode backgrounds (applied when white-theme class is NOT present) */
+body:not(.white-theme) {
+  background: #000000 !important;
+  background-color: #000000 !important;
+}
+
+/* Ensure containers in dark mode are transparent */
+body:not(.white-theme) .container,
+body:not(.white-theme) #results,
+body:not(.white-theme) .results-container {
+  background: transparent;
 }

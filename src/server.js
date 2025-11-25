@@ -119,6 +119,31 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Version endpoint
+app.get('/api/version', (req, res) => {
+  const { execSync } = require('child_process');
+  const packageJson = require('../package.json');
+  
+  let gitHash = 'unknown';
+  let gitBranch = 'unknown';
+  
+  try {
+    gitHash = execSync('git rev-parse --short HEAD').toString().trim();
+    gitBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
+  } catch (error) {
+    logger.warn('Could not retrieve git information');
+  }
+  
+  res.json({
+    version: packageJson.version,
+    git: {
+      hash: gitHash,
+      branch: gitBranch
+    },
+    build: `${packageJson.version}-${gitHash}`
+  });
+});
+
 // Readiness probe - checks if app is ready to accept traffic
 app.get('/api/ready', (req, res) => {
   if (isShuttingDown) {

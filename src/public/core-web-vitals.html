@@ -10,9 +10,34 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+    
+    <!-- CRITICAL: Theme background fix -->
+    <style>
+      /* Dark mode (when white-theme is NOT present) */
+      body:not(.white-theme) {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+      /* Light mode (when white-theme IS present) */
+      body.white-theme {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
+        color: #1a1a1a !important;
+      }
+    </style>
+    
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
@@ -21,9 +46,6 @@
     <div class="container">
       <!-- Header -->
       <header class="form-container">
-        <h1>[CORE_WEB_VITALS_ANALYZER]</h1>
-        <p>> google ranking factors • lcp • inp • cls • real user monitoring</p>
-        
         <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b; border-radius: 4px;">
           <p style="color: #ff6b6b; font-weight: bold; margin: 0 0 0.5rem 0;">⚠️ GOOGLE RANKING FACTOR</p>
           <p style="color: #e0e0e0; margin: 0; line-height: 1.5;">
