@@ -33,7 +33,7 @@
     "fontkit": "^2.0.4",
     "generic-pool": "^3.9.0",
     "helmet": "^7.0.0",
-    "jsdom": "^27.1.0",
+    "jsdom": "^27.2.0",
     "lighthouse": "^11.0.0",
     "morgan": "^1.10.0",
     "node-cron": "^4.2.1",
