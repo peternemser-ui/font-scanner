@@ -302,6 +302,10 @@ app.post('/api/accessibility', scanLimiter, accessibilityController.analyzeAcces
 const securityController = require('./controllers/securityController');
 app.post('/api/security', scanLimiter, securityController.analyzeSecurity);
 
+// IP/Domain Reputation Analyzer
+const ipReputationController = require('./controllers/ipReputationController');
+app.post('/api/ip-reputation', scanLimiter, ipReputationController.analyzeIPReputation);
+
 // Download PDF report (legacy - for font scanner)
 app.get('/api/reports/:filename', downloadLimiter, scanController.downloadReport);
 

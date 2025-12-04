@@ -1058,6 +1058,28 @@ body {
   body {
     padding-top: 55px; /* Very compact header */
   }
+
+  /* Fix form container overflow on mobile */
+  .form-container {
+    padding-top: 1.5rem !important;
+    margin-top: 1rem !important;
+  }
+
+  input[type="url"],
+  input[type="text"] {
+    width: 100%;
+    max-width: 100%;
+    margin-right: 0;
+    margin-bottom: 0.75rem;
+    font-size: 1rem;
+  }
+
+  button {
+    width: 100%;
+    max-width: 100%;
+    padding: 1rem 1.5rem;
+    font-size: 0.95rem;
+  }
 }
 
 /* Extra small phones (iPhone SE, etc.) */
@@ -1469,6 +1491,21 @@ body.white-theme .security-summary-panel h2 {
   margin-bottom: 2rem !important;
 }
 
+@media (max-width: 480px) {
+  .health-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+
+  .health-item {
+    min-width: 0 !important;
+  }
+
+  .health-indicator {
+    min-width: 0 !important;
+  }
+}
+
 .health-item {
   display: flex !important;
   min-width: 200px !important;
@@ -1526,6 +1563,13 @@ body.white-theme .security-summary-panel h2 {
   grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)) !important;
   gap: 1.5rem !important;
   margin-bottom: 2rem !important;
+}
+
+@media (max-width: 480px) {
+  .metrics-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
 }
 
 /* Score Cards */
@@ -3254,6 +3298,13 @@ body.white-theme #loadingMessage span[style*="color: var(--accent-primary)"] {
   }
 }
 
+@media (max-width: 480px) {
+  .secondary-metrics {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+}
+
 .metric-item {
   display: flex !important;
   flex-direction: column !important;
@@ -4650,6 +4701,13 @@ body.white-theme .icon-legend .legend-color {
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important;
   gap: 1.5rem !important;
   margin: 1.5rem 0 !important;
+}
+
+@media (max-width: 480px) {
+  .loading-insights-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
 }
 
 .insight-card {
@@ -6178,15 +6236,43 @@ body.white-theme .breakdown-note svg {
   .summary-ribbon-content {
     grid-template-columns: 1fr;
   }
-  
+
   .quick-nav {
     position: relative;
     top: 0;
   }
-  
+
   .ribbon-btn {
     width: 100%;
     justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .summary-ribbon-content {
+    gap: var(--spacing-md);
+  }
+
+  .summary-item {
+    gap: var(--spacing-sm);
+  }
+
+  .summary-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 375px) {
+  .summary-ribbon-content {
+    gap: var(--spacing-sm);
+  }
+
+  .summary-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 1.25rem;
   }
 }
 

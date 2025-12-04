@@ -565,6 +565,13 @@
   margin-bottom: var(--space-8);
 }
 
+@media (max-width: 480px) {
+  .stat-grid {
+    grid-template-columns: 1fr;
+    gap: var(--space-3);
+  }
+}
+
 .stat {
   text-align: center;
   padding: var(--space-6);

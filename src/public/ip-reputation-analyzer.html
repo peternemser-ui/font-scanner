@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Professional IP and domain reputation scanner. Check blacklists, email deliverability, hosting reputation, DNS health, and threat intelligence." />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="IP reputation, domain reputation, blacklist checker, email deliverability, DNS checker, threat intelligence, spam checker" />
+    <meta name="author" content="Font Scanner" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="IP/Domain Reputation Scanner - Blacklist & Email Checker" />
+    <meta property="og:description" content="Comprehensive reputation analysis with blacklist checking, email deliverability testing, and threat intelligence" />
+    <meta property="og:type" content="website" />
+
+    <title>IP/Domain Reputation Scanner - Blacklist & Email Testing</title>
+
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Existing Stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+
+    <!-- CRITICAL: Theme background fix -->
+    <style>
+      /* Dark mode (when white-theme is NOT present) */
+      body:not(.white-theme) {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+      /* Light mode (when white-theme IS present) */
+      body.white-theme {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
+        color: #1a1a1a !important;
+      }
+
+      /* Reduce white space above form */
+      .form-container {
+        padding-top: 0.5rem !important;
+        margin-top: 0 !important;
+      }
+
+      /* Add spacing between input and button */
+      .form-container button {
+        margin-top: 1rem;
+      }
+
+      /* Mobile spacing adjustments */
+      @media (max-width: 768px) {
+        .form-container {
+          padding-top: 0.25rem !important;
+        }
+        .form-container button {
+          margin-top: 0.75rem;
+        }
+      }
+    </style>
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
+  </head>
+  <body>
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+
+    <div class="container">
+      <!-- Header -->
+      <header class="form-container">
+        <!-- URL Input Form -->
+        <div>
+          <label for="urlInput" class="visually-hidden">IP address or domain to analyze</label>
+          <input
+            type="text"
+            id="urlInput"
+            placeholder="example.com or 8.8.8.8"
+            aria-label="Enter IP address or domain for reputation analysis"
+            required
+            aria-required="true"
+          />
+
+          <button id="analyzeButton" aria-label="Start comprehensive reputation analysis">ANALYZE</button>
+        </div>
+
+        <!-- Info Banner -->
+        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 4px;">
+          <p style="color: #00ff41; margin: 0; font-size: clamp(0.8rem, 2vw, 0.9rem); line-height: 1.5;">
+            <strong>🔍 Comprehensive Reputation Check:</strong> Scans DNS blacklists (DNSBL), checks email deliverability,
+            analyzes hosting reputation, verifies DNS health, checks threat intelligence databases, and provides actionable recommendations.
+          </p>
+        </div>
+      </header>
+
+      <!-- Results Container -->
+      <div id="results" class="results-container hidden" role="region" aria-live="polite">
+        <!-- Loading State -->
+        <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
+          <h2><span class="heartbeat" aria-hidden="true">🔍</span> Analyzing Reputation...</h2>
+          <p class="animate-pulse">Checking blacklists and reputation databases...</p>
+          <div class="progress-container" role="progressbar" aria-label="Analysis progress">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <div id="progressText" class="progress-text" aria-live="polite">Initializing reputation check...</div>
+        </div>
+
+        <!-- Results Content (populated by JavaScript) -->
+        <div id="resultsContent"></div>
+      </div>
+
+      <!-- Error Display -->
+      <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="margin-top: 3rem; padding: 2rem 0; text-align: center; border-top: 1px solid #333;">
+      <p style="color: #808080; font-size: 0.85rem;">
+        IP/Domain Reputation Scanner | Blacklist & Email Deliverability Testing | Built with 🔍 for safe internet
+      </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="theme-controls.js"></script>
+    <script src="nav-template.js"></script>
+    <script src="analyzer-loader.js"></script>
+    <script src="ip-reputation-script.js"></script>
+  </body>
+</html>
