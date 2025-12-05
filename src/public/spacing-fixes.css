@@ -1,0 +1,62 @@
+/**
+ * Global Spacing Fixes
+ * Ensures consistent spacing across all analyzer pages
+ * Matches IP Reputation analyzer layout
+ */
+
+/* Reduce white space above form containers */
+.form-container {
+  padding-top: 0.5rem !important;
+  margin-top: 0 !important;
+}
+
+/* Add proper spacing between input and button */
+.form-container button {
+  margin-top: 1rem;
+}
+
+/* Ensure header has proper margin */
+.unified-header {
+  margin-bottom: 0.5rem;
+}
+
+/* Container spacing */
+.container {
+  padding-top: 0.5rem;
+}
+
+/* Mobile spacing adjustments */
+@media (max-width: 768px) {
+  .form-container {
+    padding-top: 0.25rem !important;
+  }
+
+  .form-container button {
+    margin-top: 0.75rem;
+  }
+
+  .unified-header {
+    margin-bottom: 0.25rem;
+  }
+
+  .container {
+    padding-top: 0.25rem;
+  }
+}
+
+/* Extra small mobile */
+@media (max-width: 480px) {
+  .form-container {
+    padding-top: 0.15rem !important;
+  }
+
+  .container {
+    padding-top: 0.15rem;
+  }
+}
+
+/* Info banners responsive text */
+.form-container [style*="margin-top"] p {
+  font-size: clamp(0.8rem, 2vw, 0.9rem) !important;
+  line-height: 1.5 !important;
+}
