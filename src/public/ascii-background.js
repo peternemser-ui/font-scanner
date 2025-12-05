@@ -238,11 +238,12 @@ class ASCIIParticle {
 // Global instance
 window.asciiBackground = new ASCIIBackgroundAnimation();
 
-// Auto-start when loading states are detected
+// Auto-start when loading states are detected, auto-stop when complete
 document.addEventListener('DOMContentLoaded', () => {
-  // Watch for loading containers appearing
+  // Watch for loading containers appearing and disappearing
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
+      // Check for added nodes (loading starts)
       mutation.addedNodes.forEach((node) => {
         if (node.nodeType === 1) {
           // Check if loading state is active
@@ -253,12 +254,59 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         }
       });
+
+      // Check for removed nodes (loading ends)
+      mutation.removedNodes.forEach((node) => {
+        if (node.nodeType === 1) {
+          if (node.id === 'loadingContainer' ||
+              node.classList?.contains('analyzer-loading') ||
+              node.querySelector?.('[id*="loading"]')) {
+            window.asciiBackground.stop();
+          }
+        }
+      });
+
+      // Check for attribute changes (display: none means loading ended)
+      if (mutation.type === 'attributes' && mutation.attributeName === 'style') {
+        const target = mutation.target;
+        if (target.id === 'loadingContainer' ||
+            target.classList?.contains('analyzer-loading') ||
+            target.id?.includes('loading')) {
+          const style = window.getComputedStyle(target);
+          if (style.display === 'none') {
+            window.asciiBackground.stop();
+          }
+        }
+      }
+
+      // Check for class changes (hidden class means loading ended)
+      if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+        const target = mutation.target;
+        if (target.id === 'loadingContainer' ||
+            target.id?.includes('loading')) {
+          if (target.classList.contains('hidden') || target.style.display === 'none') {
+            window.asciiBackground.stop();
+          }
+        }
+      }
+    });
+
+    // Additional check: if results container becomes visible, stop animation
+    const resultsContainers = document.querySelectorAll('[id*="results"], [id*="Results"]');
+    resultsContainers.forEach(container => {
+      const style = window.getComputedStyle(container);
+      if (style.display !== 'none' && container.innerHTML.trim().length > 0) {
+        // Results are visible, stop animation
+        window.asciiBackground.stop();
+      }
     });
   });
 
   observer.observe(document.body, {
     childList: true,
-    subtree: true
+    subtree: true,
+    attributes: true,
+    attributeFilter: ['style', 'class']
   });
 
   // Also listen for analyze button clicks
@@ -268,4 +316,24 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => window.asciiBackground.start(), 100);
     }
   });
+
+  // Periodic check to ensure animation stops when loading completes
+  setInterval(() => {
+    if (window.asciiBackground.isActive) {
+      const loadingContainers = document.querySelectorAll('#loadingContainer, [id*="loading"]');
+      let anyVisible = false;
+
+      loadingContainers.forEach(container => {
+        const style = window.getComputedStyle(container);
+        if (style.display !== 'none' && !container.classList.contains('hidden')) {
+          anyVisible = true;
+        }
+      });
+
+      // If no loading containers are visible, stop the animation
+      if (!anyVisible) {
+        window.asciiBackground.stop();
+      }
+    }
+  }, 1000); // Check every second
 });
