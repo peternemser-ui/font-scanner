@@ -27,7 +27,7 @@
     "color-contrast-checker": "^2.1.0",
     "compression": "^1.7.4",
     "cors": "^2.8.5",
-    "express": "^4.18.2",
+    "express": "^4.22.1",
     "express-rate-limit": "^6.10.0",
     "flesch-kincaid": "^2.0.1",
     "fontkit": "^2.0.4",
