@@ -143,12 +143,12 @@ class ModernUI {
    */
   handleShareReport() {
     const currentUrl = window.location.href;
-    const shareText = 'Check out my website analysis report from Font Scanner!';
+    const shareText = 'Check out my website analysis report from Site Mechanic!';
 
     // Use Web Share API if available
     if (navigator.share) {
       navigator.share({
-        title: 'Font Scanner Report',
+        title: 'Site Mechanic Report',
         text: shareText,
         url: currentUrl
       }).catch((error) => {

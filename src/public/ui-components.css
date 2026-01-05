@@ -2,7 +2,97 @@
    MODERN UI COMPONENTS - Progress Bars, Chips, Cards
    =================================================================== */
 
-/* Threshold-based Progress Bars */
+/* ===================================================================
+   BREADCRUMB NAVIGATION
+   =================================================================== */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.85rem;
+  padding: 1rem 0;
+  color: var(--text-secondary, #888);
+}
+
+.breadcrumb a {
+  color: var(--accent-primary, #00ff41);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.breadcrumb a:hover {
+  color: var(--accent-secondary, #00cc33);
+  text-decoration: underline;
+}
+
+.breadcrumb-separator {
+  color: var(--text-muted, #666);
+  font-weight: 300;
+}
+
+.breadcrumb-current {
+  color: var(--text-primary, #fff);
+  font-weight: 500;
+}
+
+/* ===================================================================
+   PAGE HEADER
+   =================================================================== */
+.page-header {
+  margin-bottom: 1.5rem;
+  padding: 2rem;
+  border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-lg, 12px);
+  background: var(--bg-card, rgba(255, 255, 255, 0.02));
+  text-align: left;
+}
+
+.page-title {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  margin: 0 0 0.5rem 0;
+  line-height: 1.2;
+  text-align: left;
+}
+
+.page-subtitle {
+  font-size: 0.95rem;
+  color: var(--text-secondary, #aaa);
+  margin: 0;
+  line-height: 1.5;
+  max-width: 800px;
+  text-align: left;
+}
+
+/* Light theme adjustments */
+.white-theme .breadcrumb {
+  color: #666;
+}
+
+.white-theme .breadcrumb a {
+  color: #10b981;
+}
+
+.white-theme .breadcrumb-current {
+  color: #1a1a1a;
+}
+
+.white-theme .page-title {
+  color: #1a1a1a;
+}
+
+.white-theme .page-subtitle {
+  color: #666;
+}
+
+.white-theme .page-header {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+/* ===================================================================
+   Threshold-based Progress Bars
+   =================================================================== */
 .threshold-bar-container {
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);

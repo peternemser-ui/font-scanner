@@ -1,21 +1,47 @@
 {
   "app": {
-    "name": "SCHRIFTARTEN-SCANNER",
-    "tagline": "Erweiterte Web-Typografie & Leistungsanalyse"
+    "name": "SITE MECHANIC",
+    "tagline": "Web-Diagnose & Leistungsanalyse"
   },
   "nav": {
     "dashboard": "Dashboard",
-    "fontScanner": "Schriftarten-Scanner",
+    "fontScanner": "Schriften & Typografie",
+    "typography": "Schriften",
     "seo": "SEO",
+    "seoAnalysis": "SEO-Analyse",
     "coreWebVitals": "Core Web Vitals",
-    "rankCompetition": "Rang-Wettbewerb",
-    "performance": "Leistung",
+    "lighthouseMetrics": "Lighthouse-Metriken",
+    "rankCompetition": "Wettbewerbsanalyse",
+    "performance": "Geschwindigkeit & UX",
     "accessibility": "Barrierefreiheit",
-    "security": "Sicherheit"
+    "security": "Sicherheit",
+    "tagIntelligence": "Tracking & Analytics",
+    "enhancedFonts": "Schriften & Typografie",
+    "performanceSnapshot": "Leistungs-Schnappschuss",
+    "siteCrawler": "Website-Crawler",
+    "mobileTesting": "Mobile Tests",
+    "ipReputation": "IP-Reputation",
+    "localSeo": "Lokales SEO",
+    "brokenLinks": "Defekte Links",
+    "brandAudit": "Marken-Audit",
+    "croAnalysis": "Conversion-Optimierung",
+    "gdprCheck": "Datenschutz-Compliance",
+    "hostingGuide": "Hosting-Leitfaden",
+    "more": "Mehr",
+    "menu": "Menü"
+  },
+  "categories": {
+    "performance": "Leistung & UX",
+    "seo": "SEO & Indexierung",
+    "accessibility": "Barrierefreiheit",
+    "security": "Sicherheit & Vertrauen",
+    "technology": "Technologie & Schriften",
+    "infrastructure": "Infrastruktur",
+    "competitive": "Wettbewerbsanalyse"
   },
   "dashboard": {
-    "title": "Umfassende Übersicht",
-    "breadcrumb": "dashboard / umfassende übersicht",
+    "title": "Website-Übersicht",
+    "breadcrumb": "dashboard / übersicht",
     "runAudit": "VOLLSTÄNDIGE PRÜFUNG STARTEN",
     "analyzing": "ANALYSIERT...",
     "enterUrl": "Website-URL eingeben...",
@@ -39,6 +65,414 @@
     "loading": "Wird geladen...",
     "error": "Fehler",
     "success": "Erfolg",
-    "language": "Sprache"
+    "language": "Sprache",
+    "yes": "Ja",
+    "no": "Nein",
+    "na": "N/A",
+    "unknown": "Unbekannt",
+    "more": "Mehr",
+    "websiteUrl": "Website-URL",
+    "enterUrl": "https://ihreseite.com",
+    "pleaseEnterUrl": "Bitte geben Sie eine URL ein",
+    "mayTake": "Dies kann 15-30 Sekunden dauern"
+  },
+  "fontScanner": {
+    "title": "Schriften & Typografie",
+    "subtitle": "Typografie-Analyse",
+    "pageSubtitle": "Tiefe Typografie-Analyse mit mehrseitigem Scannen, Schriftlade-Performance und Barrierefreiheits-Einblicken.",
+    "breadcrumb": "schriften & typografie",
+    "analyzeWebsite": "WEBSITE ANALYSIEREN",
+    "analyzeFonts": "SCHRIFTEN ANALYSIEREN",
+    "analyzing": "ANALYSIERT...",
+    "enterUrl": "Website-URL eingeben...",
+    "urlRequired": "Bitte geben Sie eine gültige URL ein",
+    "analysisComplete": "Analyse abgeschlossen",
+    "multiPageScan": "Mehrseitiges Scannen (Schriften über mehrere Seiten analysieren)",
+    "maxPages": "Max Seiten:",
+    "enhancedAnalysis": "Erweiterte Schriftanalyse:",
+    "enhancedAnalysisDesc": "Erkennt Schriftanbieter (Google Fonts, Adobe Fonts, selbst gehostet), findet doppelte Familien, ungenutzte Gewichte/Stile, fehlende font-display-Deklarationen und Preload-Möglichkeiten.",
+    "desktopFonts": "DESKTOP-SCHRIFTEN",
+    "mobileFonts": "MOBILE SCHRIFTEN",
+    "dualViewportAnalysis": "Dual-Viewport-Analyse: Schriften separat für Desktop (1920x1080) und Mobile (375x667) analysiert.",
+    "fontComparison": "Schriftvergleichs-Zusammenfassung",
+    "commonFonts": "Gemeinsame Schriften auf beiden Viewports",
+    "desktopOnly": "Nur Desktop-Schriften",
+    "mobileOnly": "Nur Mobile-Schriften",
+    "totalFonts": "Gesamtschriften",
+    "systemFonts": "Systemschriften",
+    "webFonts": "Web-Schriften",
+    "googleFonts": "Google Fonts",
+    "iconFonts": "Icon-Schriften",
+    "fontDetails": "Schriftdetails",
+    "downloadReport": "PDF-Bericht herunterladen",
+    "shareResults": "Ergebnisse teilen",
+    "fontProviders": "Schriftanbieter",
+    "fontFamilies": "Schriftfamilien",
+    "performanceMetrics": "Leistungsmetriken",
+    "recommendations": "Empfehlungen",
+    "advancedAnalysis": "Erweiterte Typografie-Analyse",
+    "exportPdf": "PDF herunterladen",
+    "exportCss": "CSS exportieren",
+    "shareLink": "Link teilen"
+  },
+  "brandConsistency": {
+    "title": "Markeninspektion",
+    "subtitle": "Analysieren Sie Farbpalette, Schriftarten und Logo-Nutzung auf Ihrer Website.",
+    "breadcrumb": "Markenkonsistenz",
+    "inspect": "PRÜFEN",
+    "analyzing": "Markenkonsistenz wird analysiert...",
+    "loaderTitle": "🎨 MARKENANALYSE",
+    "grade": "Note",
+    "scoreLabel": "Markenkonsistenz-Score",
+    "quickSummary": "Schnellübersicht",
+    "scoreBreakdown": "Score-Aufschlüsselung",
+    "colors": "Farben",
+    "fonts": "Schriften",
+    "logos": "Logos",
+    "buttons": "Schaltflächen",
+    "links": "Links",
+    "favicon": "Favicon",
+    "detected": "Erkannt",
+    "missing": "Fehlt",
+    "present": "Vorhanden",
+    "excellent": "Ausgezeichnet",
+    "good": "Gut",
+    "fair": "Ausreichend",
+    "poor": "Schlecht",
+    "colorPalette": "Farbpalette",
+    "typography": "Typografie",
+    "brandIdentity": "Markenidentität",
+    "uiConsistency": "UI-Konsistenz",
+    "colorHarmony": "Farbharmonie",
+    "colorPaletteAnalysis": "Farbpaletten-Analyse",
+    "typographyAnalysis": "Typografie-Analyse",
+    "recommendations": "Empfehlungen",
+    "harmonyType": "Harmonietyp",
+    "uniqueHues": "Einzigartige Farbtöne",
+    "neutralRatio": "Neutralverhältnis",
+    "primaryBrandColors": "Primäre Markenfarben",
+    "allDetectedColors": "Alle erkannten Farben",
+    "typographySummary": "Typografie-Zusammenfassung",
+    "totalFonts": "Gesamtanzahl Schriften",
+    "quality": "Qualität",
+    "typographyHierarchy": "Typografische Hierarchie",
+    "headingFonts": "Überschrift-Schriften",
+    "bodyFonts": "Text-Schriften",
+    "allFontsByUsage": "Alle Schriften nach Nutzung",
+    "uses": "Verwendungen",
+    "logoDetection": "Logo-Erkennung",
+    "noLogoDetected": "Kein Logo erkannt",
+    "addLogoTip": "Fügen Sie ein Logo mit Alt-Text hinzu, der \"logo\" enthält",
+    "faviconPresent": "Favicon vorhanden",
+    "faviconMissing": "Favicon fehlt",
+    "faviconPresentDesc": "Ihre Website hat ein Favicon zur Tab-Identifikation",
+    "faviconMissingDesc": "Fügen Sie ein Favicon hinzu",
+    "buttonStyles": "Schaltflächen-Stile",
+    "linkColors": "Link-Farben",
+    "consistency": "Konsistenz",
+    "sampleButton": "Beispiel-Button",
+    "noButtonStyles": "Keine Schaltflächen-Stile erkannt",
+    "linkText": "Link-Text",
+    "noLinkColors": "Keine Link-Farben erkannt",
+    "noRecommendations": "Derzeit keine Empfehlungen.",
+    "harmony": {
+      "monochromatic": "Monochromatisch",
+      "analogous": "Analog",
+      "triadic": "Triadisch",
+      "splitComplementary": "Gespalten Komplementär",
+      "complementary": "Komplementär",
+      "diverse": "Vielfältig",
+      "custom": "Benutzerdefiniert"
+    },
+    "priority": {
+      "critical": "Kritisch",
+      "high": "Hoch",
+      "medium": "Mittel",
+      "low": "Niedrig",
+      "success": "Erfolg"
+    },
+    "steps": {
+      "initializing": "Analyse wird initialisiert",
+      "connecting": "Verbindung zur Website...",
+      "extractingColors": "Farben werden extrahiert",
+      "analyzingPalette": "Farbpalette wird analysiert...",
+      "detectingFonts": "Schriften werden erkannt",
+      "identifyingTypography": "Typografie-Hierarchie wird identifiziert...",
+      "findingLogos": "Logos werden gesucht",
+      "locatingAssets": "Marken-Assets werden lokalisiert...",
+      "analyzingUI": "UI-Konsistenz wird analysiert",
+      "checkingStyles": "Stile werden geprüft...",
+      "generating": "Insights werden generiert",
+      "compiling": "Empfehlungen werden zusammengestellt..."
+    },
+    "rec": {
+      "excessiveColors": {
+        "message": "Übermäßige Farbverwendung",
+        "detail": "Die Verwendung von {count} Farben erzeugt visuelles Chaos. Professionelle Marken verwenden maximal 5-10 Farben.",
+        "action": "Erstellen Sie eine definierte Farbpalette mit Primär-, Sekundär- und Akzentfarben."
+      },
+      "tooManyColors": {
+        "message": "Zu viele Farben",
+        "detail": "Verwendung von {count} Farben. Reduzieren Sie auf 8-12 Markenfarben für bessere Konsistenz.",
+        "action": "Überprüfen Sie Ihre Farbverwendung und entfernen Sie redundante Variationen."
+      },
+      "inconsistentHarmony": {
+        "message": "Inkonsistente Farbharmonie",
+        "detail": "Ihrer Farbpalette fehlt ein klares Harmoniemuster (komplementär, analog oder triadisch).",
+        "action": "Verwenden Sie einen Farbkreis, um harmonische Farben auszuwählen, die zusammenpassen."
+      },
+      "tooManyFonts": {
+        "message": "Zu viele Schriften",
+        "detail": "Die Verwendung von {count} verschiedenen Schriften erzeugt visuelle Inkonsistenz und beeinträchtigt die Leistung.",
+        "action": "Beschränken Sie sich auf 2-3 Schriftfamilien: eine für Überschriften, eine für Fließtext und optional eine für Akzente."
+      },
+      "reduceFontCount": {
+        "message": "Erwägen Sie die Reduzierung der Schriftanzahl",
+        "detail": "Verwendung von {count} Schriften. Best Practice sind maximal 2-3 Schriften.",
+        "action": "Überprüfen Sie die Schriftverwendung und konsolidieren Sie wo möglich."
+      },
+      "noTypographyHierarchy": {
+        "message": "Typografie-Hierarchie nicht erkannt",
+        "detail": "Es konnten keine unterschiedlichen Überschrift- und Fließtext-Schriften identifiziert werden.",
+        "action": "Stellen Sie sicher, dass Überschriften und Fließtext konsistente, unterschiedliche Schriftbehandlungen verwenden."
+      },
+      "noLogo": {
+        "message": "Kein Logo erkannt",
+        "detail": "Ein Logo ist wesentlich für die Markenerkennung und das Vertrauen.",
+        "action": "Fügen Sie ein Logo im Header mit einem Alt-Text hinzu, der \"logo\" enthält."
+      },
+      "noFavicon": {
+        "message": "Kein Favicon erkannt",
+        "detail": "Ein Favicon hilft Benutzern, Ihre Website in Browser-Tabs zu identifizieren.",
+        "action": "Fügen Sie ein favicon.ico hinzu oder verwenden Sie <link rel=\"icon\"> mit Ihrem Marken-Symbol."
+      },
+      "inconsistentButtons": {
+        "message": "Inkonsistente Schaltflächen-Stile",
+        "detail": "Schaltflächen auf Ihrer Website haben unterschiedliche Farben und Formen.",
+        "action": "Definieren Sie Standard-Schaltflächen-Stile in Ihrem CSS und verwenden Sie diese konsistent."
+      },
+      "inconsistentLinks": {
+        "message": "Inkonsistente Link-Farben",
+        "detail": "Links verwenden mehrere verschiedene Farben auf der Seite.",
+        "action": "Legen Sie eine konsistente Link-Farbe fest, die zu Ihrer Markenpalette passt."
+      },
+      "excellent": {
+        "message": "Ausgezeichnete Markenkonsistenz!",
+        "detail": "Ihre Website behält eine starke visuelle Konsistenz bei Farben, Typografie und Markenelementen bei.",
+        "action": "Pflegen Sie weiterhin Ihre Markenrichtlinien und führen Sie regelmäßige Audits durch."
+      }
+    }
+  },
+  "seo": {
+    "pages": {
+      "home": {
+        "title": "Site Mechanic - Professionelle Website-Analyse & SEO-Tools",
+        "description": "Umfassende Website-Analyseplattform mit erweitertem SEO, Leistungstests, Sicherheitsscans und Barrierefreiheitsprüfungen. Kostenlose professionelle Web-Diagnostik.",
+        "keywords": "Website-Analyse, SEO-Tools, Leistungstests, Sicherheitsscanner, Barrierefreiheitsprüfung, Web-Diagnostik",
+        "og_title": "Site Mechanic - Professionelle Website-Analyseplattform",
+        "twitter_title": "Analysieren Sie Ihre Website mit professionellen Tools"
+      },
+      "security-analyzer": {
+        "title": "Website-Sicherheitsscanner - Schwachstellen-Analysator",
+        "description": "Umfassendes Sicherheitsanalyse-Tool zum Scannen von Websites auf Schwachstellen, SSL/TLS-Probleme, Sicherheitsheader und potenzielle Bedrohungen.",
+        "keywords": "Website-Sicherheitsscanner, Schwachstellen-Analysator, SSL-Prüfer, Sicherheitsheader, Penetrationstests",
+        "og_title": "Kostenloser Website-Sicherheitsscanner - Schwachstellen erkennen",
+        "twitter_title": "Scannen Sie Ihre Website auf Sicherheitslücken"
+      },
+      "performance-hub": {
+        "title": "Performance-Test-Hub - Website-Geschwindigkeit & Optimierungstools",
+        "description": "Zentralisiertes Performance-Test-Dashboard mit Core Web Vitals-Überwachung, Seitengeschwindigkeitsanalyse, Ressourcenoptimierung und umfassenden Performance-Metriken.",
+        "keywords": "Performance-Tests, Seitengeschwindigkeit, Core Web Vitals, Website-Optimierung, Performance-Überwachung",
+        "og_title": "Website-Performance-Test-Hub - Geschwindigkeitsoptimierung",
+        "twitter_title": "Testen und optimieren Sie Ihre Website-Performance"
+      },
+      "mobile-analyzer": {
+        "title": "Mobile-Website-Analysator - Responsive Design Testing Tool",
+        "description": "Umfassender Mobile-Optimierungsanalysator zum Testen von Responsive Design, mobiler Benutzerfreundlichkeit, Touch-Zielen, Viewport-Konfiguration und mobilen Performance-Metriken.",
+        "keywords": "Mobile-Analysator, Responsive Design Tests, mobile Benutzerfreundlichkeit, Viewport-Tests, Mobile-Optimierung",
+        "og_title": "Mobile-Website-Analysator - Responsive Design testen",
+        "twitter_title": "Analysieren Sie die mobile Erfahrung Ihrer Website"
+      },
+      "enhanced-fonts": {
+        "title": "Web-Schriftarten-Analysator - Typografie & Schriftladenoptimierung",
+        "description": "Erweitertes Web-Schriftanalyse-Tool zur Erkennung von Schriftverwendung, Ladeleistung, FOIT/FOUT-Problemen und Optimierungsmöglichkeiten für schnelleres Rendering.",
+        "keywords": "Schriftarten-Analysator, Web-Schriftarten, Typografie-Analyse, Schriftladen, FOUT, FOIT, Schriftoptimierung",
+        "og_title": "Web-Schriftarten-Analysator - Typografie-Performance optimieren",
+        "twitter_title": "Analysieren und optimieren Sie Ihre Web-Schriftarten"
+      },
+      "ip-reputation-analyzer": {
+        "title": "IP-Reputationsprüfer - Domain & Server-Gesundheitsanalyse",
+        "description": "Überprüfen Sie IP-Adressen-Reputation, Domain-Gesundheit, Blacklist-Status, DNS-Konfiguration, SSL-Zertifikate und Server-Response-Header.",
+        "keywords": "IP-Reputationsprüfer, Domain-Gesundheit, Blacklist-Check, DNS-Analysator, Server-Header",
+        "og_title": "IP-Reputation & Domain-Gesundheitsprüfer",
+        "twitter_title": "Überprüfen Sie die IP-Reputation Ihrer Domain"
+      },
+      "hosting-analyzer": {
+        "title": "Website-Hosting-Analysator - Server-Performance & Infrastruktur",
+        "description": "Analysieren Sie Web-Hosting-Qualität mit Server-Antwortzeit, Uptime-Überwachung, CDN-Erkennung, Hosting-Provider-Identifikation und Infrastruktur-Performance-Metriken.",
+        "keywords": "Hosting-Analysator, Server-Performance, Hosting-Qualität, Uptime-Überwachung, CDN-Erkennung",
+        "og_title": "Website-Hosting-Analysator - Server-Performance prüfen",
+        "twitter_title": "Analysieren Sie Ihre Web-Hosting-Infrastruktur"
+      },
+      "competitive-analysis": {
+        "title": "Wettbewerbsanalyse-Tool - Website-Benchmarking & Vergleich",
+        "description": "Vergleichen Sie Ihre Website mit Wettbewerbern durch Side-by-Side-Benchmarking von Performance, SEO und UX. Identifizieren Sie Wettbewerbsvorteile und Verbesserungsmöglichkeiten.",
+        "keywords": "Wettbewerbsanalyse, Website-Vergleich, Konkurrenz-Benchmarking, SEO-Vergleich",
+        "og_title": "Wettbewerbsanalyse & Benchmarking für Websites",
+        "twitter_title": "Vergleichen Sie Ihre Site mit der Konkurrenz"
+      },
+      "cro-analyzer": {
+        "title": "Conversion-Rate-Optimierungs-Analysator - CRO-Audit-Tool",
+        "description": "Umfassende CRO-Analyse zur Identifizierung von Conversion-Barrieren, UX-Problemen, Call-to-Action-Effektivität, Formularoptimierung und Funnel-Verbesserungen.",
+        "keywords": "CRO-Analysator, Conversion-Optimierung, Conversion-Rate, UX-Audit, A/B-Tests, Funnel-Analyse",
+        "og_title": "CRO-Analysator - Conversion-Raten optimieren",
+        "twitter_title": "Analysieren und verbessern Sie Ihre Conversion-Raten"
+      },
+      "broken-links": {
+        "title": "Defekte-Links-Prüfer - Finden & Reparieren defekter Links",
+        "description": "Umfassender Detektor für defekte Links zum Scannen interner Links, externer Links, Bilder und Ressourcen auf 404-Fehler, Weiterleitungen und Link-Gesundheit.",
+        "keywords": "Defekte-Links-Prüfer, 404-Finder, tote Links, Link-Validator, Site-Crawler",
+        "og_title": "Defekte-Links-Prüfer - Finden Sie tote Links & 404-Fehler",
+        "twitter_title": "Scannen Sie Ihre Website auf defekte Links"
+      },
+      "gdpr-compliance": {
+        "title": "DSGVO-Compliance-Prüfer - Datenschutz & Cookie-Audit-Tool",
+        "description": "Analysieren Sie DSGVO-Compliance mit Cookie-Audits, Datenschutzrichtlinien-Erkennung, Datenschutzbewertung, Consent-Management-Review und EU-Datenschutzvorschriften.",
+        "keywords": "DSGVO-Prüfer, Datenschutz-Compliance, Cookie-Audit, DSGVO-Analyse, Datenschutz",
+        "og_title": "DSGVO-Compliance-Prüfer - Datenschutz-Audit-Tool",
+        "twitter_title": "Überprüfen Sie die DSGVO-Compliance Ihrer Website"
+      },
+      "local-seo": {
+        "title": "Lokale-SEO-Analysator - Google Business & Local Search Optimizer",
+        "description": "Optimieren Sie lokale Suchpräsenz mit Google Business Profile-Analyse, lokalen Zitaten, NAP-Konsistenz, Schema-Markup und lokalen Ranking-Faktoren.",
+        "keywords": "Lokales SEO, Google Business Profile, lokale Suche, NAP-Konsistenz, lokale Zitate, Schema-Markup",
+        "og_title": "Lokaler SEO-Analysator - Lokale Such-Rankings optimieren",
+        "twitter_title": "Verbessern Sie Ihre lokale Suchpräsenz"
+      },
+      "brand-consistency": {
+        "title": "Markenkonsistenz-Analysator - Design & visuelle Identität Audit",
+        "description": "Analysieren Sie Markenkonsistenz auf Ihrer Website mit Farbpaletten-Erkennung, Typografie-Audit, Logo-Verwendung, Design-System-Compliance und visuellen Identitätsrichtlinien.",
+        "keywords": "Markenkonsistenz, Design-Audit, Farbpalette, Markenidentität, visuelle Analyse, Design-System",
+        "og_title": "Markenkonsistenz-Analysator - Design-Audit-Tool",
+        "twitter_title": "Prüfen Sie die Markenkonsistenz Ihrer Website"
+      },
+      "site-crawler": {
+        "title": "Website-Crawler - Vollständige Site-Struktur & Seitenerkennung",
+        "description": "Crawlen und kartieren Sie Ihre gesamte Website-Struktur mit Sitemap-Generierung, interner Linkanalyse, Seitenhierarchie, Content-Inventar und umfassender Site-Architektur.",
+        "keywords": "Website-Crawler, Site-Mapping, Sitemap-Generator, interne Links, Site-Struktur",
+        "og_title": "Website-Crawler - Kartieren Sie Ihre Site-Struktur",
+        "twitter_title": "Crawlen und analysieren Sie Ihre Website-Struktur"
+      },
+      "tag-intelligence": {
+        "title": "Tag Intelligence - Marketing-Tag & Analytics-Audit-Tool",
+        "description": "Analysieren Sie Marketing-Tags, Tracking-Pixel, Analytics-Implementierung, Tag-Manager-Konfiguration, Datenlayer-Validierung und Drittanbieter-Script-Performance.",
+        "keywords": "Tag-Analyse, Google Tag Manager, Analytics-Audit, Tracking-Pixel, Marketing-Tags",
+        "og_title": "Tag Intelligence - Marketing & Analytics Tags prüfen",
+        "twitter_title": "Analysieren Sie die Tracking-Tags Ihrer Website"
+      },
+      "advanced-tools": {
+        "title": "Erweiterte Web-Tools - Professionelle Website-Analyse-Suite",
+        "description": "Greifen Sie auf erweiterte Website-Analyse-Tools zu, einschließlich technischem SEO, Performance-Profiling, Sicherheitstests und umfassenden Diagnosen für professionelle Webentwickler.",
+        "keywords": "erweiterte Web-Tools, technisches SEO, Performance-Profiling, Entwicklertools",
+        "og_title": "Erweiterte Web-Analyse-Tools für Entwickler",
+        "twitter_title": "Professionelle Website-Analyse-Tools"
+      },
+      "performance-snapshot": {
+        "title": "Performance-Snapshot - Schnelle Website-Geschwindigkeitsanalyse",
+        "description": "Erhalten Sie sofortigen Performance-Snapshot mit Ladezeit, Ressourcenanalyse, Core Web Vitals, Rendering-Metriken und schnellen Optimierungsempfehlungen.",
+        "keywords": "Performance-Snapshot, Geschwindigkeitstest, Ladezeit, Core Web Vitals, Schnellanalyse",
+        "og_title": "Performance-Snapshot - Sofortige Geschwindigkeitsanalyse",
+        "twitter_title": "Erhalten Sie einen schnellen Performance-Snapshot"
+      },
+      "core-web-vitals": {
+        "title": "Core Web Vitals Prüfer - LCP, FID, CLS Analyse-Tool",
+        "description": "Messen und optimieren Sie Core Web Vitals einschließlich Largest Contentful Paint (LCP), First Input Delay (FID) und Cumulative Layout Shift (CLS) für bessere Google-Rankings.",
+        "keywords": "Core Web Vitals, LCP, FID, CLS, Page Experience, Google-Ranking, Performance-Metriken",
+        "og_title": "Core Web Vitals Prüfer - Page Experience optimieren",
+        "twitter_title": "Überprüfen Sie Ihre Core Web Vitals Scores"
+      }
+    }
+  },
+  "notices": {
+    "botProtectionTitle": "Bot-Schutz-Hinweis:",
+    "botProtectionText": "Große kommerzielle Websites (Amazon, Walmart, cars.com) blockieren automatische Analysen.",
+    "botProtectionTry": "Versuchen Sie: Ihre Websites, Kundenprojekte, oder testen Sie mit",
+    "botProtectionBlocked": "Für blockierte Seiten verwenden Sie",
+    "botProtectionAlternative": "Google PageSpeed Insights",
+    "botProtectionInstead": "stattdessen."
+  },
+  "auth": {
+    "welcomeBack": "Willkommen Zurück",
+    "createAccount": "Konto Erstellen",
+    "login": "Anmelden",
+    "register": "Registrieren",
+    "email": "E-Mail",
+    "password": "Passwort",
+    "confirmPassword": "Passwort Bestätigen",
+    "forgotPassword": "Passwort vergessen?",
+    "alreadyHaveAccount": "Haben Sie bereits ein Konto?",
+    "dontHaveAccount": "Noch kein Konto?",
+    "loginButton": "Anmelden",
+    "registerButton": "Konto Erstellen",
+    "loggingIn": "Anmelden...",
+    "creatingAccount": "Konto wird erstellt...",
+    "passwordRequirements": "Muss 8+ Zeichen mit Groß-, Kleinbuchstaben und Zahlen enthalten",
+    "loginSuccess": "Anmeldung erfolgreich! Weiterleitung...",
+    "registerSuccess": "Konto erstellt! Weiterleitung...",
+    "logoutButton": "Abmelden",
+    "changePassword": "Passwort Ändern",
+    "currentPassword": "Aktuelles Passwort",
+    "newPassword": "Neues Passwort",
+    "updatePassword": "Passwort Aktualisieren",
+    "cancel": "Abbrechen"
+  },
+  "account": {
+    "title": "Mein Konto",
+    "subtitle": "Verwalten Sie Ihr Abonnement, Ihre Abrechnung und Kontoeinstellungen",
+    "accountInfo": "Kontoinformationen",
+    "subscription": "Abonnement",
+    "quickActions": "Schnellaktionen",
+    "email": "E-Mail",
+    "plan": "Plan",
+    "memberSince": "Mitglied Seit",
+    "status": "Status",
+    "scansRemaining": "Verbleibende Scans",
+    "freePlan": "KOSTENLOSER PLAN",
+    "proPlan": "PRO",
+    "manageBilling": "Abrechnung Verwalten",
+    "upgradeToPro": "Auf Pro Upgraden",
+    "goToDashboard": "Zum Dashboard",
+    "passwordChanged": "Passwort erfolgreich geändert!",
+    "perDay": "/ Tag",
+    "perMonth": "/ Monat"
+  },
+  "pricing": {
+    "title": "Upgrade auf Site Mechanic Pro",
+    "subtitle": "Unbegrenzte Scans, erweiterte Empfehlungen und Optimierungstools auf Expertenniveau freischalten",
+    "monthly": "Monatlich",
+    "annual": "Jährlich 17% Sparen",
+    "free": "Kostenlos",
+    "pro": "Pro",
+    "mostPopular": "AM BELIEBTESTEN",
+    "perMonth": "/Monat",
+    "scansPerMonth": "Scans pro Monat",
+    "unlimitedScans": "Unbegrenzte Scans",
+    "basicRecommendations": "Grundlegende Empfehlungen (4 Schritte)",
+    "advancedRecommendations": "4 erweiterte Empfehlungen pro Analyzer",
+    "onePagePerScan": "1 Seite pro Scan",
+    "upToPages": "Bis zu 250 Seiten pro Scan",
+    "noExport": "Kein Export",
+    "pdfExport": "PDF-Export ohne Wasserzeichen",
+    "expertTips": "Optimierungstipps auf Expertenniveau",
+    "prioritySupport": "Priorisierter E-Mail-Support",
+    "getStarted": "Loslegen",
+    "upgradeNow": "Jetzt Upgraden",
+    "faq": "Häufig Gestellte Fragen",
+    "faqQuestion1": "Kann ich jederzeit kündigen?",
+    "faqAnswer1": "Ja, Sie können Ihr Abonnement jederzeit kündigen. Keine langfristigen Verträge.",
+    "faqQuestion2": "Welche Zahlungsmethoden akzeptieren Sie?",
+    "faqAnswer2": "Wir akzeptieren alle gängigen Kreditkarten über Stripe (Visa, Mastercard, Amex).",
+    "faqQuestion3": "Bieten Sie Rückerstattungen an?",
+    "faqAnswer3": "Ja, wir bieten eine 14-tägige Geld-zurück-Garantie, wenn Sie nicht zufrieden sind."
   }
 }

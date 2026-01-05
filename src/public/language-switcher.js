@@ -171,8 +171,17 @@ class LanguageSwitcher {
         position: relative;
         display: inline-flex;
         align-items: center;
-        margin-left: auto;
         z-index: 99999 !important;
+      }
+      
+      /* When in header container, no auto margin */
+      .language-selector-header .language-switcher {
+        margin-left: 0;
+      }
+      
+      /* When in nav, push to the right */
+      nav .language-switcher {
+        margin-left: auto;
       }
 
       .language-switcher-trigger {
@@ -435,13 +444,5 @@ LanguageSwitcher.injectStyles();
 // Export for use
 window.LanguageSwitcher = LanguageSwitcher;
 
-// Auto-initialize if nav exists
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    const switcher = new LanguageSwitcher();
-    switcher.init('nav');
-  });
-} else {
-  const switcher = new LanguageSwitcher();
-  switcher.init('nav');
-}
+// Store instance globally for nav-template to use
+window.languageSwitcher = new LanguageSwitcher();

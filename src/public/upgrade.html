@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Upgrade to Site Mechanic Pro for unlimited scans and advanced features">
+  <meta name="theme-color" content="#000000" />
+
+  <title>Upgrade to Pro | Site Mechanic</title>
+
+  <!-- Preload critical fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- Design System Foundation -->
+  <link rel="stylesheet" href="/design-tokens.css">
+  <link rel="stylesheet" href="/components.css">
+  <link rel="stylesheet" href="/styles.css">
+
+  <style>
+    .pricing-container {
+      max-width: 1200px;
+      margin: 3rem auto;
+      padding: 0 2rem;
+    }
+
+    .pricing-header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .pricing-header h1 {
+      font-size: 2.5rem;
+      margin: 0 0 1rem 0;
+      color: #fff;
+    }
+
+    .pricing-header p {
+      font-size: 1.125rem;
+      color: #888;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .pricing-toggle {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .pricing-toggle label {
+      color: #ccc;
+      font-weight: 600;
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 30px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+
+    .toggle-switch.active {
+      background: #00ff88;
+    }
+
+    .toggle-switch-slider {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 24px;
+      height: 24px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.3s;
+    }
+
+    .toggle-switch.active .toggle-switch-slider {
+      transform: translateX(30px);
+    }
+
+    .pricing-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2rem;
+      margin-top: 3rem;
+    }
+
+    .pricing-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 2rem;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .pricing-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(0, 255, 136, 0.3);
+      box-shadow: 0 10px 40px rgba(0, 255, 136, 0.1);
+    }
+
+    .pricing-card.featured {
+      border: 2px solid #00ff88;
+      background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(0, 204, 102, 0.02));
+    }
+
+    .pricing-badge {
+      position: absolute;
+      top: -12px;
+      right: 20px;
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #000;
+      padding: 0.375rem 1rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .pricing-card h3 {
+      font-size: 1.5rem;
+      margin: 0 0 0.5rem 0;
+      color: #fff;
+    }
+
+    .pricing-card .price {
+      font-size: 3rem;
+      font-weight: 700;
+      color: #00ff88;
+      margin: 1rem 0;
+    }
+
+    .pricing-card .price .currency {
+      font-size: 1.5rem;
+    }
+
+    .pricing-card .period {
+      font-size: 1rem;
+      color: #888;
+      margin-left: 0.5rem;
+    }
+
+    .pricing-card .save-badge {
+      display: inline-block;
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+
+    .pricing-card ul {
+      list-style: none;
+      padding: 0;
+      margin: 2rem 0;
+    }
+
+    .pricing-card ul li {
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #ccc;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .pricing-card ul li:last-child {
+      border-bottom: none;
+    }
+
+    .pricing-card ul li::before {
+      content: '✓';
+      color: #00ff88;
+      font-weight: bold;
+      font-size: 1.25rem;
+    }
+
+    .pricing-card ul li.disabled {
+      opacity: 0.4;
+    }
+
+    .pricing-card ul li.disabled::before {
+      content: '✗';
+      color: #ef4444;
+    }
+
+    .pricing-btn {
+      width: 100%;
+      padding: 1rem;
+      background: linear-gradient(135deg, #00ff88, #00cc66);
+      color: #000;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .pricing-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 255, 136, 0.3);
+    }
+
+    .pricing-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .pricing-btn.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .pricing-btn.secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1);
+    }
+
+    .error-message {
+      padding: 1rem;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 8px;
+      color: #ef4444;
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .success-message {
+      padding: 1rem;
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      border-radius: 8px;
+      color: #22c55e;
+      margin-top: 1rem;
+      text-align: center;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    .faq-section {
+      max-width: 800px;
+      margin: 4rem auto 2rem;
+      padding: 0 2rem;
+    }
+
+    .faq-section h2 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 2rem;
+      color: #fff;
+    }
+
+    .faq-item {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      padding: 1.5rem;
+    }
+
+    .faq-item h3 {
+      font-size: 1.125rem;
+      margin: 0 0 0.75rem 0;
+      color: #00ff88;
+    }
+
+    .faq-item p {
+      margin: 0;
+      color: #ccc;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+
+  <main class="page-shell">
+    <div class="pricing-container">
+      <!-- Header -->
+      <div class="pricing-header">
+        <h1>Upgrade to Site Mechanic Pro</h1>
+        <p>Unlock unlimited scans, advanced recommendations, and expert-level optimization tools</p>
+
+        <!-- Billing Toggle -->
+        <div class="pricing-toggle">
+          <label for="billing-toggle">Monthly</label>
+          <div class="toggle-switch" id="billing-toggle">
+            <div class="toggle-switch-slider"></div>
+          </div>
+          <label>Annual <span class="save-badge">Save 17%</span></label>
+        </div>
+      </div>
+
+      <!-- Pricing Cards -->
+      <div class="pricing-cards">
+        <!-- Free Plan -->
+        <div class="pricing-card">
+          <h3>Free</h3>
+          <div class="price">
+            <span class="currency">$</span>0
+            <span class="period">/month</span>
+          </div>
+          <ul>
+            <li>3 scans per month</li>
+            <li>Basic recommendations (4 steps)</li>
+            <li>1 page per scan</li>
+            <li class="disabled">Advanced recommendations</li>
+            <li class="disabled">Unlimited scans</li>
+            <li class="disabled">PDF export</li>
+            <li class="disabled">Priority support</li>
+          </ul>
+          <button class="pricing-btn secondary" disabled>Current Plan</button>
+        </div>
+
+        <!-- Pro Plan (Monthly) -->
+        <div class="pricing-card featured" id="pro-monthly">
+          <span class="pricing-badge">Most Popular</span>
+          <h3>Pro</h3>
+          <div class="price">
+            <span class="currency">$</span>29
+            <span class="period">/month</span>
+          </div>
+          <ul>
+            <li>Unlimited scans</li>
+            <li>4 advanced recommendations per analyzer</li>
+            <li>Up to 250 pages per scan</li>
+            <li>Expert-level optimization tips</li>
+            <li>PDF export without watermark</li>
+            <li>Priority email support</li>
+            <li>API access (coming soon)</li>
+          </ul>
+          <button class="pricing-btn" id="upgrade-monthly-btn">Upgrade to Pro</button>
+        </div>
+
+        <!-- Pro Plan (Annual) -->
+        <div class="pricing-card featured hidden" id="pro-annual">
+          <span class="pricing-badge">Best Value</span>
+          <h3>Pro Annual</h3>
+          <div class="price">
+            <span class="currency">$</span>24
+            <span class="period">/month</span>
+            <span class="save-badge">Save $60/year</span>
+          </div>
+          <div style="color: #888; font-size: 0.875rem; margin-top: -0.5rem; margin-bottom: 1rem;">
+            Billed annually at $290
+          </div>
+          <ul>
+            <li>Unlimited scans</li>
+            <li>4 advanced recommendations per analyzer</li>
+            <li>Up to 250 pages per scan</li>
+            <li>Expert-level optimization tips</li>
+            <li>PDF export without watermark</li>
+            <li>Priority email support</li>
+            <li>API access (coming soon)</li>
+          </ul>
+          <button class="pricing-btn" id="upgrade-annual-btn">Upgrade to Pro Annual</button>
+        </div>
+      </div>
+
+      <div id="error-message" class="error-message hidden"></div>
+      <div id="success-message" class="success-message hidden"></div>
+
+      <!-- FAQ Section -->
+      <div class="faq-section">
+        <h2>Frequently Asked Questions</h2>
+
+        <div class="faq-item">
+          <h3>Can I cancel anytime?</h3>
+          <p>Yes! You can cancel your subscription at any time from your account dashboard. You'll continue to have Pro access until the end of your billing period.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>What payment methods do you accept?</h3>
+          <p>We accept all major credit cards (Visa, MasterCard, American Express) and debit cards through Stripe's secure payment processing.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>What's included in "advanced recommendations"?</h3>
+          <p>Each analyzer provides 4 free basic steps and 4 Pro advanced steps. The advanced steps include expert-level optimization techniques, code examples, and best practices used by professionals.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Do you offer refunds?</h3>
+          <p>Yes! If you're not satisfied within the first 14 days, contact us for a full refund.</p>
+        </div>
+
+        <div class="faq-item">
+          <h3>Is my payment information secure?</h3>
+          <p>Absolutely. We use Stripe for payment processing, which is PCI-DSS compliant and handles billions of dollars annually. We never store your credit card information on our servers.</p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/nav-template.js"></script>
+  <script src="/upgrade-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Tracking & Analytics Analyzer - Detect GTM, GA4, Meta Pixel, TikTok Pixel, LinkedIn, Hotjar and more. Find duplicate tags, missing consent, and get a Tag Health Score." />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="tag analyzer, GTM detector, GA4 checker, Meta Pixel, Facebook Pixel, TikTok Pixel, LinkedIn Insight, Hotjar, analytics tags, tag health" />
+    <meta name="author" content="Site Mechanic" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://sitemechanic.io/en/tag-intelligence.html" />
+
+    <!-- Hreflang Tags for Multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/tag-intelligence.html" />
+    <link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/tag-intelligence.html" />
+    <link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/tag-intelligence.html" />
+    <link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/tag-intelligence.html" />
+    <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/tag-intelligence.html" />
+    <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/tag-intelligence.html" />
+    <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/tag-intelligence.html" />
+    <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/tag-intelligence.html" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Tracking & Analytics Analyzer - Analytics & Tracking Tag Detection" />
+    <meta property="og:description" content="Detect and audit all analytics, advertising, and tracking tags on any website. Find duplicates, conflicts, and compliance issues." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sitemechanic.io/en/tag-intelligence.html" />
+    <meta property="og:image" content="https://sitemechanic.io/images/og-tag-intelligence.png" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="pt_PT" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:site_name" content="Site Mechanic" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Tracking & Analytics Analyzer - Analytics & Tracking Tag Detection" />
+    <meta name="twitter:description" content="Detect and audit all analytics, advertising, and tracking tags on any website. Find duplicates, conflicts, and compliance issues." />
+    <meta name="twitter:url" content="https://sitemechanic.io/en/tag-intelligence.html" />
+    <meta name="twitter:image" content="https://sitemechanic.io/images/twitter-tag-intelligence.png" />
+
+    <title>SEO & Indexing - Tracking & Analytics | Site Mechanic</title>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
+    <!-- Existing Stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+    <link rel="stylesheet" href="spacing-fixes.css" />
+
+    <!-- CRITICAL: Theme background fix -->
+    <style>
+      /* Dark mode (when white-theme is NOT present) */
+      body:not(.white-theme) {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+      /* Light mode (when white-theme IS present) */
+      body.white-theme {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
+        color: #1a1a1a !important;
+      }
+      
+      /* Tag category badges */
+      .tag-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-right: 8px;
+      }
+      .tag-analytics { background: #3b82f6; color: white; }
+      .tag-advertising { background: #f59e0b; color: black; }
+      .tag-tag_manager { background: #8b5cf6; color: white; }
+      .tag-consent { background: #10b981; color: white; }
+      .tag-customer_support { background: #ec4899; color: white; }
+      .tag-marketing { background: #ef4444; color: white; }
+      .tag-other { background: #6b7280; color: white; }
+      
+      /* Tag card */
+      .tag-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .tag-card:hover {
+        border-color: rgba(0, 255, 136, 0.3);
+      }
+      
+      /* Issue severity */
+      .severity-high { color: #ef4444; }
+      .severity-warning { color: #f59e0b; }
+      .severity-info { color: #3b82f6; }
+      
+      /* Options panel */
+      .options-panel {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+      .options-panel label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+      }
+      .options-panel input[type="number"] {
+        width: 80px;
+        padding: 4px 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: inherit;
+      }
+    </style>
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "Tracking & Analytics Analyzer",
+          "description": "Comprehensive analytics and tracking tag detector that identifies GTM, GA4, Universal Analytics, Meta Pixel, TikTok Pixel, LinkedIn Insight, Hotjar, and other marketing tags. Detects duplicate tags, missing consent management, and configuration conflicts for compliance and performance optimization.",
+          "url": "https://sitemechanic.io/en/tag-intelligence.html",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Any",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Google Tag Manager (GTM) Detection",
+            "GA4 & Universal Analytics Tracking Analysis",
+            "Meta Pixel (Facebook Pixel) Detection",
+            "TikTok Pixel Detection",
+            "LinkedIn Insight Tag Detection",
+            "Hotjar & Heatmap Tool Detection",
+            "Tag Health Score & Quality Assessment",
+            "Duplicate Tag Detection",
+            "Missing Consent Management Alerts",
+            "Tag Configuration Conflict Detection",
+            "Multi-Page Tag Consistency Scan",
+            "Cookie Compliance Verification"
+          ],
+          "browserRequirements": "Requires JavaScript",
+          "permissions": "No installation required"
+        },
+        {
+          "@type": "Organization",
+          "name": "Site Mechanic",
+          "url": "https://sitemechanic.io",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://sitemechanic.io/images/logo.png"
+          },
+          "description": "Professional website analysis and optimization tools for developers and digital marketers"
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://sitemechanic.io/en/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Tracking & Analytics",
+              "item": "https://sitemechanic.io/en/tag-intelligence.html"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
+    <script src="/seo-i18n.js"></script>
+  </head>
+  <body>
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+    
+    <main class="page-shell">
+      <!-- Breadcrumb Navigation -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/dashboard.html">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span aria-current="page">Tracking & Analytics</span>
+      </nav>
+      
+      <!-- Page Header -->
+      <header class="page-header">
+        <h1 class="page-header__title">Tracking & Analytics</h1>
+        <p class="page-header__subtitle">Detect GTM, GA4, Meta Pixel, TikTok, LinkedIn, Hotjar and more. Identify duplicate tags and configuration conflicts.</p>
+      </header>
+
+      <!-- Input Card -->
+      <section class="card">
+        <div class="card__body">
+          <!-- URL Input Form -->
+          <div class="form-row">
+            <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
+            <input 
+              type="url" 
+              id="urlInput"
+              class="input"
+              placeholder="https://example.com" 
+              aria-label="Enter website URL for tag analysis"
+              required
+              aria-required="true"
+            />
+            
+            <button id="analyzeButton" class="btn btn-primary" aria-label="Start tracking and analytics analysis">ANALYZE TAGS</button>
+          </div>
+        
+          <!-- Options Panel -->
+          <div class="options-panel" style="margin-top: 1rem;">
+            <label>
+              <input type="checkbox" id="multiPageOption" />
+              Multi-page scan (crawl multiple pages)
+            </label>
+            <div id="multiPageOptions" style="display: none; margin-left: 24px; margin-top: 8px;">
+              <label>
+                Max pages: 
+                <input type="number" id="maxPages" value="5" min="1" max="10" />
+              </label>
+            </div>
+          </div>
+        
+          <!-- Info Banner -->
+          <p class="helper-text" style="margin-top: 1rem;">
+            <strong>Tracking & Analytics:</strong> Detects GTM, GA4, Universal Analytics, Meta Pixel, TikTok Pixel, LinkedIn Insight, 
+            Hotjar, and more. Identifies duplicate tags, missing consent management, and configuration conflicts.
+          </p>
+        </div>
+      </section>
+
+      <!-- Results Container -->
+      <div id="results" class="results-container hidden" role="region" aria-live="polite">
+        <!-- Loading State (populated by AnalyzerLoader) -->
+        <div id="loadingContainer"></div>
+
+        <!-- Results Content (populated by JavaScript) -->
+        <div id="resultsContent"></div>
+      </div>
+
+      <!-- Error Display -->
+      <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="theme-controls.js"></script>
+    <script src="nav-template.js"></script>
+    <script src="analyzer-loader.js"></script>
+
+    <!-- ASCII Background Animation -->
+
+
+    <script src="tag-intelligence-script.js"></script>
+  </body>
+</html>

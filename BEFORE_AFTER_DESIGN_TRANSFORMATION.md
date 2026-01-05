@@ -296,7 +296,7 @@
 #### AFTER - CTA Box (Conversion-Optimized)
 ```html
 <div class="cta-box">
-  <h2 class="cta-box__title">Get Your Comprehensive PDF Report</h2>
+  <h2 class="cta-box__title">Download Your PDF Report</h2>
   <p class="cta-box__description">
     Save this analysis with detailed recommendations, visual charts, and actionable insights.
     Perfect for sharing with your team or tracking improvements over time.

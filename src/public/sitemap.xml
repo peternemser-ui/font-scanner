@@ -1,71 +1,322 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
-        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-        xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9
-        http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
+        xmlns:xhtml="http://www.w3.org/1999/xhtml">
 
-  <!-- Homepage / Font Scanner -->
+  <!-- Homepage - English -->
   <url>
-    <loc>https://fontscanner.app/</loc>
-    <lastmod>2025-11-17</lastmod>
+    <loc>https://sitemechanic.io/index.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/index.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/index.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/index.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/index.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/index.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/index.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/index.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/index.html"/>
+    <lastmod>2026-01-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
 
   <!-- Dashboard -->
   <url>
-    <loc>https://fontscanner.app/dashboard.html</loc>
-    <lastmod>2025-11-17</lastmod>
+    <loc>https://sitemechanic.io/dashboard.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/dashboard.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/dashboard.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/dashboard.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/dashboard.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/dashboard.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/dashboard.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/dashboard.html"/>
+    <lastmod>2026-01-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
 
   <!-- SEO Analyzer -->
   <url>
-    <loc>https://fontscanner.app/seo-analyzer.html</loc>
-    <lastmod>2025-11-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Performance Analyzer -->
-  <url>
-    <loc>https://fontscanner.app/performance-analyzer.html</loc>
-    <lastmod>2025-11-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-
-  <!-- Accessibility Analyzer -->
-  <url>
-    <loc>https://fontscanner.app/accessibility-analyzer.html</loc>
-    <lastmod>2025-11-17</lastmod>
+    <loc>https://sitemechanic.io/seo-analyzer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/seo-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/seo-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/seo-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/seo-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/seo-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/seo-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/seo-analyzer.html"/>
+    <lastmod>2026-01-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
 
   <!-- Security Analyzer -->
   <url>
-    <loc>https://fontscanner.app/security-analyzer.html</loc>
-    <lastmod>2025-11-17</lastmod>
+    <loc>https://sitemechanic.io/security-analyzer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/security-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/security-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/security-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/security-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/security-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/security-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/security-analyzer.html"/>
+    <lastmod>2026-01-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
+  </url>
+
+  <!-- Performance Hub -->
+  <url>
+    <loc>https://sitemechanic.io/performance-hub.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/performance-hub.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/performance-hub.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/performance-hub.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/performance-hub.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/performance-hub.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/performance-hub.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/performance-hub.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Performance Analyzer -->
+  <url>
+    <loc>https://sitemechanic.io/performance-analyzer.html</loc>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Accessibility Analyzer -->
+  <url>
+    <loc>https://sitemechanic.io/accessibility-analyzer.html</loc>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+
+  <!-- Mobile Analyzer -->
+  <url>
+    <loc>https://sitemechanic.io/mobile-analyzer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/mobile-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/mobile-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/mobile-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/mobile-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/mobile-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/mobile-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/mobile-analyzer.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Enhanced Fonts -->
+  <url>
+    <loc>https://sitemechanic.io/enhanced-fonts.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/enhanced-fonts.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/enhanced-fonts.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/enhanced-fonts.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/enhanced-fonts.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/enhanced-fonts.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/enhanced-fonts.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/enhanced-fonts.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- IP Reputation Analyzer -->
+  <url>
+    <loc>https://sitemechanic.io/ip-reputation-analyzer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/ip-reputation-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/ip-reputation-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/ip-reputation-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/ip-reputation-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/ip-reputation-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/ip-reputation-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/ip-reputation-analyzer.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Hosting Analyzer -->
+  <url>
+    <loc>https://sitemechanic.io/hosting-analyzer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/hosting-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/hosting-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/hosting-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/hosting-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/hosting-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/hosting-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/hosting-analyzer.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
   </url>
 
   <!-- Core Web Vitals -->
   <url>
-    <loc>https://fontscanner.app/core-web-vitals.html</loc>
-    <lastmod>2025-11-17</lastmod>
+    <loc>https://sitemechanic.io/core-web-vitals.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/core-web-vitals.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/core-web-vitals.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/core-web-vitals.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/core-web-vitals.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/core-web-vitals.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/core-web-vitals.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/core-web-vitals.html"/>
+    <lastmod>2026-01-02</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
 
   <!-- Competitive Analysis -->
   <url>
-    <loc>https://fontscanner.app/competitive-analysis.html</loc>
-    <lastmod>2025-11-17</lastmod>
+    <loc>https://sitemechanic.io/competitive-analysis.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/competitive-analysis.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/competitive-analysis.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/competitive-analysis.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/competitive-analysis.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/competitive-analysis.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/competitive-analysis.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/competitive-analysis.html"/>
+    <lastmod>2026-01-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+
+  <!-- CRO Analyzer -->
+  <url>
+    <loc>https://sitemechanic.io/cro-analyzer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/cro-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/cro-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/cro-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/cro-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/cro-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/cro-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/cro-analyzer.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Broken Links -->
+  <url>
+    <loc>https://sitemechanic.io/broken-links.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/broken-links.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/broken-links.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/broken-links.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/broken-links.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/broken-links.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/broken-links.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/broken-links.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- GDPR Compliance -->
+  <url>
+    <loc>https://sitemechanic.io/gdpr-compliance.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/gdpr-compliance.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/gdpr-compliance.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/gdpr-compliance.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/gdpr-compliance.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/gdpr-compliance.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/gdpr-compliance.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/gdpr-compliance.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Local SEO -->
+  <url>
+    <loc>https://sitemechanic.io/local-seo.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/local-seo.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/local-seo.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/local-seo.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/local-seo.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/local-seo.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/local-seo.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/local-seo.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Brand Consistency -->
+  <url>
+    <loc>https://sitemechanic.io/brand-consistency.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/brand-consistency.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/brand-consistency.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/brand-consistency.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/brand-consistency.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/brand-consistency.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/brand-consistency.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/brand-consistency.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Site Crawler -->
+  <url>
+    <loc>https://sitemechanic.io/site-crawler.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/site-crawler.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/site-crawler.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/site-crawler.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/site-crawler.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/site-crawler.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/site-crawler.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/site-crawler.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Tag Intelligence -->
+  <url>
+    <loc>https://sitemechanic.io/tag-intelligence.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/tag-intelligence.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/tag-intelligence.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/tag-intelligence.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/tag-intelligence.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/tag-intelligence.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/tag-intelligence.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/tag-intelligence.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Advanced Tools -->
+  <url>
+    <loc>https://sitemechanic.io/advanced-tools.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/advanced-tools.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/advanced-tools.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/advanced-tools.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/advanced-tools.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/advanced-tools.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/advanced-tools.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/advanced-tools.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+
+  <!-- Performance Snapshot -->
+  <url>
+    <loc>https://sitemechanic.io/performance-snapshot.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/performance-snapshot.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/performance-snapshot.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/performance-snapshot.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/performance-snapshot.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/performance-snapshot.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/performance-snapshot.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/performance-snapshot.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
   </url>
 
 </urlset>

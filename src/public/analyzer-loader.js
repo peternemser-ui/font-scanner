@@ -1,6 +1,7 @@
 /**
  * Unified Analyzer Loading System
  * Provides consistent loading UI across all analyzer pages
+ * Now uses modal overlay format
  */
 
 class AnalyzerLoader {
@@ -13,6 +14,7 @@ class AnalyzerLoader {
     this.estimatedSeconds = 0;
     this.isComplete = false;
     this.overrunActive = false;
+    this.overlay = null;
   }
 
   /**
@@ -29,13 +31,13 @@ class AnalyzerLoader {
     this.isComplete = false;
     this.overrunActive = false;
     
-    if (!this.container) {
-      console.error('Loading container not found');
-      return;
-    }
-
-    // Build loading HTML
-    this.container.innerHTML = `
+    // Create modal overlay
+    this.overlay = document.createElement('div');
+    this.overlay.className = 'analyzer-loading-overlay active';
+    this.overlay.id = 'analyzerLoadingOverlay';
+    
+    // Build loading HTML inside overlay
+    this.overlay.innerHTML = `
       <div class="analyzer-loading active">
         <div class="loading-header">
           <h2 class="loading-title">${title}</h2>
@@ -65,7 +67,16 @@ class AnalyzerLoader {
       </div>
     `;
 
-    this.container.style.display = 'block';
+    // Add overlay to body
+    document.body.appendChild(this.overlay);
+    
+    // Prevent body scrolling while loading
+    document.body.style.overflow = 'hidden';
+    
+    // Also update the container for backward compatibility
+    if (this.container) {
+      this.container.style.display = 'none';
+    }
     
     // Start progress simulation
     this.simulateProgress();
@@ -77,12 +88,13 @@ class AnalyzerLoader {
    */
   nextStep(stepIndex) {
     const index = stepIndex !== undefined ? stepIndex : this.currentStep + 1;
+    const container = this.overlay || document;
     
     if (index > this.steps.length) return;
 
     // Mark previous step as complete
     if (this.currentStep < this.steps.length) {
-      const prevStep = document.querySelector(`.progress-step[data-step="${this.currentStep}"]`);
+      const prevStep = container.querySelector(`.progress-step[data-step="${this.currentStep}"]`);
       if (prevStep) {
         prevStep.classList.remove('active');
         prevStep.classList.add('complete');
@@ -91,7 +103,7 @@ class AnalyzerLoader {
 
     // Activate current step
     if (index < this.steps.length) {
-      const currentStepEl = document.querySelector(`.progress-step[data-step="${index}"]`);
+      const currentStepEl = container.querySelector(`.progress-step[data-step="${index}"]`);
       if (currentStepEl) {
         currentStepEl.classList.remove('pending');
         currentStepEl.classList.add('active');
@@ -107,7 +119,8 @@ class AnalyzerLoader {
    * @param {number} stepIndex - Step to mark complete
    */
   completeStep(stepIndex) {
-    const step = document.querySelector(`.progress-step[data-step="${stepIndex}"]`);
+    const container = this.overlay || document;
+    const step = container.querySelector(`.progress-step[data-step="${stepIndex}"]`);
     if (step) {
       step.classList.remove('active', 'pending');
       step.classList.add('complete');
@@ -121,7 +134,8 @@ class AnalyzerLoader {
    * @param {string} errorMessage - Error description
    */
   errorStep(stepIndex, errorMessage) {
-    const step = document.querySelector(`.progress-step[data-step="${stepIndex}"]`);
+    const container = this.overlay || document;
+    const step = container.querySelector(`.progress-step[data-step="${stepIndex}"]`);
     if (step) {
       step.classList.remove('active', 'pending', 'complete');
       step.classList.add('error');
@@ -137,16 +151,17 @@ class AnalyzerLoader {
    * Update progress bar based on completed steps
    */
   updateProgress() {
-    const completed = document.querySelectorAll('.progress-step.complete').length;
+    const container = this.overlay || document;
+    const completed = container.querySelectorAll('.progress-step.complete').length;
     const total = this.steps.length;
     const percentage = (completed / total) * 100;
     
-    const progressBar = document.getElementById('progressBarFill');
+    const progressBar = container.querySelector('#progressBarFill');
     if (progressBar) {
       progressBar.style.width = `${percentage}%`;
     }
     
-    const percentageDisplay = document.getElementById('progressPercentage');
+    const percentageDisplay = container.querySelector('#progressPercentage');
     if (percentageDisplay) {
       percentageDisplay.textContent = `${Math.round(percentage)}%`;
     }
@@ -198,23 +213,27 @@ class AnalyzerLoader {
   complete() {
     this.isComplete = true;
     this.overrunActive = false;
+    
+    // Query within overlay if it exists, otherwise fallback to document
+    const container = this.overlay || document;
+    
     // Mark all steps complete
-    document.querySelectorAll('.progress-step').forEach(step => {
+    container.querySelectorAll('.progress-step').forEach(step => {
       step.classList.remove('active', 'pending');
       step.classList.add('complete');
     });
 
-    const progressBar = document.getElementById('progressBarFill');
+    const progressBar = container.querySelector('#progressBarFill');
     if (progressBar) {
       progressBar.style.width = '100%';
     }
     
-    const percentageDisplay = document.getElementById('progressPercentage');
+    const percentageDisplay = container.querySelector('#progressPercentage');
     if (percentageDisplay) {
       percentageDisplay.textContent = '100%';
     }
 
-    const timeElement = document.getElementById('timeRemaining');
+    const timeElement = container.querySelector('#timeRemaining');
     if (timeElement) {
       timeElement.textContent = 'Complete!';
       timeElement.style.color = '#00ff41';
@@ -222,10 +241,10 @@ class AnalyzerLoader {
 
     clearInterval(this.progressInterval);
 
-    // Fade out after 1 second
+    // Fade out after 800ms
     setTimeout(() => {
       this.hide();
-    }, 1000);
+    }, 800);
   }
 
   /**
@@ -234,6 +253,21 @@ class AnalyzerLoader {
   hide() {
     this.isComplete = true;
     this.overrunActive = false;
+    
+    // Remove modal overlay
+    if (this.overlay) {
+      this.overlay.classList.remove('active');
+      setTimeout(() => {
+        if (this.overlay && this.overlay.parentNode) {
+          this.overlay.parentNode.removeChild(this.overlay);
+        }
+        this.overlay = null;
+        // Restore body scrolling
+        document.body.style.overflow = '';
+      }, 300);
+    }
+    
+    // Also hide container for backward compatibility
     if (this.container) {
       const loader = this.container.querySelector('.analyzer-loading');
       if (loader) {
@@ -251,7 +285,9 @@ class AnalyzerLoader {
    */
   showError(message) {
     this.isComplete = true;
-    const loader = this.container.querySelector('.analyzer-loading');
+    
+    const container = this.overlay || this.container;
+    const loader = container ? container.querySelector('.analyzer-loading') : null;
     if (loader) {
       loader.innerHTML = `
         <div class="loading-header">
@@ -285,7 +321,8 @@ class AnalyzerLoader {
   }
 
   updateTimeValue(displayText) {
-    const timeElement = document.getElementById('timeRemaining');
+    const container = this.overlay || document;
+    const timeElement = container.querySelector('#timeRemaining');
     if (timeElement) {
       timeElement.textContent = displayText;
     }
@@ -294,12 +331,13 @@ class AnalyzerLoader {
   enterOverrunState() {
     if (this.overrunActive) return;
     this.overrunActive = true;
-    const label = document.getElementById('timeLabel');
+    const container = this.overlay || document;
+    const label = container.querySelector('#timeLabel');
     if (label) {
       label.textContent = 'Additional time:';
       label.classList.add('overrun');
     }
-    const value = document.getElementById('timeRemaining');
+    const value = container.querySelector('#timeRemaining');
     if (value) {
       value.classList.add('overrun');
     }
@@ -362,11 +400,12 @@ if (typeof window !== 'undefined') {
     updateProgress: (percent) => {
       currentProgress = percent;
       // The loader auto-calculates progress, but we can override if needed
-      const progressBar = document.getElementById('progressBarFill');
+      const container = loaderInstance.overlay || document;
+      const progressBar = container.querySelector('#progressBarFill');
       if (progressBar) {
         progressBar.style.width = `${percent}%`;
       }
-      const percentageDisplay = document.getElementById('progressPercentage');
+      const percentageDisplay = container.querySelector('#progressPercentage');
       if (percentageDisplay) {
         percentageDisplay.textContent = `${Math.round(percent)}%`;
       }

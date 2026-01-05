@@ -49,6 +49,7 @@ body {
   /* Reserved for future navigation */
   padding: var(--space-4) 0;
   border-bottom: 1px solid var(--border-color-subtle);
+  text-align: left;
 }
 
 .page-main {
@@ -72,10 +73,11 @@ body {
 
 .container {
   width: 100%;
-  margin-left: auto;
+  margin-left: 0;
   margin-right: auto;
   padding-left: var(--space-4);
   padding-right: var(--space-4);
+  text-align: left;
 }
 
 .container--sm { max-width: var(--container-sm); }
@@ -87,6 +89,7 @@ body {
 /* Default container size */
 .container {
   max-width: var(--container-xl); /* 1280px */
+  text-align: left;
 }
 
 @media (min-width: 768px) {

@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Disable button during scan
     submitButton.disabled = true;
-    submitButton.textContent = 'ANALYZING...';
+    const buttonText = submitButton.querySelector('#buttonText') || submitButton;
+    buttonText.textContent = 'Running scan...';
     submitButton.style.opacity = '0.6';
     urlInput.disabled = true;
 
@@ -78,7 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         .ascii-art-responsive {
           font-size: clamp(0.35rem, 1.2vw, 0.65rem);
-          animation: color-cycle 4s linear infinite;
           white-space: pre;
           max-width: 100%;
         }
@@ -138,7 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       // Re-enable button
       submitButton.disabled = false;
-      submitButton.textContent = 'ANALYZE SEO';
+      const buttonText = submitButton.querySelector('#buttonText') || submitButton;
+      buttonText.textContent = 'Run scan';
       submitButton.style.opacity = '1';
       urlInput.disabled = false;
     }
@@ -364,9 +365,10 @@ function initializeAccordions() {
         }
       });
       
-      // Start expanded
-      section.classList.add('expanded');
-      content.style.display = 'block';
+      // Start collapsed - users can expand sections to see details
+      // Default view shows score in header; experts can drill down
+      section.classList.remove('expanded');
+      content.style.display = 'none';
     }
   });
 }
@@ -391,6 +393,8 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
   const content = document.createElement('div');
   content.className = 'accordion-content';
   content.id = `accordion-${id}`;
+  // Set initial collapsed state
+  content.style.cssText = 'max-height: 0; padding: 0; overflow: hidden; border-top: none; transition: max-height 0.3s ease, padding 0.3s ease;';
   
   const contentInner = document.createElement('div');
   contentInner.className = 'accordion-content-inner';
@@ -406,6 +410,9 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       header.classList.remove('active');
       header.querySelector('.accordion-toggle').textContent = '▼';
       header.querySelector('.accordion-toggle').classList.remove('rotated');
+      content.style.maxHeight = '0';
+      content.style.padding = '0';
+      content.style.borderTop = 'none';
     } else {
       // Expand and create content if not already created
       if (!contentInner.hasChildNodes()) {
@@ -417,6 +424,9 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       header.classList.add('active');
       header.querySelector('.accordion-toggle').textContent = '▲';
       header.querySelector('.accordion-toggle').classList.add('rotated');
+      content.style.maxHeight = content.scrollHeight + 100 + 'px';
+      content.style.padding = '1rem 1.25rem';
+      content.style.borderTop = '1px solid #333';
     }
   });
   

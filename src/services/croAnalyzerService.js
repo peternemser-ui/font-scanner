@@ -19,7 +19,20 @@ class CROAnalyzerService {
         const page = await browser.newPage();
         await page.setViewport({ width: 1920, height: 1080 });
         
-        await page.goto(url, { waitUntil: 'networkidle0', timeout: 30000 });
+        // Use domcontentloaded for faster initial load, then wait for network to settle
+        try {
+          await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });
+          // Give additional time for dynamic content to load
+          await page.waitForNetworkIdle({ idleTime: 1000, timeout: 15000 }).catch(() => {
+            logger.info('Network idle timeout - proceeding with available content');
+          });
+        } catch (navError) {
+          // If domcontentloaded also fails, the site is truly unreachable
+          if (navError.name === 'TimeoutError') {
+            throw new Error(`Could not load website: ${url} - the site may be blocking automated access or is too slow`);
+          }
+          throw navError;
+        }
         
         // Analyze page elements
         const analysis = await page.evaluate(() => {
@@ -102,6 +115,7 @@ class CROAnalyzerService {
       // Calculate scores
       const scores = this.calculateScores(results);
       const recommendations = this.generateRecommendations(results, scores);
+      const quickWins = this.generateQuickWins(results, scores);
       
       const analysisTime = ((Date.now() - startTime) / 1000).toFixed(2);
       
@@ -113,6 +127,7 @@ class CROAnalyzerService {
         overallScore: scores.overall,
         grade: this.getGrade(scores.overall),
         recommendations,
+        quickWins,
         conversionPotential: this.assessConversionPotential(scores),
         analysisTime
       };
@@ -199,6 +214,175 @@ class CROAnalyzerService {
     }
     
     return recs;
+  }
+
+  generateQuickWins(analysis, scores) {
+    const quickWins = [];
+    
+    // Quick Win 1: Add visible CTA above the fold
+    if (analysis.ctas.visible === 0 && analysis.ctas.count > 0) {
+      quickWins.push({
+        title: 'Move a CTA above the fold',
+        timeEstimate: '2 min',
+        impact: '+15-25% click rate',
+        icon: '🎯',
+        steps: [
+          'Identify your most important CTA button',
+          'Move it to be visible without scrolling',
+          'Use contrasting colors to make it stand out'
+        ],
+        difficulty: 'Easy'
+      });
+    } else if (analysis.ctas.count === 0) {
+      quickWins.push({
+        title: 'Add a clear call-to-action button',
+        timeEstimate: '5 min',
+        impact: '+20-40% conversions',
+        icon: '🎯',
+        steps: [
+          'Add a button with action text like "Get Started" or "Contact Us"',
+          'Place it prominently in the hero section',
+          'Use a contrasting color that stands out'
+        ],
+        difficulty: 'Easy'
+      });
+    }
+    
+    // Quick Win 2: SSL/Security
+    if (!analysis.trustSignals.hasSSL) {
+      quickWins.push({
+        title: 'Enable HTTPS/SSL certificate',
+        timeEstimate: '10 min',
+        impact: '+10-15% trust',
+        icon: '🔒',
+        steps: [
+          'Get a free SSL certificate from Let\'s Encrypt',
+          'Install it on your hosting provider',
+          'Redirect all HTTP traffic to HTTPS'
+        ],
+        difficulty: 'Medium'
+      });
+    }
+    
+    // Quick Win 3: Contact info
+    if (!analysis.trustSignals.hasContactInfo) {
+      quickWins.push({
+        title: 'Add visible phone number',
+        timeEstimate: '1 min',
+        impact: '+5-10% trust',
+        icon: '📞',
+        steps: [
+          'Add your phone number to the header or footer',
+          'Make it clickable for mobile users (tel: link)',
+          'Consider adding a WhatsApp or chat option'
+        ],
+        difficulty: 'Easy'
+      });
+    }
+    
+    // Quick Win 4: Privacy Policy
+    if (!analysis.trustSignals.hasPrivacyPolicy) {
+      quickWins.push({
+        title: 'Add privacy policy link',
+        timeEstimate: '3 min',
+        impact: '+5% trust, legal compliance',
+        icon: '📋',
+        steps: [
+          'Create a privacy policy page (use a generator if needed)',
+          'Add a link to it in the footer',
+          'Link it near any forms that collect data'
+        ],
+        difficulty: 'Easy'
+      });
+    }
+    
+    // Quick Win 5: Tap targets for mobile
+    if (analysis.mobileUX.tapTargetCompliance < 0.8 && analysis.mobileUX.tapTargetCompliance > 0) {
+      quickWins.push({
+        title: 'Increase button sizes for mobile',
+        timeEstimate: '5 min',
+        impact: '+10-20% mobile conversions',
+        icon: '📱',
+        steps: [
+          'Set minimum button height to 44px',
+          'Add padding of at least 12px around button text',
+          'Increase spacing between clickable elements'
+        ],
+        difficulty: 'Easy'
+      });
+    }
+    
+    // Quick Win 6: Font size
+    if (analysis.mobileUX.avgFontSize < 16 && analysis.mobileUX.avgFontSize > 0) {
+      quickWins.push({
+        title: 'Increase base font size to 16px',
+        timeEstimate: '2 min',
+        impact: '+5-10% readability',
+        icon: '🔤',
+        steps: [
+          'Set body font-size to 16px minimum in CSS',
+          'Check that paragraph text is readable on mobile',
+          'Increase line-height to 1.5 for better readability'
+        ],
+        difficulty: 'Easy'
+      });
+    }
+    
+    // Quick Win 7: Form optimization
+    if (analysis.forms.count > 0) {
+      const longForms = analysis.forms.details.filter(f => f.fieldCount > 5);
+      if (longForms.length > 0) {
+        quickWins.push({
+          title: 'Reduce form fields',
+          timeEstimate: '5 min',
+          impact: '+25-50% form completions',
+          icon: '📝',
+          steps: [
+            'Remove non-essential form fields',
+            'Only ask for email initially (get other info later)',
+            'Use smart defaults and autofill attributes'
+          ],
+          difficulty: 'Easy'
+        });
+      }
+      
+      const noValidation = analysis.forms.details.filter(f => !f.hasValidation);
+      if (noValidation.length > 0) {
+        quickWins.push({
+          title: 'Add inline form validation',
+          timeEstimate: '10 min',
+          impact: '+15% form completions',
+          icon: '✅',
+          steps: [
+            'Add "required" attribute to mandatory fields',
+            'Use type="email" for email fields',
+            'Show validation errors inline, not after submit'
+          ],
+          difficulty: 'Medium'
+        });
+      }
+    }
+    
+    // Quick Win 8: No testimonials
+    if (!analysis.trustSignals.hasTestimonials && !analysis.trustSignals.hasSocialProof) {
+      quickWins.push({
+        title: 'Add a customer testimonial',
+        timeEstimate: '5 min',
+        impact: '+15-20% trust',
+        icon: '💬',
+        steps: [
+          'Ask your best customer for a short quote',
+          'Add their name and photo if possible',
+          'Place near your main CTA or pricing section'
+        ],
+        difficulty: 'Easy'
+      });
+    }
+    
+    // Sort by time estimate (shortest first) and limit to top 3
+    return quickWins
+      .sort((a, b) => parseInt(a.timeEstimate) - parseInt(b.timeEstimate))
+      .slice(0, 3);
   }
 
   assessConversionPotential(scores) {

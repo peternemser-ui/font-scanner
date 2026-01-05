@@ -1,17 +1,43 @@
 {
   "app": {
-    "name": "字体扫描器",
-    "tagline": "高级网页排版与性能分析"
+    "name": "网站诊断师",
+    "tagline": "网站诊断与性能分析"
   },
   "nav": {
     "dashboard": "仪表板",
-    "fontScanner": "字体扫描器",
+    "fontScanner": "字体与排版",
+    "typography": "字体",
     "seo": "SEO",
+    "seoAnalysis": "SEO分析",
     "coreWebVitals": "核心网页指标",
-    "rankCompetition": "排名竞争",
-    "performance": "性能",
+    "lighthouseMetrics": "Lighthouse指标",
+    "rankCompetition": "竞争分析",
+    "performance": "速度与用户体验",
     "accessibility": "无障碍",
-    "security": "安全"
+    "security": "安全",
+    "tagIntelligence": "跟踪与分析",
+    "enhancedFonts": "字体与排版",
+    "performanceSnapshot": "性能快照",
+    "siteCrawler": "网站爬虫",
+    "mobileTesting": "移动测试",
+    "ipReputation": "IP信誉",
+    "localSeo": "本地SEO",
+    "brokenLinks": "失效链接",
+    "brandAudit": "品牌审核",
+    "croAnalysis": "转化优化",
+    "gdprCheck": "隐私合规",
+    "hostingGuide": "托管指南",
+    "more": "更多",
+    "menu": "菜单"
+  },
+  "categories": {
+    "performance": "性能与用户体验",
+    "seo": "SEO与索引",
+    "accessibility": "无障碍",
+    "security": "安全与信任",
+    "technology": "技术与字体",
+    "infrastructure": "基础设施",
+    "competitive": "竞争洞察"
   },
   "dashboard": {
     "title": "综合概览",
@@ -39,6 +65,340 @@
     "loading": "加载中...",
     "error": "错误",
     "success": "成功",
-    "language": "语言"
+    "language": "语言",
+    "yes": "是",
+    "no": "否",
+    "na": "N/A",
+    "unknown": "未知",
+    "more": "更多",
+    "websiteUrl": "网站URL",
+    "enterUrl": "https://yoursite.com",
+    "pleaseEnterUrl": "请输入URL",
+    "mayTake": "这可能需要15-30秒"
+  },
+  "fontScanner": {
+    "title": "字体与排版",
+    "subtitle": "排版分析",
+    "pageSubtitle": "深度排版分析，包括多页扫描、字体加载性能和可访问性洞察。",
+    "breadcrumb": "字体与排版",
+    "analyzeWebsite": "分析网站",
+    "analyzeFonts": "分析字体",
+    "analyzing": "分析中...",
+    "enterUrl": "输入网站URL...",
+    "urlRequired": "请输入有效的URL",
+    "analysisComplete": "分析完成",
+    "multiPageScan": "多页扫描（分析多个页面的字体）",
+    "maxPages": "最大页数：",
+    "enhancedAnalysis": "增强字体分析：",
+    "enhancedAnalysisDesc": "检测字体提供商（Google Fonts、Adobe Fonts、自托管），查找重复的字体系列、未使用的字重/样式、缺失的font-display声明和预加载机会。",
+    "desktopFonts": "桌面字体",
+    "mobileFonts": "移动字体",
+    "dualViewportAnalysis": "双视口分析：分别针对桌面（1920x1080）和移动端（375x667）分析字体。",
+    "fontComparison": "字体比较摘要",
+    "commonFonts": "两个视口共用的字体",
+    "desktopOnly": "仅桌面字体",
+    "mobileOnly": "仅移动字体",
+    "totalFonts": "总字体数",
+    "systemFonts": "系统字体",
+    "webFonts": "网络字体",
+    "googleFonts": "Google字体",
+    "iconFonts": "图标字体",
+    "fontDetails": "字体详情",
+    "downloadReport": "下载PDF报告",
+    "shareResults": "分享结果",
+    "fontProviders": "字体提供商",
+    "fontFamilies": "字体系列",
+    "performanceMetrics": "性能指标",
+    "recommendations": "建议",
+    "advancedAnalysis": "高级排版分析",
+    "exportPdf": "下载PDF",
+    "exportCss": "导出CSS",
+    "shareLink": "分享链接"
+  },
+  "brandConsistency": {
+    "title": "品牌检测",
+    "subtitle": "分析您网站的调色板、字体和徽标使用情况。",
+    "breadcrumb": "品牌一致性",
+    "inspect": "检测",
+    "analyzing": "正在分析品牌一致性...",
+    "loaderTitle": "🎨 品牌分析",
+    "grade": "等级",
+    "scoreLabel": "品牌一致性分数",
+    "quickSummary": "快速摘要",
+    "scoreBreakdown": "分数细分",
+    "colors": "颜色",
+    "fonts": "字体",
+    "logos": "徽标",
+    "buttons": "按钮",
+    "links": "链接",
+    "favicon": "网站图标",
+    "detected": "已检测",
+    "missing": "缺失",
+    "present": "存在",
+    "excellent": "优秀",
+    "good": "良好",
+    "fair": "一般",
+    "poor": "较差",
+    "colorPalette": "调色板",
+    "typography": "排版",
+    "brandIdentity": "品牌标识",
+    "uiConsistency": "UI一致性",
+    "colorHarmony": "色彩和谐",
+    "colorPaletteAnalysis": "调色板分析",
+    "typographyAnalysis": "排版分析",
+    "recommendations": "建议",
+    "harmonyType": "和谐类型",
+    "uniqueHues": "独特色调",
+    "neutralRatio": "中性比例",
+    "primaryBrandColors": "主要品牌颜色",
+    "allDetectedColors": "所有检测到的颜色",
+    "typographySummary": "排版摘要",
+    "totalFonts": "字体总数",
+    "quality": "质量",
+    "typographyHierarchy": "排版层次",
+    "headingFonts": "标题字体",
+    "bodyFonts": "正文字体",
+    "allFontsByUsage": "按使用情况列出的所有字体",
+    "uses": "次使用",
+    "logoDetection": "徽标检测",
+    "noLogoDetected": "未检测到徽标",
+    "addLogoTip": "添加包含\"logo\"的alt文本的徽标",
+    "faviconPresent": "网站图标存在",
+    "faviconMissing": "网站图标缺失",
+    "faviconPresentDesc": "您的网站有用于浏览器标签识别的网站图标",
+    "faviconMissingDesc": "添加网站图标以帮助识别您的网站",
+    "buttonStyles": "按钮样式",
+    "linkColors": "链接颜色",
+    "consistency": "一致性",
+    "sampleButton": "示例按钮",
+    "noButtonStyles": "未检测到按钮样式",
+    "linkText": "链接文本",
+    "noLinkColors": "未检测到链接颜色",
+    "noRecommendations": "目前没有建议。",
+    "harmony": {
+      "monochromatic": "单色",
+      "analogous": "类似",
+      "triadic": "三色",
+      "splitComplementary": "分裂互补",
+      "complementary": "互补",
+      "diverse": "多样",
+      "custom": "自定义"
+    },
+    "priority": {
+      "critical": "严重",
+      "high": "高",
+      "medium": "中",
+      "low": "低",
+      "success": "成功"
+    },
+    "steps": {
+      "initializing": "正在初始化分析",
+      "connecting": "正在连接目标网站...",
+      "extractingColors": "正在提取颜色",
+      "analyzingPalette": "正在分析调色板...",
+      "detectingFonts": "正在检测字体",
+      "identifyingTypography": "正在识别排版层次...",
+      "findingLogos": "正在查找徽标",
+      "locatingAssets": "正在定位品牌资产...",
+      "analyzingUI": "正在分析UI一致性",
+      "checkingStyles": "正在检查样式...",
+      "generating": "正在生成见解",
+      "compiling": "正在编译建议..."
+    },
+    "rec": {
+      "excessiveColors": {
+        "message": "颜色使用过多",
+        "detail": "使用{count}种颜色会造成视觉混乱。专业品牌最多使用5-10种颜色。",
+        "action": "创建一个包含主色、辅色和强调色的定义调色板。"
+      },
+      "tooManyColors": {
+        "message": "颜色太多",
+        "detail": "使用了{count}种颜色。精简到8-12种品牌颜色以获得更好的一致性。",
+        "action": "审核您的颜色使用情况并删除冗余变体。"
+      },
+      "inconsistentHarmony": {
+        "message": "颜色和谐度不一致",
+        "detail": "您的调色板缺乏清晰的和谐模式（互补、类似或三色）。",
+        "action": "使用色轮选择相互协调的和谐颜色。"
+      },
+      "tooManyFonts": {
+        "message": "字体太多",
+        "detail": "使用{count}种不同的字体会造成视觉不一致并影响性能。",
+        "action": "限制在2-3个字体系列：一个用于标题，一个用于正文，可选一个用于强调。"
+      },
+      "reduceFontCount": {
+        "message": "考虑减少字体数量",
+        "detail": "使用了{count}种字体。最佳实践是最多2-3种字体。",
+        "action": "审查字体使用情况并尽可能整合。"
+      },
+      "noTypographyHierarchy": {
+        "message": "未检测到排版层次",
+        "detail": "无法识别不同的标题和正文字体。",
+        "action": "确保标题和正文使用一致且独特的字体处理。"
+      },
+      "noLogo": {
+        "message": "未检测到徽标",
+        "detail": "徽标对于品牌识别和信任至关重要。",
+        "action": "在页头添加一个带有包含\"logo\"的替代文本的徽标。"
+      },
+      "noFavicon": {
+        "message": "未检测到网站图标",
+        "detail": "网站图标帮助用户在浏览器标签中识别您的网站。",
+        "action": "添加favicon.ico或使用<link rel=\"icon\">与您的品牌图标。"
+      },
+      "inconsistentButtons": {
+        "message": "按钮样式不一致",
+        "detail": "您网站上的按钮具有不同的颜色和形状。",
+        "action": "在CSS中定义标准按钮样式并一致使用。"
+      },
+      "inconsistentLinks": {
+        "message": "链接颜色不一致",
+        "detail": "链接在页面上使用多种不同的颜色。",
+        "action": "设置一个与您的品牌调色板匹配的一致链接颜色。"
+      },
+      "excellent": {
+        "message": "品牌一致性优秀！",
+        "detail": "您的网站在颜色、排版和品牌元素方面保持了强烈的视觉一致性。",
+        "action": "继续维护您的品牌指南并定期进行审核。"
+      }
+    }
+  },
+  "seo": {
+    "pages": {
+      "home": {
+        "title": "Site Mechanic - 专业网站分析与SEO工具",
+        "description": "全面的网站分析平台，提供高级SEO、性能测试、安全扫描和可访问性审核。",
+        "keywords": "网站分析,SEO工具,性能测试,安全扫描",
+        "og_title": "Site Mechanic - 专业网站分析",
+        "twitter_title": "专业网站分析工具"
+      },
+      "security-analyzer": {
+        "title": "网站安全扫描器 - 漏洞分析工具",
+        "description": "全面的安全分析工具，扫描网站漏洞、SSL/TLS问题和安全威胁。",
+        "keywords": "安全扫描器,漏洞分析,SSL检查",
+        "og_title": "网站安全扫描器",
+        "twitter_title": "网站安全分析"
+      },
+      "performance-hub": {
+        "title": "性能测试中心 - 网站速度优化工具",
+        "description": "集中式性能测试仪表板，包含Core Web Vitals监控和优化。",
+        "keywords": "性能测试,Core Web Vitals,网站优化",
+        "og_title": "性能测试中心",
+        "twitter_title": "性能优化"
+      },
+      "mobile-analyzer": {
+        "title": "移动网站分析器 - 响应式设计测试",
+        "description": "全面的移动优化分析器，测试响应式设计和移动可用性。",
+        "keywords": "移动分析,响应式设计,移动优化",
+        "og_title": "移动网站分析器",
+        "twitter_title": "移动分析"
+      },
+      "enhanced-fonts": {
+        "title": "网页字体分析器 - 排版优化",
+        "description": "高级网页字体分析工具，优化字体加载和排版性能。",
+        "keywords": "字体分析,网页字体,排版",
+        "og_title": "网页字体分析器",
+        "twitter_title": "字体优化"
+      },
+      "ip-reputation-analyzer": {
+        "title": "IP信誉检查器 - 域名健康分析",
+        "description": "检查IP地址信誉、域名健康状态和DNS配置。",
+        "keywords": "IP信誉,域名健康,DNS",
+        "og_title": "IP信誉检查器",
+        "twitter_title": "IP信誉分析"
+      },
+      "hosting-analyzer": {
+        "title": "网站托管分析器 - 服务器性能",
+        "description": "分析网站托管质量和服务器基础设施性能。",
+        "keywords": "托管分析,服务器性能",
+        "og_title": "托管分析器",
+        "twitter_title": "托管分析"
+      },
+      "competitive-analysis": {
+        "title": "竞争分析工具 - 网站对比",
+        "description": "与竞争对手进行性能、SEO和UX基准对比。",
+        "keywords": "竞争分析,网站对比",
+        "og_title": "竞争分析",
+        "twitter_title": "竞争对比"
+      },
+      "cro-analyzer": {
+        "title": "转化率优化分析器 - CRO审核",
+        "description": "全面的CRO分析，识别转化障碍和UX问题。",
+        "keywords": "CRO,转化率优化",
+        "og_title": "CRO分析器",
+        "twitter_title": "转化优化"
+      },
+      "broken-links": {
+        "title": "死链检查器 - 查找和修复404错误",
+        "description": "全面的死链检测器，扫描内部和外部链接。",
+        "keywords": "死链检查,404错误",
+        "og_title": "死链检查器",
+        "twitter_title": "链接检查"
+      },
+      "gdpr-compliance": {
+        "title": "GDPR合规检查器 - 隐私审核",
+        "description": "分析网站GDPR合规性和隐私保护。",
+        "keywords": "GDPR,隐私合规",
+        "og_title": "GDPR检查器",
+        "twitter_title": "GDPR合规"
+      },
+      "local-seo": {
+        "title": "本地SEO分析器 - Google商家优化",
+        "description": "优化本地搜索排名和Google商家资料。",
+        "keywords": "本地SEO,Google商家",
+        "og_title": "本地SEO",
+        "twitter_title": "本地SEO分析"
+      },
+      "brand-consistency": {
+        "title": "品牌一致性分析器 - 设计审核",
+        "description": "分析网站品牌一致性和视觉设计。",
+        "keywords": "品牌一致性,设计审核",
+        "og_title": "品牌分析",
+        "twitter_title": "品牌一致性"
+      },
+      "site-crawler": {
+        "title": "网站爬虫 - 站点结构发现",
+        "description": "爬取和映射整个网站结构。",
+        "keywords": "网站爬虫,站点地图",
+        "og_title": "网站爬虫",
+        "twitter_title": "站点爬虫"
+      },
+      "tag-intelligence": {
+        "title": "标签智能 - 营销标签审核",
+        "description": "分析营销标签和分析工具实施。",
+        "keywords": "标签分析,营销标签",
+        "og_title": "标签智能",
+        "twitter_title": "标签分析"
+      },
+      "advanced-tools": {
+        "title": "高级网页工具 - 专业分析套件",
+        "description": "访问高级网站分析工具。",
+        "keywords": "高级工具,网站诊断",
+        "og_title": "高级工具",
+        "twitter_title": "高级分析"
+      },
+      "performance-snapshot": {
+        "title": "性能快照 - 快速速度分析",
+        "description": "即时性能快照和优化建议。",
+        "keywords": "性能快照,速度测试",
+        "og_title": "性能快照",
+        "twitter_title": "快速分析"
+      },
+      "core-web-vitals": {
+        "title": "Core Web Vitals检查器 - LCP、FID、CLS分析",
+        "description": "测量和优化Core Web Vitals指标。",
+        "keywords": "Core Web Vitals,LCP,FID,CLS",
+        "og_title": "Core Web Vitals",
+        "twitter_title": "CWV检查"
+      }
+    }
+  },
+  "notices": {
+    "botProtectionTitle": "机器人保护提示：",
+    "botProtectionText": "主要商业网站（亚马逊、沃尔玛、cars.com）会阻止自动化分析。",
+    "botProtectionTry": "试试：您的网站、客户项目，或使用以下网站测试",
+    "botProtectionBlocked": "对于被阻止的网站，请使用",
+    "botProtectionAlternative": "Google PageSpeed Insights",
+    "botProtectionInstead": "代替。"
   }
 }

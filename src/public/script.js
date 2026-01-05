@@ -420,9 +420,18 @@
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
-      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41; animation: fade-in-out 3s ease-in-out infinite;">
-        ⏳ Comprehensive analysis in progress...<br>
-        <span style="font-size: 0.75rem; color: #00ffaa;">This may take 30-60 seconds</span>
+      <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255, 193, 7, 0.15); border: 1px solid rgba(255, 193, 7, 0.4); border-radius: 6px;">
+        <div style="font-size: 0.9rem; color: #ffc107; font-weight: bold; margin-bottom: 0.25rem;">
+          ⚠️ Comprehensive Scan in Progress
+        </div>
+        <div style="font-size: 0.8rem; color: #ffdb4d;">
+          This full analysis includes Lighthouse, accessibility, SEO, and performance metrics.<br>
+          <strong>Please wait 1-3 minutes</strong> — do not refresh the page.
+        </div>
+      </div>
+      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41;">
+        ⏳ Analyzing your website...<br>
+        <span style="font-size: 0.75rem; color: #00ffaa;">Running 9 specialized analyzers</span>
       </div>
     `;
     
@@ -445,9 +454,9 @@
         }
         .ascii-art-responsive {
           font-size: clamp(0.35rem, 1.2vw, 0.65rem);
-          animation: color-cycle 4s linear infinite;
           white-space: pre;
           max-width: 100%;
+          color: #00ff41;
         }
         #patience-message {
           overflow: visible;

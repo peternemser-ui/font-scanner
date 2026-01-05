@@ -1,0 +1,728 @@
+/**
+ * PDF Export Styles
+ * Print-friendly styles for PDF generation
+ * Applied when content is in PDF export mode
+ */
+
+/* ===================================
+   PDF Export Mode Styles
+   Professional, clean design
+   =================================== */
+
+.pdf-export-mode {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+  width: 1200px !important;
+  max-width: none !important;
+  padding: 30px 40px !important;
+  margin: 0 !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', Arial, sans-serif !important;
+  line-height: 1.6;
+}
+
+/* Ensure all sections are visible and properly formatted */
+.pdf-export-mode * {
+  box-sizing: border-box;
+}
+
+/* Force expand all collapsible content */
+.pdf-export-mode .accordion__content,
+.pdf-export-mode .collapsible__content,
+.pdf-export-mode .expandable__content,
+.pdf-export-mode [data-accordion-content],
+.pdf-export-mode details > *:not(summary) {
+  display: block !important;
+  max-height: none !important;
+  overflow: visible !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.pdf-export-mode details {
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #f9fafb;
+  page-break-inside: avoid;
+}
+
+.pdf-export-mode details summary {
+  font-weight: 600;
+  color: #1f2937;
+  margin-bottom: 8px;
+  cursor: default;
+  list-style: none;
+}
+
+.pdf-export-mode details summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Report header - keep visible and styled */
+.pdf-export-mode .report-header {
+  background: #f0f0f0 !important;
+  border: 2px solid #d0d0d0 !important;
+  border-radius: 8px;
+  padding: 16px 20px !important;
+  margin-bottom: 24px !important;
+  page-break-inside: avoid;
+  page-break-after: avoid;
+}
+
+.pdf-export-mode .report-header h2 {
+  color: #000000 !important;
+  font-size: 20px !important;
+  margin: 0 0 8px 0 !important;
+  font-weight: 700;
+  border-bottom: none !important;
+}
+
+.pdf-export-mode .report-header p {
+  color: #4b5563 !important;
+  font-size: 11px !important;
+  margin: 4px 0 !important;
+  line-height: 1.4;
+}
+
+.pdf-export-mode .report-header strong {
+  color: #000000 !important;
+  font-weight: 700;
+}
+
+/* Hide interactive UI elements */
+.pdf-export-mode button:not(.score-badge),
+.pdf-export-mode .toggle-button,
+.pdf-export-mode .expand-button,
+.pdf-export-mode [data-toggle],
+.pdf-export-mode nav,
+.pdf-export-mode .navigation,
+.pdf-export-mode .tabs,
+.pdf-export-mode .modal,
+.pdf-export-mode .tooltip,
+.pdf-export-mode .dropdown,
+.pdf-export-mode input[type="text"],
+.pdf-export-mode input[type="url"],
+.pdf-export-mode textarea,
+.pdf-export-mode select,
+.pdf-export-mode .copy-button,
+.pdf-export-mode .share-button {
+  display: none !important;
+}
+
+/* Improve readability for text content */
+.pdf-export-mode h1,
+.pdf-export-mode h2,
+.pdf-export-mode h3,
+.pdf-export-mode h4,
+.pdf-export-mode h5,
+.pdf-export-mode h6 {
+  color: #000000 !important;
+  page-break-after: avoid;
+  margin-top: 1.5em;
+  margin-bottom: 0.75em;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.pdf-export-mode h1 {
+  font-size: 26px !important;
+  border-bottom: 3px solid #000000;
+  padding-bottom: 12px;
+  margin-bottom: 1em;
+}
+
+.pdf-export-mode h2 {
+  font-size: 20px !important;
+  border-bottom: 2px solid #e0e0e0;
+  padding-bottom: 8px;
+  margin-bottom: 0.75em;
+}
+
+.pdf-export-mode h3 {
+  font-size: 16px !important;
+  color: #333333 !important;
+}
+
+.pdf-export-mode p,
+.pdf-export-mode li {
+  color: #374151 !important;
+  line-height: 1.6;
+  font-size: 14px !important;
+}
+
+/* Improve table styling for PDF - modern design */
+.pdf-export-mode table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin: 20px 0;
+  page-break-inside: avoid;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06) !important;
+}
+
+.pdf-export-mode th,
+.pdf-export-mode td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e8e8e8;
+  color: #1a1a1a !important;
+  background: #ffffff !important;
+}
+
+.pdf-export-mode th {
+  background: linear-gradient(180deg, #f8f8f8 0%, #f0f0f0 100%) !important;
+  font-weight: 700;
+  font-size: 12px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #000000 !important;
+  border-bottom: 2px solid #d0d0d0;
+}
+
+.pdf-export-mode td {
+  font-size: 11px !important;
+  line-height: 1.5;
+}
+
+.pdf-export-mode tr:last-child td {
+  border-bottom: none;
+}
+
+/* Score badges - modern, professional design */
+.pdf-export-mode .score-badge,
+.pdf-export-mode .metric-score,
+.pdf-export-mode .grade {
+  display: inline-block;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 18px !important;
+  min-width: 60px;
+  text-align: center;
+  letter-spacing: -0.01em;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+}
+
+.pdf-export-mode .score-badge.good,
+.pdf-export-mode .score-good {
+  background: linear-gradient(135deg, #d4f4dd 0%, #c1f0cc 100%) !important;
+  color: #0d5e2e !important;
+  border: 2px solid #16a34a;
+}
+
+.pdf-export-mode .score-badge.needs-improvement,
+.pdf-export-mode .score-medium {
+  background: linear-gradient(135deg, #fef4d4 0%, #fdecc8 100%) !important;
+  color: #854d0e !important;
+  border: 2px solid #f59e0b;
+}
+
+.pdf-export-mode .score-badge.poor,
+.pdf-export-mode .score-bad {
+  background: linear-gradient(135deg, #fee5e5 0%, #fdd8d8 100%) !important;
+  color: #991b1b !important;
+  border: 2px solid #dc2626;
+}
+
+/* Cards and sections - modern, clean design */
+.pdf-export-mode .card,
+.pdf-export-mode .section,
+.pdf-export-mode .panel {
+  background: #fafafa !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 8px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
+  page-break-inside: avoid;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+.pdf-export-mode .card__header,
+.pdf-export-mode .section__header {
+  font-size: 17px !important;
+  font-weight: 700;
+  color: #000000 !important;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid #d0d0d0;
+  letter-spacing: -0.01em;
+}
+
+.pdf-export-mode .card__body,
+.pdf-export-mode .section__content {
+  display: block !important;
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Metric displays - modern card style */
+.pdf-export-mode .metric {
+  display: inline-block;
+  margin: 10px 14px 10px 0;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%) !important;
+  border: 1px solid #d0d0d0;
+  border-radius: 8px;
+  min-width: 160px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+}
+
+.pdf-export-mode .metric__label {
+  font-size: 10px !important;
+  color: #666666 !important;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  margin-bottom: 6px;
+}
+
+.pdf-export-mode .metric__value {
+  font-size: 24px !important;
+  font-weight: 700;
+  color: #000000 !important;
+  letter-spacing: -0.02em;
+}
+
+/* Issues and recommendations */
+.pdf-export-mode .issue,
+.pdf-export-mode .recommendation {
+  padding: 12px;
+  margin-bottom: 12px;
+  border-left: 4px solid #6b7280;
+  background: #f9fafb !important;
+  page-break-inside: avoid;
+}
+
+.pdf-export-mode .issue.critical {
+  border-left-color: #dc2626;
+  background: #fef2f2 !important;
+}
+
+.pdf-export-mode .issue.high {
+  border-left-color: #f59e0b;
+  background: #fffbeb !important;
+}
+
+.pdf-export-mode .issue.medium {
+  border-left-color: #3b82f6;
+  background: #eff6ff !important;
+}
+
+.pdf-export-mode .issue.low {
+  border-left-color: #10b981;
+  background: #f0fdf4 !important;
+}
+
+.pdf-export-mode .issue__title,
+.pdf-export-mode .recommendation__title {
+  font-weight: 700;
+  color: #1f2937 !important;
+  font-size: 14px !important;
+  margin-bottom: 6px;
+}
+
+.pdf-export-mode .issue__description,
+.pdf-export-mode .recommendation__description {
+  color: #4b5563 !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+}
+
+/* Lists */
+.pdf-export-mode ul,
+.pdf-export-mode ol {
+  margin: 12px 0;
+  padding-left: 24px;
+}
+
+.pdf-export-mode li {
+  margin-bottom: 6px;
+}
+
+/* Code blocks */
+.pdf-export-mode pre,
+.pdf-export-mode code {
+  background: #f3f4f6 !important;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px !important;
+  color: #1f2937 !important;
+  page-break-inside: avoid;
+}
+
+.pdf-export-mode pre {
+  padding: 12px;
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Status indicators */
+.pdf-export-mode .status-indicator {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.pdf-export-mode .status-indicator.pass {
+  background: #10b981 !important;
+}
+
+.pdf-export-mode .status-indicator.warn {
+  background: #f59e0b !important;
+}
+
+.pdf-export-mode .status-indicator.fail {
+  background: #ef4444 !important;
+}
+
+/* Progress bars */
+.pdf-export-mode .progress-bar {
+  width: 100%;
+  height: 24px;
+  background: #e5e7eb !important;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+
+.pdf-export-mode .progress-bar__fill {
+  height: 100%;
+  background: #10b981 !important;
+  transition: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff !important;
+  font-weight: 600;
+  font-size: 12px !important;
+}
+
+/* Ensure proper page breaks */
+.pdf-export-mode .page-break {
+  page-break-after: always;
+}
+
+.pdf-export-mode .no-break {
+  page-break-inside: avoid;
+}
+
+/* Fix for any remaining dark mode elements */
+.pdf-export-mode [class*="dark"],
+.pdf-export-mode [style*="background: rgb(10, 10, 10)"],
+.pdf-export-mode [style*="background: #0a0a0a"],
+.pdf-export-mode [style*="background: black"] {
+  background: #ffffff !important;
+  color: #1f2937 !important;
+}
+
+/* Core Web Vitals specific styling */
+.pdf-export-mode .cwv-metrics {
+  display: block !important;
+  width: 100% !important;
+  margin: 16px 0 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.pdf-export-mode .cwv-metric {
+  display: block !important;
+  margin: 12px 0 !important;
+  padding: 16px !important;
+  background: #f9fafb !important;
+  border: 2px solid #e0e0e0 !important;
+  border-radius: 8px;
+  page-break-inside: avoid;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.pdf-export-mode .cwv-metric * {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.pdf-export-mode .cwv-metric-header {
+  display: block !important;
+  margin-bottom: 10px !important;
+  overflow: visible !important;
+  width: 100% !important;
+}
+
+.pdf-export-mode .cwv-metric-header::after {
+  content: "";
+  display: table;
+  clear: both;
+}
+
+.pdf-export-mode .cwv-metric-name {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  float: left !important;
+  display: inline-block !important;
+}
+
+.pdf-export-mode .cwv-metric-value {
+  font-size: 28px !important;
+  font-weight: 700 !important;
+  color: #000000 !important;
+  letter-spacing: -0.02em;
+  margin: 8px 0 !important;
+  display: block !important;
+  clear: both !important;
+  width: 100% !important;
+}
+
+.pdf-export-mode .cwv-metric-desc {
+  font-size: 11px !important;
+  color: #6b7280 !important;
+  margin: 4px 0 0 0 !important;
+  display: block !important;
+  line-height: 1.4;
+}
+
+.pdf-export-mode .cwv-metric-badge {
+  display: inline-block !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  float: right !important;
+}
+
+.pdf-export-mode .cwv-metric-badge.good {
+  background: #d1fae5 !important;
+  color: #065f46 !important;
+  border: 1px solid #10b981 !important;
+}
+
+.pdf-export-mode .cwv-metric-badge.needs-improvement {
+  background: #fef3c7 !important;
+  color: #92400e !important;
+  border: 1px solid #f59e0b !important;
+}
+
+.pdf-export-mode .cwv-metric-badge.poor {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border: 1px solid #ef4444 !important;
+}
+
+/* Legacy CWV metric styles (double underscore) */
+.pdf-export-mode .cwv-metric__name {
+  font-size: 12px !important;
+  font-weight: 600;
+  color: #000000 !important;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.pdf-export-mode .cwv-metric__value {
+  font-size: 32px !important;
+  font-weight: 700;
+  color: #000000 !important;
+  margin-bottom: 4px;
+}
+
+.pdf-export-mode .cwv-metric__rating {
+  font-size: 11px !important;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+/* Device panels for CWV */
+.pdf-export-mode .device-panel {
+  background: #fafafa !important;
+  border: 1px solid #d0d0d0 !important;
+  border-radius: 8px;
+  padding: 16px !important;
+  page-break-inside: avoid;
+}
+
+.pdf-export-mode .device-panel h3 {
+  color: #000000 !important;
+  font-size: 16px !important;
+  font-weight: 700;
+  margin-bottom: 12px !important;
+  text-align: center;
+}
+
+/* Metric explainers */
+.pdf-export-mode .metric-explainer {
+  background: #f5f5f5 !important;
+  padding: 12px !important;
+  border-radius: 6px;
+  border-left: 4px solid #3b82f6 !important;
+  margin-bottom: 12px !important;
+  page-break-inside: avoid;
+}
+
+.pdf-export-mode .metric-explainer strong {
+  color: #000000 !important;
+  font-size: 14px !important;
+  display: block;
+  margin-bottom: 6px;
+}
+
+.pdf-export-mode .metric-explainer p {
+  color: #4b5563 !important;
+  font-size: 12px !important;
+  line-height: 1.5;
+  margin: 0 !important;
+}
+
+/* Score rings and circles */
+.pdf-export-mode .score-ring,
+.pdf-export-mode svg {
+  max-width: 200px !important;
+  height: auto !important;
+  margin: 0 auto;
+  display: block;
+}
+
+.pdf-export-mode .score-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 16px;
+  margin: 20px 0;
+}
+
+.pdf-export-mode .score-card {
+  background: #fafafa !important;
+  border: 1px solid #d0d0d0 !important;
+  border-radius: 8px;
+  padding: 16px;
+  text-align: center;
+  page-break-inside: avoid;
+}
+
+/* Side-by-side results */
+.pdf-export-mode .side-by-side-results {
+  display: block !important;
+}
+
+.pdf-export-mode .device-column {
+  background: #fafafa !important;
+  border: 1px solid #d0d0d0 !important;
+  border-radius: 8px;
+  padding: 16px !important;
+  margin-bottom: 20px;
+  page-break-inside: avoid;
+}
+
+.pdf-export-mode .device-column h2 {
+  color: #000000 !important;
+  font-size: 18px !important;
+  margin-bottom: 16px !important;
+  text-align: center;
+}
+
+/* Comparison tables */
+.pdf-export-mode .comparison-row {
+  display: flex;
+  gap: 16px;
+  margin-bottom: 16px;
+  page-break-inside: avoid;
+}
+
+.pdf-export-mode .comparison-item {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 6px;
+  background: #f9fafb !important;
+}
+
+.pdf-export-mode .comparison-item__label {
+  font-size: 11px !important;
+  font-weight: 600;
+  color: #6b7280 !important;
+  margin-bottom: 4px;
+}
+
+.pdf-export-mode .comparison-item__value {
+  font-size: 16px !important;
+  font-weight: 700;
+  color: #1f2937 !important;
+}
+
+/* ===================================
+   Standard Print Media Query
+   =================================== */
+
+@media print {
+  body {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Hide UI elements */
+  button,
+  nav,
+  .navigation,
+  .tabs,
+  .modal,
+  input,
+  textarea,
+  select {
+    display: none !important;
+  }
+
+  /* Expand all content */
+  details {
+    open: true;
+  }
+
+  details > *:not(summary) {
+    display: block !important;
+  }
+
+  /* Page breaks */
+  h1, h2, h3, h4, h5, h6 {
+    page-break-after: avoid;
+  }
+
+  table, figure, img {
+    page-break-inside: avoid;
+  }
+
+  /* Ensure readability */
+  * {
+    background: white !important;
+    color: black !important;
+  }
+
+  /* Preserve score colors */
+  .score-badge,
+  .metric-score {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
+
+/* ===================================
+   Responsive adjustments for PDF
+   =================================== */
+
+@media screen and (max-width: 1200px) {
+  .pdf-export-mode {
+    width: 100% !important;
+  }
+}

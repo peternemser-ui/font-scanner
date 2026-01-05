@@ -34,14 +34,18 @@ const checkBrokenLinks = asyncHandler(async (req, res) => {
     maxDepth
   });
 
-  const reachableUrl = await testUrlReachability(normalized);
+  // Check if URL is reachable before scanning
+  const isReachable = await testUrlReachability(normalized);
+  if (!isReachable) {
+    throw new ValidationError('URL is not reachable. Please check the URL and try again.');
+  }
 
   const options = {};
   if (maxPages) options.maxPages = Math.min(parseInt(maxPages), 100);
   if (maxDepth) options.maxDepth = Math.min(parseInt(maxDepth), 5);
   if (followExternal !== undefined) options.followExternal = Boolean(followExternal);
 
-  const results = await brokenLinkService.checkLinks(reachableUrl, options);
+  const results = await brokenLinkService.checkLinks(normalized, options);
 
   logger.info(`Broken link check completed`, {
     requestId: req.id,

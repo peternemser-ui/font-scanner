@@ -59,7 +59,7 @@ analyzeButton.addEventListener('click', async () => {
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
     </div>
     <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: #00ff41; font-weight: 600; letter-spacing: 0.05em;">
-      Comprehensive analysis in progress...
+      Measuring core web vitals...
     </p>
     <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(0, 255, 65, 0.7);">
       This may take 30-60 seconds
@@ -79,7 +79,6 @@ analyzeButton.addEventListener('click', async () => {
     }
     .ascii-art-responsive {
       font-size: clamp(0.35rem, 1.2vw, 0.65rem);
-      animation: color-cycle 4s linear infinite;
       white-space: pre;
       max-width: 100%;
     }
@@ -241,74 +240,66 @@ function displayResults(data) {
       </div>
     </div>
 
-    <!-- Best Practices & Optimization Guide -->
-    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">Best Practices & Optimization Guide</h2>
-    ${renderBestPracticesTable(mobile, desktop)}
-
-    <!-- The Big 3 Core Web Vitals -->
-    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">P The Big 3: Google's Core Web Vitals</h2>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
-      ${renderMetricCard('LCP', 'Largest Contentful Paint', mobile.lcp, desktop.lcp, 'I', 'Loading Performance')}
-      ${renderMetricCard('INP', 'Interaction to Next Paint', mobile.inp, desktop.inp, '👆', 'Responsiveness')}
-      ${renderMetricCard('CLS', 'Cumulative Layout Shift', mobile.cls, desktop.cls, '📐', 'Visual Stability')}
-    </div>
-
-    <!-- Additional Performance Metrics -->
-    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">C Additional Performance Metrics</h2>
-    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
-      ${renderAdditionalMetric('FCP', 'First Contentful Paint', mobile.additionalMetrics.fcp, desktop.additionalMetrics.fcp)}
-      ${renderAdditionalMetric('SI', 'Speed Index', mobile.additionalMetrics.si, desktop.additionalMetrics.si)}
-      ${renderAdditionalMetric('TTI', 'Time to Interactive', mobile.additionalMetrics.tti, desktop.additionalMetrics.tti)}
-    </div>
+    <!-- Accordions for detailed analysis -->
+    ${createCWVAccordionSection('best-practices', '📋', 'Best Practices & Optimization Guide', renderBestPracticesTable(mobile, desktop), Math.round((mobile.score + desktop.score) / 2))}
+    
+    ${createCWVAccordionSection('core-vitals', '⚡', 'The Big 3: Google\'s Core Web Vitals', `
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 1rem 0;">
+        ${renderMetricCard('LCP', 'Largest Contentful Paint', mobile.lcp, desktop.lcp, '⏱️', 'Loading Performance')}
+        ${renderMetricCard('INP', 'Interaction to Next Paint', mobile.inp, desktop.inp, '👆', 'Responsiveness')}
+        ${renderMetricCard('CLS', 'Cumulative Layout Shift', mobile.cls, desktop.cls, '📐', 'Visual Stability')}
+      </div>
+    `, Math.round((mobile.score + desktop.score) / 2))}
+    
+    ${createCWVAccordionSection('additional-metrics', '📊', 'Additional Performance Metrics', `
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1rem 0;">
+        ${renderAdditionalMetric('FCP', 'First Contentful Paint', mobile.additionalMetrics.fcp, desktop.additionalMetrics.fcp)}
+        ${renderAdditionalMetric('SI', 'Speed Index', mobile.additionalMetrics.si, desktop.additionalMetrics.si)}
+        ${renderAdditionalMetric('TTI', 'Time to Interactive', mobile.additionalMetrics.tti, desktop.additionalMetrics.tti)}
+      </div>
+    `, null)}
 
     <!-- Recommendations -->
-    ${recommendations.length > 0 ? `
-    <h2 style="color: #00ff41; margin: 2rem 0 1rem 0;">ⓘ Recommendations</h2>
-    <div style="display: grid; gap: 1rem; margin-bottom: 2rem;">
-      ${recommendations.map(rec => `
-        <div style="
-          background: ${rec.priority === 'critical' ? 'rgba(255, 68, 68, 0.1)' : rec.priority === 'high' ? 'rgba(255, 140, 0, 0.1)' : 'rgba(255, 215, 0, 0.1)'};
-          border-left: 4px solid ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#ffd700'};
-          padding: 1.5rem;
-          border-radius: 8px;
-        ">
-          <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
-            <h4 style="color: ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#ffd700'}; margin: 0;">
-              ${rec.metric}
-            </h4>
-            <span style="
-              padding: 0.25rem 0.75rem;
-              background: ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#ffd700'};
-              color: #000;
-              font-size: 0.75rem;
-              font-weight: bold;
-              border-radius: 4px;
-              text-transform: uppercase;
-            ">${rec.priority}</span>
+    ${recommendations.length > 0 ? createCWVAccordionSection('recommendations', '💡', 'Recommendations', `
+      <div style="display: grid; gap: 1rem; padding: 1rem 0;">
+        ${recommendations.map(rec => `
+          <div style="
+            background: ${rec.priority === 'critical' ? 'rgba(255, 68, 68, 0.1)' : rec.priority === 'high' ? 'rgba(255, 140, 0, 0.1)' : 'rgba(255, 215, 0, 0.1)'};
+            border-left: 4px solid ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#ffd700'};
+            padding: 1.5rem;
+            border-radius: 8px;
+          ">
+            <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.75rem;">
+              <h4 style="color: ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#ffd700'}; margin: 0;">
+                ${rec.metric}
+              </h4>
+              <span style="
+                padding: 0.25rem 0.75rem;
+                background: ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#ffd700'};
+                color: #000;
+                font-size: 0.75rem;
+                font-weight: bold;
+                border-radius: 4px;
+                text-transform: uppercase;
+              ">${rec.priority}</span>
+            </div>
+            <p style="color: #e0e0e0; margin: 0 0 0.75rem 0; font-weight: 600;">~ ${rec.issue}</p>
+            <p style="color: #c0c0c0; margin: 0;">ⓘ ${rec.solution}</p>
           </div>
-          <p style="color: #e0e0e0; margin: 0 0 0.75rem 0; font-weight: 600;">~ ${rec.issue}</p>
-          <p style="color: #c0c0c0; margin: 0;">ⓘ ${rec.solution}</p>
-        </div>
-      `).join('')}
-    </div>
-    ` : ''}
-
-    <!-- Field Data Context -->
-    <div style="
-      background: rgba(0, 255, 65, 0.05);
-      border: 1px solid rgba(0, 255, 65, 0.3);
-      padding: 1.5rem;
-      border-radius: 8px;
-      margin-bottom: 2rem;
-    ">
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0;">ⓘ Understanding Your Scores</h3>
-      <p style="color: #e0e0e0; margin: 0 0 0.5rem 0;">${comparison.context}</p>
-      <p style="color: #c0c0c0; margin: 0; font-size: 0.9rem;">${comparison.note}</p>
-      <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
-        <p style="color: #e0e0e0; margin: 0.5rem 0;"><strong>LCP:</strong> ${comparison.comparison.lcp.percentile} - ${comparison.comparison.lcp.realWorldImpact}</p>
-        <p style="color: #e0e0e0; margin: 0.5rem 0;"><strong>CLS:</strong> ${comparison.comparison.cls.percentile} - ${comparison.comparison.cls.realWorldImpact}</p>
+        `).join('')}
       </div>
-    </div>
+    `, null) : ''}
+
+    ${createCWVAccordionSection('understanding-scores', 'ℹ️', 'Understanding Your Scores', `
+      <div style="padding: 1rem 0;">
+        <p style="color: #e0e0e0; margin: 0 0 0.5rem 0;">${comparison.context}</p>
+        <p style="color: #c0c0c0; margin: 0; font-size: 0.9rem;">${comparison.note}</p>
+        <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
+          <p style="color: #e0e0e0; margin: 0.5rem 0;"><strong>LCP:</strong> ${comparison.comparison.lcp.percentile} - ${comparison.comparison.lcp.realWorldImpact}</p>
+          <p style="color: #e0e0e0; margin: 0.5rem 0;"><strong>CLS:</strong> ${comparison.comparison.cls.percentile} - ${comparison.comparison.cls.realWorldImpact}</p>
+        </div>
+      </div>
+    `, null)}
 
     <!-- PDF Download button removed - monetization disabled -->
   `;
@@ -478,15 +469,6 @@ function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
   `;
 }
 
-function getRatingEmoji(rating) {
-  switch(rating) {
-    case 'good': return '✓';
-    case 'needs-improvement': return '~';
-    case 'poor': return '✗';
-    default: return '⧗'; // Clock icon instead of question mark
-  }
-}
-
 function renderBestPracticesTable(mobile, desktop) {
   return `
     <div style="
@@ -636,6 +618,86 @@ function getGradeColor(grade) {
     case 'D': return '#ff6b6b';
     case 'F': return '#ff4444';
     default: return '#808080';
+  }
+}
+
+function getRatingEmoji(rating) {
+  if (rating === 'good') return '✓';
+  if (rating === 'needs-improvement') return '⚠️';
+  return '✗';
+}
+
+// Accordion helper functions
+function createCWVAccordionSection(id, icon, title, contentHTML, score = null) {
+  const scoreHTML = score !== null ? `
+    <span class="accordion-badge" style="
+      padding: 0.25rem 0.75rem;
+      border-radius: 4px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      background: ${score >= 90 ? 'rgba(0, 255, 65, 0.2)' : score >= 70 ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'};
+      color: ${score >= 90 ? '#00ff41' : score >= 70 ? '#ffd700' : '#ff4444'};
+      border: 1px solid ${score >= 90 ? 'rgba(0, 255, 65, 0.4)' : score >= 70 ? 'rgba(255, 215, 0, 0.4)' : 'rgba(255, 68, 68, 0.4)'};
+    ">${score}</span>
+  ` : '';
+
+  return `
+    <div class="accordion" style="margin-bottom: 0.5rem; border-radius: 8px; overflow: hidden; background: rgba(255, 255, 255, 0.03);">
+      <div class="accordion-header" onclick="toggleCWVAccordion('${id}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0.875rem 1.25rem;
+        cursor: pointer;
+        background: transparent;
+        transition: all 0.2s ease;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${icon}</span>
+          <span style="font-weight: 600; color: #ffffff;">${title}</span>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          ${scoreHTML}
+          <span class="accordion-chevron" style="transition: transform 0.2s ease; color: #808080;">▼</span>
+        </div>
+      </div>
+      <div class="accordion-content" id="${id}" style="
+        max-height: 0;
+        overflow: hidden;
+        transition: all 0.3s ease;
+        padding: 0 1.25rem;
+        border-top: 0px solid rgba(255, 255, 255, 0.1);
+      ">
+        <div class="accordion-body" style="padding: 0;">${contentHTML}</div>
+      </div>
+    </div>
+  `;
+}
+
+function toggleCWVAccordion(accordionId) {
+  const content = document.getElementById(accordionId);
+  const header = content.previousElementSibling;
+  const chevron = header.querySelector('.accordion-chevron');
+  
+  if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+    // Collapse
+    content.style.maxHeight = '0px';
+    content.style.padding = '0 1.25rem';
+    content.style.borderTopWidth = '0px';
+    chevron.style.transform = 'rotate(0deg)';
+  } else {
+    // Expand
+    content.style.maxHeight = content.scrollHeight + 'px';
+    content.style.padding = '1rem 1.25rem';
+    content.style.borderTopWidth = '1px';
+    chevron.style.transform = 'rotate(180deg)';
+    
+    // Adjust max-height after content loads (images, etc.)
+    setTimeout(() => {
+      if (content.style.maxHeight !== '0px') {
+        content.style.maxHeight = content.scrollHeight + 'px';
+      }
+    }, 100);
   }
 }
 

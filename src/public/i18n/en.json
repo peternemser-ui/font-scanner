@@ -1,21 +1,47 @@
 {
   "app": {
-    "name": "FONT SCANNER",
-    "tagline": "Advanced Web Typography & Performance Analysis"
+    "name": "SITE MECHANIC",
+    "tagline": "Web Diagnostics & Performance Analysis"
   },
   "nav": {
     "dashboard": "Dashboard",
-    "fontScanner": "Font Scanner",
+    "fontScanner": "Fonts & Typography",
+    "typography": "Fonts",
     "seo": "SEO",
+    "seoAnalysis": "SEO Analysis",
     "coreWebVitals": "Core Web Vitals",
-    "rankCompetition": "Rank Competition",
-    "performance": "Performance",
+    "lighthouseMetrics": "Lighthouse Metrics",
+    "rankCompetition": "Competitor Benchmarks",
+    "performance": "Speed & UX",
     "accessibility": "Accessibility",
-    "security": "Security"
+    "security": "Security",
+    "tagIntelligence": "Tracking & Analytics",
+    "enhancedFonts": "Fonts & Typography",
+    "performanceSnapshot": "Performance Snapshot",
+    "siteCrawler": "Site Crawler",
+    "mobileTesting": "Mobile Testing",
+    "ipReputation": "IP & Domain Health",
+    "croAnalysis": "Conversion Optimization",
+    "localSeo": "Local SEO",
+    "brokenLinks": "Broken Links",
+    "gdprCheck": "Privacy Compliance",
+    "brandAudit": "Brand & Design",
+    "hostingGuide": "Hosting Guide",
+    "more": "More",
+    "menu": "Menu"
+  },
+  "categories": {
+    "performance": "Performance & UX",
+    "seo": "SEO & Indexing",
+    "accessibility": "Accessibility",
+    "security": "Security & Trust",
+    "technology": "Technology & Fonts",
+    "infrastructure": "Infrastructure",
+    "competitive": "Competitive Insights"
   },
   "dashboard": {
-    "title": "Comprehensive Overview",
-    "breadcrumb": "dashboard / comprehensive overview",
+    "title": "Website Overview",
+    "breadcrumb": "dashboard / overview",
     "runAudit": "RUN FULL AUDIT",
     "analyzing": "ANALYZING...",
     "enterUrl": "Enter website URL to analyze...",
@@ -41,14 +67,20 @@
     "na": "N/A"
   },
   "fontScanner": {
-    "title": "Font Scanner",
-    "subtitle": "Comprehensive Typography Analysis",
-    "breadcrumb": "font scanner",
+    "title": "Fonts & Typography",
+    "subtitle": "Typography Analysis",
+    "pageSubtitle": "Deep typography analysis with multi-page scanning, font loading performance, and accessibility insights.",
+    "breadcrumb": "fonts & typography",
     "analyzeWebsite": "ANALYZE WEBSITE",
+    "analyzeFonts": "ANALYZE FONTS",
     "analyzing": "ANALYZING...",
     "enterUrl": "Enter website URL...",
     "urlRequired": "Please enter a valid URL",
     "analysisComplete": "Analysis complete",
+    "multiPageScan": "Multi-page scan (analyze fonts across multiple pages)",
+    "maxPages": "Max pages:",
+    "enhancedAnalysis": "Enhanced Font Analysis:",
+    "enhancedAnalysisDesc": "Detects font providers (Google Fonts, Adobe Fonts, self-hosted), finds duplicate families, unused weights/styles, missing font-display declarations, and preload opportunities.",
     "desktopFonts": "DESKTOP FONTS",
     "mobileFonts": "MOBILE FONTS",
     "dualViewportAnalysis": "Dual Viewport Analysis: Fonts analyzed separately for desktop (1920x1080) and mobile (375x667) viewports.",
@@ -63,7 +95,163 @@
     "iconFonts": "Icon Fonts",
     "fontDetails": "Font Details",
     "downloadReport": "Download PDF Report",
-    "shareResults": "Share Results"
+    "shareResults": "Share Results",
+    "fontProviders": "Font Providers",
+    "fontFamilies": "Font Families",
+    "performanceMetrics": "Performance Metrics",
+    "recommendations": "Recommendations",
+    "advancedAnalysis": "Advanced Typography Analysis",
+    "exportPdf": "Download PDF",
+    "exportCss": "Export CSS",
+    "shareLink": "Share Link"
+  },
+  "brandConsistency": {
+    "title": "Brand Inspection",
+    "subtitle": "Analyze color palette, fonts, and logo usage across your website for brand alignment.",
+    "breadcrumb": "Brand Consistency",
+    "inspect": "INSPECT",
+    "analyzing": "Analyzing brand consistency...",
+    "loaderTitle": "🎨 BRAND ANALYSIS",
+    "grade": "Grade",
+    "scoreLabel": "Brand Consistency Score",
+    "quickSummary": "Quick Summary",
+    "scoreBreakdown": "Score Breakdown",
+    "colors": "Colors",
+    "fonts": "Fonts",
+    "logos": "Logos",
+    "buttons": "Buttons",
+    "links": "Links",
+    "favicon": "Favicon",
+    "detected": "Detected",
+    "missing": "Missing",
+    "present": "Present",
+    "excellent": "Excellent",
+    "good": "Good",
+    "fair": "Fair",
+    "poor": "Poor",
+    "colorPalette": "Color Palette",
+    "typography": "Typography",
+    "brandIdentity": "Brand Identity",
+    "uiConsistency": "UI Consistency",
+    "colorHarmony": "Color Harmony",
+    "colorPaletteAnalysis": "Color Palette Analysis",
+    "typographyAnalysis": "Typography Analysis",
+    "recommendations": "Recommendations",
+    "harmonyType": "Harmony Type",
+    "uniqueHues": "Unique Hues",
+    "neutralRatio": "Neutral Ratio",
+    "primaryBrandColors": "Primary Brand Colors",
+    "allDetectedColors": "All Detected Colors",
+    "typographySummary": "Typography Summary",
+    "totalFonts": "Total Fonts",
+    "quality": "Quality",
+    "typographyHierarchy": "Typography Hierarchy",
+    "headingFonts": "Heading Fonts",
+    "bodyFonts": "Body Fonts",
+    "allFontsByUsage": "All Fonts by Usage",
+    "uses": "uses",
+    "logoDetection": "Logo Detection",
+    "noLogoDetected": "No logo detected",
+    "addLogoTip": "Add a logo with alt text containing \"logo\" for better brand recognition",
+    "faviconPresent": "Favicon Present",
+    "faviconMissing": "Favicon Missing",
+    "faviconPresentDesc": "Your site has a favicon for browser tab identification",
+    "faviconMissingDesc": "Add a favicon to help users identify your site in browser tabs",
+    "buttonStyles": "Button Styles",
+    "linkColors": "Link Colors",
+    "consistency": "Consistency",
+    "sampleButton": "Sample Button",
+    "noButtonStyles": "No button styles detected",
+    "linkText": "Link Text",
+    "noLinkColors": "No link colors detected",
+    "noRecommendations": "No recommendations at this time.",
+    "harmony": {
+      "monochromatic": "Monochromatic",
+      "analogous": "Analogous",
+      "triadic": "Triadic",
+      "splitComplementary": "Split-Complementary",
+      "complementary": "Complementary",
+      "diverse": "Diverse",
+      "custom": "Custom"
+    },
+    "priority": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "success": "Success"
+    },
+    "steps": {
+      "initializing": "Initializing analysis",
+      "connecting": "Connecting to target website...",
+      "extractingColors": "Extracting colors",
+      "analyzingPalette": "Analyzing color palette and harmony...",
+      "detectingFonts": "Detecting fonts",
+      "identifyingTypography": "Identifying typography hierarchy...",
+      "findingLogos": "Finding logos",
+      "locatingAssets": "Locating brand assets...",
+      "analyzingUI": "Analyzing UI consistency",
+      "checkingStyles": "Checking button and link styles...",
+      "generating": "Generating insights",
+      "compiling": "Compiling recommendations..."
+    },
+    "rec": {
+      "excessiveColors": {
+        "message": "Excessive color usage",
+        "detail": "Using {count} colors creates visual chaos. Professional brands use 5-10 colors maximum.",
+        "action": "Create a defined color palette with primary, secondary, and accent colors."
+      },
+      "tooManyColors": {
+        "message": "Too many colors",
+        "detail": "Using {count} colors. Streamline to 8-12 brand colors for better consistency.",
+        "action": "Audit your color usage and remove redundant variations."
+      },
+      "inconsistentHarmony": {
+        "message": "Inconsistent color harmony",
+        "detail": "Your color palette lacks a clear harmony pattern (complementary, analogous, or triadic).",
+        "action": "Use a color wheel to select harmonious colors that work together."
+      },
+      "tooManyFonts": {
+        "message": "Too many fonts",
+        "detail": "Using {count} different fonts creates visual inconsistency and hurts performance.",
+        "action": "Limit to 2-3 font families: one for headings, one for body text, and optionally one for accents."
+      },
+      "reduceFontCount": {
+        "message": "Consider reducing font count",
+        "detail": "Using {count} fonts. Best practice is 2-3 fonts maximum.",
+        "action": "Review font usage and consolidate where possible."
+      },
+      "noTypographyHierarchy": {
+        "message": "Typography hierarchy not detected",
+        "detail": "Could not identify distinct heading and body fonts.",
+        "action": "Ensure headings and body text use consistent, distinct font treatments."
+      },
+      "noLogo": {
+        "message": "No logo detected",
+        "detail": "A logo is essential for brand recognition and trust.",
+        "action": "Add a logo in the header with proper alt text containing \"logo\"."
+      },
+      "noFavicon": {
+        "message": "No favicon detected",
+        "detail": "A favicon helps users identify your site in browser tabs and bookmarks.",
+        "action": "Add a favicon.ico or use <link rel=\"icon\"> with your brand icon."
+      },
+      "inconsistentButtons": {
+        "message": "Inconsistent button styles",
+        "detail": "Buttons across your site have varying colors and shapes.",
+        "action": "Define standard button styles in your CSS and use them consistently."
+      },
+      "inconsistentLinks": {
+        "message": "Inconsistent link colors",
+        "detail": "Links use multiple different colors across the page.",
+        "action": "Set a consistent link color that matches your brand palette."
+      },
+      "excellent": {
+        "message": "Excellent brand consistency!",
+        "detail": "Your website maintains strong visual consistency across colors, typography, and branding elements.",
+        "action": "Continue maintaining your brand guidelines and conduct periodic audits."
+      }
+    }
   },
   "performance": {
     "title": "Performance Analyzer",
@@ -129,7 +317,135 @@
     "canonicalUrl": "Canonical URL",
     "structuredData": "Structured Data",
     "sitemap": "Sitemap",
-    "robotsTxt": "Robots.txt"
+    "robotsTxt": "Robots.txt",
+    "pages": {
+      "home": {
+        "title": "Site Mechanic - Professional Website Analysis & SEO Tools",
+        "description": "Comprehensive website analysis platform with advanced SEO, performance testing, security scanning, and accessibility audits. Free professional-grade web diagnostics for developers.",
+        "keywords": "website analysis, SEO tools, performance testing, security scanner, accessibility audit, web diagnostics",
+        "og_title": "Site Mechanic - Professional Website Analysis Platform",
+        "twitter_title": "Analyze Your Website with Professional-Grade Tools"
+      },
+      "security-analyzer": {
+        "title": "Website Security Scanner & Vulnerability Analyzer - Site Mechanic",
+        "description": "Comprehensive security analysis tool that scans websites for vulnerabilities, SSL/TLS issues, security headers, malware, and potential threats. Free online security testing.",
+        "keywords": "website security scanner, vulnerability analyzer, SSL checker, security headers, penetration testing, malware detection",
+        "og_title": "Free Website Security Scanner - Detect Vulnerabilities",
+        "twitter_title": "Scan Your Website for Security Vulnerabilities"
+      },
+      "performance-hub": {
+        "title": "Performance Testing Hub - Website Speed & Optimization Tools",
+        "description": "Centralized performance testing dashboard with Core Web Vitals monitoring, page speed analysis, resource optimization, and comprehensive performance metrics for faster websites.",
+        "keywords": "performance testing, page speed, Core Web Vitals, website optimization, performance monitoring, speed test",
+        "og_title": "Website Performance Testing Hub - Speed Optimization",
+        "twitter_title": "Test and Optimize Your Website Performance"
+      },
+      "mobile-analyzer": {
+        "title": "Mobile Website Analyzer - Responsive Design Testing Tool",
+        "description": "Comprehensive mobile optimization analyzer testing responsive design, mobile usability, touch targets, viewport configuration, and mobile performance metrics for better UX.",
+        "keywords": "mobile analyzer, responsive design testing, mobile usability, viewport testing, mobile optimization, touch targets",
+        "og_title": "Mobile Website Analyzer - Test Responsive Design",
+        "twitter_title": "Analyze Your Website's Mobile Experience"
+      },
+      "enhanced-fonts": {
+        "title": "Web Font Analyzer - Typography & Font Loading Optimization",
+        "description": "Advanced web font analysis tool detecting font usage, loading performance, FOIT/FOUT issues, typography metrics, and font optimization opportunities for faster rendering.",
+        "keywords": "font analyzer, web fonts, typography analysis, font loading, FOUT, FOIT, font optimization",
+        "og_title": "Web Font Analyzer - Optimize Typography Performance",
+        "twitter_title": "Analyze and Optimize Your Web Fonts"
+      },
+      "ip-reputation-analyzer": {
+        "title": "IP Reputation Checker - Domain & Server Health Analysis",
+        "description": "Check IP address reputation, domain health, blacklist status, DNS configuration, SSL certificates, and server response headers for improved deliverability and trust.",
+        "keywords": "IP reputation checker, domain health, blacklist check, DNS analyzer, server headers, IP lookup",
+        "og_title": "IP Reputation & Domain Health Checker",
+        "twitter_title": "Check Your Domain's IP Reputation"
+      },
+      "hosting-analyzer": {
+        "title": "Website Hosting Analyzer - Server Performance & Infrastructure",
+        "description": "Analyze web hosting quality with server response time, uptime monitoring, CDN detection, hosting provider identification, and infrastructure performance metrics.",
+        "keywords": "hosting analyzer, server performance, hosting quality, uptime monitoring, CDN detection, infrastructure analysis",
+        "og_title": "Website Hosting Analyzer - Check Server Performance",
+        "twitter_title": "Analyze Your Web Hosting Infrastructure"
+      },
+      "competitive-analysis": {
+        "title": "Competitive Analysis Tool - Website Benchmarking & Comparison",
+        "description": "Compare your website against competitors with side-by-side performance, SEO, and UX benchmarking. Identify competitive advantages and improvement opportunities.",
+        "keywords": "competitive analysis, website comparison, competitor benchmarking, SEO comparison, performance benchmarking",
+        "og_title": "Competitive Website Analysis & Benchmarking",
+        "twitter_title": "Benchmark Your Site Against Competitors"
+      },
+      "cro-analyzer": {
+        "title": "Conversion Rate Optimization Analyzer - CRO Audit Tool",
+        "description": "Comprehensive CRO analysis identifying conversion barriers, UX issues, call-to-action effectiveness, form optimization, and funnel improvements for higher conversions.",
+        "keywords": "CRO analyzer, conversion optimization, conversion rate, UX audit, A/B testing, funnel analysis",
+        "og_title": "CRO Analyzer - Optimize Conversion Rates",
+        "twitter_title": "Analyze and Improve Your Conversion Rates"
+      },
+      "broken-links": {
+        "title": "Broken Link Checker - Find & Fix Dead Links & 404 Errors",
+        "description": "Comprehensive broken link detector scanning internal links, external links, images, and resources for 404 errors, redirects, and link health across your entire website.",
+        "keywords": "broken link checker, 404 finder, dead links, link validator, site crawler, link analysis",
+        "og_title": "Broken Link Checker - Find Dead Links & 404 Errors",
+        "twitter_title": "Scan Your Website for Broken Links"
+      },
+      "gdpr-compliance": {
+        "title": "GDPR Compliance Checker - Privacy & Cookie Audit Tool",
+        "description": "Analyze website GDPR compliance with cookie audits, privacy policy detection, data protection assessment, consent management review, and EU privacy regulations.",
+        "keywords": "GDPR checker, privacy compliance, cookie audit, GDPR analysis, data protection, privacy policy",
+        "og_title": "GDPR Compliance Checker - Privacy Audit Tool",
+        "twitter_title": "Check Your Website's GDPR Compliance"
+      },
+      "local-seo": {
+        "title": "Local SEO Analyzer - Google Business & Local Search Optimizer",
+        "description": "Optimize local search presence with Google Business Profile analysis, local citations, NAP consistency, schema markup, and local ranking factors for better visibility.",
+        "keywords": "local SEO, Google Business Profile, local search, NAP consistency, local citations, schema markup",
+        "og_title": "Local SEO Analyzer - Optimize Local Search Rankings",
+        "twitter_title": "Improve Your Local Search Presence"
+      },
+      "brand-consistency": {
+        "title": "Brand Consistency Analyzer - Design & Visual Identity Audit",
+        "description": "Analyze brand consistency across your website with color palette detection, typography audit, logo usage, design system compliance, and visual identity guidelines.",
+        "keywords": "brand consistency, design audit, color palette, brand identity, visual analysis, design system",
+        "og_title": "Brand Consistency Analyzer - Design Audit Tool",
+        "twitter_title": "Audit Your Website's Brand Consistency"
+      },
+      "site-crawler": {
+        "title": "Website Crawler - Complete Site Structure & Page Discovery",
+        "description": "Crawl and map your entire website structure with sitemap generation, internal linking analysis, page hierarchy, content inventory, and comprehensive site architecture.",
+        "keywords": "website crawler, site mapping, sitemap generator, internal links, site structure, page discovery",
+        "og_title": "Website Crawler - Map Your Site Structure",
+        "twitter_title": "Crawl and Analyze Your Website Structure"
+      },
+      "tag-intelligence": {
+        "title": "Tag Intelligence - Marketing Tag & Analytics Audit Tool",
+        "description": "Analyze marketing tags, tracking pixels, analytics implementation, tag manager configuration, data layer validation, and third-party script performance.",
+        "keywords": "tag analysis, Google Tag Manager, analytics audit, tracking pixels, marketing tags, tag manager",
+        "og_title": "Tag Intelligence - Audit Marketing & Analytics Tags",
+        "twitter_title": "Analyze Your Website's Tracking Tags"
+      },
+      "advanced-tools": {
+        "title": "Advanced Web Tools - Professional Website Analysis Suite",
+        "description": "Access advanced website analysis tools including technical SEO, performance profiling, security testing, and comprehensive diagnostics for professional web developers.",
+        "keywords": "advanced web tools, technical SEO, performance profiling, developer tools, website diagnostics",
+        "og_title": "Advanced Web Analysis Tools for Developers",
+        "twitter_title": "Professional Website Analysis Tools"
+      },
+      "performance-snapshot": {
+        "title": "Performance Snapshot - Quick Website Speed Analysis",
+        "description": "Get instant performance snapshot with load time, resource analysis, Core Web Vitals, rendering metrics, and quick optimization recommendations for faster websites.",
+        "keywords": "performance snapshot, speed test, load time, Core Web Vitals, quick analysis, website speed",
+        "og_title": "Performance Snapshot - Instant Speed Analysis",
+        "twitter_title": "Get a Quick Performance Snapshot"
+      },
+      "core-web-vitals": {
+        "title": "Core Web Vitals Checker - LCP, FID, CLS Analysis Tool",
+        "description": "Measure and optimize Core Web Vitals including Largest Contentful Paint (LCP), First Input Delay (FID), and Cumulative Layout Shift (CLS) for better Google rankings.",
+        "keywords": "Core Web Vitals, LCP, FID, CLS, page experience, Google ranking, performance metrics",
+        "og_title": "Core Web Vitals Checker - Optimize Page Experience",
+        "twitter_title": "Check Your Core Web Vitals Scores"
+      }
+    }
   },
   "common": {
     "loading": "Loading...",
@@ -163,7 +479,16 @@
     "print": "Print",
     "help": "Help",
     "settings": "Settings",
-    "language": "Language"
+    "language": "Language",
+    "yes": "Yes",
+    "no": "No",
+    "na": "N/A",
+    "unknown": "Unknown",
+    "more": "more",
+    "websiteUrl": "Website URL",
+    "enterUrl": "https://yoursite.com",
+    "pleaseEnterUrl": "Please enter a URL",
+    "mayTake": "This may take 15-30 seconds"
   },
   "errors": {
     "urlRequired": "Please enter a valid URL",
@@ -208,5 +533,87 @@
     "pending": "Pending",
     "inProgress": "In Progress",
     "completed": "Completed"
+  },
+  "notices": {
+    "botProtectionTitle": "Bot Protection Notice:",
+    "botProtectionText": "Major commercial sites (Amazon, Walmart, cars.com) block automated analysis.",
+    "botProtectionTry": "Try: your websites, client projects, or test with",
+    "botProtectionBlocked": "For blocked sites, use",
+    "botProtectionAlternative": "Google PageSpeed Insights",
+    "botProtectionInstead": "instead."
+  },
+  "auth": {
+    "welcomeBack": "Welcome Back",
+    "createAccount": "Create Account",
+    "login": "Login",
+    "register": "Sign Up",
+    "email": "Email",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot your password?",
+    "alreadyHaveAccount": "Already have an account?",
+    "dontHaveAccount": "Don't have an account?",
+    "loginButton": "Login",
+    "registerButton": "Create Account",
+    "loggingIn": "Logging in...",
+    "creatingAccount": "Creating account...",
+    "passwordRequirements": "Must be 8+ characters with uppercase, lowercase, and number",
+    "loginSuccess": "Login successful! Redirecting...",
+    "registerSuccess": "Account created! Redirecting...",
+    "logoutButton": "Logout",
+    "changePassword": "Change Password",
+    "currentPassword": "Current Password",
+    "newPassword": "New Password",
+    "updatePassword": "Update Password",
+    "cancel": "Cancel"
+  },
+  "account": {
+    "title": "My Account",
+    "subtitle": "Manage your subscription, billing, and account settings",
+    "accountInfo": "Account Information",
+    "subscription": "Subscription",
+    "quickActions": "Quick Actions",
+    "email": "Email",
+    "plan": "Plan",
+    "memberSince": "Member Since",
+    "status": "Status",
+    "scansRemaining": "Scans Remaining",
+    "freePlan": "FREE PLAN",
+    "proPlan": "PRO",
+    "manageBilling": "Manage Billing",
+    "upgradeToPro": "Upgrade to Pro",
+    "goToDashboard": "Go to Dashboard",
+    "passwordChanged": "Password changed successfully!",
+    "perDay": "/ day",
+    "perMonth": "/ month"
+  },
+  "pricing": {
+    "title": "Upgrade to Site Mechanic Pro",
+    "subtitle": "Unlock unlimited scans, advanced recommendations, and expert-level optimization tools",
+    "monthly": "Monthly",
+    "annual": "Annual Save 17%",
+    "free": "Free",
+    "pro": "Pro",
+    "mostPopular": "MOST POPULAR",
+    "perMonth": "/month",
+    "scansPerMonth": "scans per month",
+    "unlimitedScans": "Unlimited scans",
+    "basicRecommendations": "Basic recommendations (4 steps)",
+    "advancedRecommendations": "4 advanced recommendations per analyzer",
+    "onePagePerScan": "1 page per scan",
+    "upToPages": "Up to 250 pages per scan",
+    "noExport": "No export",
+    "pdfExport": "PDF export without watermark",
+    "expertTips": "Expert-level optimization tips",
+    "prioritySupport": "Priority email support",
+    "getStarted": "Get Started",
+    "upgradeNow": "Upgrade Now",
+    "faq": "Frequently Asked Questions",
+    "faqQuestion1": "Can I cancel anytime?",
+    "faqAnswer1": "Yes, you can cancel your subscription at any time. No long-term contracts.",
+    "faqQuestion2": "What payment methods do you accept?",
+    "faqAnswer2": "We accept all major credit cards via Stripe (Visa, Mastercard, Amex).",
+    "faqQuestion3": "Do you offer refunds?",
+    "faqAnswer3": "Yes, we offer a 14-day money-back guarantee if you're not satisfied."
   }
 }

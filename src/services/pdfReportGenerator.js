@@ -72,14 +72,14 @@ class PDFReportGenerator {
       .fontSize(28)
       .font('Helvetica-Bold')
       .fillColor('#0f0f14') // Dark background color similar to website
-      .text('[FONT_SCANNER]', 50, 50);
+      .text('[SITE_MECHANIC]', 50, 50);
 
     // Subtitle with terminal-style bracket formatting
     doc
       .fontSize(16)
       .font('Helvetica')
       .fillColor('#64748b')
-      .text('> comprehensive website font analysis protocol', 50, 85);
+      .text('> web diagnostics & performance analysis', 50, 85);
 
     // URL with consistent styling
     doc

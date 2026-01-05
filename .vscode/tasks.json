@@ -2,6 +2,49 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "💻 Dev: Server",
+      "type": "npm",
+      "script": "dev",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated"
+      },
+      "runOptions": {
+        "runOn": "folderOpen"
+      }
+    },
+    {
+      "label": "🧪 Test",
+      "type": "npm",
+      "script": "test",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "new"
+      }
+    },
+    {
+      "label": "🔍 Lint",
+      "type": "npm",
+      "script": "lint",
+      "problemMatcher": ["$eslint-stylish"],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "✨ Format",
+      "type": "npm",
+      "script": "format",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
       "label": "🚀 Deploy to Production",
       "type": "shell",
       "command": "git push origin main && ssh fontscanner@143.198.147.93 'cd /var/www/fontscanner && git pull && npm install --production && pm2 restart fontscanner'",

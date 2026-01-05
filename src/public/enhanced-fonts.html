@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Enhanced Font Analyzer - Detect font providers (Google Fonts, Adobe Fonts, self-hosted), find duplicates, unused weights, missing font-display, and preload opportunities." />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="font analyzer, Google Fonts detector, Adobe Fonts, font-display, font preload, duplicate fonts, web fonts, font performance" />
+    <meta name="author" content="Site Mechanic" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://sitemechanic.io/en/enhanced-fonts.html" />
+
+    <!-- Hreflang Tags for Multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/enhanced-fonts.html" />
+    <link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/enhanced-fonts.html" />
+    <link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/enhanced-fonts.html" />
+    <link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/enhanced-fonts.html" />
+    <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/enhanced-fonts.html" />
+    <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/enhanced-fonts.html" />
+    <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/enhanced-fonts.html" />
+    <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/enhanced-fonts.html" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Enhanced Font Analyzer - Font Provider Detection & Optimization" />
+    <meta property="og:description" content="Detect font providers, find duplicate fonts, identify unused weights, validate font-display, and optimize font loading performance." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sitemechanic.io/en/enhanced-fonts.html" />
+    <meta property="og:image" content="https://sitemechanic.io/images/og-enhanced-fonts.png" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="pt_PT" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:site_name" content="Site Mechanic" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Enhanced Font Analyzer - Font Provider Detection & Optimization" />
+    <meta name="twitter:description" content="Detect font providers, find duplicate fonts, identify unused weights, validate font-display, and optimize font loading performance." />
+    <meta name="twitter:url" content="https://sitemechanic.io/en/enhanced-fonts.html" />
+    <meta name="twitter:image" content="https://sitemechanic.io/images/twitter-enhanced-fonts.png" />
+
+    <title>Technology & Fonts - Typography Analysis & Optimization | Site Mechanic</title>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
+    <!-- Existing Stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+    <link rel="stylesheet" href="spacing-fixes.css" />
+
+    <!-- CRITICAL: Theme background fix -->
+    <style>
+      /* Dark mode (when white-theme is NOT present) */
+      body:not(.white-theme) {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+      /* Light mode (when white-theme IS present) */
+      body.white-theme {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
+        color: #1a1a1a !important;
+      }
+      
+      /* Provider badges */
+      .provider-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        margin-right: 8px;
+      }
+      .provider-google { background: #4285f4; color: white; }
+      .provider-adobe { background: #ff0000; color: white; }
+      .provider-self { background: #10b981; color: white; }
+      .provider-bunny { background: #ff6b35; color: white; }
+      .provider-fontawesome { background: #528dd7; color: white; }
+      .provider-unknown { background: #6b7280; color: white; }
+      
+      /* Font family card */
+      .font-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        transition: all 0.2s ease;
+      }
+      .font-card:hover {
+        border-color: rgba(0, 255, 136, 0.3);
+        transform: translateY(-2px);
+      }
+      
+      /* Issue indicators */
+      .issue-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 10px;
+        font-size: 0.7rem;
+        margin-left: 8px;
+      }
+      .issue-duplicate { background: #f59e0b; color: black; }
+      .issue-display { background: #ef4444; color: white; }
+      .issue-preload { background: #3b82f6; color: white; }
+      .issue-unused { background: #6b7280; color: white; }
+      
+      /* Results Tabs */
+      .results-tabs {
+        display: flex;
+        gap: 0;
+        border-bottom: 2px solid rgba(255,255,255,0.1);
+        margin-bottom: 1.5rem;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+      .results-tab {
+        padding: 0.75rem 1.25rem;
+        background: transparent;
+        border: none;
+        color: #888;
+        font-size: 0.9rem;
+        font-weight: 500;
+        cursor: pointer;
+        white-space: nowrap;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s ease;
+      }
+      .results-tab:hover {
+        color: #ccc;
+        background: rgba(255,255,255,0.03);
+      }
+      .results-tab.active {
+        color: #10b981;
+        border-bottom-color: #10b981;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+      
+      /* Sticky Alert Banner */
+      .sticky-alert {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        padding: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        backdrop-filter: blur(10px);
+      }
+      .sticky-alert.critical {
+        background: rgba(239, 68, 68, 0.15);
+        border: 1px solid rgba(239, 68, 68, 0.4);
+      }
+      .sticky-alert.warning {
+        background: rgba(245, 158, 11, 0.15);
+        border: 1px solid rgba(245, 158, 11, 0.4);
+      }
+      .sticky-alert.success {
+        background: rgba(16, 185, 129, 0.15);
+        border: 1px solid rgba(16, 185, 129, 0.4);
+      }
+      
+      /* Copy Button */
+      .copy-btn {
+        padding: 4px 10px;
+        background: rgba(255,255,255,0.1);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 4px;
+        color: #888;
+        font-size: 0.75rem;
+        cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .copy-btn:hover {
+        background: rgba(16, 185, 129, 0.2);
+        border-color: rgba(16, 185, 129, 0.4);
+        color: #10b981;
+      }
+      .copy-btn.copied {
+        background: rgba(16, 185, 129, 0.3);
+        color: #10b981;
+      }
+      
+      /* Chart Container */
+      .chart-container {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .chart-container canvas {
+        max-height: 250px;
+      }
+      
+      /* Export Buttons */
+      .export-buttons {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+      .export-btn {
+        padding: 0.5rem 1rem;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        color: #ccc;
+        font-size: 0.85rem;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.2s ease;
+      }
+      .export-btn:hover {
+        background: rgba(16, 185, 129, 0.1);
+        border-color: rgba(16, 185, 129, 0.4);
+        color: #10b981;
+      }
+      
+      /* Comparison View */
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+      }
+      @media (max-width: 768px) {
+        .comparison-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .comparison-panel {
+        background: rgba(255,255,255,0.03);
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 8px;
+        padding: 1rem;
+      }
+      .comparison-panel h4 {
+        margin: 0 0 1rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      /* AI Suggestion Card */
+      .ai-suggestion {
+        background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+        border: 1px solid rgba(139, 92, 246, 0.3);
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+      }
+      .ai-suggestion h4 {
+        color: #a78bfa;
+        margin: 0 0 0.5rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+      
+      /* Accessibility improvements */
+      .visually-hidden {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+      }
+      
+      /* Focus styles for keyboard nav */
+      .results-tab:focus,
+      .export-btn:focus,
+      .copy-btn:focus {
+        outline: 2px solid #10b981;
+        outline-offset: 2px;
+      }
+      
+      /* Options panel */
+      .options-panel {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+      .options-panel label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+      }
+      .options-panel input[type="number"] {
+        width: 80px;
+        padding: 4px 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: inherit;
+      }
+      
+      /* Severity badges */
+      .severity-critical { background: #ef4444; color: white; }
+      .severity-warning { background: #f59e0b; color: black; }
+      .severity-info { background: #3b82f6; color: white; }
+      .severity-good { background: #10b981; color: white; }
+      
+      /* ========================================
+         ACCORDION STYLES (for <details> elements)
+         ======================================== */
+      .accordion-container {
+        display: flex;
+        flex-direction: column;
+        gap: 0.75rem;
+      }
+      
+      details.accordion {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: all 0.2s ease;
+      }
+      
+      details.accordion:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      
+      details.accordion[open] {
+        border-color: rgba(16, 185, 129, 0.3);
+      }
+      
+      details.accordion > summary.accordion__header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+        background: transparent;
+        transition: background 0.2s ease;
+      }
+      
+      details.accordion > summary.accordion__header::-webkit-details-marker {
+        display: none;
+      }
+      
+      details.accordion > summary.accordion__header:hover {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      
+      details.accordion[open] > summary.accordion__header {
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .accordion__title {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        color: #e5e5e5;
+        margin: 0;
+      }
+      
+      .accordion__badge {
+        padding: 0.25rem 0.75rem;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 500;
+        color: #9ca3af;
+      }
+      
+      .accordion__content {
+        padding: 1.25rem;
+        background: rgba(0, 0, 0, 0.1);
+      }
+      
+      /* Light theme adjustments */
+      .white-theme details.accordion {
+        background: rgba(0, 0, 0, 0.02);
+        border-color: rgba(0, 0, 0, 0.1);
+      }
+      
+      .white-theme details.accordion:hover {
+        border-color: rgba(0, 0, 0, 0.2);
+      }
+      
+      .white-theme details.accordion[open] {
+        border-color: rgba(16, 185, 129, 0.4);
+      }
+      
+      .white-theme .accordion__title {
+        color: #1a1a1a;
+      }
+      
+      .white-theme .accordion__badge {
+        background: rgba(0, 0, 0, 0.08);
+        color: #4b5563;
+      }
+      
+      .white-theme .accordion__content {
+        background: rgba(0, 0, 0, 0.02);
+      }
+    </style>
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "Enhanced Font Analyzer",
+          "description": "Advanced typography analysis tool that detects font providers (Google Fonts, Adobe Fonts, self-hosted), identifies duplicate fonts, unused weights, missing font-display properties, and font preload opportunities for performance optimization.",
+          "url": "https://sitemechanic.io/en/enhanced-fonts.html",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Any",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Font Provider Detection (Google Fonts, Adobe Fonts, Bunny Fonts)",
+            "Duplicate Font Detection",
+            "Unused Font Weight Analysis",
+            "Font-Display Property Validation",
+            "Font Preload Opportunity Detection",
+            "Self-Hosted vs CDN Font Analysis",
+            "Font Performance Optimization Recommendations"
+          ],
+          "browserRequirements": "Requires JavaScript",
+          "permissions": "No installation required"
+        },
+        {
+          "@type": "Organization",
+          "name": "Site Mechanic",
+          "url": "https://sitemechanic.io",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://sitemechanic.io/images/logo.png"
+          },
+          "description": "Professional website analysis and optimization tools for developers and digital marketers"
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://sitemechanic.io/en/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Font Analyzer",
+              "item": "https://sitemechanic.io/en/enhanced-fonts.html"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
+    <script src="/seo-i18n.js"></script>
+  </head>
+  <body>
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+    
+    <main class="page-shell">
+      <!-- Breadcrumb Navigation -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/dashboard.html" data-i18n="nav.dashboard">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span aria-current="page" data-i18n="fontScanner.title">Fonts & Typography</span>
+      </nav>
+      
+      <!-- Page Header -->
+      <header class="page-header">
+        <h1 class="page-header__title" data-i18n="fontScanner.title">Fonts & Typography</h1>
+        <p class="page-header__subtitle" data-i18n="fontScanner.pageSubtitle">Deep typography analysis with multi-page scanning, font loading performance, and accessibility insights.</p>
+      </header>
+
+      <!-- Input Card -->
+      <section class="card">
+        <div class="card__body">
+          <!-- URL Input Form -->
+          <div class="form-row">
+            <label for="urlInput" class="visually-hidden" data-i18n="fontScanner.enterUrl">Website URL to analyze</label>
+            <input 
+              type="url" 
+              id="urlInput"
+              class="input"
+              placeholder="https://example.com" 
+              data-i18n-placeholder="fontScanner.enterUrl"
+              aria-label="Enter website URL for font analysis"
+              required
+              aria-required="true"
+            />
+            
+            <button id="analyzeButton" class="btn btn-primary" data-i18n="fontScanner.analyzeFonts" aria-label="Start enhanced font analysis">ANALYZE FONTS</button>
+          </div>
+        
+          <!-- Options Panel -->
+          <div class="options-panel" style="margin-top: 1rem;">
+            <label>
+              <input type="checkbox" id="multiPageOption" />
+              <span data-i18n="fontScanner.multiPageScan">Multi-page scan (analyze fonts across multiple pages)</span>
+            </label>
+            <div id="multiPageOptions" style="display: none; margin-left: 24px; margin-top: 8px;">
+              <label>
+                <span data-i18n="fontScanner.maxPages">Max pages:</span>
+                <input type="number" id="maxPages" value="5" min="1" max="20" />
+              </label>
+            </div>
+          </div>
+        
+          <!-- Info Banner -->
+          <p class="helper-text" style="margin-top: 1rem;">
+            <strong data-i18n="fontScanner.enhancedAnalysis">Enhanced Font Analysis:</strong>
+            <span data-i18n="fontScanner.enhancedAnalysisDesc">Detects font providers (Google Fonts, Adobe Fonts, self-hosted), 
+            finds duplicate families, unused weights/styles, missing font-display declarations, and preload opportunities.</span>
+          </p>
+        </div>
+      </section>
+
+      <!-- Loading Container (populated by AnalyzerLoader) -->
+      <div id="loadingContainer"></div>
+
+      <!-- Results Container -->
+      <div id="results" class="results-container hidden" role="region" aria-live="polite">
+        <!-- Results Content (populated by JavaScript) -->
+        <div id="resultsContent"></div>
+      </div>
+
+      <!-- Error Display -->
+      <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="theme-controls.js"></script>
+    <script src="nav-template.js"></script>
+    <script src="analyzer-loader.js"></script>
+
+    <!-- ASCII Background Animation -->
+
+
+    <script src="enhanced-fonts-script.js"></script>
+  </body>
+</html>

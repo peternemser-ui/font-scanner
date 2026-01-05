@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard | Site Mechanic</title>
+  <link rel="stylesheet" href="/components.css">
+  <link rel="stylesheet" href="/ui.css">
+  <style>
+    body {
+      background: #000;
+      color: #fff;
+      font-family: 'Inter', -apple-system, sans-serif;
+    }
+
+    .admin-container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+    }
+
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .admin-title {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #00ff41;
+    }
+
+    .admin-badge {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      transition: all 0.2s ease;
+    }
+
+    .stat-card:hover {
+      background: rgba(255,255,255,0.08);
+      border-color: #00ff41;
+    }
+
+    .stat-label {
+      font-size: 0.875rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+    }
+
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #00ff41;
+    }
+
+    .stat-subtext {
+      font-size: 0.8rem;
+      color: #666;
+      margin-top: 0.5rem;
+    }
+
+    .admin-tabs {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      overflow-x: auto;
+    }
+
+    .admin-tab {
+      padding: 1rem 1.5rem;
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 1rem;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+    }
+
+    .admin-tab:hover {
+      color: #fff;
+    }
+
+    .admin-tab.active {
+      color: #00ff41;
+      border-bottom-color: #00ff41;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .users-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255,255,255,0.02);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .users-table thead {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .users-table th,
+    .users-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .users-table th {
+      font-weight: 600;
+      color: #888;
+      font-size: 0.875rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .users-table tr:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .plan-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .plan-badge.free {
+      background: rgba(156, 163, 175, 0.2);
+      color: #9ca3af;
+    }
+
+    .plan-badge.pro {
+      background: rgba(168, 85, 247, 0.2);
+      color: #a855f7;
+    }
+
+    .admin-badge-small {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      padding: 0.25rem 0.5rem;
+      border-radius: 8px;
+      font-size: 0.65rem;
+      font-weight: 700;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #00ff88, #00cc66);
+      color: #000;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-danger {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.3);
+    }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.1);
+    }
+
+    .testing-tools {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .tool-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .tool-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .tool-description {
+      color: #888;
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
+    }
+
+    .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .form-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+      color: #888;
+    }
+
+    .form-group input,
+    .form-group select {
+      width: 100%;
+      padding: 0.75rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #00ff41;
+    }
+
+    .message {
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+      display: none;
+    }
+
+    .message.success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
+    }
+
+    .message.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+
+    .activity-log {
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    .activity-item {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .activity-action {
+      font-weight: 600;
+      color: #00ff41;
+    }
+
+    .activity-details {
+      font-size: 0.875rem;
+      color: #888;
+      margin-top: 0.25rem;
+    }
+
+    .activity-time {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.25rem;
+    }
+
+    .search-box {
+      margin-bottom: 1.5rem;
+    }
+
+    .search-box input {
+      width: 100%;
+      max-width: 400px;
+      padding: 0.75rem 1rem;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 2rem;
+      color: #888;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <div id="nav-placeholder"></div>
+
+  <main class="page-shell">
+    <div class="admin-container">
+      <!-- Header -->
+      <div class="admin-header">
+        <div>
+          <h1 class="admin-title">Admin Dashboard</h1>
+          <p style="color: #888;">Manage users, monitor system, and run tests</p>
+        </div>
+        <div class="admin-badge">ADMIN ACCESS</div>
+      </div>
+
+      <!-- Stats Overview -->
+      <div class="stats-grid" id="statsGrid">
+        <div class="stat-card">
+          <div class="stat-label">Total Users</div>
+          <div class="stat-value" id="totalUsers">-</div>
+          <div class="stat-subtext"><span id="proUsers">-</span> Pro • <span id="freeUsers">-</span> Free</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Total Scans</div>
+          <div class="stat-value" id="totalScans">-</div>
+          <div class="stat-subtext"><span id="scansToday">-</span> today • <span id="scansWeek">-</span> this week</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Active Subscriptions</div>
+          <div class="stat-value" id="activeSubscriptions">-</div>
+          <div class="stat-subtext">$<span id="mrr">-</span> MRR</div>
+        </div>
+      </div>
+
+      <!-- Messages -->
+      <div id="successMessage" class="message success"></div>
+      <div id="errorMessage" class="message error"></div>
+
+      <!-- Tabs -->
+      <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="users">Users</button>
+        <button class="admin-tab" data-tab="testing">Testing Tools</button>
+        <button class="admin-tab" data-tab="activity">Activity Log</button>
+      </div>
+
+      <!-- Users Tab -->
+      <div id="usersTab" class="tab-content active">
+        <div class="search-box">
+          <input type="text" id="userSearch" placeholder="Search users by email...">
+        </div>
+
+        <div id="usersTableContainer">
+          <table class="users-table">
+            <thead>
+              <tr>
+                <th>Email</th>
+                <th>Plan</th>
+                <th>Scans</th>
+                <th>Created</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="usersTableBody">
+              <tr>
+                <td colspan="5" class="loading">Loading users...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Testing Tools Tab -->
+      <div id="testingTab" class="tab-content">
+        <div class="testing-tools">
+          <!-- Create Test User -->
+          <div class="tool-card">
+            <h3 class="tool-title">Create Test User</h3>
+            <p class="tool-description">Quickly create a test user for testing authentication and features</p>
+
+            <form id="createTestUserForm">
+              <div class="form-group">
+                <label>Email</label>
+                <input type="email" id="testUserEmail" placeholder="test@example.com" required>
+              </div>
+              <div class="form-group">
+                <label>Password</label>
+                <input type="text" id="testUserPassword" value="TestPass123" required>
+              </div>
+              <div class="form-group">
+                <label>Plan</label>
+                <select id="testUserPlan">
+                  <option value="free">Free</option>
+                  <option value="pro">Pro</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary">Create Test User</button>
+            </form>
+          </div>
+
+          <!-- Reset User Usage -->
+          <div class="tool-card">
+            <h3 class="tool-title">Reset Usage Counter</h3>
+            <p class="tool-description">Reset daily scan counter for a specific user (for testing limits)</p>
+
+            <form id="resetUsageForm">
+              <div class="form-group">
+                <label>User Email or ID</label>
+                <input type="text" id="resetUserId" placeholder="user@example.com" required>
+              </div>
+              <button type="submit" class="btn btn-secondary">Reset Usage</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Activity Log Tab -->
+      <div id="activityTab" class="tab-content">
+        <div class="activity-log" id="activityLog">
+          <div class="loading">Loading activity log...</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <script src="/i18n.js"></script>
+  <script src="/language-switcher.js"></script>
+  <script src="/pro-utils.js"></script>
+  <script src="/nav-template.js"></script>
+  <script src="/admin-script.js"></script>
+</body>
+</html>

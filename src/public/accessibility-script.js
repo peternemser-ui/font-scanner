@@ -42,6 +42,11 @@ async function analyzeAccessibility() {
     return;
   }
 
+  // Update button state
+  analyzeButton.disabled = true;
+  const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
+  buttonText.textContent = 'Running scan...';
+
   // Reset UI
   results.classList.add('hidden');
   errorMessage.classList.add('hidden');
@@ -78,7 +83,7 @@ async function analyzeAccessibility() {
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
     </div>
     <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: #00ff41; font-weight: 600; letter-spacing: 0.05em;">
-      Comprehensive analysis in progress...
+      Analyzing accessibility across both platforms...
     </p>
     <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(0, 255, 65, 0.7);">
       This may take 30-60 seconds
@@ -100,7 +105,6 @@ async function analyzeAccessibility() {
       }
       .ascii-art-responsive {
         font-size: clamp(0.35rem, 1.2vw, 0.65rem);
-        animation: color-cycle 4s linear infinite;
         white-space: pre;
         max-width: 100%;
       }
@@ -174,6 +178,11 @@ async function analyzeAccessibility() {
   } catch (error) {
     loader.showError(error.message || 'Failed to analyze accessibility. Please try again.');
     console.error('Accessibility analysis error:', error);
+  } finally {
+    // Reset button state
+    analyzeButton.disabled = false;
+    const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
+    buttonText.textContent = 'Run scan';
   }
 }
 
@@ -338,12 +347,12 @@ function createWCAGLevelsSection(results) {
 
   return `
     <h2>[WCAG_COMPLIANCE_LEVELS]</h2>
-    <div style="padding-left: 1rem;">
+    <div class="wcag-section-container" style="padding-left: 1rem;">
       <p style="color: #ffd700; margin-bottom: 1.5rem;">>> Understanding WCAG 2.1 Conformance Levels</p>
       
-      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+      <div class="wcag-levels-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
         <!-- Level A Card -->
-        <div style="
+        <div class="wcag-level-card" style="
           background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,215,0,0.05) 100%);
           border: 2px solid ${currentLevel === 'A' ? '#ffd700' : 'rgba(255,215,0,0.3)'};
           border-radius: 12px;
@@ -397,7 +406,7 @@ function createWCAGLevelsSection(results) {
         </div>
 
         <!-- Level AA Card -->
-        <div style="
+        <div class="wcag-level-card" style="
           background: linear-gradient(135deg, rgba(0,255,65,0.15) 0%, rgba(0,255,65,0.05) 100%);
           border: 2px solid ${currentLevel === 'AA' ? '#00ff41' : 'rgba(0,255,65,0.3)'};
           border-radius: 12px;
@@ -452,7 +461,7 @@ function createWCAGLevelsSection(results) {
         </div>
 
         <!-- Level AAA Card -->
-        <div style="
+        <div class="wcag-level-card" style="
           background: linear-gradient(135deg, rgba(0,217,255,0.15) 0%, rgba(0,217,255,0.05) 100%);
           border: 2px solid ${currentLevel === 'AAA' ? '#00d9ff' : 'rgba(0,217,255,0.3)'};
           border-radius: 12px;
@@ -490,7 +499,7 @@ function createWCAGLevelsSection(results) {
             ">Highest Accessibility</span>
           </div>
           <p style="color: #c0c0c0; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
-            Most comprehensive level of accessibility. Provides the best possible experience for all users, including those with severe disabilities.
+            Highest conformance level. Addresses all accessibility requirements. Required for government and healthcare sites, recommended for public-facing applications.
           </p>
           <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
             <div style="color: #808080; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">Key Requirements:</div>
@@ -508,7 +517,7 @@ function createWCAGLevelsSection(results) {
       </div>
 
       <!-- Current Level Status -->
-      <div style="
+      <div class="wcag-status-box" style="
         background: linear-gradient(135deg, ${currentLevel === 'AAA' ? 'rgba(0,217,255,0.1)' : currentLevel === 'AA' ? 'rgba(0,255,65,0.1)' : currentLevel === 'A' ? 'rgba(255,215,0,0.1)' : 'rgba(255,68,68,0.1)'} 0%, rgba(0,0,0,0.05) 100%);
         border: 2px solid ${currentLevel === 'AAA' ? '#00d9ff' : currentLevel === 'AA' ? '#00ff41' : currentLevel === 'A' ? '#ffd700' : '#ff4444'};
         border-radius: 12px;
@@ -527,9 +536,9 @@ function createWCAGLevelsSection(results) {
         </p>
       </div>
 
-      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(138,43,226,0.05); border-radius: 8px; border-left: 3px solid #bb86fc;">
+      <div class="wcag-note-box" style="margin-top: 1.5rem; padding: 1rem; background: rgba(138,43,226,0.05); border-radius: 8px; border-left: 3px solid #bb86fc;">
         <p style="color: #bb86fc; font-size: 0.9rem; margin: 0; line-height: 1.6;">
-          <strong>ⓘ Note:</strong> Most organizations aim for Level AA compliance as it balances comprehensive accessibility with practical implementation. 
+          <strong>ⓘ Note:</strong> Level AA is the industry standard—it covers 90% of real user needs without excessive implementation cost. 
           Level AAA is not always feasible for all content types.
         </p>
       </div>
@@ -553,7 +562,7 @@ function createDesktopMobileComparison(results) {
   return `
     <h2>[DESKTOP_VS_MOBILE_COMPARISON]</h2>
     <div style="padding-left: 1rem;">
-      <p style="color: #bb86fc; margin-bottom: 1.5rem;">>> Comprehensive accessibility analysis across both platforms</p>
+      <p style="color: #bb86fc; margin-bottom: 1.5rem;">>> Analyzed both desktop and mobile for accessibility issues</p>
       
       ${anyFailed ? `
         <div style="

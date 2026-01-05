@@ -114,18 +114,36 @@ class FontAnalyzer {
               }
             });
             
-            // Store detailed font metrics for first few elements
-            if (index < 20 && element.textContent && element.textContent.trim()) {
-              fontMetrics.push({
-                fontFamily: individualFonts[0] || fontFamily, // Use first font as primary
-                fontSize: styles.fontSize,
-                fontWeight: styles.fontWeight,
-                fontStyle: styles.fontStyle,
-                fontDisplay: styles.fontDisplay,
-                lineHeight: styles.lineHeight,
-                element: element.tagName.toLowerCase(),
-                textContent: element.textContent.trim().substring(0, 100),
-              });
+            // Store detailed font metrics for visual content elements only
+            const tagName = element.tagName.toLowerCase();
+            const visualElements = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'a', 'li', 'td', 'th', 'label', 'button', 'input', 'textarea', 'blockquote', 'figcaption', 'strong', 'em', 'b', 'i', 'small', 'mark', 'cite', 'q', 'code', 'pre', 'nav', 'article', 'section', 'aside', 'footer', 'header', 'main', 'div'];
+            const excludedElements = ['html', 'head', 'body', 'style', 'script', 'link', 'meta', 'title', 'noscript', 'template', 'svg', 'path', 'g', 'defs', 'symbol', 'use', 'clippath', 'mask', 'iframe', 'object', 'embed', 'param', 'source', 'track', 'wbr', 'br', 'hr'];
+            
+            const hasVisibleText = element.textContent && element.textContent.trim().length > 0;
+            const isVisualElement = visualElements.includes(tagName) || (!excludedElements.includes(tagName) && hasVisibleText);
+            
+            if (fontMetrics.length < 30 && isVisualElement && hasVisibleText) {
+              // Get direct text content only (not from children)
+              const directText = Array.from(element.childNodes)
+                .filter(node => node.nodeType === Node.TEXT_NODE)
+                .map(node => node.textContent.trim())
+                .join(' ')
+                .trim();
+              
+              if (directText.length > 0 || ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'li', 'a', 'button', 'label'].includes(tagName)) {
+                fontMetrics.push({
+                  fontFamily: individualFonts[0] || fontFamily,
+                  fontSize: styles.fontSize,
+                  fontWeight: styles.fontWeight,
+                  fontStyle: styles.fontStyle,
+                  fontDisplay: styles.fontDisplay,
+                  lineHeight: styles.lineHeight,
+                  letterSpacing: styles.letterSpacing,
+                  element: tagName,
+                  textContent: (directText || element.textContent.trim()).substring(0, 80),
+                  className: element.className ? element.className.toString().substring(0, 50) : '',
+                });
+              }
             }
           }
         });
@@ -350,6 +368,24 @@ class FontAnalyzer {
         logger.info(`🎨 Icon fonts detected: ${iconFonts.map(f => f.fontFamily).join(', ')}`);
       }
 
+      // Run best-in-class analysis
+      logger.info('Running advanced font analysis...');
+      const formatAnalysis = this.analyzeFontFormats(fontData.fontSources, fontData.fontFaces);
+      const fontDisplayAnalysis = this.analyzeFontDisplay(fontData.fontFaces);
+      const accessibilityAnalysis = this.analyzeTypographyAccessibility(fontData.fontMetrics);
+      const fallbackAnalysis = this.analyzeFallbackStacks(fontData.fontMetrics);
+      const variableFontAnalysis = await this.analyzeVariableFonts(page);
+      const clsRiskAnalysis = this.analyzeCLSRisk(fontData.fontFaces, fontData.fontMetrics);
+      
+      logger.info('Advanced analysis complete:', {
+        formats: formatAnalysis.summary,
+        fontDisplay: fontDisplayAnalysis.summary,
+        accessibility: accessibilityAnalysis.summary,
+        fallbacks: fallbackAnalysis.summary,
+        variableFonts: variableFontAnalysis.hasVariableFonts,
+        clsRisk: clsRiskAnalysis.level
+      });
+
       return {
         totalFonts: processedFonts.length,
         fonts: processedFonts,
@@ -358,6 +394,15 @@ class FontAnalyzer {
         fontMetrics: fontData.fontMetrics,
         categorizedFonts: categorizedFonts,
         fontLoading: fontLoadingData,
+        // Best-in-class analysis results
+        advancedAnalysis: {
+          formats: formatAnalysis,
+          fontDisplay: fontDisplayAnalysis,
+          accessibility: accessibilityAnalysis,
+          fallbackStacks: fallbackAnalysis,
+          variableFonts: variableFontAnalysis,
+          clsRisk: clsRiskAnalysis
+        }
       };
 
     } catch (error) {
@@ -693,6 +738,479 @@ class FontAnalyzer {
     }
 
     return false;
+  }
+
+  // ============================================
+  // BEST-IN-CLASS ANALYSIS METHODS
+  // ============================================
+
+  /**
+   * Analyze font formats (WOFF2, WOFF, TTF, etc.)
+   */
+  analyzeFontFormats(fontSources, fontFaces) {
+    const formats = {
+      woff2: [],
+      woff: [],
+      ttf: [],
+      otf: [],
+      eot: [],
+      svg: [],
+      unknown: []
+    };
+
+    const allSources = [...fontSources];
+    
+    // Also extract from fontFaces src
+    fontFaces.forEach(face => {
+      if (face.src) {
+        const urlMatches = face.src.match(/url\(['"]?([^'")\s]+)['"]?\)/g);
+        if (urlMatches) {
+          urlMatches.forEach(match => {
+            const url = match.match(/url\(['"]?([^'")\s]+)['"]?\)/)?.[1];
+            if (url) allSources.push(url);
+          });
+        }
+      }
+    });
+
+    allSources.forEach(src => {
+      const srcLower = src.toLowerCase();
+      if (srcLower.includes('.woff2') || srcLower.includes('format("woff2")') || srcLower.includes("format('woff2')")) {
+        formats.woff2.push(src);
+      } else if (srcLower.includes('.woff') || srcLower.includes('format("woff")') || srcLower.includes("format('woff')")) {
+        formats.woff.push(src);
+      } else if (srcLower.includes('.ttf') || srcLower.includes('format("truetype")')) {
+        formats.ttf.push(src);
+      } else if (srcLower.includes('.otf') || srcLower.includes('format("opentype")')) {
+        formats.otf.push(src);
+      } else if (srcLower.includes('.eot')) {
+        formats.eot.push(src);
+      } else if (srcLower.includes('.svg')) {
+        formats.svg.push(src);
+      } else if (srcLower.includes('fonts.googleapis.com') || srcLower.includes('fonts.gstatic.com')) {
+        // Google Fonts serve WOFF2 by default to modern browsers
+        formats.woff2.push(src);
+      }
+    });
+
+    const total = Object.values(formats).reduce((sum, arr) => sum + arr.length, 0);
+    const woff2Percentage = total > 0 ? Math.round((formats.woff2.length / total) * 100) : 0;
+    
+    return {
+      formats,
+      summary: {
+        total,
+        woff2Count: formats.woff2.length,
+        woff2Percentage,
+        hasModernFormats: formats.woff2.length > 0,
+        hasLegacyFormats: formats.eot.length > 0 || formats.svg.length > 0,
+        recommendation: woff2Percentage >= 80 ? 'excellent' : woff2Percentage >= 50 ? 'good' : 'needs-improvement'
+      }
+    };
+  }
+
+  /**
+   * Analyze font-display property usage
+   */
+  analyzeFontDisplay(fontFaces) {
+    const displayValues = {
+      swap: [],
+      block: [],
+      fallback: [],
+      optional: [],
+      auto: [],
+      notSet: []
+    };
+
+    fontFaces.forEach(face => {
+      const display = (face.fontDisplay || '').toLowerCase().trim();
+      const fontName = face.fontFamily || 'Unknown';
+      
+      if (display === 'swap') {
+        displayValues.swap.push(fontName);
+      } else if (display === 'block') {
+        displayValues.block.push(fontName);
+      } else if (display === 'fallback') {
+        displayValues.fallback.push(fontName);
+      } else if (display === 'optional') {
+        displayValues.optional.push(fontName);
+      } else if (display === 'auto') {
+        displayValues.auto.push(fontName);
+      } else {
+        displayValues.notSet.push(fontName);
+      }
+    });
+
+    const total = fontFaces.length;
+    const optimalCount = displayValues.swap.length + displayValues.optional.length + displayValues.fallback.length;
+    const problematicCount = displayValues.block.length + displayValues.auto.length + displayValues.notSet.length;
+    
+    return {
+      values: displayValues,
+      summary: {
+        total,
+        optimalCount,
+        problematicCount,
+        score: total > 0 ? Math.round((optimalCount / total) * 100) : 100,
+        recommendation: problematicCount === 0 ? 'excellent' : problematicCount <= 2 ? 'good' : 'needs-improvement'
+      }
+    };
+  }
+
+  /**
+   * Analyze typography accessibility
+   */
+  analyzeTypographyAccessibility(fontMetrics) {
+    const issues = [];
+    const passed = [];
+    
+    // Check body text sizes
+    const textElements = fontMetrics.filter(m => 
+      ['p', 'span', 'div', 'li', 'td', 'th', 'label', 'a'].includes(m.element?.toLowerCase())
+    );
+    
+    const headingElements = fontMetrics.filter(m => 
+      ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(m.element?.toLowerCase())
+    );
+
+    // Body text minimum size check (16px)
+    const smallTextElements = textElements.filter(m => {
+      const size = parseFloat(m.fontSize);
+      return size > 0 && size < 16;
+    });
+    
+    if (smallTextElements.length > 0) {
+      issues.push({
+        type: 'warning',
+        title: 'Small body text detected',
+        detail: `${smallTextElements.length} element(s) have text smaller than 16px. Consider increasing for better readability.`,
+        elements: smallTextElements.slice(0, 3).map(e => `<${e.element}>: ${e.fontSize}`)
+      });
+    } else if (textElements.length > 0) {
+      passed.push({
+        type: 'success',
+        title: 'Body text size is adequate',
+        detail: 'All body text is 16px or larger'
+      });
+    }
+
+    // Line-height check (1.5+ for body text)
+    const poorLineHeight = textElements.filter(m => {
+      if (!m.lineHeight || m.lineHeight === 'normal') return false;
+      const fontSize = parseFloat(m.fontSize);
+      const lineHeight = parseFloat(m.lineHeight);
+      if (fontSize > 0 && lineHeight > 0) {
+        const ratio = lineHeight / fontSize;
+        return ratio < 1.4;
+      }
+      return false;
+    });
+
+    if (poorLineHeight.length > 0) {
+      issues.push({
+        type: 'warning',
+        title: 'Tight line-height detected',
+        detail: `${poorLineHeight.length} element(s) have line-height below 1.4. Recommended: 1.5+ for body text.`,
+        elements: poorLineHeight.slice(0, 3).map(e => `<${e.element}>: ${e.lineHeight}`)
+      });
+    } else if (textElements.length > 0) {
+      passed.push({
+        type: 'success',
+        title: 'Line-height is accessible',
+        detail: 'Line-height ratios are 1.4 or higher'
+      });
+    }
+
+    // Heading hierarchy check
+    if (headingElements.length > 0) {
+      const headingSizes = {};
+      headingElements.forEach(h => {
+        const tag = h.element?.toLowerCase();
+        if (!headingSizes[tag]) {
+          headingSizes[tag] = parseFloat(h.fontSize);
+        }
+      });
+      
+      // Check if heading sizes follow hierarchy (h1 > h2 > h3, etc.)
+      const sortedHeadings = Object.entries(headingSizes).sort((a, b) => {
+        const numA = parseInt(a[0].replace('h', ''));
+        const numB = parseInt(b[0].replace('h', ''));
+        return numA - numB;
+      });
+      
+      let hierarchyBroken = false;
+      for (let i = 1; i < sortedHeadings.length; i++) {
+        if (sortedHeadings[i][1] >= sortedHeadings[i-1][1]) {
+          hierarchyBroken = true;
+          break;
+        }
+      }
+
+      if (hierarchyBroken) {
+        issues.push({
+          type: 'info',
+          title: 'Heading hierarchy may need review',
+          detail: 'Heading sizes don\'t follow a consistent h1>h2>h3 pattern',
+          elements: sortedHeadings.map(([tag, size]) => `${tag}: ${size}px`)
+        });
+      } else {
+        passed.push({
+          type: 'success',
+          title: 'Heading hierarchy is correct',
+          detail: 'Font sizes decrease appropriately from h1 to h6'
+        });
+      }
+    }
+
+    // Font weight variety check
+    const weights = new Set(fontMetrics.map(m => m.fontWeight).filter(Boolean));
+    if (weights.size >= 3) {
+      passed.push({
+        type: 'success',
+        title: 'Good font weight variety',
+        detail: `${weights.size} different font weights used for visual hierarchy`
+      });
+    }
+
+    const score = Math.max(0, 100 - (issues.filter(i => i.type === 'warning').length * 15) - (issues.filter(i => i.type === 'error').length * 25));
+    
+    return {
+      issues,
+      passed,
+      score,
+      summary: {
+        issueCount: issues.length,
+        passedCount: passed.length,
+        recommendation: score >= 90 ? 'excellent' : score >= 70 ? 'good' : 'needs-improvement'
+      }
+    };
+  }
+
+  /**
+   * Analyze fallback font stack quality
+   */
+  analyzeFallbackStacks(fontMetrics) {
+    const stacks = [];
+    const seenStacks = new Set();
+
+    fontMetrics.forEach(m => {
+      if (!m.fontFamily || seenStacks.has(m.fontFamily)) return;
+      seenStacks.add(m.fontFamily);
+
+      const fonts = m.fontFamily.split(',').map(f => f.trim().replace(/['"]/g, ''));
+      
+      if (fonts.length <= 1) {
+        stacks.push({
+          stack: m.fontFamily,
+          fonts,
+          quality: 'poor',
+          issue: 'No fallback fonts defined',
+          recommendation: 'Add system font fallbacks'
+        });
+      } else {
+        const hasGenericFallback = fonts.some(f => 
+          ['sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 'system-ui', '-apple-system'].includes(f.toLowerCase())
+        );
+        
+        const hasSystemFallback = fonts.some(f => 
+          ['Arial', 'Helvetica', 'Georgia', 'Times New Roman', 'Verdana', 'Tahoma'].some(sys => 
+            f.toLowerCase().includes(sys.toLowerCase())
+          )
+        );
+
+        let quality = 'poor';
+        let issue = '';
+        let recommendation = '';
+
+        if (hasGenericFallback && hasSystemFallback && fonts.length >= 3) {
+          quality = 'excellent';
+          issue = 'Well-defined fallback stack';
+          recommendation = 'No changes needed';
+        } else if (hasGenericFallback) {
+          quality = 'good';
+          issue = 'Has generic fallback';
+          recommendation = 'Consider adding intermediate system fonts';
+        } else {
+          quality = 'poor';
+          issue = 'Missing generic fallback';
+          recommendation = 'Add sans-serif, serif, or monospace at the end';
+        }
+
+        stacks.push({
+          stack: m.fontFamily,
+          fonts,
+          quality,
+          issue,
+          recommendation
+        });
+      }
+    });
+
+    const excellent = stacks.filter(s => s.quality === 'excellent').length;
+    const good = stacks.filter(s => s.quality === 'good').length;
+    const poor = stacks.filter(s => s.quality === 'poor').length;
+    const total = stacks.length;
+    
+    const score = total > 0 ? Math.round(((excellent * 100 + good * 70 + poor * 30) / total)) : 100;
+
+    return {
+      stacks: stacks.slice(0, 10), // Limit to 10
+      summary: {
+        total,
+        excellent,
+        good,
+        poor,
+        score,
+        recommendation: score >= 80 ? 'excellent' : score >= 60 ? 'good' : 'needs-improvement'
+      }
+    };
+  }
+
+  /**
+   * Detect variable fonts
+   */
+  async analyzeVariableFonts(page) {
+    try {
+      return await page.evaluate(() => {
+        const variableFonts = [];
+        const regularFonts = [];
+        
+        // Check CSS for font-variation-settings
+        const allElements = document.querySelectorAll('*');
+        const checkedFamilies = new Set();
+        
+        Array.from(allElements).slice(0, 100).forEach(el => {
+          const styles = window.getComputedStyle(el);
+          const fontFamily = styles.fontFamily?.split(',')[0]?.replace(/['"]/g, '').trim();
+          
+          if (fontFamily && !checkedFamilies.has(fontFamily)) {
+            checkedFamilies.add(fontFamily);
+            
+            const variationSettings = styles.fontVariationSettings;
+            const fontStretch = styles.fontStretch;
+            const fontWeight = styles.fontWeight;
+            
+            // Variable fonts often have font-variation-settings or non-keyword font-stretch
+            const hasVariationSettings = variationSettings && variationSettings !== 'normal';
+            const hasVariableWeight = fontWeight && !['normal', 'bold', '400', '700'].includes(fontWeight);
+            
+            if (hasVariationSettings) {
+              variableFonts.push({
+                fontFamily,
+                variationSettings,
+                axes: variationSettings
+              });
+            } else {
+              regularFonts.push(fontFamily);
+            }
+          }
+        });
+
+        // Check @font-face for variable font indicators
+        try {
+          const styleSheets = Array.from(document.styleSheets);
+          styleSheets.forEach(sheet => {
+            try {
+              const rules = Array.from(sheet.cssRules || []);
+              rules.forEach(rule => {
+                if (rule.type === CSSRule.FONT_FACE_RULE) {
+                  const fontFamily = rule.style.fontFamily?.replace(/['"]/g, '');
+                  const src = rule.style.src || '';
+                  
+                  // Variable fonts often have format("woff2-variations") or weight ranges like "100 900"
+                  const isVariable = src.includes('variations') || 
+                                    src.includes('variable') ||
+                                    (rule.style.fontWeight && rule.style.fontWeight.includes(' '));
+                  
+                  if (isVariable && fontFamily && !variableFonts.find(v => v.fontFamily === fontFamily)) {
+                    variableFonts.push({
+                      fontFamily,
+                      variationSettings: 'Variable font detected from @font-face',
+                      axes: rule.style.fontWeight || 'wght'
+                    });
+                  }
+                }
+              });
+            } catch (e) {
+              // Cross-origin access may fail
+            }
+          });
+        } catch (e) {
+          // Ignore stylesheet access errors
+        }
+
+        return {
+          variableFonts,
+          regularFonts: regularFonts.filter(f => !variableFonts.find(v => v.fontFamily === f)),
+          hasVariableFonts: variableFonts.length > 0,
+          potentialSavings: variableFonts.length > 0 
+            ? 'Variable fonts can replace multiple static font files'
+            : regularFonts.length > 3 
+              ? 'Consider variable fonts to reduce HTTP requests'
+              : null
+        };
+      });
+    } catch (error) {
+      logger.warn('Variable font analysis failed:', error.message);
+      return {
+        variableFonts: [],
+        regularFonts: [],
+        hasVariableFonts: false,
+        error: error.message
+      };
+    }
+  }
+
+  /**
+   * Estimate CLS (Cumulative Layout Shift) risk from fonts
+   */
+  analyzeCLSRisk(fontFaces, fontMetrics) {
+    let riskScore = 0;
+    const risks = [];
+
+    // Check font-display values
+    const blockingFonts = fontFaces.filter(f => 
+      !f.fontDisplay || f.fontDisplay === 'auto' || f.fontDisplay === 'block'
+    );
+    
+    if (blockingFonts.length > 0) {
+      riskScore += blockingFonts.length * 15;
+      risks.push({
+        type: 'high',
+        title: 'Blocking font-display values',
+        detail: `${blockingFonts.length} font(s) use 'block' or 'auto' which can cause FOIT`,
+        fonts: blockingFonts.map(f => f.fontFamily).slice(0, 5)
+      });
+    }
+
+    // Check for web fonts without fallbacks
+    const noFallbackStacks = fontMetrics.filter(m => {
+      const fonts = (m.fontFamily || '').split(',');
+      return fonts.length === 1 && !['sans-serif', 'serif', 'monospace'].includes(fonts[0]?.trim().toLowerCase());
+    });
+
+    if (noFallbackStacks.length > 0) {
+      riskScore += noFallbackStacks.length * 10;
+      risks.push({
+        type: 'medium',
+        title: 'Missing fallback fonts',
+        detail: `${noFallbackStacks.length} element(s) have no fallback fonts defined`,
+        fonts: [...new Set(noFallbackStacks.map(m => m.fontFamily))].slice(0, 5)
+      });
+    }
+
+    // Cap at 100
+    riskScore = Math.min(riskScore, 100);
+    
+    return {
+      risks,
+      score: 100 - riskScore,
+      level: riskScore >= 50 ? 'high' : riskScore >= 25 ? 'medium' : 'low',
+      summary: {
+        riskCount: risks.length,
+        recommendation: riskScore === 0 ? 'excellent' : riskScore < 30 ? 'good' : 'needs-improvement'
+      }
+    };
   }
 }
 

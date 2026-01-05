@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnostic Results - Prioritized Issues | Site Mechanic</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="spacing-fixes.css">
+    <style>
+        .progress-container {
+            max-width: 800px;
+            margin: 3rem auto;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .scan-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .scan-url {
+            color: #00ff41;
+            font-size: 1.1rem;
+            word-break: break-all;
+        }
+
+        .progress-bar-container {
+            width: 100%;
+            height: 40px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            position: relative;
+            margin: 2rem 0;
+            border: 2px solid rgba(0, 255, 65, 0.2);
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #00ff41 0%, #00cc33 100%);
+            border-radius: 20px;
+            transition: width 0.5s ease;
+            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-weight: bold;
+            font-size: 1.1rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            z-index: 10;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .status-queued {
+            background: rgba(255, 140, 0, 0.2);
+            border: 2px solid rgba(255, 140, 0, 0.4);
+            color: #ff8c00;
+        }
+
+        .status-running {
+            background: rgba(0, 255, 65, 0.2);
+            border: 2px solid rgba(0, 255, 65, 0.4);
+            color: #00ff41;
+            animation: pulse 2s infinite;
+        }
+
+        .status-done {
+            background: rgba(0, 255, 65, 0.2);
+            border: 2px solid rgba(0, 255, 65, 0.4);
+            color: #00ff41;
+        }
+
+        .status-failed {
+            background: rgba(255, 75, 75, 0.2);
+            border: 2px solid rgba(255, 75, 75, 0.4);
+            color: #ff4444;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .scan-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+
+        .info-card {
+            background: rgba(255, 255, 255, 0.03);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .info-value {
+            color: var(--text-primary);
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .error-message {
+            background: rgba(255, 75, 75, 0.1);
+            border-left: 4px solid #ff4444;
+            padding: 1rem;
+            border-radius: 4px;
+            color: #ff6b6b;
+            margin: 1rem 0;
+        }
+
+        .results-section {
+            margin-top: 3rem;
+        }
+
+        .result-tabs {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 2rem;
+            overflow-x: auto;
+        }
+
+        .tab-button {
+            padding: 0.75rem 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            white-space: nowrap;
+        }
+
+        .tab-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-button.active {
+            background: rgba(0, 255, 65, 0.2);
+            border-color: rgba(0, 255, 65, 0.4);
+            color: #00ff41;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: center;
+        }
+
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            border: 2px solid;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: rgba(0, 255, 65, 0.2);
+            border-color: rgba(0, 255, 65, 0.4);
+            color: #00ff41;
+        }
+
+        .btn-primary:hover {
+            background: rgba(0, 255, 65, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        @media (max-width: 768px) {
+            .progress-container {
+                padding: 1rem;
+                margin: 1rem;
+            }
+
+            .scan-info {
+                grid-template-columns: 1fr;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <div id="nav-placeholder"></div>
+
+    <div class="container">
+        <!-- Workflow Stage Indicator -->
+        <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin: 1.5rem 0;">
+          <span class="workflow-stage" id="stagesScan" style="padding: 0.5rem 1rem; border-radius: 20px; background: var(--bg-secondary, #1a1a1a); color: var(--text-muted, #888); font-size: 0.85rem; border: 1px solid var(--border-color, #333);">1. Scan ✓</span>
+          <span class="workflow-stage" id="stagesDiagnose" style="padding: 0.5rem 1rem; border-radius: 20px; background: rgba(0, 255, 65, 0.15); color: #00ff41; font-size: 0.85rem; border: 2px solid #00ff41; font-weight: 600;">2. Diagnose</span>
+          <span class="workflow-stage" id="stagesPrioritize" style="padding: 0.5rem 1rem; border-radius: 20px; background: var(--bg-secondary, #1a1a1a); color: var(--text-muted, #888); font-size: 0.85rem; border: 1px solid var(--border-color, #333);">3. Prioritize</span>
+          <span class="workflow-stage" id="stagesExport" style="padding: 0.5rem 1rem; border-radius: 20px; background: var(--bg-secondary, #1a1a1a); color: var(--text-muted, #888); font-size: 0.85rem; border: 1px solid var(--border-color, #333);">4. Export</span>
+          <span class="workflow-stage" id="stagesImprove" style="padding: 0.5rem 1rem; border-radius: 20px; background: var(--bg-secondary, #1a1a1a); color: var(--text-muted, #888); font-size: 0.85rem; border: 1px solid var(--border-color, #333);">5. Improve</span>
+        </div>
+
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="/">Home</a>
+            <span class="breadcrumb-separator">›</span>
+            <span class="breadcrumb-current">Diagnostic Results</span>
+        </nav>
+
+        <div class="progress-container">
+            <div class="scan-header">
+                <h1>Diagnostic Progress</h1>
+                <p class="scan-url" id="scanUrl">Loading...</p>
+                <div style="margin-top: 1rem;">
+                    <span class="status-badge" id="statusBadge">Queued</span>
+                </div>
+            </div>
+
+            <div class="progress-bar-container">
+                <div class="progress-bar" id="progressBar" style="width: 0%"></div>
+                <div class="progress-text" id="progressText">0%</div>
+            </div>
+
+            <div class="scan-info">
+                <div class="info-card">
+                    <div class="info-label">Inspection ID</div>
+                    <div class="info-value" id="scanId" style="font-size: 0.9rem; word-break: break-all;">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Pages Inspected</div>
+                    <div class="info-value" id="pagesCrawled">0</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Time Elapsed</div>
+                    <div class="info-value" id="timeElapsed">-</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-label">Created At</div>
+                    <div class="info-value" id="createdAt" style="font-size: 0.8rem;">-</div>
+                </div>
+            </div>
+
+            <div id="errorContainer" style="display: none;">
+                <div class="error-message" id="errorMessage"></div>
+            </div>
+
+            <!-- Stage 2: Diagnose - Results Section (hidden until scan completes) -->
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2 style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span style="opacity: 0.6; font-weight: normal; font-size: 0.9em;">Stage 2:</span>
+                    Diagnostic Results
+                </h2>
+                <div class="result-tabs" id="resultTabs"></div>
+                <div id="resultContent"></div>
+                
+                <!-- Stage 3: Prioritize -->
+                <div id="prioritySection" style="margin-top: 2rem;">
+                    <h2 style="display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="opacity: 0.6; font-weight: normal; font-size: 0.9em;">Stage 3:</span>
+                        Prioritized Issues
+                    </h2>
+                    <div id="priorityContent" style="background: rgba(255, 165, 0, 0.08); border-left: 4px solid #ffa500; padding: 1rem; border-radius: 4px;">
+                        <!-- Priority issues will be inserted here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stage 4: Export - Action Buttons -->
+            <div class="action-buttons" style="flex-direction: column; gap: 1rem;">
+                <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+                    <button class="btn btn-primary" id="exportPdfBtn" style="display: none;">
+                        <span style="display: flex; align-items: center; gap: 0.5rem;">📄 Export PDF Report</span>
+                    </button>
+                    <button class="btn btn-secondary" id="exportCsvBtn" style="display: none;">📊 Export CSV</button>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: center;">
+                    <a href="/" class="btn btn-secondary">← Back to Dashboard</a>
+                    <button class="btn btn-secondary" id="newScanBtn">🔍 New Scan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ASCII Background Animation -->
+
+    <script src="nav-template.js"></script>
+
+    <script>
+        // Get inspection ID from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const scanId = urlParams.get('scanId');
+
+        if (!scanId) {
+            document.querySelector('.progress-container').innerHTML = `
+                <div class="error-message">
+                    <h2>No Inspection ID Provided</h2>
+                    <p>Please provide a valid inspection ID in the URL.</p>
+                    <a href="/" class="btn btn-primary">← Back to Home</a>
+                </div>
+            `;
+        } else {
+            initializeInspectionMonitoring();
+        }
+
+        let pollInterval = null;
+        let startTime = null;
+
+        async function initializeInspectionMonitoring() {
+            document.getElementById('scanId').textContent = scanId;
+
+            // Start polling
+            pollInterval = setInterval(fetchScanStatus, 2000);
+            fetchScanStatus(); // Initial fetch
+
+            // Update elapsed time
+            setInterval(updateElapsedTime, 1000);
+        }
+
+        async function fetchScanStatus() {
+            try {
+                const response = await fetch(`/api/scans/${scanId}`);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to fetch scan status');
+                }
+
+                updateUI(data);
+
+                // Stop polling if scan is complete or failed
+                if (data.status === 'done' || data.status === 'failed') {
+                    clearInterval(pollInterval);
+                    window.asciiBackground?.stop();
+                }
+
+            } catch (error) {
+                console.error('Error fetching scan status:', error);
+                showError('Failed to fetch scan status: ' + error.message);
+            }
+        }
+
+        function updateUI(data) {
+            // Update URL
+            document.getElementById('scanUrl').textContent = data.url;
+
+            // Update status badge
+            const statusBadge = document.getElementById('statusBadge');
+            statusBadge.textContent = data.status.toUpperCase();
+            statusBadge.className = `status-badge status-${data.status}`;
+
+            // Update progress bar
+            const progress = data.progress || 0;
+            document.getElementById('progressBar').style.width = `${progress}%`;
+            document.getElementById('progressText').textContent = `${progress}%`;
+
+            // Update info cards
+            document.getElementById('pagesCrawled').textContent = data.pagesCrawled || 0;
+
+            if (data.createdAt) {
+                document.getElementById('createdAt').textContent = new Date(data.createdAt).toLocaleString();
+                if (!startTime) {
+                    startTime = new Date(data.createdAt);
+                }
+            }
+
+            // Update workflow stage indicator based on status
+            updateWorkflowStage(data.status);
+
+            // Handle completion
+            if (data.status === 'done' && data.results) {
+                showResults(data.results);
+                document.getElementById('exportPdfBtn').style.display = 'inline-block';
+                document.getElementById('exportCsvBtn').style.display = 'inline-block';
+            }
+
+            // Handle failure
+            if (data.status === 'failed') {
+                showError(data.error || 'Scan failed for unknown reason');
+            }
+        }
+
+        function updateElapsedTime() {
+            if (!startTime) return;
+
+            const elapsed = Math.floor((new Date() - startTime) / 1000);
+            const minutes = Math.floor(elapsed / 60);
+            const seconds = elapsed % 60;
+
+            document.getElementById('timeElapsed').textContent =
+                `${minutes}m ${seconds}s`;
+        }
+
+        function showError(message) {
+            const errorContainer = document.getElementById('errorContainer');
+            const errorMessage = document.getElementById('errorMessage');
+
+            errorMessage.innerHTML = `<strong>Error:</strong> ${message}`;
+            errorContainer.style.display = 'block';
+        }
+
+        function showResults(results) {
+            const resultsSection = document.getElementById('resultsSection');
+            const resultTabs = document.getElementById('resultTabs');
+            const resultContent = document.getElementById('resultContent');
+
+            resultsSection.style.display = 'block';
+
+            // Create tabs for each analyzer type
+            const analyzers = Object.keys(results).filter(key => key !== 'scanId' && key !== 'summary' && key !== 'pages');
+
+            if (analyzers.length === 0) {
+                resultContent.innerHTML = '<p>No analyzer results available.</p>';
+                return;
+            }
+
+            // Create tabs
+            analyzers.forEach((analyzer, index) => {
+                const tab = document.createElement('button');
+                tab.className = `tab-button ${index === 0 ? 'active' : ''}`;
+                tab.textContent = analyzer.toUpperCase();
+                tab.onclick = () => switchTab(analyzer);
+                resultTabs.appendChild(tab);
+            });
+
+            // Show first analyzer results
+            switchTab(analyzers[0]);
+        }
+
+        function switchTab(analyzer) {
+            // Update active tab
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent === analyzer.toUpperCase()) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Fetch and display results for this analyzer
+            fetch(`/api/scans/${scanId}`)
+                .then(res => res.json())
+                .then(data => {
+                    const resultContent = document.getElementById('resultContent');
+                    const analyzerResults = data.results[analyzer];
+
+                    if (!analyzerResults) {
+                        resultContent.innerHTML = '<p>No results available for this analyzer.</p>';
+                        return;
+                    }
+
+                    // Display results as formatted JSON for now
+                    // TODO: Create specialized result renderers for each analyzer type
+                    resultContent.innerHTML = `
+                        <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; overflow-x: auto;">
+                            ${JSON.stringify(analyzerResults, null, 2)}
+                        </pre>
+                    `;
+                });
+        }
+
+        // Export PDF button
+        document.getElementById('exportPdfBtn')?.addEventListener('click', async () => {
+            try {
+                const response = await fetch(`/api/scans/${scanId}/pdf`);
+                if (!response.ok) {
+                    throw new Error('PDF export not available yet');
+                }
+                // Download PDF
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `scan-${scanId}.pdf`;
+                a.click();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        // New scan button
+        document.getElementById('newScanBtn')?.addEventListener('click', () => {
+            window.location.href = '/';
+        });
+
+        /**
+         * Update the workflow stage indicator based on scan status
+         * Stages: 1. Scan → 2. Diagnose → 3. Prioritize → 4. Export → 5. Improve
+         */
+        function updateWorkflowStage(status) {
+            const stages = {
+                scan: document.getElementById('stagesScan'),
+                diagnose: document.getElementById('stagesDiagnose'),
+                prioritize: document.getElementById('stagesPrioritize'),
+                export: document.getElementById('stagesExport'),
+                improve: document.getElementById('stagesImprove')
+            };
+
+            // Helper to set stage as active
+            const setActive = (el) => {
+                if (!el) return;
+                el.style.background = 'rgba(0, 255, 65, 0.15)';
+                el.style.color = '#00ff41';
+                el.style.border = '2px solid #00ff41';
+                el.style.fontWeight = '600';
+            };
+
+            // Helper to set stage as complete
+            const setComplete = (el) => {
+                if (!el) return;
+                el.style.background = 'var(--bg-secondary, #1a1a1a)';
+                el.style.color = '#00ff41';
+                el.style.border = '1px solid #00ff41';
+                el.style.fontWeight = 'normal';
+                if (!el.textContent.includes('✓')) {
+                    el.textContent = el.textContent.replace(/^\d+\.\s*/, (m) => m) + ' ✓';
+                }
+            };
+
+            // Helper to set stage as pending
+            const setPending = (el) => {
+                if (!el) return;
+                el.style.background = 'var(--bg-secondary, #1a1a1a)';
+                el.style.color = 'var(--text-muted, #888)';
+                el.style.border = '1px solid var(--border-color, #333)';
+                el.style.fontWeight = 'normal';
+            };
+
+            // Update based on status
+            switch (status) {
+                case 'queued':
+                    setComplete(stages.scan);
+                    setPending(stages.diagnose);
+                    setPending(stages.prioritize);
+                    setPending(stages.export);
+                    setPending(stages.improve);
+                    break;
+                case 'running':
+                    setComplete(stages.scan);
+                    setActive(stages.diagnose);
+                    setPending(stages.prioritize);
+                    setPending(stages.export);
+                    setPending(stages.improve);
+                    break;
+                case 'done':
+                    setComplete(stages.scan);
+                    setComplete(stages.diagnose);
+                    setActive(stages.prioritize);
+                    // Enable export when done
+                    stages.export.style.cursor = 'pointer';
+                    stages.export.onclick = () => document.getElementById('exportPdfBtn')?.click();
+                    setComplete(stages.export);
+                    setPending(stages.improve);
+                    break;
+                case 'failed':
+                    setComplete(stages.scan);
+                    if (stages.diagnose) {
+                        stages.diagnose.style.background = 'rgba(255, 68, 68, 0.15)';
+                        stages.diagnose.style.color = '#ff4444';
+                        stages.diagnose.style.border = '2px solid #ff4444';
+                    }
+                    break;
+            }
+        }
+
+        // Export CSV button
+        document.getElementById('exportCsvBtn')?.addEventListener('click', () => {
+            alert('CSV export coming soon!');
+        });
+    </script>
+</body>
+</html>

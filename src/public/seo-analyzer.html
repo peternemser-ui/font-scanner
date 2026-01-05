@@ -6,27 +6,27 @@
     <meta name="theme-color" content="#000000" />
 
     <!-- Primary Meta Tags -->
-    <title>SEO Analyzer - Comprehensive SEO Audit & Analysis Tool | Font Scanner</title>
-    <meta name="title" content="SEO Analyzer - Comprehensive SEO Audit & Analysis Tool | Font Scanner" />
-    <meta name="description" content="Professional SEO analysis tool for web developers. Get comprehensive SEO audits including meta tags, structured data, performance metrics, mobile-friendliness, and on-page optimization insights." />
-    <meta name="keywords" content="SEO analyzer, SEO audit, SEO tool, meta tags checker, structured data validator, on-page SEO, technical SEO, SEO analysis, website optimization, search engine optimization, SEO testing" />
-    <meta name="author" content="Font Scanner" />
+    <title>SEO & Indexing - Metadata, Structure & Crawlability | Site Mechanic</title>
+    <meta name="title" content="SEO & Indexing - Comprehensive SEO Audit | Site Mechanic" />
+    <meta name="description" content="Diagnose SEO issues: meta tags, headings, structured data, crawlability, and on-page optimization. Part of Site Mechanic's unified website inspection workflow." />
+    <meta name="keywords" content="SEO analyzer, SEO audit, meta tags, structured data, on-page SEO, technical SEO, crawlability, indexing, search optimization" />
+    <meta name="author" content="Site Mechanic" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-    <link rel="canonical" href="https://fontscanner.app/seo-analyzer.html" />
+    <link rel="canonical" href="https://sitemechanic.io/seo-analyzer.html" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://fontscanner.app/seo-analyzer.html" />
-    <meta property="og:title" content="SEO Analyzer - Comprehensive SEO Audit Tool | Font Scanner" />
+    <meta property="og:title" content="SEO Analyzer - Comprehensive SEO Audit Tool | Site Mechanic" />
     <meta property="og:description" content="Professional SEO analysis tool. Get comprehensive audits of meta tags, structured data, performance, mobile-friendliness, and on-page optimization." />
     <meta property="og:image" content="https://fontscanner.app/og-seo.png" />
-    <meta property="og:site_name" content="Font Scanner" />
+    <meta property="og:site_name" content="Site Mechanic" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://fontscanner.app/seo-analyzer.html" />
-    <meta property="twitter:title" content="SEO Analyzer - Comprehensive SEO Audit Tool | Font Scanner" />
+    <meta property="twitter:title" content="SEO Analyzer - Comprehensive SEO Audit Tool | Site Mechanic" />
     <meta property="twitter:description" content="Professional SEO analysis tool. Get comprehensive audits of meta tags, structured data, performance, and on-page optimization." />
     <meta property="twitter:image" content="https://fontscanner.app/twitter-seo.png" />
 
@@ -38,10 +38,13 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
     <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
@@ -63,6 +66,9 @@
       }
     </style>
     
+    <!-- PDF Export Styles -->
+    <link rel="stylesheet" href="/pdf-export-styles.css">
+
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
     <script src="/language-switcher.js"></script>
@@ -119,8 +125,8 @@
     {
       "@context": "https://schema.org",
       "@type": "HowTo",
-      "name": "How to Analyze SEO with Font Scanner",
-      "description": "Step-by-step guide to analyze your website's SEO using Font Scanner SEO Analyzer",
+      "name": "How to Analyze SEO with Site Mechanic",
+      "description": "Step-by-step guide to analyze your website's SEO using Site Mechanic SEO Analyzer",
       "step": [
         {
           "@type": "HowToStep",
@@ -148,30 +154,51 @@
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
     
-    <div class="container">
-      <!-- Header -->
-      <header class="form-container">
-        <!-- URL Input Form -->
-        <div style="margin-top: 2rem;">
-          <label for="seoUrlInput" class="visually-hidden">Website URL to analyze</label>
-          <input 
-            type="url" 
-            id="seoUrlInput" 
-            placeholder="https://example.com" 
-            aria-label="Enter website URL for SEO analysis"
-            required
-            aria-required="true"
-          />
-          
-          <button id="seoAnalyzeButton" aria-label="Start comprehensive SEO analysis">ANALYZE</button>
-        </div>
+    <main class="page-shell">
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/dashboard.html">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span aria-current="page">SEO</span>
+      </nav>
+      
+      <!-- Page Header -->
+      <header class="page-header">
+        <h1 class="page-header__title">SEO</h1>
+        <p class="page-header__subtitle">Analyze meta tags, structured data, headings, and crawlability.</p>
       </header>
+
+      <!-- Input Card -->
+      <section class="card">
+        <div class="card__body">
+          <div class="form-row">
+            <label for="seoUrlInput" class="visually-hidden">Website URL to analyze</label>
+            <input 
+              type="url" 
+              id="seoUrlInput" 
+              class="input"
+              placeholder="https://example.com" 
+              aria-label="Enter website URL for SEO analysis"
+              required
+              aria-required="true"
+            />
+            <button id="seoAnalyzeButton" class="btn btn-primary" aria-label="Run SEO scan">
+              <span id="buttonText">Run scan</span>
+            </button>
+          </div>
+        </div>
+      </section>
 
       <!-- Results Container -->
       <div id="seoResults" class="results-container" style="display: none;">
         <!-- Results will be dynamically inserted here by seo-script.js -->
       </div>
-    </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="site-footer">
+      <p>&copy; 2025 Site Mechanic. Built for developers who care about quality.</p>
+    </footer>
 
     <!-- Shared JavaScript for theme and font controls -->
     <script src="/theme-controls.js"></script>
@@ -180,6 +207,7 @@
     <script src="/theme-fixer.js"></script>
     
     <!-- Shared Navigation Template -->
+    <script src="/pro-utils.js"></script>
     <script src="/nav-template.js"></script>
     
     <!-- Analyzer Loading System -->
@@ -189,7 +217,12 @@
     <script src="/seo-visualizations.js"></script>
 
     <!-- ASCII Background Animation -->
-    <script src="ascii-background.js"></script>
+
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/pdf-export-utility.js"></script>
+    <script src="/pdf-export-integration.js"></script>
 
     <!-- SEO Analyzer Script -->
     <script src="/seo-script.js"></script>

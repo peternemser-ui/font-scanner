@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon Styles Showcase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0e27 0%, #16213e 100%);
+            color: #ffffff;
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+            padding: 2rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 3rem;
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, #00d9ff, #00ff41);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .style-section {
+            margin-bottom: 3rem;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 2rem;
+            backdrop-filter: blur(10px);
+        }
+
+        .style-title {
+            font-size: 1.5rem;
+            color: #00d9ff;
+            margin-bottom: 1rem;
+            font-weight: bold;
+            border-bottom: 2px solid rgba(0, 217, 255, 0.3);
+            padding-bottom: 0.75rem;
+        }
+
+        .style-description {
+            color: #808080;
+            margin-bottom: 1.5rem;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .icons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .icon-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+            padding: 1.5rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .icon-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(0, 217, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        .icon-display {
+            font-size: 3rem;
+            line-height: 1;
+            min-height: 3.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .icon-label {
+            font-size: 0.75rem;
+            color: #808080;
+            text-align: center;
+            max-width: 120px;
+        }
+
+        .vote-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: rgba(0, 217, 255, 0.2);
+            border: 1px solid rgba(0, 217, 255, 0.4);
+            color: #00d9ff;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .vote-btn:hover {
+            background: rgba(0, 217, 255, 0.3);
+            border-color: rgba(0, 217, 255, 0.7);
+        }
+
+        .winner {
+            background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 217, 255, 0.1));
+            border: 2px solid #00ff41;
+        }
+
+        .winner::after {
+            content: '👑 Selected';
+            display: block;
+            font-size: 0.7rem;
+            color: #00ff41;
+            margin-top: 0.5rem;
+            font-weight: bold;
+        }
+
+        .usage-example {
+            background: rgba(0, 0, 0, 0.2);
+            border-left: 3px solid #00d9ff;
+            padding: 1rem;
+            border-radius: 6px;
+            margin-top: 1.5rem;
+            font-size: 0.9rem;
+        }
+
+        .usage-example strong {
+            color: #00d9ff;
+        }
+
+        footer {
+            text-align: center;
+            color: #555;
+            margin-top: 3rem;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .provider-preview {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(0, 217, 255, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 1.25rem;
+            align-items: center;
+            margin-top: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .provider-preview:hover {
+            background: rgba(0, 0, 0, 0.5);
+            border-color: rgba(0, 217, 255, 0.5);
+        }
+
+        .provider-icon {
+            font-size: 4rem;
+            line-height: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 80px;
+        }
+
+        .provider-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .provider-details h3 {
+            margin: 0 0 0.5rem 0;
+            color: #ffffff;
+            font-size: 1.25rem;
+        }
+
+        .provider-details p {
+            margin: 0.25rem 0;
+            color: #808080;
+            font-size: 0.9rem;
+        }
+
+        .provider-price {
+            text-align: right;
+        }
+
+        .provider-price .amount {
+            font-size: 1.75rem;
+            font-weight: bold;
+            color: #00d9ff;
+        }
+
+        .provider-price .period {
+            color: #808080;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Icon Style Showcase</h1>
+        <p style="text-align: center; color: #808080; margin-bottom: 2rem;">Click any style to select it as your preference</p>
+
+        <!-- Quick Preview Card -->
+        <div class="style-section" style="background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 217, 255, 0.1)); border: 2px solid rgba(0, 255, 65, 0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="color: #00ff41; margin: 0 0 0.5rem 0;">Preview Your Choice</h2>
+                    <p style="color: #808080; margin: 0;">Pick a style below, then see it live in the hosting analyzer</p>
+                </div>
+                <a href="http://localhost:3000/hosting-analyzer.html?url=https%3A%2F%2Fvail.com" 
+                   style="background: linear-gradient(135deg, #00d9ff, #0099cc); color: #000; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; transition: all 0.2s ease; display: inline-block;"
+                   onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(0, 217, 255, 0.4)';"
+                   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                    → Open Live Analyzer (vail.com)
+                </a>
+            </div>
+        </div>
+
+        <!-- Style 1: Minimal Line Icons -->
+        <div class="style-section">
+            <div class="style-title">1. Minimal Line Icons</div>
+            <div class="style-description">
+                Clean, minimalist line-based icons. Modern and professional. Great for enterprise/technical look.
+            </div>
+            <div class="icons-grid">
+                <div class="icon-item">
+                    <div class="icon-display">⬜</div>
+                    <div class="icon-label">Provider</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">◇</div>
+                    <div class="icon-label">Premium</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">▲</div>
+                    <div class="icon-label">Performance</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">●</div>
+                    <div class="icon-label">Feature</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">⬆</div>
+                    <div class="icon-label">Uptime</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">━</div>
+                    <div class="icon-label">Speed</div>
+                </div>
+            </div>
+            <div class="usage-example">
+                <strong>Usage:</strong> Best for technical, minimal aesthetic. Works great in tables and compact layouts.
+            </div>
+            <div class="provider-preview">
+                <div class="provider-icon">⬜</div>
+                <div class="provider-info">
+                    <div class="provider-details">
+                        <h3>Kinsta Hosting</h3>
+                        <p>Managed WordPress • Premium Performance</p>
+                        <p style="font-size: 0.8rem; color: #00ff41;">⭐ 4.8 • 99.99% uptime</p>
+                    </div>
+                    <div class="provider-price">
+                        <div class="amount">$35</div>
+                        <div class="period">/month</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Style 2: Unicode Box Drawing -->
+        <div class="style-section">
+            <div class="style-title">2. Unicode Box Drawing</div>
+            <div class="style-description">
+                Retro terminal/ASCII art style. Unique, nostalgic, technical vibe.
+            </div>
+            <div class="icons-grid">
+                <div class="icon-item">
+                    <div class="icon-display">▪</div>
+                    <div class="icon-label">Server</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">▬</div>
+                    <div class="icon-label">Network</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">◈</div>
+                    <div class="icon-label">Security</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">◊</div>
+                    <div class="icon-label">Quality</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">▤</div>
+                    <div class="icon-label">Bandwidth</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">♦</div>
+                    <div class="icon-label">Premium</div>
+                </div>
+            </div>
+            <div class="usage-example">
+                <strong>Usage:</strong> Creates a distinctive, technical look. Great for branding uniqueness.
+            </div>
+            <div class="provider-preview">
+                <div class="provider-icon">♦</div>
+                <div class="provider-info">
+                    <div class="provider-details">
+                        <h3>WP Engine</h3>
+                        <p>Managed WordPress • Expert Support</p>
+                        <p style="font-size: 0.8rem; color: #00ff41;">⭐ 4.7 • 99.99% uptime</p>
+                    </div>
+                    <div class="provider-price">
+                        <div class="amount">$25</div>
+                        <div class="period">/month</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Style 3: Geometric Shapes -->
+        <div class="style-section">
+            <div class="style-title">3. Geometric/Abstract Shapes</div>
+            <div class="style-description">
+                Modern geometric approach. Contemporary and sleek. Good balance between minimalism and expressiveness.
+            </div>
+            <div class="icons-grid">
+                <div class="icon-item">
+                    <div class="icon-display">█</div>
+                    <div class="icon-label">Hosting</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">▓</div>
+                    <div class="icon-label">Storage</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">▒</div>
+                    <div class="icon-label">Cloud</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">◆</div>
+                    <div class="icon-label">Feature</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">▼</div>
+                    <div class="icon-label">Download</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">◀</div>
+                    <div class="icon-label">Backup</div>
+                </div>
+            </div>
+            <div class="usage-example">
+                <strong>Usage:</strong> Modern, geometric look. Works well for a tech-forward brand image.
+            </div>
+            <div class="provider-preview">
+                <div class="provider-icon">█</div>
+                <div class="provider-info">
+                    <div class="provider-details">
+                        <h3>Cloudways</h3>
+                        <p>Managed Cloud • Best for Scale</p>
+                        <p style="font-size: 0.8rem; color: #00ff41;">⭐ 4.5 • 99.99% uptime</p>
+                    </div>
+                    <div class="provider-price">
+                        <div class="amount">$11</div>
+                        <div class="period">/month</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Style 4: Outlined Emojis (Current) -->
+        <div class="style-section winner">
+            <div class="style-title">4. Outlined/Simplified Emojis (Current)</div>
+            <div class="style-description">
+                Simplified emoji-based icons. Friendly, accessible, and widely understood. Current style with cleaner selection.
+            </div>
+            <div class="icons-grid">
+                <div class="icon-item">
+                    <div class="icon-display">🔲</div>
+                    <div class="icon-label">Provider</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">💎</div>
+                    <div class="icon-label">Premium</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">⚡</div>
+                    <div class="icon-label">Speed</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">🔒</div>
+                    <div class="icon-label">Security</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">☁️</div>
+                    <div class="icon-label">Cloud</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">📊</div>
+                    <div class="icon-label">Analytics</div>
+                </div>
+            </div>
+            <div class="usage-example">
+                <strong>Usage:</strong> Friendly and universal. Good for general audiences. Mix of emojis for flexibility.
+            </div>
+        </div>
+
+        <!-- Style 5: Monochrome Line Icons (Feather Style) -->
+        <div class="style-section">
+            <div class="style-title">5. Feather-Style (Monochrome Line Icons)</div>
+            <div class="style-description">
+                Elegant monochrome line icons. Professional, clean, and modern. Like Feather Icons or Tabler Icons.
+            </div>
+            <div class="icons-grid">
+                <div class="icon-item">
+                    <div class="icon-display">─</div>
+                    <div class="icon-label">Bandwidth</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">┌─┐</div>
+                    <div class="icon-label">Setup</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">⦘</div>
+                    <div class="icon-label">Deploy</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">┊</div>
+                    <div class="icon-label">Uptime</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">⟳</div>
+                    <div class="icon-label">Reload</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">⧗</div>
+                    <div class="icon-label">Growth</div>
+                </div>
+            </div>
+            <div class="usage-example">
+                <strong>Usage:</strong> Premium, professional look. Great for B2B/enterprise applications.
+            </div>
+        </div>
+
+        <!-- Style 6: Neon/Cyberpunk -->
+        <div class="style-section">
+            <div class="style-title">6. Neon/Cyberpunk Style</div>
+            <div class="style-description">
+                Futuristic, bold neon-inspired icons. High contrast and attention-grabbing. Trendy, modern aesthetic.
+            </div>
+            <div class="icons-grid">
+                <div class="icon-item">
+                    <div class="icon-display">▸▹</div>
+                    <div class="icon-label">Forward</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">⧯</div>
+                    <div class="icon-label">Rotate</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">⬢</div>
+                    <div class="icon-label">Hexagon</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">⧖</div>
+                    <div class="icon-label">Climb</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">⬡</div>
+                    <div class="icon-label">Structure</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">◈</div>
+                    <div class="icon-label">Node</div>
+                </div>
+            </div>
+            <div class="usage-example">
+                <strong>Usage:</strong> Bold, eye-catching. Great for modern startups and tech companies.
+            </div>
+            <div class="provider-preview">
+                <div class="provider-icon">⬢</div>
+                <div class="provider-info">
+                    <div class="provider-details">
+                        <h3>Vercel</h3>
+                        <p>JAMstack/Edge • Lightning Fast</p>
+                        <p style="font-size: 0.8rem; color: #00ff41;">⭐ 4.6 • 99.99% uptime</p>
+                    </div>
+                    <div class="provider-price">
+                        <div class="amount">Free</div>
+                        <div class="period">+ Pro plans</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Style 7: Dingbats/Wingdings -->
+        <div class="style-section">
+            <div class="style-title">7. Dingbats (Typography Icons)</div>
+            <div class="style-description">
+                Typography-based icons from Dingbats font. Unique, stylized, and elegant. Classical approach.
+            </div>
+            <div class="icons-grid">
+                <div class="icon-item">
+                    <div class="icon-display">✚</div>
+                    <div class="icon-label">Add</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">✓</div>
+                    <div class="icon-label">Success</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">★</div>
+                    <div class="icon-label">Star</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">❖</div>
+                    <div class="icon-label">Mark</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">◈</div>
+                    <div class="icon-label">Diamond</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">✦</div>
+                    <div class="icon-label">Sparkle</div>
+                </div>
+            </div>
+            <div class="usage-example">
+                <strong>Usage:</strong> Elegant and timeless. Good for premium/luxury brands.
+            </div>
+            <div class="provider-preview">
+                <div class="provider-icon">✦</div>
+                <div class="provider-info">
+                    <div class="provider-details">
+                        <h3>SiteGround</h3>
+                        <p>Shared Hosting • Excellent Support</p>
+                        <p style="font-size: 0.8rem; color: #00ff41;">⭐ 4.4 • 99.99% uptime</p>
+                    </div>
+                    <div class="provider-price">
+                        <div class="amount">$2.99</div>
+                        <div class="period">/month</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Style 8: Minimal Colored Blocks -->
+        <div class="style-section">
+            <div class="style-title">8. Colored Block Indicators</div>
+            <div class="style-description">
+                Color-coded blocks or bars. Data-visualization style. Great for showing status/categories at a glance.
+            </div>
+            <div class="icons-grid">
+                <div class="icon-item">
+                    <div class="icon-display">🟦</div>
+                    <div class="icon-label">Info</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">🟩</div>
+                    <div class="icon-label">Success</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">🟨</div>
+                    <div class="icon-label">Warning</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">🟥</div>
+                    <div class="icon-label">Error</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">🟪</div>
+                    <div class="icon-label">Premium</div>
+                </div>
+                <div class="icon-item">
+                    <div class="icon-display">🟧</div>
+                    <div class="icon-label">Alert</div>
+                </div>
+            </div>
+            <div class="usage-example">
+                <strong>Usage:</strong> Functional and clear. Perfect for status indicators and data visualization.
+            </div>
+        </div>
+
+        <footer>
+            <p>💡 Each style has unique strengths. Choose based on your brand identity and audience.</p>
+            <p style="margin-top: 1rem; font-size: 0.85rem;">Would you like me to implement any of these styles across the hosting analyzer?</p>
+            <a href="http://localhost:3000/hosting-analyzer.html?url=https%3A%2F%2Fvail.com" 
+               style="display: inline-block; margin-top: 1.5rem; background: linear-gradient(135deg, #00d9ff, #0099cc); color: #000; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; transition: all 0.2s ease;"
+               onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(0, 217, 255, 0.4)';"
+               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                → View Live on Hosting Analyzer (vail.com)
+            </a>
+        </footer>
+    </div>
+</body>
+</html>

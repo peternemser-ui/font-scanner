@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Disable button during scan
     submitButton.disabled = true;
-    submitButton.textContent = 'ANALYZING DESKTOP & MOBILE...';
+    submitButton.textContent = 'ANALYZING...';
     submitButton.style.opacity = '0.6';
     urlInput.disabled = true;
 
@@ -77,7 +77,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         .ascii-art-responsive {
           font-size: clamp(0.35rem, 1.2vw, 0.65rem);
-          animation: color-cycle 4s linear infinite;
           white-space: pre;
           max-width: 100%;
         }
@@ -159,7 +158,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       // Re-enable button
       submitButton.disabled = false;
-      submitButton.textContent = 'D M ANALYZE PERFORMANCE (Desktop & Mobile)';
+      submitButton.textContent = 'ANALYZE PERFORMANCE';
       submitButton.style.opacity = '1';
       urlInput.disabled = false;
     }

@@ -1,17 +1,43 @@
 {
   "app": {
-    "name": "フォントスキャナー",
-    "tagline": "高度なウェブタイポグラフィとパフォーマンス分析"
+    "name": "サイトメカニック",
+    "tagline": "ウェブ診断とパフォーマンス分析"
   },
   "nav": {
     "dashboard": "ダッシュボード",
-    "fontScanner": "フォントスキャナー",
+    "fontScanner": "フォントとタイポグラフィ",
+    "typography": "フォント",
     "seo": "SEO",
+    "seoAnalysis": "SEO分析",
     "coreWebVitals": "コアウェブバイタル",
-    "rankCompetition": "ランク競争",
-    "performance": "パフォーマンス",
+    "lighthouseMetrics": "Lighthouse指標",
+    "rankCompetition": "競合分析",
+    "performance": "速度とUX",
     "accessibility": "アクセシビリティ",
-    "security": "セキュリティ"
+    "security": "セキュリティ",
+    "tagIntelligence": "トラッキングと分析",
+    "enhancedFonts": "フォントとタイポグラフィ",
+    "performanceSnapshot": "パフォーマンススナップショット",
+    "siteCrawler": "サイトクローラー",
+    "mobileTesting": "モバイルテスト",
+    "ipReputation": "IPレピュテーション",
+    "localSeo": "ローカルSEO",
+    "brokenLinks": "リンク切れ",
+    "brandAudit": "ブランド監査",
+    "croAnalysis": "コンバージョン最適化",
+    "gdprCheck": "プライバシーコンプライアンス",
+    "hostingGuide": "ホスティングガイド",
+    "more": "もっと見る",
+    "menu": "メニュー"
+  },
+  "categories": {
+    "performance": "パフォーマンスとUX",
+    "seo": "SEOとインデックス",
+    "accessibility": "アクセシビリティ",
+    "security": "セキュリティと信頼",
+    "technology": "テクノロジーとフォント",
+    "infrastructure": "インフラストラクチャ",
+    "competitive": "競合インサイト"
   },
   "dashboard": {
     "title": "総合概要",
@@ -39,6 +65,340 @@
     "loading": "読み込み中...",
     "error": "エラー",
     "success": "成功",
-    "language": "言語"
+    "language": "言語",
+    "yes": "はい",
+    "no": "いいえ",
+    "na": "N/A",
+    "unknown": "不明",
+    "more": "もっと見る",
+    "websiteUrl": "ウェブサイトURL",
+    "enterUrl": "https://yoursite.com",
+    "pleaseEnterUrl": "URLを入力してください",
+    "mayTake": "15-30秒かかる場合があります"
+  },
+  "fontScanner": {
+    "title": "フォント＆タイポグラフィ",
+    "subtitle": "タイポグラフィ分析",
+    "pageSubtitle": "マルチページスキャン、フォント読み込みパフォーマンス、アクセシビリティの洞察を含む詳細なタイポグラフィ分析。",
+    "breadcrumb": "フォント＆タイポグラフィ",
+    "analyzeWebsite": "ウェブサイトを分析",
+    "analyzeFonts": "フォントを分析",
+    "analyzing": "分析中...",
+    "enterUrl": "ウェブサイトのURLを入力...",
+    "urlRequired": "有効なURLを入力してください",
+    "analysisComplete": "分析完了",
+    "multiPageScan": "マルチページスキャン（複数ページのフォントを分析）",
+    "maxPages": "最大ページ数：",
+    "enhancedAnalysis": "拡張フォント分析：",
+    "enhancedAnalysisDesc": "フォントプロバイダー（Google Fonts、Adobe Fonts、セルフホスト）を検出し、重複するファミリー、未使用のウェイト/スタイル、欠落しているfont-display宣言、プリロードの機会を発見します。",
+    "desktopFonts": "デスクトップフォント",
+    "mobileFonts": "モバイルフォント",
+    "dualViewportAnalysis": "デュアルビューポート分析：デスクトップ（1920x1080）とモバイル（375x667）で別々にフォントを分析。",
+    "fontComparison": "フォント比較サマリー",
+    "commonFonts": "両方のビューポートで使用される共通フォント",
+    "desktopOnly": "デスクトップのみのフォント",
+    "mobileOnly": "モバイルのみのフォント",
+    "totalFonts": "総フォント数",
+    "systemFonts": "システムフォント",
+    "webFonts": "ウェブフォント",
+    "googleFonts": "Google Fonts",
+    "iconFonts": "アイコンフォント",
+    "fontDetails": "フォント詳細",
+    "downloadReport": "PDFレポートをダウンロード",
+    "shareResults": "結果を共有",
+    "fontProviders": "フォントプロバイダー",
+    "fontFamilies": "フォントファミリー",
+    "performanceMetrics": "パフォーマンス指標",
+    "recommendations": "推奨事項",
+    "advancedAnalysis": "高度なタイポグラフィ分析",
+    "exportPdf": "PDFをダウンロード",
+    "exportCss": "CSSをエクスポート",
+    "shareLink": "リンクを共有"
+  },
+  "brandConsistency": {
+    "title": "ブランド検査",
+    "subtitle": "ウェブサイトのカラーパレット、フォント、ロゴ使用状況を分析します。",
+    "breadcrumb": "ブランド一貫性",
+    "inspect": "検査",
+    "analyzing": "ブランドの一貫性を分析中...",
+    "loaderTitle": "🎨 ブランド分析",
+    "grade": "グレード",
+    "scoreLabel": "ブランド一貫性スコア",
+    "quickSummary": "クイックサマリー",
+    "scoreBreakdown": "スコア内訳",
+    "colors": "色",
+    "fonts": "フォント",
+    "logos": "ロゴ",
+    "buttons": "ボタン",
+    "links": "リンク",
+    "favicon": "ファビコン",
+    "detected": "検出済み",
+    "missing": "不足",
+    "present": "あり",
+    "excellent": "優秀",
+    "good": "良好",
+    "fair": "普通",
+    "poor": "不良",
+    "colorPalette": "カラーパレット",
+    "typography": "タイポグラフィ",
+    "brandIdentity": "ブランドアイデンティティ",
+    "uiConsistency": "UI一貫性",
+    "colorHarmony": "色の調和",
+    "colorPaletteAnalysis": "カラーパレット分析",
+    "typographyAnalysis": "タイポグラフィ分析",
+    "recommendations": "推奨事項",
+    "harmonyType": "ハーモニータイプ",
+    "uniqueHues": "ユニークな色相",
+    "neutralRatio": "ニュートラル比率",
+    "primaryBrandColors": "主要ブランドカラー",
+    "allDetectedColors": "検出されたすべての色",
+    "typographySummary": "タイポグラフィサマリー",
+    "totalFonts": "フォント総数",
+    "quality": "品質",
+    "typographyHierarchy": "タイポグラフィ階層",
+    "headingFonts": "見出しフォント",
+    "bodyFonts": "本文フォント",
+    "allFontsByUsage": "使用状況別の全フォント",
+    "uses": "回使用",
+    "logoDetection": "ロゴ検出",
+    "noLogoDetected": "ロゴが検出されませんでした",
+    "addLogoTip": "\"logo\"を含むalt属性を持つロゴを追加してください",
+    "faviconPresent": "ファビコンあり",
+    "faviconMissing": "ファビコンなし",
+    "faviconPresentDesc": "サイトにはブラウザタブ識別用のファビコンがあります",
+    "faviconMissingDesc": "サイト識別のためにファビコンを追加してください",
+    "buttonStyles": "ボタンスタイル",
+    "linkColors": "リンクの色",
+    "consistency": "一貫性",
+    "sampleButton": "サンプルボタン",
+    "noButtonStyles": "ボタンスタイルが検出されませんでした",
+    "linkText": "リンクテキスト",
+    "noLinkColors": "リンクの色が検出されませんでした",
+    "noRecommendations": "現時点で推奨事項はありません。",
+    "harmony": {
+      "monochromatic": "モノクロマティック",
+      "analogous": "類似色",
+      "triadic": "トライアド",
+      "splitComplementary": "スプリットコンプリメンタリー",
+      "complementary": "補色",
+      "diverse": "多様",
+      "custom": "カスタム"
+    },
+    "priority": {
+      "critical": "重大",
+      "high": "高",
+      "medium": "中",
+      "low": "低",
+      "success": "成功"
+    },
+    "steps": {
+      "initializing": "分析を初期化中",
+      "connecting": "ターゲットウェブサイトに接続中...",
+      "extractingColors": "色を抽出中",
+      "analyzingPalette": "カラーパレットを分析中...",
+      "detectingFonts": "フォントを検出中",
+      "identifyingTypography": "タイポグラフィ階層を識別中...",
+      "findingLogos": "ロゴを検索中",
+      "locatingAssets": "ブランドアセットを特定中...",
+      "analyzingUI": "UI一貫性を分析中",
+      "checkingStyles": "スタイルを確認中...",
+      "generating": "インサイトを生成中",
+      "compiling": "推奨事項をコンパイル中..."
+    },
+    "rec": {
+      "excessiveColors": {
+        "message": "過度な色使用",
+        "detail": "{count}色の使用は視覚的な混乱を生み出します。プロのブランドは最大5-10色を使用します。",
+        "action": "プライマリ、セカンダリ、アクセントカラーを含む定義されたカラーパレットを作成してください。"
+      },
+      "tooManyColors": {
+        "message": "色が多すぎます",
+        "detail": "{count}色を使用しています。一貫性を高めるために8-12のブランドカラーに絞ってください。",
+        "action": "色の使用状況を監査し、冗長なバリエーションを削除してください。"
+      },
+      "inconsistentHarmony": {
+        "message": "一貫性のない色の調和",
+        "detail": "カラーパレットに明確な調和パターン（補色、類似色、トライアド）がありません。",
+        "action": "カラーホイールを使用して、一緒に機能する調和のとれた色を選択してください。"
+      },
+      "tooManyFonts": {
+        "message": "フォントが多すぎます",
+        "detail": "{count}種類のフォントを使用すると、視覚的な不一致が生じ、パフォーマンスに影響します。",
+        "action": "2-3のフォントファミリーに制限：見出し用、本文用、オプションでアクセント用。"
+      },
+      "reduceFontCount": {
+        "message": "フォント数の削減を検討してください",
+        "detail": "{count}種類のフォントを使用しています。ベストプラクティスは最大2-3フォントです。",
+        "action": "フォントの使用状況を確認し、可能な限り統合してください。"
+      },
+      "noTypographyHierarchy": {
+        "message": "タイポグラフィ階層が検出されませんでした",
+        "detail": "見出しと本文の異なるフォントを識別できませんでした。",
+        "action": "見出しと本文が一貫した個別のフォント処理を使用していることを確認してください。"
+      },
+      "noLogo": {
+        "message": "ロゴが検出されませんでした",
+        "detail": "ロゴはブランド認知と信頼に不可欠です。",
+        "action": "\"logo\"を含むalt属性を持つロゴをヘッダーに追加してください。"
+      },
+      "noFavicon": {
+        "message": "ファビコンが検出されませんでした",
+        "detail": "ファビコンは、ユーザーがブラウザのタブであなたのサイトを識別するのに役立ちます。",
+        "action": "favicon.icoを追加するか、ブランドアイコンで<link rel=\"icon\">を使用してください。"
+      },
+      "inconsistentButtons": {
+        "message": "一貫性のないボタンスタイル",
+        "detail": "サイト全体のボタンの色や形が異なっています。",
+        "action": "CSSで標準的なボタンスタイルを定義し、一貫して使用してください。"
+      },
+      "inconsistentLinks": {
+        "message": "一貫性のないリンクの色",
+        "detail": "リンクがページ全体で複数の異なる色を使用しています。",
+        "action": "ブランドパレットに合った一貫したリンク色を設定してください。"
+      },
+      "excellent": {
+        "message": "優れたブランド一貫性！",
+        "detail": "ウェブサイトは色、タイポグラフィ、ブランド要素全体で強い視覚的一貫性を維持しています。",
+        "action": "ブランドガイドラインを維持し、定期的な監査を実施し続けてください。"
+      }
+    }
+  },
+  "seo": {
+    "pages": {
+      "home": {
+        "title": "Site Mechanic - プロフェッショナルウェブサイト分析ツール",
+        "description": "高度なSEO、パフォーマンステスト、セキュリティスキャン、アクセシビリティ監査。",
+        "keywords": "ウェブサイト分析,SEOツール,パフォーマンステスト",
+        "og_title": "Site Mechanic",
+        "twitter_title": "ウェブサイト分析ツール"
+      },
+      "security-analyzer": {
+        "title": "セキュリティスキャナー",
+        "description": "脆弱性、SSL問題をスキャン。",
+        "keywords": "セキュリティ,脆弱性,SSL",
+        "og_title": "セキュリティスキャナー",
+        "twitter_title": "セキュリティ分析"
+      },
+      "performance-hub": {
+        "title": "パフォーマンステストハブ",
+        "description": "Core Web Vitals監視とページ速度分析。",
+        "keywords": "パフォーマンス,Core Web Vitals",
+        "og_title": "パフォーマンステスト",
+        "twitter_title": "速度最適化"
+      },
+      "mobile-analyzer": {
+        "title": "モバイル分析ツール",
+        "description": "レスポンシブデザインテスト。",
+        "keywords": "モバイル,レスポンシブ",
+        "og_title": "モバイル分析",
+        "twitter_title": "モバイルテスト"
+      },
+      "enhanced-fonts": {
+        "title": "フォント分析ツール",
+        "description": "ウェブフォント最適化。",
+        "keywords": "フォント,タイポグラフィ",
+        "og_title": "フォント分析",
+        "twitter_title": "フォント最適化"
+      },
+      "ip-reputation-analyzer": {
+        "title": "IP評判チェッカー",
+        "description": "IP評判とドメイン健全性。",
+        "keywords": "IP,評判,DNS",
+        "og_title": "IP評判",
+        "twitter_title": "IP分析"
+      },
+      "hosting-analyzer": {
+        "title": "ホスティング分析",
+        "description": "サーバーパフォーマンス分析。",
+        "keywords": "ホスティング,サーバー",
+        "og_title": "ホスティング分析",
+        "twitter_title": "サーバー分析"
+      },
+      "competitive-analysis": {
+        "title": "競合分析",
+        "description": "競合ベンチマーク。",
+        "keywords": "競合分析,ベンチマーク",
+        "og_title": "競合分析",
+        "twitter_title": "ベンチマーク"
+      },
+      "cro-analyzer": {
+        "title": "CRO分析ツール",
+        "description": "コンバージョン率最適化。",
+        "keywords": "CRO,コンバージョン",
+        "og_title": "CRO分析",
+        "twitter_title": "コンバージョン最適化"
+      },
+      "broken-links": {
+        "title": "リンク切れチェッカー",
+        "description": "404エラー検出。",
+        "keywords": "リンク切れ,404",
+        "og_title": "リンク切れチェッカー",
+        "twitter_title": "リンク検証"
+      },
+      "gdpr-compliance": {
+        "title": "GDPR準拠チェッカー",
+        "description": "プライバシー監査。",
+        "keywords": "GDPR,プライバシー",
+        "og_title": "GDPR準拠",
+        "twitter_title": "GDPR監査"
+      },
+      "local-seo": {
+        "title": "ローカルSEO分析",
+        "description": "Googleビジネス最適化。",
+        "keywords": "ローカルSEO,Googleビジネス",
+        "og_title": "ローカルSEO",
+        "twitter_title": "ローカルSEO分析"
+      },
+      "brand-consistency": {
+        "title": "ブランド一貫性分析",
+        "description": "デザイン監査。",
+        "keywords": "ブランド,デザイン",
+        "og_title": "ブランド分析",
+        "twitter_title": "ブランド監査"
+      },
+      "site-crawler": {
+        "title": "サイトクローラー",
+        "description": "サイト構造マッピング。",
+        "keywords": "クローラー,サイトマップ",
+        "og_title": "クローラー",
+        "twitter_title": "サイトクローラー"
+      },
+      "tag-intelligence": {
+        "title": "タグインテリジェンス",
+        "description": "マーケティングタグ監査。",
+        "keywords": "タグ,アナリティクス",
+        "og_title": "タグインテリジェンス",
+        "twitter_title": "タグ監査"
+      },
+      "advanced-tools": {
+        "title": "高度なツール",
+        "description": "プロフェッショナル分析。",
+        "keywords": "高度なツール",
+        "og_title": "高度なツール",
+        "twitter_title": "高度な分析"
+      },
+      "performance-snapshot": {
+        "title": "パフォーマンススナップショット",
+        "description": "高速速度分析。",
+        "keywords": "スナップショット,速度",
+        "og_title": "スナップショット",
+        "twitter_title": "高速分析"
+      },
+      "core-web-vitals": {
+        "title": "Core Web Vitalsチェッカー",
+        "description": "LCP、FID、CLS分析。",
+        "keywords": "Core Web Vitals,LCP,FID,CLS",
+        "og_title": "Core Web Vitals",
+        "twitter_title": "CWV分析"
+      }
+    }
+  },
+  "notices": {
+    "botProtectionTitle": "ボット保護に関するお知らせ：",
+    "botProtectionText": "大手商業サイト（Amazon、Walmart、cars.com）は自動分析をブロックします。",
+    "botProtectionTry": "お試しください：あなたのウェブサイト、クライアントプロジェクト、または以下でテスト",
+    "botProtectionBlocked": "ブロックされたサイトには、",
+    "botProtectionAlternative": "Google PageSpeed Insights",
+    "botProtectionInstead": "をご利用ください。"
   }
 }

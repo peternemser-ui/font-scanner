@@ -13,6 +13,11 @@ const { createLogger } = require('./utils/logger');
 const { errorMiddleware } = require('./utils/errorHandler');
 const { metricsMiddleware, metricsHandler } = require('./middleware/metrics');
 const requestIdMiddleware = require('./middleware/requestId');
+
+// New async scan system
+const { initializeDatabase, getDatabase } = require('./db');
+const { getQueue } = require('./queue/scanQueue');
+const ScanWorker = require('./queue/scanWorker');
 const { 
   globalLimiter, 
   scanLimiter, 
@@ -43,6 +48,24 @@ const PORT = config.port;
 
 // Health check state
 let isShuttingDown = false;
+
+// Initialize database and scan worker
+let scanWorker = null;
+(async () => {
+  try {
+    logger.info('Initializing database...');
+    await initializeDatabase();
+    logger.info('Database initialized successfully');
+
+    // Initialize scan worker
+    const queue = getQueue();
+    scanWorker = new ScanWorker(queue);
+    logger.info('Scan worker initialized');
+  } catch (error) {
+    logger.error('Failed to initialize async scan system:', error);
+    process.exit(1);
+  }
+})();
 
 // Start report cleanup scheduler (runs daily)
 let cleanupInterval = null;
@@ -100,6 +123,10 @@ app.use(requestIdMiddleware);
 
 // Metrics middleware
 app.use(metricsMiddleware);
+
+// Stripe webhooks (MUST be before body parsing to get raw body)
+const webhookRoutes = require('./routes/webhooks');
+app.use('/api/webhooks', webhookRoutes);
 
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
@@ -265,6 +292,27 @@ app.get('/api/reports/stats', async (req, res) => {
   }
 });
 
+// Authentication API
+const authRoutes = require('./routes/auth');
+app.use('/api/auth', authRoutes);
+
+// Payment API (Stripe Checkout & Customer Portal)
+const paymentRoutes = require('./routes/payment');
+app.use('/api/payment', paymentRoutes);
+
+// Usage Stats API
+const usageRoutes = require('./routes/usage');
+app.use('/api/usage', usageRoutes);
+
+// Admin API (requires authentication + admin privileges)
+const adminRoutes = require('./routes/admin');
+app.use('/api/admin', adminRoutes);
+
+// New async scan API
+const scanRoutes = require('./routes/scan.routes');
+app.use('/api/scans', scanRoutes);
+
+// Legacy scan endpoints (keep for backwards compatibility)
 app.post('/api/scan', scanLimiter, scanController.scanWebsite);
 app.post('/api/scan/best-in-class', scanLimiter, scanController.performBestInClassScan);
 app.post('/api/seo', scanLimiter, scanController.performSEOScan);
@@ -306,6 +354,23 @@ app.post('/api/security', scanLimiter, securityController.analyzeSecurity);
 const ipReputationController = require('./controllers/ipReputationController');
 app.post('/api/ip-reputation', scanLimiter, ipReputationController.analyzeIPReputation);
 
+// Hosting Pricing Analyzer
+const hostingController = require('./controllers/hostingController');
+app.post('/api/hosting/analyze', scanLimiter, hostingController.analyzeHosting);
+app.get('/api/hosting/providers', hostingController.getProviders);
+app.get('/api/hosting/providers/:cmsType', hostingController.getProvidersByCMS);
+
+// Tag Intelligence, Enhanced Fonts, Performance Snapshot, Crawler (monetization features)
+const tagIntelligenceController = require('./controllers/tagIntelligenceController');
+app.post('/api/tag-intelligence', scanLimiter, tagIntelligenceController.analyzeTagIntelligence);
+app.post('/api/enhanced-fonts', scanLimiter, tagIntelligenceController.analyzeEnhancedFonts);
+app.post('/api/performance-snapshot', scanLimiter, tagIntelligenceController.analyzePerformanceSnapshot);
+app.post('/api/crawl', scanLimiter, tagIntelligenceController.crawlSite);
+
+// Mobile Testing Suite
+const mobileAnalyzerController = require('./controllers/mobileAnalyzerController');
+app.post('/api/mobile-analyze', scanLimiter, mobileAnalyzerController.analyzeMobile);
+
 // Download PDF report (legacy - for font scanner)
 app.get('/api/reports/:filename', downloadLimiter, scanController.downloadReport);
 
@@ -319,7 +384,7 @@ app.get('/api/pdf/download/:token', downloadLimiter, pdfController.downloadPDFRe
 app.get('/api/test', (req, res) => {
   res.json({
     status: 'OK',
-    message: 'Font Scanner API is working',
+    message: 'Site Mechanic API is working',
     timestamp: new Date().toISOString(),
     version: '2.0.0',
     features: [
@@ -380,7 +445,7 @@ global.io = io;
 
 // Start server
 server.listen(PORT, () => {
-  logger.info(`Font Scanner server running on port ${PORT}`);
+  logger.info(`Site Mechanic server running on port ${PORT}`);
   logger.info(`Access the application at http://localhost:${PORT}`);
   logger.info(`Environment: ${config.nodeEnv}`);
   logger.info('WebSocket server ready');
@@ -416,8 +481,25 @@ const gracefulShutdown = async (signal) => {
       logger.error('Error draining browser pool:', error);
     }
 
-    // Close database connections, cleanup resources, etc.
-    // Add your cleanup logic here
+    // Close database connections
+    try {
+      logger.info('Closing database connection...');
+      const db = getDatabase();
+      await db.close();
+      logger.info('Database connection closed');
+    } catch (error) {
+      logger.error('Error closing database:', error);
+    }
+
+    // Clear scan queue
+    try {
+      logger.info('Clearing scan queue...');
+      const queue = getQueue();
+      queue.clear();
+      logger.info('Scan queue cleared');
+    } catch (error) {
+      logger.error('Error clearing scan queue:', error);
+    }
 
     logger.info('Cleanup complete. Exiting process.');
     process.exit(0);

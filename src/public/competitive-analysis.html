@@ -3,11 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Competitive Analysis - Beat Your Competition</title>
+    <meta name="description" content="Compare your website against competitors with side-by-side analysis of performance, SEO, security, and accessibility. Identify gaps and opportunities to outrank competition." />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="competitive analysis, competitor benchmarking, SEO competition, website comparison, competitor research, gap analysis, competitive intelligence" />
+    <meta name="author" content="Site Mechanic" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://sitemechanic.io/en/competitive-analysis.html" />
+
+    <!-- Hreflang Tags for Multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/competitive-analysis.html" />
+    <link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/competitive-analysis.html" />
+    <link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/competitive-analysis.html" />
+    <link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/competitive-analysis.html" />
+    <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/competitive-analysis.html" />
+    <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/competitive-analysis.html" />
+    <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/competitive-analysis.html" />
+    <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/competitive-analysis.html" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Competitive Analysis - Benchmark Your Website vs Competitors" />
+    <meta property="og:description" content="Side-by-side comparison of performance, SEO, security, and accessibility to identify competitive gaps and opportunities" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sitemechanic.io/en/competitive-analysis.html" />
+    <meta property="og:image" content="https://sitemechanic.io/images/og-competitive-analysis.png" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="pt_PT" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:site_name" content="Site Mechanic" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Competitive Analysis - Benchmark Your Website vs Competitors" />
+    <meta name="twitter:description" content="Side-by-side comparison of performance, SEO, security, and accessibility to identify competitive gaps and opportunities" />
+    <meta name="twitter:url" content="https://sitemechanic.io/en/competitive-analysis.html" />
+    <meta name="twitter:image" content="https://sitemechanic.io/images/twitter-competitive-analysis.png" />
+
+    <title>Competitive Insights - Competitor Benchmarks & Gap Analysis | Site Mechanic</title>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css">
     <link rel="stylesheet" href="components.css">
     <link rel="stylesheet" href="layout.css">
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css">
     <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css">
     <link rel="stylesheet" href="progress-styles.css">
@@ -509,7 +560,7 @@
             color: #444444;
         }
 
-        /* Pac-Man Animation - Improved */
+        /* Pac-Man Animation - Premium Design */
         .pacman-container {
             position: relative;
             height: 80px;
@@ -530,43 +581,109 @@
             box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1), 0 4px 15px rgba(255, 215, 0, 0.15);
         }
 
+        /* Pac-Man wrapper for smooth movement */
         .pacman {
             position: absolute;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #ffd700;
-            animation: pacman-move 6s linear infinite;
+            width: 44px;
+            height: 44px;
             top: 50%;
             transform: translateY(-50%);
-            filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.5));
+            animation: pacman-move 6s linear infinite;
+            filter: drop-shadow(0 0 12px rgba(255, 215, 0, 0.6));
+            background: transparent !important;
+            background-color: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
         }
 
+        /* Ensure all pacman children have transparent backgrounds */
+        .pacman > *:not(.pacman-eye) {
+            background: transparent !important;
+        }
+
+        /* Pac-Man body - top half */
         .pacman::before {
             content: '';
             position: absolute;
-            width: 0;
-            height: 0;
-            border-left: 20px solid rgba(0, 0, 0, 0.1);
-            border-top: 12px solid transparent;
-            border-bottom: 12px solid transparent;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            animation: pacman-chomp 0.3s ease-in-out infinite;
+            width: 44px;
+            height: 22px;
+            background: #ffd700;
+            border-radius: 44px 44px 0 0;
+            top: 0;
+            left: 0;
+            transform-origin: bottom center;
+            animation: pacman-top 0.25s ease-in-out infinite;
+            box-shadow: none;
+        }
+
+        /* Pac-Man body - bottom half */
+        .pacman::after {
+            content: '';
+            position: absolute;
+            width: 44px;
+            height: 22px;
+            background: #ffd700;
+            border-radius: 0 0 44px 44px;
+            bottom: 0;
+            left: 0;
+            transform-origin: top center;
+            animation: pacman-bottom 0.25s ease-in-out infinite;
+            box-shadow: none;
+        }
+
+        /* Pac-Man eye */
+        .pacman-eye {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            background: #000 !important;
+            background-color: #000 !important;
+            border-radius: 50%;
+            top: 6px;
+            left: 24px;
+            z-index: 10;
+            border: none !important;
+            box-shadow: none !important;
+            padding: 0 !important;
+        }
+
+        body.white-theme .pacman::before,
+        body.white-theme .pacman::after {
+            background: #f5c000;
         }
 
         body.white-theme .pacman {
-            background: #f5c000;
-            filter: drop-shadow(0 0 10px rgba(245, 192, 0, 0.4));
+            filter: drop-shadow(0 0 10px rgba(245, 192, 0, 0.5));
+            background: transparent !important;
+            background-color: transparent !important;
         }
 
-        @keyframes pacman-chomp {
+        /* Ensure no white artifacts on pacman in any theme */
+        .pacman,
+        .pacman * {
+            background-color: transparent;
+        }
+        
+        .pacman-eye {
+            background: #000 !important;
+        }
+
+        @keyframes pacman-top {
             0%, 100% {
-                transform: translate(-50%, -50%) rotate(0deg);
+                transform: rotate(0deg);
             }
             50% {
-                transform: translate(-50%, -50%) rotate(45deg);
+                transform: rotate(-20deg);
+            }
+        }
+
+        @keyframes pacman-bottom {
+            0%, 100% {
+                transform: rotate(0deg);
+            }
+            50% {
+                transform: rotate(20deg);
             }
         }
 
@@ -824,13 +941,93 @@
             border-color: rgba(0, 255, 65, 0.4);
         }
     </style>
+
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "Competitive Analysis Tool",
+          "description": "Compare your website against competitors with side-by-side benchmarking of performance, SEO, security, and accessibility. Identify competitive gaps and opportunities to outrank competition.",
+          "url": "https://sitemechanic.io/en/competitive-analysis.html",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Any",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Side-by-Side Website Comparison",
+            "Performance Benchmarking",
+            "SEO Competition Analysis",
+            "Security Gap Identification",
+            "Accessibility Comparison",
+            "Competitive Intelligence Dashboard",
+            "Multi-Site Comparison"
+          ],
+          "browserRequirements": "Requires JavaScript",
+          "permissions": "No installation required"
+        },
+        {
+          "@type": "Organization",
+          "name": "Site Mechanic",
+          "url": "https://sitemechanic.io",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://sitemechanic.io/images/logo.png"
+          },
+          "description": "Professional website analysis and optimization tools for developers and digital marketers"
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://sitemechanic.io/en/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Competitive Analysis",
+              "item": "https://sitemechanic.io/en/competitive-analysis.html"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
+    <script src="/seo-i18n.js"></script>
 </head>
 <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
 
-    <div class="container">        <!-- Header -->
-        <header class="form-container">
+    <main class="page-shell">
+        <!-- Breadcrumb Navigation -->
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+            <a href="/dashboard.html">Home</a>
+            <span class="breadcrumb-sep">›</span>
+            <span aria-current="page">Competitive Analysis</span>
+        </nav>
+        
+        <!-- Page Header -->
+        <header class="page-header">
+            <h1 class="page-header__title">Competitive Analysis</h1>
+            <p class="page-header__subtitle">Compare your website against competitors across SEO, Performance, Accessibility, and Security metrics.</p>
+        </header>
+
+        <!-- Input Card -->
+        <section class="card">
+            <div class="card__body">
             <div style="margin: 1rem 0; padding: 0.75rem 1rem; background: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b; border-radius: 4px;">
                 <p style="color: #ff6b6b; font-weight: bold; margin: 0 0 0.35rem 0;">→ COMPETITIVE ADVANTAGE</p>
                 <p style="color: #e0e0e0; margin: 0 0 0.35rem 0; line-height: 1.4;">
@@ -848,7 +1045,8 @@
                     <label for="yourUrl" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--text-primary);">Your Website URL</label>
                     <input 
                         type="url" 
-                        id="yourUrl" 
+                        id="yourUrl"
+                        class="input"
                         placeholder="https://yoursite.com"
                         aria-label="Enter your website URL"
                         required
@@ -868,23 +1066,24 @@
                                     placeholder="https://competitor1.com"
                                     aria-label="Competitor 1 URL"
                                 />
-                                <button class="remove-competitor">Remove</button>
+                                <button type="button" class="remove-competitor" onclick="removeCompetitor(this)">Remove</button>
                             </div>
                         </div>
-                        <button class="add-competitor-btn" id="addCompetitorBtn">+ Add Competitor</button>
+                        <button type="button" class="add-competitor-btn" id="addCompetitorBtn" onclick="addCompetitorInput()">+ Add Competitor</button>
                     </div>
                 </div>
                 
                 <!-- Analyze Button -->
-                <button id="analyzeBtn" class="analyze-button">ANALYZE</button>
+                <button id="analyzeBtn" class="btn btn-primary">INSPECT</button>
             </div>
-        </header>
+            </div>
+        </section>
 
         <!-- Unified Loading Container -->
         <div id="loadingContainer" style="display: none;"></div>
 
         <div id="results" style="display: none;"></div>
-    </div>
+    </main>
 
     <!-- Pac-Man Loading Modal -->
     <div id="pacmanModal" class="pacman-modal">
@@ -894,7 +1093,9 @@
             
             <!-- Pac-Man Animation -->
             <div class="pacman-container">
-                <div class="pacman"></div>
+                <div class="pacman">
+                    <div class="pacman-eye"></div>
+                </div>
                 <div class="dot"></div>
                 <div class="dot"></div>
                 <div class="dot"></div>
@@ -967,7 +1168,7 @@
     <script src="analyzer-loader.js"></script>
 
     <!-- ASCII Background Animation -->
-    <script src="ascii-background.js"></script>
+
 
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>

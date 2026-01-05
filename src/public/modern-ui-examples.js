@@ -99,7 +99,7 @@ function renderCoreWebVitals(data) {
     </div>
     <div class="module-actions">
       <button class="module-action-btn" onclick="exportCWVReport()">
-        📊 Export Report
+        📊 Client Report
       </button>
     </div>
   `;

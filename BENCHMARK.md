@@ -16,7 +16,7 @@
 
 3. **Typekit/Adobe Fonts Analytics**
    - Font loading optimization
-   - Advanced metrics tracking
+   - Detailed font metrics and performance tracking
    - Professional font library integration
 
 4. **WebPageTest Font Analysis**
@@ -28,7 +28,7 @@
 
 | Feature | Our Tool | Google Fonts | Adobe | WebPageTest | Fontspring |
 |---------|----------|--------------|-------|-------------|------------|
-| Font Detection | ✅ Advanced | ✅ Basic | ✅ Advanced | ✅ Basic | ✅ Advanced |
+| Font Detection | ✅ Detailed | ✅ Basic | ✅ Detailed | ✅ Basic | ✅ Detailed |
 | Performance Analysis | ✅ Good | ✅ Excellent | ⚠️ Limited | ✅ Excellent | ⚠️ Basic |
 | Visual Analysis | ✅ Good | ⚠️ Limited | ✅ Excellent | ⚠️ Basic | ✅ Good |
 | Accessibility Analysis | ⚠️ Basic | ⚠️ Limited | ✅ Good | ❌ None | ⚠️ Basic |

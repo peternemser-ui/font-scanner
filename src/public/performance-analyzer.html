@@ -4,23 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
+    
+    <!-- Redirect to Speed & UX - consolidated performance tools -->
+    <meta http-equiv="refresh" content="0; url=/performance-hub.html" />
+    <script>window.location.href = '/performance-hub.html' + window.location.search;</script>
 
     <!-- Primary Meta Tags -->
-    <title>Performance Analyzer - Website Speed & Core Web Vitals Tool | Font Scanner</title>
-    <meta name="title" content="Performance Analyzer - Website Speed & Core Web Vitals Tool | Font Scanner" />
+    <title>Performance Analyzer - Redirecting to Speed & UX | Site Mechanic</title>
+    <meta name="title" content="Performance Analyzer - Website Speed & Core Web Vitals Tool | Site Mechanic" />
     <meta name="description" content="Professional performance analysis tool for web developers. Analyze website speed, Core Web Vitals (LCP, FID, CLS), resource optimization, loading performance, and get actionable optimization insights." />
     <meta name="keywords" content="performance analyzer, website speed test, Core Web Vitals, LCP, FID, CLS, page speed, performance optimization, website performance, speed test, web vitals, lighthouse, performance audit" />
-    <meta name="author" content="Font Scanner" />
+    <meta name="author" content="Site Mechanic" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <link rel="canonical" href="https://fontscanner.app/performance-analyzer.html" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://fontscanner.app/performance-analyzer.html" />
-    <meta property="og:title" content="Performance Analyzer - Website Speed & Core Web Vitals Tool | Font Scanner" />
+    <meta property="og:title" content="Performance Analyzer - Website Speed & Core Web Vitals Tool | Site Mechanic" />
     <meta property="og:description" content="Analyze website speed, Core Web Vitals, resource optimization, and get actionable performance insights. Professional web development tool." />
     <meta property="og:image" content="https://fontscanner.app/og-performance.png" />
-    <meta property="og:site_name" content="Font Scanner" />
+    <meta property="og:site_name" content="Site Mechanic" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
@@ -38,10 +42,13 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
     <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
@@ -153,6 +160,19 @@
     <div id="nav-placeholder"></div>
     
     <div class="container">
+      <!-- Breadcrumb Navigation -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Performance Analyzer</span>
+      </nav>
+      
+      <!-- Page Title -->
+      <div class="page-header">
+        <h1 class="page-title">Performance Analyzer</h1>
+        <p class="page-subtitle">Website speed and Core Web Vitals analysis with Lighthouse audits and actionable optimization insights.</p>
+      </div>
+
       <!-- Header -->
       <header class="form-container">
         <!-- URL Input Form -->
@@ -167,7 +187,7 @@
             aria-required="true"
           />
           
-          <button id="perfAnalyzeButton" aria-label="Start comprehensive performance analysis">ANALYZE</button>
+          <button id="perfAnalyzeButton" aria-label="Start comprehensive performance analysis">ANALYZE PERFORMANCE</button>
           
           <p style="color: #808080; font-size: 0.85rem; margin-top: 0.5rem; font-style: italic;">
             Note: Analysis runs Lighthouse on both desktop and mobile (takes 2-3x longer)
@@ -186,6 +206,7 @@
     <script src="/theme-fixer.js"></script>
     
     <!-- Shared Navigation Template -->
+    <script src="/pro-utils.js"></script>
     <script src="/nav-template.js"></script>
     
     <!-- Performance Visualizations Library -->
@@ -195,7 +216,7 @@
     <script src="/analyzer-loader.js"></script>
 
     <!-- ASCII Background Animation -->
-    <script src="ascii-background.js"></script>
+
 
     <!-- Performance Analyzer Script -->
     <script src="/performance-script.js"></script>

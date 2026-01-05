@@ -1,8 +1,11 @@
-# Font Scanner - AI Coding Agent Instructions
+# Site Mechanic - AI Coding Agent Instructions
 
 ## Project Overview
 
-Enterprise-grade web application that analyzes websites for fonts, typography, accessibility, and performance using Puppeteer, Lighthouse, and advanced font metrics. Built for production with Docker/Kubernetes deployment, comprehensive monitoring, and security-first design.
+**Site Mechanic** is a web diagnostics platform that analyzes websites for SEO, performance, accessibility, security, and typography. Built with Puppeteer, Lighthouse, and specialized analyzers. Production-ready with Docker/Kubernetes, monitoring, and security-first design.
+
+**Brand**: Site Mechanic (the product)
+**Modules**: Font Scanner, Hosting Analyzer, Crawler, SEO Analyzer, etc. (features within Site Mechanic)
 
 ## Architecture & Core Patterns
 
@@ -101,7 +104,7 @@ const fontScannerService = require('../services/fontScannerService');
 const result = await fontScannerService.scanFonts(url);
 ```
 
-Main scan orchestration in `enhancedScannerService.performComprehensiveScan()` - coordinates 9 analyzers
+Main scan orchestration in `enhancedScannerService.performComprehensiveScan()` - orchestrates 9 analyzers with parallel execution
 
 ### Scoring Algorithm (Critical!)
 Enhanced mode uses **strict validation** - only working analyzers contribute to scores:
@@ -131,7 +134,7 @@ Protected endpoints for operational visibility:
 ## Project-Specific Quirks
 
 ### Graceful Shutdown Pattern
-`server.js` implements comprehensive shutdown via `gracefulShutdown()`:
+`server.js` implements graceful shutdown via `gracefulShutdown()`:
 1. Set `isShuttingDown = true` (readiness probe fails)
 2. Stop accepting new connections
 3. Drain browser pool (closes all Puppeteer instances)
@@ -143,7 +146,7 @@ When adding async resources, **always register cleanup** in `gracefulShutdown()`
 ### Cache Strategy
 `src/utils/cache.js` provides TTL-based in-memory cache:
 - Basic scans cached (15min default)
-- Comprehensive scans always fresh
+- Full scans always fetch fresh data (no cache)
 - Check cache before expensive operations: `defaultCache.get(key, metadata)`
 
 ### Report Management
@@ -151,6 +154,72 @@ PDF reports in `./reports/` auto-cleanup via `src/utils/reportCleanup.js`:
 - Scheduled daily via node-cron
 - Retention: 7 days (configurable)
 - Manual: `node scripts/cleanup-reports.js`
+
+## UI & Copy Guidelines
+
+### Branding
+Always reference the product as **Site Mechanic**.
+
+| Type | Name | Usage |
+|------|------|-------|
+| **Brand** | Site Mechanic | The product name, used in titles, headers, marketing |
+| **Module** | Font Scanner | A feature within Site Mechanic |
+| **Module** | Hosting Analyzer | A feature within Site Mechanic |
+| **Module** | Crawler | A feature within Site Mechanic |
+| **Module** | SEO Analyzer | A feature within Site Mechanic |
+
+Example: "Site Mechanic's Font Scanner module analyzes typography..."
+
+### Navigation Labels
+Labels must reflect **user intent**, not implementation details.
+
+| ❌ Bad (Implementation) | ✅ Good (User Intent) |
+|------------------------|----------------------|
+| Tag Intelligence | Tracking & Analytics |
+| Performance Hub | Speed & UX |
+| Font Scanner | Fonts & Typography |
+
+### Language Rules
+**Avoid** marketing words: Comprehensive, Advanced, Powerful, Robust, Enterprise-grade
+**Prefer** engineering terms: Actionable, Prioritized, Impact, Fix, Issue, Recommendation
+
+### PRO/Paid Feature Framing
+Do NOT use raw "PRO" labels. Frame paid features as value propositions:
+- Time-saving, Export-ready, Multi-page, Client-friendly, Automation-ready
+- Badge text: "Saves time" not "PRO"
+- Show what feature saves (e.g., "Saves 2+ hours/week")
+
+### Free vs Paid Tiers
+**Free**: Single-page scans, summary scores, top issues, on-screen viewing
+**Paid**: Multi-page crawling, client-ready reports, competitive analysis, historical data
+
+### Export Philosophy
+Treat exports as a **premium outcome**, not a utility.
+
+Reports should be:
+- **Client-presentable** (professional quality, ready to share)
+- **Clear** (no jargon without explanation)
+- **Minimal** (focused, not exhaustive)
+- **Recommendation-focused** (what to fix, not raw data)
+
+Avoid raw data dumps unless explicitly requested.
+
+### UI Simplification Rules
+Default views show **what's actionable**. Details are for experts.
+
+**Show by default:**
+- Health score
+- Category breakdown (mini scores)
+- Top 3-5 issues (prioritized)
+- Clear "next step" recommendation
+
+**Hide by default (in collapsible sections):**
+- Raw data, large tables (>5 rows)
+- Edge cases, technical metrics
+- Accordions start COLLAPSED
+- Score/severity visible in accordion headers
+
+See `UI_SIMPLIFICATION_GUIDELINES.md` for implementation patterns.
 
 ## Security Conventions
 
@@ -177,4 +246,5 @@ Logger auto-redacts (disable with `DISABLE_LOG_SANITIZATION=true`):
 - `DEPLOYMENT.md` - Docker/K8s deployment patterns
 - `SECURITY.md` - Threat model, security controls
 - `docs/ERROR_TELEMETRY.md` - Error tracking implementation
+- `UI_SIMPLIFICATION_GUIDELINES.md` - Frontend UI patterns
 - `Makefile` - All available commands with descriptions

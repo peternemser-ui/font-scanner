@@ -1,6 +1,6 @@
 /**
  * 🎨 DESIGN TOKENS
- * Unified design system for Font Scanner Suite
+ * Unified design system for Site Mechanic
  * Version: 2.0 - Business-Ready Streamline
  * 
  * Usage: Import this before styles.css in all HTML files
@@ -324,10 +324,11 @@
 .container {
   width: 100%;
   max-width: var(--container-2xl);
-  margin-left: auto;
+  margin-left: 0;
   margin-right: auto;
   padding-left: var(--space-4);
   padding-right: var(--space-4);
+  text-align: left;
 }
 
 /* Card Base */

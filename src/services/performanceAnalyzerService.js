@@ -87,6 +87,76 @@ class PerformanceAnalyzerService {
   }
 
   /**
+   * ⚡ OPTIMIZED: Perform performance analysis with pre-computed Lighthouse results
+   * This avoids running Lighthouse twice (saves 60-120 seconds!)
+   * @param {string} url - URL to analyze
+   * @param {Object} sharedLighthouse - Pre-computed Lighthouse results { desktop, mobile }
+   * @returns {Object} Performance analysis results
+   */
+  async analyzePerformanceWithLighthouse(url, sharedLighthouse = {}) {
+    const startTime = Date.now();
+    logger.info(`Starting OPTIMIZED performance analysis for: ${url} (using shared Lighthouse)`);
+
+    try {
+      // Collect Puppeteer metrics (still needed for detailed resource info)
+      logger.info('Collecting resource metrics via Puppeteer...');
+      let resourceMetrics;
+      try {
+        resourceMetrics = await this.collectResourceMetrics(url);
+      } catch (navError) {
+        logger.warn(`Puppeteer metrics collection failed, using minimal metrics: ${navError.message}`);
+        resourceMetrics = {
+          resources: [],
+          pageSize: 0,
+          url,
+          status: 0,
+          timing: {
+            navigation: {
+              domContentLoaded: 0,
+              loadComplete: 0,
+              domInteractive: 0,
+              ttfb: 0,
+              dns: 0,
+              tcp: 0,
+              ssl: 0,
+              request: 0,
+              response: 0,
+              domProcessing: 0,
+              totalLoadTime: 0,
+            },
+            webVitals: { lcp: 0, fid: 0, cls: 0 }
+          }
+        };
+      }
+      
+      // Use shared Lighthouse results (NO new Lighthouse runs!)
+      let desktopLighthouse = sharedLighthouse.desktop;
+      let mobileLighthouse = sharedLighthouse.mobile;
+      
+      // Create fallbacks if Lighthouse data is missing
+      if (!desktopLighthouse || desktopLighthouse.score === 0) {
+        logger.warn('Shared Lighthouse desktop missing, using Puppeteer-only fallback');
+        desktopLighthouse = this.createPuppeteerFallback(resourceMetrics, 'desktop');
+      }
+      
+      if (!mobileLighthouse || mobileLighthouse.score === 0) {
+        logger.warn('Shared Lighthouse mobile missing, using Puppeteer-only fallback');
+        mobileLighthouse = this.createPuppeteerFallback(resourceMetrics, 'mobile');
+      }
+
+      // Combine and process results
+      const results = this.processResults(url, resourceMetrics, desktopLighthouse, mobileLighthouse, startTime);
+      
+      logger.info(`OPTIMIZED Performance analysis completed for: ${url} (Desktop: ${results.desktop.performanceScore}, Mobile: ${results.mobile.performanceScore})`);
+      return results;
+
+    } catch (error) {
+      logger.error(`OPTIMIZED Performance analysis failed for ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Collect resource loading metrics using Puppeteer
    */
   async collectResourceMetrics(url) {

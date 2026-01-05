@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Multi-Page Site Crawler - Discover and crawl website pages with configurable limits. Sitemap discovery, robots.txt respect, and SSRF protection." />
+    <meta name="theme-color" content="#000000" />
+    
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="site crawler, website spider, page discovery, sitemap crawler, robots.txt, link discovery, website map" />
+    <meta name="author" content="Site Mechanic" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://sitemechanic.io/en/site-crawler.html" />
+
+    <!-- Hreflang Tags for Multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/site-crawler.html" />
+    <link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/site-crawler.html" />
+    <link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/site-crawler.html" />
+    <link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/site-crawler.html" />
+    <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/site-crawler.html" />
+    <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/site-crawler.html" />
+    <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/site-crawler.html" />
+    <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/site-crawler.html" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Multi-Page Site Crawler - Discover Website Pages" />
+    <meta property="og:description" content="Crawl websites to discover pages with configurable limits, sitemap support, and robots.txt compliance." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sitemechanic.io/en/site-crawler.html" />
+    <meta property="og:image" content="https://sitemechanic.io/images/og-site-crawler.png" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="pt_PT" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:site_name" content="Site Mechanic" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Multi-Page Site Crawler - Discover Website Pages" />
+    <meta name="twitter:description" content="Crawl websites to discover pages with configurable limits, sitemap support, and robots.txt compliance." />
+    <meta name="twitter:url" content="https://sitemechanic.io/en/site-crawler.html" />
+    <meta name="twitter:image" content="https://sitemechanic.io/images/twitter-site-crawler.png" />
+
+    <title>SEO & Indexing - Full Site Crawler | Site Mechanic</title>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
+    <!-- Existing Stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+    <link rel="stylesheet" href="spacing-fixes.css" />
+
+    <!-- CRITICAL: Theme background fix -->
+    <style>
+      /* Dark mode (when white-theme is NOT present) */
+      body:not(.white-theme) {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+      /* Light mode (when white-theme IS present) */
+      body.white-theme {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
+        color: #1a1a1a !important;
+      }
+      
+      /* Page list item */
+      .page-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 4px;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+      }
+      .page-item:hover {
+        background: rgba(255, 255, 255, 0.06);
+        border-color: rgba(0, 255, 136, 0.3);
+      }
+      .page-item a {
+        color: #60a5fa;
+        text-decoration: none;
+        word-break: break-all;
+        flex: 1;
+      }
+      .page-item a:hover {
+        text-decoration: underline;
+      }
+      
+      /* Options panel */
+      .options-panel {
+        margin-top: 1rem;
+        padding: 1rem;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+      }
+      .options-panel label {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 0.75rem;
+        cursor: pointer;
+      }
+      .options-panel input[type="number"] {
+        width: 80px;
+        padding: 4px 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 4px;
+        color: inherit;
+      }
+      .options-panel input[type="checkbox"] {
+        width: 18px;
+        height: 18px;
+      }
+      
+      /* Action buttons */
+      .action-btn {
+        padding: 4px 8px;
+        border-radius: 4px;
+        border: none;
+        cursor: pointer;
+        font-size: 0.75rem;
+        transition: all 0.2s ease;
+      }
+      .action-btn.analyze {
+        background: #10b981;
+        color: white;
+      }
+      .action-btn.analyze:hover {
+        background: #059669;
+      }
+    </style>
+    
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "Site Crawler",
+          "description": "Multi-page site crawler that discovers and maps website pages with configurable crawl limits, sitemap discovery, robots.txt compliance, and SSRF protection for comprehensive site analysis.",
+          "url": "https://sitemechanic.io/en/site-crawler.html",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Any",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Website Page Discovery",
+            "Sitemap XML Parsing",
+            "Robots.txt Compliance",
+            "Link Discovery & Crawling",
+            "Configurable Crawl Limits",
+            "SSRF Protection",
+            "Multi-Page Site Mapping"
+          ],
+          "browserRequirements": "Requires JavaScript",
+          "permissions": "No installation required"
+        },
+        {
+          "@type": "Organization",
+          "name": "Site Mechanic",
+          "url": "https://sitemechanic.io",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://sitemechanic.io/images/logo.png"
+          },
+          "description": "Professional website analysis and optimization tools for developers and digital marketers"
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://sitemechanic.io/en/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Site Crawler",
+              "item": "https://sitemechanic.io/en/site-crawler.html"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
+    <script src="/seo-i18n.js"></script>
+  </head>
+  <body>
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+    
+    <main class="page-shell">
+      <!-- Breadcrumb Navigation -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/dashboard.html">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span aria-current="page">Site Crawler</span>
+      </nav>
+      
+      <!-- Page Header -->
+      <header class="page-header">
+        <h1 class="page-header__title">Site Crawler</h1>
+        <p class="page-header__subtitle">Discover all pages on a website with intelligent link extraction and sitemap generation.</p>
+      </header>
+
+      <!-- Input Card -->
+      <section class="card">
+        <div class="card__body">
+          <!-- URL Input Form -->
+          <div class="form-row">
+            <label for="urlInput" class="visually-hidden">Website URL to crawl</label>
+            <input 
+              type="url" 
+              id="urlInput"
+              class="input"
+              placeholder="https://example.com" 
+              aria-label="Enter website URL to crawl"
+              required
+              aria-required="true"
+            />
+            
+            <button id="crawlButton" class="btn btn-primary" aria-label="Start site crawl">CRAWL SITE</button>
+          </div>
+        
+          <!-- Options Panel -->
+          <div class="options-panel" style="margin-top: 1.5rem;">
+            <label>
+              Max pages to discover: 
+              <input type="number" id="maxPages" value="20" min="1" max="50" />
+            </label>
+            <label>
+              Max crawl depth: 
+              <input type="number" id="maxDepth" value="3" min="1" max="5" />
+            </label>
+            <label>
+              <input type="checkbox" id="includeSitemap" checked />
+              Parse sitemap.xml (faster discovery)
+          </label>
+          <label>
+            <input type="checkbox" id="respectRobots" checked />
+            Respect robots.txt rules
+          </label>
+        </div>
+        
+        <!-- Info Banner -->
+        <p class="helper-text" style="margin-top: 1rem;">
+          <strong>Site Crawler:</strong> Discovers pages on your website by parsing sitemaps, following links, and respecting robots.txt. 
+          Use discovered pages for multi-page font, performance, or tag analysis.
+        </p>
+        </div>
+      </section>
+
+      <!-- Results Container -->
+      <div id="results" class="results-container hidden" role="region" aria-live="polite">
+        <!-- Loading State (populated by AnalyzerLoader) -->
+        <div id="loadingContainer"></div>
+
+        <!-- Results Content (populated by JavaScript) -->
+        <div id="resultsContent"></div>
+      </div>
+
+      <!-- Error Display -->
+      <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
+    </main>
+
+    <!-- Scripts -->
+    <script src="theme-controls.js"></script>
+    <script src="nav-template.js"></script>
+    <script src="analyzer-loader.js"></script>
+
+    <!-- ASCII Background Animation -->
+
+
+    <script src="site-crawler-script.js"></script>
+  </body>
+</html>

@@ -3,18 +3,25 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Core Web Vitals Analyzer - Track Google's ranking factors: LCP, INP/FID, CLS. Real-time monitoring and optimization recommendations." />
     <meta name="theme-color" content="#000000" />
     
-    <title>Core Web Vitals Analyzer - Google Ranking Factors</title>
+    <!-- Redirect to Speed & UX - consolidated performance tools -->
+    <meta http-equiv="refresh" content="0; url=/performance-hub.html" />
+    <script>window.location.href = '/performance-hub.html' + window.location.search;</script>
+    
+    <meta name="description" content="Redirecting to Speed & UX - Core Web Vitals now available in the consolidated Speed & UX page." />
+    <title>Core Web Vitals - Redirecting to Speed & UX | Site Mechanic</title>
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
     <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
@@ -45,6 +52,19 @@
     <div id="nav-placeholder"></div>
     
     <div class="container">
+      <!-- Breadcrumb Navigation -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Core Web Vitals</span>
+      </nav>
+      
+      <!-- Page Title -->
+      <div class="page-header">
+        <h1 class="page-title">📈 Core Web Vitals</h1>
+        <p class="page-subtitle">Google's critical metrics for user experience: LCP, INP, and CLS directly impact search rankings.</p>
+      </div>
+
       <!-- Header -->
       <header class="form-container">
         <div style="margin: 1.5rem 0; padding: 1rem; background: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b; border-radius: 4px;">
@@ -86,7 +106,7 @@
     <script src="/analyzer-loader.js"></script>
 
     <!-- ASCII Background Animation -->
-    <script src="ascii-background.js"></script>
+
 
     <!-- Core Web Vitals Analyzer Script -->
     <script src="/cwv-script.js"></script>

@@ -1,6 +1,6 @@
-# Font Scanner
+# Site Mechanic
 
-A comprehensive, enterprise-grade web application that analyzes websites for fonts, font display properties, font loading performance, and typography best practices.
+A web diagnostics platform that analyzes websites for SEO, performance, accessibility, security, and typography. Production-ready with detailed monitoring and security controls.
 
 [![CI/CD](https://github.com/your-org/font-scanner/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/your-org/font-scanner/actions)
 [![Security Scan](https://img.shields.io/badge/security-scanned-green.svg)](./SECURITY.md)
@@ -9,21 +9,21 @@ A comprehensive, enterprise-grade web application that analyzes websites for fon
 
 ## Features
 
-### Comprehensive Font & Typography Analysis
+### Core Diagnostics
 
-- **Font Discovery**: Identifies all fonts used (system, Google Fonts, web fonts, icon fonts)
+- **Font Scanner Module**: Identifies all fonts used (system, Google Fonts, web fonts, icon fonts)
 - **Performance Analysis**: Lighthouse desktop + mobile with Core Web Vitals (LCP, FID, CLS)
 - **Best Practices Audit**: Industry-standard compliance checking with detailed recommendations
 - **AI-Powered Font Pairing**: Typography harmony evaluation and pairing quality scoring
 - **Real User Metrics (RUM)**: Simulated user experience and UX quality assessment
 - **Cross-Browser Testing**: Chrome, Firefox, Safari compatibility analysis
-- **Advanced Accessibility**: WCAG 2.1 AA/AAA compliance, contrast analysis, readability scoring
+- **Accessibility Analysis**: WCAG 2.1 AA/AAA compliance, contrast analysis, readability scoring
 - **Font Licensing Detection**: License identification and compliance checking
 - **Industry Benchmarking**: Competitive analysis against best-in-class standards
 - **Real-Time Progress Updates**: WebSocket-powered live progress tracking (5-10 min scans)
-- **Detailed Reports**: Comprehensive PDF reports with weighted scoring and actionable recommendations
+- **PDF Reports**: Exportable reports with weighted scoring and actionable recommendations
 - **Score Breakdown Visualization**: Transparent display of exactly how scores are calculated
-- **Enterprise-Ready**: Production-ready with Docker, Kubernetes, monitoring, and CI/CD
+- **Production-Ready**: Docker, Kubernetes, monitoring, and CI/CD
 
 ## Technology Stack
 
@@ -52,7 +52,7 @@ Font Scanner works best with:
 - Large retail chains with aggressive bot protection
 - Any site using Cloudflare Enterprise WAF or similar
 
-**Why?** These sites use advanced bot detection (Cloudflare, PerimeterX, etc.) that blocks automated analysis tools. This is expected behavior, not a bug. Use [Google PageSpeed Insights](https://pagespeed.web.dev/) for these sites instead.
+**Why?** These sites use bot detection (Cloudflare, PerimeterX, etc.) that blocks automated analysis tools. This is expected behavior, not a bug. Use [Google PageSpeed Insights](https://pagespeed.web.dev/) for these sites instead.
 
 **Fallback Mode:** Font Scanner automatically attempts a lightweight HTTP-based analysis if full Puppeteer analysis is blocked. This provides basic SEO metrics (meta tags, headings, content) but no Core Web Vitals or performance data.
 
@@ -96,9 +96,9 @@ make docker-compose
 
 See [DOCKER_README.md](./DOCKER_README.md) for detailed Docker instructions.
 
-## Comprehensive Analysis Mode
+## Full Analysis Mode
 
-Font Scanner performs a **complete 10-analyzer comprehensive scan** for every website:
+Font Scanner performs a **complete 10-analyzer scan** for every website:
 
 ### Analysis Components (Weighted Scoring)
 
@@ -108,7 +108,7 @@ Font Scanner performs a **complete 10-analyzer comprehensive scan** for every we
 4. **Font Pairing Analysis** (15%) - AI-powered typography harmony evaluation
 5. **Real User Metrics** (12%) - Simulated user experience, UX quality
 6. **Cross-Browser Testing** (10%) - Chrome/Firefox/Safari compatibility
-7. **Advanced Accessibility** (13%) - WCAG compliance, contrast, readability
+7. **Accessibility** (13%) - WCAG compliance, contrast, readability
 8. **Font Licensing** (8%) - License identification, compliance checking
 9. **Lighthouse** (5%) - Google's performance audit (desktop + mobile)
 
@@ -120,12 +120,12 @@ Font Scanner performs a **complete 10-analyzer comprehensive scan** for every we
 - ✅ **Visual Score Breakdown** showing which analyzers contributed
 - ✅ **Completeness Bonus** when ≥70% features work with base score >70
 - ✅ **PDF Report Download** with all metrics and recommendations
-- ✅ **10+ Advanced Analyzers** working in parallel
+- ✅ **10+ Parallel Analyzers** for comprehensive coverage
 - ✅ **5-10 Minute Analysis** with live time estimates
 
 ### Real-Time Progress Tracking (NEW!)
 
-Experience transparent, real-time progress updates during comprehensive scans:
+Experience real-time progress updates during full scans:
 - **Live step tracking**: See which analyzer is currently running (Step 1/10)
 - **Status indicators**: Running (⏳), Completed (✅), Error (❌)
 - **Progress bars**: Visual feedback for each step's completion
@@ -166,7 +166,7 @@ The **Score Breakdown** feature shows exactly how your score is calculated:
 ## API Endpoints
 
 ### Core Endpoints
-- `POST /api/scan/best-in-class` - Comprehensive analysis with 10+ analyzers (5-10 minutes)
+- `POST /api/scan/best-in-class` - Full analysis with 10+ analyzers (5-10 minutes)
   - Includes: Font discovery, performance, best practices, font pairing, RUM, cross-browser, accessibility, licensing, benchmarking, Lighthouse
   - Returns: Weighted scoring (0-100), letter grade (A+ to F), PDF report
 - `GET /api/health` - Liveness probe endpoint
@@ -183,7 +183,7 @@ The **Score Breakdown** feature shows exactly how your score is calculated:
 
 ## Make Commands
 
-The project includes a comprehensive Makefile:
+The project includes a Makefile with common tasks:
 
 ```bash
 make help              # Show all available commands

@@ -6,21 +6,21 @@
     <meta name="theme-color" content="#000000" />
 
     <!-- Primary Meta Tags -->
-    <title>Accessibility Analyzer - WCAG & ADA Compliance Testing Tool | Font Scanner</title>
-    <meta name="title" content="Accessibility Analyzer - WCAG & ADA Compliance Testing Tool | Font Scanner" />
-    <meta name="description" content="Professional accessibility testing tool for web developers. Comprehensive WCAG 2.1, ADA compliance audits. Test color contrast, keyboard navigation, screen reader compatibility, ARIA implementation, and accessibility best practices." />
-    <meta name="keywords" content="accessibility analyzer, WCAG testing, ADA compliance, accessibility audit, a11y testing, color contrast checker, screen reader testing, ARIA validator, web accessibility, accessibility compliance, WCAG 2.1" />
-    <meta name="author" content="Font Scanner" />
+    <title>Accessibility - WCAG Compliance & Violations | Site Mechanic</title>
+    <meta name="title" content="Accessibility - WCAG & ADA Compliance Audit | Site Mechanic" />
+    <meta name="description" content="Diagnose accessibility issues: WCAG 2.1 violations, color contrast, keyboard navigation, screen reader support. Part of Site Mechanic's unified website inspection workflow." />
+    <meta name="keywords" content="accessibility audit, WCAG testing, ADA compliance, a11y, color contrast, keyboard navigation, screen reader, ARIA, web accessibility" />
+    <meta name="author" content="Site Mechanic" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-    <link rel="canonical" href="https://fontscanner.app/accessibility-analyzer.html" />
+    <link rel="canonical" href="https://sitemechanic.io/accessibility-analyzer.html" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://fontscanner.app/accessibility-analyzer.html" />
-    <meta property="og:title" content="Accessibility Analyzer - WCAG & ADA Compliance Testing | Font Scanner" />
+    <meta property="og:title" content="Accessibility Analyzer - WCAG & ADA Compliance Testing | Site Mechanic" />
     <meta property="og:description" content="Comprehensive WCAG 2.1 and ADA compliance testing. Test color contrast, keyboard navigation, screen reader compatibility, and accessibility best practices." />
     <meta property="og:image" content="https://fontscanner.app/og-accessibility.png" />
-    <meta property="og:site_name" content="Font Scanner" />
+    <meta property="og:site_name" content="Site Mechanic" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
@@ -39,17 +39,22 @@
     <!-- Preload critical fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
     <!-- Existing Stylesheets -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
     <link rel="stylesheet" href="ui-components.css" />
     <link rel="stylesheet" href="spacing-fixes.css" />
+    <!-- PDF Export Styles -->
+    <link rel="stylesheet" href="/pdf-export-styles.css">
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -170,32 +175,41 @@
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
     
-    <div class="container">
-      <!-- Header -->
-      <header class="form-container">
-        <!-- URL Input Form -->
-        <div style="margin-top: 2rem;">
-          <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
-          <input 
-            type="url" 
-            id="urlInput" 
-            placeholder="https://example.com" 
-            aria-label="Enter website URL for accessibility analysis"
-            required
-            aria-required="true"
-          />
-          
-          <button id="analyzeButton" aria-label="Start comprehensive accessibility analysis">ANALYZE</button>
-        </div>
-        
-        <!-- Info Banner -->
-        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(138, 43, 226, 0.1); border: 1px solid rgba(138, 43, 226, 0.3); border-radius: 4px;">
-          <p style="color: #bb86fc; margin: 0; font-size: 0.9rem;">
-            <strong>🦾 Comprehensive Analysis:</strong> Tests WCAG 2.1 compliance, color contrast ratios, keyboard navigation, 
-            screen reader compatibility, ARIA implementation, and provides actionable recommendations for both desktop and mobile platforms.
-          </p>
-        </div>
+    <main class="page-shell">
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/dashboard.html">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span aria-current="page">Accessibility</span>
+      </nav>
+      
+      <!-- Page Header -->
+      <header class="page-header">
+        <h1 class="page-header__title">Accessibility</h1>
+        <p class="page-header__subtitle">WCAG 2.1 compliance testing, color contrast, and keyboard navigation audits.</p>
       </header>
+
+      <!-- Input Card -->
+      <section class="card">
+        <div class="card__body">
+          <div class="form-row">
+            <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
+            <input 
+              type="url" 
+              id="urlInput" 
+              class="input"
+              placeholder="https://example.com" 
+              aria-label="Enter website URL for accessibility analysis"
+              required
+              aria-required="true"
+            />
+            <button id="analyzeButton" class="btn btn-primary" aria-label="Run accessibility scan">
+              <span id="buttonText">Run scan</span>
+            </button>
+          </div>
+          <p class="helper-text">Tests WCAG 2.1 compliance, color contrast, keyboard navigation, and screen reader compatibility.</p>
+        </div>
+      </section>
 
       <!-- Results Container -->
       <div id="results" class="results-container hidden" role="region" aria-live="polite">
@@ -215,13 +229,11 @@
 
       <!-- Error Display -->
       <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
-    </div>
+    </main>
 
     <!-- Footer -->
-    <footer style="margin-top: 3rem; padding: 2rem 0; text-align: center; border-top: 1px solid #333;">
-      <p style="color: #808080; font-size: 0.85rem;">
-        Accessibility Analyzer | WCAG 2.1 Compliance Testing | Built with care for inclusive web
-      </p>
+    <footer class="site-footer">
+      <p>&copy; 2025 Site Mechanic. Built for developers who care about quality.</p>
     </footer>
 
     <!-- Scripts -->
@@ -229,8 +241,11 @@
     <script src="nav-template.js"></script>
     <script src="analyzer-loader.js"></script>
 
-    <!-- ASCII Background Animation -->
-    <script src="ascii-background.js"></script>
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/pdf-export-utility.js"></script>
+    <script src="/pdf-export-integration.js"></script>
 
     <script src="accessibility-script.js"></script>
   </body>

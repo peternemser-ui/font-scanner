@@ -1,21 +1,47 @@
 {
   "app": {
-    "name": "SCANNER DE FONTES",
-    "tagline": "Análise Avançada de Tipografia Web e Desempenho"
+    "name": "SITE MECHANIC",
+    "tagline": "Diagnósticos Web e Análise de Desempenho"
   },
   "nav": {
     "dashboard": "Painel",
-    "fontScanner": "Scanner de Fontes",
+    "fontScanner": "Fontes e Tipografia",
+    "typography": "Fontes",
     "seo": "SEO",
+    "seoAnalysis": "Análise SEO",
     "coreWebVitals": "Core Web Vitals",
-    "rankCompetition": "Competição de Ranking",
-    "performance": "Desempenho",
+    "lighthouseMetrics": "Métricas Lighthouse",
+    "rankCompetition": "Análise Competitiva",
+    "performance": "Velocidade e UX",
     "accessibility": "Acessibilidade",
-    "security": "Segurança"
+    "security": "Segurança",
+    "tagIntelligence": "Rastreamento e Análise",
+    "enhancedFonts": "Fontes e Tipografia",
+    "performanceSnapshot": "Snapshot de Desempenho",
+    "siteCrawler": "Rastreador de Sites",
+    "mobileTesting": "Testes Móveis",
+    "ipReputation": "Reputação de IP",
+    "localSeo": "SEO Local",
+    "brokenLinks": "Links Quebrados",
+    "brandAudit": "Auditoria de Marca",
+    "croAnalysis": "Otimização de Conversão",
+    "gdprCheck": "Conformidade de Privacidade",
+    "hostingGuide": "Guia de Hospedagem",
+    "more": "Mais",
+    "menu": "Menu"
+  },
+  "categories": {
+    "performance": "Desempenho e UX",
+    "seo": "SEO e Indexação",
+    "accessibility": "Acessibilidade",
+    "security": "Segurança e Confiança",
+    "technology": "Tecnologia e Fontes",
+    "infrastructure": "Infraestrutura",
+    "competitive": "Análise Competitiva"
   },
   "dashboard": {
-    "title": "Visão Geral Completa",
-    "breadcrumb": "painel / visão geral completa",
+    "title": "Visão Geral do Site",
+    "breadcrumb": "painel / visão geral",
     "runAudit": "EXECUTAR AUDITORIA COMPLETA",
     "analyzing": "ANALISANDO...",
     "enterUrl": "Digite a URL do site...",
@@ -39,6 +65,414 @@
     "loading": "Carregando...",
     "error": "Erro",
     "success": "Sucesso",
-    "language": "Idioma"
+    "language": "Idioma",
+    "yes": "Sim",
+    "no": "Não",
+    "na": "N/A",
+    "unknown": "Desconhecido",
+    "more": "Mais",
+    "websiteUrl": "URL do site",
+    "enterUrl": "https://seusite.com",
+    "pleaseEnterUrl": "Por favor, insira uma URL",
+    "mayTake": "Isso pode levar 15-30 segundos"
+  },
+  "fontScanner": {
+    "title": "Fontes e Tipografia",
+    "subtitle": "Análise de Tipografia",
+    "pageSubtitle": "Análise profunda de tipografia com varredura de múltiplas páginas, desempenho de carregamento de fontes e insights de acessibilidade.",
+    "breadcrumb": "fontes e tipografia",
+    "analyzeWebsite": "ANALISAR SITE",
+    "analyzeFonts": "ANALISAR FONTES",
+    "analyzing": "ANALISANDO...",
+    "enterUrl": "Digite a URL do site...",
+    "urlRequired": "Por favor, insira uma URL válida",
+    "analysisComplete": "Análise concluída",
+    "multiPageScan": "Varredura de múltiplas páginas (analisar fontes em várias páginas)",
+    "maxPages": "Páginas máximas:",
+    "enhancedAnalysis": "Análise Avançada de Fontes:",
+    "enhancedAnalysisDesc": "Detecta provedores de fontes (Google Fonts, Adobe Fonts, auto-hospedadas), encontra famílias duplicadas, pesos/estilos não utilizados, declarações font-display ausentes e oportunidades de pré-carregamento.",
+    "desktopFonts": "FONTES DESKTOP",
+    "mobileFonts": "FONTES MÓVEIS",
+    "dualViewportAnalysis": "Análise de Viewport Dupla: Fontes analisadas separadamente para desktop (1920x1080) e móvel (375x667).",
+    "fontComparison": "Resumo de Comparação de Fontes",
+    "commonFonts": "Fontes comuns usadas em ambos os viewports",
+    "desktopOnly": "Fontes apenas desktop",
+    "mobileOnly": "Fontes apenas móveis",
+    "totalFonts": "Total de Fontes",
+    "systemFonts": "Fontes do Sistema",
+    "webFonts": "Fontes Web",
+    "googleFonts": "Google Fonts",
+    "iconFonts": "Fontes de Ícones",
+    "fontDetails": "Detalhes da Fonte",
+    "downloadReport": "Baixar Relatório PDF",
+    "shareResults": "Compartilhar Resultados",
+    "fontProviders": "Provedores de Fontes",
+    "fontFamilies": "Famílias de Fontes",
+    "performanceMetrics": "Métricas de Desempenho",
+    "recommendations": "Recomendações",
+    "advancedAnalysis": "Análise Tipográfica Avançada",
+    "exportPdf": "Baixar PDF",
+    "exportCss": "Exportar CSS",
+    "shareLink": "Compartilhar Link"
+  },
+  "brandConsistency": {
+    "title": "Inspeção de Marca",
+    "subtitle": "Analise a paleta de cores, fontes e uso do logo em seu site.",
+    "breadcrumb": "Consistência de Marca",
+    "inspect": "INSPECIONAR",
+    "analyzing": "Analisando consistência de marca...",
+    "loaderTitle": "🎨 ANÁLISE DE MARCA",
+    "grade": "Nota",
+    "scoreLabel": "Pontuação de Consistência de Marca",
+    "quickSummary": "Resumo Rápido",
+    "scoreBreakdown": "Detalhamento da Pontuação",
+    "colors": "Cores",
+    "fonts": "Fontes",
+    "logos": "Logos",
+    "buttons": "Botões",
+    "links": "Links",
+    "favicon": "Favicon",
+    "detected": "Detectado",
+    "missing": "Faltando",
+    "present": "Presente",
+    "excellent": "Excelente",
+    "good": "Bom",
+    "fair": "Regular",
+    "poor": "Ruim",
+    "colorPalette": "Paleta de Cores",
+    "typography": "Tipografia",
+    "brandIdentity": "Identidade de Marca",
+    "uiConsistency": "Consistência de UI",
+    "colorHarmony": "Harmonia de Cores",
+    "colorPaletteAnalysis": "Análise de Paleta de Cores",
+    "typographyAnalysis": "Análise de Tipografia",
+    "recommendations": "Recomendações",
+    "harmonyType": "Tipo de Harmonia",
+    "uniqueHues": "Tons Únicos",
+    "neutralRatio": "Proporção Neutra",
+    "primaryBrandColors": "Cores Principais da Marca",
+    "allDetectedColors": "Todas as Cores Detectadas",
+    "typographySummary": "Resumo de Tipografia",
+    "totalFonts": "Total de Fontes",
+    "quality": "Qualidade",
+    "typographyHierarchy": "Hierarquia Tipográfica",
+    "headingFonts": "Fontes de Título",
+    "bodyFonts": "Fontes de Corpo",
+    "allFontsByUsage": "Todas as Fontes por Uso",
+    "uses": "usos",
+    "logoDetection": "Detecção de Logo",
+    "noLogoDetected": "Nenhum logo detectado",
+    "addLogoTip": "Adicione um logo com texto alternativo contendo \"logo\"",
+    "faviconPresent": "Favicon Presente",
+    "faviconMissing": "Favicon Faltando",
+    "faviconPresentDesc": "Seu site tem um favicon para identificação nas abas",
+    "faviconMissingDesc": "Adicione um favicon para identificar seu site",
+    "buttonStyles": "Estilos de Botão",
+    "linkColors": "Cores de Links",
+    "consistency": "Consistência",
+    "sampleButton": "Botão de Exemplo",
+    "noButtonStyles": "Nenhum estilo de botão detectado",
+    "linkText": "Texto do Link",
+    "noLinkColors": "Nenhuma cor de link detectada",
+    "noRecommendations": "Sem recomendações no momento.",
+    "harmony": {
+      "monochromatic": "Monocromático",
+      "analogous": "Análogo",
+      "triadic": "Triádico",
+      "splitComplementary": "Complementar Dividido",
+      "complementary": "Complementar",
+      "diverse": "Diverso",
+      "custom": "Personalizado"
+    },
+    "priority": {
+      "critical": "Crítico",
+      "high": "Alto",
+      "medium": "Médio",
+      "low": "Baixo",
+      "success": "Sucesso"
+    },
+    "steps": {
+      "initializing": "Iniciando análise",
+      "connecting": "Conectando ao site...",
+      "extractingColors": "Extraindo cores",
+      "analyzingPalette": "Analisando paleta de cores...",
+      "detectingFonts": "Detectando fontes",
+      "identifyingTypography": "Identificando hierarquia tipográfica...",
+      "findingLogos": "Procurando logos",
+      "locatingAssets": "Localizando ativos de marca...",
+      "analyzingUI": "Analisando consistência de UI",
+      "checkingStyles": "Verificando estilos...",
+      "generating": "Gerando insights",
+      "compiling": "Compilando recomendações..."
+    },
+    "rec": {
+      "excessiveColors": {
+        "message": "Uso excessivo de cores",
+        "detail": "Usar {count} cores cria caos visual. Marcas profissionais usam no máximo 5-10 cores.",
+        "action": "Crie uma paleta de cores definida com cores primárias, secundárias e de destaque."
+      },
+      "tooManyColors": {
+        "message": "Muitas cores",
+        "detail": "Usando {count} cores. Reduza para 8-12 cores de marca para melhor consistência.",
+        "action": "Audite o uso de cores e remova variações redundantes."
+      },
+      "inconsistentHarmony": {
+        "message": "Harmonia de cores inconsistente",
+        "detail": "Sua paleta de cores carece de um padrão de harmonia claro (complementar, análogo ou triádico).",
+        "action": "Use uma roda de cores para selecionar cores harmoniosas que funcionem juntas."
+      },
+      "tooManyFonts": {
+        "message": "Muitas fontes",
+        "detail": "Usar {count} fontes diferentes cria inconsistência visual e prejudica o desempenho.",
+        "action": "Limite a 2-3 famílias de fontes: uma para títulos, uma para corpo e opcionalmente uma para destaques."
+      },
+      "reduceFontCount": {
+        "message": "Considere reduzir a quantidade de fontes",
+        "detail": "Usando {count} fontes. A melhor prática é no máximo 2-3 fontes.",
+        "action": "Revise o uso de fontes e consolide onde possível."
+      },
+      "noTypographyHierarchy": {
+        "message": "Hierarquia tipográfica não detectada",
+        "detail": "Não foi possível identificar fontes distintas para títulos e corpo.",
+        "action": "Garanta que títulos e corpo do texto usem tratamentos de fonte consistentes e distintos."
+      },
+      "noLogo": {
+        "message": "Logo não detectado",
+        "detail": "Um logo é essencial para o reconhecimento e confiança da marca.",
+        "action": "Adicione um logo no cabeçalho com texto alternativo contendo \"logo\"."
+      },
+      "noFavicon": {
+        "message": "Favicon não detectado",
+        "detail": "Um favicon ajuda os usuários a identificar seu site nas abas do navegador.",
+        "action": "Adicione um favicon.ico ou use <link rel=\"icon\"> com o ícone da sua marca."
+      },
+      "inconsistentButtons": {
+        "message": "Estilos de botão inconsistentes",
+        "detail": "Os botões em seu site têm cores e formas variadas.",
+        "action": "Defina estilos de botão padrão no seu CSS e use-os consistentemente."
+      },
+      "inconsistentLinks": {
+        "message": "Cores de links inconsistentes",
+        "detail": "Os links usam várias cores diferentes na página.",
+        "action": "Defina uma cor de link consistente que combine com sua paleta de marca."
+      },
+      "excellent": {
+        "message": "Excelente consistência de marca!",
+        "detail": "Seu site mantém forte consistência visual em cores, tipografia e elementos de marca.",
+        "action": "Continue mantendo suas diretrizes de marca e realize auditorias periódicas."
+      }
+    }
+  },
+  "seo": {
+    "pages": {
+      "home": {
+        "title": "Site Mechanic - Análise Profissional de Sites",
+        "description": "Plataforma completa de análise web com SEO avançado, testes de desempenho, segurança e acessibilidade.",
+        "keywords": "análise sites, SEO, desempenho, segurança",
+        "og_title": "Site Mechanic",
+        "twitter_title": "Análise Profissional de Sites"
+      },
+      "security-analyzer": {
+        "title": "Scanner de Segurança Web",
+        "description": "Análise completa de segurança detectando vulnerabilidades, SSL/TLS, cabeçalhos de segurança.",
+        "keywords": "scanner segurança, vulnerabilidades, SSL",
+        "og_title": "Scanner de Segurança",
+        "twitter_title": "Análise de Segurança Web"
+      },
+      "performance-hub": {
+        "title": "Hub de Testes de Desempenho",
+        "description": "Painel de testes de desempenho com Core Web Vitals e otimização.",
+        "keywords": "desempenho, Core Web Vitals, otimização",
+        "og_title": "Hub de Desempenho",
+        "twitter_title": "Testes de Desempenho"
+      },
+      "mobile-analyzer": {
+        "title": "Analisador Mobile",
+        "description": "Análise de otimização móvel e design responsivo.",
+        "keywords": "mobile, responsivo, otimização",
+        "og_title": "Analisador Mobile",
+        "twitter_title": "Análise Mobile"
+      },
+      "enhanced-fonts": {
+        "title": "Analisador de Fontes Web",
+        "description": "Análise de fontes web e otimização tipográfica.",
+        "keywords": "fontes web, tipografia",
+        "og_title": "Analisador de Fontes",
+        "twitter_title": "Fontes Web"
+      },
+      "ip-reputation-analyzer": {
+        "title": "Verificador de Reputação IP",
+        "description": "Verificação de reputação IP e saúde de domínio.",
+        "keywords": "IP, reputação, DNS",
+        "og_title": "Reputação IP",
+        "twitter_title": "Verificador IP"
+      },
+      "hosting-analyzer": {
+        "title": "Analisador de Hospedagem",
+        "description": "Análise de qualidade de hospedagem e infraestrutura.",
+        "keywords": "hospedagem, servidor",
+        "og_title": "Analisador de Hospedagem",
+        "twitter_title": "Análise de Hospedagem"
+      },
+      "competitive-analysis": {
+        "title": "Análise Competitiva",
+        "description": "Comparação e benchmarking com concorrentes.",
+        "keywords": "análise competitiva, benchmarking",
+        "og_title": "Análise Competitiva",
+        "twitter_title": "Benchmarking"
+      },
+      "cro-analyzer": {
+        "title": "Analisador CRO",
+        "description": "Otimização de taxa de conversão.",
+        "keywords": "CRO, conversão",
+        "og_title": "Analisador CRO",
+        "twitter_title": "Otimização de Conversão"
+      },
+      "broken-links": {
+        "title": "Verificador de Links Quebrados",
+        "description": "Detecção de links quebrados e erros 404.",
+        "keywords": "links quebrados, 404",
+        "og_title": "Links Quebrados",
+        "twitter_title": "Verificador de Links"
+      },
+      "gdpr-compliance": {
+        "title": "Verificador GDPR",
+        "description": "Análise de conformidade GDPR e privacidade.",
+        "keywords": "GDPR, privacidade",
+        "og_title": "GDPR Compliance",
+        "twitter_title": "Verificador GDPR"
+      },
+      "local-seo": {
+        "title": "Analisador SEO Local",
+        "description": "Otimização de SEO local e Google Business.",
+        "keywords": "SEO local, Google Business",
+        "og_title": "SEO Local",
+        "twitter_title": "Analisador SEO Local"
+      },
+      "brand-consistency": {
+        "title": "Consistência de Marca",
+        "description": "Análise de consistência de marca e design.",
+        "keywords": "marca, design",
+        "og_title": "Consistência de Marca",
+        "twitter_title": "Análise de Marca"
+      },
+      "site-crawler": {
+        "title": "Crawler de Sites",
+        "description": "Rastreamento e mapeamento de estrutura do site.",
+        "keywords": "crawler, sitemap",
+        "og_title": "Crawler",
+        "twitter_title": "Crawler de Sites"
+      },
+      "tag-intelligence": {
+        "title": "Tag Intelligence",
+        "description": "Análise de tags de marketing e analytics.",
+        "keywords": "tags, analytics",
+        "og_title": "Tag Intelligence",
+        "twitter_title": "Análise de Tags"
+      },
+      "advanced-tools": {
+        "title": "Ferramentas Avançadas",
+        "description": "Ferramentas avançadas de análise web.",
+        "keywords": "ferramentas avançadas",
+        "og_title": "Ferramentas Avançadas",
+        "twitter_title": "Análise Avançada"
+      },
+      "performance-snapshot": {
+        "title": "Snapshot de Desempenho",
+        "description": "Análise rápida de desempenho web.",
+        "keywords": "snapshot, desempenho",
+        "og_title": "Snapshot",
+        "twitter_title": "Snapshot de Desempenho"
+      },
+      "core-web-vitals": {
+        "title": "Core Web Vitals",
+        "description": "Análise de Core Web Vitals (LCP, FID, CLS).",
+        "keywords": "Core Web Vitals, LCP, FID, CLS",
+        "og_title": "Core Web Vitals",
+        "twitter_title": "Verificador Core Web Vitals"
+      }
+    }
+  },
+  "notices": {
+    "botProtectionTitle": "Aviso de Proteção contra Bots:",
+    "botProtectionText": "Grandes sites comerciais (Amazon, Walmart, cars.com) bloqueiam análise automatizada.",
+    "botProtectionTry": "Tente: seus sites, projetos de clientes, ou teste com",
+    "botProtectionBlocked": "Para sites bloqueados, use",
+    "botProtectionAlternative": "Google PageSpeed Insights",
+    "botProtectionInstead": "em vez disso."
+  },
+  "auth": {
+    "welcomeBack": "Bienvenido de Nuevo",
+    "createAccount": "Crear Cuenta",
+    "login": "Iniciar Sesión",
+    "register": "Registrarse",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "dontHaveAccount": "¿No tienes una cuenta?",
+    "loginButton": "Iniciar Sesión",
+    "registerButton": "Crear Cuenta",
+    "loggingIn": "Iniciando sesión...",
+    "creatingAccount": "Creando cuenta...",
+    "passwordRequirements": "Debe tener 8+ caracteres con mayúsculas, minúsculas y números",
+    "loginSuccess": "¡Inicio de sesión exitoso! Redirigiendo...",
+    "registerSuccess": "¡Cuenta creada! Redirigiendo...",
+    "logoutButton": "Cerrar Sesión",
+    "changePassword": "Cambiar Contraseña",
+    "currentPassword": "Contraseña Actual",
+    "newPassword": "Nueva Contraseña",
+    "updatePassword": "Actualizar Contraseña",
+    "cancel": "Cancelar"
+  },
+  "account": {
+    "title": "Mi Cuenta",
+    "subtitle": "Administre su suscripción, facturación y configuración de cuenta",
+    "accountInfo": "Información de la Cuenta",
+    "subscription": "Suscripción",
+    "quickActions": "Acciones Rápidas",
+    "email": "Correo Electrónico",
+    "plan": "Plan",
+    "memberSince": "Miembro Desde",
+    "status": "Estado",
+    "scansRemaining": "Escaneos Restantes",
+    "freePlan": "PLAN GRATUITO",
+    "proPlan": "PRO",
+    "manageBilling": "Administrar Facturación",
+    "upgradeToPro": "Actualizar a Pro",
+    "goToDashboard": "Ir al Panel",
+    "passwordChanged": "¡Contraseña cambiada exitosamente!",
+    "perDay": "/ día",
+    "perMonth": "/ mes"
+  },
+  "pricing": {
+    "title": "Actualizar a Site Mechanic Pro",
+    "subtitle": "Desbloquea escaneos ilimitados, recomendaciones avanzadas y herramientas de optimización de nivel experto",
+    "monthly": "Mensual",
+    "annual": "Anual Ahorra 17%",
+    "free": "Gratis",
+    "pro": "Pro",
+    "mostPopular": "MÁS POPULAR",
+    "perMonth": "/mes",
+    "scansPerMonth": "escaneos por mes",
+    "unlimitedScans": "Escaneos ilimitados",
+    "basicRecommendations": "Recomendaciones básicas (4 pasos)",
+    "advancedRecommendations": "4 recomendaciones avanzadas por analizador",
+    "onePagePerScan": "1 página por escaneo",
+    "upToPages": "Hasta 250 páginas por escaneo",
+    "noExport": "Sin exportación",
+    "pdfExport": "Exportación PDF sin marca de agua",
+    "expertTips": "Consejos de optimización de nivel experto",
+    "prioritySupport": "Soporte prioritario por correo electrónico",
+    "getStarted": "Comenzar",
+    "upgradeNow": "Actualizar Ahora",
+    "faq": "Preguntas Frecuentes",
+    "faqQuestion1": "¿Puedo cancelar en cualquier momento?",
+    "faqAnswer1": "Sí, puedes cancelar tu suscripción en cualquier momento. Sin contratos a largo plazo.",
+    "faqQuestion2": "¿Qué métodos de pago aceptan?",
+    "faqAnswer2": "Aceptamos todas las principales tarjetas de crédito a través de Stripe (Visa, Mastercard, Amex).",
+    "faqQuestion3": "¿Ofrecen reembolsos?",
+    "faqAnswer3": "Sí, ofrecemos una garantía de devolución de dinero de 14 días si no estás satisfecho."
   }
 }

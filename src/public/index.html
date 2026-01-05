@@ -4,31 +4,46 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
+    
+    <!-- Smart Redirect - Auth check before routing -->
+    <script>
+      // Check if user is authenticated
+      const token = localStorage.getItem('sm_token');
+      const user = localStorage.getItem('sm_user');
+
+      if (token && user) {
+        // Authenticated - go to dashboard
+        window.location.href = '/dashboard.html';
+      } else {
+        // Not authenticated - go to login
+        window.location.href = '/auth.html';
+      }
+    </script>
 
     <!-- Primary Meta Tags -->
-    <title>Font Scanner - Comprehensive Web Typography & Performance Analysis Tool</title>
-    <meta name="title" content="Font Scanner - Comprehensive Web Typography & Performance Analysis Tool" />
-    <meta name="description" content="Professional font analysis tool for web developers. Scan websites for font usage, performance, accessibility, and typography best practices. Get detailed insights on web fonts, loading performance, and optimization opportunities." />
-    <meta name="keywords" content="font scanner, web fonts, font analysis, typography, web typography, font performance, accessibility, WCAG, Core Web Vitals, font optimization, web development tools, SEO tools, font audit" />
-    <meta name="author" content="Font Scanner" />
+    <title>Site Mechanic - Website Diagnostics & Optimization Platform</title>
+    <meta name="title" content="Site Mechanic - Website Diagnostics & Optimization Platform" />
+    <meta name="description" content="Professional website analysis platform. SEO, performance, accessibility, security scanning. Get actionable insights to improve your site's health and rankings." />
+    <meta name="keywords" content="site mechanic, website analysis, SEO tools, performance audit, accessibility checker, security scanner, web optimization, Core Web Vitals" />
+    <meta name="author" content="Site Mechanic" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-    <link rel="canonical" href="https://font-scanner.com/" />
+    <link rel="canonical" href="https://sitemechanic.io/" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://font-scanner.com/" />
-    <meta property="og:title" content="Font Scanner - Comprehensive Web Typography Analysis" />
-    <meta property="og:description" content="Professional font analysis tool for web developers. Scan websites for font usage, performance, accessibility, and typography best practices." />
-    <meta property="og:image" content="https://font-scanner.com/og-image.png" />
-    <meta property="og:site_name" content="Font Scanner" />
+    <meta property="og:url" content="https://sitemechanic.io/" />
+    <meta property="og:title" content="Site Mechanic - Website Diagnostics & Optimization Platform" />
+    <meta property="og:description" content="Professional website analysis platform. SEO, performance, accessibility, security scanning. Get actionable insights to improve your site's health and rankings." />
+    <meta property="og:image" content="https://sitemechanic.io/og-image.png" />
+    <meta property="og:site_name" content="Site Mechanic" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://font-scanner.com/" />
-    <meta property="twitter:title" content="Font Scanner - Comprehensive Web Typography Analysis" />
-    <meta property="twitter:description" content="Professional font analysis tool for web developers. Scan websites for font usage, performance, accessibility, and typography best practices." />
-    <meta property="twitter:image" content="https://font-scanner.com/twitter-image.png" />
+    <meta property="twitter:url" content="https://sitemechanic.io/" />
+    <meta property="twitter:title" content="Site Mechanic - Website Diagnostics & Optimization Platform" />
+    <meta property="twitter:description" content="Professional website analysis platform. SEO, performance, accessibility, security scanning. Get actionable insights to improve your site's health and rankings." />
+    <meta property="twitter:image" content="https://sitemechanic.io/twitter-image.png" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -39,12 +54,14 @@
     <!-- Preload critical fonts with font-display swap -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-    <!-- Load fonts with optimal font-display strategy -->
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
     <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
@@ -75,9 +92,9 @@
     {
       "@context": "https://schema.org",
       "@type": "WebApplication",
-      "name": "Font Scanner",
-      "url": "https://font-scanner.com",
-      "description": "Professional font analysis tool for web developers. Scan websites for font usage, performance, accessibility, and typography best practices.",
+      "name": "Site Mechanic",
+      "url": "https://sitemechanic.io",
+      "description": "Professional website analysis platform. SEO, performance, accessibility, security scanning with actionable insights.",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Web Browser",
       "browserRequirements": "Requires JavaScript. Requires HTML5.",
@@ -88,27 +105,20 @@
         "availability": "https://schema.org/InStock"
       },
       "featureList": [
-        "Web Font Analysis",
-        "Typography Audit",
-        "Performance Analysis",
-        "Accessibility Testing",
-        "Core Web Vitals",
         "SEO Analysis",
+        "Performance Audit",
+        "Accessibility Testing",
         "Security Scanning",
+        "Core Web Vitals",
+        "Font Analysis",
+        "Mobile Testing",
         "Multi-language Support"
       ],
-      "screenshot": "https://font-scanner.com/screenshot.png",
-      "softwareVersion": "1.0.0",
-      "aggregateRating": {
-        "@type": "AggregateRating",
-        "ratingValue": "5.0",
-        "ratingCount": "1",
-        "bestRating": "5",
-        "worstRating": "1"
-      },
+      "screenshot": "https://sitemechanic.io/screenshot.png",
+      "softwareVersion": "2.0.0",
       "author": {
         "@type": "Organization",
-        "name": "Font Scanner"
+        "name": "Site Mechanic"
       }
     }
     </script>
@@ -116,11 +126,11 @@
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "name": "Font Scanner",
-      "url": "https://font-scanner.com",
+      "name": "Site Mechanic",
+      "url": "https://sitemechanic.io",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://font-scanner.com/logo.png",
+        "url": "https://sitemechanic.io/logo.png",
         "width": "512",
         "height": "512"
       },
@@ -128,7 +138,7 @@
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "customer support",
-        "url": "https://font-scanner.com"
+        "url": "https://sitemechanic.io"
       }
     }
     </script>
@@ -136,13 +146,13 @@
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "Font Scanner",
-      "url": "https://font-scanner.com",
+      "name": "Site Mechanic",
+      "url": "https://sitemechanic.io",
       "potentialAction": {
         "@type": "SearchAction",
         "target": {
           "@type": "EntryPoint",
-          "urlTemplate": "https://font-scanner.com/?url={search_term_string}"
+          "urlTemplate": "https://sitemechanic.io/?url={search_term_string}"
         },
         "query-input": "required name=search_term_string"
       }
@@ -157,13 +167,13 @@
           "@type": "ListItem",
           "position": 1,
           "name": "Home",
-          "item": "https://font-scanner.com/"
+          "item": "https://sitemechanic.io/"
         },
         {
           "@type": "ListItem",
           "position": 2,
-          "name": "Font Scanner",
-          "item": "https://font-scanner.com/"
+          "name": "Site Mechanic",
+          "item": "https://sitemechanic.io/"
         }
       ]
     }
@@ -175,34 +185,34 @@
       "mainEntity": [
         {
           "@type": "Question",
-          "name": "What is Font Scanner?",
+          "name": "What is Site Mechanic?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Font Scanner is a comprehensive web typography analysis tool that helps developers analyze website fonts, performance, accessibility, and best practices. It provides detailed insights on web fonts, loading performance, and optimization opportunities."
+            "text": "Site Mechanic is a website analysis platform that helps developers and site owners analyze SEO, performance, accessibility, and security. It provides actionable insights to improve your site's health and rankings."
           }
         },
         {
           "@type": "Question",
-          "name": "Is Font Scanner free to use?",
+          "name": "Is Site Mechanic free to use?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Yes, Font Scanner is completely free to use. You can analyze any website's typography, performance, accessibility, and SEO without any cost."
+            "text": "Site Mechanic offers free core tools including SEO analysis, performance audits, accessibility testing, security scanning, and hosting analysis. Paid tools add time-saving workflows (multi-page crawls, export-ready reports, automation) so you don't have to run those checks manually."
           }
         },
         {
           "@type": "Question",
-          "name": "What does Font Scanner analyze?",
+          "name": "What does Site Mechanic analyze?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Font Scanner provides comprehensive analysis including: Web Font Analysis, Typography Audit, Performance Analysis, Accessibility Testing (WCAG), Core Web Vitals, SEO Analysis, Security Scanning, and supports multiple languages."
+            "text": "Site Mechanic provides comprehensive analysis including: SEO Audit, Performance Analysis, Accessibility Testing (WCAG), Security Scanning, Core Web Vitals, Font Analysis, Mobile Testing, and multi-language support."
           }
         },
         {
           "@type": "Question",
-          "name": "Does Font Scanner work with all websites?",
+          "name": "Does Site Mechanic work with all websites?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Font Scanner works with most websites. However, some major commercial sites with bot protection (like Amazon, Walmart) may block automated analysis. It works best with your own websites, client projects, or publicly accessible web pages."
+            "text": "Site Mechanic works with most websites. However, some major commercial sites with bot protection may block automated analysis. It works best with your own websites, client projects, or publicly accessible web pages."
           }
         },
         {
@@ -210,7 +220,7 @@
           "name": "What are Core Web Vitals?",
           "acceptedAnswer": {
             "@type": "Answer",
-            "text": "Core Web Vitals are Google's metrics for measuring user experience: LCP (Largest Contentful Paint) for loading performance, FID (First Input Delay) for interactivity, and CLS (Cumulative Layout Shift) for visual stability. Font Scanner analyzes all these metrics."
+            "text": "Core Web Vitals are Google's metrics for measuring user experience: LCP (Largest Contentful Paint) for loading performance, INP (Interaction to Next Paint) for interactivity, and CLS (Cumulative Layout Shift) for visual stability. Site Mechanic analyzes all these metrics."
           }
         }
       ]
@@ -231,7 +241,21 @@
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
 
-    <div class="container">      <!-- Header -->
+    <div class="container">
+      <!-- Breadcrumb Navigation -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Site Mechanic</span>
+      </nav>
+      
+      <!-- Page Title -->
+      <div class="page-header">
+        <h1 class="page-title">🔧 Site Mechanic</h1>
+        <p class="page-subtitle">Website inspection and diagnostics platform. Find issues, understand severity, and know what to fix first.</p>
+      </div>
+
+      <!-- Header -->
       <header class="form-container">
         <!-- URL Input Form -->
         <div style="margin-top: 2rem;">
@@ -246,21 +270,21 @@
             aria-required="true"
           />
 
-          <button id="analyzeButton" data-i18n="fontScanner.analyzeWebsite" aria-label="Start comprehensive font analysis">ANALYZE</button>
+          <button id="analyzeButton" data-i18n="fontScanner.inspectWebsite" aria-label="Start website inspection">INSPECT</button>
         </div>
       </header>
 
       <!-- Results Container -->
       <div id="results" class="results-container hidden" role="region" aria-live="polite">
         <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
-          <h2><span class="heartbeat" aria-hidden="true">P</span> Processing Analysis...</h2>
-          <p class="animate-pulse">Analyzing website fonts and performance...</p>
+          <h2><span class="heartbeat" aria-hidden="true">P</span> Running Inspection...</h2>
+          <p class="animate-pulse">Scanning for issues across SEO, performance, accessibility, and security...</p>
           <div class="progress-container" role="progressbar" aria-label="Analysis progress">
             <div class="progress-bar" id="progressBar"></div>
           </div>
           <div id="progressText" class="progress-text" aria-live="polite"></div>
           <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0, 255, 20, 0.1); border: 1px solid rgba(0, 255, 20, 0.3); border-radius: 4px; font-size: 0.85rem;">
-            <strong>ⓘ Note:</strong> <span style="color: #00ff41;">Comprehensive analysis includes Lighthouse, accessibility audit, cross-browser testing, and AI-powered insights. Analysis takes 5-10 minutes.</span>
+            <strong>ⓘ Note:</strong> <span style="color: #00ff41;">Full inspection includes Lighthouse diagnostics, accessibility audit, cross-browser testing, and AI-powered recommendations. Inspection takes 5-10 minutes.</span>
           </div>
         </div>
 
@@ -287,7 +311,7 @@
                 <span class="summary-label">Actions</span>
                 <div class="summary-actions">
                   <button class="ribbon-btn ribbon-btn-primary" id="ribbonDownloadPDF">
-                    ▬ Download Report
+                    ▬ Get Client Report
                   </button>
                   <button class="ribbon-btn ribbon-btn-secondary" id="ribbonShareReport">
                     🔗 Share
@@ -409,7 +433,7 @@
     <script src="modern-ui.js"></script>
 
     <!-- ASCII Background Animation -->
-    <script src="ascii-background.js"></script>
+
 
     <script src="script.js"></script>
 

@@ -1,42 +1,325 @@
 /**
  * Global Spacing Fixes
  * Ensures consistent spacing across all analyzer pages
- * Matches IP Reputation analyzer layout
+ * Minimum 2rem (32px) padding for all content boxes
  */
 
-/* Reduce white space above form containers */
-.form-container {
-  padding-top: 0.5rem !important;
-  margin-top: 0 !important;
+/* ========================================
+   BOX PADDING - MINIMUM 2rem (2em)
+   All content containers must have at least 
+   2rem of inner padding for readability
+   ======================================== */
+
+/* Card and box padding overrides */
+.metric-card,
+.card:not(.accordion-item):not(.provider-card):not(.recommendation-card),
+.panel,
+.info-box,
+.feature-card,
+.result-card,
+.analysis-card,
+.score-card,
+.hero-card,
+.analyzer-section,
+.results-section,
+.summary-card {
+  padding: 2rem !important;
 }
 
-/* Add proper spacing between input and button */
-.form-container button {
-  margin-top: 1rem;
+/* Exclude accordions and small interactive elements from padding override */
+.checklist-item,
+.metric-row,
+.provider-card,
+.pacman,
+.pacman::before,
+.pacman::after,
+.pacman-eye,
+.dot {
+  padding: revert !important;
 }
 
-/* Ensure header has proper margin */
-.unified-header {
+/* Issue items and recommendation cards need consistent left padding for border-left spacing */
+.issue-item,
+.recommendation-card,
+.insight-card,
+.insight-critical,
+.insight-warning,
+.insight-success {
+  padding: 1rem 1rem 1rem 1.25rem !important;
+}
+
+/* Pac-Man loading animation - prevent any background artifacts */
+.pacman {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+}
+
+/* Accordion header needs explicit padding for proper spacing */
+.accordion-header {
+  padding: 0.875rem 1.25rem !important;
+}
+
+/* Force font size on metric rows globally */
+.metric-row,
+.metric-label,
+.metric-value,
+.checklist-item,
+.issue-item {
+  font-size: 0.9rem !important;
+}
+
+/* Generic card selectors - be more careful */
+/* Exclude WCAG level cards from 2rem padding override */
+[class*="card"]:not(.accordion-item):not(.provider-card):not(.recommendation-card):not(.price-stat-card):not(.wcag-level-card),
+[class*="panel"],
+[class*="box"]:not([class*="checkbox"]):not(.wcag-status-box):not(.wcag-note-box) {
+  padding: 2rem !important;
+}
+
+/* Smaller padding for nested cards within cards */
+.metric-card .metric-card,
+.card .card,
+[class*="card"] [class*="card"]:not(.wcag-level-card),
+[class*="box"] [class*="box"] {
+  padding: 1.5rem !important;
+}
+
+/* Detail/summary elements (accordions) - lighter padding */
+details {
+  padding: 0;
   margin-bottom: 0.5rem;
 }
 
-/* Container spacing */
-.container {
-  padding-top: 0.5rem;
+details summary {
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+  border-radius: 6px;
+  transition: background 0.2s ease;
 }
 
-/* Mobile spacing adjustments */
+details summary:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+details[open] summary {
+  margin-bottom: 0.5rem;
+}
+
+details[open] > *:not(summary) {
+  padding-left: 0;
+}
+
+/* Accordion-style expandable sections - allow internal padding, zero outer */
+.accordion-item,
+.expandable-item {
+  padding: 0 !important;
+  margin-bottom: 0.75rem;
+}
+
+/* Ensure accordion headers have proper internal padding */
+.accordion-item > .accordion-header,
+.expandable-item > .expandable-header {
+  padding: 0.75rem 1rem !important;
+}
+
+/* Accordion content body gets proper padding when open */
+.accordion-item .accordion-body,
+.accordion-item .accordion-content-inner {
+  padding: 1rem !important;
+}
+
+/* Exclude dashboard page from accordion padding reset */
+body:not([data-page="dashboard"]) [class*="accordion"]:not(.accordion-score):not(.accordion-item):not(.accordion-header):not(.accordion-content):not(.accordion-body):not(.accordion-chevron):not(.accordion-title):not(.accordion-icon) {
+  padding: 0 !important;
+}
+
+.accordion-item summary,
+.expandable-item summary {
+  padding: 1rem 1.25rem !important;
+}
+
+/* Exclude small UI elements from padding overrides */
+input[type="checkbox"],
+input[type="radio"],
+.device-selector,
+.device-selector label,
+.toggle-container,
+.checkbox-container {
+  padding: revert !important;
+}
+
+/* Info banners and alerts */
+.info-banner,
+.alert,
+.notice,
+.warning-box,
+.success-box,
+.error-box,
+[class*="alert"],
+[class*="notice"],
+[class*="banner"] {
+  padding: 2rem !important;
+}
+
+/* Form containers */
+.form-container {
+  padding: 2rem !important;
+  margin-top: 0 !important;
+}
+
+/* Results and data display sections */
+.results-content,
+.data-section,
+.stats-section,
+.metrics-section,
+.analysis-results,
+.scan-results,
+#results,
+#resultsContent,
+[id*="results"],
+[id*="Results"] {
+  padding: 2rem;
+}
+
+/* Table containers */
+.table-container,
+.table-wrapper {
+  padding: 2rem;
+}
+
+/* Inline style overrides for dynamically generated content */
+/* Exclude elements inside grids to prevent card overflow */
+div[style*="padding: 1rem"],
+div[style*="padding:1rem"],
+div[style*="padding: 1.5rem"],
+div[style*="padding:1.5rem"] {
+  /* Only apply to non-grid children - grid children handled separately */
+}
+
+/* More targeted: only override form containers and main sections */
+.form-container div[style*="padding"],
+.results-section div[style*="padding"]:not(.wcag-level-card),
+.analysis-card div[style*="padding"] {
+  padding: 2rem !important;
+}
+
+/* ========================================
+   SPECIFIC COMPONENT OVERRIDES
+   ======================================== */
+
+/* Hero sections - slightly more padding */
+.hero,
+.page-hero,
+.hero-section,
+[class*="hero"] {
+  padding: 2.5rem 2rem !important;
+}
+
+/* Modal and dialog content */
+.modal-content,
+.dialog-content,
+.popup-content {
+  padding: 2rem !important;
+}
+
+/* Tooltip and popover content */
+.tooltip-content,
+.popover-content {
+  padding: 1rem !important; /* Exception: tooltips stay smaller */
+}
+
+/* ========================================
+   BUTTON AND INPUT SPACING
+   ======================================== */
+
+/* Buttons in forms */
+.form-container button {
+  margin-top: 1.5rem;
+}
+
+/* Input fields within boxes */
+.form-container input,
+.form-container select,
+.form-container textarea {
+  margin-bottom: 1rem;
+}
+
+/* ========================================
+   HEADER AND SECTION SPACING
+   ======================================== */
+
+.unified-header {
+  margin-bottom: 1rem;
+}
+
+/* Container base padding */
+.container {
+  padding-top: 1rem;
+  padding-bottom: 1rem;
+  text-align: left;
+}
+
+/* Section headers within cards */
+.metric-card h3,
+.card h3,
+[class*="card"] h3 {
+  margin-bottom: 1.5rem;
+}
+
+/* ========================================
+   MOBILE RESPONSIVE ADJUSTMENTS
+   ======================================== */
+
 @media (max-width: 768px) {
-  .form-container {
-    padding-top: 0.25rem !important;
+  .metric-card,
+  .card,
+  .panel,
+  .info-box,
+  .feature-card,
+  .result-card,
+  .analysis-card,
+  .form-container,
+  [class*="card"],
+  [class*="panel"],
+  [class*="box"] {
+    padding: 1.5rem !important; /* Slightly less on mobile but still good */
+  }
+  
+  .hero,
+  .page-hero,
+  .hero-section,
+  [class*="hero"] {
+    padding: 2rem 1.5rem !important;
   }
 
   .form-container button {
-    margin-top: 0.75rem;
+    margin-top: 1rem;
   }
 
   .unified-header {
-    margin-bottom: 0.25rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .container {
+    padding-top: 0.5rem;
+  }
+}
+
+/* Extra small mobile */
+@media (max-width: 480px) {
+  .metric-card,
+  .card,
+  .panel,
+  .info-box,
+  .feature-card,
+  .form-container,
+  [class*="card"],
+  [class*="panel"],
+  [class*="box"] {
+    padding: 1.25rem !important;
   }
 
   .container {
@@ -44,19 +327,264 @@
   }
 }
 
-/* Extra small mobile */
-@media (max-width: 480px) {
-  .form-container {
-    padding-top: 0.15rem !important;
-  }
+/* ========================================
+   INFO BANNER TEXT
+   ======================================== */
 
-  .container {
-    padding-top: 0.15rem;
-  }
-}
-
-/* Info banners responsive text */
 .form-container [style*="margin-top"] p {
   font-size: clamp(0.8rem, 2vw, 0.9rem) !important;
   line-height: 1.5 !important;
+}
+
+/* ========================================
+   LIGHT MODE INPUT FIXES
+   No dark borders in light mode
+   ======================================== */
+
+body.white-theme input[type="url"],
+body.white-theme input[type="text"],
+body.white-theme input[type="email"],
+body.white-theme input[type="search"],
+body.white-theme input[type="number"],
+body.white-theme textarea,
+body.white-theme select {
+  background-color: #ffffff !important;
+  border: 2px solid #d1d5db !important; /* Light gray border */
+  color: #1a1a1a !important;
+}
+
+body.white-theme input:focus,
+body.white-theme textarea:focus,
+body.white-theme select:focus {
+  border-color: #10b981 !important; /* Green focus */
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+  outline: none !important;
+}
+
+body.white-theme input::placeholder,
+body.white-theme textarea::placeholder {
+  color: #6b7280 !important;
+}
+
+/* Fix any inline-styled dark backgrounds in light mode */
+body.white-theme [style*="background: rgba(0,0,0"],
+body.white-theme [style*="background:rgba(0,0,0"],
+body.white-theme [style*="background: #000"],
+body.white-theme [style*="background:#000"] {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+/* Form container in light mode */
+body.white-theme .form-container {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Page header in light mode */
+body.white-theme .page-header {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Cards in light mode - exclude accordions */
+body.white-theme .metric-card,
+body.white-theme .card:not(.accordion-item),
+body.white-theme [class*="card"]:not(.accordion-item):not(.accordion-score):not(.recommendation-card) {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* Accordion items in light mode */
+body.white-theme .accordion-item {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+body.white-theme .accordion-header:hover {
+  background: rgba(0, 0, 0, 0.03) !important;
+}
+
+body.white-theme .accordion-body {
+  background: #ffffff !important;
+  border-top-color: #e2e8f0 !important;
+}
+
+body.white-theme .accordion-title {
+  color: #1a1a1a !important;
+}
+
+body.white-theme .metric-label {
+  color: #6b7280 !important;
+  font-size: 0.9rem !important;
+}
+
+body.white-theme .metric-value {
+  color: #10b981 !important;
+  font-size: 0.9rem !important;
+}
+
+body.white-theme .checklist-item,
+body.white-theme .metric-row,
+body.white-theme .issue-item {
+  border-color: #e2e8f0 !important;
+  font-size: 0.9rem !important;
+}
+
+/* Issue items in light mode */
+body.white-theme .issue-item {
+  color: #1a1a2e !important;
+}
+
+body.white-theme .issue-item.issue-error,
+body.white-theme .issue-item.issue-critical {
+  background: rgba(255, 68, 68, 0.08) !important;
+  color: #c92a2a !important;
+}
+
+body.white-theme .issue-item.issue-warning {
+  background: rgba(255, 140, 0, 0.08) !important;
+  color: #b45309 !important;
+}
+
+body.white-theme .issue-item.issue-info {
+  background: rgba(0, 150, 255, 0.08) !important;
+  color: #0369a1 !important;
+}
+
+/* Recommendation cards in light mode */
+body.white-theme .recommendation-card {
+  background: #f8fafc !important;
+  color: #1a1a2e !important;
+}
+
+body.white-theme .recommendation-card.critical,
+body.white-theme .recommendation-card.error {
+  background: rgba(255, 68, 68, 0.06) !important;
+}
+
+body.white-theme .recommendation-card.high,
+body.white-theme .recommendation-card.warning {
+  background: rgba(255, 140, 0, 0.06) !important;
+}
+
+body.white-theme .recommendation-card.medium {
+  background: rgba(255, 215, 0, 0.06) !important;
+}
+
+body.white-theme .recommendation-card.low,
+body.white-theme .recommendation-card.success {
+  background: rgba(0, 180, 100, 0.06) !important;
+}
+
+/* Insight cards in light mode */
+body.white-theme .insight-card,
+body.white-theme .insight-critical,
+body.white-theme .insight-warning,
+body.white-theme .insight-success {
+  color: #1a1a2e !important;
+}
+
+body.white-theme .insight-critical {
+  background: rgba(255, 68, 68, 0.06) !important;
+}
+
+body.white-theme .insight-warning {
+  background: rgba(255, 140, 0, 0.06) !important;
+}
+
+body.white-theme .insight-success {
+  background: rgba(0, 180, 100, 0.06) !important;
+}
+
+/* ========================================
+   ACCORDION TOGGLE FIX
+   Ensures accordion open/close works
+   ======================================== */
+
+/* Base state: closed - use display none */
+.accordion-item:not(.open) > .accordion-content,
+.accordion-item:not(.open) .accordion-content {
+  display: none !important;
+}
+
+/* Open state: visible */
+.accordion-item.open > .accordion-content,
+.accordion-item.open .accordion-content {
+  display: block !important;
+  padding: 1.5rem !important;
+}
+
+/* ========================================
+   WCAG COMPLIANCE LEVELS SECTION FIX
+   Prevent aggressive padding overrides on 
+   the 3-column WCAG level cards grid
+   ======================================== */
+
+/* WCAG section container - controlled padding */
+.wcag-section-container {
+  padding: 1rem !important;
+}
+
+/* WCAG levels grid - proper gap and layout */
+.wcag-levels-grid {
+  display: grid !important;
+  grid-template-columns: repeat(3, 1fr) !important;
+  gap: 1.5rem !important;
+  margin-bottom: 2rem !important;
+}
+
+/* WCAG level cards - prevent padding override */
+.wcag-level-card {
+  padding: 1.5rem !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  min-width: 0 !important; /* Prevents grid item overflow */
+}
+
+/* WCAG status box - controlled padding */
+.wcag-status-box {
+  padding: 1.5rem !important;
+  box-sizing: border-box !important;
+}
+
+/* WCAG note box - controlled padding */
+.wcag-note-box {
+  padding: 1rem !important;
+  box-sizing: border-box !important;
+}
+
+/* Override the generic card selectors for WCAG cards */
+.wcag-level-card[class*="card"],
+div.wcag-level-card {
+  padding: 1.5rem !important;
+}
+
+/* Fix for the inner requirement boxes inside WCAG cards */
+.wcag-level-card div[style*="background: rgba(0,0,0,0.3)"] {
+  padding: 1rem !important;
+}
+
+/* Ensure proper text wrapping in WCAG cards */
+.wcag-level-card p,
+.wcag-level-card li {
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+/* Mobile responsive: Stack WCAG cards on smaller screens */
+@media (max-width: 900px) {
+  .wcag-levels-grid {
+    grid-template-columns: 1fr !important;
+    gap: 1rem !important;
+  }
+}
+
+@media (min-width: 901px) and (max-width: 1200px) {
+  .wcag-levels-grid {
+    gap: 1rem !important;
+  }
+  
+  .wcag-level-card {
+    padding: 1.25rem !important;
+  }
 }

@@ -80,27 +80,60 @@ class EnhancedScannerService {
         licenseCompliance: null
       };
 
-      // Step 1: Basic font scan (always first)
-      logger.info('🔍 Step 1: Performing basic font scan...');
-      emitProgress(1, 10, 'Basic Font Scan', 'running', 10);
+      // ⚡ OPTIMIZATION: Run Lighthouse ONCE and share results across analyzers
+      // This saves 4+ Lighthouse runs (was: perf 2x + accessibility 2x + main 2x = 6 runs)
+      // Now: just 2 runs (desktop + mobile), shared across all
+      
+      logger.info('⚡ Running shared Lighthouse analysis (desktop + mobile)...');
+      emitProgress(1, 8, 'Lighthouse Analysis', 'running', 10);
+      
+      let sharedLighthouse = { desktop: null, mobile: null };
+      try {
+        // Run desktop Lighthouse
+        logger.info('Running Lighthouse desktop...');
+        sharedLighthouse.desktop = await lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'desktop' });
+        
+        // Small delay between runs to reduce browser contention
+        await new Promise(r => setTimeout(r, 300));
+        
+        // Run mobile Lighthouse  
+        if (options.includeMobileLighthouse !== false) {
+          logger.info('Running Lighthouse mobile...');
+          sharedLighthouse.mobile = await lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'mobile' });
+        }
+        
+        logger.info(`✅ Shared Lighthouse complete - Desktop: ${sharedLighthouse.desktop?.score || 0}, Mobile: ${sharedLighthouse.mobile?.score || 0}`);
+        emitProgress(1, 8, 'Lighthouse Analysis', 'completed', 100);
+      } catch (lhError) {
+        logger.warn('Shared Lighthouse failed:', lhError.message);
+        emitProgress(1, 8, 'Lighthouse Analysis', 'error', 0);
+      } finally {
+        try { await lighthouseAnalyzer.closeLighthouse(); } catch (e) {}
+      }
+      
+      // Store lighthouse results
+      result.lighthouse = sharedLighthouse;
+
+      // Step 2: Basic font scan
+      logger.info('🔍 Step 2: Performing basic font scan...');
+      emitProgress(2, 8, 'Basic Font Scan', 'running', 10);
       result.basicScan = await fontScannerService.scanWebsite(url, options);
       const fontsData = result.basicScan?.fonts?.fonts || [];
-      emitProgress(1, 10, 'Basic Font Scan', 'completed', 100);
+      emitProgress(2, 8, 'Basic Font Scan', 'completed', 100);
 
-      // ⚡ PARALLEL EXECUTION - Run independent analyzers simultaneously for 50-70% speed boost
-      logger.info('⚡ Running multiple analyzers in parallel...');
+      // ⚡ PARALLEL EXECUTION - Run ALL independent analyzers simultaneously
+      logger.info('⚡ Running multiple analyzers in parallel (with shared Lighthouse data)...');
+      emitProgress(3, 8, 'Parallel Analysis', 'running', 10);
       
       const parallelTasks = [];
       
-      // Step 2: Performance analysis (parallel)
+      // Performance analysis - USE SHARED LIGHTHOUSE (no new Lighthouse run!)
       if (options.includePerformance !== false) {
-        emitProgress(2, 10, 'Performance Analysis', 'running', 10);
         parallelTasks.push(
-          performanceAnalyzerService.analyzePerformance(url)
+          performanceAnalyzerService.analyzePerformanceWithLighthouse(url, sharedLighthouse)
             .then(perf => {
               result.performance = perf;
               logger.info(`✅ Performance Score - Desktop: ${perf.desktop?.performanceScore || 0}, Mobile: ${perf.mobile?.performanceScore || 0}`);
-              emitProgress(2, 10, 'Performance Analysis', 'completed', 100);
               return { key: 'performance', value: perf };
             })
             .catch(error => {
@@ -111,15 +144,13 @@ class EnhancedScannerService {
                 desktop: { performanceScore: 0, error: error.message },
                 mobile: { performanceScore: 0, error: error.message }
               };
-              emitProgress(2, 10, 'Performance Analysis', 'error', 0);
               return { key: 'performance', value: result.performance };
             })
         );
       }
 
-      // Step 3: Best practices (parallel - instant)
+      // Best practices (instant - no Lighthouse needed)
       if (options.includeBestPractices !== false) {
-        emitProgress(3, 10, 'Best Practices', 'running', 10);
         parallelTasks.push(
           Promise.resolve().then(() => {
             if (result.basicScan && result.basicScan.bestPractices) {
@@ -127,153 +158,136 @@ class EnhancedScannerService {
             } else {
               result.bestPractices = this.generateFallbackBestPractices(result.basicScan?.fonts);
             }
-            emitProgress(3, 10, 'Best Practices', 'completed', 100);
             return { key: 'bestPractices', value: result.bestPractices };
           })
         );
       }
 
-      // Step 4: AI-Powered Font Pairing Analysis (parallel)
+      // AI-Powered Font Pairing Analysis (no Lighthouse needed)
       if (options.includeFontPairing !== false) {
-        emitProgress(4, 10, 'AI Font Pairing', 'running', 10);
         parallelTasks.push(
           fontPairingAnalyzer.analyzeFontPairings(fontsData, result.basicScan)
             .then(pairing => {
               result.fontPairing = pairing;
-              emitProgress(4, 10, 'AI Font Pairing', 'completed', 100);
               return { key: 'fontPairing', value: pairing };
             })
             .catch(error => {
               logger.warn('Font pairing analysis failed:', error.message);
               result.fontPairing = { error: 'Font pairing analysis failed', details: error.message };
-              emitProgress(4, 10, 'AI Font Pairing', 'error', 0);
               return { key: 'fontPairing', value: result.fontPairing };
             })
         );
       }
 
-      // Step 5: Real User Metrics (RUM) (parallel)
+      // Real User Metrics (RUM) - no Lighthouse needed
       if (options.includeRealUserMetrics !== false) {
-        emitProgress(5, 10, 'Real User Metrics', 'running', 10);
         parallelTasks.push(
           realUserMetricsService.getRUMSummary(url)
             .then(rum => {
               result.realUserMetrics = rum;
-              emitProgress(5, 10, 'Real User Metrics', 'completed', 100);
               return { key: 'realUserMetrics', value: rum };
             })
             .catch(error => {
               logger.warn('Real user metrics failed:', error.message);
               result.realUserMetrics = { error: 'Real user metrics failed', details: error.message };
-              emitProgress(5, 10, 'Real User Metrics', 'error', 0);
               return { key: 'realUserMetrics', value: result.realUserMetrics };
             })
         );
       }
 
+      // Cross-Browser Testing - run in parallel (was sequential before!)
+      if (options.includeCrossBrowserTesting !== false) {
+        parallelTasks.push(
+          crossBrowserTestingService.getCrossBrowserSummary(url)
+            .then(cbt => {
+              result.crossBrowserTesting = cbt;
+              return { key: 'crossBrowserTesting', value: cbt };
+            })
+            .catch(error => {
+              logger.warn('Cross-browser testing failed:', error.message);
+              result.crossBrowserTesting = { error: 'Cross-browser testing failed', details: error.message };
+              return { key: 'crossBrowserTesting', value: result.crossBrowserTesting };
+            })
+        );
+      }
+
+      // Accessibility Analysis - USE SHARED LIGHTHOUSE (no new Lighthouse run!)
+      if (options.includeAdvancedAccessibility !== false) {
+        parallelTasks.push(
+          accessibilityAnalyzerService.analyzeAccessibilityWithLighthouse(url, sharedLighthouse)
+            .then(a11y => {
+              result.accessibility = a11y;
+              logger.info(`✅ Accessibility Score - Desktop: ${a11y.desktop?.accessibilityScore || 0}, Mobile: ${a11y.mobile?.accessibilityScore || 0}`);
+              return { key: 'accessibility', value: a11y };
+            })
+            .catch(error => {
+              logger.warn('Accessibility analysis failed:', error.message);
+              result.accessibility = { 
+                error: 'Accessibility analysis failed',
+                details: error.message,
+                desktop: { accessibilityScore: 0, error: error.message },
+                mobile: { accessibilityScore: 0, error: error.message }
+              };
+              return { key: 'accessibility', value: result.accessibility };
+            })
+        );
+      }
+
+      // Font Licensing Detection - run in parallel
+      if (options.includeFontLicensing !== false) {
+        parallelTasks.push(
+          fontLicensingDetector.getLicensingSummary(fontsData, url)
+            .then(lic => {
+              result.licenseCompliance = lic;
+              return { key: 'licenseCompliance', value: lic };
+            })
+            .catch(error => {
+              logger.warn('Font licensing detection failed:', error.message);
+              result.licenseCompliance = { error: 'Font licensing detection failed', details: error.message };
+              return { key: 'licenseCompliance', value: result.licenseCompliance };
+            })
+        );
+      }
+
+      // SEO Analysis - run in parallel
+      if (options.includeSEO !== false) {
+        parallelTasks.push(
+          Promise.resolve().then(async () => {
+            try {
+              const seoAnalyzer = require('./seoAnalyzer');
+              result.seoAnalysis = await seoAnalyzer.analyzeSEO(url);
+              logger.info(`✅ SEO Score: ${result.seoAnalysis.score?.overall || 0}/100`);
+              return { key: 'seoAnalysis', value: result.seoAnalysis };
+            } catch (error) {
+              logger.warn('SEO analysis failed:', error.message);
+              result.seoAnalysis = { error: 'SEO analysis failed', details: error.message };
+              return { key: 'seoAnalysis', value: result.seoAnalysis };
+            }
+          })
+        );
+      }
+
       // Wait for all parallel tasks to complete
       await Promise.allSettled(parallelTasks);
-      logger.info('✅ Parallel analyzers completed');
+      logger.info('✅ All parallel analyzers completed');
+      emitProgress(3, 8, 'Parallel Analysis', 'completed', 100);
 
-      // Step 6: Cross-Browser Testing
-      if (options.includeCrossBrowserTesting !== false) {
-        logger.info('🌍 Step 6: Running cross-browser testing...');
-        emitProgress(6, 10, 'Cross-Browser Testing', 'running', 10);
-        try {
-          result.crossBrowserTesting = await crossBrowserTestingService.getCrossBrowserSummary(url);
-          emitProgress(6, 10, 'Cross-Browser Testing', 'completed', 100);
-        } catch (error) {
-          logger.warn('Cross-browser testing failed:', error.message);
-          result.crossBrowserTesting = { error: 'Cross-browser testing failed', details: error.message };
-          emitProgress(6, 10, 'Cross-Browser Testing', 'error', 0);
-        }
-      }
-
-      // Step 7: Advanced Accessibility Analysis
-      if (options.includeAdvancedAccessibility !== false) {
-        logger.info('♿ Step 7: Analyzing accessibility (comprehensive)...');
-        emitProgress(7, 10, 'Accessibility Analysis', 'running', 10);
-        try {
-          result.accessibility = await accessibilityAnalyzerService.analyzeAccessibility(url);
-          logger.info(`✅ Accessibility Score - Desktop: ${result.accessibility.desktop?.accessibilityScore || 0}, Mobile: ${result.accessibility.mobile?.accessibilityScore || 0}`);
-          emitProgress(7, 10, 'Accessibility Analysis', 'completed', 100);
-        } catch (error) {
-          logger.warn('Accessibility analysis failed:', error.message);
-          result.accessibility = { 
-            error: 'Accessibility analysis failed',
-            details: error.message,
-            desktop: { accessibilityScore: 0, error: error.message },
-            mobile: { accessibilityScore: 0, error: error.message }
-          };
-          emitProgress(7, 10, 'Accessibility Analysis', 'error', 0);
-        }
-      }
-
-      // Step 8: Font Licensing Detection
-      if (options.includeFontLicensing !== false) {
-        logger.info('⚖️ Step 8: Detecting font licensing...');
-        emitProgress(8, 10, 'Font Licensing', 'running', 10);
-        try {
-          result.licenseCompliance = await fontLicensingDetector.getLicensingSummary(fontsData, url);
-          emitProgress(8, 10, 'Font Licensing', 'completed', 100);
-        } catch (error) {
-          logger.warn('Font licensing detection failed:', error.message);
-          result.licenseCompliance = { error: 'Font licensing detection failed', details: error.message };
-          emitProgress(8, 10, 'Font Licensing', 'error', 0);
-        }
-      }
-
-      // Step 9: Industry Benchmark Analysis
+      // Step 4: Industry Benchmark Analysis (depends on other results)
       if (options.includeBenchmarking !== false) {
-        logger.info('🏆 Step 9: Running industry benchmark analysis...');
-        emitProgress(9, 10, 'Industry Benchmarking', 'running', 10);
+        logger.info('🏆 Step 4: Running industry benchmark analysis...');
+        emitProgress(4, 8, 'Industry Benchmarking', 'running', 10);
         try {
           result.typographyBenchmark = await benchmarkAnalyzer.evaluateAgainstBenchmarks(result);
-          emitProgress(9, 10, 'Industry Benchmarking', 'completed', 100);
+          emitProgress(4, 8, 'Industry Benchmarking', 'completed', 100);
         } catch (error) {
           logger.warn('Benchmark analysis failed:', error.message);
           result.typographyBenchmark = { error: 'Benchmark analysis failed', details: error.message };
-          emitProgress(9, 10, 'Industry Benchmarking', 'error', 0);
-        }
-      }
-
-      // Step 10: Lighthouse analysis
-      if (options.includeLighthouse !== false) {
-        logger.info('🏠 Step 10: Running Lighthouse analysis...');
-        emitProgress(10, 11, 'Lighthouse Analysis', 'running', 10);
-        try {
-          result.lighthouse = await this.performLighthouseAnalysis(url, {
-            includeMobile: options.includeMobileLighthouse !== false // Run mobile by default
-          });
-          emitProgress(10, 11, 'Lighthouse Analysis', 'completed', 100);
-        } catch (error) {
-          logger.warn('Lighthouse analysis failed:', error.message);
-          result.lighthouse = { 
-            desktop: { error: 'Lighthouse desktop analysis failed', details: error.message },
-            mobile: { error: 'Lighthouse mobile analysis failed', details: error.message }
-          };
-          emitProgress(10, 11, 'Lighthouse Analysis', 'error', 0);
-        }
-      }
-
-      // Step 11: SEO Analysis (new!)
-      if (options.includeSEO !== false) {
-        logger.info('🔍 Step 11: Running SEO analysis...');
-        emitProgress(11, 11, 'SEO Analysis', 'running', 10);
-        try {
-          const seoAnalyzer = require('./seoAnalyzer');
-          result.seoAnalysis = await seoAnalyzer.analyzeSEO(url);
-          logger.info(`✅ SEO Score: ${result.seoAnalysis.score.overall}/100 (${result.seoAnalysis.score.grade})`);
-          emitProgress(11, 11, 'SEO Analysis', 'completed', 100);
-        } catch (error) {
-          logger.warn('SEO analysis failed:', error.message);
-          result.seoAnalysis = { error: 'SEO analysis failed', details: error.message };
-          emitProgress(11, 11, 'SEO Analysis', 'error', 0);
+          emitProgress(4, 8, 'Industry Benchmarking', 'error', 0);
         }
       }
 
       // Final: Analysis and Scoring
-      emitProgress(11, 11, 'Finalizing Results', 'running', 50);
+      emitProgress(5, 8, 'Finalizing Results', 'running', 50);
 
       // Restructure font data for dual viewport support
       result.fonts = this.restructureFontData(result.basicScan);
@@ -288,17 +302,17 @@ class EnhancedScannerService {
       // Calculate scan duration
       result.scanDuration = Date.now() - startTime;
 
-      logger.info(`🎉 BEST-IN-CLASS scan completed in ${result.scanDuration}ms`);
+      logger.info(`🎉 OPTIMIZED scan completed in ${result.scanDuration}ms (${Math.round(result.scanDuration/1000)}s)`);
       logger.info(`📊 Final Score: ${result.overallScore}/100 (Grade: ${result.grade})`);
 
       // Emit final completion progress
-      emitProgress(11, 11, 'Scan Complete', 'completed', 100);
+      emitProgress(5, 8, 'Scan Complete', 'completed', 100);
 
       return result;
 
     } catch (error) {
-      logger.error('Best-in-class scan failed:', error);
-      throw new Error(`Best-in-class scan failed: ${error.message}`);
+      logger.error('Optimized scan failed:', error);
+      throw new Error(`Optimized scan failed: ${error.message}`);
     }
   }
 

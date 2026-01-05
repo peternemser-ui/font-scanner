@@ -26,7 +26,23 @@ const validateAndPrepareUrl = async (url, requestId) => {
     throw new ValidationError('Invalid URL format');
   }
 
-  return await testUrlReachability(normalized);
+  // Test HTTPS first
+  let isReachable = await testUrlReachability(normalized);
+  if (isReachable) {
+    return normalized;
+  }
+
+  // If HTTPS failed and URL was auto-normalized to https, try HTTP fallback
+  if (normalized.startsWith('https://')) {
+    const httpUrl = normalized.replace('https://', 'http://');
+    isReachable = await testUrlReachability(httpUrl);
+    if (isReachable) {
+      logger.info(`HTTPS failed, falling back to HTTP for ${url}`, { requestId });
+      return httpUrl;
+    }
+  }
+
+  throw new ValidationError('URL is not reachable. Please check the address and try again.');
 };
 
 /**

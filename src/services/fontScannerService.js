@@ -3,7 +3,7 @@ const browserPool = require('../utils/browserPool');
 const FontAnalyzer = require('./fontAnalyzer');
 const performanceAnalyzer = require('./performanceAnalyzer');
 const bestPracticesAnalyzer = require('./bestPracticesAnalyzer');
-const fallbackScannerService = require('./fallbackScannerService');
+const simpleAnalyzer = require('./simpleAnalyzer');
 
 const logger = createLogger('FontScannerService');
 
@@ -184,7 +184,25 @@ class FontScannerService {
       // Release browser back to pool before fallback
       await browserPool.release(browser);
       
-      return await fallbackScannerService.scanWebsite(url);
+      // Use simple HTTP-based analysis as fallback
+      logger.info(`Using simple analyzer fallback for: ${url}`);
+      const results = await simpleAnalyzer.analyzeUrl(url);
+      return {
+        fonts: results.fonts || {
+          totalFonts: 0,
+          fonts: [],
+          categorizedFonts: { system: [], webFonts: [], googleFonts: [], customFonts: [] },
+        },
+        performance: results.performance || { initialLoadTime: 0 },
+        bestPractices: results.bestPractices || { score: 0, recommendations: [] },
+        screenshot: null,
+        metadata: {
+          scannedUrl: url,
+          method: 'fallback',
+          userAgent: 'Font Scanner Fallback',
+          loadTime: results.loadTime || 0,
+        },
+      };
     } finally {
       // Always close page and release browser
       if (page && !page.isClosed()) {

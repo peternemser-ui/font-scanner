@@ -74,6 +74,59 @@ class AccessibilityAnalyzerService {
   }
 
   /**
+   * ⚡ OPTIMIZED: Perform accessibility analysis with pre-computed Lighthouse results
+   * This avoids running Lighthouse twice (saves 60-120 seconds!)
+   * @param {string} url - URL to analyze
+   * @param {Object} sharedLighthouse - Pre-computed Lighthouse results { desktop, mobile }
+   * @returns {Object} Accessibility analysis results
+   */
+  async analyzeAccessibilityWithLighthouse(url, sharedLighthouse = {}) {
+    const startTime = Date.now();
+    logger.info(`Starting OPTIMIZED accessibility analysis for: ${url} (using shared Lighthouse)`);
+
+    try {
+      // Collect Puppeteer accessibility metrics (still needed for detailed info)
+      logger.info('Collecting accessibility metrics via Puppeteer...');
+      let accessibilityMetrics;
+      try {
+        accessibilityMetrics = await this.collectAccessibilityMetrics(url);
+      } catch (navError) {
+        logger.warn(`Accessibility Puppeteer metrics collection failed, using minimal fallback: ${navError.message}`);
+        accessibilityMetrics = {
+          contrast: [],
+          keyboard: { focusableElements: [], tabTraps: [], missingFocusIndicators: [] },
+          aria: { landmarks: [], missingLabels: [], invalidRoles: [], headings: [] }
+        };
+      }
+      
+      // Use shared Lighthouse results (NO new Lighthouse runs!)
+      let desktopLighthouse = sharedLighthouse.desktop;
+      let mobileLighthouse = sharedLighthouse.mobile;
+      
+      // Create fallbacks if Lighthouse data is missing
+      if (!desktopLighthouse || !desktopLighthouse.accessibility) {
+        logger.warn('Shared Lighthouse desktop missing accessibility, using Puppeteer-only fallback');
+        desktopLighthouse = this.createPuppeteerFallback(accessibilityMetrics, 'desktop');
+      }
+      
+      if (!mobileLighthouse || !mobileLighthouse.accessibility) {
+        logger.warn('Shared Lighthouse mobile missing accessibility, using Puppeteer-only fallback');
+        mobileLighthouse = this.createPuppeteerFallback(accessibilityMetrics, 'mobile');
+      }
+
+      // Process and combine results
+      const results = this.processResults(url, desktopLighthouse, mobileLighthouse, accessibilityMetrics, startTime);
+      
+      logger.info(`OPTIMIZED Accessibility analysis completed for: ${url} (Desktop: ${results.desktop.accessibilityScore}, Mobile: ${results.mobile.accessibilityScore})`);
+      return results;
+
+    } catch (error) {
+      logger.error(`OPTIMIZED Accessibility analysis failed for ${url}:`, error);
+      throw error;
+    }
+  }
+
+  /**
    * Collect accessibility metrics using Puppeteer
    */
   async collectAccessibilityMetrics(url) {

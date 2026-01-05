@@ -1,13 +1,16 @@
-# Font Scanner - robots.txt
-# https://fontscanner.app/robots.txt
+# Site Mechanic - robots.txt
+# https://sitemechanic.io/robots.txt
 
 User-agent: *
 Allow: /
 
-# Sitemaps
-Sitemap: https://fontscanner.app/sitemap.xml
+# XML Sitemap
+Sitemap: https://sitemechanic.io/sitemap.xml
 
-# Disallow backup and demo files
+# Disallow utility and demo pages
+Disallow: /results.html
+Disallow: /analyzer-loader.html
+Disallow: /icon-styles-showcase.html
 Disallow: /index_backup.html
 Disallow: /index_simple.html
 Disallow: /*demo.html

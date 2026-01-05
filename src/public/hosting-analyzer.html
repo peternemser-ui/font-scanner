@@ -1,0 +1,902 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Professional Hosting Pricing Analyzer. Compare 25+ hosting providers, detect CMS platforms, and find the best hosting for your website with real pricing data." />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- SEO Meta Tags -->
+    <meta name="keywords" content="hosting comparison, web hosting pricing, WordPress hosting, Shopify hosting, VPS hosting, cloud hosting, CMS detection, hosting cost calculator" />
+    <meta name="author" content="Site Mechanic" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://sitemechanic.io/en/hosting-analyzer.html" />
+
+    <!-- Hreflang Tags for Multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/hosting-analyzer.html" />
+    <link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/hosting-analyzer.html" />
+    <link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/hosting-analyzer.html" />
+    <link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/hosting-analyzer.html" />
+    <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/hosting-analyzer.html" />
+    <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/hosting-analyzer.html" />
+    <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/hosting-analyzer.html" />
+    <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/hosting-analyzer.html" />
+
+    <!-- Open Graph -->
+    <meta property="og:title" content="Hosting Pricing Analyzer - Compare 25+ Web Hosting Providers" />
+    <meta property="og:description" content="Detect your CMS, compare hosting providers, and find the best value hosting with real pricing data" />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sitemechanic.io/en/hosting-analyzer.html" />
+    <meta property="og:image" content="https://sitemechanic.io/images/og-hosting-analyzer.png" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="pt_PT" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:site_name" content="Site Mechanic" />
+
+    <!-- Twitter Cards -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Hosting Pricing Analyzer - Compare 25+ Web Hosting Providers" />
+    <meta name="twitter:description" content="Detect your CMS, compare hosting providers, and find the best value hosting with real pricing data" />
+    <meta name="twitter:url" content="https://sitemechanic.io/en/hosting-analyzer.html" />
+    <meta name="twitter:image" content="https://sitemechanic.io/images/twitter-hosting-analyzer.png" />
+
+    <title>Infrastructure - Hosting Analysis & Recommendations | Site Mechanic</title>
+
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
+    <!-- Existing Stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+    <link rel="stylesheet" href="spacing-fixes.css" />
+
+    <!-- PDF Export Styles -->
+    <link rel="stylesheet" href="/pdf-export-styles.css">
+
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- CRITICAL: Theme background fix -->
+    <style>
+      /* Dark mode (when white-theme is NOT present) */
+      body:not(.white-theme) {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+      /* Light mode (when white-theme IS present) */
+      body.white-theme {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
+        color: #1a1a1a !important;
+      }
+
+      /* Reduce white space above form */
+      .form-container {
+        padding-top: 0.5rem !important;
+        margin-top: 0 !important;
+      }
+
+      /* Add spacing between input and button */
+      .form-container button {
+        margin-top: 1rem;
+      }
+
+      /* Provider cards grid */
+      .providers-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 1.5rem;
+      }
+
+      .provider-card {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        padding: 2rem;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .provider-card:hover {
+        border-color: rgba(0, 255, 65, 0.4);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 30px rgba(0, 255, 65, 0.1);
+      }
+
+      .provider-card.top-pick {
+        background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 165, 0, 0.08) 100%);
+        border: 2px solid rgba(255, 215, 0, 0.5);
+      }
+
+      .provider-badge {
+        position: absolute;
+        top: 0;
+        right: 0;
+        background: linear-gradient(135deg, #ffd700, #ffa500);
+        color: #000;
+        padding: 0.3rem 1rem;
+        font-size: 0.75rem;
+        font-weight: bold;
+        border-bottom-left-radius: 8px;
+      }
+
+      .cms-detection-card {
+        background: linear-gradient(135deg, rgba(153, 51, 255, 0.1) 0%, rgba(0, 217, 255, 0.1) 100%);
+        border: 2px solid rgba(153, 51, 255, 0.4);
+        border-radius: 12px;
+        padding: 2rem;
+      }
+
+      .current-host-card {
+        background: linear-gradient(135deg, rgba(0, 255, 65, 0.1) 0%, rgba(0, 217, 255, 0.1) 100%);
+        border: 2px solid rgba(0, 255, 65, 0.4);
+        border-radius: 12px;
+        padding: 2rem;
+      }
+
+      .price-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        gap: 1rem;
+      }
+
+      .price-stat-card {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 1.5rem;
+        border-radius: 8px;
+        text-align: center;
+      }
+
+      .savings-card {
+        background: linear-gradient(135deg, rgba(0, 255, 65, 0.15) 0%, rgba(0, 200, 50, 0.08) 100%);
+        border: 2px solid rgba(0, 255, 65, 0.5);
+        border-radius: 12px;
+        padding: 2rem;
+      }
+
+      .comparison-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 700px;
+      }
+
+      .comparison-table th {
+        padding: 1rem;
+        text-align: left;
+        color: #00ff41;
+        font-weight: 600;
+        background: rgba(0, 0, 0, 0.4);
+      }
+
+      .comparison-table td {
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .comparison-table tr:nth-child(even) {
+        background: rgba(0, 0, 0, 0.2);
+      }
+
+      .comparison-table tr:nth-child(odd) {
+        background: rgba(0, 0, 0, 0.1);
+      }
+
+      /* Animation for provider cards */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* Filter pill hover effects */
+      .filter-pill:hover {
+        background: rgba(0, 255, 65, 0.15) !important;
+        border-color: rgba(0, 255, 65, 0.3) !important;
+        color: #00ff41 !important;
+      }
+
+      /* Mobile spacing adjustments */
+      @media (max-width: 768px) {
+        .form-container {
+          padding-top: 0.25rem !important;
+        }
+        .form-container button {
+          margin-top: 0.75rem;
+        }
+        .providers-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@graph": [
+        {
+          "@type": "WebApplication",
+          "name": "Hosting Pricing Analyzer",
+          "description": "Professional hosting pricing analyzer that compares 25+ web hosting providers, detects CMS platforms (WordPress, Shopify, Wix), and provides real pricing data and recommendations for the best hosting solution.",
+          "url": "https://sitemechanic.io/en/hosting-analyzer.html",
+          "applicationCategory": "DeveloperApplication",
+          "operatingSystem": "Any",
+          "offers": {
+            "@type": "Offer",
+            "price": "0",
+            "priceCurrency": "USD"
+          },
+          "featureList": [
+            "Compare 25+ Hosting Providers",
+            "CMS Platform Detection (WordPress, Shopify, Wix, Drupal)",
+            "Real Hosting Pricing Data",
+            "WordPress Hosting Recommendations",
+            "VPS & Cloud Hosting Comparison",
+            "Shared Hosting Analysis",
+            "Hosting Cost Calculator"
+          ],
+          "browserRequirements": "Requires JavaScript",
+          "permissions": "No installation required"
+        },
+        {
+          "@type": "Organization",
+          "name": "Site Mechanic",
+          "url": "https://sitemechanic.io",
+          "logo": {
+            "@type": "ImageObject",
+            "url": "https://sitemechanic.io/images/logo.png"
+          },
+          "description": "Professional website analysis and optimization tools for developers and digital marketers"
+        },
+        {
+          "@type": "BreadcrumbList",
+          "itemListElement": [
+            {
+              "@type": "ListItem",
+              "position": 1,
+              "name": "Home",
+              "item": "https://sitemechanic.io/en/"
+            },
+            {
+              "@type": "ListItem",
+              "position": 2,
+              "name": "Hosting Analyzer",
+              "item": "https://sitemechanic.io/en/hosting-analyzer.html"
+            }
+          ]
+        }
+      ]
+    }
+    </script>
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
+    <script src="/seo-i18n.js"></script>
+  </head>
+  <body>
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+
+    <div class="container">
+      <!-- Breadcrumb Navigation -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/" class="breadcrumb-link">Home</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Hosting Pricing Analyzer</span>
+      </nav>
+
+      <!-- Analysis Form -->
+      <div class="form-container">
+        <!-- Hero Section -->
+        <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
+          <h1 style="font-size: clamp(1.75rem, 5vw, 2.5rem); color: #00ff41; margin-bottom: 0.75rem; line-height: 1.2;">
+            💰 Hosting Pricing Analyzer
+          </h1>
+          <p style="color: #ffffff; font-size: 1.1rem; max-width: 600px; margin: 0 auto;">
+            Compare 25+ hosting providers. Get recommendations based on your site's actual needs.
+          </p>
+        </div>
+
+        <div class="input-group" style="max-width: 700px; margin: 0 auto;">
+          <!-- URL Input -->
+          <label for="urlInput" class="input-label">Website URL or Domain (optional - for auto-detection)</label>
+          <input
+            type="text"
+            id="urlInput"
+            class="input-field"
+            placeholder="example.com or https://example.com"
+            autocomplete="url"
+          />
+
+          <!-- Traffic & Technology Selection -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <!-- Monthly Visitors -->
+            <div>
+              <label for="trafficSelect" class="input-label">Expected Monthly Visitors</label>
+              <select id="trafficSelect" class="input-field" style="padding: 0.75rem;">
+                <option value="">🔍 Auto-detect from URL</option>
+                <option value="1000">👤 Under 1,000 (Personal/Hobby)</option>
+                <option value="10000">🚀 1K - 10K (Startup/Small Biz)</option>
+                <option value="50000">📈 10K - 50K (Growing Business)</option>
+                <option value="100000">🏪 50K - 100K (Established Business)</option>
+                <option value="500000">🏢 100K - 500K (Enterprise)</option>
+                <option value="1000000">🌐 500K+ (High-Traffic Enterprise)</option>
+              </select>
+            </div>
+
+            <!-- CMS/Technology -->
+            <div>
+              <label for="cmsSelect" class="input-label">CMS / Technology Platform</label>
+              <select id="cmsSelect" class="input-field" style="padding: 0.75rem;">
+                <option value="">🔍 Auto-detect from URL</option>
+                <optgroup label="Popular CMS">
+                  <option value="wordpress">📝 WordPress</option>
+                  <option value="shopify">🛒 Shopify</option>
+                  <option value="wix">🎨 Wix</option>
+                  <option value="squarespace">⬛ Squarespace</option>
+                  <option value="webflow">🌊 Webflow</option>
+                </optgroup>
+                <optgroup label="E-commerce">
+                  <option value="woocommerce">◈ WooCommerce</option>
+                  <option value="magento">◆ Magento / Adobe Commerce</option>
+                  <option value="bigcommerce">◈ BigCommerce</option>
+                  <option value="prestashop">◈ PrestaShop</option>
+                </optgroup>
+                <optgroup label="Enterprise CMS">
+                  <option value="drupal">◉ Drupal</option>
+                  <option value="joomla">▤ Joomla</option>
+                  <option value="hubspot">● HubSpot CMS</option>
+                  <option value="contentful">▢ Contentful</option>
+                </optgroup>
+                <optgroup label="Modern Frameworks">
+                  <option value="nextjs">▲ Next.js</option>
+                  <option value="gatsby">💜 Gatsby</option>
+                  <option value="ghost">👻 Ghost</option>
+                  <option value="strapi">🚀 Strapi</option>
+                </optgroup>
+                <optgroup label="Other">
+                  <option value="static">📄 Static HTML/CSS</option>
+                  <option value="custom">⚙️ Custom/Other</option>
+                </optgroup>
+              </select>
+            </div>
+          </div>
+
+          <!-- Storage & Priority -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <!-- Storage -->
+            <div>
+              <label for="storageSelect" class="input-label">Storage Needs</label>
+              <select id="storageSelect" class="input-field" style="padding: 0.75rem;">
+                <option value="">🔍 Auto (based on traffic)</option>
+                <option value="5">📁 5GB (Small site, few images)</option>
+                <option value="10">📂 10GB (Standard website)</option>
+                <option value="25">💾 25GB (Media-rich site)</option>
+                <option value="50">🗄️ 50GB (Large site/E-commerce)</option>
+                <option value="100">🏢 100GB+ (Enterprise/Video)</option>
+              </select>
+            </div>
+
+            <!-- Priority Features -->
+            <div>
+              <label for="prioritySelect" class="input-label">Top Priority</label>
+              <select id="prioritySelect" class="input-field" style="padding: 0.75rem;">
+                <option value="balanced">⚖️ Balanced (Default)</option>
+                <option value="speed">⚡ Maximum Speed</option>
+                <option value="budget">💰 Lowest Cost</option>
+                <option value="support">🎧 Best Support</option>
+                <option value="uptime">🔒 Maximum Uptime</option>
+                <option value="scalability">📈 Scalability</option>
+                <option value="security">🛡️ Security & Compliance</option>
+                <option value="ecommerce">🛒 E-commerce Ready</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Geographic & Advanced Options -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <!-- Geographic Region -->
+            <div>
+              <label for="regionSelect" class="input-label">Primary Audience Location</label>
+              <select id="regionSelect" class="input-field" style="padding: 0.75rem;">
+                <option value="">🌍 Global / Any Region</option>
+                <option value="us">🇺🇸 United States</option>
+                <option value="eu">🇪🇺 Europe</option>
+                <option value="uk">🇬🇧 United Kingdom</option>
+                <option value="asia">🌏 Asia Pacific</option>
+                <option value="latam">🌎 Latin America</option>
+                <option value="au">🇦🇺 Australia / Oceania</option>
+              </select>
+            </div>
+
+            <!-- E-commerce Features -->
+            <div>
+              <label for="ecommerceSelect" class="input-label">E-commerce Requirements</label>
+              <select id="ecommerceSelect" class="input-field" style="padding: 0.75rem;">
+                <option value="none">❌ Not selling online</option>
+                <option value="basic">🛒 Basic (< 100 products)</option>
+                <option value="medium">🛍️ Growing (100-1,000 products)</option>
+                <option value="large">🏪 Large store (1,000+ products)</option>
+                <option value="enterprise">🏢 Enterprise (Multi-store, B2B)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Features & Billing -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
+            <!-- Must-Have Features -->
+            <div>
+              <label for="featuresSelect" class="input-label">Must-Have Features</label>
+              <select id="featuresSelect" class="input-field" style="padding: 0.75rem;" multiple size="4">
+                <option value="ssl">🔒 Free SSL Certificate</option>
+                <option value="cdn">🌐 CDN Included</option>
+                <option value="backup">💾 Automatic Backups</option>
+                <option value="staging">🛠️ Staging Environment</option>
+                <option value="email">📧 Email Hosting</option>
+                <option value="migration">🚚 Free Migration</option>
+                <option value="support247">🎧 24/7 Support</option>
+                <option value="uptime99">✅ 99.9%+ Uptime SLA</option>
+              </select>
+              <div style="font-size: 0.75rem; color: #808080; margin-top: 0.25rem;">Hold Ctrl/Cmd to select multiple</div>
+            </div>
+
+            <!-- Billing Preference -->
+            <div>
+              <label for="billingSelect" class="input-label">Billing Preference</label>
+              <select id="billingSelect" class="input-field" style="padding: 0.75rem;">
+                <option value="annual">📅 Annual (Best savings)</option>
+                <option value="monthly">🗓️ Monthly (Flexible)</option>
+                <option value="multi">📆 Multi-year (Maximum savings)</option>
+              </select>
+              <div style="font-size: 0.75rem; color: #808080; margin-top: 0.25rem;">Annual billing typically saves 20-40%</div>
+            </div>
+          </div>
+
+          <!-- CTA Button -->
+          <div style="margin-top: 2rem; margin-bottom: 2rem;">
+            <button id="analyzeButton" class="scan-button" style="width: 100%; padding: 1.25rem 2rem; font-size: 1.1rem;">
+              <span class="button-content" style="display: flex; align-items: center; justify-content: center; gap: 0.75rem;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"/>
+                  <path d="m21 21-4.35-4.35"/>
+                </svg>
+                Find Hosting Options
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error Message -->
+      <div id="errorMessage" class="error-banner hidden"></div>
+
+      <!-- Results Container -->
+      <div id="results" class="results-section hidden">
+        <div id="resultsContent"></div>
+      </div>
+
+      <!-- Charts Section -->
+      <div id="chartsSection" class="section" style="margin-top: 2rem;">
+        <h2 style="color: #00ff41; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>📊</span> Market Overview
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 1.5rem;">
+          <!-- Price Comparison Chart -->
+          <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 2rem;">
+            <h3 style="color: #ffffff; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              💰 Starting Prices
+            </h3>
+            <div style="height: 250px;">
+              <canvas id="priceChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Ratings Chart -->
+          <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 2rem;">
+            <h3 style="color: #ffffff; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              ⭐ User Ratings
+            </h3>
+            <div style="height: 250px;">
+              <canvas id="ratingsChart"></canvas>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Category Distribution -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
+          <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 2rem;">
+            <h3 style="color: #ffffff; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              🏷️ Hosting Categories
+            </h3>
+            <div style="height: 220px; display: flex; justify-content: center;">
+              <canvas id="categoryChart"></canvas>
+            </div>
+          </div>
+          
+          <!-- Value Score Chart -->
+          <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 2rem;">
+            <h3 style="color: #ffffff; font-size: 1rem; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+              📈 Value Score (Rating / Price)
+            </h3>
+            <div style="height: 220px;">
+              <canvas id="valueChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hosting Decision Flowchart -->
+      <div class="section" style="margin-top: 2rem;">
+        <h2 style="color: #00ff41; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🗺️</span> Hosting Decision Map
+        </h2>
+        
+        <!-- Decision Tree Diagram -->
+        <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 2rem; overflow-x: auto;">
+          <div style="min-width: 800px;">
+            <!-- SVG Decision Tree -->
+            <svg viewBox="0 0 900 500" style="width: 100%; height: auto;">
+              <!-- Definitions -->
+              <defs>
+                <linearGradient id="greenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#00ff41;stop-opacity:0.3" />
+                  <stop offset="100%" style="stop-color:#00ff41;stop-opacity:0.1" />
+                </linearGradient>
+                <linearGradient id="blueGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#00d9ff;stop-opacity:0.3" />
+                  <stop offset="100%" style="stop-color:#00d9ff;stop-opacity:0.1" />
+                </linearGradient>
+                <linearGradient id="purpleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#bb77ff;stop-opacity:0.3" />
+                  <stop offset="100%" style="stop-color:#bb77ff;stop-opacity:0.1" />
+                </linearGradient>
+                <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" style="stop-color:#ffd700;stop-opacity:0.3" />
+                  <stop offset="100%" style="stop-color:#ffd700;stop-opacity:0.1" />
+                </linearGradient>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#808080" />
+                </marker>
+              </defs>
+              
+              <!-- Connection Lines (drawn first so they appear behind boxes) -->
+              <g stroke="#808080" stroke-width="2" fill="none" marker-end="url(#arrowhead)" style="z-index: -1;">
+                <!-- From Start to Questions -->
+                <path d="M450,60 L450,105" />
+                
+                <!-- From Website Type to branches -->
+                <path d="M350,155 L250,155 L250,210" />
+                <path d="M450,155 L450,210" />
+                <path d="M550,155 L650,155 L650,210" />
+                
+                <!-- From branches to solutions -->
+                <path d="M200,265 L120,265 L120,330" />
+                <path d="M300,265 L280,265 L280,330" />
+                <path d="M450,265 L450,330" />
+                <path d="M600,265 L610,265 L610,330" />
+                <path d="M700,265 L770,265 L770,330" />
+              </g>
+              
+              <!-- Start Node -->
+              <g transform="translate(350, 20)">
+                <rect width="200" height="40" rx="20" fill="#0a1a0a" />
+                <rect width="200" height="40" rx="20" fill="url(#greenGrad)" stroke="#00ff41" stroke-width="2"/>
+                <text x="100" y="26" text-anchor="middle" fill="#00ff41" font-size="14" font-weight="bold">🌐 Your Website</text>
+              </g>
+              
+              <!-- Question Node -->
+              <g transform="translate(325, 105)">
+                <polygon points="125,0 250,50 125,100 0,50" fill="#0a1520" />
+                <polygon points="125,0 250,50 125,100 0,50" fill="url(#blueGrad)" stroke="#00d9ff" stroke-width="2"/>
+                <text x="125" y="45" text-anchor="middle" fill="#00d9ff" font-size="12" font-weight="bold">What type of site?</text>
+                <text x="125" y="60" text-anchor="middle" fill="#808080" font-size="10">Choose your path</text>
+              </g>
+              
+              <!-- Branch 1: Blog/Content -->
+              <g transform="translate(150, 210)">
+                <rect width="200" height="55" rx="8" fill="#15101a" />
+                <rect width="200" height="55" rx="8" fill="url(#purpleGrad)" stroke="#bb77ff" stroke-width="2"/>
+                <text x="100" y="22" text-anchor="middle" fill="#bb77ff" font-size="13" font-weight="bold">📝 Blog / Content</text>
+                <text x="100" y="40" text-anchor="middle" fill="#808080" font-size="10">WordPress, Ghost, Hugo</text>
+              </g>
+              
+              <!-- Branch 2: E-commerce -->
+              <g transform="translate(350, 210)">
+                <rect width="200" height="55" rx="8" fill="#1a1508" />
+                <rect width="200" height="55" rx="8" fill="url(#goldGrad)" stroke="#ffd700" stroke-width="2"/>
+                <text x="100" y="22" text-anchor="middle" fill="#ffd700" font-size="13" font-weight="bold">🛒 E-commerce</text>
+                <text x="100" y="40" text-anchor="middle" fill="#808080" font-size="10">Selling products online</text>
+              </g>
+              
+              <!-- Branch 3: Web App -->
+              <g transform="translate(550, 210)">
+                <rect width="200" height="55" rx="8" fill="#0a1520" />
+                <rect width="200" height="55" rx="8" fill="url(#blueGrad)" stroke="#00d9ff" stroke-width="2"/>
+                <text x="100" y="22" text-anchor="middle" fill="#00d9ff" font-size="13" font-weight="bold">⚡ Web Application</text>
+                <text x="100" y="40" text-anchor="middle" fill="#808080" font-size="10">Next.js, React, Node.js</text>
+              </g>
+              
+              <!-- Solutions Row -->
+              <!-- Solution 1a: Managed WordPress -->
+              <g transform="translate(50, 330)" class="solution-node" style="cursor: pointer;">
+                <rect width="140" height="70" rx="8" fill="#0d0d0d" />
+                <rect width="140" height="70" rx="8" fill="rgba(0,50,0,0.3)" stroke="#00ff41" stroke-width="2"/>
+                <text x="70" y="20" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold">🚀 Managed WP</text>
+                <text x="70" y="38" text-anchor="middle" fill="#00ff41" font-size="10">WP Engine, Kinsta</text>
+                <text x="70" y="55" text-anchor="middle" fill="#808080" font-size="9">$20-35/mo</text>
+              </g>
+              
+              <!-- Solution 1b: Shared Hosting -->
+              <g transform="translate(210, 330)" class="solution-node" style="cursor: pointer;">
+                <rect width="140" height="70" rx="8" fill="#0d0d0d" />
+                <rect width="140" height="70" rx="8" fill="rgba(50,30,70,0.3)" stroke="#bb77ff" stroke-width="2"/>
+                <text x="70" y="20" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold">💜 Shared Host</text>
+                <text x="70" y="38" text-anchor="middle" fill="#bb77ff" font-size="10">Hostinger, SiteGround</text>
+                <text x="70" y="55" text-anchor="middle" fill="#808080" font-size="9">$2-10/mo</text>
+              </g>
+              
+              <!-- Solution 2: E-commerce Platforms -->
+              <g transform="translate(380, 330)" class="solution-node" style="cursor: pointer;">
+                <rect width="140" height="70" rx="8" fill="#0d0d0d" />
+                <rect width="140" height="70" rx="8" fill="rgba(70,60,0,0.3)" stroke="#ffd700" stroke-width="2"/>
+                <text x="70" y="20" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold">🛒 E-com Platform</text>
+                <text x="70" y="38" text-anchor="middle" fill="#ffd700" font-size="10">Shopify, BigCommerce</text>
+                <text x="70" y="55" text-anchor="middle" fill="#808080" font-size="9">$29-79/mo</text>
+              </g>
+              
+              <!-- Solution 3a: JAMstack -->
+              <g transform="translate(540, 330)" class="solution-node" style="cursor: pointer;">
+                <rect width="140" height="70" rx="8" fill="#0d0d0d" />
+                <rect width="140" height="70" rx="8" fill="rgba(0,50,70,0.3)" stroke="#00d9ff" stroke-width="2"/>
+                <text x="70" y="20" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold">▲ JAMstack</text>
+                <text x="70" y="38" text-anchor="middle" fill="#00d9ff" font-size="10">Vercel, Netlify</text>
+                <text x="70" y="55" text-anchor="middle" fill="#808080" font-size="9">FREE - $20/mo</text>
+              </g>
+              
+              <!-- Solution 3b: Cloud VPS -->
+              <g transform="translate(700, 330)" class="solution-node" style="cursor: pointer;">
+                <rect width="140" height="70" rx="8" fill="#0d0d0d" />
+                <rect width="140" height="70" rx="8" fill="rgba(0,50,0,0.3)" stroke="#00ff41" stroke-width="2"/>
+                <text x="70" y="20" text-anchor="middle" fill="#ffffff" font-size="11" font-weight="bold">☁️ Cloud VPS</text>
+                <text x="70" y="38" text-anchor="middle" fill="#00ff41" font-size="10">DigitalOcean, Vultr</text>
+                <text x="70" y="55" text-anchor="middle" fill="#808080" font-size="9">$4-20/mo</text>
+              </g>
+              
+              <!-- Traffic Scale Indicator -->
+              <g transform="translate(50, 430)">
+                <text x="0" y="15" fill="#808080" font-size="11">Traffic Scale:</text>
+                <rect x="100" y="5" width="700" height="20" rx="10" fill="rgba(255,255,255,0.05)" stroke="rgba(255,255,255,0.1)"/>
+                <rect x="100" y="5" width="175" height="20" rx="10" fill="rgba(187,119,255,0.3)"/>
+                <rect x="275" y="5" width="175" height="20" rx="0" fill="rgba(0,217,255,0.3)"/>
+                <rect x="450" y="5" width="175" height="20" rx="0" fill="rgba(255,215,0,0.3)"/>
+                <rect x="625" y="5" width="175" height="20" rx="10" fill="rgba(0,255,65,0.3)"/>
+                <text x="187" y="19" text-anchor="middle" fill="#bb77ff" font-size="9" font-weight="bold">Personal</text>
+                <text x="362" y="19" text-anchor="middle" fill="#00d9ff" font-size="9" font-weight="bold">Startup</text>
+                <text x="537" y="19" text-anchor="middle" fill="#ffd700" font-size="9" font-weight="bold">Business</text>
+                <text x="712" y="19" text-anchor="middle" fill="#00ff41" font-size="9" font-weight="bold">Enterprise</text>
+              </g>
+              
+              <!-- Legend -->
+              <g transform="translate(50, 470)">
+                <text x="0" y="12" fill="#808080" font-size="10">💡 Click a solution above for recommendations, or use the analyzer for personalized results</text>
+              </g>
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Hosting Ecosystem Map -->
+      <div class="section" style="margin-top: 2rem;">
+        <h2 style="color: #00ff41; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>🔗</span> Hosting Ecosystem
+        </h2>
+        
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem;">
+          <!-- Managed WordPress Ecosystem -->
+          <div style="background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.02)); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 12px; padding: 2rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+              <span style="font-size: 2rem;">🚀</span>
+              <div>
+                <h3 style="color: #00ff41; margin: 0; font-size: 1.1rem;">Managed WordPress</h3>
+                <span style="color: #808080; font-size: 0.8rem;">Premium performance & support</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">WP Engine</span>
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">Kinsta</span>
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">Flywheel</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #808080;">
+              <div>✓ Auto updates & security</div>
+              <div>✓ Staging environments</div>
+              <div>✓ Expert WP support</div>
+            </div>
+          </div>
+          
+          <!-- Cloud VPS Ecosystem -->
+          <div style="background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 217, 255, 0.02)); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 12px; padding: 2rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+              <span style="font-size: 2rem;">☁️</span>
+              <div>
+                <h3 style="color: #00d9ff; margin: 0; font-size: 1.1rem;">Cloud VPS</h3>
+                <span style="color: #808080; font-size: 0.8rem;">Full control & scalability</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">DigitalOcean</span>
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">Vultr</span>
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">Hetzner</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #808080;">
+              <div>✓ Root access</div>
+              <div>✓ Custom configurations</div>
+              <div>✓ Hourly billing</div>
+            </div>
+          </div>
+          
+          <!-- JAMstack Ecosystem -->
+          <div style="background: linear-gradient(135deg, rgba(187, 119, 255, 0.1), rgba(187, 119, 255, 0.02)); border: 1px solid rgba(187, 119, 255, 0.3); border-radius: 12px; padding: 2rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+              <span style="font-size: 2rem;">⚡</span>
+              <div>
+                <h3 style="color: #bb77ff; margin: 0; font-size: 1.1rem;">JAMstack / Edge</h3>
+                <span style="color: #808080; font-size: 0.8rem;">Modern static & serverless</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">Vercel</span>
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">Netlify</span>
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">Cloudflare</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #808080;">
+              <div>✓ Edge functions</div>
+              <div>✓ Git deployments</div>
+              <div>✓ Free tier available</div>
+            </div>
+          </div>
+          
+          <!-- E-commerce Ecosystem -->
+          <div style="background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 215, 0, 0.02)); border: 1px solid rgba(255, 215, 0, 0.3); border-radius: 12px; padding: 2rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+              <span style="font-size: 2rem;">🛒</span>
+              <div>
+                <h3 style="color: #ffd700; margin: 0; font-size: 1.1rem;">E-commerce</h3>
+                <span style="color: #808080; font-size: 0.8rem;">Built for selling online</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">Shopify</span>
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">BigCommerce</span>
+              <span style="background: rgba(0,0,0,0.3); padding: 0.3rem 0.6rem; border-radius: 4px; font-size: 0.8rem; color: #ffffff;">WooCommerce</span>
+            </div>
+            <div style="font-size: 0.85rem; color: #808080;">
+              <div>✓ Payment processing</div>
+              <div>✓ Inventory management</div>
+              <div>✓ POS integration</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Technology Stack Connections -->
+        <div style="background: rgba(0, 0, 0, 0.3); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; padding: 2rem; margin-top: 1.5rem;">
+          <h3 style="color: #ffffff; font-size: 1rem; margin-bottom: 1.5rem;">🔧 Common Technology Stacks</h3>
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+            <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 8px; border-left: 3px solid #00ff41;">
+              <div style="color: #00ff41; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem;">WordPress Stack</div>
+              <div style="color: #808080; font-size: 0.8rem; line-height: 1.6;">
+                WordPress → WP Engine/Kinsta<br>
+                + Cloudflare CDN<br>
+                + WooCommerce (optional)
+              </div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 8px; border-left: 3px solid #00d9ff;">
+              <div style="color: #00d9ff; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem;">Next.js Stack</div>
+              <div style="color: #808080; font-size: 0.8rem; line-height: 1.6;">
+                Next.js → Vercel<br>
+                + Prisma/Supabase<br>
+                + Stripe payments
+              </div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 8px; border-left: 3px solid #ffd700;">
+              <div style="color: #ffd700; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem;">E-commerce Stack</div>
+              <div style="color: #808080; font-size: 0.8rem; line-height: 1.6;">
+                Shopify/BigCommerce<br>
+                + Custom theme<br>
+                + App integrations
+              </div>
+            </div>
+            <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 8px; border-left: 3px solid #bb77ff;">
+              <div style="color: #bb77ff; font-weight: bold; font-size: 0.9rem; margin-bottom: 0.5rem;">Custom Stack</div>
+              <div style="color: #808080; font-size: 0.8rem; line-height: 1.6;">
+                Node.js → DigitalOcean<br>
+                + Docker/Kubernetes<br>
+                + PostgreSQL/MongoDB
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quick Browse Section (shown before analysis) -->
+      <div id="quickBrowse" class="section" style="margin-top: 2rem;">
+        <div style="display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem;">
+          <div>
+            <h2 style="color: #00ff41; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.5rem;">
+              <span>🔥</span> Top-Rated Hosting Providers
+            </h2>
+            <p style="color: #808080; margin: 0;">Handpicked based on performance, support & value</p>
+          </div>
+          <div style="background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); padding: 0.5rem 1rem; border-radius: 8px; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: #00ff41; font-size: 1.25rem;">25+</span>
+            <span style="color: #808080; font-size: 0.85rem;">Providers Compared</span>
+          </div>
+        </div>
+        
+        <!-- Quick Filter Pills -->
+        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
+          <button onclick="filterProviders('all')" class="filter-pill active" style="background: rgba(0, 255, 65, 0.2); border: 1px solid rgba(0, 255, 65, 0.4); color: #00ff41; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">All</button>
+          <button onclick="filterProviders('wordpress')" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">📝 WordPress</button>
+          <button onclick="filterProviders('ecommerce')" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">🛒 E-commerce</button>
+          <button onclick="filterProviders('vps')" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">☁️ Cloud/VPS</button>
+          <button onclick="filterProviders('budget')" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">💰 Budget-Friendly</button>
+        </div>
+        
+        <div id="popularProviders" class="providers-grid">
+          <!-- Populated by JavaScript -->
+        </div>
+        
+        <!-- Bottom CTA -->
+        <div style="text-align: center; margin-top: 2rem; padding: 2rem; background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(153, 51, 255, 0.1)); border-radius: 12px; border: 1px solid rgba(0, 217, 255, 0.2);">
+          <h3 style="color: #ffffff; margin-bottom: 0.5rem;">Not sure which hosting is right for you?</h3>
+          <p style="color: #808080; margin-bottom: 1rem;">Enter your website URL above and we'll analyze your exact needs</p>
+          <a href="#urlInput" style="color: #00d9ff; text-decoration: none; font-weight: 600; display: inline-flex; align-items: center; gap: 0.5rem;">
+            Get Personalized Recommendations <span>→</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="site-footer" role="contentinfo">
+      <p>&copy; 2025 Site Mechanic. Built for developers who care about quality.</p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="nav-template.js"></script>
+    <script src="analyzer-loader.js"></script>
+
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/pdf-export-utility.js"></script>
+    <script src="/pdf-export-integration.js"></script>
+
+    <script src="hosting-analyzer-script.js"></script>
+    <script>
+      // Set current year in footer
+      document.getElementById('currentYear').textContent = new Date().getFullYear();
+
+      // Initialize navigation
+      if (typeof initNavigation === 'function') {
+        initNavigation('hosting-analyzer');
+      }
+    </script>
+  </body>
+</html>

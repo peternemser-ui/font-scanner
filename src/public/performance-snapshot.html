@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+
+    <!-- SEO: Noindex for redirect page -->
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://sitemechanic.io/en/performance-hub.html" />
+
+    <!-- Redirect to Speed & UX - consolidated performance tools -->
+    <meta http-equiv="refresh" content="0; url=/performance-hub.html" />
+    <script>window.location.href = '/performance-hub.html' + window.location.search;</script>
+
+    <meta name="description" content="Redirecting to Speed & UX - consolidated performance analysis tools." />
+    <title>Performance Snapshot - Redirecting to Speed & UX | Site Mechanic</title>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Design System Foundation -->
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
+    <!-- Existing Stylesheets -->
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="progress-styles.css" />
+    <link rel="stylesheet" href="analyzer-loading.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+    <link rel="stylesheet" href="spacing-fixes.css" />
+
+    <!-- CRITICAL: Theme background fix -->
+    <style>
+      /* Dark mode (when white-theme is NOT present) */
+      body:not(.white-theme) {
+        background: #000000 !important;
+        background-color: #000000 !important;
+      }
+      /* Light mode (when white-theme IS present) */
+      body.white-theme {
+        background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
+        color: #1a1a1a !important;
+      }
+      
+      /* Resource type badges */
+      .resource-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      .resource-css { background: #3b82f6; color: white; }
+      .resource-js { background: #f59e0b; color: black; }
+      .resource-image { background: #10b981; color: white; }
+      .resource-font { background: #8b5cf6; color: white; }
+      .resource-third-party { background: #ec4899; color: white; }
+      
+      /* Metric card */
+      .metric-card {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        padding: 1rem;
+        text-align: center;
+      }
+      .metric-value {
+        font-size: 2rem;
+        font-weight: bold;
+      }
+      .metric-label {
+        font-size: 0.85rem;
+        color: #888;
+        margin-top: 0.25rem;
+      }
+      
+      /* Issue card */
+      .issue-card {
+        background: rgba(239, 68, 68, 0.05);
+        border-left: 3px solid #ef4444;
+        padding: 1rem;
+        margin-bottom: 0.5rem;
+        border-radius: 0 4px 4px 0;
+      }
+      .issue-card.warning {
+        border-left-color: #f59e0b;
+        background: rgba(245, 158, 11, 0.05);
+      }
+      .issue-card.info {
+        border-left-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.05);
+      }
+      
+      /* Accordion styles */
+      /* Resource details (native HTML accordion) */
+      .resource-details {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      .resource-details:hover {
+        border-color: rgba(255, 255, 255, 0.2);
+      }
+      .resource-summary {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem;
+        cursor: pointer;
+        user-select: none;
+        list-style: none;
+      }
+      .resource-summary::-webkit-details-marker {
+        display: none;
+      }
+      .resource-summary::after {
+        content: '▼';
+        margin-left: auto;
+        font-size: 0.75rem;
+        color: #888;
+        transition: transform 0.2s ease;
+      }
+      .resource-details[open] .resource-summary::after {
+        transform: rotate(180deg);
+      }
+      .resource-details-content {
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.2);
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      /* Resource table styles */
+      .resource-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.85rem;
+      }
+      .resource-table th {
+        background: rgba(255, 255, 255, 0.05);
+        padding: 0.75rem 1rem;
+        text-align: left;
+        font-weight: 600;
+        color: #aaa;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      .resource-table td {
+        padding: 0.5rem 1rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        color: #ccc;
+      }
+      .resource-table tr:hover td {
+        background: rgba(255, 255, 255, 0.03);
+      }
+      .url-cell {
+        font-family: monospace;
+        font-size: 0.8rem;
+        word-break: break-all;
+        max-width: 400px;
+      }
+      
+      /* Light mode adjustments */
+      body.white-theme .resource-details {
+        background: rgba(0, 0, 0, 0.02);
+        border-color: rgba(0, 0, 0, 0.1);
+      }
+      body.white-theme .resource-details-content {
+        background: rgba(0, 0, 0, 0.03);
+        border-top-color: rgba(0, 0, 0, 0.1);
+      }
+      body.white-theme .resource-table th {
+        background: rgba(0, 0, 0, 0.05);
+        color: #555;
+      }
+      body.white-theme .resource-table td {
+        color: #333;
+        border-bottom-color: rgba(0, 0, 0, 0.05);
+      }
+    </style>
+    
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
+    <script src="/language-switcher.js"></script>
+  </head>
+  <body>
+    <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
+    <div id="nav-placeholder"></div>
+    
+    <div class="container">
+      <!-- Breadcrumb Navigation -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/">Home</a>
+        <span class="breadcrumb-separator">›</span>
+        <span class="breadcrumb-current">Performance Snapshot</span>
+      </nav>
+      
+      <!-- Page Title -->
+      <div class="page-header">
+        <h1 class="page-title">Performance Snapshot</h1>
+        <p class="page-subtitle">Fast, lightweight performance analysis detecting render-blocking resources and optimization opportunities.</p>
+      </div>
+
+      <!-- Header -->
+      <header class="form-container">
+        <!-- URL Input Form -->
+        <div style="margin-top: 2rem;">
+          <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
+          <input 
+            type="url" 
+            id="urlInput" 
+            placeholder="https://example.com" 
+            aria-label="Enter website URL for performance snapshot"
+            required
+            aria-required="true"
+          />
+          
+          <button id="analyzeButton" aria-label="Start performance snapshot">ANALYZE PERFORMANCE</button>
+        </div>
+        
+        <!-- Info Banner -->
+        <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 4px;">
+          <p style="color: #34d399; margin: 0; font-size: 0.9rem;">
+            <strong>⚡ Performance Snapshot:</strong> Fast, lightweight performance analysis. Detects render-blocking CSS/JS, 
+            counts requests, estimates page weight, identifies image issues, and flags third-party script impact.
+            <br><em style="color: #888;">Much faster than full Lighthouse scans - perfect for quick checks!</em>
+          </p>
+        </div>
+      </header>
+
+      <!-- Results Container -->
+      <div id="results" class="results-container hidden" role="region" aria-live="polite">
+        <!-- Loading State -->
+        <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
+          <h2><span class="heartbeat" aria-hidden="true">⚡</span> Analyzing Performance...</h2>
+          <p class="animate-pulse">Scanning resources and measuring page metrics...</p>
+          
+          <!-- ASCII Art Loading Animation -->
+          <div style="margin: 2rem 0; font-family: monospace; font-size: 14px;">
+            <pre id="asciiLoader" class="color-cycle" style="text-align: center; line-height: 1.2;">
+ ____  _     _____ ____  ____  _____   ____  _____   ____  ____  _____  _  _____  _      _____ 
+/  __\/ \   /  __//  _ \/ ___\/  __/  /  _ \/  __/  /  __\/  _ \/__ __\/ \/  __/ / \  /|/__ __\
+|  \/|| |   |  \  | / \||    \|  \    | | //|  \    |  \/|| / \|  / \  | ||  \   | |\ ||  / \  
+|  __/| |_/\|  /_ | |-|||___ ||  /_   | |_\\|  /_   |  __/| |-||  | |  | ||  /_  | | \||  | |  
+\____/\____/\____\\_/ \|\____/\____\  \____/\____\  \_/   \_/ \|  \_/  \_/\____\ \_/  \|  \_/  
+            </pre>
+          </div>
+          
+          <div class="progress-container" role="progressbar" aria-label="Analysis progress">
+            <div class="progress-bar" id="progressBar"></div>
+          </div>
+          <div id="progressText" class="progress-text" aria-live="polite">Initializing performance scan...</div>
+        </div>
+
+        <!-- Results Content (populated by JavaScript) -->
+        <div id="resultsContent"></div>
+      </div>
+
+      <!-- Error Display -->
+      <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
+    </div>
+
+    <!-- Footer -->
+    <footer style="margin-top: 3rem; padding: 2rem 0; text-align: center; border-top: 1px solid #333;">
+      <p style="color: #808080; font-size: 0.85rem;">
+        Performance Snapshot | Fast Performance Analysis | Built with ⚡
+      </p>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="theme-controls.js"></script>
+    <script src="nav-template.js"></script>
+    <script src="analyzer-loader.js"></script>
+
+    <!-- ASCII Background Animation -->
+
+
+    <script src="performance-snapshot-script.js"></script>
+  </body>
+</html>

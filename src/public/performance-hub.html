@@ -1,0 +1,1053 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Diagnose performance issues: page speed, Core Web Vitals, Lighthouse metrics, and mobile UX. Part of Site Mechanic's unified website inspection workflow.">
+  <meta name="theme-color" content="#000000" />
+
+  <!-- SEO Meta Tags -->
+  <meta name="keywords" content="performance testing, page speed, Core Web Vitals, Lighthouse, website optimization, LCP, FID, CLS, mobile UX" />
+  <meta name="author" content="Site Mechanic" />
+  <meta name="robots" content="index, follow" />
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://sitemechanic.io/en/performance-hub.html" />
+
+  <!-- Hreflang Tags for Multilingual SEO -->
+  <link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/performance-hub.html" />
+  <link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/performance-hub.html" />
+  <link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/performance-hub.html" />
+  <link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/performance-hub.html" />
+  <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/performance-hub.html" />
+  <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/performance-hub.html" />
+  <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/performance-hub.html" />
+  <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/performance-hub.html" />
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="Performance Testing Hub - Speed & Core Web Vitals" />
+  <meta property="og:description" content="Analyze page load speed, Core Web Vitals (LCP, FID, CLS), and Lighthouse performance metrics for optimal UX" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://sitemechanic.io/en/performance-hub.html" />
+  <meta property="og:image" content="https://sitemechanic.io/images/og-performance-hub.png" />
+  <meta property="og:locale" content="en_US" />
+  <meta property="og:locale:alternate" content="es_ES" />
+  <meta property="og:locale:alternate" content="fr_FR" />
+  <meta property="og:locale:alternate" content="de_DE" />
+  <meta property="og:locale:alternate" content="pt_PT" />
+  <meta property="og:locale:alternate" content="zh_CN" />
+  <meta property="og:locale:alternate" content="ja_JP" />
+  <meta property="og:site_name" content="Site Mechanic" />
+
+  <!-- Twitter Cards -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Performance Testing Hub - Speed & Core Web Vitals" />
+  <meta name="twitter:description" content="Analyze page load speed, Core Web Vitals (LCP, FID, CLS), and Lighthouse performance metrics for optimal UX" />
+  <meta name="twitter:url" content="https://sitemechanic.io/en/performance-hub.html" />
+  <meta name="twitter:image" content="https://sitemechanic.io/images/twitter-performance-hub.png" />
+
+  <title>Speed & UX - Performance, Core Web Vitals & Lighthouse | Site Mechanic</title>
+
+  <!-- Preload critical fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="/design-tokens.css">
+  <link rel="stylesheet" href="/components.css">
+  <link rel="stylesheet" href="/layout.css">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/ui.css">
+  <link rel="stylesheet" href="/ui-components.css">
+  <link rel="stylesheet" href="/progress-styles.css">
+  <link rel="stylesheet" href="/analyzer-loading.css">
+  <link rel="stylesheet" href="/spacing-fixes.css">
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+  
+  <style>
+    /* Report header animations */
+    @keyframes slideInFromTop {
+      from {
+        opacity: 0;
+        transform: translateY(-20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+
+    .report-header {
+      animation: slideInFromTop 0.5s ease-out;
+    }
+
+    /* Side by side results for Full Analysis */
+    .side-by-side-results {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+    .device-column {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .device-column h2 {
+      font-size: 1.25rem;
+      margin: 0 0 1rem 0;
+    }
+    @media (max-width: 900px) {
+      .side-by-side-results {
+        grid-template-columns: 1fr;
+      }
+    }
+    body.white-theme .device-column {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Score circles */
+    .score-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+    .device-column .score-grid {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+    .score-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1rem;
+      text-align: center;
+    }
+    .device-column .score-card {
+      padding: 0.75rem;
+    }
+    .score-circle {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      font-weight: bold;
+      margin: 0 auto 0.5rem;
+      border: 5px solid currentColor;
+    }
+    .device-column .score-circle {
+      width: 60px;
+      height: 60px;
+      font-size: 1.25rem;
+      border-width: 3px;
+      margin-bottom: 0.25rem;
+    }
+    .score-label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .score-good { border-color: #22c55e; color: #22c55e; background: rgba(34, 197, 94, 0.25); box-shadow: 0 0 20px rgba(34, 197, 94, 0.4); }
+    .score-average { border-color: #f59e0b; color: #f59e0b; background: rgba(245, 158, 11, 0.25); box-shadow: 0 0 20px rgba(245, 158, 11, 0.4); }
+    .score-poor { border-color: #ef4444; color: #ef4444; background: rgba(239, 68, 68, 0.25); box-shadow: 0 0 20px rgba(239, 68, 68, 0.4); }
+    
+    /* CWV specific metrics */
+    .cwv-metrics {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+      margin: 1rem 0;
+    }
+    .device-column .cwv-metrics {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .cwv-metric {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 0.75rem;
+    }
+    .cwv-metric-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+    .cwv-metric-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .cwv-metric-badge {
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .cwv-metric-badge.good { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+    .cwv-metric-badge.needs-improvement { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .cwv-metric-badge.poor { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .cwv-metric-value {
+      font-size: 1.25rem;
+      font-weight: bold;
+      margin: 0.25rem 0;
+    }
+    .cwv-metric-desc {
+      font-size: 0.7rem;
+      color: #888;
+    }
+    
+    /* Resource details (native HTML accordion) */
+    .resource-details {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+    .resource-details:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    .resource-summary {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+    }
+    .resource-summary::-webkit-details-marker {
+      display: none;
+    }
+    .resource-summary::after {
+      content: '▼';
+      margin-left: auto;
+      font-size: 0.75rem;
+      color: #888;
+      transition: transform 0.2s ease;
+    }
+    .resource-details[open] .resource-summary::after {
+      transform: rotate(180deg);
+    }
+    .resource-details-content {
+      padding: 1rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    /* Resource badges */
+    .resource-badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    .resource-badge.resource-css { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+    .resource-badge.resource-js { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .resource-badge.resource-image { background: rgba(16, 185, 129, 0.2); color: #10b981; }
+    .resource-badge.resource-third-party { background: rgba(236, 72, 153, 0.2); color: #ec4899; }
+    .resource-badge.resource-font { background: rgba(139, 92, 246, 0.2); color: #8b5cf6; }
+    
+    /* Resource table styles */
+    .resource-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .resource-table th {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 0.75rem 1rem;
+      text-align: left;
+      font-weight: 600;
+      color: #aaa;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .resource-table td {
+      padding: 0.5rem 1rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #ccc;
+    }
+    .resource-table tr:hover td {
+      background: rgba(255, 255, 255, 0.03);
+    }
+    .url-cell {
+      font-family: monospace;
+      font-size: 0.8rem;
+      word-break: break-all;
+      max-width: 400px;
+    }
+    
+    /* Light mode adjustments */
+    body.white-theme .resource-details {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+    body.white-theme .resource-details-content {
+      background: rgba(0, 0, 0, 0.03);
+      border-top-color: rgba(0, 0, 0, 0.1);
+    }
+    body.white-theme .resource-table th {
+      background: rgba(0, 0, 0, 0.05);
+      color: #555;
+    }
+    body.white-theme .resource-table td {
+      color: #333;
+      border-bottom-color: rgba(0, 0, 0, 0.05);
+    }
+    body.white-theme .score-card {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+    body.white-theme .cwv-metric {
+      background: rgba(0, 0, 0, 0.02);
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Mobile comparison toggle */
+    .device-toggle {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      justify-content: center;
+    }
+    .device-btn {
+      padding: 0.5rem 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: transparent;
+      color: #888;
+      cursor: pointer;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      transition: all 0.2s ease;
+    }
+    .device-btn:hover {
+      border-color: rgba(255, 255, 255, 0.4);
+      color: #fff;
+    }
+    .device-btn.active {
+      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+      border-color: transparent;
+      color: #fff;
+    }
+    
+    /* Progress indicator */
+    .analysis-progress {
+      margin: 2rem 0;
+    }
+    .progress-steps {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+    }
+    .progress-step {
+      flex: 1;
+      text-align: center;
+      padding: 0.5rem;
+      color: #666;
+      font-size: 0.8rem;
+      position: relative;
+    }
+    .progress-step.active {
+      color: #3b82f6;
+    }
+    .progress-step.complete {
+      color: #10b981;
+    }
+    .progress-step::after {
+      content: '';
+      position: absolute;
+      top: -0.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #444;
+    }
+    .progress-step.active::after {
+      background: #3b82f6;
+      box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+    }
+    .progress-step.complete::after {
+      background: #10b981;
+    }
+
+    /* Performance Fixes Accordion Styles */
+    .fix-accordion {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .fix-accordion.severity-critical {
+      border-left: 4px solid #ef4444;
+    }
+
+    .fix-accordion.severity-medium {
+      border-left: 4px solid #f59e0b;
+    }
+
+    .fix-accordion.severity-low {
+      border-left: 4px solid #3b82f6;
+    }
+
+    .fix-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      cursor: pointer;
+      transition: background 0.2s ease;
+      user-select: none;
+    }
+
+    .fix-header:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .fix-header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex: 1;
+    }
+
+    .fix-icon {
+      font-size: 1.5rem;
+      min-width: 1.5rem;
+    }
+
+    .fix-title-group {
+      flex: 1;
+    }
+
+    .fix-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .fix-subtitle {
+      font-size: 0.85rem;
+      color: #888;
+      margin: 0;
+    }
+
+    .fix-badges {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .fix-badge {
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .fix-badge.priority-critical { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .fix-badge.priority-medium { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .fix-badge.priority-low { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+    .fix-badge.category { background: rgba(255, 255, 255, 0.1); color: #aaa; }
+
+    .fix-expand-icon {
+      font-size: 1.25rem;
+      color: #666;
+      transition: transform 0.3s ease;
+      margin-left: 1rem;
+    }
+
+    .fix-accordion.expanded .fix-expand-icon {
+      transform: rotate(180deg);
+    }
+
+    .fix-content {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease;
+    }
+
+    .fix-content-inner {
+      padding: 0 1.5rem 1.5rem 1.5rem;
+    }
+
+    /* Tab Navigation */
+    .fix-tabs {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      overflow-x: auto;
+    }
+
+    .fix-tab {
+      padding: 0.75rem 1.25rem;
+      background: transparent;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 0.875rem;
+      font-weight: 600;
+      border-bottom: 2px solid transparent;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .fix-tab:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .fix-tab.active {
+      color: #00ff88;
+      border-bottom-color: #00ff88;
+    }
+
+    .fix-tab-content {
+      display: none;
+    }
+
+    .fix-tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Code Blocks */
+    .code-comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+      margin: 1rem 0;
+    }
+
+    @media (max-width: 768px) {
+      .code-comparison {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .code-block {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .code-block-header {
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .code-block-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .code-block-title.error { color: #ef4444; }
+    .code-block-title.success { color: #22c55e; }
+
+    .code-block-body {
+      padding: 1rem;
+      font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+      font-size: 0.8rem;
+      line-height: 1.6;
+      overflow-x: auto;
+      color: #e0e0e0;
+    }
+
+    .code-block pre {
+      margin: 0;
+      white-space: pre;
+    }
+
+    .code-annotation {
+      color: #888;
+      font-style: italic;
+      margin-top: 0.5rem;
+      font-size: 0.75rem;
+      padding-left: 1rem;
+      border-left: 2px solid rgba(255, 255, 255, 0.1);
+    }
+
+    /* Action Buttons */
+    .fix-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .fix-btn {
+      padding: 0.625rem 1.25rem;
+      border-radius: 6px;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .fix-btn-primary {
+      background: linear-gradient(135deg, #00ff88, #00cc66);
+      color: #000;
+    }
+
+    .fix-btn-primary:hover {
+      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+      transform: translateY(-1px);
+    }
+
+    .fix-btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: #fff;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .fix-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+      border-color: rgba(255, 255, 255, 0.3);
+    }
+
+    /* Resources List */
+    .resources-list {
+      list-style: none;
+      padding: 0;
+      margin: 1rem 0;
+    }
+
+    .resource-item {
+      padding: 0.75rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-left: 3px solid #3b82f6;
+      border-radius: 4px;
+      margin-bottom: 0.5rem;
+      font-size: 0.85rem;
+    }
+
+    .resource-item code {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.8rem;
+      color: #00ff88;
+    }
+
+    .resource-size {
+      color: #f59e0b;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+
+    /* Impact Indicator */
+    .impact-indicator {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem;
+      background: rgba(0, 255, 136, 0.05);
+      border: 1px solid rgba(0, 255, 136, 0.2);
+      border-radius: 8px;
+      margin-top: 1rem;
+    }
+
+    .impact-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #00ff88;
+    }
+
+    .impact-label {
+      font-size: 0.85rem;
+      color: #aaa;
+    }
+
+    /* Pro Features */
+    .pro-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.375rem;
+      padding: 3px 8px;
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #000;
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      border-radius: 10px;
+      letter-spacing: 0.5px;
+    }
+
+    .pro-step {
+      opacity: 0.6;
+      position: relative;
+      padding-left: 2rem;
+    }
+
+    .pro-step::before {
+      content: '🔒';
+      position: absolute;
+      left: 0;
+      top: 0;
+      font-size: 0.9rem;
+    }
+
+    .pro-overlay {
+      position: relative;
+    }
+
+    .pro-overlay::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.8) 100%);
+      pointer-events: none;
+    }
+
+    .pro-unlock-banner {
+      background: linear-gradient(135deg, rgba(255, 215, 0, 0.1), rgba(255, 170, 0, 0.05));
+      border: 1px solid rgba(255, 215, 0, 0.3);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+    }
+
+    .pro-unlock-text {
+      flex: 1;
+    }
+
+    .pro-unlock-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #ffd700;
+      margin: 0 0 0.25rem 0;
+    }
+
+    .pro-unlock-desc {
+      font-size: 0.8rem;
+      color: #aaa;
+      margin: 0;
+    }
+
+    .pro-unlock-btn {
+      padding: 0.625rem 1.5rem;
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #000;
+      font-weight: 700;
+      font-size: 0.875rem;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .pro-unlock-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(255, 215, 0, 0.4);
+    }
+
+    .pro-code-overlay {
+      position: relative;
+      filter: blur(3px);
+      pointer-events: none;
+      user-select: none;
+    }
+
+    .pro-code-lock {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 10;
+    }
+
+    .pro-code-lock-icon {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .pro-code-lock-text {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #ffd700;
+    }
+  </style>
+  
+  <!-- Schema.org Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "WebApplication",
+        "name": "Performance Testing Hub",
+        "description": "Centralized performance testing dashboard with Core Web Vitals, page speed analysis, resource optimization, and Lighthouse performance monitoring tools.",
+        "url": "https://sitemechanic.io/en/performance-hub.html",
+        "applicationCategory": "DeveloperApplication",
+        "operatingSystem": "Any",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "featureList": [
+          "Core Web Vitals Analysis (LCP, FID, CLS)",
+          "Page Speed Testing",
+          "Lighthouse Performance Audit",
+          "Resource Optimization Analysis",
+          "Mobile Performance Testing",
+          "Performance Monitoring Dashboard"
+        ],
+        "browserRequirements": "Requires JavaScript",
+        "permissions": "No installation required"
+      },
+      {
+        "@type": "Organization",
+        "name": "Site Mechanic",
+        "url": "https://sitemechanic.io",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://sitemechanic.io/images/logo.png"
+        },
+        "description": "Professional website analysis and optimization tools for developers and digital marketers"
+      },
+      {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://sitemechanic.io/en/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Performance Hub",
+            "item": "https://sitemechanic.io/en/performance-hub.html"
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <!-- Scripts -->
+  <script src="/i18n.js"></script>
+  <script src="/language-switcher.js"></script>
+  <script src="/seo-i18n.js"></script>
+
+  <!-- PDF Export Styles -->
+  <link rel="stylesheet" href="/pdf-export-styles.css">
+</head>
+<body data-page="performance-hub">
+  <!-- Navigation Bar -->
+  <div id="nav-placeholder"></div>
+  
+  <main class="page-shell">
+    <!-- Breadcrumb -->
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="/dashboard.html">Home</a>
+      <span class="breadcrumb-sep">›</span>
+      <span aria-current="page">Speed & UX</span>
+    </nav>
+    
+    <!-- Page Header -->
+    <header class="page-header">
+      <h1 class="page-header__title">Speed & UX</h1>
+      <p class="page-header__subtitle">Analyze page load speed, Core Web Vitals, and Lighthouse performance metrics.</p>
+    </header>
+
+    <!-- Scan Card -->
+    <section class="card">
+      <h2 class="card__title mb-2">Run a scan</h2>
+      
+      <!-- Mode Selector Tabs -->
+      <div class="tabs" id="modeTabs">
+        <button type="button" class="tabs__item tabs__item--active" data-mode="quick" id="tab-quick">
+          <span class="tabs__label">Quick scan</span>
+          <span class="tabs__desc">Resource analysis</span>
+          <span class="tabs__time">~5-10s</span>
+        </button>
+        <button type="button" class="tabs__item" data-mode="cwv" id="tab-cwv">
+          <span class="tabs__label">Core Web Vitals</span>
+          <span class="tabs__desc">Google ranking metrics</span>
+          <span class="tabs__time">~15-30s</span>
+        </button>
+        <button type="button" class="tabs__item" data-mode="full" id="tab-full">
+          <span class="tabs__label">Lighthouse audit</span>
+          <span class="tabs__desc">Complete performance audit</span>
+          <span class="tabs__time">~2-3 min</span>
+        </button>
+      </div>
+      
+      <script>
+        // Inline tab switching
+        document.getElementById('tab-quick').onclick = function(e) {
+          e.preventDefault();
+          document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
+          this.classList.add('tabs__item--active');
+          var el = document.getElementById('selectedMode');
+          if (el) el.textContent = 'Quick scan';
+        };
+        document.getElementById('tab-cwv').onclick = function(e) {
+          e.preventDefault();
+          document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
+          this.classList.add('tabs__item--active');
+          var el = document.getElementById('selectedMode');
+          if (el) el.textContent = 'Core Web Vitals';
+        };
+        document.getElementById('tab-full').onclick = function(e) {
+          e.preventDefault();
+          document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
+          this.classList.add('tabs__item--active');
+          var el = document.getElementById('selectedMode');
+          if (el) el.textContent = 'Lighthouse audit';
+        };
+      </script>
+      
+      <!-- URL Input Form -->
+      <div class="form-row">
+        <label for="urlInput" class="form-row__label">Website URL</label>
+        <div class="form-row__group">
+          <input type="url" id="urlInput" class="input" placeholder="https://example.com" aria-label="Enter website URL" required>
+          <button id="analyzeButton" class="btn btn-primary">
+            <span id="buttonText">Run scan</span>
+          </button>
+        </div>
+        <p class="helper-text">
+          <span class="mode-indicator">
+            <span class="mode-indicator__label">Mode:</span>
+            <span class="mode-indicator__value" id="selectedMode">Quick scan</span>
+          </span>
+        </p>
+      </div>
+    </section>
+    
+    <!-- Results Container -->
+    <div id="results" class="hidden">
+      <!-- Loading State (will be populated by AnalyzerLoader) -->
+      <div id="loadingContainer"></div>
+      
+      <!-- Error State -->
+      <div id="errorMessage" class="error-message hidden"></div>
+      
+      <!-- Results Content -->
+      <div id="resultsContent"></div>
+      
+      <!-- PDF Export Button -->
+      <div id="pdfExportSection" class="hidden" style="margin-top: 2rem; text-align: center;">
+        <button id="exportPdfBtn" class="btn btn-primary" onclick="exportToPDF()">
+          Download PDF Report
+        </button>
+      </div>
+    </div>
+  </main>
+  
+  <!-- PDF Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <!-- PDF Export Utility -->
+  <script src="/pdf-export-utility.js"></script>
+
+  <!-- Footer Scripts -->
+  <script src="/theme-controls.js"></script>
+  <script src="/pro-utils.js"></script>
+    <script src="/nav-template.js"></script>
+  <script src="/analyzer-loader.js"></script>
+
+  <script src="/performance-fixes-renderer.js"></script>
+  <script src="/performance-hub-script.js?v=20260105e"></script>
+  
+  <script>
+    // PDF Export Function using improved utility
+    async function exportToPDF() {
+      const urlInput = document.getElementById('urlInput');
+      const url = urlInput ? urlInput.value : '';
+      const exportBtn = document.getElementById('exportPdfBtn');
+
+      // Create PDF exporter with Speed & UX configuration
+      const exporter = new PDFExportUtility({
+        filename: `speed-ux-report-${new Date().toISOString().split('T')[0]}.pdf`,
+        reportTitle: 'Site Mechanic',
+        reportSubtitle: 'Speed & UX Report',
+        url: url,
+        scale: 2,
+        pageFormat: 'a4'
+      });
+
+      try {
+        // Export with automatic accordion expansion
+        await exporter.export('#resultsContent', exportBtn);
+      } catch (error) {
+        console.error('PDF export failed:', error);
+      }
+    }
+    
+    // Tab mode selector with mode indicator update
+    document.querySelectorAll('.tabs__item').forEach(tab => {
+      tab.addEventListener('click', function() {
+        document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
+        this.classList.add('tabs__item--active');
+        const mode = this.dataset.mode;
+        const modeLabels = { quick: 'Quick scan', cwv: 'Core Web Vitals', full: 'Lighthouse audit' };
+        document.getElementById('selectedMode').textContent = modeLabels[mode] || mode;
+      });
+    });
+    
+    // Initialize navigation
+    document.addEventListener('DOMContentLoaded', function() {
+      initializeNavigation('performance-hub', 'SITE MECHANIC', '> speed & ux');
+    });
+  </script>
+</body>
+</html>

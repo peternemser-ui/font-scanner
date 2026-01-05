@@ -6,29 +6,29 @@
     <meta name="theme-color" content="#000000" />
 
     <!-- Primary Meta Tags -->
-    <title>Dashboard - Comprehensive Website Analysis | Font Scanner</title>
-    <meta name="title" content="Dashboard - Comprehensive Website Analysis | Font Scanner" />
-    <meta name="description" content="Unified dashboard for comprehensive website analysis. Get SEO, Performance, Accessibility, Security, Typography, and Core Web Vitals insights in one powerful view. Professional web development tool." />
-    <meta name="keywords" content="website analysis, SEO dashboard, performance dashboard, accessibility audit, security scan, web vitals, typography analysis, website audit, web development tools, site health check" />
-    <meta name="author" content="Font Scanner" />
+    <title>Site Mechanic - Scan, Diagnose, Prioritize, Improve</title>
+    <meta name="title" content="Site Mechanic - Website Diagnostics Platform" />
+    <meta name="description" content="Scan any website. Diagnose issues across SEO, speed, accessibility, and security. Prioritize by severity. Get client-ready reports with actionable fixes." />
+    <meta name="keywords" content="website diagnostics, site scan, SEO issues, performance problems, accessibility audit, security vulnerabilities, prioritize fixes, site mechanic" />
+    <meta name="author" content="Site Mechanic" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-    <link rel="canonical" href="https://fontscanner.app/dashboard.html" />
+    <link rel="canonical" href="https://sitemechanic.io/dashboard.html" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://fontscanner.app/dashboard.html" />
-    <meta property="og:title" content="Comprehensive Website Analysis Dashboard | Font Scanner" />
-    <meta property="og:description" content="Unified dashboard for comprehensive website analysis. Get SEO, Performance, Accessibility, Security, and Typography insights in one view." />
-    <meta property="og:image" content="https://fontscanner.app/og-dashboard.png" />
-    <meta property="og:site_name" content="Font Scanner" />
+    <meta property="og:url" content="https://sitemechanic.io/dashboard.html" />
+    <meta property="og:title" content="Site Mechanic - Scan, Diagnose, Prioritize, Improve" />
+    <meta property="og:description" content="Scan any website. Diagnose issues across SEO, speed, accessibility, and security. Prioritize by severity. Get actionable fixes." />
+    <meta property="og:image" content="https://sitemechanic.io/og-dashboard.png" />
+    <meta property="og:site_name" content="Site Mechanic" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://fontscanner.app/dashboard.html" />
-    <meta property="twitter:title" content="Comprehensive Website Analysis Dashboard | Font Scanner" />
-    <meta property="twitter:description" content="Unified dashboard for comprehensive website analysis. Get SEO, Performance, Accessibility, Security, and Typography insights in one view." />
-    <meta property="twitter:image" content="https://fontscanner.app/twitter-dashboard.png" />
+    <meta property="twitter:url" content="https://sitemechanic.io/dashboard.html" />
+    <meta property="twitter:title" content="Site Mechanic - Scan, Diagnose, Prioritize, Improve" />
+    <meta property="twitter:description" content="Scan any website. Diagnose issues across SEO, speed, accessibility, and security. Prioritize by severity. Get actionable fixes." />
+    <meta property="twitter:image" content="https://sitemechanic.io/twitter-dashboard.png" />
 
     <!-- Favicon -->
     <link rel="icon" type="image/x-icon" href="/favicon.ico" />
@@ -38,16 +38,22 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
+    <!-- Shared UI System -->
+    <link rel="stylesheet" href="ui.css" />
     <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
     <link rel="stylesheet" href="ui-components.css" />
     <link rel="stylesheet" href="spacing-fixes.css" />
+
+    <!-- PDF Export Styles -->
+    <link rel="stylesheet" href="/pdf-export-styles.css">
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -61,6 +67,225 @@
         background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
         color: #1a1a1a !important;
       }
+
+      /* Dashboard Layout */
+      .dashboard-main {
+        max-width: 1400px;
+        margin: 0;
+        padding: 2rem 1.5rem 4rem;
+        min-height: calc(100vh - 80px);
+      }
+
+      .dashboard-header {
+        margin-bottom: 2rem;
+      }
+
+      .dashboard-title {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--text-primary, #fff);
+        margin: 0 0 0.5rem 0;
+      }
+
+      .dashboard-subtitle {
+        font-size: 1rem;
+        color: var(--text-secondary, #888);
+        margin: 0;
+      }
+
+      /* Two-column grid */
+      .dashboard-grid {
+        display: grid;
+        grid-template-columns: 1fr 380px;
+        gap: 1.5rem;
+        align-items: start;
+      }
+
+      @media (max-width: 900px) {
+        .dashboard-grid {
+          grid-template-columns: 1fr;
+        }
+        .dashboard-right {
+          order: 2;
+        }
+      }
+
+      .dashboard-left {
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+      }
+
+      .dashboard-right {
+        position: sticky;
+        top: 100px;
+      }
+
+      /* Cards */
+      .dashboard-card {
+        background: var(--bg-card, rgba(255,255,255,0.03));
+        border: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        border-radius: 12px;
+        padding: 1.5rem;
+      }
+
+      .card-heading {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-primary, #fff);
+        margin: 0 0 1rem 0;
+      }
+
+      /* Scan form */
+      .scan-form .input-label {
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 500;
+        color: var(--text-secondary, #888);
+        margin-bottom: 0.5rem;
+      }
+
+      .scan-form .input-group {
+        display: flex;
+        gap: 0.75rem;
+      }
+
+      .scan-form .url-input {
+        flex: 1;
+        padding: 0.875rem 1rem;
+        font-size: 1rem;
+        border: 1px solid var(--border-color, rgba(255,255,255,0.15));
+        border-radius: 8px;
+        background: var(--bg-input, rgba(255,255,255,0.05));
+        color: var(--text-primary, #fff);
+        transition: border-color 0.2s, box-shadow 0.2s;
+      }
+
+      .scan-form .url-input:focus {
+        outline: none;
+        border-color: var(--accent-primary, #00ff41);
+        box-shadow: 0 0 0 3px rgba(0,255,65,0.15);
+      }
+
+      .scan-form .scan-button {
+        padding: 0.875rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        background: var(--accent-primary, #00ff41);
+        color: #000;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        white-space: nowrap;
+        transition: background 0.2s, transform 0.1s;
+      }
+
+      .scan-form .scan-button:hover {
+        background: var(--accent-primary-dark, #00cc33);
+      }
+
+      .scan-form .scan-button:focus {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(0,255,65,0.3);
+      }
+
+      .scan-form .scan-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .scan-form .input-help {
+        margin: 0.75rem 0 0;
+        font-size: 0.8rem;
+        color: var(--text-muted, #666);
+        line-height: 1.5;
+      }
+
+      .scan-form .input-help code {
+        background: var(--bg-secondary, #1e1e1e);
+        padding: 2px 6px;
+        border-radius: 3px;
+      }
+
+      /* Footer */
+      .dashboard-footer {
+        text-align: center;
+        padding: 2rem 1rem;
+        font-size: 0.85rem;
+        color: var(--text-muted, #666);
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.1));
+        margin-top: 2rem;
+      }
+
+      .dashboard-footer a {
+        color: var(--accent-primary, #00ff41);
+        text-decoration: none;
+      }
+
+      /* Light mode overrides */
+      body.white-theme .dashboard-card {
+        background: #fff;
+        border-color: #e0e0e0;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      }
+
+      body.white-theme .scan-form .url-input {
+        background: #fff;
+        border-color: #d0d0d0;
+        color: #1a1a1a;
+      }
+
+      body.white-theme .scan-form .url-input:focus {
+        border-color: #00994d;
+        box-shadow: 0 0 0 3px rgba(0,153,77,0.15);
+      }
+
+      body.white-theme .scan-form .scan-button {
+        background: #00994d;
+        color: #fff;
+      }
+
+      body.white-theme .scan-form .scan-button:hover {
+        background: #007a3d;
+      }
+
+      /* Light mode: Account status card */
+      body.white-theme #accountStatusCard {
+        background: linear-gradient(135deg, #f0fff4, #ecfdf5);
+        border-color: rgba(0, 153, 77, 0.2);
+      }
+      
+      body.white-theme #planBadge {
+        background: rgba(0, 153, 77, 0.1) !important;
+        color: #00994d !important;
+        border-color: rgba(0, 153, 77, 0.3) !important;
+      }
+      
+      body.white-theme #scansUsed,
+      body.white-theme #reportsGenerated,
+      body.white-theme #scansRemaining {
+        color: #1a1a1a !important;
+      }
+      
+      body.white-theme #usageBar {
+        background: linear-gradient(90deg, #00994d, #22c55e) !important;
+      }
+
+      /* Responsive category grid */
+      @media (max-width: 700px) {
+        .dashboard-main {
+          padding: 1.5rem 1rem 3rem;
+        }
+        .dashboard-card {
+          padding: 1.25rem;
+        }
+        .scan-form .input-group {
+          flex-direction: column;
+        }
+        .scan-form .scan-button {
+          width: 100%;
+        }
+      }
     </style>
 
     <!-- Internationalization (i18n) Support -->
@@ -72,9 +297,9 @@
     {
       "@context": "https://schema.org",
       "@type": "SoftwareApplication",
-      "name": "Font Scanner Dashboard",
-      "url": "https://fontscanner.app/dashboard.html",
-      "description": "Unified dashboard for comprehensive website analysis. Get SEO, Performance, Accessibility, Security, Typography, and Core Web Vitals insights in one powerful view.",
+      "name": "Site Mechanic Dashboard",
+      "url": "https://sitemechanic.io/dashboard.html",
+      "description": "Unified website inspection dashboard. Identify issues across SEO, performance, accessibility, and security. Prioritized fixes and actionable recommendations.",
       "applicationCategory": "DeveloperApplication",
       "operatingSystem": "Web Browser",
       "offers": {
@@ -83,14 +308,14 @@
         "priceCurrency": "USD"
       },
       "featureList": [
-        "SEO Analysis",
-        "Performance Metrics",
-        "Accessibility Audit",
-        "Security Scanning",
-        "Typography Analysis",
+        "SEO Issue Detection",
+        "Performance Diagnostics",
+        "Accessibility Inspection",
+        "Security Vulnerability Scan",
+        "Typography Issues",
         "Core Web Vitals",
-        "Mobile & Desktop Analysis",
-        "Unified Reporting"
+        "Mobile Compatibility",
+        "Prioritized Fix Recommendations"
       ]
     }
     </script>
@@ -115,108 +340,170 @@
     }
     </script>
   </head>
-  <body>
+  <body data-page="dashboard">
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
     
-    <div class="container">      <!-- Header -->
-      <header class="form-container">
-        <!-- URL Input Form -->
-        <div style="margin-top: 2rem;">
-          <label for="dashboardUrlInput" class="visually-hidden" data-i18n="dashboard.enterUrl">Website URL to analyze</label>
-          <input
-            type="text"
-            id="dashboardUrlInput"
-            data-i18n-placeholder="dashboard.enterUrl"
-            placeholder="example.com or https://example.com"
-            aria-label="Enter website URL for comprehensive analysis"
-            required
-            aria-required="true"
-          />
+    <main class="page-shell">
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb" aria-label="Breadcrumb">
+        <a href="/dashboard.html">Home</a>
+        <span class="breadcrumb-sep">›</span>
+        <span aria-current="page">Dashboard</span>
+      </nav>
+      
+      <!-- Page Header -->
+      <header class="page-header">
+        <h1 class="page-header__title">Dashboard</h1>
+        <p class="page-header__subtitle">Analyze any website for performance, SEO, accessibility, and security issues.</p>
+      </header>
 
-          <button id="dashboardAnalyzeButton" data-i18n="dashboard.runAudit" type="button" aria-label="Start comprehensive website analysis">
-            ANALYZE
-          </button>
-          
-          <div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-muted, #888); line-height: 1.5;">
-            <strong>⚠️ Bot Protection Notice:</strong> Major commercial sites (Amazon, Walmart, cars.com) block automated analysis. 
-            Try: your websites, client projects, or test with <code style="background: var(--bg-secondary, #1e1e1e); padding: 2px 6px; border-radius: 3px;">example.com</code> • 
-            For blocked sites, use <a href="https://pagespeed.web.dev/" target="_blank" style="color: var(--accent-purple, #a855f7); text-decoration: underline;">Google PageSpeed Insights</a> instead.
-          </div>
-        </div>
-
-      <!-- Quick Stats -->
-      <div id="quickStats" style="display: none; margin-top: 2rem;"></div>
-    </header>
-
-    <!-- Unified Loading Container -->
-    <div id="loadingContainer" class="loading-container" style="display: none;">
-      <div class="loading-content">
-        <div class="loading-icon">
-          <div class="terminal-cursor">▋</div>
-        </div>
-        <h2 class="loading-title">INITIALIZING COMPREHENSIVE AUDIT</h2>
-        <div class="loading-steps">
-          <div class="loading-step" data-step="init">
-            <span class="step-icon">●</span>
-            <span class="step-text">Connecting to target...</span>
-          </div>
-          <div class="loading-step" data-step="fonts">
-            <span class="step-icon">●</span>
-            <span class="step-text">Analyzing typography & fonts...</span>
-          </div>
-          <div class="loading-step" data-step="seo">
-            <span class="step-icon">●</span>
-            <span class="step-text">Scanning SEO metrics...</span>
-          </div>
-          <div class="loading-step" data-step="performance">
-            <span class="step-icon">●</span>
-            <span class="step-text">Running performance tests...</span>
-          </div>
-          <div class="loading-step" data-step="accessibility">
-            <span class="step-icon">●</span>
-            <span class="step-text">Checking accessibility compliance...</span>
-          </div>
-          <div class="loading-step" data-step="security">
-            <span class="step-icon">●</span>
-            <span class="step-text">Auditing security headers...</span>
-          </div>
-          <div class="loading-step" data-step="compile">
-            <span class="step-icon">●</span>
-            <span class="step-text">Compiling unified report...</span>
-          </div>
-        </div>
-        <div class="loading-progress">
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <div class="progress-bar" style="flex: 1;">
-              <div class="progress-fill" id="progressFill"></div>
+      <!-- Account Status Card -->
+      <section class="card" id="accountStatusCard">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem;">
+          <!-- Plan Info -->
+          <div style="flex: 1; min-width: 200px;">
+            <h2 class="card__title" style="margin-bottom: 0.75rem;">Your Account</h2>
+            <div id="planBadge" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.375rem 0.875rem; border-radius: 20px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; background: rgba(0, 255, 65, 0.15); color: #00ff41; border: 1px solid rgba(0, 255, 65, 0.3);">
+              <span>●</span> Free Plan
             </div>
-            <span id="progressPercent" style="font-size: 1.2rem; font-weight: bold; color: #00ff41; min-width: 50px; text-align: right;">0%</span>
           </div>
-          <div class="progress-text">
-            <span id="progressTime">Estimated time: 30-60s</span>
+          
+          <!-- Usage Stats -->
+          <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
+            <!-- Scans Today -->
+            <div style="text-align: center;">
+              <div style="font-size: 2rem; font-weight: 700; color: var(--text-primary, #fff);" id="scansUsed">0</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted, #666); text-transform: uppercase; letter-spacing: 0.5px;">Scans Today</div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary, #888); margin-top: 0.25rem;">of <span id="scansLimit">25</span></div>
+            </div>
+            
+            <!-- Reports Generated -->
+            <div style="text-align: center;">
+              <div style="font-size: 2rem; font-weight: 700; color: var(--text-primary, #fff);" id="reportsGenerated">0</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted, #666); text-transform: uppercase; letter-spacing: 0.5px;">Reports</div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary, #888); margin-top: 0.25rem;">generated</div>
+            </div>
+            
+            <!-- Remaining -->
+            <div style="text-align: center;">
+              <div style="font-size: 2rem; font-weight: 700;" id="scansRemaining" style="color: #22c55e;">25</div>
+              <div style="font-size: 0.75rem; color: var(--text-muted, #666); text-transform: uppercase; letter-spacing: 0.5px;">Remaining</div>
+              <div style="font-size: 0.8rem; color: var(--text-secondary, #888); margin-top: 0.25rem;">resets daily</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Progress Bar -->
+        <div style="margin-top: 1.25rem;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+            <span style="font-size: 0.8rem; color: var(--text-secondary, #888);">Daily Usage</span>
+            <span style="font-size: 0.8rem; color: var(--text-secondary, #888);" id="usagePercent">0%</span>
+          </div>
+          <div style="height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+            <div id="usageBar" style="height: 100%; background: linear-gradient(90deg, #22c55e, #00ff41); border-radius: 4px; transition: width 0.5s ease; width: 0%;"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Scan a Site Card -->
+      <section class="card">
+        <h2 class="card__title">Scan a site</h2>
+        <div class="form-row">
+          <label for="dashboardUrlInput" class="form-row__label">Website URL</label>
+          <div class="form-row__group">
+            <input
+              type="url"
+              id="dashboardUrlInput"
+              class="input"
+              placeholder="https://example.com"
+              aria-label="Enter website URL to audit"
+              aria-describedby="urlHelp"
+              required
+              aria-required="true"
+            />
+            <button id="dashboardAnalyzeButton" type="button" class="btn btn-primary" aria-label="Run audit on entered URL">
+              Run audit
+            </button>
+          </div>
+          <p id="urlHelp" class="helper-text">
+            <strong>Note:</strong> Some sites block automated scans. Try your own sites or <code>example.com</code>.
+          </p>
+        </div>
+      </section>
+
+      <!-- Results Container (appears after scan) -->
+      <section id="dashboardResults" class="card" style="display: none;">
+        <!-- Results will be dynamically inserted here -->
+      </section>
+
+      <!-- Unified Loading Container -->
+      <div id="loadingContainer" class="loading-container" style="display: none;">
+        <div class="loading-content">
+          <div class="loading-icon">
+            <div class="terminal-cursor">▋</div>
+          </div>
+          <h2 class="loading-title">Running audit...</h2>
+          <div class="loading-steps">
+            <div class="loading-step" data-step="init">
+              <span class="step-icon">●</span>
+              <span class="step-text">1. Connecting to site...</span>
+            </div>
+            <div class="loading-step" data-step="seo">
+              <span class="step-icon">●</span>
+              <span class="step-text">2. Analyzing SEO...</span>
+            </div>
+            <div class="loading-step" data-step="performance">
+              <span class="step-icon">●</span>
+              <span class="step-text">3. Checking performance...</span>
+            </div>
+            <div class="loading-step" data-step="accessibility">
+              <span class="step-icon">●</span>
+              <span class="step-text">4. Auditing accessibility...</span>
+            </div>
+            <div class="loading-step" data-step="security">
+              <span class="step-icon">●</span>
+              <span class="step-text">5. Scanning security...</span>
+            </div>
+            <div class="loading-step" data-step="compile">
+              <span class="step-icon">●</span>
+              <span class="step-text">6. Compiling results...</span>
+            </div>
+          </div>
+          <div class="loading-progress">
+            <div style="display: flex; align-items: center; gap: 1rem;">
+              <div class="progress-bar" style="flex: 1;">
+                <div class="progress-fill" id="progressFill"></div>
+              </div>
+              <span id="progressPercent" style="font-size: 1.2rem; font-weight: bold; color: var(--accent-primary, #00ff41); min-width: 50px; text-align: right;">0%</span>
+            </div>
+            <div class="progress-text">
+              <span id="progressTime">Estimated time: 30-60s</span>
+            </div>
           </div>
         </div>
       </div>
-    </div>      <!-- Error Message -->
-      <div id="errorMessage" class="error-message" style="display: none;"></div>
 
-      <!-- Results Container -->
-      <div id="dashboardResults" class="results-container" style="display: none;">
-        <!-- Results will be dynamically inserted here -->
-      </div>
-    </div>
+      <!-- Error Message -->
+      <div id="errorMessage" class="error-message" style="display: none;"></div>
+    </main>
 
     <!-- Shared JavaScript -->
     <script src="/theme-controls.js"></script>
     <script src="/theme-fixer.js"></script>
+    <script src="/pro-utils.js"></script>
     <script src="/nav-template.js"></script>
     <script src="/analyzer-loader.js"></script>
 
     <!-- ASCII Background Animation -->
-    <script src="ascii-background.js"></script>
+
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/pdf-export-utility.js"></script>
+    <script src="/pdf-export-integration.js"></script>
 
     <!-- Dashboard Script -->
-    <script src="/dashboard-script.js"></script>
+    <script src="/dashboard-script.js?v=20260103b"></script>
   </body>
 </html>

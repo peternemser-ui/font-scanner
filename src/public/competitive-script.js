@@ -136,18 +136,8 @@ function removeCompetitor(button) {
 
 // Initialize event listeners on page load
 document.addEventListener('DOMContentLoaded', () => {
-  // Add competitor button
-  const addBtn = document.getElementById('addCompetitorBtn');
-  if (addBtn) {
-    addBtn.addEventListener('click', addCompetitorInput);
-  }
-  
-  // Attach remove listeners to existing competitor inputs
-  document.querySelectorAll('.remove-competitor').forEach(btn => {
-    btn.addEventListener('click', function() {
-      removeCompetitor(this);
-    });
-  });
+  // Note: Add competitor and remove buttons use inline onclick handlers in HTML
+  // No additional event listeners needed here
 });
 
 // Analyze competition
@@ -302,17 +292,51 @@ function displayResults(data) {
   const resultsDiv = document.getElementById('results');
   
   try {
+    // Build the HTML with executive summary and interactive charts at top (always visible)
+    // Then accordion sections for detailed breakdowns
     const html = `
       ${renderExecutiveSummary(data)}
       ${renderInteractiveCharts(data)}
-      ${renderDetailedMetricsTable(data)}
-      ${renderRankings(data.rankings)}
-      ${renderInsights(data.insights)}
-      ${renderComparisonTable(data)}
-      ${renderRecommendations(data.recommendations)}
+      
+      <div id="accordionContainer" class="accordion-container"></div>
     `;
     
     resultsDiv.innerHTML = html;
+    
+    // Create accordion sections
+    const accordionContainer = document.getElementById('accordionContainer');
+    
+    // Detailed Metrics Breakdown
+    createCompetitiveAccordion(accordionContainer, 'detailed-metrics', '📋 Detailed Metrics Breakdown', 
+      () => renderDetailedMetricsContent(data), null, true);
+    
+    // Key Insights
+    if (data.insights && data.insights.length > 0) {
+      createCompetitiveAccordion(accordionContainer, 'key-insights', 'ⓘ Key Insights', 
+        () => renderInsightsContent(data.insights), null, true);
+    }
+    
+    // Visual Score Comparison
+    createCompetitiveAccordion(accordionContainer, 'visual-comparison', '◉ Visual Score Comparison', 
+      () => renderVisualComparisonContent(data), null, false);
+    
+    // Competitive Position Summary
+    createCompetitiveAccordion(accordionContainer, 'competitive-position', '◈ Competitive Position Summary', 
+      () => renderCompetitivePositionContent(data), null, false);
+    
+    // Head-to-Head Battle
+    createCompetitiveAccordion(accordionContainer, 'head-to-head', '⚔️ Head-to-Head Battle', 
+      () => renderHeadToHeadContent(data), null, false);
+    
+    // Strengths & Weaknesses
+    createCompetitiveAccordion(accordionContainer, 'strengths-weaknesses', '💪 Your Competitive Strengths & Weaknesses', 
+      () => renderStrengthsWeaknessesContent(data), null, false);
+    
+    // Action Plan / Recommendations
+    if (data.recommendations && data.recommendations.length > 0) {
+      createCompetitiveAccordion(accordionContainer, 'action-plan', '🎯 Action Plan to Beat Competition', 
+        () => renderRecommendationsContent(data.recommendations), null, true);
+    }
     
     // Initialize charts after DOM is updated
     setTimeout(() => {
@@ -322,6 +346,73 @@ function displayResults(data) {
     console.error('Error rendering results:', error);
     alert(`Error displaying results: ${error.message}`);
   }
+}
+
+// Create accordion section for competitive analysis
+function createCompetitiveAccordion(container, id, title, contentCreator, score, startExpanded = false) {
+  const accordion = document.createElement('div');
+  accordion.className = 'accordion';
+  accordion.style.marginBottom = '0.5rem';
+  
+  const header = document.createElement('button');
+  header.className = 'accordion-header';
+  header.innerHTML = `
+    <span style="display: flex; align-items: center; gap: 0.5rem;">
+      <span>${title}</span>
+    </span>
+    <span style="display: flex; align-items: center; gap: 0.5rem;">
+      ${score !== null ? `<span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}</span>` : ''}
+      <span class="accordion-toggle">${startExpanded ? '▲' : '▼'}</span>
+    </span>
+  `;
+  
+  const content = document.createElement('div');
+  content.className = 'accordion-content';
+  content.id = `accordion-${id}`;
+  
+  const contentInner = document.createElement('div');
+  contentInner.className = 'accordion-content-inner';
+  content.appendChild(contentInner);
+  
+  // Add click handler for accordion
+  header.addEventListener('click', () => {
+    const isExpanded = content.classList.contains('expanded');
+    
+    if (isExpanded) {
+      // Collapse
+      content.classList.remove('expanded');
+      header.classList.remove('active');
+      header.querySelector('.accordion-toggle').textContent = '▼';
+    } else {
+      // Expand and create content if not already created
+      if (!contentInner.hasChildNodes()) {
+        const contentHTML = contentCreator();
+        contentInner.innerHTML = contentHTML;
+      }
+      
+      content.classList.add('expanded');
+      header.classList.add('active');
+      header.querySelector('.accordion-toggle').textContent = '▲';
+    }
+  });
+  
+  accordion.appendChild(header);
+  accordion.appendChild(content);
+  container.appendChild(accordion);
+  
+  // If startExpanded, trigger the expansion
+  if (startExpanded) {
+    contentInner.innerHTML = contentCreator();
+    content.classList.add('expanded');
+    header.classList.add('active');
+  }
+}
+
+// Get score color
+function getScoreColor(score) {
+  if (score >= 80) return '#00ff41';
+  if (score >= 60) return '#ffa500';
+  return '#ff4444';
 }
 
 // Chart instances storage
@@ -646,8 +737,8 @@ function getScoreGrade(score) {
   return 'F';
 }
 
-// Detailed Metrics Breakdown Table
-function renderDetailedMetricsTable(data) {
+// Detailed Metrics Breakdown Content (for accordion)
+function renderDetailedMetricsContent(data) {
   const sites = [
     { name: getDomainName(data.yourSite.url), data: data.yourSite, isYou: true },
     ...data.competitors.map(comp => ({
@@ -666,105 +757,107 @@ function renderDetailedMetricsTable(data) {
   ];
 
   return `
-    <section class="section">
-      <h2>📋 Detailed Metrics Breakdown</h2>
-      <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-        Complete score breakdown with individual metric details for every site
-      </p>
-      
-      <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden;">
-          <thead>
-            <tr style="background: rgba(0, 255, 65, 0.1); border-bottom: 2px solid rgba(0, 255, 65, 0.3);">
-              <th style="padding: 0.6rem 0.8rem; text-align: left; color: #00ff41; font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
-                Site
+    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+      Complete score breakdown with individual metric details for every site
+    </p>
+    
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden;">
+        <thead>
+          <tr style="background: rgba(0, 255, 65, 0.1); border-bottom: 2px solid rgba(0, 255, 65, 0.3);">
+            <th style="padding: 0.6rem 0.8rem; text-align: left; color: #00ff41; font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
+              Site
+            </th>
+            ${metrics.map(({ label, icon }) => `
+              <th style="padding: 0.6rem 0.8rem; text-align: center; color: var(--text-primary); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
+                ${icon} ${label}
               </th>
-              ${metrics.map(({ label, icon }) => `
-                <th style="padding: 0.6rem 0.8rem; text-align: center; color: var(--text-primary); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
-                  ${icon} ${label}
-                </th>
-              `).join('')}
-              <th style="padding: 0.6rem 0.8rem; text-align: center; color: #ffd700; font-weight: bold; font-size: 0.95rem;">
-                ◉ Overall
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            ${sites.map((site, siteIdx) => {
-              const scores = site.data.scores || {};
-              const details = site.data.details || {};
-              const isYou = site.isYou;
-              
-              return `
-                <tr style="background: ${isYou ? 'rgba(0, 255, 65, 0.05)' : siteIdx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                  <td style="padding: 0.6rem 0.8rem; font-weight: ${isYou ? 'bold' : 'normal'}; color: ${isYou ? '#00ff41' : 'var(--text-primary)'}; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
-                    ${isYou ? '◉ ' : ''}${site.name}${isYou ? ' (YOU)' : ''}
-                    <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.15rem;">
-                      ${getDomainName(site.data.url)}
-                    </div>
-                  </td>
-                  ${metrics.map(({ key }) => {
-                    const score = scores[key] || 0;
-                    const hasDetails = details[key] !== null && details[key] !== undefined;
-                    const failed = score === 0;
-                    
-                    let scoreColor = '#ff4444';
-                    if (score >= 80) scoreColor = '#00ff41';
-                    else if (score >= 60) scoreColor = '#ffa500';
-                    
-                    let grade = 'F';
-                    if (score >= 90) grade = 'A+';
-                    else if (score >= 80) grade = 'A';
-                    else if (score >= 70) grade = 'B';
-                    else if (score >= 60) grade = 'C';
-                    else if (score >= 50) grade = 'D';
-                    
-                    return `
-                      <td style="padding: 0.5rem 0.6rem; text-align: center; border-right: 1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size: 1.2rem; font-weight: bold; color: ${scoreColor}; margin-bottom: 0.15rem;">
-                          ${failed ? '✗' : score}
+            `).join('')}
+            <th style="padding: 0.6rem 0.8rem; text-align: center; color: #ffd700; font-weight: bold; font-size: 0.95rem;">
+              ◉ Overall
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          ${sites.map((site, siteIdx) => {
+            const scores = site.data.scores || {};
+            const details = site.data.details || {};
+            const isYou = site.isYou;
+            
+            return `
+              <tr style="background: ${isYou ? 'rgba(0, 255, 65, 0.05)' : siteIdx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 0.6rem 0.8rem; font-weight: ${isYou ? 'bold' : 'normal'}; color: ${isYou ? '#00ff41' : 'var(--text-primary)'}; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
+                  ${isYou ? '◉ ' : ''}${site.name}${isYou ? ' (YOU)' : ''}
+                  <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                    ${getDomainName(site.data.url)}
+                  </div>
+                </td>
+                ${metrics.map(({ key }) => {
+                  const score = scores[key] || 0;
+                  const hasDetails = details[key] !== null && details[key] !== undefined;
+                  const failed = score === 0;
+                  
+                  let scoreColor = '#ff4444';
+                  if (score >= 80) scoreColor = '#00ff41';
+                  else if (score >= 60) scoreColor = '#ffa500';
+                  
+                  let grade = 'F';
+                  if (score >= 90) grade = 'A+';
+                  else if (score >= 80) grade = 'A';
+                  else if (score >= 70) grade = 'B';
+                  else if (score >= 60) grade = 'C';
+                  else if (score >= 50) grade = 'D';
+                  
+                  return `
+                    <td style="padding: 0.5rem 0.6rem; text-align: center; border-right: 1px solid rgba(255,255,255,0.1);">
+                      <div style="font-size: 1.2rem; font-weight: bold; color: ${scoreColor}; margin-bottom: 0.15rem;">
+                        ${failed ? '✗' : score}
+                      </div>
+                      <div style="font-size: 0.7rem; padding: 0.15rem 0.4rem; background: ${scoreColor}20; border: 1px solid ${scoreColor}40; border-radius: 3px; display: inline-block; color: ${scoreColor};">
+                        ${failed ? 'Failed' : grade}
+                      </div>
+                      ${failed ? `
+                        <div style="font-size: 0.65rem; color: #ff8c00; margin-top: 0.3rem;">
+                          ~ Analysis error
                         </div>
-                        <div style="font-size: 0.7rem; padding: 0.15rem 0.4rem; background: ${scoreColor}20; border: 1px solid ${scoreColor}40; border-radius: 3px; display: inline-block; color: ${scoreColor};">
-                          ${failed ? 'Failed' : grade}
+                      ` : hasDetails && key === 'coreWebVitals' && details[key].metrics ? `
+                        <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.3rem; line-height: 1.3;">
+                          LCP: ${details[key].metrics.lcp ? (details[key].metrics.lcp / 1000).toFixed(2) + 's' : 'N/A'}<br>
+                          FID: ${details[key].metrics.fid ? details[key].metrics.fid.toFixed(0) + 'ms' : 'N/A'}<br>
+                          CLS: ${details[key].metrics.cls ? details[key].metrics.cls.toFixed(3) : 'N/A'}
                         </div>
-                        ${failed ? `
-                          <div style="font-size: 0.65rem; color: #ff8c00; margin-top: 0.3rem;">
-                            ~ Analysis error
-                          </div>
-                        ` : hasDetails && key === 'coreWebVitals' && details[key].metrics ? `
-                          <div style="font-size: 0.65rem; color: var(--text-secondary); margin-top: 0.3rem; line-height: 1.3;">
-                            LCP: ${details[key].metrics.lcp ? (details[key].metrics.lcp / 1000).toFixed(2) + 's' : 'N/A'}<br>
-                            FID: ${details[key].metrics.fid ? details[key].metrics.fid.toFixed(0) + 'ms' : 'N/A'}<br>
-                            CLS: ${details[key].metrics.cls ? details[key].metrics.cls.toFixed(3) : 'N/A'}
-                          </div>
-                        ` : ''}
-                      </td>
-                    `;
-                  }).join('')}
-                  <td style="padding: 0.6rem 0.8rem; text-align: center; background: ${isYou ? 'rgba(0, 255, 65, 0.1)' : 'rgba(255, 215, 0, 0.05)'};">
-                    <div style="font-size: 1.5rem; font-weight: bold; color: ${scores.overall >= 80 ? '#00ff41' : scores.overall >= 60 ? '#ffa500' : '#ff4444'};">
-                      ${scores.overall || 0}
-                    </div>
-                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
-                      ${site.data.grade || 'F'}
-                    </div>
-                  </td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-      
-      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 152, 0, 0.1); border-left: 4px solid #ff8c00; border-radius: 4px;">
-        <strong style="color: #ff8c00;">ⓘ Note:</strong>
-        <span style="color: var(--text-secondary); font-size: 0.9rem;">
-          Scores marked with ✗ indicate analyzer failures (typically due to Lighthouse timeouts or site restrictions). 
-          These metrics are excluded from overall score calculation to ensure accuracy.
-        </span>
-      </div>
-    </section>
+                      ` : ''}
+                    </td>
+                  `;
+                }).join('')}
+                <td style="padding: 0.6rem 0.8rem; text-align: center; background: ${isYou ? 'rgba(0, 255, 65, 0.1)' : 'rgba(255, 215, 0, 0.05)'};">
+                  <div style="font-size: 1.5rem; font-weight: bold; color: ${scores.overall >= 80 ? '#00ff41' : scores.overall >= 60 ? '#ffa500' : '#ff4444'};">
+                    ${scores.overall || 0}
+                  </div>
+                  <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
+                    ${site.data.grade || 'F'}
+                  </div>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+    
+    <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 152, 0, 0.1); border-left: 4px solid #ff8c00; border-radius: 4px;">
+      <strong style="color: #ff8c00;">ⓘ Note:</strong>
+      <span style="color: var(--text-secondary); font-size: 0.9rem;">
+        Scores marked with ✗ indicate analyzer failures (typically due to Lighthouse timeouts or site restrictions). 
+        These metrics are excluded from overall score calculation to ensure accuracy.
+      </span>
+    </div>
   `;
+}
+
+// Legacy wrapper for backward compatibility
+function renderDetailedMetricsTable(data) {
+  return `<section class="section"><h2>📋 Detailed Metrics Breakdown</h2>${renderDetailedMetricsContent(data)}</section>`;
 }
 
 // Executive Summary - Quick overview
@@ -1104,19 +1197,28 @@ function renderRankings(rankings) {
   `;
 }
 
-// Render insights
+// Render insights content (for accordion)
+function renderInsightsContent(insights) {
+  if (!insights || insights.length === 0) return '<p style="color: var(--text-secondary);">No insights available.</p>';
+  
+  return `
+    ${insights.map(insight => `
+      <div class="insight-card insight-${insight.type}" style="margin-bottom: 0.75rem;">
+        <h3 style="margin: 0 0 0.5rem 0;">${insight.message}</h3>
+        <p style="margin: 0; color: var(--text-secondary);">${insight.detail}</p>
+      </div>
+    `).join('')}
+  `;
+}
+
+// Legacy wrapper
 function renderInsights(insights) {
   if (!insights || insights.length === 0) return '';
   
   return `
     <section class="section">
       <h2>ⓘ Key Insights</h2>
-      ${insights.map(insight => `
-        <div class="insight-card insight-${insight.type}">
-          <h3 style="margin: 0 0 0.5rem 0;">${insight.message}</h3>
-          <p style="margin: 0; color: var(--text-secondary);">${insight.detail}</p>
-        </div>
-      `).join('')}
+      ${renderInsightsContent(insights)}
     </section>
   `;
 }
@@ -1125,12 +1227,8 @@ function renderInsights(insights) {
 function renderComparisonTable(data) {
   const metrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
   
-  return `
-    ${renderVisualComparison(data, metrics)}
-    ${renderCompetitivePosition(data)}
-    ${renderHeadToHead(data, metrics)}
-    ${renderStrengthsWeaknesses(data, metrics)}
-  `;
+  // Legacy - now handled by accordions
+  return '';
 }
 
 // Get metric status from rankings data (ALWAYS use this to check if metric failed)
@@ -1152,194 +1250,204 @@ function getMetricStatus(data, metric) {
   };
 }
 
-// Visual bar chart comparison
-function renderVisualComparison(data, metrics) {
+// Visual bar chart comparison content (for accordion)
+function renderVisualComparisonContent(data) {
+  const metrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
+  
   return `
-    <section class="section">
-      <h2>◉ Visual Score Comparison</h2>
-      <p style="color: var(--text-secondary); margin-bottom: 2rem;">
-        See exactly where you stand against each competitor in every category
-      </p>
+    <p style="color: var(--text-secondary); margin-bottom: 2rem;">
+      See exactly where you stand against each competitor in every category
+    </p>
+    
+    ${metrics.map(metric => {
+      // Get metric status from backend rankings
+      const metricStatus = getMetricStatus(data, metric);
       
-      ${metrics.map(metric => {
-        // Get metric status from backend rankings
-        const metricStatus = getMetricStatus(data, metric);
-        
-        const allScores = [
-          { name: 'You', score: data.yourSite.scores[metric], url: data.yourSite.url, isYou: true },
-          ...data.competitors.map(c => ({ 
-            name: getDomainName(c.url), 
-            score: c.scores[metric], 
-            url: c.url, 
-            isYou: false 
-          }))
-        ].sort((a, b) => b.score - a.score);
-        
-        const maxScore = Math.max(...allScores.map(s => s.score));
-        const yourScore = data.yourSite.scores[metric];
-        const bestCompetitor = data.competitors.reduce((best, c) => 
-          c.scores[metric] > (best?.scores[metric] || 0) ? c : best, null);
-        const gap = bestCompetitor ? bestCompetitor.scores[metric] - yourScore : 0;
-        
-        return `
-          <div style="margin-bottom: 2.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-              <h3 style="margin: 0; font-size: 1.1rem;">
-                ${formatMetricName(metric)}
-                ${metricStatus.failed ? `<span style="color: ${metricStatus.statusColor}; font-size: 0.9rem; margin-left: 0.5rem;">(${metricStatus.statusText})</span>` :
-                  gap > 0 ? `<span style="color: #ff4444; font-size: 0.9rem; margin-left: 0.5rem;">(-${gap} behind leader)</span>` : 
-                   gap < 0 ? `<span style="color: #00ff41; font-size: 0.9rem; margin-left: 0.5rem;">(+${Math.abs(gap)} ahead!)</span>` :
-                   `<span style="color: #ffd700; font-size: 0.9rem; margin-left: 0.5rem;">(${metricStatus.statusText})</span>`}
-              </h3>
-              <div style="font-size: 0.85rem; color: ${metricStatus.statusColor};">
-                Your rank: ${metricStatus.displayRank}
-              </div>
+      const allScores = [
+        { name: 'You', score: data.yourSite.scores[metric], url: data.yourSite.url, isYou: true },
+        ...data.competitors.map(c => ({ 
+          name: getDomainName(c.url), 
+          score: c.scores[metric], 
+          url: c.url, 
+          isYou: false 
+        }))
+      ].sort((a, b) => b.score - a.score);
+      
+      const maxScore = Math.max(...allScores.map(s => s.score));
+      const yourScore = data.yourSite.scores[metric];
+      const bestCompetitor = data.competitors.reduce((best, c) => 
+        c.scores[metric] > (best?.scores[metric] || 0) ? c : best, null);
+      const gap = bestCompetitor ? bestCompetitor.scores[metric] - yourScore : 0;
+      
+      return `
+        <div style="margin-bottom: 2.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h3 style="margin: 0; font-size: 1.1rem;">
+              ${formatMetricName(metric)}
+              ${metricStatus.failed ? `<span style="color: ${metricStatus.statusColor}; font-size: 0.9rem; margin-left: 0.5rem;">(${metricStatus.statusText})</span>` :
+                gap > 0 ? `<span style="color: #ff4444; font-size: 0.9rem; margin-left: 0.5rem;">(-${gap} behind leader)</span>` : 
+                 gap < 0 ? `<span style="color: #00ff41; font-size: 0.9rem; margin-left: 0.5rem;">(+${Math.abs(gap)} ahead!)</span>` :
+                 `<span style="color: #ffd700; font-size: 0.9rem; margin-left: 0.5rem;">(${metricStatus.statusText})</span>`}
+            </h3>
+            <div style="font-size: 0.85rem; color: ${metricStatus.statusColor};">
+              Your rank: ${metricStatus.displayRank}
             </div>
+          </div>
+          
+          ${allScores.map((site, idx) => {
+            const percentage = maxScore > 0 ? (site.score / maxScore) * 100 : 0;
+            const isWinner = idx === 0;
+            const barColor = site.isYou ? '#00ff41' : (isWinner ? '#ffd700' : '#4a9eff');
             
-            ${allScores.map((site, idx) => {
-              const percentage = maxScore > 0 ? (site.score / maxScore) * 100 : 0;
-              const isWinner = idx === 0;
-              const barColor = site.isYou ? '#00ff41' : (isWinner ? '#ffd700' : '#4a9eff');
-              
-              return `
-                <div style="margin-bottom: 0.75rem;">
-                  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                    <span style="font-size: 0.9rem; ${site.isYou ? 'font-weight: bold; color: #00ff41;' : ''}">
-                      ${isWinner ? '👑 ' : ''}${site.name}${site.isYou ? ' (YOU)' : ''}
-                    </span>
-                    <span style="font-weight: bold; font-size: 1rem; color: ${barColor};">
-                      ${site.score}
-                    </span>
-                  </div>
-                  <div style="background: rgba(255,255,255,0.1); height: 24px; border-radius: 4px; overflow: hidden; position: relative;">
-                    <div style="
-                      background: linear-gradient(90deg, ${barColor} 0%, ${barColor}dd 100%);
-                      height: 100%;
-                      width: ${percentage}%;
-                      transition: width 1s ease-out;
-                      display: flex;
-                      align-items: center;
-                      padding: 0 0.5rem;
-                      font-size: 0.75rem;
-                      font-weight: bold;
-                      color: white;
-                      box-shadow: ${site.isYou ? '0 0 10px ' + barColor : 'none'};
-                    ">
-                      ${percentage.toFixed(0)}%
-                    </div>
+            return `
+              <div style="margin-bottom: 0.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
+                  <span style="font-size: 0.9rem; ${site.isYou ? 'font-weight: bold; color: #00ff41;' : ''}">
+                    ${isWinner ? '👑 ' : ''}${site.name}${site.isYou ? ' (YOU)' : ''}
+                  </span>
+                  <span style="font-weight: bold; font-size: 1rem; color: ${barColor};">
+                    ${site.score}
+                  </span>
+                </div>
+                <div style="background: rgba(255,255,255,0.1); height: 24px; border-radius: 4px; overflow: hidden; position: relative;">
+                  <div style="
+                    background: linear-gradient(90deg, ${barColor} 0%, ${barColor}dd 100%);
+                    height: 100%;
+                    width: ${percentage}%;
+                    transition: width 1s ease-out;
+                    display: flex;
+                    align-items: center;
+                    padding: 0 0.5rem;
+                    font-size: 0.75rem;
+                    font-weight: bold;
+                    color: white;
+                    box-shadow: ${site.isYou ? '0 0 10px ' + barColor : 'none'};
+                  ">
+                    ${percentage.toFixed(0)}%
                   </div>
                 </div>
-              `;
-            }).join('')}
-          </div>
-        `;
-      }).join('')}
-    </section>
-  `;
-}
-
-// Competitive position summary
-function renderCompetitivePosition(data) {
-  return `
-    <section class="section">
-      <h2>◈ Competitive Position Summary</h2>
-      <div class="stats-grid">
-        ${Object.entries(data.comparison).map(([metric, stats]) => `
-          <div class="stat-card" style="border: 2px solid ${stats.status === 'winning' ? '#00ff41' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
-            <div style="text-align: center; margin-bottom: 0.5rem;">
-              ${stats.status === 'winning' ? '✓' : stats.status === 'losing' ? '✗' : '≈'}
-            </div>
-            <div class="stat-value status-${stats.status}">
-              ${stats.diff > 0 ? '+' : ''}${stats.diff}
-            </div>
-            <div class="stat-label">${formatMetricName(metric)}</div>
-            <div class="stat-sublabel" style="font-weight: bold; color: ${stats.status === 'winning' ? '#00ff41' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
-              ${stats.status === 'winning' ? 'WINNING' : stats.status === 'tied' ? 'TIED' : 'LOSING'}
-            </div>
-            <div style="font-size: 0.8rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1);">
-              <div>You: <strong>${stats.yourScore}</strong></div>
-              <div>Avg: ${stats.avgCompetitor}</div>
-              <div>Best: ${stats.maxCompetitor}</div>
-              <div style="margin-top: 0.25rem; color: var(--text-secondary);">
-                ${stats.percentile}th percentile
               </div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </section>
+            `;
+          }).join('')}
+        </div>
+      `;
+    }).join('')}
   `;
 }
 
-// Head-to-head matchup
-function renderHeadToHead(data, metrics) {
+// Legacy wrapper
+function renderVisualComparison(data, metrics) {
+  return `<section class="section"><h2>◉ Visual Score Comparison</h2>${renderVisualComparisonContent(data)}</section>`;
+}
+
+// Competitive position content (for accordion)
+function renderCompetitivePositionContent(data) {
+  return `
+    <div class="stats-grid">
+      ${Object.entries(data.comparison).map(([metric, stats]) => `
+        <div class="stat-card" style="border: 2px solid ${stats.status === 'winning' ? '#00ff41' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
+          <div style="text-align: center; margin-bottom: 0.5rem;">
+            ${stats.status === 'winning' ? '✓' : stats.status === 'losing' ? '✗' : '≈'}
+          </div>
+          <div class="stat-value status-${stats.status}">
+            ${stats.diff > 0 ? '+' : ''}${stats.diff}
+          </div>
+          <div class="stat-label">${formatMetricName(metric)}</div>
+          <div class="stat-sublabel" style="font-weight: bold; color: ${stats.status === 'winning' ? '#00ff41' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
+            ${stats.status === 'winning' ? 'WINNING' : stats.status === 'tied' ? 'TIED' : 'LOSING'}
+          </div>
+          <div style="font-size: 0.8rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div>You: <strong>${stats.yourScore}</strong></div>
+            <div>Avg: ${stats.avgCompetitor}</div>
+            <div>Best: ${stats.maxCompetitor}</div>
+            <div style="margin-top: 0.25rem; color: var(--text-secondary);">
+              ${stats.percentile}th percentile
+            </div>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Legacy wrapper
+function renderCompetitivePosition(data) {
+  return `<section class="section"><h2>◈ Competitive Position Summary</h2>${renderCompetitivePositionContent(data)}</section>`;
+}
+
+// Head-to-head content (for accordion)
+function renderHeadToHeadContent(data) {
+  const metrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
   const allSites = [
     { name: 'You', ...data.yourSite, isYou: true },
     ...data.competitors.map(c => ({ name: getDomainName(c.url), ...c, isYou: false }))
   ];
   
   return `
-    <section class="section">
-      <h2>⚔️ Head-to-Head Battle</h2>
-      <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-        Detailed score breakdown across all competitors
-      </p>
-      
-      <div style="overflow-x: auto;">
-        <table class="comparison-table">
-          <thead>
-            <tr>
-              <th style="position: sticky; left: 0; background: rgba(20, 20, 20, 0.95); z-index: 10;">Website</th>
-              ${metrics.map(m => `<th>${formatMetricName(m)}</th>`).join('')}
-              <th>Overall</th>
-              <th>Grade</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${allSites.map(site => {
-              const isYou = site.isYou;
-              return `
-                <tr class="${isYou ? 'your-site' : ''}" style="${isYou ? 'background: rgba(0, 255, 65, 0.1);' : ''}">
-                  <td style="position: sticky; left: 0; background: ${isYou ? 'rgba(0, 255, 65, 0.15)' : 'rgba(20, 20, 20, 0.95)'}; z-index: 9;">
-                    <strong>${isYou ? '👤 YOU' : site.name}</strong>
-                    <br><small style="font-size: 0.75rem; opacity: 0.7;">${site.url}</small>
-                  </td>
-                  ${metrics.map(m => {
-                    const score = site.scores[m];
-                    const maxScore = Math.max(...allSites.map(s => s.scores[m]));
-                    const isMax = score === maxScore && score > 0;
-                    return `
-                      <td style="text-align: center;">
-                        <span style="
-                          font-weight: ${isMax ? 'bold' : 'normal'};
-                          color: ${isMax ? '#ffd700' : 'inherit'};
-                          ${isMax ? 'text-shadow: 0 0 10px #ffd700;' : ''}
-                        ">
-                          ${isMax ? '👑 ' : ''}${score}
-                        </span>
-                      </td>
-                    `;
-                  }).join('')}
-                  <td style="text-align: center;">
-                    <strong style="font-size: 1.1rem;">${site.scores.overall}</strong>
-                  </td>
-                  <td style="text-align: center;">
-                    <strong style="color: ${getGradeColor(site.grade)}; font-size: 1.2rem;">
-                      ${site.grade}
-                    </strong>
-                  </td>
-                </tr>
-              `;
-            }).join('')}
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+      Detailed score breakdown across all competitors
+    </p>
+    
+    <div style="overflow-x: auto;">
+      <table class="comparison-table">
+        <thead>
+          <tr>
+            <th style="position: sticky; left: 0; background: rgba(20, 20, 20, 0.95); z-index: 10;">Website</th>
+            ${metrics.map(m => `<th>${formatMetricName(m)}</th>`).join('')}
+            <th>Overall</th>
+            <th>Grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${allSites.map(site => {
+            const isYou = site.isYou;
+            return `
+              <tr class="${isYou ? 'your-site' : ''}" style="${isYou ? 'background: rgba(0, 255, 65, 0.1);' : ''}">
+                <td style="position: sticky; left: 0; background: ${isYou ? 'rgba(0, 255, 65, 0.15)' : 'rgba(20, 20, 20, 0.95)'}; z-index: 9;">
+                  <strong>${isYou ? '👤 YOU' : site.name}</strong>
+                  <br><small style="font-size: 0.75rem; opacity: 0.7;">${site.url}</small>
+                </td>
+                ${metrics.map(m => {
+                  const score = site.scores[m];
+                  const maxScore = Math.max(...allSites.map(s => s.scores[m]));
+                  const isMax = score === maxScore && score > 0;
+                  return `
+                    <td style="text-align: center;">
+                      <span style="
+                        font-weight: ${isMax ? 'bold' : 'normal'};
+                        color: ${isMax ? '#ffd700' : 'inherit'};
+                        ${isMax ? 'text-shadow: 0 0 10px #ffd700;' : ''}
+                      ">
+                        ${isMax ? '👑 ' : ''}${score}
+                      </span>
+                    </td>
+                  `;
+                }).join('')}
+                <td style="text-align: center;">
+                  <strong style="font-size: 1.1rem;">${site.scores.overall}</strong>
+                </td>
+                <td style="text-align: center;">
+                  <strong style="color: ${getGradeColor(site.grade)}; font-size: 1.2rem;">
+                    ${site.grade}
+                  </strong>
+                </td>
+              </tr>
+            `;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
   `;
 }
 
-// Strengths and weaknesses matrix
-function renderStrengthsWeaknesses(data, metrics) {
+// Legacy wrapper
+function renderHeadToHead(data, metrics) {
+  return `<section class="section"><h2>⚔️ Head-to-Head Battle</h2>${renderHeadToHeadContent(data)}</section>`;
+}
+
+// Strengths and weaknesses content (for accordion)
+function renderStrengthsWeaknessesContent(data) {
+  const metrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
   const yourScores = data.yourSite.scores;
   
   // Calculate what you're winning and losing at
@@ -1378,71 +1486,102 @@ function renderStrengthsWeaknesses(data, metrics) {
   });
   
   return `
-    <section class="section">
-      <h2>💪 Your Competitive Strengths & Weaknesses</h2>
-      
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1.5rem;">
-        <!-- Strengths -->
-        <div style="background: rgba(0, 255, 65, 0.05); padding: 1.5rem; border-radius: 8px; border: 2px solid rgba(0, 255, 65, 0.3);">
-          <h3 style="margin: 0 0 1rem 0; color: #00ff41; display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-size: 1.5rem;">💪</span> Strengths (${strengths.length})
-          </h3>
-          ${strengths.length > 0 ? `
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-              ${strengths.map(s => `
-                <div style="background: rgba(0, 255, 65, 0.1); padding: 1rem; border-radius: 6px; border-left: 3px solid #00ff41;">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold;">${formatMetricName(s.metric)}</span>
-                    <span style="color: #00ff41; font-weight: bold; font-size: 1.1rem;">${s.score}</span>
-                  </div>
-                  <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                    ${s.status === 'dominant' ? '👑 <strong>DOMINATING</strong> - Best in category!' : 
-                      `✓ <strong>+${s.lead.toFixed(0)} above average</strong>`}
-                  </div>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
+      <!-- Strengths -->
+      <div style="background: rgba(0, 255, 65, 0.05); padding: 1.5rem; border-radius: 8px; border: 2px solid rgba(0, 255, 65, 0.3);">
+        <h3 style="margin: 0 0 1rem 0; color: #00ff41; display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.5rem;">💪</span> Strengths (${strengths.length})
+        </h3>
+        ${strengths.length > 0 ? `
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            ${strengths.map(s => `
+              <div style="background: rgba(0, 255, 65, 0.1); padding: 1rem; border-radius: 6px; border-left: 3px solid #00ff41;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-weight: bold;">${formatMetricName(s.metric)}</span>
+                  <span style="color: #00ff41; font-weight: bold; font-size: 1.1rem;">${s.score}</span>
                 </div>
-              `).join('')}
-            </div>
-          ` : `
-            <p style="color: var(--text-secondary); font-style: italic;">
-              No clear strengths identified. Focus on improving across all areas.
-            </p>
-          `}
-        </div>
-        
-        <!-- Weaknesses -->
-        <div style="background: rgba(255, 75, 75, 0.05); padding: 1.5rem; border-radius: 8px; border: 2px solid rgba(255, 75, 75, 0.3);">
-          <h3 style="margin: 0 0 1rem 0; color: #ff4444; display: flex; align-items: center; gap: 0.5rem;">
-            <span style="font-size: 1.5rem;">~</span> Weaknesses (${weaknesses.length})
-          </h3>
-          ${weaknesses.length > 0 ? `
-            <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-              ${weaknesses.map(w => `
-                <div style="background: rgba(255, 75, 75, 0.1); padding: 1rem; border-radius: 6px; border-left: 3px solid #ff4444;">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold;">${formatMetricName(w.metric)}</span>
-                    <span style="color: #ff4444; font-weight: bold; font-size: 1.1rem;">${w.score}</span>
-                  </div>
-                  <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                    ~ <strong>-${w.gap.toFixed(0)} behind leader</strong>
-                  </div>
-                  <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                    Leader: <strong>${getDomainName(w.leader.url)}</strong> (${w.leader.scores[w.metric]})
-                  </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                  ${s.status === 'dominant' ? '👑 <strong>DOMINATING</strong> - Best in category!' : 
+                    `✓ <strong>+${s.lead.toFixed(0)} above average</strong>`}
                 </div>
-              `).join('')}
-            </div>
-          ` : `
-            <p style="color: #00ff41; font-style: italic;">
-              ! No weaknesses! You're leading or competitive in all areas!
-            </p>
-          `}
-        </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <p style="color: var(--text-secondary); font-style: italic;">
+            No clear strengths identified. Focus on improving across all areas.
+          </p>
+        `}
       </div>
-    </section>
+      
+      <!-- Weaknesses -->
+      <div style="background: rgba(255, 75, 75, 0.05); padding: 1.5rem; border-radius: 8px; border: 2px solid rgba(255, 75, 75, 0.3);">
+        <h3 style="margin: 0 0 1rem 0; color: #ff4444; display: flex; align-items: center; gap: 0.5rem;">
+          <span style="font-size: 1.5rem;">~</span> Weaknesses (${weaknesses.length})
+        </h3>
+        ${weaknesses.length > 0 ? `
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+            ${weaknesses.map(w => `
+              <div style="background: rgba(255, 75, 75, 0.1); padding: 1rem; border-radius: 6px; border-left: 3px solid #ff4444;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                  <span style="font-weight: bold;">${formatMetricName(w.metric)}</span>
+                  <span style="color: #ff4444; font-weight: bold; font-size: 1.1rem;">${w.score}</span>
+                </div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                  ~ <strong>-${w.gap.toFixed(0)} behind leader</strong>
+                </div>
+                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                  Leader: <strong>${getDomainName(w.leader.url)}</strong> (${w.leader.scores[w.metric]})
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : `
+          <p style="color: #00ff41; font-style: italic;">
+            ! No weaknesses! You're leading or competitive in all areas!
+          </p>
+        `}
+      </div>
+    </div>
   `;
 }
 
-// Render recommendations
+// Legacy wrapper
+function renderStrengthsWeaknesses(data, metrics) {
+  return `<section class="section"><h2>💪 Your Competitive Strengths & Weaknesses</h2>${renderStrengthsWeaknessesContent(data)}</section>`;
+}
+
+// Recommendations content (for accordion)
+function renderRecommendationsContent(recommendations) {
+  if (!recommendations || recommendations.length === 0) {
+    return `<p style="color: #00ff41;">You're already ahead of the competition. Keep up the great work!</p>`;
+  }
+  
+  return `
+    <div style="display: grid; gap: 1rem;">
+      ${recommendations.map((rec, idx) => `
+        <div class="insight-card ${rec.priority === 'high' ? 'insight-critical' : 'insight-warning'}" style="margin-bottom: 0.5rem;">
+          <div style="display: flex; justify-content: space-between; align-items: start;">
+            <div>
+              <h3 style="margin: 0 0 0.5rem 0;">
+                ${idx + 1}. Close ${rec.gap}-point gap in ${rec.metric}
+              </h3>
+              <p style="margin: 0.5rem 0; color: var(--text-secondary);">${rec.recommendation}</p>
+              <p style="margin: 0.5rem 0 0 0; font-style: italic; color: var(--text-secondary);">
+                ⓘ ${rec.impact}
+              </p>
+            </div>
+            <span style="padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 0.85rem; white-space: nowrap;">
+              ${rec.priority.toUpperCase()}
+            </span>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `;
+}
+
+// Legacy wrapper
 function renderRecommendations(recommendations) {
   if (!recommendations || recommendations.length === 0) {
     return `
@@ -1453,31 +1592,7 @@ function renderRecommendations(recommendations) {
     `;
   }
   
-  return `
-    <section class="section">
-      <h2>T Action Plan to Beat Competition</h2>
-      <div style="display: grid; gap: 1rem;">
-        ${recommendations.map((rec, idx) => `
-          <div class="insight-card ${rec.priority === 'high' ? 'insight-critical' : 'insight-warning'}">
-            <div style="display: flex; justify-content: space-between; align-items: start;">
-              <div>
-                <h3 style="margin: 0 0 0.5rem 0;">
-                  ${idx + 1}. Close ${rec.gap}-point gap in ${rec.metric}
-                </h3>
-                <p style="margin: 0.5rem 0; color: var(--text-secondary);">${rec.recommendation}</p>
-                <p style="margin: 0.5rem 0 0 0; font-style: italic; color: var(--text-secondary);">
-                  ⓘ ${rec.impact}
-                </p>
-              </div>
-              <span style="padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 0.85rem; white-space: nowrap;">
-                ${rec.priority.toUpperCase()}
-              </span>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-    </section>
-  `;
+  return `<section class="section"><h2>🎯 Action Plan to Beat Competition</h2>${renderRecommendationsContent(recommendations)}</section>`;
 }
 
 // Utility functions

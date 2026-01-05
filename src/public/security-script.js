@@ -32,11 +32,17 @@ document.addEventListener('DOMContentLoaded', () => {
 // Main analysis function
 async function analyzeSecurity() {
   const url = document.getElementById('urlInput').value.trim();
+  const analyzeButton = document.getElementById('analyzeButton');
   
   if (!url) {
     showError('Please enter a valid URL');
     return;
   }
+
+  // Update button state
+  analyzeButton.disabled = true;
+  const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
+  buttonText.textContent = 'Running scan...';
 
   // Setup UI
   const resultsDiv = document.getElementById('results');
@@ -99,7 +105,6 @@ async function analyzeSecurity() {
       }
       .ascii-art-responsive {
         font-size: clamp(0.35rem, 1.2vw, 0.65rem);
-        animation: color-cycle 4s linear infinite;
         white-space: pre;
         max-width: 100%;
       }
@@ -176,6 +181,12 @@ async function analyzeSecurity() {
   } catch (error) {
     console.error('Security analysis error:', error);
     loader.showError(`Security analysis failed: ${error.message}`);
+  } finally {
+    // Reset button state
+    const analyzeButton = document.getElementById('analyzeButton');
+    analyzeButton.disabled = false;
+    const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
+    buttonText.textContent = 'Run scan';
   }
 }
 
@@ -231,7 +242,7 @@ function displaySecurityResults(data) {
             </text>
           </svg>
           <div style="margin-top: 0.5rem; color: ${getScoreColor(data.overallScore)}; font-weight: 600; font-size: 1.1rem;">
-            ${getGrade(data.overallScore)} Grade
+            ${getGrade(data.overallScore)}
           </div>
         </div>
 
@@ -275,7 +286,7 @@ function displaySecurityResults(data) {
             </text>
           </svg>
           <div style="margin-top: 0.5rem; color: ${getScoreColor(data.ssl.score)}; font-weight: 600; font-size: 1.1rem;">
-            ${getGrade(data.ssl.score)} Grade
+            ${getGrade(data.ssl.score)}
           </div>
         </div>
 
@@ -375,7 +386,7 @@ function displaySecurityResults(data) {
             <tr style="background: rgba(255, 68, 68, 0.1); border-bottom: 2px solid rgba(255, 68, 68, 0.3);">
               <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #ff4444;">Category</th>
               <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #ff4444;">Score</th>
-              <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #ff4444;">Grade</th>
+              <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #00ff41;">Status</th>
               <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #ff4444;">Status</th>
             </tr>
           </thead>
@@ -1093,31 +1104,30 @@ function renderRecommendationsContent(recommendations) {
  */
 // PDF purchase modal removed - monetization disabled
 
-// Helper: Get letter grade from score
+// Helper: Get status label from score
+// Standard: Excellent (90-100), Good (75-89), Needs Work (50-74), Critical (<50)
 function getGrade(score) {
-  if (score >= 95) return 'A+';
-  if (score >= 90) return 'A';
-  if (score >= 85) return 'A-';
-  if (score >= 80) return 'B+';
-  if (score >= 75) return 'B';
-  if (score >= 70) return 'B-';
-  if (score >= 65) return 'C+';
-  if (score >= 60) return 'C';
-  if (score >= 55) return 'C-';
-  if (score >= 50) return 'D';
-  return 'F';
+  if (score >= 90) return 'Excellent';
+  if (score >= 75) return 'Good';
+  if (score >= 50) return 'Needs Work';
+  return 'Critical';
 }
 
-// Helper: Get score color - Traditional traffic light system
-// A grades (90-100): Green
-// B grades (70-89): Yellow
-// C grades (50-69): Orange
-// Below C (<50): Red
+// Alias for clarity
+function getStatus(score) {
+  return getGrade(score);
+}
+
+// Helper: Get score color - Standardized status colors
+// Excellent (90-100): Green
+// Good (75-89): Teal
+// Needs Work (50-74): Orange
+// Critical (<50): Red
 function getScoreColor(score) {
-  if (score >= 90) return '#00ff41';  // A: Bright green (terminal green)
-  if (score >= 70) return '#ffd700';  // B: Yellow (gold)
-  if (score >= 50) return '#ff8c00';  // C: Dark orange
-  return '#ff4444';                   // D/F: Red
+  if (score >= 90) return '#00ff41';  // Excellent: Bright green
+  if (score >= 75) return '#00bcd4';  // Good: Teal
+  if (score >= 50) return '#ffa500';  // Needs Work: Orange
+  return '#ff4444';                   // Critical: Red
 }
 
 // Show error message
