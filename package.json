@@ -1,7 +1,7 @@
 {
-  "name": "font-scanner",
+  "name": "sitemechanic",
   "version": "3.0.0",
-  "description": "A comprehensive font scanner application that analyzes websites for fonts, font display properties, and best practices",
+  "description": "SiteMechanic.io - Comprehensive website analysis tool for fonts, performance, accessibility, and SEO",
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",

@@ -380,7 +380,7 @@ global.io = io;
 
 // Start server
 server.listen(PORT, () => {
-  logger.info(`Font Scanner server running on port ${PORT}`);
+  logger.info(`SiteMechanic.io server running on port ${PORT}`);
   logger.info(`Access the application at http://localhost:${PORT}`);
   logger.info(`Environment: ${config.nodeEnv}`);
   logger.info('WebSocket server ready');
