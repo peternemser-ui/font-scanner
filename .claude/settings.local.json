@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm outdated:*)",
+      "Bash(exit 0)",
+      "Bash(npm install:*)",
+      "Bash(cat:*)",
+      "Bash(npm audit:*)",
+      "Bash(git restore:*)"
+    ]
+  }
+}
