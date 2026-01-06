@@ -353,7 +353,142 @@ function renderUnifiedHeader(appTitle, subtitle) {
         </button>
       </div>
     </div>
+    <div id="scanContextBar" class="scan-context-bar" style="display: none;"></div>
   `;
+}
+
+/**
+ * Render the scan context bar showing current domain and actions
+ * This appears below the header when there's an active scan context
+ */
+function renderScanContextBar() {
+  const bar = document.getElementById('scanContextBar');
+  if (!bar) return;
+  
+  // Check if ScanContext exists and has data
+  if (!window.ScanContext || !window.ScanContext.exists()) {
+    bar.style.display = 'none';
+    return;
+  }
+  
+  const context = window.ScanContext.get();
+  const domain = context.domain || 'Unknown site';
+  const timeSince = window.ScanContext.getTimeSinceScan() || '';
+  
+  bar.innerHTML = `
+    <div class="scan-context-content">
+      <div class="scan-context-info">
+        <span class="scan-context-label">Currently analyzing:</span>
+        <span class="scan-context-domain">${domain}</span>
+        ${timeSince ? `<span class="scan-context-time">• Scanned ${timeSince}</span>` : ''}
+      </div>
+      <div class="scan-context-actions">
+        <button onclick="window.ScanContext.clear(); window.location.href='/dashboard.html'" class="scan-context-btn scan-context-btn-secondary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+          Change Site
+        </button>
+        <button onclick="window.location.href='/dashboard.html'" class="scan-context-btn scan-context-btn-primary">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Run New Scan
+        </button>
+      </div>
+    </div>
+  `;
+  bar.style.display = 'block';
+}
+
+/**
+ * Add styles for the scan context bar
+ */
+function addScanContextStyles() {
+  if (document.getElementById('scanContextStyles')) return;
+  
+  const style = document.createElement('style');
+  style.id = 'scanContextStyles';
+  style.textContent = `
+    .scan-context-bar {
+      background: linear-gradient(135deg, rgba(0, 255, 65, 0.08) 0%, rgba(0, 255, 65, 0.03) 100%);
+      border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+      padding: 0.5rem 1rem;
+    }
+    .scan-context-content {
+      max-width: 1400px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+    .scan-context-info {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .scan-context-label {
+      color: #888;
+      font-size: 0.85rem;
+    }
+    .scan-context-domain {
+      color: #00ff41;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+    .scan-context-time {
+      color: #666;
+      font-size: 0.8rem;
+    }
+    .scan-context-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    .scan-context-btn {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1px solid transparent;
+    }
+    .scan-context-btn-secondary {
+      background: transparent;
+      border-color: rgba(255, 255, 255, 0.15);
+      color: #aaa;
+    }
+    .scan-context-btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.25);
+      color: #fff;
+    }
+    .scan-context-btn-primary {
+      background: rgba(0, 255, 65, 0.1);
+      border-color: rgba(0, 255, 65, 0.3);
+      color: #00ff41;
+    }
+    .scan-context-btn-primary:hover {
+      background: rgba(0, 255, 65, 0.2);
+      border-color: rgba(0, 255, 65, 0.5);
+    }
+    @media (max-width: 600px) {
+      .scan-context-content {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .scan-context-actions {
+        width: 100%;
+      }
+      .scan-context-btn {
+        flex: 1;
+        justify-content: center;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 /**
@@ -700,6 +835,15 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
   initializeNavScroll();
   initializeDropdownMenu();
   initializeHeaderLanguageSwitcher();
+  
+  // Initialize scan context bar
+  addScanContextStyles();
+  renderScanContextBar();
+  
+  // Listen for scan context updates
+  window.addEventListener('scanContextUpdated', () => {
+    renderScanContextBar();
+  });
 
   // Initialize theme controls after footer is ready
   setTimeout(() => {

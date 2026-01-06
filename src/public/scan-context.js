@@ -1,0 +1,320 @@
+/**
+ * Site Mechanic - Scan Context Manager
+ * 
+ * Single source of truth for current scan state across all pages.
+ * Stored in localStorage under 'sm_current_scan' key.
+ * 
+ * Schema:
+ * {
+ *   domain: string,           // The scanned domain (e.g., "example.com")
+ *   selectedUrls: string[],   // URLs included in the scan
+ *   selectedModules: string[], // Modules used (fonts, seo, performance, accessibility, security)
+ *   finishedAt: ISO string,   // When the scan completed
+ *   results: object           // Full scan result JSON
+ * }
+ */
+
+const ScanContext = {
+  STORAGE_KEY: 'sm_current_scan',
+  
+  /**
+   * Get the current scan context
+   * @returns {Object|null} The scan context or null if none exists
+   */
+  get() {
+    try {
+      const data = localStorage.getItem(this.STORAGE_KEY);
+      return data ? JSON.parse(data) : null;
+    } catch (error) {
+      console.error('[ScanContext] Failed to read scan context:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Save a new scan context
+   * @param {Object} scanData - The scan results and metadata
+   */
+  save(scanData) {
+    try {
+      // Extract domain from URL
+      let domain = scanData.url || '';
+      try {
+        const urlObj = new URL(domain.startsWith('http') ? domain : `https://${domain}`);
+        domain = urlObj.hostname;
+      } catch (e) {
+        // Keep as-is if URL parsing fails
+      }
+      
+      const context = {
+        domain,
+        url: scanData.url,
+        selectedUrls: scanData.selectedUrls || [scanData.url],
+        selectedModules: scanData.selectedModules || ['fonts', 'seo', 'performance', 'accessibility', 'security'],
+        finishedAt: new Date().toISOString(),
+        results: scanData.results || scanData
+      };
+      
+      localStorage.setItem(this.STORAGE_KEY, JSON.stringify(context));
+      console.log('[ScanContext] Scan context saved for:', domain);
+      
+      // Dispatch custom event for cross-page reactivity
+      window.dispatchEvent(new CustomEvent('scanContextUpdated', { detail: context }));
+      
+      return context;
+    } catch (error) {
+      console.error('[ScanContext] Failed to save scan context:', error);
+      return null;
+    }
+  },
+  
+  /**
+   * Clear the current scan context
+   */
+  clear() {
+    try {
+      localStorage.removeItem(this.STORAGE_KEY);
+      console.log('[ScanContext] Scan context cleared');
+      window.dispatchEvent(new CustomEvent('scanContextUpdated', { detail: null }));
+    } catch (error) {
+      console.error('[ScanContext] Failed to clear scan context:', error);
+    }
+  },
+  
+  /**
+   * Check if a scan context exists
+   * @returns {boolean}
+   */
+  exists() {
+    return this.get() !== null;
+  },
+  
+  /**
+   * Get just the domain from current scan
+   * @returns {string|null}
+   */
+  getDomain() {
+    const ctx = this.get();
+    return ctx ? ctx.domain : null;
+  },
+  
+  /**
+   * Get the scan results
+   * @returns {Object|null}
+   */
+  getResults() {
+    const ctx = this.get();
+    return ctx ? ctx.results : null;
+  },
+  
+  /**
+   * Get time since last scan in human-readable format
+   * @returns {string|null}
+   */
+  getTimeSinceScan() {
+    const ctx = this.get();
+    if (!ctx || !ctx.finishedAt) return null;
+    
+    const scanTime = new Date(ctx.finishedAt);
+    const now = new Date();
+    const diffMs = now - scanTime;
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    
+    if (diffMins < 1) return 'Just now';
+    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+  },
+  
+  /**
+   * Check if the scan is stale (older than 24 hours)
+   * @returns {boolean}
+   */
+  isStale() {
+    const ctx = this.get();
+    if (!ctx || !ctx.finishedAt) return true;
+    
+    const scanTime = new Date(ctx.finishedAt);
+    const now = new Date();
+    const diffHours = (now - scanTime) / (1000 * 60 * 60);
+    return diffHours > 24;
+  }
+};
+
+// Make available globally
+window.ScanContext = ScanContext;
+
+/**
+ * Site Mechanic - Export Paywall Utility
+ * 
+ * Shared utility to check Pro status and show export paywall.
+ * Used by PDFExportUtility, copyShareLink, and other export features.
+ */
+const ExportGate = {
+  /**
+   * Check if user has Pro status
+   * @returns {boolean}
+   */
+  isPro() {
+    return window.proManager && window.proManager.isPro();
+  },
+  
+  /**
+   * Gate an action behind Pro status
+   * @param {Function} action - The action to perform if user is Pro
+   * @returns {boolean} Whether the action was performed
+   */
+  gatedAction(action) {
+    if (this.isPro()) {
+      action();
+      return true;
+    }
+    this.showPaywall();
+    return false;
+  },
+  
+  /**
+   * Show inline paywall CTA for exports
+   */
+  showPaywall() {
+    // Remove any existing paywall
+    const existingPaywall = document.getElementById('exportPaywall');
+    if (existingPaywall) existingPaywall.remove();
+    
+    const paywall = document.createElement('div');
+    paywall.id = 'exportPaywall';
+    paywall.innerHTML = `
+      <div class="export-paywall-overlay">
+        <div class="export-paywall-modal">
+          <button class="export-paywall-close" onclick="this.closest('#exportPaywall').remove()" aria-label="Close">&times;</button>
+          <div class="export-paywall-icon">📄</div>
+          <h3 class="export-paywall-title">Export Your Report</h3>
+          <p class="export-paywall-text">
+            Get the <strong>$5 USD SiteMechanic Pro Report</strong> to download client-ready PDFs, 
+            export fix packs, and share results.
+          </p>
+          <div class="export-paywall-features">
+            <div class="export-paywall-feature">✓ PDF Downloads</div>
+            <div class="export-paywall-feature">✓ Fix Pack Export</div>
+            <div class="export-paywall-feature">✓ Share Links</div>
+            <div class="export-paywall-feature">✓ Multi-page Scanning</div>
+          </div>
+          <a href="/upgrade.html" class="export-paywall-cta">Get Pro Report — $5</a>
+          <p class="export-paywall-note">One-time purchase. No subscription.</p>
+        </div>
+      </div>
+    `;
+    
+    // Add styles if not present
+    if (!document.getElementById('exportPaywallStyles')) {
+      const style = document.createElement('style');
+      style.id = 'exportPaywallStyles';
+      style.textContent = `
+        .export-paywall-overlay {
+          position: fixed;
+          inset: 0;
+          background: rgba(0, 0, 0, 0.8);
+          backdrop-filter: blur(4px);
+          z-index: 10000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 1rem;
+        }
+        .export-paywall-modal {
+          position: relative;
+          background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+          border: 1px solid rgba(0, 255, 65, 0.3);
+          border-radius: 16px;
+          padding: 2rem;
+          max-width: 400px;
+          width: 100%;
+          text-align: center;
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        .export-paywall-close {
+          position: absolute;
+          top: 0.75rem;
+          right: 0.75rem;
+          background: none;
+          border: none;
+          color: #888;
+          font-size: 1.5rem;
+          cursor: pointer;
+          line-height: 1;
+        }
+        .export-paywall-close:hover { color: #fff; }
+        .export-paywall-icon {
+          font-size: 3rem;
+          margin-bottom: 1rem;
+        }
+        .export-paywall-title {
+          color: #fff;
+          font-size: 1.5rem;
+          font-weight: 700;
+          margin: 0 0 0.75rem 0;
+        }
+        .export-paywall-text {
+          color: #aaa;
+          font-size: 1rem;
+          line-height: 1.5;
+          margin: 0 0 1.25rem 0;
+        }
+        .export-paywall-features {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 0.5rem;
+          margin-bottom: 1.5rem;
+        }
+        .export-paywall-feature {
+          color: #00ff41;
+          font-size: 0.9rem;
+          text-align: left;
+          padding: 0.25rem 0;
+        }
+        .export-paywall-cta {
+          display: inline-block;
+          background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%);
+          color: #000;
+          font-weight: 700;
+          font-size: 1.1rem;
+          padding: 0.875rem 2rem;
+          border-radius: 8px;
+          text-decoration: none;
+          transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .export-paywall-cta:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 8px 20px rgba(0, 255, 65, 0.3);
+        }
+        .export-paywall-note {
+          color: #666;
+          font-size: 0.8rem;
+          margin: 1rem 0 0 0;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(paywall);
+    
+    // Close on overlay click
+    paywall.querySelector('.export-paywall-overlay').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) paywall.remove();
+    });
+    
+    // Close on Escape key
+    const handleEscape = (e) => {
+      if (e.key === 'Escape') {
+        paywall.remove();
+        document.removeEventListener('keydown', handleEscape);
+      }
+    };
+    document.addEventListener('keydown', handleEscape);
+  }
+};
+
+// Make available globally
+window.ExportGate = ExportGate;

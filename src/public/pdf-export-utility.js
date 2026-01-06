@@ -28,6 +28,19 @@ class PDFExportUtility {
    * @returns {Promise<void>}
    */
   async export(contentSelector, buttonElement = null) {
+    // PAYMENT GATE: Check if user has Pro status before exporting
+    // Use shared ExportGate if available, otherwise fallback to proManager check
+    const isPaid = window.ExportGate ? window.ExportGate.isPro() : (window.proManager && window.proManager.isPro());
+    if (!isPaid) {
+      if (window.ExportGate) {
+        window.ExportGate.showPaywall();
+      } else {
+        // Fallback paywall if ExportGate not loaded
+        alert('Pro Report required for PDF export. Visit /upgrade.html to unlock exports.');
+      }
+      return;
+    }
+    
     const content = document.querySelector(contentSelector);
 
     if (!content) {

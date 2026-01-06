@@ -1177,6 +1177,12 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
   };
 
   window.copyShareLink = function() {
+    // Check Pro status before sharing
+    if (window.ExportGate && !window.ExportGate.isPro()) {
+      window.ExportGate.showPaywall();
+      return;
+    }
+    
     const url = window.location.origin + window.location.pathname + '?url=' + encodeURIComponent(urlInput.value);
     navigator.clipboard.writeText(url).then(() => {
       alert('Share link copied to clipboard!');

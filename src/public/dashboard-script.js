@@ -24,11 +24,29 @@ let dashboardResults = null;
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  // AUTHENTICATION REQUIRED - Redirect if not logged in
-  if (!window.proManager || !window.proManager.isAuthenticated()) {
-    // Redirect to login page
-    window.location.href = '/auth.html?redirect=' + encodeURIComponent(window.location.pathname);
-    return;
+  // GUEST MODE: No authentication required for scanning
+  // Only exports are gated behind payment
+  const isAuthenticated = window.proManager && window.proManager.isAuthenticated();
+  const isGuest = !isAuthenticated;
+  
+  // Show guest banner if not logged in
+  if (isGuest) {
+    showGuestBanner();
+  }
+  
+  // Check for existing scan context and restore results
+  if (window.ScanContext && window.ScanContext.exists()) {
+    const context = window.ScanContext.get();
+    if (context && context.results) {
+      // Pre-fill the URL input
+      const urlInput = document.getElementById('dashboardUrlInput');
+      if (urlInput && context.url) {
+        urlInput.value = context.url;
+      }
+      // Restore and display results
+      dashboardResults = context.results;
+      displayDashboard(dashboardResults);
+    }
   }
 
   const urlInput = document.getElementById('dashboardUrlInput');
@@ -47,6 +65,90 @@ document.addEventListener('DOMContentLoaded', () => {
   // Initialize account status display
   updateAccountStatus();
 });
+
+/**
+ * Show a non-blocking guest banner
+ */
+function showGuestBanner() {
+  // Don't show if already exists
+  if (document.getElementById('guestBanner')) return;
+  
+  const banner = document.createElement('div');
+  banner.id = 'guestBanner';
+  banner.className = 'guest-banner';
+  banner.innerHTML = `
+    <div class="guest-banner-content">
+      <span class="guest-banner-icon">👋</span>
+      <span class="guest-banner-text">
+        <strong>Guest session</strong> — Results aren't saved long-term. 
+        <a href="/upgrade.html" class="guest-banner-link">Get the $5 Pro Report</a> to export and share.
+      </span>
+      <button class="guest-banner-close" onclick="this.parentElement.parentElement.remove()" aria-label="Dismiss">&times;</button>
+    </div>
+  `;
+  
+  // Add styles if not already present
+  if (!document.getElementById('guestBannerStyles')) {
+    const style = document.createElement('style');
+    style.id = 'guestBannerStyles';
+    style.textContent = `
+      .guest-banner {
+        position: fixed;
+        bottom: 1rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        max-width: 600px;
+        width: calc(100% - 2rem);
+      }
+      .guest-banner-content {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      }
+      .guest-banner-icon {
+        font-size: 1.25rem;
+        flex-shrink: 0;
+      }
+      .guest-banner-text {
+        flex: 1;
+        font-size: 0.9rem;
+        color: var(--text-primary, #fff);
+        line-height: 1.4;
+      }
+      .guest-banner-link {
+        color: #3b82f6;
+        text-decoration: underline;
+        font-weight: 600;
+      }
+      .guest-banner-link:hover {
+        color: #60a5fa;
+      }
+      .guest-banner-close {
+        background: none;
+        border: none;
+        color: var(--text-secondary, #888);
+        font-size: 1.5rem;
+        cursor: pointer;
+        padding: 0 0.25rem;
+        line-height: 1;
+      }
+      .guest-banner-close:hover {
+        color: var(--text-primary, #fff);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  
+  // Insert into page
+  document.body.appendChild(banner);
+}
 
 /**
  * Update the account status card with current usage
@@ -149,12 +251,36 @@ async function updateAccountStatus() {
 /**
  * Track a scan in usage stats
  */
-function trackScanUsage() {
+async function trackScanUsage(scannedUrl) {
+  // If authenticated, track on server
+  if (window.proManager && window.proManager.isAuthenticated()) {
+    try {
+      const response = await fetch('/api/usage/track-scan', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...window.proManager.getAuthHeaders()
+        },
+        body: JSON.stringify({ url: scannedUrl || 'unknown' })
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Scan tracked on server:', data);
+      }
+    } catch (error) {
+      console.error('Failed to track scan on server:', error);
+    }
+  }
+  
+  // Also track in localStorage as fallback
   const today = new Date().toDateString();
   const usageKey = `siteMechanic_usage_${today}`;
   const usage = JSON.parse(localStorage.getItem(usageKey) || '{}');
   usage.scan = (usage.scan || 0) + 1;
   localStorage.setItem(usageKey, JSON.stringify(usage));
+  
+  // Update UI
   updateAccountStatus();
 }
 
@@ -356,8 +482,18 @@ async function runComprehensiveAnalysis() {
     window.AnalyzerLoader.updateStep('compile', 'complete');
     window.AnalyzerLoader.updateProgress(100);
     
-    // Track successful scan
-    trackScanUsage();
+    // Track successful scan (pass URL for server-side tracking)
+    trackScanUsage(url);
+    
+    // Save to ScanContext for cross-page access
+    if (window.ScanContext) {
+      window.ScanContext.save({
+        url,
+        selectedUrls: [url],
+        selectedModules: ['fonts', 'seo', 'performance', 'accessibility', 'security'],
+        results: dashboardResults
+      });
+    }
     
     // Short delay to show completion
     await new Promise(resolve => setTimeout(resolve, 200));
@@ -1408,9 +1544,15 @@ function generateImprovementGuide(data) {
 // }
 
 /**
- * Copy shareable link (Stage 4)
+ * Copy shareable link (Stage 4) - GATED BEHIND PAYMENT
  */
 function copyShareLink() {
+  // Check Pro status before sharing
+  if (window.ExportGate && !window.ExportGate.isPro()) {
+    window.ExportGate.showPaywall();
+    return;
+  }
+  
   const url = window.location.href;
   navigator.clipboard.writeText(url).then(() => {
     // Show temporary success message
