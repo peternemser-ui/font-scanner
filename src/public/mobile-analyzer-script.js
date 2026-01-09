@@ -4,12 +4,23 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  console.log('Mobile analyzer script loaded');
+  
   const urlInput = document.getElementById('urlInput');
   const analyzeButton = document.getElementById('analyzeButton');
   const results = document.getElementById('results');
   const loadingContainer = document.getElementById('loadingContainer');
   const resultsContent = document.getElementById('resultsContent');
   const errorMessage = document.getElementById('errorMessage');
+
+  console.log('Elements found:', { 
+    urlInput: !!urlInput, 
+    analyzeButton: !!analyzeButton, 
+    results: !!results,
+    loadingContainer: !!loadingContainer,
+    resultsContent: !!resultsContent,
+    errorMessage: !!errorMessage
+  });
 
   // Initialize AnalyzerLoader
   let loader = null;
@@ -170,91 +181,332 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayResults(data) {
-    // Get first device data for advanced features (they're consistent across devices)
+    const url = document.getElementById('urlInput').value;
+    const timestamp = new Date().toLocaleString();
+    
+    // Check if shared components are loaded
+    if (typeof ReportShell === 'undefined' || typeof ReportAccordion === 'undefined') {
+      console.error('Shared report components not loaded');
+      resultsContent.innerHTML = '<div style="color: red; padding: 2rem;">Error: Report components failed to load. Please refresh the page.</div>';
+      return;
+    }
+    
+    // Get first device data for advanced features
     const firstDevice = Object.values(data.devices).find(d => !d.error) || {};
-
+    
+    // Summary donuts
+    const summaryDonuts = ReportShell.renderSummaryDonuts([
+      { label: 'Mobile Score', score: data.mobileScore },
+      { label: 'Performance', score: data.performanceSummary.average },
+      { label: 'Readability', score: data.readabilitySummary.average },
+      { label: 'Accessibility', score: data.accessibilitySummary.average }
+    ]);
+    
+    // Device Screenshots Section
+    const screenshotsContent = `
+      <div class="report-shell__card">
+        ${Object.entries(data.devices).map(([key, device]) => {
+          if (device.error) {
+            return `
+              <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border-primary, rgba(255,255,255,0.1));">
+                <h4 style="margin-bottom: 1rem;">${device.device || key}</h4>
+                <div style="color: #ff6b6b; padding: 1rem; background: rgba(255,107,107,0.1); border-radius: 8px;">
+                  ⚠️ Error capturing this device: ${device.error}
+                </div>
+              </div>
+            `;
+          }
+          return `
+            <div style="margin-bottom: 2rem;">
+              <h4 style="margin-bottom: 1rem;">${device.device}</h4>
+              <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                ${device.portraitScreenshot ? `
+                  <div style="text-align: center;">
+                    <img src="${device.portraitScreenshot}" alt="${device.device} portrait" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" onclick="window.open(this.src)">
+                    <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">📱 ${device.width}x${device.height}</div>
+                    <a href="${device.portraitScreenshot}" download="${device.device}-portrait.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">🔽 Click to enlarge</a>
+                  </div>
+                ` : ''}
+                ${device.landscapeScreenshot ? `
+                  <div style="text-align: center;">
+                    <img src="${device.landscapeScreenshot}" alt="${device.device} landscape" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" onclick="window.open(this.src)">
+                    <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">🖥️ ${device.height}x${device.width}</div>
+                    <a href="${device.landscapeScreenshot}" download="${device.device}-landscape.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">🔽 Click to enlarge</a>
+                  </div>
+                ` : ''}
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+    
+    // Other diagnostic sections (viewport, PWA, dark mode, etc.)
+    const diagnosticsContent = createAllDiagnosticSections(data, firstDevice);
+    
+    // Recommendations
+    const recommendationsContent = `
+      <div class="report-shell__card">
+        ${data.recommendations.length > 0 ? 
+          data.recommendations.map(rec => `
+            <div style="background: rgba(255, 255, 255, 0.03); padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; border-left: 3px solid ${rec.severity === 'high' ? '#ef4444' : rec.severity === 'medium' ? '#f59e0b' : '#22c55e'};">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                <strong style="color: var(--text-primary, #fff);">${rec.title}</strong>
+                <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: rgba(255,255,255,0.1);">${rec.category}</span>
+              </div>
+              <div style="font-size: 0.9rem; color: var(--text-muted, #aaa);">${rec.suggestion}</div>
+            </div>
+          `).join('') 
+          : '<p style="color: var(--text-muted, #888);">✅ No significant issues detected!</p>'
+        }
+      </div>
+    `;
+    
+    // Build accordions
+    const accordions = [
+      ReportAccordion.createSection({ id: 'mobile-screenshots', title: 'Device Screenshots', scoreTextRight: `${Object.keys(data.devices).length} Devices`, contentHTML: screenshotsContent }),
+      ...diagnosticsContent,
+      ReportAccordion.createSection({ id: 'mobile-recommendations', title: 'Recommendations', scoreTextRight: null, contentHTML: recommendationsContent })
+    ].join('');
+    
+    // Summary stats
+    const issuesCount = data.recommendations.filter(r => r.severity === 'high').length;
+    const summaryStats = {
+      issues: issuesCount,
+      recommendations: data.recommendations.length,
+      checks: Object.keys(data.devices).length
+    };
+    
     const html = `
-      <!-- Overall Mobile Score -->
-      <div style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="margin-bottom: 1rem;">Mobile Score</h2>
-        <div class="score-circle" style="
-          width: 140px; height: 140px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 3rem; font-weight: bold; margin: 0 auto;
-          border: 4px solid ${getScoreColor(data.mobileScore)};
-          color: ${getScoreColor(data.mobileScore)};
-          background: rgba(${getScoreRGB(data.mobileScore)}, 0.1);
-        ">
-          ${data.mobileScore}
-        </div>
-        <p style="margin-top: 1rem; color: #888;">
-          Overall mobile readiness across all tested devices
-        </p>
-      </div>
-
-      <!-- Summary Cards -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.performanceSummary.average)};">
-            ${data.performanceSummary.average}
+      ${ReportShell.renderReportHeader({ title: 'Mobile Testing Report', url, timestamp, badgeText: 'Mobile', mode: 'mobile' })}
+      ${summaryDonuts}
+      ${accordions}
+      ${renderMobileSummarySection(summaryStats)}
+      ${renderMobileTakeActionSection(url)}
+    `;
+    
+    resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;
+    window.mobileData = data;
+    ReportAccordion.initInteractions();
+  }
+  
+  function createAllDiagnosticSections(data, firstDevice) {
+    const sections = [];
+    
+    // Viewport Meta Tag
+    sections.push(ReportAccordion.createSection({
+      id: 'mobile-viewport',
+      title: 'Viewport Meta Tag',
+      scoreTextRight: `${firstDevice.viewportMetaTag?.score || 0}/100`,
+      contentHTML: `
+        <div class="report-shell__card">
+          <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+            <strong>Status:</strong> ${firstDevice.viewportMetaTag?.present ? '✅ Present' : '❌ Missing'}<br>
+            ${firstDevice.viewportMetaTag?.content ? `<strong>Content:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 4px;">${firstDevice.viewportMetaTag.content}</code>` : ''}
           </div>
-          <div style="color: #888; font-size: 0.85rem; margin-top: 0.5rem;">Performance</div>
         </div>
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.readabilitySummary.average)};">
-            ${data.readabilitySummary.average}
+      `
+    }));
+    
+    // PWA Readiness
+    sections.push(ReportAccordion.createSection({
+      id: 'mobile-pwa',
+      title: 'PWA Readiness',
+      scoreTextRight: `${firstDevice.pwaReadiness?.score || 0}/100`,
+      contentHTML: `
+        <div class="report-shell__card">
+          <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+            ${firstDevice.pwaReadiness?.manifest ? '✅' : '❌'} Manifest: ${firstDevice.pwaReadiness?.manifest || 'Missing'}<br>
+            ${firstDevice.pwaReadiness?.serviceWorker ? '✅' : '❌'} Service Worker: ${firstDevice.pwaReadiness?.serviceWorker || 'Not registered'}
           </div>
-          <div style="color: #888; font-size: 0.85rem; margin-top: 0.5rem;">Readability</div>
         </div>
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.touchTargetsSummary.average)};">
-            ${data.touchTargetsSummary.average}%
+      `
+    }));
+    
+    // Dark Mode Support
+    sections.push(ReportAccordion.createSection({
+      id: 'mobile-darkmode',
+      title: 'Dark Mode Support',
+      scoreTextRight: `${firstDevice.darkModeSupport?.score || 0}/100`,
+      contentHTML: `
+        <div class="report-shell__card">
+          <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+            <strong>Support:</strong> ${firstDevice.darkModeSupport?.supported ? '✅ Supported' : '❌ Not detected'}
           </div>
-          <div style="color: #888; font-size: 0.85rem; margin-top: 0.5rem;">Touch Compliant</div>
         </div>
-        <div style="background: rgba(255, 255, 255, 0.03); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.accessibilitySummary.average)};">
-            ${data.accessibilitySummary.average}
-          </div>
-          <div style="color: #888; font-size: 0.85rem; margin-top: 0.5rem;">Accessibility</div>
-        </div>
-      </div>
-
-      <!-- DETAILED DIAGNOSTICS -->
-      <h3 style="margin-top: 2rem; margin-bottom: 1rem;">🔬 Detailed Diagnostics</h3>
-      <div class="accordion">
-        
-        <!-- 1. Device Screenshots (Portrait/Landscape) -->
-        <div class="accordion-item open" id="accordion-screenshots">
-          <div class="accordion-header">
-            <div class="accordion-header-left">
-              <span class="accordion-icon">📱</span>
-              <span class="accordion-title">Device Screenshots</span>
+      `
+    }));
+    
+    // Above the fold content
+    if (firstDevice.aboveTheFoldContent) {
+      sections.push(ReportAccordion.createSection({
+        id: 'mobile-fold',
+        title: 'Above the Fold',
+        scoreTextRight: `${firstDevice.aboveTheFoldContent.score || 0}/100`,
+        contentHTML: `
+          <div class="report-shell__card">
+            <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+              <strong>Visible Content:</strong> ${firstDevice.aboveTheFoldContent.visibleElements || 0} elements<br>
+              <strong>Images:</strong> ${firstDevice.aboveTheFoldContent.images || 0}<br>
+              <strong>Text Elements:</strong> ${firstDevice.aboveTheFoldContent.textElements || 0}
             </div>
-            <div class="accordion-header-right">
-              <span class="accordion-score excellent">${Object.keys(data.devices).length} Devices</span>
-              <span class="accordion-chevron">▼</span>
+          </div>
+        `
+      }));
+    }
+    
+    // Mobile SEO
+    if (firstDevice.mobileSeo) {
+      sections.push(ReportAccordion.createSection({
+        id: 'mobile-seo',
+        title: 'Mobile SEO',
+        scoreTextRight: `${firstDevice.mobileSeo.score || 0}/100`,
+        contentHTML: `
+          <div class="report-shell__card">
+            <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+              ${firstDevice.mobileSeo.canonical ? '✅' : '❌'} Canonical URL<br>
+              ${firstDevice.mobileSeo.robotsMeta ? '✅' : '❌'} Robots Meta<br>
+              ${firstDevice.mobileSeo.structuredData ? '✅' : '❌'} Structured Data
             </div>
           </div>
-          <div class="accordion-content">
-            <div class="accordion-body">
-              ${Object.entries(data.devices).map(([key, device]) => {
-                if (device.error) {
-                  return `
-                    <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                      <h4 style="margin-bottom: 1rem;">${device.device || key}</h4>
-                      <div style="color: #ff6b6b; padding: 1rem; background: rgba(255,107,107,0.1); border-radius: 8px;">
-                        ⚠️ Error capturing this device: ${device.error}
-                      </div>
-                    </div>
-                  `;
-                }
-                return `
-                  <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <h4 style="margin-bottom: 1rem;">${device.device}</h4>
-                    <div class="orientation-comparison">
-                      ${device.screenshot ? `
-                        <div class="orientation-item">
+        `
+      }));
+    }
+    
+    // Input Fields
+    if (firstDevice.inputFields) {
+      sections.push(ReportAccordion.createSection({
+        id: 'mobile-inputs',
+        title: 'Input Fields',
+        scoreTextRight: `${firstDevice.inputFields.score || 0}/100`,
+        contentHTML: `
+          <div class="report-shell__card">
+            <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+              <strong>Total:</strong> ${firstDevice.inputFields.total || 0}<br>
+              <strong>With autocomplete:</strong> ${firstDevice.inputFields.withAutocomplete || 0}<br>
+              <strong>With labels:</strong> ${firstDevice.inputFields.withLabels || 0}
+            </div>
+          </div>
+        `
+      }));
+    }
+    
+    // Touch Targets
+    if (firstDevice.touchTargets) {
+      sections.push(ReportAccordion.createSection({
+        id: 'mobile-touch',
+        title: 'Touch Targets',
+        scoreTextRight: `${Math.round((firstDevice.touchTargets.compliant || 0) / (firstDevice.touchTargets.total || 1) * 100)}%`,
+        contentHTML: `
+          <div class="report-shell__card">
+            <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+              <strong>Total elements:</strong> ${firstDevice.touchTargets.total || 0}<br>
+              <strong>Compliant (≥48px):</strong> ${firstDevice.touchTargets.compliant || 0}<br>
+              <strong>Non-compliant:</strong> ${firstDevice.touchTargets.nonCompliant || 0}
+            </div>
+          </div>
+        `
+      }));
+    }
+    
+    // Performance Metrics
+    if (firstDevice.performanceMetrics) {
+      sections.push(ReportAccordion.createSection({
+        id: 'mobile-performance',
+        title: 'Performance Metrics',
+        scoreTextRight: `${firstDevice.performanceMetrics.score || 0}/100`,
+        contentHTML: `
+          <div class="report-shell__card">
+            <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+              <strong>Load Time:</strong> ${firstDevice.performanceMetrics.loadTime || 'N/A'}<br>
+              <strong>DOM Content Loaded:</strong> ${firstDevice.performanceMetrics.domContentLoaded || 'N/A'}<br>
+              <strong>First Paint:</strong> ${firstDevice.performanceMetrics.firstPaint || 'N/A'}
+            </div>
+          </div>
+        `
+      }));
+    }
+    
+    return sections;
+  }
+  
+  function renderMobileSummarySection(stats) {
+    return `
+      <div class="section">
+        <h2>[SUMMARY]</h2>
+        <div class="seo-summary">
+          <div class="summary-stats">
+            <div class="stat-item">
+              <span class="stat-value">${stats.issues}</span>
+              <span class="stat-label">Issues Found</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">${stats.recommendations}</span>
+              <span class="stat-label">Recommendations</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-value">${stats.checks}</span>
+              <span class="stat-label">Checks Passed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  function renderMobileTakeActionSection(url) {
+    return `
+      <div class="section">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: #00ff41; font-weight: 600;">Take Action</span>
+            <span style="color: #666; font-size: 0.9rem;">Export or share this Mobile Testing report</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button onclick="exportMobilePDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(0, 255, 65, 0.4); background: rgba(0, 255, 65, 0.1); color: #00ff41; cursor: pointer; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+              PDF Report
+            </button>
+            <button onclick="copyMobileShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share Link
+            </button>
+            <button onclick="downloadMobileCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
+              Export Data
+            </button>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+  
+  // Stub functions for export (can be implemented later)
+  window.exportMobilePDF = function() { alert('PDF export coming soon'); };
+  window.copyMobileShareLink = function() { alert('Share link coming soon'); };
+  window.downloadMobileCSV = function() { alert('CSV export coming soon'); };
+
+  function getScoreClass(score) {
+    if (score >= 80) return 'excellent';
+    if (score >= 60) return 'good';
+    if (score >= 40) return 'warning';
+    return 'error';
+  }
+
+  function getScoreColor(score) {
+    if (score >= 80) return '#10b981';
+    if (score >= 60) return '#f59e0b';
+    return '#ef4444';
+  }
+
+  function getScoreRGB(score) {
+    if (score >= 80) return '16, 185, 129';
+    if (score >= 60) return '245, 158, 11';
+    return '239, 68, 68';
+  }
+
+  /**
+   * Add ASCII art patience message to loading container
                           <div style="border: 4px solid #333; border-radius: 16px; padding: 4px; background: #1a1a1a;">
                             <img src="${device.screenshot}" alt="${device.device} portrait" 
                                  style="width: 120px; height: auto; border-radius: 12px; cursor: zoom-in;"

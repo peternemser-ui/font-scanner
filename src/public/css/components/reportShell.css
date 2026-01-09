@@ -1,0 +1,165 @@
+/* SEO-style report shell shared across analyzers */
+.report-scope .report-shell {
+  background: var(--bg-secondary, #111);
+  border: 1px solid var(--border-primary, rgba(255,255,255,0.08));
+  border-radius: 6px;
+  padding: 1.25rem;
+  margin-bottom: 1rem;
+}
+.report-scope .report-shell__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  color: var(--text-secondary, #c7f5d9);
+  font-size: 0.95rem;
+}
+.report-scope .report-shell__title {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #00ff41;
+}
+.report-scope .report-shell__badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(0,255,65,0.12);
+  border: 1px solid rgba(0,255,65,0.35);
+  color: #00ff41;
+  font-weight: 700;
+  font-size: 0.8rem;
+}
+.report-scope .report-shell__meta {
+  color: var(--text-muted, #a7a7a7);
+  font-size: 0.9rem;
+}
+.report-scope .report-shell__summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.report-scope .report-shell__summary-card {
+  background: var(--bg-tertiary, #1a1a1a);
+  border: 1px solid var(--border-primary, rgba(255,255,255,0.08));
+  border-radius: 6px;
+  padding: 0.75rem;
+  text-align: center;
+}
+.report-scope .report-shell__summary-label {
+  color: var(--text-secondary, #d1d5db);
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.report-scope .report-shell__donut {
+  width: 120px;
+  height: 120px;
+  margin: 0 auto;
+}
+.report-scope .report-shell__donut text {
+  font-size: 1.8rem;
+  font-weight: 700;
+  paint-order: stroke fill;
+}
+.report-scope .report-shell__donut-grade {
+  margin-top: 0.35rem;
+  color: var(--text-secondary, #e6ffe6);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+/* Resource bars */
+.report-scope .report-shell__bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #d1d5db;
+  font-size: 0.9rem;
+  margin-bottom: 0.45rem;
+}
+.report-scope .report-shell__bar-label {
+  min-width: 90px;
+  color: #9ca3af;
+  font-weight: 600;
+}
+.report-scope .report-shell__bar-track {
+  flex: 1;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.06);
+  overflow: hidden;
+}
+.report-scope .report-shell__bar-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #00ff41, #00b5ff);
+}
+.report-scope .report-shell__bar-value {
+  min-width: 70px;
+  text-align: right;
+  color: #e6ffe6;
+  font-weight: 600;
+}
+
+/* Device grid used by Lighthouse/CWV */
+.report-scope .report-shell__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+.report-scope .report-shell__card {
+  background: var(--bg-tertiary, #1a1a1a);
+  border: 1px solid var(--border-primary, rgba(255,255,255,0.08));
+  border-radius: 6px;
+  padding: 1rem;
+}
+.report-scope .report-shell__card-title {
+  font-weight: 600;
+  color: var(--text-primary, #e6ffe6);
+  margin-bottom: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.report-scope .report-shell__metric-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 1rem;
+}
+.report-scope .report-shell__metric-grid--cwv {
+  border-top: 1px solid var(--border-primary, rgba(255,255,255,0.05));
+  padding-top: 0.75rem;
+}
+
+/* Locked content overlay used inside accordions */
+.report-scope .report-shell__lock-overlay {
+  position: relative;
+  overflow: hidden;
+}
+.report-scope .report-shell__lock-overlay .is-locked {
+  filter: blur(2px);
+  pointer-events: none;
+  user-select: none;
+}
+.report-scope .report-shell__lock-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.7) 100%);
+  backdrop-filter: blur(3px);
+}
+.report-scope .report-shell__lock-cta {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+  background: linear-gradient(135deg, #00ff41, #00cc66);
+  color: #000;
+  border: none;
+  padding: 0.65rem 1.1rem;
+  border-radius: 8px;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(0,255,65,0.25);
+}

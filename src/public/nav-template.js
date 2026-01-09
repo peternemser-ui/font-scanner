@@ -1062,14 +1062,7 @@ function initializeAuthLinks() {
             </svg>
             Account
           </a>
-          ${!isPro ? `
-            <a href="/upgrade.html" class="auth-dropdown-item auth-upgrade-item">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
-              </svg>
-              Upgrade to Pro
-            </a>
-          ` : `
+          ${!isPro ? '' : `
             <button class="auth-dropdown-item" id="manageSubscriptionBtn">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
@@ -1144,11 +1137,10 @@ function initializeAuthLinks() {
     }
 
   } else {
-    // Not authenticated - show login/register links
+    // Not authenticated - show login link only
     container.innerHTML = `
       <div class="auth-actions">
         <a href="/auth.html" class="auth-link auth-login">Login</a>
-        <a href="/auth.html" class="auth-link auth-register">Sign Up</a>
       </div>
     `;
   }

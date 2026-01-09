@@ -36,7 +36,7 @@ class PDFExportUtility {
         window.ExportGate.showPaywall();
       } else {
         // Fallback paywall if ExportGate not loaded
-        alert('Pro Report required for PDF export. Visit /upgrade.html to unlock exports.');
+        alert('Pro access required for PDF export. Please sign in with Pro.');
       }
       return;
     }

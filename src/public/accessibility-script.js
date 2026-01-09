@@ -300,8 +300,11 @@ function displayAccessibilityResults(results) {
   `;
   container.appendChild(summary);
   
-  // Store results globally for PDF generation
-  window.currentAccessibilityResults = results;
+  // Store results globally for PDF generation/share
+  window.currentAccessibilityResults = {
+    ...results,
+    url: results.url || urlInput.value.trim()
+  };
 
   // Desktop vs Mobile Comparison Section
   if (results.desktop && results.mobile) {
@@ -331,7 +334,71 @@ function displayAccessibilityResults(results) {
   createAccordionSection(container, 'color-contrast', 'Color Contrast Analysis', () => renderContrastContent(results.contrast), avgContrastScore);
   createAccordionSection(container, 'keyboard-navigation', 'Keyboard Navigation', () => renderKeyboardContent(results.keyboard), avgKeyboardScore);
   createAccordionSection(container, 'aria-implementation', 'ARIA & Semantics', () => renderARIAContent(results.aria), avgAriaScore);
-  createAccordionSection(container, 'recommendations', 'Accessibility Recommendations', () => renderRecommendationsContent(results.recommendations), null);
+  createAccordionSection(
+    container,
+    'recommendations',
+    'Accessibility Recommendations',
+    () => renderRecommendationsContent(results.recommendations),
+    null,
+    {
+      isPro: true,
+      previewHtml: renderLockedProPreview('Accessibility Recommendations', [
+        'Critical accessibility fixes',
+        'Prioritized remediation steps'
+      ])
+    }
+  );
+
+  // Summary block (mirror SEO layout)
+  const summaryFooter = document.createElement('div');
+  summaryFooter.className = 'section';
+  summaryFooter.innerHTML = `
+    <h2>[SUMMARY]</h2>
+    <div class="seo-summary">
+      <div class="summary-stats">
+        <div class="stat-item">
+          <span class="stat-value">${countAccessibilityIssues(results)}</span>
+          <span class="stat-label">Issues Found</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">${countAccessibilityRecommendations(results)}</span>
+          <span class="stat-label">Recommendations</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">${countAccessibilityPassedChecks(results)}</span>
+          <span class="stat-label">Checks Passed</span>
+        </div>
+      </div>
+    </div>
+  `;
+  container.appendChild(summaryFooter);
+
+  // Monetization actions (export/share)
+  const actionsFooter = document.createElement('div');
+  actionsFooter.className = 'section';
+  actionsFooter.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="color: #00ff41; font-weight: 600;">Take Action</span>
+        <span style="color: #666; font-size: 0.9rem;">Export or share this accessibility report</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button onclick="exportAccessibilityPDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(0, 255, 65, 0.4); background: rgba(0, 255, 65, 0.1); color: #00ff41; cursor: pointer; font-weight: 600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+          PDF Report
+        </button>
+        <button onclick="copyAccessibilityShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share Link
+        </button>
+        <button onclick="downloadAccessibilityCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
+          Export Data
+        </button>
+      </div>
+    </div>
+  `;
+  container.appendChild(actionsFooter);
 }
 
 /**
@@ -753,14 +820,22 @@ function createPlatformCard(title, score, data, color) {
 /**
  * Create an accordion section
  */
-function createAccordionSection(container, id, displayTitle, contentCreator, score) {
+function createAccordionSection(container, id, displayTitle, contentCreator, score, options = {}) {
+  const { isPro = false, previewHtml = '' } = options;
+  ensureProStyles();
+
   const accordion = document.createElement('div');
   accordion.className = 'accordion';
+  if (isPro) {
+    accordion.classList.add('pro-section');
+    accordion.dataset.pro = 'true';
+  }
   
   const header = document.createElement('button');
   header.className = 'accordion-header';
+  const proBadge = isPro ? '<span class="pro-pill">PRO</span>' : '';
   header.innerHTML = `
-    <span>${displayTitle}</span>
+    <span style="display: inline-flex; align-items: center; gap: 0.5rem;">${displayTitle} ${proBadge}</span>
     <span style="display: flex; align-items: center; gap: 0.5rem;">
       ${score !== null ? `<span style="color: ${getAccessibilityColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
       <span class="accordion-toggle">▼</span>
@@ -774,6 +849,16 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
   const contentInner = document.createElement('div');
   contentInner.className = 'accordion-content-inner';
   content.appendChild(contentInner);
+
+  const renderContent = () => {
+    const hasPro = !isPro || userHasPro();
+    if (isPro && !hasPro) {
+      contentInner.innerHTML = previewHtml || renderLockedProPreview(displayTitle, ['Example recommendations', 'Code fixes preview']);
+      return;
+    }
+    const contentHTML = contentCreator();
+    contentInner.innerHTML = contentHTML;
+  };
   
   // Add click handler for accordion
   header.addEventListener('click', () => {
@@ -786,10 +871,13 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       header.querySelector('.accordion-toggle').textContent = '▼';
       header.querySelector('.accordion-toggle').classList.remove('rotated');
     } else {
+      // Paywall ping if locked
+      if (isPro && !userHasPro()) {
+        openProPaywall({ domain: getCurrentDomain(), context: 'fixes' });
+      }
       // Expand and create content if not already created
       if (!contentInner.hasChildNodes()) {
-        const contentHTML = contentCreator();
-        contentInner.innerHTML = contentHTML;
+        renderContent();
       }
       
       content.classList.add('expanded');
@@ -802,6 +890,99 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
   accordion.appendChild(header);
   accordion.appendChild(content);
   container.appendChild(accordion);
+}
+
+// Pro gating helpers
+function getCurrentDomain() {
+  if (window.ProAccess && typeof window.ProAccess.getCurrentDomain === 'function') {
+    return window.ProAccess.getCurrentDomain();
+  }
+  return window.location.hostname;
+}
+
+function userHasPro() {
+  if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
+    return window.ProAccess.hasProAccess(getCurrentDomain());
+  }
+  return false;
+}
+
+function renderLockedProPreview(title = 'Pro content', previewLines = []) {
+  const lines = previewLines.length ? previewLines : ['Recommendations preview', 'Code fixes preview'];
+  return `
+    <div class="pro-locked">
+      <div class="pro-locked__header">
+        <span class="pro-pill">PRO</span>
+        <span>${title}</span>
+      </div>
+      <ul class="pro-locked__list">
+        ${lines.slice(0, 2).map(line => `<li>${line}</li>`).join('')}
+      </ul>
+      <div class="pro-locked__blur"></div>
+      <button class="pro-locked__unlock" onclick="openProPaywall({ domain: '${getCurrentDomain()}', context: 'fixes' })">Unlock in Pro Report ($5 USD)</button>
+    </div>
+  `;
+}
+
+function ensureProStyles() {
+  if (document.getElementById('pro-lock-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'pro-lock-styles';
+  style.textContent = `
+    .pro-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 255, 65, 0.4);
+      background: rgba(0, 255, 65, 0.1);
+      color: #00ff41;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .pro-locked {
+      position: relative;
+      border: 1px dashed rgba(0, 255, 65, 0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      overflow: hidden;
+    }
+    .pro-locked__header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .pro-locked__list {
+      margin: 0;
+      padding-left: 1.25rem;
+      color: #ccc;
+      font-size: 0.9rem;
+    }
+    .pro-locked__blur {
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(3px);
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 60%);
+      pointer-events: none;
+    }
+    .pro-locked__unlock {
+      position: relative;
+      margin-top: 0.75rem;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 255, 65, 0.4);
+      background: rgba(0, 255, 65, 0.12);
+      color: #00ff41;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 /**
@@ -1267,6 +1448,93 @@ function renderRecommendationsContent(recommendations) {
       ` : ''}
     </div>
   `;
+}
+
+// -------- Monetization actions (gated) --------
+function ensureAccessibilityProAccess() {
+  const domain = getCurrentDomain();
+  if (window.ProAccess && window.ProAccess.hasProAccess(domain)) {
+    return true;
+  }
+  if (window.ExportGate && window.ExportGate.isPro()) {
+    return true;
+  }
+  openProPaywall({ domain, context: 'accessibility' });
+  return false;
+}
+
+function exportAccessibilityPDF() {
+  if (!ensureAccessibilityProAccess()) return;
+  const exporter = new PDFExportUtility({
+    filename: 'accessibility-report.pdf',
+    reportTitle: 'Accessibility Analysis Report',
+    url: window.currentAccessibilityResults?.url || ''
+  });
+  exporter.export('#results');
+}
+
+function copyAccessibilityShareLink() {
+  if (!ensureAccessibilityProAccess()) return;
+  const targetUrl = window.currentAccessibilityResults?.url || window.location.href;
+  const shareUrl = `${window.location.origin}/accessibility-analyzer.html?url=${encodeURIComponent(targetUrl)}`;
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    alert('Share link copied to clipboard');
+  });
+}
+
+function downloadAccessibilityCSV() {
+  if (!ensureAccessibilityProAccess()) return;
+  const r = window.currentAccessibilityResults;
+  if (!r) return;
+
+  const rows = [
+    ['Metric', 'Value'],
+    ['Overall Score', r.accessibilityScore ?? ''],
+    ['WCAG Level', r.wcagLevel || ''],
+    ['Violations Found', r.violationsCount ?? 0],
+    ['Contrast Issues', r.contrastIssues ?? r.contrast?.issues?.length ?? 0],
+    ['Keyboard Issues', r.keyboard?.issues?.length ?? 0],
+    ['ARIA Issues', r.aria?.issues?.length ?? 0],
+    ['Recommendations', countAccessibilityRecommendations(r)],
+    ['Checks Passed', countAccessibilityPassedChecks(r)],
+    ['URL', r.url || '']
+  ];
+
+  const csv = rows
+    .map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'accessibility-report.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+function countAccessibilityIssues(results) {
+  if (!results) return 0;
+  const totals = [
+    results.violationsCount || 0,
+    results.contrastIssues || 0,
+    results.contrast?.issues?.length || 0,
+    results.keyboard?.issues?.length || 0,
+    results.aria?.issues?.length || 0
+  ];
+  return totals.reduce((sum, val) => sum + val, 0);
+}
+
+function countAccessibilityRecommendations(results) {
+  return results?.recommendations?.length || 0;
+}
+
+function countAccessibilityPassedChecks(results) {
+  if (!results) return 0;
+  if (typeof results.bestPracticesCount === 'number') return results.bestPracticesCount;
+  if (typeof results.passedChecks === 'number') return results.passedChecks;
+  return 0;
 }
 
 /**

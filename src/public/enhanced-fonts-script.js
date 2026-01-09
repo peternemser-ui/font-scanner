@@ -149,13 +149,13 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Export Buttons (at bottom) -->
       <div class="export-buttons" role="toolbar" aria-label="Export options" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
         <button class="export-btn" onclick="exportToPDF()" aria-label="Download PDF report">
-          📄 Download PDF
+          Download PDF
         </button>
         <button class="export-btn" onclick="exportToCSS()" aria-label="Export as CSS">
-          🎨 Export CSS
+          Export CSS
         </button>
         <button class="export-btn" onclick="copyShareLink()" aria-label="Copy share link">
-          🔗 Share Link
+          Share Link
         </button>
       </div>
     `;
@@ -254,8 +254,8 @@ document.addEventListener('DOMContentLoaded', () => {
     return `
       <!-- Font Format Analysis -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          📦 Font Format Analysis
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+          >> Font Format Analysis
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${getRecommendationColor(formats?.summary?.recommendation)}; color: white;">
             ${formats?.summary?.recommendation || 'N/A'}
           </span>
@@ -281,7 +281,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           ${formats.summary.hasLegacyFormats ? `
             <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 0 6px 6px 0; font-size: 0.85rem;">
-              ⚠️ Legacy formats detected (EOT/SVG). Consider removing for smaller bundles.
+              Legacy formats detected (EOT/SVG). Consider removing for smaller bundles.
             </div>
           ` : ''}
         ` : '<p style="color: #666;">Format data not available</p>'}
@@ -289,8 +289,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <!-- font-display Audit -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          ⚡ font-display Audit
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+          >> font-display Audit
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${getRecommendationColor(fontDisplay?.summary?.recommendation)}; color: white;">
             ${fontDisplay?.summary?.score || 0}/100
           </span>
@@ -300,13 +300,13 @@ document.addEventListener('DOMContentLoaded', () => {
             ${fontDisplay.values.swap.length > 0 ? `
               <div style="text-align: center; padding: 0.5rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px;">
                 <div style="font-weight: bold; color: #10b981;">${fontDisplay.values.swap.length}</div>
-                <div style="font-size: 0.7rem; color: #888;">swap ✓</div>
+                <div style="font-size: 0.7rem; color: #888;">swap</div>
               </div>
             ` : ''}
             ${fontDisplay.values.optional.length > 0 ? `
               <div style="text-align: center; padding: 0.5rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px;">
                 <div style="font-weight: bold; color: #10b981;">${fontDisplay.values.optional.length}</div>
-                <div style="font-size: 0.7rem; color: #888;">optional ✓</div>
+                <div style="font-size: 0.7rem; color: #888;">optional</div>
               </div>
             ` : ''}
             ${fontDisplay.values.fallback.length > 0 ? `
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ${fontDisplay.values.block.length > 0 ? `
               <div style="text-align: center; padding: 0.5rem; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">
                 <div style="font-weight: bold; color: #ef4444;">${fontDisplay.values.block.length}</div>
-                <div style="font-size: 0.7rem; color: #888;">block ✗</div>
+                <div style="font-size: 0.7rem; color: #888;">block</div>
               </div>
             ` : ''}
             ${fontDisplay.values.auto.length + fontDisplay.values.notSet.length > 0 ? `
@@ -330,11 +330,11 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           ${fontDisplay.summary.problematicCount > 0 ? `
             <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 0 6px 6px 0; font-size: 0.85rem;">
-              💡 Add <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">font-display: swap</code> to prevent Flash of Invisible Text (FOIT)
+              Add <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">font-display: swap</code> to prevent Flash of Invisible Text (FOIT)
             </div>
           ` : `
             <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 0.75rem; border-radius: 0 6px 6px 0; font-size: 0.85rem;">
-              ✅ All fonts use optimal font-display values
+              All fonts use optimal font-display values
             </div>
           `}
         ` : '<p style="color: #666;">font-display data not available</p>'}
@@ -342,8 +342,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <!-- Typography Accessibility -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          ♿ Typography Accessibility
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+          >> Typography Accessibility
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${getRecommendationColor(accessibility?.summary?.recommendation)}; color: white;">
             ${accessibility?.score || 0}/100
           </span>
@@ -361,7 +361,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `).join('')}
             ${accessibility.issues.map(item => `
               <div style="display: flex; align-items: flex-start; gap: 0.75rem; padding: 0.5rem; background: rgba(${item.type === 'warning' ? '245, 158, 11' : '239, 68, 68'}, 0.05); border-radius: 6px;">
-                <span style="color: ${item.type === 'warning' ? '#f59e0b' : '#ef4444'};">${item.type === 'warning' ? '⚠' : '✗'}</span>
+                <span style="color: ${item.type === 'warning' ? '#f59e0b' : '#ef4444'};">${item.type === 'warning' ? '~' : '✗'}</span>
                 <div>
                   <div style="font-weight: 500;">${item.title}</div>
                   <div style="font-size: 0.8rem; color: #888;">${item.detail}</div>
@@ -374,8 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <!-- Fallback Stack Quality -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          🔄 Fallback Stack Quality
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+          >> Fallback Stack Quality
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${getRecommendationColor(fallbackStacks?.summary?.recommendation)}; color: white;">
             ${fallbackStacks?.summary?.score || 0}/100
           </span>
@@ -383,13 +383,13 @@ document.addEventListener('DOMContentLoaded', () => {
         ${fallbackStacks && fallbackStacks.stacks.length > 0 ? `
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
             <span style="padding: 0.25rem 0.5rem; background: rgba(16, 185, 129, 0.2); border-radius: 4px; font-size: 0.75rem;">
-              ✓ Excellent: ${fallbackStacks.summary.excellent}
+              Excellent: ${fallbackStacks.summary.excellent}
             </span>
             <span style="padding: 0.25rem 0.5rem; background: rgba(66, 133, 244, 0.2); border-radius: 4px; font-size: 0.75rem;">
-              ○ Good: ${fallbackStacks.summary.good}
+              Good: ${fallbackStacks.summary.good}
             </span>
             <span style="padding: 0.25rem 0.5rem; background: rgba(239, 68, 68, 0.2); border-radius: 4px; font-size: 0.75rem;">
-              ✗ Poor: ${fallbackStacks.summary.poor}
+              Poor: ${fallbackStacks.summary.poor}
             </span>
           </div>
           ${fallbackStacks.stacks.filter(s => s.quality === 'poor').slice(0, 3).map(stack => `
@@ -403,8 +403,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <!-- Variable Fonts Detection -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          🎨 Variable Fonts
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+          >> Variable Fonts
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${variableFonts?.hasVariableFonts ? '#10b981' : '#6b7280'}; color: white;">
             ${variableFonts?.variableFonts?.length || 0} detected
           </span>
@@ -412,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${variableFonts ? `
           ${variableFonts.hasVariableFonts ? `
             <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 0.75rem; border-radius: 0 6px 6px 0; font-size: 0.85rem; margin-bottom: 0.75rem;">
-              ✅ Using variable fonts! This reduces HTTP requests and enables smooth weight/width transitions.
+              Using variable fonts! This reduces HTTP requests and enables smooth weight/width transitions.
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
               ${variableFonts.variableFonts.map(vf => `
@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
           ` : `
             <div style="background: rgba(66, 133, 244, 0.1); border-left: 4px solid #4285f4; padding: 0.75rem; border-radius: 0 6px 6px 0; font-size: 0.85rem;">
-              💡 ${variableFonts.potentialSavings || 'Consider using variable fonts for more flexible typography with fewer files.'}
+              ${variableFonts.potentialSavings || 'Consider using variable fonts for more flexible typography with fewer files.'}
             </div>
           `}
         ` : '<p style="color: #666;">Variable font data not available</p>'}
@@ -431,8 +431,8 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <!-- CLS Risk Score -->
       <div style="margin-bottom: 1rem;">
-        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;">
-          📊 Layout Shift Risk (CLS)
+        <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41;">
+          >> Layout Shift Risk (CLS)
           <span style="font-size: 0.75rem; padding: 2px 8px; border-radius: 12px; background: ${clsRisk?.level === 'low' ? '#10b981' : clsRisk?.level === 'medium' ? '#f59e0b' : '#ef4444'}; color: white;">
             ${clsRisk?.level || 'N/A'}
           </span>
@@ -440,7 +440,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${clsRisk ? `
           ${clsRisk.risks.length === 0 ? `
             <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 0.75rem; border-radius: 0 6px 6px 0; font-size: 0.85rem;">
-              ✅ Low risk of font-related layout shifts. Good font-display and fallback configuration.
+              Low risk of font-related layout shifts. Good font-display and fallback configuration.
             </div>
           ` : `
             ${clsRisk.risks.map(risk => `
@@ -536,7 +536,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (totalIssues === 0) {
       return `
         <div class="sticky-alert success" role="alert">
-          <span style="font-size: 1.5rem;">✅</span>
           <div>
             <strong>Excellent Font Health!</strong>
             <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; opacity: 0.8;">No critical font issues detected. Your typography is well-optimized.</p>
@@ -549,7 +548,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     return `
       <div class="sticky-alert ${hasCritical ? 'critical' : 'warning'}" role="alert">
-        <span style="font-size: 1.5rem;">${hasCritical ? '🚨' : '⚠️'}</span>
         <div style="flex: 1;">
           <strong>${totalIssues} Issue${totalIssues > 1 ? 's' : ''} Found</strong>
           <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; opacity: 0.8;">
@@ -563,81 +561,92 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // ============================================
-  // OVERVIEW SECTION (Always Visible)
+  // OVERVIEW SECTION (SEO-style design pattern)
   // ============================================
   function generateOverviewSection(data, totalIssues, hasFullScan, fonts, performance, bestPractices, screenshot) {
+    const healthScore = data.healthScore || 0;
+    const familyScore = Math.min(100, Math.max(0, 100 - (data.summary.totalFamilies - 3) * 10));
+    const duplicateScore = data.summary.duplicateCount === 0 ? 100 : Math.max(0, 100 - data.summary.duplicateCount * 20);
+    const displayScore = data.summary.displayIssueCount === 0 ? 100 : Math.max(0, 100 - data.summary.displayIssueCount * 15);
+    
     return `
-      <!-- Score Section -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-        <!-- Main Score -->
-        <div style="text-align: center; padding: 2rem; background: rgba(255,255,255,0.03); border-radius: 12px;">
-          <h3 style="margin: 0 0 1rem 0; font-size: 1rem; color: #888;">Font Health Score</h3>
-          <div style="
-            width: 140px; height: 140px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-size: 3rem; font-weight: bold; margin: 0 auto;
-            border: 5px solid ${getScoreColor(data.healthScore)};
-            color: ${getScoreColor(data.healthScore)};
-            background: rgba(${getScoreColor(data.healthScore) === '#10b981' ? '16, 185, 129' : getScoreColor(data.healthScore) === '#f59e0b' ? '245, 158, 11' : '239, 68, 68'}, 0.1);
-          ">
-            ${data.healthScore}
-          </div>
-          <p style="margin: 1rem 0 0 0; color: #888; font-size: 0.9rem;">
-            ${data.healthScore >= 80 ? 'Excellent' : data.healthScore >= 60 ? 'Good' : 'Needs Work'}
-          </p>
-        </div>
+      <div class="section">
+        <h2>[FONT_ANALYSIS_RESULTS]</h2>
+        <p>>> url: ${data.url || 'N/A'}</p>
+        <p>>> timestamp: ${new Date(data.analyzedAt).toLocaleString()}</p>
         
-        <!-- Stats Grid -->
-        <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
-          <div class="font-card" style="text-align: center; margin: 0;">
-            <div style="font-size: 2rem; font-weight: bold; color: #4285f4;">${data.summary.totalFamilies}</div>
-            <div style="color: #888; font-size: 0.85rem;">Font Families</div>
+        <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">>> Font Health Summary</h3>
+        
+        <!-- Circular Progress Dials -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; margin: 2rem 0;">
+          <!-- Overall Score -->
+          <div style="text-align: center;">
+            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Font Health Score</div>
+            <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
+              <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
+              <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(healthScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(healthScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
+              <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(healthScore)}, 0 0 30px rgba(0,0,0,0.6);">${healthScore}</text>
+            </svg>
+            <div style="margin-top: 0.5rem; color: ${getScoreColor(healthScore)}; font-weight: 600; font-size: 1.1rem;">${healthScore >= 80 ? 'Excellent' : healthScore >= 60 ? 'Good' : 'Needs Work'}</div>
           </div>
-          <div class="font-card" style="text-align: center; margin: 0;">
-            <div style="font-size: 2rem; font-weight: bold; color: #10b981;">${data.summary.totalProviders}</div>
-            <div style="color: #888; font-size: 0.85rem;">Providers</div>
+          
+          <!-- Font Families -->
+          <div style="text-align: center;">
+            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Font Families</div>
+            <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
+              <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
+              <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(familyScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(familyScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
+              <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(familyScore)}, 0 0 30px rgba(0,0,0,0.6);">${data.summary.totalFamilies}</text>
+            </svg>
+            <div style="margin-top: 0.5rem; color: ${getScoreColor(familyScore)}; font-weight: 600; font-size: 1.1rem;">${data.summary.totalFamilies <= 3 ? 'Optimal' : data.summary.totalFamilies <= 5 ? 'Acceptable' : 'Too Many'}</div>
           </div>
-          <div class="font-card" style="text-align: center; margin: 0;">
-            <div style="font-size: 2rem; font-weight: bold; color: ${data.summary.duplicateCount > 0 ? '#f59e0b' : '#10b981'};">${data.summary.duplicateCount}</div>
-            <div style="color: #888; font-size: 0.85rem;">Duplicates</div>
+          
+          <!-- Duplicates -->
+          <div style="text-align: center;">
+            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Duplicates</div>
+            <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
+              <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
+              <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(duplicateScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(duplicateScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
+              <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(duplicateScore)}, 0 0 30px rgba(0,0,0,0.6);">${data.summary.duplicateCount}</text>
+            </svg>
+            <div style="margin-top: 0.5rem; color: ${getScoreColor(duplicateScore)}; font-weight: 600; font-size: 1.1rem;">${data.summary.duplicateCount === 0 ? 'None Found' : 'Issues Found'}</div>
           </div>
-          <div class="font-card" style="text-align: center; margin: 0;">
-            <div style="font-size: 2rem; font-weight: bold; color: ${data.summary.displayIssueCount > 0 ? '#ef4444' : '#10b981'};">${data.summary.displayIssueCount}</div>
-            <div style="color: #888; font-size: 0.85rem;">Display Issues</div>
+          
+          <!-- Display Issues -->
+          <div style="text-align: center;">
+            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Display Issues</div>
+            <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
+              <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
+              <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(displayScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(displayScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
+              <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(displayScore)}, 0 0 30px rgba(0,0,0,0.6);">${data.summary.displayIssueCount}</text>
+            </svg>
+            <div style="margin-top: 0.5rem; color: ${getScoreColor(displayScore)}; font-weight: 600; font-size: 1.1rem;">${data.summary.displayIssueCount === 0 ? 'All Good' : 'Needs Fix'}</div>
           </div>
         </div>
       </div>
       
       <!-- Charts Row -->
+      <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">>> Font Distribution</h3>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1rem;">
         <div class="chart-container">
-          <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem;">Provider Distribution</h4>
+          <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #c0c0c0;">Provider Distribution</h4>
           <canvas id="providerChart"></canvas>
         </div>
         <div class="chart-container">
-          <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem;">Font Weight Usage</h4>
+          <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #c0c0c0;">Font Weight Usage</h4>
           <canvas id="weightChart"></canvas>
         </div>
       </div>
       
       <!-- Screenshot Preview -->
       ${screenshot ? `
+        <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">>> Page Preview</h3>
         <div style="margin-bottom: 1rem;">
           <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; text-align: center;">
             <img src="${screenshot}" alt="Website screenshot" style="max-width: 100%; max-height: 300px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);" loading="lazy" />
           </div>
         </div>
       ` : ''}
-      
-      <!-- Quick Stats Footer -->
-      <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-        <p style="margin: 0; color: #888; font-size: 0.9rem;">
-          📄 Scanned ${data.pagesScanned} page(s) • 
-          🔤 ${data.summary.totalFamilies} font families • 
-          📦 ${data.summary.totalProviders} providers •
-          ⏱️ Analyzed at ${new Date(data.analyzedAt).toLocaleTimeString()}
-        </p>
-      </div>
     `;
   }
 
@@ -685,11 +694,11 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Categorized Fonts (from full scan) -->
       ${hasFullScan && fonts.categorizedFonts ? `
         <div style="margin-top: 1.5rem;">
-          <h4 style="margin-bottom: 1rem; color: #888;">Font Categories</h4>
+          <h4 style="margin-bottom: 1rem; color: #00ff41;">>> Font Categories</h4>
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem;">
             ${fonts.categorizedFonts.googleFonts?.length > 0 ? `
               <div style="background: rgba(66, 133, 244, 0.1); border: 1px solid rgba(66, 133, 244, 0.3); border-radius: 8px; padding: 1rem;">
-                <div style="font-weight: 600; color: #4285f4; margin-bottom: 0.5rem;">📦 Google (${fonts.categorizedFonts.googleFonts.length})</div>
+                <div style="font-weight: 600; color: #4285f4; margin-bottom: 0.5rem;">Google (${fonts.categorizedFonts.googleFonts.length})</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
                   ${fonts.categorizedFonts.googleFonts.slice(0, 3).map(f => `<span style="background: rgba(66, 133, 244, 0.2); padding: 2px 6px; border-radius: 3px; font-size: 0.75rem;">${f.fontFamily || f.name || f}</span>`).join('')}
                 </div>
@@ -697,7 +706,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ` : ''}
             ${fonts.categorizedFonts.system?.length > 0 ? `
               <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 1rem;">
-                <div style="font-weight: 600; color: #10b981; margin-bottom: 0.5rem;">💻 System (${fonts.categorizedFonts.system.length})</div>
+                <div style="font-weight: 600; color: #10b981; margin-bottom: 0.5rem;">System (${fonts.categorizedFonts.system.length})</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
                   ${fonts.categorizedFonts.system.slice(0, 3).map(f => `<span style="background: rgba(16, 185, 129, 0.2); padding: 2px 6px; border-radius: 3px; font-size: 0.75rem;">${f.fontFamily || f.name || f}</span>`).join('')}
                 </div>
@@ -705,7 +714,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ` : ''}
             ${fonts.categorizedFonts.iconFonts?.length > 0 ? `
               <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 8px; padding: 1rem;">
-                <div style="font-weight: 600; color: #f59e0b; margin-bottom: 0.5rem;">🎨 Icons (${fonts.categorizedFonts.iconFonts.length})</div>
+                <div style="font-weight: 600; color: #f59e0b; margin-bottom: 0.5rem;">Icons (${fonts.categorizedFonts.iconFonts.length})</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.25rem;">
                   ${fonts.categorizedFonts.iconFonts.slice(0, 3).map(f => `<span style="background: rgba(245, 158, 11, 0.2); padding: 2px 6px; border-radius: 3px; font-size: 0.75rem;">${f.fontFamily || f.name || f}</span>`).join('')}
                 </div>
@@ -780,8 +789,8 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Typography Scale Analysis -->
       ${typographyStats.sizeBreakdown.length > 0 ? `
         <div style="margin-bottom: 1.5rem;">
-          <h4 style="margin-bottom: 1rem; color: #888; display: flex; align-items: center; gap: 0.5rem;">
-            📏 Typography Scale
+          <h4 style="margin-bottom: 1rem; color: #00ff41; display: flex; align-items: center; gap: 0.5rem;">
+            >> Typography Scale
             <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${typographyStats.hasConsistentScale ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(245, 158, 11, 0.2); color: #f59e0b'};">
               ${typographyStats.hasConsistentScale ? 'Consistent' : 'Review needed'}
             </span>
@@ -801,7 +810,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Font Weight Distribution -->
       ${typographyStats.weightBreakdown.length > 0 ? `
         <div style="margin-bottom: 1.5rem;">
-          <h4 style="margin-bottom: 1rem; color: #888;">⚖️ Weight Distribution</h4>
+          <h4 style="margin-bottom: 1rem; color: #00ff41;">>> Weight Distribution</h4>
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
             ${typographyStats.weightBreakdown.map(weight => `
               <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
@@ -816,7 +825,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Typography Usage Table -->
       ${fontMetrics.length > 0 ? `
         <div style="margin-bottom: 1rem;">
-          <h4 style="margin-bottom: 1rem; color: #888;">📝 Typography Usage</h4>
+          <h4 style="margin-bottom: 1rem; color: #00ff41;">>> Typography Usage</h4>
           <div style="overflow-x: auto;">
             <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
               <thead>
@@ -857,7 +866,7 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <!-- Performance Tips -->
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.05); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
-        <h4 style="margin: 0 0 0.5rem 0; color: #10b981; font-size: 0.9rem;">💡 Typography Performance Tips</h4>
+        <h4 style="margin: 0 0 0.5rem 0; color: #10b981; font-size: 0.9rem;">Typography Performance Tips</h4>
         <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; color: #888;">
           ${data.summary.totalFamilies > 3 ? `<li>Consider reducing font families from ${data.summary.totalFamilies} to 2-3 for faster loading</li>` : ''}
           ${typographyStats.uniqueWeights > 4 ? `<li>Using ${typographyStats.uniqueWeights} font weights - consider consolidating to 3-4</li>` : ''}
@@ -930,12 +939,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return `
       <!-- Quick Fixes with Copy Buttons -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin-bottom: 1rem; color: #888;">Quick Performance Fixes</h4>
+        <h4 style="margin-bottom: 1rem; color: #00ff41;">>> Quick Performance Fixes</h4>
         
         <div class="font-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
             <strong>1. Add Preconnect for External Fonts</strong>
-            <button class="copy-btn" onclick="copyCode(this, 'preconnect-code')">📋 Copy</button>
+            <button class="copy-btn" onclick="copyCode(this, 'preconnect-code')">Copy</button>
           </div>
           <pre id="preconnect-code" style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto; margin: 0;">&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
 &lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;</pre>
@@ -944,7 +953,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="font-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
             <strong>2. Add font-display: swap</strong>
-            <button class="copy-btn" onclick="copyCode(this, 'display-code')">📋 Copy</button>
+            <button class="copy-btn" onclick="copyCode(this, 'display-code')">Copy</button>
           </div>
           <pre id="display-code" style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto; margin: 0;">/* In your Google Fonts URL: */
 https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
@@ -960,7 +969,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
         <div class="font-card">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
             <strong>3. Preload Critical Fonts</strong>
-            <button class="copy-btn" onclick="copyCode(this, 'preload-code')">📋 Copy</button>
+            <button class="copy-btn" onclick="copyCode(this, 'preload-code')">Copy</button>
           </div>
           <pre id="preload-code" style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto; margin: 0;">&lt;link rel="preload" href="/fonts/main.woff2" as="font" type="font/woff2" crossorigin&gt;</pre>
         </div>
@@ -968,7 +977,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
       
       <!-- Detailed Recommendations -->
       ${allRecs.length > 0 ? `
-        <h4 style="margin-bottom: 1rem; color: #888;">Site-Specific Recommendations</h4>
+        <h4 style="margin-bottom: 1rem; color: #00ff41;">>> Site-Specific Recommendations</h4>
         ${allRecs.map(rec => `
           <div style="background: rgba(66, 133, 244, 0.05); border-left: 4px solid ${rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#f59e0b' : '#3b82f6'}; padding: 1rem; margin-bottom: 0.75rem; border-radius: 0 8px 8px 0;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
@@ -976,19 +985,19 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
               <span class="issue-badge" style="background: ${rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#f59e0b' : '#3b82f6'}; color: white;">${rec.priority}</span>
             </div>
             <p style="margin: 0.5rem 0; color: #ccc;">${rec.description}</p>
-            <p style="margin: 0; font-size: 0.85rem; color: #888;">👉 ${rec.action}</p>
+            <p style="margin: 0; font-size: 0.85rem; color: #888;">${rec.action}</p>
           </div>
         `).join('')}
       ` : ''}
       
       <!-- Best Practices -->
       ${bestPractices.recommendations && bestPractices.recommendations.length > 0 ? `
-        <h4 style="margin: 1.5rem 0 1rem 0; color: #888;">Best Practices Audit (Score: ${bestPractices.score || 0}/100)</h4>
+        <h4 style="margin: 1.5rem 0 1rem 0; color: #00ff41;">>> Best Practices Audit (Score: ${bestPractices.score || 0}/100)</h4>
         <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 1rem;">
           ${bestPractices.recommendations.slice(0, 6).map(rec => `
             <div style="display: flex; align-items: flex-start; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
               <span style="color: ${rec.type === 'error' ? '#ef4444' : rec.type === 'warning' ? '#f59e0b' : '#10b981'}; margin-right: 0.75rem; font-size: 1.2rem;">
-                ${rec.type === 'error' ? '❌' : rec.type === 'warning' ? '⚠️' : '✅'}
+                ${rec.type === 'error' ? '✗' : rec.type === 'warning' ? '~' : '✓'}
               </span>
               <div>
                 <div style="font-weight: 500;">${rec.message || rec.title}</div>

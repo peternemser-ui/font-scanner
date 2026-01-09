@@ -11,6 +11,16 @@ document.addEventListener('DOMContentLoaded', async () => {
     return;
   }
 
+  // Setup logout link
+  const logoutLink = document.getElementById('logoutLink');
+  if (logoutLink) {
+    logoutLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      proManager.logout();
+      window.location.href = '/';
+    });
+  }
+
   // Check if user is admin by trying to fetch dashboard stats
   try {
     await loadDashboardStats();
@@ -441,3 +451,377 @@ function debounce(func, wait) {
     timeout = setTimeout(later, wait);
   };
 }
+
+// =============================================================================
+// TEST RUNNER FUNCTIONALITY
+// =============================================================================
+
+let testSuites = [];
+let testResultsCache = {};
+let isRunningTests = false;
+
+/**
+ * Initialize test runner
+ */
+async function initializeTestRunner() {
+  await loadTestSuites();
+  
+  // Attach event listeners
+  document.getElementById('runAllTestsBtn')?.addEventListener('click', runAllTests);
+  document.getElementById('quickCheckBtn')?.addEventListener('click', runQuickCheck);
+}
+
+/**
+ * Load available test suites
+ */
+async function loadTestSuites() {
+  const container = document.getElementById('testSuitesGrid');
+  
+  try {
+    const response = await fetch('/api/admin/tests/suites', {
+      headers: proManager.getAuthHeaders()
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to load test suites');
+    }
+
+    testSuites = data.suites;
+    renderTestSuites();
+
+  } catch (error) {
+    console.error('Error loading test suites:', error);
+    container.innerHTML = `<div class="loading" style="color: #ef4444;">Failed to load test suites: ${error.message}</div>`;
+  }
+}
+
+/**
+ * Render test suite cards
+ */
+function renderTestSuites() {
+  const container = document.getElementById('testSuitesGrid');
+  
+  if (testSuites.length === 0) {
+    container.innerHTML = '<div class="loading">No test suites found</div>';
+    return;
+  }
+
+  container.innerHTML = testSuites.map(suite => {
+    const cached = testResultsCache[suite.id];
+    let statusClass = '';
+    let statusText = 'Click to run';
+    
+    if (cached) {
+      if (cached.running) {
+        statusClass = 'running';
+        statusText = 'Running...';
+      } else if (cached.failed > 0) {
+        statusClass = 'failed';
+        statusText = `${cached.passed} passed, ${cached.failed} failed`;
+      } else {
+        statusClass = 'passed';
+        statusText = `${cached.passed} passed`;
+      }
+    }
+
+    return `
+      <div class="test-suite-card ${statusClass}" data-suite-id="${suite.id}" onclick="runSingleSuite('${suite.id}')">
+        <div class="test-suite-header">
+          <span class="test-suite-name">${suite.name}</span>
+          <span class="test-suite-category ${suite.category}">${suite.category}</span>
+        </div>
+        <div class="test-suite-status ${statusClass}">${statusText}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Run a single test suite
+ */
+async function runSingleSuite(suiteId) {
+  if (isRunningTests) {
+    showError('Tests are already running');
+    return;
+  }
+
+  const suite = testSuites.find(s => s.id === suiteId);
+  if (!suite) return;
+
+  isRunningTests = true;
+  setTestButtonsDisabled(true);
+  
+  // Mark as running
+  testResultsCache[suiteId] = { running: true };
+  renderTestSuites();
+  showTestRunning();
+
+  try {
+    const response = await fetch('/api/admin/tests/run', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...proManager.getAuthHeaders()
+      },
+      body: JSON.stringify({ suite: suite.path })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to run tests');
+    }
+
+    // Update cache
+    const suiteResult = data.results.testResults[0];
+    testResultsCache[suiteId] = {
+      passed: suiteResult?.assertionResults.filter(a => a.status === 'passed').length || 0,
+      failed: suiteResult?.assertionResults.filter(a => a.status === 'failed').length || 0
+    };
+
+    renderTestSuites();
+    displayTestResults(data.results);
+
+  } catch (error) {
+    console.error('Error running test suite:', error);
+    testResultsCache[suiteId] = { passed: 0, failed: 1, error: error.message };
+    renderTestSuites();
+    showError('Failed to run tests: ' + error.message);
+  } finally {
+    isRunningTests = false;
+    setTestButtonsDisabled(false);
+  }
+}
+
+/**
+ * Run all tests
+ */
+async function runAllTests() {
+  if (isRunningTests) {
+    showError('Tests are already running');
+    return;
+  }
+
+  isRunningTests = true;
+  setTestButtonsDisabled(true);
+  
+  // Mark all as running
+  testSuites.forEach(s => {
+    testResultsCache[s.id] = { running: true };
+  });
+  renderTestSuites();
+  showTestRunning('Running all tests... This may take a few minutes.');
+
+  try {
+    const response = await fetch('/api/admin/tests/run', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...proManager.getAuthHeaders()
+      },
+      body: JSON.stringify({})
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error || 'Failed to run tests');
+    }
+
+    // Update cache for each suite
+    testSuites.forEach(suite => {
+      const result = data.results.testResults.find(tr => 
+        tr.name.includes(suite.path.replace('tests/', ''))
+      );
+      
+      if (result) {
+        testResultsCache[suite.id] = {
+          passed: result.assertionResults.filter(a => a.status === 'passed').length,
+          failed: result.assertionResults.filter(a => a.status === 'failed').length
+        };
+      } else {
+        delete testResultsCache[suite.id];
+      }
+    });
+
+    renderTestSuites();
+    displayTestResults(data.results);
+    showSuccess(`Tests complete: ${data.results.numPassedTests} passed, ${data.results.numFailedTests} failed`);
+
+  } catch (error) {
+    console.error('Error running all tests:', error);
+    testSuites.forEach(s => {
+      testResultsCache[s.id] = { error: true };
+    });
+    renderTestSuites();
+    showTestError(error.message);
+  } finally {
+    isRunningTests = false;
+    setTestButtonsDisabled(false);
+  }
+}
+
+/**
+ * Run quick health check
+ */
+async function runQuickCheck() {
+  if (isRunningTests) {
+    showError('Tests are already running');
+    return;
+  }
+
+  isRunningTests = true;
+  setTestButtonsDisabled(true);
+  showTestRunning('Running quick health check...');
+
+  try {
+    const response = await fetch('/api/admin/tests/quick-check', {
+      headers: proManager.getAuthHeaders()
+    });
+
+    const data = await response.json();
+
+    const panel = document.getElementById('testResultsPanel');
+    
+    if (data.healthy) {
+      panel.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
+          <div style="font-size: 1.25rem; font-weight: 600; color: #22c55e;">Health Check Passed</div>
+          <div style="color: #888; margin-top: 0.5rem;">
+            ${data.passed} tests passed in ${data.duration}ms
+          </div>
+        </div>
+      `;
+      showSuccess('Quick health check passed!');
+    } else {
+      panel.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+          <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
+          <div style="font-size: 1.25rem; font-weight: 600; color: #ef4444;">Health Check Failed</div>
+          <div style="color: #888; margin-top: 0.5rem;">
+            ${data.error || `${data.failed} tests failed`}
+          </div>
+        </div>
+      `;
+      showError('Quick health check failed!');
+    }
+
+  } catch (error) {
+    console.error('Error running quick check:', error);
+    showTestError(error.message);
+  } finally {
+    isRunningTests = false;
+    setTestButtonsDisabled(false);
+  }
+}
+
+/**
+ * Display test results
+ */
+function displayTestResults(results) {
+  // Update summary
+  const summary = document.getElementById('testSummary');
+  summary.classList.remove('hidden');
+  
+  document.getElementById('testTotal').textContent = results.numTotalTests;
+  document.getElementById('testPassed').textContent = results.numPassedTests;
+  document.getElementById('testFailed').textContent = results.numFailedTests;
+  
+  const duration = results.endTime - results.startTime;
+  document.getElementById('testDuration').textContent = duration > 1000 
+    ? `${(duration / 1000).toFixed(1)}s` 
+    : `${duration}ms`;
+
+  // Display detailed results
+  const panel = document.getElementById('testResultsPanel');
+  
+  if (results.testResults.length === 0) {
+    panel.innerHTML = '<div class="test-results-empty">No test results</div>';
+    return;
+  }
+
+  panel.innerHTML = results.testResults.map(file => {
+    const passCount = file.assertionResults.filter(a => a.status === 'passed').length;
+    const failCount = file.assertionResults.filter(a => a.status === 'failed').length;
+    const fileName = file.name.split('/').pop();
+
+    return `
+      <div class="test-result-file">
+        <div class="test-result-file-header">
+          <span class="test-result-file-name">${fileName}</span>
+          <div class="test-result-file-stats">
+            <span class="pass-count">${passCount} ✓</span>
+            ${failCount > 0 ? `<span class="fail-count">${failCount} ✗</span>` : ''}
+          </div>
+        </div>
+        <div class="test-assertions">
+          ${file.assertionResults.map(assertion => `
+            <div class="test-assertion ${assertion.status}">
+              <span class="test-assertion-icon ${assertion.status}"></span>
+              <div>
+                <span class="test-assertion-name">${assertion.title}</span>
+                ${assertion.duration ? `<span class="test-duration">(${assertion.duration}ms)</span>` : ''}
+                ${assertion.failureMessages.length > 0 ? `
+                  <div class="test-assertion-error">${escapeHtml(assertion.failureMessages[0])}</div>
+                ` : ''}
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+/**
+ * Show test running indicator
+ */
+function showTestRunning(message = 'Running tests...') {
+  const panel = document.getElementById('testResultsPanel');
+  panel.innerHTML = `
+    <div class="test-running-indicator">
+      <div class="spinner"></div>
+      <span>${message}</span>
+    </div>
+  `;
+}
+
+/**
+ * Show test error
+ */
+function showTestError(message) {
+  const panel = document.getElementById('testResultsPanel');
+  panel.innerHTML = `
+    <div style="text-align: center; padding: 2rem; color: #ef4444;">
+      <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
+      <div>Failed to run tests</div>
+      <div style="font-size: 0.875rem; color: #888; margin-top: 0.5rem;">${escapeHtml(message)}</div>
+    </div>
+  `;
+}
+
+/**
+ * Disable/enable test buttons
+ */
+function setTestButtonsDisabled(disabled) {
+  document.getElementById('runAllTestsBtn').disabled = disabled;
+  document.getElementById('quickCheckBtn').disabled = disabled;
+}
+
+/**
+ * Escape HTML
+ */
+function escapeHtml(text) {
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Initialize test runner when testing tab is activated
+document.addEventListener('DOMContentLoaded', () => {
+  // Load test suites after a short delay to avoid blocking initial load
+  setTimeout(initializeTestRunner, 500);
+});

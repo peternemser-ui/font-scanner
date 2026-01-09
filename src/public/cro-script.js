@@ -141,74 +141,154 @@ async function analyzeCRO() {
 }
 
 function displayResults(data) {
+  console.log('🎯 CRO SCRIPT VERSION: FRESH-JAN8-2026 - NEW LAYOUT');
   const resultsContainer = document.getElementById('results');
-  resultsContainer.innerHTML = '';
+  const url = document.getElementById('url').value;
+  const timestamp = new Date().toLocaleString();
   
   // Store results globally for PDF generation
   window.currentCROResults = data;
 
-  // 1. Overview Section with Score Circle
-  const overviewSection = document.createElement('div');
-  overviewSection.className = 'section';
-  overviewSection.innerHTML = createOverviewSection(data);
-  resultsContainer.appendChild(overviewSection);
-
-  // 2. Quick Wins Section (if any)
-  if (data.quickWins && data.quickWins.length > 0) {
-    const quickWinsSection = document.createElement('div');
-    quickWinsSection.className = 'section';
-    quickWinsSection.innerHTML = createQuickWinsSection(data.quickWins);
-    resultsContainer.appendChild(quickWinsSection);
+  // Check if shared components are loaded
+  if (typeof ReportShell === 'undefined' || typeof ReportAccordion === 'undefined') {
+    console.error('Shared report components not loaded');
+    resultsContainer.innerHTML = '<div style="color: red; padding: 2rem;">Error: Report components failed to load. Please refresh the page.</div>';
+    return;
   }
 
-  // 3. Score Breakdown Cards
-  const breakdownSection = document.createElement('div');
-  breakdownSection.className = 'section';
-  breakdownSection.innerHTML = createScoreBreakdownCards(data.scores);
-  resultsContainer.appendChild(breakdownSection);
+  // Build accordions using shared components
+  const accordions = [
+    ReportAccordion.createSection({ 
+      id: 'cro-cta', 
+      title: 'Call-to-Action Analysis', 
+      scoreTextRight: `${data.scores.cta}/100`,
+      contentHTML: `<div class="report-shell__card">${renderCTAContent(data.analysis.ctas)}</div>`
+    }),
+    ReportAccordion.createSection({ 
+      id: 'cro-forms', 
+      title: 'Form Optimization', 
+      scoreTextRight: `${data.scores.form}/100`,
+      contentHTML: `<div class="report-shell__card">${renderFormContent(data.analysis.forms)}</div>`
+    }),
+    ReportAccordion.createSection({ 
+      id: 'cro-trust', 
+      title: 'Trust Signals', 
+      scoreTextRight: `${data.scores.trust}/100`,
+      contentHTML: `<div class="report-shell__card">${renderTrustContent(data.analysis.trustSignals)}</div>`
+    }),
+    ReportAccordion.createSection({ 
+      id: 'cro-mobile', 
+      title: 'Mobile Experience', 
+      scoreTextRight: `${data.scores.mobile}/100`,
+      contentHTML: `<div class="report-shell__card">${renderMobileContent(data.analysis.mobileUX)}</div>`
+    }),
+    ReportAccordion.createSection({ 
+      id: 'cro-recommendations', 
+      title: 'All Recommendations', 
+      scoreTextRight: null,
+      contentHTML: `<div class="report-shell__card">${renderRecommendationsContent(data.recommendations)}</div>`
+    })
+  ].join('');
 
-  // 4. Accordion Sections
-  createCROAccordionSection(resultsContainer, 'cta-analysis', '🎯 Call-to-Action Analysis', 
-    () => renderCTAContent(data.analysis.ctas), data.scores.cta);
-  createCROAccordionSection(resultsContainer, 'form-analysis', '📝 Form Optimization', 
-    () => renderFormContent(data.analysis.forms), data.scores.form);
-  createCROAccordionSection(resultsContainer, 'trust-signals', '🛡️ Trust Signals', 
-    () => renderTrustContent(data.analysis.trustSignals), data.scores.trust);
-  createCROAccordionSection(resultsContainer, 'mobile-ux', '📱 Mobile Experience', 
-    () => renderMobileContent(data.analysis.mobileUX), data.scores.mobile);
-  createCROAccordionSection(resultsContainer, 'recommendations', '💡 All Recommendations',
-    () => renderRecommendationsContent(data.recommendations), null);
+  // Quick Wins Section
+  const quickWinsContent = data.quickWins && data.quickWins.length > 0 ? createQuickWinsSection(data.quickWins) : '';
 
-  // Add PDF Export Button
-  const exportSection = document.createElement('div');
-  exportSection.className = 'section';
-  exportSection.style.cssText = 'text-align: center; margin-top: 2rem; padding: 2rem; border-top: 1px solid rgba(255,255,255,0.1);';
-  exportSection.innerHTML = `
-    <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Export Report</h3>
-    <button id="exportPdfBtn" class="export-pdf-btn" style="
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 8px;
-      color: #ef4444;
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.95rem;
-      transition: all 0.2s ease;
-    " onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-        <polyline points="7 10 12 15 17 10"/>
-        <line x1="12" y1="15" x2="12" y2="3"/>
-      </svg>
-      Download PDF Report
-    </button>
+  // Summary stats
+  const highPriorityCount = data.recommendations.filter(r => r.priority === 'high').length;
+  const summaryStats = {
+    issues: highPriorityCount,
+    recommendations: data.recommendations.length,
+    checks: data.quickWins ? data.quickWins.length : 0
+  };
+
+  const html = `
+    <div class="section">
+      <h2>[PERFORMANCE_ANALYSIS_RESULTS]</h2>
+      <p>>> url: ${url}</p>
+      <p>>> timestamp: ${timestamp}</p>
+      
+      <div style="
+        background: linear-gradient(135deg, rgba(0,255,65,0.05) 0%, rgba(0,255,65,0.02) 100%);
+        border: 2px solid ${ReportShell.getScoreColor(data.score)};
+        border-radius: 12px;
+        padding: 2rem;
+        margin: 2rem 0;
+        box-shadow: 0 4px 20px rgba(0,255,65,0.15);
+      ">
+        <h3 style="color: #00ff41; margin: 0 0 1.5rem 0; font-size: 1.3rem;">>> CRO Audit Summary</h3>
+        ${ReportShell.renderSummaryDonuts([
+          { label: 'Overall CRO', score: data.score },
+          { label: 'CTAs', score: data.scores.cta },
+          { label: 'Forms', score: data.scores.form },
+          { label: 'Trust Signals', score: data.scores.trust }
+        ])}
+      </div>
+    </div>
+    
+    ${quickWinsContent}
+    ${accordions}
+    ${renderCROSummarySection(summaryStats)}
+    ${renderCROTakeActionSection(url)}
   `;
-  resultsContainer.appendChild(exportSection);
+  
+  resultsContainer.innerHTML = `<div class="report-scope">${html}</div>`;
+  ReportAccordion.initInteractions();
 }
+
+function renderCROSummarySection(stats) {
+  return `
+    <div class="section">
+      <h2>[SUMMARY]</h2>
+      <div class="seo-summary">
+        <div class="summary-stats">
+          <div class="stat-item">
+            <span class="stat-value">${stats.issues}</span>
+            <span class="stat-label">High Priority</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">${stats.recommendations}</span>
+            <span class="stat-label">Total Recommendations</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">${stats.checks}</span>
+            <span class="stat-label">Quick Wins</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCROTakeActionSection(url) {
+  return `
+    <div class="section">
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="color: #00ff41; font-weight: 600;">Take Action</span>
+          <span style="color: #666; font-size: 0.9rem;">Export or share this CRO report</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button id="exportPdfBtn" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(0, 255, 65, 0.4); background: rgba(0, 255, 65, 0.1); color: #00ff41; cursor: pointer; font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+            PDF Report
+          </button>
+          <button onclick="copyCROShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share Link
+          </button>
+          <button onclick="downloadCROCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
+            Export Data
+          </button>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Stub functions for share/export
+window.copyCROShareLink = function() { alert('Share link coming soon'); };
+window.downloadCROCSV = function() { alert('CSV export coming soon'); };
 
 function createQuickWinsSection(quickWins) {
   return `
@@ -337,134 +417,7 @@ function createQuickWinsSection(quickWins) {
   `;
 }
 
-function createOverviewSection(data) {
-  const gradeColor = getGradeColor(data.grade);
-  
-  return `
-    <h2>[CONVERSION_OVERVIEW]</h2>
-    
-    <div style="
-      background: linear-gradient(135deg, ${gradeColor}10 0%, ${gradeColor}05 100%);
-      border: 2px solid ${gradeColor};
-      border-radius: 12px;
-      padding: 2rem;
-      margin: 2rem 0;
-      box-shadow: 0 4px 20px ${gradeColor}20;
-    ">
-      <div style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: center;">
-        <!-- Left: Score Circle -->
-        <div style="text-align: center;">
-          <div style="
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: #ffffff;
-            border: 5px solid ${gradeColor};
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 30px ${gradeColor}40, 0 4px 15px rgba(0,0,0,0.2);
-          ">
-            <div style="
-              font-size: 4.5rem;
-              font-weight: 900;
-              color: #000000;
-              line-height: 1;
-            ">${data.overallScore}</div>
-            <div style="
-              font-size: 0.9rem;
-              color: #666666;
-              margin-top: 0.5rem;
-              text-transform: uppercase;
-              letter-spacing: 2px;
-              font-weight: 600;
-            ">/ 100</div>
-          </div>
-          <div style="
-            margin-top: 1rem;
-            font-size: 1.5rem;
-            font-weight: bold;
-            color: ${gradeColor};
-          ">${getGradeName(data.grade)}</div>
-        </div>
-        
-        <!-- Right: Quick Stats -->
-        <div>
-          <h3 style="color: ${gradeColor}; margin: 0 0 1rem 0; font-size: 1.3rem;">>> Quick Stats</h3>
-          <div style="display: grid; gap: 0.75rem;">
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">Overall Grade</span>
-              <span style="color: ${gradeColor}; font-weight: bold;">${data.grade}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">CTAs Detected</span>
-              <span style="color: ${data.analysis.ctas.count > 0 ? '#00ff41' : '#ff4444'}; font-weight: bold;">${data.analysis.ctas.count}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">Forms Found</span>
-              <span style="color: ${data.analysis.forms.count > 0 ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${data.analysis.forms.count}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-              <span style="color: #c0c0c0;">Conversion Potential</span>
-              <span style="color: ${gradeColor}; font-weight: bold;">${data.conversionPotential}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-function createScoreBreakdownCards(scores) {
-  const categories = [
-    { key: 'cta', label: 'Call-to-Action', icon: '🎯' },
-    { key: 'form', label: 'Forms', icon: '📝' },
-    { key: 'trust', label: 'Trust Signals', icon: '🛡️' },
-    { key: 'mobile', label: 'Mobile UX', icon: '📱' }
-  ];
-
-  return `
-    <h2>[SCORE_BREAKDOWN]</h2>
-    <p style="color: #c0c0c0; margin-bottom: 1rem;">>> Category performance breakdown</p>
-    
-    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
-      ${categories.map(cat => {
-        const score = scores[cat.key] || 0;
-        const color = getScoreColor(score);
-        return `
-          <div style="
-            background: linear-gradient(135deg, ${color}15 0%, ${color}05 100%);
-            border: 2px solid ${color}80;
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-          ">
-            <div style="
-              width: 80px;
-              height: 80px;
-              margin: 0 auto 1rem;
-              border-radius: 50%;
-              background: #ffffff;
-              border: 3px solid ${color};
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 2rem;
-              font-weight: 900;
-              color: #000000;
-              box-shadow: 0 0 15px ${color}40;
-            ">${score}</div>
-            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${cat.icon}</div>
-            <div style="color: #c0c0c0; font-size: 0.9rem;">${cat.label}</div>
-          </div>
-        `;
-      }).join('')}
-    </div>
-  `;
-}
-
-function createCROAccordionSection(container, id, title, contentCreator, score) {
+function renderCTAContent(ctas) {
   const accordion = document.createElement('div');
   accordion.className = 'accordion';
   

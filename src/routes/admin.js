@@ -414,4 +414,218 @@ router.get('/activity-log', async (req, res) => {
   }
 });
 
+// =============================================================================
+// TEST RUNNER ENDPOINTS
+// =============================================================================
+
+const { spawn } = require('child_process');
+const path = require('path');
+
+/**
+ * GET /api/admin/tests/suites
+ * List available test suites
+ */
+router.get('/tests/suites', async (req, res) => {
+  const fs = require('fs').promises;
+  const testsDir = path.join(process.cwd(), 'tests');
+  
+  try {
+    const suites = [];
+    
+    // Scan test directories
+    const categories = ['utils', 'services', 'middleware', 'integration'];
+    
+    for (const category of categories) {
+      const categoryPath = path.join(testsDir, category);
+      try {
+        const files = await fs.readdir(categoryPath);
+        const testFiles = files.filter(f => f.endsWith('.test.js'));
+        
+        for (const file of testFiles) {
+          suites.push({
+            id: `${category}/${file}`,
+            name: file.replace('.test.js', ''),
+            category,
+            path: `tests/${category}/${file}`
+          });
+        }
+      } catch (e) {
+        // Category doesn't exist, skip
+      }
+    }
+    
+    res.json({
+      success: true,
+      suites,
+      categories: [...new Set(suites.map(s => s.category))]
+    });
+    
+  } catch (error) {
+    console.error('Error listing test suites:', error);
+    res.status(500).json({ error: 'Failed to list test suites' });
+  }
+});
+
+/**
+ * POST /api/admin/tests/run
+ * Run tests and return results
+ * Body: { suite?: string, category?: string } - if empty, runs all tests
+ */
+router.post('/tests/run', async (req, res) => {
+  const { suite, category } = req.body;
+  
+  // Build jest command arguments
+  const args = ['--json', '--testLocationInResults'];
+  
+  if (suite) {
+    // Run specific test file
+    args.push(suite);
+  } else if (category) {
+    // Run all tests in a category
+    args.push(`tests/${category}/`);
+  }
+  // If neither, runs all tests
+  
+  try {
+    const result = await runJestTests(args);
+    
+    // Log admin action
+    await logAdminAction(req.admin.id, 'RUN_TESTS', null, { 
+      suite: suite || 'all',
+      category: category || 'all',
+      passed: result.numPassedTests,
+      failed: result.numFailedTests
+    });
+    
+    res.json({
+      success: true,
+      results: {
+        numTotalTests: result.numTotalTests,
+        numPassedTests: result.numPassedTests,
+        numFailedTests: result.numFailedTests,
+        numPendingTests: result.numPendingTests,
+        numTotalSuites: result.numTotalTestSuites,
+        numPassedSuites: result.numPassedTestSuites,
+        numFailedSuites: result.numFailedTestSuites,
+        startTime: result.startTime,
+        endTime: new Date().getTime(),
+        testResults: result.testResults.map(tr => ({
+          name: tr.name.replace(process.cwd(), '').replace(/\\/g, '/'),
+          status: tr.status,
+          duration: tr.endTime - tr.startTime,
+          numPassingAsserts: tr.numPassingAsserts,
+          numFailingAsserts: tr.numFailingAsserts,
+          assertionResults: tr.assertionResults.map(ar => ({
+            title: ar.title,
+            fullName: ar.fullName,
+            status: ar.status,
+            duration: ar.duration,
+            failureMessages: ar.failureMessages
+          }))
+        }))
+      }
+    });
+    
+  } catch (error) {
+    console.error('Error running tests:', error);
+    res.status(500).json({ 
+      error: 'Failed to run tests',
+      message: error.message,
+      output: error.output || null
+    });
+  }
+});
+
+/**
+ * Run Jest tests and return parsed JSON results
+ */
+function runJestTests(args) {
+  return new Promise((resolve, reject) => {
+    const isWindows = process.platform === 'win32';
+    const npmCmd = isWindows ? 'npx.cmd' : 'npx';
+    
+    const jestProcess = spawn(npmCmd, ['jest', ...args], {
+      cwd: process.cwd(),
+      env: { ...process.env, NODE_ENV: 'test' },
+      shell: true
+    });
+    
+    let stdout = '';
+    let stderr = '';
+    
+    jestProcess.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+    
+    jestProcess.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+    
+    jestProcess.on('close', (code) => {
+      try {
+        // Jest outputs JSON to stdout when using --json flag
+        // Even if tests fail, it still outputs valid JSON
+        const jsonMatch = stdout.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const results = JSON.parse(jsonMatch[0]);
+          resolve(results);
+        } else {
+          reject({ 
+            message: 'No JSON output from Jest', 
+            output: stdout + stderr,
+            code 
+          });
+        }
+      } catch (parseError) {
+        reject({ 
+          message: 'Failed to parse Jest output', 
+          output: stdout + stderr,
+          code 
+        });
+      }
+    });
+    
+    jestProcess.on('error', (error) => {
+      reject({ message: error.message, output: stderr });
+    });
+    
+    // Timeout after 5 minutes
+    setTimeout(() => {
+      jestProcess.kill();
+      reject({ message: 'Test execution timed out after 5 minutes' });
+    }, 5 * 60 * 1000);
+  });
+}
+
+/**
+ * GET /api/admin/tests/quick-check
+ * Run a quick health check (subset of critical tests)
+ */
+router.get('/tests/quick-check', async (req, res) => {
+  try {
+    // Run only validator and sanitizer tests (fast)
+    const result = await runJestTests([
+      '--json',
+      '--testLocationInResults', 
+      'tests/utils/validators.test.js',
+      'tests/utils/sanitizer.test.js'
+    ]);
+    
+    res.json({
+      success: true,
+      healthy: result.numFailedTests === 0,
+      passed: result.numPassedTests,
+      failed: result.numFailedTests,
+      duration: result.testResults.reduce((sum, tr) => sum + (tr.endTime - tr.startTime), 0)
+    });
+    
+  } catch (error) {
+    res.json({
+      success: false,
+      healthy: false,
+      error: error.message
+    });
+  }
+});
+
 module.exports = router;

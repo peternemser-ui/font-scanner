@@ -23,21 +23,82 @@ class LocalSEOService {
           const text = document.body.textContent;
           const html = document.body.innerHTML;
           
-          // NAP (Name, Address, Phone) detection
-          const phoneRegex = /\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g;
-          const phones = [...new Set(text.match(phoneRegex) || [])];
+          // NAP (Name, Address, Phone) detection - More strict phone regex
+          // Must have proper formatting (parentheses, dashes, dots, or spaces as separators)
+          // Avoid matching random digit sequences in scripts/styles
+          const phonePatterns = [
+            /\(\d{3}\)\s*\d{3}[-.\s]\d{4}/g,           // (123) 456-7890
+            /\(\d{3}\)\s*\d{3}\d{4}/g,                  // (123) 4567890
+            /\d{3}[-.\s]\d{3}[-.\s]\d{4}/g,            // 123-456-7890, 123.456.7890, 123 456 7890
+            /\+1\s*\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/g, // +1 (123) 456-7890
+            /1[-.\s]\d{3}[-.\s]\d{3}[-.\s]\d{4}/g      // 1-800-123-4567
+          ];
           
-          // Email detection
+          // Get visible text only (exclude scripts, styles, and hidden elements)
+          const getVisibleText = () => {
+            const walker = document.createTreeWalker(
+              document.body,
+              NodeFilter.SHOW_TEXT,
+              {
+                acceptNode: (node) => {
+                  const parent = node.parentElement;
+                  if (!parent) return NodeFilter.FILTER_REJECT;
+                  const tag = parent.tagName.toLowerCase();
+                  if (['script', 'style', 'noscript', 'svg', 'path'].includes(tag)) {
+                    return NodeFilter.FILTER_REJECT;
+                  }
+                  const style = window.getComputedStyle(parent);
+                  if (style.display === 'none' || style.visibility === 'hidden') {
+                    return NodeFilter.FILTER_REJECT;
+                  }
+                  return NodeFilter.FILTER_ACCEPT;
+                }
+              }
+            );
+            
+            let visibleText = '';
+            while (walker.nextNode()) {
+              visibleText += walker.currentNode.textContent + ' ';
+            }
+            return visibleText;
+          };
+          
+          const visibleText = getVisibleText();
+          
+          // Find phones in visible text only
+          let allPhones = [];
+          phonePatterns.forEach(pattern => {
+            const matches = visibleText.match(pattern) || [];
+            allPhones.push(...matches);
+          });
+          
+          // Clean and dedupe phones
+          const phones = [...new Set(allPhones.map(p => p.replace(/\D/g, '').slice(-10)))];
+          
+          // Filter out obvious non-phone numbers (all same digit, sequential, etc.)
+          const validPhones = phones.filter(p => {
+            // Must be exactly 10 digits
+            if (p.length !== 10) return false;
+            // Not all same digit (e.g., 0000000000)
+            if (/^(.)\1+$/.test(p)) return false;
+            // Not sequential (e.g., 1234567890)
+            if (p === '1234567890' || p === '0987654321') return false;
+            // Area code shouldn't start with 0 or 1
+            if (p[0] === '0' || p[0] === '1') return false;
+            return true;
+          });
+          
+          // Email detection - use visible text only
           const emailRegex = /[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/g;
-          const emails = [...new Set(text.match(emailRegex) || [])].slice(0, 3);
+          const emails = [...new Set(visibleText.match(emailRegex) || [])].slice(0, 3);
           
-          // Address detection - more comprehensive
+          // Address detection - more comprehensive (use visible text)
           const addressKeywords = ['street', 'st.', 'avenue', 'ave.', 'road', 'rd.', 'boulevard', 'blvd.', 'suite', 'ste.', 'floor', 'city', 'state', 'zip', 'drive', 'dr.', 'lane', 'ln.', 'way', 'court', 'ct.', 'place', 'pl.'];
-          const hasAddress = addressKeywords.some(kw => text.toLowerCase().includes(kw));
+          const hasAddress = addressKeywords.some(kw => visibleText.toLowerCase().includes(kw));
           
-          // ZIP code detection
+          // ZIP code detection (use visible text)
           const zipRegex = /\b\d{5}(-\d{4})?\b/g;
-          const zipCodes = [...new Set(text.match(zipRegex) || [])].slice(0, 3);
+          const zipCodes = [...new Set(visibleText.match(zipRegex) || [])].slice(0, 3);
           
           // Local schema detection - enhanced
           const schemas = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
@@ -115,8 +176,8 @@ class LocalSEOService {
           
           return {
             nap: {
-              phoneCount: phones.length,
-              phones: phones.slice(0, 5),
+              phoneCount: validPhones.length,
+              phones: validPhones.slice(0, 5),
               hasAddress,
               zipCodes,
               emails

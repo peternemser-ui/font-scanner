@@ -142,17 +142,19 @@ describe('Sanitizer Utility', () => {
     });
 
     it('should redact long alphanumeric strings (potential API keys)', () => {
-      const str = 'API Key: test_' + 'live_' + 'abc123xyz456';
+      // API keys are typically 32+ characters long
+      const str = 'API Key: sk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX';
       const sanitized = sanitizeString(str);
       expect(sanitized).toContain('[KEY_REDACTED]');
-      expect(sanitized).not.toContain('abc123xyz456');
+      expect(sanitized).not.toContain('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX');
     });
 
     it('should redact JWT tokens', () => {
-      const str = 'Token: eyJhbGci' + 'OiJIUzI1' + 'NiIsInR5cCI6IkpXVCJ9.test.signature';
+      // Real JWTs have three base64 segments, each with 10+ characters
+      const str = 'Token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.dozjgNryP4J3jVmNHl0w5N_XgL0n3I9PlFUP0THsR8U';
       const sanitized = sanitizeString(str);
       expect(sanitized).toContain('[JWT_REDACTED]');
-      expect(sanitized).not.toContain('eyJhbGci');
+      expect(sanitized).not.toContain('eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9');
     });
 
     it('should handle null/undefined', () => {

@@ -312,7 +312,23 @@ function displaySEOResults(results) {
   createAccordionSection(container, 'structured-data', 'Structured Data Schema', () => renderStructuredDataContent(results.structuredData), results.structuredData.score);
   createAccordionSection(container, 'additional-checks', 'Additional Checks', () => renderAdditionalChecksContent(results.additionalChecks), results.additionalChecks.score);
   
-  // Summary section (not in accordion)
+  // Pro Fixes accordion (visible to all, content gated)
+  createAccordionSection(
+    container,
+    'pro-fixes',
+    'Fix Code + Recommendations',
+    () => renderProFixes(results),
+    results.score?.overall || 0,
+    {
+      isPro: true,
+      previewHtml: renderLockedProPreview('Fix Code + Recommendations', [
+        'Meta tags improvements',
+        'Structured data quick wins'
+      ])
+    }
+  );
+
+  // Summary section (not in accordion) — now placed after Fix Code accordion
   const summaryFooter = document.createElement('div');
   summaryFooter.className = 'section';
   summaryFooter.innerHTML = `
@@ -336,8 +352,191 @@ function displaySEOResults(results) {
   `;
   container.appendChild(summaryFooter);
 
+  // Monetization actions (export/share)
+  const actionsFooter = document.createElement('div');
+  actionsFooter.className = 'section';
+  actionsFooter.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="color: #00ff41; font-weight: 600;">Take Action</span>
+        <span style="color: #666; font-size: 0.9rem;">Export or share this SEO report</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button onclick="exportSeoPDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(0, 255, 65, 0.4); background: rgba(0, 255, 65, 0.1); color: #00ff41; cursor: pointer; font-weight: 600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+          PDF Report
+        </button>
+        <button onclick="copySeoShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share Link
+        </button>
+        <button onclick="downloadSeoCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
+          Export Data
+        </button>
+      </div>
+    </div>
+  `;
+  container.appendChild(actionsFooter);
+
   // Animate score circle
   animateScoreCircle(results.score.overall);
+}
+
+// -------- Monetization actions (gated) --------
+function ensureSeoProAccess() {
+  const domain = getCurrentDomain();
+  if (window.ProAccess && window.ProAccess.hasProAccess(domain)) {
+    return true;
+  }
+  if (window.ExportGate && window.ExportGate.isPro()) {
+    return true;
+  }
+  openProPaywall({ domain, context: 'fixes' });
+  return false;
+}
+
+function exportSeoPDF() {
+  if (!ensureSeoProAccess()) return;
+  const exporter = new PDFExportUtility({
+    filename: 'seo-report.pdf',
+    reportTitle: 'SEO Analysis Report',
+    url: window.currentSeoResults?.url || ''
+  });
+  exporter.export('#seoResults');
+}
+
+function copySeoShareLink() {
+  if (!ensureSeoProAccess()) return;
+  const targetUrl = window.currentSeoResults?.url || window.location.href;
+  const shareUrl = `${window.location.origin}/seo-analyzer.html?url=${encodeURIComponent(targetUrl)}`;
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    alert('Share link copied to clipboard');
+  });
+}
+
+function downloadSeoCSV() {
+  if (!ensureSeoProAccess()) return;
+  const r = window.currentSeoResults;
+  if (!r) return;
+
+  const rows = [
+    ['Metric', 'Value'],
+    ['Overall Score', r.score?.overall ?? ''],
+    ['Grade', r.score?.grade ?? ''],
+    ['Issues Found', countTotalIssues(r)],
+    ['Recommendations', countTotalRecommendations(r)],
+    ['Checks Passed', countPassedChecks(r)],
+    ['URL', r.url || '']
+  ];
+
+  const csv = rows
+    .map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'seo-report.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+function renderProFixes(results) {
+  ensureProStyles();
+  const hasPro = userHasPro();
+  const cards = buildFixCards(results);
+  return `
+    <div class="fix-card-grid">
+      ${cards.map(card => renderFixCard(card, hasPro)).join('')}
+    </div>
+  `;
+}
+
+function renderFixCard(card, hasPro) {
+  const severityClass = card.severity === 'High' ? 'severity-high' : card.severity === 'Medium' ? 'severity-medium' : 'severity-low';
+  const lockNote = hasPro ? '' : '<div style="font-size: 0.8rem; color: #888;">Pro feature — unlock to copy code</div>';
+  return `
+    <div class="fix-card ${hasPro ? '' : 'fix-card-locked'}">
+      <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
+        <div style="font-weight: 700;">${card.title}</div>
+        <span class="severity ${severityClass}">${card.severity}</span>
+      </div>
+      <div style="color: #ccc; font-size: 0.95rem;">${card.description}</div>
+      <div style="color: #8ae6b2; font-size: 0.9rem;">Impact: ${card.impact}</div>
+      <code>${card.snippet}</code>
+      <div class="actions">
+        <button class="${hasPro ? '' : 'locked-copy'}" onclick="${hasPro ? `copyFixSnippet(${JSON.stringify(card.snippet)})` : 'openProPaywall({ domain: getCurrentDomain(), context: "fixes" })'}">Copy snippet</button>
+        ${lockNote}
+      </div>
+    </div>
+  `;
+}
+
+function copyFixSnippet(snippet) {
+  if (!ensureSeoProAccess()) return;
+  navigator.clipboard.writeText(snippet).then(() => {
+    alert('Snippet copied to clipboard');
+  });
+}
+
+function buildFixCards(results) {
+  const cards = [];
+  const meta = results.metaTags || {};
+  const structured = results.structuredData || {};
+  const performance = results.performanceMetrics || {};
+
+  cards.push({
+    title: 'Tune your title tag',
+    severity: 'High',
+    impact: 'Improves CTR in SERPs',
+    description: meta.title ? 'Adjust title length to 50-60 chars and front-load the keyword.' : 'Add a clear, unique <title> for this page.',
+    snippet: `<title>${meta.title || 'Primary Keyword | Brand'}</title>`
+  });
+
+  cards.push({
+    title: 'Write a compelling meta description',
+    severity: 'Medium',
+    impact: 'Higher click-through and relevance signals',
+    description: 'Keep 150-160 chars, include a CTA, and ensure uniqueness.',
+    snippet: '<meta name="description" content="Describe the main value in 150-160 characters with a call to action." />'
+  });
+
+  cards.push({
+    title: 'Add canonical + sitemap refs',
+    severity: 'Medium',
+    impact: 'Prevents duplicate indexing issues',
+    description: 'Declare the preferred URL and list all discoverable URLs.',
+    snippet: `<link rel="canonical" href="https://${getCurrentDomain()}/" />\n<link rel="sitemap" type="application/xml" title="Sitemap" href="https://${getCurrentDomain()}/sitemap.xml" />`
+  });
+
+  cards.push({
+    title: 'Add JSON-LD (Article/Product)',
+    severity: 'High',
+    impact: 'Rich results eligibility',
+    description: 'Provide structured data for the primary page type.',
+    snippet: `<script type="application/ld+json">{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  "name": "${meta.title || 'Page Title'}",\n  "description": "${meta.description || 'Page description'}",\n  "url": "https://${getCurrentDomain()}/"\n}</script>`
+  });
+
+  cards.push({
+    title: 'Preload critical assets',
+    severity: 'Medium',
+    impact: 'Faster LCP and render',
+    description: 'Preload hero image, main font, and critical CSS.',
+    snippet: `<link rel="preload" as="image" href="/path/to/hero.jpg" />\n<link rel="preload" as="style" href="/critical.css" />\n<link rel="preload" as="font" type="font/woff2" href="/fonts/main.woff2" crossorigin />`
+  });
+
+  cards.push({
+    title: 'Defer non-critical JS',
+    severity: 'Low',
+    impact: 'Reduces blocking time',
+    description: 'Use defer for scripts that can wait until DOM is parsed.',
+    snippet: `<script src="/app.js" defer></script>\n<script src="/analytics.js" defer></script>`
+  });
+
+  return cards;
 }
 
 /**
@@ -373,17 +572,175 @@ function initializeAccordions() {
   });
 }
 
+// Pro gating helpers
+function getCurrentDomain() {
+  if (window.ProAccess && typeof window.ProAccess.getCurrentDomain === 'function') {
+    return window.ProAccess.getCurrentDomain();
+  }
+  return window.location.hostname;
+}
+
+function userHasPro() {
+  if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
+    return window.ProAccess.hasProAccess(getCurrentDomain());
+  }
+  return false;
+}
+
+function renderLockedProPreview(title = 'Pro content', previewLines = []) {
+  const lines = previewLines.length ? previewLines : ['Example recommendations', 'Code fix snippets'];
+  return `
+    <div class="pro-locked">
+      <div class="pro-locked__header">
+        <span class="pro-pill">PRO</span>
+        <span>${title}</span>
+      </div>
+      <ul class="pro-locked__list">
+        ${lines.slice(0, 2).map(line => `<li>${line}</li>`).join('')}
+      </ul>
+      <div class="pro-locked__blur"></div>
+      <button class="pro-locked__unlock" onclick="openProPaywall({ domain: '${getCurrentDomain()}', context: 'fixes' })">Unlock in Pro Report ($5 USD)</button>
+    </div>
+  `;
+}
+
+function ensureProStyles() {
+  if (document.getElementById('pro-lock-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'pro-lock-styles';
+  style.textContent = `
+    .pro-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 255, 65, 0.4);
+      background: rgba(0, 255, 65, 0.1);
+      color: #00ff41;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .pro-locked {
+      position: relative;
+      border: 1px dashed rgba(0, 255, 65, 0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      overflow: hidden;
+    }
+    .pro-locked__header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .pro-locked__list {
+      margin: 0;
+      padding-left: 1.25rem;
+      color: #ccc;
+      font-size: 0.9rem;
+    }
+    .pro-locked__blur {
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(3px);
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 60%);
+      pointer-events: none;
+    }
+    .pro-locked__unlock {
+      position: relative;
+      margin-top: 0.75rem;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 255, 65, 0.4);
+      background: rgba(0, 255, 65, 0.12);
+      color: #00ff41;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .fix-card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+    .fix-card {
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 10px;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .fix-card .severity {
+      font-size: 0.8rem;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.2);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .severity-high { color: #ff8c00; border-color: rgba(255, 140, 0, 0.4); }
+    .severity-medium { color: #ffd700; border-color: rgba(255, 215, 0, 0.4); }
+    .severity-low { color: #00ff41; border-color: rgba(0, 255, 65, 0.4); }
+    .fix-card code {
+      display: block;
+      background: rgba(0, 0, 0, 0.45);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 6px;
+      padding: 0.75rem;
+      white-space: pre-wrap;
+      font-size: 0.9rem;
+    }
+    .fix-card .actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+    .fix-card button {
+      padding: 0.5rem 0.9rem;
+      border-radius: 6px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      cursor: pointer;
+    }
+    .fix-card button.locked-copy {
+      opacity: 0.6;
+      border-style: dashed;
+    }
+    .fix-card button[disabled] {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
 /**
  * Create an accordion section (similar to font scanner)
  */
-function createAccordionSection(container, id, displayTitle, contentCreator, score) {
+function createAccordionSection(container, id, displayTitle, contentCreator, score, options = {}) {
+  const { isPro = false, previewHtml = '' } = options;
+  ensureProStyles();
+
   const accordion = document.createElement('div');
   accordion.className = 'accordion';
+  if (isPro) {
+    accordion.classList.add('pro-section');
+    accordion.dataset.pro = 'true';
+  }
   
   const header = document.createElement('button');
   header.className = 'accordion-header';
+  const proBadge = isPro ? '<span class="pro-pill">PRO</span>' : '';
   header.innerHTML = `
-    <span>${displayTitle}</span>
+    <span style="display: inline-flex; align-items: center; gap: 0.5rem;">${displayTitle} ${proBadge}</span>
     <span style="display: flex; align-items: center; gap: 0.5rem;">
       <span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}/100</span>
       <span class="accordion-toggle">▼</span>
@@ -400,6 +757,16 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
   contentInner.className = 'accordion-content-inner';
   content.appendChild(contentInner);
   
+  const renderContent = () => {
+    const hasPro = !isPro || userHasPro();
+    if (isPro && !hasPro) {
+      contentInner.innerHTML = previewHtml || renderLockedProPreview(displayTitle);
+      return;
+    }
+    const contentHTML = contentCreator();
+    contentInner.innerHTML = contentHTML;
+  };
+
   // Add click handler for accordion
   header.addEventListener('click', () => {
     const isExpanded = content.classList.contains('expanded');
@@ -414,10 +781,13 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       content.style.padding = '0';
       content.style.borderTop = 'none';
     } else {
+      // Pro paywall prompt on open if locked
+      if (isPro && !userHasPro()) {
+        openProPaywall({ domain: getCurrentDomain(), context: 'fixes' });
+      }
       // Expand and create content if not already created
       if (!contentInner.hasChildNodes()) {
-        const contentHTML = contentCreator();
-        contentInner.innerHTML = contentHTML;
+        renderContent();
       }
       
       content.classList.add('expanded');

@@ -83,25 +83,26 @@ router.post('/track-scan', requireAuth, async (req, res) => {
   try {
     const db = getDatabase();
     const userId = req.user.id;
-    const { scanId, url } = req.body;
+    const { url } = req.body;
+
+    // Get today's date range
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayISO = today.toISOString();
+
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowISO = tomorrow.toISOString();
 
     // Check daily limit (free tier only)
     const isPro = req.user.plan === 'pro';
     if (!isPro) {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayISO = today.toISOString();
-
-      const tomorrow = new Date(today);
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      const tomorrowISO = tomorrow.toISOString();
-
       const scansToday = await db.get(
         'SELECT COUNT(*) as count FROM scans WHERE user_id = ? AND created_at >= ? AND created_at < ?',
         [userId, todayISO, tomorrowISO]
       );
 
-      if (scansToday.count >= 25) {
+      if (scansToday && scansToday.count >= 25) {
         return res.status(429).json({
           success: false,
           error: 'Daily scan limit reached (25 scans). Upgrade to Pro for unlimited scans.',
@@ -110,9 +111,25 @@ router.post('/track-scan', requireAuth, async (req, res) => {
       }
     }
 
+    // Record the scan in the database
+    const scanId = require('crypto').randomUUID();
+    await db.run(
+      `INSERT INTO scans (id, user_id, target_url, status, created_at)
+       VALUES (?, ?, ?, 'completed', datetime('now'))`,
+      [scanId, userId, url || 'unknown']
+    );
+
+    // Get updated count
+    const updatedCount = await db.get(
+      'SELECT COUNT(*) as count FROM scans WHERE user_id = ? AND created_at >= ? AND created_at < ?',
+      [userId, todayISO, tomorrowISO]
+    );
+
     res.json({
       success: true,
-      message: 'Scan tracked successfully'
+      message: 'Scan tracked successfully',
+      scansToday: updatedCount?.count || 1,
+      scansRemaining: isPro ? -1 : Math.max(0, 25 - (updatedCount?.count || 1))
     });
   } catch (error) {
     console.error('Error tracking scan:', error);

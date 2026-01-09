@@ -4,13 +4,74 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Admin Dashboard | Site Mechanic</title>
+  <link rel="stylesheet" href="/design-tokens.css">
   <link rel="stylesheet" href="/components.css">
   <link rel="stylesheet" href="/ui.css">
   <style>
+    * {
+      box-sizing: border-box;
+    }
+    
     body {
-      background: #000;
+      background: #0a0a0a;
       color: #fff;
       font-family: 'Inter', -apple-system, sans-serif;
+      margin: 0;
+      padding: 0;
+      min-height: 100vh;
+    }
+
+    /* Admin-specific header */
+    .admin-topbar {
+      background: rgba(0, 0, 0, 0.8);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      backdrop-filter: blur(10px);
+    }
+
+    .admin-topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .admin-topbar-logo {
+      color: #00ff41;
+      font-weight: 700;
+      font-size: 1.1rem;
+      text-decoration: none;
+    }
+
+    .admin-topbar-divider {
+      color: rgba(255, 255, 255, 0.3);
+    }
+
+    .admin-topbar-title {
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .admin-topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .admin-topbar-link {
+      color: #888;
+      text-decoration: none;
+      font-size: 0.875rem;
+      transition: color 0.2s;
+    }
+
+    .admin-topbar-link:hover {
+      color: #00ff41;
     }
 
     .admin-container {
@@ -345,12 +406,326 @@
     .hidden {
       display: none !important;
     }
+
+    /* Test Runner Styles */
+    .test-runner {
+      margin-top: 2rem;
+    }
+
+    .test-runner-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .test-runner-title {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .test-controls {
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .btn-test {
+      padding: 0.625rem 1.25rem;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 0.875rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: none;
+    }
+
+    .btn-run-all {
+      background: linear-gradient(135deg, #00ff88, #00cc66);
+      color: #000;
+    }
+
+    .btn-run-all:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+    }
+
+    .btn-run-all:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-quick-check {
+      background: rgba(59, 130, 246, 0.2);
+      color: #3b82f6;
+      border: 1px solid rgba(59, 130, 246, 0.3);
+    }
+
+    .btn-quick-check:hover:not(:disabled) {
+      background: rgba(59, 130, 246, 0.3);
+    }
+
+    .test-summary {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .test-summary-item {
+      background: rgba(255,255,255,0.05);
+      border-radius: 8px;
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .test-summary-value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .test-summary-value.passed {
+      color: #22c55e;
+    }
+
+    .test-summary-value.failed {
+      color: #ef4444;
+    }
+
+    .test-summary-value.pending {
+      color: #f59e0b;
+    }
+
+    .test-summary-value.total {
+      color: #3b82f6;
+    }
+
+    .test-summary-label {
+      font-size: 0.75rem;
+      color: #888;
+      text-transform: uppercase;
+      margin-top: 0.25rem;
+    }
+
+    .test-suites-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .test-suite-card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 10px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .test-suite-card:hover {
+      background: rgba(255,255,255,0.06);
+      border-color: rgba(255,255,255,0.2);
+    }
+
+    .test-suite-card.running {
+      border-color: #3b82f6;
+      animation: pulse-blue 2s infinite;
+    }
+
+    .test-suite-card.passed {
+      border-color: rgba(34, 197, 94, 0.5);
+    }
+
+    .test-suite-card.failed {
+      border-color: rgba(239, 68, 68, 0.5);
+    }
+
+    @keyframes pulse-blue {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.3); }
+      50% { box-shadow: 0 0 0 8px rgba(59, 130, 246, 0); }
+    }
+
+    .test-suite-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.5rem;
+    }
+
+    .test-suite-name {
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .test-suite-category {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      background: rgba(255,255,255,0.1);
+      color: #888;
+    }
+
+    .test-suite-category.utils { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
+    .test-suite-category.services { background: rgba(168, 85, 247, 0.2); color: #a855f7; }
+    .test-suite-category.middleware { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
+    .test-suite-category.integration { background: rgba(236, 72, 153, 0.2); color: #ec4899; }
+
+    .test-suite-status {
+      font-size: 0.8rem;
+      color: #666;
+    }
+
+    .test-suite-status.passed { color: #22c55e; }
+    .test-suite-status.failed { color: #ef4444; }
+    .test-suite-status.running { color: #3b82f6; }
+
+    .test-results-panel {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.5rem;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    .test-results-empty {
+      text-align: center;
+      color: #666;
+      padding: 3rem;
+    }
+
+    .test-result-file {
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .test-result-file:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+
+    .test-result-file-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+
+    .test-result-file-name {
+      font-weight: 600;
+      color: #fff;
+      font-size: 0.9rem;
+    }
+
+    .test-result-file-stats {
+      font-size: 0.75rem;
+      display: flex;
+      gap: 0.75rem;
+    }
+
+    .test-result-file-stats span {
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .test-result-file-stats .pass-count {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+
+    .test-result-file-stats .fail-count {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+
+    .test-assertions {
+      padding-left: 1rem;
+    }
+
+    .test-assertion {
+      padding: 0.5rem 0;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .test-assertion-icon {
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+
+    .test-assertion-icon.passed::before { content: '✓'; color: #22c55e; }
+    .test-assertion-icon.failed::before { content: '✗'; color: #ef4444; }
+    .test-assertion-icon.pending::before { content: '○'; color: #f59e0b; }
+
+    .test-assertion-name {
+      color: #ccc;
+    }
+
+    .test-assertion.failed .test-assertion-name {
+      color: #ef4444;
+    }
+
+    .test-assertion-error {
+      margin-top: 0.5rem;
+      padding: 0.75rem;
+      background: rgba(239, 68, 68, 0.1);
+      border-radius: 6px;
+      font-family: monospace;
+      font-size: 0.75rem;
+      color: #ef4444;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    .test-running-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 2rem;
+      color: #3b82f6;
+    }
+
+    .test-running-indicator .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid rgba(59, 130, 246, 0.2);
+      border-top-color: #3b82f6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .test-duration {
+      font-size: 0.75rem;
+      color: #666;
+      margin-left: 0.5rem;
+    }
   </style>
 </head>
 <body>
-  <div id="nav-placeholder"></div>
+  <!-- Admin-specific top bar -->
+  <header class="admin-topbar">
+    <div class="admin-topbar-left">
+      <a href="/dashboard.html" class="admin-topbar-logo">SITE MECHANIC</a>
+      <span class="admin-topbar-divider">/</span>
+      <span class="admin-topbar-title">Admin Dashboard</span>
+    </div>
+    <div class="admin-topbar-right">
+      <a href="/dashboard.html" class="admin-topbar-link">← Back to Dashboard</a>
+      <a href="#" id="logoutLink" class="admin-topbar-link">Logout</a>
+    </div>
+  </header>
 
-  <main class="page-shell">
+  <main>
     <div class="admin-container">
       <!-- Header -->
       <div class="admin-header">
@@ -419,6 +794,53 @@
 
       <!-- Testing Tools Tab -->
       <div id="testingTab" class="tab-content">
+        <!-- Unit Test Runner Section -->
+        <div class="test-runner">
+          <div class="test-runner-header">
+            <h2 class="test-runner-title">🧪 Unit Test Runner</h2>
+            <div class="test-controls">
+              <button id="quickCheckBtn" class="btn-test btn-quick-check">Quick Health Check</button>
+              <button id="runAllTestsBtn" class="btn-test btn-run-all">Run All Tests</button>
+            </div>
+          </div>
+
+          <!-- Test Summary -->
+          <div id="testSummary" class="test-summary hidden">
+            <div class="test-summary-item">
+              <div class="test-summary-value total" id="testTotal">0</div>
+              <div class="test-summary-label">Total</div>
+            </div>
+            <div class="test-summary-item">
+              <div class="test-summary-value passed" id="testPassed">0</div>
+              <div class="test-summary-label">Passed</div>
+            </div>
+            <div class="test-summary-item">
+              <div class="test-summary-value failed" id="testFailed">0</div>
+              <div class="test-summary-label">Failed</div>
+            </div>
+            <div class="test-summary-item">
+              <div class="test-summary-value pending" id="testDuration">0ms</div>
+              <div class="test-summary-label">Duration</div>
+            </div>
+          </div>
+
+          <!-- Test Suites Grid -->
+          <div id="testSuitesGrid" class="test-suites-grid">
+            <div class="loading">Loading test suites...</div>
+          </div>
+
+          <!-- Test Results Panel -->
+          <div class="test-results-panel" id="testResultsPanel">
+            <div class="test-results-empty">
+              Select a test suite or click "Run All Tests" to see results
+            </div>
+          </div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid rgba(255,255,255,0.1); margin: 2rem 0;">
+
+        <!-- Original Testing Tools -->
+        <h3 style="color: #888; font-size: 0.875rem; text-transform: uppercase; margin-bottom: 1rem;">Development Tools</h3>
         <div class="testing-tools">
           <!-- Create Test User -->
           <div class="tool-card">
@@ -471,9 +893,7 @@
   </main>
 
   <script src="/i18n.js"></script>
-  <script src="/language-switcher.js"></script>
   <script src="/pro-utils.js"></script>
-  <script src="/nav-template.js"></script>
   <script src="/admin-script.js"></script>
 </body>
 </html>

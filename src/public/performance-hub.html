@@ -62,6 +62,8 @@
   <link rel="stylesheet" href="/ui-components.css">
   <link rel="stylesheet" href="/progress-styles.css">
   <link rel="stylesheet" href="/analyzer-loading.css">
+  <link rel="stylesheet" href="/css/components/reportShell.css">
+  <link rel="stylesheet" href="/css/components/reportAccordion.css">
   <link rel="stylesheet" href="/spacing-fixes.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   
@@ -912,47 +914,22 @@
       
       <!-- Mode Selector Tabs -->
       <div class="tabs" id="modeTabs">
-        <button type="button" class="tabs__item tabs__item--active" data-mode="quick" id="tab-quick">
+        <button type="button" class="tabs__item tabs__item--active" data-mode="quick" id="tab-quick" onclick="setPerformanceMode('quick')">
           <span class="tabs__label">Quick scan</span>
           <span class="tabs__desc">Resource analysis</span>
           <span class="tabs__time">~5-10s</span>
         </button>
-        <button type="button" class="tabs__item" data-mode="cwv" id="tab-cwv">
+        <button type="button" class="tabs__item" data-mode="cwv" id="tab-cwv" onclick="setPerformanceMode('cwv')">
           <span class="tabs__label">Core Web Vitals</span>
           <span class="tabs__desc">Google ranking metrics</span>
           <span class="tabs__time">~15-30s</span>
         </button>
-        <button type="button" class="tabs__item" data-mode="full" id="tab-full">
+        <button type="button" class="tabs__item" data-mode="full" id="tab-full" onclick="setPerformanceMode('full')">
           <span class="tabs__label">Lighthouse audit</span>
           <span class="tabs__desc">Complete performance audit</span>
           <span class="tabs__time">~2-3 min</span>
         </button>
       </div>
-      
-      <script>
-        // Inline tab switching
-        document.getElementById('tab-quick').onclick = function(e) {
-          e.preventDefault();
-          document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
-          this.classList.add('tabs__item--active');
-          var el = document.getElementById('selectedMode');
-          if (el) el.textContent = 'Quick scan';
-        };
-        document.getElementById('tab-cwv').onclick = function(e) {
-          e.preventDefault();
-          document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
-          this.classList.add('tabs__item--active');
-          var el = document.getElementById('selectedMode');
-          if (el) el.textContent = 'Core Web Vitals';
-        };
-        document.getElementById('tab-full').onclick = function(e) {
-          e.preventDefault();
-          document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
-          this.classList.add('tabs__item--active');
-          var el = document.getElementById('selectedMode');
-          if (el) el.textContent = 'Lighthouse audit';
-        };
-      </script>
       
       <!-- URL Input Form -->
       <div class="form-row">
@@ -969,11 +946,12 @@
             <span class="mode-indicator__value" id="selectedMode">Quick scan</span>
           </span>
         </p>
+        <p class="helper-text" id="modeDescription" style="margin-top: 0.25rem;">Resource analysis focusing on requests, page weight, blocking assets, and server response time.</p>
       </div>
     </section>
     
     <!-- Results Container -->
-    <div id="results" class="hidden">
+    <div id="results" class="results-container hidden">
       <!-- Loading State (will be populated by AnalyzerLoader) -->
       <div id="loadingContainer"></div>
       
@@ -1006,7 +984,9 @@
   <script src="/analyzer-loader.js"></script>
 
   <script src="/performance-fixes-renderer.js"></script>
-  <script src="/performance-hub-script.js?v=20260105e"></script>
+  <script src="/js/components/reportShell.js?v=20260106a"></script>
+  <script src="/js/components/reportAccordion.js?v=20260106a"></script>
+  <script src="/performance-hub-script.js?v=20260106b"></script>
   
   <script>
     // PDF Export Function using improved utility

@@ -231,20 +231,13 @@ function displayReputationResults(data) {
   // Overall Reputation Summary with Circular Dials
   const summaryHtml = `
     <div class="summary-section security-summary-panel">
-      <h2>◈ IP/Domain Reputation Summary</h2>
-
-      <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
-        <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
-          <span style="color: #00ff41;">Target:</span>
-          <span style="color: #ffffff;">${data.input || 'N/A'}</span>
-          <span style="color: #00ff41;">IP Address:</span>
-          <span style="color: #ffffff;">${data.ipAddress || 'N/A'}</span>
-          <span style="color: #00ff41;">Hostname:</span>
-          <span style="color: #ffffff;">${data.hostname || 'N/A'}</span>
-          <span style="color: #00ff41;">Timestamp:</span>
-          <span style="color: #ffffff;">${new Date(data.timestamp).toLocaleString()}</span>
-        </div>
-      </div>
+      <h2>[IP_REPUTATION_ANALYSIS]</h2>
+      <p>>> target: ${data.input || 'N/A'}</p>
+      <p>>> ip_address: ${data.ipAddress || 'N/A'}</p>
+      <p>>> hostname: ${data.hostname || 'N/A'}</p>
+      <p>>> timestamp: ${new Date(data.timestamp).toLocaleString()}</p>
+      
+      <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">>> Reputation Summary</h3>
 
       <!-- Circular Progress Dials -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0;">
@@ -385,28 +378,28 @@ function displayReputationResults(data) {
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
         <!-- SSL Score -->
         <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">🔒 SSL/TLS</div>
+          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">SSL/TLS</div>
           <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.sslScore || 0)};">${data.sslScore || 0}</div>
           <div style="font-size: 0.8rem; color: ${getScoreColor(data.sslScore || 0)};">${data.sslStatus || 'N/A'}</div>
         </div>
 
         <!-- DNS Score -->
         <div style="background: rgba(153, 51, 255, 0.05); border: 1px solid rgba(153, 51, 255, 0.2); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">🌐 DNS Health</div>
+          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">DNS Health</div>
           <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.dnsScore || 0)};">${data.dnsScore || 0}</div>
           <div style="font-size: 0.8rem; color: ${getScoreColor(data.dnsScore || 0)};">${data.dnsStatus || 'N/A'}</div>
         </div>
 
         <!-- Port Security Score -->
         <div style="background: rgba(255, 165, 0, 0.05); border: 1px solid rgba(255, 165, 0, 0.2); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">🔓 Port Security</div>
+          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">Port Security</div>
           <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.portSecurityScore || 0)};">${data.portSecurityScore || 0}</div>
           <div style="font-size: 0.8rem; color: ${getScoreColor(data.portSecurityScore || 0)};">${data.portSecurityScore >= 90 ? 'Secure' : data.portSecurityScore >= 70 ? 'Good' : 'At Risk'}</div>
         </div>
 
         <!-- Analysis Time -->
         <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">⏱️ Analysis Time</div>
+          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">Analysis Time</div>
           <div style="font-size: 2rem; font-weight: bold; color: #00ff41;">${((data.analysisTime || 0) / 1000).toFixed(1)}s</div>
           <div style="font-size: 0.8rem; color: #00ff41;">${data.blacklists?.length || 0} checks</div>
         </div>
@@ -522,7 +515,7 @@ function createBlacklistSection(blacklists) {
     </div>
   `;
 
-  return createAccordionSection('blacklist', '🛡️', 'DNS Blacklist Status', content, score);
+  return createAccordionSection('blacklist', 'DNS Blacklist Status', content, score);
 }
 
 // Create Email Configuration Section
@@ -578,7 +571,7 @@ function createEmailSection(emailConfig) {
   if (emailConfig.dkim?.valid) score += 30;
   if (emailConfig.dmarc?.valid) score += 30;
 
-  return createAccordionSection('email-deliverability', '📧', 'Email Deliverability', content, score);
+  return createAccordionSection('email-deliverability', 'Email Deliverability', content, score);
 }
 
 // Create Hosting & Network Information Section
@@ -622,7 +615,7 @@ function createHostingSection(hostingInfo) {
       </div>
   `;
 
-  return createAccordionSection('hosting-network', '🌐', 'Hosting & Network Information', content);
+  return createAccordionSection('hosting-network', 'Hosting & Network Information', content);
 }
 
 // Create Threat Intelligence Section
@@ -675,7 +668,7 @@ function createThreatSection(threatIntel) {
     score = Math.max(0, score);
   }
 
-  return createAccordionSection('threat-intelligence', '🛡️', 'Threat Intelligence', content, score);
+  return createAccordionSection('threat-intelligence', 'Threat Intelligence', content, score);
 }
 
 // Create Recommendations Section
@@ -712,7 +705,7 @@ function createRecommendationsSection(recommendations) {
       </div>
   `;
 
-  return createAccordionSection('recommendations', '💡', 'Recommendations', content);
+  return createAccordionSection('recommendations', 'Recommendations', content);
 }
 
 // Utility functions
@@ -821,7 +814,7 @@ function createSSLSection(sslCert, sslScore) {
       ` : ''}
   `;
   
-  return createAccordionSection('ssl', '🔒', 'SSL/TLS Certificate', content, sslScore);
+  return createAccordionSection('ssl', 'SSL/TLS Certificate', content, sslScore);
 }
 
 // Create DNS Health Section
@@ -893,7 +886,7 @@ function createDNSHealthSection(dnsHealth, dnsScore) {
       ` : ''}
   `;
 
-  return createAccordionSection('dns-health', '🌐', 'DNS Health', content, dnsScore);
+  return createAccordionSection('dns-health', 'DNS Health', content, dnsScore);
 }
 
 // Create Port Security Section
@@ -961,7 +954,7 @@ function createPortSecuritySection(portScan) {
     score = Math.max(0, score);
   }
 
-  return createAccordionSection('port-security', '🔓', 'Port Security Scan', content, score);
+  return createAccordionSection('port-security', 'Port Security Scan', content, score);
 }
 
 function showError(message) {
@@ -975,13 +968,13 @@ function showError(message) {
 }
 
 // Helper function to create accordion sections
-function createAccordionSection(id, icon, title, contentHTML, score = null) {
+function createAccordionSection(id, title, contentHTML, score = null) {
   const accordionId = `accordion-${id}`;
   
   return `
     <div class="accordion" style="margin-bottom: 0.5rem;">
       <button class="accordion-header" onclick="toggleIPAccordion('${accordionId}')">
-        <span>${icon} ${title}</span>
+        <span>${title}</span>
         <span style="display: flex; align-items: center; gap: 0.5rem;">
           ${score !== null ? `<span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
           <span class="accordion-toggle" id="${accordionId}-toggle">▼</span>

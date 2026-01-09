@@ -131,11 +131,6 @@ details[open] > *:not(summary) {
   padding: 1rem !important;
 }
 
-/* Exclude dashboard page from accordion padding reset */
-body:not([data-page="dashboard"]) [class*="accordion"]:not(.accordion-score):not(.accordion-item):not(.accordion-header):not(.accordion-content):not(.accordion-body):not(.accordion-chevron):not(.accordion-title):not(.accordion-icon) {
-  padding: 0 !important;
-}
-
 .accordion-item summary,
 .expandable-item summary {
   padding: 1rem 1.25rem !important;

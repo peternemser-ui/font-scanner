@@ -115,9 +115,9 @@ class ProManager {
               Get expert-level optimization with Site Mechanic Pro
             </div>
           </div>
-          <button style="padding: 0.5rem 1.25rem; background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; border: none; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; white-space: nowrap;" onclick="window.location.href='/upgrade.html'">
-            Upgrade to Pro
-          </button>
+          <span style="padding: 0.5rem 1.25rem; background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; border: none; border-radius: 6px; font-weight: 700; font-size: 0.8rem; white-space: nowrap; display: inline-block;">
+            Pro required
+          </span>
         </div>
       </div>
     `;
@@ -157,9 +157,9 @@ class ProManager {
           <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 1rem;">
             Unlock expert-level code examples
           </div>
-          <button style="padding: 0.625rem 1.5rem; background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; border: none; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;" onclick="window.location.href='/upgrade.html'">
-            Upgrade to Pro
-          </button>
+          <span style="padding: 0.625rem 1.5rem; background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; border: none; border-radius: 6px; font-weight: 700; font-size: 0.85rem; display: inline-block;">
+            Pro required
+          </span>
         </div>
       </div>
     `;
@@ -181,9 +181,7 @@ class ProManager {
    * Show upgrade prompt for a specific feature
    */
   showUpgradePrompt(featureName) {
-    if (confirm(`${featureName} is a Pro feature. Upgrade to Site Mechanic Pro to unlock it?`)) {
-      window.location.href = '/upgrade.html';
-    }
+    alert(`${featureName} is a Pro feature. Please sign in with a Pro account.`);
   }
 
   /**

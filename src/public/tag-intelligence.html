@@ -57,6 +57,11 @@
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
+    
+    <!-- Shared Report Components CSS -->
+    <link rel="stylesheet" href="/css/components/reportShell.css?v=FRESH-JAN8-2026">
+    <link rel="stylesheet" href="/css/components/reportAccordion.css?v=FRESH-JAN8-2026">
+    
     <!-- Shared UI System -->
     <link rel="stylesheet" href="ui.css" />
     <!-- Existing Stylesheets -->
@@ -95,6 +100,10 @@
       .tag-consent { background: #10b981; color: white; }
       .tag-customer_support { background: #ec4899; color: white; }
       .tag-marketing { background: #ef4444; color: white; }
+      .tag-ab_testing { background: #8b5cf6; color: white; }
+      .tag-session_recording { background: #ec4899; color: white; }
+      .tag-error_monitoring { background: #f97316; color: white; }
+      .tag-cdp { background: #14b8a6; color: white; }
       .tag-other { background: #6b7280; color: white; }
       
       /* Tag card */
@@ -107,6 +116,17 @@
       }
       .tag-card:hover {
         border-color: rgba(0, 255, 136, 0.3);
+      }
+      
+      /* SEO-style accordion overrides */
+      .accordion-header:hover {
+        background: rgba(255, 255, 255, 0.06) !important;
+      }
+      .accordion-header.active {
+        background: rgba(255, 255, 255, 0.05) !important;
+      }
+      .accordion-header.active .accordion-toggle {
+        color: #00ff41;
       }
       
       /* Issue severity */
@@ -248,6 +268,18 @@
         
           <!-- Options Panel -->
           <div class="options-panel" style="margin-top: 1rem;">
+            <!-- Best-in-Class Toggle -->
+            <div class="scan-options" style="margin-bottom: 1rem;">
+              <label class="toggle-container">
+                <input type="checkbox" id="comprehensiveScan" />
+                <span class="toggle-slider"></span>
+                <span class="toggle-label">Comprehensive Tag Analysis</span>
+              </label>
+              <p class="toggle-description">
+                Deep analysis including performance impact, consent compliance, and data layer inspection
+              </p>
+            </div>
+            
             <label>
               <input type="checkbox" id="multiPageOption" />
               Multi-page scan (crawl multiple pages)
@@ -284,12 +316,17 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="theme-controls.js"></script>
+    <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
     <script src="analyzer-loader.js"></script>
+
+    <!-- Shared Report Components -->
+    <script src="/js/components/reportShell.js?v=FRESH-JAN8-2026"></script>
+    <script src="/js/components/reportAccordion.js?v=FRESH-JAN8-2026"></script>
 
     <!-- ASCII Background Animation -->
 
 
-    <script src="tag-intelligence-script.js"></script>
+    <script src="tag-intelligence-script.js?v=FRESH-JAN8-2026"></script>
   </body>
 </html>

@@ -63,15 +63,27 @@ const analyzeCRO = asyncHandler(async (req, res) => {
 /**
  * Brand Consistency Analysis
  * POST /api/brand-consistency
+ * Supports multiPage mode for crawling multiple pages
  */
 const analyzeBrand = asyncHandler(async (req, res) => {
-  const { url } = req.body;
-  logger.info(`Brand analysis requested: ${url}`, { requestId: req.id });
+  const { url, multiPage = false, maxPages = 5 } = req.body;
+  logger.info(`Brand analysis requested: ${url}`, { 
+    requestId: req.id, 
+    multiPage, 
+    maxPages: multiPage ? maxPages : 1 
+  });
 
   const reachableUrl = await validateAndPrepareUrl(url, req.id);
-  const results = await brandConsistencyService.analyzeBrand(reachableUrl);
+  const results = await brandConsistencyService.analyzeBrand(reachableUrl, { 
+    multiPage, 
+    maxPages: Math.min(maxPages, 10) // Cap at 10 pages max
+  });
 
-  logger.info(`Brand analysis completed`, { requestId: req.id, score: results.score });
+  logger.info(`Brand analysis completed`, { 
+    requestId: req.id, 
+    score: results.score,
+    pagesAnalyzed: results.pagesAnalyzed || 1
+  });
   res.json(results);
 });
 

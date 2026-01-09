@@ -308,6 +308,10 @@ app.use('/api/usage', usageRoutes);
 const adminRoutes = require('./routes/admin');
 app.use('/api/admin', adminRoutes);
 
+// Pro Report Snapshot API (paid report capture flow)
+const proReportRoutes = require('./routes/proReport');
+app.use('/api/pro-report', proReportRoutes);
+
 // New async scan API
 const scanRoutes = require('./routes/scan.routes');
 app.use('/api/scans', scanRoutes);

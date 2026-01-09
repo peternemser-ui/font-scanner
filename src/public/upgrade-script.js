@@ -108,7 +108,7 @@ async function handleUpgrade(billingPeriod) {
       },
       body: JSON.stringify({
         successUrl: `${window.location.origin}/account.html?success=true`,
-        cancelUrl: `${window.location.origin}/upgrade.html?canceled=true`
+        cancelUrl: `${window.location.origin}/account.html?canceled=true`
       })
     });
 

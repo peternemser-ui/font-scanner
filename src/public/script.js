@@ -642,7 +642,41 @@
         `;
         this.resultsContainer.insertBefore(gradeIndicator, this.resultsContainer.firstChild);
       }
+      
+      // Capture pro report snapshot after scan completes (non-blocking)
+      this.captureProReportSnapshot(data);
     }, 500);
+  }
+
+  /**
+   * Capture a pro report snapshot for later PDF generation
+   * This is a non-blocking operation - failures are logged but don't affect UX
+   * @param {object} scanData - The full scan result data
+   */
+  async captureProReportSnapshot(scanData) {
+    // Check if ProReportSnapshot is available
+    if (typeof ProReportSnapshot === 'undefined') {
+      console.log('[FontScannerApp] ProReportSnapshot not loaded, skipping capture');
+      return;
+    }
+
+    try {
+      const domain = scanData.url || scanData.basicScan?.url || '';
+      if (!domain) {
+        console.warn('[FontScannerApp] No domain found in scan data, skipping snapshot');
+        return;
+      }
+
+      const result = await ProReportSnapshot.capture(domain, scanData, { silent: false });
+      if (result.success) {
+        console.log('[FontScannerApp] Pro report snapshot captured:', result.purchaseId);
+      } else {
+        console.warn('[FontScannerApp] Pro report snapshot failed:', result.error);
+      }
+    } catch (error) {
+      // Non-blocking - just log the error
+      console.error('[FontScannerApp] Pro report snapshot error:', error);
+    }
   }
 
   showProgress(customMessage) {

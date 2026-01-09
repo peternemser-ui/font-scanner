@@ -68,6 +68,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Build options
     const options = {};
+    const comprehensiveScan = document.getElementById('comprehensiveScan');
+    if (comprehensiveScan && comprehensiveScan.checked) {
+      options.comprehensive = true;
+      options.includePerformanceImpact = true;
+      options.includeDataLayer = true;
+      options.includeConsentMode = true;
+      options.includeThirdPartyScripts = true;
+    }
     if (multiPageOption.checked) {
       options.maxPages = parseInt(document.getElementById('maxPages').value) || 5;
       options.maxDepth = 2;
@@ -122,22 +130,43 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayResults(data) {
+    const url = document.getElementById('url') ? document.getElementById('url').value : (document.getElementById('urlInput') ? document.getElementById('urlInput').value : '');
+    const timestamp = new Date().toLocaleString();
+    const scoreColor = getScoreColor(data.healthScore);
+    
     const html = `
-      <!-- Score Overview -->
-      <div class="score-section" style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="margin-bottom: 1rem;">Tag Health Score</h2>
-        <div class="score-circle ${getScoreClass(data.healthScore)}" style="
-          width: 120px; height: 120px; border-radius: 50%;
-          display: flex; align-items: center; justify-content: center;
-          font-size: 2.5rem; font-weight: bold; margin: 0 auto;
-          border: 4px solid ${getScoreColor(data.healthScore)};
-          color: ${getScoreColor(data.healthScore)};
+      <!-- SEO-Style Header -->
+      <div class="section">
+        <h2>[TAG_ANALYSIS_RESULTS]</h2>
+        <p>>> url: ${url}</p>
+        <p>>> timestamp: ${timestamp}</p>
+        
+        <div style="
+          background: linear-gradient(135deg, rgba(0,255,65,0.05) 0%, rgba(0,255,65,0.02) 100%);
+          border: 2px solid ${scoreColor};
+          border-radius: 12px;
+          padding: 2rem;
+          margin: 2rem 0;
+          box-shadow: 0 4px 20px rgba(0,255,65,0.15);
         ">
-          ${data.healthScore}
+          <h3 style="color: #00ff41; margin: 0 0 1.5rem 0; font-size: 1.3rem;">>> Tag Audit Summary</h3>
+          
+          <!-- Score Overview -->
+          <div class="score-section" style="text-align: center; margin-bottom: 1rem;">
+            <div class="score-circle ${getScoreClass(data.healthScore)}" style="
+              width: 120px; height: 120px; border-radius: 50%;
+              display: flex; align-items: center; justify-content: center;
+              font-size: 2.5rem; font-weight: bold; margin: 0 auto;
+              border: 4px solid ${scoreColor};
+              color: ${scoreColor};
+            ">
+              ${data.healthScore}
+            </div>
+            <p style="margin-top: 1rem; color: #808080;">
+              Scanned ${data.pagesScanned} page(s) • ${data.summary.totalTags} tag(s) detected
+            </p>
+          </div>
         </div>
-        <p style="margin-top: 1rem; color: #808080;">
-          Scanned ${data.pagesScanned} page(s) • ${data.summary.totalTags} tag(s) detected
-        </p>
       </div>
 
       <!-- Summary Cards -->
@@ -377,6 +406,137 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `, null) : ''}
 
+      <!-- Cookie Audit Section -->
+      ${data.pageResults && data.pageResults[0]?.cookies?.count > 0 ? createTagAccordionSection('cookie-audit', '🍪', `Cookie Audit (${data.pageResults[0].cookies.count})`, `
+        <div style="padding: 1rem 0;">
+          <!-- Cookie Compliance Score -->
+          <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+            <div style="text-align: center;">
+              <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.pageResults[0].cookies.complianceScore || 100)};">
+                ${data.pageResults[0].cookies.complianceScore || 100}
+              </div>
+              <div style="font-size: 0.75rem; color: #888;">Compliance Score</div>
+            </div>
+            <div style="flex: 1;">
+              <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                ${Object.entries(data.pageResults[0].cookies.summary || {}).map(([type, count]) => count > 0 ? `
+                  <span style="background: ${getCookieTypeColor(type)}; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">
+                    ${formatCookieType(type)}: ${count}
+                  </span>
+                ` : '').join('')}
+              </div>
+            </div>
+          </div>
+          
+          <!-- Cookie Issues -->
+          ${data.pageResults[0].cookies.issues?.length > 0 ? `
+            <div style="margin-bottom: 1rem;">
+              ${data.pageResults[0].cookies.issues.map(issue => `
+                <div style="background: rgba(${issue.severity === 'high' ? '239, 68, 68' : '245, 158, 11'}, 0.1); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.85rem; border-left: 3px solid ${issue.severity === 'high' ? '#ef4444' : '#f59e0b'};">
+                  <strong>${issue.severity === 'high' ? '⚠️' : '⚡'} ${issue.message}</strong>
+                  <p style="margin: 0.25rem 0 0 0; color: #888;">${issue.recommendation}</p>
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          
+          <!-- Cookie List -->
+          <div style="max-height: 400px; overflow-y: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
+              <thead style="position: sticky; top: 0; background: #1a1a1a;">
+                <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+                  <th style="text-align: left; padding: 0.5rem; color: #888;">Name</th>
+                  <th style="text-align: left; padding: 0.5rem; color: #888;">Type</th>
+                  <th style="text-align: left; padding: 0.5rem; color: #888;">Vendor</th>
+                  <th style="text-align: left; padding: 0.5rem; color: #888;">Purpose</th>
+                  <th style="text-align: center; padding: 0.5rem; color: #888;">Secure</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.pageResults[0].cookies.cookies.slice(0, 30).map(cookie => `
+                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <td style="padding: 0.5rem; font-family: monospace; color: #a78bfa;">${cookie.name.substring(0, 25)}${cookie.name.length > 25 ? '...' : ''}</td>
+                    <td style="padding: 0.5rem;"><span style="background: ${getCookieTypeColor(cookie.type)}; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem;">${cookie.type}</span></td>
+                    <td style="padding: 0.5rem; color: #ccc;">${cookie.vendor || 'Unknown'}</td>
+                    <td style="padding: 0.5rem; color: #888; font-size: 0.75rem;">${cookie.purpose || '-'}</td>
+                    <td style="padding: 0.5rem; text-align: center;">${cookie.hasSecure ? '✓' : '✗'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+            ${data.pageResults[0].cookies.cookies.length > 30 ? `<p style="color: #888; font-size: 0.8rem; margin-top: 0.5rem;">... and ${data.pageResults[0].cookies.cookies.length - 30} more cookies</p>` : ''}
+          </div>
+        </div>
+      `, data.pageResults[0].cookies.complianceScore) : ''}
+
+      <!-- A/B Testing & Session Recording -->
+      ${renderABTestingSection(data)}
+
+      <!-- Tag Load Waterfall -->
+      ${data.pageResults && data.pageResults[0]?.tagLoadWaterfall?.scripts?.length > 0 ? createTagAccordionSection('tag-waterfall', '⏱️', `Tag Load Waterfall (${data.pageResults[0].tagLoadWaterfall.totalScripts} scripts)`, `
+        <div style="padding: 1rem 0;">
+          <!-- Waterfall Stats -->
+          <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">${data.pageResults[0].tagLoadWaterfall.totalLoadTime}ms</div>
+              <div style="font-size: 0.75rem; color: #888;">Total Load Time</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">${data.pageResults[0].tagLoadWaterfall.totalSizeFormatted}</div>
+              <div style="font-size: 0.75rem; color: #888;">Total Size</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="font-size: 1.5rem; font-weight: bold; color: ${data.pageResults[0].tagLoadWaterfall.blockingCount > 5 ? '#ef4444' : '#10b981'};">${data.pageResults[0].tagLoadWaterfall.blockingCount}</div>
+              <div style="font-size: 0.75rem; color: #888;">Blocking Scripts</div>
+            </div>
+          </div>
+          
+          <!-- Insights -->
+          ${data.pageResults[0].tagLoadWaterfall.insights?.length > 0 ? `
+            <div style="margin-bottom: 1.5rem;">
+              ${data.pageResults[0].tagLoadWaterfall.insights.map(insight => `
+                <div style="background: rgba(${insight.type === 'warning' ? '245, 158, 11' : insight.type === 'good' ? '16, 185, 129' : '59, 130, 246'}, 0.1); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.85rem;">
+                  ${insight.type === 'warning' ? '⚠️' : insight.type === 'good' ? '✅' : 'ℹ️'} ${insight.message}
+                  ${insight.recommendation ? `<span style="color: #888;"> - ${insight.recommendation}</span>` : ''}
+                </div>
+              `).join('')}
+            </div>
+          ` : ''}
+          
+          <!-- Waterfall Visualization -->
+          <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; overflow-x: auto;">
+            <div style="min-width: 600px;">
+              ${data.pageResults[0].tagLoadWaterfall.scripts.slice(0, 20).map(script => `
+                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.75rem;">
+                  <div style="width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ccc;" title="${script.vendor}">${script.vendor}</div>
+                  <div style="flex: 1; height: 20px; background: rgba(255,255,255,0.05); border-radius: 3px; position: relative; overflow: hidden;">
+                    <div style="
+                      position: absolute;
+                      left: ${(script.startTime / data.pageResults[0].tagLoadWaterfall.totalLoadTime) * 100}%;
+                      width: ${Math.max((script.duration / data.pageResults[0].tagLoadWaterfall.totalLoadTime) * 100, 2)}%;
+                      height: 100%;
+                      background: ${getWaterfallColor(script.category)};
+                      border-radius: 3px;
+                    " title="${script.vendor}: ${script.duration}ms"></div>
+                  </div>
+                  <div style="width: 60px; text-align: right; color: #888;">${script.duration}ms</div>
+                  <div style="width: 50px; text-align: right; color: #666;">${script.sizeFormatted}</div>
+                </div>
+              `).join('')}
+            </div>
+            
+            <!-- Legend -->
+            <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+              <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #3b82f6; border-radius: 2px; margin-right: 4px;"></span>Analytics</span>
+              <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #f59e0b; border-radius: 2px; margin-right: 4px;"></span>Advertising</span>
+              <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #ec4899; border-radius: 2px; margin-right: 4px;"></span>Session Recording</span>
+              <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #8b5cf6; border-radius: 2px; margin-right: 4px;"></span>A/B Testing</span>
+              <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #6b7280; border-radius: 2px; margin-right: 4px;"></span>Other</span>
+            </div>
+          </div>
+        </div>
+      `, null) : ''}
+
       <!-- Raw Data (collapsible) -->
       <details style="margin-top: 2rem;">
         <summary style="cursor: pointer; color: #888;">📋 View Raw Data</summary>
@@ -386,7 +546,7 @@ ${JSON.stringify(data, null, 2)}
       </details>
     `;
 
-    resultsContent.innerHTML = html;
+    resultsContent.innerHTML = '<div class="report-scope">' + html + '</div>';
     
     // Render charts after DOM is updated
     setTimeout(() => renderCharts(data), 100);
@@ -542,6 +702,10 @@ ${JSON.stringify(data, null, 2)}
       consent: 'Consent',
       customer_support: 'Support',
       marketing: 'Marketing',
+      ab_testing: 'A/B Testing',
+      session_recording: 'Session Recording',
+      error_monitoring: 'Error Monitoring',
+      cdp: 'CDP',
       other: 'Other'
     };
     return labels[category] || category;
@@ -567,6 +731,154 @@ ${JSON.stringify(data, null, 2)}
       unknown: 'rgba(100, 100, 100, 0.3)'
     };
     return colors[category] || 'rgba(100, 100, 100, 0.3)';
+  }
+
+  /**
+   * Get color for cookie type badges
+   */
+  function getCookieTypeColor(type) {
+    const colors = {
+      necessary: 'rgba(16, 185, 129, 0.3)',
+      analytics: 'rgba(59, 130, 246, 0.3)',
+      advertising: 'rgba(239, 68, 68, 0.3)',
+      functional: 'rgba(167, 139, 250, 0.3)',
+      marketing: 'rgba(245, 158, 11, 0.3)',
+      unknown: 'rgba(100, 100, 100, 0.3)'
+    };
+    return colors[type] || colors.unknown;
+  }
+
+  /**
+   * Format cookie type for display
+   */
+  function formatCookieType(type) {
+    const labels = {
+      necessary: 'Essential',
+      analytics: 'Analytics',
+      advertising: 'Advertising',
+      functional: 'Functional',
+      marketing: 'Marketing',
+      unknown: 'Unknown'
+    };
+    return labels[type] || type;
+  }
+
+  /**
+   * Get color for waterfall chart bars
+   */
+  function getWaterfallColor(category) {
+    const colors = {
+      analytics: '#3b82f6',
+      advertising: '#f59e0b',
+      session_recording: '#ec4899',
+      ab_testing: '#8b5cf6',
+      consent: '#10b981',
+      customer_support: '#06b6d4',
+      marketing: '#ef4444',
+      error_monitoring: '#f97316',
+      cdp: '#14b8a6',
+      other: '#6b7280'
+    };
+    return colors[category] || colors.other;
+  }
+
+  /**
+   * Render A/B Testing & Session Recording section
+   */
+  function renderABTestingSection(data) {
+    // Collect A/B testing and session recording tags
+    const abTags = data.tags?.filter(t => t.category === 'ab_testing') || [];
+    const sessionTags = data.tags?.filter(t => t.category === 'session_recording') || [];
+    const errorTags = data.tags?.filter(t => t.category === 'error_monitoring') || [];
+    const cdpTags = data.tags?.filter(t => t.category === 'cdp') || [];
+    
+    const totalCount = abTags.length + sessionTags.length + errorTags.length + cdpTags.length;
+    
+    if (totalCount === 0) {
+      return '';
+    }
+
+    return createTagAccordionSection('ab-session-tools', '🧪', `A/B Testing & Session Recording (${totalCount})`, `
+      <div style="padding: 1rem 0;">
+        <!-- A/B Testing Tools -->
+        ${abTags.length > 0 ? `
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="margin: 0 0 0.75rem 0; color: #8b5cf6; font-size: 0.9rem;">🧪 A/B Testing (${abTags.length})</h4>
+            <div style="display: grid; gap: 0.5rem;">
+              ${abTags.map(tag => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(139, 92, 246, 0.1); border-radius: 6px; border-left: 3px solid #8b5cf6;">
+                  <div>
+                    <strong style="color: #fff;">${tag.name}</strong>
+                    ${tag.ids?.length ? `<span style="color: #888; font-size: 0.8rem; margin-left: 0.5rem;">${tag.ids.join(', ')}</span>` : ''}
+                  </div>
+                  <span style="color: #888; font-size: 0.8rem;">${tag.instances} instance(s)</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        
+        <!-- Session Recording Tools -->
+        ${sessionTags.length > 0 ? `
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="margin: 0 0 0.75rem 0; color: #ec4899; font-size: 0.9rem;">🎥 Session Recording & Heatmaps (${sessionTags.length})</h4>
+            <div style="display: grid; gap: 0.5rem;">
+              ${sessionTags.map(tag => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(236, 72, 153, 0.1); border-radius: 6px; border-left: 3px solid #ec4899;">
+                  <div>
+                    <strong style="color: #fff;">${tag.name}</strong>
+                  </div>
+                  <span style="color: #888; font-size: 0.8rem;">${tag.instances} instance(s)</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        
+        <!-- Error Monitoring Tools -->
+        ${errorTags.length > 0 ? `
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="margin: 0 0 0.75rem 0; color: #f97316; font-size: 0.9rem;">🐛 Error Monitoring (${errorTags.length})</h4>
+            <div style="display: grid; gap: 0.5rem;">
+              ${errorTags.map(tag => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(249, 115, 22, 0.1); border-radius: 6px; border-left: 3px solid #f97316;">
+                  <div>
+                    <strong style="color: #fff;">${tag.name}</strong>
+                  </div>
+                  <span style="color: #888; font-size: 0.8rem;">${tag.instances} instance(s)</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        
+        <!-- CDP Tools -->
+        ${cdpTags.length > 0 ? `
+          <div style="margin-bottom: 1rem;">
+            <h4 style="margin: 0 0 0.75rem 0; color: #14b8a6; font-size: 0.9rem;">🔄 Customer Data Platforms (${cdpTags.length})</h4>
+            <div style="display: grid; gap: 0.5rem;">
+              ${cdpTags.map(tag => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(20, 184, 166, 0.1); border-radius: 6px; border-left: 3px solid #14b8a6;">
+                  <div>
+                    <strong style="color: #fff;">${tag.name}</strong>
+                  </div>
+                  <span style="color: #888; font-size: 0.8rem;">${tag.instances} instance(s)</span>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        ` : ''}
+        
+        <!-- Summary Tips -->
+        <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(59, 130, 246, 0.1); border-radius: 6px; font-size: 0.85rem;">
+          <strong style="color: #3b82f6;">💡 Tip:</strong>
+          ${abTags.length > 1 ? `<span style="color: #ccc;"> Multiple A/B testing tools detected. Consider consolidating to reduce page weight.</span>` : ''}
+          ${sessionTags.length > 0 && abTags.length > 0 ? `<span style="color: #ccc;"> Session recordings can help analyze A/B test user behavior.</span>` : ''}
+          ${sessionTags.length > 0 && abTags.length === 0 ? `<span style="color: #ccc;"> Session recordings detected. Consider adding A/B testing to optimize based on insights.</span>` : ''}
+          ${totalCount === 1 ? `<span style="color: #ccc;"> Good foundation! Consider adding complementary tools as needed.</span>` : ''}
+        </div>
+      </div>
+    `, null);
   }
 
   /**
@@ -638,47 +950,49 @@ ${JSON.stringify(data, null, 2)}
   }
 
   // Accordion helper functions
+  /**
+   * Create SEO-style accordion section (matches SEO analyzer)
+   */
   function createTagAccordionSection(id, icon, title, contentHTML, score = null) {
-    const scoreHTML = score !== null ? `
-      <span class="accordion-badge" style="
-        padding: 0.25rem 0.75rem;
-        border-radius: 4px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        background: ${score >= 90 ? 'rgba(0, 255, 65, 0.2)' : score >= 70 ? 'rgba(255, 215, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'};
-        color: ${score >= 90 ? '#00ff41' : score >= 70 ? '#ffd700' : '#ff4444'};
-        border: 1px solid ${score >= 90 ? 'rgba(0, 255, 65, 0.4)' : score >= 70 ? 'rgba(255, 215, 0, 0.4)' : 'rgba(255, 68, 68, 0.4)'};
-      ">${score}</span>
-    ` : '';
+    const scoreColor = score !== null ? getScoreColor(score) : '#808080';
+    const scoreDisplay = score !== null ? `<span style="color: ${scoreColor}; font-size: 0.9rem;">${score}/100</span>` : '';
 
     return `
-      <div class="accordion" style="margin-bottom: 0.5rem; border-radius: 8px; overflow: hidden; background: rgba(255, 255, 255, 0.03);">
-        <div class="accordion-header" onclick="toggleTagAccordion('${id}')" style="
+      <div class="accordion" data-accordion-id="${id}" style="
+        margin-bottom: 0.5rem;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        background: rgba(0, 0, 0, 0.3);
+      ">
+        <button class="accordion-header" type="button" onclick="toggleTagAccordion('${id}')" style="
+          width: 100%;
           display: flex;
           justify-content: space-between;
           align-items: center;
-          padding: 0.875rem 1.25rem;
+          padding: 1rem 1.25rem;
           cursor: pointer;
-          background: transparent;
-          transition: all 0.2s ease;
+          background: rgba(255, 255, 255, 0.03);
+          border: none;
+          color: #ffffff;
+          transition: background 0.2s ease;
         ">
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            <span style="font-size: 1.25rem;">${icon}</span>
-            <span style="font-weight: 600; color: #ffffff;">${title}</span>
-          </div>
-          <div style="display: flex; align-items: center; gap: 0.75rem;">
-            ${scoreHTML}
-            <span class="accordion-chevron" style="transition: transform 0.2s ease; color: #808080;">▼</span>
-          </div>
-        </div>
+          <span style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 600;">
+            ${title}
+          </span>
+          <span style="display: flex; align-items: center; gap: 0.5rem;">
+            ${scoreDisplay}
+            <span class="accordion-toggle" style="transition: transform 0.2s ease; color: #808080;">▼</span>
+          </span>
+        </button>
         <div class="accordion-content" id="${id}" style="
           max-height: 0;
+          padding: 0;
           overflow: hidden;
-          transition: all 0.3s ease;
-          padding: 0 1.25rem;
-          border-top: 0px solid rgba(255, 255, 255, 0.1);
+          border-top: none;
+          transition: max-height 0.3s ease, padding 0.3s ease;
         ">
-          <div class="accordion-body" style="padding: 0;">${contentHTML}</div>
+          <div class="accordion-content-inner" style="padding: 0 1.25rem;">${contentHTML}</div>
         </div>
       </div>
     `;
@@ -686,26 +1000,39 @@ ${JSON.stringify(data, null, 2)}
 
   window.toggleTagAccordion = function(accordionId) {
     const content = document.getElementById(accordionId);
-    const header = content.previousElementSibling;
-    const chevron = header.querySelector('.accordion-chevron');
+    if (!content) return;
     
-    if (content.style.maxHeight && content.style.maxHeight !== '0px') {
+    const accordion = content.closest('.accordion');
+    const header = accordion ? accordion.querySelector('.accordion-header') : content.previousElementSibling;
+    const toggle = header ? header.querySelector('.accordion-toggle') : null;
+    
+    const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
+    
+    if (isExpanded) {
       // Collapse
-      content.style.maxHeight = '0px';
-      content.style.padding = '0 1.25rem';
-      content.style.borderTopWidth = '0px';
-      chevron.style.transform = 'rotate(0deg)';
+      content.style.maxHeight = '0';
+      content.style.padding = '0';
+      content.style.borderTop = 'none';
+      if (toggle) {
+        toggle.textContent = '▼';
+        toggle.style.transform = '';
+      }
+      if (header) header.classList.remove('active');
     } else {
       // Expand
-      content.style.maxHeight = content.scrollHeight + 'px';
+      content.style.maxHeight = content.scrollHeight + 100 + 'px';
       content.style.padding = '1rem 1.25rem';
-      content.style.borderTopWidth = '1px';
-      chevron.style.transform = 'rotate(180deg)';
+      content.style.borderTop = '1px solid #333';
+      if (toggle) {
+        toggle.textContent = '▲';
+        toggle.style.transform = 'rotate(180deg)';
+      }
+      if (header) header.classList.add('active');
       
       // Adjust max-height after content loads
       setTimeout(() => {
-        if (content.style.maxHeight !== '0px') {
-          content.style.maxHeight = content.scrollHeight + 'px';
+        if (content.style.maxHeight !== '0px' && content.style.maxHeight !== '0') {
+          content.style.maxHeight = content.scrollHeight + 100 + 'px';
         }
       }, 100);
     }

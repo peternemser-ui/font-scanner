@@ -201,7 +201,7 @@ const ExportGate = {
             <div class="export-paywall-feature">✓ Share Links</div>
             <div class="export-paywall-feature">✓ Multi-page Scanning</div>
           </div>
-          <a href="/upgrade.html" class="export-paywall-cta">Get Pro Report — $5</a>
+          <span class="export-paywall-cta">Get Pro access to export</span>
           <p class="export-paywall-note">One-time purchase. No subscription.</p>
         </div>
       </div>
@@ -318,3 +318,56 @@ const ExportGate = {
 
 // Make available globally
 window.ExportGate = ExportGate;
+
+/**
+ * Pro entitlement helper
+ * Provides a single source of truth for Pro access and paywall triggers
+ */
+const ProAccess = {
+  getEntitlement() {
+    try {
+      const raw = localStorage.getItem('sm_pro_entitlement');
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.error('[ProAccess] Failed to parse entitlement', e);
+      return null;
+    }
+  },
+  normalizeDomain(domain) {
+    if (!domain) return null;
+    try {
+      const asUrl = domain.startsWith('http') ? domain : `https://${domain}`;
+      return new URL(asUrl).hostname;
+    } catch (e) {
+      return domain.replace(/^https?:\/\//, '').split('/')[0];
+    }
+  },
+  getCurrentDomain() {
+    return ScanContext.getDomain() || this.normalizeDomain(window.currentSeoResults?.url || window.location.hostname);
+  },
+  hasProAccess(domainOverride) {
+    const entitlement = this.getEntitlement();
+    if (!entitlement) return false;
+    const now = Date.now();
+    const expires = entitlement.expiresAt ? new Date(entitlement.expiresAt).getTime() : 0;
+    if (!expires || now >= expires) return false;
+    const targetDomain = this.normalizeDomain(domainOverride || this.getCurrentDomain());
+    const entitlementDomain = this.normalizeDomain(entitlement.domain);
+    return Boolean(targetDomain && entitlementDomain && entitlementDomain === targetDomain && entitlement.token);
+  },
+  openProPaywall(payload = {}) {
+    const { domain, context } = payload || {};
+    if (window.ExportGate) {
+      window.ExportGate.showPaywall();
+      return;
+    }
+    const target = domain ? ` for ${domain}` : '';
+    const area = context ? ` (${context})` : '';
+    alert(`Pro Report required${target}${area}. Unlock to access this content.`);
+  }
+};
+
+// Expose globally for analyzers
+window.ProAccess = ProAccess;
+window.hasProAccess = (...args) => ProAccess.hasProAccess(...args);
+window.openProPaywall = (payload) => ProAccess.openProPaywall(payload);

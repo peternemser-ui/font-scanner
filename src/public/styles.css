@@ -48,6 +48,9 @@
   
   /* Border Colors */
   --border-primary: #333333;
+  
+  /* Component-specific */
+  --donut-track: rgba(255, 255, 255, 0.08);
   --border-secondary: #555555;
   --border-accent: #00ff41;
   
@@ -126,6 +129,9 @@ body.white-theme {
   --border-primary: #dee2e6;   /* Softer primary border */
   --border-secondary: #ced4da; /* Clear secondary border */
   --border-accent: #00994d;
+  
+  /* Component-specific */
+  --donut-track: rgba(0, 0, 0, 0.1);
   
   /* Semantic Colors - Score indicators */
   --score-excellent: #00994d;  /* Accessible green */
@@ -1496,6 +1502,40 @@ button:active {
   background-color: #0f0f0f;
   border: 1px solid #303030;
   border-radius: 6px;
+}
+
+.section h2 {
+  color: var(--text-primary, #fff);
+  font-size: 1.5rem;
+  margin: 0 0 1rem 0;
+}
+
+/* Summary stats styling */
+.seo-summary {
+  margin-top: 0.5rem;
+}
+
+.summary-stats {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.stat-value {
+  color: #00ff41;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.stat-label {
+  color: var(--text-muted, #9ca3af);
+  font-size: 0.9rem;
 }
 
 .security-summary-panel {

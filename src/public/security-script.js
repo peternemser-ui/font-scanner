@@ -452,8 +452,11 @@ function displaySecurityResults(data) {
 
   resultsContent.innerHTML = summaryHtml;
 
-  // Store results globally for PDF generation
-  window.currentSecurityResults = data;
+  // Store results globally for export/share
+  window.currentSecurityResults = {
+    ...data,
+    url: data.url || document.getElementById('urlInput').value.trim()
+  };
 
   // PDF Download Button removed - monetization disabled
 
@@ -514,16 +517,74 @@ function displaySecurityResults(data) {
     data.thirdPartyScripts.score
   );
 
-  // 6. Recommendations
+  // 6. Recommendations (Pro gated)
   createAccordionSection(
     accordionsContainer,
     'recommendations-section',
     'Security Recommendations',
     () => renderRecommendationsContent(data.recommendations),
-    null // No score for recommendations
+    null,
+    {
+      isPro: true,
+      previewHtml: renderLockedProPreview('Security Recommendations', [
+        'Critical remediation steps',
+        'OWASP-aligned fixes'
+      ])
+    }
   );
 
   resultsContent.appendChild(accordionsContainer);
+
+  // Summary block (SEO-style footer)
+  const summaryFooter = document.createElement('div');
+  summaryFooter.className = 'section';
+  summaryFooter.innerHTML = `
+    <h2>[SUMMARY]</h2>
+    <div class="seo-summary">
+      <div class="summary-stats">
+        <div class="stat-item">
+          <span class="stat-value">${countSecurityIssues(data)}</span>
+          <span class="stat-label">Issues Found</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">${countSecurityRecommendations(data)}</span>
+          <span class="stat-label">Recommendations</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-value">${countSecurityPassedChecks(data)}</span>
+          <span class="stat-label">Checks Passed</span>
+        </div>
+      </div>
+    </div>
+  `;
+  resultsContent.appendChild(summaryFooter);
+
+  // Monetization actions (export/share)
+  const actionsFooter = document.createElement('div');
+  actionsFooter.className = 'section';
+  actionsFooter.innerHTML = `
+    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
+      <div style="display: flex; align-items: center; gap: 0.5rem;">
+        <span style="color: #00ff41; font-weight: 600;">Take Action</span>
+        <span style="color: #666; font-size: 0.9rem;">Export or share this security report</span>
+      </div>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button onclick="exportSecurityPDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(0, 255, 65, 0.4); background: rgba(0, 255, 65, 0.1); color: #00ff41; cursor: pointer; font-weight: 600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+          PDF Report
+        </button>
+        <button onclick="copySecurityShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          Share Link
+        </button>
+        <button onclick="downloadSecurityCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
+          Export Data
+        </button>
+      </div>
+    </div>
+  `;
+  resultsContent.appendChild(actionsFooter);
 }
 
 // Create desktop vs mobile comparison section
@@ -667,15 +728,23 @@ function createDesktopMobileComparison(container, desktop, mobile) {
   container.innerHTML = comparisonHtml;
 }
 
-// Create accordion section matching Performance/Accessibility style
-function createAccordionSection(container, id, displayTitle, contentCreator, score) {
+// Create accordion section matching SEO/Accessibility style with optional Pro gating
+function createAccordionSection(container, id, displayTitle, contentCreator, score, options = {}) {
+  const { isPro = false, previewHtml = '' } = options;
+  ensureProStyles();
+
   const accordion = document.createElement('div');
   accordion.className = 'accordion';
+  if (isPro) {
+    accordion.classList.add('pro-section');
+    accordion.dataset.pro = 'true';
+  }
   
   const header = document.createElement('button');
   header.className = 'accordion-header';
+  const proBadge = isPro ? '<span class="pro-pill">PRO</span>' : '';
   header.innerHTML = `
-    <span>${displayTitle}</span>
+    <span style="display: inline-flex; align-items: center; gap: 0.5rem;">${displayTitle} ${proBadge}</span>
     <span style="display: flex; align-items: center; gap: 0.5rem;">
       ${score !== null ? `<span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
       <span class="accordion-toggle">▼</span>
@@ -689,6 +758,20 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
   const contentInner = document.createElement('div');
   contentInner.className = 'accordion-content-inner';
   content.appendChild(contentInner);
+
+  const renderContent = () => {
+    const hasPro = !isPro || userHasPro();
+    if (isPro && !hasPro) {
+      contentInner.innerHTML = previewHtml || renderLockedProPreview(displayTitle, ['Security fixes preview', 'OWASP-aligned recommendations']);
+      return;
+    }
+    const contentHTML = contentCreator();
+    if (typeof contentHTML === 'string') {
+      contentInner.innerHTML = contentHTML;
+    } else {
+      contentInner.appendChild(contentHTML);
+    }
+  };
   
   // Add click handler for accordion
   header.addEventListener('click', () => {
@@ -701,14 +784,13 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       header.querySelector('.accordion-toggle').textContent = '▼';
       header.querySelector('.accordion-toggle').classList.remove('rotated');
     } else {
+      // Pro paywall prompt on open if locked
+      if (isPro && !userHasPro()) {
+        openProPaywall({ domain: getCurrentDomain(), context: 'security' });
+      }
       // Expand and create content if not already created
       if (!contentInner.hasChildNodes()) {
-        const contentHTML = contentCreator();
-        if (typeof contentHTML === 'string') {
-          contentInner.innerHTML = contentHTML;
-        } else {
-          contentInner.appendChild(contentHTML);
-        }
+        renderContent();
       }
       
       content.classList.add('expanded');
@@ -1128,6 +1210,188 @@ function getScoreColor(score) {
   if (score >= 75) return '#00bcd4';  // Good: Teal
   if (score >= 50) return '#ffa500';  // Needs Work: Orange
   return '#ff4444';                   // Critical: Red
+}
+
+// Counts for summary footer
+function countSecurityIssues(results) {
+  if (!results) return 0;
+  const vulnIssues = (results.vulnerabilities?.issues?.length || 0) +
+    (results.vulnerabilities?.critical || 0) +
+    (results.vulnerabilities?.high || 0) +
+    (results.vulnerabilities?.medium || 0);
+  const missingHeaders = Math.max((results.headers?.total || 0) - (results.headers?.implemented || 0), 0);
+  const cookieIssues = results.cookies?.issues?.length || 0;
+  const thirdPartyRisks = (results.thirdPartyScripts?.scripts || []).filter(s => s.risk === 'high' || s.risk === 'medium').length;
+  return vulnIssues + missingHeaders + cookieIssues + thirdPartyRisks;
+}
+
+function countSecurityRecommendations(results) {
+  return results?.recommendations?.length || 0;
+}
+
+function countSecurityPassedChecks(results) {
+  if (!results) return 0;
+  const headerPass = results.headers?.implemented || 0;
+  const cookiePass = results.cookies?.secure || 0;
+  const thirdPartyPass = results.thirdPartyScripts?.withSRI || 0;
+  return headerPass + cookiePass + thirdPartyPass;
+}
+
+// Monetization actions (gated)
+function ensureSecurityProAccess() {
+  const domain = getCurrentDomain();
+  if (userHasPro()) return true;
+  openProPaywall({ domain, context: 'security' });
+  return false;
+}
+
+function exportSecurityPDF() {
+  if (!ensureSecurityProAccess()) return;
+  const exporter = new PDFExportUtility({
+    filename: 'security-report.pdf',
+    reportTitle: 'Security Analysis Report',
+    url: window.currentSecurityResults?.url || ''
+  });
+  exporter.export('#results');
+}
+
+function copySecurityShareLink() {
+  if (!ensureSecurityProAccess()) return;
+  const targetUrl = window.currentSecurityResults?.url || window.location.href;
+  const shareUrl = `${window.location.origin}/security-analyzer.html?url=${encodeURIComponent(targetUrl)}`;
+  navigator.clipboard.writeText(shareUrl).then(() => {
+    alert('Share link copied to clipboard');
+  });
+}
+
+function downloadSecurityCSV() {
+  if (!ensureSecurityProAccess()) return;
+  const r = window.currentSecurityResults;
+  if (!r) return;
+
+  const rows = [
+    ['Metric', 'Value'],
+    ['Overall Score', r.overallScore ?? ''],
+    ['SSL Score', r.ssl?.score ?? ''],
+    ['Headers Score', r.headers?.score ?? ''],
+    ['Vulnerability Score', r.vulnerabilities?.score ?? ''],
+    ['Critical Vulns', r.vulnerabilities?.critical ?? 0],
+    ['High Vulns', r.vulnerabilities?.high ?? 0],
+    ['Medium Vulns', r.vulnerabilities?.medium ?? 0],
+    ['Missing Headers', Math.max((r.headers?.total || 0) - (r.headers?.implemented || 0), 0)],
+    ['Recommendations', countSecurityRecommendations(r)],
+    ['Checks Passed', countSecurityPassedChecks(r)],
+    ['URL', r.url || '']
+  ];
+
+  const csv = rows
+    .map(row => row.map(val => `"${String(val).replace(/"/g, '""')}"`).join(','))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'security-report.csv';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+// Pro gating helpers
+function getCurrentDomain() {
+  if (window.ProAccess && typeof window.ProAccess.getCurrentDomain === 'function') {
+    return window.ProAccess.getCurrentDomain();
+  }
+  return window.location.hostname;
+}
+
+function userHasPro() {
+  if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
+    return window.ProAccess.hasProAccess(getCurrentDomain());
+  }
+  if (window.ExportGate && window.ExportGate.isPro()) {
+    return true;
+  }
+  return false;
+}
+
+function renderLockedProPreview(title = 'Pro content', previewLines = []) {
+  const lines = previewLines.length ? previewLines : ['Recommendations preview', 'Code fixes preview'];
+  return `
+    <div class="pro-locked">
+      <div class="pro-locked__header">
+        <span class="pro-pill">PRO</span>
+        <span>${title}</span>
+      </div>
+      <ul class="pro-locked__list">
+        ${lines.slice(0, 2).map(line => `<li>${line}</li>`).join('')}
+      </ul>
+      <div class="pro-locked__blur"></div>
+      <button class="pro-locked__unlock" onclick="openProPaywall({ domain: '${getCurrentDomain()}', context: 'security' })">Unlock in Pro Report ($5 USD)</button>
+    </div>
+  `;
+}
+
+function ensureProStyles() {
+  if (document.getElementById('pro-lock-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'pro-lock-styles';
+  style.textContent = `
+    .pro-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid rgba(0, 255, 65, 0.4);
+      background: rgba(0, 255, 65, 0.1);
+      color: #00ff41;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .pro-locked {
+      position: relative;
+      border: 1px dashed rgba(0, 255, 65, 0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      background: rgba(255, 255, 255, 0.02);
+      overflow: hidden;
+    }
+    .pro-locked__header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .pro-locked__list {
+      margin: 0;
+      padding-left: 1.25rem;
+      color: #ccc;
+      font-size: 0.9rem;
+    }
+    .pro-locked__blur {
+      position: absolute;
+      inset: 0;
+      backdrop-filter: blur(3px);
+      background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 60%);
+      pointer-events: none;
+    }
+    .pro-locked__unlock {
+      position: relative;
+      margin-top: 0.75rem;
+      padding: 0.55rem 1rem;
+      border-radius: 8px;
+      border: 1px solid rgba(0, 255, 65, 0.4);
+      background: rgba(0, 255, 65, 0.12);
+      color: #00ff41;
+      font-weight: 700;
+      cursor: pointer;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 // Show error message

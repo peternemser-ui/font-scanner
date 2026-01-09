@@ -164,13 +164,13 @@ function displayResults(data) {
   resultsContainer.appendChild(breakdownSection);
 
   // 4. Accordion Sections
-  createAccordionSection(resultsContainer, 'nap-analysis', '📞 NAP Analysis (Name, Address, Phone)', 
+  createAccordionSection(resultsContainer, 'nap-analysis', 'NAP Analysis (Name, Address, Phone)', 
     () => renderNAPContent(data.analysis), data.scores.nap);
-  createAccordionSection(resultsContainer, 'schema-analysis', '🏷️ Structured Data & Schema', 
+  createAccordionSection(resultsContainer, 'schema-analysis', 'Structured Data & Schema', 
     () => renderSchemaContent(data.analysis.schema), data.scores.schema);
-  createAccordionSection(resultsContainer, 'local-presence', '📍 Local Presence Signals', 
+  createAccordionSection(resultsContainer, 'local-presence', 'Local Presence Signals', 
     () => renderLocalPresenceContent(data.analysis.localPresence), data.scores.presence);
-  createAccordionSection(resultsContainer, 'recommendations', '💡 All Recommendations', 
+  createAccordionSection(resultsContainer, 'recommendations', 'All Recommendations', 
     () => renderRecommendationsContent(data.recommendations), null);
 }
 
@@ -178,6 +178,9 @@ function createOverviewSection(data) {
   const gradeColor = getGradeColor(data.grade);
   const nap = data.analysis.nap;
   const presence = data.analysis.localPresence;
+  const score = data.overallScore;
+  const circumference = 2 * Math.PI * 75; // 471.24
+  const strokeDasharray = `${(score / 100) * circumference} ${circumference}`;
   
   return `
     <h2>[LOCAL_SEO_OVERVIEW]</h2>
@@ -191,38 +194,47 @@ function createOverviewSection(data) {
       box-shadow: 0 4px 20px ${gradeColor}20;
     ">
       <div style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: center;">
-        <!-- Left: Score Circle -->
+        <!-- Left: SVG Score Circle -->
         <div style="text-align: center;">
+          <svg width="180" height="180" viewBox="0 0 180 180">
+            <circle
+              cx="90"
+              cy="90"
+              r="75"
+              fill="none"
+              stroke="rgba(0, 0, 0, 0.1)"
+              stroke-width="10"
+            />
+            <circle
+              cx="90"
+              cy="90"
+              r="75"
+              fill="none"
+              stroke="${gradeColor}"
+              stroke-width="10"
+              stroke-linecap="round"
+              stroke-dasharray="${strokeDasharray}"
+              transform="rotate(-90 90 90)"
+            />
+            <text
+              x="90"
+              y="90"
+              text-anchor="middle"
+              dy="0.35em"
+              font-size="3.5rem"
+              font-weight="bold"
+              fill="#f9fff2"
+              stroke="rgba(0, 0, 0, 0.65)"
+              stroke-width="2.5"
+              paint-order="stroke fill"
+              style="text-shadow: 0 0 18px ${gradeColor}, 0 0 30px rgba(0,0,0,0.6);"
+            >
+              ${score}
+            </text>
+          </svg>
           <div style="
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: #ffffff;
-            border: 5px solid ${gradeColor};
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0 30px ${gradeColor}40, 0 4px 15px rgba(0,0,0,0.2);
-          ">
-            <div style="
-              font-size: 4.5rem;
-              font-weight: 900;
-              color: #000000;
-              line-height: 1;
-            ">${data.overallScore}</div>
-            <div style="
-              font-size: 0.9rem;
-              color: #666666;
-              margin-top: 0.5rem;
-              text-transform: uppercase;
-              letter-spacing: 2px;
-              font-weight: 600;
-            ">/ 100</div>
-          </div>
-          <div style="
-            margin-top: 1rem;
-            font-size: 1.5rem;
+            margin-top: 0.5rem;
+            font-size: 1.3rem;
             font-weight: bold;
             color: ${gradeColor};
           ">${getGradeName(data.grade)}</div>
@@ -373,10 +385,11 @@ function createQuickWinsSection(quickWins) {
 
 function createScoreBreakdownCards(scores) {
   const categories = [
-    { key: 'nap', label: 'NAP Info', icon: '📞', description: 'Name, Address, Phone' },
-    { key: 'schema', label: 'Schema', icon: '🏷️', description: 'Structured Data' },
-    { key: 'presence', label: 'Presence', icon: '📍', description: 'Local Signals' }
+    { key: 'nap', label: 'NAP Info', description: 'Name, Address, Phone' },
+    { key: 'schema', label: 'Schema', description: 'Structured Data' },
+    { key: 'presence', label: 'Presence', description: 'Local Signals' }
   ];
+  const circumference = 2 * Math.PI * 60; // 376.99
 
   return `
     <h2>[SCORE_BREAKDOWN]</h2>
@@ -386,6 +399,7 @@ function createScoreBreakdownCards(scores) {
       ${categories.map(cat => {
         const score = scores[cat.key] || 0;
         const color = getScoreColor(score);
+        const strokeDasharray = `${(score / 100) * circumference} ${circumference}`;
         return `
           <div style="
             background: linear-gradient(135deg, ${color}15 0%, ${color}05 100%);
@@ -394,22 +408,42 @@ function createScoreBreakdownCards(scores) {
             padding: 1.5rem;
             text-align: center;
           ">
-            <div style="
-              width: 80px;
-              height: 80px;
-              margin: 0 auto 1rem;
-              border-radius: 50%;
-              background: #ffffff;
-              border: 3px solid ${color};
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 2rem;
-              font-weight: 900;
-              color: #000000;
-              box-shadow: 0 0 15px ${color}40;
-            ">${score}</div>
-            <div style="font-size: 1.5rem; margin-bottom: 0.5rem;">${cat.icon}</div>
+            <svg width="120" height="120" viewBox="0 0 140 140" style="margin: 0 auto 0.75rem; display: block;">
+              <circle
+                cx="70"
+                cy="70"
+                r="60"
+                fill="none"
+                stroke="rgba(0, 0, 0, 0.1)"
+                stroke-width="8"
+              />
+              <circle
+                cx="70"
+                cy="70"
+                r="60"
+                fill="none"
+                stroke="${color}"
+                stroke-width="8"
+                stroke-linecap="round"
+                stroke-dasharray="${strokeDasharray}"
+                transform="rotate(-90 70 70)"
+              />
+              <text
+                x="70"
+                y="70"
+                text-anchor="middle"
+                dy="0.35em"
+                font-size="2.5rem"
+                font-weight="bold"
+                fill="#f9fff2"
+                stroke="rgba(0, 0, 0, 0.65)"
+                stroke-width="2"
+                paint-order="stroke fill"
+                style="text-shadow: 0 0 12px ${color};"
+              >
+                ${score}
+              </text>
+            </svg>
             <div style="color: #ffffff; font-size: 1rem; font-weight: 600;">${cat.label}</div>
             <div style="color: #808080; font-size: 0.8rem; margin-top: 0.25rem;">${cat.description}</div>
           </div>

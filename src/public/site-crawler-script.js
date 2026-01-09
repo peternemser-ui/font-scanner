@@ -115,6 +115,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayResults(data) {
+    console.log('🕷️ CRAWLER VERSION: FRESH-JAN8-2026 - NEW LAYOUT');
     const pages = data.results?.pages || [];
     const hostname = new URL(data.url || 'https://example.com').hostname;
     
@@ -123,28 +124,57 @@ document.addEventListener('DOMContentLoaded', () => {
     const techStack = detectTechStack(pages, data);
     const hostingInfo = detectHostingInfo(hostname, data);
     
+    // Check if shared components are loaded
+    if (typeof ReportShell === 'undefined' || typeof ReportAccordion === 'undefined') {
+      console.error('Shared report components not loaded');
+      resultsContent.innerHTML = '<div style="color: red; padding: 2rem;">Error: Report components failed to load. Please refresh the page.</div>';
+      return;
+    }
+    
     const html = `
-      <!-- Summary -->
-      <div style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="margin-bottom: 1rem;">🕷️ Crawl Complete</h2>
-        <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap;">
-          <div style="text-align: center;">
-            <div style="font-size: 3rem; font-weight: bold; color: #10b981;">${data.results?.pagesDiscovered || 0}</div>
-            <div style="color: #888;">Pages Discovered</div>
-          </div>
-          <div style="text-align: center;">
-            <div style="font-size: 1.5rem; color: #888; margin-top: 1rem;">${data.duration || 'N/A'}</div>
-            <div style="color: #888;">Crawl Time</div>
+      <div class="section">
+        <h2>[SITE_CRAWLER_RESULTS]</h2>
+        <p>>> url: ${data.url}</p>
+        <p>>> timestamp: ${new Date().toLocaleString()}</p>
+        
+        <div style="
+          background: linear-gradient(135deg, rgba(0,255,65,0.05) 0%, rgba(0,255,65,0.02) 100%);
+          border: 2px solid #00ff41;
+          border-radius: 12px;
+          padding: 2rem;
+          margin: 2rem 0;
+          box-shadow: 0 4px 20px rgba(0,255,65,0.15);
+        ">
+          <h3 style="color: #00ff41; margin: 0 0 1.5rem 0; font-size: 1.3rem;">>> Site Crawl Summary</h3>
+          <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin: 1rem 0;">
+            <div style="text-align: center;">
+              <div style="font-size: 2.5rem; font-weight: bold; color: #10b981;">${data.results?.pagesDiscovered || 0}</div>
+              <div style="color: #9ca3af; font-size: 0.9rem;">Pages Discovered</div>
+            </div>
+            <div style="text-align: center;">
+              <div style="font-size: 2.5rem; font-weight: bold; color: #00d9ff;">${data.duration || 'N/A'}</div>
+              <div style="color: #9ca3af; font-size: 0.9rem;">Crawl Time</div>
+            </div>
           </div>
         </div>
       </div>
 
       <!-- Visual Sitemap Section -->
-      <div style="margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1rem; color: #00ff41; display: flex; align-items: center; gap: 0.5rem;">
-          🗺️ Visual Sitemap
-        </h3>
-        <div style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2rem; overflow-x: auto;">
+      <div id="sitemapSection" style="margin-bottom: 2rem;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+          <h3 style="margin: 0; color: #00ff41; display: flex; align-items: center; gap: 0.5rem;">
+            🗺️ Visual Sitemap
+          </h3>
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button onclick="printSitemap()" style="padding: 0.5rem 1rem; background: rgba(0, 255, 65, 0.1); color: #00ff41; border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 255, 65, 0.2)'" onmouseout="this.style.background='rgba(0, 255, 65, 0.1)'">
+              🖨️ Print Sitemap
+            </button>
+            <button onclick="downloadSitemapImage()" style="padding: 0.5rem 1rem; background: rgba(0, 217, 255, 0.1); color: #00d9ff; border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 217, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 217, 255, 0.1)'">
+              💾 Save as Image
+            </button>
+          </div>
+        </div>
+        <div id="sitemapDiagram" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2rem; overflow-x: auto;">
           ${renderSitemapDiagram(siteStructure, hostname)}
         </div>
       </div>
@@ -292,7 +322,7 @@ ${JSON.stringify(data, null, 2)}
       </details>
     `;
 
-    resultsContent.innerHTML = html;
+    resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;
 
     // Store data for export functions
     window.crawlData = data;
@@ -423,125 +453,188 @@ ${JSON.stringify(data, null, 2)}
     return info;
   }
 
-  // Render visual sitemap diagram as SVG
+  // Render visual sitemap diagram - clean hierarchical flow
   function renderSitemapDiagram(structure, hostname) {
     const topLevelSections = Object.keys(structure.children);
-    const maxSections = Math.min(topLevelSections.length, 6); // Reduced from 8 for better spacing
-    const displaySections = topLevelSections.slice(0, maxSections);
     
-    if (displaySections.length === 0) {
-      return '<div style="text-align: center; color: #888; padding: 2rem;">No directory structure detected (flat site)</div>';
+    if (topLevelSections.length === 0) {
+      return '<div style="text-align: center; color: #666; padding: 2rem;">No directory structure detected (flat site)</div>';
     }
     
-    // Dynamic width based on number of sections
-    const sectionBoxWidth = 110;
-    const sectionGap = 30;
-    const totalSectionsWidth = (displaySections.length * sectionBoxWidth) + ((displaySections.length - 1) * sectionGap);
-    const width = Math.max(900, totalSectionsWidth + 150);
-    const height = 380;
-    const centerX = width / 2;
-    const rootY = 55;
-    const sectionY = 170;
-    const pageY = 300;
+    const isDark = !document.body.classList.contains('white-theme');
+    const nodeStroke = isDark ? '#fff' : '#000';
+    const nodeFill = isDark ? '#000' : '#fff';
+    const lineColor = isDark ? '#666' : '#ccc';
+    const textColor = isDark ? '#fff' : '#000';
     
-    // Calculate section positions with proper spacing
-    const startX = (width - totalSectionsWidth) / 2 + (sectionBoxWidth / 2);
-    
-    let svg = `<svg viewBox="0 0 ${width} ${height}" style="width: 100%; height: auto; min-height: 320px;">`;
-    
-    // Definitions
-    svg += `
-      <defs>
-        <linearGradient id="rootGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#00ff41;stop-opacity:0.4"/>
-          <stop offset="100%" style="stop-color:#00ff41;stop-opacity:0.1"/>
-        </linearGradient>
-        <linearGradient id="sectionGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#00d9ff;stop-opacity:0.3"/>
-          <stop offset="100%" style="stop-color:#00d9ff;stop-opacity:0.1"/>
-        </linearGradient>
-        <linearGradient id="pageGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style="stop-color:#bb77ff;stop-opacity:0.3"/>
-          <stop offset="100%" style="stop-color:#bb77ff;stop-opacity:0.1"/>
-        </linearGradient>
-        <filter id="glow">
-          <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-          <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
+    // Build SVG tree diagram
+    let html = `
+      <style>
+        .tree-diagram {
+          width: 100%;
+          min-height: 800px;
+          padding: 2rem;
+          overflow-x: auto;
+        }
+        .tree-node {
+          cursor: default;
+        }
+        .tree-node rect {
+          transition: all 0.2s ease;
+        }
+        .tree-node:hover rect {
+          filter: brightness(1.1);
+        }
+      </style>
+      <svg class="tree-diagram" viewBox="0 0 1600 800" preserveAspectRatio="xMidYMin meet">
     `;
     
-    // Root node (homepage)
-    svg += `
-      <g filter="url(#glow)">
-        <rect x="${centerX - 90}" y="${rootY - 25}" width="180" height="50" rx="10" fill="url(#rootGrad)" stroke="#00ff41" stroke-width="2"/>
-        <text x="${centerX}" y="${rootY + 8}" text-anchor="middle" fill="#00ff41" font-size="14" font-weight="bold">🏠 ${hostname}</text>
+    const rootX = 800;
+    const rootY = 60;
+    const rootWidth = 200;
+    const rootHeight = 60;
+    
+    // Draw root node
+    html += `
+      <g class="tree-node">
+        <rect x="${rootX - rootWidth/2}" y="${rootY - rootHeight/2}" 
+              width="${rootWidth}" height="${rootHeight}" 
+              fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="3" rx="4"/>
+        <text x="${rootX}" y="${rootY}" 
+              text-anchor="middle" dominant-baseline="middle" 
+              fill="${textColor}" font-weight="bold" font-size="16">
+          ${hostname || 'Home'}
+        </text>
       </g>
     `;
     
-    // Connection lines from root to sections
-    displaySections.forEach((section, index) => {
-      const sectionX = startX + (index * (sectionBoxWidth + sectionGap));
-      svg += `<path d="M${centerX},${rootY + 25} Q${centerX},${sectionY - 50} ${sectionX},${sectionY - 25}" stroke="#00d9ff" stroke-width="2" fill="none" opacity="0.5"/>`;
-    });
+    // Calculate section positions
+    const sectionCount = Math.min(topLevelSections.length, 6);
+    const sectionSpacing = 1500 / (sectionCount + 1);
+    const sectionY = 200;
     
-    // Section nodes
-    displaySections.forEach((section, index) => {
-      const sectionX = startX + (index * (sectionBoxWidth + sectionGap));
+    // Draw vertical line from root
+    html += `<line x1="${rootX}" y1="${rootY + rootHeight/2}" x2="${rootX}" y2="${sectionY - 80}" stroke="${lineColor}" stroke-width="2"/>`;
+    
+    // Draw horizontal line connecting all sections
+    if (sectionCount > 1) {
+      const startX = 50 + sectionSpacing;
+      const endX = 50 + sectionSpacing * sectionCount;
+      html += `<line x1="${startX}" y1="${sectionY - 60}" x2="${endX}" y2="${sectionY - 60}" stroke="${lineColor}" stroke-width="2"/>`;
+    }
+    
+    // Draw sections
+    topLevelSections.slice(0, 6).forEach((section, i) => {
       const sectionData = structure.children[section];
-      const childCount = Object.keys(sectionData.children || {}).length;
-      const displayName = section.length > 14 ? section.substring(0, 12) + '...' : section;
+      const sectionX = 50 + sectionSpacing * (i + 1);
+      const sectionWidth = 140;
+      const sectionHeight = 50;
+      const sectionName = section.replace(/-/g, ' ');
       
-      svg += `
-        <g>
-          <rect x="${sectionX - 50}" y="${sectionY - 25}" width="100" height="55" rx="8" fill="url(#sectionGrad)" stroke="#00d9ff" stroke-width="1.5"/>
-          <text x="${sectionX}" y="${sectionY + 2}" text-anchor="middle" fill="#00d9ff" font-size="11" font-weight="bold">/${displayName}</text>
-          <text x="${sectionX}" y="${sectionY + 18}" text-anchor="middle" fill="#888" font-size="10">${sectionData.count} page${sectionData.count !== 1 ? 's' : ''}</text>
+      // Vertical line to section
+      html += `<line x1="${sectionX}" y1="${sectionY - 60}" x2="${sectionX}" y2="${sectionY - 20}" stroke="${lineColor}" stroke-width="2"/>`;
+      
+      // Section node
+      html += `
+        <g class="tree-node">
+          <rect x="${sectionX - sectionWidth/2}" y="${sectionY - sectionHeight/2}" 
+                width="${sectionWidth}" height="${sectionHeight}" 
+                fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="2" rx="4"/>
+          <text x="${sectionX}" y="${sectionY - 5}" 
+                text-anchor="middle" dominant-baseline="middle" 
+                fill="${textColor}" font-weight="600" font-size="13">
+            ${sectionName.length > 18 ? sectionName.slice(0, 16) + '...' : sectionName}
+          </text>
+          <text x="${sectionX}" y="${sectionY + 12}" 
+                text-anchor="middle" dominant-baseline="middle" 
+                fill="${isDark ? '#888' : '#666'}" font-size="10">
+            ${sectionData.count} page${sectionData.count !== 1 ? 's' : ''}
+          </text>
         </g>
       `;
       
-      // Show child pages only for first 2 sections to avoid clutter
-      if (index < 2) {
-        const childPages = Object.keys(sectionData.children || {}).slice(0, 2);
-        if (childPages.length > 0) {
-          svg += `<path d="M${sectionX},${sectionY + 30} L${sectionX},${pageY - 25}" stroke="#bb77ff" stroke-width="1" fill="none" opacity="0.4"/>`;
+      // Draw child pages
+      const childPages = Object.entries(sectionData.children || {}).slice(0, 2);
+      if (childPages.length > 0) {
+        const pageY = sectionY + 110;
+        const pageWidth = 95;
+        const pageHeight = 35;
+        
+        // Critical: Prevent overlap by strictly constraining pages within section boundaries
+        // Each section owns a territory of sectionSpacing width, but we only use half to add buffer
+        const safeBoundary = sectionSpacing * 0.4; // only use 40% of available space
+        const totalPageWidth = pageWidth * childPages.length;
+        const minGap = 15; // minimum gap between page nodes
+        const neededSpace = totalPageWidth + (minGap * (childPages.length - 1));
+        
+        // If pages would overflow the safe boundary, reduce their count or spacing
+        let actualSpacing;
+        if (neededSpace > safeBoundary) {
+          // Pages would overlap - use tight spacing within boundary
+          actualSpacing = childPages.length === 1 ? 0 : (safeBoundary - totalPageWidth) / (childPages.length - 1);
+        } else {
+          // Plenty of space - use comfortable spacing
+          actualSpacing = childPages.length === 1 ? 0 : pageWidth + minGap;
+        }
+        
+        const pageSpacing = actualSpacing;
+        
+        // Vertical line from section to pages area
+        html += `<line x1="${sectionX}" y1="${sectionY + sectionHeight/2}" x2="${sectionX}" y2="${pageY - 40}" stroke="${lineColor}" stroke-width="2"/>`;
+        
+        // Horizontal line for pages
+        if (childPages.length > 1) {
+          const pageStartX = sectionX - (childPages.length - 1) * pageSpacing / 2;
+          const pageEndX = sectionX + (childPages.length - 1) * pageSpacing / 2;
+          html += `<line x1="${pageStartX}" y1="${pageY - 20}" x2="${pageEndX}" y2="${pageY - 20}" stroke="${lineColor}" stroke-width="1.5"/>`;
+        }
+        
+        childPages.forEach(([pageName, pageData], j) => {
+          const pageX = sectionX - (childPages.length - 1) * pageSpacing / 2 + j * pageSpacing;
+          const pageTitle = pageName.replace(/-/g, ' ');
+          const subcount = pageData.children ? Object.keys(pageData.children).length : 0;
           
-          childPages.forEach((page, pIndex) => {
-            const pageOffset = (pIndex - 0.5) * 55;
-            const pageName = page.length > 10 ? page.substring(0, 8) + '..' : page;
-            svg += `
-              <g>
-                <rect x="${sectionX + pageOffset - 25}" y="${pageY - 18}" width="50" height="28" rx="5" fill="url(#pageGrad)" stroke="#bb77ff" stroke-width="1"/>
-                <text x="${sectionX + pageOffset}" y="${pageY + 2}" text-anchor="middle" fill="#bb77ff" font-size="9">${pageName}</text>
-              </g>
-            `;
-          });
+          // Vertical line to page
+          html += `<line x1="${pageX}" y1="${pageY - 20}" x2="${pageX}" y2="${pageY - 10}" stroke="${lineColor}" stroke-width="1.5"/>`;
           
-          if (childCount > 2) {
-            svg += `<text x="${sectionX + 60}" y="${pageY + 2}" fill="#888" font-size="10">+${childCount - 2} more</text>`;
-          }
+          // Page node
+          html += `
+            <g class="tree-node">
+              <rect x="${pageX - pageWidth/2}" y="${pageY - pageHeight/2}" 
+                    width="${pageWidth}" height="${pageHeight}" 
+                    fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="1.5" rx="3"/>
+              <text x="${pageX}" y="${pageY}" 
+                    text-anchor="middle" dominant-baseline="middle" 
+                    fill="${textColor}" font-size="10">
+                ${pageTitle.length > 12 ? pageTitle.slice(0, 10) + '...' : pageTitle}
+              </text>
+              ${subcount > 0 ? `
+                <text x="${pageX}" y="${pageY + 12}" 
+                      text-anchor="middle" dominant-baseline="middle" 
+                      fill="${isDark ? '#888' : '#666'}" font-size="8">
+                  +${subcount}
+                </text>
+              ` : ''}
+            </g>
+          `;
+        });
+        
+        // Show "more" indicator if there are additional pages
+        const remainingPages = Object.keys(sectionData.children || {}).length - 2;
+        if (remainingPages > 0) {
+          html += `
+            <text x="${sectionX}" y="${pageY + 45}" 
+                  text-anchor="middle" 
+                  fill="${isDark ? '#666' : '#999'}" font-size="11" font-style="italic">
+              +${remainingPages} more...
+            </text>
+          `;
         }
       }
     });
     
-    if (topLevelSections.length > maxSections) {
-      svg += `<text x="${width - 30}" y="${sectionY}" text-anchor="end" fill="#888" font-size="11">+${topLevelSections.length - maxSections} more sections</text>`;
-    }
-    
-    // Legend
-    svg += `
-      <g transform="translate(25, ${height - 40})">
-        <rect x="0" y="0" width="18" height="18" rx="3" fill="url(#rootGrad)" stroke="#00ff41"/>
-        <text x="25" y="13" fill="#888" font-size="10">Homepage</text>
-        <rect x="110" y="0" width="18" height="18" rx="3" fill="url(#sectionGrad)" stroke="#00d9ff"/>
-        <text x="135" y="13" fill="#888" font-size="10">Section</text>
-        <rect x="210" y="0" width="18" height="18" rx="3" fill="url(#pageGrad)" stroke="#bb77ff"/>
-        <text x="235" y="13" fill="#888" font-size="10">Page</text>
-      </g>
-    `;
-    
-    svg += '</svg>';
-    return svg;
+    html += `</svg>`;
+    return html;
   }
 
   // Render site tree
@@ -1018,6 +1111,150 @@ ${JSON.stringify(data, null, 2)}
     a.download = `sitemap-${hostname}-${new Date().toISOString().split('T')[0]}.xml`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  /**
+   * Print the visual sitemap
+   */
+  window.printSitemap = function() {
+    const sitemapSection = document.getElementById('sitemapSection');
+    if (!sitemapSection) {
+      alert('No sitemap to print');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    const hostname = window.crawlData?.results?.hostname || 'website';
+    const pageCount = window.crawlData?.results?.pages?.length || 0;
+    
+    printWindow.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Visual Sitemap - ${hostname}</title>
+        <style>
+          @page { 
+            size: landscape;
+            margin: 1cm; 
+          }
+          body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: white;
+            color: black;
+            padding: 20px;
+            margin: 0;
+          }
+          h1 {
+            color: #00994d;
+            margin-bottom: 10px;
+            font-size: 24px;
+          }
+          .meta {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 14px;
+          }
+          .sitemap-container {
+            background: white;
+            border: 2px solid #00994d;
+            border-radius: 8px;
+            padding: 20px;
+            overflow: visible;
+          }
+          svg {
+            width: 100%;
+            height: auto;
+          }
+          .footer {
+            margin-top: 20px;
+            padding-top: 10px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #888;
+            text-align: center;
+          }
+          @media print {
+            body { 
+              print-color-adjust: exact;
+              -webkit-print-color-adjust: exact;
+            }
+          }
+        </style>
+      </head>
+      <body>
+        <h1>🗺️ Visual Sitemap</h1>
+        <div class="meta">
+          <strong>${hostname}</strong> • ${pageCount} pages discovered • Generated ${new Date().toLocaleDateString()}
+        </div>
+        <div class="sitemap-container">
+          ${document.getElementById('sitemapDiagram')?.innerHTML || '<p>No sitemap data available</p>'}
+        </div>
+        <div class="footer">
+          Generated by Site Mechanic | sitemechanic.io
+        </div>
+      </body>
+      </html>
+    `);
+    
+    printWindow.document.close();
+    
+    // Wait for content to load, then print
+    setTimeout(() => {
+      printWindow.focus();
+      printWindow.print();
+    }, 500);
+  };
+
+  /**
+   * Download sitemap as image (SVG or PNG)
+   */
+  window.downloadSitemapImage = async function() {
+    const sitemapDiagram = document.getElementById('sitemapDiagram');
+    if (!sitemapDiagram) {
+      alert('No sitemap to download');
+      return;
+    }
+
+    const svgElement = sitemapDiagram.querySelector('svg');
+    if (!svgElement) {
+      alert('No sitemap diagram found');
+      return;
+    }
+
+    try {
+      // Clone the SVG to avoid modifying the original
+      const clonedSvg = svgElement.cloneNode(true);
+      
+      // Create SVG blob
+      const svgData = new XMLSerializer().serializeToString(clonedSvg);
+      const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
+      const svgUrl = URL.createObjectURL(svgBlob);
+      
+      // Download SVG
+      const hostname = window.crawlData?.results?.hostname || 'website';
+      const a = document.createElement('a');
+      a.href = svgUrl;
+      a.download = `sitemap-${hostname}-${new Date().toISOString().split('T')[0]}.svg`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(svgUrl);
+      
+      // Show success message
+      const button = event?.target;
+      if (button) {
+        const originalText = button.innerHTML;
+        button.innerHTML = '✓ Downloaded!';
+        button.style.background = 'rgba(0, 255, 65, 0.2)';
+        setTimeout(() => {
+          button.innerHTML = originalText;
+          button.style.background = 'rgba(0, 217, 255, 0.1)';
+        }, 2000);
+      }
+    } catch (error) {
+      console.error('Error downloading sitemap:', error);
+      alert('Failed to download sitemap. Please try again.');
+    }
   };
 
   // Helper function to escape XML special characters
