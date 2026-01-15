@@ -1,4 +1,5 @@
 const { createLogger } = require('../utils/logger');
+const { roundTo, formatNumber } = require('../utils/formatHelpers');
 
 const logger = createLogger('BestPracticesAnalyzer');
 
@@ -245,7 +246,7 @@ class BestPracticesAnalyzer {
         const lineHeightRatio = lineHeight / fontSize;
         if (lineHeightRatio < 1.2) {
           analysis.readabilityIssues.push(
-            `Poor line height ratio (${lineHeightRatio.toFixed(2)}) for element with font-size ${fontSize}px`
+            `Poor line height ratio (${formatNumber(lineHeightRatio, 2)}) for element with font-size ${fontSize}px`
           );
         }
 
@@ -425,14 +426,14 @@ class BestPracticesAnalyzer {
       }
     });
 
-    const calculatedScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
-    
+    const calculatedScore = totalWeight > 0 ? roundTo(totalScore / totalWeight, 0) : 0;
+
     // Apply minimum score adjustment for system fonts or minimal detection
     if (calculatedScore < 50 && bestPractices.fontOptimization?.good?.length > 0) {
       // If we have some positive indicators but low score, boost it slightly
       return Math.max(calculatedScore, 60);
     }
-    
+
     return calculatedScore;
   }
 
@@ -491,7 +492,7 @@ class BestPracticesAnalyzer {
         priority: 'high',
         category: 'Performance',
         message: 'Implement font-display: swap for better loading performance',
-        details: `Only ${Math.round(bestPractices.fontDisplay.percentage)}% of fonts use optimal display strategy`,
+        details: `Only ${roundTo(bestPractices.fontDisplay.percentage, 0)}% of fonts use optimal display strategy`,
         action: 'Add font-display: swap to @font-face declarations',
         impact: 'Reduces invisible text during font loading',
         codeExample:
@@ -551,7 +552,7 @@ class BestPracticesAnalyzer {
         priority: 'high',
         category: 'Accessibility',
         message: 'Improve font accessibility and readability',
-        details: `Accessibility score: ${Math.round(bestPractices.accessibility.percentage)}%`,
+        details: `Accessibility score: ${roundTo(bestPractices.accessibility.percentage, 0)}%`,
         action: 'Ensure minimum font sizes (16px) and adequate line heights (1.4+)',
         impact: 'Better readability for users with visual impairments',
         codeExample: 'body { font-size: 16px; line-height: 1.5; }',
@@ -594,7 +595,7 @@ class BestPracticesAnalyzer {
         priority: 'low',
         category: 'Sustainability',
         message: 'Reduce carbon footprint of font loading',
-        details: `Current carbon footprint: ${(bestPractices.sustainability.carbonFootprint || 0).toFixed(2)}g CO₂`,
+        details: `Current carbon footprint: ${formatNumber(bestPractices.sustainability.carbonFootprint || 0, 2)}g CO₂`,
         action: 'Use variable fonts and aggressive font subsetting',
         impact: 'Reduces bandwidth usage and environmental impact',
         codeExample: 'Consider using system fonts or single variable font files',
@@ -712,8 +713,8 @@ class BestPracticesAnalyzer {
 
     return {
       ...caching,
-      score: Math.round(score),
-      percentage: Math.round(score),
+      score: roundTo(score, 0),
+      percentage: roundTo(score, 0),
     };
   }
 
@@ -760,8 +761,8 @@ class BestPracticesAnalyzer {
 
     return {
       ...security,
-      score: Math.round(score),
-      percentage: Math.round(score),
+      score: roundTo(score, 0),
+      percentage: roundTo(score, 0),
     };
   }
 
@@ -814,8 +815,8 @@ class BestPracticesAnalyzer {
 
     return {
       ...analysis,
-      score: Math.round(sustainabilityScore),
-      percentage: Math.round(sustainabilityScore),
+      score: roundTo(sustainabilityScore, 0),
+      percentage: roundTo(sustainabilityScore, 0),
       recommendations: this.generateSustainabilityRecommendations(analysis),
     };
   }
@@ -863,8 +864,8 @@ class BestPracticesAnalyzer {
 
     return {
       ...webVitals,
-      score: Math.round(score),
-      percentage: Math.round(score),
+      score: roundTo(score, 0),
+      percentage: roundTo(score, 0),
     };
   }
 
@@ -931,7 +932,7 @@ class BestPracticesAnalyzer {
         metrics.totalFonts = bestPractices.fontDisplay.total;
         // Calculate optimized fonts based on the optimization percentage
         const optimizationPercentage = bestPractices.fontOptimization.percentage || 0;
-        metrics.optimizedFonts = Math.round((optimizationPercentage / 100) * bestPractices.fontDisplay.total);
+        metrics.optimizedFonts = roundTo((optimizationPercentage / 100) * bestPractices.fontDisplay.total, 0);
       } else {
         // Default assumption: if no explicit fonts detected, assume 1 system font
         metrics.totalFonts = 1;

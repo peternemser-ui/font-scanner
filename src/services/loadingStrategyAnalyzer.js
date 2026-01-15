@@ -1,4 +1,5 @@
 const { createLogger } = require('../utils/logger');
+const { formatNumber } = require('../utils/formatHelpers');
 
 const logger = createLogger('LoadingStrategyAnalyzer');
 
@@ -145,12 +146,12 @@ class LoadingStrategyAnalyzer {
       return {
         fonts: performance,
         totalFonts: performance.length,
-        totalLoadTime: totalLoadTime.toFixed(2),
+        totalLoadTime: formatNumber(totalLoadTime, 2),
         totalSize: totalSize,
-        totalSizeKB: (totalSize / 1024).toFixed(2),
-        avgLoadTime: avgLoadTime.toFixed(2),
+        totalSizeKB: formatNumber(totalSize / 1024, 2),
+        avgLoadTime: formatNumber(avgLoadTime, 2),
         cachedFonts: cachedCount,
-        cacheRate: performance.length > 0 ? ((cachedCount / performance.length) * 100).toFixed(1) : 0,
+        cacheRate: performance.length > 0 ? formatNumber((cachedCount / performance.length) * 100, 1) : 0,
       };
     } catch (error) {
       logger.error('Error analyzing loading performance:', error);
@@ -369,7 +370,7 @@ class LoadingStrategyAnalyzer {
         title: 'Reduce font file sizes',
         description: `Total font size: ${analysis.loadingPerformance.totalSizeKB}KB. Consider subsetting or using variable fonts`,
         implementation: 'Use tools like glyphhanger or Font Squirrel to subset fonts',
-        impact: `Could reduce ${((analysis.loadingPerformance.totalSize - 150000) / 1024).toFixed(0)}KB of transfer size`,
+        impact: `Could reduce ${formatNumber((analysis.loadingPerformance.totalSize - 150000) / 1024, 0)}KB of transfer size`,
       });
     }
 

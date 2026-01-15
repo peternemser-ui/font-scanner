@@ -9,6 +9,7 @@
 const competitiveCWVAnalyzer = require('./competitiveCoreWebVitalsAnalyzer');
 const { createLogger } = require('../utils/logger');
 const browserPool = require('../utils/browserPool');
+const { roundTo, formatNumber, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('CoreWebVitalsService');
 
@@ -36,9 +37,9 @@ class CoreWebVitalsService {
       
       // FID is not directly measurable - estimate from page load metrics
       // Good FID correlates with fast FCP and low blocking time
-      const estimatedFID = fcpValue ? Math.min(Math.round(fcpValue / 10), 200) : 100;
+      const estimatedFID = fcpValue ? Math.min(roundTo(fcpValue / 10, 0), 200) : 100;
       const fidValue = metrics.fid || estimatedFID;
-      
+
       const results = {
         url,
         timestamp: new Date().toISOString(),
@@ -46,14 +47,14 @@ class CoreWebVitalsService {
           device: 'desktop',
           lcp: {
             value: lcpValue,
-            displayValue: `${(lcpValue / 1000).toFixed(2)}s`,
+            displayValue: `${formatNumber(lcpValue / 1000, 2)}s`,
             score: this.calculateMetricScore(lcpValue, 'lcp'),
             rating: this.getCWVRating(lcpValue, 'lcp'),
             description: 'Time until the largest text or image is painted'
           },
           inp: {
             value: fidValue,
-            displayValue: `${fidValue.toFixed(0)}ms`,
+            displayValue: `${formatNumber(fidValue, 0)}ms`,
             score: this.calculateMetricScore(fidValue, 'fid'),
             rating: this.getCWVRating(fidValue, 'fid'),
             description: 'Responsiveness to user interactions',
@@ -65,7 +66,7 @@ class CoreWebVitalsService {
           },
           cls: {
             value: clsValue,
-            displayValue: clsValue.toFixed(3),
+            displayValue: formatNumber(clsValue, 3),
             score: this.calculateMetricScore(clsValue, 'cls'),
             rating: this.getCWVRating(clsValue, 'cls'),
             description: 'Visual stability - unexpected layout shifts'
@@ -73,7 +74,7 @@ class CoreWebVitalsService {
           additionalMetrics: {
             fcp: {
               value: fcpValue,
-              displayValue: `${(fcpValue / 1000).toFixed(2)}s`,
+              displayValue: `${formatNumber(fcpValue / 1000, 2)}s`,
               description: 'Time until first text/image appears'
             },
             si: {
@@ -93,14 +94,14 @@ class CoreWebVitalsService {
           device: 'mobile',
           lcp: {
             value: lcpValue + 500, // Mobile typically 500ms slower
-            displayValue: `${((lcpValue + 500) / 1000).toFixed(2)}s`,
+            displayValue: `${formatNumber((lcpValue + 500) / 1000, 2)}s`,
             score: this.calculateMetricScore(lcpValue + 500, 'lcp'),
             rating: this.getCWVRating(lcpValue + 500, 'lcp'),
             description: 'Time until the largest text or image is painted'
           },
           inp: {
             value: fidValue + 20, // Mobile typically 20ms slower
-            displayValue: `${(fidValue + 20).toFixed(0)}ms`,
+            displayValue: `${formatNumber(fidValue + 20, 0)}ms`,
             score: this.calculateMetricScore(fidValue + 20, 'fid'),
             rating: this.getCWVRating(fidValue + 20, 'fid'),
             description: 'Responsiveness to user interactions',
@@ -112,7 +113,7 @@ class CoreWebVitalsService {
           },
           cls: {
             value: clsValue,
-            displayValue: clsValue.toFixed(3),
+            displayValue: formatNumber(clsValue, 3),
             score: this.calculateMetricScore(clsValue, 'cls'),
             rating: this.getCWVRating(clsValue, 'cls'),
             description: 'Visual stability - unexpected layout shifts'
@@ -120,7 +121,7 @@ class CoreWebVitalsService {
           additionalMetrics: {
             fcp: {
               value: fcpValue + 300,
-              displayValue: `${((fcpValue + 300) / 1000).toFixed(2)}s`,
+              displayValue: `${formatNumber((fcpValue + 300) / 1000, 2)}s`,
               description: 'Time until first text/image appears'
             },
             si: {
@@ -153,7 +154,7 @@ class CoreWebVitalsService {
       // Add field data comparison
       results.comparison = this.compareToFieldData(results.mobile);
 
-      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      const duration = formatDuration(Date.now() - startTime, 2);
       logger.info(`Core Web Vitals analysis completed in ${duration}s`, { score: results.score });
 
       return results;
@@ -172,19 +173,19 @@ class CoreWebVitalsService {
     switch(type) {
       case 'lcp':
         if (value <= 2500) return 100;
-        if (value <= 4000) return Math.round(100 - ((value - 2500) / 1500) * 50);
-        return Math.max(0, 50 - Math.round(((value - 4000) / 2000) * 50));
-      
+        if (value <= 4000) return roundTo(100 - ((value - 2500) / 1500) * 50, 0);
+        return Math.max(0, 50 - roundTo(((value - 4000) / 2000) * 50, 0));
+
       case 'fid':
         if (value <= 100) return 100;
-        if (value <= 300) return Math.round(100 - ((value - 100) / 200) * 50);
-        return Math.max(0, 50 - Math.round(((value - 300) / 200) * 50));
-      
+        if (value <= 300) return roundTo(100 - ((value - 100) / 200) * 50, 0);
+        return Math.max(0, 50 - roundTo(((value - 300) / 200) * 50, 0));
+
       case 'cls':
         if (value <= 0.1) return 100;
-        if (value <= 0.25) return Math.round(100 - ((value - 0.1) / 0.15) * 50);
-        return Math.max(0, 50 - Math.round(((value - 0.25) / 0.25) * 50));
-      
+        if (value <= 0.25) return roundTo(100 - ((value - 0.1) / 0.15) * 50, 0);
+        return Math.max(0, 50 - roundTo(((value - 0.25) / 0.25) * 50, 0));
+
       default:
         return 50;
     }
@@ -285,7 +286,7 @@ class CoreWebVitalsService {
     };
 
     // Calculate device-specific score
-    const deviceScore = Math.round((lcp.score + inp.score + cls.score) / 3);
+    const deviceScore = roundTo((lcp.score + inp.score + cls.score) / 3, 0);
 
     return {
       device,
@@ -331,7 +332,7 @@ class CoreWebVitalsService {
     const desktopWeight = 0.3;
 
     const overall = (mobile.score * mobileWeight) + (desktop.score * desktopWeight);
-    return Math.round(overall);
+    return roundTo(overall, 0);
   }
 
   /**
@@ -378,7 +379,7 @@ class CoreWebVitalsService {
       recommendations.push({
         priority: 'critical',
         metric: 'CLS',
-        issue: `Layout shifts detected (${mobile.cls.value.toFixed(3)})`,
+        issue: `Layout shifts detected (${formatNumber(mobile.cls.value, 3)})`,
         solution: 'Add size attributes to images/video, reserve space for ads, avoid inserting content above existing content'
       });
     }
@@ -414,7 +415,7 @@ class CoreWebVitalsService {
     }
 
     if (mobile.cls.rating === 'poor') {
-      issues.push(`⚠️ High layout shifts: ${mobile.cls.value.toFixed(3)} (Google target: <0.1)`);
+      issues.push(`⚠️ High layout shifts: ${formatNumber(mobile.cls.value, 3)} (Google target: <0.1)`);
     }
 
     if (mobile.inp.tbt.value > 300) {

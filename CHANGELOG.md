@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Unified report metadata pattern (reportId, screenshotUrl, scanStartedAt)
   - Consolidated URL processing with HTTP fallback support
   - Single source for analyzer key extraction
-- **13 analyzer services** refactored to use utility helpers (eliminated 230+ lines)
+- **16 analyzer services** refactored to use utility helpers (eliminated 270+ lines)
   - `seoAnalyzer.js`: Uses formatHelpers, scoringHelpers, browserHelpers, domHelpers (eliminated 120+ lines)
   - `securityAnalyzerService.js`: Uses formatHelpers and scoringHelpers for weighted scoring
   - `performanceAnalyzerService.js`: Uses formatHelpers for consistent number formatting
@@ -38,6 +38,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `brandConsistencyService.js`: Uses formatHelpers for color analysis, contrast ratios, hierarchy (20 replacements)
   - `ipReputationService.js`: Uses formatHelpers for scoring, price averages, savings calculations (8 replacements)
   - `localSEOService.js`: Uses formatHelpers for score calculations and analysis duration (2 replacements)
+  - `coreWebVitalsService.js`: Uses formatHelpers for CWV metrics, scoring, duration (20 replacements)
+  - `bestPracticesAnalyzer.js`: Uses formatHelpers for best practice scoring and metrics (14 replacements)
+  - `loadingStrategyAnalyzer.js`: Uses formatHelpers for loading performance metrics (5 replacements)
 - **4 PDF generators** refactored to use pdfHelpers (eliminated 180+ lines)
   - `seoPdfGenerator.js`: Uses initializePdfGeneration, finalizePdfGeneration, addPdfHeader, section helpers
   - `securityPdfGenerator.js`: Uses pdfHelpers for headers, sections, scoring, page breaks
@@ -51,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **13 duplicate `getAnalyzerKeyOverride()` functions** from controllers
 - **10+ duplicate 8-line report metadata patterns** from controllers
 - **36+ duplicate scoring methods** replaced with scoringHelpers utilities
-- **112+ scattered `.toFixed()` and `Math.round()` formatting calls** replaced with formatHelpers
+- **151+ scattered `.toFixed()` and `Math.round()` formatting calls** replaced with formatHelpers
 - **17 duplicate browser automation patterns** replaced with browserHelpers
 - **10+ duplicate DOM extraction functions** replaced with domHelpers
 - **4 × 50-line PDF boilerplate blocks** replaced with pdfHelpers (200+ lines eliminated)
