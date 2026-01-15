@@ -6,6 +6,7 @@
 
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
+const { roundTo, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('BrandConsistencyService');
 
@@ -91,7 +92,7 @@ class BrandConsistencyService {
         scoreBreakdown: this.getScoreBreakdown(consistency, colorAnalysis, typographyAnalysis, crossPageConsistency),
         grade: this.getGrade(score),
         recommendations: this.generateRecommendations(consistency, colorAnalysis, typographyAnalysis, aggregated, contrastAnalysis, hierarchyAnalysis, crossPageConsistency),
-        analysisTime: ((Date.now() - startTime) / 1000).toFixed(2)
+        analysisTime: formatDuration(Date.now() - startTime, 2)
       };
       
     } catch (error) {
@@ -541,7 +542,7 @@ class BrandConsistencyService {
     pageVariations.push({
       metric: 'colors',
       values: colorCounts,
-      variation: Math.round(maxColorDiff)
+      variation: roundTo(maxColorDiff, 0)
     });
     
     // Analyze font variation across pages
@@ -656,7 +657,7 @@ class BrandConsistencyService {
         scoreBreakdown: this.getScoreBreakdown(consistency, colorAnalysis, typographyAnalysis),
         grade: this.getGrade(score),
         recommendations: this.generateRecommendations(consistency, colorAnalysis, typographyAnalysis, results, contrastAnalysis, hierarchyAnalysis),
-        analysisTime: ((Date.now() - startTime) / 1000).toFixed(2)
+        analysisTime: formatDuration(Date.now() - startTime, 2)
       };
       
     } catch (error) {
@@ -688,8 +689,8 @@ class BrandConsistencyService {
         case b: h = ((r - g) / d + 4) / 6; break;
       }
     }
-    
-    return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100), raw: colorStr };
+
+    return { h: roundTo(h * 360, 0), s: roundTo(s * 100, 0), l: roundTo(l * 100, 0), raw: colorStr };
   }
 
   // Parse RGB to get luminance for contrast calculation
@@ -732,7 +733,7 @@ class BrandConsistencyService {
       
       return {
         ...pair,
-        ratio: ratio ? Math.round(ratio * 100) / 100 : null,
+        ratio: ratio ? roundTo(ratio, 2) : null,
         passAA: ratio >= aaThreshold,
         passAAA: ratio >= aaaThreshold,
         isLargeText,
@@ -755,9 +756,9 @@ class BrandConsistencyService {
         passAA,
         passAAA,
         failAA,
-        complianceRate: Math.round(complianceRate)
+        complianceRate: roundTo(complianceRate, 0)
       },
-      score: Math.round(complianceRate)
+      score: roundTo(complianceRate, 0)
     };
   }
 
@@ -798,12 +799,12 @@ class BrandConsistencyService {
       const h1Size = headingHierarchy[0].fontSize;
       const bodySize = parseFloat(bodyTextStyle.fontSize);
       const ratio = h1Size / bodySize;
-      
+
       if (ratio < 1.5) {
-        issues.push({ type: 'h1TooSmall', ratio: Math.round(ratio * 10) / 10 });
+        issues.push({ type: 'h1TooSmall', ratio: roundTo(ratio, 1) });
         score -= 15;
       } else if (ratio > 4) {
-        issues.push({ type: 'h1TooLarge', ratio: Math.round(ratio * 10) / 10 });
+        issues.push({ type: 'h1TooLarge', ratio: roundTo(ratio, 1) });
         score -= 10;
       }
     }
@@ -815,7 +816,7 @@ class BrandConsistencyService {
       typeScale.push({
         from: headingHierarchy[i - 1].tag,
         to: headingHierarchy[i].tag,
-        ratio: Math.round(ratio * 100) / 100
+        ratio: roundTo(ratio, 2)
       });
     }
     
@@ -847,25 +848,25 @@ class BrandConsistencyService {
       usage.accent.reduce((sum, c) => sum + c.count, 0);
     
     const distribution = {
-      text: { 
-        count: usage.text.length, 
+      text: {
+        count: usage.text.length,
         total: usage.text.reduce((sum, c) => sum + c.count, 0),
-        percentage: totalUsage > 0 ? Math.round((usage.text.reduce((sum, c) => sum + c.count, 0) / totalUsage) * 100) : 0
+        percentage: totalUsage > 0 ? roundTo((usage.text.reduce((sum, c) => sum + c.count, 0) / totalUsage) * 100, 0) : 0
       },
-      background: { 
-        count: usage.background.length, 
+      background: {
+        count: usage.background.length,
         total: usage.background.reduce((sum, c) => sum + c.count, 0),
-        percentage: totalUsage > 0 ? Math.round((usage.background.reduce((sum, c) => sum + c.count, 0) / totalUsage) * 100) : 0
+        percentage: totalUsage > 0 ? roundTo((usage.background.reduce((sum, c) => sum + c.count, 0) / totalUsage) * 100, 0) : 0
       },
-      border: { 
-        count: usage.border.length, 
+      border: {
+        count: usage.border.length,
         total: usage.border.reduce((sum, c) => sum + c.count, 0),
-        percentage: totalUsage > 0 ? Math.round((usage.border.reduce((sum, c) => sum + c.count, 0) / totalUsage) * 100) : 0
+        percentage: totalUsage > 0 ? roundTo((usage.border.reduce((sum, c) => sum + c.count, 0) / totalUsage) * 100, 0) : 0
       },
-      accent: { 
-        count: usage.accent.length, 
+      accent: {
+        count: usage.accent.length,
         total: usage.accent.reduce((sum, c) => sum + c.count, 0),
-        percentage: totalUsage > 0 ? Math.round((usage.accent.reduce((sum, c) => sum + c.count, 0) / totalUsage) * 100) : 0
+        percentage: totalUsage > 0 ? roundTo((usage.accent.reduce((sum, c) => sum + c.count, 0) / totalUsage) * 100, 0) : 0
       }
     };
     
@@ -948,7 +949,7 @@ class BrandConsistencyService {
       harmonyScore,
       uniqueHueCount: uniqueHues.length,
       primaryColors: primaryColors.slice(0, 3).map(c => c.raw),
-      neutralRatio: Math.round(neutralRatio * 100),
+      neutralRatio: roundTo(neutralRatio * 100, 0),
       hasGoodNeutralBalance,
       totalColors: colors.length,
       significantColors: significantColors.length
@@ -1044,7 +1045,7 @@ class BrandConsistencyService {
     else if (consistency.colorCount <= 35) score += 8;
     
     // Color harmony bonus (10 points)
-    score += Math.round((colorAnalysis?.harmonyScore || 50) / 10);
+    score += roundTo((colorAnalysis?.harmonyScore || 50) / 10, 0);
     
     // Typography score (25 points max)
     if (consistency.fontCount <= 2) score += 25;
@@ -1064,7 +1065,7 @@ class BrandConsistencyService {
     
     // Cross-page consistency bonus (10 points) - only for multi-page mode
     if (crossPageConsistency && crossPageConsistency.score !== undefined) {
-      score += Math.round(crossPageConsistency.score / 10);
+      score += roundTo(crossPageConsistency.score / 10, 0);
     }
     
     return Math.min(100, Math.max(0, score));
@@ -1094,16 +1095,16 @@ class BrandConsistencyService {
         detail: `Buttons: ${consistency.buttonStyleConsistency}, Links: ${consistency.linkColorConsistency}`
       },
       colorHarmony: {
-        score: Math.round((colorAnalysis?.harmonyScore || 50) / 10),
+        score: roundTo((colorAnalysis?.harmonyScore || 50) / 10, 0),
         maxScore: 10,
         detail: `${colorAnalysis?.harmonyType || 'Unknown'} palette`
       }
     };
-    
+
     // Add cross-page consistency breakdown if multi-page
     if (crossPageConsistency && crossPageConsistency.score !== undefined) {
       breakdown.crossPageConsistency = {
-        score: Math.round(crossPageConsistency.score / 10),
+        score: roundTo(crossPageConsistency.score / 10, 0),
         maxScore: 10,
         detail: `${crossPageConsistency.pagesAnalyzed || 0} pages analyzed, ${crossPageConsistency.issues?.length || 0} inconsistencies`
       };

@@ -4,6 +4,7 @@ const http = require('http');
 const tls = require('tls');
 const net = require('net');
 const { createLogger } = require('../utils/logger');
+const { roundTo } = require('../utils/formatHelpers');
 
 const logger = createLogger('IPReputationService');
 
@@ -1242,7 +1243,7 @@ class IPReputationService {
     else if (listedCount >= 2 && listedCount <= 3) score -= 40;
     else if (listedCount >= 4) score -= 60;
 
-    return Math.max(0, Math.round(score));
+    return Math.max(0, roundTo(score, 0));
   }
 
   /**
@@ -1297,7 +1298,7 @@ class IPReputationService {
       portSecurityScore * 0.10 +
       hostingScore * 0.05;
 
-    return Math.round(overallScore);
+    return roundTo(overallScore, 0);
   }
 
   /**
@@ -2618,8 +2619,8 @@ class IPReputationService {
     
     // Priority bonuses (20 points max)
     score += this.getPriorityScore(provider, criteria.priority);
-    
-    return Math.round(score);
+
+    return roundTo(score, 0);
   }
 
   /**
@@ -2879,7 +2880,7 @@ class IPReputationService {
     return {
       lowestPrice: Math.min(...prices),
       highestPrice: Math.max(...prices),
-      averagePrice: Math.round((prices.reduce((a, b) => a + b, 0) / prices.length) * 100) / 100,
+      averagePrice: roundTo(prices.reduce((a, b) => a + b, 0) / prices.length, 2),
       medianPrice: prices.sort((a, b) => a - b)[Math.floor(prices.length / 2)],
       budgetOptions: hosts.filter(h => (h.recommendedPlan?.price || h.cheapestPlan?.price) <= minPrice * 2).length,
       premiumOptions: hosts.filter(h => (h.recommendedPlan?.price || h.cheapestPlan?.price) >= 50).length,
@@ -2912,7 +2913,7 @@ class IPReputationService {
       if (typeof providerPrice !== 'number' || providerPrice < minPrice) continue;
 
       const savings = currentPrice - providerPrice;
-      const savingsPercent = currentPrice > 0 ? Math.round((savings / currentPrice) * 100) : 0;
+      const savingsPercent = currentPrice > 0 ? roundTo((savings / currentPrice) * 100, 0) : 0;
 
       if (savings > 0 && savingsPercent >= 10) {
         opportunities.push({
@@ -2922,7 +2923,7 @@ class IPReputationService {
           currentPlan: currentPlan?.name,
           newPlan: providerPlan?.name,
           monthlySavings: savings,
-          annualSavings: Math.round(savings * 12),
+          annualSavings: roundTo(savings * 12, 0),
           savingsPercent,
           category: provider.category,
           rating: provider.rating,
@@ -2969,7 +2970,7 @@ class IPReputationService {
     return {
       lowestPrice: Math.min(...prices),
       highestPrice: Math.max(...prices),
-      averagePrice: Math.round((prices.reduce((a, b) => a + b, 0) / prices.length) * 100) / 100,
+      averagePrice: roundTo(prices.reduce((a, b) => a + b, 0) / prices.length, 2),
       medianPrice: prices.sort((a, b) => a - b)[Math.floor(prices.length / 2)],
       budgetOptions: hosts.filter(h => h.cheapestPlan?.price <= 5).length,
       premiumOptions: hosts.filter(h => h.cheapestPlan?.price >= 20).length,
@@ -2997,7 +2998,7 @@ class IPReputationService {
       if (typeof providerPrice !== 'number') continue;
 
       const savings = currentPrice - providerPrice;
-      const savingsPercent = currentPrice > 0 ? Math.round((savings / currentPrice) * 100) : 0;
+      const savingsPercent = currentPrice > 0 ? roundTo((savings / currentPrice) * 100, 0) : 0;
 
       if (savings > 0 && savingsPercent >= 20) {
         opportunities.push({

@@ -5,6 +5,7 @@
 
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
+const { roundTo, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('LocalSEOService');
 
@@ -213,7 +214,7 @@ class LocalSEOService {
         grade: this.getGrade(overallScore),
         recommendations: this.generateRecommendations(results),
         quickWins: this.generateQuickWins(results),
-        analysisTime: ((Date.now() - startTime) / 1000).toFixed(2)
+        analysisTime: formatDuration(Date.now() - startTime, 2)
       };
       
     } catch (error) {
@@ -257,7 +258,7 @@ class LocalSEOService {
 
   calculateOverallScore(scores) {
     // Weighted average
-    return Math.round((scores.nap * 0.35) + (scores.schema * 0.35) + (scores.presence * 0.30));
+    return roundTo((scores.nap * 0.35) + (scores.schema * 0.35) + (scores.presence * 0.30), 0);
   }
 
   generateQuickWins(analysis) {
