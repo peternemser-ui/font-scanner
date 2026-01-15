@@ -5,6 +5,7 @@
 
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
+const { roundTo } = require('../utils/formatHelpers');
 
 const logger = createLogger('MobileAnalyzer');
 
@@ -158,7 +159,7 @@ class MobileAnalyzerService {
             });
             results.screenshot = `data:image/jpeg;base64,${screenshotBuffer.toString('base64')}`;
             logger.info(`Screenshot captured for ${device.name}`, { 
-              size: Math.round(screenshotBuffer.length / 1024) + 'KB' 
+              size: roundTo(screenshotBuffer.length / 1024, 0) + 'KB' 
             });
           } catch (screenshotError) {
             logger.warn(`Failed to capture screenshot for ${device.name}:`, screenshotError.message);
@@ -244,8 +245,8 @@ class MobileAnalyzerService {
       return {
         domContentLoaded: metrics.domContentLoaded,
         loadComplete: metrics.loadComplete,
-        firstPaint: Math.round(metrics.firstPaint),
-        firstContentfulPaint: Math.round(metrics.firstContentfulPaint),
+        firstPaint: roundTo(metrics.firstPaint, 0),
+        firstContentfulPaint: roundTo(metrics.firstContentfulPaint, 0),
         score: this.calculatePerformanceScore(metrics)
       };
     } catch (error) {
@@ -326,8 +327,8 @@ class MobileAnalyzerService {
 
         interactive.forEach((el, idx) => {
           const rect = el.getBoundingClientRect();
-          const width = Math.round(rect.width);
-          const height = Math.round(rect.height);
+          const width = roundTo(rect.width, 0);
+          const height = roundTo(rect.height, 0);
 
           const isCompliant = width >= MIN_SIZE && height >= MIN_SIZE;
 
@@ -350,7 +351,7 @@ class MobileAnalyzerService {
           compliant: compliant.length,
           issues: issues.length,
           issueDetails: issues,
-          compliancePercentage: Math.round((compliant.length / interactive.length) * 100)
+          compliancePercentage: roundTo((compliant.length / interactive.length) * 100, 0)
         };
       });
 
@@ -392,10 +393,10 @@ class MobileAnalyzerService {
         return {
           totalElements: bodyText.length,
           smallFontElements: smallFontCount,
-          smallFontPercentage: Math.round((smallFontCount / bodyText.length) * 100),
+          smallFontPercentage: roundTo((smallFontCount / bodyText.length) * 100, 0),
           goodLineHeight: goodLineHeightCount,
-          goodLineHeightPercentage: Math.round((goodLineHeightCount / bodyText.length) * 100),
-          readabilityScore: Math.max(0, 100 - Math.round((smallFontCount / bodyText.length) * 50))
+          goodLineHeightPercentage: roundTo((goodLineHeightCount / bodyText.length) * 100, 0),
+          readabilityScore: Math.max(0, 100 - roundTo((smallFontCount / bodyText.length) * 50, 0))
         };
       });
 
@@ -977,7 +978,7 @@ class MobileAnalyzerService {
       }
     });
 
-    summary.average = count > 0 ? Math.round(totalScore / count) : 0;
+    summary.average = count > 0 ? roundTo(totalScore / count, 0) : 0;
     return summary;
   }
 
@@ -996,7 +997,7 @@ class MobileAnalyzerService {
       }
     });
 
-    summary.average = count > 0 ? Math.round(totalScore / count) : 0;
+    summary.average = count > 0 ? roundTo(totalScore / count, 0) : 0;
     return summary;
   }
 
@@ -1015,7 +1016,7 @@ class MobileAnalyzerService {
       }
     });
 
-    summary.average = count > 0 ? Math.round(totalScore / count) : 0;
+    summary.average = count > 0 ? roundTo(totalScore / count, 0) : 0;
     return summary;
   }
 
@@ -1037,7 +1038,7 @@ class MobileAnalyzerService {
       }
     });
 
-    summary.average = count > 0 ? Math.round(totalCompliance / count) : 0;
+    summary.average = count > 0 ? roundTo(totalCompliance / count, 0) : 0;
     return summary;
   }
 
@@ -1101,7 +1102,7 @@ class MobileAnalyzerService {
       results.accessibilitySummary.average * 0.25
     ];
 
-    return Math.round(scores.reduce((a, b) => a + b, 0));
+    return roundTo(scores.reduce((a, b) => a + b, 0), 0);
   }
 }
 

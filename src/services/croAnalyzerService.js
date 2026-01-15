@@ -6,6 +6,7 @@
 
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
+const { roundTo, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('CROAnalyzerService');
 
@@ -116,8 +117,8 @@ class CROAnalyzerService {
       const scores = this.calculateScores(results);
       const recommendations = this.generateRecommendations(results, scores);
       const quickWins = this.generateQuickWins(results, scores);
-      
-      const analysisTime = ((Date.now() - startTime) / 1000).toFixed(2);
+
+      const analysisTime = formatDuration(Date.now() - startTime, 2);
       
       return {
         url,
@@ -164,9 +165,9 @@ class CROAnalyzerService {
     if (analysis.mobileUX.hasViewportMeta) mobileScore += 30;
     if (analysis.mobileUX.tapTargetCompliance > 0.7) mobileScore += 40;
     if (analysis.mobileUX.avgFontSize >= 16) mobileScore += 30;
-    
-    const overall = Math.round((ctaScore + formScore + trustScore + mobileScore) / 4);
-    
+
+    const overall = roundTo((ctaScore + formScore + trustScore + mobileScore) / 4, 0);
+
     return { cta: ctaScore, form: formScore, trust: trustScore, mobile: mobileScore, overall };
   }
 

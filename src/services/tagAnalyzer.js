@@ -5,6 +5,7 @@
 
 const cheerio = require('cheerio');
 const browserPool = require('../utils/browserPool');
+const { roundTo, formatNumber } = require('../utils/formatHelpers');
 
 class TagAnalyzer {
   constructor() {
@@ -482,8 +483,6 @@ class TagAnalyzer {
    */
   async analyzeTags(url) {
     try {
-      console.log(`🏷️ Analyzing tags for: ${url}`);
-
       // Use browser pool for better bot protection bypass
       const { html, cookies: pageCookies, resourceTimings, navigationTiming } = await browserPool.execute(async (browser) => {
         const page = await browser.newPage();
@@ -499,15 +498,21 @@ class TagAnalyzer {
           
           // Capture resource timings for waterfall
           const timings = await page.evaluate(() => {
+            // Import formatHelpers for use in page context
+            const roundTo = (num, decimals) => {
+              const factor = Math.pow(10, decimals);
+              return Math.round(num * factor) / factor;
+            };
+
             const resources = performance.getEntriesByType('resource');
             return resources
               .filter(r => r.initiatorType === 'script')
               .map(r => ({
                 name: r.name,
-                startTime: Math.round(r.startTime),
-                duration: Math.round(r.duration),
+                startTime: roundTo(r.startTime, 0),
+                duration: roundTo(r.duration, 0),
                 transferSize: r.transferSize || 0,
-                responseEnd: Math.round(r.responseEnd),
+                responseEnd: roundTo(r.responseEnd, 0),
                 initiatorType: r.initiatorType
               }))
               .sort((a, b) => a.startTime - b.startTime)
@@ -516,12 +521,18 @@ class TagAnalyzer {
           
           // Get navigation timing
           const navTiming = await page.evaluate(() => {
+            // Import formatHelpers for use in page context
+            const roundTo = (num, decimals) => {
+              const factor = Math.pow(10, decimals);
+              return Math.round(num * factor) / factor;
+            };
+
             const timing = performance.getEntriesByType('navigation')[0];
             if (!timing) return null;
             return {
-              domContentLoaded: Math.round(timing.domContentLoadedEventEnd),
-              loadComplete: Math.round(timing.loadEventEnd),
-              firstPaint: Math.round(timing.responseStart)
+              domContentLoaded: roundTo(timing.domContentLoadedEventEnd, 0),
+              loadComplete: roundTo(timing.loadEventEnd, 0),
+              firstPaint: roundTo(timing.responseStart, 0)
             };
           });
           
@@ -574,9 +585,6 @@ class TagAnalyzer {
 
       // Calculate health score
       results.healthScore = this.calculateHealthScore(results);
-
-      console.log(`✅ Found ${results.tags.length} tags on ${url}`);
-
       return results;
 
     } catch (error) {
@@ -1028,7 +1036,7 @@ class TagAnalyzer {
         duration: r.duration,
         endTime: r.responseEnd,
         size: r.transferSize,
-        sizeFormatted: r.transferSize > 1024 ? `${(r.transferSize / 1024).toFixed(1)}KB` : `${r.transferSize}B`,
+        sizeFormatted: r.transferSize > 1024 ? `${formatNumber(r.transferSize / 1024, 1)}KB` : `${r.transferSize}B`,
         category,
         vendor,
         blocking: r.startTime < (navigationTiming?.domContentLoaded || 1000)
@@ -1054,11 +1062,11 @@ class TagAnalyzer {
     return {
       scripts: categorizedScripts,
       totalScripts: categorizedScripts.length,
-      totalLoadTime: Math.round(totalLoadTime),
+      totalLoadTime: roundTo(totalLoadTime, 0),
       totalSize,
-      totalSizeFormatted: totalSize > 1024 * 1024 
-        ? `${(totalSize / 1024 / 1024).toFixed(2)}MB` 
-        : `${(totalSize / 1024).toFixed(1)}KB`,
+      totalSizeFormatted: totalSize > 1024 * 1024
+        ? `${formatNumber(totalSize / 1024 / 1024, 2)}MB`
+        : `${formatNumber(totalSize / 1024, 1)}KB`,
       blockingCount: blockingScripts.length,
       byCategory,
       timeline: navigationTiming,

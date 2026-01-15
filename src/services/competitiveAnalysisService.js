@@ -13,6 +13,7 @@ const competitiveCWVAnalyzer = require('./competitiveCoreWebVitalsAnalyzer');
 const competitivePerformanceAnalyzer = require('./competitivePerformanceAnalyzer');
 
 const { createLogger } = require('../utils/logger');
+const { roundTo, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('CompetitiveAnalysisService');
 
@@ -204,7 +205,7 @@ class CompetitiveAnalysisService {
           circuitBreakerTriggered: consecutiveFailures >= MAX_CONSECUTIVE_FAILURES
         },
         timestamp: new Date().toISOString(),
-        analysisTime: ((Date.now() - startTime) / 1000).toFixed(2)
+        analysisTime: formatDuration(Date.now() - startTime, 2)
       };
 
       logger.info('═══════════════════════════════════════════════');
@@ -385,7 +386,7 @@ class CompetitiveAnalysisService {
       // Calculate overall score (only from successful analyzers)
       const successfulScores = Object.values(scores).filter(s => s > 0);
       const overallScore = successfulScores.length > 0
-        ? Math.round(successfulScores.reduce((sum, s) => sum + s, 0) / successfulScores.length)
+        ? roundTo(successfulScores.reduce((sum, s) => sum + s, 0) / successfulScores.length, 0)
         : 0;
 
       scores.overall = overallScore;
@@ -534,9 +535,9 @@ class CompetitiveAnalysisService {
       
       comparison[metric] = {
         yourScore,
-        avgCompetitor: Math.round(avgCompetitor),
+        avgCompetitor: roundTo(avgCompetitor, 0),
         maxCompetitor,
-        diff: Math.round(yourScore - avgCompetitor),
+        diff: roundTo(yourScore - avgCompetitor, 0),
         percentile: this.calculatePercentile(yourScore, validCompetitorScores),
         status: yourScore > avgCompetitor ? 'winning' : yourScore === avgCompetitor ? 'tied' : 'losing',
         failed: false
@@ -630,7 +631,7 @@ class CompetitiveAnalysisService {
   calculatePercentile(yourScore, competitorScores) {
     const allScores = [...competitorScores, yourScore].sort((a, b) => a - b);
     const rank = allScores.indexOf(yourScore) + 1;
-    return Math.round((rank / allScores.length) * 100);
+    return roundTo((rank / allScores.length) * 100, 0);
   }
 
   /**
@@ -640,11 +641,11 @@ class CompetitiveAnalysisService {
   generateInsights(yourSite, competitors) {
     const insights = [];
     const avgScores = {
-      seo: competitors.reduce((sum, c) => sum + c.scores.seo, 0) / competitors.length,
-      performance: competitors.reduce((sum, c) => sum + c.scores.performance, 0) / competitors.length,
-      accessibility: competitors.reduce((sum, c) => sum + c.scores.accessibility, 0) / competitors.length,
-      security: competitors.reduce((sum, c) => sum + c.scores.security, 0) / competitors.length,
-      coreWebVitals: competitors.reduce((sum, c) => sum + c.scores.coreWebVitals, 0) / competitors.length
+      seo: roundTo(competitors.reduce((sum, c) => sum + c.scores.seo, 0) / competitors.length, 0),
+      performance: roundTo(competitors.reduce((sum, c) => sum + c.scores.performance, 0) / competitors.length, 0),
+      accessibility: roundTo(competitors.reduce((sum, c) => sum + c.scores.accessibility, 0) / competitors.length, 0),
+      security: roundTo(competitors.reduce((sum, c) => sum + c.scores.security, 0) / competitors.length, 0),
+      coreWebVitals: roundTo(competitors.reduce((sum, c) => sum + c.scores.coreWebVitals, 0) / competitors.length, 0)
     };
 
     // Overall performance
@@ -670,7 +671,7 @@ class CompetitiveAnalysisService {
         type: 'critical',
         category: 'SEO',
         message: '❌ Losing SEO battle',
-        detail: `Your SEO score (${yourSite.scores.seo}) is below competitor average (${Math.round(avgScores.seo)}). This hurts organic visibility.`
+        detail: `Your SEO score (${yourSite.scores.seo}) is below competitor average (${avgScores.seo}). This hurts organic visibility.`
       });
     }
 
@@ -680,7 +681,7 @@ class CompetitiveAnalysisService {
         type: 'critical',
         category: 'Core Web Vitals',
         message: '⚠️ Google rankings at risk',
-        detail: `Competitors have better Core Web Vitals (${Math.round(avgScores.coreWebVitals)} vs your ${yourSite.scores.coreWebVitals}). Google may rank them higher.`
+        detail: `Competitors have better Core Web Vitals (${avgScores.coreWebVitals} vs your ${yourSite.scores.coreWebVitals}). Google may rank them higher.`
       });
     }
 
@@ -690,7 +691,7 @@ class CompetitiveAnalysisService {
         type: 'warning',
         category: 'Performance',
         message: '🐌 Slower than competitors',
-        detail: `Users may choose faster competitor sites. Average competitor performance: ${Math.round(avgScores.performance)}`
+        detail: `Users may choose faster competitor sites. Average competitor performance: ${avgScores.performance}`
       });
     }
 

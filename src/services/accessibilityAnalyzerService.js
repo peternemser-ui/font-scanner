@@ -7,6 +7,7 @@
 const browserPool = require('../utils/browserPool');
 const lighthouseAnalyzer = require('./lighthouseAnalyzer');
 const { createLogger } = require('../utils/logger');
+const { roundTo, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('AccessibilityAnalyzer');
 
@@ -307,7 +308,7 @@ class AccessibilityAnalyzerService {
    * Process and combine all metrics into final results
    */
   processResults(url, desktopLighthouse, mobileLighthouse, accessibilityMetrics, startTime) {
-    const analysisDuration = ((Date.now() - startTime) / 1000).toFixed(2);
+    const analysisDuration = formatDuration(Date.now() - startTime, 2);
     
     // Calculate accessibility scores
     const desktopAccessibilityScore = desktopLighthouse.accessibility || 0;
@@ -336,7 +337,7 @@ class AccessibilityAnalyzerService {
     );
 
     // Calculate overall score
-    const accessibilityScore = Math.round((desktopAccessibilityScore + mobileAccessibilityScore) / 2);
+    const accessibilityScore = roundTo((desktopAccessibilityScore + mobileAccessibilityScore) / 2, 0);
 
     return {
       url,
@@ -350,9 +351,9 @@ class AccessibilityAnalyzerService {
 
       // Desktop-specific results
       desktop: {
-        accessibilityScore: Math.round(desktopAccessibilityScore),
+        accessibilityScore: roundTo(desktopAccessibilityScore, 0),
         wcag: {
-          score: Math.round(desktopAccessibilityScore),
+          score: roundTo(desktopAccessibilityScore, 0),
           ...desktopWCAG
         },
         lighthouse: {
@@ -365,9 +366,9 @@ class AccessibilityAnalyzerService {
       
       // Mobile-specific results
       mobile: {
-        accessibilityScore: Math.round(mobileAccessibilityScore),
+        accessibilityScore: roundTo(mobileAccessibilityScore, 0),
         wcag: {
-          score: Math.round(mobileAccessibilityScore),
+          score: roundTo(mobileAccessibilityScore, 0),
           ...mobileWCAG
         },
         lighthouse: {

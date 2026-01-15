@@ -5,6 +5,7 @@
 
 const cheerio = require('cheerio');
 const browserPool = require('../utils/browserPool');
+const { roundTo, formatNumber } = require('../utils/formatHelpers');
 
 class PerformanceSnapshotAnalyzer {
   constructor() {
@@ -17,8 +18,6 @@ class PerformanceSnapshotAnalyzer {
    */
   async analyzePerformance(url) {
     try {
-      console.log(`⚡ Performance snapshot for: ${url}`);
-
       this.startTime = Date.now();
 
       // Use browser pool to bypass bot protection
@@ -93,7 +92,7 @@ class PerformanceSnapshotAnalyzer {
         resources: {
           html: {
             size: htmlSize,
-            sizeKB: (htmlSize / 1024).toFixed(2)
+            sizeKB: formatNumber(htmlSize / 1024, 2)
           },
           actualCounts: resourceCounts, // Actual counts from Puppeteer network tracking
           renderBlocking: await this.detectRenderBlockingResources($, url),
@@ -120,9 +119,6 @@ class PerformanceSnapshotAnalyzer {
 
       // Calculate performance score
       analysis.performanceScore = this.calculatePerformanceScore(analysis);
-
-      console.log(`✅ Performance analysis complete: ${analysis.performanceScore}/100`);
-
       return analysis;
 
     } catch (error) {
@@ -217,7 +213,7 @@ class PerformanceSnapshotAnalyzer {
       css.inline.push({
         index: i,
         sizeBytes,
-        sizeKB: (sizeBytes / 1024).toFixed(2)
+        sizeKB: formatNumber(sizeBytes / 1024, 2)
       });
     });
 
@@ -272,7 +268,7 @@ class PerformanceSnapshotAnalyzer {
       js.inline.push({
         index: i,
         sizeBytes,
-        sizeKB: (sizeBytes / 1024).toFixed(2)
+        sizeKB: formatNumber(sizeBytes / 1024, 2)
       });
     });
 
@@ -466,7 +462,7 @@ class PerformanceSnapshotAnalyzer {
     
     // Use actual byte count if available, otherwise estimate
     const actualPageWeight = actualCounts.totalBytes > 0 
-      ? (actualCounts.totalBytes / 1024).toFixed(2)
+      ? formatNumber(actualCounts.totalBytes / 1024, 2)
       : parseFloat(analysis.resources.html.sizeKB) +
         analysis.resources.css.estimatedSizeKB +
         analysis.resources.js.estimatedSizeKB +
@@ -530,7 +526,7 @@ class PerformanceSnapshotAnalyzer {
       issues.push({
         type: 'page-weight',
         severity: 'medium',
-        message: `Large page weight: ${analysis.summary.estimatedPageWeightKB.toFixed(0)}KB`,
+        message: `Large page weight: ${formatNumber(analysis.summary.estimatedPageWeightKB, 0)}KB`,
         recommendation: 'Optimize images, minify CSS/JS, use compression'
       });
     }
@@ -666,7 +662,7 @@ class PerformanceSnapshotAnalyzer {
       score = Math.max(10, score);
     }
 
-    return Math.max(0, Math.min(100, Math.round(score)));
+    return Math.max(0, Math.min(100, roundTo(score, 0)));
   }
 
   /**

@@ -2,6 +2,7 @@ const lighthouse = require('lighthouse').default;
 const chromeLauncher = require('chrome-launcher');
 const { createLogger } = require('../utils/logger');
 const appConfig = require('../config');
+const { roundTo } = require('../utils/formatHelpers');
 
 const logger = createLogger('LighthouseAnalyzer');
 
@@ -51,7 +52,7 @@ class LighthouseAnalyzer {
     if (cbConfig.enabled && this.circuitOpen) {
       const elapsed = Date.now() - this.circuitOpenTime;
       if (elapsed < (cbConfig.resetTimeoutMs || 300000)) {
-        logger.warn(`Circuit breaker OPEN - skipping Lighthouse (${Math.round(elapsed/1000)}s/${Math.round(cbConfig.resetTimeoutMs/1000)}s)`);
+        logger.warn(`Circuit breaker OPEN - skipping Lighthouse (${roundTo(elapsed/1000, 0)}s/${roundTo(cbConfig.resetTimeoutMs/1000, 0)}s)`);
         throw new Error('Lighthouse circuit breaker open');
       } else {
         logger.info('Circuit breaker timeout expired - attempting reset');
@@ -309,8 +310,8 @@ class LighthouseAnalyzer {
 
     const result = {
       formFactor: formFactor || 'desktop',
-      score: Math.round(lhr.categories.performance.score * 100),
-      performance: Math.round(lhr.categories.performance.score * 100), // Add explicit performance score
+      score: roundTo(lhr.categories.performance.score * 100, 0),
+      performance: roundTo(lhr.categories.performance.score * 100, 0), // Add explicit performance score
       metrics: performanceMetrics,
       fontAudits: fontRelatedAudits,
       // Expose scores at root level for easy frontend access
@@ -412,7 +413,7 @@ class LighthouseAnalyzer {
     });
 
     return {
-      score: Math.round(lhr.categories.accessibility.score * 100),
+      score: roundTo(lhr.categories.accessibility.score * 100, 0),
       issues: issues.slice(0, 10), // Top 10 issues
     };
   }
@@ -437,7 +438,7 @@ class LighthouseAnalyzer {
     });
 
     return {
-      score: Math.round(lhr.categories['best-practices'].score * 100),
+      score: roundTo(lhr.categories['best-practices'].score * 100, 0),
       issues: issues.slice(0, 10),
     };
   }
@@ -458,7 +459,7 @@ class LighthouseAnalyzer {
     });
 
     return {
-      score: Math.round(lhr.categories.seo.score * 100),
+      score: roundTo(lhr.categories.seo.score * 100, 0),
       issues: issues.slice(0, 10),
     };
   }
