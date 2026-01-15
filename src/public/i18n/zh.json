@@ -74,7 +74,9 @@
     "websiteUrl": "网站URL",
     "enterUrl": "https://yoursite.com",
     "pleaseEnterUrl": "请输入URL",
-    "mayTake": "这可能需要15-30秒"
+    "mayTake": "这可能需要15-30秒",
+    "pageScreenshotAlt": "页面截图",
+    "footer": "© 2025 Site Mechanic。为重视质量的开发者而打造。"
   },
   "fontScanner": {
     "title": "字体与排版",
@@ -197,6 +199,538 @@
       "extractingColors": "正在提取颜色",
       "analyzingPalette": "正在分析调色板...",
       "detectingFonts": "正在检测字体",
+    "report": {
+      "units": {
+        "chars": "字符"
+      },
+      "table": {
+        "property": "属性",
+        "value": "值",
+        "length": "长度",
+        "status": "状态",
+        "bestPractice": "最佳实践",
+        "recommendation": "建议",
+        "metric": "指标",
+        "recommended": "推荐值",
+        "description": "说明",
+        "purpose": "用途",
+        "details": "详情",
+        "check": "检查项",
+        "platform": "平台",
+        "seoValue": "SEO 价值",
+        "implementationTip": "实现提示"
+      },
+      "status": {
+        "missing": "缺失",
+        "review": "需检查",
+        "optimal": "最佳",
+        "configured": "已配置",
+        "present": "存在",
+        "set": "已设置",
+        "valid": "有效",
+        "none": "无",
+        "multiple": "多个",
+        "pass": "通过",
+        "fail": "未通过",
+        "yes": "是",
+        "no": "否",
+        "found": "已找到",
+        "notFound": "未找到",
+        "detected": "已检测",
+        "notDetected": "未检测",
+        "enabled": "已启用",
+        "notConfigured": "未配置 — 浏览器仍可通过 HTTP 连接"
+      },
+      "common": {
+        "moreCount": "... 另外 {{count}} 个"
+      },
+      "metaTags": {
+        "calloutTitle": "🏷️ Meta 标签是你的第一印象",
+        "calloutBody": "这些标签决定你的页面在搜索结果与社交分享中的展示方式。优化后通常可提升 30–50% 点击率。",
+        "overviewHeading": "Meta 标签概览",
+        "healthHeading": "Meta 标签健康度",
+        "rows": {
+          "title": "标题",
+          "description": "描述",
+          "openGraph": "Open Graph",
+          "twitterCard": "Twitter 卡片",
+          "viewport": "Viewport",
+          "canonical": "规范化（Canonical）",
+          "ogTags": "OG 标签",
+          "twitter": "Twitter"
+        },
+        "bestPractice": {
+          "title": "50–60 个字符，核心关键词尽量靠前",
+          "description": "150–160 个字符，有说服力的 CTA，每页唯一",
+          "openGraph": "og:title、og:description、og:image（1200×630px）",
+          "twitterCard": "summary_large_image、twitter:title、twitter:image",
+          "viewport": "width=device-width, initial-scale=1",
+          "canonical": "避免重复内容，使用绝对 URL"
+        }
+      },
+      "headings": {
+        "distributionHeading": "标题分布",
+        "hierarchyHeading": "标题层级结构",
+        "table": {
+          "level": "级别",
+          "count": "数量",
+          "firstInstance": "首次出现"
+        },
+        "totalHeadingsLabel": "标题总数",
+        "primaryH1Label": "主 H1",
+        "hierarchySampleLabel": "层级示例"
+      },
+      "content": {
+        "qualityMetricsHeading": "内容质量指标",
+        "healthHeading": "内容健康度",
+        "metrics": {
+          "wordCount": "词数",
+          "readability": "可读性",
+          "textRatio": "文本占比",
+          "paragraphs": "段落"
+        },
+        "wordCountLabel": "词数：{{count}}",
+        "readabilityScoreLabel": "可读性评分",
+        "textToHtmlLabel": "文本/HTML：{{percent}}%",
+        "paragraphsLabel": "段落：{{count}}",
+        "wordCountLineLabel": "词数",
+        "sentencesLineLabel": "句子",
+        "avgWordsPerSentenceLineLabel": "每句平均词数"
+      },
+      "images": {
+        "calloutTitle": "I 图片 SEO：Alt 文本至关重要",
+        "calloutBody": "Alt 文本帮助搜索引擎理解图片，并提升可访问性。对许多网站来说，Google 图片搜索可带来 20–30% 的流量。",
+        "overviewHeading": "图片优化概览",
+        "detailsHeading": "图片详情",
+        "statsHeading": "图片统计",
+        "noImagesFound": "本页未找到图片",
+        "radial": {
+          "altCoverage": "Alt 覆盖率",
+          "imagesFound": "已发现图片",
+          "overallScore": "综合得分"
+        },
+        "table": {
+          "imageUrl": "图片 URL",
+          "dimensions": "尺寸",
+          "altText": "Alt 文本"
+        },
+        "recommendation": {
+          "pass": "描述清晰，有助于 SEO 与无障碍",
+          "fail": "为 SEO 与读屏器添加描述性的 Alt 文本"
+        },
+        "totalImagesLabel": "图片总数",
+        "withAltLabel": "含 Alt"
+      },
+      "links": {
+        "networkDiagramHeading": "链接网络图",
+        "healthSummaryHeading": "链接健康度总结",
+        "totalLinksLabel": "链接总数",
+        "internalLinksLabel": "站内链接",
+        "externalLinksLabel": "站外链接",
+        "nofollowLinksLabel": "nofollow 链接",
+        "brokenFormatLabel": "格式错误"
+      },
+      "mobile": {
+        "calloutTitle": "M 移动优先索引",
+        "calloutBody": "Google 已使用你网站的移动版本进行索引和排名。移动端响应式对 SEO 至关重要。",
+        "devices": {
+          "mobile": "手机",
+          "tablet": "平板",
+          "desktop": "桌面"
+        },
+        "table": {
+          "deviceType": "设备类型",
+          "width": "宽度",
+          "noHorizontalScroll": "无横向滚动",
+          "viewportMeta": "Viewport meta",
+          "readableFontSize": "字体可读"
+        },
+        "recommendations": {
+          "mobile": "字体 ≥ 16px，无横向滚动",
+          "tablet": "响应式布局，触控友好",
+          "desktop": "桌面端兼容"
+        },
+        "cards": {
+          "horizontalScroll": "横向滚动",
+          "viewportMetaTag": "Viewport meta 标签",
+          "fontReadability": "字体可读性",
+          "none": "无",
+          "detected": "已检测",
+          "devicesFraction": "{{count}}/{{total}} 设备"
+        }
+      },
+      "performance": {
+        "metrics": {
+          "pageLoadTime": "页面加载时间",
+          "domContentLoaded": "DOM Content Loaded",
+          "totalResources": "资源总数",
+          "pageSize": "页面大小",
+          "domNodes": "DOM 节点"
+        },
+        "desc": {
+          "pageLoadTime": "页面完全加载所需时间",
+          "domContentLoaded": "DOM 就绪所需时间",
+          "totalResources": "HTTP 请求数量",
+          "pageSize": "总传输大小",
+          "domNodes": "HTML 元素数量"
+        },
+        "recommended": {
+          "pageLoadTime": "< 3s（好）| < 5s（可接受）",
+          "domContentLoaded": "< 2s（好）",
+          "totalResources": "< 150（好）| < 300（可接受）",
+          "pageSize": "< 3 MB（好）",
+          "domNodes": "< 1,500（好）| < 3,000（可接受）"
+        }
+      },
+      "security": {
+        "calloutTitle": "◈ 安全响应头对 SEO 很关键",
+        "calloutBody": "Google 在排名中更偏好安全的网站。缺失安全响应头会影响 SEO 与用户信任。HTTPS 是直接排名因素。",
+        "table": {
+          "securityHeader": "安全响应头",
+          "recommendedValue": "推荐值"
+        },
+        "headers": {
+          "httpsEnabled": "已启用 HTTPS",
+          "hsts": "HSTS 响应头",
+          "csp": "内容安全策略（CSP）",
+          "xFrameOptions": "X-Frame-Options",
+          "xContentTypeOptions": "X-Content-Type-Options"
+        },
+        "purpose": {
+          "encryptedConnection": "加密连接",
+          "forceHttps": "强制 HTTPS",
+          "xssProtection": "XSS 防护",
+          "clickjacking": "点击劫持防护",
+          "mimeSniffing": "防止 MIME 嗅探"
+        },
+        "details": {
+          "sslEnabled": "已启用安全的 SSL/TLS",
+          "noHttps": "未检测到 HTTPS",
+          "hstsNotConfigured": "未配置 — 浏览器仍可通过 HTTP 连接",
+          "injectionRisk": "可能遭受注入攻击",
+          "canEmbed": "可被嵌入到 iframe",
+          "misinterpret": "浏览器可能错误解析内容"
+        },
+        "recommended": {
+          "https": "必需 — 生产环境务必使用 HTTPS"
+        }
+      },
+      "structuredData": {
+        "info": {
+          "title": "ⓘ 什么是结构化数据 Schema？",
+          "body": "结构化数据（也称为 schema 标记）是一段代码，用于帮助搜索引擎更好地理解你的内容，从而启用 <strong style=\"color: #00ff41;\">富媒体搜索结果</strong>，例如星级评分、产品价格、活动日期、FAQ 下拉等。它使用 <strong style=\"color: #00ccff;\">Schema.org</strong> 词汇表，可通过 JSON-LD、Microdata 或 RDFa 实现。",
+          "cards": {
+            "ctr": {
+              "title": "U 提升 CTR",
+              "body": "富媒体结果更醒目，更容易获得点击"
+            },
+            "targeting": {
+              "title": "T 更精准定位",
+              "body": "帮助搜索引擎理解你的领域与内容"
+            },
+            "advantage": {
+              "title": "W SEO 优势",
+              "body": "在搜索结果中获得竞争优势"
+            }
+          }
+        },
+        "summary": {
+          "heading": "摘要",
+          "table": {
+            "impact": "影响"
+          },
+          "rows": {
+            "found": {
+              "metric": "已检测到结构化数据",
+              "impact": {
+                "detected": "可启用富媒体结果",
+                "notFound": "缺少增强型展示"
+              }
+            },
+            "types": {
+              "metric": "已实现的 Schema 类型",
+              "value": {
+                "singular": "种类型",
+                "plural": "种类型"
+              },
+              "impact": {
+                "great": "覆盖很全面",
+                "good": "不错的开始",
+                "none": "尚未实现"
+              }
+            },
+            "score": {
+              "metric": "总体得分",
+              "impact": {
+                "excellent": "实现优秀",
+                "room": "仍有提升空间",
+                "critical": "关键缺口"
+              }
+            }
+          }
+        },
+        "detected": {
+          "heading": "检测到的 Schema 类型",
+          "table": {
+            "schemaType": "Schema 类型",
+            "seoBenefit": "SEO 收益",
+            "keyFields": "关键字段"
+          },
+          "unknown": {
+            "desc": "Schema 标记",
+            "benefit": "结构化数据实现"
+          },
+          "moreFields": "+{{count}} 项",
+          "na": "无"
+        },
+        "validation": {
+          "title": "✓ 下一步：验证你的 Schema",
+          "body": {
+            "beforeLink": "使用",
+            "linkText": "Google 富媒体结果测试",
+            "afterLink": "确保结构化数据无错误并可用于富媒体摘要。也请在 Search Console 中监控结构化数据错误。"
+          }
+        },
+        "missing": {
+          "heading": "缺少关键 SEO 机会",
+          "card": {
+            "title": "未检测到结构化数据",
+            "body": "你正在错过可提升可见性与点击率的增强型搜索展示"
+          },
+          "table": {
+            "richResultType": "富媒体结果类型",
+            "whatMissing": "缺少内容",
+            "ctrImpact": "CTR 影响"
+          },
+          "rows": {
+            "starRatings": {
+              "title": "星级评分",
+              "body": "在搜索结果中直接展示评分与星级"
+            },
+            "productInfo": {
+              "title": "产品信息",
+              "body": "展示价格、库存与优惠信息"
+            },
+            "eventDetails": {
+              "title": "活动详情",
+              "body": "展示日期、地点与购票信息，并可加入日历"
+            },
+            "richMedia": {
+              "title": "富媒体",
+              "body": "更丰富的缩略图、轮播与视频摘要"
+            },
+            "faq": {
+              "title": "FAQ 下拉",
+              "body": "在搜索结果中直接展开问答"
+            }
+          }
+        },
+        "proTip": {
+          "label": "ⓘ 提示：",
+          "body": "根据 Google 的研究，富媒体结果可将点击率提升约 15%–35%。建议先从下面的基础 schema 开始。"
+        },
+        "recommended": {
+          "heading": "建议实现的 Schema 类型",
+          "box": {
+            "title": "从这些基础 schema 开始",
+            "body": "它们适用于几乎所有网站。之后可根据内容类型增加更具体的 schema。"
+          },
+          "table": {
+            "schemaType": "Schema 类型",
+            "priority": "优先级",
+            "seoBenefit": "SEO 收益",
+            "requiredFields": "必填字段"
+          }
+        },
+        "priority": {
+          "high": "高",
+          "medium": "中"
+        },
+        "formats": {
+          "heading": "实现方式",
+          "jsonld": {
+            "badge": "推荐",
+            "body": "用于 Linked Data 的 JSON。Google 首选格式——干净、与 HTML 分离、易维护。"
+          },
+          "microdata": {
+            "subtitle": "HTML 属性",
+            "body": "直接嵌入到 HTML 标签中。维护更复杂，但与内容绑定更紧。"
+          },
+          "rdfa": {
+            "subtitle": "资源描述",
+            "body": "以属性形式实现的 RDF。与 Microdata 类似，但使用不同的属性名。"
+          }
+        },
+        "resources": {
+          "heading": "必备资源与工具",
+          "table": {
+            "tool": "工具",
+            "link": "链接"
+          },
+          "rows": {
+            "schemaDocs": {
+              "title": "Schema.org 文档",
+              "purpose": "官方词汇参考，包含所有 schema 类型与属性的完整说明",
+              "linkText": "schema.org →"
+            },
+            "richResultsTest": {
+              "title": "富媒体结果测试",
+              "purpose": "测试你的结构化数据，并查看 Google 可生成哪些富媒体结果",
+              "linkText": "测试 →"
+            },
+            "validator": {
+              "title": "Schema 校验器",
+              "purpose": "支持 JSON-LD、Microdata 与 RDFa 的综合验证工具",
+              "linkText": "验证 →"
+            },
+            "googleGuide": {
+              "title": "Google 指南",
+              "purpose": "Google 提供的分步实现指南，包含示例与最佳实践",
+              "linkText": "阅读 →"
+            },
+            "generator": {
+              "title": "标记生成器",
+              "purpose": "免费生成多种 schema 类型的 JSON-LD 标记",
+              "linkText": "生成 →"
+            }
+          }
+        },
+        "schemas": {
+          "Organization": {
+            "desc": "公司/品牌信息",
+            "benefit": "帮助在知识图谱中建立品牌身份"
+          },
+          "Person": {
+            "desc": "个人资料",
+            "benefit": "支持作者富媒体摘要与知识面板"
+          },
+          "Product": {
+            "desc": "产品信息与详情",
+            "benefit": "在搜索中展示价格、库存与评价"
+          },
+          "Article": {
+            "desc": "文章内容",
+            "benefit": "显示作者与发布时间等文章摘要"
+          },
+          "WebSite": {
+            "desc": "网站元数据",
+            "benefit": "启用 Google 站点链接搜索框"
+          },
+          "BreadcrumbList": {
+            "desc": "面包屑导航",
+            "benefit": "在搜索结果中展示面包屑路径"
+          },
+          "LocalBusiness": {
+            "desc": "本地商家信息",
+            "benefit": "出现在本地搜索与 Google 地图中"
+          },
+          "Event": {
+            "desc": "活动信息",
+            "benefit": "展示活动详情并可\"加入日历\""
+          },
+          "Recipe": {
+            "desc": "食谱内容",
+            "benefit": "食谱卡片包含评分、用时与热量"
+          },
+          "Review": {
+            "desc": "用户评价",
+            "benefit": "在搜索结果中展示星级评分"
+          },
+          "VideoObject": {
+            "desc": "视频内容",
+            "benefit": "视频摘要含缩略图与关键时刻"
+          },
+          "FAQPage": {
+            "desc": "FAQ 内容",
+            "benefit": "在搜索结果中显示可展开的 FAQ"
+          },
+          "HowTo": {
+            "desc": "步骤指南",
+            "benefit": "在搜索中展示带图片的编号步骤"
+          },
+          "SoftwareApplication": {
+            "desc": "软件/应用信息",
+            "benefit": "在搜索中展示安装入口与评分"
+          },
+          "JobPosting": {
+            "desc": "招聘信息",
+            "benefit": "在 Google for Jobs 中展示薪资与地点"
+          }
+        }
+      },
+      "additional": {
+        "calloutTitle": "🔧 技术 SEO 基础",
+        "calloutBody": "这些技术元素帮助搜索引擎抓取、索引并理解你的网站。缺失会显著降低可发现性。",
+        "technicalHeading": "技术 SEO",
+        "checks": {
+          "sitemap": "XML Sitemap",
+          "favicon": "Favicon",
+          "googleAnalytics": "Google Analytics"
+        },
+        "purpose": {
+          "robots": "控制搜索引擎抓取",
+          "sitemap": "帮助搜索引擎发现页面",
+          "favicon": "浏览器标签图标",
+          "analytics": "流量追踪"
+        },
+        "details": {
+          "robotsPresent": "文件存在且可访问",
+          "robotsMissing": "缺失 — 创建 /robots.txt",
+          "sitemapDetected": "检测到 Sitemap",
+          "sitemapMissing": "缺失 — 有助于索引",
+          "faviconMissing": "未找到 favicon",
+          "analyticsEnabled": "已启用分析追踪",
+          "analyticsMissing": "未检测到分析工具"
+        },
+        "bestPractice": {
+          "robots": "允许抓取，屏蔽后台/私有路径",
+          "sitemap": "提交到 Google Search Console，每周更新",
+          "favicon": "32×32 PNG 或 ICO，提升品牌识别",
+          "analytics": "推荐 GA4，追踪用户行为以获取 SEO 洞察"
+        },
+        "social": {
+          "calloutTitle": "M 社交信号与 SEO",
+          "calloutBody": "虽非直接排名因素，但社交链接可提升品牌曝光、带来流量，并改善分享时的 Open Graph 预览。",
+          "heading": "社交媒体存在感",
+          "value": {
+            "openGraph": "Open Graph Meta 标签",
+            "twitterCard": "Twitter Card 标签",
+            "professional": "职业社交网络",
+            "visual": "视觉内容平台"
+          },
+          "details": {
+            "linkPresent": "链接存在",
+            "facebookMissing": "未找到 Facebook 链接",
+            "twitterMissing": "未找到 Twitter 链接",
+            "linkedinMissing": "未找到 LinkedIn 链接",
+            "instagramMissing": "未找到 Instagram 链接"
+          },
+          "tip": {
+            "openGraph": "添加 og:image、og:title、og:description",
+            "twitterCard": "添加 twitter:card、twitter:image",
+            "linkedin": "在页脚放置链接，提升 B2B 可信度",
+            "instagram": "链接到企业账号，强化视觉品牌"
+          }
+        }
+      },
+      "issues": {
+        "issuesHeading": "问题",
+        "recommendationsHeading": "建议"
+      },
+      "loading": {
+        "title": "分析中",
+        "running": "正在执行完整 SEO 分析...",
+        "metaTags": "检查 Meta 标签...",
+        "content": "分析内容质量...",
+        "mobile": "测试移动端响应...",
+        "performance": "测量性能..."
+      },
+      "error": {
+        "title": "错误",
+        "analysisFailed": "分析失败",
+        "retry": "重试"
+      }
+    },
       "identifyingTypography": "正在识别排版层次...",
       "findingLogos": "正在查找徽标",
       "locatingAssets": "正在定位品牌资产...",
@@ -264,6 +798,72 @@
     }
   },
   "seo": {
+    "title": "SEO 分析器",
+    "subtitle": "搜索引擎优化审核",
+    "breadcrumb": "SEO 分析器",
+    "analyze": "分析 SEO",
+    "analyzing": "分析中...",
+    "overall": "总体",
+    "reportTitle": "SEO 报告",
+    "reportSubtitle": "SEO 分析",
+    "loadingTitle": "正在分析...",
+    "mayTake": "可能需要 30-60 秒",
+    "seoScore": "SEO 得分",
+    "metaTags": "元标签",
+    "headings": "标题",
+    "content": "内容",
+    "images": "图片",
+    "links": "链接",
+    "mobile": "移动端",
+    "performance": "性能",
+    "security": "安全",
+    "canonicalUrl": "规范化 URL",
+    "structuredData": "结构化数据",
+    "sitemap": "站点地图",
+    "robotsTxt": "Robots.txt",
+    "sections": {
+      "metaTags": "元标签",
+      "headings": "标题",
+      "content": "内容",
+      "images": "图片",
+      "links": "链接",
+      "mobile": "移动端",
+      "performance": "性能",
+      "security": "安全",
+      "structuredData": "结构化数据",
+      "additional": "其他检查",
+      "fixCode": "修复代码 + 建议"
+    },
+    "steps": {
+      "running": "正在运行 SEO 分析",
+      "initializing": "正在初始化扫描引擎...",
+      "metaTags": "正在检查元标签",
+      "metaTagsDetail": "分析标题、描述、关键词...",
+      "content": "正在分析内容质量",
+      "contentDetail": "评估标题、文本、可读性...",
+      "mobile": "正在测试移动端适配",
+      "mobileDetail": "检查 viewport 和布局...",
+      "performance": "正在测量性能",
+      "performanceDetail": "测试加载速度与优化..."
+    },
+    "proPreview": {
+      "metaTags": "元标签改进",
+      "structuredData": "结构化数据快速优化"
+    },
+    "fixes": {
+      "previewIntro": "修复包预览：",
+      "impact": "影响",
+      "copySnippet": "复制代码片段",
+      "snippetCopied": "代码片段已复制到剪贴板"
+    },
+    "components": {
+      "metaTags": "元标签",
+      "headings": "标题",
+      "content": "内容",
+      "images": "图片",
+      "links": "链接",
+      "structuredData": "结构化数据"
+    },
     "pages": {
       "home": {
         "title": "Site Mechanic - 专业网站分析与SEO工具",
@@ -285,6 +885,13 @@
         "keywords": "性能测试,Core Web Vitals,网站优化",
         "og_title": "性能测试中心",
         "twitter_title": "性能优化"
+      },
+      "seo-analyzer": {
+        "title": "SEO 与索引 - 元数据、结构与可抓取性 | Site Mechanic",
+        "description": "诊断 SEO 问题：元标签、标题、结构化数据、可抓取性和页面优化。Site Mechanic 统一网站检查流程的一部分。",
+        "keywords": "SEO 分析器,SEO 审核,元标签,结构化数据,页面 SEO,技术 SEO,可抓取性,索引",
+        "og_title": "SEO 分析器 - SEO 审核工具 | Site Mechanic",
+        "twitter_title": "SEO 分析器 - SEO 审核工具 | Site Mechanic"
       },
       "mobile-analyzer": {
         "title": "移动网站分析器 - 响应式设计测试",
@@ -392,6 +999,10 @@
         "twitter_title": "CWV检查"
       }
     }
+  },
+  "pricing": {
+    "unlockReportTitle": "解锁报告",
+    "unlockReportSubtitle": "PDF 导出、分享链接、导出数据，以及此扫描的修复包。"
   },
   "notices": {
     "botProtectionTitle": "机器人保护提示：",

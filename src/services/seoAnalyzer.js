@@ -5,6 +5,33 @@
 
 const { createLogger } = require('../utils/logger');
 const browserPool = require('../utils/browserPool');
+const { formatDuration, formatBytes } = require('../utils/formatHelpers');
+const {
+  scoreMetaTags,
+  scoreHeadingStructure,
+  scoreContentQuality,
+  scoreImageAccessibility,
+  scoreLinkStructure,
+  scoreMobileResponsiveness,
+  scorePerformanceMetrics,
+  scoreSecurityHeaders,
+  scoreStructuredData,
+  calculateWeightedScore,
+  scoreToGrade
+} = require('../utils/scoringHelpers');
+const {
+  setDeviceProfile,
+  detectBotProtection,
+  navigateToPage
+} = require('../utils/browserHelpers');
+const {
+  extractMetaTags,
+  extractHeadingStructure,
+  analyzeContent,
+  analyzeImages,
+  analyzeLinks,
+  extractStructuredData
+} = require('../utils/domHelpers');
 
 const logger = createLogger('SEOAnalyzer');
 
@@ -21,49 +48,21 @@ class SEOAnalyzer {
   async analyzeSEO(url) {
     logger.info('Starting SEO analysis', { url });
 
-    const results = await browserPool.execute(async (browser) => {
+    // Add overall timeout to prevent analysis from hanging indefinitely
+    const analysisPromise = browserPool.execute(async (browser) => {
       const page = await browser.newPage();
       
       try {
-  // Use a realistic desktop profile
-  await page.setViewport({ width: 1920, height: 1080 });
-  await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
-        
-        // Navigate to page with timeout and capture response
-        logger.info('Navigating to page', { url });
-        const response = await page.goto(url, {
-          waitUntil: 'networkidle2',
-          timeout: this.timeout
+        // Set desktop device profile
+        await setDeviceProfile(page, 'desktop');
+
+        // Navigate to page with bot detection
+        const response = await navigateToPage(page, url, {
+          timeout: this.timeout,
+          waitUntil: 'domcontentloaded',
+          checkBotProtection: true,
+          retries: 0
         });
-        logger.info('Navigation completed', { url, status: response ? response.status() : 'unknown' });
-
-        // Check for bot detection / access denied
-        if (response && (response.status() === 403 || response.status() === 429)) {
-          throw new Error(`Access denied (${response.status()}). This website uses bot protection and cannot be analyzed.`);
-        }
-
-        // Check page content for common bot detection patterns
-        const pageContent = await page.content();
-        const botDetectionPatterns = [
-          /cloudflare/i,
-          /captcha/i,
-          /bot[\s-]?detection/i,
-          /access[\s-]?denied/i,
-          /checking your browser/i,
-          /ray id:/i // Cloudflare Ray ID
-        ];
-
-        const hasBotDetection = botDetectionPatterns.some(pattern => pattern.test(pageContent));
-        if (hasBotDetection) {
-          // Double-check by looking for title
-          const title = await page.title();
-          logger.warn('Bot detection patterns found', { url, title });
-          if (title.toLowerCase().includes('attention required') || 
-              title.toLowerCase().includes('just a moment') ||
-              title.toLowerCase().includes('access denied')) {
-            throw new Error('Bot protection detected. This website blocks automated analysis. Try a different website or contact the site owner.');
-          }
-        }
 
         // Run analysis functions that can safely run in parallel
         const [
@@ -124,6 +123,16 @@ class SEOAnalyzer {
       }
     });
 
+    // Create timeout promise (35 seconds total for all analysis steps)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('SEO analysis timed out after 35 seconds. The website may be too slow or complex to analyze.'));
+      }, 35000);
+    });
+
+    // Race between analysis and timeout
+    const results = await Promise.race([analysisPromise, timeoutPromise]);
+
     logger.info('SEO analysis completed', { url, score: results.score });
     return results;
   }
@@ -134,40 +143,8 @@ class SEOAnalyzer {
   async analyzeMetaTags(page) {
     logger.info('Analyzing meta tags');
 
-    const metaTags = await page.evaluate(() => {
-      const getMetaContent = (selector) => {
-        const element = document.querySelector(selector);
-        return element ? element.content || element.textContent : null;
-      };
-
-      return {
-        title: document.title || null,
-        titleLength: document.title ? document.title.length : 0,
-        description: getMetaContent('meta[name="description"]'),
-        descriptionLength: getMetaContent('meta[name="description"]')?.length || 0,
-        keywords: getMetaContent('meta[name="keywords"]'),
-        robots: getMetaContent('meta[name="robots"]'),
-        canonical: document.querySelector('link[rel="canonical"]')?.href || null,
-        viewport: getMetaContent('meta[name="viewport"]'),
-        
-        // Open Graph
-        ogTitle: getMetaContent('meta[property="og:title"]'),
-        ogDescription: getMetaContent('meta[property="og:description"]'),
-        ogImage: getMetaContent('meta[property="og:image"]'),
-        ogUrl: getMetaContent('meta[property="og:url"]'),
-        ogType: getMetaContent('meta[property="og:type"]'),
-        
-        // Twitter Cards
-        twitterCard: getMetaContent('meta[name="twitter:card"]'),
-        twitterTitle: getMetaContent('meta[name="twitter:title"]'),
-        twitterDescription: getMetaContent('meta[name="twitter:description"]'),
-        twitterImage: getMetaContent('meta[name="twitter:image"]'),
-        
-        // Additional
-        language: document.documentElement.lang || null,
-        charset: document.characterSet || null
-      };
-    });
+    // Use domHelper function for meta tag extraction
+    const metaTags = await page.evaluate(extractMetaTags);
 
     // Evaluate meta tag quality
     const issues = [];
@@ -209,7 +186,8 @@ class SEOAnalyzer {
       recommendations.push('Add language attribute to <html> tag');
     }
 
-    const score = this.scoreMetaTags(metaTags, issues);
+    // Use scoring helper
+    const score = scoreMetaTags(metaTags);
 
     return {
       ...metaTags,
@@ -226,23 +204,8 @@ class SEOAnalyzer {
   async analyzeHeadingStructure(page) {
     logger.info('Analyzing heading structure');
 
-    const headings = await page.evaluate(() => {
-      const headingElements = document.querySelectorAll('h1, h2, h3, h4, h5, h6');
-      
-      return {
-        h1: Array.from(document.querySelectorAll('h1')).map(h => h.textContent.trim()),
-        h2: Array.from(document.querySelectorAll('h2')).map(h => h.textContent.trim()),
-        h3: Array.from(document.querySelectorAll('h3')).map(h => h.textContent.trim()),
-        h4: Array.from(document.querySelectorAll('h4')).map(h => h.textContent.trim()),
-        h5: Array.from(document.querySelectorAll('h5')).map(h => h.textContent.trim()),
-        h6: Array.from(document.querySelectorAll('h6')).map(h => h.textContent.trim()),
-        total: headingElements.length,
-        hierarchy: Array.from(headingElements).map(h => ({
-          level: h.tagName.toLowerCase(),
-          text: h.textContent.trim().substring(0, 100)
-        }))
-      };
-    });
+    // Use domHelper function for heading extraction
+    const headings = await page.evaluate(extractHeadingStructure);
 
     const issues = [];
     const recommendations = [];
@@ -277,7 +240,8 @@ class SEOAnalyzer {
       recommendations.push('Heading hierarchy has gaps (e.g., H1 → H3). Use sequential heading levels');
     }
 
-    const score = this.scoreHeadings(headings, issues);
+    // Use scoring helper
+    const score = scoreHeadingStructure(headings);
 
     return {
       ...headings,
@@ -342,7 +306,8 @@ class SEOAnalyzer {
       recommendations.push('Low text-to-HTML ratio. Too much code relative to content');
     }
 
-    const score = this.scoreContent(content, issues);
+    // Use scoring helper
+    const score = scoreContentQuality(content);
 
     return {
       ...content,
@@ -399,7 +364,8 @@ class SEOAnalyzer {
       recommendations.push(`${largeImages} large image(s) detected. Consider optimizing image sizes`);
     }
 
-    const score = this.scoreImages(images, issues);
+    // Use scoring helper
+    const score = scoreImageAccessibility(images);
 
     return {
       ...images,
@@ -473,7 +439,8 @@ class SEOAnalyzer {
       recommendations.push(`${links.brokenFormat} link(s) with potentially broken format (href="#" or javascript:)`);
     }
 
-    const score = this.scoreLinks(links, issues);
+    // Use scoring helper
+    const score = scoreLinkStructure(links);
 
     return {
       ...links,
@@ -501,7 +468,7 @@ class SEOAnalyzer {
     
     for (const viewport of viewports) {
       await page.setViewport({ width: viewport.width, height: viewport.height });
-      await page.waitForTimeout(500); // Allow reflow
+      await page.waitForTimeout(100); // Allow reflow
       
       const metrics = await page.evaluate(() => {
         return {
@@ -537,7 +504,8 @@ class SEOAnalyzer {
       recommendations.push('Font size may be too small on mobile devices');
     }
 
-    const score = this.scoreMobileResponsiveness(results, issues);
+    // Use scoring helper
+    const score = scoreMobileResponsiveness(results);
 
     return {
       viewports: results,
@@ -557,38 +525,42 @@ class SEOAnalyzer {
     const metrics = await page.evaluate(() => {
       const perfData = window.performance.timing;
       const navigation = performance.getEntriesByType('navigation')[0] || {};
-      
-      // Calculate max DOM depth
-      function getMaxDOMDepth(element) {
+
+      // Calculate max DOM depth with stack overflow protection
+      function getMaxDOMDepth(element, maxDepthLimit = 50) {
         if (!element || !element.children || element.children.length === 0) {
           return 0;
         }
         let maxDepth = 0;
         for (let i = 0; i < element.children.length; i++) {
-          const depth = getMaxDOMDepth(element.children[i]);
+          if (maxDepth >= maxDepthLimit) {
+            // Prevent infinite recursion on pathological DOMs
+            return maxDepthLimit;
+          }
+          const depth = getMaxDOMDepth(element.children[i], maxDepthLimit);
           if (depth > maxDepth) {
             maxDepth = depth;
           }
         }
         return maxDepth + 1;
       }
-      
+
       return {
         // Core metrics
         domContentLoaded: perfData.domContentLoadedEventEnd - perfData.navigationStart,
         loadComplete: perfData.loadEventEnd - perfData.navigationStart,
         firstPaint: navigation.responseStart - navigation.requestStart,
-        
+
         // Resource counts
         resources: performance.getEntriesByType('resource').length,
-        
+
         // Page size estimate
         transferSize: performance.getEntriesByType('resource')
           .reduce((sum, r) => sum + (r.transferSize || 0), 0),
-        
+
         // DOM stats
         domNodes: document.getElementsByTagName('*').length,
-        domDepth: getMaxDOMDepth(document.body)
+        domDepth: getMaxDOMDepth(document.body, 50)
       };
     });
 
@@ -597,7 +569,7 @@ class SEOAnalyzer {
 
     // Load time checks
     if (metrics.loadComplete > 3000) {
-      issues.push(`Slow page load time (${(metrics.loadComplete / 1000).toFixed(1)}s). Target: < 3s`);
+      issues.push(`Slow page load time (${formatDuration(metrics.loadComplete, 1)}). Target: < 3s`);
     } else if (metrics.loadComplete > 2000) {
       recommendations.push('Page load time could be improved');
     }
@@ -613,17 +585,18 @@ class SEOAnalyzer {
     }
 
     // Transfer size
-    const sizeMB = (metrics.transferSize / 1024 / 1024).toFixed(2);
+    const sizeMB = formatBytes(metrics.transferSize);
     if (metrics.transferSize > 3 * 1024 * 1024) {
-      issues.push(`Large page size (${sizeMB} MB). Optimize images and resources`);
+      issues.push(`Large page size (${sizeMB}). Optimize images and resources`);
     }
 
-    const score = this.scorePerformance(metrics, issues);
+    // Use scoring helper
+    const score = scorePerformanceMetrics(metrics);
 
     return {
       ...metrics,
-      loadCompleteSeconds: (metrics.loadComplete / 1000).toFixed(2),
-      transferSizeMB: sizeMB,
+      loadCompleteSeconds: formatDuration(metrics.loadComplete),
+      transferSizeMB: formatBytes(metrics.transferSize),
       issues,
       recommendations,
       score,
@@ -674,7 +647,8 @@ class SEOAnalyzer {
       recommendations.push('Add X-Content-Type-Options header');
     }
 
-    const score = this.scoreSecurityHeaders(securityHeaders, issues);
+    // Use scoring helper
+    const score = scoreSecurityHeaders(securityHeaders);
 
     return {
       ...securityHeaders,
@@ -729,7 +703,8 @@ class SEOAnalyzer {
       issues.push(`${invalidSchemas} invalid structured data schema(s) found`);
     }
 
-    const score = this.scoreStructuredData(structuredData, issues);
+    // Use scoring helper
+    const score = scoreStructuredData(structuredData);
 
     return {
       ...structuredData,
@@ -765,21 +740,38 @@ class SEOAnalyzer {
       };
     }, url);
 
-    // Check robots.txt
+    // Check robots.txt and sitemap.xml in parallel using fetch with timeout protection
     try {
-      const robotsUrl = new URL('/robots.txt', url).href;
-      const robotsResponse = await page.goto(robotsUrl, { waitUntil: 'networkidle2', timeout: 5000 });
-      additional.hasRobotsTxt = robotsResponse.status() === 200;
-    } catch (e) {
-      additional.hasRobotsTxt = false;
-    }
+      const [robotsExists, sitemapExists] = await page.evaluate(async (baseUrl) => {
+        const checkUrl = async (path) => {
+          try {
+            // Add 5-second timeout to prevent hanging
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-    // Check sitemap
-    try {
-      const sitemapUrl = new URL('/sitemap.xml', url).href;
-      const sitemapResponse = await page.goto(sitemapUrl, { waitUntil: 'networkidle2', timeout: 5000 });
-      additional.hasSitemap = sitemapResponse.status() === 200;
+            const response = await fetch(new URL(path, baseUrl).href, {
+              method: 'HEAD',
+              signal: controller.signal
+            });
+
+            clearTimeout(timeoutId);
+            return response.ok;
+          } catch {
+            return false;
+          }
+        };
+
+        return await Promise.all([
+          checkUrl('/robots.txt'),
+          checkUrl('/sitemap.xml')
+        ]);
+      }, url);
+
+      additional.hasRobotsTxt = robotsExists;
+      additional.hasSitemap = sitemapExists;
     } catch (e) {
+      logger.warn('Failed to check robots.txt/sitemap', { error: e.message });
+      additional.hasRobotsTxt = false;
       additional.hasSitemap = false;
     }
 
@@ -842,12 +834,8 @@ class SEOAnalyzer {
 
     const finalScore = totalWeight > 0 ? Math.round(totalScore / totalWeight) : 0;
 
-    // Determine grade
-    let grade = 'F';
-    if (finalScore >= 90) grade = 'A';
-    else if (finalScore >= 80) grade = 'B';
-    else if (finalScore >= 70) grade = 'C';
-    else if (finalScore >= 60) grade = 'D';
+    // Use scoring helper for grade
+    const grade = scoreToGrade(finalScore);
 
     return {
       overall: finalScore,
@@ -866,98 +854,7 @@ class SEOAnalyzer {
   }
 
   // Scoring helper methods
-  scoreMetaTags(meta) {
-    let score = 100;
-    if (!meta.title) score -= 20;
-    if (!meta.description) score -= 20;
-    if (meta.titleLength < 30 || meta.titleLength > 60) score -= 10;
-    if (meta.descriptionLength < 120 || meta.descriptionLength > 160) score -= 10;
-    if (!meta.ogTitle && !meta.ogDescription) score -= 15;
-    if (!meta.viewport) score -= 15;
-    if (!meta.language) score -= 10;
-    return Math.max(0, score);
-  }
-
-  scoreHeadings(headings) {
-    let score = 100;
-    if (headings.h1.length === 0) score -= 30;
-    if (headings.h1.length > 1) score -= 20;
-    if (headings.total === 0) score -= 40;
-    if (headings.total < 3) score -= 10;
-    return Math.max(0, score);
-  }
-
-  scoreContent(content) {
-    let score = 100;
-    if (content.wordCount < 300) score -= 30;
-    else if (content.wordCount < 600) score -= 10;
-    if (content.averageWordsPerSentence > 25) score -= 10;
-    if (content.textToHTMLRatio < 0.1) score -= 15;
-    return Math.max(0, score);
-  }
-
-  scoreImages(images) {
-    let score = 100;
-    if (images.total > 0) {
-      const altRatio = images.withAlt / images.total;
-      if (altRatio < 0.5) score -= 40;
-      else if (altRatio < 0.8) score -= 20;
-      else if (altRatio < 1.0) score -= 10;
-    }
-    return Math.max(0, score);
-  }
-
-  scoreLinks(links) {
-    let score = 100;
-    if (links.brokenFormat > 0) score -= 20;
-    const emptyAnchors = links.links.filter(l => !l.text).length;
-    if (emptyAnchors > 0) score -= 15;
-    return Math.max(0, score);
-  }
-
-  scoreMobileResponsiveness(results) {
-    let score = 100;
-    const mobileResult = results.find(r => r.viewport === 'Mobile');
-    if (mobileResult) {
-      if (mobileResult.hasHorizontalScroll) score -= 30;
-      if (!mobileResult.hasViewportMeta) score -= 40;
-      if (!mobileResult.fontSizeReadable) score -= 10;
-    }
-    return Math.max(0, score);
-  }
-
-  scorePerformance(metrics) {
-    let score = 100;
-    if (metrics.loadComplete > 5000) score -= 40;
-    else if (metrics.loadComplete > 3000) score -= 20;
-    else if (metrics.loadComplete > 2000) score -= 10;
-    
-    if (metrics.domNodes > 2000) score -= 15;
-    else if (metrics.domNodes > 1500) score -= 10;
-    
-    if (metrics.transferSize > 5 * 1024 * 1024) score -= 25;
-    else if (metrics.transferSize > 3 * 1024 * 1024) score -= 15;
-    
-    return Math.max(0, score);
-  }
-
-  scoreSecurityHeaders(headers) {
-    let score = 100;
-    if (!headers.hasHTTPS) score -= 50;
-    if (!headers.strictTransportSecurity && headers.hasHTTPS) score -= 15;
-    if (!headers.contentSecurityPolicy) score -= 10;
-    if (!headers.xFrameOptions) score -= 10;
-    if (!headers.xContentTypeOptions) score -= 10;
-    return Math.max(0, score);
-  }
-
-  scoreStructuredData(data) {
-    let score = 100;
-    if (!data.hasStructuredData) score -= 40;
-    const invalidCount = data.schemas.filter(s => !s.valid).length;
-    score -= invalidCount * 20;
-    return Math.max(0, score);
-  }
+  // Most scoring moved to scoringHelpers.js - keeping only SEO-specific ones here
 
   scoreAdditionalChecks(checks) {
     let score = 100;

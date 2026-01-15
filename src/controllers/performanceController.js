@@ -6,8 +6,14 @@
 const performanceAnalyzerService = require('../services/performanceAnalyzerService');
 const crossBrowserLighthouseService = require('../services/crossBrowserLighthouseService');
 const { asyncHandler } = require('../utils/errorHandler');
-const { validateUrl, sanitizeUrl, normalizeUrl } = require('../utils/validators');
 const { createLogger } = require('../utils/logger');
+const { attachToResponse } = require('../utils/scanTimestamp');
+const {
+  getAnalyzerKeyOverride,
+  buildReportMetadata,
+  attachReportMetadata,
+  processUrl
+} = require('../utils/controllerHelpers');
 
 const logger = createLogger('PerformanceController');
 
@@ -26,23 +32,14 @@ const analyzePerformance = asyncHandler(async (req, res) => {
     });
   }
 
-  // Sanitize and normalize URL (automatically add https:// if no protocol)
-  let sanitizedUrl = sanitizeUrl(url);
-  sanitizedUrl = normalizeUrl(sanitizedUrl);
-  
-  // Basic URL format validation
-  const isValid = validateUrl(sanitizedUrl);
-  
+  // Process URL with HTTP fallback
+  const { url: sanitizedUrl, isValid } = await processUrl(url, { allowHttpFallback: true });
+
   if (!isValid) {
-    // Try with http:// if https:// failed
-    const httpUrl = sanitizedUrl.replace('https://', 'http://');
-    if (!validateUrl(httpUrl)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid URL format. Please provide a valid HTTP or HTTPS URL.'
-      });
-    }
-    sanitizedUrl = httpUrl;
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid URL format. Please provide a valid HTTP or HTTPS URL.'
+    });
   }
 
   logger.info(`Performance analysis request for: ${sanitizedUrl} (Request ID: ${req.id})`);
@@ -50,12 +47,18 @@ const analyzePerformance = asyncHandler(async (req, res) => {
   // Perform analysis
   const results = await performanceAnalyzerService.analyzePerformance(sanitizedUrl);
 
-  // Return results
-  res.json({
+  // Attach report metadata (reportId, screenshotUrl, timestamps)
+  const analyzerKey = getAnalyzerKeyOverride(req, 'performance');
+  const metadata = await buildReportMetadata({ req, results, url: sanitizedUrl, analyzerKey });
+
+  // Return results with metadata
+  res.json(attachToResponse({
     success: true,
     results,
+    reportId: metadata.reportId,
+    screenshotUrl: metadata.screenshotUrl,
     requestId: req.id
-  });
+  }, metadata.scanStartedAt));
 });
 
 /**
@@ -73,23 +76,14 @@ const analyzeCrossBrowser = asyncHandler(async (req, res) => {
     });
   }
 
-  // Sanitize and normalize URL
-  let sanitizedUrl = sanitizeUrl(url);
-  sanitizedUrl = normalizeUrl(sanitizedUrl);
-  
-  // Basic URL format validation
-  const isValid = validateUrl(sanitizedUrl);
-  
+  // Process URL with HTTP fallback
+  const { url: sanitizedUrl, isValid } = await processUrl(url, { allowHttpFallback: true });
+
   if (!isValid) {
-    // Try with http:// if https:// failed
-    const httpUrl = sanitizedUrl.replace('https://', 'http://');
-    if (!validateUrl(httpUrl)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid URL format. Please provide a valid HTTP or HTTPS URL.'
-      });
-    }
-    sanitizedUrl = httpUrl;
+    return res.status(400).json({
+      success: false,
+      error: 'Invalid URL format. Please provide a valid HTTP or HTTPS URL.'
+    });
   }
 
   logger.info(`Cross-browser analysis request for: ${sanitizedUrl} (Request ID: ${req.id})`, {
@@ -101,12 +95,18 @@ const analyzeCrossBrowser = asyncHandler(async (req, res) => {
     profiles: profiles || ['desktop', 'mobile']
   });
 
-  // Return results
-  res.json({
+  // Attach report metadata (reportId, screenshotUrl, timestamps)
+  const analyzerKey = getAnalyzerKeyOverride(req, 'performance');
+  const metadata = await buildReportMetadata({ req, results, url: sanitizedUrl, analyzerKey });
+
+  // Return results with metadata
+  res.json(attachToResponse({
     success: true,
     results,
+    reportId: metadata.reportId,
+    screenshotUrl: metadata.screenshotUrl,
     requestId: req.id
-  });
+  }, metadata.scanStartedAt));
 });
 
 module.exports = {

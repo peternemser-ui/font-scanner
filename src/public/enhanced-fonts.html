@@ -73,6 +73,12 @@
     <link rel="stylesheet" href="ui-components.css" />
     <link rel="stylesheet" href="spacing-fixes.css" />
 
+    <!-- Pro Report Block Styles -->
+    <link rel="stylesheet" href="/css/components/modal.css" />
+    <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
+    <link rel="stylesheet" href="/css/components/pro-report-block.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+
     <!-- CRITICAL: Theme background fix -->
     <style>
       /* Dark mode (when white-theme is NOT present) */
@@ -113,7 +119,7 @@
         transition: all 0.2s ease;
       }
       .font-card:hover {
-        border-color: rgba(0, 255, 136, 0.3);
+        border-color: rgba(var(--accent-primary-rgb), 0.3);
         transform: translateY(-2px);
       }
       
@@ -589,8 +595,13 @@
     <script src="nav-template.js"></script>
     <script src="analyzer-loader.js"></script>
 
-    <!-- ASCII Background Animation -->
-
+    <!-- Report UI Components -->
+    <script src="/js/report-ui.js"></script>
+    <script src="/js/components/ReportContainer.js"></script>
+    <script src="/js/components/Modal.js"></script>
+    <script src="/js/components/ScreenshotLightbox.js"></script>
+    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/PricingModal.js"></script>
 
     <script src="enhanced-fonts-script.js"></script>
   </body>

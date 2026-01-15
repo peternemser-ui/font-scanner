@@ -1,0 +1,525 @@
+/**
+ * Site Mechanic - Pro Report Block Styles
+ * Conversion-focused export & upgrade CTA
+ */
+
+/* Pro Report Block Container */
+.pro-report-block {
+  margin-top: 3rem;
+  padding: var(--space-8, 2rem);
+  background: var(--bg-card, #161A1F);
+  border: 2px solid transparent;
+  border-radius: var(--radius-xl, 16px);
+  background-image:
+    linear-gradient(var(--bg-card, #161A1F), var(--bg-card, #161A1F)),
+    var(--pro-block-gradient, linear-gradient(135deg, var(--color-primary, #5bf4e7) 0%, var(--color-secondary, #0AFFEF) 100%));
+  background-origin: border-box;
+  background-clip: padding-box, border-box;
+  box-shadow: var(--pro-block-glow, 0 4px 20px rgba(91, 244, 231, 0.2));
+  transition: all 0.3s ease;
+}
+
+.pro-report-block:hover {
+  box-shadow: 0 8px 30px rgba(91, 244, 231, 0.3);
+  transform: translateY(-2px);
+}
+
+/* Header */
+.pro-report-block__header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.pro-report-block__icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.pro-report-block__text {
+  flex: 1;
+}
+
+.pro-report-block__title {
+  margin: 0 0 0.5rem 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.pro-report-block__subtitle {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-secondary, #9ca3af);
+  line-height: 1.5;
+}
+
+.pro-report-block__user-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  background: var(--color-primary, #5bf4e7);
+  color: var(--color-black, #000);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--radius-md, 8px);
+}
+
+/* Actions Grid */
+.pro-report-block__actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+/* Action Button */
+.pro-report-block__action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--bg-elevated, #111418);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-lg, 12px);
+  color: var(--text-primary, #fff);
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.pro-report-block__action:hover {
+  background: var(--bg-hover, rgba(255, 255, 255, 0.05));
+  border-color: var(--color-primary, #5bf4e7);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(91, 244, 231, 0.2);
+}
+
+.pro-report-block__action:focus {
+  outline: 2px solid var(--color-primary, #5bf4e7);
+  outline-offset: 2px;
+}
+
+.pro-report-block__action--locked {
+  cursor: pointer;
+}
+
+.pro-report-block__action--locked:hover {
+  border-color: var(--color-warning, #FFB84D);
+  box-shadow: 0 4px 12px rgba(255, 184, 77, 0.2);
+}
+
+.pro-report-block__action-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.pro-report-block__action-text {
+  flex: 1;
+}
+
+.pro-report-block__action-label {
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--text-primary, #fff);
+  margin-bottom: 0.25rem;
+}
+
+.pro-report-block__action-description {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.pro-report-block--explore-tools .pro-report-block__action-note {
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #9ca3af);
+  opacity: 0.95;
+}
+
+/* Explore Tools variant (Speed & UX page) */
+.pro-report-block--explore-tools .pro-report-block__actions {
+  margin-top: 1.25rem;
+  margin-bottom: 1.25rem;
+}
+
+a.pro-report-block__action--link {
+  text-decoration: none;
+}
+
+.pro-report-block__action-chevron {
+  color: var(--text-secondary, #9ca3af);
+  font-size: 1.5rem;
+  line-height: 1;
+  flex-shrink: 0;
+  opacity: 0.9;
+  transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.pro-report-block__action:hover .pro-report-block__action-chevron {
+  color: var(--accent-primary, var(--color-primary, #5bf4e7));
+  transform: translateX(2px);
+}
+
+.pro-report-block__lock-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.5rem;
+  background: var(--color-warning, #FFB84D);
+  color: var(--color-black, #000);
+  font-size: 0.625rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--radius-sm, 6px);
+}
+
+/* Upgrade Prompt */
+.pro-report-block__upgrade-prompt {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  display: grid;
+  grid-template-columns: 1fr auto;
+  grid-template-areas:
+    'spacer credits'
+    'buttons buttons';
+  gap: 0.75rem 1rem;
+  align-items: start;
+}
+
+/* Credit Info */
+.pro-report-block__credit-info {
+  grid-area: credits;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  justify-self: end;
+  gap: 0.25rem;
+  margin: 0;
+}
+
+.pro-report-block__credit-balance {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--accent-primary, var(--color-primary, #5bf4e7));
+}
+
+.pro-report-block__credit-info [data-credits-label] {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #9ca3af);
+  font-weight: 600;
+}
+
+.pro-report-block__helper-text {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #9ca3af);
+  text-align: center;
+}
+
+/* CTA Buttons Container */
+.pro-report-block__cta-buttons {
+  grid-area: buttons;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+/* Upgrade Buttons */
+.pro-report-block__upgrade-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.875rem 2rem;
+  border: none;
+  border-radius: var(--radius-lg, 12px);
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 280px;
+  max-width: 100%;
+}
+
+.pro-report-block__upgrade-button--primary {
+  background: var(--pro-block-gradient, linear-gradient(135deg, var(--color-primary, #5bf4e7) 0%, var(--color-secondary, #0AFFEF) 100%));
+  color: var(--accent-primary-contrast, #000);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.pro-report-block__upgrade-button--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(91, 244, 231, 0.4);
+}
+
+.pro-report-block__upgrade-button--secondary {
+  background: transparent;
+  border: 1px solid var(--color-primary, #5bf4e7);
+  color: var(--color-primary, #5bf4e7);
+}
+
+.pro-report-block__upgrade-button--secondary:hover {
+  background: rgba(91, 244, 231, 0.1);
+  border-color: var(--color-primary-hover, #00E68A);
+  transform: translateY(-2px);
+}
+
+.pro-report-block__upgrade-button:focus {
+  outline: 2px solid var(--color-primary, #5bf4e7);
+  outline-offset: 4px;
+}
+
+/*
+ * PaidUnlockCard.html variant
+ * Uses the pro-report-block container but different internal markup.
+ * Ensure credits + buttons never overlap and remain readable.
+ */
+.pro-report-block[data-paid-unlock-card] .pro-report-block__header {
+  display: block;
+  margin-bottom: 1rem;
+}
+
+.pro-report-block[data-paid-unlock-card] .pro-report-block__title {
+  display: block;
+}
+
+.pro-report-block[data-paid-unlock-card] .pro-report-block__meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  flex-wrap: wrap;
+  margin: 0.75rem 0 1rem;
+}
+
+.pro-report-block[data-paid-unlock-card] .pro-report-block__credits {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.pro-report-block[data-paid-unlock-card] .pro-report-block__credits-value {
+  font-weight: 800;
+  color: var(--color-primary, #5bf4e7);
+}
+
+.pro-report-block[data-paid-unlock-card] .pro-report-block__unlocked {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: var(--radius-md, 8px);
+  background: rgba(91, 244, 231, 0.12);
+  color: var(--text-primary, #fff);
+  border: 1px solid rgba(91, 244, 231, 0.25);
+  font-weight: 700;
+}
+
+.pro-report-block[data-paid-unlock-card] .pro-report-block__actions {
+  /* Override the feature grid layout for purchase CTA buttons */
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 0;
+  clear: both;
+}
+
+.pro-report-block[data-paid-unlock-card] .pro-report-block__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 520px;
+  margin: 0 auto;
+  min-width: 0;
+  border-radius: var(--radius-lg, 12px);
+  font-weight: 800;
+  text-align: center;
+  padding: 0.875rem 1.25rem;
+  border: none;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
+  color: var(--accent-primary-contrast, #ffffff);
+}
+
+.pro-report-block[data-paid-unlock-card] .pro-report-block__btn--secondary {
+  background: transparent;
+  border: 1px solid var(--color-primary, #5bf4e7);
+  color: var(--color-primary, #5bf4e7);
+}
+
+.pro-report-block[data-paid-unlock-card] .pro-report-block__footer {
+  margin-top: 0.75rem;
+}
+
+@media (min-width: 900px) {
+  .pro-report-block[data-paid-unlock-card] .pro-report-block__actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .pro-report-block[data-paid-unlock-card] .pro-report-block__btn {
+    max-width: none;
+  }
+}
+
+/* Compact Variant */
+.pro-report-block--compact {
+  margin-top: 1.5rem;
+  padding: 1.5rem;
+}
+
+.pro-report-block--compact .pro-report-block__actions {
+  grid-template-columns: 1fr;
+  margin-bottom: 0;
+}
+
+.pro-report-block__upgrade-button--compact {
+  width: 100%;
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* Minimal Variant */
+.pro-report-block--minimal {
+  margin-top: 1rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.pro-report-block--minimal:hover {
+  transform: none;
+  box-shadow: none;
+}
+
+.pro-report-block__upgrade-button--minimal {
+  padding: 0.625rem 1.25rem;
+  font-size: 0.875rem;
+}
+
+/* Report Header Styles (for ReportContainer) */
+.report-header {
+  margin-bottom: 2rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  text-align: left;
+}
+
+.report-header__badge {
+  display: inline-block;
+  padding: 0.375rem 0.875rem;
+  background: var(--color-primary, #5bf4e7);
+  color: var(--color-black, #000);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--radius-md, 8px);
+  margin: 0.5rem 0 1rem 0;
+}
+
+.report-header__title {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+  line-height: 1.2;
+  text-align: left;
+}
+
+.report-header__subtitle {
+  margin: 0 0 1rem 0;
+  font-size: 1.125rem;
+  color: var(--text-secondary, #9ca3af);
+  line-height: 1.5;
+  text-align: left;
+}
+
+.report-header__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-top: 1rem;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--text-secondary, #9ca3af);
+}
+
+.meta-icon {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+.meta-item__text {
+  line-height: 1.4;
+}
+
+.meta-item--mode {
+  padding: 0.25rem 0.75rem;
+  background: var(--bg-elevated, #111418);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-md, 8px);
+  font-weight: 600;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .pro-report-block {
+    padding: var(--space-6, 1.5rem);
+  }
+
+  .pro-report-block__header {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .pro-report-block__title {
+    font-size: 1.25rem;
+  }
+
+  .pro-report-block__actions {
+    grid-template-columns: 1fr;
+  }
+
+  .report-header__title {
+    font-size: 1.5rem;
+  }
+
+  .report-header__meta {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+/* Accessibility: Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .pro-report-block,
+  .pro-report-block__action,
+  .pro-report-block__upgrade-button {
+    transition: none;
+  }
+
+  .pro-report-block:hover,
+  .pro-report-block__action:hover,
+  .pro-report-block__upgrade-button:hover {
+    transform: none;
+  }
+}

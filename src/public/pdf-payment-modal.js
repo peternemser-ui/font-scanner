@@ -6,6 +6,8 @@
 class PDFPaymentModal {
   constructor() {
     this.modal = null;
+    this.previousFocus = null;
+    this.cleanupKeydown = null;
     this.reportType = null;
     this.reportData = null;
     this.onSuccess = null;
@@ -32,12 +34,12 @@ class PDFPaymentModal {
 
   createModal() {
     const modalHTML = `
-      <div id="pdfPaymentModal" class="pdf-payment-modal" style="display: none;">
+      <div id="pdfPaymentModal" class="pdf-payment-modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="pdfPaymentTitle" aria-hidden="true">
         <div class="pdf-modal-overlay" id="pdfModalOverlay"></div>
-        <div class="pdf-modal-content">
+        <div class="pdf-modal-content" tabindex="-1">
           <div class="pdf-modal-header">
-            <h2>[PURCHASE_PDF_REPORT]</h2>
-            <button class="pdf-modal-close" id="pdfModalCloseBtn">×</button>
+            <h2 id="pdfPaymentTitle">[PURCHASE_PDF_REPORT]</h2>
+            <button type="button" class="pdf-modal-close" id="pdfModalCloseBtn" aria-label="Close">×</button>
           </div>
           
           <div class="pdf-modal-body">
@@ -199,10 +201,71 @@ class PDFPaymentModal {
     });
   }
 
+  getFocusableElements() {
+    const modalContent = this.modal && this.modal.querySelector ? this.modal.querySelector('.pdf-modal-content') : null;
+    if (!modalContent) return [];
+
+    const selectors = [
+      'a[href]',
+      'button:not([disabled])',
+      'textarea:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])'
+    ];
+
+    return Array.from(modalContent.querySelectorAll(selectors.join(','))).filter((el) => {
+      if (!el) return false;
+      const style = window.getComputedStyle(el);
+      return style && style.visibility !== 'hidden' && style.display !== 'none';
+    });
+  }
+
+  trapFocus() {
+    if (!this.modal) return;
+    const modalContent = this.modal.querySelector('.pdf-modal-content');
+    if (!modalContent) return;
+
+    const onKeyDown = (e) => {
+      if (!this.modal || this.modal.style.display === 'none') return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        this.close();
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+      const focusables = this.getFocusableElements();
+      if (!focusables.length) {
+        e.preventDefault();
+        modalContent.focus();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    this.cleanupKeydown = () => {
+      document.removeEventListener('keydown', onKeyDown);
+    };
+  }
+
   open(reportType, reportData, onSuccess) {
     this.reportType = reportType;
     this.reportData = reportData;
     this.onSuccess = onSuccess;
+
+    this.previousFocus = document.activeElement;
 
     // Show demo notice if in demo mode
     if (this.pricing && this.pricing.demoMode) {
@@ -214,13 +277,37 @@ class PDFPaymentModal {
 
     // Show modal
     this.modal.style.display = 'flex';
+    this.modal.setAttribute('aria-hidden', 'false');
     document.body.style.overflow = 'hidden';
+
+    if (typeof this.cleanupKeydown === 'function') this.cleanupKeydown();
+    this.trapFocus();
+
+    window.requestAnimationFrame(() => {
+      const focusables = this.getFocusableElements();
+      if (focusables.length) {
+        focusables[0].focus();
+      } else {
+        const modalContent = this.modal.querySelector('.pdf-modal-content');
+        if (modalContent) modalContent.focus();
+      }
+    });
   }
 
   close() {
+    if (typeof this.cleanupKeydown === 'function') {
+      this.cleanupKeydown();
+      this.cleanupKeydown = null;
+    }
+
     this.modal.style.display = 'none';
+    this.modal.setAttribute('aria-hidden', 'true');
     document.body.style.overflow = '';
     this.resetForm();
+
+    if (this.previousFocus && typeof this.previousFocus.focus === 'function' && document.contains(this.previousFocus)) {
+      this.previousFocus.focus();
+    }
   }
 
   resetForm() {

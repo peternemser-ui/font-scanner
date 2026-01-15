@@ -309,15 +309,599 @@
     "breadcrumb": "analizador seo",
     "analyze": "ANALIZAR SEO",
     "analyzing": "ANALIZANDO...",
+    "overall": "General",
+    "reportTitle": "Informe SEO",
+    "reportSubtitle": "Análisis SEO",
+    "loadingTitle": "Análisis en curso...",
+    "mayTake": "Esto puede tardar 30-60 segundos",
     "seoScore": "Puntuación SEO",
     "metaTags": "Etiquetas Meta",
     "headings": "Encabezados",
+    "content": "Contenido",
     "images": "Imágenes",
     "links": "Enlaces",
+    "mobile": "Móvil",
+    "performance": "Rendimiento",
+    "security": "Seguridad",
     "canonicalUrl": "URL Canónica",
     "structuredData": "Datos Estructurados",
     "sitemap": "Mapa del Sitio",
     "robotsTxt": "Robots.txt",
+    "sections": {
+      "metaTags": "Etiquetas Meta",
+      "headings": "Encabezados",
+      "content": "Contenido",
+      "images": "Imágenes",
+      "links": "Enlaces",
+      "mobile": "Móvil",
+      "performance": "Rendimiento",
+      "security": "Seguridad",
+      "structuredData": "Datos Estructurados",
+      "additional": "Comprobaciones adicionales",
+      "fixCode": "Correcciones + Recomendaciones"
+    },
+    "steps": {
+      "running": "Ejecutando análisis SEO",
+      "initializing": "Inicializando el motor de escaneo...",
+      "metaTags": "Comprobando etiquetas meta",
+      "metaTagsDetail": "Analizando título, descripción, palabras clave...",
+      "content": "Analizando calidad del contenido",
+      "contentDetail": "Evaluando encabezados, texto, legibilidad...",
+      "mobile": "Probando compatibilidad móvil",
+      "mobileDetail": "Comprobando viewport y diseño...",
+      "performance": "Midiendo rendimiento",
+      "performanceDetail": "Probando velocidad de carga y optimización..."
+    },
+    "proPreview": {
+      "metaTags": "Mejoras de etiquetas meta",
+      "structuredData": "Mejoras rápidas de datos estructurados"
+    },
+    "fixes": {
+      "previewIntro": "Vista previa de paquetes de corrección:",
+      "impact": "Impacto",
+      "copySnippet": "Copiar fragmento",
+      "snippetCopied": "Fragmento copiado al portapapeles"
+    },
+    "report": {
+      "units": {
+        "chars": "caracteres"
+      },
+      "table": {
+        "property": "Propiedad",
+        "value": "Valor",
+        "length": "Longitud",
+        "status": "Estado",
+        "bestPractice": "Mejor práctica",
+        "recommendation": "Recomendación",
+        "metric": "Métrica",
+        "recommended": "Recomendado",
+        "description": "Descripción",
+        "purpose": "Propósito",
+        "details": "Detalles",
+        "check": "Comprobación",
+        "platform": "Plataforma",
+        "seoValue": "Valor SEO",
+        "implementationTip": "Consejo de implementación"
+      },
+      "status": {
+        "missing": "Falta",
+        "review": "Revisar",
+        "optimal": "Óptimo",
+        "configured": "Configurado",
+        "present": "Presente",
+        "set": "Establecido",
+        "valid": "Válido",
+        "none": "Ninguno",
+        "multiple": "Múltiple",
+        "pass": "Aprobado",
+        "fail": "Falló",
+        "yes": "Sí",
+        "no": "No",
+        "found": "Encontrado",
+        "notFound": "No encontrado",
+        "detected": "Detectado",
+        "notDetected": "No detectado",
+        "enabled": "Habilitado",
+        "notConfigured": "No configurado: los navegadores pueden conectarse por HTTP"
+      },
+      "common": {
+        "moreCount": "... {{count}} más"
+      },
+      "metaTags": {
+        "calloutTitle": "🏷️ Las metaetiquetas son tu primera impresión",
+        "calloutBody": "Estas etiquetas controlan cómo aparece tu sitio en los resultados de búsqueda y en redes sociales. Optimizarlas puede aumentar el CTR en un 30–50%.",
+        "overviewHeading": "Resumen de metaetiquetas",
+        "healthHeading": "Salud de metaetiquetas",
+        "rows": {
+          "title": "Título",
+          "description": "Descripción",
+          "openGraph": "Open Graph",
+          "twitterCard": "Tarjeta de Twitter",
+          "viewport": "Viewport",
+          "canonical": "Canónica",
+          "ogTags": "Etiquetas OG",
+          "twitter": "Twitter"
+        },
+        "bestPractice": {
+          "title": "50–60 caracteres, incluye la palabra clave principal al inicio",
+          "description": "150–160 caracteres, CTA convincente, única por página",
+          "openGraph": "og:title, og:description, og:image (1200x630px)",
+          "twitterCard": "summary_large_image, twitter:title, twitter:image",
+          "viewport": "width=device-width, initial-scale=1",
+          "canonical": "Evita contenido duplicado, usa URLs absolutas"
+        }
+      },
+      "headings": {
+        "distributionHeading": "Distribución de encabezados",
+        "hierarchyHeading": "Jerarquía de encabezados",
+        "table": {
+          "level": "Nivel",
+          "count": "Cantidad",
+          "firstInstance": "Primera instancia"
+        },
+        "totalHeadingsLabel": "total_encabezados",
+        "primaryH1Label": "h1_principal",
+        "hierarchySampleLabel": "muestra_jerarquía"
+      },
+      "content": {
+        "qualityMetricsHeading": "Métricas de calidad del contenido",
+        "healthHeading": "Salud del contenido",
+        "metrics": {
+          "wordCount": "Recuento de palabras",
+          "readability": "Legibilidad",
+          "textRatio": "Proporción de texto",
+          "paragraphs": "Párrafos"
+        },
+        "wordCountLabel": "Recuento de palabras: {{count}}",
+        "readabilityScoreLabel": "Puntuación de legibilidad",
+        "textToHtmlLabel": "Texto/HTML: {{percent}}%",
+        "paragraphsLabel": "Párrafos: {{count}}",
+        "wordCountLineLabel": "recuento_palabras",
+        "sentencesLineLabel": "oraciones",
+        "avgWordsPerSentenceLineLabel": "prom_palabras_por_oración"
+      },
+      "images": {
+        "calloutTitle": "I SEO de imágenes: el texto alternativo es crítico",
+        "calloutBody": "El texto alternativo ayuda a los motores de búsqueda a entender las imágenes y mejora la accesibilidad. Google Imágenes aporta entre un 20–30% del tráfico web en muchos sitios.",
+        "overviewHeading": "Resumen de optimización de imágenes",
+        "detailsHeading": "Detalles de imágenes",
+        "statsHeading": "Estadísticas de imágenes",
+        "noImagesFound": "No se encontraron imágenes en esta página",
+        "radial": {
+          "altCoverage": "Cobertura de texto alt",
+          "imagesFound": "Imágenes encontradas",
+          "overallScore": "Puntuación general"
+        },
+        "table": {
+          "imageUrl": "URL de imagen",
+          "dimensions": "Dimensiones",
+          "altText": "Texto alt"
+        },
+        "recommendation": {
+          "pass": "Descriptivo, ayuda al SEO y a la accesibilidad",
+          "fail": "Añade texto alt descriptivo para SEO y lectores de pantalla"
+        },
+        "totalImagesLabel": "total_imágenes",
+        "withAltLabel": "con_alt"
+      },
+      "links": {
+        "networkDiagramHeading": "Diagrama de red de enlaces",
+        "healthSummaryHeading": "Resumen de salud de enlaces",
+        "totalLinksLabel": "total_enlaces",
+        "internalLinksLabel": "enlaces_internos",
+        "externalLinksLabel": "enlaces_externos",
+        "nofollowLinksLabel": "enlaces_nofollow",
+        "brokenFormatLabel": "formato_roto"
+      },
+      "mobile": {
+        "calloutTitle": "M Indexación mobile-first",
+        "calloutBody": "Google ahora usa la versión móvil de tu sitio para indexar y posicionar. La compatibilidad móvil es crítica para el SEO.",
+        "devices": {
+          "mobile": "Móvil",
+          "tablet": "Tableta",
+          "desktop": "Escritorio"
+        },
+        "table": {
+          "deviceType": "Tipo de dispositivo",
+          "width": "Ancho",
+          "noHorizontalScroll": "Sin desplazamiento horizontal",
+          "viewportMeta": "Meta viewport",
+          "readableFontSize": "Tamaño de fuente legible"
+        },
+        "recommendations": {
+          "mobile": "≥ 16px de fuente, sin desplazamiento horizontal",
+          "tablet": "Diseño responsivo, apto para táctil",
+          "desktop": "Respaldo de escritorio"
+        },
+        "cards": {
+          "horizontalScroll": "Desplazamiento horizontal",
+          "viewportMetaTag": "Etiqueta meta viewport",
+          "fontReadability": "Legibilidad de fuente",
+          "none": "Ninguno",
+          "detected": "Detectado",
+          "devicesFraction": "{{count}}/{{total}} dispositivos"
+        }
+      },
+      "performance": {
+        "metrics": {
+          "pageLoadTime": "Tiempo de carga de la página",
+          "domContentLoaded": "DOM Content Loaded",
+          "totalResources": "Recursos totales",
+          "pageSize": "Tamaño de página",
+          "domNodes": "Nodos del DOM"
+        },
+        "desc": {
+          "pageLoadTime": "Tiempo hasta que la página se carga por completo",
+          "domContentLoaded": "Tiempo hasta que el DOM está listo",
+          "totalResources": "Número de solicitudes HTTP",
+          "pageSize": "Tamaño total transferido",
+          "domNodes": "Total de elementos HTML"
+        },
+        "recommended": {
+          "pageLoadTime": "< 3s (Bueno) | < 5s (Regular)",
+          "domContentLoaded": "< 2s (Bueno)",
+          "totalResources": "< 150 (Bueno) | < 300 (Regular)",
+          "pageSize": "< 3 MB (Bueno)",
+          "domNodes": "< 1.500 (Bueno) | < 3.000 (Regular)"
+        }
+      },
+      "security": {
+        "calloutTitle": "◈ Encabezados de seguridad críticos para SEO",
+        "calloutBody": "Google prioriza los sitios seguros en el ranking. La falta de encabezados de seguridad puede dañar el SEO y la confianza del usuario. HTTPS es un factor de ranking directo.",
+        "table": {
+          "securityHeader": "Encabezado de seguridad",
+          "recommendedValue": "Valor recomendado"
+        },
+        "headers": {
+          "httpsEnabled": "HTTPS habilitado",
+          "hsts": "Encabezado HSTS",
+          "csp": "Content Security Policy",
+          "xFrameOptions": "X-Frame-Options",
+          "xContentTypeOptions": "X-Content-Type-Options"
+        },
+        "purpose": {
+          "encryptedConnection": "Conexión cifrada",
+          "forceHttps": "Forzar HTTPS",
+          "xssProtection": "Protección XSS",
+          "clickjacking": "Protección contra clickjacking",
+          "mimeSniffing": "Protección contra MIME sniffing"
+        },
+        "details": {
+          "sslEnabled": "SSL/TLS seguro habilitado",
+          "noHttps": "No se detectó HTTPS",
+          "hstsNotConfigured": "No configurado: los navegadores pueden conectarse por HTTP",
+          "injectionRisk": "Vulnerable a ataques de inyección",
+          "canEmbed": "Puede incrustarse en iframes",
+          "misinterpret": "El navegador puede interpretar mal el contenido"
+        },
+        "recommended": {
+          "https": "Requerido: usa siempre HTTPS en producción"
+        }
+      },
+      "structuredData": {
+        "info": {
+          "title": "ⓘ ¿Qué es el esquema de datos estructurados?",
+          "body": "Los datos estructurados (también llamados marcado schema) son código que ayuda a los motores de búsqueda a entender mejor tu contenido, habilitando <strong style=\"color: #00ff41;\">resultados enriquecidos</strong> como valoraciones con estrellas, precios de producto, fechas de eventos, desplegables de FAQ y más. Usa el vocabulario de <strong style=\"color: #00ccff;\">Schema.org</strong> en formatos JSON-LD, Microdata o RDFa.",
+          "cards": {
+            "ctr": {
+              "title": "U Mejor CTR",
+              "body": "Los resultados enriquecidos destacan y generan más clics"
+            },
+            "targeting": {
+              "title": "T Mejor segmentación",
+              "body": "Ayuda a los motores de búsqueda a entender tu nicho"
+            },
+            "advantage": {
+              "title": "W Ventaja SEO",
+              "body": "Ventaja competitiva en los resultados de búsqueda"
+            }
+          }
+        },
+        "summary": {
+          "heading": "Resumen",
+          "table": {
+            "impact": "Impacto"
+          },
+          "rows": {
+            "found": {
+              "metric": "Datos estructurados encontrados",
+              "impact": {
+                "detected": "Habilita resultados enriquecidos",
+                "notFound": "Faltan apariciones mejoradas en búsqueda"
+              }
+            },
+            "types": {
+              "metric": "Tipos de schema implementados",
+              "value": {
+                "singular": "Tipo",
+                "plural": "Tipos"
+              },
+              "impact": {
+                "great": "Cobertura excelente",
+                "good": "Buen inicio",
+                "none": "Ninguno implementado"
+              }
+            },
+            "score": {
+              "metric": "Puntuación general",
+              "impact": {
+                "excellent": "Implementación excelente",
+                "room": "Hay margen de mejora",
+                "critical": "Brecha crítica"
+              }
+            }
+          }
+        },
+        "detected": {
+          "heading": "Tipos de schema detectados",
+          "table": {
+            "schemaType": "Tipo de schema",
+            "seoBenefit": "Beneficio SEO",
+            "keyFields": "Campos clave"
+          },
+          "unknown": {
+            "desc": "Marcado de schema",
+            "benefit": "Implementación de datos estructurados"
+          },
+          "moreFields": "+{{count}} más",
+          "na": "N/D"
+        },
+        "validation": {
+          "title": "✓ Siguiente paso: valida tu schema",
+          "body": {
+            "beforeLink": "Usa",
+            "linkText": "la Prueba de resultados enriquecidos de Google",
+            "afterLink": "para asegurarte de que tus datos estructurados no tengan errores y sean aptos para rich snippets. Supervisa Search Console para ver errores de datos estructurados."
+          }
+        },
+        "missing": {
+          "heading": "Falta una oportunidad SEO crítica",
+          "card": {
+            "title": "No se detectaron datos estructurados",
+            "body": "Estás perdiendo apariciones mejoradas que aumentan la visibilidad y el CTR"
+          },
+          "table": {
+            "richResultType": "Tipo de resultado enriquecido",
+            "whatMissing": "Lo que te falta",
+            "ctrImpact": "Impacto en CTR"
+          },
+          "rows": {
+            "starRatings": {
+              "title": "Valoraciones con estrellas",
+              "body": "Muestra estrellas y valoraciones directamente en los resultados"
+            },
+            "productInfo": {
+              "title": "Información de producto",
+              "body": "Muestra precio, disponibilidad y ofertas"
+            },
+            "eventDetails": {
+              "title": "Detalles del evento",
+              "body": "Fechas, ubicación y entradas con integración de calendario"
+            },
+            "richMedia": {
+              "title": "Contenido enriquecido",
+              "body": "Miniaturas mejoradas, carruseles y snippets de vídeo"
+            },
+            "faq": {
+              "title": "Desplegables de FAQ",
+              "body": "Secciones de preguntas y respuestas expandibles en búsqueda"
+            }
+          }
+        },
+        "proTip": {
+          "label": "ⓘ Consejo:",
+          "body": "Los resultados enriquecidos pueden aumentar el CTR entre un 15% y 35% según investigación de Google. Empieza con los schemas base de abajo para desbloquear estos beneficios."
+        },
+        "recommended": {
+          "heading": "Tipos de schema recomendados para implementar",
+          "box": {
+            "title": "Empieza con estos schemas base",
+            "body": "que funcionan para casi cualquier web. Luego puedes añadir schemas más específicos según tu contenido."
+          },
+          "table": {
+            "schemaType": "Tipo de schema",
+            "priority": "Prioridad",
+            "seoBenefit": "Beneficio SEO",
+            "requiredFields": "Campos obligatorios"
+          }
+        },
+        "priority": {
+          "high": "ALTA",
+          "medium": "MEDIA"
+        },
+        "formats": {
+          "heading": "Formatos de implementación",
+          "jsonld": {
+            "badge": "RECOMENDADO",
+            "body": "JSON para Linked Data. El formato preferido por Google: limpio, separado del HTML y fácil de mantener."
+          },
+          "microdata": {
+            "subtitle": "Atributos HTML",
+            "body": "Insertado directamente en etiquetas HTML. Más difícil de mantener, pero vincula el marcado con el contenido."
+          },
+          "rdfa": {
+            "subtitle": "Descripción de recursos",
+            "body": "RDF en atributos. Similar a Microdata, pero con nombres de atributos distintos."
+          }
+        },
+        "resources": {
+          "heading": "Recursos y herramientas esenciales",
+          "table": {
+            "tool": "Herramienta",
+            "link": "Enlace"
+          },
+          "rows": {
+            "schemaDocs": {
+              "title": "Documentación de Schema.org",
+              "purpose": "Referencia oficial del vocabulario con documentación completa para todos los tipos y propiedades",
+              "linkText": "schema.org →"
+            },
+            "richResultsTest": {
+              "title": "Prueba de resultados enriquecidos",
+              "purpose": "Prueba tu marcado y mira qué rich results puede generar Google",
+              "linkText": "Probar marcado →"
+            },
+            "validator": {
+              "title": "Validador de schema",
+              "purpose": "Herramienta de validación para JSON-LD, Microdata y RDFa",
+              "linkText": "Validar →"
+            },
+            "googleGuide": {
+              "title": "Guía de Google",
+              "purpose": "Guía paso a paso para implementar datos estructurados con ejemplos y buenas prácticas",
+              "linkText": "Leer guía →"
+            },
+            "generator": {
+              "title": "Generador de marcado",
+              "purpose": "Herramienta gratuita para generar marcado JSON-LD para varios tipos de schema",
+              "linkText": "Generar →"
+            }
+          }
+        },
+        "schemas": {
+          "Organization": {
+            "desc": "Información de empresa/marca",
+            "benefit": "Refuerza la identidad de marca en el Knowledge Graph"
+          },
+          "Person": {
+            "desc": "Perfil individual",
+            "benefit": "Habilita snippets de autor y panel de conocimiento"
+          },
+          "Product": {
+            "desc": "Listado y detalles de productos",
+            "benefit": "Muestra precio, disponibilidad y reseñas en búsqueda"
+          },
+          "Article": {
+            "desc": "Artículos y posts",
+            "benefit": "Snippets de artículos con autor y fecha"
+          },
+          "WebSite": {
+            "desc": "Metadatos del sitio",
+            "benefit": "Habilita el cuadro de búsqueda de sitelinks en Google"
+          },
+          "BreadcrumbList": {
+            "desc": "Migas de pan de navegación",
+            "benefit": "Muestra la ruta de migas de pan en resultados"
+          },
+          "LocalBusiness": {
+            "desc": "Información de negocio local",
+            "benefit": "Aparece en búsquedas locales y Google Maps"
+          },
+          "Event": {
+            "desc": "Información de eventos",
+            "benefit": "Muestra detalles del evento con \"Añadir al calendario\""
+          },
+          "Recipe": {
+            "desc": "Contenido de recetas",
+            "benefit": "Tarjetas de recetas con valoraciones, tiempo y calorías"
+          },
+          "Review": {
+            "desc": "Reseñas de usuarios",
+            "benefit": "Muestra estrellas directamente en resultados"
+          },
+          "VideoObject": {
+            "desc": "Contenido de vídeo",
+            "benefit": "Snippets de vídeo con miniatura y momentos clave"
+          },
+          "FAQPage": {
+            "desc": "Contenido FAQ",
+            "benefit": "Secciones FAQ expandibles en resultados"
+          },
+          "HowTo": {
+            "desc": "Guías paso a paso",
+            "benefit": "Pasos numerados con imágenes en búsqueda"
+          },
+          "SoftwareApplication": {
+            "desc": "Detalles de software/app",
+            "benefit": "Botones de instalación y valoraciones en búsqueda"
+          },
+          "JobPosting": {
+            "desc": "Ofertas de trabajo",
+            "benefit": "Aparece en Google for Jobs con salario y ubicación"
+          }
+        }
+      },
+      "additional": {
+        "calloutTitle": "🔧 Elementos esenciales de SEO técnico",
+        "calloutBody": "Estos elementos técnicos ayudan a los motores de búsqueda a rastrear, indexar y entender tu sitio. Los faltantes pueden afectar significativamente la visibilidad.",
+        "technicalHeading": "SEO técnico",
+        "checks": {
+          "sitemap": "Mapa del sitio XML",
+          "favicon": "Favicon",
+          "googleAnalytics": "Google Analytics"
+        },
+        "purpose": {
+          "robots": "Controla el rastreo de los motores de búsqueda",
+          "sitemap": "Ayuda a los motores de búsqueda a descubrir páginas",
+          "favicon": "Icono de pestaña del navegador",
+          "analytics": "Seguimiento de tráfico"
+        },
+        "details": {
+          "robotsPresent": "El archivo está presente y accesible",
+          "robotsMissing": "Falta: crea /robots.txt",
+          "sitemapDetected": "Mapa del sitio detectado",
+          "sitemapMissing": "Falta: mejora la indexación",
+          "faviconMissing": "No se encontró favicon",
+          "analyticsEnabled": "Seguimiento de analítica habilitado",
+          "analyticsMissing": "No se detectó analítica"
+        },
+        "bestPractice": {
+          "robots": "Permite rastreadores y bloquea admin/privado",
+          "sitemap": "Envíalo a Google Search Console y actualízalo semanalmente",
+          "favicon": "PNG o ICO 32x32, ayuda al reconocimiento de marca",
+          "analytics": "Se recomienda GA4; analiza el comportamiento para obtener insights SEO"
+        },
+        "social": {
+          "calloutTitle": "M Señales sociales y SEO",
+          "calloutBody": "Aunque no son factores directos de ranking, los enlaces sociales aumentan la visibilidad de marca, generan tráfico y mejoran las vistas previas de Open Graph al compartir contenido.",
+          "heading": "Presencia en redes sociales",
+          "value": {
+            "openGraph": "Etiquetas Meta Open Graph",
+            "twitterCard": "Etiquetas Twitter Card",
+            "professional": "Red profesional",
+            "visual": "Contenido visual"
+          },
+          "details": {
+            "linkPresent": "Enlace presente",
+            "facebookMissing": "No se encontró enlace a Facebook",
+            "twitterMissing": "No se encontró enlace a Twitter",
+            "linkedinMissing": "No se encontró enlace a LinkedIn",
+            "instagramMissing": "No se encontró enlace a Instagram"
+          },
+          "tip": {
+            "openGraph": "Añade etiquetas og:image, og:title, og:description",
+            "twitterCard": "Añade meta tags twitter:card, twitter:image",
+            "linkedin": "Añádelo al pie de empresa; mejora la credibilidad B2B",
+            "instagram": "Enlaza al perfil de negocio; refuerza la marca visual"
+          }
+        }
+      },
+      "issues": {
+        "issuesHeading": "problemas",
+        "recommendationsHeading": "recomendaciones"
+      },
+      "loading": {
+        "title": "ANALIZANDO",
+        "running": "ejecutando análisis SEO completo...",
+        "metaTags": "comprobando metaetiquetas...",
+        "content": "analizando calidad del contenido...",
+        "mobile": "probando compatibilidad móvil...",
+        "performance": "midiendo rendimiento..."
+      },
+      "error": {
+        "title": "ERROR",
+        "analysisFailed": "análisis_fallido",
+        "retry": "REINTENTAR"
+      }
+    },
+    "components": {
+      "metaTags": "Etiquetas Meta",
+      "headings": "Encabezados",
+      "content": "Contenido",
+      "images": "Imágenes",
+      "links": "Enlaces",
+      "structuredData": "Datos Estructurados"
+    },
     "pages": {
       "home": {
         "title": "Site Mechanic - Análisis Profesional de Sitios Web y Herramientas SEO",
@@ -339,6 +923,13 @@
         "keywords": "pruebas de rendimiento, velocidad de página, Core Web Vitals, optimización web, monitoreo de rendimiento",
         "og_title": "Centro de Pruebas de Rendimiento - Optimización de Velocidad",
         "twitter_title": "Prueba y Optimiza el Rendimiento de Tu Sitio Web"
+      },
+      "seo-analyzer": {
+        "title": "SEO e Indexación - Metadatos, Estructura y Rastreabilidad | Site Mechanic",
+        "description": "Diagnostica problemas de SEO: etiquetas meta, encabezados, datos estructurados, rastreabilidad y optimización on-page. Parte del flujo unificado de inspección web de Site Mechanic.",
+        "keywords": "analizador SEO, auditoría SEO, etiquetas meta, datos estructurados, SEO on-page, SEO técnico, rastreabilidad, indexación",
+        "og_title": "Analizador SEO - Herramienta de Auditoría SEO | Site Mechanic",
+        "twitter_title": "Analizador SEO - Herramienta de Auditoría SEO | Site Mechanic"
       },
       "mobile-analyzer": {
         "title": "Analizador Móvil - Herramienta de Pruebas de Diseño Responsivo",
@@ -488,7 +1079,9 @@
     "print": "Imprimir",
     "help": "Ayuda",
     "settings": "Configuración",
-    "language": "Idioma"
+    "language": "Idioma",
+    "pageScreenshotAlt": "Captura de pantalla de la página",
+    "footer": "© 2025 Site Mechanic. Creado para desarrolladores que se preocupan por la calidad."
   },
   "errors": {
     "urlRequired": "Por favor ingrese una URL válida",
@@ -590,6 +1183,8 @@
   "pricing": {
     "title": "Actualizar a Site Mechanic Pro",
     "subtitle": "Desbloquea escaneos ilimitados, recomendaciones avanzadas y herramientas de optimización de nivel experto",
+    "unlockReportTitle": "Desbloquear informe",
+    "unlockReportSubtitle": "Exportación PDF, compartir enlace, exportar datos y paquetes de corrección para este análisis.",
     "monthly": "Mensual",
     "annual": "Anual Ahorra 17%",
     "free": "Gratis",

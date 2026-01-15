@@ -1,8 +1,18 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 const { createLogger } = require('../utils/logger');
+const { resolveReportId } = require('../utils/resolveReportId');
+const {
+  initializePdfGeneration,
+  finalizePdfGeneration,
+  addPdfHeader,
+  addSectionHeader,
+  checkPageBreakNeeded,
+  getScoreColor,
+  getGrade
+} = require('../utils/pdfHelpers');
+const { formatBytes } = require('../utils/formatHelpers');
 
 const logger = createLogger('PerformancePdfGenerator');
 
@@ -26,80 +36,50 @@ class PerformancePdfGenerator {
    * Generate comprehensive Performance PDF report
    */
   async generateReport(performanceResults) {
-    const reportId = uuidv4();
-    const filename = `performance-analysis-${reportId}.pdf`;
-    const filepath = path.join(this.reportsDir, filename);
+    // Use helper to initialize PDF generation
+    const { doc, filepath, reportId, stream, filename } = initializePdfGeneration(
+      performanceResults,
+      'performance',
+      { reportsDir: this.reportsDir }
+    );
 
-    logger.info(`Generating Performance PDF report: ${filename}`);
+    try {
+      // Use helper for header
+      addPdfHeader(
+        doc,
+        '[PERFORMANCE_ANALYSIS_REPORT]',
+        performanceResults.url,
+        'comprehensive performance and speed analysis'
+      );
 
-    return new Promise((resolve, reject) => {
-      try {
-        const doc = new PDFDocument({ margin: 50, size: 'A4' });
-        const stream = fs.createWriteStream(filepath);
-        doc.pipe(stream);
+      // Generate report sections
+      this.addExecutiveSummary(doc, performanceResults);
+      this.addCoreWebVitals(doc, performanceResults);
+      this.addPerformanceMetrics(doc, performanceResults);
+      this.addResourceAnalysis(doc, performanceResults);
+      this.addDesktopMobileComparison(doc, performanceResults);
+      this.addRecommendations(doc, performanceResults);
 
-        // Generate report sections
-        this.addHeader(doc, performanceResults.url);
-        this.addExecutiveSummary(doc, performanceResults);
-        this.addCoreWebVitals(doc, performanceResults);
-        this.addPerformanceMetrics(doc, performanceResults);
-        this.addResourceAnalysis(doc, performanceResults);
-        this.addDesktopMobileComparison(doc, performanceResults);
-        this.addRecommendations(doc, performanceResults);
-
-        doc.end();
-
-        stream.on('finish', () => {
-          logger.info(`Performance PDF report generated: ${filename}`);
-          resolve({ filename, filepath, reportId });
-        });
-
-        stream.on('error', (error) => {
-          logger.error('Error generating Performance PDF:', error);
-          reject(error);
-        });
-
-      } catch (error) {
-        logger.error('Error creating Performance PDF:', error);
-        reject(error);
-      }
-    });
+      // Use helper to finalize PDF generation
+      return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+    } catch (error) {
+      logger.error('Error creating Performance PDF:', error);
+      throw error;
+    }
   }
 
-  /**
-   * Add header with branding
-   */
-  addHeader(doc, url) {
-    doc
-      .fontSize(28)
-      .font('Helvetica-Bold')
-      .fillColor('#1a1a1a')
-      .text('[PERFORMANCE_ANALYSIS_REPORT]', 50, 50);
-
-    doc
-      .fontSize(14)
-      .font('Helvetica')
-      .fillColor('#555')
-      .text(`Website: ${url}`, 50, 85);
-
-    doc
-      .fontSize(10)
-      .fillColor('#999')
-      .text(`Generated: ${new Date().toLocaleString()}`, 50, 105);
-
-    doc.moveDown(2);
-  }
+  // addHeader removed - using pdfHelpers.addPdfHeader() instead
 
   /**
    * Add executive summary
    */
   addExecutiveSummary(doc, results) {
-    this.checkPageBreak(doc, 200);
-    this.addSectionHeader(doc, '📊 Executive Summary');
+    checkPageBreakNeeded(doc, 200);
+    addSectionHeader(doc, '📊 Executive Summary');
 
     const overallScore = results.overallScore || results.performanceScore || 0;
-    const grade = this.getGrade(overallScore);
-    const color = this.getScoreColor(overallScore);
+    const grade = getGrade(overallScore);
+    const color = getScoreColor(overallScore);
 
     // Overall Score Box
     doc
@@ -133,8 +113,8 @@ class PerformancePdfGenerator {
     doc.moveDown(0.5);
 
     components.forEach(comp => {
-      const compColor = this.getScoreColor(comp.score);
-      const compGrade = this.getGrade(comp.score);
+      const compColor = getScoreColor(comp.score);
+      const compGrade = getGrade(comp.score);
       
       doc
         .fontSize(10)
@@ -154,8 +134,8 @@ class PerformancePdfGenerator {
    * Add Core Web Vitals section
    */
   addCoreWebVitals(doc, results) {
-    this.checkPageBreak(doc, 300);
-    this.addSectionHeader(doc, '⚡ Core Web Vitals');
+    checkPageBreakNeeded(doc, 300);
+    addSectionHeader(doc, '⚡ Core Web Vitals');
 
     // LCP - Largest Contentful Paint
     if (results.lcp) {
@@ -170,7 +150,7 @@ class PerformancePdfGenerator {
         .font('Helvetica')
         .fillColor('#555')
         .text(`Value: ${results.lcp.displayValue || results.lcp.value || 'N/A'}`, { indent: 20 })
-        .text(`Score: ${results.lcp.score}/100 (${this.getGrade(results.lcp.score)})`, { indent: 20 })
+        .text(`Score: ${results.lcp.score}/100 (${getGrade(results.lcp.score)})`, { indent: 20 })
         .text(`Threshold: Good < 2.5s, Needs Improvement < 4s, Poor > 4s`, { indent: 20 });
       
       doc.moveDown(1);
@@ -189,7 +169,7 @@ class PerformancePdfGenerator {
         .font('Helvetica')
         .fillColor('#555')
         .text(`Value: ${results.tbt.displayValue || results.tbt.value || 'N/A'}`, { indent: 20 })
-        .text(`Score: ${results.tbt.score}/100 (${this.getGrade(results.tbt.score)})`, { indent: 20 })
+        .text(`Score: ${results.tbt.score}/100 (${getGrade(results.tbt.score)})`, { indent: 20 })
         .text(`Threshold: Good < 200ms, Needs Improvement < 600ms, Poor > 600ms`, { indent: 20 });
       
       doc.moveDown(1);
@@ -208,7 +188,7 @@ class PerformancePdfGenerator {
         .font('Helvetica')
         .fillColor('#555')
         .text(`Value: ${results.cls.displayValue || results.cls.value || 'N/A'}`, { indent: 20 })
-        .text(`Score: ${results.cls.score}/100 (${this.getGrade(results.cls.score)})`, { indent: 20 })
+        .text(`Score: ${results.cls.score}/100 (${getGrade(results.cls.score)})`, { indent: 20 })
         .text(`Threshold: Good < 0.1, Needs Improvement < 0.25, Poor > 0.25`, { indent: 20 });
       
       doc.moveDown(1);
@@ -227,7 +207,7 @@ class PerformancePdfGenerator {
         .font('Helvetica')
         .fillColor('#555')
         .text(`Value: ${results.fcp.displayValue || results.fcp.value || 'N/A'}`, { indent: 20 })
-        .text(`Score: ${results.fcp.score}/100 (${this.getGrade(results.fcp.score)})`, { indent: 20 })
+        .text(`Score: ${results.fcp.score}/100 (${getGrade(results.fcp.score)})`, { indent: 20 })
         .text(`Threshold: Good < 1.8s, Needs Improvement < 3s, Poor > 3s`, { indent: 20 });
       
       doc.moveDown(1);
@@ -240,8 +220,8 @@ class PerformancePdfGenerator {
    * Add Performance Metrics section
    */
   addPerformanceMetrics(doc, results) {
-    this.checkPageBreak(doc, 250);
-    this.addSectionHeader(doc, '📈 Additional Performance Metrics');
+    checkPageBreakNeeded(doc, 250);
+    addSectionHeader(doc, '📈 Additional Performance Metrics');
 
     const metrics = [
       { name: 'Speed Index', value: results.speedIndex?.displayValue, score: results.speedIndex?.score },
@@ -272,8 +252,8 @@ class PerformancePdfGenerator {
    * Add Resource Analysis section
    */
   addResourceAnalysis(doc, results) {
-    this.checkPageBreak(doc, 300);
-    this.addSectionHeader(doc, '📦 Resource Analysis');
+    checkPageBreakNeeded(doc, 300);
+    addSectionHeader(doc, '📦 Resource Analysis');
 
     if (results.resources) {
       const resources = results.resources;
@@ -291,22 +271,22 @@ class PerformancePdfGenerator {
         doc
           .font('Helvetica')
           .fillColor('#555')
-          .text(`JavaScript Files: ${resources.scripts.count || 0} (${this.formatBytes(resources.scripts.size || 0)})`, { indent: 20 });
+          .text(`JavaScript Files: ${resources.scripts.count || 0} (${formatBytes(resources.scripts.size || 0)})`, { indent: 20 });
       }
 
       // Stylesheets
       if (resources.stylesheets) {
-        doc.text(`CSS Files: ${resources.stylesheets.count || 0} (${this.formatBytes(resources.stylesheets.size || 0)})`, { indent: 20 });
+        doc.text(`CSS Files: ${resources.stylesheets.count || 0} (${formatBytes(resources.stylesheets.size || 0)})`, { indent: 20 });
       }
 
       // Images
       if (resources.images) {
-        doc.text(`Images: ${resources.images.count || 0} (${this.formatBytes(resources.images.size || 0)})`, { indent: 20 });
+        doc.text(`Images: ${resources.images.count || 0} (${formatBytes(resources.images.size || 0)})`, { indent: 20 });
       }
 
       // Fonts
       if (resources.fonts) {
-        doc.text(`Fonts: ${resources.fonts.count || 0} (${this.formatBytes(resources.fonts.size || 0)})`, { indent: 20 });
+        doc.text(`Fonts: ${resources.fonts.count || 0} (${formatBytes(resources.fonts.size || 0)})`, { indent: 20 });
       }
 
       // Total
@@ -315,7 +295,7 @@ class PerformancePdfGenerator {
         doc
           .font('Helvetica-Bold')
           .fillColor('#333')
-          .text(`Total Resources: ${resources.total.count || 0} (${this.formatBytes(resources.total.size || 0)})`, { indent: 20 });
+          .text(`Total Resources: ${resources.total.count || 0} (${formatBytes(resources.total.size || 0)})`, { indent: 20 });
       }
 
       doc.moveDown(1);
@@ -357,8 +337,8 @@ class PerformancePdfGenerator {
       return;
     }
 
-    this.checkPageBreak(doc, 250);
-    this.addSectionHeader(doc, '📱 Desktop vs Mobile Comparison');
+    checkPageBreakNeeded(doc, 250);
+    addSectionHeader(doc, '📱 Desktop vs Mobile Comparison');
 
     const metrics = [
       { name: 'Performance Score', desktop: results.desktop.performanceScore, mobile: results.mobile.performanceScore },
@@ -397,8 +377,8 @@ class PerformancePdfGenerator {
       return;
     }
 
-    this.checkPageBreak(doc, 200);
-    this.addSectionHeader(doc, '💡 Performance Recommendations');
+    checkPageBreakNeeded(doc, 200);
+    addSectionHeader(doc, '💡 Performance Recommendations');
 
     // Group by priority
     const high = results.recommendations.filter(r => r.priority === 'high');
@@ -416,7 +396,7 @@ class PerformancePdfGenerator {
       doc.moveDown(0.5);
 
       high.forEach((rec, index) => {
-        this.checkPageBreak(doc, 80);
+        checkPageBreakNeeded(doc, 80);
         
         doc
           .fontSize(10)
@@ -452,7 +432,7 @@ class PerformancePdfGenerator {
       doc.moveDown(0.5);
 
       medium.forEach((rec, index) => {
-        this.checkPageBreak(doc, 80);
+        checkPageBreakNeeded(doc, 80);
         
         doc
           .fontSize(10)
@@ -482,7 +462,7 @@ class PerformancePdfGenerator {
       doc.moveDown(0.5);
 
       low.slice(0, 5).forEach((rec, index) => {
-        this.checkPageBreak(doc, 60);
+        checkPageBreakNeeded(doc, 60);
         
         doc
           .fontSize(10)
@@ -506,59 +486,12 @@ class PerformancePdfGenerator {
     }
   }
 
-  /**
-   * Add section header
-   */
-  addSectionHeader(doc, title) {
-    doc
-      .fontSize(16)
-      .font('Helvetica-Bold')
-      .fillColor('#1a1a1a')
-      .text(title);
-    
-    doc.moveDown(1);
-  }
-
-  /**
-   * Check if page break needed
-   */
-  checkPageBreak(doc, requiredSpace) {
-    if (doc.y + requiredSpace > doc.page.height - 50) {
-      doc.addPage();
-    }
-  }
-
-  /**
-   * Get score color
-   */
-  getScoreColor(score) {
-    if (score >= 90) return '#00ff41';
-    if (score >= 70) return '#ffa500';
-    if (score >= 50) return '#ffff00';
-    return '#ff4444';
-  }
-
-  /**
-   * Get grade from score
-   */
-  getGrade(score) {
-    if (score >= 90) return 'Excellent';
-    if (score >= 80) return 'Good';
-    if (score >= 70) return 'Fair';
-    if (score >= 50) return 'Poor';
-    return 'Critical';
-  }
-
-  /**
-   * Format bytes to human-readable
-   */
-  formatBytes(bytes) {
-    if (bytes === 0) return '0 B';
-    const k = 1024;
-    const sizes = ['B', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
-  }
+  // Helper methods removed - now using pdfHelpers and formatHelpers utilities
+  // - addSectionHeader → pdfHelpers.addSectionHeader()
+  // - checkPageBreak → pdfHelpers.checkPageBreakNeeded()
+  // - getScoreColor → pdfHelpers.getScoreColor()
+  // - getGrade → pdfHelpers.getGrade()
+  // - formatBytes → formatHelpers.formatBytes()
 }
 
 // Export singleton

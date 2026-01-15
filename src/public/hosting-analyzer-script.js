@@ -1,6 +1,12 @@
 // Hosting Pricing Analyzer JavaScript
 // Frontend rendering and API interaction for hosting analysis
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'hosting-analyzer';
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+});
+
 let currentResults = null;
 let currentFilter = 'all';
 
@@ -196,7 +202,6 @@ let priceChart, ratingsChart, categoryChart, valueChart;
 // Initialize charts
 function initializeCharts() {
   if (typeof Chart === 'undefined') {
-    console.warn('Chart.js not loaded, skipping charts');
     return;
   }
 
@@ -440,7 +445,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof window.getUrlParameter === 'function') {
     const autoUrl = window.getUrlParameter();
     if (autoUrl) {
-      console.log('→ Auto-starting Hosting analysis for:', autoUrl);
       urlInput.value = autoUrl;
       setTimeout(() => {
         analyzeHosting();
@@ -610,6 +614,10 @@ async function analyzeHosting() {
   loader.start(analysisSteps, '[HOSTING ANALYZER]', 20);
 
   try {
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
     // Call hosting API with manual inputs
     const response = await fetch('/api/hosting/analyze', {
       method: 'POST',
@@ -618,6 +626,7 @@ async function analyzeHosting() {
       },
       body: JSON.stringify({ 
         url: input,
+        scanStartedAt,
         ...manualInputs
       }),
     });
@@ -1118,35 +1127,18 @@ function displayHostingResults(data) {
     `;
   }
 
-  // Add PDF Export Button
-  html += `
-    <div class="section" style="text-align: center; margin-top: 2rem; padding: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
-      <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Export Report</h3>
-      <button id="exportPdfBtn" class="export-pdf-btn" style="
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        border-radius: 8px;
-        color: #ef4444;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.95rem;
-        transition: all 0.2s ease;
-      " onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Download PDF Report
-      </button>
-    </div>
-  `;
-
   resultsContent.innerHTML = html;
+
+  // Pro Report Block
+  if (window.ProReportBlock && window.ProReportBlock.render) {
+    const proBlockHtml = window.ProReportBlock.render({
+      context: 'hosting-analysis',
+      features: ['pdf', 'csv', 'share'],
+      title: 'Unlock Report',
+      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+    });
+    resultsContent.insertAdjacentHTML('beforeend', proBlockHtml);
+  }
 }
 
 // Get category icon - Classic Emoji Style
@@ -1196,9 +1188,7 @@ function initHostingPDFExport() {
       urlInputSelector: '#urlInput, input[type="url"], input[type="text"]',
       filename: `hosting-analysis-${new Date().toISOString().split('T')[0]}.pdf`
     });
-    console.log('Hosting Analyzer PDF export initialized');
   } else {
-    console.warn('PDF export utility not loaded');
   }
 }
 

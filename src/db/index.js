@@ -30,7 +30,6 @@ class Database {
           console.error('Error opening database:', err);
           throw err;
         }
-        console.log(`📊 Database connected: ${this.dbPath}`);
       });
 
       // Enable foreign keys
@@ -41,8 +40,6 @@ class Database {
 
       // Run migrations
       await this.runMigrations();
-
-      console.log('✅ Database initialized successfully');
     } catch (error) {
       console.error('Failed to initialize database:', error);
       throw error;
@@ -91,8 +88,6 @@ class Database {
 
     // Then run migrations from migrations folder
     await this.runMigrationFiles();
-
-    console.log('✅ Migrations completed');
   }
 
   /**
@@ -122,15 +117,11 @@ class Database {
         );
 
         if (existing) {
-          console.log(`⏭️  Skipping migration: ${migrationName} (already applied)`);
           continue;
         }
       } catch (error) {
         // migrations table doesn't exist yet - skip check
       }
-
-      console.log(`🔄 Running migration: ${migrationName}`);
-
       // Read and execute migration
       const migrationPath = path.join(migrationsDir, file);
       const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
@@ -166,7 +157,6 @@ class Database {
           // Handle specific errors gracefully
           if (error.message.includes('duplicate column name') ||
               error.message.includes('already exists')) {
-            console.log(`⚠️  Column/table already exists, continuing...`);
           } else {
             console.error('Migration statement error:', error.message);
             console.error('Statement:', statement.substring(0, 200));
@@ -174,8 +164,6 @@ class Database {
           }
         }
       }
-
-      console.log(`✅ Migration applied: ${migrationName}`);
     }
   }
 
@@ -228,7 +216,6 @@ class Database {
       this.db.close((err) => {
         if (err) reject(err);
         else {
-          console.log('📊 Database connection closed');
           resolve();
         }
       });

@@ -119,7 +119,7 @@ async function handleUpgrade(billingPeriod) {
     }
 
     // Redirect to Stripe Checkout
-    window.location.href = data.url;
+    window.location.href = data.checkoutUrl || data.url;
 
   } catch (error) {
     showError(error.message);

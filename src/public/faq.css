@@ -1,0 +1,125 @@
+/* Site Mechanic - FAQ Page (scoped styles) */
+
+.faq-search {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.faq-search .input {
+  flex: 1;
+  min-width: 240px;
+}
+
+.faq-meta {
+  color: var(--text-secondary, #9ca3af);
+  font-size: 0.9rem;
+  margin: 0.75rem 0 0;
+}
+
+.faq-group {
+  margin-top: 1.5rem;
+}
+
+.faq-group__title {
+  margin: 1.25rem 0 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 800;
+  color: var(--text-primary, #fff);
+}
+
+.faq-item {
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.12));
+  background: var(--bg-card, rgba(255, 255, 255, 0.02));
+  border-radius: var(--radius-lg, 12px);
+  padding: 0;
+  overflow: hidden;
+  margin-bottom: 0.75rem;
+}
+
+.faq-item summary {
+  list-style: none;
+  cursor: pointer;
+  padding: 0.95rem 1rem;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 700;
+  color: var(--text-primary, #fff);
+}
+
+.faq-item summary::-webkit-details-marker {
+  display: none;
+}
+
+.faq-item summary:focus {
+  outline: 2px solid var(--color-primary, #5bf4e7);
+  outline-offset: 2px;
+}
+
+.faq-item__q {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+}
+
+.faq-item__tag {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.2rem 0.55rem;
+  border-radius: 999px;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.16));
+  color: var(--text-secondary, #9ca3af);
+  background: rgba(255, 255, 255, 0.02);
+  flex-shrink: 0;
+}
+
+.faq-item__chev {
+  color: var(--text-secondary, #9ca3af);
+  transition: transform 0.2s ease;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.faq-item[open] .faq-item__chev {
+  transform: rotate(90deg);
+}
+
+.faq-item__a {
+  padding: 0 1rem 1rem;
+  color: var(--text-secondary, #9ca3af);
+  line-height: 1.6;
+}
+
+.faq-item__a a {
+  color: var(--accent-primary, var(--color-primary, #5bf4e7));
+}
+
+.faq-empty {
+  margin-top: 1rem;
+  padding: 1rem;
+  border-radius: var(--radius-lg, 12px);
+  border: 1px dashed var(--border-color, rgba(255, 255, 255, 0.12));
+  color: var(--text-secondary, #9ca3af);
+}
+
+body.white-theme .faq-item {
+  background: #ffffff;
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+body.white-theme .faq-item summary {
+  color: #111827;
+}
+
+body.white-theme .faq-item__a {
+  color: rgba(17, 24, 39, 0.75);
+}
+
+body.white-theme .faq-item__tag {
+  border-color: rgba(0, 0, 0, 0.12);
+  color: rgba(17, 24, 39, 0.65);
+  background: rgba(17, 24, 39, 0.03);
+}

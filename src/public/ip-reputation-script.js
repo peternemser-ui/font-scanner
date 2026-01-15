@@ -1,10 +1,14 @@
 // IP/Domain Reputation Analyzer JavaScript
 // Frontend rendering and API interaction for reputation analysis
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'ip-reputation';
+
 let currentResults = null;
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   const analyzeButton = document.getElementById('analyzeButton');
   const urlInput = document.getElementById('urlInput');
 
@@ -20,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof window.getUrlParameter === 'function') {
     const autoUrl = window.getUrlParameter();
     if (autoUrl) {
-      console.log('→ Auto-starting Reputation analysis for:', autoUrl);
       urlInput.value = autoUrl;
       setTimeout(() => {
         analyzeReputation();
@@ -68,24 +71,24 @@ async function analyzeReputation() {
   loaderMessageEl.style.cssText = `
     margin: 0 0 1.5rem 0;
     padding: clamp(0.75rem, 2vw, 1rem);
-    background: rgba(0, 255, 65, 0.05);
-    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
     border-radius: 6px;
     text-align: center;
     overflow: visible;
   `;
   loaderMessageEl.innerHTML = `
     <div style="overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch;">
-      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
     </div>
-    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: #00ff41; font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
+    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
       Checking IP reputation and blocklist status...
     </p>
-    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(0, 255, 65, 0.7); padding: 0 0.5rem;">
+    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(var(--accent-primary-rgb), 0.7); padding: 0 0.5rem;">
       This may take 15-30 seconds
     </p>
   `;
@@ -96,12 +99,12 @@ async function analyzeReputation() {
     style.id = 'ascii-art-style';
     style.textContent = `
       @keyframes color-cycle {
-        0% { color: #00ff41; }
+        0% { color: var(--accent-primary); }
         20% { color: #00ffff; }
         40% { color: #0099ff; }
         60% { color: #9933ff; }
         80% { color: #ff33cc; }
-        100% { color: #00ff41; }
+        100% { color: var(--accent-primary); }
       }
       .ascii-art-responsive {
         font-size: clamp(0.35rem, 1.2vw, 0.65rem);
@@ -185,13 +188,17 @@ async function analyzeReputation() {
   }, 100);
 
   try {
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
     // Call reputation API
     const response = await fetch('/api/ip-reputation', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ input }),
+      body: JSON.stringify({ input, scanStartedAt }),
     });
 
     if (!response.ok) {
@@ -449,33 +456,17 @@ function displayReputationResults(data) {
     resultsContent.innerHTML += createRecommendationsSection(data.recommendations);
   }
 
-  // Add PDF Export Button
-  resultsContent.innerHTML += `
-    <div class="section" style="text-align: center; margin-top: 2rem; padding: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
-      <h3 style="margin-bottom: 1.5rem; color: var(--text-primary);">Export Report</h3>
-      <button id="exportPdfBtn" class="export-pdf-btn" style="
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1.5rem;
-        background: rgba(239, 68, 68, 0.1);
-        border: 1px solid rgba(239, 68, 68, 0.3);
-        border-radius: 8px;
-        color: #ef4444;
-        cursor: pointer;
-        font-weight: 600;
-        font-size: 0.95rem;
-        transition: all 0.2s ease;
-      " onmouseover="this.style.background='rgba(239, 68, 68, 0.2)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.1)'">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-          <polyline points="7 10 12 15 17 10"/>
-          <line x1="12" y1="15" x2="12" y2="3"/>
-        </svg>
-        Download PDF Report
-      </button>
-    </div>
-  `;
+
+  // Pro Report Block
+  if (window.ProReportBlock && window.ProReportBlock.render) {
+    const proBlockHtml = window.ProReportBlock.render({
+      context: 'ip-reputation',
+      features: ['pdf', 'csv', 'share'],
+      title: 'Unlock Report',
+      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+    });
+    resultsContent.insertAdjacentHTML('beforeend', proBlockHtml);
+  }
 }
 
 // Create Blacklist Details Section
@@ -710,10 +701,20 @@ function createRecommendationsSection(recommendations) {
 
 // Utility functions
 function getScoreColor(score) {
-  if (score >= 90) return '#00ff41'; // Excellent
+  if (score >= 90) return getAccentPrimaryHex(); // Excellent
   if (score >= 70) return '#00d9ff'; // Good
   if (score >= 50) return '#ffa500'; // Fair
   return '#ff4444'; // Poor
+}
+
+function getAccentPrimaryHex() {
+  const computed = getComputedStyle(document.documentElement)
+    .getPropertyValue('--accent-primary')
+    .trim();
+  if (computed) return computed;
+
+  const isLight = document.body?.classList?.contains('white-theme');
+  return isLight ? '#dd3838' : '#5bf4e7';
 }
 
 // Standard: Excellent (90-100), Good (75-89), Needs Work (50-74), Critical (<50)
@@ -752,8 +753,8 @@ function getRiskColor(risk) {
     case 'critical': return '#ff0000';
     case 'high': return '#ff4444';
     case 'medium': return '#ffa500';
-    case 'low': return '#00ff41';
-    case 'minimal': return '#00ff41';
+    case 'low': return getAccentPrimaryHex();
+    case 'minimal': return getAccentPrimaryHex();
     default: return '#808080';
   }
 }
@@ -763,13 +764,13 @@ function createSSLSection(sslCert, sslScore) {
   if (!sslCert) return '';
 
   const isValid = sslCert.valid;
-  const statusColor = isValid ? '#00ff41' : '#ff4444';
+  const statusColor = isValid ? 'var(--accent-primary)' : '#ff4444';
 
   const content = `
       
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem; margin-top: 1.5rem;">
         <!-- Certificate Status -->
-        <div style="background: rgba(${isValid ? '0, 255, 65' : '255, 68, 68'}, 0.05); border: 1px solid ${statusColor}40; border-radius: 8px; padding: 1.5rem; text-align: center;">
+        <div style="background: ${isValid ? 'rgba(var(--accent-primary-rgb), 0.05)' : 'rgba(255, 68, 68, 0.05)'}; border: 1px solid ${isValid ? 'rgba(var(--accent-primary-rgb), 0.25)' : 'rgba(255, 68, 68, 0.25)'}; border-radius: 8px; padding: 1.5rem; text-align: center;">
           <div style="font-size: 3rem; margin-bottom: 0.5rem;">${isValid ? '✅' : '❌'}</div>
           <div style="color: ${statusColor}; font-weight: 600; font-size: 1.2rem;">${isValid ? 'Valid Certificate' : 'Invalid/Missing'}</div>
           <div style="color: #808080; font-size: 0.9rem; margin-top: 0.5rem;">Score: ${sslScore || 0}/100</div>
@@ -782,19 +783,19 @@ function createSSLSection(sslCert, sslScore) {
           <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
             <div><span style="color: #808080;">Issuer:</span> <span style="color: #fff;">${sslCert.issuer}</span></div>
             <div><span style="color: #808080;">Subject:</span> <span style="color: #fff;">${sslCert.subject}</span></div>
-            <div><span style="color: #808080;">Protocol:</span> <span style="color: ${sslCert.protocol === 'TLSv1.3' ? '#00ff41' : sslCert.protocol === 'TLSv1.2' ? '#00d9ff' : '#ffa500'};">${sslCert.protocol}</span></div>
+            <div><span style="color: #808080;">Protocol:</span> <span style="color: ${sslCert.protocol === 'TLSv1.3' ? 'var(--accent-primary)' : sslCert.protocol === 'TLSv1.2' ? '#00d9ff' : '#ffa500'};">${sslCert.protocol}</span></div>
             <div><span style="color: #808080;">Cipher:</span> <span style="color: #fff;">${sslCert.cipher || 'N/A'}</span></div>
           </div>
         </div>
 
         <!-- Expiry Info -->
-        <div style="background: rgba(${sslCert.daysUntilExpiry > 30 ? '0, 255, 65' : sslCert.daysUntilExpiry > 14 ? '255, 165, 0' : '255, 68, 68'}, 0.05); border: 1px solid rgba(${sslCert.daysUntilExpiry > 30 ? '0, 255, 65' : sslCert.daysUntilExpiry > 14 ? '255, 165, 0' : '255, 68, 68'}, 0.2); border-radius: 8px; padding: 1.5rem;">
-          <h3 style="color: ${sslCert.daysUntilExpiry > 30 ? '#00ff41' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'}; margin-top: 0;">⏰ Validity Period</h3>
+        <div style="background: ${sslCert.daysUntilExpiry > 30 ? 'rgba(var(--accent-primary-rgb), 0.05)' : sslCert.daysUntilExpiry > 14 ? 'rgba(255, 165, 0, 0.05)' : 'rgba(255, 68, 68, 0.05)'}; border: 1px solid ${sslCert.daysUntilExpiry > 30 ? 'rgba(var(--accent-primary-rgb), 0.2)' : sslCert.daysUntilExpiry > 14 ? 'rgba(255, 165, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'}; border-radius: 8px; padding: 1.5rem;">
+          <h3 style="color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'}; margin-top: 0;">⏰ Validity Period</h3>
           <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
             <div><span style="color: #808080;">Valid From:</span> <span style="color: #fff;">${new Date(sslCert.validFrom).toLocaleDateString()}</span></div>
             <div><span style="color: #808080;">Valid Until:</span> <span style="color: #fff;">${new Date(sslCert.validTo).toLocaleDateString()}</span></div>
             <div style="margin-top: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 4px; text-align: center;">
-              <span style="font-size: 1.5rem; font-weight: bold; color: ${sslCert.daysUntilExpiry > 30 ? '#00ff41' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'};">${sslCert.daysUntilExpiry}</span>
+              <span style="font-size: 1.5rem; font-weight: bold; color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'};">${sslCert.daysUntilExpiry}</span>
               <span style="color: #808080;"> days remaining</span>
             </div>
           </div>
@@ -1023,9 +1024,7 @@ function initIPReputationPDFExport() {
       urlInputSelector: '#urlInput, input[type="url"], input[type="text"]',
       filename: `ip-reputation-${new Date().toISOString().split('T')[0]}.pdf`
     });
-    console.log('IP Reputation Analyzer PDF export initialized');
   } else {
-    console.warn('PDF export utility not loaded');
   }
 }
 

@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(powershell -Command \"Get-Content ''f:\\\\dev\\\\font-scanner\\\\src\\\\public\\\\hosting-analyzer-script.js'' | Select-Object -Last 2\")"
+      "Bash(powershell -Command \"Get-Content ''f:\\\\dev\\\\font-scanner\\\\src\\\\public\\\\hosting-analyzer-script.js'' | Select-Object -Last 2\")",
+      "Bash(sort:*)"
     ]
   }
 }

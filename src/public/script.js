@@ -1,7 +1,5 @@
 ﻿class FontScannerApp {
   constructor() {
-    console.log('→ FontScannerApp initializing...');
-    
     // Initialize Socket.IO client
     this.socket = io({
       transports: ['websocket', 'polling'],
@@ -16,16 +14,13 @@
     this.initializeElements();
     this.bindEvents();
     this.initializeFontSizeControls();
-    console.log('✓ FontScannerApp initialized successfully');
   }
   
   initializeSocketHandlers() {
     this.socket.on('connect', () => {
-      console.log('✓ WebSocket connected:', this.socket.id);
     });
     
     this.socket.on('disconnect', (reason) => {
-      console.log('✗ WebSocket disconnected:', reason);
     });
     
     this.socket.on('connect_error', (error) => {
@@ -33,20 +28,16 @@
     });
     
     this.socket.on('progress', (data) => {
-      console.log('C Progress update:', data);
       this.handleProgressUpdate(data);
     });
   }
   
   handleProgressUpdate(data) {
-    console.log('C Progress update received:', data);
     const { step, total, name, status, progress, elapsed, remaining } = data;
     
     // Update progress UI
     const progressContainer = document.getElementById('progressContainer');
-    console.log('R Progress container exists:', !!progressContainer);
     if (!progressContainer) {
-      console.warn('~ Progress container not found, cannot update');
       return;
     }
     
@@ -118,21 +109,25 @@
     
     // Update time estimates
     const timeDisplay = document.getElementById('timeEstimate');
+    const startedAtIso = this.scanStartedAt || document.body.getAttribute('data-sm-scan-started-at');
+    const startedAtText = startedAtIso ? new Date(startedAtIso).toLocaleString() : null;
+    const startedAtPrefix = startedAtText ? `Started: ${startedAtText} • ` : '';
+
     if (timeDisplay && elapsed !== undefined && remaining !== undefined) {
       const elapsedSeconds = Math.floor(elapsed / 1000);
       const remainingSeconds = Math.floor(remaining / 1000);
       
       // Only show time estimates after 2+ steps completed (more accurate)
       if (step >= 2 && remainingSeconds > 0) {
-        timeDisplay.textContent = `${this.formatTime(elapsedSeconds)} elapsed • ~${this.formatTime(remainingSeconds)} remaining`;
+        timeDisplay.textContent = `${startedAtPrefix}${this.formatTime(elapsedSeconds)} elapsed • ~${this.formatTime(remainingSeconds)} remaining`;
       } else if (step === 1) {
         // First step - just show progress without time estimate
-        timeDisplay.textContent = `Analyzing... • Step ${step}/${total}`;
+        timeDisplay.textContent = `${startedAtPrefix}Analyzing... • Step ${step}/${total}`;
       } else {
-        timeDisplay.textContent = `Step ${step}/${total} • ${name}`;
+        timeDisplay.textContent = `${startedAtPrefix}Step ${step}/${total} • ${name}`;
       }
     } else if (timeDisplay) {
-      timeDisplay.textContent = `Step ${step}/${total} • ${name}`;
+      timeDisplay.textContent = `${startedAtPrefix}Step ${step}/${total} • ${name}`;
     }
   }
   
@@ -146,23 +141,19 @@
   }
 
   showProgressUI() {
-    console.log('Y showProgressUI() called');
     // Create progress container if it doesn't exist
     let progressContainer = document.getElementById('progressContainer');
-    console.log('R Existing container:', progressContainer);
-    
     if (!progressContainer) {
-      console.log('* Creating new progress container...');
       progressContainer = document.createElement('div');
       progressContainer.id = 'progressContainer';
       // Don't use className to avoid conflicts with existing .progress-container styles
       progressContainer.innerHTML = `
         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
           <h3 style="margin: 0; font-size: 1.1em;">→ Comprehensive Analysis</h3>
-          <div id="timeEstimate" style="font-size: 0.9em; color: #00ff88;">Initializing...</div>
+          <div id="timeEstimate" style="font-size: 0.9em; color: var(--accent-primary);">Initializing...</div>
         </div>
         <div class="progress-bar-main" style="width: 100%; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; margin-bottom: 12px; overflow: hidden;">
-          <div id="mainProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #00ff88, #00cc66); transition: width 0.3s ease;"></div>
+          <div id="mainProgressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, rgba(var(--accent-primary-rgb), 1), rgba(var(--accent-primary-rgb), 0.75)); transition: width 0.3s ease;"></div>
         </div>
         <div class="progress-steps-horizontal" style="display: flex; gap: 8px; flex-wrap: wrap;">
           ${this.generateProgressSteps()}
@@ -171,28 +162,21 @@
       
       // Insert before results
       const results = document.getElementById('results');
-      console.log('↕ Results element:', results);
       if (results && results.parentNode) {
         results.parentNode.insertBefore(progressContainer, results);
-        console.log('✓ Progress container inserted into DOM');
       } else {
         console.error('✗ Results element or parent not found!');
       }
     }
     
     progressContainer.style.display = 'block';
-    console.log('👁️ Progress container display set to block');
   }
 
   hideProgressUI() {
-    console.log('🚪 hideProgressUI() called');
     const progressContainer = document.getElementById('progressContainer');
-    console.log('R Progress container found:', !!progressContainer);
     if (progressContainer) {
       progressContainer.style.display = 'none';
-      console.log('✓ Progress container display set to none');
     } else {
-      console.warn('~ Progress container not found when trying to hide');
     }
   }
 
@@ -219,40 +203,23 @@
   }
 
   initializeElements() {
-    console.log('S Finding DOM elements...');
     this.urlInput = document.getElementById('urlInput');
     this.analyzeButton = document.getElementById('analyzeButton');
     this.resultsContainer = document.getElementById('results');
     this.loadingMessage = document.getElementById('loadingMessage');
-    
-    console.log('📋 Elements found:', {
-      urlInput: !!this.urlInput,
-      analyzeButton: !!this.analyzeButton,
-      resultsContainer: !!this.resultsContainer,
-      loadingMessage: !!this.loadingMessage
-    });
   }
 
   initializeFontSizeControls() {
-    console.log('🔤 Initializing font size controls...');
     const fontSizeButtons = document.querySelectorAll('.font-size-btn');
     const body = document.body;
-    
-    console.log(`C Found ${fontSizeButtons.length} font size buttons`);
-    
     if (fontSizeButtons.length === 0) {
-      console.warn('~ No font size buttons found in DOM!');
       return;
     }
     
     fontSizeButtons.forEach((button, index) => {
       const size = button.dataset.size;
-      console.log(`  Button ${index + 1}: ${size}`);
-      
       button.addEventListener('click', (e) => {
         e.preventDefault();
-        console.log(`🔤 Font size button clicked: ${size}`);
-        
         // Remove active state from all buttons
         fontSizeButtons.forEach(btn => {
           btn.classList.remove('active');
@@ -271,14 +238,11 @@
         
         // Save preference
         localStorage.setItem('fontSize', size);
-        console.log(`✓ Font size changed to: ${size}`);
       });
     });
     
     // Load saved font size preference
     const savedSize = localStorage.getItem('fontSize') || 'md';
-    console.log(`📖 Loading saved font size: ${savedSize}`);
-    
     // Apply saved size
     body.classList.remove('font-size-sm', 'font-size-md', 'font-size-lg', 'font-size-xl');
     body.classList.add(`font-size-${savedSize}`);
@@ -293,18 +257,13 @@
         btn.setAttribute('aria-pressed', 'false');
       }
     });
-    
-    console.log('✓ Font size controls initialized');
   }
 
   bindEvents() {
-    console.log('K Binding events to elements...');
     if (this.analyzeButton) {
       this.analyzeButton.addEventListener('click', () => {
-        console.log('S Analyze button clicked!');
         this.handleScan();
       });
-      console.log('✓ Analyze button event bound');
     } else {
       console.error('✗ Analyze button not found!');
     }
@@ -312,11 +271,9 @@
     if (this.urlInput) {
       this.urlInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
-          console.log('⏎ Enter key pressed in URL input');
           this.handleScan();
         }
       });
-      console.log('✓ URL input event bound');
     } else {
       console.error('✗ URL input not found!');
     }
@@ -324,9 +281,6 @@
 
   async handleScan() {
     const url = this.urlInput.value.trim();
-    
-    console.log('S Starting scan...', { url });
-
     if (!url) {
       this.showError('Please enter a URL to scan');
       return;
@@ -339,26 +293,16 @@
 
     // Normalize the URL before sending to backend
     const normalizedUrl = this.normalizeUrl(url);
-    
-    console.log('→ Starting comprehensive analysis...');
-    
     // Always perform comprehensive scan
     await this.performComprehensiveScan(normalizedUrl);
   }
 
   async performComprehensiveScan(normalizedUrl) {
-    console.log('T performComprehensiveScan called with URL:', normalizedUrl);
     this.setLoading(true);
-    console.log('⧗ Loading state set to true');
-    
     // Generate unique scan ID
     this.scanId = `scan_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    console.log('🆔 Generated scan ID:', this.scanId);
-    
     // Join Socket.IO room for this scan
     this.socket.emit('join-scan', this.scanId);
-    console.log('🚪 Emitted join-scan event');
-    
     // Create loading container if it doesn't exist
     let loadingContainer = document.getElementById('loadingContainer');
     if (!loadingContainer) {
@@ -406,15 +350,15 @@
     loaderMessageEl.style.cssText = `
       margin: 0 0 1.5rem 0;
       padding: 1rem;
-      background: rgba(0, 255, 65, 0.05);
-      border: 1px solid rgba(0, 255, 65, 0.3);
+      background: rgba(var(--accent-primary-rgb), 0.05);
+      border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
       border-radius: 6px;
       text-align: center;
       overflow: visible;
     `;
     loaderMessageEl.innerHTML = `
       <div style="overflow-x: auto; overflow-y: visible;">
-        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
@@ -429,9 +373,9 @@
           <strong>Please wait 1-3 minutes</strong> — do not refresh the page.
         </div>
       </div>
-      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41;">
+      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--accent-primary);">
         ⏳ Analyzing your website...<br>
-        <span style="font-size: 0.75rem; color: #00ffaa;">Running 9 specialized analyzers</span>
+        <span style="font-size: 0.75rem; color: rgba(var(--accent-primary-rgb), 0.8);">Running 9 specialized analyzers</span>
       </div>
     `;
     
@@ -441,12 +385,12 @@
       style.id = 'patience-animations';
       style.textContent = `
         @keyframes color-cycle {
-          0% { color: #00ff41; }
+          0% { color: var(--accent-primary); }
           20% { color: #00ffaa; }
           40% { color: #00aaff; }
           60% { color: #aa00ff; }
           80% { color: #ff00aa; }
-          100% { color: #00ff41; }
+          100% { color: var(--accent-primary); }
         }
         @keyframes fade-in-out {
           0%, 100% { opacity: 0.7; }
@@ -456,7 +400,7 @@
           font-size: clamp(0.35rem, 1.2vw, 0.65rem);
           white-space: pre;
           max-width: 100%;
-          color: #00ff41;
+          color: var(--accent-primary);
         }
         #patience-message {
           overflow: visible;
@@ -488,7 +432,10 @@
       const timeoutDuration = 600000; // 10 minutes for comprehensive scan
       const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
-      console.log('→ Sending request to /api/scan/best-in-class...');
+      const scanStartedAt = new Date().toISOString();
+      this.scanStartedAt = scanStartedAt;
+      window.SM_SCAN_STARTED_AT = scanStartedAt;
+      document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
       const response = await fetch('/api/scan/best-in-class', {
         method: 'POST',
         headers: {
@@ -497,6 +444,7 @@
         body: JSON.stringify({ 
           url: normalizedUrl,
           scanId: this.scanId,
+          scanStartedAt,
           includePerformance: true,
           includeBestPractices: true,
           includeFontPairing: true,
@@ -511,31 +459,20 @@
       });
 
       clearTimeout(timeoutId);
-      console.log('→ Best-in-class response received:', response.status);
-
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(errorData.error || `HTTP ${response.status}`);
       }
 
       const data = await response.json();
-      console.log(`! Comprehensive scan completed with grade: ${data.data?.grade}`);
-      
       // Complete the loader
       loader.complete();
       
       // Show results after animation completes
       setTimeout(() => {
-        console.log('R Full response data:', data);
-        console.log('S data.success:', data.success);
-        console.log('S data.data exists:', !!data.data);
-        
         if (data.success) {
-          console.log('✓ Success flag is true, hiding progress and showing results...');
           this.hideProgressUI();
-          console.log('✓ Progress UI hidden, calling displayComprehensiveResults...');
           this.displayComprehensiveResults(data.data);
-          console.log('✓ displayComprehensiveResults completed');
         } else {
           console.error('✗ Success flag is false');
           this.showError(data.error || 'Comprehensive scan failed');
@@ -551,8 +488,6 @@
   }
 
   prepareDataForDisplay(data) {
-    console.log('T Preparing comprehensive results for display:', data);
-    
     // Transform comprehensive data to display format with proper nesting
     const transformedData = {
       results: {
@@ -575,28 +510,15 @@
       url: data.url || 'Unknown URL',
       scannedAt: data.scannedAt || new Date().toISOString()
     };
-    
-    console.log('🔄 Transformed data for display:', transformedData);
-    
     return transformedData;
   }
   
   displayComprehensiveResults(data) {
-    console.log('🎬 displayComprehensiveResults called with data:', data);
     const transformedData = this.prepareDataForDisplay(data);
-    console.log('🔄 Data transformed, calling displayResults...');
-    
     // Use main display with transformed data
     this.displayResults(transformedData);
-    console.log('✓ displayResults completed');
-    
     // Add comprehensive analysis grade indicator at the very top
     setTimeout(() => {
-      console.log('T Grade Debug - data.overallScore:', data.overallScore);
-      console.log('T Grade Debug - data.grade:', data.grade);
-      console.log('T Grade Debug - transformedData.results.overallScore:', transformedData.results.overallScore);
-      console.log('T Grade Debug - transformedData.results.grade:', transformedData.results.grade);
-      
       if (this.resultsContainer && (data.overallScore || transformedData.results.overallScore) && (data.grade || transformedData.results.grade)) {
         const gradeIndicator = document.createElement('div');
         gradeIndicator.className = 'comprehensive-grade';
@@ -619,6 +541,8 @@
         const finalGrade = data.grade || transformedData.results.grade;
         const finalScore = data.overallScore || transformedData.results.overallScore;
         const finalDuration = data.scanDuration || transformedData.results.scanDuration || 0;
+        const startedAtIso = this.scanStartedAt || document.body.getAttribute('data-sm-scan-started-at');
+        const startedAtText = startedAtIso ? new Date(startedAtIso).toLocaleString() : '-';
         
         const textColor = isLightMode ? '#1a1a1a' : '#000';
         const secondaryOpacity = isLightMode ? '0.7' : '0.8';
@@ -636,7 +560,7 @@
               SCORE: ${finalScore}/100
             </div>
             <div style="color: ${textColor}; opacity: ${tertiaryOpacity}; font-size: 0.9rem; margin-top: 0.5rem; text-shadow: none;">
-              Analysis Duration: ${Math.round(finalDuration / 1000)}s
+              Started: ${startedAtText} • Duration: ${Math.round(finalDuration / 1000)}s
             </div>
           </div>
         `;
@@ -656,22 +580,18 @@
   async captureProReportSnapshot(scanData) {
     // Check if ProReportSnapshot is available
     if (typeof ProReportSnapshot === 'undefined') {
-      console.log('[FontScannerApp] ProReportSnapshot not loaded, skipping capture');
       return;
     }
 
     try {
       const domain = scanData.url || scanData.basicScan?.url || '';
       if (!domain) {
-        console.warn('[FontScannerApp] No domain found in scan data, skipping snapshot');
         return;
       }
 
       const result = await ProReportSnapshot.capture(domain, scanData, { silent: false });
       if (result.success) {
-        console.log('[FontScannerApp] Pro report snapshot captured:', result.purchaseId);
       } else {
-        console.warn('[FontScannerApp] Pro report snapshot failed:', result.error);
       }
     } catch (error) {
       // Non-blocking - just log the error
@@ -875,8 +795,6 @@
   }
 
   showError(message) {
-    console.log('! Showing error:', message);
-    
     // Create error display in results container
     this.resultsContainer.classList.remove('hidden');
     this.resultsContainer.innerHTML = `
@@ -951,20 +869,13 @@
   }
 
   loadWebFonts(results) {
-    console.log('🔤 Loading web fonts...');
-    
     // Check if we have fonts data
     if (!results || !results.fonts) {
-      console.log('~ No fonts found in results');
       return;
     }
 
     const fontSources = results.fonts.fontSources || [];
     const fonts = results.fonts.fonts || [];
-    
-    console.log('🔤 Font sources:', fontSources);
-    console.log('🔤 Detected fonts:', fonts);
-
     // Create or get the style element for dynamic fonts
     let styleElement = document.getElementById('dynamic-font-loader');
     if (!styleElement) {
@@ -977,13 +888,10 @@
 
     // First priority: Use exact font sources from the scanned page
     if (fontSources.length > 0) {
-      console.log('🔤 Loading fonts from detected sources...');
       fontSources.forEach(source => {
         if (source.includes('fonts.googleapis.com') || source.includes('fonts.google.com')) {
-          console.log('🔤 Adding Google Fonts source:', source);
           cssContent += `@import url('${source}');\n`;
         } else if (source.includes('typekit') || source.includes('adobe') || source.includes('fonts.net') || source.includes('webfont')) {
-          console.log('🔤 Adding web font source:', source);
           cssContent += `@import url('${source}');\n`;
         }
       });
@@ -995,9 +903,6 @@
       const fontName = fontObj.name || fontObj.fontFamily || font;
       return this.isGoogleFontName(fontName);
     });
-
-    console.log('🔤 Google Fonts detected:', googleFonts);
-
     if (googleFonts.length > 0) {
       // Build comprehensive Google Fonts URL with multiple weights
       const fontFamilies = googleFonts.map(font => {
@@ -1008,19 +913,13 @@
       }).join('&');
 
       const googleFontsUrl = `https://fonts.googleapis.com/css2?${fontFamilies}&display=swap`;
-      console.log('🔤 Loading Google Fonts from:', googleFontsUrl);
-
       cssContent += `@import url('${googleFontsUrl}');\n`;
-      console.log('✓ Google Fonts CSS added');
     }
 
     // Apply all CSS
     if (cssContent) {
       styleElement.textContent = cssContent;
-      console.log('✓ Web fonts loaded successfully');
-      console.log('� CSS Content:', cssContent);
     } else {
-      console.log('~ No web fonts to load');
     }
   }
 
@@ -1044,8 +943,6 @@
   }
 
   displayResults(data) {
-    console.log('Y displayResults called with:', data);
-
     if (!data || !data.results) {
       console.error('✗ Invalid data format - no results found:', data);
       this.showError('Invalid response format from server');
@@ -1063,11 +960,6 @@
 
     const { results, url, scannedAt } = data;
 
-    console.log('S DEBUG displayResults received results:', results);
-    console.log('S DEBUG displayResults results.fonts:', results.fonts);
-    console.log('S DEBUG displayResults results.fonts type:', typeof results.fonts);
-    console.log('S DEBUG displayResults results.fonts keys:', Object.keys(results.fonts || {}));
-
     // Store results globally for other methods
     this.lastResults = results;
 
@@ -1079,8 +971,6 @@
     
     // Make sure results container is visible
     this.resultsContainer.classList.remove('hidden');
-    console.log('✓ Results container unhidden');
-
     // Executive Summary (not in accordion)
     this.createExecutiveSummary(results, url, scannedAt);
     
@@ -1100,10 +990,8 @@
        (results.lighthouse.mobile && !results.lighthouse.mobile.error && results.lighthouse.mobile.performance > 0));
 
     if (hasLighthouseData) {
-      console.log('✓ Lighthouse data detected, showing section');
       this.createAccordionSection('lighthouse', 'LIGHTHOUSE_ANALYSIS', 'Lighthouse Analysis', () => this.createLighthouseAnalysis(results.lighthouse));
     } else {
-      console.log('ℹ️ No Lighthouse data available - section hidden (Lighthouse moved to Core Web Vitals page)');
     }
 
     this.createAccordionSection('accessibility-wcag', 'ACCESSIBILITY_WCAG', 'Accessibility + WCAG', () => this.createAccessibilityWCAG(results.fonts, results));
@@ -1125,36 +1013,17 @@
   }
 
   createExecutiveSummary(results, url, scannedAt) {
-    console.log('T Executive Summary Debug - Full results object:', results);
-    
     const section = document.createElement('div');
     section.className = 'section executive-summary';
 
     // Debug lighthouse data structure
-    console.log('T Lighthouse data available:', {
-      hasLighthouse: !!results.lighthouse,
-      lighthouseKeys: results.lighthouse ? Object.keys(results.lighthouse) : 'none',
+     : 'none',
       desktop: results.lighthouse?.desktop,
       mobile: results.lighthouse?.mobile,
       performance: results.performance
     });
 
     // Enhanced debugging for performance scores
-    console.log('T Desktop Performance Data:', {
-      path1: results.lighthouse?.desktop?.performance,
-      path2: results.lighthouse?.desktop?.score,
-      failed: results.lighthouse?.desktop?.failed,
-      error: results.lighthouse?.desktop?.error,
-      fullDesktop: results.lighthouse?.desktop
-    });
-    console.log('T Mobile Performance Data:', {
-      path1: results.lighthouse?.mobile?.performance,
-      path2: results.lighthouse?.mobile?.score,
-      failed: results.lighthouse?.mobile?.failed,
-      error: results.lighthouse?.mobile?.error,
-      fullMobile: results.lighthouse?.mobile
-    });
-
     // Check if Lighthouse failed for desktop or mobile
     const desktopFailed = results.lighthouse?.desktop?.failed || false;
     const mobileFailed = results.lighthouse?.mobile?.failed || false;
@@ -1163,7 +1032,6 @@
     const mobileEstimated = results.lighthouse?.mobile?.estimated || false;
 
     if (desktopFailed) {
-      console.warn('⚠️ Desktop Lighthouse analysis failed:', results.lighthouse?.desktop?.error);
       if (desktopEstimated) {
         console.info('ℹ️ Using estimated scores for desktop');
       }
@@ -1172,7 +1040,6 @@
       }
     }
     if (mobileFailed) {
-      console.warn('⚠️ Mobile Lighthouse analysis failed:', results.lighthouse?.mobile?.error);
       if (mobileEstimated) {
         console.info('ℹ️ Using estimated scores for mobile');
       }
@@ -1190,8 +1057,6 @@
       results.lighthouse?.mobile?.score ||
       0
     );
-
-    console.log('T Calculated Performance Scores - Desktop:', desktopPerf, 'Mobile:', mobilePerf);
     let overallScore = 0;
 
     // Try alternative performance data sources
@@ -1209,23 +1074,16 @@
       else if (loadTime < 3000) overallScore = 60;
       else if (loadTime < 5000) overallScore = 40;
       else overallScore = 20;
-      console.log('T Generated performance score from load time:', overallScore);
     } else {
       // Use demo values if no real data
       overallScore = 85;
-      console.log('T Using demo performance score:', overallScore);
     }
 
     const accessibility = Math.round(results.lighthouse?.desktop?.accessibility || results.lighthouse?.mobile?.accessibility || 92);
     const seo = Math.round(results.lighthouse?.desktop?.seo || results.lighthouse?.mobile?.seo || 88);
-    
-    console.log('T Calculated scores - Performance:', overallScore, 'Accessibility:', accessibility, 'SEO:', seo);
-    
     // Improved best practices score calculation with better debugging
     let compliance = 0;
-    console.log('S Best Practices Debug - Full Results:', {
-      hasBestPractices: !!results.bestPractices,
-      bestPracticesKeys: results.bestPractices ? Object.keys(results.bestPractices) : 'none',
+     : 'none',
       bestPracticesScore: results.bestPractices?.score,
       bestPracticesFull: results.bestPractices,
       lighthouseDesktopBP: results.lighthouse?.desktop?.bestPractices,
@@ -1237,19 +1095,14 @@
     // Try multiple paths to get the best practices score
     if (results.bestPractices?.score !== undefined && results.bestPractices.score !== null) {
       compliance = Math.round(results.bestPractices.score);
-      console.log('✓ Using results.bestPractices.score:', compliance);
     } else if (results.lighthouse?.desktop?.bestPractices !== undefined) {
       compliance = Math.round(results.lighthouse.desktop.bestPractices);
-      console.log('✓ Using lighthouse.desktop.bestPractices:', compliance);
     } else if (results.lighthouse?.mobile?.bestPractices !== undefined) {
       compliance = Math.round(results.lighthouse.mobile.bestPractices);
-      console.log('✓ Using lighthouse.mobile.bestPractices:', compliance);
     } else if (results.lighthouse?.desktop?.['best-practices'] !== undefined) {
       compliance = Math.round(results.lighthouse.desktop['best-practices'] * 100);
-      console.log('✓ Using lighthouse.desktop.best-practices:', compliance);
     } else if (results.lighthouse?.mobile?.['best-practices'] !== undefined) {
       compliance = Math.round(results.lighthouse.mobile['best-practices'] * 100);
-      console.log('✓ Using lighthouse.mobile.best-practices:', compliance);
     } else {
       // Generate a reasonable best practices score based on available data
       const fontCount = results.fonts?.totalFonts || results.fonts?.fonts?.length || 0;
@@ -1257,13 +1110,11 @@
       else if (fontCount <= 5) compliance = 75;
       else if (fontCount <= 8) compliance = 60;
       else compliance = 45;
-      console.log('T Generated best practices score based on font count:', fontCount, '=> Score:', compliance);
     }
     
     // Final safeguard - if still 0, use a reasonable default
     if (compliance === 0) {
       compliance = 70;
-      console.log('~ Best practices score was 0, using default:', compliance);
     }
     
     const loadTime = results.performance?.loadTime || 0;
@@ -1369,8 +1220,6 @@
   }
 
   createScoreBreakdown(scoringBreakdown, overallScore, grade) {
-    console.log('C Creating score breakdown visualization:', scoringBreakdown);
-    
     const section = document.createElement('div');
     section.className = 'section score-breakdown';
     
@@ -1563,16 +1412,16 @@
       'Font Subsetting': `<div class="action-code">Subset fonts:<br><code>pyftsubset font.ttf<br>  --unicodes="U+0020-007F"<br>  --output-file="font-subset.woff2"</code></div>`,
       'Font Compression': `<div class="action-code">Enable server compression:<br><code># .htaccess<br>&lt;IfModule mod_deflate.c&gt;<br>  AddType font/woff2 .woff2<br>&lt;/IfModule&gt;</code></div>`,
       'Font Fallback Strategy': `<div class="action-code">Match metrics:<br><code>font-family: 'CustomFont',<br>  'Arial', 'Helvetica', sans-serif;<br>font-size-adjust: 0.5;</code></div>`,
-      'Fallback Testing': `<div class="action-code">Test scenarios:<br><code>// Simulate font failure<br>document.fonts.ready.then(() => {<br>  console.log('Fonts loaded');<br>});</code></div>`,
+      'Fallback Testing': `<div class="action-code">Test scenarios:<br><code>// Simulate font failure<br>document.fonts.ready.then(() => {<br>  <br>});</code></div>`,
       'Font Stack Optimization': `<div class="action-code">Optimize order:<br><code>font-family:<br>  'WebFont',     /* Custom */<br>  'system-ui',   /* System */<br>  sans-serif;    /* Generic */</code></div>`,
       'Minimum Font Size': `<div class="action-code">Set minimum sizes:<br><code>body { font-size: 16px; }<br>@media (max-width: 768px) {<br>  body { font-size: 18px; }<br>}</code></div>`,
       'Color Contrast': `<div class="action-code">Improve contrast:<br><code>/* WCAG AA compliant */<br>color: #000000; /* 21:1 ratio */<br>background: #ffffff;</code></div>`,
       'Dyslexia-Friendly Fonts': `<div class="action-code">Add accessible options:<br><code>/* User preference */<br>@media (prefers-reduced-motion) {<br>  font-family: 'OpenDyslexic', Arial;<br>}</code></div>`,
       'Variable Fonts': `<div class="action-code">Implement variable fonts:<br><code>@font-face {<br>  font-family: 'VarFont';<br>  src: url('font.woff2') tech(variations);<br>  font-weight: 100 900;<br>}</code></div>`,
       'Loading Strategies': `<div class="action-code">Choose strategy:<br><code>/* Preload critical */<br>&lt;link rel="preload" href="critical.woff2"&gt;<br>/* Prefetch non-critical */<br>&lt;link rel="prefetch" href="body.woff2"&gt;</code></div>`,
-      'Core Web Vitals': `<div class="action-code">Monitor with code:<br><code>new PerformanceObserver((list) => {<br>  list.getEntries().forEach((entry) => {<br>    console.log(entry.name, entry.value);<br>  });<br>}).observe({entryTypes: ['measure']});</code></div>`,
+      'Core Web Vitals': `<div class="action-code">Monitor with code:<br><code>new PerformanceObserver((list) => {<br>  list.getEntries().forEach((entry) => {<br>    <br>  });<br>}).observe({entryTypes: ['measure']});</code></div>`,
       'Performance Monitoring': `<div class="action-code">Set up monitoring:<br><code>// Font loading performance<br>performance.mark('font-start');<br>document.fonts.ready.then(() => {<br>  performance.mark('font-end');<br>});</code></div>`,
-      'Font Usage Audits': `<div class="action-code">Audit script:<br><code>// Check unused fonts<br>document.fonts.forEach(font => {<br>  console.log(font.family, font.status);<br>});</code></div>`,
+      'Font Usage Audits': `<div class="action-code">Audit script:<br><code>// Check unused fonts<br>document.fonts.forEach(font => {<br>  <br>});</code></div>`,
       'A/B Testing': `<div class="action-code">Test implementation:<br><code>// A/B test fonts<br>const variant = Math.random() > 0.5;<br>document.body.className +=<br>  variant ? ' font-a' : ' font-b';</code></div>`,
       
       // Performance Analysis
@@ -1872,20 +1721,12 @@
 
   // Helper: Create enhanced font loading diagram with better connections and info
   createEnhancedFontLoadingDiagram(fonts) {
-    console.log('C Creating diagram with fonts:', fonts);
-    console.log('C Creating diagram - fonts type:', typeof fonts);
-    console.log('C Creating diagram - fonts keys:', Object.keys(fonts || {}));
     
     const allFonts = fonts?.fonts || [];
-    console.log('C All fonts found:', allFonts.length);
-    console.log('C Sample font:', allFonts[0]);
-    console.log('C All fonts array:', allFonts);
-    
     // If no fonts found, use fallback system fonts for demonstration
     let systemFonts, webFonts, googleFonts, iconFonts;
     
     if (allFonts.length === 0) {
-      console.log('C No fonts detected, using fallback system fonts');
       // Use fallback system fonts like Font Analysis does
       systemFonts = [
         { fontFamily: 'Times New Roman', isSystemFont: true, fontWeight: 'normal', fontStyle: 'normal' },
@@ -1909,9 +1750,6 @@
     const googleCount = googleFonts.length || 0;
     const iconCount = iconFonts.length || 0;
     const totalFonts = systemCount + webCount + googleCount + iconCount;
-    
-    console.log('C Font counts - System:', systemCount, 'Web:', webCount, 'Google:', googleCount, 'Icon:', iconCount);
-    
     // Performance metrics
     const estimatedLoadTime = (webCount * 150) + (googleCount * 200) + (iconCount * 100);
     const performanceRating = estimatedLoadTime < 300 ? 'Excellent' : estimatedLoadTime < 600 ? 'Good' : 'Needs Optimization';
@@ -2071,18 +1909,12 @@
 
   // Helper: Create loading performance insights
   createLoadingInsights(fonts) {
-    console.log('S Loading Insights - Debug fonts data:', fonts);
-    
     // Use the same pattern as Font Analysis section
     const allFonts = fonts?.fonts || [];
-    console.log('S Loading Insights - All fonts:', allFonts);
-    console.log('S Loading Insights - Fonts count:', allFonts.length);
-    
     // If no fonts found, use fallback system fonts
     let systemFonts, webFonts, googleFonts, iconFonts;
     
     if (allFonts.length === 0) {
-      console.log('S Loading Insights - Using fallback system fonts');
       systemFonts = [
         { fontFamily: 'Times New Roman', isSystemFont: true },
         { fontFamily: 'Arial, Helvetica', isSystemFont: true },
@@ -2098,11 +1930,6 @@
       googleFonts = allFonts.filter(f => f.source === 'google' || (f.url && f.url.includes('googleapis')) || f.isGoogleFont);
       iconFonts = allFonts.filter(f => f.isIconFont);
     }
-    
-    console.log('S Loading Insights - Web fonts:', webFonts.length);
-    console.log('S Loading Insights - Google fonts:', googleFonts.length);
-    console.log('S Loading Insights - System fonts:', systemFonts.length);
-    
     // Calculate realistic performance metrics
     const totalLoadTime = Math.max(100, (webFonts.length * 120) + (googleFonts.length * 180) + (systemFonts.length * 5));
     const totalSize = Math.max(15, (webFonts.length * 35) + (googleFonts.length * 28) + (systemFonts.length * 2));
@@ -2251,7 +2078,6 @@
 
   // Load detected fonts dynamically into the page so they render in previews
   loadDetectedFonts(fonts) {
-    console.log('🔤 Loading detected fonts for preview rendering...');
     const allFonts = fonts?.fonts || [];
     
     // Extract Google Fonts
@@ -2271,7 +2097,6 @@
             .split(/[\s-]+/) // Split on spaces and hyphens
             .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
             .join(' ');
-          console.log(`🔤 Normalized font name: "${f.fontFamily || f.name}" → "${fontName}"`);
           // Encode font name for URL (replace spaces with +)
           return encodeURIComponent(fontName).replace(/%20/g, '+');
         })
@@ -2286,17 +2111,13 @@
           link.rel = 'stylesheet';
           link.href = `https://fonts.googleapis.com/css2?family=${fontFamilies}&display=swap`;
           document.head.appendChild(link);
-          console.log('✓ Loaded Google Fonts:', fontFamilies);
-          
           // Wait a brief moment for fonts to load
           return new Promise(resolve => {
             link.onload = () => {
-              console.log('✓ Google Fonts loaded successfully');
               // Give browser a moment to apply fonts
               setTimeout(resolve, 100);
             };
             link.onerror = () => {
-              console.warn('~ Google Fonts failed to load');
               resolve(); // Continue anyway
             };
             // Timeout fallback
@@ -2640,7 +2461,6 @@
 
     // STRATEGY 1: System Fonts - Always available, no loading needed
     if (font.isSystemFont) {
-      console.log(`✓ System font detected: ${fontName}`);
       window.loadedFonts.add(fontName);
       return { loaded: true, reason: 'System font', fontName };
     }
@@ -2650,12 +2470,10 @@
         (font.url && font.url.includes('googleapis.com')) ||
         (font.url && font.url.includes('fonts.gstatic.com'))) {
       
-      console.log(`📥 Loading Google Font: ${fontName} from https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}`);
       try {
         // Check if already added to DOM
         const existingLink = document.querySelector(`link[href*="family=${fontName.replace(/ /g, '+')}"]`);
         if (existingLink) {
-          console.log(`✓ Google Font already in DOM: ${fontName}`);
           window.loadedFonts.add(fontName);
           return { loaded: true, reason: 'Google Font (cached)', fontName };
         }
@@ -2664,26 +2482,21 @@
         link.rel = 'stylesheet';
         link.href = `https://fonts.googleapis.com/css2?family=${fontName.replace(/ /g, '+')}:wght@100;200;300;400;500;600;700;800;900&display=swap`;
         link.onerror = () => {
-          console.warn(`✗ Failed to load Google Font: ${fontName}`);
           window.failedFonts.add(fontName);
         };
         link.onload = () => {
-          console.log(`✓ Google Font stylesheet loaded: ${fontName}`);
           window.loadedFonts.add(fontName);
           
           // Wait for font to actually be ready for use
           if (document.fonts && document.fonts.load) {
             document.fonts.load(`16px "${fontName}"`).then(() => {
-              console.log(`✓ Google Font ready for use: ${fontName}`);
             }).catch(err => {
-              console.warn(`~ Font ready check failed for ${fontName}:`, err);
             });
           }
         };
         document.head.appendChild(link);
         return { loaded: true, reason: 'Google Font', fontName };
       } catch (error) {
-        console.warn(`✗ Google Font load error: ${fontName}`, error);
         window.failedFonts.add(fontName);
         return { loaded: false, reason: 'Google Font error', fontName };
       }
@@ -2701,7 +2514,6 @@
                     urlObj.hostname.includes('static.');
       
       if (isCDN) {
-        console.log(`📥 Attempting to load web font from CDN: ${fontName}`);
         try {
           const styleElement = this.getOrCreateFontStyleElement();
           const fontFaceRule = `
@@ -2717,12 +2529,10 @@
           window.loadedFonts.add(fontName);
           return { loaded: true, reason: 'CDN font', fontName };
         } catch (error) {
-          console.warn(`✗ CDN font load error: ${fontName}`, error);
           window.failedFonts.add(fontName);
           return { loaded: false, reason: 'CDN error', fontName };
         }
       } else {
-        console.log(`~  Web font from scanned domain (CORS blocked): ${fontName}`);
         window.failedFonts.add(fontName);
         return { loaded: false, reason: 'CORS blocked', fontName };
       }
@@ -2745,7 +2555,6 @@
       });
 
       if (cdnSources.length > 0) {
-        console.log(`📥 Loading web font from ${cdnSources.length} CDN sources: ${fontName}`);
         try {
           const styleElement = this.getOrCreateFontStyleElement();
           const srcList = cdnSources.map(src => {
@@ -2765,7 +2574,6 @@
           window.loadedFonts.add(fontName);
           return { loaded: true, reason: 'CDN sources', fontName };
         } catch (error) {
-          console.warn(`✗ CDN sources load error: ${fontName}`, error);
           window.failedFonts.add(fontName);
           return { loaded: false, reason: 'CDN sources error', fontName };
         }
@@ -2773,7 +2581,6 @@
     }
 
     // STRATEGY 5: Can't load - will use fallback fonts
-    console.log(`ⓘ  Using fallback fonts for: ${fontName} (web font not loadable)`);
     window.failedFonts.add(fontName);
     return { loaded: false, reason: 'No loadable source', fontName };
   }
@@ -2806,7 +2613,6 @@
       styleElement = document.createElement('style');
       styleElement.id = 'font-preview-styles';
       document.head.appendChild(styleElement);
-      console.log('* Created #font-preview-styles element');
     }
 
     // Apply immediately - no batching delay
@@ -2814,9 +2620,7 @@
     const ruleText = `.font-preview-text.${fontId} { font-family: ${fontFamily} !important; }`;
     if (!styleElement.textContent.includes(fontId)) {
       styleElement.textContent += '\n' + ruleText;
-      console.log(`✓ Added font style for ${fontId}:`, fontFamily);
     } else {
-      console.log(`⏭️ Font style already exists for ${fontId}`);
     }
   }
 
@@ -2926,8 +2730,6 @@
   }
 
   generateFallbackBestPracticesData() {
-    console.log('🔧 Generating fallback best practices data...');
-    
     // Generate realistic fallback data based on typical font analysis
     // Use fixed ranges to ensure consistent, reasonable scores
     const categories = {
@@ -2969,8 +2771,6 @@
         iconFonts: 0
       }
     };
-
-    console.log('✓ Generated fallback data:', fallbackData);
     return fallbackData;
   }
 
@@ -3204,8 +3004,6 @@
   }
 
   createBestPracticesAnalysis(bestPractices) {
-    console.log('S Best Practices data received:', bestPractices);
-    
     const section = document.createElement('div');
     section.className = 'section';
     
@@ -3214,13 +3012,7 @@
         typeof bestPractices !== 'object' || 
         !bestPractices.score && !bestPractices.overall ||
         (bestPractices.score === 0 && Object.keys(bestPractices.categories || {}).length === 0)) {
-      console.warn('~ Best Practices data is missing, invalid, or empty. Generating fallback data');
-      console.log('C Fallback triggered because:', {
-        exists: !!bestPractices,
-        type: typeof bestPractices,
-        score: bestPractices?.score,
-        overall: bestPractices?.overall,
-        categoriesCount: Object.keys(bestPractices?.categories || {}).length
+      .length
       });
       bestPractices = this.generateFallbackBestPracticesData();
     }
@@ -3230,7 +3022,6 @@
     
     // If score is still 0, force fallback data generation
     if (score === 0) {
-      console.warn('~ Score is 0, forcing fallback data generation');
       bestPractices = this.generateFallbackBestPracticesData();
       score = bestPractices.score;
     }
@@ -3238,7 +3029,6 @@
     const grade = this.getGrade(score);
     const categories = bestPractices?.categories || bestPractices?.breakdown || {};
     
-    console.log('C Final calculated values:', { score, grade, categoriesCount: Object.keys(categories).length });
     
     // Categorize scores for better organization
     const categorizedScores = {
@@ -3332,8 +3122,6 @@
   }
 
   generateCategoryScores(categories) {
-    console.log('T Generating category scores for:', categories);
-    
     const categoryMappings = {
       fontDisplay: 'Font Display Strategy',
       fontLoading: 'Font Loading Performance', 
@@ -3363,10 +3151,7 @@
       const score = typeof data === 'object' ? (data.percentage || data.score || 0) : (data || 0);
       const status = score >= 80 ? '✓ PASS' : score >= 60 ? '~ WARN' : '✗ FAIL';
       html += `<p>${name}: ${score}% ${status}</p>`;
-      console.log(`U Category: ${name}, Score: ${score}%, Status: ${status}`);
     });
-
-    console.log('✓ Generated category scores HTML:', html);
     return html || '<p>Category analysis in progress...</p>';
   }
 
@@ -4008,23 +3793,15 @@
   }
 
   createAccessibilityWCAG(fonts, results) {
-    console.log('T Creating Accessibility + WCAG section with fonts:', fonts, 'results:', results);
-    
     try {
       const section = document.createElement('div');
       section.className = 'section';
       
       // Calculate accessibility metrics
       const fontsArray = fonts || [];
-      console.log('C Calculating accessibility score...');
       const accessibilityScore = this.calculateAccessibilityScore(fontsArray, results);
-      console.log('C Accessibility score calculated:', accessibilityScore);
-      
       // Generate contrast analysis data
-      console.log('Y Generating contrast pairs...');
       const contrastPairs = this.generateContrastPairs();
-      console.log('Y Contrast pairs generated:', contrastPairs);
-
       section.innerHTML = `
         <div class="accessibility-wcag-analysis">
           <div class="score-section" style="margin-bottom: 2rem;">
@@ -4097,11 +3874,7 @@
           </div>
         </div>
       `;
-      
-      console.log('✓ Accessibility + WCAG section HTML created successfully');
       this.resultsContainer.appendChild(section);
-      console.log('✓ Accessibility + WCAG section appended to container');
-      
     } catch (error) {
       console.error('✗ Error creating Accessibility + WCAG section:', error);
       
@@ -4774,8 +4547,6 @@
       }
       
       // Debug logging
-      console.log(`Y Font Preview: "${cleanFontName}" → font-family: ${fullFontFamily}`);
-
       // Enhanced contrast analysis and color forcing
       const backgroundColor = pair.bg;
       const isLightBackground = this.isLightColor(backgroundColor);
@@ -4790,7 +4561,6 @@
 
       // Calculate actual contrast ratio for validation
       const actualContrast = this.calculateContrastRatio(enforcedTextColor, backgroundColor);
-      console.log(`Y Font: ${cleanFontName}, BG: ${backgroundColor}, Text: ${enforcedTextColor}, Contrast: ${actualContrast.toFixed(2)}:1`);
 
       return `
         <div style="margin: 1rem 0; padding: 1rem; border: 1px solid #333; background: #0a0a0a;">
@@ -4985,20 +4755,12 @@
   }
 
   createFontLoadingArchitecture(fonts) {
-    console.log('S DEBUG Font Loading Architecture received fonts:', fonts);
-    console.log('S DEBUG Font Loading Architecture fonts type:', typeof fonts);
-    console.log('S DEBUG Font Loading Architecture fonts keys:', Object.keys(fonts || {}));
-    console.log('S DEBUG Font Loading Architecture fonts.fonts:', fonts?.fonts);
-    console.log('S DEBUG Font Loading Architecture fonts length:', fonts?.fonts?.length);
-    console.log('S DEBUG Font Loading Architecture fonts structure (first 1000 chars):', JSON.stringify(fonts, null, 2).substring(0, 1000));
     
     const section = document.createElement('div');
     section.className = 'section';
     
     try {
       const diagramHTML = this.createEnhancedFontLoadingDiagram(fonts);
-      console.log('✓ Debug: Diagram HTML generated successfully');
-      
       section.innerHTML = `
         <div class="font-loading-architecture">
           <div class="architecture-intro">
@@ -5035,10 +4797,6 @@
   }
 
   createCSSExamples(fonts) {
-    console.log('S CSS Examples - Debug fonts data (FULL):', fonts);
-    console.log('S CSS Examples - Type of fonts:', typeof fonts);
-    console.log('S CSS Examples - Is Array:', Array.isArray(fonts));
-    console.log('S CSS Examples - Object keys:', fonts ? Object.keys(fonts) : 'null/undefined');
     
     const section = document.createElement('div');
     section.className = 'section';
@@ -5074,7 +4832,6 @@
         for (const [key, value] of Object.entries(obj)) {
           const currentPath = path ? `${path}.${key}` : key;
           if (Array.isArray(value) && value.length > 0) {
-            console.log(`S Found array at ${currentPath}:`, value);
             // Check if it looks like fonts
             if (value.some(item => typeof item === 'string' || (item && (item.fontFamily || item.family || item.name)))) {
               return { array: value, path: currentPath };
@@ -5093,24 +4850,16 @@
         dataSource = foundFonts.path;
       }
     }
-    
-    console.log('S CSS Examples - Data source:', dataSource);
-    console.log('S CSS Examples - All fonts:', allFonts);
-    console.log('S CSS Examples - Fonts length:', allFonts.length);
-
     let cssExamples = '';
 
     if (allFonts.length === 0 && fonts?.categorizedFonts) {
       // Handle categorized fonts structure
-      console.log('S CSS Examples - Using categorized fonts:', fonts.categorizedFonts);
       cssExamples = this.generateCSSExamplesFromCategorized(fonts.categorizedFonts);
     } else if (allFonts.length > 0) {
       // Handle regular fonts array
-      console.log('S CSS Examples - Using fonts array, length:', allFonts.length);
       cssExamples = this.generateCSSExamplesFromArray(allFonts);
     } else {
       // No fonts found
-      console.log('S CSS Examples - No fonts found, showing fallback message');
       cssExamples = `
         <div style="padding: 2rem; text-align: center; color: #666;">
           <h3>D No Font Declarations Detected</h3>
@@ -5185,7 +4934,6 @@ body {
   }
 
   generateCSSExamplesFromArray(fontsArray) {
-    console.log('S Generating CSS from array:', fontsArray);
     let cssExamples = '';
 
     fontsArray.forEach((font, index) => {
@@ -5234,7 +4982,6 @@ body {
   }
 
   generateCSSExamplesFromCategorized(categorized) {
-    console.log('S Generating CSS from categorized:', categorized);
     let cssExamples = '';
 
     // Handle system fonts
@@ -5696,18 +5443,9 @@ body {
   }
 
   createDownloadReport(pdfPath) {
-    const section = document.createElement('div');
-    section.className = 'section';
-    section.innerHTML = `
-      <h2>[DOWNLOAD_REPORT]</h2>
-      <p>>> detailed PDF report ready for download</p>
-      <button onclick="window.open('${pdfPath}', '_blank')" 
-              style="background: #333; color: white; border: 1px solid #666; padding: 1rem 2rem; margin-top: 1rem; cursor: pointer;">
-        DOWNLOAD_PDF
-      </button>
-    `;
-    
-    this.resultsContainer.appendChild(section);
+    // PDF download button removed site-wide.
+    // Keep this method to avoid breaking older scan flows that still return `pdfPath`.
+    void pdfPath;
   }
 
   getGrade(score) {
@@ -5743,8 +5481,6 @@ body {
 
 // Initialize the app when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('→ FontScannerApp initializing...');
-  
   // NOTE: Theme toggle is now handled by nav-template.js
   // Removed duplicate theme toggle code to prevent conflicts
   

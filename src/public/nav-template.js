@@ -72,6 +72,12 @@ const CATEGORIES = {
     label: 'Competitive Insights',
     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>',
     description: 'Competitor benchmarks and comparisons'
+  },
+  help: {
+    id: 'help',
+    label: 'Help',
+    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.82 1c0 2-3 2-3 4"/><path d="M12 17h.01"/></svg>',
+    description: 'FAQs and troubleshooting'
   }
 };
 
@@ -254,6 +260,16 @@ const ALL_DIAGNOSTICS = [
     tier: 'pro',
     primary: true,
     description: 'Compare against competitors'
+  },
+
+  // --- I. HELP ---
+  {
+    href: '/faq.html',
+    label: 'FAQ',
+    id: 'faq',
+    category: 'help',
+    tier: 'free',
+    description: 'Scans, paid reports, and troubleshooting'
   }
 ];
 
@@ -281,31 +297,69 @@ const NAV_CONFIG = ALL_DIAGNOSTICS
 const MORE_DIAGNOSTICS_CONFIG = ALL_DIAGNOSTICS
   .filter(d => !d.primary || d.tier === 'pro')
   .map(d => {
-    const badge = (d.tier && d.tier.toLowerCase() === 'pro') ? 'Saves time' : null;
-    // Debug logging to track badge assignments
-    if (badge) {
-      console.log(`✓ Badge assigned to ${d.label}: "${badge}" (tier: ${d.tier})`);
-    }
     return {
       href: d.href,
       icon: CATEGORIES[d.category]?.icon || '',
       label: d.label,
       id: d.id,
-      // Paid items get a value badge - explicitly check tier value
-      badge: badge,
+      badge: null, // Removed "Saves time" badges
       category: d.category,
       stage: 2
     };
   });
 
-// Helper: Get diagnostics by category
-function getDiagnosticsByCategory(categoryId) {
-  return ALL_DIAGNOSTICS.filter(d => d.category === categoryId);
-}
-
 // Helper: Get category info
 function getCategoryInfo(categoryId) {
   return CATEGORIES[categoryId] || null;
+}
+
+/**
+ * Render breadcrumb trail: Home > Section > Tool
+ * - Home always links to dashboard
+ * - Section is the tool category (when available)
+ * - Tool is the current page label
+ */
+function renderBreadcrumb(activePageId) {
+  const currentUrl = new URLSearchParams(window.location.search).get('url');
+
+  const activeItem =
+    NAV_CONFIG.find(item => item.id === activePageId) ||
+    MORE_DIAGNOSTICS_CONFIG.find(item => item.id === activePageId) ||
+    null;
+
+  if (!activeItem) return '';
+
+  const category = activeItem.category ? getCategoryInfo(activeItem.category) : null;
+  const parts = [];
+
+  parts.push(`<a href="/dashboard.html" data-i18n="breadcrumb.home">Home</a>`);
+
+  // Only show Section when we have a category and we're not on a top-level page.
+  if (category && activePageId !== 'dashboard') {
+    parts.push(`<span class="breadcrumb-separator" aria-hidden="true">›</span>`);
+    parts.push(`<span class="breadcrumb-section">${category.label}</span>`);
+  }
+
+  // Current page
+  const isDashboard = activePageId === 'dashboard';
+  if (!isDashboard) {
+    parts.push(`<span class="breadcrumb-separator" aria-hidden="true">›</span>`);
+    parts.push(`<span class="breadcrumb-current" aria-current="page">${activeItem.label}</span>`);
+  } else {
+    parts.push(`<span class="breadcrumb-separator" aria-hidden="true">›</span>`);
+    parts.push(`<span class="breadcrumb-current" aria-current="page">Dashboard</span>`);
+  }
+
+  // If we have a url context, expose it for screen readers without adding UI noise.
+  const contextNote = currentUrl ? ` <span class="breadcrumb-context" aria-label="Current site context">(${currentUrl})</span>` : '';
+
+  return `
+    <div class="breadcrumb-bar" role="navigation" aria-label="Breadcrumb">
+      <div class="breadcrumb-container">
+        <div class="breadcrumb">${parts.join('')}${contextNote}</div>
+      </div>
+    </div>
+  `;
 }
 
 /**
@@ -315,12 +369,16 @@ function getCategoryInfo(categoryId) {
  * @returns {string} HTML string for the unified header
  */
 function renderUnifiedHeader(appTitle, subtitle) {
+  // Cache-bust logo assets so updates show immediately without relying on hard refresh.
+  const logoAssetVersion = '20260112.2';
+
   return `
     <div class="unified-header">
       <!-- Hamburger Menu Button (Mobile Only) -->
       <button 
         class="hamburger-btn" 
         id="hamburgerBtn"
+        type="button"
         aria-label="Toggle navigation menu"
         aria-expanded="false"
         aria-controls="mobileNav"
@@ -330,10 +388,13 @@ function renderUnifiedHeader(appTitle, subtitle) {
         <span class="hamburger-line"></span>
       </button>
       
-      <!-- Center: App Title and Subtitle -->
+      <!-- Center: App Logo and Subtitle -->
       <div class="unified-header-center">
-        <h1 class="app-title" data-i18n="app.name">${appTitle}</h1>
-        <p class="app-subtitle" data-i18n="app.tagline">${subtitle}</p>
+        <a href="/" class="app-logo-link" aria-label="Site Mechanic Home">
+          <img src="/assets/logo-dark.svg?v=${logoAssetVersion}" alt="Site Mechanic" class="app-logo app-logo-dark" />
+          <img src="/assets/logo-light.svg?v=${logoAssetVersion}" alt="Site Mechanic" class="app-logo app-logo-light" />
+        </a>
+        <div class="app-subtitle" data-i18n="app.tagline">${subtitle}</div>
       </div>
       
       <!-- Right: Auth + Language Selector + Theme Toggle -->
@@ -343,6 +404,7 @@ function renderUnifiedHeader(appTitle, subtitle) {
         <button
           id="headerThemeToggle"
           class="header-theme-toggle"
+          type="button"
           aria-label="Toggle dark/light theme"
           aria-pressed="false"
         >
@@ -407,8 +469,8 @@ function addScanContextStyles() {
   style.id = 'scanContextStyles';
   style.textContent = `
     .scan-context-bar {
-      background: linear-gradient(135deg, rgba(0, 255, 65, 0.08) 0%, rgba(0, 255, 65, 0.03) 100%);
-      border-bottom: 1px solid rgba(0, 255, 65, 0.2);
+      background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.08) 0%, rgba(var(--accent-primary-rgb), 0.03) 100%);
+      border-bottom: 1px solid rgba(var(--accent-primary-rgb), 0.2);
       padding: 0.5rem 1rem;
     }
     .scan-context-content {
@@ -431,7 +493,7 @@ function addScanContextStyles() {
       font-size: 0.85rem;
     }
     .scan-context-domain {
-      color: #00ff41;
+      color: var(--accent-primary);
       font-weight: 600;
       font-size: 0.9rem;
     }
@@ -466,13 +528,13 @@ function addScanContextStyles() {
       color: #fff;
     }
     .scan-context-btn-primary {
-      background: rgba(0, 255, 65, 0.1);
-      border-color: rgba(0, 255, 65, 0.3);
-      color: #00ff41;
+      background: rgba(var(--accent-primary-rgb), 0.1);
+      border-color: rgba(var(--accent-primary-rgb), 0.3);
+      color: var(--accent-primary);
     }
     .scan-context-btn-primary:hover {
-      background: rgba(0, 255, 65, 0.2);
-      border-color: rgba(0, 255, 65, 0.5);
+      background: rgba(var(--accent-primary-rgb), 0.2);
+      border-color: rgba(var(--accent-primary-rgb), 0.5);
     }
     @media (max-width: 600px) {
       .scan-context-content {
@@ -555,7 +617,7 @@ function renderNavigation(activePageId) {
   const navItems = NAV_CONFIG.map(item => generateNavLink(item)).join('');
 
   // Generate dropdown items grouped by category
-  const categoryOrder = ['performance', 'seo', 'accessibility', 'security', 'technology', 'infrastructure', 'competitive'];
+  const categoryOrder = ['performance', 'seo', 'accessibility', 'security', 'technology', 'infrastructure', 'competitive', 'help'];
   
   const generateCategoryGroup = (categoryId) => {
     const category = CATEGORIES[categoryId];
@@ -645,7 +707,7 @@ function renderNavigation(activePageId) {
         ${navItems}
         <!-- Extended Diagnostics Dropdown -->
         <div class="nav-dropdown">
-          <button class="nav-link nav-dropdown-trigger ${isDropdownActive ? 'active' : ''}" aria-expanded="false" aria-haspopup="true">
+          <button type="button" class="nav-link nav-dropdown-trigger ${isDropdownActive ? 'active' : ''}" aria-expanded="false" aria-haspopup="true">
             <span class="nav-icon">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="12" cy="12" r="1"/><circle cx="12" cy="5" r="1"/><circle cx="12" cy="19" r="1"/>
@@ -714,13 +776,16 @@ let navInitialized = false;
 function initializeNavigation(customActivePageId, customAppTitle, customSubtitle) {
   // Prevent double initialization
   if (navInitialized) {
-    console.log('Navigation already initialized, skipping...');
     return;
   }
   navInitialized = true;
 
   // Remove any leftover merge conflict artifacts that may be rendered on the page
-  removeMergeConflictArtifacts();
+  // (defensive: never let this block header/nav rendering)
+  try {
+    removeMergeConflictArtifacts();
+  } catch (e) {
+  }
 
   // If custom values provided, use them; otherwise auto-detect from URL
   let activePageId, appTitle, subtitle;
@@ -754,6 +819,10 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
       activePageId = 'performance-hub';
       appTitle = 'SITE MECHANIC';
       subtitle = '> performance / core web vitals';
+    } else if (path.includes('faq')) {
+      activePageId = 'faq';
+      appTitle = 'SITE MECHANIC';
+      subtitle = '> help / faq';
     } else if (path.includes('competitive-analysis')) {
       activePageId = 'competitive-analysis';
       appTitle = 'SITE MECHANIC';
@@ -825,7 +894,7 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
   // Find the nav placeholder and inject unified header + navigation
   const navPlaceholder = document.getElementById('nav-placeholder');
   if (navPlaceholder) {
-    navPlaceholder.innerHTML = renderUnifiedHeader(appTitle, subtitle) + renderNavigation(activePageId);
+    navPlaceholder.innerHTML = renderUnifiedHeader(appTitle, subtitle) + renderNavigation(activePageId) + renderBreadcrumb(activePageId);
   }
   
   // Initialize controls after rendering
@@ -854,18 +923,158 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
   if (window.i18n && window.i18n.translatePage) {
     window.i18n.translatePage();
   }
+
+  // Progressive enhancement: ensure legacy accordions meet a11y requirements
+  initializeGlobalAccordionA11y();
+}
+
+// =============================================================================
+// Accessibility helpers
+// =============================================================================
+
+function initializeGlobalAccordionA11y() {
+  if (window.__smAccordionA11yInitialized) return;
+  window.__smAccordionA11yInitialized = true;
+
+  let idCounter = 0;
+
+  function getPanelForHeader(headerEl) {
+    if (!headerEl) return null;
+
+    // Most legacy accordions are: .accordion-header + next sibling content
+    const next = headerEl.nextElementSibling;
+    if (next && next.classList && (next.classList.contains('accordion-content') || next.classList.contains('accordion-body') || next.classList.contains('accordion-panel'))) {
+      return next;
+    }
+
+    // Some accordions nest content inside the item
+    const item = headerEl.closest('.accordion-item');
+    if (!item) return null;
+    return item.querySelector('.accordion-content, .accordion-body, .accordion-panel');
+  }
+
+  function isExpanded(headerEl, buttonEl, panelEl) {
+    const item = headerEl && headerEl.closest ? headerEl.closest('.accordion-item') : null;
+    if (item && item.classList && item.classList.contains('open')) return true;
+    if (headerEl && headerEl.classList && headerEl.classList.contains('active')) return true;
+    if (buttonEl && buttonEl.classList && buttonEl.classList.contains('active')) return true;
+
+    if (panelEl && panelEl.classList && (panelEl.classList.contains('expanded') || panelEl.classList.contains('open'))) return true;
+    if (panelEl && typeof panelEl.getAttribute === 'function' && panelEl.getAttribute('aria-hidden') === 'false') return true;
+    if (panelEl && panelEl.style && typeof panelEl.style.maxHeight === 'string') {
+      const mh = panelEl.style.maxHeight.trim();
+      if (mh && mh !== '0px' && mh !== '0') return true;
+    }
+    return false;
+  }
+
+  function ensureIds(buttonEl, panelEl) {
+    idCounter += 1;
+    if (buttonEl && !buttonEl.id) buttonEl.id = `sm-accordion-header-${idCounter}`;
+    if (panelEl && !panelEl.id) panelEl.id = `sm-accordion-panel-${idCounter}`;
+  }
+
+  function syncAria(headerEl) {
+    if (!headerEl) return;
+
+    const panelEl = getPanelForHeader(headerEl);
+    const buttonEl = (headerEl.tagName === 'BUTTON')
+      ? headerEl
+      : headerEl.querySelector('button.accordion-header__button');
+
+    if (!buttonEl || !panelEl) return;
+
+    ensureIds(buttonEl, panelEl);
+
+    buttonEl.setAttribute('type', 'button');
+    buttonEl.setAttribute('aria-controls', panelEl.id);
+    buttonEl.setAttribute('aria-expanded', String(isExpanded(headerEl, buttonEl, panelEl)));
+
+    if (!panelEl.getAttribute('role')) panelEl.setAttribute('role', 'region');
+    panelEl.setAttribute('aria-labelledby', buttonEl.id);
+  }
+
+  function upgradeHeader(headerEl) {
+    if (!headerEl) return;
+
+    // If the header itself is already a <button>, just wire ARIA
+    if (headerEl.tagName === 'BUTTON') {
+      headerEl.setAttribute('data-sm-accordion-button', 'true');
+      syncAria(headerEl);
+      return;
+    }
+
+    // If we've already injected a button, just wire ARIA
+    const existingButton = headerEl.querySelector('button.accordion-header__button');
+    if (existingButton) {
+      existingButton.setAttribute('data-sm-accordion-button', 'true');
+      syncAria(headerEl);
+      return;
+    }
+
+    // Inject a real <button> while preserving existing click handlers on the container
+    const buttonEl = document.createElement('button');
+    buttonEl.type = 'button';
+    buttonEl.className = 'accordion-header__button';
+    buttonEl.setAttribute('data-sm-accordion-button', 'true');
+
+    // Move existing children into the button
+    while (headerEl.firstChild) {
+      buttonEl.appendChild(headerEl.firstChild);
+    }
+    headerEl.appendChild(buttonEl);
+
+    syncAria(headerEl);
+  }
+
+  function upgradeAllAccordions(root = document) {
+    const headers = root.querySelectorAll ? root.querySelectorAll('.accordion-header') : [];
+    headers.forEach(upgradeHeader);
+  }
+
+  // Keep aria-expanded in sync with legacy open/close implementations
+  document.addEventListener('click', (e) => {
+    const btn = e.target.closest('button.accordion-header__button, button.accordion-header, [data-sm-accordion-button]');
+    if (!btn) return;
+    const headerEl = btn.classList.contains('accordion-header') ? btn : btn.closest('.accordion-header');
+    if (!headerEl) return;
+    // Let the page's existing toggle logic run first, then sync
+    window.requestAnimationFrame(() => syncAria(headerEl));
+  });
+
+  // Initial pass
+  upgradeAllAccordions(document);
+
+  // Upgrade dynamically rendered accordions (many pages render results after scan)
+  let debounceHandle = null;
+  const observer = new MutationObserver(() => {
+    if (debounceHandle) return;
+    debounceHandle = window.setTimeout(() => {
+      debounceHandle = null;
+      upgradeAllAccordions(document);
+    }, 50);
+  });
+
+  if (document.body) {
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
 }
 
 /**
  * Strip merge conflict markers that might appear on legacy deployments
  */
 function removeMergeConflictArtifacts() {
+  if (!document || !document.body) return;
+
   const conflictRegex = /<<<<<<< HEAD[\s\S]*?>>>>>>>[ \t]*[0-9a-f]+/gi;
   const additionalPhrases = [
     'Updated deployment scripts and server files'
   ];
 
-  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const showText = (typeof NodeFilter !== 'undefined' && NodeFilter && NodeFilter.SHOW_TEXT)
+    ? NodeFilter.SHOW_TEXT
+    : 4; // NodeFilter.SHOW_TEXT
+  const walker = document.createTreeWalker(document.body, showText);
   const nodesToClean = [];
 
   while (walker.nextNode()) {
@@ -898,12 +1107,8 @@ function initializeDropdownMenu() {
   const menu = document.querySelector('.nav-dropdown-menu');
   
   if (!dropdown || !trigger || !menu) {
-    console.warn('Dropdown elements not found:', { dropdown: !!dropdown, trigger: !!trigger, menu: !!menu });
     return;
   }
-  
-  console.log('Dropdown initialized');
-  
   // Toggle dropdown on trigger click
   trigger.addEventListener('click', (e) => {
     e.preventDefault();
@@ -913,7 +1118,6 @@ function initializeDropdownMenu() {
     dropdown.classList.toggle('open');
     trigger.setAttribute('aria-expanded', !isOpen);
     
-    console.log('Dropdown clicked, now:', dropdown.classList.contains('open') ? 'OPEN' : 'CLOSED');
   });
   
   // Close dropdown when clicking outside
@@ -922,7 +1126,6 @@ function initializeDropdownMenu() {
       if (dropdown.classList.contains('open') && 
           !trigger.contains(e.target) && 
           !menu.contains(e.target)) {
-        console.log('Closing dropdown - clicked outside');
         dropdown.classList.remove('open');
         trigger.setAttribute('aria-expanded', 'false');
       }
@@ -1016,7 +1219,6 @@ function initializeHeaderLanguageSwitcher() {
   const container = document.getElementById('languageSelectorContainer');
   if (container && window.languageSwitcher && !window.languageSwitcher.initialized) {
     window.languageSwitcher.init('#languageSelectorContainer');
-    console.log('✓ Language switcher initialized in header');
   }
 }
 
@@ -1029,7 +1231,6 @@ function initializeAuthLinks() {
 
   // Check if pro-utils.js is loaded
   if (typeof window.proManager === 'undefined') {
-    console.warn('ProManager not loaded, auth links disabled');
     return;
   }
 
@@ -1167,6 +1368,7 @@ function ensureGlobalFooter() {
             Site Mechanic by <strong>Peter Freedman</strong> |
             <span style="opacity: 0.7;">v${data.build}</span> |
             Web optimization & development services |
+            <a href="/faq.html" class="site-footer-link">FAQ</a> |
             <a href="mailto:peter@sitemechanic.io" class="site-footer-link">peter@sitemechanic.io</a>
           </span>
           <button
@@ -1192,6 +1394,7 @@ function ensureGlobalFooter() {
           <span class="footer-text">
             Site Mechanic by <strong>Peter Freedman</strong> |
             Web optimization & development services |
+            <a href="/faq.html" class="site-footer-link">FAQ</a> |
             <a href="mailto:peter@sitemechanic.io" class="site-footer-link">peter@sitemechanic.io</a>
           </span>
           <button
@@ -1216,31 +1419,17 @@ function ensureGlobalFooter() {
  * Initialize hamburger menu functionality for mobile
  */
 function initializeHamburgerMenu() {
-  console.log('🍔 Initializing hamburger menu...');
-  
   const hamburgerBtn = document.getElementById('hamburgerBtn');
   const mobileNav = document.getElementById('mobileNav');
   const mobileNavOverlay = document.getElementById('mobileNavOverlay');
   const mobileNavClose = document.getElementById('mobileNavClose');
   const body = document.body;
-  
-  console.log('🍔 Elements found:', {
-    hamburgerBtn: !!hamburgerBtn,
-    mobileNav: !!mobileNav,
-    mobileNavOverlay: !!mobileNavOverlay,
-    mobileNavClose: !!mobileNavClose
-  });
-  
   if (!hamburgerBtn || !mobileNav || !mobileNavOverlay) {
     console.error('✗ Hamburger menu elements not found!');
     return;
   }
-  
-  console.log('✓ All hamburger menu elements found, setting up event listeners...');
-  
   // Open mobile menu
   const openMenu = () => {
-    console.log('📂 Opening mobile menu...');
     mobileNav.classList.add('active');
     mobileNavOverlay.classList.add('active');
     hamburgerBtn.classList.add('active');
@@ -1250,7 +1439,6 @@ function initializeHamburgerMenu() {
   
   // Close mobile menu
   const closeMenu = () => {
-    console.log('📁 Closing mobile menu...');
     mobileNav.classList.remove('active');
     mobileNavOverlay.classList.remove('active');
     hamburgerBtn.classList.remove('active');
@@ -1259,11 +1447,7 @@ function initializeHamburgerMenu() {
   };
   
   // Toggle on hamburger button click
-  hamburgerBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    console.log('🍔 Hamburger clicked!');
-    console.log('🍔 Menu currently active?', mobileNav.classList.contains('active'));
+  hamburgerBtn.addEventListener('click', () => {
     if (mobileNav.classList.contains('active')) {
       closeMenu();
     } else {
@@ -1272,25 +1456,21 @@ function initializeHamburgerMenu() {
   });
   
   // Close on overlay click
-  mobileNavOverlay.addEventListener('click', (e) => {
-    console.log('👆 Overlay clicked');
+  mobileNavOverlay.addEventListener('click', () => {
     closeMenu();
   });
   
   // Close on close button click
   if (mobileNavClose) {
-    mobileNavClose.addEventListener('click', (e) => {
-      console.log('✗ Close button clicked');
+    mobileNavClose.addEventListener('click', () => {
       closeMenu();
     });
   }
   
   // Close on nav link click
   const mobileNavLinks = mobileNav.querySelectorAll('.nav-link');
-  console.log('K Found', mobileNavLinks.length, 'nav links in mobile menu');
   mobileNavLinks.forEach(link => {
-    link.addEventListener('click', (e) => {
-      console.log('K Nav link clicked:', link.textContent);
+    link.addEventListener('click', () => {
       closeMenu();
     });
   });
@@ -1298,7 +1478,6 @@ function initializeHamburgerMenu() {
   // Close on Escape key
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && mobileNav.classList.contains('active')) {
-      console.log('⌨️ Escape key pressed');
       closeMenu();
     }
   });
@@ -1311,12 +1490,7 @@ function initializeHamburgerMenu() {
  * Initialize collapsible sections in mobile navigation
  */
 function initializeMobileNavSections() {
-  console.log('📂 Initializing mobile nav collapsible sections...');
-
   const sectionHeaders = document.querySelectorAll('.mobile-nav-section-header');
-
-  console.log(`📂 Found ${sectionHeaders.length} collapsible sections`);
-
   sectionHeaders.forEach(header => {
     header.addEventListener('click', (e) => {
       e.preventDefault();
@@ -1339,8 +1513,6 @@ function initializeMobileNavSections() {
         itemsContainer.style.maxHeight = itemsContainer.scrollHeight + 'px';
         arrow.style.transform = 'rotate(90deg)';
       }
-
-      console.log(`📂 Section ${section.dataset.category} ${isExpanded ? 'collapsed' : 'expanded'}`);
     });
   });
 }
@@ -1349,41 +1521,26 @@ function initializeMobileNavSections() {
  * Initialize theme toggle functionality
  */
 function initializeThemeControls() {
-  console.log('Y Initializing theme controls...');
-
   const headerThemeToggle = document.getElementById('headerThemeToggle');
   const footerThemeToggle = document.getElementById('themeToggle');
   const mobileThemeToggle = document.getElementById('mobileThemeToggle');
   const body = document.body;
-
-  console.log('Y Theme toggle elements:', {
-    header: headerThemeToggle ? 'found' : 'NOT FOUND',
-    footer: footerThemeToggle ? 'found' : 'NOT FOUND',
-    mobile: mobileThemeToggle ? 'found' : 'NOT FOUND'
-  });
-  
   const currentTheme = localStorage.getItem('theme') || 'dark';
-  console.log('Y Current theme from localStorage:', currentTheme);
-  
   // Apply theme on load
   if (currentTheme === 'light') {
     body.classList.add('white-theme');
     // FORCE background with inline styles
     body.style.backgroundColor = '#ffffff';
     body.style.color = '#000000';
-    console.log('Y Applied white-theme class + inline styles on load');
   } else {
     // Dark mode - explicitly set dark colors
     body.classList.remove('white-theme');
     body.style.backgroundColor = '#000000';
     body.style.color = '#ffffff';
-    console.log('Y Applied dark theme on load');
   }
   
   const updateThemeButtons = () => {
     const isLight = body.classList.contains('white-theme');
-    console.log('Y Updating theme buttons, isLight:', isLight);
-
     // Update header theme toggle (desktop)
     if (headerThemeToggle) {
       headerThemeToggle.setAttribute('aria-pressed', isLight);
@@ -1409,10 +1566,8 @@ function initializeThemeControls() {
   };
   
   const toggleTheme = () => {
-    console.log('Y Toggle theme clicked!');
     body.classList.toggle('white-theme');
     const newTheme = body.classList.contains('white-theme') ? 'light' : 'dark';
-    console.log('Y New theme:', newTheme);
     localStorage.setItem('theme', newTheme);
     
     // FORCE background change with inline styles as fallback
@@ -1433,22 +1588,17 @@ function initializeThemeControls() {
   // Header theme toggle (desktop)
   if (headerThemeToggle) {
     headerThemeToggle.addEventListener('click', toggleTheme);
-    console.log('Y Header theme toggle click listener added');
   }
 
   // Footer theme toggle
   if (footerThemeToggle) {
     footerThemeToggle.addEventListener('click', toggleTheme);
-    console.log('Y Footer theme toggle click listener added');
   }
 
   // Mobile theme toggle
   if (mobileThemeToggle) {
     mobileThemeToggle.addEventListener('click', toggleTheme);
-    console.log('Y Mobile theme toggle click listener added');
   }
-
-  console.log('Y Theme controls initialization complete');
 }
 
 // Auto-initialize on DOM ready

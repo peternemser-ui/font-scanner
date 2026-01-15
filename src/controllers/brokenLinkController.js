@@ -7,6 +7,12 @@ const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { validateUrl, sanitizeUrl, normalizeUrl, testUrlReachability } = require('../utils/validators');
 const { createLogger } = require('../utils/logger');
 
+const {
+  getAnalyzerKeyOverride,
+  buildReportMetadata,
+  attachReportMetadata
+} = require('../utils/controllerHelpers');
+
 const logger = createLogger('BrokenLinkController');
 
 /**
@@ -46,6 +52,10 @@ const checkBrokenLinks = asyncHandler(async (req, res) => {
   if (followExternal !== undefined) options.followExternal = Boolean(followExternal);
 
   const results = await brokenLinkService.checkLinks(normalized, options);
+  // Attach report metadata (reportId, screenshotUrl, timestamps)
+  const analyzerKey = getAnalyzerKeyOverride(req, 'broken-links');
+  const metadata = await buildReportMetadata({ req, results, url: normalized, analyzerKey });
+  attachReportMetadata(results, metadata);
 
   logger.info(`Broken link check completed`, {
     requestId: req.id,

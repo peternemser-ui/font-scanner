@@ -6,6 +6,7 @@
 
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
+const { formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('GDPRComplianceService');
 
@@ -341,7 +342,7 @@ class GDPRComplianceService {
         consentQuality,
         recommendations: this.generateRecommendations(results),
         risks: this.identifyRisks(results),
-        analysisTime: ((Date.now() - startTime) / 1000).toFixed(2)
+        analysisTime: formatDuration(Date.now() - startTime, 2)
       };
 
     } catch (error) {

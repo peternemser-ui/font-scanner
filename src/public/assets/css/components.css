@@ -1,0 +1,19 @@
+/* Site Mechanic - Shared Components
+ * Aggregates the report UI building blocks needed by analyzer pages.
+ */
+
+@import url('/layout.css');
+@import url('/components.css');
+@import url('/ui.css');
+
+/* Report shell + accordions */
+@import url('/css/components/reportShell.css');
+@import url('/css/components/reportAccordion.css');
+
+/* Monetization UI */
+@import url('/css/components/pro-report-block.css');
+@import url('/css/components/pricing-modal.css');
+@import url('/css/components/modal.css');
+
+/* Screenshot viewer */
+@import url('/css/components/screenshot-lightbox.css');

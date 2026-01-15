@@ -1,6 +1,10 @@
 const ipReputationService = require('../services/ipReputationService');
 const { asyncHandler } = require('../utils/errorHandler');
 const { createLogger } = require('../utils/logger');
+const { getRequestScanStartedAt, attachScanStartedAt } = require('../utils/scanTimestamp');
+const { makeReportId } = require('../utils/reportId');
+const { ensureReportScreenshot } = require('../utils/reportScreenshot');
+const { getAnalyzerKeyOverride } = require('../utils/controllerHelpers');
 
 const logger = createLogger('IPReputationController');
 
@@ -30,6 +34,17 @@ exports.analyzeIPReputation = asyncHandler(async (req, res) => {
   try {
     // Perform comprehensive reputation analysis
     const results = await ipReputationService.analyzeReputation(normalizedInput);
+    const startedAt = getRequestScanStartedAt(req) || new Date().toISOString();
+    const analyzerKey = getAnalyzerKeyOverride(req, 'ip-reputation');
+    const reportId = makeReportId({ analyzerKey, normalizedUrl: normalizedInput, startedAtISO: startedAt });
+    // Screenshot is only meaningful for domains/URLs; skip for plain IPs.
+    const screenshotUrl = /^\d{1,3}(?:\.\d{1,3}){3}$/.test(normalizedInput)
+      ? null
+      : (reportId ? await ensureReportScreenshot({ url: normalizedInput.startsWith('http') ? normalizedInput : `https://${normalizedInput}`, reportId, requestId: req.id }) : null);
+
+    attachScanStartedAt(results, startedAt);
+    if (reportId) results.reportId = reportId;
+    if (screenshotUrl) results.screenshotUrl = screenshotUrl;
 
     logger.info('IP/domain reputation analysis completed successfully', {
       input: normalizedInput,

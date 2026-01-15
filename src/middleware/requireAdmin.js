@@ -36,8 +36,6 @@ async function requireAdmin(req, res, next) {
 
     if (!user.is_admin || user.is_admin !== 1) {
       // Log unauthorized admin access attempt
-      console.warn(`[SECURITY] Non-admin user ${user.email} attempted to access admin endpoint`);
-
       return res.status(403).json({
         error: 'Admin privileges required',
         code: 'ADMIN_REQUIRED'
@@ -68,8 +66,6 @@ async function logAdminAction(adminUserId, action, targetUserId = null, details 
       'INSERT INTO admin_activity_log (admin_user_id, action, target_user_id, details_json) VALUES (?, ?, ?, ?)',
       [adminUserId, action, targetUserId, JSON.stringify(details)]
     );
-
-    console.log(`[ADMIN] ${adminUserId}: ${action}`, details);
   } catch (error) {
     console.error('Failed to log admin action:', error);
   }

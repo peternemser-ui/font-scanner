@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Payment Cancelled</title>
+</head>
+<body>
+  <h1>Payment cancelled</h1>
+  <p>No charges were made.</p>
+  <p><a id="returnLink" href="/">Back</a></p>
+
+  <script>
+    (function () {
+      var params = new URLSearchParams(window.location.search);
+      var returnUrl = params.get('returnUrl') || params.get('return_url') || '';
+
+      var link = document.getElementById('returnLink');
+      if (!link) return;
+
+      if (returnUrl && typeof returnUrl === 'string') {
+        try {
+          var u = new URL(returnUrl);
+          if (u.protocol === 'http:' || u.protocol === 'https:') {
+            link.href = u.toString();
+          }
+        } catch (e) {
+          // ignore
+        }
+      }
+    })();
+  </script>
+</body>
+</html>

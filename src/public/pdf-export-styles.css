@@ -68,14 +68,17 @@
   margin-bottom: 24px !important;
   page-break-inside: avoid;
   page-break-after: avoid;
+  text-align: left !important;
 }
 
+.pdf-export-mode .report-header h1,
 .pdf-export-mode .report-header h2 {
   color: #000000 !important;
   font-size: 20px !important;
   margin: 0 0 8px 0 !important;
   font-weight: 700;
   border-bottom: none !important;
+  text-align: left !important;
 }
 
 .pdf-export-mode .report-header p {
@@ -91,7 +94,8 @@
 }
 
 /* Hide interactive UI elements */
-.pdf-export-mode button:not(.score-badge),
+/* NOTE: ReportAccordion headers are <button> elements; keep them visible in PDFs. */
+.pdf-export-mode button:not(.score-badge):not(.report-accordion__header),
 .pdf-export-mode .toggle-button,
 .pdf-export-mode .expand-button,
 .pdf-export-mode [data-toggle],
@@ -110,6 +114,26 @@
   display: none !important;
 }
 
+/* Make ReportAccordion headers look like section headers in PDF */
+.pdf-export-mode .report-accordion__header {
+  display: flex !important;
+  width: 100% !important;
+  border: 1px solid #e5e7eb !important;
+  background: #f9fafb !important;
+  color: #111827 !important;
+  padding: 12px 14px !important;
+  border-radius: 8px !important;
+  cursor: default !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  page-break-after: avoid;
+  box-shadow: none !important;
+}
+
+.pdf-export-mode .report-accordion__chevron {
+  display: none !important;
+}
+
 /* Improve readability for text content */
 .pdf-export-mode h1,
 .pdf-export-mode h2,
@@ -123,6 +147,7 @@
   margin-bottom: 0.75em;
   font-weight: 600;
   letter-spacing: -0.02em;
+  text-align: left !important;
 }
 
 .pdf-export-mode h1 {

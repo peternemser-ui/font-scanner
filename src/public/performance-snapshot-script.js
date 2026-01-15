@@ -3,7 +3,11 @@
  * Fast performance analysis without full Lighthouse
  */
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'performance-snapshot';
+
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   const urlInput = document.getElementById('urlInput');
   const analyzeButton = document.getElementById('analyzeButton');
   const results = document.getElementById('results');
@@ -34,6 +38,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
     // Show loading
     results.classList.remove('hidden');
     loadingMessage.classList.remove('hidden');
@@ -47,7 +55,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/performance-snapshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url, scanStartedAt })
       });
 
       updateProgress(50, 'Analyzing performance...');

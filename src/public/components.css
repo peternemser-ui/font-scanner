@@ -8,6 +8,8 @@
  * <link rel="stylesheet" href="/components.css">
  */
 
+@import url('/css/components/reportShell.css');
+
 /* ========================================
    METRIC CARD
    Standard metric display component
@@ -317,7 +319,7 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(0, 255, 157, 0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(91, 244, 231, 0.1) 0%, transparent 70%);
   animation: cta-glow 4s ease-in-out infinite;
   pointer-events: none;
 }
@@ -641,14 +643,13 @@
   right: 0 !important;
   min-width: 320px;
   max-width: 360px;
-  max-height: 80vh;
   overflow-y: auto;
   background: rgba(22, 26, 31, 0.98);
   backdrop-filter: blur(16px);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-  padding: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 0.5rem;
   z-index: 10000 !important;
   opacity: 0;
   visibility: hidden;
@@ -676,12 +677,12 @@
 }
 
 .nav-dropdown-menu::-webkit-scrollbar-thumb {
-  background: rgba(0, 255, 65, 0.3);
+  background: rgba(var(--accent-primary-rgb), 0.3);
   border-radius: 3px;
 }
 
 .nav-dropdown-menu::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 255, 65, 0.5);
+  background: rgba(var(--accent-primary-rgb), 0.5);
 }
 
 /* Hide all children by default */
@@ -708,8 +709,8 @@
 }
 
 .nav-dropdown-menu .nav-link.active {
-  background: rgba(0, 255, 65, 0.1);
-  color: #00ff41;
+  background: rgba(var(--accent-primary-rgb), 0.1);
+  color: var(--accent-primary);
 }
 
 .nav-dropdown-menu .nav-link .hot-badge {
@@ -783,6 +784,7 @@
 
 .dropdown-category:last-child {
   margin-bottom: 0;
+  padding-bottom: 0.25rem;
 }
 
 .dropdown-category-header {
@@ -931,13 +933,13 @@
 }
 
 /* Status Color Classes (Standardized scoring) */
-.status-excellent { --score-color: var(--color-success, #00ff41); }
+.status-excellent { --score-color: var(--accent-primary); }
 .status-good { --score-color: var(--color-info, #00bcd4); }
 .status-needs-work { --score-color: var(--color-warning, #ffa500); }
 .status-critical { --score-color: var(--color-error, #ff4444); }
 
 /* Legacy grade classes - deprecated, use status-* instead */
-.grade-a { --score-color: var(--color-success, #00ff41); }
+.grade-a { --score-color: var(--accent-primary); }
 .grade-b { --score-color: var(--color-info, #00bcd4); }
 .grade-c { --score-color: var(--color-warning, #ffa500); }
 .grade-d { --score-color: var(--color-warning-dim, #ff9500); }
@@ -978,7 +980,7 @@ details summary:hover {
 
 /* Category Links - compact navigation */
 .category-link:hover {
-  border-color: var(--color-primary, #00ff41) !important;
+  border-color: var(--accent-primary) !important;
   background: rgba(255,255,255,0.05) !important;
 }
 
@@ -1022,13 +1024,13 @@ details summary:hover {
 }
 
 .auth-register {
-  color: #000;
-  background: linear-gradient(135deg, #00ff88, #00cc66);
+  color: var(--accent-primary-contrast);
+  background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 1), rgba(var(--accent-primary-rgb), 0.75));
   border: none;
 }
 
 .auth-register:hover {
-  box-shadow: 0 4px 12px rgba(0, 255, 136, 0.3);
+  box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.3);
   transform: translateY(-1px);
 }
 
@@ -1061,8 +1063,8 @@ details summary:hover {
   justify-content: center;
   width: 28px;
   height: 28px;
-  background: linear-gradient(135deg, #00ff88, #00cc66);
-  color: #000;
+  background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 1), rgba(var(--accent-primary-rgb), 0.75));
+  color: var(--accent-primary-contrast);
   border-radius: 50%;
   font-size: 0.75rem;
   font-weight: 700;
@@ -1190,6 +1192,28 @@ details summary:hover {
 body.white-theme .auth-user-dropdown {
   background: rgba(255, 255, 255, 0.98);
   border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.white-theme .auth-login {
+  color: #111;
+  background: rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.14);
+}
+
+body.white-theme .auth-login:hover {
+  background: rgba(0, 0, 0, 0.09);
+  border-color: rgba(0, 0, 0, 0.2);
+}
+
+body.white-theme .auth-user-trigger {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.12);
+  color: #111;
+}
+
+body.white-theme .auth-user-trigger:hover {
+  background: rgba(0, 0, 0, 0.07);
+  border-color: rgba(0, 0, 0, 0.18);
 }
 
 body.white-theme .auth-user-email {

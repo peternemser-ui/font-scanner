@@ -1,5 +1,8 @@
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
+const { roundTo } = require('../utils/formatHelpers');
+const { calculateWeightedScore, scoreSecurityHeaders } = require('../utils/scoringHelpers');
+
 const logger = createLogger('SecurityAnalyzerService');
 
 class SecurityAnalyzerService {
@@ -315,7 +318,7 @@ class SecurityAnalyzerService {
 
         const implemented = Object.values(securityHeaders).filter(h => h.present).length;
         const total = Object.keys(securityHeaders).length;
-        const score = Math.round((implemented / total) * 100);
+        const score = roundTo((implemented / total) * 100, 0);
 
         return {
           score,
@@ -470,7 +473,7 @@ class SecurityAnalyzerService {
 
         const total = cookies.length;
         const secure = cookieAnalysis.filter(c => c.httpOnly && c.secure && c.sameSite !== 'None').length;
-        const score = total > 0 ? Math.round((secure / total) * 100) : 100;
+        const score = total > 0 ? roundTo((secure / total) * 100, 0) : 100;
 
         const allIssues = [];
         if (total > 0 && secure === 0) {
@@ -545,7 +548,7 @@ class SecurityAnalyzerService {
 
         const total = scripts.length;
         const withSRI = scripts.filter(s => s.hasSRI).length;
-        const score = total > 0 ? Math.round((withSRI / total) * 100) : 100;
+        const score = total > 0 ? roundTo((withSRI / total) * 100, 0) : 100;
 
         return {
           score,
@@ -578,22 +581,14 @@ class SecurityAnalyzerService {
    * Calculate overall security score
    */
   calculateOverallScore({ ssl, headers, vulnerabilities, cookies, thirdParty }) {
-    const weights = {
-      ssl: 0.3,
-      headers: 0.25,
-      vulnerabilities: 0.25,
-      cookies: 0.1,
-      thirdParty: 0.1,
-    };
-
-    const weightedScore = 
-      ssl.score * weights.ssl +
-      headers.score * weights.headers +
-      vulnerabilities.score * weights.vulnerabilities +
-      cookies.score * weights.cookies +
-      thirdParty.score * weights.thirdParty;
-
-    return Math.round(weightedScore);
+    // Use scoring helper for weighted score calculation
+    return Math.round(calculateWeightedScore([
+      { score: ssl.score, weight: 0.3 },
+      { score: headers.score, weight: 0.25 },
+      { score: vulnerabilities.score, weight: 0.25 },
+      { score: cookies.score, weight: 0.1 },
+      { score: thirdParty.score, weight: 0.1 }
+    ]));
   }
 
   /**
@@ -634,7 +629,7 @@ class SecurityAnalyzerService {
     // 10. Insufficient Logging & Monitoring - No direct check (placeholder)
     compliantControls++; // Placeholder
 
-    return Math.round((compliantControls / totalControls) * 100);
+    return roundTo((compliantControls / totalControls) * 100, 0);
   }
 
   /**

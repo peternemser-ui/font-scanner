@@ -50,7 +50,7 @@ function getScoreColor(score) {
  * @returns {string} Color hex value
  */
 function getScoreColorFallback(score) {
-  if (score >= 90) return '#00ff41';  // A: Bright green (terminal green)
+  if (score >= 90) return getThemeColor('--accent-primary') || '#00ff41';
   if (score >= 70) return '#ffd700';  // B: Yellow (gold)
   if (score >= 50) return '#ff8c00';  // C: Dark orange
   return '#ff4444';                   // D/F: Red

@@ -6,6 +6,7 @@
 const browserPool = require('../utils/browserPool');
 const lighthouseAnalyzer = require('./lighthouseAnalyzer');
 const { createLogger } = require('../utils/logger');
+const { roundTo } = require('../utils/formatHelpers');
 const logger = createLogger('PerformanceAnalyzer');
 
 class PerformanceAnalyzerService {
@@ -329,8 +330,8 @@ class PerformanceAnalyzerService {
     
     return {
       formFactor,
-      score: Math.round(score),
-      performance: Math.round(score),
+      score: roundTo(score, 0),
+      performance: roundTo(score, 0),
       accessibility: 50,
       bestPractices: 50,
       seo: 50,
@@ -628,7 +629,7 @@ class PerformanceAnalyzerService {
     if (vitals.clsNum > 0.25) score -= 30;
     else if (vitals.clsNum > 0.1) score -= 15;
     
-    return Math.max(0, Math.round(score));
+    return Math.max(0, roundTo(score, 0));
   }
 
   /**
@@ -654,7 +655,7 @@ class PerformanceAnalyzerService {
     if (totalRequests > 100) score -= 15;
     else if (totalRequests > 50) score -= 8;
     
-    return Math.max(0, Math.round(score));
+    return Math.max(0, roundTo(score, 0));
   }
 
   /**
@@ -688,7 +689,7 @@ class PerformanceAnalyzerService {
     if (totalTime > 5000) score -= 30;
     else if (totalTime > 3000) score -= 15;
     
-    return Math.max(0, Math.round(score));
+    return Math.max(0, roundTo(score, 0));
   }
 
   /**

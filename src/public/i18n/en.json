@@ -309,15 +309,599 @@
     "breadcrumb": "seo analyzer",
     "analyze": "ANALYZE SEO",
     "analyzing": "ANALYZING...",
+    "overall": "Overall",
+    "reportTitle": "SEO Report",
+    "reportSubtitle": "SEO Analysis",
+    "loadingTitle": "Analysis in progress...",
+    "mayTake": "This may take 30-60 seconds",
     "seoScore": "SEO Score",
     "metaTags": "Meta Tags",
     "headings": "Headings",
+    "content": "Content",
     "images": "Images",
     "links": "Links",
+    "mobile": "Mobile",
+    "performance": "Performance",
+    "security": "Security",
     "canonicalUrl": "Canonical URL",
     "structuredData": "Structured Data",
     "sitemap": "Sitemap",
     "robotsTxt": "Robots.txt",
+    "sections": {
+      "metaTags": "Meta Tags",
+      "headings": "Headings",
+      "content": "Content",
+      "images": "Images",
+      "links": "Links",
+      "mobile": "Mobile",
+      "performance": "Performance",
+      "security": "Security",
+      "structuredData": "Structured Data",
+      "additional": "Additional Checks",
+      "fixCode": "Fix Code + Recommendations"
+    },
+    "steps": {
+      "running": "Running SEO analysis",
+      "initializing": "Initializing scan engine...",
+      "metaTags": "Checking meta tags",
+      "metaTagsDetail": "Analyzing title, description, keywords...",
+      "content": "Analyzing content quality",
+      "contentDetail": "Evaluating headings, text, readability...",
+      "mobile": "Testing mobile responsiveness",
+      "mobileDetail": "Checking viewport and layout...",
+      "performance": "Measuring performance",
+      "performanceDetail": "Testing load speed and optimization..."
+    },
+    "proPreview": {
+      "metaTags": "Meta tags improvements",
+      "structuredData": "Structured data quick wins"
+    },
+    "fixes": {
+      "previewIntro": "Preview of fix packs:",
+      "impact": "Impact",
+      "copySnippet": "Copy snippet",
+      "snippetCopied": "Snippet copied to clipboard"
+    },
+    "report": {
+      "units": {
+        "chars": "chars"
+      },
+      "table": {
+        "property": "Property",
+        "value": "Value",
+        "length": "Length",
+        "status": "Status",
+        "bestPractice": "Best Practice",
+        "recommendation": "Recommendation",
+        "metric": "Metric",
+        "recommended": "Recommended",
+        "description": "Description",
+        "purpose": "Purpose",
+        "details": "Details",
+        "check": "Check",
+        "platform": "Platform",
+        "seoValue": "SEO Value",
+        "implementationTip": "Implementation Tip"
+      },
+      "status": {
+        "missing": "Missing",
+        "review": "Review",
+        "optimal": "Optimal",
+        "configured": "Configured",
+        "present": "Present",
+        "set": "Set",
+        "valid": "Valid",
+        "none": "None",
+        "multiple": "Multiple",
+        "pass": "Pass",
+        "fail": "Fail",
+        "yes": "Yes",
+        "no": "No",
+        "found": "Found",
+        "notFound": "Not found",
+        "detected": "Detected",
+        "notDetected": "Not detected",
+        "enabled": "Enabled",
+        "notConfigured": "Not configured - browsers can connect via HTTP"
+      },
+      "common": {
+        "moreCount": "... {{count}} more"
+      },
+      "metaTags": {
+        "calloutTitle": "🏷️ Meta Tags are Your First Impression",
+        "calloutBody": "These tags control how your site appears in search results and social media. Optimizing them can increase click-through rates by 30-50%.",
+        "overviewHeading": "Meta Tags Overview",
+        "healthHeading": "Meta Tags Health",
+        "rows": {
+          "title": "Title",
+          "description": "Description",
+          "openGraph": "Open Graph",
+          "twitterCard": "Twitter Card",
+          "viewport": "Viewport",
+          "canonical": "Canonical",
+          "ogTags": "OG Tags",
+          "twitter": "Twitter"
+        },
+        "bestPractice": {
+          "title": "50-60 chars, include primary keyword near start",
+          "description": "150-160 chars, compelling CTA, unique per page",
+          "openGraph": "og:title, og:description, og:image (1200x630px)",
+          "twitterCard": "summary_large_image, twitter:title, twitter:image",
+          "viewport": "width=device-width, initial-scale=1",
+          "canonical": "Prevents duplicate content, use absolute URLs"
+        }
+      },
+      "headings": {
+        "distributionHeading": "Heading Distribution",
+        "hierarchyHeading": "Heading Hierarchy",
+        "table": {
+          "level": "Level",
+          "count": "Count",
+          "firstInstance": "First Instance"
+        },
+        "totalHeadingsLabel": "total_headings",
+        "primaryH1Label": "primary_h1",
+        "hierarchySampleLabel": "hierarchy_sample"
+      },
+      "content": {
+        "qualityMetricsHeading": "Content Quality Metrics",
+        "healthHeading": "Content Health",
+        "metrics": {
+          "wordCount": "Word Count",
+          "readability": "Readability",
+          "textRatio": "Text Ratio",
+          "paragraphs": "Paragraphs"
+        },
+        "wordCountLabel": "Word Count: {{count}}",
+        "readabilityScoreLabel": "Readability Score",
+        "textToHtmlLabel": "Text-to-HTML: {{percent}}%",
+        "paragraphsLabel": "Paragraphs: {{count}}",
+        "wordCountLineLabel": "word_count",
+        "sentencesLineLabel": "sentences",
+        "avgWordsPerSentenceLineLabel": "avg_words_per_sentence"
+      },
+      "images": {
+        "calloutTitle": "I Image SEO: Alt Text is Critical",
+        "calloutBody": "Alt text helps search engines understand images and improves accessibility. Google Image Search drives 20-30% of web traffic for many sites.",
+        "overviewHeading": "Image Optimization Overview",
+        "detailsHeading": "Image Details",
+        "statsHeading": "Image Statistics",
+        "noImagesFound": "No images found on this page",
+        "radial": {
+          "altCoverage": "Alt Text Coverage",
+          "imagesFound": "Images Found",
+          "overallScore": "Overall Score"
+        },
+        "table": {
+          "imageUrl": "Image URL",
+          "dimensions": "Dimensions",
+          "altText": "Alt Text"
+        },
+        "recommendation": {
+          "pass": "Descriptive, helps SEO and accessibility",
+          "fail": "Add descriptive alt text for SEO + screen readers"
+        },
+        "totalImagesLabel": "total_images",
+        "withAltLabel": "with_alt"
+      },
+      "links": {
+        "networkDiagramHeading": "Link Network Diagram",
+        "healthSummaryHeading": "Link Health Summary",
+        "totalLinksLabel": "total_links",
+        "internalLinksLabel": "internal_links",
+        "externalLinksLabel": "external_links",
+        "nofollowLinksLabel": "nofollow_links",
+        "brokenFormatLabel": "broken_format"
+      },
+      "mobile": {
+        "calloutTitle": "M Mobile-First Indexing",
+        "calloutBody": "Google now uses the mobile version of your site for indexing and ranking. Mobile responsiveness is critical for SEO.",
+        "devices": {
+          "mobile": "Mobile",
+          "tablet": "Tablet",
+          "desktop": "Desktop"
+        },
+        "table": {
+          "deviceType": "Device Type",
+          "width": "Width",
+          "noHorizontalScroll": "No Horizontal Scroll",
+          "viewportMeta": "Viewport Meta",
+          "readableFontSize": "Readable Font Size"
+        },
+        "recommendations": {
+          "mobile": "≥ 16px fonts, no horizontal scroll",
+          "tablet": "Responsive layout, touch-friendly",
+          "desktop": "Desktop fallback"
+        },
+        "cards": {
+          "horizontalScroll": "Horizontal Scroll",
+          "viewportMetaTag": "Viewport Meta Tag",
+          "fontReadability": "Font Readability",
+          "none": "None",
+          "detected": "Detected",
+          "devicesFraction": "{{count}}/{{total}} Devices"
+        }
+      },
+      "performance": {
+        "metrics": {
+          "pageLoadTime": "Page Load Time",
+          "domContentLoaded": "DOM Content Loaded",
+          "totalResources": "Total Resources",
+          "pageSize": "Page Size",
+          "domNodes": "DOM Nodes"
+        },
+        "desc": {
+          "pageLoadTime": "Time until page fully loaded",
+          "domContentLoaded": "Time until DOM is ready",
+          "totalResources": "Number of HTTP requests",
+          "pageSize": "Total transfer size",
+          "domNodes": "Total HTML elements"
+        },
+        "recommended": {
+          "pageLoadTime": "< 3s (Good) | < 5s (Fair)",
+          "domContentLoaded": "< 2s (Good)",
+          "totalResources": "< 150 (Good) | < 300 (Fair)",
+          "pageSize": "< 3 MB (Good)",
+          "domNodes": "< 1,500 (Good) | < 3,000 (Fair)"
+        }
+      },
+      "security": {
+        "calloutTitle": "◈ Security Headers Critical for SEO",
+        "calloutBody": "Google prioritizes secure sites in rankings. Missing security headers can harm SEO and user trust. HTTPS is a direct ranking factor.",
+        "table": {
+          "securityHeader": "Security Header",
+          "recommendedValue": "Recommended Value"
+        },
+        "headers": {
+          "httpsEnabled": "HTTPS Enabled",
+          "hsts": "HSTS Header",
+          "csp": "Content Security Policy",
+          "xFrameOptions": "X-Frame-Options",
+          "xContentTypeOptions": "X-Content-Type-Options"
+        },
+        "purpose": {
+          "encryptedConnection": "Encrypted connection",
+          "forceHttps": "Force HTTPS",
+          "xssProtection": "XSS Protection",
+          "clickjacking": "Clickjacking Protection",
+          "mimeSniffing": "MIME Sniffing Protection"
+        },
+        "details": {
+          "sslEnabled": "Secure SSL/TLS enabled",
+          "noHttps": "No HTTPS detected",
+          "hstsNotConfigured": "Not configured - browsers can connect via HTTP",
+          "injectionRisk": "Vulnerable to injection attacks",
+          "canEmbed": "Can be embedded in iframes",
+          "misinterpret": "Browser may misinterpret content"
+        },
+        "recommended": {
+          "https": "Required - Always use HTTPS in production"
+        }
+      },
+      "structuredData": {
+        "info": {
+          "title": "ⓘ What is Structured Data Schema?",
+          "body": "Structured data (also called schema markup) is code that helps search engines understand your content better, enabling <strong style=\"color: #00ff41;\">rich search results</strong> like star ratings, product prices, event dates, FAQ dropdowns, and more. It uses the <strong style=\"color: #00ccff;\">Schema.org</strong> vocabulary in JSON-LD, Microdata, or RDFa formats.",
+          "cards": {
+            "ctr": {
+              "title": "U Improved CTR",
+              "body": "Rich results stand out and attract more clicks"
+            },
+            "targeting": {
+              "title": "T Better Targeting",
+              "body": "Helps search engines understand your niche"
+            },
+            "advantage": {
+              "title": "W SEO Advantage",
+              "body": "Competitive edge in search results"
+            }
+          }
+        },
+        "summary": {
+          "heading": "Summary",
+          "table": {
+            "impact": "Impact"
+          },
+          "rows": {
+            "found": {
+              "metric": "Structured Data Found",
+              "impact": {
+                "detected": "Enables rich search results",
+                "notFound": "Missing enhanced search appearances"
+              }
+            },
+            "types": {
+              "metric": "Schema Types Implemented",
+              "value": {
+                "singular": "Type",
+                "plural": "Types"
+              },
+              "impact": {
+                "great": "Great coverage",
+                "good": "Good start",
+                "none": "None implemented"
+              }
+            },
+            "score": {
+              "metric": "Overall Score",
+              "impact": {
+                "excellent": "Excellent implementation",
+                "room": "Room for improvement",
+                "critical": "Critical gap"
+              }
+            }
+          }
+        },
+        "detected": {
+          "heading": "Detected Schema Types",
+          "table": {
+            "schemaType": "Schema Type",
+            "seoBenefit": "SEO Benefit",
+            "keyFields": "Key Fields"
+          },
+          "unknown": {
+            "desc": "Schema markup",
+            "benefit": "Structured data implementation"
+          },
+          "moreFields": "+{{count}} more",
+          "na": "N/A"
+        },
+        "validation": {
+          "title": "✓ Next Step: Validate Your Schema",
+          "body": {
+            "beforeLink": "Use",
+            "linkText": "Google's Rich Results Test",
+            "afterLink": "to ensure your structured data is error-free and eligible for rich snippets. Monitor Search Console for structured data errors."
+          }
+        },
+        "missing": {
+          "heading": "Missing Critical SEO Opportunity",
+          "card": {
+            "title": "No Structured Data Detected",
+            "body": "You're missing enhanced search appearances that boost visibility and click-through rates"
+          },
+          "table": {
+            "richResultType": "Rich Result Type",
+            "whatMissing": "What You're Missing",
+            "ctrImpact": "CTR Impact"
+          },
+          "rows": {
+            "starRatings": {
+              "title": "Star Ratings",
+              "body": "Display review stars and ratings directly in search results"
+            },
+            "productInfo": {
+              "title": "Product Info",
+              "body": "Show prices, availability, and special offers inline"
+            },
+            "eventDetails": {
+              "title": "Event Details",
+              "body": "Event dates, locations, and ticket info with calendar integration"
+            },
+            "richMedia": {
+              "title": "Rich Media",
+              "body": "Enhanced thumbnails, carousels, and video snippets"
+            },
+            "faq": {
+              "title": "FAQ Dropdowns",
+              "body": "Expandable Q&A sections directly in search results"
+            }
+          }
+        },
+        "proTip": {
+          "label": "ⓘ Pro Tip:",
+          "body": "Rich results can increase click-through rates by 15-35% according to Google research. Start with the foundational schemas below to unlock these benefits."
+        },
+        "recommended": {
+          "heading": "Recommended Schema Types to Implement",
+          "box": {
+            "title": "Start with these foundational schemas",
+            "body": "that work for almost every website. You can add more specific schemas based on your content type later."
+          },
+          "table": {
+            "schemaType": "Schema Type",
+            "priority": "Priority",
+            "seoBenefit": "SEO Benefit",
+            "requiredFields": "Required Fields"
+          }
+        },
+        "priority": {
+          "high": "HIGH",
+          "medium": "MEDIUM"
+        },
+        "formats": {
+          "heading": "Implementation Formats",
+          "jsonld": {
+            "badge": "RECOMMENDED",
+            "body": "JavaScript Object Notation for Linked Data. Google's preferred format - clean, separate from HTML, easy to maintain."
+          },
+          "microdata": {
+            "subtitle": "HTML Attributes",
+            "body": "Embedded directly in HTML tags. More complex to maintain but tightly couples markup with content."
+          },
+          "rdfa": {
+            "subtitle": "Resource Description",
+            "body": "Resource Description Framework in Attributes. Similar to Microdata, uses different attribute names."
+          }
+        },
+        "resources": {
+          "heading": "Essential Resources & Tools",
+          "table": {
+            "tool": "Tool",
+            "link": "Link"
+          },
+          "rows": {
+            "schemaDocs": {
+              "title": "Schema.org Docs",
+              "purpose": "Official vocabulary reference with complete documentation for all schema types and properties",
+              "linkText": "schema.org →"
+            },
+            "richResultsTest": {
+              "title": "Rich Results Test",
+              "purpose": "Test your structured data markup and see which Google rich results can be generated from it",
+              "linkText": "Test Markup →"
+            },
+            "validator": {
+              "title": "Schema Validator",
+              "purpose": "Comprehensive validation tool for all structured data formats including JSON-LD, Microdata, and RDFa",
+              "linkText": "Validate →"
+            },
+            "googleGuide": {
+              "title": "Google Guide",
+              "purpose": "Step-by-step guide from Google on implementing structured data with code examples and best practices",
+              "linkText": "Read Guide →"
+            },
+            "generator": {
+              "title": "Markup Generator",
+              "purpose": "Free tool to generate JSON-LD structured data markup for various schema types quickly and easily",
+              "linkText": "Generate →"
+            }
+          }
+        },
+        "schemas": {
+          "Organization": {
+            "desc": "Company/Brand information",
+            "benefit": "Establishes brand identity in Knowledge Graph"
+          },
+          "Person": {
+            "desc": "Individual profile data",
+            "benefit": "Powers author rich snippets and Knowledge Panel"
+          },
+          "Product": {
+            "desc": "Product listings & details",
+            "benefit": "Shows price, availability, and reviews in search"
+          },
+          "Article": {
+            "desc": "Blog posts & articles",
+            "benefit": "Enables article snippets with author and publish date"
+          },
+          "WebSite": {
+            "desc": "Website metadata",
+            "benefit": "Enables sitelinks search box in Google"
+          },
+          "BreadcrumbList": {
+            "desc": "Navigation breadcrumbs",
+            "benefit": "Shows breadcrumb trail in search results"
+          },
+          "LocalBusiness": {
+            "desc": "Local business info",
+            "benefit": "Appears in local search and Google Maps"
+          },
+          "Event": {
+            "desc": "Event information",
+            "benefit": "Shows event details in search with \"Add to Calendar\""
+          },
+          "Recipe": {
+            "desc": "Recipe content",
+            "benefit": "Rich recipe cards with ratings, cook time, calories"
+          },
+          "Review": {
+            "desc": "User reviews",
+            "benefit": "Display star ratings directly in search results"
+          },
+          "VideoObject": {
+            "desc": "Video content",
+            "benefit": "Video snippets with thumbnails and key moments"
+          },
+          "FAQPage": {
+            "desc": "FAQ content",
+            "benefit": "Expandable FAQ sections in search results"
+          },
+          "HowTo": {
+            "desc": "Step-by-step guides",
+            "benefit": "Numbered steps with images in search"
+          },
+          "SoftwareApplication": {
+            "desc": "Software/app details",
+            "benefit": "App install buttons and ratings in search"
+          },
+          "JobPosting": {
+            "desc": "Job listings",
+            "benefit": "Appears in Google for Jobs with salary and location"
+          }
+        }
+      },
+      "additional": {
+        "calloutTitle": "🔧 Technical SEO Essentials",
+        "calloutBody": "These technical elements help search engines crawl, index, and understand your site. Missing items can significantly impact discoverability.",
+        "technicalHeading": "Technical SEO",
+        "checks": {
+          "sitemap": "XML Sitemap",
+          "favicon": "Favicon",
+          "googleAnalytics": "Google Analytics"
+        },
+        "purpose": {
+          "robots": "Controls search engine crawling",
+          "sitemap": "Helps search engines discover pages",
+          "favicon": "Browser tab icon",
+          "analytics": "Traffic tracking"
+        },
+        "details": {
+          "robotsPresent": "File is present and accessible",
+          "robotsMissing": "Missing - create /robots.txt",
+          "sitemapDetected": "Sitemap detected",
+          "sitemapMissing": "Missing - improves indexing",
+          "faviconMissing": "No favicon found",
+          "analyticsEnabled": "Analytics tracking enabled",
+          "analyticsMissing": "No analytics detected"
+        },
+        "bestPractice": {
+          "robots": "Allow crawlers, disallow admin/private pages",
+          "sitemap": "Submit to Google Search Console, update weekly",
+          "favicon": "32x32 PNG or ICO, helps brand recognition",
+          "analytics": "GA4 recommended, track user behavior for SEO insights"
+        },
+        "social": {
+          "calloutTitle": "M Social Signals & SEO",
+          "calloutBody": "While not direct ranking factors, social links increase brand visibility, drive traffic, and improve Open Graph previews when content is shared.",
+          "heading": "Social Media Presence",
+          "value": {
+            "openGraph": "Meta Open Graph tags",
+            "twitterCard": "Twitter Card tags",
+            "professional": "Professional network",
+            "visual": "Visual content"
+          },
+          "details": {
+            "linkPresent": "Link present",
+            "facebookMissing": "No Facebook link found",
+            "twitterMissing": "No Twitter link found",
+            "linkedinMissing": "No LinkedIn link found",
+            "instagramMissing": "No Instagram link found"
+          },
+          "tip": {
+            "openGraph": "Add og:image, og:title, og:description tags",
+            "twitterCard": "Add twitter:card, twitter:image meta tags",
+            "linkedin": "Add to company footer, improves B2B credibility",
+            "instagram": "Link to business profile, helps visual branding"
+          }
+        }
+      },
+      "issues": {
+        "issuesHeading": "issues",
+        "recommendationsHeading": "recommendations"
+      },
+      "loading": {
+        "title": "ANALYZING",
+        "running": "running comprehensive seo analysis...",
+        "metaTags": "checking meta tags...",
+        "content": "analyzing content quality...",
+        "mobile": "testing mobile responsiveness...",
+        "performance": "measuring performance..."
+      },
+      "error": {
+        "title": "ERROR",
+        "analysisFailed": "analysis_failed",
+        "retry": "RETRY"
+      }
+    },
+    "components": {
+      "metaTags": "Meta Tags",
+      "headings": "Headings",
+      "content": "Content",
+      "images": "Images",
+      "links": "Links",
+      "structuredData": "Structured Data"
+    },
     "pages": {
       "home": {
         "title": "Site Mechanic - Professional Website Analysis & SEO Tools",
@@ -339,6 +923,13 @@
         "keywords": "performance testing, page speed, Core Web Vitals, website optimization, performance monitoring, speed test",
         "og_title": "Website Performance Testing Hub - Speed Optimization",
         "twitter_title": "Test and Optimize Your Website Performance"
+      },
+      "seo-analyzer": {
+        "title": "SEO & Indexing - Metadata, Structure & Crawlability | Site Mechanic",
+        "description": "Diagnose SEO issues: meta tags, headings, structured data, crawlability, and on-page optimization. Part of Site Mechanic's unified website inspection workflow.",
+        "keywords": "SEO analyzer, SEO audit, meta tags, structured data, on-page SEO, technical SEO, crawlability, indexing, search optimization",
+        "og_title": "SEO Analyzer - Comprehensive SEO Audit Tool | Site Mechanic",
+        "twitter_title": "SEO Analyzer - Comprehensive SEO Audit Tool | Site Mechanic"
       },
       "mobile-analyzer": {
         "title": "Mobile Website Analyzer - Responsive Design Testing Tool",
@@ -488,7 +1079,9 @@
     "websiteUrl": "Website URL",
     "enterUrl": "https://yoursite.com",
     "pleaseEnterUrl": "Please enter a URL",
-    "mayTake": "This may take 15-30 seconds"
+    "mayTake": "This may take 15-30 seconds",
+    "pageScreenshotAlt": "Page screenshot",
+    "footer": "© 2025 Site Mechanic. Built for developers who care about quality."
   },
   "errors": {
     "urlRequired": "Please enter a valid URL",
@@ -590,6 +1183,8 @@
   "pricing": {
     "title": "Upgrade to Site Mechanic Pro",
     "subtitle": "Unlock unlimited scans, advanced recommendations, and expert-level optimization tools",
+    "unlockReportTitle": "Unlock Report",
+    "unlockReportSubtitle": "PDF export, share link, export data, and fix packs for this scan.",
     "monthly": "Monthly",
     "annual": "Annual Save 17%",
     "free": "Free",

@@ -152,7 +152,6 @@ class ModernUI {
         text: shareText,
         url: currentUrl
       }).catch((error) => {
-        console.log('Error sharing:', error);
         this.fallbackShare(currentUrl);
       });
     } else {

@@ -215,6 +215,15 @@ const scanLimiter = createRateLimiter('scan', {
 });
 
 /**
+ * Contact endpoint rate limiter - anti-spam
+ */
+const contactLimiter = createRateLimiter('contact', {
+  windowMs: config.rateLimit.contactWindowMs,
+  max: config.rateLimit.contactMaxRequests,
+  message: `Too many contact requests. Please try again in ${Math.ceil(config.rateLimit.contactWindowMs / 60000)} minutes.`,
+});
+
+/**
  * Report download rate limiter - prevent excessive downloads
  * 
  * Config: Uses config.rateLimit.downloadWindowMs and config.rateLimit.downloadMaxRequests
@@ -332,6 +341,7 @@ module.exports = {
   createRateLimiter,
   globalLimiter,
   scanLimiter,
+  contactLimiter,
   downloadLimiter,
   strictLimiter,
   competitiveAnalysisLimiter,

@@ -6,6 +6,7 @@
 
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
+const { roundTo, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('CompetitiveAccessibilityAnalyzer');
 
@@ -23,7 +24,7 @@ class CompetitiveAccessibilityAnalyzer {
       const metrics = await this.collectMetrics(url);
       const score = this.calculateScore(metrics);
       
-      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      const duration = formatDuration(Date.now() - startTime, 2);
       logger.info(`Accessibility completed in ${duration}s: ${score}`);
       
       return {
@@ -142,7 +143,7 @@ class CompetitiveAccessibilityAnalyzer {
     // Penalize missing lang attribute (-10 points)
     if (!metrics.lang) score -= 10;
 
-    return Math.max(Math.round(score), 0);
+    return Math.max(roundTo(score, 0), 0);
   }
 }
 

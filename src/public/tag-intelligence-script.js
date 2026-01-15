@@ -3,7 +3,11 @@
  * Detects and analyzes analytics, advertising, and tracking tags
  */
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'tag-intelligence';
+
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   const urlInput = document.getElementById('urlInput');
   const analyzeButton = document.getElementById('analyzeButton');
   const multiPageOption = document.getElementById('multiPageOption');
@@ -84,10 +88,14 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       if (loader) loader.nextStep(1);
 
+      const scanStartedAt = new Date().toISOString();
+      window.SM_SCAN_STARTED_AT = scanStartedAt;
+      document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
       const response = await fetch('/api/tag-intelligence', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, options })
+        body: JSON.stringify({ url, options, scanStartedAt })
       });
 
       if (loader) loader.nextStep(3);
@@ -544,6 +552,18 @@ document.addEventListener('DOMContentLoaded', () => {
 ${JSON.stringify(data, null, 2)}
         </pre>
       </details>
+
+      <!-- Pro Report Block -->
+      ${window.ProReportBlock && window.ProReportBlock.render ? `
+        <div class="section" style="margin-top: 2rem;">
+          ${window.ProReportBlock.render({
+            context: 'tag-intelligence',
+            features: ['pdf', 'csv', 'share'],
+            title: 'Unlock Report',
+            subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+          })}
+        </div>
+      ` : ''}
     `;
 
     resultsContent.innerHTML = '<div class="report-scope">' + html + '</div>';

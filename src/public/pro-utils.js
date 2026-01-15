@@ -290,8 +290,9 @@ class ProManager {
       }
 
       const data = await response.json();
-      if (data.success && data.url) {
-        window.location.href = data.url;
+      const portalUrl = data.portalUrl || data.url;
+      if (data.success && portalUrl) {
+        window.location.href = portalUrl;
       }
     } catch (error) {
       console.error('Failed to open customer portal:', error);

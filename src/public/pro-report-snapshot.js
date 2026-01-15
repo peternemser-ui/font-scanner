@@ -236,27 +236,21 @@ const ProReportSnapshot = (() => {
     const { silent = false } = options;
 
     if (!domain || !scanResult) {
-      console.warn('[ProReportSnapshot] Missing domain or scanResult');
+
       return { success: false, error: 'Missing required parameters' };
     }
 
     try {
-      console.log('[ProReportSnapshot] Initializing purchase for:', extractDomain(domain));
       
       // Step 1: Initialize purchase
       const { purchaseId, expiresAt } = await initPurchase(domain);
-      console.log('[ProReportSnapshot] Purchase initialized:', purchaseId);
 
       // Step 2: Extract URLs and modules from scan result
       const selectedUrls = extractScannedUrls(scanResult);
       const selectedModules = extractModules(scanResult);
-      
-      console.log('[ProReportSnapshot] Captured URLs:', selectedUrls.length);
-      console.log('[ProReportSnapshot] Captured modules:', selectedModules);
 
       // Step 3: Save snapshot
       await saveSnapshot(purchaseId, domain, selectedUrls, selectedModules, scanResult);
-      console.log('[ProReportSnapshot] Snapshot saved successfully');
 
       if (!silent) {
         showToast(`Pro report snapshot saved: ${purchaseId.slice(0, 8)}...`, 'success');

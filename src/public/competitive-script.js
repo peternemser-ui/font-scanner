@@ -3,6 +3,9 @@
  * Compare your site vs competitors with interactive visualizations
  */
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'competitive-analysis';
+
 // Max competitors limited to 5 for comprehensive competitive analysis
 const maxCompetitors = 5;
 
@@ -24,11 +27,9 @@ function initializeWebSocket() {
   });
   
   socket.on('connect', () => {
-    console.log('✓ WebSocket connected');
   });
   
   socket.on('disconnect', () => {
-    console.log('✗ WebSocket disconnected');
   });
   
   socket.on('analysis:progress', (data) => {
@@ -36,10 +37,13 @@ function initializeWebSocket() {
   });
 }
 
+// Ensure analyzer key is present for deterministic report identity
+document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+});
+
 // Handle real-time progress updates
 function handleProgressUpdate(data) {
-  console.log('◉ Progress update:', data);
-  
   // Update loader based on WebSocket data
   if (!loader) return;
   
@@ -83,6 +87,7 @@ function handleProgressUpdate(data) {
 }
 
 // Add competitor input field
+// eslint-disable-next-line no-unused-vars
 function addCompetitorInput() {
   const container = document.getElementById('competitorInputs');
   const currentCount = container.querySelectorAll('.competitor-input-row').length;
@@ -117,6 +122,9 @@ function addCompetitorInput() {
     document.getElementById('addCompetitorBtn').style.display = 'none';
   }
 }
+
+// Expose for HTML button handlers / external triggers
+window.addCompetitorInput = addCompetitorInput;
 
 // Remove competitor input field
 function removeCompetitor(button) {
@@ -163,7 +171,65 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
   
   // Show Pac-Man modal instead of regular loader
   const modal = document.getElementById('pacmanModal');
-  modal.classList.add('active');
+  const previousFocus = document.activeElement;
+  const closePacmanModal = () => {
+    if (!modal) return;
+    modal.classList.remove('active');
+    modal.setAttribute('aria-hidden', 'true');
+    document.removeEventListener('keydown', onPacmanKeyDown);
+    if (previousFocus && typeof previousFocus.focus === 'function' && document.contains(previousFocus)) {
+      previousFocus.focus();
+    }
+  };
+
+  const getPacmanFocusable = () => {
+    if (!modal) return [];
+    const selectors = [
+      'a[href]',
+      'button:not([disabled])',
+      'textarea:not([disabled])',
+      'input:not([disabled])',
+      'select:not([disabled])',
+      '[tabindex]:not([tabindex="-1"])'
+    ];
+    return Array.from(modal.querySelectorAll(selectors.join(','))).filter((el) => {
+      if (!el) return false;
+      const style = window.getComputedStyle(el);
+      return style && style.visibility !== 'hidden' && style.display !== 'none';
+    });
+  };
+
+  const onPacmanKeyDown = (e) => {
+    if (!modal || !modal.classList.contains('active')) return;
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closePacmanModal();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const focusables = getPacmanFocusable();
+    if (!focusables.length) {
+      e.preventDefault();
+      modal.focus();
+      return;
+    }
+    const first = focusables[0];
+    const last = focusables[focusables.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  };
+
+  if (modal) {
+    modal.classList.add('active');
+    modal.setAttribute('aria-hidden', 'false');
+    document.addEventListener('keydown', onPacmanKeyDown);
+    window.requestAnimationFrame(() => modal.focus());
+  }
   
   // Initialize unified loader (hidden, but still tracking progress)
   const steps = [
@@ -213,6 +279,10 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
   analyzeBtn.disabled = true;
   
   try {
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
     const response = await fetch('/api/competitive-analysis', {
       method: 'POST',
       headers: {
@@ -220,7 +290,8 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
       },
       body: JSON.stringify({
         yourUrl,
-        competitorUrls
+        competitorUrls,
+        scanStartedAt
       })
     });
     
@@ -236,12 +307,9 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     // Join WebSocket session room for real-time updates
     if (data.sessionId && socket) {
       socket.emit('join-session', data.sessionId);
-      console.log(`K Joined WebSocket session: ${data.sessionId}`);
     }
     
     // Debug: Log the data structure
-    console.log('Received data:', data);
-    
     // Validate data structure before rendering
     if (!data || !data.yourSite) {
       throw new Error('Invalid response structure: missing yourSite data');
@@ -257,7 +325,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     
     // Close modal and show results
     clearInterval(modalTimer);
-    modal.classList.remove('active');
+    closePacmanModal();
     resultsDiv.style.display = 'block';
     
   } catch (error) {
@@ -268,7 +336,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     
     // Close modal on error
     clearInterval(modalTimer);
-    modal.classList.remove('active');
+    closePacmanModal();
   } finally {
     analyzeBtn.disabled = false;
   }
@@ -342,6 +410,18 @@ function displayResults(data) {
     setTimeout(() => {
       initializeCharts(data);
     }, 100);
+
+
+    // Pro Report Block
+    if (window.ProReportBlock && window.ProReportBlock.render) {
+      const proBlockHtml = window.ProReportBlock.render({
+        context: 'competitive-analysis',
+        features: ['pdf', 'csv', 'share'],
+        title: 'Unlock Report',
+        subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+      });
+      accordionContainer.insertAdjacentHTML('beforeend', proBlockHtml);
+    }
   } catch (error) {
     console.error('Error rendering results:', error);
     alert(`Error displaying results: ${error.message}`);
@@ -409,8 +489,22 @@ function createCompetitiveAccordion(container, id, title, contentCreator, score,
 }
 
 // Get score color
+function getAccentPrimaryColor() {
+  try {
+    const value = getComputedStyle(document.documentElement)
+      .getPropertyValue('--accent-primary')
+      .trim();
+    if (value) return value;
+  } catch (e) {
+    // Ignore
+  }
+
+  const isLightTheme = document.body && document.body.classList.contains('white-theme');
+  return isLightTheme ? '#dd3838' : '#5bf4e7';
+}
+
 function getScoreColor(score) {
-  if (score >= 80) return '#00ff41';
+  if (score >= 80) return getAccentPrimaryColor();
   if (score >= 60) return '#ffa500';
   return '#ff4444';
 }
@@ -574,9 +668,9 @@ function createRadarChart(sites) {
         },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: '#00ff41',
+          titleColor: getAccentPrimaryColor(),
           bodyColor: '#fff',
-          borderColor: '#00ff41',
+          borderColor: getAccentPrimaryColor(),
           borderWidth: 1,
           padding: 12,
           displayColors: true,
@@ -623,7 +717,7 @@ function createBarChart(sites) {
       label: site.name,
       data: scores,
       backgroundColor: color,
-      borderColor: site.isYourSite ? '#00ff41' : color,
+      borderColor: site.isYourSite ? getAccentPrimaryColor() : color,
       borderWidth: site.isYourSite ? 3 : 1,
       borderRadius: 6,
       barThickness: 'flex'
@@ -681,9 +775,9 @@ function createBarChart(sites) {
         },
         tooltip: {
           backgroundColor: 'rgba(0, 0, 0, 0.8)',
-          titleColor: '#00ff41',
+          titleColor: getAccentPrimaryColor(),
           bodyColor: '#fff',
-          borderColor: '#00ff41',
+          borderColor: getAccentPrimaryColor(),
           borderWidth: 1,
           padding: 12,
           displayColors: true,
@@ -715,7 +809,7 @@ function createBarChart(sites) {
 
 // Get chart color for site
 function getChartColor(index, isYourSite) {
-  if (isYourSite) return '#00ff41'; // Bright green for your site
+  if (isYourSite) return getAccentPrimaryColor();
   
   const colors = [
     '#ff6b6b', // Red
@@ -764,8 +858,8 @@ function renderDetailedMetricsContent(data) {
     <div style="overflow-x: auto;">
       <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden;">
         <thead>
-          <tr style="background: rgba(0, 255, 65, 0.1); border-bottom: 2px solid rgba(0, 255, 65, 0.3);">
-            <th style="padding: 0.6rem 0.8rem; text-align: left; color: #00ff41; font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
+          <tr style="background: rgba(var(--accent-primary-rgb), 0.1); border-bottom: 2px solid rgba(var(--accent-primary-rgb), 0.3);">
+            <th style="padding: 0.6rem 0.8rem; text-align: left; color: var(--accent-primary); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
               Site
             </th>
             ${metrics.map(({ label, icon }) => `
@@ -785,8 +879,8 @@ function renderDetailedMetricsContent(data) {
             const isYou = site.isYou;
             
             return `
-              <tr style="background: ${isYou ? 'rgba(0, 255, 65, 0.05)' : siteIdx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <td style="padding: 0.6rem 0.8rem; font-weight: ${isYou ? 'bold' : 'normal'}; color: ${isYou ? '#00ff41' : 'var(--text-primary)'}; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
+              <tr style="background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.05)' : siteIdx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                <td style="padding: 0.6rem 0.8rem; font-weight: ${isYou ? 'bold' : 'normal'}; color: ${isYou ? 'var(--accent-primary)' : 'var(--text-primary)'}; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
                   ${isYou ? '◉ ' : ''}${site.name}${isYou ? ' (YOU)' : ''}
                   <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.15rem;">
                     ${getDomainName(site.data.url)}
@@ -798,7 +892,7 @@ function renderDetailedMetricsContent(data) {
                   const failed = score === 0;
                   
                   let scoreColor = '#ff4444';
-                  if (score >= 80) scoreColor = '#00ff41';
+                  if (score >= 80) scoreColor = getAccentPrimaryColor();
                   else if (score >= 60) scoreColor = '#ffa500';
                   
                   let grade = 'F';
@@ -830,8 +924,8 @@ function renderDetailedMetricsContent(data) {
                     </td>
                   `;
                 }).join('')}
-                <td style="padding: 0.6rem 0.8rem; text-align: center; background: ${isYou ? 'rgba(0, 255, 65, 0.1)' : 'rgba(255, 215, 0, 0.05)'};">
-                  <div style="font-size: 1.5rem; font-weight: bold; color: ${scores.overall >= 80 ? '#00ff41' : scores.overall >= 60 ? '#ffa500' : '#ff4444'};">
+                <td style="padding: 0.6rem 0.8rem; text-align: center; background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.1)' : 'rgba(255, 215, 0, 0.05)'};">
+                  <div style="font-size: 1.5rem; font-weight: bold; color: ${scores.overall >= 80 ? 'var(--accent-primary)' : scores.overall >= 60 ? '#ffa500' : '#ff4444'};">
                     ${scores.overall || 0}
                   </div>
                   <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
@@ -894,13 +988,13 @@ function renderExecutiveSummary(data) {
     if (status === 'losing') lossesCount++;
   });
   
-  const statusColor = isWinning ? '#00ff41' : isLosing ? '#ff4444' : '#ff8c00';
+  const statusColor = isWinning ? getAccentPrimaryColor() : isLosing ? '#ff4444' : '#ff8c00';
   const statusIcon = isWinning ? '↑' : isLosing ? '↓' : '≈';
   const statusText = isWinning ? 'COMPETITIVE' : isLosing ? 'COMPETITIVE' : 'COMPETITIVE';
   
   return `
     <div style="
-      background: linear-gradient(135deg, rgba(0,255,65,0.05) 0%, rgba(0,0,0,0.1) 100%);
+      background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.05) 0%, rgba(0,0,0,0.1) 100%);
       border: 2px solid ${statusColor};
       border-radius: 16px;
       padding: 2.5rem;
@@ -965,7 +1059,7 @@ function renderExecutiveSummary(data) {
               background: rgba(255,255,255,0.03);
               padding: 1rem;
               border-radius: 8px;
-              border-left: 3px solid #00ff41;
+              border-left: 3px solid var(--accent-primary);
             ">
               <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
                 Winning in
@@ -999,12 +1093,12 @@ function renderExecutiveSummary(data) {
               background: rgba(255,255,255,0.03);
               padding: 1rem;
               border-radius: 8px;
-              border-left: 3px solid ${maxCompetitor > yourOverall ? '#ff4444' : '#00ff41'};
+              border-left: 3px solid ${maxCompetitor > yourOverall ? '#ff4444' : 'var(--accent-primary)'};
             ">
               <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
                 Gap to leader
               </div>
-              <div style="font-size: 2rem; font-weight: 900; color: ${maxCompetitor > yourOverall ? '#ff4444' : '#00ff41'}; line-height: 1;">
+              <div style="font-size: 2rem; font-weight: 900; color: ${maxCompetitor > yourOverall ? '#ff4444' : 'var(--accent-primary)'}; line-height: 1;">
                 ${maxCompetitor > yourOverall ? `${maxCompetitor - yourOverall}` : `+${yourOverall - maxCompetitor}`}
               </div>
               <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
@@ -1114,7 +1208,7 @@ function renderRankings(rankings) {
                 rankDisplay = '—';
                 recommendation = 'Fix analysis errors - check site accessibility';
               } else if (isFirst) {
-                statusColor = '#00ff41';
+                statusColor = getAccentPrimaryColor();
                 statusText = '↑ Leading!';
                 recommendation = 'Maintain position - monitor competitors';
               } else if (isSecond) {
@@ -1246,7 +1340,7 @@ function getMetricStatus(data, metric) {
     statusText: failed 
       ? '✗ Analysis Failed'
       : (rankingData.rank === 1 ? '↑ Leading!' : rankingData.rank === 2 ? '≈ Strong' : '◉ Competitive'),
-    statusColor: failed ? '#ff4444' : (rankingData.rank === 1 ? '#00ff41' : rankingData.rank === 2 ? '#ffd700' : '#ff8c00')
+    statusColor: failed ? '#ff4444' : (rankingData.rank === 1 ? getAccentPrimaryColor() : rankingData.rank === 2 ? '#ffd700' : '#ff8c00')
   };
 }
 
@@ -1286,7 +1380,7 @@ function renderVisualComparisonContent(data) {
               ${formatMetricName(metric)}
               ${metricStatus.failed ? `<span style="color: ${metricStatus.statusColor}; font-size: 0.9rem; margin-left: 0.5rem;">(${metricStatus.statusText})</span>` :
                 gap > 0 ? `<span style="color: #ff4444; font-size: 0.9rem; margin-left: 0.5rem;">(-${gap} behind leader)</span>` : 
-                 gap < 0 ? `<span style="color: #00ff41; font-size: 0.9rem; margin-left: 0.5rem;">(+${Math.abs(gap)} ahead!)</span>` :
+                 gap < 0 ? `<span style="color: var(--accent-primary); font-size: 0.9rem; margin-left: 0.5rem;">(+${Math.abs(gap)} ahead!)</span>` :
                  `<span style="color: #ffd700; font-size: 0.9rem; margin-left: 0.5rem;">(${metricStatus.statusText})</span>`}
             </h3>
             <div style="font-size: 0.85rem; color: ${metricStatus.statusColor};">
@@ -1297,12 +1391,12 @@ function renderVisualComparisonContent(data) {
           ${allScores.map((site, idx) => {
             const percentage = maxScore > 0 ? (site.score / maxScore) * 100 : 0;
             const isWinner = idx === 0;
-            const barColor = site.isYou ? '#00ff41' : (isWinner ? '#ffd700' : '#4a9eff');
+            const barColor = site.isYou ? getAccentPrimaryColor() : (isWinner ? '#ffd700' : '#4a9eff');
             
             return `
               <div style="margin-bottom: 0.75rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                  <span style="font-size: 0.9rem; ${site.isYou ? 'font-weight: bold; color: #00ff41;' : ''}">
+                  <span style="font-size: 0.9rem; ${site.isYou ? 'font-weight: bold; color: var(--accent-primary);' : ''}">
                     ${isWinner ? '👑 ' : ''}${site.name}${site.isYou ? ' (YOU)' : ''}
                   </span>
                   <span style="font-weight: bold; font-size: 1rem; color: ${barColor};">
@@ -1345,7 +1439,7 @@ function renderCompetitivePositionContent(data) {
   return `
     <div class="stats-grid">
       ${Object.entries(data.comparison).map(([metric, stats]) => `
-        <div class="stat-card" style="border: 2px solid ${stats.status === 'winning' ? '#00ff41' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
+        <div class="stat-card" style="border: 2px solid ${stats.status === 'winning' ? 'var(--accent-primary)' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
           <div style="text-align: center; margin-bottom: 0.5rem;">
             ${stats.status === 'winning' ? '✓' : stats.status === 'losing' ? '✗' : '≈'}
           </div>
@@ -1353,7 +1447,7 @@ function renderCompetitivePositionContent(data) {
             ${stats.diff > 0 ? '+' : ''}${stats.diff}
           </div>
           <div class="stat-label">${formatMetricName(metric)}</div>
-          <div class="stat-sublabel" style="font-weight: bold; color: ${stats.status === 'winning' ? '#00ff41' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
+          <div class="stat-sublabel" style="font-weight: bold; color: ${stats.status === 'winning' ? 'var(--accent-primary)' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
             ${stats.status === 'winning' ? 'WINNING' : stats.status === 'tied' ? 'TIED' : 'LOSING'}
           </div>
           <div style="font-size: 0.8rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1);">
@@ -1402,8 +1496,8 @@ function renderHeadToHeadContent(data) {
           ${allSites.map(site => {
             const isYou = site.isYou;
             return `
-              <tr class="${isYou ? 'your-site' : ''}" style="${isYou ? 'background: rgba(0, 255, 65, 0.1);' : ''}">
-                <td style="position: sticky; left: 0; background: ${isYou ? 'rgba(0, 255, 65, 0.15)' : 'rgba(20, 20, 20, 0.95)'}; z-index: 9;">
+              <tr class="${isYou ? 'your-site' : ''}" style="${isYou ? 'background: rgba(var(--accent-primary-rgb), 0.1);' : ''}">
+                <td style="position: sticky; left: 0; background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.15)' : 'rgba(20, 20, 20, 0.95)'}; z-index: 9;">
                   <strong>${isYou ? '👤 YOU' : site.name}</strong>
                   <br><small style="font-size: 0.75rem; opacity: 0.7;">${site.url}</small>
                 </td>
@@ -1488,17 +1582,17 @@ function renderStrengthsWeaknessesContent(data) {
   return `
     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
       <!-- Strengths -->
-      <div style="background: rgba(0, 255, 65, 0.05); padding: 1.5rem; border-radius: 8px; border: 2px solid rgba(0, 255, 65, 0.3);">
-        <h3 style="margin: 0 0 1rem 0; color: #00ff41; display: flex; align-items: center; gap: 0.5rem;">
+      <div style="background: rgba(var(--accent-primary-rgb), 0.05); padding: 1.5rem; border-radius: 8px; border: 2px solid rgba(var(--accent-primary-rgb), 0.3);">
+        <h3 style="margin: 0 0 1rem 0; color: var(--accent-primary); display: flex; align-items: center; gap: 0.5rem;">
           <span style="font-size: 1.5rem;">💪</span> Strengths (${strengths.length})
         </h3>
         ${strengths.length > 0 ? `
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             ${strengths.map(s => `
-              <div style="background: rgba(0, 255, 65, 0.1); padding: 1rem; border-radius: 6px; border-left: 3px solid #00ff41;">
+              <div style="background: rgba(var(--accent-primary-rgb), 0.1); padding: 1rem; border-radius: 6px; border-left: 3px solid var(--accent-primary);">
                 <div style="display: flex; justify-content: space-between; align-items: center;">
                   <span style="font-weight: bold;">${formatMetricName(s.metric)}</span>
-                  <span style="color: #00ff41; font-weight: bold; font-size: 1.1rem;">${s.score}</span>
+                  <span style="color: var(--accent-primary); font-weight: bold; font-size: 1.1rem;">${s.score}</span>
                 </div>
                 <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
                   ${s.status === 'dominant' ? '👑 <strong>DOMINATING</strong> - Best in category!' : 
@@ -1537,7 +1631,7 @@ function renderStrengthsWeaknessesContent(data) {
             `).join('')}
           </div>
         ` : `
-          <p style="color: #00ff41; font-style: italic;">
+          <p style="color: var(--accent-primary); font-style: italic;">
             ! No weaknesses! You're leading or competitive in all areas!
           </p>
         `}
@@ -1554,7 +1648,7 @@ function renderStrengthsWeaknesses(data, metrics) {
 // Recommendations content (for accordion)
 function renderRecommendationsContent(recommendations) {
   if (!recommendations || recommendations.length === 0) {
-    return `<p style="color: #00ff41;">You're already ahead of the competition. Keep up the great work!</p>`;
+    return `<p style="color: var(--accent-primary);">You're already ahead of the competition. Keep up the great work!</p>`;
   }
   
   return `
@@ -1587,7 +1681,7 @@ function renderRecommendations(recommendations) {
     return `
       <section class="section">
         <h2>✓ You're Dominating!</h2>
-        <p style="color: #00ff41;">You're already ahead of the competition. Keep up the great work!</p>
+        <p style="color: var(--accent-primary);">You're already ahead of the competition. Keep up the great work!</p>
       </section>
     `;
   }
@@ -1619,7 +1713,7 @@ function getDomainName(url) {
 
 function getGradeColor(grade) {
   const colors = {
-    'A': '#00ff41',
+    'A': getAccentPrimaryColor(),
     'B': '#ffd700',
     'C': '#ff8c00',
     'D': '#ff4444',
@@ -1646,7 +1740,6 @@ function setupThemeChangeListener() {
       if (mutation.attributeName === 'class') {
         // Theme changed, re-render charts if data exists
         if (chartData) {
-          console.log('Theme changed, updating charts...');
           initializeCharts(chartData);
         }
       }

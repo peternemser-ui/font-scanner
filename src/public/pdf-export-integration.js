@@ -37,7 +37,6 @@ function initPDFExport(config = {}) {
   const buttons = document.querySelectorAll(defaultConfig.buttonSelector);
 
   if (buttons.length === 0) {
-    console.warn('PDF Export: No export button found. Looking for:', defaultConfig.buttonSelector);
     return false;
   }
 
@@ -48,8 +47,6 @@ function initPDFExport(config = {}) {
       await exportCurrentPage(defaultConfig);
     });
   });
-
-  console.log('PDF Export initialized for:', pageType);
   return true;
 }
 
@@ -202,7 +199,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (typeof PDFExportUtility !== 'undefined') {
         initPDFExport();
       } else {
-        console.warn('PDF Export: PDFExportUtility not loaded. Make sure pdf-export-utility.js is included.');
       }
     }, 500);
   }

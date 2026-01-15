@@ -2,8 +2,8 @@ const PDFDocument = require('pdfkit');
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 const { createLogger } = require('../utils/logger');
+const { resolveReportId } = require('../utils/resolveReportId');
 
 const logger = createLogger('PDFReportGenerator');
 
@@ -22,7 +22,16 @@ class PDFReportGenerator {
   }
 
   async generateComprehensiveReport(scanResults) {
-    const reportId = uuidv4();
+    const reportId = resolveReportId({
+      reportId: scanResults?.reportId,
+      analyzerKey: scanResults?.analyzerKey || 'enhanced-fonts',
+      url: scanResults?.normalizedUrl || scanResults?.url || scanResults?.baseUrl,
+      startedAtISO: scanResults?.scanStartedAt || scanResults?.startedAt || scanResults?.timestamp,
+    });
+
+    if (!reportId) {
+      throw new Error('Missing report identity for Font PDF generation (reportId or url+scanStartedAt+analyzerKey)');
+    }
     const filename = `font-analysis-${reportId}.pdf`;
     const filepath = path.join(this.reportsDir, filename);
 

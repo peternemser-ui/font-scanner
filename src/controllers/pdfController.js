@@ -9,8 +9,9 @@ const performancePdfGenerator = require('../services/performancePdfGenerator');
 const accessibilityPdfGenerator = require('../services/accessibilityPdfGenerator');
 const securityPdfGenerator = require('../services/securityPdfGenerator');
 const pdfReportGenerator = require('../services/pdfReportGenerator');
-const { asyncHandler } = require('../utils/errorHandler');
+const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { createLogger } = require('../utils/logger');
+const { resolveReportId } = require('../utils/resolveReportId');
 const path = require('path');
 
 const logger = createLogger('PDFController');
@@ -61,6 +62,27 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
 
   logger.info(`PDF purchase request`, { reportType, email, requestId: req.id });
 
+  const analyzerKeyByType = {
+    seo: 'seo',
+    performance: 'performance',
+    accessibility: 'accessibility',
+    security: 'security',
+    fonts: reportData?.analyzerKey || 'enhanced-fonts',
+  };
+
+  const resolvedReportId = resolveReportId({
+    reportId: reportData?.reportId,
+    analyzerKey: analyzerKeyByType[reportType],
+    url: reportData?.normalizedUrl || reportData?.url || reportData?.baseUrl,
+    startedAtISO: reportData?.scanStartedAt || reportData?.startedAt || reportData?.timestamp,
+  });
+
+  if (!resolvedReportId) {
+    throw new ValidationError('Report identity is required (reportId or url + scanStartedAt + analyzerKey)');
+  }
+
+  const reportDataWithId = { ...reportData, reportId: resolvedReportId, analyzerKey: analyzerKeyByType[reportType] };
+
   // Process payment
   const paymentResult = await paymentService.processPayment({
     cardNumber,
@@ -69,7 +91,7 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
     cvv,
     email,
     reportType,
-    reportId: reportData.reportId || 'unknown'
+    reportId: resolvedReportId,
   });
 
   if (!paymentResult.success) {
@@ -85,19 +107,19 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
   try {
     switch (reportType) {
       case 'seo':
-        pdfResult = await seoPdfGenerator.generateReport(reportData);
+        pdfResult = await seoPdfGenerator.generateReport(reportDataWithId);
         break;
       case 'performance':
-        pdfResult = await performancePdfGenerator.generateReport(reportData);
+        pdfResult = await performancePdfGenerator.generateReport(reportDataWithId);
         break;
       case 'accessibility':
-        pdfResult = await accessibilityPdfGenerator.generateReport(reportData);
+        pdfResult = await accessibilityPdfGenerator.generateReport(reportDataWithId);
         break;
       case 'security':
-        pdfResult = await securityPdfGenerator.generateReport(reportData);
+        pdfResult = await securityPdfGenerator.generateReport(reportDataWithId);
         break;
       case 'fonts':
-        pdfResult = await pdfReportGenerator.generateComprehensiveReport(reportData);
+        pdfResult = await pdfReportGenerator.generateComprehensiveReport(reportDataWithId);
         break;
       default:
         throw new Error(`Unknown report type: ${reportType}`);
@@ -169,24 +191,17 @@ const downloadPDFReport = asyncHandler(async (req, res) => {
   // Note: In production, store filename in token data or database
   const reportsDir = path.join(__dirname, '../../reports');
   const fs = require('fs');
-  
-  // Search for matching PDF file
-  let pdfPath;
-  const files = fs.readdirSync(reportsDir);
-  
-  // Find file by report type and recent timestamp
+
   const reportTypePrefix = reportType === 'fonts' ? 'font-analysis' : `${reportType}-analysis`;
-  const matchingFiles = files.filter(f => f.startsWith(reportTypePrefix) && f.endsWith('.pdf'));
-  
-  if (matchingFiles.length === 0) {
+  const expectedFilename = `${reportTypePrefix}-${reportId}.pdf`;
+  const pdfPath = path.join(reportsDir, expectedFilename);
+
+  if (!fs.existsSync(pdfPath)) {
     return res.status(404).json({
       success: false,
       error: 'PDF report not found'
     });
   }
-
-  // Get most recent file
-  pdfPath = path.join(reportsDir, matchingFiles[matchingFiles.length - 1]);
 
   // Invalidate token (one-time download)
   paymentService.invalidateToken(token);

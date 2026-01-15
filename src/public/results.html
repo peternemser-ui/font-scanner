@@ -22,7 +22,7 @@
         }
 
         .scan-url {
-            color: #00ff41;
+            color: var(--accent-primary);
             font-size: 1.1rem;
             word-break: break-all;
         }
@@ -35,15 +35,15 @@
             overflow: hidden;
             position: relative;
             margin: 2rem 0;
-            border: 2px solid rgba(0, 255, 65, 0.2);
+            border: 2px solid rgba(var(--accent-primary-rgb), 0.2);
         }
 
         .progress-bar {
             height: 100%;
-            background: linear-gradient(90deg, #00ff41 0%, #00cc33 100%);
+            background: linear-gradient(90deg, var(--accent-primary) 0%, var(--accent-primary-dark) 100%);
             border-radius: 20px;
             transition: width 0.5s ease;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+            box-shadow: 0 0 20px rgba(var(--accent-primary-rgb), 0.4);
             position: relative;
             overflow: hidden;
         }
@@ -92,16 +92,16 @@
         }
 
         .status-running {
-            background: rgba(0, 255, 65, 0.2);
-            border: 2px solid rgba(0, 255, 65, 0.4);
-            color: #00ff41;
+            background: rgba(var(--accent-primary-rgb), 0.2);
+            border: 2px solid rgba(var(--accent-primary-rgb), 0.4);
+            color: var(--accent-primary);
             animation: pulse 2s infinite;
         }
 
         .status-done {
-            background: rgba(0, 255, 65, 0.2);
-            border: 2px solid rgba(0, 255, 65, 0.4);
-            color: #00ff41;
+            background: rgba(var(--accent-primary-rgb), 0.2);
+            border: 2px solid rgba(var(--accent-primary-rgb), 0.4);
+            color: var(--accent-primary);
         }
 
         .status-failed {
@@ -120,6 +120,38 @@
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
             margin: 2rem 0;
+        }
+
+        .long-scan-hint {
+            display: none;
+            align-items: flex-start;
+            gap: 0.75rem;
+            padding: 0.75rem 1rem;
+            border-radius: 10px;
+            border: 1px solid rgba(var(--accent-primary-rgb), 0.25);
+            background: rgba(var(--accent-primary-rgb), 0.05);
+            margin-top: -0.75rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .long-scan-hint.show {
+            display: flex;
+        }
+
+        .long-scan-hint .loading-spinner {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid rgba(var(--accent-primary-rgb), 0.25);
+            border-top-color: var(--accent-primary);
+            animation: spin 0.9s linear infinite;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .info-card {
@@ -177,9 +209,9 @@
         }
 
         .tab-button.active {
-            background: rgba(0, 255, 65, 0.2);
-            border-color: rgba(0, 255, 65, 0.4);
-            color: #00ff41;
+            background: rgba(var(--accent-primary-rgb), 0.2);
+            border-color: rgba(var(--accent-primary-rgb), 0.4);
+            color: var(--accent-primary);
         }
 
         .tab-content {
@@ -209,13 +241,13 @@
         }
 
         .btn-primary {
-            background: rgba(0, 255, 65, 0.2);
-            border-color: rgba(0, 255, 65, 0.4);
-            color: #00ff41;
+            background: rgba(var(--accent-primary-rgb), 0.12);
+            border-color: rgba(var(--accent-primary-rgb), 0.35);
+            color: var(--accent-primary);
         }
 
         .btn-primary:hover {
-            background: rgba(0, 255, 65, 0.3);
+            background: rgba(var(--accent-primary-rgb), 0.18);
             transform: translateY(-2px);
         }
 
@@ -253,7 +285,7 @@
         <!-- Workflow Stage Indicator -->
         <div style="display: flex; justify-content: center; gap: 0.5rem; flex-wrap: wrap; margin: 1.5rem 0;">
           <span class="workflow-stage" id="stagesScan" style="padding: 0.5rem 1rem; border-radius: 20px; background: var(--bg-secondary, #1a1a1a); color: var(--text-muted, #888); font-size: 0.85rem; border: 1px solid var(--border-color, #333);">1. Scan ✓</span>
-          <span class="workflow-stage" id="stagesDiagnose" style="padding: 0.5rem 1rem; border-radius: 20px; background: rgba(0, 255, 65, 0.15); color: #00ff41; font-size: 0.85rem; border: 2px solid #00ff41; font-weight: 600;">2. Diagnose</span>
+          <span class="workflow-stage" id="stagesDiagnose" style="padding: 0.5rem 1rem; border-radius: 20px; background: rgba(var(--accent-primary-rgb), 0.15); color: var(--accent-primary); font-size: 0.85rem; border: 2px solid var(--accent-primary); font-weight: 600;">2. Diagnose</span>
           <span class="workflow-stage" id="stagesPrioritize" style="padding: 0.5rem 1rem; border-radius: 20px; background: var(--bg-secondary, #1a1a1a); color: var(--text-muted, #888); font-size: 0.85rem; border: 1px solid var(--border-color, #333);">3. Prioritize</span>
           <span class="workflow-stage" id="stagesExport" style="padding: 0.5rem 1rem; border-radius: 20px; background: var(--bg-secondary, #1a1a1a); color: var(--text-muted, #888); font-size: 0.85rem; border: 1px solid var(--border-color, #333);">4. Export</span>
           <span class="workflow-stage" id="stagesImprove" style="padding: 0.5rem 1rem; border-radius: 20px; background: var(--bg-secondary, #1a1a1a); color: var(--text-muted, #888); font-size: 0.85rem; border: 1px solid var(--border-color, #333);">5. Improve</span>
@@ -290,12 +322,20 @@
                     <div class="info-value" id="pagesCrawled">0</div>
                 </div>
                 <div class="info-card">
-                    <div class="info-label">Time Elapsed</div>
+                    <div class="info-label">Duration</div>
                     <div class="info-value" id="timeElapsed">-</div>
                 </div>
                 <div class="info-card">
-                    <div class="info-label">Created At</div>
+                    <div class="info-label">Started At</div>
                     <div class="info-value" id="createdAt" style="font-size: 0.8rem;">-</div>
+                </div>
+            </div>
+
+            <div class="long-scan-hint" id="longScanHint" aria-live="polite">
+                <span class="loading-spinner" aria-hidden="true"></span>
+                <div>
+                    <div style="font-weight: 700; margin-bottom: 0.15rem;">Still working…</div>
+                    <div id="longScanMessage" style="opacity: 0.85;">Some sites take longer to inspect.</div>
                 </div>
             </div>
 
@@ -327,9 +367,6 @@
             <!-- Stage 4: Export - Action Buttons -->
             <div class="action-buttons" style="flex-direction: column; gap: 1rem;">
                 <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-                    <button class="btn btn-primary" id="exportPdfBtn" style="display: none;">
-                        <span style="display: flex; align-items: center; gap: 0.5rem;">📄 Export PDF Report</span>
-                    </button>
                     <button class="btn btn-secondary" id="exportCsvBtn" style="display: none;">📊 Export CSV</button>
                 </div>
                 <div style="display: flex; gap: 1rem; justify-content: center;">
@@ -364,6 +401,7 @@
 
         let pollInterval = null;
         let startTime = null;
+        let currentStatus = null;
 
         async function initializeInspectionMonitoring() {
             document.getElementById('scanId').textContent = scanId;
@@ -407,6 +445,7 @@
             const statusBadge = document.getElementById('statusBadge');
             statusBadge.textContent = data.status.toUpperCase();
             statusBadge.className = `status-badge status-${data.status}`;
+            currentStatus = data.status;
 
             // Update progress bar
             const progress = data.progress || 0;
@@ -429,7 +468,6 @@
             // Handle completion
             if (data.status === 'done' && data.results) {
                 showResults(data.results);
-                document.getElementById('exportPdfBtn').style.display = 'inline-block';
                 document.getElementById('exportCsvBtn').style.display = 'inline-block';
             }
 
@@ -448,6 +486,35 @@
 
             document.getElementById('timeElapsed').textContent =
                 `${minutes}m ${seconds}s`;
+
+            updateLongScanHint(elapsed);
+        }
+
+        function updateLongScanHint(elapsedSeconds) {
+            const hint = document.getElementById('longScanHint');
+            if (!hint) return;
+
+            const isActiveScan = currentStatus && currentStatus !== 'done' && currentStatus !== 'failed';
+            const isLong = elapsedSeconds >= 60;
+
+            if (!isActiveScan || !isLong) {
+                hint.classList.remove('show');
+                return;
+            }
+
+            hint.classList.add('show');
+
+            const messageEl = document.getElementById('longScanMessage');
+            if (!messageEl) return;
+
+            const messages = [
+                'Some sites take longer to inspect.',
+                'Still crawling pages and checking links.',
+                'Finishing up the last checks — almost there.'
+            ];
+
+            const messageIndex = Math.floor((elapsedSeconds - 60) / 10) % messages.length;
+            messageEl.textContent = messages[messageIndex];
         }
 
         function showError(message) {
@@ -517,25 +584,6 @@
                 });
         }
 
-        // Export PDF button
-        document.getElementById('exportPdfBtn')?.addEventListener('click', async () => {
-            try {
-                const response = await fetch(`/api/scans/${scanId}/pdf`);
-                if (!response.ok) {
-                    throw new Error('PDF export not available yet');
-                }
-                // Download PDF
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `scan-${scanId}.pdf`;
-                a.click();
-            } catch (error) {
-                alert(error.message);
-            }
-        });
-
         // New scan button
         document.getElementById('newScanBtn')?.addEventListener('click', () => {
             window.location.href = '/';
@@ -557,9 +605,9 @@
             // Helper to set stage as active
             const setActive = (el) => {
                 if (!el) return;
-                el.style.background = 'rgba(0, 255, 65, 0.15)';
-                el.style.color = '#00ff41';
-                el.style.border = '2px solid #00ff41';
+                el.style.background = 'rgba(var(--accent-primary-rgb), 0.15)';
+                el.style.color = 'var(--accent-primary)';
+                el.style.border = '2px solid var(--accent-primary)';
                 el.style.fontWeight = '600';
             };
 
@@ -567,8 +615,8 @@
             const setComplete = (el) => {
                 if (!el) return;
                 el.style.background = 'var(--bg-secondary, #1a1a1a)';
-                el.style.color = '#00ff41';
-                el.style.border = '1px solid #00ff41';
+                el.style.color = 'var(--accent-primary)';
+                el.style.border = '1px solid var(--accent-primary)';
                 el.style.fontWeight = 'normal';
                 if (!el.textContent.includes('✓')) {
                     el.textContent = el.textContent.replace(/^\d+\.\s*/, (m) => m) + ' ✓';
@@ -604,9 +652,6 @@
                     setComplete(stages.scan);
                     setComplete(stages.diagnose);
                     setActive(stages.prioritize);
-                    // Enable export when done
-                    stages.export.style.cursor = 'pointer';
-                    stages.export.onclick = () => document.getElementById('exportPdfBtn')?.click();
                     setComplete(stages.export);
                     setPending(stages.improve);
                     break;

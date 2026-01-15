@@ -7,6 +7,8 @@
  * - Consistent branding
  */
 
+/* global html2canvas */
+
 class PDFExportUtility {
   constructor(options = {}) {
     this.options = {
@@ -28,15 +30,31 @@ class PDFExportUtility {
    * @returns {Promise<void>}
    */
   async export(contentSelector, buttonElement = null) {
-    // PAYMENT GATE: Check if user has Pro status before exporting
-    // Use shared ExportGate if available, otherwise fallback to proManager check
-    const isPaid = window.ExportGate ? window.ExportGate.isPro() : (window.proManager && window.proManager.isPro());
+    const reportId =
+      (buttonElement && buttonElement.dataset && buttonElement.dataset.reportId) ||
+      document.body.getAttribute('data-report-id') ||
+      null;
+
+    // PAYMENT GATE: allow export for Pro OR for an unlocked single report.
+    const isPaid = (function isExportAllowed() {
+      const hasPro = window.ExportGate
+        ? window.ExportGate.isPro()
+        : (window.proManager && typeof window.proManager.isPro === 'function' && window.proManager.isPro());
+      if (hasPro) return true;
+
+      if (reportId && window.CreditsManager) {
+        if (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) return true;
+        if (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId)) return true;
+      }
+
+      return false;
+    })();
+
     if (!isPaid) {
-      if (window.ExportGate) {
+      if (window.ExportGate && typeof window.ExportGate.showPaywall === 'function') {
         window.ExportGate.showPaywall();
       } else {
-        // Fallback paywall if ExportGate not loaded
-        alert('Pro access required for PDF export. Please sign in with Pro.');
+        alert('Pro access required for PDF export.');
       }
       return;
     }
@@ -51,6 +69,18 @@ class PDFExportUtility {
     const originalButtonState = this._setButtonLoading(buttonElement, true);
 
     try {
+      // Ensure paywall/unlock UI is up to date before we snapshot.
+      if (reportId && window.CreditsManager) {
+        const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
+        if (typeof render === 'function') {
+          try {
+            render(reportId);
+          } catch (e) {
+            // best-effort only
+          }
+        }
+      }
+
       // Step 1: Prepare content (expand accordions, apply print styles)
       const restoreContent = await this._prepareContentForPDF(content);
 
@@ -59,8 +89,6 @@ class PDFExportUtility {
 
       // Step 3: Restore original content state
       restoreContent();
-
-      console.log('PDF generated successfully');
     } catch (error) {
       console.error('PDF export error:', error);
       alert('Failed to generate PDF. Please try again.');
@@ -86,7 +114,10 @@ class PDFExportUtility {
       styles: []
     };
 
-    // Clone content for manipulation
+    // Mark export root so html2canvas.onclone can reliably find the right element.
+    content.setAttribute('data-pdf-export-root', 'true');
+
+    // Apply print-friendly CSS
     content.classList.add('pdf-export-mode');
 
     // 1. Expand all <details> elements
@@ -103,6 +134,7 @@ class PDFExportUtility {
       '.collapsible__content',
       '.expandable__content',
       '[data-accordion-content]',
+      '.report-accordion__body',
       '.card__body.hidden',
       '.card__body[style*="display: none"]',
       '.section__content.collapsed'
@@ -125,13 +157,14 @@ class PDFExportUtility {
         el.style.maxHeight = 'none';
         el.style.overflow = 'visible';
         el.classList.remove('hidden', 'collapsed');
+        if (el.hasAttribute('hidden')) el.removeAttribute('hidden');
         el.setAttribute('data-pdf-expanded', 'true');
       });
     });
 
     // 3. Show hidden issues/recommendations sections
     const hiddenSections = content.querySelectorAll('[style*="display: none"], .hidden:not([data-pdf-expanded])');
-    hiddenSections.forEach((el, index) => {
+    hiddenSections.forEach((el) => {
       // Skip navigation, modals, and UI controls
       if (el.closest('nav, .modal, .tabs, button, [role="button"]')) {
         return;
@@ -163,6 +196,18 @@ class PDFExportUtility {
       button.style.display = 'none';
     });
 
+    // 4. Ensure images are loaded (so screenshots render in the PDF)
+    await this._waitForImages(content);
+
+    // Ensure fonts are ready (helps avoid missing icon glyphs / layout shifts)
+    if (document.fonts && typeof document.fonts.ready === 'object' && typeof document.fonts.ready.then === 'function') {
+      try {
+        await document.fonts.ready;
+      } catch (e) {
+        // ignore
+      }
+    }
+
     // 5. Force expand any elements with aria-expanded="false"
     const collapsedElements = content.querySelectorAll('[aria-expanded="false"]');
     collapsedElements.forEach(el => {
@@ -172,6 +217,9 @@ class PDFExportUtility {
         if (target) {
           target.style.display = 'block';
           target.style.maxHeight = 'none';
+          target.style.overflow = 'visible';
+          if (target.hasAttribute('hidden')) target.removeAttribute('hidden');
+          target.classList.add('expanded');
         }
       }
     });
@@ -182,6 +230,7 @@ class PDFExportUtility {
     // Return restore function
     return () => {
       content.classList.remove('pdf-export-mode');
+      content.removeAttribute('data-pdf-export-root');
 
       // Restore details elements
       detailsElements.forEach((details, index) => {
@@ -215,6 +264,35 @@ class PDFExportUtility {
   }
 
   /**
+   * Wait for images to finish loading so html2canvas captures them.
+   * @private
+   */
+  async _waitForImages(content) {
+    const images = Array.from(content.querySelectorAll('img'));
+    if (images.length === 0) return;
+
+    const waiters = images.map((img) => {
+      if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+
+      return new Promise((resolve) => {
+        const done = () => {
+          img.removeEventListener('load', done);
+          img.removeEventListener('error', done);
+          resolve();
+        };
+        img.addEventListener('load', done, { once: true });
+        img.addEventListener('error', done, { once: true });
+      });
+    });
+
+    // Don't hang forever if some images are slow.
+    await Promise.race([
+      Promise.all(waiters),
+      new Promise((resolve) => setTimeout(resolve, 4000))
+    ]);
+  }
+
+  /**
    * Generate PDF from content
    * @private
    */
@@ -235,19 +313,20 @@ class PDFExportUtility {
       windowWidth: 1200, // Fixed width for consistency
       onclone: (clonedDoc) => {
         // Apply additional print styles to cloned document
-        const clonedContent = clonedDoc.querySelector(content.tagName);
+        const clonedContent = clonedDoc.querySelector('[data-pdf-export-root="true"]');
         if (clonedContent) {
           clonedContent.style.width = '1200px';
           clonedContent.style.padding = '20px';
         }
         // Hide elements marked as no-print (e.g., "Want More Detailed Analysis?" sections)
-        const noPrintElements = clonedDoc.querySelectorAll('.no-print, .pdf-exclude');
+        const noPrintElements = clonedDoc.querySelectorAll('.no-print, .pdf-exclude, [data-hide-in-pdf]');
         noPrintElements.forEach(el => {
           el.style.display = 'none';
         });
       }
     });
 
+    // Fast path for single-page documents (also avoids "unused" diagnostics in some toolchains)
     const imgData = canvas.toDataURL('image/png');
 
     // Create PDF
@@ -271,6 +350,28 @@ class PDFExportUtility {
     let remainingHeight = contentHeight;
     let yOffset = 0;
     let currentPage = 1;
+
+    const firstPageTopMargin = headerHeight;
+    const firstPageAvailableHeight = pageHeight - firstPageTopMargin - footerHeight - margin;
+    if (contentHeight <= firstPageAvailableHeight) {
+      pdf.addImage(
+        imgData,
+        'PNG',
+        margin,
+        firstPageTopMargin,
+        contentWidth,
+        contentHeight
+      );
+
+      const totalPages = pdf.internal.getNumberOfPages();
+      for (let i = 1; i <= totalPages; i++) {
+        pdf.setPage(i);
+        this._addPDFFooter(pdf, pageWidth, pageHeight, i, totalPages);
+      }
+
+      pdf.save(this.options.filename);
+      return;
+    }
 
     while (remainingHeight > 0) {
       if (currentPage > 1) {
@@ -354,7 +455,7 @@ class PDFExportUtility {
     // Horizontal line separator
     pdf.setDrawColor(0, 0, 0);
     pdf.setLineWidth(0.8);
-    pdf.line(15, yPos, 85, yPos);
+    pdf.line(15, yPos, Math.min(85, pageWidth - 15), yPos);
     yPos += 8;
 
     // Report Type

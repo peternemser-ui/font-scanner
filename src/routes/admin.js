@@ -82,6 +82,50 @@ router.get('/dashboard-stats', async (req, res) => {
 });
 
 /**
+ * GET /api/admin/billing-sessions
+ * Debug endpoint to inspect recent billing (no-account) checkout sessions.
+ * Query: ?limit=50
+ */
+router.get('/billing-sessions', async (req, res) => {
+  try {
+    const db = getDatabase();
+
+    const rawLimit = parseInt(req.query.limit, 10);
+    const limit = Number.isFinite(rawLimit) ? Math.min(Math.max(rawLimit, 1), 200) : 50;
+
+    const sessions = await db.all(
+      `SELECT
+         session_id,
+         purchase_type,
+         report_id,
+         pack_id,
+         credits_added,
+         payment_status,
+         mode,
+         amount_total,
+         currency,
+         completed_at,
+         updated_at
+       FROM billing_sessions
+       ORDER BY datetime(updated_at) DESC
+       LIMIT ?`,
+      [limit]
+    );
+
+    await logAdminAction(req.admin.id, 'VIEW_BILLING_SESSIONS', null, { limit });
+
+    res.json({
+      success: true,
+      limit,
+      sessions
+    });
+  } catch (error) {
+    console.error('Error fetching billing sessions:', error);
+    res.status(500).json({ error: 'Failed to fetch billing sessions' });
+  }
+});
+
+/**
  * GET /api/admin/users
  * Get all users with pagination
  */

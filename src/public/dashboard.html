@@ -51,9 +51,16 @@
     <link rel="stylesheet" href="analyzer-loading.css" />
     <link rel="stylesheet" href="ui-components.css" />
     <link rel="stylesheet" href="spacing-fixes.css" />
+    <link rel="stylesheet" href="faq.css" />
 
     <!-- PDF Export Styles -->
     <link rel="stylesheet" href="/pdf-export-styles.css">
+
+    <!-- Report UI Components -->
+    <link rel="stylesheet" href="/css/components/modal.css" />
+    <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
+    <link rel="stylesheet" href="/css/components/pro-report-block.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -391,6 +398,122 @@
         <!-- Results will be dynamically inserted here -->
       </section>
 
+      <!-- FAQ (below Scan a site) -->
+      <section class="card" aria-label="Frequently asked questions">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
+          <h2 class="card__title" style="margin: 0;">FAQ</h2>
+          <a href="/faq.html" class="link" style="font-weight: 700;">View all FAQs</a>
+        </div>
+
+        <div class="faq-group" style="margin-top: 0.75rem;">
+          <h3 class="faq-group__title">Common questions</h3>
+
+          <details class="faq-item">
+            <summary>
+              <span class="faq-item__q">
+                <span class="faq-item__tag">Basics</span>
+                <span>What is Site Mechanic?</span>
+              </span>
+              <span class="faq-item__chev" aria-hidden="true">›</span>
+            </summary>
+            <div class="faq-item__a">Site Mechanic is a set of website diagnostics modules (Speed & UX, SEO, Accessibility, Security, Fonts &amp; Design, Hosting, and more). Paste a URL, run a scan, and get prioritized issues plus next-step recommendations.</div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span class="faq-item__q">
+                <span class="faq-item__tag">Basics</span>
+                <span>Do I need an account to run scans?</span>
+              </span>
+              <span class="faq-item__chev" aria-hidden="true">›</span>
+            </summary>
+            <div class="faq-item__a">No. Most scans can be run without signing in. If you choose a paid report/export, you may be prompted to sign in or purchase credits depending on the tool.</div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span class="faq-item__q">
+                <span class="faq-item__tag">Basics</span>
+                <span>How long do scans take?</span>
+              </span>
+              <span class="faq-item__chev" aria-hidden="true">›</span>
+            </summary>
+            <div class="faq-item__a">Quick scans are typically under a minute; Lighthouse audits can take a few minutes. If a site is slow or blocks automation, scans can take longer or fail.</div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span class="faq-item__q">
+                <span class="faq-item__tag">Billing</span>
+                <span>What is a paid report?</span>
+              </span>
+              <span class="faq-item__chev" aria-hidden="true">›</span>
+            </summary>
+            <div class="faq-item__a">A paid report is an export/share outcome for a specific scan, such as PDF export, share links, downloadable data, or extended fix guidance. You can usually run the scan for free and then decide whether to purchase the report.</div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span class="faq-item__q">
+                <span class="faq-item__tag">Billing</span>
+                <span>How do credits work?</span>
+              </span>
+              <span class="faq-item__chev" aria-hidden="true">›</span>
+            </summary>
+            <div class="faq-item__a">Credits unlock paid reports for individual scans. When a report is locked, you’ll see options to buy a single report or buy a credit pack. If you already have credits, you can unlock with 1 credit.</div>
+          </details>
+
+          <details class="faq-item">
+            <summary>
+              <span class="faq-item__q">
+                <span class="faq-item__tag">Help</span>
+                <span>The scan is stuck. What should I do?</span>
+              </span>
+              <span class="faq-item__chev" aria-hidden="true">›</span>
+            </summary>
+            <div class="faq-item__a">Try a simpler URL (homepage vs. deep route) and re-run. If the issue persists, email <a href="mailto:peter@sitemechanic.io">peter@sitemechanic.io</a> with the URL and module name so we can reproduce.</div>
+          </details>
+
+          <p class="faq-meta" style="margin-bottom: 0;">More answers on the <a href="/faq.html">FAQ page</a>.</p>
+        </div>
+      </section>
+
+      <!-- Contact (below FAQ) -->
+      <section class="card" aria-label="Contact support">
+        <h2 class="card__title" style="margin-bottom: 0.5rem;">Contact</h2>
+        <p class="helper-text" style="margin-top: 0;">Send a message to support. Include the URL you scanned if it helps.</p>
+
+        <form id="dashboardContactForm" class="form-row" autocomplete="on">
+          <div class="form-row" style="margin-top: 0.75rem;">
+            <label for="contactName" class="form-row__label">Name (optional)</label>
+            <input id="contactName" name="name" class="input" type="text" placeholder="Your name" maxlength="200" />
+          </div>
+
+          <div class="form-row" style="margin-top: 0.75rem;">
+            <label for="contactEmail" class="form-row__label">Email</label>
+            <input id="contactEmail" name="email" class="input" type="email" placeholder="you@company.com" required maxlength="320" />
+          </div>
+
+          <div class="form-row" style="margin-top: 0.75rem;">
+            <label for="contactUrl" class="form-row__label">Website URL (optional)</label>
+            <input id="contactUrl" name="url" class="input" type="url" placeholder="https://example.com" maxlength="2000" />
+          </div>
+
+          <div class="form-row" style="margin-top: 0.75rem;">
+            <label for="contactMessage" class="form-row__label">Message</label>
+            <textarea id="contactMessage" name="message" class="input" rows="5" placeholder="What can we help with?" required maxlength="5000" style="resize: vertical;"></textarea>
+          </div>
+
+          <!-- Honeypot anti-spam field (hidden) -->
+          <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;" aria-hidden="true" />
+
+          <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
+            <button id="contactSubmitButton" type="submit" class="btn btn-primary">Send message</button>
+            <div id="contactFormStatus" class="helper-text" role="status" aria-live="polite" style="margin: 0;"></div>
+          </div>
+        </form>
+      </section>
+
       <!-- Unified Loading Container -->
       <div id="loadingContainer" class="loading-container" style="display: none;">
         <div class="loading-content">
@@ -458,7 +581,15 @@
     <script src="/pdf-export-utility.js"></script>
     <script src="/pdf-export-integration.js"></script>
 
+    <!-- Report UI Components -->
+    <script src="/js/report-ui.js"></script>
+    <script src="/js/components/ReportContainer.js"></script>
+    <script src="/js/components/Modal.js"></script>
+    <script src="/js/components/ScreenshotLightbox.js"></script>
+    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/PricingModal.js"></script>
+
     <!-- Dashboard Script -->
-    <script src="/dashboard-script.js?v=20260103b"></script>
+    <script src="/dashboard-script.js?v=20260114a"></script>
   </body>
 </html>

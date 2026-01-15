@@ -1,4 +1,5 @@
 const { createLogger } = require('../utils/logger');
+const { roundTo } = require('../utils/formatHelpers');
 
 const logger = createLogger('FontAnalyzer');
 
@@ -8,21 +9,15 @@ class FontAnalyzer {
 
     try {
       const fontData = await page.evaluate(() => {
-        console.log('🔍 FontAnalyzer: Starting font detection in browser context');
         const fonts = new Set();
         const fontFaces = new Map();
         const fontSources = new Set();
         const fontMetrics = [];
 
         // ENHANCED: Check for Google Fonts link elements FIRST
-        console.log('🔍 FontAnalyzer: Checking for Google Fonts links...');
         const allLinks = document.querySelectorAll('link');
-        console.log('🔍 FontAnalyzer: Found', allLinks.length, 'total link elements');
-        
         allLinks.forEach((link, index) => {
-          console.log(`🔍 FontAnalyzer: Link ${index}:`, link.href);
           if (link.href.includes('googleapis.com') || link.href.includes('fonts.google')) {
-            console.log('🔍 FontAnalyzer: ✅ Google Fonts link found:', link.href);
             fontSources.add(link.href);
             
             // Try to extract font family from href
@@ -30,58 +25,48 @@ class FontAnalyzer {
               const url = new URL(link.href);
               const family = url.searchParams.get('family');
               if (family) {
-                console.log('🔍 FontAnalyzer: Extracted family parameter:', family);
                 const fontFamilies = family.split('|').map(f => {
                   const cleanName = f.split(':')[0].replace(/\+/g, ' ');
                   return cleanName;
                 });
                 fontFamilies.forEach(fontName => {
                   if (fontName && fontName.trim()) {
-                    console.log('🔍 FontAnalyzer: Adding Google Font from link:', fontName.trim());
                     fonts.add(fontName.trim());
                   }
                 });
               }
             } catch (e) {
-              console.log('🔍 FontAnalyzer: Error parsing Google Fonts URL:', e);
             }
           }
         });
 
         // Check @import statements in all stylesheets and style elements
-        console.log('🔍 FontAnalyzer: Checking for @import statements...');
         const styleElements = document.querySelectorAll('style');
         styleElements.forEach((style, index) => {
           const content = style.textContent || '';
-          console.log(`🔍 FontAnalyzer: Style element ${index} content:`, content.substring(0, 200));
           
           const importMatches = content.match(/@import\s+url\(['"]?([^'"]+)['"]?\)/g);
           if (importMatches) {
-            console.log('🔍 FontAnalyzer: Found @import statements:', importMatches);
             importMatches.forEach((match) => {
               const url = match.match(/@import\s+url\(['"]?([^'"]+)['"]?\)/)?.[1];
               if (url && (url.includes('fonts.googleapis.com') || url.includes('fonts.google.com'))) {
-                console.log('🔍 FontAnalyzer: Google Fonts @import found:', url);
                 fontSources.add(url);
                 
                 try {
                   const urlObj = new URL(url);
                   const family = urlObj.searchParams.get('family');
                   if (family) {
-                    console.log('🔍 FontAnalyzer: Extracted family from @import:', family);
                     const fontFamilies = family.split('|').map(f => {
                       const cleanName = f.split(':')[0].replace(/\+/g, ' ');
                       return cleanName;
                     });
                     fontFamilies.forEach(fontName => {
                       if (fontName && fontName.trim()) {
-                        console.log('🔍 FontAnalyzer: Adding Google Font from @import:', fontName.trim());
                         fonts.add(fontName.trim());
                       }
                     });
                   }
                 } catch (e) {
-                  console.log('🔍 FontAnalyzer: Error parsing Google Fonts @import URL:', e);
                 }
               }
             });
@@ -90,8 +75,6 @@ class FontAnalyzer {
 
         // Get computed styles for all elements (optimized sampling)
         const allElements = document.querySelectorAll('*');
-        console.log('🔍 FontAnalyzer: Found', allElements.length, 'elements to analyze');
-        
         // Sample first 200 elements for better performance (reduced from 500)
         const sampleElements = Array.from(allElements).slice(0, 200);
         sampleElements.forEach((element, index) => {
@@ -99,7 +82,6 @@ class FontAnalyzer {
           const fontFamily = styles.fontFamily;
           
           if (index < 10) { // Only log first 10 for debugging
-            console.log(`🔍 FontAnalyzer: Element ${index} (${element.tagName}) font-family:`, fontFamily);
           }
           
           if (fontFamily && fontFamily !== 'initial') {
@@ -109,7 +91,6 @@ class FontAnalyzer {
             
             individualFonts.forEach(individualFont => {
               if (individualFont && individualFont !== 'initial') {
-                console.log('🔍 FontAnalyzer: Adding individual font:', individualFont);
                 fonts.add(individualFont);
               }
             });
@@ -149,7 +130,6 @@ class FontAnalyzer {
         });
 
         // ENHANCED: Check pseudo-elements for icon fonts (::before, ::after)
-        console.log('🔍 FontAnalyzer: Checking pseudo-elements for icon fonts...');
         const pseudoSampleElements = Array.from(allElements).slice(0, 200);
         pseudoSampleElements.forEach((element, index) => {
           try {
@@ -160,7 +140,6 @@ class FontAnalyzer {
               const individualFonts = beforeFont.split(',').map(f => f.trim().replace(/['"]/g, ''));
               individualFonts.forEach(font => {
                 if (font && font !== 'initial') {
-                  console.log('🔍 FontAnalyzer: Adding font from ::before:', font);
                   fonts.add(font);
                 }
               });
@@ -173,7 +152,6 @@ class FontAnalyzer {
               const individualFonts = afterFont.split(',').map(f => f.trim().replace(/['"]/g, ''));
               individualFonts.forEach(font => {
                 if (font && font !== 'initial') {
-                  console.log('🔍 FontAnalyzer: Adding font from ::after:', font);
                   fonts.add(font);
                 }
               });
@@ -218,18 +196,14 @@ class FontAnalyzer {
               });
             } catch (e) {
               // Cross-origin stylesheet access might fail
-              console.warn('Could not access stylesheet rules:', e.message);
             }
           });
         } catch (e) {
-          console.warn('Error analyzing stylesheets:', e.message);
         }
 
         // Check for Google Fonts and other web font services
         const linkElements = document.querySelectorAll('link[href*="fonts"]');
-        console.log('🔍 FontAnalyzer: Found', linkElements.length, 'font links');
         linkElements.forEach((link) => {
-          console.log('🔍 FontAnalyzer: Processing font link:', link.href);
           fontSources.add(link.href);
           
           // Extract Google Font family names from URLs
@@ -244,7 +218,6 @@ class FontAnalyzer {
               });
               fontFamilies.forEach(fontName => {
                 if (fontName && fontName.trim()) {
-                  console.log('🔍 FontAnalyzer: Adding Google Font from link:', fontName.trim());
                   fonts.add(`"${fontName.trim()}"`);
                 }
               });
@@ -280,22 +253,13 @@ class FontAnalyzer {
                       });
                     }
                   } catch (e) {
-                    console.warn('Error parsing Google Fonts URL:', e);
                   }
                 }
               });
             }
           });
         } catch (e) {
-          console.warn('Error analyzing style elements:', e);
         }
-
-        console.log('🔍 FontAnalyzer: Final font detection results:');
-        console.log('  - Total fonts found:', fonts.size);
-        console.log('  - Fonts list:', Array.from(fonts));
-        console.log('  - Font sources:', Array.from(fontSources));
-        console.log('  - Font faces:', fontFaces.size);
-
         return {
           fonts: Array.from(fonts),
           fontFaces: Array.from(fontFaces.values()),
@@ -794,8 +758,8 @@ class FontAnalyzer {
     });
 
     const total = Object.values(formats).reduce((sum, arr) => sum + arr.length, 0);
-    const woff2Percentage = total > 0 ? Math.round((formats.woff2.length / total) * 100) : 0;
-    
+    const woff2Percentage = total > 0 ? roundTo((formats.woff2.length / total) * 100, 0) : 0;
+
     return {
       formats,
       summary: {
@@ -851,7 +815,7 @@ class FontAnalyzer {
         total,
         optimalCount,
         problematicCount,
-        score: total > 0 ? Math.round((optimalCount / total) * 100) : 100,
+        score: total > 0 ? roundTo((optimalCount / total) * 100, 0) : 100,
         recommendation: problematicCount === 0 ? 'excellent' : problematicCount <= 2 ? 'good' : 'needs-improvement'
       }
     };
@@ -1050,8 +1014,8 @@ class FontAnalyzer {
     const good = stacks.filter(s => s.quality === 'good').length;
     const poor = stacks.filter(s => s.quality === 'poor').length;
     const total = stacks.length;
-    
-    const score = total > 0 ? Math.round(((excellent * 100 + good * 70 + poor * 30) / total)) : 100;
+
+    const score = total > 0 ? roundTo(((excellent * 100 + good * 70 + poor * 30) / total), 0) : 100;
 
     return {
       stacks: stacks.slice(0, 10), // Limit to 10

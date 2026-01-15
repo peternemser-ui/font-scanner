@@ -246,9 +246,7 @@ div[style*="padding:1.5rem"] {
    HEADER AND SECTION SPACING
    ======================================== */
 
-.unified-header {
-  margin-bottom: 1rem;
-}
+
 
 /* Container base padding */
 .container {
@@ -292,10 +290,6 @@ div[style*="padding:1.5rem"] {
 
   .form-container button {
     margin-top: 1rem;
-  }
-
-  .unified-header {
-    margin-bottom: 0.5rem;
   }
 
   .container {

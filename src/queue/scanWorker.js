@@ -32,9 +32,6 @@ class ScanWorker {
   async processJob(job) {
     const { scanId, payload } = job;
     const { url, options = {} } = payload;
-
-    console.log(`🔨 Worker processing: ${scanId} - ${url}`);
-
     try {
       // Update scan status to 'running'
       await this.updateScanStatus(scanId, 'running', 0);
@@ -48,7 +45,6 @@ class ScanWorker {
       const results = {};
 
       for (const analyzer of analyzers) {
-        console.log(`🔍 Running ${analyzer} analyzer for ${scanId}...`);
         results[analyzer] = await this.runAnalyzer(analyzer, pagesToScan, scanId);
 
         // Update progress
@@ -69,9 +65,6 @@ class ScanWorker {
         'UPDATE scans SET finished_at = DATETIME("now"), pages_crawled = ? WHERE id = ?',
         [pagesToScan.length, scanId]
       );
-
-      console.log(`✅ Worker completed: ${scanId}`);
-
       // Notify queue
       await this.queue.complete(scanId, aggregatedResults);
 
@@ -101,9 +94,6 @@ class ScanWorker {
     } catch (error) {
       throw new Error(`URL validation failed: ${error.message}`);
     }
-
-    console.log(`🕷️ Starting crawl for ${scanId}: ${url}`);
-
     // Crawl with configured limits
     const pages = await crawlerService.crawl(url, {
       maxPages: options.maxPages || 10,
@@ -124,7 +114,6 @@ class ScanWorker {
       }
     }
 
-    console.log(`✅ Crawled ${pages.length} page(s) for ${scanId}`);
     return pages;
   }
 
@@ -144,7 +133,6 @@ class ScanWorker {
 
     const analyzer = analyzers[analyzerType];
     if (!analyzer) {
-      console.warn(`⚠️ Unknown analyzer: ${analyzerType}`);
       return null;
     }
 

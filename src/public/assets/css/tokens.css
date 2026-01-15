@@ -1,0 +1,5 @@
+/* Site Mechanic - Shared Tokens
+ * Intentionally thin wrapper around the canonical token source.
+ */
+
+@import url('/design-tokens.css');

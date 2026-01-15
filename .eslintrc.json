@@ -10,21 +10,18 @@
     "ecmaVersion": 2020,
     "sourceType": "module"
   },
+  "globals": {
+    "BigInt": "readonly"
+  },
   "rules": {
-    "no-console": "warn",
+    "no-console": ["error", { "allow": ["error"] }],
     "no-unused-vars": "warn",
     "prefer-const": "error",
     "no-var": "error"
   },
   "overrides": [
     {
-      "files": ["src/public/**/*.js"],
-      "rules": {
-        "no-console": "off"
-      }
-    },
-    {
-      "files": ["src/services/fontAnalyzer.js"],
+      "files": ["**/*.test.js", "**/*.spec.js", "tests/**/*.js", "scripts/**/*.js"],
       "rules": {
         "no-console": "off"
       }

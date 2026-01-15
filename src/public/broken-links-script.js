@@ -1,6 +1,10 @@
 // Broken Links Analyzer Script
 // Uses AnalyzerLoader for consistent loading UI
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'broken-links';
+document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+
 document.getElementById('analyzeBtn').addEventListener('click', analyzeLinks);
 document.getElementById('url').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyzeLinks();
@@ -42,24 +46,24 @@ async function analyzeLinks() {
   loaderMessageEl.style.cssText = `
     margin: 0 0 1.5rem 0;
     padding: clamp(0.75rem, 2vw, 1rem);
-    background: rgba(0, 255, 65, 0.05);
-    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
     border-radius: 6px;
     text-align: center;
     overflow: visible;
   `;
   loaderMessageEl.innerHTML = `
     <div style="overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch;">
-      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
     </div>
-    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: #00ff41; font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
+    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
       Link analysis in progress...
     </p>
-    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(0, 255, 65, 0.7); padding: 0 0.5rem;">
+    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(var(--accent-primary-rgb), 0.7); padding: 0 0.5rem;">
       This may take 30-90 seconds depending on site size
     </p>
   `;
@@ -70,12 +74,12 @@ async function analyzeLinks() {
     style.id = 'ascii-art-style';
     style.textContent = `
       @keyframes color-cycle {
-        0% { color: #00ff41; }
+        0% { color: var(--accent-primary); }
         20% { color: #00ffff; }
         40% { color: #0099ff; }
         60% { color: #9933ff; }
         80% { color: #ff33cc; }
-        100% { color: #00ff41; }
+        100% { color: var(--accent-primary); }
       }
       .ascii-art-responsive {
         font-size: clamp(0.35rem, 1.2vw, 0.65rem);
@@ -97,11 +101,15 @@ async function analyzeLinks() {
   
   try {
     loader.nextStep(1);
+
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
     
     const response = await fetch('/api/broken-links', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, maxPages, maxDepth, followExternal })
+      body: JSON.stringify({ url, maxPages, maxDepth, followExternal, scanStartedAt })
     });
     
     loader.nextStep(2);
@@ -189,8 +197,22 @@ function displayResults(data) {
 
   // 7. Recommendations
   if (data.recommendations && data.recommendations.length > 0) {
-    createAccordionSection(resultsContainer, 'recommendations', 'Recommendations', 
+    createAccordionSection(resultsContainer, 'recommendations', 'Recommendations',
       () => renderRecommendationsContent(data.recommendations), null, false);
+  }
+
+  // 8. Pro Report Block
+  if (window.ProReportBlock && window.ProReportBlock.render) {
+    const proSection = document.createElement('div');
+    proSection.className = 'section';
+    proSection.style.marginTop = '2rem';
+    proSection.innerHTML = window.ProReportBlock.render({
+      context: 'broken-links',
+      features: ['pdf', 'csv', 'share'],
+      title: 'Unlock Report',
+      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+    });
+    resultsContainer.appendChild(proSection);
   }
 }
 
@@ -275,7 +297,7 @@ function createOverviewSection(data) {
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
               <span style="color: #c0c0c0;">Broken Links</span>
-              <span style="color: ${s.broken > 0 ? '#ff4444' : '#00ff41'}; font-weight: bold;">${s.broken}</span>
+              <span style="color: ${s.broken > 0 ? '#ff4444' : getAccentPrimaryHex()}; font-weight: bold;">${s.broken}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
               <span style="color: #c0c0c0;">Redirects</span>
@@ -293,15 +315,16 @@ function createOverviewSection(data) {
 }
 
 function createSummaryCards(summary) {
+  const accent = getAccentPrimaryHex();
   const cards = [
-    { key: 'broken', label: 'Broken', color: summary.broken > 0 ? '#ff4444' : '#00ff41', desc: 'Dead links' },
+    { key: 'broken', label: 'Broken', color: summary.broken > 0 ? '#ff4444' : accent, desc: 'Dead links' },
     { key: 'redirects', label: 'Redirects', color: summary.redirects > 5 ? '#ff8c00' : '#ffd700', desc: '301/302 chains' },
-    { key: 'working', label: 'Working', color: '#00ff41', desc: 'Healthy links' },
+    { key: 'working', label: 'Working', color: accent, desc: 'Healthy links' },
     { key: 'external', label: 'External', color: '#00d9ff', desc: 'Outbound links' }
   ];
 
   return `
-    <h3 style="color: #00ff41; margin: 0 0 1.5rem 0; font-size: 1.3rem;">>> Link Status Breakdown</h3>
+    <h3 style="color: ${accent}; margin: 0 0 1.5rem 0; font-size: 1.3rem;">>> Link Status Breakdown</h3>
     <p style="color: #c0c0c0; margin-bottom: 1rem;">Overview of all links found on the site by category</p>
     
     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem;">
@@ -1041,15 +1064,19 @@ function truncateUrl(url) {
   }
 }
 
+function getAccentPrimaryHex() {
+  const value = getComputedStyle(document.documentElement)
+    .getPropertyValue('--accent-primary').trim();
+  return value || '#00ff41';
+}
+
 function getGradeColor(grade) {
-  const colors = {
-    'A': '#00ff41',
-    'B': '#ffd700',
-    'C': '#ff8c00',
-    'D': '#ff4444',
-    'F': '#ff0000'
-  };
-  return colors[grade] || '#888888';
+  if (grade === 'A') return getAccentPrimaryHex();
+  if (grade === 'B') return '#ffd700';
+  if (grade === 'C') return '#ff8c00';
+  if (grade === 'D') return '#ff4444';
+  if (grade === 'F') return '#ff0000';
+  return '#888888';
 }
 
 function getGradeName(grade) {
@@ -1064,7 +1091,7 @@ function getGradeName(grade) {
 }
 
 function getScoreColor(score) {
-  if (score >= 80) return '#00ff41';
+  if (score >= 80) return getAccentPrimaryHex();
   if (score >= 60) return '#ffd700';
   if (score >= 40) return '#ff8c00';
   return '#ff4444';

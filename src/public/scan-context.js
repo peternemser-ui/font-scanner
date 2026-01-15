@@ -56,8 +56,7 @@ const ScanContext = {
       };
       
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(context));
-      console.log('[ScanContext] Scan context saved for:', domain);
-      
+
       // Dispatch custom event for cross-page reactivity
       window.dispatchEvent(new CustomEvent('scanContextUpdated', { detail: context }));
       
@@ -74,7 +73,7 @@ const ScanContext = {
   clear() {
     try {
       localStorage.removeItem(this.STORAGE_KEY);
-      console.log('[ScanContext] Scan context cleared');
+
       window.dispatchEvent(new CustomEvent('scanContextUpdated', { detail: null }));
     } catch (error) {
       console.error('[ScanContext] Failed to clear scan context:', error);
@@ -185,12 +184,13 @@ const ExportGate = {
     
     const paywall = document.createElement('div');
     paywall.id = 'exportPaywall';
+    const previousFocus = document.activeElement;
     paywall.innerHTML = `
       <div class="export-paywall-overlay">
-        <div class="export-paywall-modal">
-          <button class="export-paywall-close" onclick="this.closest('#exportPaywall').remove()" aria-label="Close">&times;</button>
+        <div class="export-paywall-modal" role="dialog" aria-modal="true" aria-labelledby="exportPaywallTitle" tabindex="-1">
+          <button type="button" class="export-paywall-close" aria-label="Close">&times;</button>
           <div class="export-paywall-icon">📄</div>
-          <h3 class="export-paywall-title">Export Your Report</h3>
+          <h3 class="export-paywall-title" id="exportPaywallTitle">Export Your Report</h3>
           <p class="export-paywall-text">
             Get the <strong>$5 USD SiteMechanic Pro Report</strong> to download client-ready PDFs, 
             export fix packs, and share results.
@@ -300,19 +300,80 @@ const ExportGate = {
     
     document.body.appendChild(paywall);
     
-    // Close on overlay click
-    paywall.querySelector('.export-paywall-overlay').addEventListener('click', (e) => {
-      if (e.target === e.currentTarget) paywall.remove();
-    });
-    
-    // Close on Escape key
-    const handleEscape = (e) => {
-      if (e.key === 'Escape') {
-        paywall.remove();
-        document.removeEventListener('keydown', handleEscape);
+    const overlayEl = paywall.querySelector('.export-paywall-overlay');
+    const dialogEl = paywall.querySelector('.export-paywall-modal');
+    const closeBtn = paywall.querySelector('.export-paywall-close');
+
+    const getFocusable = () => {
+      const selectors = [
+        'a[href]',
+        'button:not([disabled])',
+        'textarea:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])'
+      ];
+      return Array.from(dialogEl.querySelectorAll(selectors.join(','))).filter((el) => {
+        if (!el) return false;
+        const style = window.getComputedStyle(el);
+        return style && style.visibility !== 'hidden' && style.display !== 'none';
+      });
+    };
+
+    const cleanup = () => {
+      document.removeEventListener('keydown', onKeyDown);
+      if (previousFocus && typeof previousFocus.focus === 'function' && document.contains(previousFocus)) {
+        previousFocus.focus();
       }
     };
-    document.addEventListener('keydown', handleEscape);
+
+    const close = () => {
+      if (!paywall.isConnected) return;
+      paywall.remove();
+      cleanup();
+    };
+
+    const onKeyDown = (e) => {
+      if (!paywall.isConnected) return;
+
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+      const focusables = getFocusable();
+      if (!focusables.length) {
+        e.preventDefault();
+        dialogEl.focus();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    // Close on click
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    if (overlayEl) {
+      overlayEl.addEventListener('click', (e) => {
+        if (e.target === e.currentTarget) close();
+      });
+    }
+
+    document.addEventListener('keydown', onKeyDown);
+    window.requestAnimationFrame(() => {
+      if (closeBtn) closeBtn.focus();
+      else if (dialogEl) dialogEl.focus();
+    });
   }
 };
 

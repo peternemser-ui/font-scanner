@@ -8,6 +8,12 @@ const { createLogger } = require('../utils/logger');
 const { ValidationError, asyncHandler } = require('../utils/errorHandler');
 const { validateUrl, sanitizeUrl, normalizeUrl, testUrlReachability } = require('../utils/validators');
 
+const {
+  getAnalyzerKeyOverride,
+  buildReportMetadata,
+  attachReportMetadata
+} = require('../utils/controllerHelpers');
+
 const logger = createLogger('CoreWebVitalsController');
 
 /**
@@ -41,6 +47,11 @@ exports.analyzeCoreWebVitals = asyncHandler(async (req, res) => {
   
   // Perform Core Web Vitals analysis with the validated URL
   const results = await coreWebVitalsService.analyzeCoreWebVitals(url);
+
+  // Attach report metadata (reportId, screenshotUrl, timestamps)
+  const analyzerKey = getAnalyzerKeyOverride(req, 'core-web-vitals');
+  const metadata = await buildReportMetadata({ req, results, url: url, analyzerKey });
+  attachReportMetadata(results, metadata);
 
   logger.info(`Core Web Vitals analysis completed for: ${url}`, {
     requestId: req.id,

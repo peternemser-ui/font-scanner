@@ -61,7 +61,13 @@
     <!-- Shared Report Components CSS -->
     <link rel="stylesheet" href="/css/components/reportShell.css?v=FRESH-JAN8-2026">
     <link rel="stylesheet" href="/css/components/reportAccordion.css?v=FRESH-JAN8-2026">
-    
+
+    <!-- Report UI Components CSS -->
+    <link rel="stylesheet" href="/css/components/modal.css" />
+    <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
+    <link rel="stylesheet" href="/css/components/pro-report-block.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+
     <!-- Shared UI System -->
     <link rel="stylesheet" href="ui.css" />
     <!-- Existing Stylesheets -->
@@ -98,7 +104,7 @@
       }
       .page-item:hover {
         background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(0, 255, 136, 0.3);
+        border-color: rgba(var(--accent-primary-rgb), 0.3);
       }
       .page-item a {
         color: #60a5fa;
@@ -314,6 +320,13 @@
 
     <!-- ASCII Background Animation -->
 
+    <!-- Report UI Components -->
+    <script src="/js/report-ui.js"></script>
+    <script src="/js/components/ReportContainer.js"></script>
+    <script src="/js/components/Modal.js"></script>
+    <script src="/js/components/ScreenshotLightbox.js"></script>
+    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/PricingModal.js"></script>
 
     <script src="site-crawler-script.js?v=FRESH-JAN8-2026"></script>
   </body>

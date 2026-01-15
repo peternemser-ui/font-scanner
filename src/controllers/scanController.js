@@ -12,6 +12,10 @@ const {
 const { createLogger } = require('../utils/logger');
 const { asyncHandler, ValidationError, parsePuppeteerError } = require('../utils/errorHandler');
 const { defaultCache } = require('../utils/cache');
+const { getRequestScanStartedAt, attachToResponse } = require('../utils/scanTimestamp');
+const { makeReportId } = require('../utils/reportId');
+const { ensureReportScreenshot } = require('../utils/reportScreenshot');
+const { getAnalyzerKeyOverride } = require('../utils/controllerHelpers');
 
 const logger = createLogger('ScanController');
 
@@ -86,6 +90,11 @@ const scanWebsite = asyncHandler(async (req, res) => {
   logger.info(`Starting ${scanType} scan`, { url, scanType, requestId });
 
   let scanResult;
+
+  const startedAt = getRequestScanStartedAt(req) || new Date().toISOString();
+  const analyzerKey = getAnalyzerKeyOverride(req, 'enhanced-fonts');
+  const reportId = makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt });
+  const screenshotUrl = reportId ? await ensureReportScreenshot({ url, reportId, requestId }) : null;
 
   try {
     if (scanType === 'comprehensive') {
@@ -391,6 +400,8 @@ const scanWebsite = asyncHandler(async (req, res) => {
         scanType: 'comprehensive',
         url: url,
         scannedAt: new Date().toISOString(),
+        reportId,
+        screenshotUrl,
         results: transformedResults,
         pages: transformedResults.pages,
         lighthouse: scanResult.lighthouse, // Will be null/undefined since Lighthouse is disabled
@@ -415,7 +426,7 @@ const scanWebsite = asyncHandler(async (req, res) => {
         allFontsPreview: response.results?.fonts?.fonts?.map(f => f.fontFamily || f.name) || []
       });
 
-      res.json(response);
+      res.json(attachToResponse(response, startedAt));
     } else {
       // Basic single-page scan
       scanResult = await fontScannerService.scanWebsite(url);
@@ -425,6 +436,8 @@ const scanWebsite = asyncHandler(async (req, res) => {
         scanType: 'basic',
         url: url,
         scannedAt: new Date().toISOString(),
+        reportId,
+        screenshotUrl,
         results: scanResult,
         cached: false,
       };
@@ -436,7 +449,7 @@ const scanWebsite = asyncHandler(async (req, res) => {
         { scanType, ttl: 3600000 }
       );
 
-      res.json(response);
+      res.json(attachToResponse(response, startedAt));
     }
   } catch (error) {
     // Parse and re-throw Puppeteer errors
@@ -680,17 +693,24 @@ const performBestInClassScan = asyncHandler(async (req, res) => {
   
   logger.info(`✅ Best-in-class scan completed - Score: ${result.overallScore}/100 (${result.grade})`);
 
-  res.json({
+  const startedAt = getRequestScanStartedAt(req) || result?.startedAt || result?.timestamp || new Date().toISOString();
+  const analyzerKey = getAnalyzerKeyOverride(req, 'enhanced-fonts');
+  const reportId = makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt });
+  const screenshotUrl = reportId ? await ensureReportScreenshot({ url, reportId, requestId: req.id }) : null;
+
+  res.json(attachToResponse({
     success: true,
     scanId: scanId,
     data: result,
+    reportId,
+    screenshotUrl,
     message: `Best-in-class scan completed with ${result.grade} grade (${result.overallScore}/100)`,
     scanDuration: result.scanDuration,
     featuresAnalyzed: Object.keys(result).filter(key => 
       result[key] && typeof result[key] === 'object' && !result[key].error
     ).length,
     timestamp: new Date().toISOString()
-  });
+  }, startedAt));
 });
 
 /**
@@ -757,12 +777,20 @@ const performSEOScan = asyncHandler(async (req, res) => {
       const seoResults = await seoAnalyzer.analyzeSEO(url);
       const duration = Date.now() - startTime;
       logger.info('SEO analysis completed (full mode)', { url, score: seoResults.score.overall, duration, requestId });
+
+      const startedAt = getRequestScanStartedAt(req) || seoResults?.startedAt || seoResults?.timestamp || new Date().toISOString();
+      const analyzerKey = getAnalyzerKeyOverride(req, 'seo');
+      const reportId = makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt });
+      const screenshotUrl = reportId ? await ensureReportScreenshot({ url, reportId, requestId }) : null;
       return res.json({
         success: true,
         url,
         scanType: 'seo',
         mode: 'full',
-        timestamp: new Date().toISOString(),
+        timestamp: startedAt,
+        startedAt,
+        reportId,
+        screenshotUrl,
         duration: `${(duration / 1000).toFixed(2)}s`,
         results: seoResults
       });
@@ -781,12 +809,20 @@ const performSEOScan = asyncHandler(async (req, res) => {
     const lightweightResults = await lightweightSeoAnalyzer.analyzeSEO(url);
     const duration = Date.now() - startTime;
     logger.info('Lightweight SEO analysis completed', { url, score: lightweightResults.score.overall, duration, requestId });
+
+    const startedAt = getRequestScanStartedAt(req) || lightweightResults?.startedAt || lightweightResults?.timestamp || new Date().toISOString();
+    const analyzerKey = getAnalyzerKeyOverride(req, 'seo');
+    const reportId = makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt });
+    const screenshotUrl = reportId ? await ensureReportScreenshot({ url, reportId, requestId }) : null;
     return res.json({
       success: true,
       url,
       scanType: 'seo',
       mode: 'lightweight',
-      timestamp: new Date().toISOString(),
+      timestamp: startedAt,
+      startedAt,
+      reportId,
+      screenshotUrl,
       duration: `${(duration / 1000).toFixed(2)}s`,
       warning: 'Full headless analysis unavailable (protocol/bot protection). Limited fallback results returned.',
       results: lightweightResults

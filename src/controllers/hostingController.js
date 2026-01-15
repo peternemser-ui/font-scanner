@@ -6,7 +6,12 @@
 const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const ipReputationService = require('../services/ipReputationService');
 const { createLogger } = require('../utils/logger');
-const { sanitizeUrl, normalizeUrl, validateUrl } = require('../utils/validators');
+const { sanitizeUrl, normalizeUrl } = require('../utils/validators');
+const { attachToResponse } = require('../utils/scanTimestamp');
+const {
+  getAnalyzerKeyOverride,
+  buildReportMetadata
+} = require('../utils/controllerHelpers');
 
 const logger = createLogger('HostingController');
 
@@ -92,16 +97,26 @@ const analyzeHosting = asyncHandler(async (req, res) => {
       requestId,
     });
 
-    // Return the analysis results
-    res.json({
+    // Generate report metadata
+    const analyzerKey = getAnalyzerKeyOverride(req, 'hosting-analyzer');
+    const metadata = await buildReportMetadata({
+      req,
+      results: hostingAnalysis,
+      url: normalizedUrl,
+      analyzerKey
+    });
+
+    res.json(attachToResponse({
       success: true,
       url: normalizedUrl,
       hostname,
       timestamp: new Date().toISOString(),
+      reportId: metadata.reportId,
+      screenshotUrl: metadata.screenshotUrl,
       analysisTime,
       manualInputsApplied: !!(monthlyVisitors || manualCms || region || ecommerceLevel !== 'none'),
       ...hostingAnalysis,
-    });
+    }, metadata.scanStartedAt));
 
   } catch (error) {
     logger.error('Hosting analysis failed', {

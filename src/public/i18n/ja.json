@@ -74,7 +74,9 @@
     "websiteUrl": "ウェブサイトURL",
     "enterUrl": "https://yoursite.com",
     "pleaseEnterUrl": "URLを入力してください",
-    "mayTake": "15-30秒かかる場合があります"
+    "mayTake": "15-30秒かかる場合があります",
+    "pageScreenshotAlt": "ページのスクリーンショット",
+    "footer": "© 2025 Site Mechanic。品質を大切にする開発者のために。"
   },
   "fontScanner": {
     "title": "フォント＆タイポグラフィ",
@@ -264,6 +266,604 @@
     }
   },
   "seo": {
+    "title": "SEOアナライザー",
+    "subtitle": "検索エンジン最適化監査",
+    "breadcrumb": "SEOアナライザー",
+    "analyze": "SEOを分析",
+    "analyzing": "分析中...",
+    "overall": "総合",
+    "reportTitle": "SEOレポート",
+    "reportSubtitle": "SEO分析",
+    "loadingTitle": "分析中...",
+    "mayTake": "30〜60秒かかる場合があります",
+    "seoScore": "SEOスコア",
+    "metaTags": "メタタグ",
+    "headings": "見出し",
+    "content": "コンテンツ",
+    "images": "画像",
+    "links": "リンク",
+    "mobile": "モバイル",
+    "performance": "パフォーマンス",
+    "security": "セキュリティ",
+    "canonicalUrl": "正規URL",
+    "structuredData": "構造化データ",
+    "sitemap": "サイトマップ",
+    "robotsTxt": "Robots.txt",
+    "sections": {
+      "metaTags": "メタタグ",
+      "headings": "見出し",
+      "content": "コンテンツ",
+      "images": "画像",
+      "links": "リンク",
+      "mobile": "モバイル",
+      "performance": "パフォーマンス",
+      "security": "セキュリティ",
+      "structuredData": "構造化データ",
+      "additional": "追加チェック",
+      "fixCode": "修正コード + 推奨事項"
+    },
+    "steps": {
+      "running": "SEO分析を実行中",
+      "initializing": "スキャンエンジンを初期化中...",
+      "metaTags": "メタタグを確認中",
+      "metaTagsDetail": "タイトル、説明、キーワードを分析中...",
+      "content": "コンテンツ品質を分析中",
+      "contentDetail": "見出し、テキスト、可読性を評価中...",
+      "mobile": "モバイル対応をテスト中",
+      "mobileDetail": "viewport とレイアウトを確認中...",
+      "performance": "パフォーマンスを測定中",
+      "performanceDetail": "読み込み速度と最適化をテスト中..."
+    },
+    "proPreview": {
+      "metaTags": "メタタグの改善",
+      "structuredData": "構造化データのクイック改善"
+    },
+    "fixes": {
+      "previewIntro": "修正パックのプレビュー：",
+      "impact": "影響",
+      "copySnippet": "スニペットをコピー",
+      "snippetCopied": "スニペットをクリップボードにコピーしました"
+    },
+    "report": {
+      "units": {
+        "chars": "文字"
+      },
+      "table": {
+        "property": "項目",
+        "value": "値",
+        "length": "長さ",
+        "status": "状態",
+        "bestPractice": "ベストプラクティス",
+        "recommendation": "推奨",
+        "metric": "指標",
+        "recommended": "推奨値",
+        "description": "説明",
+        "purpose": "目的",
+        "details": "詳細",
+        "check": "チェック",
+        "platform": "プラットフォーム",
+        "seoValue": "SEO 価値",
+        "implementationTip": "実装のヒント"
+      },
+      "status": {
+        "missing": "未設定",
+        "review": "要確認",
+        "optimal": "最適",
+        "configured": "設定済み",
+        "present": "あり",
+        "set": "設定済み",
+        "valid": "有効",
+        "none": "なし",
+        "multiple": "複数",
+        "pass": "合格",
+        "fail": "不合格",
+        "yes": "はい",
+        "no": "いいえ",
+        "found": "見つかりました",
+        "notFound": "見つかりません",
+        "detected": "検出",
+        "notDetected": "未検出",
+        "enabled": "有効",
+        "notConfigured": "未設定 — ブラウザは HTTP で接続できます"
+      },
+      "common": {
+        "moreCount": "... さらに {{count}} 件"
+      },
+      "metaTags": {
+        "calloutTitle": "🏷️ メタタグは第一印象",
+        "calloutBody": "検索結果やSNSでの表示を左右します。最適化によりクリック率が 30–50% 向上することもあります。",
+        "overviewHeading": "メタタグ概要",
+        "healthHeading": "メタタグの健康状態",
+        "rows": {
+          "title": "タイトル",
+          "description": "ディスクリプション",
+          "openGraph": "Open Graph",
+          "twitterCard": "Twitter Card",
+          "viewport": "Viewport",
+          "canonical": "カノニカル",
+          "ogTags": "OG タグ",
+          "twitter": "Twitter"
+        },
+        "bestPractice": {
+          "title": "50–60 文字、主要キーワードは冒頭に",
+          "description": "150–160 文字、強いCTA、ページごとに一意",
+          "openGraph": "og:title、og:description、og:image（1200×630px）",
+          "twitterCard": "summary_large_image、twitter:title、twitter:image",
+          "viewport": "width=device-width, initial-scale=1",
+          "canonical": "重複コンテンツ回避、絶対URLを使用"
+        }
+      },
+      "headings": {
+        "distributionHeading": "見出しの分布",
+        "hierarchyHeading": "見出し階層",
+        "table": {
+          "level": "レベル",
+          "count": "数",
+          "firstInstance": "最初の出現"
+        },
+        "totalHeadingsLabel": "見出し合計",
+        "primaryH1Label": "主要 H1",
+        "hierarchySampleLabel": "階層サンプル"
+      },
+      "content": {
+        "qualityMetricsHeading": "コンテンツ品質指標",
+        "healthHeading": "コンテンツの健康状態",
+        "metrics": {
+          "wordCount": "単語数",
+          "readability": "可読性",
+          "textRatio": "テキスト比率",
+          "paragraphs": "段落"
+        },
+        "wordCountLabel": "単語数：{{count}}",
+        "readabilityScoreLabel": "可読性スコア",
+        "textToHtmlLabel": "テキスト/HTML：{{percent}}%",
+        "paragraphsLabel": "段落：{{count}}",
+        "wordCountLineLabel": "単語数",
+        "sentencesLineLabel": "文",
+        "avgWordsPerSentenceLineLabel": "1文あたり平均単語数"
+      },
+      "images": {
+        "calloutTitle": "I 画像SEO：Alt テキストは重要",
+        "calloutBody": "Alt テキストは検索エンジンが画像を理解する助けになり、アクセシビリティも向上します。多くのサイトで Google 画像検索は 20–30% の流入源です。",
+        "overviewHeading": "画像最適化の概要",
+        "detailsHeading": "画像の詳細",
+        "statsHeading": "画像の統計",
+        "noImagesFound": "このページで画像が見つかりませんでした",
+        "radial": {
+          "altCoverage": "Alt カバレッジ",
+          "imagesFound": "検出画像数",
+          "overallScore": "総合スコア"
+        },
+        "table": {
+          "imageUrl": "画像URL",
+          "dimensions": "サイズ",
+          "altText": "Alt テキスト"
+        },
+        "recommendation": {
+          "pass": "具体的で、SEOとアクセシビリティに有効",
+          "fail": "SEOとスクリーンリーダーのために説明的な Alt を追加"
+        },
+        "totalImagesLabel": "画像合計",
+        "withAltLabel": "Alt あり"
+      },
+      "links": {
+        "networkDiagramHeading": "リンクネットワーク図",
+        "healthSummaryHeading": "リンク健全性サマリー",
+        "totalLinksLabel": "リンク合計",
+        "internalLinksLabel": "内部リンク",
+        "externalLinksLabel": "外部リンク",
+        "nofollowLinksLabel": "nofollow リンク",
+        "brokenFormatLabel": "形式不正"
+      },
+      "mobile": {
+        "calloutTitle": "M モバイルファーストインデックス",
+        "calloutBody": "Google はモバイル版を基準にインデックスとランキングを行います。モバイル対応はSEOに直結します。",
+        "devices": {
+          "mobile": "モバイル",
+          "tablet": "タブレット",
+          "desktop": "デスクトップ"
+        },
+        "table": {
+          "deviceType": "デバイス",
+          "width": "幅",
+          "noHorizontalScroll": "横スクロールなし",
+          "viewportMeta": "Viewport メタ",
+          "readableFontSize": "文字が読みやすい"
+        },
+        "recommendations": {
+          "mobile": "フォント16px以上、横スクロールなし",
+          "tablet": "レスポンシブ、タッチ操作に最適化",
+          "desktop": "デスクトップ互換"
+        },
+        "cards": {
+          "horizontalScroll": "横スクロール",
+          "viewportMetaTag": "Viewport メタタグ",
+          "fontReadability": "フォントの可読性",
+          "none": "なし",
+          "detected": "検出",
+          "devicesFraction": "{{count}}/{{total}} デバイス"
+        }
+      },
+      "performance": {
+        "metrics": {
+          "pageLoadTime": "ページ読み込み時間",
+          "domContentLoaded": "DOM Content Loaded",
+          "totalResources": "リソース数",
+          "pageSize": "ページサイズ",
+          "domNodes": "DOM ノード"
+        },
+        "desc": {
+          "pageLoadTime": "ページが完全に読み込まれるまでの時間",
+          "domContentLoaded": "DOM 準備完了までの時間",
+          "totalResources": "HTTP リクエスト数",
+          "pageSize": "転送サイズ合計",
+          "domNodes": "HTML 要素数"
+        },
+        "recommended": {
+          "pageLoadTime": "< 3秒（良）| < 5秒（可）",
+          "domContentLoaded": "< 2秒（良）",
+          "totalResources": "< 150（良）| < 300（可）",
+          "pageSize": "< 3MB（良）",
+          "domNodes": "< 1,500（良）| < 3,000（可）"
+        }
+      },
+      "security": {
+        "calloutTitle": "◈ セキュリティヘッダーはSEOにも重要",
+        "calloutBody": "Google は安全なサイトを優先します。セキュリティヘッダー不足はSEOと信頼性を損ねます。HTTPS は直接のランキング要因です。",
+        "table": {
+          "securityHeader": "セキュリティヘッダー",
+          "recommendedValue": "推奨値"
+        },
+        "headers": {
+          "httpsEnabled": "HTTPS 有効",
+          "hsts": "HSTS ヘッダー",
+          "csp": "Content Security Policy",
+          "xFrameOptions": "X-Frame-Options",
+          "xContentTypeOptions": "X-Content-Type-Options"
+        },
+        "purpose": {
+          "encryptedConnection": "暗号化通信",
+          "forceHttps": "HTTPS 強制",
+          "xssProtection": "XSS 対策",
+          "clickjacking": "クリックジャッキング対策",
+          "mimeSniffing": "MIME スニッフィング対策"
+        },
+        "details": {
+          "sslEnabled": "安全な SSL/TLS が有効",
+          "noHttps": "HTTPS が検出されません",
+          "hstsNotConfigured": "未設定 — ブラウザは HTTP で接続できます",
+          "injectionRisk": "インジェクション攻撃のリスク",
+          "canEmbed": "iframe に埋め込み可能",
+          "misinterpret": "ブラウザが内容を誤解釈する可能性"
+        },
+        "recommended": {
+          "https": "必須 — 本番では常に HTTPS を使用"
+        }
+      },
+      "structuredData": {
+        "info": {
+          "title": "ⓘ 構造化データ（Schema）とは？",
+          "body": "構造化データ（schema マークアップ）は、検索エンジンがコンテンツをより正確に理解できるようにするコードです。星評価、価格、イベント日時、FAQ の展開表示などの <strong style=\"color: #00ff41;\">リッチリザルト</strong> を有効化できます。<strong style=\"color: #00ccff;\">Schema.org</strong> の語彙を JSON-LD／Microdata／RDFa で実装します。",
+          "cards": {
+            "ctr": {
+              "title": "U CTR 改善",
+              "body": "リッチリザルトは目立ち、クリックが増えます"
+            },
+            "targeting": {
+              "title": "T ターゲティング改善",
+              "body": "検索エンジンがニッチを理解しやすくなります"
+            },
+            "advantage": {
+              "title": "W SEO 優位性",
+              "body": "検索結果での競争力を高めます"
+            }
+          }
+        },
+        "summary": {
+          "heading": "概要",
+          "table": {
+            "impact": "影響"
+          },
+          "rows": {
+            "found": {
+              "metric": "構造化データ検出",
+              "impact": {
+                "detected": "リッチリザルトを有効化",
+                "notFound": "強化表示の機会を逃しています"
+              }
+            },
+            "types": {
+              "metric": "実装済み Schema タイプ",
+              "value": {
+                "singular": "タイプ",
+                "plural": "タイプ"
+              },
+              "impact": {
+                "great": "十分なカバレッジ",
+                "good": "良いスタート",
+                "none": "未実装"
+              }
+            },
+            "score": {
+              "metric": "総合スコア",
+              "impact": {
+                "excellent": "実装は優秀",
+                "room": "改善の余地あり",
+                "critical": "重大な不足"
+              }
+            }
+          }
+        },
+        "detected": {
+          "heading": "検出された Schema タイプ",
+          "table": {
+            "schemaType": "Schema タイプ",
+            "seoBenefit": "SEO 効果",
+            "keyFields": "主要フィールド"
+          },
+          "unknown": {
+            "desc": "Schema マークアップ",
+            "benefit": "構造化データの実装"
+          },
+          "moreFields": "+{{count}} 件",
+          "na": "該当なし"
+        },
+        "validation": {
+          "title": "✓ 次のステップ：Schema を検証",
+          "body": {
+            "beforeLink": "",
+            "linkText": "Google リッチリザルト テスト",
+            "afterLink": "でエラーがないか確認し、リッチスニペットの対象になることを確かめましょう。Search Console でも構造化データのエラーを監視してください。"
+          }
+        },
+        "missing": {
+          "heading": "重要なSEO機会が不足",
+          "card": {
+            "title": "構造化データが検出されません",
+            "body": "可視性とクリック率を高める強化表示を逃しています"
+          },
+          "table": {
+            "richResultType": "リッチリザルトの種類",
+            "whatMissing": "不足しているもの",
+            "ctrImpact": "CTR への影響"
+          },
+          "rows": {
+            "starRatings": {
+              "title": "星評価",
+              "body": "検索結果にレビュー星と評価を表示"
+            },
+            "productInfo": {
+              "title": "商品情報",
+              "body": "価格、在庫、特典などを表示"
+            },
+            "eventDetails": {
+              "title": "イベント詳細",
+              "body": "日付・場所・チケット情報（カレンダー連携）"
+            },
+            "richMedia": {
+              "title": "リッチメディア",
+              "body": "強化サムネイル、カルーセル、動画スニペット"
+            },
+            "faq": {
+              "title": "FAQ 展開",
+              "body": "検索結果で Q&A を展開表示"
+            }
+          }
+        },
+        "proTip": {
+          "label": "ⓘ ヒント：",
+          "body": "Google の調査では、リッチリザルトでクリック率が 15〜35% 向上する可能性があります。まずは下の基本 schema から始めましょう。"
+        },
+        "recommended": {
+          "heading": "おすすめの Schema タイプ",
+          "box": {
+            "title": "まずは基本 schema から",
+            "body": "ほとんどのサイトで有効です。後からコンテンツに合わせてより具体的な schema を追加できます。"
+          },
+          "table": {
+            "schemaType": "Schema タイプ",
+            "priority": "優先度",
+            "seoBenefit": "SEO 効果",
+            "requiredFields": "必須フィールド"
+          }
+        },
+        "priority": {
+          "high": "高",
+          "medium": "中"
+        },
+        "formats": {
+          "heading": "実装形式",
+          "jsonld": {
+            "badge": "推奨",
+            "body": "Linked Data 用 JSON。Google 推奨形式で、HTML と分離でき、保守が容易です。"
+          },
+          "microdata": {
+            "subtitle": "HTML 属性",
+            "body": "HTML タグに直接埋め込みます。保守は複雑ですが、内容と密接に結びつきます。"
+          },
+          "rdfa": {
+            "subtitle": "リソース記述",
+            "body": "属性で RDF を表現します。Microdata に似ていますが、属性名が異なります。"
+          }
+        },
+        "resources": {
+          "heading": "主要リソースとツール",
+          "table": {
+            "tool": "ツール",
+            "link": "リンク"
+          },
+          "rows": {
+            "schemaDocs": {
+              "title": "Schema.org ドキュメント",
+              "purpose": "すべての schema タイプとプロパティの公式リファレンス",
+              "linkText": "schema.org →"
+            },
+            "richResultsTest": {
+              "title": "リッチリザルト テスト",
+              "purpose": "マークアップをテストし、生成可能なリッチリザルトを確認",
+              "linkText": "テスト →"
+            },
+            "validator": {
+              "title": "Schema バリデータ",
+              "purpose": "JSON-LD／Microdata／RDFa を包括的に検証",
+              "linkText": "検証 →"
+            },
+            "googleGuide": {
+              "title": "Google ガイド",
+              "purpose": "実装手順、例、ベストプラクティスのガイド",
+              "linkText": "読む →"
+            },
+            "generator": {
+              "title": "マークアップ生成",
+              "purpose": "さまざまな schema の JSON-LD を素早く生成",
+              "linkText": "生成 →"
+            }
+          }
+        },
+        "schemas": {
+          "Organization": {
+            "desc": "会社／ブランド情報",
+            "benefit": "ナレッジグラフでブランド認知を強化"
+          },
+          "Person": {
+            "desc": "個人プロフィール",
+            "benefit": "著者スニペットやナレッジパネルに寄与"
+          },
+          "Product": {
+            "desc": "商品情報",
+            "benefit": "価格・在庫・レビューを検索結果に表示"
+          },
+          "Article": {
+            "desc": "記事",
+            "benefit": "著者や公開日付きの記事スニペット"
+          },
+          "WebSite": {
+            "desc": "サイトのメタデータ",
+            "benefit": "サイトリンク検索ボックスを有効化"
+          },
+          "BreadcrumbList": {
+            "desc": "パンくずリスト",
+            "benefit": "検索結果でパンくずを表示"
+          },
+          "LocalBusiness": {
+            "desc": "ローカルビジネス情報",
+            "benefit": "ローカル検索や Google マップに表示"
+          },
+          "Event": {
+            "desc": "イベント情報",
+            "benefit": "検索結果にイベント詳細と\"カレンダーに追加\""
+          },
+          "Recipe": {
+            "desc": "レシピ",
+            "benefit": "評価・時間・カロリー付きのレシピカード"
+          },
+          "Review": {
+            "desc": "レビュー",
+            "benefit": "検索結果で星評価を表示"
+          },
+          "VideoObject": {
+            "desc": "動画",
+            "benefit": "サムネイルと重要シーン付き動画スニペット"
+          },
+          "FAQPage": {
+            "desc": "FAQ",
+            "benefit": "検索結果で FAQ を展開表示"
+          },
+          "HowTo": {
+            "desc": "手順ガイド",
+            "benefit": "画像付きの番号手順を表示"
+          },
+          "SoftwareApplication": {
+            "desc": "ソフトウェア／アプリ",
+            "benefit": "インストール導線と評価を表示"
+          },
+          "JobPosting": {
+            "desc": "求人",
+            "benefit": "Google for Jobs に給与と場所を表示"
+          }
+        }
+      },
+      "additional": {
+        "calloutTitle": "🔧 技術SEOの基礎",
+        "calloutBody": "これらの技術要素は検索エンジンのクロール、インデックス、理解を助けます。不足すると発見性が大きく落ちます。",
+        "technicalHeading": "技術SEO",
+        "checks": {
+          "sitemap": "XML サイトマップ",
+          "favicon": "ファビコン",
+          "googleAnalytics": "Google Analytics"
+        },
+        "purpose": {
+          "robots": "検索エンジンのクロール制御",
+          "sitemap": "ページ発見を支援",
+          "favicon": "ブラウザタブのアイコン",
+          "analytics": "トラフィック計測"
+        },
+        "details": {
+          "robotsPresent": "ファイルが存在し到達可能",
+          "robotsMissing": "未検出 — /robots.txt を作成",
+          "sitemapDetected": "サイトマップを検出",
+          "sitemapMissing": "未検出 — インデックス改善に有効",
+          "faviconMissing": "ファビコンが見つかりません",
+          "analyticsEnabled": "分析トラッキング有効",
+          "analyticsMissing": "分析ツールを検出できません"
+        },
+        "bestPractice": {
+          "robots": "クロール許可、管理/非公開はブロック",
+          "sitemap": "Search Console に送信、週次更新",
+          "favicon": "32×32 PNG または ICO、ブランド認知に寄与",
+          "analytics": "GA4 推奨、行動分析でSEO改善"
+        },
+        "social": {
+          "calloutTitle": "M ソーシャルシグナルとSEO",
+          "calloutBody": "直接のランキング要因ではありませんが、ソーシャルリンクは認知と流入を増やし、共有時の Open Graph 表示も改善します。",
+          "heading": "ソーシャルメディアの存在",
+          "value": {
+            "openGraph": "Open Graph メタタグ",
+            "twitterCard": "Twitter Card タグ",
+            "professional": "プロフェッショナルネットワーク",
+            "visual": "ビジュアルコンテンツ"
+          },
+          "details": {
+            "linkPresent": "リンクあり",
+            "facebookMissing": "Facebook リンクが見つかりません",
+            "twitterMissing": "Twitter リンクが見つかりません",
+            "linkedinMissing": "LinkedIn リンクが見つかりません",
+            "instagramMissing": "Instagram リンクが見つかりません"
+          },
+          "tip": {
+            "openGraph": "og:image、og:title、og:description を追加",
+            "twitterCard": "twitter:card、twitter:image を追加",
+            "linkedin": "フッターにリンクしてB2B信頼性を向上",
+            "instagram": "ビジネスプロフィールへリンクしブランド強化"
+          }
+        }
+      },
+      "issues": {
+        "issuesHeading": "問題",
+        "recommendationsHeading": "推奨事項"
+      },
+      "loading": {
+        "title": "解析中",
+        "running": "SEO の完全解析を実行中...",
+        "metaTags": "メタタグを確認中...",
+        "content": "コンテンツ品質を解析中...",
+        "mobile": "モバイル対応をテスト中...",
+        "performance": "パフォーマンスを計測中..."
+      },
+      "error": {
+        "title": "エラー",
+        "analysisFailed": "解析に失敗しました",
+        "retry": "再試行"
+      }
+    },
+    "components": {
+      "metaTags": "メタタグ",
+      "headings": "見出し",
+      "content": "コンテンツ",
+      "images": "画像",
+      "links": "リンク",
+      "structuredData": "構造化データ"
+    },
     "pages": {
       "home": {
         "title": "Site Mechanic - プロフェッショナルウェブサイト分析ツール",
@@ -285,6 +885,13 @@
         "keywords": "パフォーマンス,Core Web Vitals",
         "og_title": "パフォーマンステスト",
         "twitter_title": "速度最適化"
+      },
+      "seo-analyzer": {
+        "title": "SEOとインデックス - メタデータ、構造、クロール性 | Site Mechanic",
+        "description": "SEOの問題を診断：メタタグ、見出し、構造化データ、クロール性、ページ最適化。Site Mechanicの統合サイト検査フローの一部です。",
+        "keywords": "SEOアナライザー,SEO監査,メタタグ,構造化データ,オンページSEO,テクニカルSEO,クロール,インデックス",
+        "og_title": "SEOアナライザー - SEO監査ツール | Site Mechanic",
+        "twitter_title": "SEOアナライザー - SEO監査ツール | Site Mechanic"
       },
       "mobile-analyzer": {
         "title": "モバイル分析ツール",
@@ -392,6 +999,10 @@
         "twitter_title": "CWV分析"
       }
     }
+  },
+  "pricing": {
+    "unlockReportTitle": "レポートを解放",
+    "unlockReportSubtitle": "PDFエクスポート、リンク共有、データエクスポート、このスキャンの修正パック。"
   },
   "notices": {
     "botProtectionTitle": "ボット保護に関するお知らせ：",

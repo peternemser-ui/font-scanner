@@ -3,7 +3,11 @@
  * Detects font providers, duplicates, unused fonts, and optimization opportunities
  */
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'enhanced-fonts';
+
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   const urlInput = document.getElementById('urlInput');
   const analyzeButton = document.getElementById('analyzeButton');
   const multiPageOption = document.getElementById('multiPageOption');
@@ -77,10 +81,14 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       if (loader) loader.nextStep(1);
 
+      const scanStartedAt = new Date().toISOString();
+      window.SM_SCAN_STARTED_AT = scanStartedAt;
+      document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
       const response = await fetch('/api/enhanced-fonts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, options })
+        body: JSON.stringify({ url, options, scanStartedAt })
       });
 
       if (loader) loader.nextStep(3);
@@ -148,9 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
       
       <!-- Export Buttons (at bottom) -->
       <div class="export-buttons" role="toolbar" aria-label="Export options" style="margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-        <button class="export-btn" onclick="exportToPDF()" aria-label="Download PDF report">
-          Download PDF
-        </button>
         <button class="export-btn" onclick="exportToCSS()" aria-label="Export as CSS">
           Export CSS
         </button>
@@ -212,6 +217,18 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       initializeCharts(data, fonts);
     }, 100);
+
+    // Pro Report Block
+    if (window.ProReportBlock && window.ProReportBlock.render) {
+      const proBlockHtml = window.ProReportBlock.render({
+        context: 'font-analysis',
+        features: ['pdf', 'csv', 'share'],
+        title: 'Unlock Report',
+        subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+      });
+      resultsContent.insertAdjacentHTML('beforeend', proBlockHtml);
+    }
+
   }
   
   // ============================================
@@ -1251,23 +1268,23 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
     patienceEl.style.cssText = `
       margin: 0 0 1.5rem 0;
       padding: 1rem;
-      background: rgba(0, 255, 65, 0.05);
-      border: 1px solid rgba(0, 255, 65, 0.3);
+      background: rgba(var(--accent-primary-rgb), 0.05);
+      border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
       border-radius: 6px;
       text-align: center;
       overflow: visible;
     `;
     patienceEl.innerHTML = `
       <div style="overflow-x: auto; overflow-y: visible;">
-        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
-      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41;">
+      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--accent-primary);">
         ⏳ Font analysis in progress...<br>
-        <span style="font-size: 0.75rem; color: #00ffaa;">This may take 20-45 seconds</span>
+        <span style="font-size: 0.75rem; color: rgba(var(--accent-primary-rgb), 0.8);">This may take 20-45 seconds</span>
       </div>
     `;
     
@@ -1277,12 +1294,12 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
       style.id = 'patience-animations';
       style.textContent = `
         @keyframes color-cycle {
-          0% { color: #00ff41; }
+          0% { color: var(--accent-primary); }
           20% { color: #00ffaa; }
           40% { color: #00aaff; }
           60% { color: #aa00ff; }
           80% { color: #ff00aa; }
-          100% { color: #00ff41; }
+          100% { color: var(--accent-primary); }
         }
         @keyframes fade-in-out {
           0%, 100% { opacity: 0.7; }

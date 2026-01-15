@@ -3,7 +3,11 @@
  * Multi-page discovery with sitemap parsing and robots.txt respect
  */
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'site-crawler';
+
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   const urlInput = document.getElementById('urlInput');
   const crawlButton = document.getElementById('crawlButton');
   const maxPagesInput = document.getElementById('maxPages');
@@ -74,10 +78,14 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       if (loader) loader.nextStep(1);
 
+      const scanStartedAt = new Date().toISOString();
+      window.SM_SCAN_STARTED_AT = scanStartedAt;
+      document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
       const response = await fetch('/api/crawl', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, options })
+        body: JSON.stringify({ url, options, scanStartedAt })
       });
 
       if (loader) loader.nextStep(3);
@@ -115,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayResults(data) {
-    console.log('🕷️ CRAWLER VERSION: FRESH-JAN8-2026 - NEW LAYOUT');
+
     const pages = data.results?.pages || [];
     const hostname = new URL(data.url || 'https://example.com').hostname;
     
@@ -320,6 +328,18 @@ document.addEventListener('DOMContentLoaded', () => {
 ${JSON.stringify(data, null, 2)}
         </pre>
       </details>
+
+      <!-- Pro Report Block -->
+      ${window.ProReportBlock && window.ProReportBlock.render ? `
+        <div class="section" style="margin-top: 2rem;">
+          ${window.ProReportBlock.render({
+            context: 'crawler',
+            features: ['pdf', 'csv', 'share'],
+            title: 'Unlock Report',
+            subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+          })}
+        </div>
+      ` : ''}
     `;
 
     resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;

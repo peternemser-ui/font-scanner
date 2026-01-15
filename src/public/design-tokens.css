@@ -13,9 +13,9 @@
      ======================================== */
   
   /* Primary Brand Colors */
-  --color-primary: #00FF9D;           /* Bright teal - CTAs, active states */
-  --color-primary-hover: #00E68A;     /* Slightly darker for hover */
-  --color-primary-dim: rgba(0, 255, 157, 0.1);  /* Subtle backgrounds */
+  --color-primary: #5bf4e7;           /* Cyan - CTAs, active states (from dark mode logo) */
+  --color-primary-hover: #4dd8cc;     /* Slightly darker for hover */
+  --color-primary-dim: rgba(91, 244, 231, 0.1);  /* Subtle backgrounds */
   
   --color-secondary: #0AFFEF;         /* Cyan - Accents, highlights */
   --color-secondary-hover: #00D9CF;
@@ -271,13 +271,45 @@
   --card-radius: var(--radius-lg);
   --card-shadow: var(--shadow-md);
   --card-border: 1px solid var(--border-color);
-  
+
+  /* Modal */
+  --modal-backdrop: rgba(0, 0, 0, 0.85);
+  --modal-width-sm: 400px;
+  --modal-width-md: 600px;
+  --modal-width-lg: 900px;
+
+  /* Pro Report Block */
+  --pro-block-gradient: linear-gradient(135deg, var(--color-primary) 0%, var(--color-secondary) 100%);
+  --pro-block-glow: 0 4px 20px rgba(91, 244, 231, 0.3);
+
+  /* Screenshot Lightbox */
+  --lightbox-bg: rgba(0, 0, 0, 0.95);
+  --lightbox-arrow-size: 48px;
+
+  /* ========================================
+     UI.CSS COMPATIBILITY ALIASES
+     (For gradual migration from ui.css)
+     ======================================== */
+
+  /* Color Aliases */
+  --color-accent: var(--color-primary);           /* ui.css accent → primary */
+  --color-accent-hover: var(--color-primary-hover);
+  --color-accent-light: var(--color-primary-dim);
+
+  /* Spacing Aliases (ui.css used different values) */
+  --space-ui-5: var(--space-6);   /* ui.css --space-5 was 24px, ours is 20px */
+
+  /* Background Aliases */
+  --color-bg: var(--bg-base);
+  --color-surface: var(--bg-card);
+  --color-border: var(--border-color);
+
   /* ========================================
      ACCESSIBILITY
      ======================================== */
   
   /* Focus Rings */
-  --focus-ring: 0 0 0 3px rgba(0, 255, 157, 0.3);
+  --focus-ring: 0 0 0 3px rgba(91, 244, 231, 0.3);
   --focus-ring-offset: 2px;
   
   /* Touch Targets (WCAG 2.1 Level AAA) */
@@ -286,11 +318,65 @@
 
 /* ========================================
    LIGHT MODE OVERRIDES
-   (Optional - currently dark-only)
+   Using brand red #dd3838 from light mode logo
    ======================================== */
 
+body.white-theme {
+  /* Primary Brand Colors - Light Mode (red from logo) */
+  --color-primary: #dd3838;
+  --color-primary-hover: #c52f2f;
+  --color-primary-dim: rgba(221, 56, 56, 0.1);
+  
+  --color-secondary: #ff5252;
+  --color-secondary-hover: #e04545;
+  --color-secondary-dim: rgba(255, 82, 82, 0.1);
+  
+  /* Semantic State Colors - adjusted for light mode */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+  
+  /* Backgrounds - Light mode */
+  --bg-base: #ffffff;
+  --bg-elevated: #f9fafb;
+  --bg-card: #ffffff;
+  --bg-input: #f3f4f6;
+  --bg-overlay: rgba(255, 255, 255, 0.95);
+  
+  /* Borders - Light mode */
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-color-strong: rgba(0, 0, 0, 0.2);
+  --border-color-subtle: rgba(0, 0, 0, 0.05);
+  
+  /* Text colors - Light mode */
+  --color-text: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
+  
+  /* Gradient Backgrounds - Light mode */
+  --bg-gradient-primary: linear-gradient(135deg, rgba(221, 56, 56, 0.1), rgba(255, 82, 82, 0.05));
+  --bg-gradient-success: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
+  --bg-gradient-warning: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.1));
+  --bg-gradient-error: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.1));
+  
+  /* Effects - Light mode */
+  --focus-ring: 0 0 0 3px rgba(221, 56, 56, 0.3);
+  --pro-block-glow: 0 4px 20px rgba(221, 56, 56, 0.2);
+  
+  /* Update aliases */
+  --color-accent: var(--color-primary);
+  --color-accent-hover: var(--color-primary-hover);
+  --color-accent-light: var(--color-primary-dim);
+}
+
 @media (prefers-color-scheme: light) {
-  /* Add light mode tokens here if needed */
+  /* System light mode preference - apply same overrides */
+  :root:not(.dark-forced) {
+    --color-primary: #dd3838;
+    --color-primary-hover: #c52f2f;
+    --color-primary-dim: rgba(221, 56, 56, 0.1);
+  }
 }
 
 /* ========================================

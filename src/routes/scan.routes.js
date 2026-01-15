@@ -331,7 +331,6 @@ router.get('/:scanId/pdf', async (req, res) => {
     const watermark = isFreeTier;
 
     // Generate PDF
-    console.log(`📄 Generating PDF for scan ${scanId}...`);
     const pdfBuffer = await pdfGenerator.generatePDF(scanData, {
       watermark,
       includeAllPages: true
@@ -342,9 +341,6 @@ router.get('/:scanId/pdf', async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="scan-${scanId}.pdf"`);
     res.setHeader('Content-Length', pdfBuffer.length);
     res.send(pdfBuffer);
-
-    console.log(`✅ PDF sent successfully for scan ${scanId}`);
-
   } catch (error) {
     console.error('Error generating PDF:', error);
     res.status(500).json({

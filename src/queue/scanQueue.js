@@ -28,7 +28,6 @@ class ScanQueue extends EventEmitter {
     this.queue.push(job);
     this.emit('job:queued', job);
 
-    console.log(`📝 Scan queued: ${scanId} (${this.queue.length} in queue)`);
 
     // Try to process immediately if capacity available
     setImmediate(() => this.processNext());
@@ -55,7 +54,6 @@ class ScanQueue extends EventEmitter {
     this.processing.set(job.scanId, job);
     job.startedAt = new Date();
 
-    console.log(`⚙️ Processing scan: ${job.scanId} (${this.processing.size} active)`);
 
     this.emit('job:started', job);
 
@@ -74,7 +72,6 @@ class ScanQueue extends EventEmitter {
   async complete(scanId, result) {
     const job = this.processing.get(scanId);
     if (!job) {
-      console.warn(`⚠️ Attempted to complete unknown job: ${scanId}`);
       return;
     }
 
@@ -82,7 +79,6 @@ class ScanQueue extends EventEmitter {
     job.completedAt = new Date();
     job.result = result;
 
-    console.log(`✅ Scan completed: ${scanId} (took ${job.completedAt - job.startedAt}ms)`);
 
     this.emit('job:completed', job);
 
@@ -96,7 +92,6 @@ class ScanQueue extends EventEmitter {
   async fail(scanId, error) {
     const job = this.processing.get(scanId);
     if (!job) {
-      console.warn(`⚠️ Attempted to fail unknown job: ${scanId}`);
       return;
     }
 
@@ -115,8 +110,6 @@ class ScanQueue extends EventEmitter {
     if (job.attempts < job.maxAttempts) {
       // Retry with exponential backoff
       const delayMs = Math.pow(2, job.attempts) * 1000;
-      console.log(`🔄 Retrying scan ${job.scanId} in ${delayMs}ms...`);
-
       this.processing.delete(job.scanId);
 
       setTimeout(() => {
@@ -196,13 +189,11 @@ class ScanQueue extends EventEmitter {
     if (queueIndex >= 0) {
       this.queue.splice(queueIndex, 1);
       this.emit('job:cancelled', { scanId });
-      console.log(`🚫 Scan cancelled: ${scanId}`);
       return true;
     }
 
     // Can't cancel if already processing
     if (this.processing.has(scanId)) {
-      console.warn(`⚠️ Cannot cancel scan already in progress: ${scanId}`);
       return false;
     }
 
@@ -215,7 +206,6 @@ class ScanQueue extends EventEmitter {
   clear() {
     const count = this.queue.length;
     this.queue = [];
-    console.log(`🧹 Cleared ${count} jobs from queue`);
     return count;
   }
 }

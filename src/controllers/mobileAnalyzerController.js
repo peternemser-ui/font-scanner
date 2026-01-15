@@ -7,6 +7,11 @@ const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { createLogger } = require('../utils/logger');
 const { sanitizeUrl, validateUrl, normalizeUrl } = require('../utils/validators');
 const mobileAnalyzerService = require('../services/mobileAnalyzerService');
+const { getRequestScanStartedAt, attachToResponse } = require('../utils/scanTimestamp');
+
+const { makeReportId } = require('../utils/reportId');
+const { ensureReportScreenshot } = require('../utils/reportScreenshot');
+const { getAnalyzerKeyOverride } = require('../utils/controllerHelpers');
 
 const logger = createLogger('MobileAnalyzerController');
 
@@ -50,12 +55,19 @@ const analyzeMobile = asyncHandler(async (req, res) => {
       score: results.mobileScore
     });
 
-    res.json({
+    const startedAt = getRequestScanStartedAt(req) || results?.startedAt || results?.timestamp || new Date().toISOString();
+    const analyzerKey = getAnalyzerKeyOverride(req, 'mobile-analyzer');
+    const reportId = makeReportId({ analyzerKey, normalizedUrl: normalized, startedAtISO: startedAt });
+    const screenshotUrl = reportId ? await ensureReportScreenshot({ url: normalized, reportId, requestId: req.id }) : null;
+
+    res.json(attachToResponse({
       success: true,
       url: normalized,
       results,
+      reportId,
+      screenshotUrl,
       timestamp: new Date().toISOString()
-    });
+    }, startedAt));
   } catch (error) {
     logger.error(`Mobile analysis failed: ${error.message}`, {
       requestId: req.id,

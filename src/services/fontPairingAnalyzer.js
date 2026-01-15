@@ -1,4 +1,5 @@
 const { createLogger } = require('../utils/logger');
+const { roundTo } = require('../utils/formatHelpers');
 
 const logger = createLogger('FontPairingAnalyzer');
 
@@ -77,7 +78,7 @@ class FontPairingAnalyzer {
         fonts: classifiedFonts,
         pairings,
         totalFonts: fonts.length,
-        score: Math.round(avgScore),
+        score: roundTo(avgScore, 0),
         rating: this.getRating(avgScore),
         recommendations,
         harmony: this.assessHarmony(classifiedFonts, pairings),

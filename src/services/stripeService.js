@@ -1,10 +1,253 @@
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
+const jwt = require('jsonwebtoken');
 const { getDatabase } = require('../db');
 const { createLogger } = require('../utils/logger');
 
 const logger = createLogger('StripeService');
 
+const JWT_SECRET = process.env.JWT_SECRET || 'change-this-in-production-use-long-random-string';
+
 class StripeService {
+  getBaseUrl(requestOrigin = null) {
+    return process.env.BASE_URL || requestOrigin || 'http://localhost:3000';
+  }
+
+  getBillingPriceId(purchaseType, packId = null) {
+    const env = process.env;
+    const priceMap = {
+      single_report: env.STRIPE_PRICE_SINGLE_REPORT_10,
+      credit_pack: {
+        pack_5: env.STRIPE_PRICE_CREDITS_PACK_5_40,
+        pack_10: env.STRIPE_PRICE_CREDITS_PACK_10_70,
+        pack_25: env.STRIPE_PRICE_CREDITS_PACK_25_150,
+      }
+    };
+
+    if (purchaseType === 'single_report') {
+      if (!priceMap.single_report) {
+        throw new Error('Stripe price ID not configured: STRIPE_PRICE_SINGLE_REPORT_10');
+      }
+      return priceMap.single_report;
+    }
+
+    if (purchaseType === 'credit_pack') {
+      const priceId = priceMap.credit_pack[packId];
+      if (!priceId) {
+        throw new Error(`Stripe price ID not configured for pack: ${packId}`);
+      }
+      return priceId;
+    }
+
+    throw new Error('Invalid purchaseType');
+  }
+
+  getCreditsForPack(packId) {
+    const map = { pack_5: 5, pack_10: 10, pack_25: 25 };
+    return map[packId] || 0;
+  }
+
+  appendQuery(urlString, query) {
+    const url = new URL(urlString);
+    Object.entries(query).forEach(([key, value]) => {
+      url.searchParams.set(key, value);
+    });
+    return url.toString();
+  }
+
+  createEntitlementToken(payload) {
+    try {
+      return jwt.sign(
+        {
+          ...payload,
+          iss: 'site-mechanic',
+        },
+        JWT_SECRET,
+        { expiresIn: '30d' }
+      );
+    } catch (e) {
+      logger.warn('Failed to create entitlement token', { error: e.message });
+      return null;
+    }
+  }
+
+  /**
+   * Create Stripe Checkout session for billing purchases (no auth required)
+   * purchaseType: 'single_report' | 'credit_pack'
+   */
+  async createBillingCheckoutSession({ purchaseType, packId = null, reportId = null, returnUrl, requestOrigin = null }) {
+    const baseUrl = this.getBaseUrl(requestOrigin);
+    const priceId = this.getBillingPriceId(purchaseType, packId);
+    const creditsAdded = purchaseType === 'credit_pack' ? this.getCreditsForPack(packId) : 0;
+
+    const successHandlerUrl = new URL('/billing-success.html', baseUrl).toString();
+    const cancelHandlerUrl = new URL('/billing-cancel.html', baseUrl).toString();
+    const successUrl = this.appendQuery(successHandlerUrl, {
+      session_id: '{CHECKOUT_SESSION_ID}',
+      returnUrl
+    });
+    const cancelUrl = this.appendQuery(cancelHandlerUrl, { returnUrl });
+
+    const session = await stripe.checkout.sessions.create({
+      line_items: [{ price: priceId, quantity: 1 }],
+      mode: 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      allow_promotion_codes: true,
+      metadata: {
+        purchaseType,
+        packId: packId || '',
+        reportId: reportId || '',
+        creditsAdded: creditsAdded.toString(),
+        returnUrl
+      }
+    });
+
+    logger.info('Billing checkout session created', {
+      sessionId: session.id,
+      purchaseType,
+      packId,
+      reportId,
+      creditsAdded
+    });
+
+    return session;
+  }
+
+  /**
+   * Verify a billing session and return a client-side entitlement payload
+   */
+  async verifyBillingSession(sessionId) {
+    const db = getDatabase();
+
+    // Prefer webhook-fulfilled DB state when available
+    try {
+      const row = await db.get(
+        'SELECT purchase_type, report_id, credits_added, payment_status FROM billing_sessions WHERE session_id = ?',
+        [sessionId]
+      );
+
+      if (row && row.payment_status === 'paid') {
+        return {
+          paid: true,
+          purchaseType: row.purchase_type || null,
+          reportId: row.report_id || null,
+          creditsAdded: parseInt(row.credits_added || 0, 10) || 0,
+        };
+      }
+    } catch (e) {
+      // DB might not be initialized in some edge contexts; fall back to Stripe.
+      logger.warn('Failed to check billing session DB state', { error: e.message });
+    }
+
+    const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+    const paid = session.payment_status === 'paid';
+    const purchaseType = session.metadata?.purchaseType || null;
+    const packId = session.metadata?.packId || null;
+    const reportId = session.metadata?.reportId || null;
+
+    let creditsAdded = 0;
+    if (paid && purchaseType === 'credit_pack') {
+      creditsAdded = this.getCreditsForPack(packId);
+    }
+
+    // Best-effort upsert so subsequent verifications can short-circuit
+    try {
+      if (purchaseType === 'single_report' || purchaseType === 'credit_pack') {
+        await db.run(
+          `INSERT INTO billing_sessions (session_id, purchase_type, report_id, pack_id, credits_added, payment_status, mode, amount_total, currency, stripe_customer_id, completed_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+           ON CONFLICT(session_id) DO UPDATE SET
+             purchase_type = excluded.purchase_type,
+             report_id = excluded.report_id,
+             pack_id = excluded.pack_id,
+             credits_added = excluded.credits_added,
+             payment_status = excluded.payment_status,
+             mode = excluded.mode,
+             amount_total = excluded.amount_total,
+             currency = excluded.currency,
+             stripe_customer_id = excluded.stripe_customer_id,
+             completed_at = COALESCE(excluded.completed_at, billing_sessions.completed_at),
+             updated_at = CURRENT_TIMESTAMP`,
+          [
+            session.id,
+            purchaseType,
+            reportId || null,
+            packId || null,
+            paid ? creditsAdded : 0,
+            session.payment_status || null,
+            session.mode || null,
+            session.amount_total || null,
+            session.currency || null,
+            session.customer || null,
+            session.created ? new Date(session.created * 1000).toISOString() : null,
+          ]
+        );
+      }
+    } catch (e) {
+      logger.warn('Failed to upsert billing session during verify', { error: e.message });
+    }
+
+    return {
+      paid: !!paid,
+      purchaseType,
+      reportId: reportId || null,
+      creditsAdded: paid ? creditsAdded : 0
+    };
+  }
+
+  async upsertBillingSessionFromCheckoutSession(session) {
+    const db = getDatabase();
+
+    const purchaseType = session.metadata?.purchaseType || null;
+    if (purchaseType !== 'single_report' && purchaseType !== 'credit_pack') {
+      return { stored: false, reason: 'not_billing_purchase' };
+    }
+
+    const packId = session.metadata?.packId || null;
+    const reportId = session.metadata?.reportId || null;
+    const paid = session.payment_status === 'paid';
+    const creditsAdded = paid && purchaseType === 'credit_pack' ? this.getCreditsForPack(packId) : 0;
+
+    await db.run(
+      `INSERT INTO billing_sessions (session_id, purchase_type, report_id, pack_id, credits_added, payment_status, mode, amount_total, currency, stripe_customer_id, completed_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+       ON CONFLICT(session_id) DO UPDATE SET
+         purchase_type = excluded.purchase_type,
+         report_id = excluded.report_id,
+         pack_id = excluded.pack_id,
+         credits_added = excluded.credits_added,
+         payment_status = excluded.payment_status,
+         mode = excluded.mode,
+         amount_total = excluded.amount_total,
+         currency = excluded.currency,
+         stripe_customer_id = excluded.stripe_customer_id,
+         completed_at = COALESCE(excluded.completed_at, billing_sessions.completed_at),
+         updated_at = CURRENT_TIMESTAMP`,
+      [
+        session.id,
+        purchaseType,
+        reportId || null,
+        packId || null,
+        paid ? creditsAdded : 0,
+        session.payment_status || null,
+        session.mode || null,
+        session.amount_total || null,
+        session.currency || null,
+        session.customer || null,
+        session.created ? new Date(session.created * 1000).toISOString() : null,
+      ]
+    );
+
+    return {
+      stored: true,
+      paid,
+      purchaseType,
+      reportId: reportId || null,
+      creditsAdded: paid ? creditsAdded : 0,
+    };
+  }
+
   /**
    * Create or get Stripe customer for user
    */
@@ -148,6 +391,35 @@ class StripeService {
 
     try {
       switch (event.type) {
+        case 'checkout.session.completed':
+        case 'checkout.session.async_payment_succeeded':
+        case 'checkout.session.async_payment_failed': {
+          const session = event.data.object;
+
+          // Only fulfill billing purchases (no-auth, pay-per-report / credit packs).
+          // Subscription checkouts are handled by subscription.* events.
+          if (session && session.mode === 'payment') {
+            try {
+              const stored = await this.upsertBillingSessionFromCheckoutSession(session);
+              logger.info('Billing checkout session webhook stored', {
+                eventType: event.type,
+                sessionId: session.id,
+                stored: stored.stored,
+                paid: stored.paid,
+                purchaseType: stored.purchaseType,
+              });
+            } catch (e) {
+              logger.error('Failed to store billing checkout session webhook', {
+                eventType: event.type,
+                sessionId: session?.id,
+                error: e.message,
+              });
+            }
+          }
+
+          break;
+        }
+
         case 'customer.subscription.created':
         case 'customer.subscription.updated': {
           const subscription = event.data.object;

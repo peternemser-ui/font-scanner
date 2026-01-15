@@ -1,10 +1,14 @@
 // Security Analyzer JavaScript
 // Frontend rendering and API interaction for security analysis
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'security';
+
 let currentResults = null;
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   const analyzeButton = document.getElementById('analyzeButton');
   const urlInput = document.getElementById('urlInput');
 
@@ -20,7 +24,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if (typeof window.getUrlParameter === 'function') {
     const autoUrl = window.getUrlParameter();
     if (autoUrl) {
-      console.log('→ Auto-starting Security analysis for:', autoUrl);
       urlInput.value = autoUrl;
       setTimeout(() => {
         analyzeSecurity();
@@ -68,24 +71,24 @@ async function analyzeSecurity() {
   loaderMessageEl.style.cssText = `
     margin: 0 0 1.5rem 0;
     padding: 1rem;
-    background: rgba(0, 255, 65, 0.05);
-    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
     border-radius: 6px;
     text-align: center;
     overflow: visible;
   `;
   loaderMessageEl.innerHTML = `
     <div style="overflow-x: auto; overflow-y: visible;">
-      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\\\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\\\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
     </div>
-    <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: #00ff41; font-weight: 600; letter-spacing: 0.05em;">
+    <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em;">
       Comprehensive analysis in progress...
     </p>
-    <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(0, 255, 65, 0.7);">
+    <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(var(--accent-primary-rgb), 0.7);">
       This may take 30-60 seconds
     </p>
   `;
@@ -96,12 +99,12 @@ async function analyzeSecurity() {
     style.id = 'ascii-art-style';
     style.textContent = `
       @keyframes color-cycle {
-        0% { color: #00ff41; }
+        0% { color: var(--accent-primary); }
         20% { color: #00ffff; }
         40% { color: #0099ff; }
         60% { color: #9933ff; }
         80% { color: #ff33cc; }
-        100% { color: #00ff41; }
+        100% { color: var(--accent-primary); }
       }
       .ascii-art-responsive {
         font-size: clamp(0.35rem, 1.2vw, 0.65rem);
@@ -152,13 +155,17 @@ async function analyzeSecurity() {
   }, 100);
 
   try {
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
     // Call security API
     const response = await fetch('/api/security', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, scanStartedAt }),
     });
 
     if (!response.ok) {
@@ -373,7 +380,7 @@ function displaySecurityResults(data) {
               ${data.vulnerabilities.score}
             </text>
           </svg>
-          <div style="margin-top: 0.5rem; color: ${data.vulnerabilities.critical === 0 ? '#00ff41' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">
+          <div style="margin-top: 0.5rem; color: ${data.vulnerabilities.critical === 0 ? 'var(--accent-primary)' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">
             ${data.vulnerabilities.critical} Critical Issues
           </div>
         </div>
@@ -386,7 +393,7 @@ function displaySecurityResults(data) {
             <tr style="background: rgba(255, 68, 68, 0.1); border-bottom: 2px solid rgba(255, 68, 68, 0.3);">
               <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #ff4444;">Category</th>
               <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #ff4444;">Score</th>
-              <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: #00ff41;">Status</th>
+              <th style="padding: 0.75rem; text-align: center; font-weight: 600; color: var(--accent-primary);">Status</th>
               <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #ff4444;">Status</th>
             </tr>
           </thead>
@@ -395,7 +402,7 @@ function displaySecurityResults(data) {
               <td style="padding: 0.75rem; font-weight: 500;">◈ SSL/TLS Certificate</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.ssl.score)}; font-weight: bold;">${data.ssl.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.ssl.score)}; font-weight: bold;">${getGrade(data.ssl.score)}</td>
-              <td style="padding: 0.75rem; color: ${data.ssl.valid ? '#00ff41' : '#ff4444'};">${data.ssl.valid ? '✓ Valid Certificate' : '✗ Invalid Certificate'}</td>
+              <td style="padding: 0.75rem; color: ${data.ssl.valid ? 'var(--accent-primary)' : '#ff4444'};">${data.ssl.valid ? '✓ Valid Certificate' : '✗ Invalid Certificate'}</td>
             </tr>
             <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
               <td style="padding: 0.75rem; font-weight: 500;">◈ Security Headers</td>
@@ -407,7 +414,7 @@ function displaySecurityResults(data) {
               <td style="padding: 0.75rem; font-weight: 500;">~ Vulnerabilities</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${data.vulnerabilities.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${getGrade(data.vulnerabilities.score)}</td>
-              <td style="padding: 0.75rem; color: ${data.vulnerabilities.critical === 0 ? '#00ff41' : '#ff4444'};">
+              <td style="padding: 0.75rem; color: ${data.vulnerabilities.critical === 0 ? 'var(--accent-primary)' : '#ff4444'};">
                 ${data.vulnerabilities.critical} Critical, ${data.vulnerabilities.high} High, ${data.vulnerabilities.medium} Medium
               </td>
             </tr>
@@ -428,20 +435,20 @@ function displaySecurityResults(data) {
       </div>
 
       <!-- OWASP Compliance Banner -->
-      <div style="margin-top: 2rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(255, 165, 0, 0.15)); border: 2px solid ${data.owaspCompliance >= 70 ? '#00ff41' : '#ff4444'}; border-radius: 8px;">
+      <div style="margin-top: 2rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(255, 165, 0, 0.15)); border: 2px solid ${data.owaspCompliance >= 70 ? 'var(--accent-primary)' : '#ff4444'}; border-radius: 8px;">
         <div style="display: flex; align-items: center; gap: 1rem;">
           <div style="font-size: 3rem;">${data.owaspCompliance >= 70 ? '✓' : '~'}</div>
           <div style="flex: 1;">
             <div style="font-weight: 600; font-size: 1.1rem; color: #ffffff; margin-bottom: 0.5rem;">
               OWASP Top 10 Compliance
             </div>
-            <div style="color: ${data.owaspCompliance >= 70 ? '#00ff41' : '#ff4444'}; font-size: 0.95rem;">
+            <div style="color: ${data.owaspCompliance >= 70 ? 'var(--accent-primary)' : '#ff4444'}; font-size: 0.95rem;">
               <strong>${data.owaspCompliance}%</strong> of OWASP Top 10 security controls implemented
               ${data.owaspCompliance >= 70 ? '- Good security posture!' : '- Improvements needed'}
             </div>
           </div>
           <div style="text-align: center;">
-            <div style="font-size: 2.5rem; font-weight: bold; color: ${data.owaspCompliance >= 70 ? '#00ff41' : '#ff4444'};">
+            <div style="font-size: 2.5rem; font-weight: bold; color: ${data.owaspCompliance >= 70 ? 'var(--accent-primary)' : '#ff4444'};">
               ${data.owaspCompliance}%
             </div>
           </div>
@@ -562,28 +569,40 @@ function displaySecurityResults(data) {
   // Monetization actions (export/share)
   const actionsFooter = document.createElement('div');
   actionsFooter.className = 'section';
-  actionsFooter.innerHTML = `
-    <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span style="color: #00ff41; font-weight: 600;">Take Action</span>
-        <span style="color: #666; font-size: 0.9rem;">Export or share this security report</span>
+
+  // Use new ProReportBlock component if available
+  if (window.ProReportBlock && window.ProReportBlock.render) {
+    actionsFooter.innerHTML = window.ProReportBlock.render({
+      context: 'security',
+      features: ['pdf', 'csv', 'share'],
+      title: 'Unlock Report',
+      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+    });
+  } else {
+    // Fallback/legacy code
+    actionsFooter.innerHTML = `
+      <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
+        <div style="display: flex; align-items: center; gap: 0.5rem;">
+          <span style="color: var(--accent-primary); font-weight: 600;">Take Action</span>
+          <span style="color: #666; font-size: 0.9rem;">Export or share this security report</span>
+        </div>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <button onclick="exportSecurityPDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+            PDF Report
+          </button>
+          <button onclick="copySecurityShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+            Share Link
+          </button>
+          <button onclick="downloadSecurityCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
+            Export Data
+          </button>
+        </div>
       </div>
-      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <button onclick="exportSecurityPDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(0, 255, 65, 0.4); background: rgba(0, 255, 65, 0.1); color: #00ff41; cursor: pointer; font-weight: 600;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-          PDF Report
-        </button>
-        <button onclick="copySecurityShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-          Share Link
-        </button>
-        <button onclick="downloadSecurityCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
-          Export Data
-        </button>
-      </div>
-    </div>
-  `;
+    `;
+  }
   resultsContent.appendChild(actionsFooter);
 }
 
@@ -637,19 +656,19 @@ function createDesktopMobileComparison(container, desktop, mobile) {
           <div style="margin-top: 1rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">HTTPS:</span>
-              <span style="color: ${desktop.https ? '#00ff41' : '#ff4444'}; font-weight: bold;">${desktop.https ? '✓ Enabled' : '✗ Missing'}</span>
+              <span style="color: ${desktop.https ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${desktop.https ? '✓ Enabled' : '✗ Missing'}</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">Mixed Content:</span>
-              <span style="color: ${desktop.mixedContent === 0 ? '#00ff41' : '#ff4444'}; font-weight: bold;">${desktop.mixedContent} issues</span>
+              <span style="color: ${desktop.mixedContent === 0 ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${desktop.mixedContent} issues</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">CSP:</span>
-              <span style="color: ${desktop.csp ? '#00ff41' : '#ffa500'}; font-weight: bold;">${desktop.csp ? '✓ Present' : '⚠ Missing'}</span>
+              <span style="color: ${desktop.csp ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">${desktop.csp ? '✓ Present' : '⚠ Missing'}</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px;">
               <span style="font-weight: 500;">HSTS:</span>
-              <span style="color: ${desktop.hsts ? '#00ff41' : '#ffa500'}; font-weight: bold;">${desktop.hsts ? '✓ Present' : '⚠ Missing'}</span>
+              <span style="color: ${desktop.hsts ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">${desktop.hsts ? '✓ Present' : '⚠ Missing'}</span>
             </div>
           </div>
         </div>
@@ -698,19 +717,19 @@ function createDesktopMobileComparison(container, desktop, mobile) {
           <div style="margin-top: 1rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">HTTPS:</span>
-              <span style="color: ${mobile.https ? '#00ff41' : '#ff4444'}; font-weight: bold;">${mobile.https ? '✓ Enabled' : '✗ Missing'}</span>
+              <span style="color: ${mobile.https ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${mobile.https ? '✓ Enabled' : '✗ Missing'}</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">Mixed Content:</span>
-              <span style="color: ${mobile.mixedContent === 0 ? '#00ff41' : '#ff4444'}; font-weight: bold;">${mobile.mixedContent} issues</span>
+              <span style="color: ${mobile.mixedContent === 0 ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${mobile.mixedContent} issues</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">CSP:</span>
-              <span style="color: ${mobile.csp ? '#00ff41' : '#ffa500'}; font-weight: bold;">${mobile.csp ? '✓ Present' : '⚠ Missing'}</span>
+              <span style="color: ${mobile.csp ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">${mobile.csp ? '✓ Present' : '⚠ Missing'}</span>
             </div>
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px;">
               <span style="font-weight: 500;">HSTS:</span>
-              <span style="color: ${mobile.hsts ? '#00ff41' : '#ffa500'}; font-weight: bold;">${mobile.hsts ? '✓ Present' : '⚠ Missing'}</span>
+              <span style="color: ${mobile.hsts ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">${mobile.hsts ? '✓ Present' : '⚠ Missing'}</span>
             </div>
           </div>
         </div>
@@ -786,7 +805,7 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
     } else {
       // Pro paywall prompt on open if locked
       if (isPro && !userHasPro()) {
-        openProPaywall({ domain: getCurrentDomain(), context: 'security' });
+        safeOpenProPaywall({ domain: getCurrentDomain(), context: 'security' });
       }
       // Expand and create content if not already created
       if (!contentInner.hasChildNodes()) {
@@ -844,7 +863,7 @@ function renderSSLContent(ssl) {
             ${ssl.issues.map(issue => `<li style="color: #ff4444;">${issue}</li>`).join('')}
           </ul>
         </div>
-      ` : '<p style="color: #00ff41; margin-top: 1rem;">✓ No SSL/TLS issues detected</p>'}
+      ` : '<p style="color: var(--accent-primary); margin-top: 1rem;">✓ No SSL/TLS issues detected</p>'}
     </div>
   `;
 }
@@ -860,24 +879,24 @@ function renderHeadersContent(headers) {
         <table style="width: 100%; border-collapse: collapse; border: 1px solid rgba(255, 255, 255, 0.1);">
           <thead>
             <tr style="background: rgba(255, 255, 255, 0.05); border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
-              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #00ff41; width: 10%;">Status</th>
-              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #00ff41; width: 25%;">Header</th>
-              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #00ff41; width: 30%;">Value</th>
-              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: #00ff41; width: 35%;">Description / Risk</th>
+              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--accent-primary); width: 10%;">Status</th>
+              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--accent-primary); width: 25%;">Header</th>
+              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--accent-primary); width: 30%;">Value</th>
+              <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--accent-primary); width: 35%;">Description / Risk</th>
             </tr>
           </thead>
           <tbody>
             ${Object.entries(headers.details).map(([header, info]) => `
               <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${!info.present ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${info.present ? '#00ff41' : '#ff4444'}; font-size: 1.2rem; font-weight: bold;">
+                  <span style="color: ${info.present ? 'var(--accent-primary)' : '#ff4444'}; font-size: 1.2rem; font-weight: bold;">
                     ${info.present ? '✓' : '✗'}
                   </span>
                 </td>
                 <td style="padding: 0.75rem;">
                   <strong style="color: ${info.present ? '#ffffff' : '#ff4444'};">${header}</strong>
                 </td>
-                <td style="padding: 0.75rem; color: ${info.present ? '#00ff41' : '#808080'}; font-family: monospace; font-size: 0.85rem; word-break: break-all;">
+                <td style="padding: 0.75rem; color: ${info.present ? 'var(--accent-primary)' : '#808080'}; font-family: monospace; font-size: 0.85rem; word-break: break-all;">
                   ${info.value || '<span style="color: #808080; font-style: italic;">Not set</span>'}
                 </td>
                 <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.9rem;">
@@ -912,7 +931,7 @@ function renderVulnerabilitiesContent(vulnerabilities) {
               <span style="color: #ff4444; font-weight: 600;">● Critical</span>
             </td>
             <td style="text-align: center; padding: 0.75rem;">
-              <span style="color: ${vulnerabilities.critical > 0 ? '#ff4444' : '#00ff41'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.critical}</span>
+              <span style="color: ${vulnerabilities.critical > 0 ? '#ff4444' : 'var(--accent-primary)'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.critical}</span>
             </td>
           </tr>
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
@@ -920,7 +939,7 @@ function renderVulnerabilitiesContent(vulnerabilities) {
               <span style="color: #ff6b6b; font-weight: 600;">● High</span>
             </td>
             <td style="text-align: center; padding: 0.75rem;">
-              <span style="color: ${vulnerabilities.high > 0 ? '#ff6b6b' : '#00ff41'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.high}</span>
+              <span style="color: ${vulnerabilities.high > 0 ? '#ff6b6b' : 'var(--accent-primary)'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.high}</span>
             </td>
           </tr>
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
@@ -928,7 +947,7 @@ function renderVulnerabilitiesContent(vulnerabilities) {
               <span style="color: #ffa500; font-weight: 600;">● Medium</span>
             </td>
             <td style="text-align: center; padding: 0.75rem;">
-              <span style="color: ${vulnerabilities.medium > 0 ? '#ffa500' : '#00ff41'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.medium}</span>
+              <span style="color: ${vulnerabilities.medium > 0 ? '#ffa500' : 'var(--accent-primary)'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.medium}</span>
             </td>
           </tr>
           <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
@@ -936,7 +955,7 @@ function renderVulnerabilitiesContent(vulnerabilities) {
               <span style="color: #00ccff; font-weight: 600;">● Low</span>
             </td>
             <td style="text-align: center; padding: 0.75rem;">
-              <span style="color: ${vulnerabilities.low > 0 ? '#00ccff' : '#00ff41'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.low}</span>
+              <span style="color: ${vulnerabilities.low > 0 ? '#00ccff' : 'var(--accent-primary)'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.low}</span>
             </td>
           </tr>
         </tbody>
@@ -956,7 +975,7 @@ function renderVulnerabilitiesContent(vulnerabilities) {
             </div>
           `).join('')}
         </div>
-      ` : '<p style="color: #00ff41; margin-top: 1rem;">✓ No significant vulnerabilities detected</p>'}
+      ` : '<p style="color: var(--accent-primary); margin-top: 1rem;">✓ No significant vulnerabilities detected</p>'}
 
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); border-radius: 4px;">
         <p style="color: #ffa500; margin: 0; font-size: 0.9rem;">
@@ -992,17 +1011,17 @@ function renderCookiesContent(cookies) {
                 <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${(!cookie.httpOnly || !cookie.secure) ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                   <td style="padding: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #00ccff;">${cookie.name}</td>
                   <td style="text-align: center; padding: 0.75rem;">
-                    <span style="color: ${cookie.httpOnly ? '#00ff41' : '#ff4444'}; font-weight: bold; font-size: 1.1rem;">
+                    <span style="color: ${cookie.httpOnly ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold; font-size: 1.1rem;">
                       ${cookie.httpOnly ? '✓' : '✗'}
                     </span>
                   </td>
                   <td style="text-align: center; padding: 0.75rem;">
-                    <span style="color: ${cookie.secure ? '#00ff41' : '#ff4444'}; font-weight: bold; font-size: 1.1rem;">
+                    <span style="color: ${cookie.secure ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold; font-size: 1.1rem;">
                       ${cookie.secure ? '✓' : '✗'}
                     </span>
                   </td>
                   <td style="text-align: center; padding: 0.75rem;">
-                    <span style="color: ${cookie.sameSite && cookie.sameSite !== 'Not set' && cookie.sameSite !== 'None' ? '#00ff41' : (cookie.sameSite === 'Lax' ? '#ffa500' : '#ff4444')}; font-weight: bold; font-size: 0.9rem;">
+                    <span style="color: ${cookie.sameSite && cookie.sameSite !== 'Not set' && cookie.sameSite !== 'None' ? 'var(--accent-primary)' : (cookie.sameSite === 'Lax' ? '#ffa500' : '#ff4444')}; font-weight: bold; font-size: 0.9rem;">
                       ${cookie.sameSite || 'Not set'}
                     </span>
                   </td>
@@ -1014,7 +1033,7 @@ function renderCookiesContent(cookies) {
             </tbody>
           </table>
         </div>
-      ` : '<p style="padding: 1rem; background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 4px; color: #00ff41;">✓ No cookies detected</p>'}
+      ` : '<p style="padding: 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary);">✓ No cookies detected</p>'}
 
       ${cookies.issues && cookies.issues.length > 0 ? `
         <div class="cookie-issues" style="margin-top: 1rem;">
@@ -1058,24 +1077,24 @@ function renderThirdPartyContent(thirdParty) {
                     ${script.url}
                   </td>
                   <td style="padding: 0.75rem; text-align: center;">
-                    <span style="color: ${script.hasSRI ? '#00ff41' : '#ff4444'}; font-weight: bold;">
+                    <span style="color: ${script.hasSRI ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">
                       ${script.hasSRI ? '✓' : '✗'}
                     </span>
                   </td>
                   <td style="padding: 0.75rem; text-align: center;">
-                    <span style="color: ${script.async ? '#00ff41' : '#ffa500'}; font-weight: bold;">
+                    <span style="color: ${script.async ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">
                       ${script.async ? '✓' : '⚠'}
                     </span>
                   </td>
                   <td style="padding: 0.75rem; text-align: center;">
-                    <span style="color: ${script.https ? '#00ff41' : '#ff4444'}; font-weight: bold;">
+                    <span style="color: ${script.https ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">
                       ${script.https ? '✓' : '✗'}
                     </span>
                   </td>
                   <td style="padding: 0.75rem; text-align: center; font-weight: 600; text-transform: capitalize; color: ${
                     script.risk === 'high' ? '#ff4444' : 
                     script.risk === 'medium' ? '#ffa500' : 
-                    script.risk === 'low' ? '#ffff00' : '#00ff41'
+                    script.risk === 'low' ? '#ffff00' : 'var(--accent-primary)'
                   };">
                     ${script.risk || 'Low'}
                   </td>
@@ -1084,7 +1103,7 @@ function renderThirdPartyContent(thirdParty) {
             </tbody>
           </table>
         </div>
-      ` : '<p style="padding: 1rem; background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 4px; color: #00ff41;">✓ No third-party scripts detected - Excellent!</p>'}
+      ` : '<p style="padding: 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary);">✓ No third-party scripts detected - Excellent!</p>'}
 
       <div style="margin-top: 1.5rem; padding: 1.25rem; background: rgba(255, 165, 0, 0.1); border: 2px solid rgba(255, 165, 0, 0.3); border-radius: 8px;">
         <h5 style="margin: 0 0 0.75rem 0; color: #ffa500; font-size: 1rem;">
@@ -1107,7 +1126,7 @@ function renderRecommendationsContent(recommendations) {
     return `
       <div class="security-section">
         <h4>Security Recommendations</h4>
-        <p style="padding: 1rem; background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 4px; color: #00ff41;">
+        <p style="padding: 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary);">
           ✓ No major security issues detected - Excellent!
         </p>
       </div>
@@ -1161,7 +1180,7 @@ function renderRecommendationsContent(recommendations) {
                   <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #ff6b6b;">
                     ${rec.impact || '-'}
                   </td>
-                  <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #00ff41;">
+                  <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: var(--accent-primary);">
                     ${rec.solution || '-'}
                     ${rec.resources && rec.resources.length > 0 ? `
                       <div style="margin-top: 0.5rem;">
@@ -1206,7 +1225,7 @@ function getStatus(score) {
 // Needs Work (50-74): Orange
 // Critical (<50): Red
 function getScoreColor(score) {
-  if (score >= 90) return '#00ff41';  // Excellent: Bright green
+  if (score >= 90) return 'var(--accent-primary)';
   if (score >= 75) return '#00bcd4';  // Good: Teal
   if (score >= 50) return '#ffa500';  // Needs Work: Orange
   return '#ff4444';                   // Critical: Red
@@ -1241,7 +1260,7 @@ function countSecurityPassedChecks(results) {
 function ensureSecurityProAccess() {
   const domain = getCurrentDomain();
   if (userHasPro()) return true;
-  openProPaywall({ domain, context: 'security' });
+  safeOpenProPaywall({ domain, context: 'security' });
   return false;
 }
 
@@ -1328,9 +1347,30 @@ function renderLockedProPreview(title = 'Pro content', previewLines = []) {
         ${lines.slice(0, 2).map(line => `<li>${line}</li>`).join('')}
       </ul>
       <div class="pro-locked__blur"></div>
-      <button class="pro-locked__unlock" onclick="openProPaywall({ domain: '${getCurrentDomain()}', context: 'security' })">Unlock in Pro Report ($5 USD)</button>
+      <button class="pro-locked__unlock" onclick="safeOpenProPaywall({ domain: '${getCurrentDomain()}', context: 'security' })">Unlock Report ($10 USD)</button>
     </div>
   `;
+}
+
+function safeOpenProPaywall(payload = {}) {
+  try {
+    if (typeof window.openProPaywall === 'function') {
+      window.openProPaywall(payload);
+      return true;
+    }
+    if (window.ProAccess && typeof window.ProAccess.openProPaywall === 'function') {
+      window.ProAccess.openProPaywall(payload);
+      return true;
+    }
+    if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+      window.PricingModal.open();
+      return true;
+    }
+  } catch (err) {
+    return false;
+  }
+
+  return false;
 }
 
 function ensureProStyles() {
@@ -1344,16 +1384,16 @@ function ensureProStyles() {
       gap: 4px;
       padding: 2px 8px;
       border-radius: 999px;
-      border: 1px solid rgba(0, 255, 65, 0.4);
-      background: rgba(0, 255, 65, 0.1);
-      color: #00ff41;
+      border: 1px solid rgba(var(--accent-primary-rgb), 0.4);
+      background: rgba(var(--accent-primary-rgb), 0.1);
+      color: var(--accent-primary);
       font-size: 0.7rem;
       font-weight: 700;
       letter-spacing: 0.05em;
     }
     .pro-locked {
       position: relative;
-      border: 1px dashed rgba(0, 255, 65, 0.3);
+      border: 1px dashed rgba(var(--accent-primary-rgb), 0.3);
       border-radius: 10px;
       padding: 1rem;
       background: rgba(255, 255, 255, 0.02);
@@ -1384,9 +1424,9 @@ function ensureProStyles() {
       margin-top: 0.75rem;
       padding: 0.55rem 1rem;
       border-radius: 8px;
-      border: 1px solid rgba(0, 255, 65, 0.4);
-      background: rgba(0, 255, 65, 0.12);
-      color: #00ff41;
+      border: 1px solid rgba(var(--accent-primary-rgb), 0.4);
+      background: rgba(var(--accent-primary-rgb), 0.12);
+      color: var(--accent-primary);
       font-weight: 700;
       cursor: pointer;
     }

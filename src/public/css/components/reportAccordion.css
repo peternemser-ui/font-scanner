@@ -1,17 +1,17 @@
 /* SEO-style accordion rows shared across analyzers */
 .report-scope .report-accordion {
   border: 1px solid var(--border-primary, rgba(255,255,255,0.08));
-  border-radius: 6px;
+  border-radius: var(--radius-lg, 12px);
   overflow: hidden;
-  background: var(--bg-secondary, #111);
+  background: var(--bg-card, var(--bg-secondary, #111));
   margin: 0 0 0.5rem 0;
 }
 .report-scope .report-accordion__header {
   width: 100%;
-  background: var(--bg-tertiary, #1a1a1a);
+  background: var(--bg-elevated, var(--bg-tertiary, #1a1a1a));
   border: none;
   color: var(--text-primary, #e5e7eb);
-  padding: 0.75rem 1rem;
+  padding: 0.9rem 1.1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -21,6 +21,10 @@
   gap: 0.75rem;
   transition: background-color 0.2s ease;
 }
+.report-scope .report-accordion__header:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
 .report-scope .report-accordion__header:hover {
   background: var(--bg-hover, #222);
 }
@@ -28,6 +32,8 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
+  flex: 1;
 }
 .report-scope .report-accordion__meta {
   display: inline-flex;
@@ -35,6 +41,19 @@
   gap: 0.55rem;
   color: var(--text-muted, #9ca3af);
   font-weight: 600;
+  flex-shrink: 0;
+}
+.report-scope .report-accordion__score-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--border-primary, rgba(255,255,255,0.12));
+  background: var(--bg-hover, rgba(255,255,255,0.04));
+  color: var(--text-secondary, #d1d5db);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
 }
 .report-scope .report-accordion__chevron {
   font-size: 0.85rem;
@@ -48,7 +67,7 @@
   display: none;
   padding: 1.25rem;
   color: var(--text-secondary, #d1d5db);
-  background: var(--bg-primary, #0a0a0a);
+  background: var(--bg-base, var(--bg-primary, #0a0a0a));
 }
 .report-scope .report-accordion__body--open {
   display: block;
@@ -59,9 +78,9 @@
   gap: 4px;
   padding: 2px 8px;
   border-radius: 999px;
-  border: 1px solid rgba(0, 255, 65, 0.4);
-  background: rgba(0, 255, 65, 0.1);
-  color: #00ff41;
+  border: 1px solid rgba(var(--accent-primary-rgb), 0.4);
+  background: rgba(var(--accent-primary-rgb), 0.1);
+  color: var(--accent-primary);
   font-size: 0.7rem;
   font-weight: 700;
   letter-spacing: 0.05em;

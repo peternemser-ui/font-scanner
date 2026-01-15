@@ -125,6 +125,28 @@ CREATE TABLE IF NOT EXISTS stripe_events (
 CREATE INDEX IF NOT EXISTS idx_stripe_events_type ON stripe_events(event_type);
 
 -- ============================================================
+-- BILLING SESSIONS (one-time purchases fulfillment)
+-- ============================================================
+-- Stores outcomes for /api/billing purchases so webhook can fulfill idempotently
+-- and verify-session can short-circuit without always calling Stripe.
+CREATE TABLE IF NOT EXISTS billing_sessions (
+  session_id TEXT PRIMARY KEY,      -- Stripe Checkout Session ID
+  purchase_type TEXT,               -- single_report | credit_pack
+  report_id TEXT,                   -- Optional: reportId for single_report
+  pack_id TEXT,                     -- Optional: pack_5|pack_10|pack_25
+  credits_added INTEGER DEFAULT 0,  -- Credits to add when paid
+  payment_status TEXT,              -- paid|unpaid|no_payment_required
+  mode TEXT,                        -- payment|subscription
+  amount_total INTEGER,             -- cents
+  currency TEXT,
+  stripe_customer_id TEXT,
+  completed_at DATETIME,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS idx_billing_sessions_purchase_type ON billing_sessions(purchase_type);
+
+-- ============================================================
 -- CRAWLED PAGES (for scan progress tracking)
 -- ============================================================
 CREATE TABLE IF NOT EXISTS crawled_pages (

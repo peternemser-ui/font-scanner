@@ -3,75 +3,126 @@ const router = express.Router();
 const stripeService = require('../services/stripeService');
 const { requireAuth } = require('../middleware/requireAuth');
 const { createLogger } = require('../utils/logger');
+const { ValidationError, asyncHandler } = require('../utils/errorHandler');
 
 const logger = createLogger('PaymentRoutes');
+
+function getAllowedReturnHosts(requestHost) {
+  const fromEnv = (process.env.PAYMENT_ALLOWED_RETURN_HOSTS || '')
+    .split(',')
+    .map((v) => v.trim())
+    .filter(Boolean);
+
+  if (fromEnv.length > 0) return fromEnv;
+
+  const host = typeof requestHost === 'string' ? requestHost.split(':')[0] : '';
+  return [
+    'sitemechanic.io',
+    'www.sitemechanic.io',
+    'localhost',
+    host
+  ].filter(Boolean);
+}
+
+function validateReturnUrl(returnUrl, requestHost) {
+  if (!returnUrl || typeof returnUrl !== 'string') {
+    throw new ValidationError('returnUrl is required');
+  }
+
+  const trimmed = returnUrl.trim();
+  let parsed;
+  try {
+    parsed = new URL(trimmed);
+  } catch (e) {
+    throw new ValidationError('returnUrl must be a valid absolute URL');
+  }
+
+  if (parsed.protocol !== 'https:' && parsed.protocol !== 'http:') {
+    throw new ValidationError('returnUrl must use http or https');
+  }
+
+  const allowedHosts = getAllowedReturnHosts(requestHost);
+  if (!allowedHosts.includes(parsed.hostname)) {
+    throw new ValidationError('returnUrl host is not allowed');
+  }
+
+  return parsed.toString();
+}
+
+function appendQuery(urlString, query) {
+  const url = new URL(urlString);
+  Object.entries(query).forEach(([key, value]) => {
+    url.searchParams.set(key, value);
+  });
+  return url.toString();
+}
 
 /**
  * POST /api/payment/create-checkout-session
  * Create a Stripe Checkout session for Pro subscription
  */
-router.post('/create-checkout-session', requireAuth, async (req, res) => {
-  try {
-    const { successUrl, cancelUrl } = req.body;
+router.post(
+  '/create-checkout-session',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { successUrl, cancelUrl, returnUrl } = req.body || {};
 
     logger.info('Creating checkout session', { userId: req.user.id });
+
+    const requestHost = req.get('host');
+    let safeSuccessUrl = successUrl;
+    let safeCancelUrl = cancelUrl;
+
+    if (returnUrl) {
+      const safeReturnUrl = validateReturnUrl(returnUrl, requestHost);
+      safeSuccessUrl = safeSuccessUrl || appendQuery(safeReturnUrl, { success: 'true' });
+      safeCancelUrl = safeCancelUrl || appendQuery(safeReturnUrl, { canceled: 'true' });
+    }
+
+    // If provided, validate success/cancel URLs are safe absolute URLs on allowed hosts.
+    if (safeSuccessUrl) safeSuccessUrl = validateReturnUrl(safeSuccessUrl, requestHost);
+    if (safeCancelUrl) safeCancelUrl = validateReturnUrl(safeCancelUrl, requestHost);
 
     const session = await stripeService.createCheckoutSession(
       req.user.id,
       req.user.email,
-      successUrl,
-      cancelUrl
+      safeSuccessUrl,
+      safeCancelUrl
     );
 
+    // New contract: checkoutUrl. Keep legacy fields for back-compat.
     res.json({
       success: true,
+      checkoutUrl: session.url,
       url: session.url,
       sessionId: session.id
     });
-  } catch (error) {
-    logger.error('Error creating checkout session', {
-      userId: req.user?.id,
-      error: error.message
-    });
-
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
+  })
+);
 
 /**
  * POST /api/payment/create-portal-session
  * Create a Stripe Customer Portal session for subscription management
  */
-router.post('/create-portal-session', requireAuth, async (req, res) => {
-  try {
-    const { returnUrl } = req.body;
+router.post(
+  '/create-portal-session',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { returnUrl } = req.body || {};
+    const requestHost = req.get('host');
 
     logger.info('Creating portal session', { userId: req.user.id });
 
-    const session = await stripeService.createPortalSession(
-      req.user.id,
-      returnUrl
-    );
+    const safeReturnUrl = returnUrl ? validateReturnUrl(returnUrl, requestHost) : null;
+    const session = await stripeService.createPortalSession(req.user.id, safeReturnUrl);
 
     res.json({
       success: true,
+      portalUrl: session.url,
       url: session.url
     });
-  } catch (error) {
-    logger.error('Error creating portal session', {
-      userId: req.user?.id,
-      error: error.message
-    });
-
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
+  })
+);
 
 /**
  * GET /api/payment/subscription
@@ -135,51 +186,50 @@ router.post('/cancel-subscription', requireAuth, async (req, res) => {
  * Create one-time payment for individual report (no auth required)
  * Body: { reportType: 'cwv' | 'lighthouse', url: string, email?: string }
  */
-router.post('/create-report-payment', async (req, res) => {
-  try {
-    const { reportType, url, email, successUrl, cancelUrl } = req.body;
+router.post(
+  '/create-report-payment',
+  asyncHandler(async (req, res) => {
+    const { reportType, url, email, successUrl, cancelUrl, returnUrl } = req.body || {};
 
     if (!reportType || !url) {
-      return res.status(400).json({
-        success: false,
-        error: 'Missing required fields: reportType and url'
-      });
+      throw new ValidationError('Missing required fields: reportType and url');
     }
 
     if (!['cwv', 'lighthouse'].includes(reportType)) {
-      return res.status(400).json({
-        success: false,
-        error: 'Invalid report type. Must be "cwv" or "lighthouse"'
-      });
+      throw new ValidationError('Invalid report type. Must be "cwv" or "lighthouse"');
     }
 
-    logger.info('Creating report payment', { reportType, url, email });
+    const requestHost = req.get('host');
+    let safeSuccessUrl = successUrl;
+    let safeCancelUrl = cancelUrl;
+
+    if (returnUrl) {
+      const safeReturnUrl = validateReturnUrl(returnUrl, requestHost);
+      safeSuccessUrl = safeSuccessUrl || appendQuery(safeReturnUrl, { payment: 'success', type: reportType, url: url });
+      safeCancelUrl = safeCancelUrl || appendQuery(safeReturnUrl, { payment: 'canceled', type: reportType });
+    }
+
+    if (safeSuccessUrl) safeSuccessUrl = validateReturnUrl(safeSuccessUrl, requestHost);
+    if (safeCancelUrl) safeCancelUrl = validateReturnUrl(safeCancelUrl, requestHost);
+
+    logger.info('Creating report payment', { reportType, url, email: email || null });
 
     const session = await stripeService.createOneTimePayment(
       reportType,
       url,
       email,
-      successUrl,
-      cancelUrl
+      safeSuccessUrl,
+      safeCancelUrl
     );
 
     res.json({
       success: true,
+      checkoutUrl: session.url,
       url: session.url,
       sessionId: session.id
     });
-  } catch (error) {
-    logger.error('Error creating report payment', {
-      error: error.message,
-      reportType: req.body?.reportType
-    });
-
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
-  }
-});
+  })
+);
 
 /**
  * GET /api/payment/verify/:sessionId

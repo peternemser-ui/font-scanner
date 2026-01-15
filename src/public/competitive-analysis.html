@@ -64,6 +64,13 @@
     <link rel="stylesheet" href="progress-styles.css">
     <link rel="stylesheet" href="analyzer-loading.css">
     <link rel="stylesheet" href="spacing-fixes.css">
+
+    <!-- Report UI Components -->
+    <link rel="stylesheet" href="/css/components/modal.css" />
+    <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
+    <link rel="stylesheet" href="/css/components/pro-report-block.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+
     <style>
         /* Score Circle Gradient - Theme Adaptive */
         .score-circle-gradient {
@@ -1086,9 +1093,9 @@
     </main>
 
     <!-- Pac-Man Loading Modal -->
-    <div id="pacmanModal" class="pacman-modal">
+    <div id="pacmanModal" class="pacman-modal" role="dialog" aria-modal="true" aria-labelledby="pacmanModalTitle" tabindex="-1" aria-hidden="true">
         <div class="pacman-modal-content">
-            <h2 class="pacman-modal-title">[COMPETITIVE_ANALYSIS]</h2>
+            <h2 class="pacman-modal-title" id="pacmanModalTitle">[COMPETITIVE_ANALYSIS]</h2>
             <p class="pacman-modal-subtitle">Analyzing your competition... This may take 5-15 minutes</p>
             
             <!-- Pac-Man Animation -->
@@ -1173,6 +1180,15 @@
 
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Report UI Components -->
+    <script src="/js/report-ui.js"></script>
+    <script src="/js/components/ReportContainer.js"></script>
+    <script src="/js/components/Modal.js"></script>
+    <script src="/js/components/ScreenshotLightbox.js"></script>
+    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/PricingModal.js"></script>
+
     <script src="competitive-script.js"></script>
 </body>
 </html>

@@ -1,6 +1,10 @@
 // Local SEO Analyzer Script
 // Uses AnalyzerLoader for consistent loading UI
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'local-seo';
+document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+
 document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('url').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyze();
@@ -37,24 +41,24 @@ async function analyze() {
   loaderMessageEl.style.cssText = `
     margin: 0 0 1.5rem 0;
     padding: clamp(0.75rem, 2vw, 1rem);
-    background: rgba(0, 255, 65, 0.05);
-    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
     border-radius: 6px;
     text-align: center;
     overflow: visible;
   `;
   loaderMessageEl.innerHTML = `
     <div style="overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch;">
-      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
     </div>
-    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: #00ff41; font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
+    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
       Local SEO analysis in progress...
     </p>
-    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(0, 255, 65, 0.7); padding: 0 0.5rem;">
+    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(var(--accent-primary-rgb), 0.7); padding: 0 0.5rem;">
       This may take 30-60 seconds for complex sites
     </p>
   `;
@@ -65,12 +69,12 @@ async function analyze() {
     style.id = 'ascii-art-style';
     style.textContent = `
       @keyframes color-cycle {
-        0% { color: #00ff41; }
+        0% { color: var(--accent-primary); }
         20% { color: #00ffff; }
         40% { color: #0099ff; }
         60% { color: #9933ff; }
         80% { color: #ff33cc; }
-        100% { color: #00ff41; }
+        100% { color: var(--accent-primary); }
       }
       .ascii-art-responsive {
         font-size: clamp(0.35rem, 1.2vw, 0.65rem);
@@ -92,6 +96,10 @@ async function analyze() {
   
   try {
     loader.nextStep(1);
+
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
     
     // Set up AbortController with 90 second timeout
     const controller = new AbortController();
@@ -100,7 +108,7 @@ async function analyze() {
     const response = await fetch('/api/local-seo', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, scanStartedAt }),
       signal: controller.signal
     });
     
@@ -168,10 +176,24 @@ function displayResults(data) {
     () => renderNAPContent(data.analysis), data.scores.nap);
   createAccordionSection(resultsContainer, 'schema-analysis', 'Structured Data & Schema', 
     () => renderSchemaContent(data.analysis.schema), data.scores.schema);
-  createAccordionSection(resultsContainer, 'local-presence', 'Local Presence Signals', 
+  createAccordionSection(resultsContainer, 'local-presence', 'Local Presence Signals',
     () => renderLocalPresenceContent(data.analysis.localPresence), data.scores.presence);
-  createAccordionSection(resultsContainer, 'recommendations', 'All Recommendations', 
+  createAccordionSection(resultsContainer, 'recommendations', 'All Recommendations',
     () => renderRecommendationsContent(data.recommendations), null);
+
+  // Pro Report Block
+  if (window.ProReportBlock && window.ProReportBlock.render) {
+    const proSection = document.createElement('div');
+    proSection.className = 'section';
+    proSection.style.marginTop = '2rem';
+    proSection.innerHTML = window.ProReportBlock.render({
+      context: 'local-seo',
+      features: ['pdf', 'csv', 'share'],
+      title: 'Unlock Report',
+      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+    });
+    resultsContainer.appendChild(proSection);
+  }
 }
 
 function createOverviewSection(data) {

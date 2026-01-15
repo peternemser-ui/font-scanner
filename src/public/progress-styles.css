@@ -6,8 +6,8 @@
   padding: 16px 20px !important;
   background: linear-gradient(135deg, #1e2936 0%, #2a3f54 100%) !important;
   border-radius: 8px !important;
-  border: 2px solid #00ff88 !important;
-  box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2) !important;
+  border: 2px solid var(--accent-primary) !important;
+  box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.2) !important;
   height: auto !important;
   width: 100% !important;
   display: block !important;
@@ -15,10 +15,10 @@
 
 @keyframes borderPulse {
   0%, 100% {
-    box-shadow: 0 4px 20px rgba(0, 255, 136, 0.2);
+    box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.2);
   }
   50% {
-    box-shadow: 0 4px 30px rgba(0, 255, 136, 0.4);
+    box-shadow: 0 4px 30px rgba(var(--accent-primary-rgb), 0.4);
   }
 }
 
@@ -79,12 +79,12 @@
 
 #progressContainer #timeEstimate {
   font-size: 16px !important;
-  color: #00ff88 !important;
+  color: var(--accent-primary) !important;
   font-weight: bold !important;
   font-family: 'Courier New', monospace !important;
   text-align: center !important;
   padding: 10px !important;
-  background: rgba(0, 255, 136, 0.1) !important;
+  background: rgba(var(--accent-primary-rgb), 0.1) !important;
   border-radius: 6px !important;
   height: auto !important;
 }
@@ -201,8 +201,8 @@
 }
 
 .status-text.completed {
-  background: rgba(76, 175, 80, 0.2);
-  color: #4caf50;
+  background: rgba(var(--accent-primary-rgb), 0.2);
+  color: var(--accent-primary);
 }
 
 .status-text.error {
@@ -229,7 +229,7 @@
 
 .progress-bar {
   height: 100%;
-  background: linear-gradient(90deg, #00ff88 0%, #00cc70 100%);
+  background: linear-gradient(90deg, rgba(var(--accent-primary-rgb), 1) 0%, rgba(var(--accent-primary-rgb), 0.7) 100%);
   border-radius: 4px;
   transition: width 0.5s ease;
   position: relative;
@@ -258,7 +258,7 @@
 /* Dark theme adjustments */
 body.dark-theme .progress-container {
   background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
-  border-color: #00ff88;
+  border-color: var(--accent-primary);
 }
 
 /* Responsive design */
@@ -284,8 +284,8 @@ body.dark-theme .progress-container {
 /* White theme overrides */
 body.white-theme .progress-container {
   background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-  border: 2px solid #4caf50;
-  box-shadow: 0 4px 20px rgba(76, 175, 80, 0.2);
+  border: 2px solid var(--accent-primary);
+  box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.2);
 }
 
 body.white-theme #timeEstimate {

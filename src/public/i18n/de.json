@@ -74,7 +74,9 @@
     "websiteUrl": "Website-URL",
     "enterUrl": "https://ihreseite.com",
     "pleaseEnterUrl": "Bitte geben Sie eine URL ein",
-    "mayTake": "Dies kann 15-30 Sekunden dauern"
+    "mayTake": "Dies kann 15-30 Sekunden dauern",
+    "pageScreenshotAlt": "Seiten-Screenshot",
+    "footer": "© 2025 Site Mechanic. Für Entwickler, denen Qualität wichtig ist."
   },
   "fontScanner": {
     "title": "Schriften & Typografie",
@@ -264,6 +266,604 @@
     }
   },
   "seo": {
+    "title": "SEO-Analysator",
+    "subtitle": "Audit für Suchmaschinenoptimierung",
+    "breadcrumb": "seo-analysator",
+    "analyze": "SEO ANALYSIEREN",
+    "analyzing": "ANALYSIERE...",
+    "overall": "Gesamt",
+    "reportTitle": "SEO-Bericht",
+    "reportSubtitle": "SEO-Analyse",
+    "loadingTitle": "Analyse läuft...",
+    "mayTake": "Dies kann 30–60 Sekunden dauern",
+    "seoScore": "SEO-Score",
+    "metaTags": "Meta-Tags",
+    "headings": "Überschriften",
+    "content": "Inhalt",
+    "images": "Bilder",
+    "links": "Links",
+    "mobile": "Mobil",
+    "performance": "Performance",
+    "security": "Sicherheit",
+    "canonicalUrl": "Kanonische URL",
+    "structuredData": "Strukturierte Daten",
+    "sitemap": "Sitemap",
+    "robotsTxt": "Robots.txt",
+    "sections": {
+      "metaTags": "Meta-Tags",
+      "headings": "Überschriften",
+      "content": "Inhalt",
+      "images": "Bilder",
+      "links": "Links",
+      "mobile": "Mobil",
+      "performance": "Performance",
+      "security": "Sicherheit",
+      "structuredData": "Strukturierte Daten",
+      "additional": "Zusätzliche Prüfungen",
+      "fixCode": "Fixes + Empfehlungen"
+    },
+    "steps": {
+      "running": "SEO-Analyse wird ausgeführt",
+      "initializing": "Scan-Engine wird initialisiert...",
+      "metaTags": "Meta-Tags werden geprüft",
+      "metaTagsDetail": "Titel, Beschreibung, Keywords werden analysiert...",
+      "content": "Inhaltsqualität wird analysiert",
+      "contentDetail": "Überschriften, Text, Lesbarkeit werden bewertet...",
+      "mobile": "Mobile Darstellung wird getestet",
+      "mobileDetail": "Viewport und Layout werden geprüft...",
+      "performance": "Performance wird gemessen",
+      "performanceDetail": "Ladezeit und Optimierung werden getestet..."
+    },
+    "proPreview": {
+      "metaTags": "Meta-Tags verbessern",
+      "structuredData": "Schnelle Gewinne bei strukturierten Daten"
+    },
+    "fixes": {
+      "previewIntro": "Vorschau der Fix-Pakete:",
+      "impact": "Auswirkung",
+      "copySnippet": "Snippet kopieren",
+      "snippetCopied": "Snippet in die Zwischenablage kopiert"
+    },
+    "report": {
+      "units": {
+        "chars": "Zeichen"
+      },
+      "table": {
+        "property": "Eigenschaft",
+        "value": "Wert",
+        "length": "Länge",
+        "status": "Status",
+        "bestPractice": "Best Practice",
+        "recommendation": "Empfehlung",
+        "metric": "Metrik",
+        "recommended": "Empfohlen",
+        "description": "Beschreibung",
+        "purpose": "Zweck",
+        "details": "Details",
+        "check": "Prüfung",
+        "platform": "Plattform",
+        "seoValue": "SEO-Wert",
+        "implementationTip": "Implementierungstipp"
+      },
+      "status": {
+        "missing": "Fehlt",
+        "review": "Prüfen",
+        "optimal": "Optimal",
+        "configured": "Konfiguriert",
+        "present": "Vorhanden",
+        "set": "Gesetzt",
+        "valid": "Gültig",
+        "none": "Keine",
+        "multiple": "Mehrfach",
+        "pass": "Bestanden",
+        "fail": "Fehlgeschlagen",
+        "yes": "Ja",
+        "no": "Nein",
+        "found": "Gefunden",
+        "notFound": "Nicht gefunden",
+        "detected": "Erkannt",
+        "notDetected": "Nicht erkannt",
+        "enabled": "Aktiviert",
+        "notConfigured": "Nicht konfiguriert – Browser können per HTTP verbinden"
+      },
+      "common": {
+        "moreCount": "... {{count}} mehr"
+      },
+      "metaTags": {
+        "calloutTitle": "🏷️ Meta-Tags sind Ihr erster Eindruck",
+        "calloutBody": "Diese Tags steuern, wie Ihre Seite in Suchergebnissen und Social Media erscheint. Optimierung kann die Klickrate um 30–50 % steigern.",
+        "overviewHeading": "Meta-Tags Übersicht",
+        "healthHeading": "Meta-Tags Gesundheit",
+        "rows": {
+          "title": "Titel",
+          "description": "Beschreibung",
+          "openGraph": "Open Graph",
+          "twitterCard": "Twitter-Card",
+          "viewport": "Viewport",
+          "canonical": "Kanonisch",
+          "ogTags": "OG-Tags",
+          "twitter": "Twitter"
+        },
+        "bestPractice": {
+          "title": "50–60 Zeichen, Haupt-Keyword möglichst am Anfang",
+          "description": "150–160 Zeichen, überzeugender CTA, einzigartig pro Seite",
+          "openGraph": "og:title, og:description, og:image (1200x630px)",
+          "twitterCard": "summary_large_image, twitter:title, twitter:image",
+          "viewport": "width=device-width, initial-scale=1",
+          "canonical": "Vermeidet Duplicate Content, absolute URLs verwenden"
+        }
+      },
+      "headings": {
+        "distributionHeading": "Überschriften-Verteilung",
+        "hierarchyHeading": "Überschriften-Hierarchie",
+        "table": {
+          "level": "Ebene",
+          "count": "Anzahl",
+          "firstInstance": "Erstes Vorkommen"
+        },
+        "totalHeadingsLabel": "gesamt_überschriften",
+        "primaryH1Label": "primäres_h1",
+        "hierarchySampleLabel": "hierarchie_beispiel"
+      },
+      "content": {
+        "qualityMetricsHeading": "Content-Qualitätsmetriken",
+        "healthHeading": "Content-Zustand",
+        "metrics": {
+          "wordCount": "Wortanzahl",
+          "readability": "Lesbarkeit",
+          "textRatio": "Textanteil",
+          "paragraphs": "Absätze"
+        },
+        "wordCountLabel": "Wortanzahl: {{count}}",
+        "readabilityScoreLabel": "Lesbarkeits-Score",
+        "textToHtmlLabel": "Text-zu-HTML: {{percent}}%",
+        "paragraphsLabel": "Absätze: {{count}}",
+        "wordCountLineLabel": "wortanzahl",
+        "sentencesLineLabel": "sätze",
+        "avgWordsPerSentenceLineLabel": "durchschn_wörter_pro_satz"
+      },
+      "images": {
+        "calloutTitle": "I Bild-SEO: Alt-Text ist entscheidend",
+        "calloutBody": "Alt-Text hilft Suchmaschinen, Bilder zu verstehen, und verbessert die Barrierefreiheit. Google Bildersuche bringt bei vielen Sites 20–30 % des Traffics.",
+        "overviewHeading": "Übersicht Bildoptimierung",
+        "detailsHeading": "Bilddetails",
+        "statsHeading": "Bildstatistiken",
+        "noImagesFound": "Keine Bilder auf dieser Seite gefunden",
+        "radial": {
+          "altCoverage": "Alt-Text-Abdeckung",
+          "imagesFound": "Gefundene Bilder",
+          "overallScore": "Gesamtwertung"
+        },
+        "table": {
+          "imageUrl": "Bild-URL",
+          "dimensions": "Abmessungen",
+          "altText": "Alt-Text"
+        },
+        "recommendation": {
+          "pass": "Aussagekräftig, hilft SEO und Barrierefreiheit",
+          "fail": "Fügen Sie beschreibenden Alt-Text für SEO und Screenreader hinzu"
+        },
+        "totalImagesLabel": "gesamt_bilder",
+        "withAltLabel": "mit_alt"
+      },
+      "links": {
+        "networkDiagramHeading": "Link-Netzwerkdiagramm",
+        "healthSummaryHeading": "Zusammenfassung Link-Zustand",
+        "totalLinksLabel": "gesamt_links",
+        "internalLinksLabel": "interne_links",
+        "externalLinksLabel": "externe_links",
+        "nofollowLinksLabel": "nofollow_links",
+        "brokenFormatLabel": "fehlerhaftes_format"
+      },
+      "mobile": {
+        "calloutTitle": "M Mobile-First-Indexierung",
+        "calloutBody": "Google nutzt inzwischen die mobile Version Ihrer Website für Indexierung und Ranking. Mobile Responsiveness ist entscheidend für SEO.",
+        "devices": {
+          "mobile": "Mobil",
+          "tablet": "Tablet",
+          "desktop": "Desktop"
+        },
+        "table": {
+          "deviceType": "Gerätetyp",
+          "width": "Breite",
+          "noHorizontalScroll": "Kein horizontales Scrollen",
+          "viewportMeta": "Viewport-Meta",
+          "readableFontSize": "Lesbare Schriftgröße"
+        },
+        "recommendations": {
+          "mobile": "≥ 16px Schrift, kein horizontales Scrollen",
+          "tablet": "Responsives Layout, touchfreundlich",
+          "desktop": "Desktop-Fallback"
+        },
+        "cards": {
+          "horizontalScroll": "Horizontales Scrollen",
+          "viewportMetaTag": "Viewport-Meta-Tag",
+          "fontReadability": "Schrift-Lesbarkeit",
+          "none": "Keine",
+          "detected": "Erkannt",
+          "devicesFraction": "{{count}}/{{total}} Geräte"
+        }
+      },
+      "performance": {
+        "metrics": {
+          "pageLoadTime": "Ladezeit der Seite",
+          "domContentLoaded": "DOM Content Loaded",
+          "totalResources": "Ressourcen gesamt",
+          "pageSize": "Seitengröße",
+          "domNodes": "DOM-Knoten"
+        },
+        "desc": {
+          "pageLoadTime": "Zeit bis die Seite vollständig geladen ist",
+          "domContentLoaded": "Zeit bis der DOM bereit ist",
+          "totalResources": "Anzahl HTTP-Anfragen",
+          "pageSize": "Gesamt-Transfergröße",
+          "domNodes": "Anzahl der HTML-Elemente"
+        },
+        "recommended": {
+          "pageLoadTime": "< 3s (Gut) | < 5s (Okay)",
+          "domContentLoaded": "< 2s (Gut)",
+          "totalResources": "< 150 (Gut) | < 300 (Okay)",
+          "pageSize": "< 3 MB (Gut)",
+          "domNodes": "< 1.500 (Gut) | < 3.000 (Okay)"
+        }
+      },
+      "security": {
+        "calloutTitle": "◈ Sicherheits-Header sind kritisch für SEO",
+        "calloutBody": "Google priorisiert sichere Websites im Ranking. Fehlende Sicherheits-Header können SEO und Nutzervertrauen schädigen. HTTPS ist ein direkter Ranking-Faktor.",
+        "table": {
+          "securityHeader": "Sicherheits-Header",
+          "recommendedValue": "Empfohlener Wert"
+        },
+        "headers": {
+          "httpsEnabled": "HTTPS aktiviert",
+          "hsts": "HSTS-Header",
+          "csp": "Content Security Policy",
+          "xFrameOptions": "X-Frame-Options",
+          "xContentTypeOptions": "X-Content-Type-Options"
+        },
+        "purpose": {
+          "encryptedConnection": "Verschlüsselte Verbindung",
+          "forceHttps": "HTTPS erzwingen",
+          "xssProtection": "XSS-Schutz",
+          "clickjacking": "Clickjacking-Schutz",
+          "mimeSniffing": "Schutz vor MIME Sniffing"
+        },
+        "details": {
+          "sslEnabled": "Sicheres SSL/TLS aktiviert",
+          "noHttps": "Kein HTTPS erkannt",
+          "hstsNotConfigured": "Nicht konfiguriert – Browser können per HTTP verbinden",
+          "injectionRisk": "Anfällig für Injection-Angriffe",
+          "canEmbed": "Kann in iframes eingebettet werden",
+          "misinterpret": "Browser kann Inhalte falsch interpretieren"
+        },
+        "recommended": {
+          "https": "Erforderlich – in Produktion immer HTTPS verwenden"
+        }
+      },
+      "structuredData": {
+        "info": {
+          "title": "ⓘ Was ist Structured-Data-Schema?",
+          "body": "Strukturierte Daten (auch Schema-Markup genannt) sind Code, der Suchmaschinen hilft, Ihre Inhalte besser zu verstehen und <strong style=\"color: #00ff41;\">Rich Results</strong> wie Sternebewertungen, Produktpreise, Event-Daten, FAQ-Dropdowns und mehr ermöglicht. Es nutzt den <strong style=\"color: #00ccff;\">Schema.org</strong>-Wortschatz in JSON-LD, Microdata oder RDFa.",
+          "cards": {
+            "ctr": {
+              "title": "U Bessere CTR",
+              "body": "Rich Results fallen auf und bringen mehr Klicks"
+            },
+            "targeting": {
+              "title": "T Besseres Targeting",
+              "body": "Hilft Suchmaschinen, Ihre Nische zu verstehen"
+            },
+            "advantage": {
+              "title": "W SEO-Vorteil",
+              "body": "Wettbewerbsvorteil in den Suchergebnissen"
+            }
+          }
+        },
+        "summary": {
+          "heading": "Zusammenfassung",
+          "table": {
+            "impact": "Auswirkung"
+          },
+          "rows": {
+            "found": {
+              "metric": "Strukturierte Daten gefunden",
+              "impact": {
+                "detected": "Ermöglicht Rich Results",
+                "notFound": "Fehlende erweiterte Suchdarstellung"
+              }
+            },
+            "types": {
+              "metric": "Implementierte Schema-Typen",
+              "value": {
+                "singular": "Typ",
+                "plural": "Typen"
+              },
+              "impact": {
+                "great": "Sehr gute Abdeckung",
+                "good": "Guter Start",
+                "none": "Keine implementiert"
+              }
+            },
+            "score": {
+              "metric": "Gesamt-Score",
+              "impact": {
+                "excellent": "Exzellente Implementierung",
+                "room": "Verbesserung möglich",
+                "critical": "Kritische Lücke"
+              }
+            }
+          }
+        },
+        "detected": {
+          "heading": "Erkannte Schema-Typen",
+          "table": {
+            "schemaType": "Schema-Typ",
+            "seoBenefit": "SEO-Vorteil",
+            "keyFields": "Wichtige Felder"
+          },
+          "unknown": {
+            "desc": "Schema-Markup",
+            "benefit": "Implementierung strukturierter Daten"
+          },
+          "moreFields": "+{{count}} weitere",
+          "na": "k. A."
+        },
+        "validation": {
+          "title": "✓ Nächster Schritt: Schema validieren",
+          "body": {
+            "beforeLink": "Nutzen Sie",
+            "linkText": "Googles Rich-Results-Test",
+            "afterLink": "um sicherzustellen, dass Ihre strukturierten Daten fehlerfrei sind und für Rich Snippets geeignet sind. Überwachen Sie die Search Console auf strukturierte Datenfehler."
+          }
+        },
+        "missing": {
+          "heading": "Kritische SEO-Chance fehlt",
+          "card": {
+            "title": "Keine strukturierten Daten erkannt",
+            "body": "Sie verpassen erweiterte Suchdarstellungen, die Sichtbarkeit und Klickrate erhöhen"
+          },
+          "table": {
+            "richResultType": "Rich-Result-Typ",
+            "whatMissing": "Was fehlt",
+            "ctrImpact": "CTR-Effekt"
+          },
+          "rows": {
+            "starRatings": {
+              "title": "Sternebewertungen",
+              "body": "Bewertungssterne und Ratings direkt in den Suchergebnissen"
+            },
+            "productInfo": {
+              "title": "Produktinfos",
+              "body": "Preis, Verfügbarkeit und Angebote direkt anzeigen"
+            },
+            "eventDetails": {
+              "title": "Event-Details",
+              "body": "Datum, Ort und Ticketinfos mit Kalenderintegration"
+            },
+            "richMedia": {
+              "title": "Rich Media",
+              "body": "Bessere Thumbnails, Karussells und Video-Snippets"
+            },
+            "faq": {
+              "title": "FAQ-Dropdowns",
+              "body": "Ausklappbare Q&A-Bereiche direkt in der Suche"
+            }
+          }
+        },
+        "proTip": {
+          "label": "ⓘ Profi-Tipp:",
+          "body": "Rich Results können laut Google die Klickrate um 15–35 % steigern. Starten Sie mit den grundlegenden Schemas unten, um diese Vorteile freizuschalten."
+        },
+        "recommended": {
+          "heading": "Empfohlene Schema-Typen",
+          "box": {
+            "title": "Starten Sie mit diesen Basis-Schemas",
+            "body": "die für fast jede Website passen. Später können Sie je nach Inhalt spezifischere Schemas ergänzen."
+          },
+          "table": {
+            "schemaType": "Schema-Typ",
+            "priority": "Priorität",
+            "seoBenefit": "SEO-Vorteil",
+            "requiredFields": "Pflichtfelder"
+          }
+        },
+        "priority": {
+          "high": "HOCH",
+          "medium": "MITTEL"
+        },
+        "formats": {
+          "heading": "Implementierungsformate",
+          "jsonld": {
+            "badge": "EMPFOHLEN",
+            "body": "JavaScript Object Notation for Linked Data. Googles bevorzugtes Format – sauber, vom HTML getrennt, leicht zu pflegen."
+          },
+          "microdata": {
+            "subtitle": "HTML-Attribute",
+            "body": "Direkt in HTML-Tags eingebettet. Aufwändiger zu pflegen, aber eng an den Inhalt gekoppelt."
+          },
+          "rdfa": {
+            "subtitle": "Ressourcenbeschreibung",
+            "body": "Resource Description Framework in Attributes. Ähnlich wie Microdata, nutzt andere Attributnamen."
+          }
+        },
+        "resources": {
+          "heading": "Wichtige Ressourcen & Tools",
+          "table": {
+            "tool": "Tool",
+            "link": "Link"
+          },
+          "rows": {
+            "schemaDocs": {
+              "title": "Schema.org-Dokumentation",
+              "purpose": "Offizielle Vokabular-Referenz mit vollständiger Dokumentation zu allen Typen und Eigenschaften",
+              "linkText": "schema.org →"
+            },
+            "richResultsTest": {
+              "title": "Rich-Results-Test",
+              "purpose": "Testen Sie Ihr Markup und sehen Sie, welche Rich Results Google daraus erzeugen kann",
+              "linkText": "Markup testen →"
+            },
+            "validator": {
+              "title": "Schema-Validator",
+              "purpose": "Umfassendes Validierungstool für JSON-LD, Microdata und RDFa",
+              "linkText": "Validieren →"
+            },
+            "googleGuide": {
+              "title": "Google-Leitfaden",
+              "purpose": "Schritt-für-Schritt-Anleitung von Google mit Beispielen und Best Practices",
+              "linkText": "Leitfaden lesen →"
+            },
+            "generator": {
+              "title": "Markup-Generator",
+              "purpose": "Kostenloses Tool zum schnellen Erstellen von JSON-LD-Markup für verschiedene Schema-Typen",
+              "linkText": "Generieren →"
+            }
+          }
+        },
+        "schemas": {
+          "Organization": {
+            "desc": "Unternehmens-/Markeninfos",
+            "benefit": "Stärkt die Markenidentität im Knowledge Graph"
+          },
+          "Person": {
+            "desc": "Personenprofil",
+            "benefit": "Ermöglicht Autoren-Snippets und Knowledge Panel"
+          },
+          "Product": {
+            "desc": "Produkte & Details",
+            "benefit": "Zeigt Preis, Verfügbarkeit und Bewertungen in der Suche"
+          },
+          "Article": {
+            "desc": "Artikel & Blogposts",
+            "benefit": "Artikel-Snippets mit Autor und Veröffentlichungsdatum"
+          },
+          "WebSite": {
+            "desc": "Website-Metadaten",
+            "benefit": "Ermöglicht Sitelinks-Suchfeld in Google"
+          },
+          "BreadcrumbList": {
+            "desc": "Breadcrumb-Navigation",
+            "benefit": "Zeigt Breadcrumb-Pfad in Suchergebnissen"
+          },
+          "LocalBusiness": {
+            "desc": "Lokale Unternehmensinfos",
+            "benefit": "Erscheint in lokaler Suche und Google Maps"
+          },
+          "Event": {
+            "desc": "Event-Informationen",
+            "benefit": "Zeigt Event-Details mit \"Zum Kalender hinzufügen\""
+          },
+          "Recipe": {
+            "desc": "Rezepte",
+            "benefit": "Rezeptkarten mit Bewertungen, Zeit, Kalorien"
+          },
+          "Review": {
+            "desc": "Nutzerbewertungen",
+            "benefit": "Sternebewertungen direkt in Suchergebnissen"
+          },
+          "VideoObject": {
+            "desc": "Video-Inhalte",
+            "benefit": "Video-Snippets mit Thumbnails und Key Moments"
+          },
+          "FAQPage": {
+            "desc": "FAQ-Inhalte",
+            "benefit": "Ausklappbare FAQ-Bereiche in der Suche"
+          },
+          "HowTo": {
+            "desc": "Schritt-für-Schritt-Anleitungen",
+            "benefit": "Nummerierte Schritte mit Bildern in der Suche"
+          },
+          "SoftwareApplication": {
+            "desc": "Software/App-Details",
+            "benefit": "Installations-Buttons und Bewertungen in der Suche"
+          },
+          "JobPosting": {
+            "desc": "Stellenanzeigen",
+            "benefit": "Erscheint in Google for Jobs mit Gehalt und Ort"
+          }
+        }
+      },
+      "additional": {
+        "calloutTitle": "🔧 Technische SEO-Grundlagen",
+        "calloutBody": "Diese technischen Elemente helfen Suchmaschinen beim Crawlen, Indexieren und Verstehen Ihrer Website. Fehlende Elemente können die Auffindbarkeit stark beeinträchtigen.",
+        "technicalHeading": "Technisches SEO",
+        "checks": {
+          "sitemap": "XML-Sitemap",
+          "favicon": "Favicon",
+          "googleAnalytics": "Google Analytics"
+        },
+        "purpose": {
+          "robots": "Steuert das Crawling durch Suchmaschinen",
+          "sitemap": "Hilft Suchmaschinen, Seiten zu entdecken",
+          "favicon": "Browser-Tab-Icon",
+          "analytics": "Traffic-Tracking"
+        },
+        "details": {
+          "robotsPresent": "Datei ist vorhanden und erreichbar",
+          "robotsMissing": "Fehlt – erstellen Sie /robots.txt",
+          "sitemapDetected": "Sitemap erkannt",
+          "sitemapMissing": "Fehlt – verbessert Indexierung",
+          "faviconMissing": "Kein Favicon gefunden",
+          "analyticsEnabled": "Analytics-Tracking aktiviert",
+          "analyticsMissing": "Kein Analytics erkannt"
+        },
+        "bestPractice": {
+          "robots": "Crawler erlauben, Admin/Privat ausschließen",
+          "sitemap": "In Google Search Console einreichen, wöchentlich aktualisieren",
+          "favicon": "32×32 PNG oder ICO, stärkt Markenwiedererkennung",
+          "analytics": "GA4 empfohlen, Nutzerverhalten für SEO-Insights tracken"
+        },
+        "social": {
+          "calloutTitle": "M Social Signals & SEO",
+          "calloutBody": "Auch wenn keine direkten Ranking-Faktoren: Social-Links steigern Marken-Sichtbarkeit, bringen Traffic und verbessern Open-Graph-Vorschauen beim Teilen.",
+          "heading": "Social-Media-Präsenz",
+          "value": {
+            "openGraph": "Meta Open Graph Tags",
+            "twitterCard": "Twitter Card Tags",
+            "professional": "Professionelles Netzwerk",
+            "visual": "Visueller Content"
+          },
+          "details": {
+            "linkPresent": "Link vorhanden",
+            "facebookMissing": "Kein Facebook-Link gefunden",
+            "twitterMissing": "Kein Twitter-Link gefunden",
+            "linkedinMissing": "Kein LinkedIn-Link gefunden",
+            "instagramMissing": "Kein Instagram-Link gefunden"
+          },
+          "tip": {
+            "openGraph": "Fügen Sie og:image, og:title, og:description hinzu",
+            "twitterCard": "Fügen Sie twitter:card, twitter:image hinzu",
+            "linkedin": "Im Footer verlinken, verbessert B2B-Glaubwürdigkeit",
+            "instagram": "Zum Business-Profil verlinken, stärkt visuelles Branding"
+          }
+        }
+      },
+      "issues": {
+        "issuesHeading": "probleme",
+        "recommendationsHeading": "empfehlungen"
+      },
+      "loading": {
+        "title": "ANALYSE",
+        "running": "führe vollständige SEO-Analyse aus...",
+        "metaTags": "prüfe Meta-Tags...",
+        "content": "analysiere Content-Qualität...",
+        "mobile": "teste mobile Responsiveness...",
+        "performance": "messe Performance..."
+      },
+      "error": {
+        "title": "FEHLER",
+        "analysisFailed": "analyse_fehlgeschlagen",
+        "retry": "WIEDERHOLEN"
+      }
+    },
+    "components": {
+      "metaTags": "Meta-Tags",
+      "headings": "Überschriften",
+      "content": "Inhalt",
+      "images": "Bilder",
+      "links": "Links",
+      "structuredData": "Strukturierte Daten"
+    },
     "pages": {
       "home": {
         "title": "Site Mechanic - Professionelle Website-Analyse & SEO-Tools",
@@ -285,6 +885,13 @@
         "keywords": "Performance-Tests, Seitengeschwindigkeit, Core Web Vitals, Website-Optimierung, Performance-Überwachung",
         "og_title": "Website-Performance-Test-Hub - Geschwindigkeitsoptimierung",
         "twitter_title": "Testen und optimieren Sie Ihre Website-Performance"
+      },
+      "seo-analyzer": {
+        "title": "SEO & Indexierung - Metadaten, Struktur & Crawlability | Site Mechanic",
+        "description": "Diagnostizieren Sie SEO-Probleme: Meta-Tags, Überschriften, strukturierte Daten, Crawlability und On-Page-Optimierung. Teil des einheitlichen Website-Checks von Site Mechanic.",
+        "keywords": "SEO-Analysator, SEO-Audit, Meta-Tags, strukturierte Daten, On-Page-SEO, technisches SEO, Crawlability, Indexierung",
+        "og_title": "SEO-Analysator - SEO-Audit-Tool | Site Mechanic",
+        "twitter_title": "SEO-Analysator - SEO-Audit-Tool | Site Mechanic"
       },
       "mobile-analyzer": {
         "title": "Mobile-Website-Analysator - Responsive Design Testing Tool",
@@ -449,6 +1056,8 @@
   "pricing": {
     "title": "Upgrade auf Site Mechanic Pro",
     "subtitle": "Unbegrenzte Scans, erweiterte Empfehlungen und Optimierungstools auf Expertenniveau freischalten",
+    "unlockReportTitle": "Bericht freischalten",
+    "unlockReportSubtitle": "PDF-Export, Link teilen, Daten exportieren und Fix-Pakete für diesen Scan.",
     "monthly": "Monatlich",
     "annual": "Jährlich 17% Sparen",
     "free": "Kostenlos",

@@ -22,8 +22,6 @@ class EnhancedFontAnalyzer {
    */
   async analyzeFont(url) {
     try {
-      console.log(`🔤 Enhanced Font Analysis for: ${url}`);
-
       // Use browser pool for better bot protection bypass
       const { html, stylesheets, computedFonts } = await browserPool.execute(async (browser) => {
         const page = await browser.newPage();
@@ -36,7 +34,6 @@ class EnhancedFontAnalyzer {
           } catch (navError) {
             // Fallback to faster wait condition if networkidle2 times out
             if (navError.message.includes('timeout') || navError.message.includes('Navigation')) {
-              console.log(`⏳ Retrying with faster wait condition for: ${url}`);
               await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
               // Give extra time for fonts to load
               await new Promise(resolve => setTimeout(resolve, 2000));
@@ -143,9 +140,6 @@ class EnhancedFontAnalyzer {
         missingPreloads: fonts.preloadIssues.length,
         healthScore: fonts.healthScore
       };
-
-      console.log(`✅ Font analysis complete: ${fonts.summary.totalFamilies} families, ${fonts.summary.totalVariants} variants`);
-
       return fonts;
 
     } catch (error) {

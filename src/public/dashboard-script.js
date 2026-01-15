@@ -19,11 +19,16 @@
  * H. Competitive       - Competitor benchmarks
  */
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'dashboard';
+
 // Dashboard state
 let dashboardResults = null;
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+
   // Check for existing scan context and restore results
   if (window.ScanContext && window.ScanContext.exists()) {
     const context = window.ScanContext.get();
@@ -51,7 +56,80 @@ document.addEventListener('DOMContentLoaded', () => {
       runComprehensiveAnalysis();
     }
   });
+
+  // Dashboard contact form (support)
+  initializeDashboardContactForm();
 });
+
+function initializeDashboardContactForm() {
+  const form = document.getElementById('dashboardContactForm');
+  if (!form) return;
+
+  const statusEl = document.getElementById('contactFormStatus');
+  const submitBtn = document.getElementById('contactSubmitButton');
+  const urlInput = document.getElementById('dashboardUrlInput');
+  const contactUrl = document.getElementById('contactUrl');
+
+  // Prefill URL when possible
+  if (contactUrl) {
+    const fromQuery = new URLSearchParams(window.location.search).get('url');
+    if (fromQuery) contactUrl.value = fromQuery;
+    else if (urlInput && urlInput.value) contactUrl.value = urlInput.value;
+  }
+
+  const setStatus = (text, isError = false) => {
+    if (!statusEl) return;
+    statusEl.textContent = text;
+    statusEl.style.color = isError ? 'var(--color-error, #ff4444)' : 'var(--text-secondary, #9ca3af)';
+  };
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    setStatus('');
+
+    const formData = new FormData(form);
+    const payload = Object.fromEntries(formData.entries());
+
+    // Keep the URL field synced with the scan input when empty
+    if ((!payload.url || String(payload.url).trim() === '') && urlInput && urlInput.value) {
+      payload.url = urlInput.value;
+    }
+
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Sending...';
+    }
+
+    try {
+      const resp = await fetch('/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await resp.json().catch(() => ({}));
+
+      if (!resp.ok || !data.success) {
+        const msg = data && data.message ? data.message : 'Failed to send message. Please try again.';
+        setStatus(msg, true);
+        return;
+      }
+
+      setStatus('Message sent. We’ll reply by email.');
+      // Keep name/email for convenience; clear only the message
+      const messageEl = document.getElementById('contactMessage');
+      if (messageEl) messageEl.value = '';
+    } catch (err) {
+      setStatus('Failed to send message. Please try again.', true);
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Send message';
+      }
+    }
+  });
+}
 
 
 
@@ -95,24 +173,24 @@ async function runComprehensiveAnalysis() {
     loaderMessageEl.style.cssText = `
       margin: 0 0 1.5rem 0;
       padding: 1rem;
-      background: rgba(0, 255, 65, 0.05);
-      border: 1px solid rgba(0, 255, 65, 0.3);
+      background: rgba(var(--accent-primary-rgb), 0.05);
+      border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
       border-radius: 6px;
       text-align: center;
       overflow: visible;
     `;
     loaderMessageEl.innerHTML = `
       <div style="overflow-x: auto; overflow-y: visible;">
-        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\\\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\\\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
-      <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: #00ff41; font-weight: 600; letter-spacing: 0.05em;">
+      <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em;">
         Running analysis across all categories...
       </p>
-      <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(0, 255, 65, 0.7);">
+      <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(var(--accent-primary-rgb), 0.7);">
         This may take 30-60 seconds
       </p>
     `;
@@ -123,12 +201,12 @@ async function runComprehensiveAnalysis() {
       style.id = 'ascii-art-style';
       style.textContent = `
         @keyframes color-cycle {
-          0% { color: #00ff41; }
+          0% { color: var(--accent-primary); }
           20% { color: #00ffff; }
           40% { color: #0099ff; }
           60% { color: #9933ff; }
           80% { color: #ff33cc; }
-          100% { color: #00ff41; }
+          100% { color: var(--accent-primary); }
         }
         .ascii-art-responsive {
           font-size: clamp(0.35rem, 1.2vw, 0.65rem);
@@ -156,6 +234,10 @@ async function runComprehensiveAnalysis() {
   resultsContainer.style.display = 'none';
 
   try {
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
     const startTime = Date.now();
     
     // Step 1: Initialize
@@ -177,35 +259,35 @@ async function runComprehensiveAnalysis() {
       fetch('/api/scan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, mode: 'basic' })
+        body: JSON.stringify({ url, mode: 'basic', scanStartedAt })
       }).then(r => r.json()),
       
       // SEO - lightweight mode
       fetch('/api/seo', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, forceLightweight: true, source: 'dashboard', skipLighthouse: true })
+        body: JSON.stringify({ url, forceLightweight: true, source: 'dashboard', skipLighthouse: true, scanStartedAt })
       }).then(r => r.json()),
       
       // Performance - skip Lighthouse for speed
       fetch('/api/performance-snapshot', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url })
+        body: JSON.stringify({ url, scanStartedAt })
       }).then(r => r.json()),
       
       // Accessibility - lightweight
       fetch('/api/accessibility', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, lightweight: true })
+        body: JSON.stringify({ url, lightweight: true, scanStartedAt })
       }).then(r => r.json()),
       
       // Security - lightweight
       fetch('/api/security', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, lightweight: true })
+        body: JSON.stringify({ url, lightweight: true, scanStartedAt })
       }).then(r => r.json())
     ]);
     
@@ -229,7 +311,8 @@ async function runComprehensiveAnalysis() {
     // Process results
     dashboardResults = {
       url,
-      timestamp: new Date().toISOString(),
+      startedAt: scanStartedAt,
+      timestamp: scanStartedAt,
       duration,
       font: fontResults.status === 'fulfilled' ? fontResults.value : { error: fontResults.reason?.message || 'Failed' },
       seo: seoResults.status === 'fulfilled' ? seoResults.value : { error: seoResults.reason?.message || 'Failed' },
@@ -327,7 +410,7 @@ function displayDashboard(data) {
         align-items: center;
         gap: 2rem;
         padding: 1.5rem;
-        background: linear-gradient(135deg, rgba(0,255,65,0.05), rgba(0,204,255,0.05));
+        background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.05), rgba(var(--accent-primary-rgb), 0.02));
         border: 1px solid ${getScoreColor(overallScore)}40;
         border-radius: 12px;
         margin-bottom: 1.5rem;
@@ -350,7 +433,7 @@ function displayDashboard(data) {
             ${summary}
           </p>
           <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
-            Analyzed: ${data.url} • ${new Date(data.timestamp).toLocaleString()} • ${data.duration}s
+            Analyzed: ${data.url} • Started: ${new Date(data.startedAt || data.timestamp).toLocaleString()} • Duration: ${data.duration}s
           </p>
         </div>
       </div>
@@ -417,8 +500,8 @@ function displayDashboard(data) {
             `).join('')}
           </div>
         ` : `
-          <div style="padding: 1rem; background: rgba(0,255,65,0.1); border-radius: 6px; text-align: center;">
-            <span style="color: #00ff41; font-weight: 600;">No critical issues found. Your site is in good shape!</span>
+          <div style="padding: 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border-radius: 6px; text-align: center;">
+            <span style="color: var(--accent-primary); font-weight: 600;">No critical issues found. Your site is in good shape!</span>
           </div>
         `}
       </div>
@@ -426,20 +509,20 @@ function displayDashboard(data) {
       <!-- 4. CLEAR RECOMMENDATION / NEXT STEP -->
       <div style="
         padding: 1rem 1.25rem;
-        background: rgba(0,255,65,0.08);
-        border: 1px solid rgba(0,255,65,0.3);
+        background: rgba(var(--accent-primary-rgb), 0.08);
+        border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
         border-radius: 8px;
         margin-bottom: 1.5rem;
       ">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#00ff41" stroke-width="2">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2">
             <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
           </svg>
           <div>
-            <div style="font-weight: 600; color: #00ff41; font-size: 0.85rem; margin-bottom: 0.25rem;">Recommended next fix</div>
+            <div style="font-weight: 600; color: var(--accent-primary); font-size: 0.85rem; margin-bottom: 0.25rem;">Recommended next fix</div>
             <div style="color: var(--text-primary); font-size: 0.95rem;">${nextStep.text}</div>
           </div>
-          ${nextStep.link ? `<a href="${nextStep.link}" style="margin-left: auto; padding: 0.5rem 1rem; background: #00ff41; color: #000; font-weight: 600; font-size: 0.85rem; border-radius: 4px; text-decoration: none;">Start</a>` : ''}
+          ${nextStep.link ? `<a href="${nextStep.link}" style="margin-left: auto; padding: 0.5rem 1rem; background: var(--accent-primary); color: var(--accent-primary-contrast); font-weight: 600; font-size: 0.85rem; border-radius: 4px; text-decoration: none;">Start</a>` : ''}
         </div>
       </div>
       
@@ -477,11 +560,7 @@ function displayDashboard(data) {
           <!-- Export Options -->
           <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Client-Ready Reports</h4>
           <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <button id="exportPdfBtn" class="export-pdf-btn" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; color: #ef4444; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              Download PDF
-            </button>
-            <button onclick="copyShareLink()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: rgba(0, 255, 65, 0.1); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 8px; color: #00ff41; cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;">
+            <button onclick="copyShareLink()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 8px; color: var(--accent-primary); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               Copy Link
             </button>
@@ -528,8 +607,8 @@ function displayDashboard(data) {
             `).join('')}
           </div>
         ` : `
-          <div style="padding: 1.5rem; background: rgba(0,255,65,0.08); border-radius: 8px; text-align: center;">
-            <span style="color: var(--accent-primary, #00ff41); font-weight: 600;">✓ No critical issues found</span>
+          <div style="padding: 1.5rem; background: rgba(var(--accent-primary-rgb), 0.08); border-radius: 8px; text-align: center;">
+            <span style="color: var(--accent-primary); font-weight: 600;">✓ No critical issues found</span>
             <p style="margin: 0.5rem 0 0; font-size: 0.85rem; color: var(--text-secondary);">Your site is in good shape!</p>
           </div>
         `}
@@ -538,13 +617,13 @@ function displayDashboard(data) {
         <div style="
           margin-top: 1rem;
           padding: 1rem;
-          background: rgba(0,255,65,0.08);
-          border: 1px solid rgba(0,255,65,0.25);
+          background: rgba(var(--accent-primary-rgb), 0.08);
+          border: 1px solid rgba(var(--accent-primary-rgb), 0.25);
           border-radius: 8px;
         ">
-          <div style="font-weight: 600; color: var(--accent-primary, #00ff41); font-size: 0.8rem; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em;">Recommended next fix</div>
+          <div style="font-weight: 600; color: var(--accent-primary); font-size: 0.8rem; margin-bottom: 0.35rem; text-transform: uppercase; letter-spacing: 0.03em;">Recommended next fix</div>
           <div style="color: var(--text-primary); font-size: 0.9rem; line-height: 1.4;">${nextStep.text}</div>
-          ${nextStep.link ? `<a href="${nextStep.link}" style="display: inline-block; margin-top: 0.75rem; padding: 0.5rem 1rem; background: var(--accent-primary, #00ff41); color: #000; font-weight: 600; font-size: 0.85rem; border-radius: 6px; text-decoration: none;">Start</a>` : ''}
+          ${nextStep.link ? `<a href="${nextStep.link}" style="display: inline-block; margin-top: 0.75rem; padding: 0.5rem 1rem; background: var(--accent-primary); color: var(--accent-primary-contrast); font-weight: 600; font-size: 0.85rem; border-radius: 6px; text-decoration: none;">Start</a>` : ''}
         </div>
       </div>
     `;
@@ -816,7 +895,7 @@ function generateInsights(scores, data) {
       insights.push('🔍 <strong>SEO improvements needed</strong> — Missing meta tags or structure issues may affect rankings.');
     }
   } else {
-    insights.push('🔍 <strong>SEO not scanned yet</strong> — <a href="/seo-analyzer.html" style="color: var(--accent-primary, #00ff41);">Run SEO scan</a> for detailed analysis.');
+    insights.push('🔍 <strong>SEO not scanned yet</strong> — <a href="/seo-analyzer.html" style="color: var(--accent-primary);">Run SEO scan</a> for detailed analysis.');
   }
   
   // Accessibility insights
@@ -986,11 +1065,11 @@ function createActionCard(title, key, scores, data, link, icon) {
 
   // Detect light mode
   const isLightMode = document.body.classList.contains('white-theme');
-  const cardBg = isLightMode ? '#f5f5f5' : 'rgba(0,255,65,0.05)';
-  const cardBorder = isLightMode ? '#cccccc' : 'rgba(0,255,65,0.2)';
+  const cardBg = isLightMode ? '#f5f5f5' : 'rgba(var(--accent-primary-rgb), 0.05)';
+  const cardBorder = isLightMode ? '#cccccc' : 'rgba(var(--accent-primary-rgb), 0.2)';
   const cardTitleColor = isLightMode ? '#222' : '#ffffff';
   const cardTextColor = isLightMode ? '#333' : '#808080';
-  const detailsColor = isLightMode ? '#00796b' : '#00ff41';
+  const detailsColor = 'var(--accent-primary)';
   const borderTopColor = isLightMode ? '#e0e0e0' : 'rgba(255,255,255,0.1)';
 
   return `
@@ -1002,8 +1081,8 @@ function createActionCard(title, key, scores, data, link, icon) {
         border-radius: 8px;
         transition: all 0.3s ease;
         cursor: pointer;
-      " data-hover-border="${isLightMode ? '#00796b' : '#00ff41'}" 
-         data-hover-bg="${isLightMode ? '#e0f7fa' : 'rgba(0,255,65,0.1)'}" 
+      " data-hover-border="var(--accent-primary)" 
+        data-hover-bg="rgba(var(--accent-primary-rgb), 0.1)" 
          data-default-border="${cardBorder}" 
          data-default-bg="${cardBg}">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
@@ -1056,7 +1135,7 @@ function generateRecommendations(data) {
   }
 
   if (recommendations.length === 0) {
-    return '<p style="color: #00ff41; margin: 0;">✓ Excellent! All areas are performing well. Keep up the good work!</p>';
+    return '<p style="color: var(--accent-primary); margin: 0;">✓ Excellent! All areas are performing well. Keep up the good work!</p>';
   }
 
   return `
@@ -1119,7 +1198,7 @@ function generatePrioritizedIssues(data) {
   const totalIssues = issues.critical.length + issues.warning.length + issues.info.length;
   
   if (totalIssues === 0) {
-    return '<p style="color: #00ff41; margin: 0;">✓ No critical or warning issues found. Your site is in good shape!</p>';
+    return '<p style="color: var(--accent-primary); margin: 0;">✓ No critical or warning issues found. Your site is in good shape!</p>';
   }
 
   let html = '';
@@ -1252,10 +1331,10 @@ function generateImprovementGuide(data) {
   if (improvements.length === 0) {
     return `
       <div style="text-align: center; padding: 1rem;">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#00ff41" stroke-width="2" style="margin-bottom: 0.5rem;">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--accent-primary)" stroke-width="2" style="margin-bottom: 0.5rem;">
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
-        <p style="color: #00ff41; margin: 0; font-weight: 600;">Excellent work!</p>
+        <p style="color: var(--accent-primary); margin: 0; font-weight: 600;">Excellent work!</p>
         <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0;">Your site is performing well across all categories. Keep monitoring for changes.</p>
       </div>
     `;
@@ -1279,7 +1358,7 @@ function generateImprovementGuide(data) {
           ${imp.actions.map(action => `<li>${action}</li>`).join('')}
         </ul>
         </ul>
-        <a href="${imp.link}" style="display: inline-block; margin-top: 0.75rem; color: #00ff41; font-size: 0.85rem; text-decoration: none;">View Full Report →</a>
+        <a href="${imp.link}" style="display: inline-block; margin-top: 0.75rem; color: var(--accent-primary); font-size: 0.85rem; text-decoration: none;">View Full Report →</a>
       </div>
     </details>
   `).join('')}`;
@@ -1315,8 +1394,8 @@ function copyShareLink() {
     const btn = event.target.closest('button');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> Copied!';
-    btn.style.borderColor = '#00ff41';
-    btn.style.color = '#00ff41';
+    btn.style.borderColor = 'var(--accent-primary)';
+    btn.style.color = 'var(--accent-primary)';
     setTimeout(() => {
       btn.innerHTML = originalText;
       btn.style.borderColor = '';
@@ -1325,22 +1404,27 @@ function copyShareLink() {
   });
 }
 
+function getAccentPrimaryHex() {
+  const computed = getComputedStyle(document.documentElement)
+    .getPropertyValue('--accent-primary')
+    .trim();
+  if (computed) return computed;
+
+  const isLight = document.body?.classList?.contains('white-theme');
+  return isLight ? '#dd3838' : '#5bf4e7';
+}
+
 /**
  * Extract desktop and mobile scores from analyzer result
  */
 function extractScores(data, type) {
   if (!data) {
-    console.log(`✗ ${type} - No data received`);
     return { desktop: null, mobile: null };
   }
 
   if (data.error) {
-    console.log(`✗ ${type} - Has error:`, data.error);
     return { desktop: null, mobile: null };
   }
-
-  console.log(`S Extracting scores for ${type}:`, data);
-
   switch(type) {
     case 'fonts': {
       // Font scanner may return desktop/mobile font data separately
@@ -1355,7 +1439,6 @@ function extractScores(data, type) {
         else if (fontCount <= 8) score = 60;
         else score = 40;
 
-        console.log(`  → Font score calculated: ${score} (${fontCount} fonts)`);
         // Fonts don't distinguish desktop/mobile, so use same score
         return { desktop: score, mobile: score };
       }
@@ -1365,7 +1448,6 @@ function extractScores(data, type) {
     case 'seo': {
       // SEO returns single overall score (no desktop/mobile distinction)
       const seoScore = data.results?.score?.overall || data.score?.overall || null;
-      console.log(`  → SEO score: ${seoScore}`);
       return { desktop: seoScore, mobile: seoScore };
     }
 
@@ -1376,7 +1458,6 @@ function extractScores(data, type) {
       // Check for performanceSnapshot format (top-level performanceScore)
       if (data.performanceScore !== undefined) {
         score = data.performanceScore;
-        console.log(`  → Performance score (snapshot): ${score}`);
         return { desktop: score, mobile: score };
       }
 
@@ -1386,11 +1467,9 @@ function extractScores(data, type) {
       
       if (data.results?.desktop?.performanceScore !== undefined) {
         desktopScore = data.results.desktop.performanceScore;
-        console.log(`  → Performance desktop score: ${desktopScore}`);
       }
       if (data.results?.mobile?.performanceScore !== undefined) {
         mobileScore = data.results.mobile.performanceScore;
-        console.log(`  → Performance mobile score: ${mobileScore}`);
       }
 
       // Fallback: use top-level score for both if no breakdown
@@ -1399,7 +1478,6 @@ function extractScores(data, type) {
                             data.results?.overallScore ||
                             data.score ||
                             null;
-        console.log(`  → Performance overall score: ${overallScore}`);
         return { desktop: overallScore, mobile: overallScore };
       }
 
@@ -1414,11 +1492,9 @@ function extractScores(data, type) {
       // Check for nested desktop/mobile breakdown in results
       if (data.results?.desktop?.accessibilityScore !== undefined) {
         desktopScore = data.results.desktop.accessibilityScore;
-        console.log(`  → Accessibility desktop score: ${desktopScore}`);
       }
       if (data.results?.mobile?.accessibilityScore !== undefined) {
         mobileScore = data.results.mobile.accessibilityScore;
-        console.log(`  → Accessibility mobile score: ${mobileScore}`);
       }
 
       // Fallback: use overall score for both if no breakdown
@@ -1427,7 +1503,6 @@ function extractScores(data, type) {
                             data.results?.accessibilityScore ||
                             data.results?.overallScore ||
                             null;
-        console.log(`  → Accessibility overall score: ${overallScore}`);
         return { desktop: overallScore, mobile: overallScore };
       }
 
@@ -1441,21 +1516,18 @@ function extractScores(data, type) {
       // Check top-level overallScore first (most common format)
       if (data.overallScore !== undefined && data.overallScore !== null) {
         score = data.overallScore;
-        console.log(`  → Security score (top-level): ${score}`);
         return { desktop: score, mobile: score };
       }
       
       // Check results.overallScore
       if (data.results?.overallScore !== undefined) {
         score = data.results.overallScore;
-        console.log(`  → Security score (results): ${score}`);
         return { desktop: score, mobile: score };
       }
       
       // Check for securityScore
       if (data.securityScore !== undefined) {
         score = data.securityScore;
-        console.log(`  → Security score (securityScore): ${score}`);
         return { desktop: score, mobile: score };
       }
       
@@ -1465,24 +1537,19 @@ function extractScores(data, type) {
 
       if (data.desktop && !data.desktop.error) {
         desktopScore = data.desktop.securityScore || data.desktop.overallScore || null;
-        console.log(`  → Security desktop score: ${desktopScore}`);
       }
 
       if (data.mobile && !data.mobile.error) {
         mobileScore = data.mobile.securityScore || data.mobile.overallScore || null;
-        console.log(`  → Security mobile score: ${mobileScore}`);
       }
 
       if (desktopScore !== null || mobileScore !== null) {
         return { desktop: desktopScore, mobile: mobileScore };
       }
-      
-      console.log(`  → Security: no score found`);
       return { desktop: null, mobile: null };
     }
 
     default:
-      console.log(`  → Unknown type: ${type}`);
       return { desktop: null, mobile: null };
   }
 }
@@ -1509,7 +1576,7 @@ function extractScore(data, type) {
  * Critical (<50): Red
  */
 function getScoreColor(score) {
-  if (score >= 90) return '#00ff41';  // Excellent: Bright green
+  if (score >= 90) return getAccentPrimaryHex(); // Excellent: Theme accent
   if (score >= 75) return '#00bcd4';  // Good: Teal/Cyan
   if (score >= 50) return '#ffa500';  // Needs Work: Orange
   return '#ff4444';                   // Critical: Red
@@ -1559,9 +1626,7 @@ function initDashboardPDFExport() {
       urlInputSelector: '#urlInput',
       filename: `site-mechanic-dashboard-${new Date().toISOString().split('T')[0]}.pdf`
     });
-    console.log('Dashboard PDF export initialized');
   } else {
-    console.warn('PDF export utility not loaded');
   }
 }
 

@@ -3,6 +3,10 @@
  * Displays Google's ranking factors with actionable insights
  */
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'core-web-vitals';
+document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+
 const urlInput = document.getElementById('cwvUrlInput');
 const analyzeButton = document.getElementById('cwvAnalyzeButton');
 const resultsContainer = document.getElementById('cwvResults');
@@ -44,24 +48,24 @@ analyzeButton.addEventListener('click', async () => {
   loaderMessageEl.style.cssText = `
     margin: 0 0 1.5rem 0;
     padding: 1rem;
-    background: rgba(0, 255, 65, 0.05);
-    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
     border-radius: 6px;
     text-align: center;
     overflow: visible;
   `;
   loaderMessageEl.innerHTML = `
     <div style="overflow-x: auto; overflow-y: visible;">
-      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
     </div>
-    <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: #00ff41; font-weight: 600; letter-spacing: 0.05em;">
+    <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em;">
       Measuring core web vitals...
     </p>
-    <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(0, 255, 65, 0.7);">
+    <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(var(--accent-primary-rgb), 0.7);">
       This may take 30-60 seconds
     </p>
   `;
@@ -70,12 +74,12 @@ analyzeButton.addEventListener('click', async () => {
   const style = document.createElement('style');
   style.textContent = `
     @keyframes color-cycle {
-      0% { color: #00ff41; }
+      0% { color: var(--accent-primary); }
       20% { color: #00ffff; }
       40% { color: #0099ff; }
       60% { color: #9933ff; }
       80% { color: #ff33cc; }
-      100% { color: #00ff41; }
+      100% { color: var(--accent-primary); }
     }
     .ascii-art-responsive {
       font-size: clamp(0.35rem, 1.2vw, 0.65rem);
@@ -123,12 +127,16 @@ analyzeButton.addEventListener('click', async () => {
   }
 
   try {
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
     const response = await fetch('/api/core-web-vitals', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ url }),
+      body: JSON.stringify({ url, scanStartedAt }),
     });
 
     if (!response.ok) {
@@ -706,7 +714,6 @@ if (typeof window.getUrlParameter === 'function') {
   window.addEventListener('DOMContentLoaded', () => {
     const autoUrl = window.getUrlParameter();
     if (autoUrl) {
-      console.log('→ Auto-starting Core Web Vitals analysis for:', autoUrl);
       urlInput.value = autoUrl;
       setTimeout(() => {
         analyzeButton.click();

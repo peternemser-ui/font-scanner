@@ -10,11 +10,14 @@ class AnalyzerLoader {
     this.steps = [];
     this.currentStep = 0;
     this.startTime = null;
+    this.startedAtIso = null;
+    this.scanUrl = '';
     this.progressInterval = null;
     this.estimatedSeconds = 0;
     this.isComplete = false;
     this.overrunActive = false;
     this.overlay = null;
+    this.longScanMessageInterval = null;
   }
 
   /**
@@ -27,25 +30,58 @@ class AnalyzerLoader {
     this.steps = steps;
     this.currentStep = 0;
     this.startTime = Date.now();
+    this.startedAtIso = (typeof window !== 'undefined' && window.SM_SCAN_STARTED_AT) ? window.SM_SCAN_STARTED_AT : new Date().toISOString();
+    this.scanUrl = this.getCurrentScanUrl();
     this.estimatedSeconds = Math.max(estimatedSeconds, this.steps.length * 2 || 10);
     this.isComplete = false;
     this.overrunActive = false;
+
+    if (this.longScanMessageInterval) {
+      clearInterval(this.longScanMessageInterval);
+      this.longScanMessageInterval = null;
+    }
+
+    // Cache-bust logo assets so updates show immediately without relying on hard refresh.
+    const logoAssetVersion = '20260112.2';
     
     // Create modal overlay
     this.overlay = document.createElement('div');
     this.overlay.className = 'analyzer-loading-overlay active';
     this.overlay.id = 'analyzerLoadingOverlay';
+
+    const scanUrlDisplay = this.formatUrlForDisplay(this.scanUrl);
+    const scanUrlEscaped = this.escapeHtml(this.scanUrl);
+    const scanUrlDisplayEscaped = this.escapeHtml(scanUrlDisplay);
+    const titleEscaped = this.escapeHtml(title);
     
     // Build loading HTML inside overlay
     this.overlay.innerHTML = `
       <div class="analyzer-loading active">
         <div class="loading-header">
-          <h2 class="loading-title">${title}</h2>
-          <span id="progressPercentage" style="font-size: 1rem; font-weight: 700; color: #00ff41; min-width: 45px; text-align: right;">0%</span>
+          <div class="loading-brand" aria-hidden="true">
+            <img src="/assets/logo-dark.svg?v=${logoAssetVersion}" alt="" class="loading-logo loading-logo-dark" />
+            <img src="/assets/logo-light.svg?v=${logoAssetVersion}" alt="" class="loading-logo loading-logo-light" />
+          </div>
+
+          <div class="loading-title-row">
+            <h2 class="loading-title">${titleEscaped}</h2>
+            <span id="progressPercentage" style="font-size: 1rem; font-weight: 700; color: var(--accent-primary); min-width: 45px; text-align: right;">0%</span>
+          </div>
         </div>
+
+        ${scanUrlDisplay ? `
+          <div class="loading-url-row">
+            <span class="loading-scan-url" title="${scanUrlEscaped}">${scanUrlDisplayEscaped}</span>
+          </div>
+        ` : ''}
 
         <div class="loading-progress-bar">
           <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
+        </div>
+
+        <div class="loading-meta" aria-label="Scan timing">
+          <div class="loading-meta__item" id="scanStartedAt">Started: ${this.formatDateTime(this.startedAtIso)}</div>
+          <div class="loading-meta__item" id="scanDuration">Duration: 0s</div>
         </div>
 
         <div class="progress-steps" id="progressSteps">
@@ -58,6 +94,14 @@ class AnalyzerLoader {
               </div>
             </div>
           `).join('')}
+        </div>
+
+        <div class="loading-long-scan" id="longScanContainer" hidden>
+          <span class="loading-spinner" aria-hidden="true"></span>
+          <div class="loading-long-scan__text">
+            <div class="loading-long-scan__title">Still working…</div>
+            <div class="loading-long-scan__message" id="longScanMessage">Some sites take longer to analyze.</div>
+          </div>
         </div>
 
         <div class="estimated-time">
@@ -80,6 +124,71 @@ class AnalyzerLoader {
     
     // Start progress simulation
     this.simulateProgress();
+  }
+
+  escapeHtml(value) {
+    return String(value || '')
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;');
+  }
+
+  getCurrentScanUrl() {
+    try {
+      const candidateInputIds = [
+        'urlInput',
+        'url',
+        'seoUrlInput',
+        'securityUrlInput',
+        'performanceUrlInput',
+        'perfUrlInput',
+        'cwvUrlInput',
+        'brokenLinksUrlInput',
+        'accessibilityUrlInput',
+        'mobileUrlInput',
+        'hostingUrlInput',
+        'ipReputationInput',
+      ];
+
+      for (const id of candidateInputIds) {
+        const input = document.getElementById(id);
+        const value = input && typeof input.value === 'string' ? input.value.trim() : '';
+        if (value) return value;
+      }
+
+      const anyInput = document.querySelector('input[type="url"], input[name="url"], input[id*="url" i]');
+      const fromAnyInput = anyInput && typeof anyInput.value === 'string' ? anyInput.value.trim() : '';
+      if (fromAnyInput) return fromAnyInput;
+
+      const params = new URLSearchParams(window.location.search);
+      const fromQuery = params.get('url');
+      return fromQuery ? fromQuery.trim() : '';
+    } catch {
+      return '';
+    }
+  }
+
+  formatUrlForDisplay(rawUrl) {
+    const raw = String(rawUrl || '').trim();
+    if (!raw) return '';
+
+    let printable = raw;
+    try {
+      const withProto = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+      const u = new URL(withProto);
+      const host = u.hostname || raw;
+      const path = (u.pathname && u.pathname !== '/') ? u.pathname : '';
+      printable = `${host}${path}`;
+    } catch {
+      printable = raw.replace(/^https?:\/\//i, '');
+    }
+
+    printable = printable.replace(/\/$/, '');
+    const maxLen = 44;
+    if (printable.length <= maxLen) return printable;
+    return `${printable.slice(0, maxLen - 1)}…`;
   }
 
   /**
@@ -182,6 +291,8 @@ class AnalyzerLoader {
 
       elapsed += updateInterval / 1000;
       const remaining = Math.max(0, this.estimatedSeconds - elapsed);
+
+      this.updateDurationValue(this.formatTime(Math.floor(elapsed)));
       
       if (!this.overrunActive && remaining <= 0) {
         this.enterOverrunState();
@@ -213,6 +324,11 @@ class AnalyzerLoader {
   complete() {
     this.isComplete = true;
     this.overrunActive = false;
+
+    if (this.longScanMessageInterval) {
+      clearInterval(this.longScanMessageInterval);
+      this.longScanMessageInterval = null;
+    }
     
     // Query within overlay if it exists, otherwise fallback to document
     const container = this.overlay || document;
@@ -236,7 +352,7 @@ class AnalyzerLoader {
     const timeElement = container.querySelector('#timeRemaining');
     if (timeElement) {
       timeElement.textContent = 'Complete!';
-      timeElement.style.color = '#00ff41';
+      timeElement.style.color = 'var(--accent-primary)';
     }
 
     clearInterval(this.progressInterval);
@@ -253,6 +369,11 @@ class AnalyzerLoader {
   hide() {
     this.isComplete = true;
     this.overrunActive = false;
+
+    if (this.longScanMessageInterval) {
+      clearInterval(this.longScanMessageInterval);
+      this.longScanMessageInterval = null;
+    }
     
     // Remove modal overlay
     if (this.overlay) {
@@ -285,27 +406,44 @@ class AnalyzerLoader {
    */
   showError(message) {
     this.isComplete = true;
-    
+    this.overrunActive = false;
+
+    // Clear all intervals
+    if (this.longScanMessageInterval) {
+      clearInterval(this.longScanMessageInterval);
+      this.longScanMessageInterval = null;
+    }
+    if (this.progressInterval) {
+      clearInterval(this.progressInterval);
+      this.progressInterval = null;
+    }
+
     const container = this.overlay || this.container;
     const loader = container ? container.querySelector('.analyzer-loading') : null;
     if (loader) {
+      // Sanitize message to prevent XSS
+      const sanitizedMessage = String(message)
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#x27;');
+
       loader.innerHTML = `
         <div class="loading-header">
           <h2 class="loading-title" style="color: #ff4444;">✗ Analysis Failed</h2>
-          <p class="loading-subtitle">${message}</p>
+          <p class="loading-subtitle" style="color: var(--text-primary); margin-top: 1rem; max-width: 500px; margin-left: auto; margin-right: auto;">${sanitizedMessage}</p>
         </div>
         <div style="text-align: center; margin-top: 2rem;">
           <button class="analyze-button" id="retry-button">Try Again</button>
         </div>
       `;
-      
+
       // Add event listener (CSP-compliant)
       const retryButton = loader.querySelector('#retry-button');
       if (retryButton) {
         retryButton.addEventListener('click', () => location.reload());
       }
     }
-    clearInterval(this.progressInterval);
   }
 
   /**
@@ -332,6 +470,27 @@ class AnalyzerLoader {
     if (this.overrunActive) return;
     this.overrunActive = true;
     const container = this.overlay || document;
+
+    const longScan = container.querySelector('#longScanContainer');
+    if (longScan) {
+      longScan.hidden = false;
+    }
+
+    const messages = [
+      'Some sites take longer to analyze.',
+      'Still collecting metrics and validating results.',
+      'Almost there — finishing up the final checks.'
+    ];
+
+    const messageEl = container.querySelector('#longScanMessage');
+    if (messageEl && !this.longScanMessageInterval) {
+      let messageIndex = 0;
+      this.longScanMessageInterval = setInterval(() => {
+        messageIndex = (messageIndex + 1) % messages.length;
+        messageEl.textContent = messages[messageIndex];
+      }, 6500);
+    }
+
     const label = container.querySelector('#timeLabel');
     if (label) {
       label.textContent = 'Additional time:';
@@ -340,6 +499,23 @@ class AnalyzerLoader {
     const value = container.querySelector('#timeRemaining');
     if (value) {
       value.classList.add('overrun');
+    }
+  }
+
+  formatDateTime(isoString) {
+    if (!isoString) return '-';
+    try {
+      return new Date(isoString).toLocaleString();
+    } catch {
+      return String(isoString);
+    }
+  }
+
+  updateDurationValue(displayText) {
+    const container = this.overlay || document;
+    const durationEl = container.querySelector('#scanDuration');
+    if (durationEl) {
+      durationEl.textContent = `Duration: ${displayText}`;
     }
   }
 
@@ -364,7 +540,6 @@ if (typeof window !== 'undefined') {
   
   // Track step IDs to indices mapping
   const stepMap = new Map();
-  let currentProgress = 0;
   
   window.AnalyzerLoader = {
     // Dashboard-compatible API (adapted from different method names)
@@ -398,7 +573,6 @@ if (typeof window !== 'undefined') {
     },
     
     updateProgress: (percent) => {
-      currentProgress = percent;
       // The loader auto-calculates progress, but we can override if needed
       const container = loaderInstance.overlay || document;
       const progressBar = container.querySelector('#progressBarFill');

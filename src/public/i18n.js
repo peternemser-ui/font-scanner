@@ -27,8 +27,14 @@ class I18n {
     // Apply translations to page
     this.translatePage();
 
+    // Notify listeners (dynamic pages can re-render without reload)
+    window.dispatchEvent(
+      new CustomEvent('languageChanged', {
+        detail: { language: this.currentLanguage, initial: true }
+      })
+    );
+
     this.initialized = true;
-    console.log(`✓ i18n initialized: ${this.currentLanguage}`);
   }
 
   /**
@@ -36,7 +42,7 @@ class I18n {
    */
   detectLanguage() {
     // 1. Check localStorage
-    const savedLang = localStorage.getItem('preferred-language');
+    const savedLang = localStorage.getItem('preferred-language') || localStorage.getItem('preferredLanguage');
     if (savedLang && this.supportedLanguages.includes(savedLang)) {
       return savedLang;
     }
@@ -62,7 +68,6 @@ class I18n {
       if (!response.ok) throw new Error(`Failed to load ${lang}.json`);
 
       this.translations = await response.json();
-      console.log(`✓ Loaded translations for: ${lang}`);
     } catch (error) {
       console.error(`Failed to load translations for ${lang}, falling back to ${this.fallbackLanguage}:`, error);
 
@@ -88,7 +93,6 @@ class I18n {
       if (value && typeof value === 'object' && k in value) {
         value = value[k];
       } else {
-        console.warn(`Translation missing for key: ${key}`);
         return key; // Return key if translation not found
       }
     }
@@ -120,6 +124,8 @@ class I18n {
 
     // Save preference
     localStorage.setItem('preferred-language', lang);
+    // Back-compat for older scripts
+    localStorage.setItem('preferredLanguage', lang);
 
     // Update page
     this.translatePage();
@@ -127,7 +133,12 @@ class I18n {
     // Update language switcher UI
     this.updateLanguageSwitcher();
 
-    console.log(`✓ Switched to language: ${lang}`);
+    // Notify listeners (dynamic pages can re-render without reload)
+    window.dispatchEvent(
+      new CustomEvent('languageChanged', {
+        detail: { language: lang }
+      })
+    );
   }
 
   /**

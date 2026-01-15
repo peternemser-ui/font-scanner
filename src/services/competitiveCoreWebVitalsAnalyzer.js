@@ -5,6 +5,7 @@
 
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
+const { roundTo, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('CompetitiveCWVAnalyzer');
 
@@ -22,7 +23,7 @@ class CompetitiveCoreWebVitalsAnalyzer {
       const metrics = await this.collectMetrics(url);
       const score = this.calculateScore(metrics);
       
-      const duration = ((Date.now() - startTime) / 1000).toFixed(2);
+      const duration = formatDuration(Date.now() - startTime, 2);
       logger.info(`CWV completed in ${duration}s: ${score}`);
       
       return {
@@ -139,7 +140,7 @@ class CompetitiveCoreWebVitalsAnalyzer {
     if (ttfb > 1000) score -= 10;
     else if (ttfb > 600) score -= 5;
 
-    return Math.max(Math.round(score), 0);
+    return Math.max(roundTo(score, 0), 0);
   }
 }
 

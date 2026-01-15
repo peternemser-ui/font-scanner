@@ -1,4 +1,5 @@
 const { createLogger } = require('../utils/logger');
+const { roundTo } = require('../utils/formatHelpers');
 const fs = require('fs').promises;
 const path = require('path');
 
@@ -624,7 +625,7 @@ class FontLicensingDetector {
         f.category === 'commercial' && f.violations.length === 0
       ).length);
 
-    return Math.round((compliantFonts / analysis.summary.total) * 100);
+    return roundTo((compliantFonts / analysis.summary.total) * 100, 0);
   }
 
   /**

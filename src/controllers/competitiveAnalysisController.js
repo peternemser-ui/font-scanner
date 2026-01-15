@@ -16,6 +16,12 @@ const { createLogger } = require('../utils/logger');
 const config = require('../config');
 const crypto = require('crypto');
 
+const {
+  getAnalyzerKeyOverride,
+  buildReportMetadata,
+  attachReportMetadata
+} = require('../utils/controllerHelpers');
+
 const logger = createLogger('CompetitiveAnalysisController');
 
 /**
@@ -172,6 +178,12 @@ const analyzeCompetitors = asyncHandler(async (req, res) => {
 
   // Include sessionId in response for frontend WebSocket connection
   results.sessionId = sessionId;
+
+  // Deterministic report identity support
+  // Attach report metadata (reportId, screenshotUrl, timestamps)
+  const analyzerKey = getAnalyzerKeyOverride(req, 'competitive-analysis');
+  const metadata = await buildReportMetadata({ req, results, url: normalizedYourUrl, analyzerKey });
+  attachReportMetadata(results, metadata);
 
   res.json(results);
 });

@@ -39,17 +39,15 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <!-- Design System Foundation -->
-    <link rel="stylesheet" href="design-tokens.css" />
-    <link rel="stylesheet" href="components.css" />
-    <link rel="stylesheet" href="layout.css" />
-    <!-- Shared UI System -->
-    <link rel="stylesheet" href="ui.css" />
+    <!-- Shared foundation (new canonical paths) -->
+    <link rel="stylesheet" href="/assets/css/tokens.css" />
+    <link rel="stylesheet" href="/assets/css/components.css" />
     <!-- Existing Styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
     <link rel="stylesheet" href="ui-components.css" />
+    <!-- Report UI Components are included via /assets/css/components.css -->
     <link rel="stylesheet" href="spacing-fixes.css" />
 
     <!-- CRITICAL: Theme background fix -->
@@ -72,6 +70,7 @@
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
     <script src="/language-switcher.js"></script>
+    <script src="/seo-i18n.js"></script>
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -157,47 +156,49 @@
     <main class="page-shell">
       <!-- Breadcrumb -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
+        <a href="/dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
         <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">SEO</span>
+        <span aria-current="page" data-i18n="nav.seo">SEO</span>
       </nav>
       
       <!-- Page Header -->
       <header class="page-header">
-        <h1 class="page-header__title">SEO</h1>
-        <p class="page-header__subtitle">Analyze meta tags, structured data, headings, and crawlability.</p>
+        <h1 class="page-header__title" data-i18n="seo.title">SEO Analyzer</h1>
+        <p class="page-header__subtitle" data-i18n="seo.subtitle">Search Engine Optimization Audit</p>
       </header>
 
       <!-- Input Card -->
       <section class="card">
         <div class="card__body">
           <div class="form-row">
-            <label for="seoUrlInput" class="visually-hidden">Website URL to analyze</label>
+            <label for="seoUrlInput" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
             <input 
               type="url" 
               id="seoUrlInput" 
               class="input"
-              placeholder="https://example.com" 
-              aria-label="Enter website URL for SEO analysis"
+              data-i18n="common.websiteUrl"
+              data-i18n-attr="aria-label"
+              data-i18n-placeholder="common.enterUrl"
+              placeholder="https://yoursite.com" 
               required
               aria-required="true"
             />
-            <button id="seoAnalyzeButton" class="btn btn-primary" aria-label="Run SEO scan">
-              <span id="buttonText">Run scan</span>
+            <button id="seoAnalyzeButton" class="btn btn-primary" data-i18n="seo.analyze" data-i18n-attr="aria-label">
+              <span id="buttonText" data-i18n="seo.analyze">ANALYZE SEO</span>
             </button>
           </div>
         </div>
       </section>
 
       <!-- Results Container -->
-      <div id="seoResults" class="results-container" style="display: none;">
+      <div id="seoResults" class="results-container" hidden>
         <!-- Results will be dynamically inserted here by seo-script.js -->
       </div>
     </main>
 
     <!-- Footer -->
     <footer class="site-footer">
-      <p>&copy; 2025 Site Mechanic. Built for developers who care about quality.</p>
+      <p data-i18n="common.footer">&copy; 2025 Site Mechanic. Built for developers who care about quality.</p>
     </footer>
 
     <!-- Shared JavaScript for theme and font controls -->
@@ -224,6 +225,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="/pdf-export-utility.js"></script>
     <script src="/pdf-export-integration.js"></script>
+
+    <!-- Report UI Components -->
+    <script src="/js/report-ui.js"></script>
+    <script src="/js/components/ReportContainer.js"></script>
+    <script src="/js/components/reportAccordion.js"></script>
+
+    <!-- Credits + paywall UI (ensures PaidUnlockCard states render) -->
+    <script src="/assets/js/ui.js"></script>
+
+    <!-- Shared report shell + billing/entitlements (new canonical paths) -->
+    <script src="/assets/js/report-shell.js"></script>
+    <script src="/assets/js/billing.js"></script>
+    <script src="/assets/js/entitlements.js"></script>
+
+    <script src="/js/components/Modal.js"></script>
+    <script src="/js/components/ScreenshotLightbox.js"></script>
+    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/PricingModal.js"></script>
 
     <!-- SEO Analyzer Script -->
     <script src="/seo-script.js"></script>

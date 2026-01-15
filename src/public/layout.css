@@ -19,7 +19,7 @@
 }
 
 html {
-  font-size: 18px; /* Improved base font size */
+  font-size: 16px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -29,7 +29,7 @@ body {
   padding: 0;
   font-family: var(--font-sans);
   background: var(--bg-base);
-  color: var(--color-white);
+  color: var(--text-primary, var(--color-white));
   line-height: var(--leading-relaxed);
   min-height: 100vh;
 }

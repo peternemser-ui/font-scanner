@@ -35,7 +35,7 @@
     }
 
     // Fallback to localStorage (set by language-switcher.js)
-    const storedLang = localStorage.getItem('preferredLanguage');
+    const storedLang = localStorage.getItem('preferred-language') || localStorage.getItem('preferredLanguage');
     if (storedLang && VALID_LANGUAGES.includes(storedLang)) {
       return storedLang;
     }
@@ -74,7 +74,7 @@
   function updateMetaTag(selector, content, attribute = 'content') {
     if (!content) return;
 
-    let tag = document.querySelector(selector);
+    const tag = document.querySelector(selector);
 
     if (tag) {
       tag.setAttribute(attribute, content);
@@ -229,7 +229,6 @@
 
       schemaScript.textContent = JSON.stringify(schema, null, 2);
     } catch (e) {
-      console.warn('Could not update Schema.org data:', e);
     }
   }
 
@@ -249,7 +248,6 @@
       // Load translations
       const response = await fetch(`/i18n/${lang}.json`);
       if (!response.ok) {
-        console.warn(`Could not load translations for ${lang}`);
         return;
       }
 
@@ -257,7 +255,6 @@
       const seoData = translations.seo?.pages?.[pageId];
 
       if (!seoData) {
-        console.warn(`No SEO translations found for page: ${pageId} in language: ${lang}`);
         return;
       }
 

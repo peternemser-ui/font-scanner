@@ -1,8 +1,17 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 const { createLogger } = require('../utils/logger');
+const { resolveReportId } = require('../utils/resolveReportId');
+const {
+  initializePdfGeneration,
+  finalizePdfGeneration,
+  addPdfHeader,
+  addSectionHeader,
+  checkPageBreakNeeded,
+  getScoreColor,
+  getGrade
+} = require('../utils/pdfHelpers');
 
 const logger = createLogger('AccessibilityPdfGenerator');
 
@@ -26,81 +35,51 @@ class AccessibilityPdfGenerator {
    * Generate comprehensive Accessibility PDF report
    */
   async generateReport(accessibilityResults) {
-    const reportId = uuidv4();
-    const filename = `accessibility-analysis-${reportId}.pdf`;
-    const filepath = path.join(this.reportsDir, filename);
+    // Use helper to initialize PDF generation
+    const { doc, filepath, reportId, stream, filename } = initializePdfGeneration(
+      accessibilityResults,
+      'accessibility',
+      { reportsDir: this.reportsDir }
+    );
 
-    logger.info(`Generating Accessibility PDF report: ${filename}`);
+    try {
+      // Use helper for header
+      addPdfHeader(
+        doc,
+        '[ACCESSIBILITY_ANALYSIS_REPORT]',
+        accessibilityResults.url,
+        'comprehensive accessibility and WCAG compliance analysis'
+      );
 
-    return new Promise((resolve, reject) => {
-      try {
-        const doc = new PDFDocument({ margin: 50, size: 'A4' });
-        const stream = fs.createWriteStream(filepath);
-        doc.pipe(stream);
+      // Generate report sections
+      this.addExecutiveSummary(doc, accessibilityResults);
+      this.addWCAGCompliance(doc, accessibilityResults);
+      this.addViolationsBySeverity(doc, accessibilityResults);
+      this.addColorContrastIssues(doc, accessibilityResults);
+      this.addARIAAnalysis(doc, accessibilityResults);
+      this.addDesktopMobileComparison(doc, accessibilityResults);
+      this.addRecommendations(doc, accessibilityResults);
 
-        // Generate report sections
-        this.addHeader(doc, accessibilityResults.url);
-        this.addExecutiveSummary(doc, accessibilityResults);
-        this.addWCAGCompliance(doc, accessibilityResults);
-        this.addViolationsBySeverity(doc, accessibilityResults);
-        this.addColorContrastIssues(doc, accessibilityResults);
-        this.addARIAAnalysis(doc, accessibilityResults);
-        this.addDesktopMobileComparison(doc, accessibilityResults);
-        this.addRecommendations(doc, accessibilityResults);
-
-        doc.end();
-
-        stream.on('finish', () => {
-          logger.info(`Accessibility PDF report generated: ${filename}`);
-          resolve({ filename, filepath, reportId });
-        });
-
-        stream.on('error', (error) => {
-          logger.error('Error generating Accessibility PDF:', error);
-          reject(error);
-        });
-
-      } catch (error) {
-        logger.error('Error creating Accessibility PDF:', error);
-        reject(error);
-      }
-    });
+      // Use helper to finalize PDF generation
+      return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+    } catch (error) {
+      logger.error('Error creating Accessibility PDF:', error);
+      throw error;
+    }
   }
 
-  /**
-   * Add header with branding
-   */
-  addHeader(doc, url) {
-    doc
-      .fontSize(28)
-      .font('Helvetica-Bold')
-      .fillColor('#1a1a1a')
-      .text('[ACCESSIBILITY_ANALYSIS_REPORT]', 50, 50);
-
-    doc
-      .fontSize(14)
-      .font('Helvetica')
-      .fillColor('#555')
-      .text(`Website: ${url}`, 50, 85);
-
-    doc
-      .fontSize(10)
-      .fillColor('#999')
-      .text(`Generated: ${new Date().toLocaleString()}`, 50, 105);
-
-    doc.moveDown(2);
-  }
+  // addHeader removed - using pdfHelpers.addPdfHeader() instead
 
   /**
    * Add executive summary
    */
   addExecutiveSummary(doc, results) {
-    this.checkPageBreak(doc, 250);
-    this.addSectionHeader(doc, '♿ Executive Summary');
+    checkPageBreakNeeded(doc, 250);
+    addSectionHeader(doc, '♿ Executive Summary');
 
     const overallScore = results.overallScore || results.accessibilityScore || 0;
-    const grade = this.getGrade(overallScore);
-    const color = this.getScoreColor(overallScore);
+    const grade = getGrade(overallScore);
+    const color = getScoreColor(overallScore);
 
     // Overall Score Box
     doc
@@ -175,8 +154,8 @@ class AccessibilityPdfGenerator {
    * Add WCAG Compliance section
    */
   addWCAGCompliance(doc, results) {
-    this.checkPageBreak(doc, 300);
-    this.addSectionHeader(doc, '✅ WCAG 2.1 Compliance');
+    checkPageBreakNeeded(doc, 300);
+    addSectionHeader(doc, '✅ WCAG 2.1 Compliance');
 
     const wcagCategories = [
       { name: 'Perceivable', score: results.perceivableScore || 0, description: 'Content must be presentable to users in ways they can perceive' },
@@ -186,8 +165,8 @@ class AccessibilityPdfGenerator {
     ];
 
     wcagCategories.forEach(category => {
-      const color = this.getScoreColor(category.score);
-      const grade = this.getGrade(category.score);
+      const color = getScoreColor(category.score);
+      const grade = getGrade(category.score);
 
       doc
         .fontSize(11)
@@ -217,8 +196,8 @@ class AccessibilityPdfGenerator {
       return;
     }
 
-    this.checkPageBreak(doc, 200);
-    this.addSectionHeader(doc, '🚨 Violations by Severity');
+    checkPageBreakNeeded(doc, 200);
+    addSectionHeader(doc, '🚨 Violations by Severity');
 
     // Group violations by severity
     const critical = results.violationDetails.filter(v => v.impact === 'critical');
@@ -237,7 +216,7 @@ class AccessibilityPdfGenerator {
       doc.moveDown(0.5);
 
       critical.slice(0, 5).forEach((violation, index) => {
-        this.checkPageBreak(doc, 100);
+        checkPageBreakNeeded(doc, 100);
         
         doc
           .fontSize(10)
@@ -287,7 +266,7 @@ class AccessibilityPdfGenerator {
       doc.moveDown(0.5);
 
       serious.slice(0, 5).forEach((violation, index) => {
-        this.checkPageBreak(doc, 80);
+        checkPageBreakNeeded(doc, 80);
         
         doc
           .fontSize(10)
@@ -345,8 +324,8 @@ class AccessibilityPdfGenerator {
       return;
     }
 
-    this.checkPageBreak(doc, 200);
-    this.addSectionHeader(doc, '🎨 Color Contrast Issues');
+    checkPageBreakNeeded(doc, 200);
+    addSectionHeader(doc, '🎨 Color Contrast Issues');
 
     doc
       .fontSize(10)
@@ -403,8 +382,8 @@ class AccessibilityPdfGenerator {
       return;
     }
 
-    this.checkPageBreak(doc, 200);
-    this.addSectionHeader(doc, '🔊 ARIA (Accessible Rich Internet Applications)');
+    checkPageBreakNeeded(doc, 200);
+    addSectionHeader(doc, '🔊 ARIA (Accessible Rich Internet Applications)');
 
     const aria = results.aria;
 
@@ -480,8 +459,8 @@ class AccessibilityPdfGenerator {
       return;
     }
 
-    this.checkPageBreak(doc, 200);
-    this.addSectionHeader(doc, '📱 Desktop vs Mobile Accessibility');
+    checkPageBreakNeeded(doc, 200);
+    addSectionHeader(doc, '📱 Desktop vs Mobile Accessibility');
 
     const metrics = [
       { name: 'Accessibility Score', desktop: results.desktop.accessibilityScore, mobile: results.mobile.accessibilityScore },
@@ -518,8 +497,8 @@ class AccessibilityPdfGenerator {
       return;
     }
 
-    this.checkPageBreak(doc, 200);
-    this.addSectionHeader(doc, '💡 Accessibility Recommendations');
+    checkPageBreakNeeded(doc, 200);
+    addSectionHeader(doc, '💡 Accessibility Recommendations');
 
     // Group by priority
     const critical = results.recommendations.filter(r => r.priority === 'critical');
@@ -537,7 +516,7 @@ class AccessibilityPdfGenerator {
       doc.moveDown(0.5);
 
       critical.forEach((rec, index) => {
-        this.checkPageBreak(doc, 100);
+        checkPageBreakNeeded(doc, 100);
         
         doc
           .fontSize(10)
@@ -579,7 +558,7 @@ class AccessibilityPdfGenerator {
       doc.moveDown(0.5);
 
       important.slice(0, 5).forEach((rec, index) => {
-        this.checkPageBreak(doc, 80);
+        checkPageBreakNeeded(doc, 80);
         
         doc
           .fontSize(10)
@@ -616,47 +595,11 @@ class AccessibilityPdfGenerator {
     }
   }
 
-  /**
-   * Add section header
-   */
-  addSectionHeader(doc, title) {
-    doc
-      .fontSize(16)
-      .font('Helvetica-Bold')
-      .fillColor('#1a1a1a')
-      .text(title);
-    
-    doc.moveDown(1);
-  }
-
-  /**
-   * Check if page break needed
-   */
-  checkPageBreak(doc, requiredSpace) {
-    if (doc.y + requiredSpace > doc.page.height - 50) {
-      doc.addPage();
-    }
-  }
-
-  /**
-   * Get score color
-   */
-  getScoreColor(score) {
-    if (score >= 90) return '#00ff41';
-    if (score >= 70) return '#bb86fc';
-    if (score >= 50) return '#ffa500';
-    return '#ff4444';
-  }
-
-  /**
-   * Get grade from score
-   */
-  getGrade(score) {
-    if (score >= 90) return 'Excellent';
-    if (score >= 70) return 'Good';
-    if (score >= 50) return 'Fair';
-    return 'Poor';
-  }
+  // Helper methods removed - now using pdfHelpers utilities
+  // - addSectionHeader → pdfHelpers.addSectionHeader()
+  // - checkPageBreak → pdfHelpers.checkPageBreakNeeded()
+  // - getScoreColor → pdfHelpers.getScoreColor()
+  // - getGrade → pdfHelpers.getGrade()
 }
 
 // Export singleton

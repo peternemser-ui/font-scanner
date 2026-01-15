@@ -67,7 +67,7 @@
     }
 
     .toggle-switch.active {
-      background: #00ff88;
+      background: var(--accent-primary);
     }
 
     .toggle-switch-slider {
@@ -103,13 +103,13 @@
 
     .pricing-card:hover {
       transform: translateY(-5px);
-      border-color: rgba(0, 255, 136, 0.3);
-      box-shadow: 0 10px 40px rgba(0, 255, 136, 0.1);
+      border-color: rgba(var(--accent-primary-rgb), 0.3);
+      box-shadow: 0 10px 40px rgba(var(--accent-primary-rgb), 0.1);
     }
 
     .pricing-card.featured {
-      border: 2px solid #00ff88;
-      background: linear-gradient(135deg, rgba(0, 255, 136, 0.05), rgba(0, 204, 102, 0.02));
+      border: 2px solid var(--accent-primary);
+      background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.08), rgba(var(--accent-primary-rgb), 0.02));
     }
 
     .pricing-badge {
@@ -135,7 +135,7 @@
     .pricing-card .price {
       font-size: 3rem;
       font-weight: 700;
-      color: #00ff88;
+      color: var(--accent-primary);
       margin: 1rem 0;
     }
 
@@ -181,7 +181,7 @@
 
     .pricing-card ul li::before {
       content: '✓';
-      color: #00ff88;
+      color: var(--accent-primary);
       font-weight: bold;
       font-size: 1.25rem;
     }
@@ -198,8 +198,8 @@
     .pricing-btn {
       width: 100%;
       padding: 1rem;
-      background: linear-gradient(135deg, #00ff88, #00cc66);
-      color: #000;
+      background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
+      color: var(--accent-primary-contrast);
       border: none;
       border-radius: 8px;
       font-size: 1rem;
@@ -210,7 +210,7 @@
 
     .pricing-btn:hover {
       transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(0, 255, 136, 0.3);
+      box-shadow: 0 6px 20px rgba(var(--accent-primary-rgb), 0.3);
     }
 
     .pricing-btn:disabled {
@@ -278,7 +278,7 @@
     .faq-item h3 {
       font-size: 1.125rem;
       margin: 0 0 0.75rem 0;
-      color: #00ff88;
+      color: var(--accent-primary);
     }
 
     .faq-item p {

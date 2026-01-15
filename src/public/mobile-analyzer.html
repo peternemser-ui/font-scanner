@@ -70,6 +70,10 @@
     <!-- Shared Report Components -->
     <link rel="stylesheet" href="/css/components/reportShell.css" />
     <link rel="stylesheet" href="/css/components/reportAccordion.css" />
+    <link rel="stylesheet" href="/css/components/modal.css" />
+    <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
+    <link rel="stylesheet" href="/css/components/pro-report-block.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -102,7 +106,7 @@
 
       .device-card:hover {
         background: rgba(255, 255, 255, 0.04);
-        border-color: rgba(0, 255, 136, 0.3);
+        border-color: rgba(var(--accent-primary-rgb), 0.3);
       }
 
       /* Screenshot styling */
@@ -145,6 +149,19 @@
         max-height: 90%;
         border-radius: 8px;
         box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5);
+      }
+
+      .screenshot-modal__close {
+        position: fixed;
+        top: 1rem;
+        right: 1rem;
+        background: none;
+        border: none;
+        color: #fff;
+        font-size: 2rem;
+        line-height: 1;
+        cursor: pointer;
+        padding: 0.25rem 0.5rem;
       }
 
       /* Accordion Styles */
@@ -206,7 +223,7 @@
         border-radius: 20px;
       }
 
-      .accordion-score.excellent { background: rgba(0, 255, 136, 0.2); color: #00ff88; }
+      .accordion-score.excellent { background: rgba(var(--accent-primary-rgb), 0.2); color: var(--accent-primary); }
       .accordion-score.good { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
       .accordion-score.warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
       .accordion-score.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
@@ -256,7 +273,7 @@
         line-height: 1.4;
       }
 
-      .checklist-pass { color: #00ff88; font-weight: 500; }
+      .checklist-pass { color: var(--accent-primary); font-weight: 500; }
       .checklist-fail { color: #ef4444; font-weight: 500; }
 
       .issue-item {
@@ -300,7 +317,7 @@
       .device-name {
         font-weight: 600;
         margin-bottom: 0.3rem;
-        color: #00ff41;
+        color: var(--accent-primary);
         font-size: 0.8rem;
       }
 
@@ -332,7 +349,7 @@
       }
 
       .metric-value {
-        color: #00ff41;
+        color: var(--accent-primary);
         font-weight: 500;
         font-size: 0.9rem !important;
         text-align: left;
@@ -553,7 +570,8 @@
     </main>
 
     <!-- Screenshot Modal for fullscreen viewing -->
-    <div id="screenshotModal" class="screenshot-modal" role="dialog" aria-label="Full size screenshot">
+    <div id="screenshotModal" class="screenshot-modal" role="dialog" aria-modal="true" aria-label="Full size screenshot" aria-hidden="true" tabindex="-1">
+      <button type="button" class="screenshot-modal__close" id="screenshotModalClose" aria-label="Close">&times;</button>
       <img id="modalImage" src="" alt="Full size screenshot" />
     </div>
 
@@ -579,53 +597,14 @@
     <!-- Shared Report Components -->
     <script src="/js/components/reportShell.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
+    <script src="/js/report-ui.js"></script>
+    <script src="/js/components/ReportContainer.js"></script>
+    <script src="/js/components/Modal.js"></script>
+    <script src="/js/components/ScreenshotLightbox.js"></script>
+    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/PricingModal.js"></script>
 
     <script src="mobile-analyzer-script.js"></script>
     
-    <!-- Accordion handler -->
-    <script>
-      // Global event delegation for accordions
-      document.addEventListener('click', function(e) {
-        const header = e.target.closest('.accordion-header');
-        if (header) {
-          e.stopPropagation();
-          e.preventDefault();
-          const item = header.closest('.accordion-item');
-          if (item) {
-            item.classList.toggle('open');
-          }
-        }
-      });
-    </script>
-
-    <!-- Screenshot modal handler -->
-    <script>
-      (function() {
-        const modal = document.getElementById('screenshotModal');
-        const modalImg = document.getElementById('modalImage');
-
-        // Click on screenshot to open modal
-        document.addEventListener('click', function(e) {
-          if (e.target.matches('.device-screenshot img')) {
-            modal.classList.add('active');
-            modalImg.src = e.target.src;
-          }
-        });
-
-        // Click modal to close
-        modal.addEventListener('click', function() {
-          modal.classList.remove('active');
-          modalImg.src = '';
-        });
-
-        // Escape key to close
-        document.addEventListener('keydown', function(e) {
-          if (e.key === 'Escape' && modal.classList.contains('active')) {
-            modal.classList.remove('active');
-            modalImg.src = '';
-          }
-        });
-      })();
-    </script>
   </body>
 </html>

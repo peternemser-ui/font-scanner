@@ -7,19 +7,101 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Deterministic analyzer key (stable forever). Updated per-mode at scan time.
+  window.SM_ANALYZER_KEY = 'speed-ux-quick';
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+
   const urlInput = document.getElementById('urlInput');
   const analyzeButton = document.getElementById('analyzeButton');
   const buttonText = document.getElementById('buttonText');
   const results = document.getElementById('results');
-  const loadingContainer = document.getElementById('loadingContainer');
   const resultsContent = document.getElementById('resultsContent');
   const errorMessage = document.getElementById('errorMessage');
   const modeTabs = Array.from(document.querySelectorAll('.tabs__item'));
   const modeIndicator = document.getElementById('selectedMode');
   const modeDescription = document.getElementById('modeDescription');
 
+  async function ensureCreditsManagerLoaded() {
+    if (window.CreditsManager) return;
+    await new Promise((resolve) => {
+      const script = document.createElement('script');
+      script.src = '/assets/js/ui.js';
+      script.async = true;
+      script.onload = () => resolve();
+      script.onerror = () => resolve();
+      document.head.appendChild(script);
+    });
+  }
+
+  async function handleBillingReturnIfPresent() {
+    // Prefer the shared handler (ReportUI is included on this page)
+    if (window.ReportUI && typeof window.ReportUI.handleBillingReturnIfPresent === 'function') {
+      try {
+        await window.ReportUI.handleBillingReturnIfPresent();
+      } catch (e) {
+        // ignore
+      }
+      return;
+    }
+
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id') || params.get('sessionId');
+    if (!sessionId) return;
+
+    try {
+      await ensureCreditsManagerLoaded();
+      if (!window.CreditsManager) return;
+
+      if (typeof window.CreditsManager.hasPurchaseReceipt === 'function' && window.CreditsManager.hasPurchaseReceipt(sessionId)) {
+        params.delete('session_id');
+        params.delete('sessionId');
+        params.delete('canceled');
+        const cleaned = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+        window.history.replaceState({}, '', cleaned);
+        return;
+      }
+
+      const verifyResp = await fetch(`/api/billing/verify-session?session_id=${encodeURIComponent(sessionId)}`);
+      const verification = await verifyResp.json();
+
+      if (verification && verification.paid === true && verification.purchaseType) {
+        const reportIdFromQuery = params.get('reportId') || null;
+        const reportId = verification.reportId || reportIdFromQuery;
+
+        if (verification.purchaseType === 'single_report' && reportId) {
+          window.CreditsManager.unlockReport(reportId, 'single');
+        } else if (verification.purchaseType === 'credit_pack') {
+          const creditsToAdd = parseInt(verification.creditsAdded || 0, 10) || 0;
+          if (creditsToAdd > 0) window.CreditsManager.addCredits(creditsToAdd);
+        }
+
+        if (typeof window.CreditsManager.addPurchaseReceipt === 'function') {
+          window.CreditsManager.addPurchaseReceipt(sessionId);
+        }
+
+        params.delete('session_id');
+        params.delete('sessionId');
+        params.delete('canceled');
+        const cleaned = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+        window.history.replaceState({}, '', cleaned);
+
+        // Let existing hub logic re-render from localStorage state
+        window.location.reload();
+      }
+    } catch (e) {
+
+    }
+  }
+
   let currentMode = 'quick';
   let loader = null;
+
+  handleBillingReturnIfPresent();
+
+  // Attach shared click handlers for PaidUnlockCard (if loaded on this page)
+  if (window.SmEntitlements && typeof window.SmEntitlements.init === 'function') {
+    window.SmEntitlements.init();
+  }
 
   // Expose mode switching globally for inline onclick handlers
   function setActiveTab(mode) {
@@ -36,10 +118,14 @@ document.addEventListener('DOMContentLoaded', () => {
     currentMode = mode;
     setActiveTab(mode);
     updateModeIndicator();
+
+    // Keep analyzer key aligned with the selected mode
+    const key = mode === 'quick' ? 'speed-ux-quick' : 'speed-ux-pro';
+    window.SM_ANALYZER_KEY = key;
+    document.body.setAttribute('data-sm-analyzer-key', key);
   };
 
   // Debug: Check if tabs are found
-  console.log('Mode tabs found:', modeTabs.length);
 
   // Tab switching is handled by inline script in HTML
   // This external script just reads the active tab at analysis time
@@ -169,9 +255,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeTab = document.querySelector('.tabs__item.tabs__item--active');
     if (activeTab && activeTab.dataset.mode) {
       currentMode = activeTab.dataset.mode;
-      console.log('Mode from active tab:', currentMode);
+
     }
-    console.log('Running analysis with mode:', currentMode);
 
     // Show loading with AnalyzerLoader
     results.classList.remove('hidden');
@@ -193,24 +278,24 @@ document.addEventListener('DOMContentLoaded', () => {
     loaderMessageEl.style.cssText = `
       margin: 0 0 1.5rem 0;
       padding: clamp(0.75rem, 2vw, 1rem);
-      background: rgba(0, 255, 65, 0.05);
-      border: 1px solid rgba(0, 255, 65, 0.3);
+      background: rgba(var(--accent-primary-rgb), 0.05);
+      border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
       border-radius: 6px;
       text-align: center;
       overflow: visible;
     `;
     loaderMessageEl.innerHTML = `
       <div style="overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch;">
-        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
-      <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: #00ff41; font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
+      <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
         ${currentMode === 'full' ? 'Full Lighthouse analysis in progress...' : 'Performance analysis in progress...'}
       </p>
-      <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(0, 255, 65, 0.7); padding: 0 0.5rem;">
+      <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(var(--accent-primary-rgb), 0.7); padding: 0 0.5rem;">
         ${currentMode === 'full' ? 'This may take 60-90 seconds' : 'This may take 15-30 seconds'}
       </p>
     `;
@@ -221,12 +306,12 @@ document.addEventListener('DOMContentLoaded', () => {
       style.id = 'ascii-art-style';
       style.textContent = `
         @keyframes color-cycle {
-          0% { color: #00ff41; }
+          0% { color: var(--accent-primary); }
           20% { color: #00ffff; }
           40% { color: #0099ff; }
           60% { color: #9933ff; }
           80% { color: #ff33cc; }
-          100% { color: #00ff41; }
+          100% { color: var(--accent-primary); }
         }
         .ascii-art-responsive {
           font-size: clamp(0.35rem, 1.2vw, 0.65rem);
@@ -246,17 +331,37 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       let data;
 
+      // Deterministic scan timestamp for report identity
+      const scanStartedAt = new Date().toISOString();
+      window.SM_SCAN_STARTED_AT = scanStartedAt;
+      document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
+      // Deterministic analyzer key for this scan
+      const analyzerKey = currentMode === 'quick' ? 'speed-ux-quick' : 'speed-ux-pro';
+      window.SM_ANALYZER_KEY = analyzerKey;
+      document.body.setAttribute('data-sm-analyzer-key', analyzerKey);
+
+      // Deterministic reportId for paywall / exports
+      const reportId =
+        document.body.getAttribute('data-report-id') ||
+        (window.ReportUI && typeof window.ReportUI.makeReportId === 'function'
+          ? window.ReportUI.makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: scanStartedAt })
+          : window.ReportUI && typeof window.ReportUI.computeReportId === 'function'
+          ? window.ReportUI.computeReportId(url, scanStartedAt, analyzerKey)
+          : '');
+      if (reportId) document.body.setAttribute('data-report-id', reportId);
+
       switch (currentMode) {
         case 'quick':
-          data = await runQuickScan(url);
+          data = await runQuickScan(url, scanStartedAt);
           displayQuickResults(data);
           break;
         case 'full':
-          data = await runFullAnalysis(url);
+          data = await runFullAnalysis(url, scanStartedAt);
           displayFullResults(data);
           break;
         case 'cwv':
-          data = await runCWVAnalysis(url);
+          data = await runCWVAnalysis(url, scanStartedAt);
           displayCWVResults(data);
           break;
       }
@@ -273,13 +378,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Quick Scan Mode
-  async function runQuickScan(url) {
+  async function runQuickScan(url, scanStartedAt) {
     if (loader) loader.nextStep(0);
 
     const response = await fetch('/api/performance-snapshot', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
+      body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY })
     });
 
     if (loader) loader.nextStep(1);
@@ -296,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Full Lighthouse Analysis
-  async function runFullAnalysis(url) {
+  async function runFullAnalysis(url, scanStartedAt) {
     if (loader) loader.nextStep(0);
 
     // Create abort controller with 5 minute timeout for Lighthouse
@@ -307,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/performance', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY }),
         signal: controller.signal
       });
 
@@ -334,13 +439,13 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Core Web Vitals Analysis
-  async function runCWVAnalysis(url) {
+  async function runCWVAnalysis(url, scanStartedAt) {
     if (loader) loader.nextStep(0);
 
     const response = await fetch('/api/core-web-vitals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
+      body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY })
     });
 
     if (loader) loader.nextStep(3);
@@ -512,7 +617,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const url = urlInput.value;
 
     // Log for debugging
-    console.log('Quick Scan Data:', { summary, resources, recommendations, performanceScore: data.performanceScore });
 
     // Calculate metric ratings
     const requestsRating = summary.totalRequests <= 50 ? 'good' : summary.totalRequests <= 100 ? 'average' : 'poor';
@@ -527,8 +631,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return '#ef4444';
     };
 
+    const quickScore = normalizeScore(data.performanceScore) ?? computeQuickScoreFromSummary(summary, issues);
     const summaryDonuts = ReportShell.renderSummaryDonuts([
-      { label: 'Quick Score', score: Math.round(data.performanceScore || 0) }
+      { label: 'Quick Score', score: quickScore }
     ]);
 
     const metrics = [
@@ -573,8 +678,12 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
+    const scoreNote = quickScore === null
+      ? `<div class="report-shell__card">${createInfoBox('info', 'Score unavailable', 'We couldn\'t compute a score from this scan, but the metrics and issues below are still actionable.', 'ℹ️')}</div>`
+      : '';
+
     const accordions = [
-      ReportAccordion.createSection({ id: 'quick-metrics', title: 'Key Performance Metrics', scoreTextRight: formatScoreText(data.performanceScore || 0), contentHTML: metricsSection }),
+      ReportAccordion.createSection({ id: 'quick-metrics', title: 'Key Performance Metrics', scoreTextRight: formatScoreText(quickScore), contentHTML: metricsSection }),
       ReportAccordion.createSection({ id: 'quick-issues', title: 'Likely Performance Issues', scoreTextRight: null, contentHTML: issuesContent }),
       ReportAccordion.createSection({ id: 'quick-resources', title: 'Resource Breakdown', scoreTextRight: null, contentHTML: resourcesContent })
     ].join('');
@@ -582,6 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const html = `
       ${ReportShell.renderReportHeader({ title: 'Speed & UX Report: Quick Scan', url, timestamp: generatedAt, badgeText: 'Quick Scan', mode: 'quick' })}
       ${summaryDonuts}
+      ${scoreNote}
       ${accordions}
     `;
 
@@ -604,6 +714,11 @@ document.addEventListener('DOMContentLoaded', () => {
     showPdfExportButton();
     animateScoreRings();
     scrollToResults();
+
+    if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+      const reportId = document.body.getAttribute('data-report-id') || '';
+      if (reportId) window.CreditsManager.renderPaywallState(reportId);
+    }
   }
 
   // Display Full Lighthouse Results
@@ -618,10 +733,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Network data is at results level, not per-device
     const network = results.network || {};
     const url = urlInput.value;
-    const desktopPerf = Number(desktop?.lighthouse?.performance ?? desktop.performanceScore ?? 0) || 0;
-    const mobilePerf = Number(mobile?.lighthouse?.performance ?? mobile.performanceScore ?? 0) || 0;
-    const perfValues = [desktopPerf, mobilePerf].filter(v => v > 0);
-    const overallPerf = perfValues.length ? Math.round(perfValues.reduce((a, b) => a + b, 0) / perfValues.length) : 0;
+    const desktopPerf = normalizeScore(desktop?.lighthouse?.performance ?? desktop.performanceScore);
+    const mobilePerf = normalizeScore(mobile?.lighthouse?.performance ?? mobile.performanceScore);
+    const perfValues = [desktopPerf, mobilePerf].filter(v => typeof v === 'number' && v > 0);
+    const overallPerf = perfValues.length ? Math.round(perfValues.reduce((a, b) => a + b, 0) / perfValues.length) : null;
     const generatedAt = new Date().toLocaleString();
     const summaryDonuts = ReportShell.renderSummaryDonuts([
       { label: 'Performance', score: averageScore(desktopPerf, mobilePerf) },
@@ -638,32 +753,53 @@ document.addEventListener('DOMContentLoaded', () => {
     const resourcesContent = renderResourceBreakdownSection(results);
     const additionalChecksContent = renderAdditionalChecksSection(results);
 
+    const opportunitiesCount =
+      (desktop.opportunities?.length || 0) +
+      (mobile.opportunities?.length || 0) +
+      (Array.isArray(results.opportunities) ? results.opportunities.length : 0) +
+      (Array.isArray(results.recommendations) ? results.recommendations.length : 0);
+
+    const diagnosticsCount =
+      (desktop.diagnostics?.length || 0) +
+      (mobile.diagnostics?.length || 0) +
+      (Array.isArray(results.diagnostics) ? results.diagnostics.length : 0);
+
+    const categoryIssuesCount =
+      (desktop.accessibilityDetails?.issues?.length || 0) +
+      (desktop.bestPracticesDetails?.issues?.length || 0) +
+      (desktop.seoDetails?.issues?.length || 0) +
+      (mobile.accessibilityDetails?.issues?.length || 0) +
+      (mobile.bestPracticesDetails?.issues?.length || 0) +
+      (mobile.seoDetails?.issues?.length || 0);
+
+    const issuesCount = diagnosticsCount + categoryIssuesCount;
+
     const proLocked = !userHasPro();
+    const topLevelRecs = Array.isArray(results.recommendations) ? results.recommendations : [];
+    const desktopForFixes = topLevelRecs.length
+      ? { ...desktop, recommendations: [...(desktop.recommendations || []), ...topLevelRecs] }
+      : desktop;
     const proContent = `
-      ${renderFreeFixBullets(desktop, mobile)}
-      ${renderFixesToMake(desktop, mobile)}
-      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
-        <button class="take-action__btn" onclick="exportPerformancePDF()">Download PDF (Pro)</button>
-        <button class="take-action__btn" onclick="downloadPerformanceCSV()">Download CSV (Pro)</button>
-        <button class="take-action__btn" onclick="copyPerformanceShareLink()">Download Fix Pack (Pro)</button>
-      </div>
+      ${renderFreeFixBullets(desktopForFixes, mobile)}
+      ${renderFixesToMake(desktopForFixes, mobile)}
+      ${proLocked ? renderLockedProPreview('Paid report available', ['Client-ready exports', 'Share link', 'Fix code + recommendations']) : ''}
     `;
 
     const accordions = [
       ReportAccordion.createSection({ id: 'lh-category-scores', title: 'Category Scores', scoreTextRight: formatScoreText(overallPerf), contentHTML: categoryScoresContent }),
       ReportAccordion.createSection({ id: 'lh-performance-metrics', title: 'Performance Metrics', scoreTextRight: formatScoreText(overallPerf), contentHTML: performanceMetricsContent }),
       ReportAccordion.createSection({ id: 'lh-cwv', title: 'Core Web Vitals', scoreTextRight: formatScoreText(overallPerf), contentHTML: cwvContent }),
-      ReportAccordion.createSection({ id: 'lh-opportunities', title: 'Opportunities', scoreTextRight: null, contentHTML: opportunitiesContent }),
-      ReportAccordion.createSection({ id: 'lh-diagnostics', title: 'Diagnostics', scoreTextRight: null, contentHTML: diagnosticsContent }),
+      ReportAccordion.createSection({ id: 'lh-opportunities', title: 'Opportunities', scoreTextRight: opportunitiesCount ? `${opportunitiesCount}` : '—', contentHTML: opportunitiesContent }),
+      ReportAccordion.createSection({ id: 'lh-diagnostics', title: 'Diagnostics', scoreTextRight: issuesCount ? `${issuesCount}` : '—', contentHTML: diagnosticsContent }),
       ReportAccordion.createSection({ id: 'lh-resources', title: 'Resource Breakdown', scoreTextRight: null, contentHTML: resourcesContent }),
       ReportAccordion.createSection({ id: 'lh-additional', title: 'Additional Checks', scoreTextRight: null, contentHTML: additionalChecksContent }),
-      ReportAccordion.createSection({ id: 'lh-fixes', title: 'Fix Code + Recommendations', scoreTextRight: 'PRO', isPro: true, locked: proLocked, contentHTML: proContent })
+      ReportAccordion.createSection({ id: 'lh-fixes', title: 'Fix Code + Recommendations', scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
     ].join('');
 
     const summaryStats = calculatePerformanceSummary({
       mode: 'full',
-      issues: (desktop.recommendations?.length || 0) + (mobile.recommendations?.length || 0),
-      recommendations: (desktop.recommendations?.length || 0) + (mobile.recommendations?.length || 0),
+      issues: issuesCount,
+      recommendations: opportunitiesCount,
       checks: countLighthouseChecks(desktop, mobile)
     });
 
@@ -681,6 +817,11 @@ document.addEventListener('DOMContentLoaded', () => {
     showPdfExportButton();
     animateScoreRings();
     scrollToResults();
+
+    if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+      const reportId = document.body.getAttribute('data-report-id') || '';
+      if (reportId) window.CreditsManager.renderPaywallState(reportId);
+    }
   }
 
   // NOTE: renderFixesToMake() is now defined in performance-fixes-renderer.js
@@ -689,7 +830,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderFreeFixBullets(desktop, mobile) {
     const recs = [...(desktop.recommendations || []), ...(mobile.recommendations || [])];
-    if (!recs.length) {
+    const opps = [...(desktop.opportunities || []), ...(mobile.opportunities || [])];
+    const fallback = recs.length ? recs : opps;
+    if (!fallback.length) {
       return `
         <div style="margin-bottom: 1rem; color: var(--text-muted, #9ca3af); font-size: 0.95rem;">
           No specific fixes detected. Keep monitoring for changes after code deployments.
@@ -697,12 +840,12 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    const top = recs.slice(0, 3);
+    const top = fallback.slice(0, 3);
     return `
       <div style="margin-bottom: 1rem;">
         <div style="color: var(--text-primary, #fff); font-weight: 700; margin-bottom: 0.5rem;">Quick fixes you can start now:</div>
         <ul style="margin: 0; padding-left: 1.1rem; color: var(--text-secondary, #e5e7eb); line-height: 1.6;">
-          ${top.map(item => `<li>${item.title || item.recommendation || item}</li>`).join('')}
+          ${top.map(item => `<li>${item.title || item.recommendation || item.name || item}</li>`).join('')}
         </ul>
       </div>
     `;
@@ -712,6 +855,62 @@ document.addEventListener('DOMContentLoaded', () => {
     const valid = [a, b].filter(v => typeof v === 'number' && !Number.isNaN(v));
     if (!valid.length) return null;
     return Math.round(valid.reduce((x, y) => x + y, 0) / valid.length);
+  }
+
+  function averageScores(values = []) {
+    const valid = (values || []).filter(v => typeof v === 'number' && !Number.isNaN(v));
+    if (!valid.length) return null;
+    return Math.round(valid.reduce((a, b) => a + b, 0) / valid.length);
+  }
+
+  function normalizeScore(raw) {
+    if (raw === null || raw === undefined) return null;
+    const n = typeof raw === 'number' ? raw : Number(raw);
+    if (!Number.isFinite(n)) return null;
+    return Math.max(0, Math.min(100, Math.round(n)));
+  }
+
+  function computeQuickScoreFromSummary(summary = {}, issues = []) {
+    const totalRequests = Number(summary.totalRequests);
+    const pageWeight = Number(summary.estimatedPageWeightKB);
+    const renderBlockingCount = Number(summary.renderBlockingCount);
+    const serverResponseTime = Number(summary.serverResponseTime);
+
+    const hasAny =
+      Number.isFinite(totalRequests) ||
+      Number.isFinite(pageWeight) ||
+      Number.isFinite(renderBlockingCount) ||
+      Number.isFinite(serverResponseTime);
+    if (!hasAny) return null;
+
+    let score = 100;
+
+    if (Number.isFinite(serverResponseTime) && serverResponseTime > 1000) {
+      score -= Math.min(15, (serverResponseTime - 1000) / 500);
+    }
+
+    if (Number.isFinite(renderBlockingCount)) {
+      const n = Math.max(0, renderBlockingCount);
+      if (n > 3) score -= Math.min(20, Math.log2(n) * 3);
+    }
+
+    if (Number.isFinite(totalRequests) && totalRequests > 100) {
+      score -= Math.min(15, (totalRequests - 100) / 30);
+    }
+
+    if (Number.isFinite(pageWeight) && pageWeight > 2000) {
+      score -= Math.min(15, (pageWeight - 2000) / 500);
+    }
+
+    const highIssues = Array.isArray(issues) ? issues.filter(i => i && i.severity === 'high').length : 0;
+    score -= Math.min(15, highIssues * 5);
+
+    if (Number.isFinite(totalRequests) && totalRequests > 0) {
+      score = Math.max(10, score);
+    }
+
+    if (!Number.isFinite(score)) return null;
+    return Math.max(0, Math.min(100, Math.round(score)));
   }
 
   function formatScoreText(score) {
@@ -1278,10 +1477,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Scores are in data.lighthouse, metrics in data.coreWebVitals
     const lighthouse = data.lighthouse || {};
     const scores = {
-      performance: lighthouse.performance || data.performanceScore || 0,
-      accessibility: lighthouse.accessibility || 0,
-      bestPractices: lighthouse.bestPractices || 0,
-      seo: lighthouse.seo || 0
+      performance: normalizeScore(lighthouse.performance ?? data.performanceScore),
+      accessibility: normalizeScore(lighthouse.accessibility),
+      bestPractices: normalizeScore(lighthouse.bestPractices),
+      seo: normalizeScore(lighthouse.seo)
     };
     const cwv = data.coreWebVitals || {};
     const fcpStr = cwv.fcp || '0s';
@@ -1307,10 +1506,10 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="lh-device-card">
         <div class="lh-device-header">${icon} ${label}</div>
         <div class="lh-metric-grid">
-          ${createMetricCard(scores.performance, 'Performance', scores.performance >= 90 ? 'good' : scores.performance >= 50 ? 'average' : 'poor', '⚡')}
-          ${createMetricCard(scores.accessibility, 'Accessibility', scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor', '♿')}
-          ${createMetricCard(scores.bestPractices, 'Best Practices', scores.bestPractices >= 90 ? 'good' : scores.bestPractices >= 50 ? 'average' : 'poor', '✓')}
-          ${createMetricCard(scores.seo, 'SEO', scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor', '🔍')}
+          ${createMetricCard(scores.performance ?? '—', 'Performance', typeof scores.performance === 'number' ? (scores.performance >= 90 ? 'good' : scores.performance >= 50 ? 'average' : 'poor') : 'unknown', '⚡')}
+          ${createMetricCard(scores.accessibility ?? '—', 'Accessibility', typeof scores.accessibility === 'number' ? (scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor') : 'unknown', '♿')}
+          ${createMetricCard(scores.bestPractices ?? '—', 'Best Practices', typeof scores.bestPractices === 'number' ? (scores.bestPractices >= 90 ? 'good' : scores.bestPractices >= 50 ? 'average' : 'poor') : 'unknown', '✓')}
+          ${createMetricCard(scores.seo ?? '—', 'SEO', typeof scores.seo === 'number' ? (scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor') : 'unknown', '🔍')}
         </div>
         <div class="lh-metric-grid lh-metric-grid--cwv">
           ${createMetricCard(metrics.lcpDisplay, 'LCP', lcpRating, '🎯')}
@@ -1326,10 +1525,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Scores are in data.lighthouse, metrics in data.coreWebVitals
     const lighthouse = data.lighthouse || {};
     const scores = {
-      performance: lighthouse.performance || data.performanceScore || 0,
-      accessibility: lighthouse.accessibility || 0,
-      bestPractices: lighthouse.bestPractices || 0,
-      seo: lighthouse.seo || 0
+      performance: normalizeScore(lighthouse.performance ?? data.performanceScore),
+      accessibility: normalizeScore(lighthouse.accessibility),
+      bestPractices: normalizeScore(lighthouse.bestPractices),
+      seo: normalizeScore(lighthouse.seo)
     };
     const cwv = data.coreWebVitals || {};
     // API returns formatted strings (lcp: "2.50s") and numeric versions (lcpMs: 2500)
@@ -1393,7 +1592,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobile = normalizeCWVDevice(data.mobile || {});
     const url = urlInput.value;
     const timestamp = new Date().toLocaleString();
-    const overallScore = data.score || data.overallScore || null;
+    const lcpScore = scoreFromCwvValue(desktop.coreWebVitals?.lcpMs || desktop.coreWebVitals?.lcp, mobile.coreWebVitals?.lcpMs || mobile.coreWebVitals?.lcp, 'lcp');
+    const clsScore = scoreFromCwvValue(desktop.coreWebVitals?.cls || desktop.coreWebVitals?.clsNum, mobile.coreWebVitals?.cls || mobile.coreWebVitals?.clsNum, 'cls');
+    const inpScore = scoreFromCwvValue(desktop.coreWebVitals?.fidMs || desktop.coreWebVitals?.inp, mobile.coreWebVitals?.fidMs || mobile.coreWebVitals?.inp, 'inp');
+
+    const derivedOverall = averageScores([lcpScore, clsScore, inpScore]);
+    const apiOverall = normalizeScore(data.score ?? data.overallScore ?? data.performanceScore);
+    const overallScore = apiOverall !== null ? apiOverall : derivedOverall;
 
     const lcpStatus = getCwvStatus(Math.max(desktop.coreWebVitals.lcpMs ?? -Infinity, mobile.coreWebVitals.lcpMs ?? -Infinity), 'lcp');
     const clsStatus = getCwvStatus(Math.max(desktop.coreWebVitals.clsNum ?? -Infinity, mobile.coreWebVitals.clsNum ?? -Infinity), 'cls');
@@ -1405,9 +1610,9 @@ document.addEventListener('DOMContentLoaded', () => {
     ]);
 
     const summaryDonuts = ReportShell.renderSummaryDonuts([
-      { label: 'LCP', score: scoreFromCwvValue(desktop.coreWebVitals?.lcpMs || desktop.coreWebVitals?.lcp, mobile.coreWebVitals?.lcpMs || mobile.coreWebVitals?.lcp, 'lcp') },
-      { label: 'CLS', score: scoreFromCwvValue(desktop.coreWebVitals?.cls || desktop.coreWebVitals?.clsNum, mobile.coreWebVitals?.cls || mobile.coreWebVitals?.clsNum, 'cls') },
-      { label: 'INP/TBT', score: scoreFromCwvValue(desktop.coreWebVitals?.fidMs || desktop.coreWebVitals?.inp, mobile.coreWebVitals?.fidMs || mobile.coreWebVitals?.inp, 'inp') },
+      { label: 'LCP', score: lcpScore },
+      { label: 'CLS', score: clsScore },
+      { label: 'INP/TBT', score: inpScore },
       { label: 'Overall', score: overallScore }
     ]);
 
@@ -1415,11 +1620,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const proContent = `
       ${renderFreeFixBullets(desktop, mobile)}
       ${renderFixesToMake(desktop, mobile)}
-      <div style="display:flex; gap:0.5rem; flex-wrap:wrap; margin-top:1rem;">
-        <button class="take-action__btn" onclick="exportPerformancePDF()">Download PDF (Pro)</button>
-        <button class="take-action__btn" onclick="downloadPerformanceCSV()">Download CSV (Pro)</button>
-        <button class="take-action__btn" onclick="copyPerformanceShareLink()">Download Fix Pack (Pro)</button>
-      </div>
+      ${proLocked ? renderLockedProPreview('Paid report available', ['Client-ready exports', 'Share link', 'Fix code + recommendations']) : ''}
     `;
 
     const accordions = [
@@ -1443,7 +1644,7 @@ document.addEventListener('DOMContentLoaded', () => {
         contentHTML: renderCWVDetailSection('INP', desktop, mobile)
       }),
       ReportAccordion.createSection({ id: 'cwv-notes', title: 'Diagnostics & Notes', scoreTextRight: '—', contentHTML: renderCWVNotesSection(data) }),
-      ReportAccordion.createSection({ id: 'cwv-fixes', title: 'Fix Code + Recommendations', scoreTextRight: 'PRO', isPro: true, locked: proLocked, contentHTML: proContent })
+      ReportAccordion.createSection({ id: 'cwv-fixes', title: 'Fix Code + Recommendations', scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
     ].join('');
 
     const summaryStats = calculatePerformanceSummary({
@@ -1802,10 +2003,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // SVG Score Ring Renderer - Creates animated circular progress indicator
   function renderScoreRing(score, displayValue, size = 120) {
-    const color = getScoreColor(score);
+    const isValid = typeof score === 'number' && Number.isFinite(score);
+    const safeScore = isValid ? score : 0;
+    const color = isValid ? getScoreColor(safeScore) : '#9ca3af';
     const radius = (size - 12) / 2;
     const circumference = 2 * Math.PI * radius;
-    const strokeDashoffset = circumference - (score / 100) * circumference;
+    const strokeDashoffset = circumference - (safeScore / 100) * circumference;
     const glowColor = color + '60';
     
     return `
@@ -1835,7 +2038,7 @@ document.addEventListener('DOMContentLoaded', () => {
           />
         </svg>
         <div class="score-ring-value" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center;">
-          <div style="font-size: ${size * 0.3}px; font-weight: bold; color: ${color}; text-shadow: 0 0 10px ${glowColor};">${displayValue || score}</div>
+          <div style="font-size: ${size * 0.3}px; font-weight: bold; color: ${color}; text-shadow: 0 0 10px ${glowColor};">${isValid ? (displayValue || safeScore) : '—'}</div>
         </div>
       </div>
     `;
@@ -1849,24 +2052,6 @@ document.addEventListener('DOMContentLoaded', () => {
         circle.style.strokeDashoffset = targetOffset;
       });
     }, 100);
-  }
-
-  function getScoreClass(score) {
-    if (score >= 80) return 'score-good';
-    if (score >= 50) return 'score-average';
-    return 'score-poor';
-  }
-
-  function getScoreColor(score) {
-    if (score >= 80) return '#22c55e';  // Vibrant green
-    if (score >= 50) return '#f59e0b';  // Orange
-    return '#ef4444';                    // Red
-  }
-
-  function getScoreBackground(score) {
-    if (score >= 80) return 'rgba(34, 197, 94, 0.25)';
-    if (score >= 50) return 'rgba(245, 158, 11, 0.25)';
-    return 'rgba(239, 68, 68, 0.25)';
   }
 
   function getMetricColor(value, warnThreshold, badThreshold) {
@@ -1978,7 +2163,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const colors = {
       good: '#22c55e',
       average: '#f59e0b',
-      poor: '#ef4444'
+      poor: '#ef4444',
+      unknown: '#9ca3af'
     };
     const color = colors[rating] || '#888';
 
@@ -2259,24 +2445,127 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
-  // Take Action section matching SEO layout - export/share buttons
+  // Pro Report Block - Unified export/share section
   function renderPerformanceTakeActionSection(url, mode) {
+    function escapeAttr(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/"/g, '&quot;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function getOrComputeReportId() {
+      const startedAt = document.body.getAttribute('data-sm-scan-started-at') || window.SM_SCAN_STARTED_AT || '';
+      const analyzerKey = document.body.getAttribute('data-sm-analyzer-key') || window.SM_ANALYZER_KEY || '';
+      const existing = document.body.getAttribute('data-report-id') || '';
+      if (existing) return existing;
+
+      const computed =
+        window.ReportUI && typeof window.ReportUI.makeReportId === 'function'
+          ? window.ReportUI.makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt })
+          : window.ReportUI && typeof window.ReportUI.computeReportId === 'function'
+          ? window.ReportUI.computeReportId(url, startedAt, analyzerKey)
+          : '';
+
+      if (computed) document.body.setAttribute('data-report-id', computed);
+      return computed;
+    }
+
+    function renderPaidUnlockCard(reportId) {
+      const encodedUrl = escapeAttr(encodeURIComponent(url || ''));
+      const tools = [
+        {
+          href: `/performance-hub.html?url=${encodedUrl}&mode=cwv`,
+          icon: '📊',
+          title: 'Core Web Vitals Analyzer',
+          description: 'Google ranking metrics: LCP, FID, CLS (~15–30s)',
+          note: 'Includes optional paid report export inside this tool'
+        },
+        {
+          href: `/performance-hub.html?url=${encodedUrl}&mode=full`,
+          icon: '🔍',
+          title: 'Lighthouse Audit',
+          description: 'Full Lighthouse run with diagnostics (~2–3 min)',
+          note: 'Includes optional paid report export inside this tool'
+        },
+        {
+          href: `/mobile-analyzer.html?url=${encodedUrl}`,
+          icon: '📱',
+          title: 'Mobile UX Analyzer',
+          description: 'Mobile responsiveness and usability testing',
+          note: 'Includes optional paid report export inside this tool'
+        }
+      ];
+
+      return `
+        <div class="section">
+          <div class="pro-report-block pro-report-block--explore-tools" data-report-id="${escapeAttr(reportId)}">
+            <div class="pro-report-block__header">
+              <div class="pro-report-block__icon">🧰</div>
+              <div class="pro-report-block__text">
+                <div class="pro-report-block__title">Explore More Performance Tools</div>
+                <p class="pro-report-block__subtitle">Run additional performance and UX analysis with specialized tools (scans are free; report exports are paid)</p>
+              </div>
+            </div>
+
+            <div class="pro-report-block__actions">
+              ${tools
+                .map(
+                  (tool) => `
+                    <a class="pro-report-block__action pro-report-block__action--link" href="${tool.href}">
+                      <div class="pro-report-block__action-icon">${tool.icon}</div>
+                      <div class="pro-report-block__action-text">
+                        <div class="pro-report-block__action-label">${tool.title}</div>
+                        <div class="pro-report-block__action-description">${tool.description}</div>
+                        <div class="pro-report-block__action-note">${tool.note || ''}</div>
+                      </div>
+                      <div class="pro-report-block__action-chevron" aria-hidden="true">›</div>
+                    </a>
+                  `
+                )
+                .join('')}
+            </div>
+
+            <p class="pro-report-block__helper-text">Scans are free to run. Optional paid exports (PDF/share/data) are available inside each tool.</p>
+          </div>
+        </div>
+      `;
+    }
+
+    // Requested: replace Take Action blocks for Quick Scan + Core Web Vitals.
+    if (mode === 'quick' || mode === 'cwv') {
+      const reportId = getOrComputeReportId();
+      return renderPaidUnlockCard(reportId);
+    }
+
+    // Use new ProReportBlock component if available
+    if (window.ProReportBlock && window.ProReportBlock.render) {
+      return window.ProReportBlock.render({
+        context: 'performance',
+        features: ['pdf', 'csv', 'share'],
+        title: 'Unlock Report',
+        subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+      });
+    }
+
+    // Fallback: Legacy Take Action section
     const modeLabels = {
       full: 'Lighthouse',
       cwv: 'Core Web Vitals',
       quick: 'Speed & UX'
     };
     const reportLabel = modeLabels[mode] || 'Speed & UX';
-    
+
     return `
       <div class="section">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
           <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="color: #00ff41; font-weight: 600;">Take Action</span>
-            <span style="color: #666; font-size: 0.9rem;">Export or share this ${reportLabel} report</span>
+            <span style="color: var(--accent-primary); font-weight: 600;">Unlock Report</span>
+            <span style="color: #666; font-size: 0.9rem;">PDF export, share link, export data, and fix packs for this scan.</span>
           </div>
           <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button onclick="exportPerformancePDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(0, 255, 65, 0.4); background: rgba(0, 255, 65, 0.1); color: #00ff41; cursor: pointer; font-weight: 600;">
+            <button onclick="exportPerformancePDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
               PDF Report
             </button>
@@ -2328,7 +2617,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${lines.slice(0, 2).map(line => `<li>${line}</li>`).join('')}
         </ul>
         <div class="pro-locked__blur"></div>
-        <button class="pro-locked__unlock" onclick="openProPaywall({ domain: '${getCurrentDomain()}', context: 'performance' })">Unlock in Pro Report ($5 USD)</button>
+        <button class="pro-locked__unlock" onclick="openProPaywall({ domain: '${getCurrentDomain()}', context: 'performance' })">Purchase Report ($10 USD)</button>
       </div>
     `;
   }
@@ -2386,8 +2675,8 @@ document.addEventListener('DOMContentLoaded', () => {
         position: relative;
         z-index: 1;
         margin-top: 0.75rem;
-        background: linear-gradient(135deg, #00ff41, #00cc66);
-        color: #000;
+        background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
+        color: var(--accent-primary-contrast);
         border: none;
         padding: 0.6rem 1rem;
         border-radius: 6px;
@@ -2398,15 +2687,15 @@ document.addEventListener('DOMContentLoaded', () => {
         margin: 2rem 0 0 0;
         padding: 1.25rem 1rem;
         border-radius: 10px;
-        border: 1px solid rgba(0,255,65,0.2);
-        background: rgba(0,255,65,0.05);
+        border: 1px solid rgba(var(--accent-primary-rgb), 0.2);
+        background: rgba(var(--accent-primary-rgb), 0.05);
         display: flex;
         align-items: center;
         gap: 1rem;
       }
       .summary-footer__pill {
         font-weight: 700;
-        color: #00ff41;
+        color: var(--accent-primary);
         text-transform: uppercase;
         letter-spacing: 0.05em;
       }
@@ -2618,7 +2907,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Payment is valid for 24 hours
       const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
       if (parseInt(paidTimestamp) > oneDayAgo) {
-        console.log(`Found valid payment for ${reportType}:`, url);
+
         return true;
       }
     }
@@ -2636,7 +2925,6 @@ document.addEventListener('DOMContentLoaded', () => {
       // Clean up URL params
       window.history.replaceState({}, '', window.location.pathname);
 
-      console.log(`Payment verified for ${reportType}:`, url);
       return true;
     }
 
@@ -2723,7 +3011,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
           <!-- Price -->
           <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 3rem; font-weight: bold; color: ${info.color}; margin-bottom: 0.25rem;">$5</div>
+            <div style="font-size: 3rem; font-weight: bold; color: ${info.color}; margin-bottom: 0.25rem;">$10</div>
             <div style="color: #888; font-size: 0.9rem;">One-time payment • No subscription • Instant access</div>
           </div>
 
@@ -2756,7 +3044,7 @@ document.addEventListener('DOMContentLoaded', () => {
               transition: all 0.2s;
               box-shadow: 0 4px 12px ${info.color}40;
             " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px ${info.color}60'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px ${info.color}40'">
-              Get Report for $5
+              Get Report for $10
             </button>
           </div>
 
@@ -2811,28 +3099,47 @@ document.addEventListener('DOMContentLoaded', () => {
     proceedBtn.textContent = 'Creating checkout...';
 
     try {
-      const response = await fetch('/api/payment/create-report-payment', {
+      const startedAt = document.body.getAttribute('data-sm-scan-started-at') || window.SM_SCAN_STARTED_AT || '';
+      const analyzerKey = document.body.getAttribute('data-sm-analyzer-key') || window.SM_ANALYZER_KEY || '';
+      const reportId =
+        document.body.getAttribute('data-report-id') ||
+        (window.ReportUI && typeof window.ReportUI.makeReportId === 'function'
+          ? window.ReportUI.makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt })
+          : window.ReportUI && typeof window.ReportUI.computeReportId === 'function'
+          ? window.ReportUI.computeReportId(url, startedAt, analyzerKey)
+          : '');
+
+      const params = new URLSearchParams(window.location.search);
+      params.delete('session_id');
+      params.delete('sessionId');
+      params.delete('canceled');
+      if (reportId) params.set('reportId', reportId);
+      const returnUrl = `${window.location.origin}${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+
+      const response = await fetch('/api/billing/create-checkout-session', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          reportType,
-          url
+          purchaseType: 'single_report',
+          packId: null,
+          reportId: reportId || null,
+          returnUrl
         })
       });
 
       const data = await response.json();
 
-      if (!response.ok || !data.success) {
-        throw new Error(data.error || 'Failed to create payment session');
+      if (!response.ok || !data.checkoutUrl) {
+        throw new Error((data && data.error) || 'Failed to create payment session');
       }
 
       // Redirect to Stripe Checkout
-      window.location.href = data.url;
+      window.location.href = data.checkoutUrl;
 
     } catch (error) {
       console.error('Payment error:', error);
       proceedBtn.disabled = false;
-      proceedBtn.textContent = 'Get Report for $5';
+      proceedBtn.textContent = 'Get Report for $10';
       alert(`Payment error: ${error.message}`);
     }
   }

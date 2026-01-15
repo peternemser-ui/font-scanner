@@ -8,7 +8,6 @@ class HealthTimeline {
     this.storageKey = 'font_scanner_history';
     this.maxHistoryItems = 30; // Keep last 30 scans
     this.history = this.loadHistory();
-    console.log('C HealthTimeline initialized with', this.history.length, 'historical scans');
   }
 
   /**
@@ -38,7 +37,6 @@ class HealthTimeline {
   saveHistory() {
     try {
       localStorage.setItem(this.storageKey, JSON.stringify(this.history));
-      console.log('✓ Saved history with', this.history.length, 'items');
     } catch (error) {
       console.error('Error saving history:', error);
       
@@ -78,7 +76,6 @@ class HealthTimeline {
     }
 
     this.saveHistory();
-    console.log('✓ Added scan to history:', url);
     return scan;
   }
 
@@ -260,7 +257,6 @@ class HealthTimeline {
   clearHistory() {
     this.history = [];
     this.saveHistory();
-    console.log('🗑️ History cleared');
   }
 
   /**
@@ -279,7 +275,6 @@ class HealthTimeline {
       if (Array.isArray(imported)) {
         this.history = imported;
         this.saveHistory();
-        console.log('✓ Imported', this.history.length, 'scans');
         return true;
       }
     } catch (error) {

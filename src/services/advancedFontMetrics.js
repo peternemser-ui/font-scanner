@@ -1,5 +1,6 @@
 const axios = require('axios');
 const { createLogger } = require('../utils/logger');
+const { formatNumber } = require('../utils/formatHelpers');
 
 const logger = createLogger('AdvancedFontMetrics');
 
@@ -277,7 +278,7 @@ class AdvancedFontMetrics {
       recommendations.push({
         type: 'fontSize',
         severity: 'high',
-        message: `Font size ${fontSize.toFixed(1)}px is too small. Increase to at least 16px for better readability.`,
+        message: `Font size ${formatNumber(fontSize, 1)}px is too small. Increase to at least 16px for better readability.`,
         suggestion: 'font-size: 16px;',
       });
     }
@@ -286,8 +287,8 @@ class AdvancedFontMetrics {
       recommendations.push({
         type: 'lineHeight',
         severity: 'medium',
-        message: `Line height ratio ${lineHeightRatio.toFixed(2)} is too tight. Increase for better readability.`,
-        suggestion: `line-height: ${(fontSize * 1.5).toFixed(1)}px;`,
+        message: `Line height ratio ${formatNumber(lineHeightRatio, 2)} is too tight. Increase for better readability.`,
+        suggestion: `line-height: ${formatNumber(fontSize * 1.5, 1)}px;`,
       });
     }
 

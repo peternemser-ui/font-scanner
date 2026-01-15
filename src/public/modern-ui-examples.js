@@ -403,6 +403,4 @@ window.enhanceFontRecommendations = function(fontData) {
 window.enhanceImageRecommendations = function(images) {
   const rec = createImageOptimizationRec(images);
   return rec;
-};
-
-console.log('✅ Modern UI Examples loaded. Use window.enhance* functions for quick integration.');
+};

@@ -24,6 +24,10 @@ const config = {
     // Download endpoint rate limit
     downloadWindowMs: parseInt(process.env.DOWNLOAD_RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
     downloadMaxRequests: parseInt(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS || '1000', 10), // 1000 per minute (increased from 100)
+
+    // Contact form endpoint rate limit (anti-spam)
+    contactWindowMs: parseInt(process.env.CONTACT_RATE_LIMIT_WINDOW_MS || '3600000', 10), // 1 hour
+    contactMaxRequests: parseInt(process.env.CONTACT_RATE_LIMIT_MAX_REQUESTS || '20', 10), // 20 per hour
   },
 
   // Security
@@ -60,7 +64,7 @@ const config = {
   // Lighthouse (centralized config)
   lighthouse: {
     // Overall execution timeout guard for a single LH run (reduced for speed)
-    timeoutMs: parseInt(process.env.LIGHTHOUSE_TIMEOUT_MS || '60000', 10), // Reduced from 90s to 60s
+    timeoutMs: parseInt(process.env.LIGHTHOUSE_TIMEOUT_MS || '90000', 10), // Default 90s; heavy sites often exceed 60s
     // How long LH will wait for page load internally
     maxWaitForLoadMs: parseInt(process.env.LIGHTHOUSE_MAX_WAIT_MS || '50000', 10), // Reduced from 75s to 50s
     // Retries for common flaky failures (NO_FCP, Chrome internal error)

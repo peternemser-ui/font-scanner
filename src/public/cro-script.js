@@ -1,6 +1,10 @@
 // CRO Analyzer Script
 // Uses AnalyzerLoader for consistent loading UI
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'cro-analysis';
+document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+
 document.getElementById('analyzeBtn').addEventListener('click', analyzeCRO);
 document.getElementById('url').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyzeCRO();
@@ -24,15 +28,15 @@ async function analyzeCRO() {
     return;
   }
   
-  const results = document.getElementById('results');
-  const btn = document.getElementById('analyzeBtn');
-  
-  results.style.display = 'none';
-  btn.disabled = true;
-  
-  // Update button text
-  const buttonText = btn.querySelector('#buttonText') || btn;
-  buttonText.textContent = 'Running scan...';
+  const header = document.createElement('button');
+  header.className = 'accordion-header';
+  header.innerHTML = `
+    <span>${title}</span>
+    <span style="display: flex; align-items: center; gap: 0.5rem;">
+      ${score !== null ? `<span style="color: var(--accent-primary); font-size: 0.9rem;">${score}/100</span>` : ''}
+      <span class="accordion-toggle">▼</span>
+    </span>
+  `;
   
   // Initialize AnalyzerLoader
   const loader = new AnalyzerLoader('loadingContainer');
@@ -43,24 +47,24 @@ async function analyzeCRO() {
   loaderMessageEl.style.cssText = `
     margin: 0 0 1.5rem 0;
     padding: clamp(0.75rem, 2vw, 1rem);
-    background: rgba(0, 255, 65, 0.05);
-    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
     border-radius: 6px;
     text-align: center;
     overflow: visible;
   `;
   loaderMessageEl.innerHTML = `
     <div style="overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch;">
-      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
     </div>
-    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: #00ff41; font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
+    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
       CRO analysis in progress...
     </p>
-    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(0, 255, 65, 0.7); padding: 0 0.5rem;">
+    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(var(--accent-primary-rgb), 0.7); padding: 0 0.5rem;">
       This may take 20-30 seconds
     </p>
   `;
@@ -71,12 +75,12 @@ async function analyzeCRO() {
     style.id = 'ascii-art-style';
     style.textContent = `
       @keyframes color-cycle {
-        0% { color: #00ff41; }
+        0% { color: var(--accent-primary); }
         20% { color: #00ffff; }
         40% { color: #0099ff; }
         60% { color: #9933ff; }
         80% { color: #ff33cc; }
-        100% { color: #00ff41; }
+        100% { color: var(--accent-primary); }
       }
       .ascii-art-responsive {
         font-size: clamp(0.35rem, 1.2vw, 0.65rem);
@@ -98,11 +102,15 @@ async function analyzeCRO() {
   
   try {
     loader.nextStep(1);
+
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
     
     const response = await fetch('/api/cro-analysis', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
+      body: JSON.stringify({ url, scanStartedAt })
     });
     
     loader.nextStep(2);
@@ -141,7 +149,6 @@ async function analyzeCRO() {
 }
 
 function displayResults(data) {
-  console.log('🎯 CRO SCRIPT VERSION: FRESH-JAN8-2026 - NEW LAYOUT');
   const resultsContainer = document.getElementById('results');
   const url = document.getElementById('url').value;
   const timestamp = new Date().toLocaleString();
@@ -208,7 +215,7 @@ function displayResults(data) {
       <p>>> timestamp: ${timestamp}</p>
       
       <div style="
-        background: linear-gradient(135deg, rgba(0,255,65,0.05) 0%, rgba(0,255,65,0.02) 100%);
+        background: linear-gradient(135deg, rgba(var(--accent-primary-rgb),0.05) 0%, rgba(var(--accent-primary-rgb),0.02) 100%);
         border: 2px solid ${ReportShell.getScoreColor(data.score)};
         border-radius: 12px;
         padding: 2rem;
@@ -260,30 +267,41 @@ function renderCROSummarySection(stats) {
 }
 
 function renderCROTakeActionSection(url) {
-  return `
-    <div class="section">
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="color: #00ff41; font-weight: 600;">Take Action</span>
-          <span style="color: #666; font-size: 0.9rem;">Export or share this CRO report</span>
-        </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button id="exportPdfBtn" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(0, 255, 65, 0.4); background: rgba(0, 255, 65, 0.1); color: #00ff41; cursor: pointer; font-weight: 600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-            PDF Report
-          </button>
-          <button onclick="copyCROShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            Share Link
-          </button>
-          <button onclick="downloadCROCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
-            Export Data
-          </button>
+  // Use new ProReportBlock component if available
+  if (window.ProReportBlock && window.ProReportBlock.render) {
+    return `
+      <div class="section">
+        ${window.ProReportBlock.render({
+          context: 'cro',
+          features: ['pdf', 'csv', 'share'],
+          title: 'Unlock Report',
+          subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+        })}
+      </div>
+    `;
+  } else {
+    // Fallback/legacy code
+    return `
+      <div class="section">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
+          <div style="display: flex; align-items: center; gap: 0.5rem;">
+            <span style="color: var(--accent-primary); font-weight: 600;">Take Action</span>
+            <span style="color: #666; font-size: 0.9rem;">Export or share this CRO report</span>
+          </div>
+          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+            <button onclick="copyCROShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+              Share Link
+            </button>
+            <button onclick="downloadCROCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
+              Export Data
+            </button>
+          </div>
         </div>
       </div>
-    </div>
-  `;
+    `;
+  }
 }
 
 // Stub functions for share/export
@@ -417,58 +435,6 @@ function createQuickWinsSection(quickWins) {
   `;
 }
 
-function renderCTAContent(ctas) {
-  const accordion = document.createElement('div');
-  accordion.className = 'accordion';
-  
-  const header = document.createElement('button');
-  header.className = 'accordion-header';
-  header.innerHTML = `
-    <span>${title}</span>
-    <span style="display: flex; align-items: center; gap: 0.5rem;">
-      ${score !== null ? `<span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
-      <span class="accordion-toggle">▼</span>
-    </span>
-  `;
-  
-  const content = document.createElement('div');
-  content.className = 'accordion-content';
-  content.id = `accordion-${id}`;
-  // Set initial collapsed state
-  content.style.cssText = 'max-height: 0; padding: 0; overflow: hidden; border-top: none; transition: max-height 0.3s ease, padding 0.3s ease;';
-  
-  const contentInner = document.createElement('div');
-  contentInner.className = 'accordion-content-inner';
-  content.appendChild(contentInner);
-  
-  header.addEventListener('click', () => {
-    const isExpanded = content.classList.contains('expanded');
-    
-    if (isExpanded) {
-      content.classList.remove('expanded');
-      header.classList.remove('active');
-      header.querySelector('.accordion-toggle').textContent = '▼';
-      content.style.maxHeight = '0';
-      content.style.padding = '0';
-      content.style.borderTop = 'none';
-    } else {
-      if (!contentInner.hasChildNodes()) {
-        contentInner.innerHTML = contentCreator();
-      }
-      content.classList.add('expanded');
-      header.classList.add('active');
-      header.querySelector('.accordion-toggle').textContent = '▲';
-      content.style.maxHeight = content.scrollHeight + 100 + 'px';
-      content.style.padding = '1rem 1.25rem';
-      content.style.borderTop = '1px solid #333';
-    }
-  });
-  
-  accordion.appendChild(header);
-  accordion.appendChild(content);
-  container.appendChild(accordion);
-}
-
 function getGradeName(grade) {
   const names = {
     'A': 'Excellent',
@@ -483,20 +449,20 @@ function getGradeName(grade) {
 function renderCTAContent(ctas) {
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> Call-to-Action Analysis</h3>
+      <h3 style="color: var(--accent-primary); margin: 0 0 0.75rem 0; font-size: 1rem;">>> Call-to-Action Analysis</h3>
       <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
         CTAs are the primary conversion elements on your page. Strong, visible CTAs with action-oriented text drive conversions.
       </p>
       
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1rem;">
         <div style="
-          background: rgba(0, 255, 65, 0.05);
-          border: 1px solid rgba(0, 255, 65, 0.3);
+          background: rgba(var(--accent-primary-rgb), 0.05);
+          border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
           border-radius: 8px;
           padding: 1.5rem;
           text-align: center;
         ">
-          <div style="font-size: 3rem; font-weight: 900; color: #00ff41;">${ctas.count}</div>
+          <div style="font-size: 3rem; font-weight: 900; color: var(--accent-primary);">${ctas.count}</div>
           <div style="color: #c0c0c0; margin-top: 0.5rem;">Total CTAs Found</div>
         </div>
         <div style="
@@ -516,11 +482,11 @@ function renderCTAContent(ctas) {
         <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
           ${ctas.examples.map(text => `
             <span style="
-              background: linear-gradient(135deg, rgba(0, 255, 65, 0.15) 0%, rgba(0, 255, 65, 0.05) 100%);
+              background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.15) 0%, rgba(var(--accent-primary-rgb), 0.05) 100%);
               padding: 0.75rem 1.25rem;
               border-radius: 6px;
-              border: 1px solid rgba(0, 255, 65, 0.4);
-              color: #00ff41;
+              border: 1px solid rgba(var(--accent-primary-rgb), 0.4);
+              color: var(--accent-primary);
               font-weight: 500;
             ">${text}</span>
           `).join('')}
@@ -859,9 +825,7 @@ function initCROPDFExport() {
       urlInputSelector: '#urlInput, input[type="url"]',
       filename: `cro-analysis-${new Date().toISOString().split('T')[0]}.pdf`
     });
-    console.log('CRO Analyzer PDF export initialized');
   } else {
-    console.warn('PDF export utility not loaded');
   }
 }
 

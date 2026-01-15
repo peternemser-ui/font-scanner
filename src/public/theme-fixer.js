@@ -5,6 +5,30 @@
 
 (function() {
   'use strict';
+
+  function isWithinPrimaryCta(element) {
+    if (!element || !element.closest) return false;
+    return !!element.closest(
+      [
+        // UI kit primary buttons
+        '.btn-primary',
+        // Unified analyze/run-scan buttons (legacy)
+        '#analyzeButton',
+        '#dashboardAnalyzeButton',
+        '#seoAnalyzeButton',
+        '#perfAnalyzeButton',
+        '#cwvAnalyzeButton',
+        '#scanButton',
+        '#analyzeBtn',
+        '.analyze-button',
+        // Ribbon/CTA buttons
+        '.ribbon-btn-primary',
+        // Pro upsell primary actions
+        '.pro-report-block__upgrade-button--primary',
+        '.pro-report-block__btn'
+      ].join(',')
+    );
+  }
   
   // Check if we're in light theme
   function isLightTheme() {
@@ -15,6 +39,7 @@
   // Fix an element's dark background
   function fixDarkBackground(element) {
     if (!element || !element.style) return;
+    if (isWithinPrimaryCta(element)) return;
     
     const bg = element.style.background || element.style.backgroundColor;
     
@@ -56,6 +81,7 @@
     );
     
     if (isLightText) {
+      if (isWithinPrimaryCta(element)) return;
       element.style.setProperty('color', '#000000', 'important');
     }
   }
@@ -63,17 +89,12 @@
   // Process all elements
   function fixAllDarkBackgrounds() {
     if (!isLightTheme()) return;
-    
-    console.log('🎨 Theme Fixer: Applying light theme fixes...');
-    
     // Get all elements
     const allElements = document.querySelectorAll('*');
     
     allElements.forEach(element => {
       fixDarkBackground(element);
     });
-    
-    console.log(`🎨 Theme Fixer: Fixed ${allElements.length} elements`);
   }
   
   // Run fixer when DOM is ready

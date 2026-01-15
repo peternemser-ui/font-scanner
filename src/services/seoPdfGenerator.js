@@ -1,8 +1,19 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 const { createLogger } = require('../utils/logger');
+const { resolveReportId } = require('../utils/resolveReportId');
+const {
+  initializePdfGeneration,
+  finalizePdfGeneration,
+  addPdfHeader,
+  addSectionHeader,
+  addSubSectionHeader,
+  checkPageBreakNeeded,
+  addScoreBadge,
+  getScoreColor,
+  getGrade
+} = require('../utils/pdfHelpers');
 
 const logger = createLogger('SEOPdfGenerator');
 
@@ -26,85 +37,49 @@ class SEOPdfGenerator {
    * Generate comprehensive SEO PDF report
    */
   async generateReport(seoResults) {
-    const reportId = uuidv4();
-    const filename = `seo-analysis-${reportId}.pdf`;
-    const filepath = path.join(this.reportsDir, filename);
+    // Use helper to initialize PDF generation
+    const { doc, filepath, reportId, stream, filename } = initializePdfGeneration(
+      seoResults,
+      'seo',
+      { reportsDir: this.reportsDir }
+    );
 
-    logger.info(`Generating SEO PDF report: ${filename}`);
+    try {
+      // Use helper for header
+      addPdfHeader(
+        doc,
+        '[SEO_ANALYSIS_REPORT]',
+        seoResults.url,
+        'comprehensive search engine optimization analysis'
+      );
 
-    return new Promise((resolve, reject) => {
-      try {
-        const doc = new PDFDocument({ margin: 50, size: 'A4' });
-        const stream = fs.createWriteStream(filepath);
-        doc.pipe(stream);
+      // Generate report sections
+      this.addExecutiveSummary(doc, seoResults);
+      this.addMetaTagsAnalysis(doc, seoResults.metaTags);
+      this.addHeadingsStructure(doc, seoResults.headings);
+      this.addImageAnalysis(doc, seoResults.images);
+      this.addContentAnalysis(doc, seoResults.content);
+      this.addTechnicalSEO(doc, seoResults.technical);
+      this.addRecommendations(doc, seoResults.recommendations);
 
-        // Generate report sections
-        this.addHeader(doc, seoResults.url);
-        this.addExecutiveSummary(doc, seoResults);
-        this.addMetaTagsAnalysis(doc, seoResults.metaTags);
-        this.addHeadingsStructure(doc, seoResults.headings);
-        this.addImageAnalysis(doc, seoResults.images);
-        this.addContentAnalysis(doc, seoResults.content);
-        this.addTechnicalSEO(doc, seoResults.technical);
-        this.addRecommendations(doc, seoResults.recommendations);
-
-        doc.end();
-
-        stream.on('finish', () => {
-          logger.info(`SEO PDF report generated: ${filename}`);
-          resolve({ filename, filepath, reportId });
-        });
-
-        stream.on('error', (error) => {
-          logger.error('Error generating SEO PDF:', error);
-          reject(error);
-        });
-
-      } catch (error) {
-        logger.error('Error creating SEO PDF:', error);
-        reject(error);
-      }
-    });
+      // Use helper to finalize PDF generation
+      return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+    } catch (error) {
+      logger.error('Error creating SEO PDF:', error);
+      throw error;
+    }
   }
 
-  /**
-   * Add header with branding
-   */
-  addHeader(doc, url) {
-    doc
-      .fontSize(28)
-      .font('Helvetica-Bold')
-      .fillColor('#1a1a1a')
-      .text('[SEO_ANALYSIS_REPORT]', 50, 50);
-
-    doc
-      .fontSize(14)
-      .font('Helvetica')
-      .fillColor('#666666')
-      .text('> comprehensive search engine optimization analysis', 50, 85);
-
-    doc
-      .fontSize(12)
-      .fillColor('#666666')
-      .text(`> url: ${url}`, 50, 110);
-
-    doc
-      .fontSize(12)
-      .fillColor('#666666')
-      .text(`> generated: ${new Date().toLocaleString()}`, 50, 130);
-
-    doc.strokeColor('#00ff41').lineWidth(2).moveTo(50, 160).lineTo(545, 160).stroke();
-    doc.moveDown(3);
-  }
+  // addHeader removed - using pdfHelpers.addPdfHeader() instead
 
   /**
    * Add executive summary
    */
   addExecutiveSummary(doc, results) {
-    this.addSectionHeader(doc, '[EXECUTIVE_SUMMARY]');
+    addSectionHeader(doc, '[EXECUTIVE_SUMMARY]');
 
     const score = results.overallScore || 0;
-    const scoreColor = this.getScoreColor(score);
+    const scoreColor = getScoreColor(score);
 
     // Score box
     doc.rect(50, doc.y, 495, 100).fillColor('#f5f5f5').fill().stroke();
@@ -131,11 +106,11 @@ class SEOPdfGenerator {
       .fillColor('#000000')
       .fontSize(12)
       .font('Helvetica')
-      .text(`Meta Tags: ${this.getGrade(results.metaTags?.score || 0)}`, 250, metricsY - 60)
-      .text(`Headings: ${this.getGrade(results.headings?.score || 0)}`, 250, metricsY - 40)
-      .text(`Images: ${this.getGrade(results.images?.score || 0)}`, 250, metricsY - 20)
-      .text(`Content: ${this.getGrade(results.content?.score || 0)}`, 400, metricsY - 60)
-      .text(`Technical: ${this.getGrade(results.technical?.score || 0)}`, 400, metricsY - 40);
+      .text(`Meta Tags: ${getGrade(results.metaTags?.score || 0)}`, 250, metricsY - 60)
+      .text(`Headings: ${getGrade(results.headings?.score || 0)}`, 250, metricsY - 40)
+      .text(`Images: ${getGrade(results.images?.score || 0)}`, 250, metricsY - 20)
+      .text(`Content: ${getGrade(results.content?.score || 0)}`, 400, metricsY - 60)
+      .text(`Technical: ${getGrade(results.technical?.score || 0)}`, 400, metricsY - 40);
 
     doc.moveDown(2);
   }
@@ -144,7 +119,7 @@ class SEOPdfGenerator {
    * Add meta tags analysis
    */
   addMetaTagsAnalysis(doc, metaTags) {
-    this.addSectionHeader(doc, '[META_TAGS_ANALYSIS]');
+    addSectionHeader(doc, '[META_TAGS_ANALYSIS]');
 
     if (!metaTags || !metaTags.tags) {
       doc.text('No meta tags data available', 50, doc.y);
@@ -153,7 +128,7 @@ class SEOPdfGenerator {
 
     // Title
     if (metaTags.tags.title) {
-      this.addSubSection(doc, 'Title Tag');
+      addSubSectionHeader(doc, 'Title Tag');
       doc
         .fontSize(10)
         .fillColor('#333333')
@@ -165,7 +140,7 @@ class SEOPdfGenerator {
 
     // Description
     if (metaTags.tags.description) {
-      this.addSubSection(doc, 'Meta Description');
+      addSubSectionHeader(doc, 'Meta Description');
       doc
         .fontSize(10)
         .fillColor('#333333')
@@ -177,7 +152,7 @@ class SEOPdfGenerator {
 
     // Keywords
     if (metaTags.tags.keywords) {
-      this.addSubSection(doc, 'Meta Keywords');
+      addSubSectionHeader(doc, 'Meta Keywords');
       doc
         .fontSize(10)
         .fillColor('#333333')
@@ -187,7 +162,7 @@ class SEOPdfGenerator {
 
     // Open Graph tags
     if (metaTags.openGraph && Object.keys(metaTags.openGraph).length > 0) {
-      this.addSubSection(doc, 'Open Graph Tags');
+      addSubSectionHeader(doc, 'Open Graph Tags');
       Object.entries(metaTags.openGraph).slice(0, 5).forEach(([key, value]) => {
         doc
           .fontSize(9)
@@ -202,8 +177,8 @@ class SEOPdfGenerator {
    * Add headings structure
    */
   addHeadingsStructure(doc, headings) {
-    this.checkPageBreak(doc);
-    this.addSectionHeader(doc, '[HEADINGS_STRUCTURE]');
+    checkPageBreakNeeded(doc);
+    addSectionHeader(doc, '[HEADINGS_STRUCTURE]');
 
     if (!headings || !headings.hierarchy) {
       doc.text('No headings data available', 50, doc.y);
@@ -212,7 +187,7 @@ class SEOPdfGenerator {
 
     ['h1', 'h2', 'h3'].forEach(tag => {
       if (headings.hierarchy[tag] && headings.hierarchy[tag].length > 0) {
-        this.addSubSection(doc, `${tag.toUpperCase()} Tags (${headings.hierarchy[tag].length})`);
+        addSubSectionHeader(doc, `${tag.toUpperCase()} Tags (${headings.hierarchy[tag].length})`);
         
         headings.hierarchy[tag].slice(0, 5).forEach(heading => {
           doc
@@ -236,8 +211,8 @@ class SEOPdfGenerator {
    * Add image analysis
    */
   addImageAnalysis(doc, images) {
-    this.checkPageBreak(doc);
-    this.addSectionHeader(doc, '[IMAGE_ANALYSIS]');
+    checkPageBreakNeeded(doc);
+    addSectionHeader(doc, '[IMAGE_ANALYSIS]');
 
     if (!images || !images.details) {
       doc.text('No image data available', 50, doc.y);
@@ -258,7 +233,7 @@ class SEOPdfGenerator {
     // Sample images without alt text
     const imagesWithoutAlt = images.details.filter(img => !img.alt).slice(0, 5);
     if (imagesWithoutAlt.length > 0) {
-      this.addSubSection(doc, 'Images Missing Alt Text (Sample)');
+      addSubSectionHeader(doc, 'Images Missing Alt Text (Sample)');
       imagesWithoutAlt.forEach(img => {
         doc
           .fontSize(8)
@@ -273,8 +248,8 @@ class SEOPdfGenerator {
    * Add content analysis
    */
   addContentAnalysis(doc, content) {
-    this.checkPageBreak(doc);
-    this.addSectionHeader(doc, '[CONTENT_ANALYSIS]');
+    checkPageBreakNeeded(doc);
+    addSectionHeader(doc, '[CONTENT_ANALYSIS]');
 
     if (!content) {
       doc.text('No content data available', 50, doc.y);
@@ -292,7 +267,7 @@ class SEOPdfGenerator {
 
     // Top keywords
     if (content.keywords && content.keywords.length > 0) {
-      this.addSubSection(doc, 'Top Keywords');
+      addSubSectionHeader(doc, 'Top Keywords');
       content.keywords.slice(0, 10).forEach(kw => {
         doc
           .fontSize(9)
@@ -307,8 +282,8 @@ class SEOPdfGenerator {
    * Add technical SEO
    */
   addTechnicalSEO(doc, technical) {
-    this.checkPageBreak(doc);
-    this.addSectionHeader(doc, '[TECHNICAL_SEO]');
+    checkPageBreakNeeded(doc);
+    addSectionHeader(doc, '[TECHNICAL_SEO]');
 
     if (!technical) {
       doc.text('No technical SEO data available', 50, doc.y);
@@ -341,8 +316,8 @@ class SEOPdfGenerator {
    * Add recommendations
    */
   addRecommendations(doc, recommendations) {
-    this.checkPageBreak(doc);
-    this.addSectionHeader(doc, '[RECOMMENDATIONS]');
+    checkPageBreakNeeded(doc);
+    addSectionHeader(doc, '[RECOMMENDATIONS]');
 
     if (!recommendations || recommendations.length === 0) {
       doc
@@ -374,64 +349,16 @@ class SEOPdfGenerator {
       }
 
       doc.moveDown();
-      this.checkPageBreak(doc);
+      checkPageBreakNeeded(doc);
     });
   }
 
-  /**
-   * Helper: Add section header
-   */
-  addSectionHeader(doc, title) {
-    this.checkPageBreak(doc, 100);
-    doc
-      .fontSize(16)
-      .font('Helvetica-Bold')
-      .fillColor('#1a1a1a')
-      .text(title, 50, doc.y);
-    doc.moveDown(0.5);
-  }
-
-  /**
-   * Helper: Add subsection
-   */
-  addSubSection(doc, title) {
-    doc
-      .fontSize(12)
-      .font('Helvetica-Bold')
-      .fillColor('#333333')
-      .text(title, 70, doc.y);
-    doc.moveDown(0.3);
-  }
-
-  /**
-   * Helper: Check if page break needed
-   */
-  checkPageBreak(doc, requiredSpace = 150) {
-    if (doc.y > 700) {
-      doc.addPage();
-    }
-  }
-
-  /**
-   * Helper: Get score color
-   */
-  getScoreColor(score) {
-    if (score >= 90) return '#00ff41';
-    if (score >= 70) return '#bb86fc';
-    if (score >= 50) return '#ffa500';
-    return '#ff4444';
-  }
-
-  /**
-   * Helper: Get grade
-   */
-  getGrade(score) {
-    if (score >= 90) return 'A';
-    if (score >= 80) return 'B';
-    if (score >= 70) return 'C';
-    if (score >= 60) return 'D';
-    return 'F';
-  }
+  // Helper methods removed - now using pdfHelpers utilities
+  // - addSectionHeader → pdfHelpers.addSectionHeader()
+  // - addSubSection → pdfHelpers.addSubSectionHeader()
+  // - checkPageBreak → pdfHelpers.checkPageBreakNeeded()
+  // - getScoreColor → pdfHelpers.getScoreColor()
+  // - getGrade → pdfHelpers.getGrade()
 }
 
 module.exports = new SEOPdfGenerator();

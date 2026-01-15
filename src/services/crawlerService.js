@@ -42,15 +42,12 @@ class CrawlerService {
             discovered.add(url);
           }
         });
-
-        console.log(`🗺️ Found ${sitemapUrls.length} URLs from sitemap`);
       }
 
       // Check robots.txt if enabled
       let disallowedPaths = [];
       if (respectRobotsTxt) {
         disallowedPaths = await this.parseRobotsTxt(baseUrl.origin);
-        console.log(`🤖 robots.txt: ${disallowedPaths.length} disallowed paths`);
       }
 
       // BFS crawl using Puppeteer for better bot protection bypass
@@ -64,15 +61,11 @@ class CrawlerService {
 
         // Skip if disallowed by robots.txt
         if (this.isDisallowed(url, disallowedPaths)) {
-          console.log(`🚫 Skipping (robots.txt): ${url}`);
           continue;
         }
 
         visited.add(url);
         discovered.add(url);
-
-        console.log(`🕷️ Crawling [${discovered.size}/${maxPages}]: ${url}`);
-
         // Only continue crawling links if we haven't hit max pages
         if (discovered.size < maxPages && depth < maxDepth) {
           try {
@@ -100,8 +93,6 @@ class CrawlerService {
           }
         }
       }
-
-      console.log(`✅ Crawl complete: ${discovered.size} pages discovered`);
       return Array.from(discovered).slice(0, maxPages);
 
     } catch (error) {
@@ -128,7 +119,6 @@ class CrawlerService {
             await page.goto(url, { waitUntil: 'networkidle2', timeout: 20000 });
           } catch (navError) {
             if (navError.message.includes('timeout') || navError.message.includes('Navigation')) {
-              console.log(`⏳ Timeout on networkidle2, falling back to domcontentloaded for ${url}`);
               await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
             } else {
               throw navError;
@@ -137,15 +127,11 @@ class CrawlerService {
 
           // Check if we were redirected to a different URL
           const finalUrl = page.url();
-          console.log(`📍 Final URL after navigation: ${finalUrl}`);
-
           // Extract all links from the page
           const pageLinks = await page.evaluate(() => {
             const anchors = document.querySelectorAll('a[href]');
             return Array.from(anchors).map(a => a.href).filter(href => href && !href.startsWith('javascript:'));
           });
-
-          console.log(`🔗 Raw links extracted: ${pageLinks.length}`);
           return pageLinks;
         } finally {
           await page.close();
@@ -174,9 +160,6 @@ class CrawlerService {
           continue;
         }
       }
-
-      console.log(`✅ Filtered links for ${hostname}: ${links.size}`);
-
     } catch (error) {
       console.error(`Failed to extract links with Puppeteer from ${url}:`, error.message);
       throw error;
@@ -338,7 +321,6 @@ class CrawlerService {
 
     } catch (error) {
       // If robots.txt doesn't exist or can't be fetched, assume everything is allowed
-      console.log(`No robots.txt found at ${origin}`);
     }
 
     return disallowedPaths;
@@ -373,7 +355,6 @@ class CrawlerService {
       // Try Puppeteer first (better bot protection bypass)
       return await this.extractLinksWithPuppeteer(url, hostname);
     } catch (error) {
-      console.log(`Puppeteer failed, trying axios fallback for ${url}`);
       // Fallback to axios
       try {
         return await this.extractLinksWithAxios(url, hostname);

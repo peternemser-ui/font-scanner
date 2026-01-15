@@ -1,6 +1,10 @@
 ﻿// GDPR Compliance Scanner Script
 // Uses AnalyzerLoader for consistent loading UI
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'gdpr-compliance';
+document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+
 document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('url').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyze();
@@ -36,17 +40,17 @@ async function analyze() {
   loaderMessageEl.style.cssText = `
     margin: 0 0 1.5rem 0;
     padding: clamp(0.75rem, 2vw, 1rem);
-    background: rgba(0, 255, 65, 0.05);
-    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
     border-radius: 6px;
     text-align: center;
     overflow: visible;
   `;
   loaderMessageEl.innerHTML = `
-    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: #00ff41; font-weight: 600;">
+    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: var(--accent-primary); font-weight: 600;">
       GDPR compliance scan in progress...
     </p>
-    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(0, 255, 65, 0.7);">
+    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(var(--accent-primary-rgb), 0.7);">
       This may take 30-45 seconds
     </p>
   `;
@@ -62,10 +66,14 @@ async function analyze() {
   try {
     loader.nextStep(1);
 
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
     const response = await fetch('/api/gdpr-compliance', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url })
+      body: JSON.stringify({ url, scanStartedAt })
     });
 
     loader.nextStep(2);
@@ -90,10 +98,20 @@ async function analyze() {
 }
 
 function getScoreColor(score) {
-  if (score >= 90) return '#00ff41';
+  if (score >= 90) return getAccentPrimaryHex();
   if (score >= 75) return '#00bcd4';
   if (score >= 50) return '#ffa500';
   return '#ff4444';
+}
+
+function getAccentPrimaryHex() {
+  const computed = getComputedStyle(document.documentElement)
+    .getPropertyValue('--accent-primary')
+    .trim();
+  if (computed) return computed;
+
+  const isLight = document.body?.classList?.contains('white-theme');
+  return isLight ? '#dd3838' : '#5bf4e7';
 }
 
 function getGrade(score) {
@@ -125,7 +143,7 @@ function displayResults(data) {
       <p>>> url: ${data.url || 'N/A'}</p>
       <p>>> timestamp: ${new Date(data.timestamp).toLocaleString()}</p>
       
-      <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">>> Compliance Summary</h3>
+      <h3 style="color: var(--accent-primary); margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">>> Compliance Summary</h3>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; margin: 2rem 0;">
         <div style="text-align: center;">
@@ -145,7 +163,7 @@ function displayResults(data) {
             <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(consentScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(consentScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
             <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(consentScore)}, 0 0 30px rgba(0,0,0,0.6);">${consentScore}</text>
           </svg>
-          <div style="margin-top: 0.5rem; color: ${data.compliance?.cookieConsent?.detected ? '#00ff41' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">${data.compliance?.cookieConsent?.detected ? (data.compliance?.cookieConsent?.hasKnownLibrary ? 'Compliant' : 'Partial') : 'Missing'}</div>
+          <div style="margin-top: 0.5rem; color: ${data.compliance?.cookieConsent?.detected ? 'var(--accent-primary)' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">${data.compliance?.cookieConsent?.detected ? (data.compliance?.cookieConsent?.hasKnownLibrary ? 'Compliant' : 'Partial') : 'Missing'}</div>
         </div>
 
         <div style="text-align: center;">
@@ -155,7 +173,7 @@ function displayResults(data) {
             <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(privacyScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(privacyScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
             <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(privacyScore)}, 0 0 30px rgba(0,0,0,0.6);">${privacyScore}</text>
           </svg>
-          <div style="margin-top: 0.5rem; color: ${privacyScore > 0 ? '#00ff41' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">${privacyScore > 0 ? 'Found' : 'Missing'}</div>
+          <div style="margin-top: 0.5rem; color: ${privacyScore > 0 ? 'var(--accent-primary)' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">${privacyScore > 0 ? 'Found' : 'Missing'}</div>
         </div>
 
         <div style="text-align: center;">
@@ -165,7 +183,7 @@ function displayResults(data) {
             <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(trackerScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(trackerScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
             <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(trackerScore)}, 0 0 30px rgba(0,0,0,0.6);">${trackerScore}</text>
           </svg>
-          <div style="margin-top: 0.5rem; color: ${trackerScore >= 80 ? '#00ff41' : trackerScore >= 50 ? '#ffa500' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">${data.compliance?.trackers?.count || 0} Trackers</div>
+          <div style="margin-top: 0.5rem; color: ${trackerScore >= 80 ? 'var(--accent-primary)' : trackerScore >= 50 ? '#ffa500' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">${data.compliance?.trackers?.count || 0} Trackers</div>
         </div>
       </div>
     </div>
@@ -213,6 +231,17 @@ function displayResults(data) {
   if (data.recommendations && data.recommendations.length > 0) {
     createAccordionSection(accordionContainer, 'recommendations', 'Recommendations', 
       () => renderRecommendationsContent(data.recommendations));
+  }
+
+  // Pro Report Block
+  if (window.ProReportBlock && window.ProReportBlock.render) {
+    const proBlockHtml = window.ProReportBlock.render({
+      context: 'gdpr-compliance',
+      features: ['pdf', 'csv', 'share'],
+      title: 'Unlock Report',
+      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+    });
+    results.insertAdjacentHTML('beforeend', proBlockHtml);
   }
 }
 
@@ -286,7 +315,7 @@ function renderConsentQualityContent(data) {
   
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">>> Consent Implementation Quality</h3>
+      <h3 style="color: var(--accent-primary); margin: 0 0 1rem 0; font-size: 1rem;">>> Consent Implementation Quality</h3>
       
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
         <div style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
@@ -306,11 +335,11 @@ function renderConsentQualityContent(data) {
       <h4 style="color: #c0c0c0; margin: 1rem 0 0.75rem 0;">Quality Factors</h4>
       <div style="display: grid; gap: 0.5rem;">
         ${(quality.factors || []).map(f => `
-          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; border-left: 3px solid ${f.status === 'pass' ? '#00ff41' : f.status === 'warn' ? '#ffa500' : '#ff4444'};">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; border-left: 3px solid ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ff4444'};">
             <span style="color: #ffffff;">${f.name}</span>
             <span style="display: flex; align-items: center; gap: 0.5rem;">
-              <span style="color: ${f.status === 'pass' ? '#00ff41' : f.status === 'warn' ? '#ffa500' : '#ff4444'}; font-weight: bold;">${f.points}/${f.name.includes('reject') ? 25 : f.name.includes('library') ? 15 : 20}</span>
-              <span style="color: ${f.status === 'pass' ? '#00ff41' : f.status === 'warn' ? '#ffa500' : '#ff4444'};">${f.status === 'pass' ? '✓' : f.status === 'warn' ? '~' : '✗'}</span>
+              <span style="color: ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ff4444'}; font-weight: bold;">${f.points}/${f.name.includes('reject') ? 25 : f.name.includes('library') ? 15 : 20}</span>
+              <span style="color: ${f.status === 'pass' ? 'var(--accent-primary)' : f.status === 'warn' ? '#ffa500' : '#ff4444'};">${f.status === 'pass' ? '✓' : f.status === 'warn' ? '~' : '✗'}</span>
             </span>
           </div>
         `).join('')}
@@ -331,7 +360,7 @@ function renderCookieAnalysisContent(cookies) {
   
   const classified = cookies.classified || {};
   const categories = [
-    { key: 'necessary', label: 'Necessary', color: '#00ff41', desc: 'Required for basic site functionality' },
+    { key: 'necessary', label: 'Necessary', color: 'var(--accent-primary)', desc: 'Required for basic site functionality' },
     { key: 'functional', label: 'Functional', color: '#00d9ff', desc: 'Preferences and settings' },
     { key: 'analytics', label: 'Analytics', color: '#ffa500', desc: 'Usage tracking and statistics' },
     { key: 'marketing', label: 'Marketing', color: '#ff4444', desc: 'Advertising and targeting' },
@@ -341,7 +370,7 @@ function renderCookieAnalysisContent(cookies) {
   
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">>> Cookie Classification</h3>
+      <h3 style="color: var(--accent-primary); margin: 0 0 1rem 0; font-size: 1rem;">>> Cookie Classification</h3>
       
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
         ${categories.map(cat => {
@@ -389,13 +418,13 @@ function renderTrackerAnalysisContent(trackers) {
     { key: 'analytics', label: 'Analytics', color: '#00d9ff' },
     { key: 'advertising', label: 'Advertising', color: '#ff4444' },
     { key: 'social', label: 'Social Media', color: '#9933ff' },
-    { key: 'customer', label: 'Customer Support', color: '#00ff41' },
+    { key: 'customer', label: 'Customer Support', color: 'var(--accent-primary)' },
     { key: 'heatmap', label: 'Heatmaps/Session Recording', color: '#ffa500' }
   ];
   
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">>> Third-Party Trackers (${trackers.count})</h3>
+      <h3 style="color: var(--accent-primary); margin: 0 0 1rem 0; font-size: 1rem;">>> Third-Party Trackers (${trackers.count})</h3>
       
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
         ${categories.map(cat => {
@@ -416,7 +445,7 @@ function renderTrackerAnalysisContent(trackers) {
             <span style="background: rgba(255, 140, 0, 0.1); border: 1px solid rgba(255, 140, 0, 0.3); padding: 0.5rem 1rem; border-radius: 4px; font-size: 0.85rem; color: #ffa500;">${t}</span>
           `).join('')}
         </div>
-      ` : '<p style="color: #00ff41;">No third-party trackers detected</p>'}
+      ` : '<p style="color: var(--accent-primary);">No third-party trackers detected</p>'}
     </div>
   `;
 }
@@ -430,19 +459,19 @@ function renderLegalPagesContent(compliance) {
   
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">>> Legal Page Detection</h3>
+      <h3 style="color: var(--accent-primary); margin: 0 0 1rem 0; font-size: 1rem;">>> Legal Page Detection</h3>
       
       <div style="display: grid; gap: 0.75rem;">
         ${pages.map(p => {
           const data = compliance?.[p.key] || {};
           const hasLink = data.hasLink;
           return `
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-radius: 8px; border-left: 3px solid ${hasLink ? '#00ff41' : p.required ? '#ff4444' : '#ffa500'};">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-radius: 8px; border-left: 3px solid ${hasLink ? 'var(--accent-primary)' : p.required ? '#ff4444' : '#ffa500'};">
               <div>
                 <span style="color: #ffffff; font-weight: 600;">${p.label}</span>
                 ${p.required ? '<span style="color: #ff4444; font-size: 0.75rem; margin-left: 0.5rem;">Required</span>' : ''}
               </div>
-              <span style="color: ${hasLink ? '#00ff41' : '#ff4444'}; font-weight: bold;">${hasLink ? '✓ Found' : '✗ Missing'}</span>
+              <span style="color: ${hasLink ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${hasLink ? '✓ Found' : '✗ Missing'}</span>
             </div>
           `;
         }).join('')}
@@ -457,27 +486,27 @@ function renderDataRightsContent(compliance) {
   
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">>> Data Subject Rights (GDPR Articles 12-23)</h3>
+      <h3 style="color: var(--accent-primary); margin: 0 0 1rem 0; font-size: 1rem;">>> Data Subject Rights (GDPR Articles 12-23)</h3>
       
       <div style="display: grid; gap: 0.75rem; margin-bottom: 1.5rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-radius: 8px; border-left: 3px solid ${rights.hasInfo ? '#00ff41' : '#ff4444'};">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-radius: 8px; border-left: 3px solid ${rights.hasInfo ? 'var(--accent-primary)' : '#ff4444'};">
           <span style="color: #ffffff;">Data Rights Information</span>
-          <span style="color: ${rights.hasInfo ? '#00ff41' : '#ff4444'}; font-weight: bold;">${rights.hasInfo ? '✓ Found' : '✗ Missing'}</span>
+          <span style="color: ${rights.hasInfo ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${rights.hasInfo ? '✓ Found' : '✗ Missing'}</span>
         </div>
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-radius: 8px; border-left: 3px solid ${rights.hasDPOContact ? '#00ff41' : '#ffa500'};">
+        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-radius: 8px; border-left: 3px solid ${rights.hasDPOContact ? 'var(--accent-primary)' : '#ffa500'};">
           <span style="color: #ffffff;">DPO/Privacy Contact</span>
-          <span style="color: ${rights.hasDPOContact ? '#00ff41' : '#ffa500'}; font-weight: bold;">${rights.hasDPOContact ? '✓ Found' : '~ Not Found'}</span>
+          <span style="color: ${rights.hasDPOContact ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">${rights.hasDPOContact ? '✓ Found' : '~ Not Found'}</span>
         </div>
       </div>
       
       <h4 style="color: #c0c0c0; margin: 1rem 0 0.75rem 0;">International Compliance</h4>
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem;">
         <div style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5rem; color: ${international.gdpr ? '#00ff41' : '#ff4444'};">${international.gdpr ? '✓' : '✗'}</div>
+          <div style="font-size: 1.5rem; color: ${international.gdpr ? 'var(--accent-primary)' : '#ff4444'};">${international.gdpr ? '✓' : '✗'}</div>
           <div style="color: #ffffff; font-weight: 600;">GDPR (EU)</div>
         </div>
         <div style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5rem; color: ${international.ccpa ? '#00ff41' : '#808080'};">${international.ccpa ? '✓' : '—'}</div>
+          <div style="font-size: 1.5rem; color: ${international.ccpa ? 'var(--accent-primary)' : '#808080'};">${international.ccpa ? '✓' : '—'}</div>
           <div style="color: #ffffff; font-weight: 600;">CCPA (California)</div>
         </div>
       </div>
@@ -526,7 +555,7 @@ function renderRecommendationsContent(recommendations) {
             </div>
             ${rec.category ? `<div style="color: #00d9ff; font-size: 0.8rem; margin-bottom: 0.5rem;">${rec.category}</div>` : ''}
             <p style="margin: 0 0 0.5rem 0; color: #c0c0c0;">${rec.detail}</p>
-            <p style="margin: 0; color: #00ff41; font-size: 0.85rem;">Impact: ${rec.impact}</p>
+            <p style="margin: 0; color: var(--accent-primary); font-size: 0.85rem;">Impact: ${rec.impact}</p>
           </div>
         `).join('')}
       </div>
@@ -538,11 +567,11 @@ function renderItem(label, hasIt) {
   return `
     <div style="padding: 0.75rem; background: rgba(255, 255, 255, 0.03); border-radius: 4px; display: flex; justify-content: space-between; align-items: center;">
       <span>${label}</span>
-      <span style="color: ${hasIt ? '#00ff41' : '#ff4444'}; font-weight: bold;">${hasIt ? '' : ''}</span>
+      <span style="color: ${hasIt ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${hasIt ? '' : ''}</span>
     </div>
   `;
 }
 
 function getColor(grade) {
-  return { 'A': '#00ff41', 'B': '#ffd700', 'C': '#ff8c00', 'F': '#ff4444' }[grade] || '#888';
+  return { 'A': getAccentPrimaryHex(), 'B': '#ffd700', 'C': '#ff8c00', 'F': '#ff4444' }[grade] || '#888';
 }

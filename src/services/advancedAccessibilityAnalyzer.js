@@ -1,4 +1,5 @@
 const { createLogger } = require('../utils/logger');
+const { roundTo } = require('../utils/formatHelpers');
 
 const logger = createLogger('AdvancedAccessibilityAnalyzer');
 
@@ -409,7 +410,7 @@ class AdvancedAccessibilityAnalyzer {
     const ratio = (lighter + 0.05) / (darker + 0.05);
     
     return {
-      ratio: Math.round(ratio * 100) / 100,
+      ratio: roundTo(ratio, 2),
       foregroundLuminance: fgLuminance,
       backgroundLuminance: bgLuminance
     };
@@ -519,9 +520,9 @@ class AdvancedAccessibilityAnalyzer {
    */
   calculateOverallContrastScore(elements) {
     if (elements.length === 0) return 0;
-    
+
     const scores = elements.map(e => e.score);
-    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    return roundTo(scores.reduce((a, b) => a + b, 0) / scores.length, 0);
   }
 
   /**
@@ -534,7 +535,7 @@ class AdvancedAccessibilityAnalyzer {
       recommendations.push({
         priority: 'high',
         title: 'Improve color contrast',
-        description: `${Math.round((1 - analysis.statistics.aaPassRate) * 100)}% of text fails WCAG AA contrast requirements`,
+        description: `${roundTo((1 - analysis.statistics.aaPassRate) * 100, 0)}% of text fails WCAG AA contrast requirements`,
         action: 'Increase contrast ratios for better accessibility'
       });
     }
@@ -574,7 +575,7 @@ class AdvancedAccessibilityAnalyzer {
     score += (analysis.visualImpairmentAnalysis?.score || 0) * weights.visualImpairmentAnalysis;
     score += (analysis.screenReaderCompatibility?.score || 0) * weights.screenReaderCompatibility;
 
-    return Math.round(score);
+    return roundTo(score, 0);
   }
 
   /**
@@ -657,7 +658,7 @@ class AdvancedAccessibilityAnalyzer {
   
   calculateReadabilityScore(factors) {
     const scores = Object.values(factors).map(f => f.score || 0);
-    return Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
+    return roundTo(scores.reduce((a, b) => a + b, 0) / scores.length, 0);
   }
   
   generateReadabilityRecommendations(factors) { return []; }

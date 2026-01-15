@@ -10,6 +10,10 @@ const crawlerService = require('../services/crawlerService');
 const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { validateUrl, sanitizeUrl, normalizeUrl, testUrlReachability } = require('../utils/validators');
 const { createLogger } = require('../utils/logger');
+const { getRequestScanStartedAt, attachScanStartedAt } = require('../utils/scanTimestamp');
+const { makeReportId } = require('../utils/reportId');
+const { ensureReportScreenshot } = require('../utils/reportScreenshot');
+const { getAnalyzerKeyOverride } = require('../utils/controllerHelpers');
 
 const logger = createLogger('TagIntelligenceController');
 
@@ -163,6 +167,14 @@ const analyzeTagIntelligence = asyncHandler(async (req, res) => {
     tagsFound: aggregatedTags.size
   });
 
+  const startedAt = getRequestScanStartedAt(req) || new Date().toISOString();
+  const analyzerKey = getAnalyzerKeyOverride(req, 'tag-intelligence');
+  const reportId = makeReportId({ analyzerKey, normalizedUrl: reachableUrl, startedAtISO: startedAt });
+  const screenshotUrl = reportId ? await ensureReportScreenshot({ url: reachableUrl, reportId, requestId: req.id }) : null;
+
+  attachScanStartedAt(response, startedAt);
+  if (reportId) response.reportId = reportId;
+  if (screenshotUrl) response.screenshotUrl = screenshotUrl;
   res.json(response);
 });
 
@@ -319,6 +331,14 @@ const analyzeEnhancedFonts = asyncHandler(async (req, res) => {
     hasFullScan: !!fullScanData
   });
 
+  const startedAt = getRequestScanStartedAt(req) || new Date().toISOString();
+  const analyzerKey = getAnalyzerKeyOverride(req, 'enhanced-fonts');
+  const reportId = makeReportId({ analyzerKey, normalizedUrl: reachableUrl, startedAtISO: startedAt });
+  const screenshotUrl = reportId ? await ensureReportScreenshot({ url: reachableUrl, reportId, requestId: req.id }) : null;
+
+  attachScanStartedAt(response, startedAt);
+  if (reportId) response.reportId = reportId;
+  if (screenshotUrl) response.screenshotUrl = screenshotUrl;
   res.json(response);
 });
 
@@ -405,6 +425,14 @@ const analyzePerformanceSnapshot = asyncHandler(async (req, res) => {
     failedPages: errors.length
   });
 
+  const startedAt = getRequestScanStartedAt(req) || new Date().toISOString();
+  const analyzerKey = getAnalyzerKeyOverride(req, 'performance-snapshot');
+  const reportId = makeReportId({ analyzerKey, normalizedUrl: reachableUrl, startedAtISO: startedAt });
+  const screenshotUrl = reportId ? await ensureReportScreenshot({ url: reachableUrl, reportId, requestId: req.id }) : null;
+
+  attachScanStartedAt(response, startedAt);
+  if (reportId) response.reportId = reportId;
+  if (screenshotUrl) response.screenshotUrl = screenshotUrl;
   res.json(response);
 });
 
@@ -458,6 +486,14 @@ const crawlSite = asyncHandler(async (req, res) => {
     duration
   });
 
+  const startedAt = getRequestScanStartedAt(req) || new Date().toISOString();
+  const analyzerKey = getAnalyzerKeyOverride(req, 'site-crawler');
+  const reportId = makeReportId({ analyzerKey, normalizedUrl: reachableUrl, startedAtISO: startedAt });
+  const screenshotUrl = reportId ? await ensureReportScreenshot({ url: reachableUrl, reportId, requestId: req.id }) : null;
+
+  attachScanStartedAt(response, startedAt);
+  if (reportId) response.reportId = reportId;
+  if (screenshotUrl) response.screenshotUrl = screenshotUrl;
   res.json(response);
 });
 

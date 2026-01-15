@@ -6,6 +6,7 @@
 
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
+const { roundTo, formatNumber, formatDuration } = require('../utils/formatHelpers');
 
 const logger = createLogger('BrokenLinkService');
 
@@ -154,8 +155,8 @@ class BrokenLinkService {
       
       // Enhanced redirect analysis
       const redirectAnalysis = this.analyzeRedirects(categorized.redirects);
-      
-      const analysisTime = ((Date.now() - startTime) / 1000).toFixed(2);
+
+      const analysisTime = formatDuration(Date.now() - startTime, 2);
       logger.info(`Link check completed in ${analysisTime}s`);
       
       return {
@@ -410,8 +411,8 @@ class BrokenLinkService {
         baseScore += 15; // No external links = no security risk
       }
     }
-    
-    return Math.round(Math.max(0, Math.min(100, baseScore)));
+
+    return roundTo(Math.max(0, Math.min(100, baseScore)), 0);
   }
 
   /**
@@ -497,7 +498,7 @@ class BrokenLinkService {
       imageOnlyCount,
       overUsedAnchors,
       issues: anchors.slice(0, 50), // Limit issues returned
-      qualityScore: Math.round((descriptiveCount / Math.max(1, allLinks.size)) * 100)
+      qualityScore: roundTo((descriptiveCount / Math.max(1, allLinks.size)) * 100, 0)
     };
   }
 
@@ -558,8 +559,8 @@ class BrokenLinkService {
       internalLinkFlow: {
         followed: followedInternal,
         nofollowed: nofollowedInternal,
-        ratio: followedInternal > 0 ? 
-          ((followedInternal / (followedInternal + nofollowedInternal)) * 100).toFixed(1) + '%' : '100%'
+        ratio: followedInternal > 0 ?
+          formatNumber((followedInternal / (followedInternal + nofollowedInternal)) * 100, 1) + '%' : '100%'
       }
     };
   }

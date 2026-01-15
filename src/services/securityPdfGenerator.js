@@ -1,8 +1,17 @@
 const PDFDocument = require('pdfkit');
 const fs = require('fs');
 const path = require('path');
-const { v4: uuidv4 } = require('uuid');
 const { createLogger } = require('../utils/logger');
+const { resolveReportId } = require('../utils/resolveReportId');
+const {
+  initializePdfGeneration,
+  finalizePdfGeneration,
+  addPdfHeader,
+  addSectionHeader,
+  checkPageBreakNeeded,
+  getScoreColor,
+  getGrade
+} = require('../utils/pdfHelpers');
 
 const logger = createLogger('SecurityPdfGenerator');
 
@@ -26,81 +35,51 @@ class SecurityPdfGenerator {
    * Generate comprehensive Security PDF report
    */
   async generateReport(securityResults) {
-    const reportId = uuidv4();
-    const filename = `security-analysis-${reportId}.pdf`;
-    const filepath = path.join(this.reportsDir, filename);
+    // Use helper to initialize PDF generation
+    const { doc, filepath, reportId, stream, filename } = initializePdfGeneration(
+      securityResults,
+      'security',
+      { reportsDir: this.reportsDir }
+    );
 
-    logger.info(`Generating Security PDF report: ${filename}`);
+    try {
+      // Use helper for header
+      addPdfHeader(
+        doc,
+        '[SECURITY_ANALYSIS_REPORT]',
+        securityResults.url,
+        'comprehensive security and vulnerability analysis'
+      );
 
-    return new Promise((resolve, reject) => {
-      try {
-        const doc = new PDFDocument({ margin: 50, size: 'A4' });
-        const stream = fs.createWriteStream(filepath);
-        doc.pipe(stream);
+      // Generate report sections
+      this.addExecutiveSummary(doc, securityResults);
+      this.addSSLAnalysis(doc, securityResults.ssl);
+      this.addSecurityHeaders(doc, securityResults.headers);
+      this.addVulnerabilities(doc, securityResults.vulnerabilities);
+      this.addOWASPCompliance(doc, securityResults.owasp);
+      this.addDesktopMobileComparison(doc, securityResults);
+      this.addRecommendations(doc, securityResults.recommendations);
 
-        // Generate report sections
-        this.addHeader(doc, securityResults.url);
-        this.addExecutiveSummary(doc, securityResults);
-        this.addSSLAnalysis(doc, securityResults.ssl);
-        this.addSecurityHeaders(doc, securityResults.headers);
-        this.addVulnerabilities(doc, securityResults.vulnerabilities);
-        this.addOWASPCompliance(doc, securityResults.owasp);
-        this.addDesktopMobileComparison(doc, securityResults);
-        this.addRecommendations(doc, securityResults.recommendations);
-
-        doc.end();
-
-        stream.on('finish', () => {
-          logger.info(`Security PDF report generated: ${filename}`);
-          resolve({ filename, filepath, reportId });
-        });
-
-        stream.on('error', (error) => {
-          logger.error('Error generating Security PDF:', error);
-          reject(error);
-        });
-
-      } catch (error) {
-        logger.error('Error creating Security PDF:', error);
-        reject(error);
-      }
-    });
+      // Use helper to finalize PDF generation
+      return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+    } catch (error) {
+      logger.error('Error creating Security PDF:', error);
+      throw error;
+    }
   }
 
-  /**
-   * Add header with branding
-   */
-  addHeader(doc, url) {
-    doc
-      .fontSize(28)
-      .font('Helvetica-Bold')
-      .fillColor('#1a1a1a')
-      .text('[SECURITY_ANALYSIS_REPORT]', 50, 50);
-
-    doc
-      .fontSize(14)
-      .font('Helvetica')
-      .fillColor('#555')
-      .text(`Website: ${url}`, 50, 85);
-
-    doc
-      .fontSize(10)
-      .fillColor('#999')
-      .text(`Generated: ${new Date().toLocaleString()}`, 50, 105);
-
-    doc.moveDown(2);
-  }
+  // addHeader removed - using pdfHelpers.addPdfHeader() instead
 
   /**
    * Add executive summary
    */
   addExecutiveSummary(doc, results) {
-    this.checkPageBreak(doc, 250);
-    this.addSectionHeader(doc, '🔒 Security Audit Summary');
+    checkPageBreakNeeded(doc, 250);
+    addSectionHeader(doc, '🔒 Security Audit Summary');
 
     const overallScore = results.overallScore || 0;
-    const grade = this.getGrade(overallScore);
-    const color = this.getScoreColor(overallScore);
+    const grade = getGrade(overallScore);
+    const color = getScoreColor(overallScore);
 
     // Overall Score Box
     doc
@@ -133,8 +112,8 @@ class SecurityPdfGenerator {
     doc.moveDown(0.5);
 
     components.forEach(comp => {
-      const compColor = this.getScoreColor(comp.score);
-      const compGrade = this.getGrade(comp.score);
+      const compColor = getScoreColor(comp.score);
+      const compGrade = getGrade(comp.score);
       
       doc
         .fontSize(10)
@@ -166,8 +145,8 @@ class SecurityPdfGenerator {
   addSSLAnalysis(doc, ssl) {
     if (!ssl) return;
 
-    this.checkPageBreak(doc, 300);
-    this.addSectionHeader(doc, '🔐 SSL/TLS Certificate Analysis');
+    checkPageBreakNeeded(doc, 300);
+    addSectionHeader(doc, '🔐 SSL/TLS Certificate Analysis');
 
     // Certificate Status
     doc
@@ -282,8 +261,8 @@ class SecurityPdfGenerator {
   addSecurityHeaders(doc, headers) {
     if (!headers) return;
 
-    this.checkPageBreak(doc, 300);
-    this.addSectionHeader(doc, '🛡️ Security Headers Analysis');
+    checkPageBreakNeeded(doc, 300);
+    addSectionHeader(doc, '🛡️ Security Headers Analysis');
 
     doc
       .fontSize(11)
@@ -307,7 +286,7 @@ class SecurityPdfGenerator {
     ];
 
     headerDetails.forEach(header => {
-      this.checkPageBreak(doc, 70);
+      checkPageBreakNeeded(doc, 70);
       
       const status = headers.details && headers.details[header.key];
       const implemented = status && status.implemented;
@@ -346,8 +325,8 @@ class SecurityPdfGenerator {
   addVulnerabilities(doc, vulnerabilities) {
     if (!vulnerabilities) return;
 
-    this.checkPageBreak(doc, 250);
-    this.addSectionHeader(doc, '🚨 Vulnerability Assessment');
+    checkPageBreakNeeded(doc, 250);
+    addSectionHeader(doc, '🚨 Vulnerability Assessment');
 
     // Summary
     doc
@@ -386,7 +365,7 @@ class SecurityPdfGenerator {
       doc.moveDown(0.5);
 
       vulnerabilities.details.slice(0, 10).forEach((vuln, index) => {
-        this.checkPageBreak(doc, 100);
+        checkPageBreakNeeded(doc, 100);
         
         const severityColor = this.getSeverityColor(vuln.severity);
         
@@ -436,8 +415,8 @@ class SecurityPdfGenerator {
   addOWASPCompliance(doc, owasp) {
     if (!owasp) return;
 
-    this.checkPageBreak(doc, 300);
-    this.addSectionHeader(doc, '⚔️ OWASP Top 10 Compliance');
+    checkPageBreakNeeded(doc, 300);
+    addSectionHeader(doc, '⚔️ OWASP Top 10 Compliance');
 
     doc
       .fontSize(10)
@@ -488,8 +467,8 @@ class SecurityPdfGenerator {
       return;
     }
 
-    this.checkPageBreak(doc, 200);
-    this.addSectionHeader(doc, '📱 Desktop vs Mobile Security');
+    checkPageBreakNeeded(doc, 200);
+    addSectionHeader(doc, '📱 Desktop vs Mobile Security');
 
     const metrics = [
       { name: 'Security Score', desktop: results.desktop.overallScore, mobile: results.mobile.overallScore },
@@ -526,8 +505,8 @@ class SecurityPdfGenerator {
       return;
     }
 
-    this.checkPageBreak(doc, 200);
-    this.addSectionHeader(doc, '💡 Security Recommendations');
+    checkPageBreakNeeded(doc, 200);
+    addSectionHeader(doc, '💡 Security Recommendations');
 
     // Group by priority
     const critical = recommendations.filter(r => r.priority === 'critical');
@@ -545,7 +524,7 @@ class SecurityPdfGenerator {
       doc.moveDown(0.5);
 
       critical.forEach((rec, index) => {
-        this.checkPageBreak(doc, 100);
+        checkPageBreakNeeded(doc, 100);
         
         doc
           .fontSize(10)
@@ -587,7 +566,7 @@ class SecurityPdfGenerator {
       doc.moveDown(0.5);
 
       high.slice(0, 5).forEach((rec, index) => {
-        this.checkPageBreak(doc, 80);
+        checkPageBreakNeeded(doc, 80);
         
         doc
           .fontSize(10)
@@ -624,51 +603,14 @@ class SecurityPdfGenerator {
     }
   }
 
-  /**
-   * Add section header
-   */
-  addSectionHeader(doc, title) {
-    doc
-      .fontSize(16)
-      .font('Helvetica-Bold')
-      .fillColor('#1a1a1a')
-      .text(title);
-    
-    doc.moveDown(1);
-  }
+  // Helper methods removed - now using pdfHelpers utilities
+  // - addSectionHeader → pdfHelpers.addSectionHeader()
+  // - checkPageBreak → pdfHelpers.checkPageBreakNeeded()
+  // - getScoreColor → pdfHelpers.getScoreColor()
+  // - getGrade → pdfHelpers.getGrade()
 
   /**
-   * Check if page break needed
-   */
-  checkPageBreak(doc, requiredSpace) {
-    if (doc.y + requiredSpace > doc.page.height - 50) {
-      doc.addPage();
-    }
-  }
-
-  /**
-   * Get score color
-   */
-  getScoreColor(score) {
-    if (score >= 90) return '#00ff41';
-    if (score >= 70) return '#ffaa00';
-    if (score >= 50) return '#ffa500';
-    return '#ff4444';
-  }
-
-  /**
-   * Get grade from score
-   */
-  getGrade(score) {
-    if (score >= 90) return 'A - Excellent';
-    if (score >= 80) return 'B - Good';
-    if (score >= 70) return 'C - Fair';
-    if (score >= 50) return 'D - Poor';
-    return 'F - Critical';
-  }
-
-  /**
-   * Get severity color
+   * Get severity color (Security-specific helper)
    */
   getSeverityColor(severity) {
     const sev = (severity || '').toLowerCase();

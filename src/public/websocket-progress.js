@@ -22,7 +22,9 @@ async performComprehensiveScan(normalizedUrl) {
     const timeoutDuration = 600000; // 10 minutes for comprehensive scan
     const timeoutId = setTimeout(() => controller.abort(), timeoutDuration);
 
-    console.log('🚀 Sending request to /api/scan/best-in-class...');
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
     const response = await fetch('/api/scan/best-in-class', {
       method: 'POST',
       headers: {
@@ -31,6 +33,7 @@ async performComprehensiveScan(normalizedUrl) {
       body: JSON.stringify({ 
         url: normalizedUrl,
         scanId: this.scanId,
+        scanStartedAt,
         includePerformance: true,
         includeBestPractices: true,
         includeFontPairing: true,
@@ -45,16 +48,12 @@ async performComprehensiveScan(normalizedUrl) {
     });
 
     clearTimeout(timeoutId);
-    console.log('🚀 Best-in-class response received:', response.status);
-
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
       throw new Error(errorData.error || `HTTP ${response.status}`);
     }
 
     const data = await response.json();
-    console.log(`🎉 Comprehensive scan completed with grade: ${data.data.grade}`);
-    
     if (data.success) {
       this.hideProgressUI();
       this.displayComprehensiveResults(data.data);

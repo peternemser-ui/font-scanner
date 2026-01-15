@@ -23,6 +23,7 @@ const {
   scanLimiter, 
   downloadLimiter,
   competitiveAnalysisLimiter,
+  contactLimiter,
   rateLimitLogger,
   getRateLimitStats,
   getRateLimitAnalytics
@@ -134,6 +135,10 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Serve generated report artifacts (PDFs, screenshots)
+// NOTE: config.reports.dir is repo-relative by default (./reports)
+app.use('/reports', express.static(path.resolve(process.cwd(), config.reports.dir)));
 
 // Routes
 // Liveness probe - checks if app is alive
@@ -300,6 +305,10 @@ app.use('/api/auth', authRoutes);
 const paymentRoutes = require('./routes/payment');
 app.use('/api/payment', paymentRoutes);
 
+// Billing API (no-account checkout for reports/credits)
+const billingRoutes = require('./routes/billing');
+app.use('/api/billing', billingRoutes);
+
 // Usage Stats API
 const usageRoutes = require('./routes/usage');
 app.use('/api/usage', usageRoutes);
@@ -357,6 +366,10 @@ app.post('/api/security', scanLimiter, securityController.analyzeSecurity);
 // IP/Domain Reputation Analyzer
 const ipReputationController = require('./controllers/ipReputationController');
 app.post('/api/ip-reputation', scanLimiter, ipReputationController.analyzeIPReputation);
+
+// Contact form
+const contactController = require('./controllers/contactController');
+app.post('/api/contact', contactLimiter, contactController.submitContact);
 
 // Hosting Pricing Analyzer
 const hostingController = require('./controllers/hostingController');

@@ -3,8 +3,11 @@
  * Multi-device testing with performance, accessibility, and readability analysis
  */
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'mobile-analyzer';
+
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('Mobile analyzer script loaded');
+  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   
   const urlInput = document.getElementById('urlInput');
   const analyzeButton = document.getElementById('analyzeButton');
@@ -12,16 +15,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const loadingContainer = document.getElementById('loadingContainer');
   const resultsContent = document.getElementById('resultsContent');
   const errorMessage = document.getElementById('errorMessage');
-
-  console.log('Elements found:', { 
-    urlInput: !!urlInput, 
-    analyzeButton: !!analyzeButton, 
-    results: !!results,
-    loadingContainer: !!loadingContainer,
-    resultsContent: !!resultsContent,
-    errorMessage: !!errorMessage
-  });
-
   // Initialize AnalyzerLoader
   let loader = null;
   if (typeof AnalyzerLoader !== 'undefined') {
@@ -127,11 +120,16 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }, 3000); // Every 3 seconds advance to next device
 
+      const scanStartedAt = new Date().toISOString();
+      window.SM_SCAN_STARTED_AT = scanStartedAt;
+      document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
       const response = await fetch('/api/mobile-analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           url, 
+          scanStartedAt,
           options: {
             devices,
             includePerformance: true,
@@ -152,15 +150,28 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
+      const reportId = data && data.reportId ? String(data.reportId) : '';
+      const screenshotUrl = data && data.screenshotUrl ? String(data.screenshotUrl) : '';
+
+      if (reportId) {
+        if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
+          window.ReportUI.setCurrentReportId(reportId);
+        } else {
+          document.body.setAttribute('data-report-id', reportId);
+        }
+      }
+      if (screenshotUrl) {
+        document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+      }
       
       if (loader) {
         loader.complete();
         setTimeout(() => {
           loadingContainer.style.display = 'none';
-          displayResults(data.results);
+          displayResults(data.results, { reportId });
         }, 800);
       } else {
-        displayResults(data.results);
+        displayResults(data.results, { reportId });
       }
 
     } catch (error) {
@@ -180,9 +191,10 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMessage.classList.remove('hidden');
   }
 
-  function displayResults(data) {
+  function displayResults(data, meta = {}) {
     const url = document.getElementById('urlInput').value;
     const timestamp = new Date().toLocaleString();
+    const reportId = (meta && meta.reportId) ? String(meta.reportId) : (document.body.getAttribute('data-report-id') || '');
     
     // Check if shared components are loaded
     if (typeof ReportShell === 'undefined' || typeof ReportAccordion === 'undefined') {
@@ -261,12 +273,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       </div>
     `;
+
+    const isReportUnlocked = (id) => {
+      const reportId = String(id || '').trim();
+
+      // Subscription-style Pro (or ProReportBlock helper)
+      if (window.ProReportBlock && typeof window.ProReportBlock.isPro === 'function') {
+        if (window.ProReportBlock.isPro(reportId || null)) return true;
+      }
+
+      // Per-report unlock via credits
+      if (reportId && window.CreditsManager) {
+        if (typeof window.CreditsManager.isUnlocked === 'function') return window.CreditsManager.isUnlocked(reportId);
+        if (typeof window.CreditsManager.isReportUnlocked === 'function') return window.CreditsManager.isReportUnlocked(reportId);
+      }
+
+      return false;
+    };
+
+    const proLocked = !isReportUnlocked(reportId);
     
     // Build accordions
     const accordions = [
       ReportAccordion.createSection({ id: 'mobile-screenshots', title: 'Device Screenshots', scoreTextRight: `${Object.keys(data.devices).length} Devices`, contentHTML: screenshotsContent }),
       ...diagnosticsContent,
-      ReportAccordion.createSection({ id: 'mobile-recommendations', title: 'Recommendations', scoreTextRight: null, contentHTML: recommendationsContent })
+      ReportAccordion.createSection({
+        id: 'mobile-recommendations',
+        title: 'Recommendations',
+        scoreTextRight: null,
+        isPro: true,
+        locked: proLocked,
+        context: 'mobile',
+        reportId,
+        contentHTML: recommendationsContent
+      })
     ].join('');
     
     // Summary stats
@@ -282,12 +322,16 @@ document.addEventListener('DOMContentLoaded', () => {
       ${summaryDonuts}
       ${accordions}
       ${renderMobileSummarySection(summaryStats)}
-      ${renderMobileTakeActionSection(url)}
+      ${renderMobileTakeActionSection(url, reportId)}
     `;
     
     resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;
     window.mobileData = data;
     ReportAccordion.initInteractions();
+
+    if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function' && reportId) {
+      window.CreditsManager.renderPaywallState(reportId);
+    }
   }
   
   function createAllDiagnosticSections(data, firstDevice) {
@@ -454,31 +498,47 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
   
-  function renderMobileTakeActionSection(url) {
-    return `
-      <div class="section">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="color: #00ff41; font-weight: 600;">Take Action</span>
-            <span style="color: #666; font-size: 0.9rem;">Export or share this Mobile Testing report</span>
-          </div>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button onclick="exportMobilePDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(0, 255, 65, 0.4); background: rgba(0, 255, 65, 0.1); color: #00ff41; cursor: pointer; font-weight: 600;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-              PDF Report
-            </button>
-            <button onclick="copyMobileShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              Share Link
-            </button>
-            <button onclick="downloadMobileCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
-              Export Data
-            </button>
+  function renderMobileTakeActionSection(url, reportId = '') {
+    // Use new ProReportBlock component if available
+    if (window.ProReportBlock && window.ProReportBlock.render) {
+      return `
+        <div class="section">
+          ${window.ProReportBlock.render({
+            context: 'mobile',
+            features: ['pdf', 'csv', 'share'],
+            title: 'Purchase Report',
+            subtitle: 'Client-ready exports (PDF/share/data) for this scan.',
+            reportId: reportId || null
+          })}
+        </div>
+      `;
+    } else {
+      // Fallback/legacy code
+      return `
+        <div class="section">
+          <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
+            <div style="display: flex; align-items: center; gap: 0.5rem;">
+              <span style="color: var(--accent-primary); font-weight: 600;">Take Action</span>
+              <span style="color: #666; font-size: 0.9rem;">Export or share this Mobile Testing report</span>
+            </div>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+              <button onclick="exportMobilePDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
+                PDF Report
+              </button>
+              <button onclick="copyMobileShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+                Share Link
+              </button>
+              <button onclick="downloadMobileCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
+                Export Data
+              </button>
+            </div>
           </div>
         </div>
-      </div>
-    `;
+      `;
+    }
   }
   
   // Stub functions for export (can be implemented later)
@@ -900,7 +960,6 @@ ${JSON.stringify(data, null, 2)}
           e.preventDefault();
           e.stopPropagation();
           item.classList.toggle('open');
-          console.log('Accordion toggled via delegation:', item.classList.contains('open'), item);
         }
       }
     });
@@ -908,27 +967,77 @@ ${JSON.stringify(data, null, 2)}
     // Setup screenshot modal click handlers
     const modal = document.getElementById('screenshotModal');
     const modalImage = document.getElementById('modalImage');
-    
+    const closeBtn = document.getElementById('screenshotModalClose');
+
     if (modal && modalImage) {
-      document.querySelectorAll('.device-screenshot').forEach(img => {
-        img.addEventListener('click', (e) => {
-          e.stopPropagation(); // Prevent accordion toggle
-          modalImage.src = img.src;
-          modalImage.alt = img.alt;
-          modal.classList.add('active');
-        });
-      });
+      const previousFocus = { el: null };
 
-      // Close modal on click
-      modal.addEventListener('click', () => {
+      const closeModal = () => {
         modal.classList.remove('active');
-      });
-
-      // Close modal on Escape key
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && modal.classList.contains('active')) {
-          modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+        modalImage.src = '';
+        if (previousFocus.el && typeof previousFocus.el.focus === 'function' && document.contains(previousFocus.el)) {
+          previousFocus.el.focus();
         }
+      };
+
+      const openModal = (imgEl) => {
+        previousFocus.el = document.activeElement;
+        modalImage.src = imgEl.src;
+        modalImage.alt = imgEl.alt || 'Full size screenshot';
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+        window.requestAnimationFrame(() => {
+          if (closeBtn) closeBtn.focus();
+          else modal.focus();
+        });
+      };
+
+      // Avoid stacking duplicate handlers across rerenders
+      if (modal.dataset.smWired !== 'true') {
+        modal.dataset.smWired = 'true';
+
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+
+        modal.addEventListener('click', (e) => {
+          if (e.target === modal) closeModal();
+        });
+
+        document.addEventListener('keydown', (e) => {
+          if (!modal.classList.contains('active')) return;
+
+          if (e.key === 'Escape') {
+            e.preventDefault();
+            closeModal();
+            return;
+          }
+
+          if (e.key !== 'Tab') return;
+
+          const focusables = [closeBtn].filter(Boolean);
+          if (!focusables.length) {
+            e.preventDefault();
+            modal.focus();
+            return;
+          }
+
+          const first = focusables[0];
+          const last = focusables[focusables.length - 1];
+          if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        });
+      }
+
+      document.querySelectorAll('.device-screenshot img').forEach((imgEl) => {
+        imgEl.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent accordion toggle
+          openModal(imgEl);
+        });
       });
     }
   }
@@ -965,23 +1074,23 @@ ${JSON.stringify(data, null, 2)}
     patienceEl.style.cssText = `
       margin: 0 0 1.5rem 0;
       padding: 1rem;
-      background: rgba(0, 255, 65, 0.05);
-      border: 1px solid rgba(0, 255, 65, 0.3);
+      background: rgba(var(--accent-primary-rgb), 0.05);
+      border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
       border-radius: 6px;
       text-align: center;
       overflow: visible;
     `;
     patienceEl.innerHTML = `
       <div style="overflow-x: auto; overflow-y: visible;">
-        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
+        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
    ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
   / _ \\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
  / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
-      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41;">
+      <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--accent-primary);">
         📱 Emulating multiple mobile devices...<br>
-        <span style="font-size: 0.75rem; color: #00ffaa;">This may take 45-90 seconds</span>
+        <span style="font-size: 0.75rem; color: rgba(var(--accent-primary-rgb), 0.8);">This may take 45-90 seconds</span>
       </div>
     `;
     
@@ -991,12 +1100,12 @@ ${JSON.stringify(data, null, 2)}
       style.id = 'patience-animations';
       style.textContent = `
         @keyframes color-cycle {
-          0% { color: #00ff41; }
+          0% { color: var(--accent-primary); }
           20% { color: #00ffaa; }
           40% { color: #00aaff; }
           60% { color: #aa00ff; }
           80% { color: #ff00aa; }
-          100% { color: #00ff41; }
+          100% { color: var(--accent-primary); }
         }
         @keyframes fade-in-out {
           0%, 100% { opacity: 0.7; }

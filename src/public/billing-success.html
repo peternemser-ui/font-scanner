@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Billing Success</title>
+</head>
+<body>
+  <h1>Finalizing purchase…</h1>
+
+  <script>
+    (function () {
+      function loadCreditsManager() {
+        if (window.CreditsManager) return Promise.resolve(true);
+        return new Promise(function (resolve) {
+          var script = document.createElement('script');
+          script.src = '/assets/js/ui.js';
+          script.async = true;
+          script.onload = function () { resolve(!!window.CreditsManager); };
+          script.onerror = function () { resolve(false); };
+          document.head.appendChild(script);
+        });
+      }
+
+      function safeRedirectHome() {
+        window.location.replace('/');
+      }
+
+      function safeRedirectReturnUrl(params) {
+        var returnUrl = params.get('returnUrl') || params.get('return_url') || '';
+        if (returnUrl && typeof returnUrl === 'string') {
+          try {
+            var u = new URL(returnUrl);
+            if (u.protocol === 'http:' || u.protocol === 'https:') {
+              return window.location.replace(u.toString());
+            }
+          } catch (e) {
+            // ignore
+          }
+        }
+        return safeRedirectHome();
+      }
+
+      async function main() {
+        var params = new URLSearchParams(window.location.search);
+        var sessionId = params.get('session_id') || params.get('sessionId');
+        if (!sessionId) return safeRedirectReturnUrl(params);
+
+        var verifyResp = await fetch('/api/billing/verify-session?session_id=' + encodeURIComponent(sessionId));
+        var verification = await verifyResp.json().catch(function () { return null; });
+
+        if (!verifyResp.ok || !verification || verification.paid !== true || !verification.purchaseType) {
+          return safeRedirectReturnUrl(params);
+        }
+
+        await loadCreditsManager();
+
+        if (window.CreditsManager) {
+          // Dedupe: if we've already applied this session, just redirect.
+          if (typeof window.CreditsManager.hasPurchaseReceipt === 'function' && window.CreditsManager.hasPurchaseReceipt(sessionId)) {
+            return safeRedirectReturnUrl(params);
+          }
+
+          if (verification.purchaseType === 'credit_pack') {
+            var creditsAdded = parseInt(verification.creditsAdded || 0, 10) || 0;
+            if (creditsAdded > 0) {
+              window.CreditsManager.addCredits(creditsAdded);
+            }
+          }
+
+          if (verification.purchaseType === 'single_report') {
+            if (verification.reportId) window.CreditsManager.unlockReport(verification.reportId, 'single');
+          }
+
+          if (typeof window.CreditsManager.addPurchaseReceipt === 'function') {
+            window.CreditsManager.addPurchaseReceipt(sessionId);
+          }
+        }
+
+        return safeRedirectReturnUrl(params);
+      }
+
+      main().catch(function () { safeRedirectHome(); });
+    })();
+  </script>
+</body>
+</html>

@@ -9,7 +9,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const navPlaceholder = document.getElementById('nav-placeholder');
   if (navPlaceholder && navPlaceholder.innerHTML.includes('unified-header')) {
     // Controls already initialized by nav-template.js, skip
-    console.log('✅ Controls managed by nav-template.js');
     return;
   }
   

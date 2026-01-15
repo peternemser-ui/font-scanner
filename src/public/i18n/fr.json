@@ -187,6 +187,538 @@
       "extractingColors": "Extraction des couleurs",
       "analyzingPalette": "Analyse de la palette...",
       "detectingFonts": "Détection des polices",
+    "report": {
+      "units": {
+        "chars": "caractères"
+      },
+      "table": {
+        "property": "Propriété",
+        "value": "Valeur",
+        "length": "Longueur",
+        "status": "Statut",
+        "bestPractice": "Bonne pratique",
+        "recommendation": "Recommandation",
+        "metric": "Métrique",
+        "recommended": "Recommandé",
+        "description": "Description",
+        "purpose": "Objectif",
+        "details": "Détails",
+        "check": "Vérification",
+        "platform": "Plateforme",
+        "seoValue": "Valeur SEO",
+        "implementationTip": "Conseil d’implémentation"
+      },
+      "status": {
+        "missing": "Manquant",
+        "review": "À revoir",
+        "optimal": "Optimal",
+        "configured": "Configuré",
+        "present": "Présent",
+        "set": "Défini",
+        "valid": "Valide",
+        "none": "Aucun",
+        "multiple": "Multiple",
+        "pass": "Réussi",
+        "fail": "Échec",
+        "yes": "Oui",
+        "no": "Non",
+        "found": "Trouvé",
+        "notFound": "Introuvable",
+        "detected": "Détecté",
+        "notDetected": "Non détecté",
+        "enabled": "Activé",
+        "notConfigured": "Non configuré – les navigateurs peuvent se connecter via HTTP"
+      },
+      "common": {
+        "moreCount": "... {{count}} de plus"
+      },
+      "metaTags": {
+        "calloutTitle": "🏷️ Les balises meta sont votre première impression",
+        "calloutBody": "Ces balises contrôlent l’affichage de votre site dans les résultats de recherche et sur les réseaux sociaux. Les optimiser peut augmenter le taux de clics de 30 à 50 %.",
+        "overviewHeading": "Aperçu des balises meta",
+        "healthHeading": "Santé des balises meta",
+        "rows": {
+          "title": "Titre",
+          "description": "Description",
+          "openGraph": "Open Graph",
+          "twitterCard": "Carte Twitter",
+          "viewport": "Viewport",
+          "canonical": "Canonique",
+          "ogTags": "Balises OG",
+          "twitter": "Twitter"
+        },
+        "bestPractice": {
+          "title": "50–60 caractères, mot-clé principal au début",
+          "description": "150–160 caractères, CTA convaincant, unique par page",
+          "openGraph": "og:title, og:description, og:image (1200x630px)",
+          "twitterCard": "summary_large_image, twitter:title, twitter:image",
+          "viewport": "width=device-width, initial-scale=1",
+          "canonical": "Évite le contenu dupliqué, utilisez des URLs absolues"
+        }
+      },
+      "headings": {
+        "distributionHeading": "Répartition des titres",
+        "hierarchyHeading": "Hiérarchie des titres",
+        "table": {
+          "level": "Niveau",
+          "count": "Nombre",
+          "firstInstance": "Première occurrence"
+        },
+        "totalHeadingsLabel": "total_titres",
+        "primaryH1Label": "h1_principal",
+        "hierarchySampleLabel": "exemple_hiérarchie"
+      },
+      "content": {
+        "qualityMetricsHeading": "Indicateurs de qualité du contenu",
+        "healthHeading": "Santé du contenu",
+        "metrics": {
+          "wordCount": "Nombre de mots",
+          "readability": "Lisibilité",
+          "textRatio": "Ratio de texte",
+          "paragraphs": "Paragraphes"
+        },
+        "wordCountLabel": "Nombre de mots : {{count}}",
+        "readabilityScoreLabel": "Score de lisibilité",
+        "textToHtmlLabel": "Texte/HTML : {{percent}}%",
+        "paragraphsLabel": "Paragraphes : {{count}}",
+        "wordCountLineLabel": "nb_mots",
+        "sentencesLineLabel": "phrases",
+        "avgWordsPerSentenceLineLabel": "moy_mots_par_phrase"
+      },
+      "images": {
+        "calloutTitle": "I SEO des images : le texte alternatif est essentiel",
+        "calloutBody": "Le texte alternatif aide les moteurs de recherche à comprendre les images et améliore l’accessibilité. La recherche d’images Google représente 20 à 30 % du trafic web pour de nombreux sites.",
+        "overviewHeading": "Aperçu de l’optimisation des images",
+        "detailsHeading": "Détails des images",
+        "statsHeading": "Statistiques des images",
+        "noImagesFound": "Aucune image trouvée sur cette page",
+        "radial": {
+          "altCoverage": "Couverture du texte alt",
+          "imagesFound": "Images trouvées",
+          "overallScore": "Score global"
+        },
+        "table": {
+          "imageUrl": "URL de l’image",
+          "dimensions": "Dimensions",
+          "altText": "Texte alt"
+        },
+        "recommendation": {
+          "pass": "Descriptif, utile pour le SEO et l’accessibilité",
+          "fail": "Ajoutez un texte alt descriptif pour le SEO et les lecteurs d’écran"
+        },
+        "totalImagesLabel": "total_images",
+        "withAltLabel": "avec_alt"
+      },
+      "links": {
+        "networkDiagramHeading": "Diagramme du réseau de liens",
+        "healthSummaryHeading": "Résumé de la santé des liens",
+        "totalLinksLabel": "total_liens",
+        "internalLinksLabel": "liens_internes",
+        "externalLinksLabel": "liens_externes",
+        "nofollowLinksLabel": "liens_nofollow",
+        "brokenFormatLabel": "format_cassé"
+      },
+      "mobile": {
+        "calloutTitle": "M Indexation mobile-first",
+        "calloutBody": "Google utilise désormais la version mobile de votre site pour l’indexation et le classement. La compatibilité mobile est essentielle pour le SEO.",
+        "devices": {
+          "mobile": "Mobile",
+          "tablet": "Tablette",
+          "desktop": "Bureau"
+        },
+        "table": {
+          "deviceType": "Type d’appareil",
+          "width": "Largeur",
+          "noHorizontalScroll": "Pas de défilement horizontal",
+          "viewportMeta": "Meta viewport",
+          "readableFontSize": "Taille de police lisible"
+        },
+        "recommendations": {
+          "mobile": "≥ 16 px, pas de défilement horizontal",
+          "tablet": "Mise en page responsive, adaptée au tactile",
+          "desktop": "Solution de repli bureau"
+        },
+        "cards": {
+          "horizontalScroll": "Défilement horizontal",
+          "viewportMetaTag": "Balise meta viewport",
+          "fontReadability": "Lisibilité de la police",
+          "none": "Aucun",
+          "detected": "Détecté",
+          "devicesFraction": "{{count}}/{{total}} appareils"
+        }
+      },
+      "performance": {
+        "metrics": {
+          "pageLoadTime": "Temps de chargement de la page",
+          "domContentLoaded": "DOM Content Loaded",
+          "totalResources": "Ressources totales",
+          "pageSize": "Taille de la page",
+          "domNodes": "Nœuds du DOM"
+        },
+        "desc": {
+          "pageLoadTime": "Temps jusqu’au chargement complet de la page",
+          "domContentLoaded": "Temps jusqu’à ce que le DOM soit prêt",
+          "totalResources": "Nombre de requêtes HTTP",
+          "pageSize": "Taille totale transférée",
+          "domNodes": "Nombre total d’éléments HTML"
+        },
+        "recommended": {
+          "pageLoadTime": "< 3 s (Bon) | < 5 s (Moyen)",
+          "domContentLoaded": "< 2 s (Bon)",
+          "totalResources": "< 150 (Bon) | < 300 (Moyen)",
+          "pageSize": "< 3 MB (Bon)",
+          "domNodes": "< 1 500 (Bon) | < 3 000 (Moyen)"
+        }
+      },
+      "security": {
+        "calloutTitle": "◈ En-têtes de sécurité critiques pour le SEO",
+        "calloutBody": "Google privilégie les sites sécurisés dans les classements. Des en-têtes manquants peuvent nuire au SEO et à la confiance. HTTPS est un facteur de classement direct.",
+        "table": {
+          "securityHeader": "En-tête de sécurité",
+          "recommendedValue": "Valeur recommandée"
+        },
+        "headers": {
+          "httpsEnabled": "HTTPS activé",
+          "hsts": "En-tête HSTS",
+          "csp": "Content Security Policy",
+          "xFrameOptions": "X-Frame-Options",
+          "xContentTypeOptions": "X-Content-Type-Options"
+        },
+        "purpose": {
+          "encryptedConnection": "Connexion chiffrée",
+          "forceHttps": "Forcer HTTPS",
+          "xssProtection": "Protection XSS",
+          "clickjacking": "Protection contre le clickjacking",
+          "mimeSniffing": "Protection contre le MIME sniffing"
+        },
+        "details": {
+          "sslEnabled": "SSL/TLS sécurisé activé",
+          "noHttps": "HTTPS non détecté",
+          "hstsNotConfigured": "Non configuré – les navigateurs peuvent se connecter via HTTP",
+          "injectionRisk": "Vulnérable aux attaques par injection",
+          "canEmbed": "Peut être intégré dans des iframes",
+          "misinterpret": "Le navigateur peut mal interpréter le contenu"
+        },
+        "recommended": {
+          "https": "Obligatoire : utilisez toujours HTTPS en production"
+        }
+      },
+      "structuredData": {
+        "info": {
+          "title": "ⓘ Qu’est-ce que le schéma de données structurées ?",
+          "body": "Les données structurées (aussi appelées balisage schema) sont du code qui aide les moteurs de recherche à mieux comprendre votre contenu, permettant des <strong style=\"color: #00ff41;\">résultats enrichis</strong> comme les étoiles d’avis, les prix, les dates d’événements, les FAQ déroulantes, etc. Elles utilisent le vocabulaire <strong style=\"color: #00ccff;\">Schema.org</strong> en JSON-LD, Microdata ou RDFa.",
+          "cards": {
+            "ctr": {
+              "title": "U Meilleur CTR",
+              "body": "Les résultats enrichis se démarquent et attirent plus de clics"
+            },
+            "targeting": {
+              "title": "T Meilleur ciblage",
+              "body": "Aide les moteurs à comprendre votre niche"
+            },
+            "advantage": {
+              "title": "W Avantage SEO",
+              "body": "Avantage concurrentiel dans les résultats"
+            }
+          }
+        },
+        "summary": {
+          "heading": "Résumé",
+          "table": {
+            "impact": "Impact"
+          },
+          "rows": {
+            "found": {
+              "metric": "Données structurées détectées",
+              "impact": {
+                "detected": "Active des résultats enrichis",
+                "notFound": "Absence d’affichages enrichis"
+              }
+            },
+            "types": {
+              "metric": "Types de schema implémentés",
+              "value": {
+                "singular": "Type",
+                "plural": "Types"
+              },
+              "impact": {
+                "great": "Excellente couverture",
+                "good": "Bon début",
+                "none": "Aucun implémenté"
+              }
+            },
+            "score": {
+              "metric": "Score global",
+              "impact": {
+                "excellent": "Implémentation excellente",
+                "room": "Peut être amélioré",
+                "critical": "Manque critique"
+              }
+            }
+          }
+        },
+        "detected": {
+          "heading": "Types de schema détectés",
+          "table": {
+            "schemaType": "Type de schema",
+            "seoBenefit": "Bénéfice SEO",
+            "keyFields": "Champs clés"
+          },
+          "unknown": {
+            "desc": "Balisage schema",
+            "benefit": "Implémentation de données structurées"
+          },
+          "moreFields": "+{{count}} de plus",
+          "na": "N/A"
+        },
+        "validation": {
+          "title": "✓ Étape suivante : validez votre schema",
+          "body": {
+            "beforeLink": "Utilisez",
+            "linkText": "le test de résultats enrichis de Google",
+            "afterLink": "pour vérifier que vos données structurées sont sans erreurs et éligibles aux extraits enrichis. Surveillez Search Console pour les erreurs de données structurées."
+          }
+        },
+        "missing": {
+          "heading": "Opportunité SEO critique manquante",
+          "card": {
+            "title": "Aucune donnée structurée détectée",
+            "body": "Vous manquez des affichages enrichis qui augmentent la visibilité et le taux de clic"
+          },
+          "table": {
+            "richResultType": "Type de résultat enrichi",
+            "whatMissing": "Ce qui manque",
+            "ctrImpact": "Impact sur le CTR"
+          },
+          "rows": {
+            "starRatings": {
+              "title": "Étoiles d’avis",
+              "body": "Afficher les étoiles et notes directement dans les résultats"
+            },
+            "productInfo": {
+              "title": "Infos produit",
+              "body": "Afficher prix, disponibilité et offres en ligne"
+            },
+            "eventDetails": {
+              "title": "Détails d’événement",
+              "body": "Dates, lieu et billets avec intégration calendrier"
+            },
+            "richMedia": {
+              "title": "Médias enrichis",
+              "body": "Miniatures améliorées, carrousels et extraits vidéo"
+            },
+            "faq": {
+              "title": "FAQ déroulantes",
+              "body": "Sections Q/R extensibles dans les résultats"
+            }
+          }
+        },
+        "proTip": {
+          "label": "ⓘ Astuce :",
+          "body": "Les résultats enrichis peuvent augmenter le taux de clic de 15 à 35 % selon Google. Commencez par les schémas de base ci-dessous pour en profiter."
+        },
+        "recommended": {
+          "heading": "Types de schema recommandés à implémenter",
+          "box": {
+            "title": "Commencez par ces schémas fondamentaux",
+            "body": "qui fonctionnent pour presque tous les sites. Vous pourrez ajouter des schémas plus spécifiques selon votre contenu ensuite."
+          },
+          "table": {
+            "schemaType": "Type de schema",
+            "priority": "Priorité",
+            "seoBenefit": "Bénéfice SEO",
+            "requiredFields": "Champs requis"
+          }
+        },
+        "priority": {
+          "high": "ÉLEVÉE",
+          "medium": "MOYENNE"
+        },
+        "formats": {
+          "heading": "Formats d’implémentation",
+          "jsonld": {
+            "badge": "RECOMMANDÉ",
+            "body": "JSON pour Linked Data. Format préféré par Google : propre, séparé du HTML, facile à maintenir."
+          },
+          "microdata": {
+            "subtitle": "Attributs HTML",
+            "body": "Intégré directement dans les balises HTML. Plus complexe à maintenir mais lié au contenu."
+          },
+          "rdfa": {
+            "subtitle": "Description de ressources",
+            "body": "RDF en attributs. Similaire à Microdata, avec d’autres noms d’attributs."
+          }
+        },
+        "resources": {
+          "heading": "Ressources et outils essentiels",
+          "table": {
+            "tool": "Outil",
+            "link": "Lien"
+          },
+          "rows": {
+            "schemaDocs": {
+              "title": "Docs Schema.org",
+              "purpose": "Référence officielle du vocabulaire avec une documentation complète pour tous les types et propriétés",
+              "linkText": "schema.org →"
+            },
+            "richResultsTest": {
+              "title": "Test de résultats enrichis",
+              "purpose": "Testez votre balisage et voyez quels résultats enrichis Google peut générer",
+              "linkText": "Tester →"
+            },
+            "validator": {
+              "title": "Validateur de schema",
+              "purpose": "Outil de validation pour JSON-LD, Microdata et RDFa",
+              "linkText": "Valider →"
+            },
+            "googleGuide": {
+              "title": "Guide Google",
+              "purpose": "Guide pas à pas pour implémenter les données structurées avec exemples et bonnes pratiques",
+              "linkText": "Lire →"
+            },
+            "generator": {
+              "title": "Générateur de balisage",
+              "purpose": "Outil gratuit pour générer rapidement du balisage JSON-LD pour divers schémas",
+              "linkText": "Générer →"
+            }
+          }
+        },
+        "schemas": {
+          "Organization": {
+            "desc": "Infos entreprise/marque",
+            "benefit": "Renforce l’identité de marque dans le Knowledge Graph"
+          },
+          "Person": {
+            "desc": "Profil individuel",
+            "benefit": "Active les extraits d’auteur et le panneau de connaissance"
+          },
+          "Product": {
+            "desc": "Produits et détails",
+            "benefit": "Affiche prix, disponibilité et avis dans la recherche"
+          },
+          "Article": {
+            "desc": "Articles et billets",
+            "benefit": "Extraits d’articles avec auteur et date"
+          },
+          "WebSite": {
+            "desc": "Métadonnées du site",
+            "benefit": "Active la boîte de recherche sitelinks dans Google"
+          },
+          "BreadcrumbList": {
+            "desc": "Fil d’Ariane",
+            "benefit": "Affiche le fil d’Ariane dans les résultats"
+          },
+          "LocalBusiness": {
+            "desc": "Infos d’entreprise locale",
+            "benefit": "Apparaît dans la recherche locale et Google Maps"
+          },
+          "Event": {
+            "desc": "Infos d’événement",
+            "benefit": "Affiche les détails avec \"Ajouter au calendrier\""
+          },
+          "Recipe": {
+            "desc": "Recettes",
+            "benefit": "Cartes recette avec notes, temps, calories"
+          },
+          "Review": {
+            "desc": "Avis utilisateurs",
+            "benefit": "Affiche les étoiles directement dans les résultats"
+          },
+          "VideoObject": {
+            "desc": "Contenu vidéo",
+            "benefit": "Extraits vidéo avec miniatures et moments clés"
+          },
+          "FAQPage": {
+            "desc": "FAQ",
+            "benefit": "FAQ extensibles dans les résultats"
+          },
+          "HowTo": {
+            "desc": "Guides étape par étape",
+            "benefit": "Étapes numérotées avec images dans la recherche"
+          },
+          "SoftwareApplication": {
+            "desc": "Détails logiciel/app",
+            "benefit": "Boutons d’installation et notes dans la recherche"
+          },
+          "JobPosting": {
+            "desc": "Offres d’emploi",
+            "benefit": "Apparaît dans Google for Jobs avec salaire et lieu"
+          }
+        }
+      },
+      "additional": {
+        "calloutTitle": "🔧 Essentiels du SEO technique",
+        "calloutBody": "Ces éléments techniques aident les moteurs de recherche à explorer, indexer et comprendre votre site. Les éléments manquants peuvent réduire fortement la découvrabilité.",
+        "technicalHeading": "SEO technique",
+        "checks": {
+          "sitemap": "Plan de site XML",
+          "favicon": "Favicon",
+          "googleAnalytics": "Google Analytics"
+        },
+        "purpose": {
+          "robots": "Contrôle l’exploration des moteurs de recherche",
+          "sitemap": "Aide les moteurs à découvrir les pages",
+          "favicon": "Icône d’onglet du navigateur",
+          "analytics": "Suivi du trafic"
+        },
+        "details": {
+          "robotsPresent": "Le fichier est présent et accessible",
+          "robotsMissing": "Manquant – créez /robots.txt",
+          "sitemapDetected": "Plan de site détecté",
+          "sitemapMissing": "Manquant – améliore l’indexation",
+          "faviconMissing": "Aucun favicon trouvé",
+          "analyticsEnabled": "Suivi Analytics activé",
+          "analyticsMissing": "Analytics non détecté"
+        },
+        "bestPractice": {
+          "robots": "Autorisez les robots, bloquez admin/privé",
+          "sitemap": "Soumettez-le à Google Search Console, mettez à jour chaque semaine",
+          "favicon": "PNG ou ICO 32×32, améliore la reconnaissance de marque",
+          "analytics": "GA4 recommandé, suivez le comportement utilisateur pour des insights SEO"
+        },
+        "social": {
+          "calloutTitle": "M Signaux sociaux & SEO",
+          "calloutBody": "Même si ce ne sont pas des facteurs directs, les liens sociaux augmentent la visibilité, génèrent du trafic et améliorent les aperçus Open Graph lors du partage.",
+          "heading": "Présence sur les réseaux sociaux",
+          "value": {
+            "openGraph": "Balises Meta Open Graph",
+            "twitterCard": "Balises Twitter Card",
+            "professional": "Réseau professionnel",
+            "visual": "Contenu visuel"
+          },
+          "details": {
+            "linkPresent": "Lien présent",
+            "facebookMissing": "Aucun lien Facebook trouvé",
+            "twitterMissing": "Aucun lien Twitter trouvé",
+            "linkedinMissing": "Aucun lien LinkedIn trouvé",
+            "instagramMissing": "Aucun lien Instagram trouvé"
+          },
+          "tip": {
+            "openGraph": "Ajoutez og:image, og:title, og:description",
+            "twitterCard": "Ajoutez twitter:card, twitter:image",
+            "linkedin": "Ajoutez au pied de page, améliore la crédibilité B2B",
+            "instagram": "Lien vers le profil pro, renforce la marque visuelle"
+          }
+        }
+      },
+      "issues": {
+        "issuesHeading": "problèmes",
+        "recommendationsHeading": "recommandations"
+      },
+      "loading": {
+        "title": "ANALYSE",
+        "running": "exécution d’une analyse SEO complète...",
+        "metaTags": "vérification des balises meta...",
+        "content": "analyse de la qualité du contenu...",
+        "mobile": "test de la compatibilité mobile...",
+        "performance": "mesure des performances..."
+      },
+      "error": {
+        "title": "ERREUR",
+        "analysisFailed": "analyse_échouée",
+        "retry": "RÉESSAYER"
+      }
+    },
       "identifyingTypography": "Identification de la hiérarchie...",
       "findingLogos": "Recherche des logos",
       "locatingAssets": "Localisation des actifs...",
@@ -309,15 +841,67 @@
     "breadcrumb": "analyseur seo",
     "analyze": "ANALYSER LE SEO",
     "analyzing": "ANALYSE EN COURS...",
+    "overall": "Global",
+    "reportTitle": "Rapport SEO",
+    "reportSubtitle": "Analyse SEO",
+    "loadingTitle": "Analyse en cours...",
+    "mayTake": "Cela peut prendre 30 à 60 secondes",
     "seoScore": "Score SEO",
     "metaTags": "Balises Meta",
     "headings": "Titres",
+    "content": "Contenu",
     "images": "Images",
     "links": "Liens",
+    "mobile": "Mobile",
+    "performance": "Performance",
+    "security": "Sécurité",
     "canonicalUrl": "URL Canonique",
     "structuredData": "Données Structurées",
     "sitemap": "Plan du Site",
     "robotsTxt": "Robots.txt",
+    "sections": {
+      "metaTags": "Balises Meta",
+      "headings": "Titres",
+      "content": "Contenu",
+      "images": "Images",
+      "links": "Liens",
+      "mobile": "Mobile",
+      "performance": "Performance",
+      "security": "Sécurité",
+      "structuredData": "Données Structurées",
+      "additional": "Vérifications supplémentaires",
+      "fixCode": "Correctifs + Recommandations"
+    },
+    "steps": {
+      "running": "Exécution de l'analyse SEO",
+      "initializing": "Initialisation du moteur d'analyse...",
+      "metaTags": "Vérification des balises meta",
+      "metaTagsDetail": "Analyse du titre, de la description, des mots-clés...",
+      "content": "Analyse de la qualité du contenu",
+      "contentDetail": "Évaluation des titres, du texte, de la lisibilité...",
+      "mobile": "Test de la compatibilité mobile",
+      "mobileDetail": "Vérification du viewport et de la mise en page...",
+      "performance": "Mesure des performances",
+      "performanceDetail": "Test de la vitesse de chargement et de l'optimisation..."
+    },
+    "proPreview": {
+      "metaTags": "Améliorations des balises meta",
+      "structuredData": "Gains rapides sur les données structurées"
+    },
+    "fixes": {
+      "previewIntro": "Aperçu des packs de correctifs :",
+      "impact": "Impact",
+      "copySnippet": "Copier l’extrait",
+      "snippetCopied": "Extrait copié dans le presse-papiers"
+    },
+    "components": {
+      "metaTags": "Balises Meta",
+      "headings": "Titres",
+      "content": "Contenu",
+      "images": "Images",
+      "links": "Liens",
+      "structuredData": "Données Structurées"
+    },
     "pages": {
       "home": {
         "title": "Site Mechanic - Analyse Professionnelle de Sites Web et Outils SEO",
@@ -339,6 +923,13 @@
         "keywords": "tests de performance, vitesse page, Core Web Vitals, optimisation web, surveillance performance",
         "og_title": "Hub de Tests de Performance - Optimisation Vitesse",
         "twitter_title": "Testez et Optimisez les Performances de Votre Site"
+      },
+      "seo-analyzer": {
+        "title": "SEO & Indexation - Métadonnées, Structure & Crawlabilité | Site Mechanic",
+        "description": "Diagnostiquez les problèmes SEO : balises meta, titres, données structurées, crawlabilité et optimisation on-page. Intégré au flux unifié d'inspection web de Site Mechanic.",
+        "keywords": "analyseur SEO, audit SEO, balises meta, données structurées, SEO on-page, SEO technique, crawlabilité, indexation",
+        "og_title": "Analyseur SEO - Outil d'audit SEO | Site Mechanic",
+        "twitter_title": "Analyseur SEO - Outil d'audit SEO | Site Mechanic"
       },
       "mobile-analyzer": {
         "title": "Analyseur Mobile - Outil de Test de Design Responsive",
@@ -488,7 +1079,9 @@
     "print": "Imprimer",
     "help": "Aide",
     "settings": "Paramètres",
-    "language": "Langue"
+    "language": "Langue",
+    "pageScreenshotAlt": "Capture d’écran de la page",
+    "footer": "© 2025 Site Mechanic. Conçu pour les développeurs qui se soucient de la qualité."
   },
   "errors": {
     "urlRequired": "Veuillez entrer une URL valide",
@@ -590,6 +1183,8 @@
   "pricing": {
     "title": "Passer à Site Mechanic Pro",
     "subtitle": "Débloquez des analyses illimitées, des recommandations avancées et des outils d'optimisation de niveau expert",
+    "unlockReportTitle": "Déverrouiller le rapport",
+    "unlockReportSubtitle": "Export PDF, partage de lien, export de données et packs de correctifs pour cette analyse.",
     "monthly": "Mensuel",
     "annual": "Annuel Économisez 17%",
     "free": "Gratuit",

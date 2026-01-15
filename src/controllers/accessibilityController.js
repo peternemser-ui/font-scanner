@@ -7,6 +7,11 @@ const accessibilityAnalyzerService = require('../services/accessibilityAnalyzerS
 const { normalizeUrl, validateUrl } = require('../utils/validators');
 const { asyncHandler } = require('../utils/errorHandler');
 const { createLogger } = require('../utils/logger');
+const {
+  getAnalyzerKeyOverride,
+  buildReportMetadata,
+  attachReportMetadata
+} = require('../utils/controllerHelpers');
 
 const logger = createLogger('AccessibilityController');
 
@@ -33,6 +38,11 @@ exports.analyzeAccessibility = asyncHandler(async (req, res) => {
 
   // Perform analysis
   const results = await accessibilityAnalyzerService.analyzeAccessibility(normalizedUrl);
+
+  // Attach report metadata (reportId, screenshotUrl, timestamps)
+  const analyzerKey = getAnalyzerKeyOverride(req, 'accessibility');
+  const metadata = await buildReportMetadata({ req, results, url: normalizedUrl, analyzerKey });
+  attachReportMetadata(results, metadata);
 
   res.json(results);
 });

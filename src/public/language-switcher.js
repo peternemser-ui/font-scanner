@@ -42,7 +42,6 @@ class LanguageSwitcher {
     this.setupEventListeners();
 
     this.initialized = true;
-    console.log('✓ Language switcher initialized');
   }
 
   /**
@@ -188,7 +187,7 @@ class LanguageSwitcher {
         display: flex;
         align-items: center;
         gap: 0.35rem;
-        padding: 0.35rem 0.6rem;
+        padding: 0.6rem 0.6rem;
         background: rgba(255, 255, 255, 0.08);
         border: 1px solid rgba(255, 255, 255, 0.15);
         border-radius: 4px;

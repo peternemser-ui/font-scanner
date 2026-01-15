@@ -311,11 +311,11 @@ const ProGate = {
     }
 
     return `
-      <div class="pro-gate-overlay" id="proGateOverlay">
-        <div class="pro-gate-modal">
-          ${dismissable ? '<button class="pro-gate-close" onclick="ProGate.hideUpgradePrompt()">✕</button>' : ''}
+      <div class="pro-gate-overlay" id="proGateOverlay" role="presentation">
+        <div class="pro-gate-modal" role="dialog" aria-modal="true" aria-labelledby="proGateTitle" tabindex="-1">
+          ${dismissable ? '<button type="button" class="pro-gate-close" aria-label="Close" onclick="ProGate.hideUpgradePrompt()">✕</button>' : ''}
           <div class="pro-gate-icon">⏱️</div>
-          <h3 class="pro-gate-title">${featureName}</h3>
+          <h3 class="pro-gate-title" id="proGateTitle">${featureName}</h3>
           <p class="pro-gate-description">
             ${featureValue ? `This saves you from ${featureValue.saves} (estimated ${timesSaved}).` : 'Automates manual work so you can focus on fixes.'}
           </p>
@@ -366,7 +366,10 @@ const ProGate = {
     
     const overlay = document.createElement('div');
     overlay.innerHTML = this.renderUpgradePrompt(options);
-    document.body.appendChild(overlay.firstElementChild);
+    const element = overlay.firstElementChild;
+    document.body.appendChild(element);
+
+    this._wireA11y(element, { dismissable: options.dismissable !== false });
   },
 
   /**
@@ -374,7 +377,91 @@ const ProGate = {
    */
   hideUpgradePrompt() {
     const overlay = document.getElementById('proGateOverlay');
-    if (overlay) overlay.remove();
+    if (!overlay) return;
+
+    const cleanup = overlay._smProGateCleanup;
+    if (typeof cleanup === 'function') cleanup();
+
+    overlay.remove();
+  },
+
+  _wireA11y(overlayEl, options = {}) {
+    const { dismissable = true } = options;
+    const modalEl = overlayEl && overlayEl.querySelector ? overlayEl.querySelector('.pro-gate-modal') : null;
+    if (!modalEl) return;
+
+    const previousFocus = document.activeElement;
+
+    const getFocusable = () => {
+      const selectors = [
+        'a[href]',
+        'button:not([disabled])',
+        'textarea:not([disabled])',
+        'input:not([disabled])',
+        'select:not([disabled])',
+        '[tabindex]:not([tabindex="-1"])'
+      ];
+      return Array.from(modalEl.querySelectorAll(selectors.join(','))).filter((el) => {
+        if (!el) return false;
+        const style = window.getComputedStyle(el);
+        return style && style.visibility !== 'hidden' && style.display !== 'none';
+      });
+    };
+
+    const focusInitial = () => {
+      const focusables = getFocusable();
+      if (focusables.length) {
+        focusables[0].focus();
+      } else {
+        modalEl.focus();
+      }
+    };
+
+    const onKeyDown = (e) => {
+      if (e.key === 'Escape' && dismissable) {
+        e.preventDefault();
+        this.hideUpgradePrompt();
+        return;
+      }
+
+      if (e.key !== 'Tab') return;
+
+      const focusables = getFocusable();
+      if (!focusables.length) {
+        e.preventDefault();
+        modalEl.focus();
+        return;
+      }
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    };
+
+    const onOverlayClick = (e) => {
+      if (!dismissable) return;
+      if (e.target === overlayEl) this.hideUpgradePrompt();
+    };
+
+    document.addEventListener('keydown', onKeyDown);
+    overlayEl.addEventListener('click', onOverlayClick);
+
+    overlayEl._smProGateCleanup = () => {
+      document.removeEventListener('keydown', onKeyDown);
+      overlayEl.removeEventListener('click', onOverlayClick);
+      if (previousFocus && typeof previousFocus.focus === 'function' && document.contains(previousFocus)) {
+        previousFocus.focus();
+      }
+    };
+
+    // Focus after insertion
+    window.requestAnimationFrame(() => focusInitial());
   },
 
   /**

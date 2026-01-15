@@ -26,19 +26,48 @@
 
   function renderReportHeader(opts) {
     const { title, url, timestamp, badgeText, mode = 'performance' } = opts || {};
-    const modeLabels = {
-      full: 'LIGHTHOUSE_ANALYSIS_RESULTS',
-      cwv: 'CORE_WEB_VITALS_RESULTS',
-      quick: 'QUICK_SCAN_RESULTS',
-      performance: 'PERFORMANCE_ANALYSIS_RESULTS'
+
+    // Delegate to ReportContainer if available (new system)
+    if (window.ReportContainer && window.ReportContainer.renderHeader) {
+      const modeTitles = {
+        full: 'Lighthouse Audit',
+        cwv: 'Core Web Vitals',
+        quick: 'Quick Scan',
+        performance: 'Performance Analysis'
+      };
+      const modeLabel = modeTitles[mode] || '';
+      const isRedundant =
+        typeof title === 'string' &&
+        title.trim() &&
+        modeLabel &&
+        title.toLowerCase().includes(modeLabel.toLowerCase());
+
+      return window.ReportContainer.renderHeader({
+        url,
+        timestamp,
+        mode,
+        title: title || 'Analysis Results',
+        subtitle: isRedundant ? undefined : badgeText,
+        showModeBadge: !isRedundant,
+        showModeMeta: !isRedundant
+      });
+    }
+
+    // Fallback: Legacy format with improved labels (no raw debug text)
+    const modeTitles = {
+      full: 'Lighthouse Audit',
+      cwv: 'Core Web Vitals',
+      quick: 'Quick Scan',
+      performance: 'Performance Analysis'
     };
-    const headerLabel = modeLabels[mode] || 'PERFORMANCE_ANALYSIS_RESULTS';
-    
+    const displayTitle = modeTitles[mode] || 'Performance Analysis';
+
     return `
       <div class="section" style="margin-bottom: 1.5rem;">
-        <h2 style="color: var(--text-primary, #fff); font-size: 1.5rem; margin: 0 0 1rem 0;">[${headerLabel}]</h2>
-        ${url ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0;">>> url: ${url}</p>` : ''}
-        ${timestamp ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0;">>> timestamp: ${timestamp}</p>` : ''}
+        <div style="display: inline-block; padding: 0.375rem 0.875rem; background: var(--color-primary, #00FF9D); color: var(--color-black, #000); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; margin-bottom: 1rem;">${displayTitle}</div>
+        <h2 style="color: var(--text-primary, #fff); font-size: 1.5rem; margin: 0 0 1rem 0;">${title || 'Analysis Results'}</h2>
+        ${url ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🌐 ${url}</p>` : ''}
+        ${timestamp ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🕒 ${timestamp}</p>` : ''}
       </div>
     `;
   }

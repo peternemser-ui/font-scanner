@@ -1,6 +1,10 @@
 // Brand Consistency Checker Script
 // Best-in-class brand analysis with consistent UI design
 
+// Deterministic analyzer key (stable forever)
+window.SM_ANALYZER_KEY = 'brand-consistency';
+document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+
 document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('url').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyze();
@@ -20,12 +24,26 @@ function t(key, fallback) {
   return fallback;
 }
 
+function getAccentPrimaryHex() {
+  try {
+    const value = getComputedStyle(document.documentElement)
+      .getPropertyValue('--accent-primary')
+      .trim();
+    if (value) return value;
+  } catch (e) {
+    // Ignore
+  }
+
+  const isLightTheme = document.body && document.body.classList.contains('white-theme');
+  return isLightTheme ? '#dd3838' : '#5bf4e7';
+}
+
 // Copy to clipboard helper
 function copyToClipboard(text, button) {
   navigator.clipboard.writeText(text).then(() => {
     const originalText = button.textContent;
     button.textContent = t('common.copied', 'Copied!');
-    button.style.background = 'rgba(0, 255, 65, 0.2)';
+    button.style.background = 'rgba(var(--accent-primary-rgb), 0.2)';
     setTimeout(() => {
       button.textContent = originalText;
       button.style.background = '';
@@ -145,24 +163,24 @@ async function analyze() {
   loaderMessageEl.style.cssText = `
     margin: 0 0 1.5rem 0;
     padding: clamp(0.75rem, 2vw, 1rem);
-    background: rgba(0, 255, 65, 0.05);
-    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: rgba(var(--accent-primary-rgb), 0.05);
+    border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
     border-radius: 6px;
     text-align: center;
     overflow: visible;
   `;
   loaderMessageEl.innerHTML = `
     <div style="overflow-x: auto; overflow-y: visible; -webkit-overflow-scrolling: touch;">
-      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: #00ff41; font-family: monospace; text-shadow: 2px 2px 0px rgba(0, 255, 65, 0.3); display: inline-block; text-align: left;">
+      <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3); display: inline-block; text-align: left;">
  ____  ____   __   __ _  ____     __   _  _  ____  __  ____ 
 (  _ \\(  _ \\ / _\\ (  ( \\(    \\   / _\\ / )( \\(    \\(  )(_  _)
  ) _ ( )   //    \\/    / ) D (  /    \\) \\/ ( ) D ( )(   )(  
 (____/(__\\_)\\_/\\_/\\_)__)(____/  \\_/\\_/\\____/(____/(__) (__)  </pre>
     </div>
-    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: #00ff41; font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
+    <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
       ${t('brandConsistency.analyzing', 'Analyzing brand consistency...')}
     </p>
-    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(0, 255, 65, 0.7); padding: 0 0.5rem;">
+    <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(var(--accent-primary-rgb), 0.7); padding: 0 0.5rem;">
       ${t('common.mayTake', 'This may take 15-30 seconds')}
     </p>
   `;
@@ -178,11 +196,15 @@ async function analyze() {
   
   try {
     loader.nextStep(1);
+
+    const scanStartedAt = new Date().toISOString();
+    window.SM_SCAN_STARTED_AT = scanStartedAt;
+    document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
     
     const response = await fetch('/api/brand-consistency', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, multiPage: isMultiPage, maxPages })
+      body: JSON.stringify({ url, multiPage: isMultiPage, maxPages, scanStartedAt })
     });
     
     loader.nextStep(2);
@@ -215,14 +237,14 @@ async function analyze() {
 }
 
 function getScoreColor(score) {
-  if (score >= 80) return '#00ff41';
+  if (score >= 80) return 'var(--accent-primary)';
   if (score >= 60) return '#ffd700';
   if (score >= 40) return '#ff8c00';
   return '#ff4444';
 }
 
 function getGradeColor(grade) {
-  if (grade.startsWith('A')) return '#00ff41';
+  if (grade.startsWith('A')) return 'var(--accent-primary)';
   if (grade.startsWith('B')) return '#ffd700';
   if (grade.startsWith('C')) return '#ff8c00';
   return '#ff4444';
@@ -235,7 +257,7 @@ function displayResults(data) {
   
   // Multi-page badge
   const multiPageBadge = isMultiPage ? `
-    <span style="display: inline-block; margin-left: 0.5rem; padding: 2px 8px; background: linear-gradient(135deg, #00ff41, #00cc33); color: #000; font-size: 0.65rem; border-radius: 3px; font-weight: 700; vertical-align: middle;">
+    <span style="display: inline-block; margin-left: 0.5rem; padding: 2px 8px; background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 1), rgba(var(--accent-primary-rgb), 0.7)); color: var(--accent-primary-contrast); font-size: 0.65rem; border-radius: 3px; font-weight: 700; vertical-align: middle;">
       ${data.pagesAnalyzed} ${t('brandConsistency.pagesScanned', 'PAGES SCANNED')}
     </span>
   ` : '';
@@ -253,14 +275,14 @@ function displayResults(data) {
       
       <!-- Enhanced Overall Score Display with SVG Circular Dials (matches SEO pattern) -->
       <div style="
-        background: linear-gradient(135deg, rgba(0,255,65,0.05) 0%, rgba(0,255,65,0.02) 100%);
+        background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.05) 0%, rgba(var(--accent-primary-rgb), 0.02) 100%);
         border: 2px solid ${getScoreColor(score)};
         border-radius: 12px;
         padding: 2rem;
         margin: 2rem 0;
-        box-shadow: 0 4px 20px rgba(0,255,65,0.15);
+        box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.15);
       ">
-        <h3 style="color: #00ff41; margin: 0 0 1.5rem 0; font-size: 1.3rem;">>> ${t('brandConsistency.auditSummary', 'Brand Audit Summary')}</h3>
+        <h3 style="color: var(--accent-primary); margin: 0 0 1.5rem 0; font-size: 1.3rem;">>> ${t('brandConsistency.auditSummary', 'Brand Audit Summary')}</h3>
         
         <!-- Circular Progress Dials -->
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; margin: 2rem 0;">
@@ -453,6 +475,18 @@ function displayResults(data) {
       () => renderRecommendationsContent(data.recommendations), 
       null, data.recommendations[0]?.priority === 'critical');
   }
+
+
+  // Pro Report Block
+  if (window.ProReportBlock && window.ProReportBlock.render) {
+    const proBlockHtml = window.ProReportBlock.render({
+      context: 'brand-consistency',
+      features: ['pdf', 'csv', 'share'],
+      title: 'Unlock Report',
+      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+    });
+    container.insertAdjacentHTML('beforeend', proBlockHtml);
+  }
 }
 
 // Translate status words
@@ -482,7 +516,7 @@ function generateStatCard(label, value, sublabel) {
 function getStatusColor(status) {
   if (!status) return 'rgba(255,255,255,0.5)';
   const s = status.toLowerCase();
-  if (s === 'excellent' || s === 'detected' || s === 'present') return '#00ff41';
+  if (s === 'excellent' || s === 'detected' || s === 'present') return 'var(--accent-primary)';
   if (s === 'good') return '#90EE90';
   if (s === 'fair') return '#ffd700';
   if (s === 'poor' || s === 'missing') return '#ff6b6b';
@@ -503,7 +537,7 @@ function generateScoreBreakdown(breakdown) {
   
   return `
     <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-      <h3 style="margin: 0 0 1rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.scoreBreakdown', 'Score Breakdown')}</h3>
+      <h3 style="margin: 0 0 1rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.scoreBreakdown', 'Score Breakdown')}</h3>
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
         ${Object.entries(breakdown).map(([key, item]) => `
           <div style="display: flex; align-items: center; gap: 1rem;">
@@ -584,7 +618,7 @@ function renderColorPaletteContent(data) {
   
   return `
     <div style="margin-bottom: 1.5rem;">
-      <h4 style="margin: 0 0 0.75rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.colorHarmony', 'Color Harmony')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.colorHarmony', 'Color Harmony')}</h4>
       <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
         <div>
           <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.harmonyType', 'Harmony Type')}:</span>
@@ -603,7 +637,7 @@ function renderColorPaletteContent(data) {
     
     ${colorAnalysis.primaryColors?.length > 0 ? `
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="margin: 0 0 0.75rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.primaryBrandColors', 'Primary Brand Colors')}</h4>
+        <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.primaryBrandColors', 'Primary Brand Colors')}</h4>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
           ${colorAnalysis.primaryColors.map(color => `
             <div style="display: flex; flex-direction: column; align-items: center; gap: 0.25rem;">
@@ -616,7 +650,7 @@ function renderColorPaletteContent(data) {
     ` : ''}
     
     <div>
-      <h4 style="margin: 0 0 0.75rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.allDetectedColors', 'All Detected Colors')} (${colors.length})</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.allDetectedColors', 'All Detected Colors')} (${colors.length})</h4>
       <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; max-height: 200px; overflow-y: auto;">
         ${colors.slice(0, 40).map(color => `
           <div style="background: ${color}; width: 32px; height: 32px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;" title="${formatColor(color)}" onclick="copyToClipboard('${color}', this)"></div>
@@ -628,18 +662,18 @@ function renderColorPaletteContent(data) {
     
     <!-- Export Color Palette -->
     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-      <h4 style="margin: 0 0 0.75rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.exportColorPalette', 'Export Color Palette')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.exportColorPalette', 'Export Color Palette')}</h4>
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
         <button onclick="copyToClipboard(\`${generateCSSVariables(colorAnalysis.primaryColors || colors.slice(0, 5)).replace(/`/g, '\\`')}\`, this)" 
-          style="padding: 0.5rem 1rem; background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.3); border-radius: 4px; color: #00ff41; cursor: pointer; font-size: 0.8rem;">
+          style="padding: 0.5rem 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary); cursor: pointer; font-size: 0.8rem;">
           ${t('brandConsistency.exportCSS', 'Copy CSS Variables')}
         </button>
         <button onclick="copyToClipboard(\`${generateTailwindConfig(colorAnalysis.primaryColors || colors.slice(0, 5)).replace(/`/g, '\\`')}\`, this)" 
-          style="padding: 0.5rem 1rem; background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.3); border-radius: 4px; color: #00ff41; cursor: pointer; font-size: 0.8rem;">
+          style="padding: 0.5rem 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary); cursor: pointer; font-size: 0.8rem;">
           ${t('brandConsistency.exportTailwind', 'Copy Tailwind Config')}
         </button>
         <button onclick="copyToClipboard(\`${generateDesignTokens(colorAnalysis.primaryColors || colors.slice(0, 5)).replace(/`/g, '\\`')}\`, this)" 
-          style="padding: 0.5rem 1rem; background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.3); border-radius: 4px; color: #00ff41; cursor: pointer; font-size: 0.8rem;">
+          style="padding: 0.5rem 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary); cursor: pointer; font-size: 0.8rem;">
           ${t('brandConsistency.exportTokens', 'Copy Design Tokens')}
         </button>
       </div>
@@ -675,7 +709,7 @@ function renderTypographyContent(data) {
   
   return `
     <div style="margin-bottom: 1.5rem;">
-      <h4 style="margin: 0 0 0.75rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.typographySummary', 'Typography Summary')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.typographySummary', 'Typography Summary')}</h4>
       <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
         <div>
           <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.totalFonts', 'Total Fonts')}:</span>
@@ -687,17 +721,17 @@ function renderTypographyContent(data) {
         </div>
         <div>
           <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.typographyHierarchy', 'Typography Hierarchy')}:</span>
-          <span style="color: ${typography.hasTypographyHierarchy ? '#00ff41' : '#ff6b6b'}; margin-left: 0.5rem;">${typography.hasTypographyHierarchy ? t('common.yes', 'Yes') : t('common.no', 'No')}</span>
+          <span style="color: ${typography.hasTypographyHierarchy ? 'var(--accent-primary)' : '#ff6b6b'}; margin-left: 0.5rem;">${typography.hasTypographyHierarchy ? t('common.yes', 'Yes') : t('common.no', 'No')}</span>
         </div>
       </div>
     </div>
     
     ${typography.headingFonts?.length > 0 ? `
       <div style="margin-bottom: 1rem;">
-        <h4 style="margin: 0 0 0.5rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.headingFonts', 'Heading Fonts')}</h4>
+        <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.headingFonts', 'Heading Fonts')}</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
           ${typography.headingFonts.map(font => `
-            <span style="background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${font}; color: #fff;">${font}</span>
+            <span style="background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${font}; color: #fff;">${font}</span>
           `).join('')}
         </div>
       </div>
@@ -705,7 +739,7 @@ function renderTypographyContent(data) {
     
     ${typography.bodyFonts?.length > 0 ? `
       <div style="margin-bottom: 1rem;">
-        <h4 style="margin: 0 0 0.5rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.bodyFonts', 'Body Fonts')}</h4>
+        <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.bodyFonts', 'Body Fonts')}</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
           ${typography.bodyFonts.map(font => `
             <span style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${font}; color: #fff;">${font}</span>
@@ -715,7 +749,7 @@ function renderTypographyContent(data) {
     ` : ''}
     
     <div>
-      <h4 style="margin: 0 0 0.5rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.allFontsByUsage', 'All Fonts by Usage')}</h4>
+      <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.allFontsByUsage', 'All Fonts by Usage')}</h4>
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         ${fonts.slice(0, 10).map(f => `
           <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
@@ -734,7 +768,7 @@ function renderBrandIdentityContent(data) {
   
   return `
     <div style="margin-bottom: 1.5rem;">
-      <h4 style="margin: 0 0 0.75rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.logoDetection', 'Logo Detection')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.logoDetection', 'Logo Detection')}</h4>
       ${logos.length > 0 ? `
         <div style="display: flex; flex-wrap: wrap; gap: 1rem;">
           ${logos.map((logo, i) => `
@@ -762,9 +796,9 @@ function renderBrandIdentityContent(data) {
     </div>
     
     <div>
-      <h4 style="margin: 0 0 0.75rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.favicon', 'Favicon')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.favicon', 'Favicon')}</h4>
       <div style="display: flex; align-items: center; gap: 1rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-        <div style="width: 48px; height: 48px; background: ${hasFavicon ? 'rgba(0,255,65,0.1)' : 'rgba(255,100,100,0.1)'}; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+        <div style="width: 48px; height: 48px; background: ${hasFavicon ? 'rgba(var(--accent-primary-rgb), 0.1)' : 'rgba(255,100,100,0.1)'}; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
           ${hasFavicon ? '✓' : '✗'}
         </div>
         <div>
@@ -784,7 +818,7 @@ function renderUIConsistencyContent(data) {
   
   return `
     <div style="margin-bottom: 1.5rem;">
-      <h4 style="margin: 0 0 0.75rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.buttonStyles', 'Button Styles')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.buttonStyles', 'Button Styles')}</h4>
       <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
         <div style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
           <span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.consistency', 'Consistency')}:</span>
@@ -803,7 +837,7 @@ function renderUIConsistencyContent(data) {
     </div>
     
     <div>
-      <h4 style="margin: 0 0 0.75rem 0; color: #00ff41; font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.linkColors', 'Link Colors')}</h4>
+      <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.linkColors', 'Link Colors')}</h4>
       <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
         <div style="margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
           <span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.consistency', 'Consistency')}:</span>
@@ -834,7 +868,7 @@ function renderRecommendationsContent(recommendations) {
     high: '#ff8c00',
     medium: '#ffd700',
     low: '#90EE90',
-    success: '#00ff41'
+    success: getAccentPrimaryHex()
   };
   
   const priorityIcons = {
@@ -995,14 +1029,14 @@ function renderRecommendationsContent(recommendations) {
   return recommendations.map(rec => {
     const content = getRecommendationContent(rec);
     return `
-    <div style="padding: 1rem; margin-bottom: 0.75rem; background: ${rec.priority === 'success' ? 'rgba(0,255,65,0.1)' : 'rgba(255,255,255,0.03)'}; border-left: 4px solid ${priorityColors[rec.priority] || '#888'}; border-radius: 0 8px 8px 0;">
+    <div style="padding: 1rem; margin-bottom: 0.75rem; background: ${rec.priority === 'success' ? 'rgba(var(--accent-primary-rgb), 0.1)' : 'rgba(255,255,255,0.03)'}; border-left: 4px solid ${priorityColors[rec.priority] || '#888'}; border-radius: 0 8px 8px 0;">
       <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
         <span style="font-size: 1.2rem;">${priorityIcons[rec.priority] || '•'}</span>
         <h4 style="margin: 0; color: #fff; font-weight: 600;">${content.message}</h4>
         <span style="margin-left: auto; font-size: 0.7rem; padding: 0.2rem 0.5rem; background: ${priorityColors[rec.priority]}30; color: ${priorityColors[rec.priority]}; border-radius: 4px; text-transform: uppercase;">${priorityLabels[rec.priority] || rec.priority}</span>
       </div>
       <p style="margin: 0 0 0.5rem 1.7rem; color: rgba(255,255,255,0.7); font-size: 0.9rem;">${content.detail}</p>
-      ${content.action ? `<p style="margin: 0 0 0 1.7rem; color: rgba(0,255,65,0.8); font-size: 0.85rem;">→ ${content.action}</p>` : ''}
+      ${content.action ? `<p style="margin: 0 0 0 1.7rem; color: rgba(var(--accent-primary-rgb), 0.8); font-size: 0.85rem;">→ ${content.action}</p>` : ''}
     </div>
   `}).join('');
 }
@@ -1012,7 +1046,7 @@ function renderColorContrastContent(contrastAnalysis) {
   const { pairs, summary } = contrastAnalysis;
   
   const getContrastBadge = (level) => {
-    if (level === 'AAA') return '<span style="background: #00ff41; color: #000; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">AAA</span>';
+    if (level === 'AAA') return `<span style="background: ${getAccentPrimaryHex()}; color: var(--accent-primary-contrast); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">AAA</span>`;
     if (level === 'AA') return '<span style="background: #90EE90; color: #000; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">AA</span>';
     return '<span style="background: #ff6b6b; color: #fff; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">FAIL</span>';
   };
@@ -1025,8 +1059,8 @@ function renderColorContrastContent(contrastAnalysis) {
           <div style="font-size: 1.5rem; font-weight: 600; color: #fff;">${summary.total}</div>
           <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${t('brandConsistency.pairsTested', 'Pairs Tested')}</div>
         </div>
-        <div style="background: rgba(0,255,65,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5rem; font-weight: 600; color: #00ff41;">${summary.passAAA}</div>
+        <div style="background: rgba(var(--accent-primary-rgb), 0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 1.5rem; font-weight: 600; color: var(--accent-primary);">${summary.passAAA}</div>
           <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${t('brandConsistency.passAAA', 'Pass AAA')}</div>
         </div>
         <div style="background: rgba(144,238,144,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
@@ -1055,7 +1089,7 @@ function renderColorContrastContent(contrastAnalysis) {
                 <div style="width: 30px; height: 30px; background: ${pair.textColor}; border-radius: 4px; border: 1px solid rgba(255,255,255,0.2);"></div>
               </div>
               <div style="flex: 1; font-size: 0.85rem; color: rgba(255,255,255,0.7);">&lt;${pair.element}&gt;</div>
-              <div style="color: ${pair.passAA ? '#00ff41' : '#ff6b6b'}; font-weight: 500;">${pair.ratio}:1</div>
+              <div style="color: ${pair.passAA ? 'var(--accent-primary)' : '#ff6b6b'}; font-weight: 500;">${pair.ratio}:1</div>
               ${getContrastBadge(pair.level)}
             </div>
           `).join('')}
@@ -1077,7 +1111,7 @@ function renderColorUsageContent(colorUsageAnalysis) {
   };
   
   const categoryColors = {
-    text: '#00ff41',
+    text: 'var(--accent-primary)',
     background: '#667eea',
     border: '#ffd700',
     accent: '#ff6b6b'
@@ -1129,7 +1163,7 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
     <div style="margin-bottom: 1.5rem;">
       <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.headingProgression', 'Heading Size Progression')}</h4>
       ${isProgressive ? 
-        `<div style="padding: 0.75rem; background: rgba(0,255,65,0.1); border: 1px solid rgba(0,255,65,0.3); border-radius: 6px; color: #00ff41;">
+        `<div style="padding: 0.75rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 6px; color: var(--accent-primary);">
           ${t('brandConsistency.progressiveHeadings', 'Headings are properly sized in descending order')}
         </div>` : 
         `<div style="padding: 0.75rem; background: rgba(255,107,107,0.1); border: 1px solid rgba(255,107,107,0.3); border-radius: 6px; color: #ff6b6b;">
@@ -1146,7 +1180,7 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
             <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
               <span style="font-size: ${h.fontSizeUnit}; font-weight: ${h.fontWeight}; color: #fff; min-width: 40px;">${h.tag.toUpperCase()}</span>
               <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
-                <div style="width: ${Math.min(h.fontSize / 48 * 100, 100)}%; height: 100%; background: #00ff41;"></div>
+                <div style="width: ${Math.min(h.fontSize / 48 * 100, 100)}%; height: 100%; background: var(--accent-primary);"></div>
               </div>
               <span style="color: rgba(255,255,255,0.6); font-size: 0.85rem; min-width: 60px;">${h.fontSizeUnit}</span>
               <span style="color: rgba(255,255,255,0.4); font-size: 0.75rem;">${h.count}x</span>
@@ -1163,7 +1197,7 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
           ${typeScale.map(s => `
             <div style="background: rgba(255,255,255,0.05); padding: 0.5rem 0.75rem; border-radius: 4px; font-size: 0.85rem;">
               <span style="color: rgba(255,255,255,0.6);">${s.from}/${s.to}:</span>
-              <span style="color: ${s.ratio >= 1.2 && s.ratio <= 1.5 ? '#00ff41' : '#ffd700'}; margin-left: 0.25rem; font-weight: 500;">${s.ratio}</span>
+              <span style="color: ${s.ratio >= 1.2 && s.ratio <= 1.5 ? 'var(--accent-primary)' : '#ffd700'}; margin-left: 0.25rem; font-weight: 500;">${s.ratio}</span>
             </div>
           `).join('')}
         </div>
@@ -1221,13 +1255,13 @@ function renderBrandAssetsContent(brandAssets) {
             <span style="font-size: 1.2rem;">${item.icon}</span>
             <span style="flex: 1; color: rgba(255,255,255,0.8);">${item.label}</span>
             ${brandAssets[item.key] ? `
-              <span style="color: #00ff41; font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${brandAssets[item.key]}">
+              <span style="color: var(--accent-primary); font-size: 0.85rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${brandAssets[item.key]}">
                 ${item.key === 'themeColor' ? 
                   `<span style="display: inline-block; width: 16px; height: 16px; background: ${brandAssets[item.key]}; border-radius: 3px; vertical-align: middle; margin-right: 0.25rem;"></span>` : 
                   ''
                 }${brandAssets[item.key].length > 30 ? brandAssets[item.key].substring(0, 30) + '...' : brandAssets[item.key]}
               </span>
-              <span style="color: #00ff41;">✓</span>
+              <span style="color: var(--accent-primary);">✓</span>
             ` : `
               <span style="color: rgba(255,255,255,0.4);">${t('brandConsistency.notSet', 'Not set')}</span>
               <span style="color: #ff6b6b;">✗</span>
@@ -1302,7 +1336,7 @@ function renderCrossPageConsistencyContent(data) {
     const colors = {
       high: '#ff6b6b',
       medium: '#ffd700',
-      low: '#00ff41'
+      low: getAccentPrimaryHex()
     };
     return `<span style="display: inline-block; padding: 2px 8px; background: ${colors[severity] || '#888'}20; color: ${colors[severity] || '#888'}; font-size: 0.7rem; border-radius: 4px; font-weight: 600;">${severity.toUpperCase()}</span>`;
   };
@@ -1338,7 +1372,7 @@ function renderCrossPageConsistencyContent(data) {
         <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.consistencyIssues', 'Consistency Issues')} (${issues.length})</h4>
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
           ${issues.map(issue => `
-            <div style="padding: 0.75rem 1rem; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid ${issue.severity === 'high' ? '#ff6b6b' : issue.severity === 'medium' ? '#ffd700' : '#00ff41'};">
+            <div style="padding: 0.75rem 1rem; background: rgba(255,255,255,0.03); border-radius: 6px; border-left: 3px solid ${issue.severity === 'high' ? '#ff6b6b' : issue.severity === 'medium' ? '#ffd700' : getAccentPrimaryHex()};">
               <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.35rem;">
                 <span style="color: rgba(255,255,255,0.9); font-weight: 500;">${issue.message}</span>
                 ${getSeverityBadge(issue.severity)}
@@ -1357,9 +1391,9 @@ function renderCrossPageConsistencyContent(data) {
         </div>
       </div>
     ` : `
-      <div style="padding: 1.5rem; background: rgba(0, 255, 65, 0.05); border-radius: 8px; text-align: center; border: 1px solid rgba(0, 255, 65, 0.2);">
-        <span style="color: #00ff41; font-size: 1.5rem;">✓</span>
-        <p style="margin: 0.5rem 0 0 0; color: #00ff41; font-weight: 500;">${t('brandConsistency.noIssuesFound', 'No consistency issues found!')}</p>
+      <div style="padding: 1.5rem; background: rgba(var(--accent-primary-rgb), 0.05); border-radius: 8px; text-align: center; border: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
+        <span style="color: var(--accent-primary); font-size: 1.5rem;">✓</span>
+        <p style="margin: 0.5rem 0 0 0; color: var(--accent-primary); font-weight: 500;">${t('brandConsistency.noIssuesFound', 'No consistency issues found!')}</p>
         <p style="margin: 0.25rem 0 0 0; color: rgba(255,255,255,0.6); font-size: 0.85rem;">${t('brandConsistency.brandConsistent', 'Your brand appears consistent across all analyzed pages.')}</p>
       </div>
     `}
@@ -1371,7 +1405,7 @@ function renderCrossPageConsistencyContent(data) {
           ${crossPage.pageVariations.map(v => `
             <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; text-align: center;">
               <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5); text-transform: uppercase; margin-bottom: 0.25rem;">${v.metric}</div>
-              <div style="font-size: 1.1rem; font-weight: 600; color: ${v.variation === 'consistent' || v.variation === 'low' || (typeof v.variation === 'number' && v.variation < 5) ? '#00ff41' : '#ffd700'};">
+              <div style="font-size: 1.1rem; font-weight: 600; color: ${v.variation === 'consistent' || v.variation === 'low' || (typeof v.variation === 'number' && v.variation < 5) ? 'var(--accent-primary)' : '#ffd700'};">
                 ${typeof v.variation === 'number' ? '±' + v.variation : v.variation}
               </div>
             </div>
@@ -1402,10 +1436,10 @@ function renderPageBreakdownContent(pageBreakdown) {
           </thead>
           <tbody>
             ${pageBreakdown.map((page, idx) => `
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${idx === 0 ? 'background: rgba(0, 255, 65, 0.05);' : ''}">
+              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${idx === 0 ? 'background: rgba(var(--accent-primary-rgb), 0.05);' : ''}">
                 <td style="padding: 0.75rem;">
                   <div style="display: flex; align-items: center; gap: 0.5rem;">
-                    ${idx === 0 ? '<span style="color: #00ff41; font-size: 0.7rem;">★</span>' : ''}
+                    ${idx === 0 ? '<span style="color: var(--accent-primary); font-size: 0.7rem;">★</span>' : ''}
                     <span style="color: #fff; font-weight: 500;">${page.pageName}</span>
                   </div>
                   <div style="font-size: 0.75rem; color: rgba(255,255,255,0.4); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${page.url}">
@@ -1413,13 +1447,13 @@ function renderPageBreakdownContent(pageBreakdown) {
                   </div>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${page.colorCount <= 20 ? '#00ff41' : page.colorCount <= 35 ? '#ffd700' : '#ff6b6b'};">${page.colorCount}</span>
+                  <span style="color: ${page.colorCount <= 20 ? 'var(--accent-primary)' : page.colorCount <= 35 ? '#ffd700' : '#ff6b6b'};">${page.colorCount}</span>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${page.fontCount <= 3 ? '#00ff41' : page.fontCount <= 5 ? '#ffd700' : '#ff6b6b'};">${page.fontCount}</span>
+                  <span style="color: ${page.fontCount <= 3 ? 'var(--accent-primary)' : page.fontCount <= 5 ? '#ffd700' : '#ff6b6b'};">${page.fontCount}</span>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${page.hasLogo ? '#00ff41' : '#ff6b6b'};">${page.hasLogo ? '✓' : '✗'}</span>
+                  <span style="color: ${page.hasLogo ? 'var(--accent-primary)' : '#ff6b6b'};">${page.hasLogo ? '✓' : '✗'}</span>
                 </td>
                 <td style="padding: 0.75rem; text-align: center;">
                   <span style="color: rgba(255,255,255,0.7);">${page.buttonCount}</span>
@@ -1432,7 +1466,7 @@ function renderPageBreakdownContent(pageBreakdown) {
       
       <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
         <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.6);">
-          <span style="color: #00ff41;">★</span> = ${t('brandConsistency.homepage', 'Homepage (primary page)')}
+          <span style="color: var(--accent-primary);">★</span> = ${t('brandConsistency.homepage', 'Homepage (primary page)')}
         </p>
       </div>
     </div>
