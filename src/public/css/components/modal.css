@@ -70,8 +70,8 @@
 
 /* Single report purchase modal (compact) */
 .modal--single-report {
-  width: min(250px, calc(100vw - 2rem));
-  max-width: min(250px, calc(100vw - 2rem));
+  width: min(400px, calc(100vw - 2rem));
+  max-width: min(400px, calc(100vw - 2rem));
 }
 
 /* Modal Header */
@@ -98,9 +98,11 @@
 }
 
 .modal__title .sm-modal-title--stacked {
+  display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
+  align-items: center;
+  gap: 0.5rem;
+  width: 100%;
 }
 
 .modal__title .sm-modal-title__brand {
@@ -117,8 +119,20 @@
   display: inline-block;
 }
 
+.modal__title .sm-modal-title__logo--red {
+  width: 240px;
+  height: 36px;
+  display: block;
+}
+
 .modal__title .sm-modal-title__text {
   display: inline-block;
+}
+
+.modal__title .sm-modal-title--stacked .sm-modal-title__text {
+  display: block;
+  text-align: center;
+  font-size: 1.1rem;
 }
 
 .modal__close {

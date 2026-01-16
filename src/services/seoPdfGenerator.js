@@ -7,19 +7,26 @@ const {
   initializePdfGeneration,
   finalizePdfGeneration,
   addPdfHeader,
-  addSectionHeader,
-  addSubSectionHeader,
+  addMaterialSectionHeader,
   checkPageBreakNeeded,
-  addScoreBadge,
   getScoreColor,
-  getGrade
+  getGrade,
+  drawScoreSummaryCard,
+  drawMetricGrid,
+  COLORS
 } = require('../utils/pdfHelpers');
+
+const {
+  drawBarChart,
+  drawPieChart,
+  drawProgressBar
+} = require('../utils/pdfCharts');
 
 const logger = createLogger('SEOPdfGenerator');
 
 /**
- * SEO PDF Report Generator
- * Creates professional PDF reports for SEO analysis results
+ * SEO PDF Report Generator (Material Design)
+ * Creates professional PDF reports with data visualizations
  */
 class SEOPdfGenerator {
   constructor() {
@@ -37,7 +44,6 @@ class SEOPdfGenerator {
    * Generate comprehensive SEO PDF report
    */
   async generateReport(seoResults) {
-    // Use helper to initialize PDF generation
     const { doc, filepath, reportId, stream, filename } = initializePdfGeneration(
       seoResults,
       'seo',
@@ -45,15 +51,15 @@ class SEOPdfGenerator {
     );
 
     try {
-      // Use helper for header
+      // Material Design header
       addPdfHeader(
         doc,
-        '[SEO_ANALYSIS_REPORT]',
+        'SEO Analysis Report',
         seoResults.url,
-        'comprehensive search engine optimization analysis'
+        'Comprehensive search engine optimization analysis'
       );
 
-      // Generate report sections
+      // Generate report sections with Material Design
       this.addExecutiveSummary(doc, seoResults);
       this.addMetaTagsAnalysis(doc, seoResults.metaTags);
       this.addHeadingsStructure(doc, seoResults.headings);
@@ -62,7 +68,6 @@ class SEOPdfGenerator {
       this.addTechnicalSEO(doc, seoResults.technical);
       this.addRecommendations(doc, seoResults.recommendations);
 
-      // Use helper to finalize PDF generation
       return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
     } catch (error) {
       logger.error('Error creating SEO PDF:', error);
@@ -70,295 +75,563 @@ class SEOPdfGenerator {
     }
   }
 
-  // addHeader removed - using pdfHelpers.addPdfHeader() instead
-
   /**
-   * Add executive summary
+   * Add executive summary with gauge chart and component breakdown
    */
   addExecutiveSummary(doc, results) {
-    addSectionHeader(doc, '[EXECUTIVE_SUMMARY]');
+    addMaterialSectionHeader(doc, 'Executive Summary', {
+      description: 'Overall SEO performance and key metrics'
+    });
 
     const score = results.overallScore || 0;
-    const scoreColor = getScoreColor(score);
 
-    // Score box
-    doc.rect(50, doc.y, 495, 100).fillColor('#f5f5f5').fill().stroke();
-    
-    doc
-      .fillColor('#000000')
-      .fontSize(16)
-      .font('Helvetica-Bold')
-      .text('Overall SEO Score', 70, doc.y - 80);
+    // Component scores for breakdown
+    const breakdown = {
+      metaTags: results.metaTags?.score || 0,
+      headings: results.headings?.score || 0,
+      images: results.images?.score || 0,
+      content: results.content?.score || 0,
+      technical: results.technical?.score || 0
+    };
 
-    doc
-      .fillColor(scoreColor)
-      .fontSize(48)
-      .text(`${score}`, 70, doc.y - 60);
+    // Score summary card with gauge chart
+    const currentY = doc.y;
+    drawScoreSummaryCard(doc, score, 'SEO Performance', breakdown, 50, currentY);
 
-    doc
-      .fillColor('#666666')
-      .fontSize(12)
-      .text(`/100`, 130, doc.y - 40);
+    doc.moveDown(2);
 
-    // Key metrics
-    const metricsY = doc.y + 20;
-    doc
-      .fillColor('#000000')
-      .fontSize(12)
-      .font('Helvetica')
-      .text(`Meta Tags: ${getGrade(results.metaTags?.score || 0)}`, 250, metricsY - 60)
-      .text(`Headings: ${getGrade(results.headings?.score || 0)}`, 250, metricsY - 40)
-      .text(`Images: ${getGrade(results.images?.score || 0)}`, 250, metricsY - 20)
-      .text(`Content: ${getGrade(results.content?.score || 0)}`, 400, metricsY - 60)
-      .text(`Technical: ${getGrade(results.technical?.score || 0)}`, 400, metricsY - 40);
+    // Bar chart comparing all 5 components
+    checkPageBreakNeeded(doc, 200);
+
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.textPrimary)
+       .text('Component Breakdown', 50, doc.y);
+
+    doc.moveDown(0.5);
+
+    const chartData = [
+      { label: 'Meta Tags', value: breakdown.metaTags },
+      { label: 'Headings', value: breakdown.headings },
+      { label: 'Images', value: breakdown.images },
+      { label: 'Content', value: breakdown.content },
+      { label: 'Technical', value: breakdown.technical }
+    ];
+
+    const chartHeight = drawBarChart(doc, chartData, 50, doc.y, {
+      width: 512,
+      barHeight: 25,
+      showValues: true,
+      colorScheme: 'score'
+    });
+
+    doc.y += chartHeight;
+    doc.moveDown(2);
+  }
+
+  /**
+   * Add meta tags analysis with progress bar
+   */
+  addMetaTagsAnalysis(doc, metaTags) {
+    checkPageBreakNeeded(doc, 200);
+    addMaterialSectionHeader(doc, 'Meta Tags Analysis', {
+      description: 'Title, description, and social media tags'
+    });
+
+    if (!metaTags || !metaTags.tags) {
+      doc.fontSize(10)
+         .fillColor(COLORS.textDisabled)
+         .text('No meta tags data available', 60, doc.y);
+      return;
+    }
+
+    // Title tag
+    if (metaTags.tags.title) {
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text('Title Tag', 60, doc.y);
+
+      doc.moveDown(0.3);
+
+      const titleStatus = metaTags.tags.title.status;
+      const titleColor = titleStatus === 'optimal' ? COLORS.success :
+                        titleStatus === 'warning' ? COLORS.warning : COLORS.error;
+
+      doc.fontSize(9)
+         .font('Helvetica')
+         .fillColor(COLORS.textSecondary)
+         .text(`Content: ${metaTags.tags.title.content}`, 70, doc.y, { width: 475 });
+
+      doc.fontSize(9)
+         .text(`Length: ${metaTags.tags.title.length} characters`, 70, doc.y + 5);
+
+      doc.fontSize(9)
+         .fillColor(titleColor)
+         .text(`Status: ${titleStatus}`, 70, doc.y + 5);
+
+      doc.moveDown(1);
+    }
+
+    // Description tag
+    if (metaTags.tags.description) {
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text('Meta Description', 60, doc.y);
+
+      doc.moveDown(0.3);
+
+      const descStatus = metaTags.tags.description.status;
+      const descColor = descStatus === 'optimal' ? COLORS.success :
+                       descStatus === 'warning' ? COLORS.warning : COLORS.error;
+
+      doc.fontSize(9)
+         .font('Helvetica')
+         .fillColor(COLORS.textSecondary)
+         .text(`Content: ${metaTags.tags.description.content}`, 70, doc.y, { width: 475 });
+
+      doc.fontSize(9)
+         .text(`Length: ${metaTags.tags.description.length} characters`, 70, doc.y + 5);
+
+      doc.fontSize(9)
+         .fillColor(descColor)
+         .text(`Status: ${descStatus}`, 70, doc.y + 5);
+
+      doc.moveDown(1);
+    }
+
+    // Open Graph tags progress bar
+    if (metaTags.openGraph) {
+      const ogTags = Object.keys(metaTags.openGraph).length;
+      const ogTotal = 10; // Expected OG tags
+      const ogPercentage = (ogTags / ogTotal) * 100;
+
+      doc.moveDown(0.5);
+
+      const progressHeight = drawProgressBar(
+        doc,
+        ogPercentage,
+        `Open Graph Tags: ${ogTags}/${ogTotal} present`,
+        60,
+        doc.y,
+        { width: 400, showPercentage: true }
+      );
+
+      doc.y += progressHeight;
+      doc.moveDown(1);
+    }
+
+    doc.moveDown(1);
+  }
+
+  /**
+   * Add headings structure with bar chart
+   */
+  addHeadingsStructure(doc, headings) {
+    checkPageBreakNeeded(doc, 250);
+    addMaterialSectionHeader(doc, 'Headings Structure', {
+      description: 'H1-H6 hierarchy and distribution'
+    });
+
+    if (!headings || !headings.hierarchy) {
+      doc.fontSize(10)
+         .fillColor(COLORS.textDisabled)
+         .text('No headings data available', 60, doc.y);
+      return;
+    }
+
+    // Bar chart showing heading distribution
+    const headingData = [];
+    ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].forEach(tag => {
+      const count = headings.hierarchy[tag]?.length || 0;
+      if (count > 0) {
+        headingData.push({
+          label: tag.toUpperCase(),
+          value: count
+        });
+      }
+    });
+
+    if (headingData.length > 0) {
+      const chartHeight = drawBarChart(doc, headingData, 60, doc.y, {
+        width: 450,
+        barHeight: 22,
+        showValues: true,
+        colorScheme: 'primary',
+        maxValue: Math.max(...headingData.map(d => d.value))
+      });
+
+      doc.y += chartHeight;
+      doc.moveDown(1);
+    }
+
+    // Sample H1 headings
+    if (headings.hierarchy.h1 && headings.hierarchy.h1.length > 0) {
+      doc.fontSize(10)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text('H1 Headings:', 60, doc.y);
+
+      doc.moveDown(0.3);
+
+      headings.hierarchy.h1.slice(0, 3).forEach(heading => {
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor(COLORS.textSecondary)
+           .text(`• ${heading.text.substring(0, 80)}${heading.text.length > 80 ? '...' : ''}`,
+                 70, doc.y, { width: 475 });
+      });
+
+      if (headings.hierarchy.h1.length > 3) {
+        doc.fontSize(8)
+           .fillColor(COLORS.textDisabled)
+           .text(`... and ${headings.hierarchy.h1.length - 3} more`, 70, doc.y);
+      }
+
+      doc.moveDown(1);
+    }
+
+    doc.moveDown(1);
+  }
+
+  /**
+   * Add image analysis with pie chart
+   */
+  addImageAnalysis(doc, images) {
+    checkPageBreakNeeded(doc, 300);
+    addMaterialSectionHeader(doc, 'Image Analysis', {
+      description: 'Alt text coverage and optimization'
+    });
+
+    if (!images || !images.summary) {
+      doc.fontSize(10)
+         .fillColor(COLORS.textDisabled)
+         .text('No image data available', 60, doc.y);
+      return;
+    }
+
+    const summary = images.summary;
+
+    // Pie chart for alt text distribution
+    if (summary.totalImages > 0) {
+      const pieData = [
+        {
+          label: 'With Alt Text',
+          value: summary.withAltText || 0,
+          color: COLORS.success
+        },
+        {
+          label: 'Without Alt Text',
+          value: summary.withoutAltText || 0,
+          color: COLORS.error
+        }
+      ];
+
+      const chartHeight = drawPieChart(doc, pieData, 150, doc.y + 80, {
+        radius: 60,
+        donutWidth: 20,
+        showLegend: true,
+        showPercentages: true
+      });
+
+      doc.y += chartHeight + 20;
+    }
+
+    // Optimization status
+    if (summary.oversized !== undefined) {
+      const optimized = summary.totalImages - summary.oversized;
+      const optimizedPercentage = summary.totalImages > 0 ?
+        (optimized / summary.totalImages) * 100 : 100;
+
+      const progressHeight = drawProgressBar(
+        doc,
+        optimizedPercentage,
+        `Optimized Images: ${optimized}/${summary.totalImages}`,
+        60,
+        doc.y,
+        { width: 400, showPercentage: true }
+      );
+
+      doc.y += progressHeight;
+      doc.moveDown(1);
+    }
+
+    // Sample images without alt text
+    if (images.details) {
+      const imagesWithoutAlt = images.details.filter(img => !img.alt).slice(0, 3);
+      if (imagesWithoutAlt.length > 0) {
+        doc.fontSize(10)
+           .font('Helvetica-Bold')
+           .fillColor(COLORS.textPrimary)
+           .text('Images Missing Alt Text:', 60, doc.y);
+
+        doc.moveDown(0.3);
+
+        imagesWithoutAlt.forEach(img => {
+          doc.fontSize(8)
+             .font('Helvetica')
+             .fillColor(COLORS.textSecondary)
+             .text(`• ${img.src.substring(0, 70)}${img.src.length > 70 ? '...' : ''}`,
+                   70, doc.y, { width: 475 });
+        });
+
+        doc.moveDown(1);
+      }
+    }
+
+    doc.moveDown(1);
+  }
+
+  /**
+   * Add content analysis with bar chart
+   */
+  addContentAnalysis(doc, content) {
+    checkPageBreakNeeded(doc, 300);
+    addMaterialSectionHeader(doc, 'Content Analysis', {
+      description: 'Word count, readability, and keyword usage'
+    });
+
+    if (!content) {
+      doc.fontSize(10)
+         .fillColor(COLORS.textDisabled)
+         .text('No content data available', 60, doc.y);
+      return;
+    }
+
+    // Metric cards
+    const metrics = [
+      {
+        label: 'Word Count',
+        value: content.wordCount?.toString() || '0',
+        color: content.wordCount >= 300 ? COLORS.success : COLORS.warning
+      },
+      {
+        label: 'Reading Time',
+        value: content.readingTime || 'N/A',
+        color: COLORS.info
+      },
+      {
+        label: 'Readability',
+        value: content.readabilityScore?.toString() || 'N/A',
+        color: COLORS.primary
+      }
+    ];
+
+    const gridHeight = drawMetricGrid(doc, metrics, 50, doc.y, {
+      columns: 3,
+      spacing: 15
+    });
+
+    doc.y += gridHeight + 20;
+
+    // Top keywords bar chart
+    if (content.keywords && content.keywords.length > 0) {
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text('Top Keywords', 60, doc.y);
+
+      doc.moveDown(0.5);
+
+      const keywordData = content.keywords.slice(0, 10).map(kw => ({
+        label: kw.word,
+        value: kw.count
+      }));
+
+      const chartHeight = drawBarChart(doc, keywordData, 60, doc.y, {
+        width: 450,
+        barHeight: 20,
+        showValues: true,
+        colorScheme: 'primary',
+        maxValue: Math.max(...keywordData.map(d => d.value))
+      });
+
+      doc.y += chartHeight;
+    }
 
     doc.moveDown(2);
   }
 
   /**
-   * Add meta tags analysis
-   */
-  addMetaTagsAnalysis(doc, metaTags) {
-    addSectionHeader(doc, '[META_TAGS_ANALYSIS]');
-
-    if (!metaTags || !metaTags.tags) {
-      doc.text('No meta tags data available', 50, doc.y);
-      return;
-    }
-
-    // Title
-    if (metaTags.tags.title) {
-      addSubSectionHeader(doc, 'Title Tag');
-      doc
-        .fontSize(10)
-        .fillColor('#333333')
-        .text(`Content: ${metaTags.tags.title.content}`, 70, doc.y)
-        .text(`Length: ${metaTags.tags.title.length} characters`, 70, doc.y + 5)
-        .text(`Status: ${metaTags.tags.title.status}`, 70, doc.y + 5);
-      doc.moveDown();
-    }
-
-    // Description
-    if (metaTags.tags.description) {
-      addSubSectionHeader(doc, 'Meta Description');
-      doc
-        .fontSize(10)
-        .fillColor('#333333')
-        .text(`Content: ${metaTags.tags.description.content}`, 70, doc.y, { width: 475 })
-        .text(`Length: ${metaTags.tags.description.length} characters`, 70, doc.y + 5)
-        .text(`Status: ${metaTags.tags.description.status}`, 70, doc.y + 5);
-      doc.moveDown();
-    }
-
-    // Keywords
-    if (metaTags.tags.keywords) {
-      addSubSectionHeader(doc, 'Meta Keywords');
-      doc
-        .fontSize(10)
-        .fillColor('#333333')
-        .text(`Content: ${metaTags.tags.keywords.content || 'Not set'}`, 70, doc.y, { width: 475 });
-      doc.moveDown();
-    }
-
-    // Open Graph tags
-    if (metaTags.openGraph && Object.keys(metaTags.openGraph).length > 0) {
-      addSubSectionHeader(doc, 'Open Graph Tags');
-      Object.entries(metaTags.openGraph).slice(0, 5).forEach(([key, value]) => {
-        doc
-          .fontSize(9)
-          .fillColor('#333333')
-          .text(`${key}: ${value}`, 70, doc.y, { width: 475 });
-      });
-      doc.moveDown();
-    }
-  }
-
-  /**
-   * Add headings structure
-   */
-  addHeadingsStructure(doc, headings) {
-    checkPageBreakNeeded(doc);
-    addSectionHeader(doc, '[HEADINGS_STRUCTURE]');
-
-    if (!headings || !headings.hierarchy) {
-      doc.text('No headings data available', 50, doc.y);
-      return;
-    }
-
-    ['h1', 'h2', 'h3'].forEach(tag => {
-      if (headings.hierarchy[tag] && headings.hierarchy[tag].length > 0) {
-        addSubSectionHeader(doc, `${tag.toUpperCase()} Tags (${headings.hierarchy[tag].length})`);
-        
-        headings.hierarchy[tag].slice(0, 5).forEach(heading => {
-          doc
-            .fontSize(9)
-            .fillColor('#333333')
-            .text(`• ${heading.text.substring(0, 80)}${heading.text.length > 80 ? '...' : ''}`, 70, doc.y);
-        });
-        
-        if (headings.hierarchy[tag].length > 5) {
-          doc
-            .fontSize(8)
-            .fillColor('#999999')
-            .text(`... and ${headings.hierarchy[tag].length - 5} more`, 70, doc.y);
-        }
-        doc.moveDown();
-      }
-    });
-  }
-
-  /**
-   * Add image analysis
-   */
-  addImageAnalysis(doc, images) {
-    checkPageBreakNeeded(doc);
-    addSectionHeader(doc, '[IMAGE_ANALYSIS]');
-
-    if (!images || !images.details) {
-      doc.text('No image data available', 50, doc.y);
-      return;
-    }
-
-    const summary = images.summary || {};
-    doc
-      .fontSize(10)
-      .fillColor('#333333')
-      .text(`Total Images: ${summary.totalImages || 0}`, 70, doc.y)
-      .text(`With Alt Text: ${summary.withAltText || 0}`, 70, doc.y + 5)
-      .text(`Without Alt Text: ${summary.withoutAltText || 0}`, 70, doc.y + 5)
-      .text(`Oversized: ${summary.oversized || 0}`, 70, doc.y + 5);
-
-    doc.moveDown();
-
-    // Sample images without alt text
-    const imagesWithoutAlt = images.details.filter(img => !img.alt).slice(0, 5);
-    if (imagesWithoutAlt.length > 0) {
-      addSubSectionHeader(doc, 'Images Missing Alt Text (Sample)');
-      imagesWithoutAlt.forEach(img => {
-        doc
-          .fontSize(8)
-          .fillColor('#666666')
-          .text(`• ${img.src.substring(0, 70)}${img.src.length > 70 ? '...' : ''}`, 70, doc.y);
-      });
-      doc.moveDown();
-    }
-  }
-
-  /**
-   * Add content analysis
-   */
-  addContentAnalysis(doc, content) {
-    checkPageBreakNeeded(doc);
-    addSectionHeader(doc, '[CONTENT_ANALYSIS]');
-
-    if (!content) {
-      doc.text('No content data available', 50, doc.y);
-      return;
-    }
-
-    doc
-      .fontSize(10)
-      .fillColor('#333333')
-      .text(`Word Count: ${content.wordCount || 0}`, 70, doc.y)
-      .text(`Reading Time: ${content.readingTime || 'N/A'}`, 70, doc.y + 5)
-      .text(`Readability Score: ${content.readabilityScore || 'N/A'}`, 70, doc.y + 5);
-
-    doc.moveDown();
-
-    // Top keywords
-    if (content.keywords && content.keywords.length > 0) {
-      addSubSectionHeader(doc, 'Top Keywords');
-      content.keywords.slice(0, 10).forEach(kw => {
-        doc
-          .fontSize(9)
-          .fillColor('#333333')
-          .text(`• ${kw.word}: ${kw.count} occurrences`, 70, doc.y);
-      });
-      doc.moveDown();
-    }
-  }
-
-  /**
-   * Add technical SEO
+   * Add technical SEO checklist
    */
   addTechnicalSEO(doc, technical) {
-    checkPageBreakNeeded(doc);
-    addSectionHeader(doc, '[TECHNICAL_SEO]');
+    checkPageBreakNeeded(doc, 200);
+    addMaterialSectionHeader(doc, 'Technical SEO', {
+      description: 'Technical implementation and best practices'
+    });
 
     if (!technical) {
-      doc.text('No technical SEO data available', 50, doc.y);
+      doc.fontSize(10)
+         .fillColor(COLORS.textDisabled)
+         .text('No technical SEO data available', 60, doc.y);
       return;
     }
 
     const items = [
-      { label: 'Canonical URL', value: technical.canonical || 'Not set', status: technical.canonical ? 'Good' : 'Warning' },
-      { label: 'Robots Meta', value: technical.robots || 'Not set', status: technical.robots ? 'Good' : 'Warning' },
-      { label: 'Viewport Meta', value: technical.viewport ? 'Present' : 'Missing', status: technical.viewport ? 'Good' : 'Error' },
-      { label: 'Language', value: technical.language || 'Not set', status: technical.language ? 'Good' : 'Warning' },
-      { label: 'Charset', value: technical.charset || 'Not set', status: technical.charset ? 'Good' : 'Warning' }
+      {
+        label: 'Canonical URL',
+        value: technical.canonical || 'Not set',
+        status: technical.canonical ? 'pass' : 'warning'
+      },
+      {
+        label: 'Robots Meta',
+        value: technical.robots || 'Not set',
+        status: technical.robots ? 'pass' : 'warning'
+      },
+      {
+        label: 'Viewport Meta',
+        value: technical.viewport ? 'Present' : 'Missing',
+        status: technical.viewport ? 'pass' : 'fail'
+      },
+      {
+        label: 'Language',
+        value: technical.language || 'Not set',
+        status: technical.language ? 'pass' : 'warning'
+      },
+      {
+        label: 'Charset',
+        value: technical.charset || 'Not set',
+        status: technical.charset ? 'pass' : 'warning'
+      }
     ];
 
     items.forEach(item => {
-      const statusColor = item.status === 'Good' ? '#00ff41' : item.status === 'Warning' ? '#ffa500' : '#ff4444';
-      doc
-        .fontSize(10)
-        .fillColor('#333333')
-        .text(`${item.label}:`, 70, doc.y)
-        .fillColor(statusColor)
-        .text(item.value, 200, doc.y - 12)
-        .moveDown(0.5);
+      let statusColor, statusIcon;
+
+      if (item.status === 'pass') {
+        statusColor = COLORS.success;
+        statusIcon = '✓';
+      } else if (item.status === 'warning') {
+        statusColor = COLORS.warning;
+        statusIcon = '⚠';
+      } else {
+        statusColor = COLORS.error;
+        statusIcon = '✗';
+      }
+
+      doc.fontSize(10)
+         .font('Helvetica')
+         .fillColor(COLORS.textPrimary)
+         .text(`${statusIcon} ${item.label}:`, 60, doc.y, { continued: true })
+         .fillColor(statusColor)
+         .text(` ${item.value}`, { width: 400 });
+
+      doc.moveDown(0.5);
     });
 
-    doc.moveDown();
+    doc.moveDown(1);
   }
 
   /**
-   * Add recommendations
+   * Add recommendations with priority grouping
    */
   addRecommendations(doc, recommendations) {
-    checkPageBreakNeeded(doc);
-    addSectionHeader(doc, '[RECOMMENDATIONS]');
+    checkPageBreakNeeded(doc, 150);
+    addMaterialSectionHeader(doc, 'Recommendations', {
+      description: 'Actionable improvements for better SEO'
+    });
 
     if (!recommendations || recommendations.length === 0) {
-      doc
-        .fontSize(10)
-        .fillColor('#00ff41')
-        .text('✓ No major issues detected. Your SEO is looking good!', 50, doc.y);
+      doc.fontSize(10)
+         .fillColor(COLORS.success)
+         .text('✓ Excellent! No critical issues detected.', 60, doc.y);
       return;
     }
 
-    recommendations.slice(0, 10).forEach((rec, index) => {
-      const priorityColor = rec.priority === 'high' ? '#ff4444' : rec.priority === 'medium' ? '#ffa500' : '#00ff41';
-      const priorityIcon = rec.priority === 'high' ? '🚨' : rec.priority === 'medium' ? '⚠️' : 'ℹ️';
-      
-      doc
-        .fontSize(11)
-        .fillColor(priorityColor)
-        .text(`${priorityIcon} ${rec.title}`, 70, doc.y)
-        .fontSize(9)
-        .fillColor('#666666')
-        .text(rec.description, 70, doc.y, { width: 475 });
+    // Group by priority
+    const high = recommendations.filter(r => r.priority === 'high').slice(0, 5);
+    const medium = recommendations.filter(r => r.priority === 'medium').slice(0, 5);
+    const low = recommendations.filter(r => r.priority === 'low').slice(0, 5);
 
-      if (rec.actions && rec.actions.length > 0) {
-        rec.actions.slice(0, 3).forEach(action => {
-          doc
-            .fontSize(8)
-            .fillColor('#333333')
-            .text(`  • ${action}`, 80, doc.y);
-        });
-      }
+    // High priority
+    if (high.length > 0) {
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.error)
+         .text('High Priority', 60, doc.y);
 
-      doc.moveDown();
-      checkPageBreakNeeded(doc);
-    });
+      doc.moveDown(0.5);
+
+      high.forEach(rec => {
+        checkPageBreakNeeded(doc);
+
+        doc.fontSize(10)
+           .font('Helvetica-Bold')
+           .fillColor(COLORS.error)
+           .text(`• ${rec.title || rec.message}`, 70, doc.y);
+
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor(COLORS.textSecondary)
+           .text(rec.description || '', 80, doc.y + 3, { width: 465 });
+
+        if (rec.actions && rec.actions.length > 0) {
+          rec.actions.slice(0, 2).forEach(action => {
+            doc.fontSize(8)
+               .fillColor(COLORS.textSecondary)
+               .text(`  - ${action}`, 85, doc.y);
+          });
+        }
+
+        doc.moveDown(0.8);
+      });
+
+      doc.moveDown(1);
+    }
+
+    // Medium priority
+    if (medium.length > 0) {
+      checkPageBreakNeeded(doc, 100);
+
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.warning)
+         .text('Medium Priority', 60, doc.y);
+
+      doc.moveDown(0.5);
+
+      medium.forEach(rec => {
+        checkPageBreakNeeded(doc);
+
+        doc.fontSize(10)
+           .font('Helvetica-Bold')
+           .fillColor(COLORS.warning)
+           .text(`• ${rec.title || rec.message}`, 70, doc.y);
+
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor(COLORS.textSecondary)
+           .text(rec.description || '', 80, doc.y + 3, { width: 465 });
+
+        doc.moveDown(0.8);
+      });
+
+      doc.moveDown(1);
+    }
+
+    // Low priority
+    if (low.length > 0) {
+      checkPageBreakNeeded(doc, 100);
+
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.info)
+         .text('Low Priority', 60, doc.y);
+
+      doc.moveDown(0.5);
+
+      low.forEach(rec => {
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor(COLORS.textSecondary)
+           .text(`• ${rec.title || rec.message}`, 70, doc.y, { width: 475 });
+
+        doc.moveDown(0.5);
+      });
+    }
   }
-
-  // Helper methods removed - now using pdfHelpers utilities
-  // - addSectionHeader → pdfHelpers.addSectionHeader()
-  // - addSubSection → pdfHelpers.addSubSectionHeader()
-  // - checkPageBreak → pdfHelpers.checkPageBreakNeeded()
-  // - getScoreColor → pdfHelpers.getScoreColor()
-  // - getGrade → pdfHelpers.getGrade()
 }
 
 module.exports = new SEOPdfGenerator();

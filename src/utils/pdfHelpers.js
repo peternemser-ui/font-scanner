@@ -18,6 +18,7 @@ const fs = require('fs');
 const path = require('path');
 const { resolveReportId } = require('./resolveReportId');
 const { createLogger } = require('./logger');
+const { COLORS, drawGaugeChart } = require('./pdfCharts');
 
 const logger = createLogger('PdfHelpers');
 
@@ -67,10 +68,11 @@ function initializePdfGeneration(results, analyzerType, options = {}) {
 
   logger.info(`Initializing ${analyzerType} PDF report: ${filename}`);
 
-  // Create PDF document
+  // Create PDF document (US Letter 8.5" x 11" with white background)
   const doc = new PDFDocument({
     margin: 50,
-    size: 'A4',
+    size: 'LETTER', // 612 x 792 points
+    bufferPages: true,
     ...options.pdfOptions
   });
 
@@ -119,59 +121,83 @@ function finalizePdfGeneration(doc, stream, filename, filepath, reportId) {
  * Add header with branding
  *
  * Consolidates header pattern used across all PDF generators
- * Terminal-style header with green accent line
+ * Material Design header with colored accent bar and optional logo
  *
  * @param {Object} doc - PDFDocument instance
- * @param {string} title - Report title (e.g., "[SEO_ANALYSIS_REPORT]")
+ * @param {string} title - Report title (e.g., "SEO Analysis Report")
  * @param {string} url - Website URL
  * @param {string} subtitle - Optional subtitle
  * @param {Object} options - Styling options
  *
  * @example
- * addPdfHeader(doc, '[SEO_ANALYSIS_REPORT]', 'https://example.com',
- *   'comprehensive search engine optimization analysis');
+ * addPdfHeader(doc, 'SEO Analysis Report', 'https://example.com',
+ *   'Comprehensive search engine optimization analysis');
  */
 function addPdfHeader(doc, title, url, subtitle = null, options = {}) {
   const {
-    titleColor = '#1a1a1a',
-    subtitleColor = '#666666',
-    accentColor = '#00ff41',
-    startY = 50
+    titleColor = COLORS.textPrimary,
+    subtitleColor = COLORS.textSecondary,
+    accentColor = COLORS.primary,
+    startY = 40,
+    showLogo = true
   } = options;
 
-  doc
-    .fontSize(28)
-    .font('Helvetica-Bold')
-    .fillColor(titleColor)
-    .text(title, 50, startY);
+  let currentY = startY;
 
-  if (subtitle) {
-    doc
-      .fontSize(14)
-      .font('Helvetica')
-      .fillColor(subtitleColor)
-      .text(`> ${subtitle}`, 50, startY + 35);
+  // Logo (top right)
+  if (showLogo) {
+    try {
+      const logoPath = path.join(__dirname, '../public/assets/logo-dark.svg');
+      if (fs.existsSync(logoPath)) {
+        // SVG logo positioned top right
+        doc.image(logoPath, 450, currentY, { width: 95 });
+      }
+    } catch (error) {
+      logger.warn('Could not load logo for PDF header:', error.message);
+    }
   }
 
+  // Main title (no brackets, clean Material Design)
   doc
-    .fontSize(12)
+    .fontSize(24)
+    .font('Helvetica-Bold')
+    .fillColor(titleColor)
+    .text(title, 50, currentY);
+
+  currentY += 30;
+
+  // Subtitle
+  if (subtitle) {
+    doc
+      .fontSize(12)
+      .font('Helvetica')
+      .fillColor(subtitleColor)
+      .text(subtitle, 50, currentY);
+    currentY += 20;
+  }
+
+  // URL
+  doc
+    .fontSize(10)
     .fillColor(subtitleColor)
-    .text(`> url: ${url}`, 50, startY + (subtitle ? 60 : 35));
+    .text(`Website: ${url}`, 50, currentY);
 
+  // Generated date
   doc
-    .fontSize(12)
+    .fontSize(10)
     .fillColor(subtitleColor)
-    .text(`> generated: ${new Date().toLocaleString()}`, 50, startY + (subtitle ? 80 : 55));
+    .text(`Generated: ${new Date().toLocaleString()}`, 50, currentY + 15);
 
-  // Accent line
+  currentY += 35;
+
+  // Material Design accent bar (thicker, colored)
+  // Full width for US Letter (612 - 100 = 512)
   doc
-    .strokeColor(accentColor)
-    .lineWidth(2)
-    .moveTo(50, startY + (subtitle ? 110 : 85))
-    .lineTo(545, startY + (subtitle ? 110 : 85))
-    .stroke();
+    .rect(50, currentY, 512, 4)
+    .fillColor(accentColor)
+    .fill();
 
-  doc.moveDown(3);
+  doc.moveDown(4);
 }
 
 /**
@@ -290,7 +316,7 @@ function addKeyValue(doc, key, value, options = {}) {
  */
 function addScoreBadge(doc, score, label, x, y, options = {}) {
   const {
-    width = 495,
+    width = 512,
     height = 100,
     backgroundColor = '#f5f5f5',
     borderColor = '#cccccc'
@@ -397,19 +423,20 @@ function checkPageBreakNeeded(doc, requiredSpace = 150) {
  * Get score color based on value
  *
  * Consolidates score-to-color mapping
- * Terminal theme colors: green (good), purple (ok), orange (warning), red (bad)
+ * Material Design colors: green (excellent), light green (good), orange (fair), red (poor)
  *
  * @param {number} score - Score value (0-100)
  * @returns {string} Hex color code
  *
  * @example
- * const color = getScoreColor(85); // '#00ff41' (green)
+ * const color = getScoreColor(85); // '#7CB342' (good)
  */
 function getScoreColor(score) {
-  if (score >= 90) return '#00ff41'; // Terminal green
-  if (score >= 70) return '#bb86fc'; // Purple
-  if (score >= 50) return '#ffa500'; // Orange
-  return '#ff4444'; // Red
+  if (score >= 90) return COLORS.excellent; // #43A047 - Green
+  if (score >= 80) return COLORS.good;      // #7CB342 - Light green
+  if (score >= 70) return COLORS.fair;      // #FB8C00 - Orange
+  if (score >= 50) return COLORS.poor;      // #FF6F00 - Dark orange
+  return COLORS.critical;                   // #E53935 - Red
 }
 
 /**
@@ -502,6 +529,210 @@ function addRecommendationsSection(doc, recommendations, options = {}) {
   }
 }
 
+/**
+ * Draw a Material Design card with subtle shadow/border
+ *
+ * @param {Object} doc - PDFDocument instance
+ * @param {number} x - X position
+ * @param {number} y - Y position
+ * @param {number} width - Card width
+ * @param {number} height - Card height
+ * @param {Object} options - { backgroundColor, borderColor, borderWidth }
+ */
+function drawCard(doc, x, y, width, height, options = {}) {
+  const {
+    backgroundColor = COLORS.surface,
+    borderColor = COLORS.divider,
+    borderWidth = 1
+  } = options;
+
+  doc.save();
+
+  // Card background
+  doc.rect(x, y, width, height)
+     .fillColor(backgroundColor)
+     .fill();
+
+  // Card border (subtle)
+  doc.rect(x, y, width, height)
+     .strokeColor(borderColor)
+     .lineWidth(borderWidth)
+     .stroke();
+
+  doc.restore();
+}
+
+/**
+ * Draw a score summary card with gauge chart
+ * Replaces the old basic score box
+ *
+ * @param {Object} doc - PDFDocument instance
+ * @param {number} score - Overall score
+ * @param {string} title - Card title
+ * @param {Object} breakdown - Component scores { meta: 85, headings: 90, ... }
+ * @param {number} x - X position
+ * @param {number} y - Y position
+ * @returns {number} - Height consumed
+ */
+function drawScoreSummaryCard(doc, score, title, breakdown, x, y) {
+  const cardHeight = 200;
+  const cardWidth = 512;
+
+  // Draw card background
+  drawCard(doc, x, y, cardWidth, cardHeight);
+
+  // Title
+  doc.fontSize(14)
+     .font('Helvetica-Bold')
+     .fillColor(COLORS.textPrimary)
+     .text(title, x + 20, y + 20);
+
+  // Gauge chart (centered)
+  const gaugeX = x + 120;
+  const gaugeY = y + 120;
+  drawGaugeChart(doc, score, 'Overall Score', gaugeX, gaugeY, {
+    radius: 60,
+    width: 12,
+    showValue: true,
+    showLabel: true
+  });
+
+  // Component breakdown (right side)
+  if (breakdown && Object.keys(breakdown).length > 0) {
+    const breakdownX = x + 260;
+    let breakdownY = y + 50;
+
+    Object.entries(breakdown).forEach(([key, value]) => {
+      const color = getScoreColor(value);
+      const label = key.charAt(0).toUpperCase() + key.slice(1);
+
+      // Component name
+      doc.fontSize(9)
+         .font('Helvetica')
+         .fillColor(COLORS.textSecondary)
+         .text(label, breakdownX, breakdownY);
+
+      // Component score
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(color)
+         .text(`${Math.round(value)}/100`, breakdownX + 150, breakdownY - 1);
+
+      breakdownY += 20;
+    });
+  }
+
+  return cardHeight + 20;
+}
+
+/**
+ * Draw a grid of key metrics (3-4 columns)
+ *
+ * @param {Object} doc - PDFDocument instance
+ * @param {Array} metrics - [{ label, value, color }]
+ * @param {number} x - X position
+ * @param {number} y - Y position
+ * @param {Object} options - { columns, spacing }
+ * @returns {number} - Height consumed
+ */
+function drawMetricGrid(doc, metrics, x, y, options = {}) {
+  const {
+    columns = 3,
+    spacing = 15
+  } = options;
+
+  if (!metrics || metrics.length === 0) {
+    return 0;
+  }
+
+  const cardWidth = (512 - (columns - 1) * spacing) / columns;
+  const cardHeight = 70;
+
+  let currentX = x;
+  let currentY = y;
+  let column = 0;
+
+  metrics.forEach((metric) => {
+    // Draw card
+    drawCard(doc, currentX, currentY, cardWidth, cardHeight);
+
+    // Label
+    doc.fontSize(9)
+       .font('Helvetica')
+       .fillColor(COLORS.textSecondary)
+       .text(metric.label || '', currentX + 10, currentY + 10, {
+         width: cardWidth - 20,
+         ellipsis: true
+       });
+
+    // Value
+    const color = metric.color || COLORS.primary;
+    doc.fontSize(20)
+       .font('Helvetica-Bold')
+       .fillColor(color)
+       .text(metric.value || '', currentX + 10, currentY + 30, {
+         width: cardWidth - 20,
+         ellipsis: true
+       });
+
+    // Move to next position
+    column++;
+    if (column >= columns) {
+      column = 0;
+      currentX = x;
+      currentY += cardHeight + spacing;
+    } else {
+      currentX += cardWidth + spacing;
+    }
+  });
+
+  // Calculate total height
+  const rows = Math.ceil(metrics.length / columns);
+  return rows * (cardHeight + spacing);
+}
+
+/**
+ * Material Design section header with colored accent bar
+ * Replaces the old bracketed headers
+ *
+ * @param {Object} doc - PDFDocument instance
+ * @param {string} title - Section title
+ * @param {Object} options - { accentColor, description, checkPageBreak }
+ */
+function addMaterialSectionHeader(doc, title, options = {}) {
+  const {
+    accentColor = COLORS.primary,
+    description = null,
+    checkPageBreak = true
+  } = options;
+
+  if (checkPageBreak) {
+    checkPageBreakNeeded(doc, 60);
+  }
+
+  // Colored accent bar (left side)
+  doc.rect(50, doc.y, 4, 20)
+     .fillColor(accentColor)
+     .fill();
+
+  // Section title
+  doc.fontSize(14)
+     .font('Helvetica-Bold')
+     .fillColor(COLORS.textPrimary)
+     .text(title, 60, doc.y - 20);
+
+  // Description (optional)
+  if (description) {
+    doc.fontSize(10)
+       .font('Helvetica')
+       .fillColor(COLORS.textSecondary)
+       .text(description, 60, doc.y + 5);
+    doc.moveDown(1);
+  } else {
+    doc.moveDown(1.5);
+  }
+}
+
 module.exports = {
   // Document lifecycle
   initializePdfGeneration,
@@ -521,5 +752,14 @@ module.exports = {
   // Utilities
   checkPageBreakNeeded,
   getScoreColor,
-  getGrade
+  getGrade,
+
+  // Material Design helpers
+  drawCard,
+  drawScoreSummaryCard,
+  drawMetricGrid,
+  addMaterialSectionHeader,
+
+  // Material Design colors
+  COLORS
 };

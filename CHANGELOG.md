@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Comprehensive codebase cleanup and optimization
+- **PDF Report Design Modernization**: Complete Material Design overhaul of all 5 PDF report types
+  - `pdfCharts.js`: New chart rendering module with 6 chart types (gauge, bar, pie/donut, comparison, progress, threshold)
+  - Material Design color palette, typography, and spacing system
+  - 60+ data visualizations added across SEO, Security, Performance, Accessibility, and Font Analysis reports
+  - Professional gauge charts for overall scores and component breakdowns
+  - Threshold charts for Core Web Vitals (LCP, TBT, CLS) with color-coded zones
+  - Pie/donut charts for distributions (vulnerabilities, resources, violations)
+  - Comparison charts for Desktop vs Mobile metrics
+  - Timeline visualizations for performance metrics (FCP → FMP → LCP → TTI)
+  - Progress bars for completion indicators and strength metrics
+  - Material cards with subtle elevation for visual grouping
+  - 4-gauge grid for WCAG 2.1 principles (Perceivable, Operable, Understandable, Robust)
+  - Color contrast analysis with visual swatches and ratio indicators
+  - Removed terminal-style brackets in favor of clean Material Design headers
 - **Service Layer Consolidation**: 6 new utility modules consolidating 3000+ lines of duplicated code
   - `controllerHelpers.js`: Request/response processing, report metadata, URL validation
   - `formatHelpers.js`: Number formatting, byte/duration conversion, percentage formatting
@@ -20,6 +34,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - ESLint now enforces `no-console` rule in production code
 - Documentation reorganized: 84 historical docs archived, 8 obsolete docs removed
+- **5 PDF generators** completely redesigned with Material Design and data visualizations
+  - `seoPdfGenerator.js`: 638 lines (from 499) - Added gauge charts, bar charts, pie charts, progress bars, metric grids
+  - `securityPdfGenerator.js`: 1017 lines (from 627) - Added vulnerability pie charts, progress bars, comparison charts, OWASP bar charts
+  - `performancePdfGenerator.js`: 1006 lines (from 498) - Added threshold charts, timeline visualization, resource pie charts, metric cards
+  - `accessibilityPdfGenerator.js`: 1084 lines (from 606) - Added 4-gauge WCAG grid, violation donut charts, contrast swatches, comparison charts
+  - `pdfReportGenerator.js`: 1038 lines (from 951) - Font Analysis PDF redesigned with pie charts, progress bars, dual gauge charts, metric grids, comparison charts
+  - Eliminated terminal-style `[BRACKETS]` headers and neon green colors in favor of Material Design section headers
+  - Professional gauge charts for overall scores with component breakdowns
+  - Rich data visualizations throughout (60+ charts total across all PDF types)
+  - **US Letter page size (8.5" x 11")** for all PDF reports with white background
+  - **Company logo** displayed in header of all PDF reports
 - **12 controllers** refactored to use `controllerHelpers` (eliminated 340+ lines of duplication)
   - Unified report metadata pattern (reportId, screenshotUrl, scanStartedAt)
   - Consolidated URL processing with HTTP fallback support
@@ -51,11 +76,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `gdprComplianceService.js`: Uses formatHelpers for analysis duration (1 replacement)
   - `fontPairingAnalyzer.js`: Uses formatHelpers for pairing scores (1 replacement)
   - `fontLicensingDetector.js`: Uses formatHelpers for compliance percentages (1 replacement)
-- **4 PDF generators** refactored to use pdfHelpers (eliminated 180+ lines)
+- **5 PDF generators** refactored to use pdfHelpers (eliminated 250+ lines)
   - `seoPdfGenerator.js`: Uses initializePdfGeneration, finalizePdfGeneration, addPdfHeader, section helpers
   - `securityPdfGenerator.js`: Uses pdfHelpers for headers, sections, scoring, page breaks
   - `performancePdfGenerator.js`: Uses pdfHelpers + formatHelpers for bytes formatting
   - `accessibilityPdfGenerator.js`: Uses pdfHelpers for consistent report structure
+  - `pdfReportGenerator.js`: Uses pdfHelpers, pdfCharts, Material Design components throughout
 
 ### Removed
 - 723 debug console statements from production code
@@ -67,7 +93,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **175+ scattered `.toFixed()` and `Math.round()` formatting calls** replaced with formatHelpers
 - **17 duplicate browser automation patterns** replaced with browserHelpers
 - **10+ duplicate DOM extraction functions** replaced with domHelpers
-- **4 × 50-line PDF boilerplate blocks** replaced with pdfHelpers (200+ lines eliminated)
+- **5 × 50-line PDF boilerplate blocks** replaced with pdfHelpers (250+ lines eliminated)
+- **Terminal-style design from font analysis PDF**: Removed neon green colors (#00ff41), bracket headers ([SECTION]), dark backgrounds (#0a0a0a, #1a1a1a)
 
 ---
 

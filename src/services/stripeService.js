@@ -92,7 +92,7 @@ class StripeService {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
-      allow_promotion_codes: true,
+      allow_promotion_codes: false,
       metadata: {
         purchaseType,
         packId: packId || '',
