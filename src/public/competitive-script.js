@@ -148,6 +148,29 @@ document.addEventListener('DOMContentLoaded', () => {
   // No additional event listeners needed here
 });
 
+// Validate URL format
+function isValidUrl(string) {
+  // Add protocol if missing
+  let urlToTest = string;
+  if (!/^https?:\/\//i.test(urlToTest)) {
+    urlToTest = 'https://' + urlToTest;
+  }
+  
+  try {
+    const url = new URL(urlToTest);
+    // Check for valid hostname with at least one dot (domain.tld)
+    const hostname = url.hostname;
+    if (!hostname.includes('.')) {
+      return false;
+    }
+    // Basic domain pattern check (alphanumeric, hyphens, dots)
+    const domainPattern = /^[a-zA-Z0-9][a-zA-Z0-9-_.]*[a-zA-Z0-9]\.[a-zA-Z]{2,}$/;
+    return domainPattern.test(hostname) || hostname.includes('.');
+  } catch {
+    return false;
+  }
+}
+
 // Analyze competition
 document.getElementById('analyzeBtn').addEventListener('click', async () => {
   const yourUrl = document.getElementById('yourUrl').value.trim();
@@ -161,9 +184,23 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     return;
   }
   
+  // Validate your URL format
+  if (!isValidUrl(yourUrl)) {
+    alert(`"${yourUrl}" is not a valid URL. Please enter a valid website address like "example.com" or "https://example.com"`);
+    return;
+  }
+  
   if (competitorUrls.length === 0) {
     alert('Please enter at least one competitor URL');
     return;
+  }
+  
+  // Validate all competitor URLs
+  for (const url of competitorUrls) {
+    if (!isValidUrl(url)) {
+      alert(`"${url}" is not a valid URL. Please enter a valid website address like "competitor.com" or "https://competitor.com"`);
+      return;
+    }
   }
   
   const resultsDiv = document.getElementById('results');
@@ -270,7 +307,7 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
   
   // eslint-disable-next-line no-undef
   loader = new AnalyzerLoader('loadingContainer');
-  loader.start(steps, '[COMPETITIVE_ANALYSIS]', 900); // 15 minutes = 900 seconds
+  loader.start(steps, 'Competitive Analysis', 900); // 15 minutes = 900 seconds
   
   // Initialize WebSocket connection
   initializeWebSocket();
@@ -358,74 +395,211 @@ function displayResults(data) {
   }
   
   const resultsDiv = document.getElementById('results');
+  const reportId = data.reportId || '';
+  
+  // Store data globally for chart access
+  window.competitiveData = data;
   
   try {
-    // Build the HTML with executive summary and interactive charts at top (always visible)
-    // Then accordion sections for detailed breakdowns
-    const html = `
-      ${renderExecutiveSummary(data)}
-      ${renderInteractiveCharts(data)}
-      
-      <div id="accordionContainer" class="accordion-container"></div>
-    `;
+    // Build summary donuts from scores
+    const summary = buildCompetitiveSummary(data);
     
-    resultsDiv.innerHTML = html;
+    // Build sections for ReportContainer
+    const sections = buildCompetitiveSections(data, reportId);
     
-    // Create accordion sections
-    const accordionContainer = document.getElementById('accordionContainer');
-    
-    // Detailed Metrics Breakdown
-    createCompetitiveAccordion(accordionContainer, 'detailed-metrics', '📋 Detailed Metrics Breakdown', 
-      () => renderDetailedMetricsContent(data), null, true);
-    
-    // Key Insights
-    if (data.insights && data.insights.length > 0) {
-      createCompetitiveAccordion(accordionContainer, 'key-insights', 'ⓘ Key Insights', 
-        () => renderInsightsContent(data.insights), null, true);
-    }
-    
-    // Visual Score Comparison
-    createCompetitiveAccordion(accordionContainer, 'visual-comparison', '◉ Visual Score Comparison', 
-      () => renderVisualComparisonContent(data), null, false);
-    
-    // Competitive Position Summary
-    createCompetitiveAccordion(accordionContainer, 'competitive-position', '◈ Competitive Position Summary', 
-      () => renderCompetitivePositionContent(data), null, false);
-    
-    // Head-to-Head Battle
-    createCompetitiveAccordion(accordionContainer, 'head-to-head', '⚔️ Head-to-Head Battle', 
-      () => renderHeadToHeadContent(data), null, false);
-    
-    // Strengths & Weaknesses
-    createCompetitiveAccordion(accordionContainer, 'strengths-weaknesses', '💪 Your Competitive Strengths & Weaknesses', 
-      () => renderStrengthsWeaknessesContent(data), null, false);
-    
-    // Action Plan / Recommendations
-    if (data.recommendations && data.recommendations.length > 0) {
-      createCompetitiveAccordion(accordionContainer, 'action-plan', '🎯 Action Plan to Beat Competition', 
-        () => renderRecommendationsContent(data.recommendations), null, true);
-    }
+    // Use ReportContainer.create() - SEO pattern
+    const reportHTML = (window.ReportContainer && typeof window.ReportContainer.create === 'function')
+      ? window.ReportContainer.create({
+          url: data.yourSite.url,
+          timestamp: data.timestamp || new Date().toISOString(),
+          mode: 'competitive',
+          title: 'Competitive Analysis',
+          subtitle: `Ranked #${data.rankings?.overall?.rank || '?'} of ${(data.competitors?.length || 0) + 1} sites analyzed`,
+          summary,
+          sections,
+          screenshots: [], // No screenshot for competitive analysis
+          proBlock: true,
+          proBlockOptions: {
+            context: 'competitive-analysis',
+            features: ['pdf', 'csv', 'share'],
+            title: 'Unlock Report',
+            subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+            reportId
+          },
+          // Custom content to inject after summary (executive summary + charts)
+          customHeaderContent: renderExecutiveSummary(data) + renderInteractiveCharts(data)
+        })
+      : renderFallbackResults(data);
+
+    resultsDiv.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
     
     // Initialize charts after DOM is updated
     setTimeout(() => {
       initializeCharts(data);
     }, 100);
-
-
-    // Pro Report Block
-    if (window.ProReportBlock && window.ProReportBlock.render) {
-      const proBlockHtml = window.ProReportBlock.render({
-        context: 'competitive-analysis',
-        features: ['pdf', 'csv', 'share'],
-        title: 'Unlock Report',
-        subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
-      });
-      accordionContainer.insertAdjacentHTML('beforeend', proBlockHtml);
+    
+    // Initialize accordion interactions
+    if (window.ReportAccordion && typeof window.ReportAccordion.initInteractions === 'function') {
+      window.ReportAccordion.initInteractions();
     }
+
+    // Refresh paywall UI
+    if (reportId && window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+      window.CreditsManager.renderPaywallState(reportId);
+    }
+    
   } catch (error) {
     console.error('Error rendering results:', error);
     alert(`Error displaying results: ${error.message}`);
   }
+}
+
+// Build summary donuts for competitive analysis
+function buildCompetitiveSummary(data) {
+  const summary = [];
+  const scores = data.yourSite.scores;
+  
+  // Overall score
+  if (typeof scores.overall === 'number') {
+    summary.push({ label: 'Overall', score: scores.overall });
+  }
+  
+  // Individual metrics
+  if (typeof scores.seo === 'number') {
+    summary.push({ label: 'SEO', score: scores.seo });
+  }
+  if (typeof scores.security === 'number') {
+    summary.push({ label: 'Security', score: scores.security });
+  }
+  if (typeof scores.accessibility === 'number') {
+    summary.push({ label: 'Accessibility', score: scores.accessibility });
+  }
+  if (typeof scores.coreWebVitals === 'number') {
+    summary.push({ label: 'Core Web Vitals', score: scores.coreWebVitals });
+  }
+  if (typeof scores.performance === 'number') {
+    summary.push({ label: 'Performance', score: scores.performance });
+  }
+  
+  return summary;
+}
+
+// Build sections for ReportContainer
+function buildCompetitiveSections(data, reportId) {
+  const isUnlocked = !!(
+    reportId &&
+    window.CreditsManager &&
+    (
+      (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+      (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+    )
+  );
+  
+  const sections = [];
+  
+  // Detailed Metrics Breakdown - always expanded
+  sections.push({
+    id: 'detailed-metrics',
+    title: 'Detailed Metrics Breakdown',
+    expanded: true,
+    contentHTML: renderDetailedMetricsContent(data)
+  });
+  
+  // Key Insights - always expanded
+  if (data.insights && data.insights.length > 0) {
+    sections.push({
+      id: 'key-insights',
+      title: 'Key Insights',
+      expanded: true,
+      contentHTML: renderInsightsContent(data.insights)
+    });
+  }
+  
+  // Visual Score Comparison
+  sections.push({
+    id: 'visual-comparison',
+    title: 'Visual Score Comparison',
+    expanded: false,
+    contentHTML: renderVisualComparisonContent(data)
+  });
+  
+  // Competitive Position Summary
+  sections.push({
+    id: 'competitive-position',
+    title: 'Competitive Position Summary',
+    expanded: false,
+    contentHTML: renderCompetitivePositionContent(data)
+  });
+  
+  // Head-to-Head Battle (Pro)
+  sections.push({
+    id: 'head-to-head',
+    title: 'Head-to-Head Battle',
+    expanded: false,
+    isPro: true,
+    locked: !isUnlocked,
+    context: 'competitive-analysis',
+    reportId,
+    contentHTML: isUnlocked ? renderHeadToHeadContent(data) : renderCompetitiveProPreview()
+  });
+  
+  // Strengths & Weaknesses (Pro)
+  sections.push({
+    id: 'strengths-weaknesses',
+    title: 'Your Competitive Strengths & Weaknesses',
+    expanded: false,
+    isPro: true,
+    locked: !isUnlocked,
+    context: 'competitive-analysis',
+    reportId,
+    contentHTML: isUnlocked ? renderStrengthsWeaknessesContent(data) : renderCompetitiveProPreview()
+  });
+  
+  // Report and Recommendations (Pro)
+  if (data.recommendations && data.recommendations.length > 0) {
+    sections.push({
+      id: 'report-recommendations',
+      title: 'Report and Recommendations',
+      expanded: true,
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'competitive-analysis',
+      reportId,
+      contentHTML: isUnlocked ? renderRecommendationsContent(data.recommendations) : renderCompetitiveProPreview()
+    });
+  }
+  
+  return sections;
+}
+
+// Fallback rendering without ReportContainer
+function renderFallbackResults(data) {
+  return `
+    ${renderExecutiveSummary(data)}
+    ${renderInteractiveCharts(data)}
+    <div id="accordionContainer" class="accordion-container">
+      <div class="accordion expanded">
+        <div class="accordion-header">📋 Detailed Metrics Breakdown</div>
+        <div class="accordion-content expanded">
+          <div class="accordion-content-inner">${renderDetailedMetricsContent(data)}</div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Pro preview for competitive analysis
+function renderCompetitiveProPreview() {
+  return `
+    <div class="pro-preview-content" style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">
+      <p style="margin-bottom: 1rem;">🔒 Unlock to see detailed recommendations</p>
+      <ul style="list-style: none; padding: 0; margin: 0; text-align: left; max-width: 300px; margin: 0 auto;">
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">• Prioritized action items</li>
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">• Gap analysis details</li>
+        <li style="padding: 0.5rem 0;">• Implementation guidance</li>
+      </ul>
+    </div>
+  `;
 }
 
 // Create accordion section for competitive analysis
@@ -1645,34 +1819,373 @@ function renderStrengthsWeaknesses(data, metrics) {
   return `<section class="section"><h2>💪 Your Competitive Strengths & Weaknesses</h2>${renderStrengthsWeaknessesContent(data)}</section>`;
 }
 
-// Recommendations content (for accordion)
-function renderRecommendationsContent(recommendations) {
-  if (!recommendations || recommendations.length === 0) {
-    return `<p style="color: var(--accent-primary);">You're already ahead of the competition. Keep up the great work!</p>`;
+// Ensure competitive fix styles are injected
+function ensureCompetitiveFixStyles() {
+  if (document.getElementById('competitive-fix-styles')) return;
+  
+  const style = document.createElement('style');
+  style.id = 'competitive-fix-styles';
+  style.textContent = `
+    .competitive-fix-accordion .competitive-fix-header:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    .competitive-fix-accordion.expanded .competitive-fix-expand-icon {
+      transform: rotate(180deg);
+    }
+    .competitive-fix-tab.active {
+      background: rgba(255, 255, 255, 0.1) !important;
+      color: #fff !important;
+      border-color: rgba(255, 255, 255, 0.2) !important;
+    }
+    .competitive-fix-tab-content {
+      display: none;
+    }
+    .competitive-fix-tab-content.active {
+      display: block;
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+// Toggle competitive fix accordion
+window.toggleCompetitiveFixAccordion = function(accordionId) {
+  const content = document.getElementById(`${accordionId}-content`);
+  const accordion = content?.closest('.competitive-fix-accordion');
+  const icon = accordion?.querySelector('.competitive-fix-expand-icon');
+  
+  if (!content) return;
+  
+  const isExpanded = content.style.maxHeight && content.style.maxHeight !== '0px';
+  
+  if (isExpanded) {
+    content.style.maxHeight = '0px';
+    accordion?.classList.remove('expanded');
+  } else {
+    content.style.maxHeight = content.scrollHeight + 'px';
+    accordion?.classList.add('expanded');
+  }
+};
+
+// Switch competitive fix tab
+window.switchCompetitiveFixTab = function(accordionId, tabName) {
+  const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  if (!accordion) return;
+  
+  // Update tab buttons
+  accordion.querySelectorAll('.competitive-fix-tab').forEach(tab => {
+    tab.classList.remove('active');
+    tab.style.background = 'transparent';
+    tab.style.color = '#aaa';
+  });
+  
+  const activeTab = accordion.querySelector(`[onclick*="'${tabName}'"]`);
+  if (activeTab) {
+    activeTab.classList.add('active');
+    activeTab.style.background = 'rgba(255,255,255,0.1)';
+    activeTab.style.color = '#fff';
   }
   
+  // Update content panels
+  accordion.querySelectorAll('.competitive-fix-tab-content').forEach(panel => {
+    panel.classList.remove('active');
+    panel.style.display = 'none';
+  });
+  
+  const activePanel = document.getElementById(`${accordionId}-${tabName}`);
+  if (activePanel) {
+    activePanel.classList.add('active');
+    activePanel.style.display = 'block';
+  }
+  
+  // Recalculate max-height for expanded content
+  const content = document.getElementById(`${accordionId}-content`);
+  if (content && content.style.maxHeight && content.style.maxHeight !== '0px') {
+    setTimeout(() => {
+      content.style.maxHeight = content.scrollHeight + 'px';
+    }, 10);
+  }
+};
+
+// Copy code utility
+window.copyCompetitiveCode = function(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const btn = document.querySelector(`[onclick*="${elementId}"]`);
+    if (btn) {
+      const original = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    }
+  });
+};
+
+// Recommendations content (for accordion) - comprehensive version with tabs
+function renderRecommendationsContent(recommendations) {
+  ensureCompetitiveFixStyles();
+  
+  if (!recommendations || recommendations.length === 0) {
+    return `
+      <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+          <span style="font-size: 1.5rem;">✓</span> You're Ahead of Competition!
+        </h3>
+        <p style="color: #86efac; margin: 0;">You're already outperforming your competitors. Keep monitoring to maintain your lead.</p>
+      </div>
+    `;
+  }
+  
+  // Sort by priority: high first, then medium, then low
+  const sortedRecs = [...recommendations].sort((a, b) => {
+    const priorityOrder = { high: 0, medium: 1, low: 2 };
+    return (priorityOrder[a.priority] || 1) - (priorityOrder[b.priority] || 1);
+  });
+  
+  let html = `
+    <div class="competitive-fixes-container" style="margin-top: 1rem;">
+      <div class="competitive-fixes-list">
+  `;
+  
+  sortedRecs.forEach((rec, index) => {
+    html += renderCompetitiveFixAccordion(rec, index);
+  });
+  
+  html += `</div></div>`;
+  
+  return html;
+}
+
+function renderCompetitiveFixAccordion(rec, index) {
+  const accordionId = `compfix-${index}`;
+  const priorityColors = {
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+    low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
+  };
+  const style = priorityColors[rec.priority] || priorityColors.medium;
+  const metricName = formatMetricName(rec.metric);
+  
   return `
-    <div style="display: grid; gap: 1rem;">
-      ${recommendations.map((rec, idx) => `
-        <div class="insight-card ${rec.priority === 'high' ? 'insight-critical' : 'insight-warning'}" style="margin-bottom: 0.5rem;">
-          <div style="display: flex; justify-content: space-between; align-items: start;">
-            <div>
-              <h3 style="margin: 0 0 0.5rem 0;">
-                ${idx + 1}. Close ${rec.gap}-point gap in ${rec.metric}
-              </h3>
-              <p style="margin: 0.5rem 0; color: var(--text-secondary);">${rec.recommendation}</p>
-              <p style="margin: 0.5rem 0 0 0; font-style: italic; color: var(--text-secondary);">
-                ⓘ ${rec.impact}
-              </p>
-            </div>
-            <span style="padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.1); border-radius: 4px; font-size: 0.85rem; white-space: nowrap;">
-              ${rec.priority.toUpperCase()}
-            </span>
+    <div class="competitive-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="competitive-fix-header" onclick="toggleCompetitiveFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">Close ${rec.gap}-point gap in ${metricName}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">Top competitor: ${rec.topCompetitorScore || '?'} vs yours: ${rec.yourScore || '?'}</p>
           </div>
         </div>
-      `).join('')}
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${(rec.priority || 'medium').toUpperCase()}</span>
+          <span class="competitive-fix-expand-icon" style="color: var(--text-secondary); transition: transform 0.3s;">▼</span>
+        </div>
+      </div>
+
+      <div class="competitive-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderCompetitiveFixTabs(rec, accordionId)}
+        </div>
+      </div>
     </div>
   `;
+}
+
+function renderCompetitiveFixTabs(rec, accordionId) {
+  const metricName = formatMetricName(rec.metric);
+  const actionSteps = getCompetitiveActionSteps(rec);
+  
+  return `
+    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="competitive-fix-tab active" onclick="switchCompetitiveFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">Summary</button>
+      <button class="competitive-fix-tab" onclick="switchCompetitiveFixTab('${accordionId}', 'analysis')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">Gap Analysis</button>
+      <button class="competitive-fix-tab" onclick="switchCompetitiveFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">Action Steps</button>
+    </div>
+
+    <!-- Summary Tab -->
+    <div class="competitive-fix-tab-content active" id="${accordionId}-summary">
+      <p style="color: var(--text-secondary); line-height: 1.7; margin: 0 0 1rem 0;">
+        ${rec.recommendation}
+      </p>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+        <div style="color: var(--text-secondary); font-size: 0.9rem;">${rec.impact}</div>
+      </div>
+    </div>
+
+    <!-- Gap Analysis Tab -->
+    <div class="competitive-fix-tab-content" id="${accordionId}-analysis" style="display: none;">
+      <div style="display: grid; gap: 1rem;">
+        <!-- Score Comparison -->
+        <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,255,255,0.1);">
+          <h5 style="margin: 0 0 0.75rem 0; color: var(--text-primary);">${metricName} Score Comparison</h5>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+            <div style="text-align: center; padding: 1rem; background: rgba(255,68,68,0.1); border-radius: 8px;">
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Your Score</div>
+              <div style="font-size: 2rem; font-weight: bold; color: #ff6666;">${rec.yourScore || '?'}</div>
+            </div>
+            <div style="text-align: center; padding: 1rem; background: rgba(0,255,65,0.1); border-radius: 8px;">
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Top Competitor</div>
+              <div style="font-size: 2rem; font-weight: bold; color: #00ff41;">${rec.topCompetitorScore || '?'}</div>
+            </div>
+          </div>
+          <div style="margin-top: 1rem; text-align: center;">
+            <div style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,165,0,0.2); border-radius: 20px; color: #ffa500; font-weight: 600;">
+              Gap: ${rec.gap} points
+            </div>
+          </div>
+        </div>
+
+        <!-- What This Means -->
+        <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,255,255,0.1);">
+          <h5 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">What This Means</h5>
+          <p style="color: var(--text-secondary); margin: 0; line-height: 1.6;">
+            ${getGapExplanation(rec)}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Action Steps Tab -->
+    <div class="competitive-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--text-primary);">How to Close This Gap:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+        ${actionSteps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(91, 244, 231, 0.1); border-radius: 8px; border: 1px solid rgba(91, 244, 231, 0.2);">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-primary); font-weight: 600; margin-bottom: 0.5rem;">
+          <span>💡</span> Pro Tip
+        </div>
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+          ${getProTip(rec)}
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+function getGapExplanation(rec) {
+  const metric = (rec.metric || '').toLowerCase();
+  const gap = rec.gap || 0;
+  
+  const explanations = {
+    performance: `Your site loads ${gap > 20 ? 'significantly' : 'noticeably'} slower than top competitors. Users may choose faster alternatives, affecting bounce rates and conversions.`,
+    seo: `Competitors have ${gap > 20 ? 'substantially' : 'moderately'} better search visibility. This could mean they're capturing traffic you're missing out on.`,
+    accessibility: `Your site is ${gap > 20 ? 'much' : 'somewhat'} less accessible than competitors. This affects users with disabilities and may have legal implications.`,
+    security: `Competitors have stronger security measures. Users may trust their sites more, especially for transactions.`,
+    corewebvitals: `Core Web Vitals affect Google rankings. A ${gap}-point gap could mean competitors rank higher in search results.`
+  };
+  
+  return explanations[metric] || `Closing this ${gap}-point gap would put you on par with or ahead of your top competitors in this area.`;
+}
+
+function getCompetitiveActionSteps(rec) {
+  const metric = (rec.metric || '').toLowerCase();
+  
+  const stepsMap = {
+    performance: [
+      'Run a Lighthouse performance audit to identify specific bottlenecks',
+      'Optimize images: compress, use WebP format, and implement lazy loading',
+      'Minimize and bundle JavaScript and CSS files',
+      'Enable browser caching and use a CDN for static assets',
+      'Consider server-side optimizations and faster hosting'
+    ],
+    seo: [
+      'Audit your meta titles and descriptions for all key pages',
+      'Ensure proper heading hierarchy (H1, H2, H3) on each page',
+      'Add structured data markup for rich search results',
+      'Build high-quality backlinks from relevant sites',
+      'Create fresh, valuable content targeting your keywords'
+    ],
+    accessibility: [
+      'Add alt text to all images and meaningful link text',
+      'Ensure sufficient color contrast (WCAG AA minimum)',
+      'Make all interactive elements keyboard accessible',
+      'Add proper ARIA labels and roles where needed',
+      'Test with screen readers and accessibility tools'
+    ],
+    security: [
+      'Implement all recommended security headers (CSP, HSTS, etc.)',
+      'Ensure all resources load over HTTPS',
+      'Keep all software and dependencies up to date',
+      'Implement proper input validation and sanitization',
+      'Set up regular security scanning and monitoring'
+    ],
+    corewebvitals: [
+      'Optimize Largest Contentful Paint (LCP) by preloading key resources',
+      'Reduce Cumulative Layout Shift (CLS) by sizing images and embeds',
+      'Improve First Input Delay (FID) by breaking up long JavaScript tasks',
+      'Use browser caching and efficient cache policies',
+      'Monitor Core Web Vitals in Google Search Console'
+    ]
+  };
+  
+  return stepsMap[metric] || [
+    'Analyze competitor implementations for best practices',
+    'Identify specific areas where competitors excel',
+    'Prioritize quick wins that can close the gap fastest',
+    'Implement changes incrementally and measure impact',
+    'Re-run analysis to track improvement'
+  ];
+}
+
+function getProTip(rec) {
+  const metric = (rec.metric || '').toLowerCase();
+  
+  const tips = {
+    performance: 'Focus on mobile performance first - Google uses mobile-first indexing and most users browse on mobile devices.',
+    seo: 'Quality over quantity - one excellent, in-depth piece of content often outranks many thin pages.',
+    accessibility: 'Accessibility improvements often benefit all users, not just those with disabilities. Better UX = better conversions.',
+    security: 'Security headers are free to implement but provide significant trust signals and protection.',
+    corewebvitals: 'Core Web Vitals are a confirmed Google ranking factor. Improvements here directly impact your search visibility.'
+  };
+  
+  return tips[metric] || 'Start with the highest-impact changes first. Small improvements compound over time to create significant competitive advantages.';
 }
 
 // Legacy wrapper

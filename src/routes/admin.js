@@ -672,4 +672,85 @@ router.get('/tests/quick-check', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/admin/memory-stats
+ * Get server memory usage statistics
+ */
+router.get('/memory-stats', async (req, res) => {
+  try {
+    const used = process.memoryUsage();
+    const browserPool = require('../utils/browserPool');
+    const { defaultCache } = require('../utils/cache');
+    const { errorTelemetry } = require('../utils/errorTelemetry');
+    
+    res.json({
+      success: true,
+      memory: {
+        heapUsed: Math.round(used.heapUsed / 1024 / 1024) + ' MB',
+        heapTotal: Math.round(used.heapTotal / 1024 / 1024) + ' MB',
+        external: Math.round(used.external / 1024 / 1024) + ' MB',
+        rss: Math.round(used.rss / 1024 / 1024) + ' MB',
+        arrayBuffers: Math.round((used.arrayBuffers || 0) / 1024 / 1024) + ' MB'
+      },
+      subsystems: {
+        browserPool: browserPool.getStats(),
+        cache: defaultCache.getStats(),
+        errorTelemetry: {
+          errorCount: errorTelemetry.errors.length,
+          aggregationCount: errorTelemetry.aggregations.size
+        }
+      },
+      uptime: Math.round(process.uptime()) + ' seconds',
+      nodeVersion: process.version
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to get memory stats: ' + error.message });
+  }
+});
+
+/**
+ * POST /api/admin/cleanup-memory
+ * Trigger memory cleanup operations
+ */
+router.post('/cleanup-memory', async (req, res) => {
+  try {
+    const { defaultCache } = require('../utils/cache');
+    const { errorTelemetry } = require('../utils/errorTelemetry');
+    
+    const beforeMemory = process.memoryUsage().heapUsed;
+    
+    // Cleanup cache
+    const cacheStatsBefore = defaultCache.getStats();
+    defaultCache.cleanup();
+    const cacheStatsAfter = defaultCache.getStats();
+    
+    // Cleanup error telemetry
+    errorTelemetry.cleanup();
+    
+    // Force garbage collection if available (requires --expose-gc flag)
+    if (global.gc) {
+      global.gc();
+    }
+    
+    const afterMemory = process.memoryUsage().heapUsed;
+    const freedMB = Math.round((beforeMemory - afterMemory) / 1024 / 1024 * 100) / 100;
+    
+    logAdminAction(req, 'MEMORY_CLEANUP', { freedMB });
+    
+    res.json({
+      success: true,
+      cleanup: {
+        cacheEntriesRemoved: cacheStatsBefore.totalEntries - cacheStatsAfter.totalEntries,
+        memoryFreedMB: freedMB > 0 ? freedMB : 0,
+        gcAvailable: !!global.gc
+      },
+      currentMemory: {
+        heapUsed: Math.round(afterMemory / 1024 / 1024) + ' MB'
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Cleanup failed: ' + error.message });
+  }
+});
+
 module.exports = router;

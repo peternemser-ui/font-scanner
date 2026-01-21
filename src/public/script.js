@@ -5377,11 +5377,11 @@ body {
           </div>
         </div>
         
-        <h3>T PRIORITY LEGEND:</h3>
+        <h3>PRIORITY LEGEND:</h3>
         <div style="margin-left: 1rem;">
-          <p><span style="color: #ff6666;">H High Priority:</span> Critical performance and loading issues</p>
-          <p><span style="color: #ffaa00;">M Medium Priority:</span> Important accessibility and fallback improvements</p>
-          <p><span style="color: #88ccff;">L Low Priority:</span> Advanced optimizations and future enhancements</p>
+          <p><span style="color: #ff6666;">High Priority:</span> Critical performance and loading issues</p>
+          <p><span style="color: #ffaa00;">Medium Priority:</span> Important accessibility and fallback improvements</p>
+          <p><span style="color: #88ccff;">Low Priority:</span> Advanced optimizations and future enhancements</p>
           <p><span style="color: #00ff41;">🟢 Monitoring:</span> Ongoing maintenance and performance tracking</p>
         </div>
       </div>

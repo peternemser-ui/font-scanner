@@ -122,7 +122,12 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMessage.classList.remove('hidden');
   }
 
+  // Store crawl data globally for export and unlock handlers
+  window.currentCrawlerResults = null;
+
   function displayResults(data) {
+    // Store results globally for PDF generation and unlock handlers
+    window.currentCrawlerResults = data;
 
     const pages = data.results?.pages || [];
     const hostname = new URL(data.url || 'https://example.com').hostname;
@@ -131,6 +136,22 @@ document.addEventListener('DOMContentLoaded', () => {
     const siteStructure = buildSiteStructure(pages);
     const techStack = detectTechStack(pages, data);
     const hostingInfo = detectHostingInfo(hostname, data);
+
+    const scanStartedAt = window.SM_SCAN_STARTED_AT || document.body.getAttribute('data-sm-scan-started-at');
+    const analyzerKey = window.SM_ANALYZER_KEY || 'site-crawler';
+    let reportId = null;
+    if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
+      reportId = window.ReportUI.makeReportId({
+        analyzerKey,
+        normalizedUrl: data.url,
+        startedAtISO: scanStartedAt
+      });
+    } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
+      reportId = window.ReportUI.computeReportId(data.url, scanStartedAt, analyzerKey);
+    }
+    if (reportId) {
+      document.body.setAttribute('data-report-id', reportId);
+    }
     
     // Check if shared components are loaded
     if (typeof ReportShell === 'undefined' || typeof ReportAccordion === 'undefined') {
@@ -138,214 +159,1002 @@ document.addEventListener('DOMContentLoaded', () => {
       resultsContent.innerHTML = '<div style="color: red; padding: 2rem;">Error: Report components failed to load. Please refresh the page.</div>';
       return;
     }
-    
-    const html = `
-      <div class="section">
-        <h2>[SITE_CRAWLER_RESULTS]</h2>
-        <p>>> url: ${data.url}</p>
-        <p>>> timestamp: ${new Date().toLocaleString()}</p>
-        
-        <div style="
-          background: linear-gradient(135deg, rgba(0,255,65,0.05) 0%, rgba(0,255,65,0.02) 100%);
-          border: 2px solid #00ff41;
-          border-radius: 12px;
-          padding: 2rem;
-          margin: 2rem 0;
-          box-shadow: 0 4px 20px rgba(0,255,65,0.15);
-        ">
-          <h3 style="color: #00ff41; margin: 0 0 1.5rem 0; font-size: 1.3rem;">>> Site Crawl Summary</h3>
-          <div style="display: flex; justify-content: center; gap: 2rem; flex-wrap: wrap; margin: 1rem 0;">
-            <div style="text-align: center;">
-              <div style="font-size: 2.5rem; font-weight: bold; color: #10b981;">${data.results?.pagesDiscovered || 0}</div>
-              <div style="color: #9ca3af; font-size: 0.9rem;">Pages Discovered</div>
-            </div>
-            <div style="text-align: center;">
-              <div style="font-size: 2.5rem; font-weight: bold; color: #00d9ff;">${data.duration || 'N/A'}</div>
-              <div style="color: #9ca3af; font-size: 0.9rem;">Crawl Time</div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- Visual Sitemap Section -->
-      <div id="sitemapSection" style="margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
-          <h3 style="margin: 0; color: #00ff41; display: flex; align-items: center; gap: 0.5rem;">
-            🗺️ Visual Sitemap
-          </h3>
-          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <button onclick="printSitemap()" style="padding: 0.5rem 1rem; background: rgba(0, 255, 65, 0.1); color: #00ff41; border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 255, 65, 0.2)'" onmouseout="this.style.background='rgba(0, 255, 65, 0.1)'">
-              🖨️ Print Sitemap
-            </button>
-            <button onclick="downloadSitemapImage()" style="padding: 0.5rem 1rem; background: rgba(0, 217, 255, 0.1); color: #00d9ff; border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 0.5rem; transition: all 0.2s;" onmouseover="this.style.background='rgba(0, 217, 255, 0.2)'" onmouseout="this.style.background='rgba(0, 217, 255, 0.1)'">
-              💾 Save as Image
-            </button>
-          </div>
-        </div>
-        <div id="sitemapDiagram" style="background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 2rem; overflow-x: auto;">
-          ${renderSitemapDiagram(siteStructure, hostname)}
-        </div>
-      </div>
-      
-      <!-- Site Structure Tree -->
-      <div style="margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1rem; color: #00d9ff; display: flex; align-items: center; gap: 0.5rem;">
-          📂 Site Structure
-        </h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem;">
-          ${renderSiteTree(siteStructure)}
-        </div>
-      </div>
-      
-      <!-- Tech Stack & Hosting Row -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 2rem;">
-        <!-- Detected Tech Stack -->
-        <div style="background: linear-gradient(135deg, rgba(187, 119, 255, 0.1), rgba(187, 119, 255, 0.02)); border: 1px solid rgba(187, 119, 255, 0.3); border-radius: 12px; padding: 2rem;">
-          <h3 style="margin: 0 0 1rem 0; color: #bb77ff; display: flex; align-items: center; gap: 0.5rem;">
-            🔧 Detected Technology
-          </h3>
-          ${renderTechStack(techStack)}
-        </div>
-        
-        <!-- Hosting & Infrastructure -->
-        <div style="background: linear-gradient(135deg, rgba(0, 217, 255, 0.1), rgba(0, 217, 255, 0.02)); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 12px; padding: 2rem;">
-          <h3 style="margin: 0 0 1rem 0; color: #00d9ff; display: flex; align-items: center; gap: 0.5rem;">
-            ☁️ Hosting & Infrastructure
-          </h3>
-          ${renderHostingInfo(hostingInfo)}
-        </div>
-        
-        <!-- Page Statistics -->
-        <div style="background: linear-gradient(135deg, rgba(0, 255, 65, 0.1), rgba(0, 255, 65, 0.02)); border: 1px solid rgba(0, 255, 65, 0.3); border-radius: 12px; padding: 2rem;">
-          <h3 style="margin: 0 0 1rem 0; color: #00ff41; display: flex; align-items: center; gap: 0.5rem;">
-            📊 Page Statistics
-          </h3>
-          ${renderPageStats(siteStructure, pages)}
-        </div>
-      </div>
+    // Check if report is unlocked (for Report and Recommendations section)
+    const isUnlocked = !!(
+      reportId &&
+      window.CreditsManager &&
+      (
+        (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+        (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+      )
+    );
 
-      <!-- Crawl Options Used -->
-      <div style="background: rgba(255,255,255,0.03); padding: 2rem; border-radius: 8px; margin-bottom: 2rem;">
-        <h3 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">Crawl Configuration</h3>
-        <div style="display: flex; gap: 1.5rem; flex-wrap: wrap; font-size: 0.85rem;">
-          <span>Max Pages: <strong>${data.options?.maxPages || 'N/A'}</strong></span>
-          <span>Max Depth: <strong>${data.options?.maxDepth || 'N/A'}</strong></span>
-          <span>Sitemap: <strong>${data.options?.includeSitemap ? '✓' : '✗'}</strong></span>
-          <span>Robots.txt: <strong>${data.options?.respectRobotsTxt ? '✓' : '✗'}</strong></span>
-        </div>
-      </div>
+    // Preview content for locked state
+    const crawlerFixesPreview = renderCrawlerFixesPreview();
+    const visualSitemapPreview = renderVisualSitemapPreview();
+    const discoveredPagesPreview = renderDiscoveredPagesPreview(pages);
 
-      <!-- Quick Actions -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        <button onclick="analyzeAllFonts('${encodeURIComponent(data.url)}')" style="padding: 1rem; background: #4285f4; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-          🔤 Analyze Fonts (All Pages)
-        </button>
-        <button onclick="analyzeAllTags('${encodeURIComponent(data.url)}')" style="padding: 1rem; background: #8b5cf6; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-          🏷️ Analyze Tags (All Pages)
-        </button>
-        <button onclick="analyzePerformance('${encodeURIComponent(data.url)}')" style="padding: 1rem; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-          ⚡ Performance Snapshot
-        </button>
-        <button onclick="copyPagesList()" style="padding: 1rem; background: #6b7280; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold;">
-          📋 Copy All URLs
-        </button>
-      </div>
+    // Build sections array (SEO pattern)
+    // Free sections first, then PRO sections at bottom
+    const sections = [
+      {
+        id: 'crawl-config',
+        title: 'Crawl Configuration',
+        scoreTextRight: null,
+        contentHTML: renderCrawlConfigContent(data)
+      },
+      {
+        id: 'site-structure',
+        title: 'Site Structure',
+        scoreTextRight: `${Object.keys(siteStructure.children).length} sections`,
+        contentHTML: renderSiteStructureContent(siteStructure)
+      },
+      {
+        id: 'tech-hosting',
+        title: 'Technology & Infrastructure',
+        scoreTextRight: null,
+        contentHTML: renderTechHostingContent(techStack, hostingInfo, siteStructure, pages)
+      },
+      // PRO sections below
+      {
+        id: 'visual-sitemap',
+        title: 'Visual Sitemap',
+        scoreTextRight: null,
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'crawler',
+        reportId,
+        contentHTML: isUnlocked ? renderVisualSitemapContent(siteStructure, hostname) : visualSitemapPreview
+      },
+      {
+        id: 'discovered-pages',
+        title: `Discovered Pages & Export (${pages.length})`,
+        scoreTextRight: pages.length,
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'crawler',
+        reportId,
+        contentHTML: isUnlocked ? renderDiscoveredPagesWithExport(pages, siteStructure) : discoveredPagesPreview
+      },
+      {
+        id: 'report-recommendations',
+        title: 'Fix Code + Recommendations',
+        scoreTextRight: data.results?.pagesDiscovered || pages.length,
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'crawler',
+        reportId,
+        contentHTML: isUnlocked ? renderCrawlerFixes(data, siteStructure, pages) : crawlerFixesPreview
+      }
+    ];
 
-      <!-- SEO Insights -->
-      <div style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.1), rgba(255, 193, 7, 0.02)); border: 1px solid rgba(255, 193, 7, 0.3); border-radius: 12px; padding: 2rem; margin-bottom: 2rem;">
-        <h3 style="margin: 0 0 1rem 0; color: #ffc107; display: flex; align-items: center; gap: 0.5rem;">
-          💡 Quick SEO Insights
-        </h3>
-        ${renderSeoInsights(pages, siteStructure)}
-      </div>
+    // No summary donuts for crawler (not score-based)
+    const summary = [];
 
-      <!-- Pages List with Filters -->
-      <div style="margin-bottom: 2rem;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
-          <h3 style="margin: 0;">📄 Discovered Pages (${pages.length})</h3>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <input type="text" id="pageSearch" placeholder="🔍 Filter pages..." 
-              oninput="filterPages(this.value)"
-              style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; min-width: 200px;">
-            <select id="sectionFilter" onchange="filterBySection(this.value)"
-              style="padding: 0.5rem 1rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: white; cursor: pointer;">
-              <option value="">All Sections</option>
-              ${Object.keys(siteStructure.children).map(section => `<option value="${section}">/${section}/</option>`).join('')}
-            </select>
-            <button onclick="toggleViewMode()" id="viewModeBtn" style="padding: 0.5rem 1rem; background: rgba(0, 217, 255, 0.1); color: #00d9ff; border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 6px; cursor: pointer;">
-              📁 Group View
-            </button>
-          </div>
-        </div>
-        
-        <!-- Grouped View (hidden by default) -->
-        <div id="groupedView" style="display: none;">
-          ${renderGroupedPages(pages, siteStructure)}
-        </div>
-        
-        <!-- List View -->
-        <div id="pagesList">
-          ${pages.map((page, index) => {
-            const pageType = getPageType(page);
-            return `
-            <div class="page-item" data-url="${page.toLowerCase()}" data-section="${getPageSection(page)}">
-              <span style="color: #666; font-size: 0.8rem; min-width: 30px;">${index + 1}.</span>
-              <span style="font-size: 1.1rem; margin-right: 0.3rem;">${pageType.icon}</span>
-              <a href="${page}" target="_blank" rel="noopener" style="flex: 1;">${formatPageUrl(page)}</a>
-              <span style="background: ${pageType.color}; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem;">${pageType.label}</span>
-              <div style="display: flex; gap: 0.5rem;">
-                <button class="action-btn analyze" onclick="window.open('/tag-intelligence.html?url=${encodeURIComponent(page)}', '_blank')">Tags</button>
-                <button class="action-btn analyze" onclick="window.open('/enhanced-fonts.html?url=${encodeURIComponent(page)}', '_blank')">Fonts</button>
-              </div>
-            </div>
-          `}).join('')}
-        </div>
-        <div id="noResults" style="display: none; text-align: center; padding: 2rem; color: #888;">
-          No pages match your filter
-        </div>
-      </div>
+    // No screenshot for crawler page (single page doesn't need it)
+    const screenshots = [];
 
-      <!-- Export Options -->
-      <div style="margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1rem;">📥 Export</h3>
-        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-          <button onclick="downloadJSON()" style="padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer;">
-            Download JSON
-          </button>
-          <button onclick="downloadCSV()" style="padding: 0.75rem 1.5rem; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); border-radius: 4px; cursor: pointer;">
-            Download CSV
-          </button>
-          <button onclick="downloadSitemap()" style="padding: 0.75rem 1.5rem; background: rgba(0,255,65,0.1); color: #00ff41; border: 1px solid rgba(0,255,65,0.3); border-radius: 4px; cursor: pointer;">
-            Download Sitemap XML
-          </button>
-        </div>
-      </div>
-
-      <!-- Raw Data -->
-      <details style="margin-top: 2rem;">
-        <summary style="cursor: pointer; color: #888;">📋 View Raw Data</summary>
-        <pre id="rawData" style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.75rem; margin-top: 1rem;">
-${JSON.stringify(data, null, 2)}
-        </pre>
-      </details>
-
-      <!-- Pro Report Block -->
-      ${window.ProReportBlock && window.ProReportBlock.render ? `
-        <div class="section" style="margin-top: 2rem;">
-          ${window.ProReportBlock.render({
+    // Use ReportContainer (SEO pattern)
+    const reportHTML = (window.ReportContainer && typeof window.ReportContainer.create === 'function')
+      ? window.ReportContainer.create({
+          url: data.url,
+          timestamp: scanStartedAt,
+          mode: 'crawler',
+          title: 'Site Crawler Report',
+          subtitle: '',
+          summary,
+          sections,
+          screenshots,
+          proBlock: true,
+          proBlockOptions: {
             context: 'crawler',
             features: ['pdf', 'csv', 'share'],
             title: 'Unlock Report',
-            subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
-          })}
-        </div>
-      ` : ''}
-    `;
+            subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+            reportId
+          }
+        })
+      : renderLegacyCrawlerReport(data, pages, siteStructure, techStack, hostingInfo, isUnlocked, reportId);
 
-    resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;
+    resultsContent.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
+
+    // Initialize accordion interactions
+    if (window.ReportAccordion && typeof window.ReportAccordion.initInteractions === 'function') {
+      window.ReportAccordion.initInteractions();
+    }
+
+    // Refresh paywall UI
+    if (reportId && window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+      window.CreditsManager.renderPaywallState(reportId);
+    }
+
+    // If already unlocked, reveal PRO content
+    if (isUnlocked) {
+      revealCrawlerProContent();
+    }
+
+    // When the report is unlocked, reveal the Fix Code section content
+    if (!window.__crawlerUnlockListenerAttached) {
+      window.__crawlerUnlockListenerAttached = true;
+      window.addEventListener('reportUnlocked', (e) => {
+        const unlockedId = e && e.detail ? e.detail.reportId : '';
+        if (!unlockedId || unlockedId !== document.body.getAttribute('data-report-id')) return;
+
+        const crawlData = window.currentCrawlerResults;
+        if (!crawlData) return;
+
+        const crawlPages = crawlData.results?.pages || [];
+        const crawlStructure = buildSiteStructure(crawlPages);
+        const crawlHostname = new URL(crawlData.url).hostname;
+
+        // Replace Visual Sitemap section body with full content
+        const sitemapBody = document.querySelector('[data-accordion-body="visual-sitemap"]');
+        if (sitemapBody) {
+          sitemapBody.innerHTML = renderVisualSitemapContent(crawlStructure, crawlHostname);
+        }
+
+        // Replace Discovered Pages & Export section body with full content
+        const pagesBody = document.querySelector('[data-accordion-body="discovered-pages"]');
+        if (pagesBody) {
+          pagesBody.innerHTML = renderDiscoveredPagesWithExport(crawlPages, crawlStructure);
+        }
+
+        // Replace the Fix Code section body with the full content
+        const body = document.querySelector('[data-accordion-body="report-recommendations"]');
+        if (body) {
+          body.innerHTML = renderCrawlerFixes(crawlData, crawlStructure, crawlPages);
+        }
+
+        revealCrawlerProContent();
+
+        if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+          window.CreditsManager.renderPaywallState(unlockedId);
+        }
+      });
+    }
 
     // Store data for export functions
     window.crawlData = data;
+  }
+
+  // ============================================================
+  // Section Content Renderers (SEO pattern)
+  // ============================================================
+
+  function renderCrawlConfigContent(data) {
+    return `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
+        <div>
+          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">Max Pages</div>
+          <div style="font-weight: 600;">${data.options?.maxPages || 'N/A'}</div>
+        </div>
+        <div>
+          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">Max Depth</div>
+          <div style="font-weight: 600;">${data.options?.maxDepth || 'N/A'}</div>
+        </div>
+        <div>
+          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">Sitemap</div>
+          <div style="font-weight: 600;">${data.options?.includeSitemap ? '✓ Enabled' : '✗ Disabled'}</div>
+        </div>
+        <div>
+          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">Robots.txt</div>
+          <div style="font-weight: 600;">${data.options?.respectRobotsTxt ? '✓ Respected' : '✗ Ignored'}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderVisualSitemapContent(siteStructure, hostname) {
+    return `
+      <div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
+        <button onclick="printSitemap()" class="text-btn" title="Print Sitemap">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"/>
+            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+            <rect x="6" y="14" width="12" height="8"/>
+          </svg>
+          Print
+        </button>
+        <button onclick="downloadSitemapImage()" class="text-btn" title="Save Image">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Save
+        </button>
+      </div>
+      <div id="sitemapDiagram" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: var(--radius-lg); padding: 2rem; overflow-x: auto;">
+        ${renderSitemapDiagram(siteStructure, hostname)}
+      </div>
+    `;
+  }
+
+  function renderSiteStructureContent(siteStructure) {
+    return `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1rem;">
+        ${renderSiteTree(siteStructure)}
+      </div>
+    `;
+  }
+
+  function renderTechHostingContent(techStack, hostingInfo, siteStructure, pages) {
+    return `
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
+        <div class="card">
+          <div class="card__header">
+            <h3 class="card__title">Technology Stack</h3>
+          </div>
+          <div class="card__body">
+            ${renderTechStack(techStack)}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__header">
+            <h3 class="card__title">Hosting & Infrastructure</h3>
+          </div>
+          <div class="card__body">
+            ${renderHostingInfo(hostingInfo)}
+          </div>
+        </div>
+        <div class="card">
+          <div class="card__header">
+            <h3 class="card__title">Page Statistics</h3>
+          </div>
+          <div class="card__body">
+            ${renderPageStats(siteStructure, pages)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderDiscoveredPagesContent(pages, siteStructure) {
+    return `
+      <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <input type="text" id="pageSearch" placeholder="🔍 Filter pages..." 
+          oninput="filterPages(this.value)"
+          class="input input-sm" style="min-width: 200px;">
+        <select id="sectionFilter" onchange="filterBySection(this.value)" class="input input-sm">
+          <option value="">All Sections</option>
+          ${Object.keys(siteStructure.children).map(section => `<option value="${section}">/${section}/</option>`).join('')}
+        </select>
+        <button onclick="toggleViewMode()" id="viewModeBtn" class="btn btn-secondary btn-sm">
+          📁 Group View
+        </button>
+      </div>
+      
+      <div id="groupedView" style="display: none;">
+        ${renderGroupedPages(pages, siteStructure)}
+      </div>
+      
+      <div id="pagesList">
+        ${pages.map((page, index) => {
+          const pageType = getPageType(page);
+          return `
+          <div class="page-item" data-url="${page.toLowerCase()}" data-section="${getPageSection(page)}">
+            <span style="color: var(--text-tertiary); font-size: 0.8rem; min-width: 30px;">${index + 1}.</span>
+            <span style="font-size: 1.1rem; margin-right: 0.3rem;">${pageType.icon}</span>
+            <a href="${page}" target="_blank" rel="noopener" style="flex: 1; word-break: break-all;">${formatPageUrl(page)}</a>
+            <span style="background: ${pageType.color}; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; white-space: nowrap;">${pageType.label}</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-sm" onclick="window.open('/tag-intelligence.html?url=${encodeURIComponent(page)}', '_blank')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Tags</button>
+              <button class="btn btn-sm" onclick="window.open('/enhanced-fonts.html?url=${encodeURIComponent(page)}', '_blank')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Fonts</button>
+            </div>
+          </div>
+        `}).join('')}
+      </div>
+      <div id="noResults" style="display: none; text-align: center; padding: 2rem; color: var(--text-tertiary);">
+        No pages match your filter
+      </div>
+    `;
+  }
+
+  function renderExportOptionsContent() {
+    return `
+      <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+        <button onclick="downloadJSON()" class="btn btn-secondary">
+          💾 Download JSON
+        </button>
+        <button onclick="downloadCSV()" class="btn btn-secondary">
+          📊 Download CSV
+        </button>
+        <button onclick="downloadSitemap()" class="btn btn-primary">
+          🗺️ Download Sitemap XML
+        </button>
+      </div>
+    `;
+  }
+
+  function renderDiscoveredPagesWithExport(pages, siteStructure) {
+    return `
+      <!-- Export Options -->
+      <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-tertiary); border-radius: var(--radius-md); border: 1px solid var(--border-primary);">
+        <div style="font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
+          <span>📤</span> Export Data
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+          <button onclick="downloadJSON()" class="btn btn-secondary">
+            💾 Download JSON
+          </button>
+          <button onclick="downloadCSV()" class="btn btn-secondary">
+            📊 Download CSV
+          </button>
+          <button onclick="downloadSitemap()" class="btn btn-primary">
+            🗺️ Download Sitemap XML
+          </button>
+        </div>
+      </div>
+      
+      <!-- Page List -->
+      <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <input type="text" id="pageSearch" placeholder="🔍 Filter pages..." 
+          oninput="filterPages(this.value)"
+          class="input input-sm" style="min-width: 200px;">
+        <select id="sectionFilter" onchange="filterBySection(this.value)" class="input input-sm">
+          <option value="">All Sections</option>
+          ${Object.keys(siteStructure.children).map(section => `<option value="${section}">/${section}/</option>`).join('')}
+        </select>
+        <button onclick="toggleViewMode()" id="viewModeBtn" class="btn btn-secondary btn-sm">
+          📁 Group View
+        </button>
+      </div>
+      
+      <div id="groupedView" style="display: none;">
+        ${renderGroupedPages(pages, siteStructure)}
+      </div>
+      
+      <div id="pagesList">
+        ${pages.map((page, index) => {
+          const pageType = getPageType(page);
+          return `
+          <div class="page-item" data-url="${page.toLowerCase()}" data-section="${getPageSection(page)}">
+            <span style="color: var(--text-tertiary); font-size: 0.8rem; min-width: 30px;">${index + 1}.</span>
+            <span style="font-size: 1.1rem; margin-right: 0.3rem;">${pageType.icon}</span>
+            <a href="${page}" target="_blank" rel="noopener" style="flex: 1; word-break: break-all;">${formatPageUrl(page)}</a>
+            <span style="background: ${pageType.color}; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; white-space: nowrap;">${pageType.label}</span>
+            <div style="display: flex; gap: 0.5rem;">
+              <button class="btn btn-sm" onclick="window.open('/tag-intelligence.html?url=${encodeURIComponent(page)}', '_blank')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Tags</button>
+              <button class="btn btn-sm" onclick="window.open('/enhanced-fonts.html?url=${encodeURIComponent(page)}', '_blank')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Fonts</button>
+            </div>
+          </div>
+        `}).join('')}
+      </div>
+      <div id="noResults" style="display: none; text-align: center; padding: 2rem; color: var(--text-tertiary);">
+        No pages match your filter
+      </div>
+    `;
+  }
+
+  // ============================================================
+  // Crawler Fixes (following SEO/CRO pattern)
+  // ============================================================
+
+  function renderCrawlerFixesPreview() {
+    return `
+      <div>
+        <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
+          Preview of fix packs:
+        </p>
+        <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
+          <li>Orphaned page detection and fixes</li>
+          <li>Sitemap coverage improvements</li>
+          <li>Internal linking structure optimization</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  function renderVisualSitemapPreview() {
+    return `
+      <div>
+        <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
+          Unlock to view:
+        </p>
+        <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
+          <li>Interactive visual sitemap diagram</li>
+          <li>Hierarchical page relationships</li>
+          <li>Export and print options</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  function renderDiscoveredPagesPreview(pages) {
+    const count = pages?.length || 0;
+    return `
+      <div>
+        <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
+          ${count} pages discovered. Unlock to access:
+        </p>
+        <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
+          <li>Full page list with filtering</li>
+          <li>Page type categorization</li>
+          <li>Quick access to analyze individual pages</li>
+          <li>Export as JSON, CSV, or Sitemap XML</li>
+        </ul>
+      </div>
+    `;
+  }
+
+  function renderCrawlerFixes(data, siteStructure, pages) {
+    ensureCrawlerFixStyles();
+    const fixes = buildCrawlerFixCards(data, siteStructure, pages);
+    
+    if (fixes.length === 0) {
+      return `
+        <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+          <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+            <span style="font-size: 1.5rem;">✓</span> Excellent Site Structure!
+          </h3>
+          <p style="color: #86efac; margin: 0;">Your site has good crawlability and structure. Keep monitoring for continued success.</p>
+        </div>
+      `;
+    }
+
+    const high = fixes.filter(f => f.severity === 'High');
+    const medium = fixes.filter(f => f.severity === 'Medium');
+    const low = fixes.filter(f => f.severity === 'Low');
+
+    let html = `
+      <div class="crawler-fixes-container" style="margin-top: 1rem;">
+        <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+          <span style="font-size: 1.75rem;">🕷️</span> Crawler Fixes
+          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} improvements found)</span>
+        </h3>
+        <div class="crawler-fixes-list">
+    `;
+
+    const allFixes = [...high, ...medium, ...low];
+    allFixes.forEach((fix, index) => {
+      html += renderCrawlerFixAccordion(fix, index);
+    });
+
+    html += `</div></div>`;
+    return html;
+  }
+
+  function renderCrawlerFixAccordion(fix, index) {
+    const accordionId = `crawlerfix-${fix.id || index}`;
+    const severityColors = {
+      High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+      Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+      Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
+    };
+    const style = severityColors[fix.severity] || severityColors.Medium;
+
+    return `
+      <div class="crawler-fix-accordion" data-fix-id="${accordionId}" style="
+        border: 1px solid ${style.border}33;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        background: ${style.bg};
+      ">
+        <div class="crawler-fix-header" onclick="toggleCrawlerFixAccordion('${accordionId}')" style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1rem 1.25rem;
+          cursor: pointer;
+          transition: background 0.2s;
+        ">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.25rem;">${style.icon}</span>
+            <div>
+              <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || 'Site Structure'}</p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 20px;
+              font-size: 0.75rem;
+              font-weight: 600;
+              background: ${style.color}20;
+              color: ${style.color};
+              border: 1px solid ${style.color}40;
+            ">${fix.severity.toUpperCase()}</span>
+            <span class="crawler-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+          </div>
+        </div>
+
+        <div class="crawler-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+          <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+            ${renderCrawlerFixTabs(fix, accordionId)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderCrawlerFixTabs(fix, accordionId) {
+    return `
+      <div class="crawler-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+        <button class="crawler-fix-tab active" onclick="switchCrawlerFixTab('${accordionId}', 'summary')" style="
+          padding: 0.5rem 1rem;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 6px;
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          cursor: pointer;
+          font-size: 0.85rem;
+        ">📋 Summary</button>
+        <button class="crawler-fix-tab" onclick="switchCrawlerFixTab('${accordionId}', 'code')" style="
+          padding: 0.5rem 1rem;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 6px;
+          background: transparent;
+          color: #aaa;
+          cursor: pointer;
+          font-size: 0.85rem;
+        ">💻 Code</button>
+        <button class="crawler-fix-tab" onclick="switchCrawlerFixTab('${accordionId}', 'guide')" style="
+          padding: 0.5rem 1rem;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 6px;
+          background: transparent;
+          color: #aaa;
+          cursor: pointer;
+          font-size: 0.85rem;
+        ">🔧 Fix Guide</button>
+      </div>
+
+      <div class="crawler-fix-tab-content active" id="${accordionId}-summary">
+        <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+          ${fix.description}
+        </p>
+        <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+          <div style="color: #c0c0c0; font-size: 0.9rem;">${fix.impact}</div>
+        </div>
+      </div>
+
+      <div class="crawler-fix-tab-content" id="${accordionId}-code" style="display: none;">
+        <div style="display: grid; gap: 1rem;">
+          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
+              <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
+              <button onclick="copyCrawlerCode('${accordionId}-problem')" style="
+                padding: 0.25rem 0.75rem;
+                border-radius: 4px;
+                border: 1px solid rgba(255,255,255,0.2);
+                background: rgba(255,255,255,0.05);
+                color: #fff;
+                cursor: pointer;
+                font-size: 0.75rem;
+              ">📋 Copy</button>
+            </div>
+            <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeCrawlerHtml(fix.problematicCode)}</pre>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+              <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
+              <button onclick="copyCrawlerCode('${accordionId}-solution')" style="
+                padding: 0.25rem 0.75rem;
+                border-radius: 4px;
+                border: 1px solid rgba(255,255,255,0.2);
+                background: rgba(255,255,255,0.05);
+                color: #fff;
+                cursor: pointer;
+                font-size: 0.75rem;
+              ">📋 Copy</button>
+            </div>
+            <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeCrawlerHtml(fix.snippet)}</pre>
+          </div>
+        </div>
+      </div>
+
+      <div class="crawler-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+        <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+        <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+          ${fix.steps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+        </ol>
+      </div>
+    `;
+  }
+
+  function buildCrawlerFixCards(data, siteStructure, pages) {
+    const cards = [];
+    const sectionCount = Object.keys(siteStructure.children).length;
+    const hasSitemap = data.options?.includeSitemap && data.results?.sitemapPages?.length > 0;
+    const sitemapPages = data.results?.sitemapPages || [];
+    const crawledPages = pages.length;
+
+    // Check for orphaned pages (in sitemap but not linked)
+    if (hasSitemap && sitemapPages.length > 0) {
+      const orphanedCount = sitemapPages.filter(sp => !pages.includes(sp)).length;
+      if (orphanedCount > 0) {
+        cards.push({
+          id: 'orphaned-pages',
+          title: `Fix ${orphanedCount} orphaned pages`,
+          severity: 'High',
+          category: 'Internal Linking',
+          impact: 'Improve crawlability and page authority distribution',
+          description: `Found ${orphanedCount} pages in sitemap.xml that have no internal links pointing to them. These pages may be hard for search engines to discover.`,
+          problematicCode: `<!-- Orphaned pages (no internal links) -->
+<!-- These pages exist but have no links from other pages: -->
+
+${sitemapPages.filter(sp => !pages.includes(sp)).slice(0, 5).map(p => `<!-- ${p} -->`).join('\n')}
+${orphanedCount > 5 ? `\n<!-- ...and ${orphanedCount - 5} more -->` : ''}`,
+          snippet: `<!-- Add internal links to orphaned pages -->
+
+<!-- In your navigation or related content: -->
+<nav>
+  <a href="/orphaned-page/">Link Text</a>
+</nav>
+
+<!-- Or in related content sections: -->
+<section class="related">
+  <h3>Related Pages</h3>
+  <ul>
+    <li><a href="/orphaned-page/">Descriptive Link</a></li>
+  </ul>
+</section>`,
+          steps: [
+            'Identify orphaned pages from the list above',
+            'Add links from relevant parent or sibling pages',
+            'Update main navigation if pages are important',
+            'Consider adding a "Related Content" section',
+            'Re-crawl to verify pages are now linked'
+          ]
+        });
+      }
+    }
+
+    // Check for missing sitemap entries
+    if (!hasSitemap || sitemapPages.length < crawledPages) {
+      const missingSitemapCount = hasSitemap ? crawledPages - sitemapPages.length : crawledPages;
+      cards.push({
+        id: 'sitemap-coverage',
+        title: 'Improve sitemap coverage',
+        severity: 'Medium',
+        category: 'Sitemap',
+        impact: 'Better search engine discovery of all pages',
+        description: hasSitemap 
+          ? `Your sitemap.xml has ${sitemapPages.length} pages but ${crawledPages} were discovered by crawling. ${missingSitemapCount} pages may be missing from sitemap.`
+          : 'No sitemap.xml was found or it could not be parsed. Adding a sitemap helps search engines discover your pages.',
+        problematicCode: hasSitemap 
+          ? `<!-- Current sitemap.xml -->
+<!-- Contains ${sitemapPages.length} URLs -->
+<!-- But ${crawledPages} pages were found by crawling -->
+<!-- Missing ${missingSitemapCount} pages -->`
+          : `<!-- No sitemap.xml found -->
+<!-- Search engines must discover pages by crawling only -->`,
+        snippet: `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${pages.slice(0, 5).map(p => `  <url>
+    <loc>${p}</loc>
+    <lastmod>${new Date().toISOString().split('T')[0]}</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>`).join('\n')}
+${crawledPages > 5 ? `  <!-- Add all ${crawledPages} discovered pages -->` : ''}
+</urlset>`,
+        steps: [
+          'Export the full page list using "Download Sitemap XML" button',
+          'Review and add any additional important pages',
+          'Upload sitemap.xml to your website root',
+          'Submit sitemap URL in Google Search Console',
+          'Add sitemap reference to robots.txt'
+        ]
+      });
+    }
+
+    // Check for deep pages (depth > 3)
+    const deepPages = pages.filter(p => {
+      try {
+        const path = new URL(p).pathname;
+        const depth = path.split('/').filter(s => s).length;
+        return depth > 3;
+      } catch { return false; }
+    });
+    if (deepPages.length > 0) {
+      cards.push({
+        id: 'deep-pages',
+        title: `Reduce depth for ${deepPages.length} pages`,
+        severity: 'Low',
+        category: 'Site Structure',
+        impact: 'Improve crawl efficiency and user navigation',
+        description: `Found ${deepPages.length} pages that are more than 3 levels deep. Deep pages may be harder for search engines to crawl and users to find.`,
+        problematicCode: `<!-- Deep page structure -->
+${deepPages.slice(0, 5).map(p => {
+  const path = new URL(p).pathname;
+  return `<!-- ${path} (depth: ${path.split('/').filter(s => s).length}) -->`;
+}).join('\n')}
+${deepPages.length > 5 ? `\n<!-- ...and ${deepPages.length - 5} more deep pages -->` : ''}`,
+        snippet: `<!-- Flatten URL structure -->
+<!-- Before: /category/subcategory/type/product-name/ -->
+<!-- After:  /category/product-name/ -->
+
+<!-- Add breadcrumbs for user navigation -->
+<nav aria-label="Breadcrumb">
+  <ol>
+    <li><a href="/">Home</a></li>
+    <li><a href="/category/">Category</a></li>
+    <li>Current Page</li>
+  </ol>
+</nav>`,
+        steps: [
+          'Identify which deep pages are most important',
+          'Consider flattening URL structure for key pages',
+          'Add breadcrumb navigation for deep pages',
+          'Link to deep pages from higher-level pages',
+          'Update internal links to use shorter paths'
+        ]
+      });
+    }
+
+    // Check for section imbalance
+    const sectionCounts = Object.entries(siteStructure.children).map(([name, node]) => ({
+      name,
+      count: node.count
+    })).sort((a, b) => b.count - a.count);
+
+    if (sectionCounts.length > 1) {
+      const largest = sectionCounts[0];
+      const smallest = sectionCounts[sectionCounts.length - 1];
+      if (largest.count > smallest.count * 3) {
+        cards.push({
+          id: 'section-balance',
+          title: 'Balance site sections',
+          severity: 'Low',
+          category: 'Content Strategy',
+          impact: 'Improve site architecture and topical authority',
+          description: `The /${largest.name}/ section has ${largest.count} pages while /${smallest.name}/ only has ${smallest.count}. Very unbalanced sections may indicate content gaps.`,
+          problematicCode: `<!-- Section size imbalance -->
+${sectionCounts.slice(0, 5).map(s => `<!-- /${s.name}/: ${s.count} pages -->`).join('\n')}`,
+          snippet: `<!-- Expand smaller sections with quality content -->
+
+<!-- For /${smallest.name}/ section: -->
+<!-- 1. Identify related topics to cover -->
+<!-- 2. Create pillar content pages -->
+<!-- 3. Add supporting articles -->
+<!-- 4. Interlink within the section -->
+
+<!-- Example structure: -->
+/${smallest.name}/
+  ├── pillar-page/
+  ├── topic-1/
+  ├── topic-2/
+  └── topic-3/`,
+          steps: [
+            `Review the /${smallest.name}/ section for content opportunities`,
+            'Identify topics that could expand the section',
+            'Create pillar content for main topics',
+            'Add supporting content that links to pillars',
+            'Ensure proper internal linking within sections'
+          ]
+        });
+      }
+    }
+
+    // Check robots.txt respect
+    if (!data.options?.respectRobotsTxt) {
+      cards.push({
+        id: 'robots-respect',
+        title: 'Consider robots.txt directives',
+        severity: 'Low',
+        category: 'Technical SEO',
+        impact: 'Align with intended crawl behavior',
+        description: 'This crawl ignored robots.txt. Some discovered pages may be intentionally blocked from search engines.',
+        problematicCode: `# robots.txt was not respected
+# Some pages may be blocked intentionally
+
+User-agent: *
+Disallow: /admin/
+Disallow: /private/
+Disallow: /temp/`,
+        snippet: `# Typical robots.txt structure
+
+User-agent: *
+Disallow: /admin/
+Disallow: /private/
+Allow: /
+
+Sitemap: https://example.com/sitemap.xml`,
+        steps: [
+          'Re-run crawl with "Respect robots.txt" enabled',
+          'Compare results to identify blocked pages',
+          'Review which pages should be blocked',
+          'Update robots.txt if needed',
+          'Submit updated robots.txt to Search Console'
+        ]
+      });
+    }
+
+    return cards;
+  }
+
+  // Crawler fix accordion toggle
+  function toggleCrawlerFixAccordion(accordionId) {
+    const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+    const content = document.getElementById(`${accordionId}-content`);
+    const icon = accordion?.querySelector('.crawler-fix-expand-icon');
+
+    if (!accordion || !content) return;
+
+    const isExpanded = accordion.classList.contains('expanded');
+
+    if (isExpanded) {
+      accordion.classList.remove('expanded');
+      content.style.maxHeight = '0';
+      if (icon) icon.style.transform = 'rotate(0deg)';
+    } else {
+      accordion.classList.add('expanded');
+      content.style.maxHeight = content.scrollHeight + 'px';
+      if (icon) icon.style.transform = 'rotate(180deg)';
+    }
+  }
+  window.toggleCrawlerFixAccordion = toggleCrawlerFixAccordion;
+
+  // Crawler fix tab switcher
+  function switchCrawlerFixTab(accordionId, tabName) {
+    const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+    if (!accordion) return;
+
+    const tabs = accordion.querySelectorAll('.crawler-fix-tab');
+    const contents = accordion.querySelectorAll('.crawler-fix-tab-content');
+
+    tabs.forEach(tab => {
+      tab.style.background = 'transparent';
+      tab.style.color = '#aaa';
+      tab.style.borderColor = 'rgba(255,255,255,0.1)';
+      tab.classList.remove('active');
+    });
+    contents.forEach(content => {
+      content.style.display = 'none';
+      content.classList.remove('active');
+    });
+
+    const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+    const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+
+    if (activeTab) {
+      activeTab.style.background = 'rgba(255,255,255,0.1)';
+      activeTab.style.color = '#fff';
+      activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+      activeTab.classList.add('active');
+    }
+    if (activeContent) {
+      activeContent.style.display = 'block';
+      activeContent.classList.add('active');
+    }
+
+    const content = document.getElementById(`${accordionId}-content`);
+    if (content && accordion.classList.contains('expanded')) {
+      setTimeout(() => {
+        content.style.maxHeight = content.scrollHeight + 'px';
+      }, 50);
+    }
+  }
+  window.switchCrawlerFixTab = switchCrawlerFixTab;
+
+  // Copy code utility
+  function copyCrawlerCode(elementId) {
+    const codeElement = document.getElementById(elementId);
+    if (!codeElement) return;
+
+    const text = codeElement.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = codeElement.parentElement.querySelector('button');
+      if (btn) {
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => { btn.textContent = originalText; }, 2000);
+      }
+    });
+  }
+  window.copyCrawlerCode = copyCrawlerCode;
+
+  function ensureCrawlerFixStyles() {
+    if (document.getElementById('crawler-fixes-styles')) return;
+    const style = document.createElement('style');
+    style.id = 'crawler-fixes-styles';
+    style.textContent = `
+      .crawler-fix-accordion.expanded .crawler-fix-expand-icon {
+        transform: rotate(180deg);
+      }
+      .crawler-fix-header:hover {
+        background: rgba(255,255,255,0.03);
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function escapeCrawlerHtml(str) {
+    if (!str) return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+
+  // Reveal PRO content when unlocked
+  function revealCrawlerProContent() {
+    const lockOverlays = document.querySelectorAll('.report-scope .accordion-section[data-accordion-section="report-recommendations"] .lock-overlay, .report-scope .pro-lock-overlay');
+    lockOverlays.forEach(overlay => overlay.remove());
+
+    const proBadges = document.querySelectorAll('.report-scope .accordion-section[data-accordion-section="report-recommendations"] .pro-badge');
+    proBadges.forEach(badge => badge.remove());
+
+    const lockedSections = document.querySelectorAll('.report-scope .accordion-section[data-accordion-section="report-recommendations"].locked');
+    lockedSections.forEach(section => section.classList.remove('locked'));
+  }
+
+  // Screenshot retry helper
+  function attachCrawlerScreenshotRetry(imgEl, baseUrl, options = {}) {
+    if (!imgEl || !baseUrl) return;
+    const maxAttempts = Number.isFinite(options.maxAttempts) ? options.maxAttempts : 6;
+    const baseDelayMs = Number.isFinite(options.baseDelayMs) ? options.baseDelayMs : 750;
+
+    let attempts = 0;
+    let settled = false;
+
+    const cacheBust = (url) => {
+      const joiner = url.includes('?') ? '&' : '?';
+      return `${url}${joiner}cb=${Date.now()}`;
+    };
+
+    const showFallback = () => {
+      const wrapper = imgEl.closest('.screenshot-item') || imgEl.parentElement;
+      if (!wrapper) return;
+      imgEl.style.display = 'none';
+      if (wrapper.querySelector('[data-sm-screenshot-fallback]')) return;
+
+      const msg = document.createElement('div');
+      msg.setAttribute('data-sm-screenshot-fallback', 'true');
+      msg.textContent = 'Screenshot unavailable';
+      msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 10px; color: var(--text-secondary); text-align: center;';
+      wrapper.appendChild(msg);
+    };
+
+    const tryReload = () => {
+      if (settled) return;
+      attempts += 1;
+      imgEl.src = cacheBust(baseUrl);
+    };
+
+    const onLoad = () => { settled = true; };
+    const onError = () => {
+      if (settled) return;
+      if (attempts >= maxAttempts) {
+        settled = true;
+        showFallback();
+        return;
+      }
+      const delay = baseDelayMs * Math.min(attempts + 1, 6);
+      window.setTimeout(tryReload, delay);
+    };
+
+    imgEl.addEventListener('load', onLoad, { once: true });
+    imgEl.addEventListener('error', onError);
+    tryReload();
+  }
+
+  // Legacy fallback renderer
+  function renderLegacyCrawlerReport(data, pages, siteStructure, techStack, hostingInfo, isUnlocked, reportId) {
+    return `
+      <div class="report-shell">
+        <div class="report-shell__header">
+          <div>
+            <h2 class="report-shell__title">Site Crawler Results</h2>
+            <p class="report-shell__meta">>> url: ${data.url}</p>
+            <p class="report-shell__meta">>> timestamp: ${new Date().toLocaleString()}</p>
+          </div>
+        </div>
+        <div class="report-shell__summary">
+          <div class="report-shell__summary-card">
+            <div class="report-shell__summary-label">Pages Discovered</div>
+            <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent-primary);">${data.results?.pagesDiscovered || 0}</div>
+          </div>
+          <div class="report-shell__summary-card">
+            <div class="report-shell__summary-label">Crawl Time</div>
+            <div style="font-size: 2.5rem; font-weight: bold; color: #00d9ff;">${data.duration || 'N/A'}</div>
+          </div>
+        </div>
+      </div>
+    `;
   }
 
   // Build site structure from URLs
@@ -506,24 +1315,29 @@ ${JSON.stringify(data, null, 2)}
           filter: brightness(1.1);
         }
       </style>
-      <svg class="tree-diagram" viewBox="0 0 1600 800" preserveAspectRatio="xMidYMin meet">
+      <svg class="tree-diagram" viewBox="0 0 1600 550" preserveAspectRatio="xMidYMin meet">
     `;
     
     const rootX = 800;
-    const rootY = 60;
-    const rootWidth = 200;
-    const rootHeight = 60;
+    const rootY = 80;
+    const rootWidth = 280;
+    const rootHeight = 80;
     
     // Draw root node
     html += `
       <g class="tree-node">
         <rect x="${rootX - rootWidth/2}" y="${rootY - rootHeight/2}" 
               width="${rootWidth}" height="${rootHeight}" 
-              fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="3" rx="4"/>
-        <text x="${rootX}" y="${rootY}" 
+              fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="3" rx="6"/>
+        <text x="${rootX}" y="${rootY - 5}" 
               text-anchor="middle" dominant-baseline="middle" 
-              fill="${textColor}" font-weight="bold" font-size="16">
+              fill="${textColor}" font-weight="bold" font-size="20">
           ${hostname || 'Home'}
+        </text>
+        <text x="${rootX}" y="${rootY + 18}" 
+              text-anchor="middle" dominant-baseline="middle" 
+              fill="${isDark ? '#888' : '#666'}" font-size="12">
+          Homepage
         </text>
       </g>
     `;
@@ -547,92 +1361,92 @@ ${JSON.stringify(data, null, 2)}
     topLevelSections.slice(0, 6).forEach((section, i) => {
       const sectionData = structure.children[section];
       const sectionX = 50 + sectionSpacing * (i + 1);
-      const sectionWidth = 140;
-      const sectionHeight = 50;
+      const sectionWidth = 180;
+      const sectionHeight = 70;
       const sectionName = section.replace(/-/g, ' ');
       
       // Vertical line to section
-      html += `<line x1="${sectionX}" y1="${sectionY - 60}" x2="${sectionX}" y2="${sectionY - 20}" stroke="${lineColor}" stroke-width="2"/>`;
+      html += `<line x1="${sectionX}" y1="${sectionY - 60}" x2="${sectionX}" y2="${sectionY - 30}" stroke="${lineColor}" stroke-width="2"/>`;
       
       // Section node
       html += `
         <g class="tree-node">
           <rect x="${sectionX - sectionWidth/2}" y="${sectionY - sectionHeight/2}" 
                 width="${sectionWidth}" height="${sectionHeight}" 
-                fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="2" rx="4"/>
-          <text x="${sectionX}" y="${sectionY - 5}" 
+                fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="2" rx="6"/>
+          <text x="${sectionX}" y="${sectionY - 8}" 
                 text-anchor="middle" dominant-baseline="middle" 
-                fill="${textColor}" font-weight="600" font-size="13">
-            ${sectionName.length > 18 ? sectionName.slice(0, 16) + '...' : sectionName}
+                fill="${textColor}" font-weight="600" font-size="15">
+            ${sectionName.length > 20 ? sectionName.slice(0, 18) + '...' : sectionName}
           </text>
           <text x="${sectionX}" y="${sectionY + 12}" 
                 text-anchor="middle" dominant-baseline="middle" 
-                fill="${isDark ? '#888' : '#666'}" font-size="10">
+                fill="${isDark ? '#888' : '#666'}" font-size="11">
+            /${section}/
+          </text>
+          <text x="${sectionX}" y="${sectionY + 26}" 
+                text-anchor="middle" dominant-baseline="middle" 
+                fill="${isDark ? '#999' : '#777'}" font-size="10">
             ${sectionData.count} page${sectionData.count !== 1 ? 's' : ''}
           </text>
         </g>
       `;
       
-      // Draw child pages
-      const childPages = Object.entries(sectionData.children || {}).slice(0, 2);
+      // Draw child pages - stagger Y position to prevent overlap
+      const childPages = Object.entries(sectionData.children || {}).slice(0, 4);
       if (childPages.length > 0) {
-        const pageY = sectionY + 110;
-        const pageWidth = 95;
-        const pageHeight = 35;
+        // Stagger: even sections at one level, odd sections lower
+        const basePageY = sectionY + 140;
+        const staggerOffset = (i % 2 === 0) ? 0 : 80; // Alternate rows
+        const pageY = basePageY + staggerOffset;
+        const pageWidth = 130;
+        const pageHeight = 50;
         
-        // Critical: Prevent overlap by strictly constraining pages within section boundaries
-        // Each section owns a territory of sectionSpacing width, but we only use half to add buffer
-        const safeBoundary = sectionSpacing * 0.4; // only use 40% of available space
-        const totalPageWidth = pageWidth * childPages.length;
-        const minGap = 15; // minimum gap between page nodes
-        const neededSpace = totalPageWidth + (minGap * (childPages.length - 1));
-        
-        // If pages would overflow the safe boundary, reduce their count or spacing
-        let actualSpacing;
-        if (neededSpace > safeBoundary) {
-          // Pages would overlap - use tight spacing within boundary
-          actualSpacing = childPages.length === 1 ? 0 : (safeBoundary - totalPageWidth) / (childPages.length - 1);
-        } else {
-          // Plenty of space - use comfortable spacing
-          actualSpacing = childPages.length === 1 ? 0 : pageWidth + minGap;
-        }
-        
-        const pageSpacing = actualSpacing;
+        // Fixed spacing for third level - use absolute positioning
+        // Each child page gets its own column to avoid overlaps
+        const pageGap = 20; // Gap between page boxes
+        const totalChildWidth = (pageWidth + pageGap) * childPages.length - pageGap;
+        const startX = sectionX - totalChildWidth / 2;
         
         // Vertical line from section to pages area
-        html += `<line x1="${sectionX}" y1="${sectionY + sectionHeight/2}" x2="${sectionX}" y2="${pageY - 40}" stroke="${lineColor}" stroke-width="2"/>`;
+        html += `<line x1="${sectionX}" y1="${sectionY + sectionHeight/2}" x2="${sectionX}" y2="${pageY - 30}" stroke="${lineColor}" stroke-width="2"/>`;
         
         // Horizontal line for pages
         if (childPages.length > 1) {
-          const pageStartX = sectionX - (childPages.length - 1) * pageSpacing / 2;
-          const pageEndX = sectionX + (childPages.length - 1) * pageSpacing / 2;
-          html += `<line x1="${pageStartX}" y1="${pageY - 20}" x2="${pageEndX}" y2="${pageY - 20}" stroke="${lineColor}" stroke-width="1.5"/>`;
+          const pageStartX = startX + pageWidth / 2;
+          const pageEndX = startX + totalChildWidth - pageWidth / 2;
+          html += `<line x1="${pageStartX}" y1="${pageY - 30}" x2="${pageEndX}" y2="${pageY - 30}" stroke="${lineColor}" stroke-width="1.5"/>`;
         }
-        
+
         childPages.forEach(([pageName, pageData], j) => {
-          const pageX = sectionX - (childPages.length - 1) * pageSpacing / 2 + j * pageSpacing;
+          const pageX = startX + j * (pageWidth + pageGap) + pageWidth / 2;
           const pageTitle = pageName.replace(/-/g, ' ');
           const subcount = pageData.children ? Object.keys(pageData.children).length : 0;
           
           // Vertical line to page
-          html += `<line x1="${pageX}" y1="${pageY - 20}" x2="${pageX}" y2="${pageY - 10}" stroke="${lineColor}" stroke-width="1.5"/>`;
+          html += `<line x1="${pageX}" y1="${pageY - 30}" x2="${pageX}" y2="${pageY - pageHeight/2}" stroke="${lineColor}" stroke-width="1.5"/>`;
           
           // Page node
           html += `
             <g class="tree-node">
               <rect x="${pageX - pageWidth/2}" y="${pageY - pageHeight/2}" 
                     width="${pageWidth}" height="${pageHeight}" 
-                    fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="1.5" rx="3"/>
-              <text x="${pageX}" y="${pageY}" 
+                    fill="${nodeFill}" stroke="${nodeStroke}" stroke-width="2" rx="4"/>
+              <text x="${pageX}" y="${pageY - 5}" 
                     text-anchor="middle" dominant-baseline="middle" 
-                    fill="${textColor}" font-size="10">
-                ${pageTitle.length > 12 ? pageTitle.slice(0, 10) + '...' : pageTitle}
+                    fill="${textColor}" font-size="12" font-weight="500">
+                ${pageTitle.length > 16 ? pageTitle.slice(0, 14) + '...' : pageTitle}
+              </text>
+              <text x="${pageX}" y="${pageY + 12}" 
+                    text-anchor="middle" dominant-baseline="middle" 
+                    fill="${isDark ? '#999' : '#777'}" font-size="9">
+                /${pageName}
               </text>
               ${subcount > 0 ? `
-                <text x="${pageX}" y="${pageY + 12}" 
+                <text x="${pageX}" y="${pageY + 22}" 
                       text-anchor="middle" dominant-baseline="middle" 
                       fill="${isDark ? '#888' : '#666'}" font-size="8">
-                  +${subcount}
+                  +${subcount} sub
                 </text>
               ` : ''}
             </g>
@@ -640,7 +1454,7 @@ ${JSON.stringify(data, null, 2)}
         });
         
         // Show "more" indicator if there are additional pages
-        const remainingPages = Object.keys(sectionData.children || {}).length - 2;
+        const remainingPages = Object.keys(sectionData.children || {}).length - 4;
         if (remainingPages > 0) {
           html += `
             <text x="${sectionX}" y="${pageY + 45}" 
@@ -657,32 +1471,45 @@ ${JSON.stringify(data, null, 2)}
     return html;
   }
 
+  function collectPagePaths(node, prefix) {
+    const results = [];
+    if (node && node.isPage) {
+      results.push(prefix);
+    }
+    const children = node?.children || {};
+    Object.entries(children).forEach(([childName, childNode]) => {
+      const childPath = `${prefix}/${childName}`;
+      results.push(...collectPagePaths(childNode, childPath));
+    });
+    return results;
+  }
+
   // Render site tree
   function renderSiteTree(structure) {
     const sections = Object.entries(structure.children);
     if (sections.length === 0) {
-      return '<div style="color: #888;">Flat site structure (no directories)</div>';
+      return '<div style="color: var(--text-tertiary);">Flat site structure (no directories)</div>';
     }
     
-    return sections.slice(0, 6).map(([name, data]) => {
-      const children = Object.keys(data.children || {});
+    return sections.slice(0, 6).map(([name, data], index) => {
+      const pagePaths = Array.from(new Set(collectPagePaths(data, `/${name}`)));
       const color = getColorForSection(name);
+      const isOpen = index === 0 ? 'open' : '';
       
       return `
-        <div style="background: rgba(0,0,0,0.3); border-left: 3px solid ${color}; padding: 1rem; border-radius: 0 8px 8px 0;">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-            <span style="color: ${color}; font-weight: bold; font-size: 0.95rem;">/${name}/</span>
-            <span style="background: ${color}20; color: ${color}; padding: 0.2rem 0.5rem; border-radius: 10px; font-size: 0.75rem;">${data.count} pages</span>
-          </div>
-          ${children.length > 0 ? `
-            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.5rem;">
-              ${children.slice(0, 5).map(child => `
-                <span style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #888;">/${child}</span>
+        <details ${isOpen} style="background: var(--bg-tertiary); border-left: 3px solid ${color}; padding: 1rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; transition: all 0.2s ease;">
+          <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none;">
+            <span style="color: ${color}; font-weight: 600; font-size: 0.95rem;">/${name}/</span>
+            <span style="background: ${color}20; color: ${color}; padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${data.count} ${data.count === 1 ? 'page' : 'pages'}</span>
+          </summary>
+          ${pagePaths.length > 0 ? `
+            <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;">
+              ${pagePaths.map(pagePath => `
+                <span style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: var(--text-tertiary);">${pagePath}</span>
               `).join('')}
-              ${children.length > 5 ? `<span style="color: #666; font-size: 0.75rem;">+${children.length - 5} more</span>` : ''}
             </div>
-          ` : '<div style="color: #666; font-size: 0.8rem; font-style: italic;">No subdirectories</div>'}
-        </div>
+          ` : '<div style="color: var(--text-tertiary); font-size: 0.8rem; font-style: italic; margin-top: 0.5rem;">No pages found</div>'}
+        </details>
       `;
     }).join('');
   }
@@ -695,15 +1522,15 @@ ${JSON.stringify(data, null, 2)}
 
   // Render tech stack
   function renderTechStack(stack) {
-    let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+    let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
     
     if (stack.cms) {
       html += `
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.5rem;">${stack.cms.icon}</span>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.8rem;">${stack.cms.icon}</span>
           <div>
-            <div style="color: #fff; font-weight: bold;">${stack.cms.name}</div>
-            <div style="color: #888; font-size: 0.75rem;">${stack.cms.confidence}% confidence</div>
+            <div style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">${stack.cms.name}</div>
+            <div style="color: var(--text-tertiary); font-size: 0.8rem;">${stack.cms.confidence}% confidence</div>
           </div>
         </div>
       `;
@@ -711,11 +1538,11 @@ ${JSON.stringify(data, null, 2)}
     
     if (stack.framework) {
       html += `
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.5rem;">${stack.framework.icon}</span>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.8rem;">${stack.framework.icon}</span>
           <div>
-            <div style="color: #fff; font-weight: bold;">${stack.framework.name}</div>
-            <div style="color: #888; font-size: 0.75rem;">Framework detected</div>
+            <div style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">${stack.framework.name}</div>
+            <div style="color: var(--text-tertiary); font-size: 0.8rem;">Framework detected</div>
           </div>
         </div>
       `;
@@ -723,18 +1550,18 @@ ${JSON.stringify(data, null, 2)}
     
     if (stack.server) {
       html += `
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.5rem;">${stack.server.icon}</span>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.8rem;">${stack.server.icon}</span>
           <div>
-            <div style="color: #fff; font-weight: bold;">${stack.server.name}</div>
-            <div style="color: #888; font-size: 0.75rem;">Server technology</div>
+            <div style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">${stack.server.name}</div>
+            <div style="color: var(--text-tertiary); font-size: 0.8rem;">Server technology</div>
           </div>
         </div>
       `;
     }
     
     if (!stack.cms && !stack.framework && !stack.server) {
-      html += '<div style="color: #888;">Could not detect specific technologies. Run full scan for detailed analysis.</div>';
+      html += '<div style="color: var(--text-tertiary);">Could not detect specific technologies. Run full scan for detailed analysis.</div>';
     }
     
     html += '</div>';
@@ -743,46 +1570,46 @@ ${JSON.stringify(data, null, 2)}
 
   // Render hosting info
   function renderHostingInfo(info) {
-    let html = '<div style="display: flex; flex-direction: column; gap: 0.75rem;">';
+    let html = '<div style="display: flex; flex-direction: column; gap: 1rem;">';
     
     html += `
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span style="font-size: 1.2rem;">🌐</span>
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.5rem;">🌐</span>
         <div>
-          <div style="color: #fff; font-family: monospace;">${info.domain}</div>
-          <div style="color: #888; font-size: 0.75rem;">Domain</div>
+          <div style="color: var(--text-primary); font-family: var(--font-mono); font-size: 0.9rem;">${info.domain}</div>
+          <div style="color: var(--text-tertiary); font-size: 0.8rem;">Domain</div>
         </div>
       </div>
     `;
     
     if (info.provider) {
       html += `
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.5rem;">${info.provider.icon}</span>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.8rem;">${info.provider.icon}</span>
           <div>
-            <div style="color: #fff; font-weight: bold;">${info.provider.name}</div>
-            <div style="color: #888; font-size: 0.75rem;">${info.provider.type}</div>
+            <div style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">${info.provider.name}</div>
+            <div style="color: var(--text-tertiary); font-size: 0.8rem;">${info.provider.type}</div>
           </div>
         </div>
       `;
     } else {
       html += `
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.2rem;">☁️</span>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.5rem;">☁️</span>
           <div>
-            <div style="color: #fff;">Custom/Unknown Hosting</div>
-            <div style="color: #888; font-size: 0.75rem;">Use IP Reputation tool for details</div>
+            <div style="color: var(--text-primary); font-size: 0.95rem;">Custom/Unknown Hosting</div>
+            <div style="color: var(--text-tertiary); font-size: 0.8rem;">Use IP Reputation tool for details</div>
           </div>
         </div>
       `;
     }
     
     html += `
-      <div style="display: flex; align-items: center; gap: 0.5rem;">
-        <span style="font-size: 1.2rem;">🔒</span>
+      <div style="display: flex; align-items: center; gap: 0.75rem;">
+        <span style="font-size: 1.5rem;">🔒</span>
         <div>
-          <div style="color: #00ff41;">SSL/HTTPS Active</div>
-          <div style="color: #888; font-size: 0.75rem;">Secure connection</div>
+          <div style="color: #00ff41; font-weight: 600;">SSL/HTTPS Active</div>
+          <div style="color: var(--text-tertiary); font-size: 0.8rem;">Secure connection</div>
         </div>
       </div>
     `;
@@ -1137,15 +1964,67 @@ ${JSON.stringify(data, null, 2)}
    * Print the visual sitemap
    */
   window.printSitemap = function() {
-    const sitemapSection = document.getElementById('sitemapSection');
-    if (!sitemapSection) {
+    const sitemapDiagram = document.getElementById('sitemapDiagram');
+    if (!sitemapDiagram) {
       alert('No sitemap to print');
       return;
     }
 
+    // Get the hostname from crawl data URL
+    let hostname = 'website';
+    try {
+      if (window.crawlData && window.crawlData.url) {
+        hostname = new URL(window.crawlData.url).hostname;
+      }
+    } catch (e) {
+      console.error('Error parsing hostname:', e);
+    }
+    
+    const pageCount = window.crawlData?.results?.pagesDiscovered || 
+                      window.crawlData?.results?.pages?.length || 0;
+    const pages = window.crawlData?.results?.pages || [];
+    
+    // Build page table HTML
+    let pageTableHTML = '';
+    if (pages.length > 0) {
+      pageTableHTML = `
+        <div class="page-table">
+          <h2>Page Index</h2>
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 40px; text-align: center;">#</th>
+                <th style="width: 40%; text-align: left;">Page Name</th>
+                <th style="width: 60%; text-align: left;">URL</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${pages.map((url, index) => {
+                const urlObj = new URL(url);
+                const pathname = urlObj.pathname;
+                const segments = pathname.split('/').filter(s => s);
+                const pageName = segments.length > 0 
+                  ? segments[segments.length - 1].replace(/-/g, ' ').replace(/\.(html|htm|php)$/i, '')
+                  : 'Home';
+                return `
+                  <tr>
+                    <td style="text-align: center; color: #666;">${index + 1}</td>
+                    <td style="text-transform: capitalize;">${pageName || 'Home'}</td>
+                    <td style="font-family: monospace; font-size: 11px; color: #333;">${url}</td>
+                  </tr>
+                `;
+              }).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+    
     const printWindow = window.open('', '_blank');
-    const hostname = window.crawlData?.results?.hostname || 'website';
-    const pageCount = window.crawlData?.results?.pages?.length || 0;
+    if (!printWindow) {
+      alert('Please allow popups to print the sitemap');
+      return;
+    }
     
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -1155,41 +2034,106 @@ ${JSON.stringify(data, null, 2)}
         <style>
           @page { 
             size: landscape;
-            margin: 1cm; 
+            margin: 1.5cm; 
+          }
+          * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
           }
           body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
             background: white;
-            color: black;
+            color: #000;
             padding: 20px;
-            margin: 0;
+          }
+          .header {
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #dd3838;
+          }
+          .logo-row {
+            margin-bottom: 16px;
+          }
+          .logo-row img {
+            height: 24px;
+            width: auto;
+          }
+          .header-content {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+          }
+          .header-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+          }
+          .header-info {
+            text-align: right;
           }
           h1 {
-            color: #00994d;
-            margin-bottom: 10px;
-            font-size: 24px;
+            color: #dd3838;
+            margin: 0;
+            font-size: 22px;
+            font-weight: 700;
           }
           .meta {
             color: #666;
-            margin-bottom: 20px;
-            font-size: 14px;
+            font-size: 13px;
+            line-height: 1.6;
           }
           .sitemap-container {
             background: white;
-            border: 2px solid #00994d;
-            border-radius: 8px;
-            padding: 20px;
+            border: 2px solid #e5e5e5;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
             overflow: visible;
           }
           svg {
             width: 100%;
             height: auto;
           }
-          .footer {
-            margin-top: 20px;
-            padding-top: 10px;
-            border-top: 1px solid #ddd;
+          .page-table {
+            page-break-before: always;
+            margin-top: 30px;
+          }
+          .page-table h2 {
+            color: #dd3838;
+            font-size: 18px;
+            margin-bottom: 16px;
+            font-weight: 700;
+          }
+          table {
+            width: 100%;
+            border-collapse: collapse;
             font-size: 12px;
+          }
+          thead {
+            background: #f5f5f5;
+          }
+          th {
+            padding: 10px 12px;
+            font-weight: 600;
+            color: #333;
+            border: 1px solid #ddd;
+          }
+          td {
+            padding: 8px 12px;
+            border: 1px solid #e5e5e5;
+          }
+          tbody tr:nth-child(even) {
+            background: #fafafa;
+          }
+          tbody tr:hover {
+            background: #f0f0f0;
+          }
+          .footer {
+            margin-top: 30px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e5e5;
+            font-size: 11px;
             color: #888;
             text-align: center;
           }
@@ -1198,19 +2142,36 @@ ${JSON.stringify(data, null, 2)}
               print-color-adjust: exact;
               -webkit-print-color-adjust: exact;
             }
+            .sitemap-container {
+              page-break-inside: avoid;
+            }
           }
         </style>
       </head>
       <body>
-        <h1>🗺️ Visual Sitemap</h1>
-        <div class="meta">
-          <strong>${hostname}</strong> • ${pageCount} pages discovered • Generated ${new Date().toLocaleDateString()}
+        <div class="header">
+          <div class="logo-row">
+            <img src="/assets/logo-sitemechanic-white.svg" alt="Site Mechanic">
+          </div>
+          <div class="header-content">
+            <div class="header-title">
+              <h1>🗺️ Visual Sitemap</h1>
+            </div>
+            <div class="header-info">
+              <div class="meta">
+                <strong>${hostname}</strong><br>
+                ${pageCount} pages discovered<br>
+                Generated ${new Date().toLocaleDateString()}
+              </div>
+            </div>
+          </div>
         </div>
         <div class="sitemap-container">
           ${document.getElementById('sitemapDiagram')?.innerHTML || '<p>No sitemap data available</p>'}
         </div>
+        ${pageTableHTML}
         <div class="footer">
-          Generated by Site Mechanic | sitemechanic.io
+          Generated by Site Mechanic | sitemechanic.io | ${new Date().toLocaleString()}
         </div>
       </body>
       </html>

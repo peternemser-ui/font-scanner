@@ -105,17 +105,32 @@ class BrandConsistencyService {
   async discoverPages(url, maxPages) {
     const baseUrl = new URL(url);
     const baseOrigin = baseUrl.origin;
+    const baseDomain = baseUrl.hostname.replace(/^www\./, ''); // Handle www vs non-www
     
     return await browserPool.execute(async (browser) => {
       const page = await browser.newPage();
       await this.setupPage(page);
       
       try {
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
-        await page.evaluate(() => new Promise(r => setTimeout(r, 1500)));
+        // Use networkidle0 for better JavaScript rendering, with longer timeout
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+        
+        // Wait for navigation to be visible (common selectors)
+        try {
+          await page.waitForSelector('nav, header, [role="navigation"], .nav, .menu, .navigation', { timeout: 5000 });
+        } catch (e) {
+          // Navigation might not exist or be named differently, continue anyway
+        }
+        
+        // Additional wait for JS-heavy sites
+        await page.evaluate(() => new Promise(r => setTimeout(r, 2000)));
+        
+        // Get the actual origin after any redirects
+        const actualOrigin = await page.evaluate(() => window.location.origin);
+        logger.info(`Page loaded at origin: ${actualOrigin} (requested: ${baseOrigin})`);
         
         // Extract all internal links
-        const links = await page.evaluate((origin) => {
+        const links = await page.evaluate((origin, baseDomain) => {
           const allLinks = Array.from(document.querySelectorAll('a[href]'));
           const internalLinks = new Set();
           
@@ -129,13 +144,14 @@ class BrandConsistencyService {
               
               const linkUrl = new URL(href);
               
-              // Only internal links
-              if (linkUrl.origin !== origin) return;
+              // Only internal links - check both origin and domain (handles www vs non-www)
+              const linkDomain = linkUrl.hostname.replace(/^www\./, '');
+              if (linkUrl.origin !== origin && linkDomain !== baseDomain) return;
               
-              // Skip anchors, files, and special paths
+              // Skip anchors-only links, files, and special paths
               const path = linkUrl.pathname.toLowerCase();
-              if (path.includes('#') || 
-                  path.match(/\.(pdf|jpg|jpeg|png|gif|svg|css|js|xml|txt|zip)$/i) ||
+              if (path === '/' && linkUrl.hash) return; // Skip hash-only links to homepage
+              if (path.match(/\.(pdf|jpg|jpeg|png|gif|svg|css|js|xml|txt|zip)$/i) ||
                   path.includes('/wp-admin') ||
                   path.includes('/cart') ||
                   path.includes('/checkout') ||
@@ -162,15 +178,22 @@ class BrandConsistencyService {
           });
           
           return Array.from(internalLinks).map(l => JSON.parse(l));
-        }, baseOrigin);
+        }, actualOrigin, baseDomain);
         
         await page.close();
+        
+        logger.info(`Found ${links.length} raw internal links from page`);
         
         // Sort by priority and take top pages
         const sortedLinks = links
           .sort((a, b) => b.priority - a.priority)
           .map(l => l.url)
           .filter((url, idx, arr) => arr.indexOf(url) === idx); // Dedupe
+        
+        logger.info(`After deduplication: ${sortedLinks.length} unique links`);
+        if (sortedLinks.length > 0) {
+          logger.debug(`Top 5 discovered links: ${sortedLinks.slice(0, 5).join(', ')}`);
+        }
         
         // Always include homepage first
         const pagesToAnalyze = [url];
@@ -181,6 +204,7 @@ class BrandConsistencyService {
           }
         }
         
+        logger.info(`Final pages to analyze: ${pagesToAnalyze.length} (max: ${maxPages})`);
         return pagesToAnalyze;
         
       } catch (error) {

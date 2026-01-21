@@ -8,10 +8,11 @@ const { createLogger } = require('./logger');
 const logger = createLogger('Cache');
 
 class Cache {
-  constructor(ttl = 3600000) {
-    // Default 1 hour
+  constructor(ttl = 3600000, maxEntries = 500) {
+    // Default 1 hour, max 500 entries
     this.cache = new Map();
     this.ttl = ttl;
+    this.maxEntries = maxEntries;
   }
 
   /**
@@ -47,8 +48,16 @@ class Cache {
       expiresAt: Date.now() + ttl,
     };
 
+    // Enforce max entries limit - remove oldest entries if at capacity
+    if (this.cache.size >= this.maxEntries && !this.cache.has(key)) {
+      const entriesToRemove = Math.max(1, Math.floor(this.maxEntries * 0.1)); // Remove 10%
+      const keys = Array.from(this.cache.keys()).slice(0, entriesToRemove);
+      keys.forEach(k => this.cache.delete(k));
+      logger.debug('Cache eviction', { removed: entriesToRemove, remaining: this.cache.size });
+    }
+
     this.cache.set(key, entry);
-    logger.debug('Cache set', { key, ttl });
+    logger.debug('Cache set', { key, ttl, size: this.cache.size });
   }
 
   /**
@@ -145,13 +154,18 @@ class Cache {
   }
 }
 
-// Create default cache instance
-const defaultCache = new Cache(3600000); // 1 hour TTL
+// Create default cache instance with size limit
+const defaultCache = new Cache(3600000, 500); // 1 hour TTL, max 500 entries
 
-// Run cleanup every 10 minutes
-setInterval(() => {
+// Run cleanup every 5 minutes (more aggressive)
+const cacheCleanupInterval = setInterval(() => {
   defaultCache.cleanup();
-}, 600000);
+}, 300000);
+
+// Clear interval on process exit to prevent memory leaks
+process.on('beforeExit', () => {
+  clearInterval(cacheCleanupInterval);
+});
 
 module.exports = {
   Cache,

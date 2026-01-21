@@ -6,6 +6,46 @@ window.SM_ANALYZER_KEY = 'security';
 
 let currentResults = null;
 
+/**
+ * MEMORY MANAGEMENT: Clean up previous scan data to prevent memory leaks
+ */
+function cleanupPreviousSecurityData() {
+  // Clear report metadata from previous scans
+  document.body.removeAttribute('data-report-id');
+  document.body.removeAttribute('data-sm-screenshot-url');
+  document.body.removeAttribute('data-sm-scan-started-at');
+  
+  // Clear current results reference
+  currentResults = null;
+  
+  // Clear results container
+  const resultsContent = document.getElementById('resultsContent');
+  if (resultsContent) {
+    resultsContent.innerHTML = '';
+  }
+  
+  // Clear loading container
+  const loadingContainer = document.getElementById('loadingContainer');
+  if (loadingContainer) {
+    loadingContainer.innerHTML = '';
+  }
+  
+  // Remove patience message
+  const patienceMessage = document.getElementById('patience-message');
+  if (patienceMessage) {
+    patienceMessage.remove();
+  }
+  
+  // Destroy any Chart.js instances
+  if (window.Chart && Chart.instances) {
+    Object.values(Chart.instances).forEach(chart => {
+      try { chart.destroy(); } catch (e) { /* ignore */ }
+    });
+  }
+  
+  console.log('[Memory] Cleaned up previous security scan data');
+}
+
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
   document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
@@ -42,10 +82,13 @@ async function analyzeSecurity() {
     return;
   }
 
+  // MEMORY CLEANUP: Clear previous scan data
+  cleanupPreviousSecurityData();
+
   // Update button state
   analyzeButton.disabled = true;
   const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-  buttonText.textContent = 'Running scan...';
+  buttonText.textContent = 'Analyzing...';
 
   // Setup UI
   const resultsDiv = document.getElementById('results');
@@ -176,6 +219,20 @@ async function analyzeSecurity() {
     const results = await response.json();
     currentResults = results;
 
+    // Set report metadata from API response
+    const reportId = results && results.reportId ? String(results.reportId) : '';
+    const screenshotUrl = results && results.screenshotUrl ? String(results.screenshotUrl) : '';
+    if (reportId) {
+      if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
+        window.ReportUI.setCurrentReportId(reportId);
+      } else {
+        document.body.setAttribute('data-report-id', reportId);
+      }
+    }
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
+
     // Complete the loader
     loader.complete();
     
@@ -193,7 +250,7 @@ async function analyzeSecurity() {
     const analyzeButton = document.getElementById('analyzeButton');
     analyzeButton.disabled = false;
     const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-    buttonText.textContent = 'Run scan';
+    buttonText.textContent = 'Analyze';
   }
 }
 
@@ -202,8 +259,31 @@ function displaySecurityResults(data) {
   const resultsContent = document.getElementById('resultsContent');
   resultsContent.innerHTML = '';
 
+  // Get URL and timestamp for header
+  const url = data.url || document.getElementById('urlInput').value.trim();
+  const timestamp = new Date().toLocaleString();
+
+  // Consistent Report Header (matches Speed & UX format)
+  const reportHeader = window.ReportShell && window.ReportShell.renderReportHeader
+    ? window.ReportShell.renderReportHeader({
+        title: 'Security Report',
+        url: url,
+        timestamp: timestamp,
+        badgeText: 'Security Audit',
+        mode: 'security'
+      })
+    : `
+      <div class="section" style="margin-bottom: 1.5rem;">
+        <div style="display: inline-block; padding: 0.375rem 0.875rem; background: #ff4444; color: #fff; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; margin-bottom: 1rem;">Security Audit</div>
+        <h2 style="color: var(--text-primary, #fff); font-size: 1.5rem; margin: 0 0 1rem 0;">Security Report</h2>
+        ${url ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🌐 ${url}</p>` : ''}
+        <p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🕒 ${timestamp}</p>
+      </div>
+    `;
+
   // Overall Security Summary with Circular Dials
   const summaryHtml = `
+    ${reportHeader}
     <div class="summary-section security-summary-panel">
       <h2>◈ Security Audit Summary</h2>
       
@@ -524,16 +604,16 @@ function displaySecurityResults(data) {
     data.thirdPartyScripts.score
   );
 
-  // 6. Recommendations (Pro gated)
+  // 6. Report and Recommendations (Pro gated)
   createAccordionSection(
     accordionsContainer,
-    'recommendations-section',
-    'Security Recommendations',
-    () => renderRecommendationsContent(data.recommendations),
+    'report-recommendations',
+    'Report and Recommendations',
+    () => renderRecommendationsContent(data.recommendations, data),
     null,
     {
       isPro: true,
-      previewHtml: renderLockedProPreview('Security Recommendations', [
+      previewHtml: renderLockedProPreview('Report and Recommendations', [
         'Critical remediation steps',
         'OWASP-aligned fixes'
       ])
@@ -546,7 +626,7 @@ function displaySecurityResults(data) {
   const summaryFooter = document.createElement('div');
   summaryFooter.className = 'section';
   summaryFooter.innerHTML = `
-    <h2>[SUMMARY]</h2>
+    <h2>Summary</h2>
     <div class="seo-summary">
       <div class="summary-stats">
         <div class="stat-item">
@@ -1120,8 +1200,18 @@ function renderThirdPartyContent(thirdParty) {
   `;
 }
 
-// Render Recommendations content
-function renderRecommendationsContent(recommendations) {
+// Render Recommendations content - Now uses the professional card-based renderer
+function renderRecommendationsContent(recommendations, results) {
+  // Use the new security fixes renderer if available
+  if (typeof renderSecurityFixes === 'function') {
+    return `
+      <div class="security-section">
+        ${renderSecurityFixes(recommendations, results)}
+      </div>
+    `;
+  }
+  
+  // Fallback to simple message if renderer not loaded
   if (!recommendations || recommendations.length === 0) {
     return `
       <div class="security-section">

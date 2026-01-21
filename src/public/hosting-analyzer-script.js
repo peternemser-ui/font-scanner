@@ -565,6 +565,11 @@ async function analyzeHosting() {
   const errorMessage = document.getElementById('errorMessage');
   const quickBrowse = document.getElementById('quickBrowse');
 
+  // Clear report metadata from previous scans
+  document.body.removeAttribute('data-report-id');
+  document.body.removeAttribute('data-sm-screenshot-url');
+  document.body.removeAttribute('data-sm-scan-started-at');
+
   resultsDiv.classList.add('hidden');
   errorMessage.classList.add('hidden');
   if (quickBrowse) quickBrowse.classList.add('hidden');
@@ -638,6 +643,20 @@ async function analyzeHosting() {
 
     const results = await response.json();
     currentResults = results;
+
+    // Set report metadata from API response
+    const reportId = results && results.reportId ? String(results.reportId) : '';
+    const screenshotUrl = results && results.screenshotUrl ? String(results.screenshotUrl) : '';
+    if (reportId) {
+      if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
+        window.ReportUI.setCurrentReportId(reportId);
+      } else {
+        document.body.setAttribute('data-report-id', reportId);
+      }
+    }
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
 
     // Complete the loader
     loader.complete();

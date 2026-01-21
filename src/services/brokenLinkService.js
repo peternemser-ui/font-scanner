@@ -10,14 +10,14 @@ const { roundTo, formatNumber, formatDuration } = require('../utils/formatHelper
 
 const logger = createLogger('BrokenLinkService');
 
-// Generic anchor texts that provide poor SEO value
-const GENERIC_ANCHOR_TEXTS = [
-  'click here', 'click', 'here', 'read more', 'learn more', 'more', 
+// Generic anchor texts that provide poor SEO value (Set for O(1) lookups)
+const GENERIC_ANCHOR_TEXTS = new Set([
+  'click here', 'click', 'here', 'read more', 'learn more', 'more',
   'this', 'link', 'go', 'see more', 'view', 'details', 'info',
   'continue', 'next', 'previous', 'back', 'home', 'page',
   'download', 'get started', 'sign up', 'submit', 'buy now',
   'read article', 'full article', 'read the article'
-];
+]);
 
 class BrokenLinkService {
   /**
@@ -40,9 +40,19 @@ class BrokenLinkService {
       const results = await browserPool.execute(async (browser) => {
         const page = await browser.newPage();
         
+        // Set realistic user agent to avoid bot detection
+        await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
+        
+        // Set extra headers to look like real browser
+        await page.setExtraHTTPHeaders({
+          'Accept-Language': 'en-US,en;q=0.9',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Encoding': 'gzip, deflate, br'
+        });
+        
         // Set reasonable timeout and viewport
         await page.setViewport({ width: 1920, height: 1080 });
-        page.setDefaultNavigationTimeout(30000);
+        page.setDefaultNavigationTimeout(15000);
         
         // Track all links found
         const allLinks = new Map();
@@ -65,14 +75,77 @@ class BrokenLinkService {
           logger.info(`Scanning page ${pagesScanned}/${maxPages}: ${currentUrl}`);
           
           try {
-            const response = await page.goto(currentUrl, { 
-              waitUntil: 'domcontentloaded',
-              timeout: 30000 
-            });
+            logger.info(`Navigating to: ${currentUrl}`);
+            
+            let response;
+            let retries = 2;
+            
+            // Use domcontentloaded for speed, with networkidle2 fallback for JS-heavy sites
+            while (retries > 0) {
+              try {
+                const waitStrategy = retries === 2 ? 'domcontentloaded' : 'networkidle2';
+                response = await page.goto(currentUrl, {
+                  waitUntil: waitStrategy,
+                  timeout: retries === 2 ? 8000 : 12000
+                });
+                break; // Success
+              } catch (navError) {
+                retries--;
+                if (retries === 0) throw navError;
+                logger.warn(`Navigation attempt failed, retrying with networkidle2: ${navError.message}`);
+              }
+            }
+
+            // Check response status
+            const status = response?.status();
+            logger.info(`Page response status: ${status}`);
+
+            if (!response || status >= 400) {
+              logger.warn(`Page returned error status ${status}, skipping link extraction`);
+              continue;
+            }
+
+            // Wait for JS rendering on first page (detect JS-heavy sites)
+            if (pagesScanned === 1) {
+              // Wait for body to have content and give JS time to render
+              await page.waitForTimeout(300);
+
+              // Check if page might be JS-rendered (few initial links)
+              const initialLinkCount = await page.evaluate(() =>
+                document.querySelectorAll('a[href]').length
+              );
+
+              if (initialLinkCount < 5) {
+                logger.info('Few links found initially, waiting for JS rendering...');
+                await page.waitForTimeout(1500);
+              }
+            }
+            
+            // Take screenshot for debugging (first page only)
+            if (pagesScanned === 1) {
+              try {
+                await page.screenshot({ path: './reports/debug-screenshot.png', fullPage: false });
+                logger.info('Debug screenshot saved to ./reports/debug-screenshot.png');
+              } catch (screenshotError) {
+                logger.warn('Could not save debug screenshot:', screenshotError.message);
+              }
+            }
+            
+            logger.info(`Page loaded successfully: ${currentUrl}`);
             
             // Extract all links on page with enhanced attributes
+            const pageContent = await page.content();
+            logger.info(`Page HTML length: ${pageContent.length} characters`);
+            
             const links = await page.evaluate(() => {
               const anchors = Array.from(document.querySelectorAll('a[href]'));
+              const allATags = Array.from(document.getElementsByTagName('a'));
+              console.log(`Total <a> tags: ${allATags.length}, with href: ${anchors.length}`);
+              
+              // Also check for data-href, ng-href, etc.
+              const dataHrefLinks = Array.from(document.querySelectorAll('[data-href]'));
+              console.log(`Elements with data-href: ${dataHrefLinks.length}`);
+              
               return anchors.map(a => ({
                 href: a.href,
                 text: a.innerText.trim().substring(0, 100),
@@ -86,6 +159,12 @@ class BrokenLinkService {
                 imageAlt: a.querySelector('img')?.alt || ''
               }));
             });
+            
+            logger.info(`✓ Successfully extracted ${links.length} links from ${currentUrl}`);
+            
+            if (links.length === 0) {
+              logger.warn(`⚠ Warning: No links found on ${currentUrl} - page may be empty or use non-standard navigation`);
+            }
             
             // Process links
             for (const link of links) {
@@ -132,11 +211,24 @@ class BrokenLinkService {
             }
             
           } catch (error) {
-            logger.warn(`Failed to scan page ${currentUrl}:`, error.message);
+            logger.error(`✗ Failed to scan page ${currentUrl}:`, error.message);
+            logger.error(`Error type: ${error.name}, Stack: ${error.stack?.split('\n')[0]}`);
+            // Don't count failed pages in pagesScanned
+            pagesScanned--;
           }
         }
         
         await page.close();
+        
+        logger.info(`Crawl complete: ${allLinks.size} unique links found from ${pagesScanned} pages`);
+        if (allLinks.size === 0) {
+          logger.warn(`WARNING: No links discovered during crawl of ${url}. This may indicate:`);
+          logger.warn(`  - Site uses JavaScript to render links (requires waitUntil: 'networkidle0')`);
+          logger.warn(`  - Site has no <a> elements with href attributes`);
+          logger.warn(`  - Site blocked the crawler/bot`);
+          logger.warn(`  - Navigation failed on all pages`);
+        }
+        
         return { allLinks, pagesScanned };
       });
       
@@ -229,121 +321,167 @@ class BrokenLinkService {
    */
   async checkLinkHealth(allLinks, followExternal) {
     const linkArray = Array.from(allLinks.values());
-    
-    // Check links in batches to avoid overwhelming server
-    const batchSize = 10;
-    for (let i = 0; i < linkArray.length; i += batchSize) {
-      const batch = linkArray.slice(i, i + batchSize);
-      
-      await Promise.all(batch.map(async (link) => {
-        // Skip external links if not following
-        if (!link.isInternal && !followExternal) {
-          link.status = 'not-checked';
-          link.checked = false;
-          return;
-        }
-        
-        try {
-          // Use HEAD request first, with manual redirect handling
-          const response = await fetch(link.url, { 
-            method: 'HEAD',
-            redirect: 'manual',
-            signal: AbortSignal.timeout(10000)
-          });
-          
-          link.statusCode = response.status;
-          link.checked = true;
-          
-          // Check for redirects and follow chain
-          if (response.status >= 300 && response.status < 400) {
-            link.status = 'redirect';
-            link.redirectType = response.status === 301 ? 'permanent' : 
-                               response.status === 302 ? 'temporary' :
-                               response.status === 307 ? 'temporary-307' :
-                               response.status === 308 ? 'permanent-308' : 'other';
-            
-            const redirectLocation = response.headers.get('location');
-            if (redirectLocation) {
-              // Resolve relative URLs
-              const absoluteUrl = new URL(redirectLocation, link.url).href;
-              link.redirectChain.push({
-                url: absoluteUrl,
-                statusCode: response.status,
-                type: link.redirectType
-              });
-              
-              // Follow redirect chain (up to 5 hops)
-              await this.followRedirectChain(link, absoluteUrl, 5);
-            }
-          } else if (response.status >= 200 && response.status < 300) {
-            link.status = 'ok';
-          } else if (response.status >= 400) {
-            link.status = 'broken';
+
+    // Separate links to check vs skip
+    const linksToCheck = [];
+    const linksToSkip = [];
+
+    for (const link of linkArray) {
+      if (!link.isInternal && !followExternal) {
+        linksToSkip.push(link);
+      } else {
+        linksToCheck.push(link);
+      }
+    }
+
+    // Mark skipped links
+    for (const link of linksToSkip) {
+      link.status = 'not-checked';
+      link.checked = false;
+    }
+
+    // Deduplicate URLs - check each unique URL only once
+    const urlToLinks = new Map();
+    for (const link of linksToCheck) {
+      if (!urlToLinks.has(link.url)) {
+        urlToLinks.set(link.url, []);
+      }
+      urlToLinks.get(link.url).push(link);
+    }
+
+    const uniqueUrls = Array.from(urlToLinks.keys());
+    logger.info(`Checking ${uniqueUrls.length} unique URLs (${linksToCheck.length} total links)`);
+
+    // Process all unique URLs with higher concurrency (50 concurrent requests)
+    const concurrencyLimit = 50;
+    const checkUrl = async (url) => {
+      const links = urlToLinks.get(url);
+      const primaryLink = links[0];
+
+      try {
+        const response = await fetch(url, {
+          method: 'HEAD',
+          redirect: 'manual',
+          signal: AbortSignal.timeout(5000)
+        });
+
+        const statusCode = response.status;
+        let status, redirectType = null;
+        const redirectChain = [];
+
+        if (response.status >= 300 && response.status < 400) {
+          status = 'redirect';
+          redirectType = response.status === 301 ? 'permanent' :
+                        response.status === 302 ? 'temporary' :
+                        response.status === 307 ? 'temporary-307' :
+                        response.status === 308 ? 'permanent-308' : 'other';
+
+          const redirectLocation = response.headers.get('location');
+          if (redirectLocation) {
+            const absoluteUrl = new URL(redirectLocation, url).href;
+            redirectChain.push({
+              url: absoluteUrl,
+              statusCode: response.status,
+              type: redirectType
+            });
+
+            // Follow redirect chain (collect all hops in parallel-friendly way)
+            await this.followRedirectChainFast(primaryLink, absoluteUrl, 5, redirectChain);
           }
-          
-        } catch (error) {
+        } else if (response.status >= 200 && response.status < 300) {
+          status = 'ok';
+        } else {
+          status = 'broken';
+        }
+
+        // Apply result to all links with this URL
+        for (const link of links) {
+          link.statusCode = statusCode;
+          link.status = status;
+          link.redirectType = redirectType;
+          link.redirectChain = [...redirectChain];
+          link.checked = true;
+          if (primaryLink.finalDestination) link.finalDestination = primaryLink.finalDestination;
+          if (primaryLink.finalStatusCode) link.finalStatusCode = primaryLink.finalStatusCode;
+          if (primaryLink.redirectLoop) link.redirectLoop = primaryLink.redirectLoop;
+          if (primaryLink.redirectEndsInError) link.redirectEndsInError = primaryLink.redirectEndsInError;
+        }
+
+      } catch (error) {
+        for (const link of links) {
           link.status = 'broken';
           link.statusCode = 0;
           link.error = error.message;
           link.checked = true;
         }
-      }));
+      }
+    };
+
+    // Process URLs with concurrency limit
+    for (let i = 0; i < uniqueUrls.length; i += concurrencyLimit) {
+      const batch = uniqueUrls.slice(i, i + concurrencyLimit);
+      await Promise.all(batch.map(checkUrl));
     }
   }
 
   /**
-   * Follow redirect chain to final destination
+   * Follow redirect chain faster (non-recursive)
    * @private
    */
-  async followRedirectChain(link, currentUrl, maxHops) {
-    if (maxHops <= 0) {
-      link.redirectLoop = true;
-      return;
-    }
-    
-    try {
-      const response = await fetch(currentUrl, {
-        method: 'HEAD',
-        redirect: 'manual',
-        signal: AbortSignal.timeout(5000)
-      });
-      
-      if (response.status >= 300 && response.status < 400) {
-        const nextLocation = response.headers.get('location');
-        if (nextLocation) {
+  async followRedirectChainFast(link, startUrl, maxHops, redirectChain) {
+    let currentUrl = startUrl;
+
+    for (let hop = 0; hop < maxHops; hop++) {
+      try {
+        const response = await fetch(currentUrl, {
+          method: 'HEAD',
+          redirect: 'manual',
+          signal: AbortSignal.timeout(3000)
+        });
+
+        if (response.status >= 300 && response.status < 400) {
+          const nextLocation = response.headers.get('location');
+          if (!nextLocation) break;
+
           const absoluteUrl = new URL(nextLocation, currentUrl).href;
-          
+
           // Check for redirect loop
-          if (link.redirectChain.some(r => r.url === absoluteUrl)) {
+          if (redirectChain.some(r => r.url === absoluteUrl)) {
             link.redirectLoop = true;
             return;
           }
-          
-          const redirectType = response.status === 301 ? 'permanent' : 
+
+          const redirectType = response.status === 301 ? 'permanent' :
                               response.status === 302 ? 'temporary' :
                               response.status === 307 ? 'temporary-307' :
                               response.status === 308 ? 'permanent-308' : 'other';
-          
-          link.redirectChain.push({
+
+          redirectChain.push({
             url: absoluteUrl,
             statusCode: response.status,
             type: redirectType
           });
-          
-          await this.followRedirectChain(link, absoluteUrl, maxHops - 1);
+
+          currentUrl = absoluteUrl;
+        } else if (response.status >= 200 && response.status < 300) {
+          link.finalDestination = currentUrl;
+          link.finalStatusCode = response.status;
+          return;
+        } else if (response.status >= 400) {
+          link.redirectEndsInError = true;
+          link.finalStatusCode = response.status;
+          return;
         }
-      } else if (response.status >= 200 && response.status < 300) {
-        // Final destination reached
-        link.finalDestination = currentUrl;
-        link.finalStatusCode = response.status;
-      } else if (response.status >= 400) {
-        // Redirect chain ends in error
+      } catch (error) {
         link.redirectEndsInError = true;
-        link.finalStatusCode = response.status;
+        link.redirectError = error.message;
+        return;
       }
-    } catch (error) {
-      link.redirectEndsInError = true;
-      link.redirectError = error.message;
+    }
+
+    // Max hops reached
+    if (redirectChain.length >= maxHops) {
+      link.redirectLoop = true;
     }
   }
 
@@ -383,7 +521,12 @@ class BrokenLinkService {
    */
   calculateLinkScore(categorized, anchorAnalysis, attributeAnalysis) {
     const total = categorized.broken.length + categorized.redirects.length + categorized.working.length + categorized.external.length;
-    if (total === 0) return 100;
+    
+    // If no links found, return 0 score (not 100)
+    if (total === 0) {
+      logger.warn('No links found during scan - this may indicate a crawling issue');
+      return 0;
+    }
     
     // Base score from link status
     const workingScore = (categorized.working.length / total) * 60;
@@ -420,6 +563,8 @@ class BrokenLinkService {
    * @private
    */
   getGrade(score) {
+    // Handle zero/null scores explicitly
+    if (!score || score === 0) return 'F';
     if (score >= 90) return 'A';
     if (score >= 70) return 'B';
     if (score >= 50) return 'C';
@@ -432,44 +577,85 @@ class BrokenLinkService {
    * @private
    */
   analyzeAnchorTexts(allLinks) {
+    // Use combined analysis for efficiency
+    return this.analyzeAllLinks(allLinks).anchorAnalysis;
+  }
+
+  /**
+   * Analyze link attributes for security and SEO
+   * @private
+   */
+  analyzeLinkAttributes(allLinks) {
+    // Use combined analysis for efficiency
+    return this.analyzeAllLinks(allLinks).attributeAnalysis;
+  }
+
+  /**
+   * Combined single-pass analysis for both anchor texts and link attributes
+   * @private
+   */
+  analyzeAllLinks(allLinks) {
+    // Return cached result if already computed for this allLinks instance
+    if (this._cachedAnalysis && this._cachedAnalysisKey === allLinks) {
+      return this._cachedAnalysis;
+    }
+
+    // Anchor text tracking
     const anchors = [];
     let genericCount = 0;
     let emptyCount = 0;
     let descriptiveCount = 0;
     let imageOnlyCount = 0;
     const anchorDistribution = {};
-    
+
+    // Attribute tracking
+    let nofollowCount = 0;
+    let sponsoredCount = 0;
+    let ugcCount = 0;
+    let newTabCount = 0;
+    let secureExternalLinks = 0;
+    let insecureExternalLinks = 0;
+    const securityIssues = [];
+
+    // Internal link tracking (single pass)
+    let followedInternal = 0;
+    let nofollowedInternal = 0;
+
+    // Single pass over all links
     for (const link of allLinks.values()) {
+      // === Anchor text analysis ===
       const text = (link.text || '').toLowerCase().trim();
       const effectiveText = text || link.ariaLabel || link.imageAlt || '';
-      
-      // Track anchor distribution
+
       if (effectiveText) {
         anchorDistribution[effectiveText] = (anchorDistribution[effectiveText] || 0) + 1;
       }
-      
-      // Categorize anchor quality
+
       if (!effectiveText || effectiveText.length === 0) {
         emptyCount++;
-        anchors.push({
-          url: link.url,
-          text: link.text,
-          category: 'empty',
-          issue: 'No anchor text, aria-label, or image alt',
-          foundOn: link.foundOn[0]
-        });
-      } else if (GENERIC_ANCHOR_TEXTS.includes(text)) {
+        if (anchors.length < 50) {
+          anchors.push({
+            url: link.url,
+            text: link.text,
+            category: 'empty',
+            issue: 'No anchor text, aria-label, or image alt',
+            foundOn: link.foundOn[0]
+          });
+        }
+      } else if (GENERIC_ANCHOR_TEXTS.has(text)) {
         genericCount++;
-        anchors.push({
-          url: link.url,
-          text: link.text,
-          category: 'generic',
-          issue: `Generic anchor text "${text}" provides poor SEO value`,
-          foundOn: link.foundOn[0]
-        });
+        if (anchors.length < 50) {
+          anchors.push({
+            url: link.url,
+            text: link.text,
+            category: 'generic',
+            issue: `Generic anchor text "${text}" provides poor SEO value`,
+            foundOn: link.foundOn[0]
+          });
+        }
       } else if (link.hasImage && !link.text) {
         imageOnlyCount++;
-        if (!link.imageAlt) {
+        if (!link.imageAlt && anchors.length < 50) {
           anchors.push({
             url: link.url,
             text: '[Image link]',
@@ -481,88 +667,110 @@ class BrokenLinkService {
       } else {
         descriptiveCount++;
       }
-    }
-    
-    // Find over-used anchors (potential over-optimization)
-    const overUsedAnchors = Object.entries(anchorDistribution)
-      .filter(([text, count]) => count > 5 && text.length > 3)
-      .sort((a, b) => b[1] - a[1])
-      .slice(0, 10)
-      .map(([text, count]) => ({ text, count }));
-    
-    return {
-      totalAnchors: allLinks.size,
-      genericCount,
-      emptyCount,
-      descriptiveCount,
-      imageOnlyCount,
-      overUsedAnchors,
-      issues: anchors.slice(0, 50), // Limit issues returned
-      qualityScore: roundTo((descriptiveCount / Math.max(1, allLinks.size)) * 100, 0)
-    };
-  }
 
-  /**
-   * Analyze link attributes for security and SEO
-   * @private
-   */
-  analyzeLinkAttributes(allLinks) {
-    let nofollowCount = 0;
-    let sponsoredCount = 0;
-    let ugcCount = 0;
-    let newTabCount = 0;
-    let secureExternalLinks = 0;
-    let insecureExternalLinks = 0;
-    const securityIssues = [];
-    
-    for (const link of allLinks.values()) {
-      // Count rel attributes
+      // === Attribute analysis ===
       if (link.isNoFollow) nofollowCount++;
       if (link.isSponsored) sponsoredCount++;
       if (link.isUGC) ugcCount++;
       if (link.opensInNewTab) newTabCount++;
-      
-      // Check security for external links opening in new tab
+
+      // Security check for external links
       if (!link.isInternal && link.opensInNewTab) {
         if (link.hasNoOpener || link.hasNoReferrer) {
           secureExternalLinks++;
         } else {
           insecureExternalLinks++;
-          securityIssues.push({
-            url: link.url,
-            issue: 'External link opens in new tab without rel="noopener" or rel="noreferrer"',
-            risk: 'Potential tabnabbing vulnerability',
-            fix: 'Add rel="noopener noreferrer" to the link',
-            foundOn: link.foundOn[0]
-          });
+          if (securityIssues.length < 20) {
+            securityIssues.push({
+              url: link.url,
+              issue: 'External link opens in new tab without rel="noopener" or rel="noreferrer"',
+              risk: 'Potential tabnabbing vulnerability',
+              fix: 'Add rel="noopener noreferrer" to the link',
+              foundOn: link.foundOn[0]
+            });
+          }
         }
       } else if (!link.isInternal && !link.opensInNewTab) {
-        // External link not opening in new tab - also a consideration
-        secureExternalLinks++; // Not a security issue if same tab
+        secureExternalLinks++;
+      }
+
+      // Internal link flow (counted in same pass)
+      if (link.isInternal) {
+        if (link.isNoFollow) {
+          nofollowedInternal++;
+        } else {
+          followedInternal++;
+        }
       }
     }
-    
-    // Calculate followed vs nofollowed ratio for internal links
-    const internalLinks = Array.from(allLinks.values()).filter(l => l.isInternal);
-    const followedInternal = internalLinks.filter(l => !l.isNoFollow).length;
-    const nofollowedInternal = internalLinks.filter(l => l.isNoFollow).length;
-    
-    return {
-      totalLinks: allLinks.size,
-      nofollowCount,
-      sponsoredCount,
-      ugcCount,
-      newTabCount,
-      secureExternalLinks,
-      insecureExternalLinks,
-      securityIssues: securityIssues.slice(0, 20),
-      internalLinkFlow: {
-        followed: followedInternal,
-        nofollowed: nofollowedInternal,
-        ratio: followedInternal > 0 ?
-          formatNumber((followedInternal / (followedInternal + nofollowedInternal)) * 100, 1) + '%' : '100%'
+
+    // Find over-used anchors efficiently (use partial sort for top 10)
+    const anchorEntries = Object.entries(anchorDistribution)
+      .filter(([text, count]) => count > 5 && text.length > 3);
+
+    // Simple approach: only sort if we have reasonable number of entries
+    const overUsedAnchors = anchorEntries.length <= 100
+      ? anchorEntries.sort((a, b) => b[1] - a[1]).slice(0, 10).map(([text, count]) => ({ text, count }))
+      : this.getTopN(anchorEntries, 10).map(([text, count]) => ({ text, count }));
+
+    const result = {
+      anchorAnalysis: {
+        totalAnchors: allLinks.size,
+        genericCount,
+        emptyCount,
+        descriptiveCount,
+        imageOnlyCount,
+        overUsedAnchors,
+        issues: anchors,
+        qualityScore: roundTo((descriptiveCount / Math.max(1, allLinks.size)) * 100, 0)
+      },
+      attributeAnalysis: {
+        totalLinks: allLinks.size,
+        nofollowCount,
+        sponsoredCount,
+        ugcCount,
+        newTabCount,
+        secureExternalLinks,
+        insecureExternalLinks,
+        securityIssues,
+        internalLinkFlow: {
+          followed: followedInternal,
+          nofollowed: nofollowedInternal,
+          ratio: followedInternal > 0
+            ? formatNumber((followedInternal / (followedInternal + nofollowedInternal)) * 100, 1) + '%'
+            : '100%'
+        }
       }
     };
+
+    // Cache the result
+    this._cachedAnalysis = result;
+    this._cachedAnalysisKey = allLinks;
+
+    return result;
+  }
+
+  /**
+   * Get top N entries by count without full sort (for large arrays)
+   * @private
+   */
+  getTopN(entries, n) {
+    if (entries.length <= n) return entries.sort((a, b) => b[1] - a[1]);
+
+    // Use partial selection for better performance on large arrays
+    const result = [];
+    const copy = [...entries];
+
+    for (let i = 0; i < n && copy.length > 0; i++) {
+      let maxIdx = 0;
+      for (let j = 1; j < copy.length; j++) {
+        if (copy[j][1] > copy[maxIdx][1]) maxIdx = j;
+      }
+      result.push(copy[maxIdx]);
+      copy.splice(maxIdx, 1);
+    }
+
+    return result;
   }
 
   /**

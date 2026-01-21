@@ -298,19 +298,39 @@
     );
     const preferredAnchor = headerEl || firstNonScreenshotChild;
 
-    // If the screenshot card already exists but is above the report header, move it below.
+    const encodedId = encodeURIComponent(reportId);
+    let screenshotUrl = (
+      document.body.getAttribute('data-sm-screenshot-url') ||
+      `/reports/${encodedId}/screenshot.jpg`
+    );
+    
+    // Add cache-busting parameter to ensure fresh screenshots
+    const cacheBuster = `?t=${Date.now()}`;
+    if (!screenshotUrl.includes('?')) {
+      screenshotUrl += cacheBuster;
+    }
+
+    // If the screenshot card already exists, update its URL and reposition if needed
     if (existingCard) {
+      // Update the screenshot URL in existing card
+      const img = existingCard.querySelector('.report-shell__screenshot');
+      const link = existingCard.querySelector('.report-shell__screenshot-link');
+      const badge = existingCard.querySelector('.report-shell__badge');
+      if (img && img.src !== screenshotUrl) {
+        img.src = screenshotUrl;
+      }
+      if (link && link.href !== screenshotUrl) {
+        link.href = screenshotUrl;
+      }
+      if (badge && badge.href !== screenshotUrl) {
+        badge.href = screenshotUrl;
+      }
+      // Reposition if needed
       if (preferredAnchor && existingCard.compareDocumentPosition(preferredAnchor) & Node.DOCUMENT_POSITION_FOLLOWING) {
         preferredAnchor.insertAdjacentElement('afterend', existingCard);
       }
       return;
     }
-
-    const encodedId = encodeURIComponent(reportId);
-    const screenshotUrl = (
-      document.body.getAttribute('data-sm-screenshot-url') ||
-      `/reports/${encodedId}/screenshot.jpg`
-    );
 
     const shell = document.createElement('div');
     shell.className = 'report-shell';

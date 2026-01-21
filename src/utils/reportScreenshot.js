@@ -30,14 +30,19 @@ async function ensureReportScreenshot({ url, reportId, requestId }) {
     return null;
   }
 
+  logger.info('Screenshot request', { url, reportId, requestId });
+
   const reportsDir = getReportsDirAbsolute();
   const reportDir = path.join(reportsDir, reportId);
   const screenshotPath = path.join(reportDir, 'screenshot.jpg');
 
   // If already present, return URL immediately.
   if (await fileExists(screenshotPath)) {
+    logger.info('Screenshot already exists, returning cached', { url, reportId });
     return `/reports/${encodeURIComponent(reportId)}/screenshot.jpg`;
   }
+
+  logger.info('Capturing new screenshot', { url, reportId });
 
   try {
     await fs.mkdir(reportDir, { recursive: true });

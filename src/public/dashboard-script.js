@@ -401,11 +401,21 @@ function displayDashboard(data) {
 
   // Create summary section - NEW SIMPLIFIED STRUCTURE
   const summaryHTML = `
-    <div class="section" style="border-left: 4px solid ${getScoreColor(overallScore)};">
-      <h2 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600; margin: 0 0 1.25rem 0;">Results for ${displayDomain}</h2>
-      
+    <div class="section dashboard-animate-in" style="border-left: 4px solid ${getScoreColor(overallScore)};">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin: 0 0 1.25rem 0;">
+        <h2 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600; margin: 0;">Results for ${displayDomain}</h2>
+        <button onclick="window.print()" title="Print report" class="text-btn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          Print
+        </button>
+      </div>
+
       <!-- ROW 1: Site Health Score + Summary Text -->
-      <div style="
+      <div class="dashboard-animate-in dashboard-animate-in-delay-1" style="
         display: flex;
         align-items: center;
         gap: 2rem;
@@ -414,15 +424,25 @@ function displayDashboard(data) {
         border: 1px solid ${getScoreColor(overallScore)}40;
         border-radius: 12px;
         margin-bottom: 1.5rem;
+        backdrop-filter: blur(8px);
       ">
         <!-- Large Overall Health Circle -->
         <div style="text-align: center; flex-shrink: 0;">
           <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Site health score</div>
-          <svg width="140" height="140" viewBox="0 0 140 140">
+          <svg width="140" height="140" viewBox="0 0 140 140" style="filter: drop-shadow(0 4px 12px ${getScoreColor(overallScore)}40);">
             <circle class="score-ring-bg" cx="70" cy="70" r="58" fill="var(--score-ring-fill, rgba(0,0,0,0.3))" stroke="var(--score-ring-stroke, rgba(255,255,255,0.1))" stroke-width="10" />
-            <circle cx="70" cy="70" r="58" fill="none" stroke="${getScoreColor(overallScore)}" stroke-width="10" stroke-linecap="round"
-              stroke-dasharray="${(overallScore / 100) * 364.42} 364.42" transform="rotate(-90 70 70)" />
-            <text x="70" y="70" text-anchor="middle" dy="0.35em" font-size="2.5rem" font-weight="bold" class="dial-score-text">${overallScore}</text>
+            <circle
+              class="score-gauge-animated"
+              cx="70" cy="70" r="58"
+              fill="none"
+              stroke="${getScoreColor(overallScore)}"
+              stroke-width="10"
+              stroke-linecap="round"
+              stroke-dasharray="${(overallScore / 100) * 364.42} 364.42"
+              transform="rotate(-90 70 70)"
+              style="filter: drop-shadow(0 0 8px ${getScoreColor(overallScore)}80);"
+            />
+            <text x="70" y="70" text-anchor="middle" dy="0.35em" font-size="2.5rem" font-weight="bold" class="dial-score-text score-text-animated" fill="${getScoreColor(overallScore)}">${overallScore}</text>
           </svg>
           <div style="color: ${getScoreColor(overallScore)}; font-weight: 700; font-size: 1rem; margin-top: 0.5rem;">${getStatus(overallScore)}</div>
         </div>
@@ -439,7 +459,7 @@ function displayDashboard(data) {
       </div>
       
       <!-- ROW 2: Category Breakdown (larger dials) -->
-      <div style="
+      <div class="dashboard-animate-in dashboard-animate-in-delay-2" style="
         display: grid;
         grid-template-columns: repeat(5, 1fr);
         gap: 1rem;
@@ -449,15 +469,15 @@ function displayDashboard(data) {
         border-radius: 12px;
         margin-bottom: 1rem;
       ">
-        ${createMiniScore('Performance', scores.performance)}
-        ${createMiniScore('SEO', scores.seo)}
-        ${createMiniScore('Accessibility', scores.accessibility)}
-        ${createMiniScore('Security', scores.security)}
-        ${createMiniScore('Fonts', scores.font)}
+        ${createMiniScore('Performance', scores.performance, 0)}
+        ${createMiniScore('SEO', scores.seo, 1)}
+        ${createMiniScore('Accessibility', scores.accessibility, 2)}
+        ${createMiniScore('Security', scores.security, 3)}
+        ${createMiniScore('Fonts', scores.font, 4)}
       </div>
       
       <!-- ROW 3: Insights -->
-      <div style="
+      <div class="dashboard-animate-in dashboard-animate-in-delay-3" style="
         padding: 1rem 1.25rem;
         background: rgba(255,255,255,0.02);
         border: 1px solid rgba(255,255,255,0.08);
@@ -793,15 +813,30 @@ function createCategoryLink(title, description, link, scores, icon) {
 
 /**
  * Create mini score display for compact category breakdown
+ * Enhanced with animations and color-coded scores
  */
-function createMiniScore(name, scores) {
+function createMiniScore(name, scores, index = 0) {
   const avgScore = scores?.desktop !== null && scores?.mobile !== null
     ? Math.round((scores.desktop + scores.mobile) / 2)
     : (scores?.desktop || scores?.mobile || null);
-  
+
+  // Get color class based on score
+  const getScoreColorClass = (score) => {
+    if (score >= 80) return 'score-excellent';
+    if (score >= 50) return 'score-warning';
+    return 'score-poor';
+  };
+
+  // Get glow color for hover effect
+  const getGlowColor = (score) => {
+    if (score >= 80) return 'rgba(16, 185, 129, 0.5)';
+    if (score >= 50) return 'rgba(245, 158, 11, 0.5)';
+    return 'rgba(239, 68, 68, 0.5)';
+  };
+
   if (avgScore === null) {
     return `
-      <div style="text-align: center; opacity: 0.5;">
+      <div class="mini-score-container mini-score-${index}" style="text-align: center; opacity: 0.5;">
         <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600;">${name}</div>
         <svg width="100" height="100" viewBox="0 0 100 100">
           <circle class="score-ring-bg" cx="50" cy="50" r="40" fill="var(--score-ring-fill, none)" stroke="var(--score-ring-track, rgba(100,100,100,0.2))" stroke-width="6" stroke-dasharray="5 5" />
@@ -810,22 +845,28 @@ function createMiniScore(name, scores) {
       </div>
     `;
   }
-  
+
+  const colorClass = getScoreColorClass(avgScore);
+  const glowColor = getGlowColor(avgScore);
+  const scoreColor = getScoreColor(avgScore);
+
   return `
-    <div style="text-align: center;">
+    <div class="mini-score-container mini-score-${index}" style="text-align: center;">
       <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600;">${name}</div>
-      <svg width="100" height="100" viewBox="0 0 100 100">
+      <svg width="100" height="100" viewBox="0 0 100 100" style="filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1));">
         <circle class="score-ring-bg" cx="50" cy="50" r="40" fill="var(--score-ring-fill, none)" stroke="var(--score-ring-track, rgba(100,100,100,0.2))" stroke-width="6" />
-        <circle 
-          cx="50" cy="50" r="40" 
-          fill="none" 
-          stroke="${getScoreColor(avgScore)}" 
-          stroke-width="6" 
+        <circle
+          class="score-gauge-mini-animated"
+          cx="50" cy="50" r="40"
+          fill="none"
+          stroke="${scoreColor}"
+          stroke-width="6"
           stroke-linecap="round"
           stroke-dasharray="${(avgScore / 100) * 251.33} 251.33"
           transform="rotate(-90 50 50)"
+          style="filter: drop-shadow(0 0 6px ${glowColor});"
         />
-        <text x="50" y="50" text-anchor="middle" dy="0.35em" font-size="1.75rem" font-weight="700" fill="${getScoreColor(avgScore)}">${avgScore}</text>
+        <text x="50" y="50" text-anchor="middle" dy="0.35em" font-size="1.75rem" font-weight="700" fill="${scoreColor}">${avgScore}</text>
       </svg>
     </div>
   `;
@@ -883,6 +924,8 @@ function generateInsights(scores, data) {
     } else if (perfScore < 50) {
       insights.push('🔴 <strong>Critical performance issue</strong> — Page speed is severely impacting user experience and SEO rankings.');
     }
+  } else {
+    insights.push('⚡ <strong>Performance not scanned yet</strong> — <a href="/performance-hub.html" style="color: var(--accent-primary);">Run performance scan</a> for detailed analysis.');
   }
   
   // SEO insights
@@ -907,6 +950,8 @@ function generateInsights(scores, data) {
     } else if (a11yScore < 75) {
       insights.push('♿ <strong>Accessibility issues found</strong> — Some users may have difficulty using your site.');
     }
+  } else {
+    insights.push('♿ <strong>Accessibility not scanned yet</strong> — <a href="/accessibility-analyzer.html" style="color: var(--accent-primary);">Run accessibility scan</a> for detailed analysis.');
   }
   
   // Security insights
@@ -918,6 +963,8 @@ function generateInsights(scores, data) {
     } else if (secScore < 75) {
       insights.push('🔒 <strong>Security vulnerabilities detected</strong> — Missing headers or SSL issues need attention.');
     }
+  } else {
+    insights.push('🔒 <strong>Security not scanned yet</strong> — <a href="/security-analyzer.html" style="color: var(--accent-primary);">Run security scan</a> for detailed analysis.');
   }
   
   // Font insights
@@ -929,6 +976,8 @@ function generateInsights(scores, data) {
     } else if (fontScore < 75) {
       insights.push('🔤 <strong>Font optimization needed</strong> — Too many fonts or poor loading strategy detected.');
     }
+  } else {
+    insights.push('🔤 <strong>Fonts not scanned yet</strong> — <a href="/enhanced-fonts.html" style="color: var(--accent-primary);">Run font scan</a> for detailed analysis.');
   }
   
   // Limit to 5 insights

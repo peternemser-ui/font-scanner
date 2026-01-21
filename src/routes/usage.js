@@ -76,6 +76,46 @@ router.get('/stats', requireAuth, async (req, res) => {
 });
 
 /**
+ * GET /api/usage/recent-scans
+ * Get user's recent scans for account page
+ */
+router.get('/recent-scans', requireAuth, async (req, res) => {
+  try {
+    const db = getDatabase();
+    const userId = req.user.id;
+    const limit = Math.min(parseInt(req.query.limit) || 8, 25);
+
+    // Get recent scans for this user
+    const scans = await db.all(
+      `SELECT id, target_url, status, created_at, finished_at
+       FROM scans
+       WHERE user_id = ?
+       ORDER BY created_at DESC
+       LIMIT ?`,
+      [userId, limit]
+    );
+
+    res.json({
+      success: true,
+      scans: scans.map(scan => ({
+        id: scan.id,
+        siteUrl: scan.target_url,
+        analyzerType: 'full',
+        status: scan.status || 'completed',
+        createdAt: scan.created_at,
+        finishedAt: scan.finished_at
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching recent scans:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch recent scans'
+    });
+  }
+});
+
+/**
  * POST /api/usage/track-scan
  * Track a scan for usage limits (called after scan starts)
  */

@@ -171,7 +171,7 @@
       .scan-form .url-input:focus {
         outline: none;
         border-color: var(--accent-primary, #00ff41);
-        box-shadow: 0 0 0 3px rgba(0,255,65,0.15);
+        box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15);
       }
 
       .scan-form .scan-button {
@@ -193,7 +193,7 @@
 
       .scan-form .scan-button:focus {
         outline: none;
-        box-shadow: 0 0 0 3px rgba(0,255,65,0.3);
+        box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.3);
       }
 
       .scan-form .scan-button:disabled {
@@ -206,6 +206,96 @@
         font-size: 0.8rem;
         color: var(--text-muted, #666);
         line-height: 1.5;
+      }
+
+      /* Enhanced Scan Card Styling */
+      .scan-card-enhanced {
+        position: relative;
+        background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.08) 0%, rgba(var(--accent-primary-rgb), 0.02) 100%);
+        border: 1px solid rgba(var(--accent-primary-rgb), 0.2);
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
+      }
+
+      .scan-card-enhanced::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, var(--accent-primary), transparent);
+        opacity: 0.6;
+      }
+
+      .scan-card-enhanced:hover {
+        border-color: rgba(var(--accent-primary-rgb), 0.4);
+        box-shadow: 0 8px 32px rgba(var(--accent-primary-rgb), 0.15);
+      }
+
+      .scan-card-enhanced:focus-within {
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15);
+      }
+
+      /* Enhanced Input Field */
+      .scan-card-enhanced .input {
+        background: rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        transition: all 0.2s ease;
+      }
+
+      .scan-card-enhanced .input:focus {
+        background: rgba(0, 0, 0, 0.4);
+        border-color: var(--accent-primary);
+        box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15), 0 0 20px rgba(var(--accent-primary-rgb), 0.1);
+      }
+
+      /* Enhanced Button with Shine Effect */
+      .scan-card-enhanced .btn-primary {
+        position: relative;
+        overflow: hidden;
+        background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-primary-dark, var(--accent-primary)) 100%);
+        box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.3);
+        transition: all 0.2s ease;
+      }
+
+      .scan-card-enhanced .btn-primary::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%);
+        transition: left 0.5s ease;
+      }
+
+      .scan-card-enhanced .btn-primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(var(--accent-primary-rgb), 0.4);
+      }
+
+      .scan-card-enhanced .btn-primary:hover::after {
+        left: 100%;
+      }
+
+      .scan-card-enhanced .btn-primary:active {
+        transform: translateY(0);
+      }
+
+      /* Light theme adjustments */
+      body.white-theme .scan-card-enhanced {
+        background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.06) 0%, rgba(var(--accent-primary-rgb), 0.02) 100%);
+      }
+
+      body.white-theme .scan-card-enhanced .input {
+        background: rgba(255, 255, 255, 0.8);
+        border-color: rgba(0, 0, 0, 0.15);
+      }
+
+      body.white-theme .scan-card-enhanced .input:focus {
+        background: rgba(255, 255, 255, 1);
       }
 
       .scan-form .input-help code {
@@ -362,13 +452,13 @@
       <!-- Page Header -->
       <header class="page-header">
         <h1 class="page-header__title">Dashboard</h1>
-        <p class="page-header__subtitle">Analyze any website for performance, SEO, accessibility, and security issues.</p>
+        <p class="page-header__subtitle">Scan a site to find issues across performance, SEO, accessibility, and security. When you need something shareable, unlock a report with prioritized recommendations and fixes.</p>
       </header>
 
 
 
       <!-- Scan a Site Card -->
-      <section class="card">
+      <section class="card scan-card-enhanced">
         <h2 class="card__title">Scan a site</h2>
         <div class="form-row">
           <label for="dashboardUrlInput" class="form-row__label">Website URL</label>
@@ -383,11 +473,13 @@
               required
               aria-required="true"
             />
-            <button id="dashboardAnalyzeButton" type="button" class="btn btn-primary" aria-label="Run audit on entered URL">
-              Run audit
+            <button id="dashboardAnalyzeButton" type="button" class="btn btn-primary" aria-label="Analyze the entered URL">
+              Analyze
             </button>
           </div>
           <p id="urlHelp" class="helper-text">
+            <strong>How it works:</strong> Run a scan to see key issues and next steps. If you want a client-ready export, you can unlock a report with recommendations and fixes.
+            <br />
             <strong>Note:</strong> Some sites block automated scans. Try your own sites or <code>example.com</code>.
           </p>
         </div>
@@ -416,7 +508,7 @@
               </span>
               <span class="faq-item__chev" aria-hidden="true">›</span>
             </summary>
-            <div class="faq-item__a">Site Mechanic is a set of website diagnostics modules (Speed & UX, SEO, Accessibility, Security, Fonts &amp; Design, Hosting, and more). Paste a URL, run a scan, and get prioritized issues plus next-step recommendations.</div>
+            <div class="faq-item__a">Site Mechanic is a set of website diagnostics modules (Speed &amp; UX, SEO, Accessibility, Security, Fonts &amp; Design, Hosting, and more). Paste a URL, run a scan, and get prioritized issues. If you need a shareable outcome, you can unlock a report with recommendations and fixes.</div>
           </details>
 
           <details class="faq-item">
@@ -427,7 +519,7 @@
               </span>
               <span class="faq-item__chev" aria-hidden="true">›</span>
             </summary>
-            <div class="faq-item__a">No. Most scans can be run without signing in. If you choose a paid report/export, you may be prompted to sign in or purchase credits depending on the tool.</div>
+            <div class="faq-item__a">No. Most scans can be run without signing in. If you choose to unlock a paid report or export, you may be prompted to sign in so we can associate the purchase with your account.</div>
           </details>
 
           <details class="faq-item">

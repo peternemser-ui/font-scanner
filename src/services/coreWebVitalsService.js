@@ -55,8 +55,8 @@ class CoreWebVitalsService {
           inp: {
             value: fidValue,
             displayValue: `${formatNumber(fidValue, 0)}ms`,
-            score: this.calculateMetricScore(fidValue, 'fid'),
-            rating: this.getCWVRating(fidValue, 'fid'),
+            score: this.calculateMetricScore(fidValue, 'inp'),
+            rating: this.getCWVRating(fidValue, 'inp'),
             description: 'Responsiveness to user interactions',
             tbt: {
               value: 0,
@@ -102,8 +102,8 @@ class CoreWebVitalsService {
           inp: {
             value: fidValue + 20, // Mobile typically 20ms slower
             displayValue: `${formatNumber(fidValue + 20, 0)}ms`,
-            score: this.calculateMetricScore(fidValue + 20, 'fid'),
-            rating: this.getCWVRating(fidValue + 20, 'fid'),
+            score: this.calculateMetricScore(fidValue + 20, 'inp'),
+            rating: this.getCWVRating(fidValue + 20, 'inp'),
             description: 'Responsiveness to user interactions',
             tbt: {
               value: 0,
@@ -180,6 +180,12 @@ class CoreWebVitalsService {
         if (value <= 100) return 100;
         if (value <= 300) return roundTo(100 - ((value - 100) / 200) * 50, 0);
         return Math.max(0, 50 - roundTo(((value - 300) / 200) * 50, 0));
+
+      case 'inp':
+        // INP (Interaction to Next Paint) thresholds: ≤200ms good, ≤500ms needs improvement
+        if (value <= 200) return 100;
+        if (value <= 500) return roundTo(100 - ((value - 200) / 300) * 50, 0);
+        return Math.max(0, 50 - roundTo(((value - 500) / 500) * 50, 0));
 
       case 'cls':
         if (value <= 0.1) return 100;

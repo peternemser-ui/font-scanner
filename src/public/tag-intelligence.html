@@ -123,18 +123,7 @@
       .tag-card:hover {
         border-color: rgba(var(--accent-primary-rgb), 0.3);
       }
-      
-      /* SEO-style accordion overrides */
-      .accordion-header:hover {
-        background: rgba(255, 255, 255, 0.06) !important;
-      }
-      .accordion-header.active {
-        background: rgba(255, 255, 255, 0.05) !important;
-      }
-      .accordion-header.active .accordion-toggle {
-        color: var(--accent-primary);
-      }
-      
+
       /* Issue severity */
       .severity-high { color: #ef4444; }
       .severity-warning { color: #f59e0b; }
@@ -272,32 +261,6 @@
             <button id="analyzeButton" class="btn btn-primary" aria-label="Start tracking and analytics analysis">ANALYZE TAGS</button>
           </div>
         
-          <!-- Options Panel -->
-          <div class="options-panel" style="margin-top: 1rem;">
-            <!-- Best-in-Class Toggle -->
-            <div class="scan-options" style="margin-bottom: 1rem;">
-              <label class="toggle-container">
-                <input type="checkbox" id="comprehensiveScan" />
-                <span class="toggle-slider"></span>
-                <span class="toggle-label">Comprehensive Tag Analysis</span>
-              </label>
-              <p class="toggle-description">
-                Deep analysis including performance impact, consent compliance, and data layer inspection
-              </p>
-            </div>
-            
-            <label>
-              <input type="checkbox" id="multiPageOption" />
-              Multi-page scan (crawl multiple pages)
-            </label>
-            <div id="multiPageOptions" style="display: none; margin-left: 24px; margin-top: 8px;">
-              <label>
-                Max pages: 
-                <input type="number" id="maxPages" value="5" min="1" max="10" />
-              </label>
-            </div>
-          </div>
-        
           <!-- Info Banner -->
           <p class="helper-text" style="margin-top: 1rem;">
             <strong>Tracking & Analytics:</strong> Detects GTM, GA4, Universal Analytics, Meta Pixel, TikTok Pixel, LinkedIn Insight, 
@@ -335,6 +298,13 @@
     <!-- Report UI Components -->
     <script src="/js/report-ui.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
+    <!-- Credits + paywall UI (ensures PaidUnlockCard states render) -->
+    <script src="/assets/js/ui.js"></script>
+
+    <!-- Shared report shell + billing/entitlements (new canonical paths) -->
+    <script src="/assets/js/report-shell.js"></script>
+    <script src="/assets/js/billing.js"></script>
+    <script src="/assets/js/entitlements.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
     <script src="/js/components/ProReportBlock.js"></script>

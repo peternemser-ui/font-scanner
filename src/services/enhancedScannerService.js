@@ -413,6 +413,16 @@ class EnhancedScannerService {
       } catch (cleanupError) {
         logger.warn('Lighthouse cleanup error:', cleanupError);
       }
+      
+      // Hint garbage collection after heavy Lighthouse operations
+      if (global.gc) {
+        try {
+          global.gc();
+          logger.debug('GC triggered after Lighthouse cleanup');
+        } catch (gcError) {
+          // Ignore GC errors
+        }
+      }
     }
   }
 

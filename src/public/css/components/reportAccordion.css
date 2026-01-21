@@ -55,6 +55,35 @@
   font-weight: 700;
   letter-spacing: 0.01em;
 }
+/* Score color variants */
+.report-scope .report-accordion__score-badge--good {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #10b981;
+}
+.report-scope .report-accordion__score-badge--warning {
+  background: rgba(245, 158, 11, 0.15);
+  border-color: rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+}
+.report-scope .report-accordion__score-badge--poor {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.4);
+  color: #ef4444;
+}
+/* Light theme adjustments */
+.white-theme .report-scope .report-accordion__score-badge--good {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+.white-theme .report-scope .report-accordion__score-badge--warning {
+  background: rgba(245, 158, 11, 0.1);
+  color: #d97706;
+}
+.white-theme .report-scope .report-accordion__score-badge--poor {
+  background: rgba(239, 68, 68, 0.1);
+  color: #dc2626;
+}
 .report-scope .report-accordion__chevron {
   font-size: 0.85rem;
   color: var(--text-muted, #9ca3af);

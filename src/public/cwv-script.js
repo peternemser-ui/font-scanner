@@ -267,8 +267,8 @@ function displayResults(data) {
       </div>
     `, null)}
 
-    <!-- Recommendations -->
-    ${recommendations.length > 0 ? createCWVAccordionSection('recommendations', '💡', 'Recommendations', `
+    <!-- Report and Recommendations (Pro) -->
+    ${recommendations.length > 0 ? createCWVAccordionSection('report-recommendations', '📋', 'Report and Recommendations <span class="pro-pill">PRO</span>', `
       <div style="display: grid; gap: 1rem; padding: 1rem 0;">
         ${recommendations.map(rec => `
           <div style="

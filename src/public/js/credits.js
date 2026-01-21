@@ -11,6 +11,52 @@
  * - sm_entitlements: Optional JWT tokens for signed proof
  */
 
+/**
+ * Demo domains that get free pro reports (for product review/testing)
+ * Add domains here to auto-unlock all pro content for those sites
+ */
+const DEMO_DOMAINS = ['vail.com', 'www.vail.com'];
+
+/**
+ * Check if current URL input matches a demo domain
+ * @returns {boolean} True if analyzing a demo domain
+ */
+function isDemoDomain() {
+  let hostname = null;
+
+  // Try URL input fields first
+  try {
+    const urlInput = document.getElementById('url') || document.getElementById('urlInput');
+    if (urlInput && urlInput.value) {
+      const url = urlInput.value.startsWith('http') ? urlInput.value : 'https://' + urlInput.value;
+      hostname = new URL(url).hostname.toLowerCase();
+    }
+  } catch (e) {}
+
+  // Fallback to ScanContext if available
+  if (!hostname && window.ScanContext && typeof window.ScanContext.getDomain === 'function') {
+    try {
+      const domain = window.ScanContext.getDomain();
+      if (domain) {
+        hostname = domain.toLowerCase();
+      }
+    } catch (e) {}
+  }
+
+  // Fallback to ProAccess.getCurrentDomain if available
+  if (!hostname && window.ProAccess && typeof window.ProAccess.getCurrentDomain === 'function') {
+    try {
+      const domain = window.ProAccess.getCurrentDomain();
+      if (domain) {
+        hostname = domain.toLowerCase();
+      }
+    } catch (e) {}
+  }
+
+  if (!hostname) return false;
+  return DEMO_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+}
+
 if (window.CreditsManager) {
   // CreditsManager already loaded (e.g. from /assets/js/ui.js)
   // Keep this file for backwards compatibility and polyfill missing helpers.
@@ -133,6 +179,8 @@ if (window.CreditsManager) {
     if (typeof manager.isUnlocked !== 'function') {
       manager.isUnlocked = function isUnlocked(reportId) {
         if (!reportId) return false;
+        // Auto-unlock for demo domains
+        if (isDemoDomain()) return true;
         const map = getUnlockedMap();
         return !!map[reportId];
       };
@@ -297,6 +345,8 @@ window.CreditsManager = (function() {
 
   function isUnlocked(reportId) {
     if (!reportId) return false;
+    // Auto-unlock for demo domains
+    if (isDemoDomain()) return true;
     const map = getUnlockedMap();
     return !!map[reportId];
   }

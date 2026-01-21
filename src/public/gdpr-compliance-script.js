@@ -137,176 +137,590 @@ function displayResults(data) {
   const trackerScore = data.compliance?.trackers?.count === 0 ? 100 : Math.max(0, 100 - data.compliance?.trackers?.count * 10);
   const consentQuality = data.consentQuality || { score: 0 };
 
-  results.innerHTML = `
-    <div class="section">
-      <h2>[PRIVACY_COMPLIANCE_ANALYSIS]</h2>
-      <p>>> url: ${data.url || 'N/A'}</p>
-      <p>>> timestamp: ${new Date(data.timestamp).toLocaleString()}</p>
-      
-      <h3 style="color: var(--accent-primary); margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">>> Compliance Summary</h3>
+  // Generate report ID for pro features
+  const url = document.getElementById('url')?.value || '';
+  const scanStartedAt = data.scanStartedAt || window.SM_SCAN_STARTED_AT || new Date().toISOString();
+  const analyzerKey = window.SM_ANALYZER_KEY || 'gdpr-compliance';
 
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; margin: 2rem 0;">
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Overall Compliance</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
-            <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(score)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(score / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
-            <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(score)}, 0 0 30px rgba(0,0,0,0.6);">${score}</text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${getScoreColor(score)}; font-weight: 600; font-size: 1.1rem;">${getGrade(score)}</div>
+  let reportId = null;
+  if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
+    reportId = window.ReportUI.makeReportId({
+      analyzerKey,
+      normalizedUrl: data.url || url,
+      startedAtISO: scanStartedAt
+    });
+  } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
+    reportId = window.ReportUI.computeReportId(data.url || url, scanStartedAt, analyzerKey);
+  } else {
+    reportId = data.reportId || `gdpr_${btoa(url).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16)}`;
+  }
+
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    results.setAttribute('data-sm-report-id', reportId);
+  }
+
+  // Set screenshot URL from API response
+  const screenshotUrl = data.screenshotUrl || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+  if (screenshotUrl) {
+    document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+  }
+
+  // Check if report is unlocked
+  const isUnlocked = !!(
+    reportId &&
+    window.CreditsManager &&
+    (
+      (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+      (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+    )
+  );
+
+  // Calculate legal pages score
+  const legalPagesScore = (data.compliance?.privacyPolicy?.hasLink ? 40 : 0) +
+    (data.compliance?.cookiePolicy?.hasLink ? 30 : 0) +
+    (data.compliance?.termsOfService?.hasLink ? 30 : 0);
+
+  // Calculate data rights score
+  const dataRightsScore = (data.compliance?.dataSubjectRights?.hasInfo ? 60 : 0) +
+    (data.compliance?.dataSubjectRights?.hasDPOContact ? 40 : 0);
+
+  // Build summary donuts (following SEO pattern - use short, consistent labels)
+  const summary = [
+    { label: 'Overall', score: score },
+    { label: 'Consent', score: consentScore },
+    { label: 'Privacy', score: privacyScore },
+    { label: 'Trackers', score: trackerScore },
+    { label: 'Legal', score: legalPagesScore },
+    { label: 'Rights', score: dataRightsScore }
+  ];
+
+  // Build accordion sections array (following SEO pattern)
+  const sections = [
+    // Cookie Consent Quality Accordion
+    {
+      id: 'consent-quality',
+      title: 'Cookie Consent Quality',
+      scoreTextRight: `${Math.round(consentQuality.score)}/100`,
+      contentHTML: renderConsentQualityContent(data)
+    },
+    // Cookie Analysis Accordion
+    {
+      id: 'cookie-analysis',
+      title: 'Cookie Analysis',
+      scoreTextRight: `${Math.round(cookieScore)}/100`,
+      contentHTML: renderCookieAnalysisContent(data.compliance?.cookies)
+    },
+    // Tracker Analysis Accordion
+    data.compliance?.trackers ? {
+      id: 'tracker-analysis',
+      title: 'Tracker Analysis',
+      scoreTextRight: `${Math.round(trackerScore)}/100`,
+      contentHTML: renderTrackerAnalysisContent(data.compliance?.trackers)
+    } : null,
+    // Legal Pages Accordion
+    {
+      id: 'legal-pages',
+      title: 'Legal Pages',
+      scoreTextRight: `${Math.round(legalPagesScore)}/100`,
+      contentHTML: renderLegalPagesContent(data.compliance)
+    },
+    // Data Rights Accordion
+    {
+      id: 'data-rights',
+      title: 'Data Subject Rights',
+      scoreTextRight: `${Math.round(dataRightsScore)}/100`,
+      contentHTML: renderDataRightsContent(data.compliance)
+    },
+    // Compliance Risks Accordion
+    (data.risks && data.risks.length > 0) ? {
+      id: 'risks',
+      title: `Compliance Risks (${data.risks.length})`,
+      contentHTML: renderRisksContent(data.risks)
+    } : null,
+    // Report and Recommendations Accordion (Pro) - follows SEO pattern
+    (data.recommendations && data.recommendations.length > 0) ? {
+      id: 'report-recommendations',
+      title: 'Fix Code + Recommendations',
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'gdpr-compliance',
+      reportId: reportId,
+      contentHTML: isUnlocked 
+        ? renderGdprProFixes(data.recommendations) 
+        : getGdprRecommendationsPreview(data.recommendations)
+    } : null
+  ].filter(Boolean);
+
+  // Use ReportContainer.create() for consistent rendering (like SEO)
+  if (window.ReportContainer && typeof window.ReportContainer.create === 'function') {
+    const reportHTML = window.ReportContainer.create({
+      url: data.url || url,
+      timestamp: data.timestamp || scanStartedAt,
+      mode: 'gdpr-compliance',
+      title: 'Privacy Compliance Analysis',
+      subtitle: '',
+      summary,
+      sections,
+      screenshots: [], // Handled by report-ui.js ensurePageScreenshotCard()
+      proBlock: true,
+      proBlockOptions: {
+        context: 'gdpr-compliance',
+        features: ['pdf', 'csv', 'share'],
+        title: 'Unlock Report',
+        subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+        reportId
+      }
+    });
+    // Wrap in report-scope for proper CSS styling of accordions
+    results.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
+  } else {
+    // Fallback: manual rendering with report-scope wrapper
+    let fallbackHTML = `<div class="report-header"><h1 class="report-header__title">Privacy Compliance Analysis</h1></div>`;
+    sections.forEach(section => {
+      if (window.ReportAccordion && window.ReportAccordion.createSection) {
+        fallbackHTML += window.ReportAccordion.createSection(section);
+      }
+    });
+    results.innerHTML = `<div class="report-scope">${fallbackHTML}</div>`;
+  }
+
+  // Initialize ReportAccordion interactions
+  if (window.ReportAccordion && typeof window.ReportAccordion.initInteractions === 'function') {
+    window.ReportAccordion.initInteractions();
+  }
+
+  // Update paywall UI
+  if (window.ReportUI && reportId) {
+    window.ReportUI.setCurrentReportId(reportId);
+  }
+
+  if (window.CreditsManager && reportId) {
+    const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
+    if (typeof render === 'function') render(reportId);
+  }
+
+  // If already unlocked, reveal pro content
+  if (isUnlocked) {
+    revealGdprProContent();
+  }
+
+  // Listen for unlock events
+  if (!window.__gdprUnlockListenerAttached) {
+    window.__gdprUnlockListenerAttached = true;
+    window.addEventListener('reportUnlocked', (e) => {
+      const unlockedId = e && e.detail ? e.detail.reportId : '';
+      if (!unlockedId || unlockedId !== document.body.getAttribute('data-report-id')) return;
+
+      // Replace the Fix Code section body with the full content
+      const body = document.querySelector('[data-accordion-body="report-recommendations"]');
+      if (body && window.__gdprCurrentData) {
+        body.innerHTML = renderGdprProFixes(window.__gdprCurrentData.recommendations || []);
+      }
+
+      revealGdprProContent();
+
+      if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+        window.CreditsManager.renderPaywallState(unlockedId);
+      }
+    });
+  }
+
+  // Store data for unlock handler
+  window.__gdprCurrentData = data;
+}
+
+/**
+ * Reveal pro content when unlocked
+ */
+function revealGdprProContent() {
+  document.querySelectorAll('.report-accordion--locked').forEach(el => {
+    el.classList.remove('report-accordion--locked');
+  });
+  document.querySelectorAll('[data-pro-locked]').forEach(el => {
+    el.removeAttribute('data-pro-locked');
+  });
+}
+
+/**
+ * Preview content for locked recommendations (follows SEO pattern)
+ */
+function getGdprRecommendationsPreview(recommendations = []) {
+  const critical = recommendations.filter(r => r.priority === 'critical').length;
+  const high = recommendations.filter(r => r.priority === 'high').length;
+  const medium = recommendations.filter(r => r.priority === 'medium').length;
+
+  const previewItems = [];
+  if (critical > 0) previewItems.push(`${critical} critical compliance issues`);
+  if (high > 0) previewItems.push(`${high} high-priority fixes`);
+  if (medium > 0) previewItems.push(`${medium} medium-priority improvements`);
+  
+  if (previewItems.length === 0) {
+    previewItems.push('GDPR compliance recommendations', 'Cookie consent improvements', 'Privacy policy suggestions');
+  }
+
+  return `
+    <div style="padding: 1rem;">
+      <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
+        Unlock to view:
+      </p>
+      <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
+        ${previewItems.slice(0, 3).map(item => `<li>${item}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+}
+
+/**
+ * Render GDPR Pro Fixes with accordion-style tabs (follows SEO pattern)
+ */
+function renderGdprProFixes(recommendations) {
+  ensureGdprFixStyles();
+  const priorityOrder = { critical: 1, high: 2, medium: 3, low: 4 };
+  const sorted = [...recommendations].sort((a, b) =>
+    priorityOrder[a.priority] - priorityOrder[b.priority]
+  );
+
+  const fixCount = sorted.length;
+
+  if (fixCount === 0) {
+    return `
+      <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+          <span style="font-size: 1.5rem;">✓</span> Excellent Compliance!
+        </h3>
+        <p style="color: #86efac; margin: 0;">Your site follows GDPR best practices. Keep monitoring for continued compliance.</p>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="gdpr-fixes-container" style="margin-top: 1rem;">
+      <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+        <span style="font-size: 1.75rem;">🔍</span> Compliance Fixes
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixCount} improvement${fixCount !== 1 ? 's' : ''} found)</span>
+      </h3>
+      <div class="gdpr-fixes-list">
+        ${sorted.map((rec, index) => renderGdprFixAccordion(rec, index)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderGdprFixAccordion(rec, index) {
+  const accordionId = `gdprfix-${rec.id || index}`;
+  const severityColors = {
+    critical: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    high: { bg: 'rgba(255,140,0,0.1)', border: '#ff8c00', color: '#ff8c00', icon: '🟠' },
+    medium: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟡' },
+    low: { bg: 'rgba(128,128,128,0.1)', border: '#808080', color: '#808080', icon: '🟢' }
+  };
+  const style = severityColors[rec.priority] || severityColors.medium;
+  const category = rec.category || 'Privacy Compliance';
+
+  return `
+    <div class="gdpr-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="gdpr-fix-header" onclick="toggleGdprFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${rec.message || rec.title}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${category}</p>
+          </div>
         </div>
-
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Cookie Consent</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
-            <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(consentScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(consentScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
-            <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(consentScore)}, 0 0 30px rgba(0,0,0,0.6);">${consentScore}</text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${data.compliance?.cookieConsent?.detected ? 'var(--accent-primary)' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">${data.compliance?.cookieConsent?.detected ? (data.compliance?.cookieConsent?.hasKnownLibrary ? 'Compliant' : 'Partial') : 'Missing'}</div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${rec.priority.toUpperCase()}</span>
+          <span class="gdpr-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
         </div>
+      </div>
 
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Privacy Policy</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
-            <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(privacyScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(privacyScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
-            <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(privacyScore)}, 0 0 30px rgba(0,0,0,0.6);">${privacyScore}</text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${privacyScore > 0 ? 'var(--accent-primary)' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">${privacyScore > 0 ? 'Found' : 'Missing'}</div>
-        </div>
-
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Tracker Status</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
-            <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(trackerScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(trackerScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
-            <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(trackerScore)}, 0 0 30px rgba(0,0,0,0.6);">${trackerScore}</text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${trackerScore >= 80 ? 'var(--accent-primary)' : trackerScore >= 50 ? '#ffa500' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">${data.compliance?.trackers?.count || 0} Trackers</div>
+      <div class="gdpr-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderGdprFixTabs(rec, accordionId)}
         </div>
       </div>
     </div>
-    
-    <!-- Accordion Sections -->
-    <div id="accordionContainer"></div>
   `;
-  
-  const accordionContainer = document.getElementById('accordionContainer');
-  
-  // Cookie Consent Quality Accordion
-  createAccordionSection(accordionContainer, 'consent-quality', 'Cookie Consent Quality', 
-    () => renderConsentQualityContent(data), consentQuality.score);
-  
-  // Cookie Analysis Accordion
-  createAccordionSection(accordionContainer, 'cookie-analysis', 'Cookie Analysis', 
-    () => renderCookieAnalysisContent(data.compliance?.cookies), cookieScore);
-  
-  // Tracker Analysis Accordion
-  if (data.compliance?.trackers) {
-    createAccordionSection(accordionContainer, 'tracker-analysis', 'Tracker Analysis', 
-      () => renderTrackerAnalysisContent(data.compliance?.trackers), trackerScore);
-  }
-  
-  // Legal Pages Accordion
-  createAccordionSection(accordionContainer, 'legal-pages', 'Legal Pages', 
-    () => renderLegalPagesContent(data.compliance), 
-    (data.compliance?.privacyPolicy?.hasLink ? 40 : 0) + 
-    (data.compliance?.cookiePolicy?.hasLink ? 30 : 0) + 
-    (data.compliance?.termsOfService?.hasLink ? 30 : 0));
-  
-  // Data Rights Accordion
-  createAccordionSection(accordionContainer, 'data-rights', 'Data Subject Rights', 
-    () => renderDataRightsContent(data.compliance), 
-    (data.compliance?.dataSubjectRights?.hasInfo ? 60 : 0) + 
-    (data.compliance?.dataSubjectRights?.hasDPOContact ? 40 : 0));
-  
-  // Compliance Risks Accordion
-  if (data.risks && data.risks.length > 0) {
-    createAccordionSection(accordionContainer, 'risks', `Compliance Risks (${data.risks.length})`, 
-      () => renderRisksContent(data.risks), null, true);
-  }
-  
-  // Recommendations Accordion
-  if (data.recommendations && data.recommendations.length > 0) {
-    createAccordionSection(accordionContainer, 'recommendations', 'Recommendations', 
-      () => renderRecommendationsContent(data.recommendations));
-  }
+}
 
-  // Pro Report Block
-  if (window.ProReportBlock && window.ProReportBlock.render) {
-    const proBlockHtml = window.ProReportBlock.render({
-      context: 'gdpr-compliance',
-      features: ['pdf', 'csv', 'share'],
-      title: 'Unlock Report',
-      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
-    });
-    results.insertAdjacentHTML('beforeend', proBlockHtml);
+function renderGdprFixTabs(rec, accordionId) {
+  return `
+    <div class="gdpr-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="gdpr-fix-tab active" onclick="switchGdprFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Summary</button>
+      <button class="gdpr-fix-tab" onclick="switchGdprFixTab('${accordionId}', 'code')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">💻 Code</button>
+      <button class="gdpr-fix-tab" onclick="switchGdprFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🔧 Fix Guide</button>
+    </div>
+
+    <!-- Summary Tab -->
+    <div class="gdpr-fix-tab-content active" id="${accordionId}-summary">
+      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        ${rec.detail || rec.description || rec.message}
+      </p>
+      ${rec.impact ? `
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+        <div style="color: #c0c0c0; font-size: 0.9rem;">${rec.impact}</div>
+      </div>
+      ` : ''}
+    </div>
+
+    <!-- Code Tab -->
+    <div class="gdpr-fix-tab-content" id="${accordionId}-code" style="display: none;">
+      <div style="display: grid; gap: 1rem;">
+        <!-- Recommended Action -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Implementation</span>
+            <button onclick="copyGdprCode('${accordionId}-action')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-action" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlGdpr(getGdprCodeSnippet(rec))}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fix Guide Tab -->
+    <div class="gdpr-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        ${getGdprDefaultSteps(rec).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+    </div>
+  `;
+}
+
+function getGdprCodeSnippet(rec) {
+  const snippets = {
+    'cookie consent': `<!-- Cookie Consent Implementation -->
+<script src="https://cdn.cookieconsent.io/cookieconsent.js"></script>
+<script>
+  CookieConsent.run({
+    categories: {
+      necessary: { enabled: true, readOnly: true },
+      analytics: { enabled: false },
+      marketing: { enabled: false }
+    },
+    guiOptions: {
+      consentModal: {
+        layout: 'box',
+        position: 'bottom center',
+        equalWeightButtons: true // Shows Accept and Reject equally
+      }
+    }
+  });
+</script>`,
+    'privacy policy': `<!-- Privacy Policy Link -->
+<a href="/privacy-policy" rel="nofollow">Privacy Policy</a>
+
+<!-- Schema.org PrivacyPolicy -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebPage",
+  "name": "Privacy Policy",
+  "url": "https://yoursite.com/privacy-policy"
+}
+</script>`,
+    'dpo contact': `<!-- DPO Contact Information -->
+<p>Data Protection Officer: dpo@yourcompany.com</p>
+<p>For data requests: <a href="/data-request">Submit Request</a></p>`,
+    default: rec.detail || rec.description || 'Follow the recommended implementation steps.'
+  };
+
+  const key = Object.keys(snippets).find(k => 
+    (rec.message || rec.category || '').toLowerCase().includes(k)
+  );
+  return snippets[key] || snippets.default;
+}
+
+function getGdprDefaultSteps(rec) {
+  const stepsMap = {
+    'consent': [
+      'Choose a GDPR-compliant consent management platform',
+      'Implement with both Accept and Reject options equally visible',
+      'Ensure no cookies are set before consent is given',
+      'Test with browser DevTools to verify cookie behavior'
+    ],
+    'privacy policy': [
+      'Create a comprehensive privacy policy page',
+      'Include all required GDPR disclosures',
+      'Add clear links in footer and consent banner',
+      'Update regularly when practices change'
+    ],
+    'tracker': [
+      'Audit all third-party scripts on your site',
+      'Remove unnecessary trackers',
+      'Ensure remaining trackers respect consent',
+      'Document data processing in privacy policy'
+    ],
+    'dpo': [
+      'Designate a Data Protection Officer if required',
+      'Provide clear contact information',
+      'Set up data subject request handling process',
+      'Train staff on GDPR compliance procedures'
+    ]
+  };
+
+  const key = Object.keys(stepsMap).find(k => 
+    (rec.message || rec.category || '').toLowerCase().includes(k)
+  );
+  return stepsMap[key] || [
+    'Review the current compliance gap',
+    'Implement the recommended fix',
+    'Test thoroughly before deployment',
+    'Document changes for compliance records'
+  ];
+}
+
+// Toggle accordion
+function toggleGdprFixAccordion(accordionId) {
+  const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  const content = document.getElementById(`${accordionId}-content`);
+  const icon = accordion?.querySelector('.gdpr-fix-expand-icon');
+
+  if (!accordion || !content) return;
+
+  const isExpanded = accordion.classList.contains('expanded');
+
+  if (isExpanded) {
+    accordion.classList.remove('expanded');
+    content.style.maxHeight = '0';
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  } else {
+    accordion.classList.add('expanded');
+    content.style.maxHeight = content.scrollHeight + 'px';
+    if (icon) icon.style.transform = 'rotate(180deg)';
   }
 }
 
-function createAccordionSection(container, id, title, contentCreator, score = null, startOpen = false) {
-  const accordion = document.createElement('div');
-  accordion.className = 'accordion';
-  accordion.style.cssText = 'margin: 0.5rem 0;';
-  
-  const header = document.createElement('button');
-  header.className = 'accordion-header';
-  header.innerHTML = `
-    <span>${title}</span>
-    <span style="display: flex; align-items: center; gap: 0.5rem;">
-      ${score !== null ? `<span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
-      <span class="accordion-toggle">${startOpen ? '▲' : '▼'}</span>
-    </span>
-  `;
-  
-  const content = document.createElement('div');
-  content.className = 'accordion-content';
-  content.id = `accordion-${id}`;
-  
-  if (startOpen) {
-    content.style.cssText = 'max-height: 5000px; padding: 1rem 1.25rem; overflow: visible; border-top: 1px solid #333;';
-    content.classList.add('expanded');
-    header.classList.add('active');
-  } else {
-    content.style.cssText = 'max-height: 0; padding: 0; overflow: hidden; border-top: none; transition: max-height 0.3s ease, padding 0.3s ease;';
+// Switch tabs
+function switchGdprFixTab(accordionId, tabName) {
+  const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  if (!accordion) return;
+
+  const tabs = accordion.querySelectorAll('.gdpr-fix-tab');
+  const contents = accordion.querySelectorAll('.gdpr-fix-tab-content');
+
+  tabs.forEach(tab => {
+    tab.style.background = 'transparent';
+    tab.style.color = '#aaa';
+    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+    tab.classList.remove('active');
+  });
+  contents.forEach(content => {
+    content.style.display = 'none';
+    content.classList.remove('active');
+  });
+
+  const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+  const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+
+  if (activeTab) {
+    activeTab.style.background = 'rgba(255,255,255,0.1)';
+    activeTab.style.color = '#fff';
+    activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+    activeTab.classList.add('active');
   }
-  
-  const contentInner = document.createElement('div');
-  contentInner.className = 'accordion-content-inner';
-  
-  if (startOpen) {
-    contentInner.innerHTML = contentCreator();
+  if (activeContent) {
+    activeContent.style.display = 'block';
+    activeContent.classList.add('active');
   }
-  
-  content.appendChild(contentInner);
-  
-  header.addEventListener('click', () => {
-    const isExpanded = content.classList.contains('expanded');
-    
-    if (isExpanded) {
-      content.classList.remove('expanded');
-      header.classList.remove('active');
-      header.querySelector('.accordion-toggle').textContent = '▼';
-      content.style.maxHeight = '0';
-      content.style.padding = '0';
-      content.style.borderTop = 'none';
-    } else {
-      if (!contentInner.hasChildNodes()) {
-        contentInner.innerHTML = contentCreator();
-      }
-      content.classList.add('expanded');
-      header.classList.add('active');
-      header.querySelector('.accordion-toggle').textContent = '▲';
-      content.style.maxHeight = content.scrollHeight + 100 + 'px';
-      content.style.padding = '1rem 1.25rem';
-      content.style.borderTop = '1px solid #333';
+
+  // Update accordion height
+  const content = document.getElementById(`${accordionId}-content`);
+  if (content && accordion.classList.contains('expanded')) {
+    setTimeout(() => {
+      content.style.maxHeight = content.scrollHeight + 'px';
+    }, 50);
+  }
+}
+
+// Copy code
+function copyGdprCode(elementId) {
+  const codeElement = document.getElementById(elementId);
+  if (!codeElement) return;
+
+  const text = codeElement.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = codeElement.parentElement.querySelector('button');
+    if (btn) {
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = originalText; }, 2000);
     }
   });
-  
-  accordion.appendChild(header);
-  accordion.appendChild(content);
-  container.appendChild(accordion);
+}
+
+function ensureGdprFixStyles() {
+  if (document.getElementById('gdpr-fixes-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'gdpr-fixes-styles';
+  style.textContent = `
+    .gdpr-fix-accordion.expanded .gdpr-fix-expand-icon {
+      transform: rotate(180deg);
+    }
+    .gdpr-fix-header:hover {
+      background: rgba(255,255,255,0.03);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function escapeHtmlGdpr(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function renderConsentQualityContent(data) {
@@ -531,31 +945,6 @@ function renderRisksContent(risks) {
             </div>
             <p style="margin: 0 0 0.5rem 0; color: #c0c0c0;">${risk.detail}</p>
             <p style="margin: 0; color: #808080; font-size: 0.85rem; font-style: italic;">Potential Fine: ${risk.fine}</p>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function renderRecommendationsContent(recommendations) {
-  const priorityOrder = { critical: 1, high: 2, medium: 3, low: 4 };
-  const sorted = recommendations.sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-  
-  return `
-    <div>
-      <h3 style="color: #00d9ff; margin: 0 0 1rem 0; font-size: 1rem;">>> Recommendations</h3>
-      
-      <div style="display: grid; gap: 1rem;">
-        ${sorted.map(rec => `
-          <div style="padding: 1.25rem; background: rgba(0, 0, 0, 0.2); border-left: 4px solid ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : rec.priority === 'medium' ? '#00d9ff' : '#808080'}; border-radius: 4px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <h4 style="margin: 0; color: #ffffff;">${rec.message}</h4>
-              <span style="background: ${rec.priority === 'critical' ? '#ff4444' : rec.priority === 'high' ? '#ff8c00' : '#00d9ff'}; color: ${rec.priority === 'critical' || rec.priority === 'high' ? '#000' : '#fff'}; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase;">${rec.priority}</span>
-            </div>
-            ${rec.category ? `<div style="color: #00d9ff; font-size: 0.8rem; margin-bottom: 0.5rem;">${rec.category}</div>` : ''}
-            <p style="margin: 0 0 0.5rem 0; color: #c0c0c0;">${rec.detail}</p>
-            <p style="margin: 0; color: var(--accent-primary); font-size: 0.85rem;">Impact: ${rec.impact}</p>
           </div>
         `).join('')}
       </div>

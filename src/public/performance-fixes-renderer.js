@@ -63,17 +63,393 @@ function renderFixesToMake(desktop, mobile) {
   return html;
 }
 
+function normalizeMetric(val) {
+  if (val === null || val === undefined) return null;
+  if (typeof val === 'number' && Number.isFinite(val)) return val;
+  if (typeof val === 'string') {
+    const trimmed = val.trim();
+    if (!trimmed) return null;
+    if (trimmed.endsWith('ms')) {
+      const n = parseFloat(trimmed.replace('ms', ''));
+      return Number.isNaN(n) ? null : n;
+    }
+    if (trimmed.endsWith('s')) {
+      const n = parseFloat(trimmed.replace('s', ''));
+      return Number.isNaN(n) ? null : n * 1000;
+    }
+    const n = parseFloat(trimmed);
+    return Number.isNaN(n) ? null : n;
+  }
+  return null;
+}
+
+function pickMetric(candidates = []) {
+  for (const c of candidates) {
+    const n = normalizeMetric(c);
+    if (n !== null) return n;
+  }
+  return null;
+}
+
+function normalizeRecommendations(desktop = {}, mobile = {}) {
+  const list = [];
+  const desktopRecs = Array.isArray(desktop.recommendations) ? desktop.recommendations : [];
+  const mobileRecs = Array.isArray(mobile.recommendations) ? mobile.recommendations : [];
+  [...desktopRecs, ...mobileRecs].forEach(rec => {
+    if (!rec) return;
+    const title = rec.title || rec.name || rec.recommendation;
+    if (!title) return;
+    list.push({
+      title,
+      description: rec.description || rec.details || rec.summary || '',
+      impact: rec.impact || rec.estimatedSavings || '',
+      priority: rec.priority || rec.severity || 'medium',
+      category: rec.category || rec.group || 'performance'
+    });
+  });
+
+  const seen = new Set();
+  return list.filter(item => {
+    const key = `${item.category}:${item.title}`.toLowerCase();
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
+function normalizeOpportunities(desktop = {}, mobile = {}) {
+  const desktopOpp = Array.isArray(desktop.opportunities) ? desktop.opportunities : [];
+  const mobileOpp = Array.isArray(mobile.opportunities) ? mobile.opportunities : [];
+  const all = [...desktopOpp, ...mobileOpp];
+  return all.filter(Boolean).map(op => ({
+    id: op.id || op.auditId || op.title || '',
+    title: op.title || op.name || 'Opportunity',
+    description: op.description || op.summary || '',
+    displayValue: op.displayValue || op.display || '',
+    details: op.details || {},
+    score: op.score,
+    numericValue: op.numericValue,
+    raw: op
+  }));
+}
+
+function formatBytes(bytes) {
+  const n = Number(bytes);
+  if (!Number.isFinite(n)) return null;
+  if (n < 1024) return `${Math.round(n)} B`;
+  if (n < 1024 * 1024) return `${(n / 1024).toFixed(1)} KB`;
+  return `${(n / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+function formatMs(ms) {
+  const n = Number(ms);
+  if (!Number.isFinite(n)) return null;
+  return `${Math.round(n)} ms`;
+}
+
+function extractOpportunityEvidence(op) {
+  const items = Array.isArray(op?.details?.items) ? op.details.items : [];
+  const urls = new Set();
+  const snippets = new Set();
+  const sources = [];
+  let wastedBytes = null;
+  let wastedMs = null;
+
+  items.forEach(item => {
+    if (item.url) urls.add(item.url);
+    if (item.request?.url) urls.add(item.request.url);
+    if (item.source?.location?.url) urls.add(item.source.location.url);
+    if (item.node?.snippet) snippets.add(item.node.snippet);
+    if (item.selector) snippets.add(item.selector);
+    if (item.source?.location) sources.push(item.source.location);
+    if (Number.isFinite(item.wastedBytes)) wastedBytes = Math.max(wastedBytes || 0, item.wastedBytes);
+    if (Number.isFinite(item.wastedMs)) wastedMs = Math.max(wastedMs || 0, item.wastedMs);
+  });
+
+  return {
+    title: op.title,
+    displayValue: op.displayValue,
+    urls: Array.from(urls).slice(0, 6),
+    snippets: Array.from(snippets).slice(0, 3),
+    sources: sources.slice(0, 3),
+    wastedBytes,
+    wastedMs
+  };
+}
+
+const OPPORTUNITY_MATCHERS = {
+  'vitals-lcp': ['largest-contentful-paint', 'lcp', 'preload', 'critical-request-chains'],
+  'vitals-cls': ['layout-shift', 'cls', 'cumulative-layout-shift'],
+  'javascript': ['javascript', 'unused-javascript', 'unminified-javascript', 'render-blocking', 'third-party'],
+  'images': ['image', 'images', 'optimized-images', 'webp', 'responsive-images', 'offscreen-images', 'efficient-animated-content'],
+  'css': ['css', 'unused-css', 'unminified-css', 'render-blocking'],
+  'caching': ['cache', 'cache-ttl', 'uses-long-cache-ttl'],
+  'compression': ['compression', 'uses-text-compression', 'gzip', 'brotli'],
+  'network': ['network', 'requests', 'server-response-time', 'total-byte-weight'],
+  'accessibility': ['accessibility', 'aria', 'contrast', 'label']
+};
+
+function findEvidenceForCategory(opps, categoryKey) {
+  const needles = OPPORTUNITY_MATCHERS[categoryKey] || [];
+  if (!needles.length) return null;
+  const match = opps.find(op => {
+    const hay = `${op.id} ${op.title} ${op.description}`.toLowerCase();
+    return needles.some(n => hay.includes(n));
+  });
+  return match ? extractOpportunityEvidence(match) : null;
+}
+
+function buildProblematicEvidenceBlock(fix, evidence, fallback) {
+  if (!evidence) return fallback;
+  const lines = [];
+  lines.push(`/* Lighthouse evidence: ${evidence.title} */`);
+  if (evidence.displayValue) lines.push(`/* ${evidence.displayValue} */`);
+  const bytes = formatBytes(evidence.wastedBytes);
+  const time = formatMs(evidence.wastedMs);
+  if (bytes) lines.push(`/* Wasted bytes: ${bytes} */`);
+  if (time) lines.push(`/* Wasted time: ${time} */`);
+  if (evidence.urls.length) {
+    lines.push('Affected URLs:');
+    evidence.urls.forEach(url => lines.push(`- ${url}`));
+  }
+  if (evidence.snippets.length) {
+    lines.push('HTML Snippets:');
+    evidence.snippets.forEach(snippet => lines.push(snippet));
+  }
+  return `${lines.join('\n')}
+
+${fallback}`;
+}
+
+function toSeverity(priority = '') {
+  const p = String(priority).toLowerCase();
+  if (p === 'high' || p === 'critical') return 'critical';
+  if (p === 'medium') return 'medium';
+  return 'low';
+}
+
+function buildRecommendationTemplate(rec = {}) {
+  const title = String(rec.title || '').toLowerCase();
+  const category = String(rec.category || '').toLowerCase();
+
+  if (title.includes('lcp') || category.includes('vital')) {
+    return {
+      id: 'rec-lcp',
+      categoryKey: 'vitals-lcp',
+      icon: '🔴',
+      categoryLabel: 'Core Web Vitals',
+      problematicCode: `<!-- LCP element not optimized -->
+<img src="/images/hero.jpg" class="hero" alt="Hero">
+<!-- ✗ Large asset, not preloaded -->`,
+      fixedCode: `<!-- Preload and serve responsive LCP image -->
+<link rel="preload" as="image" href="/images/hero-800.webp" fetchpriority="high">
+<img src="/images/hero-800.webp"
+     srcset="/images/hero-400.webp 400w, /images/hero-800.webp 800w"
+     sizes="(max-width: 768px) 100vw, 800px"
+     width="1920" height="1080" loading="eager" fetchpriority="high" alt="Hero">`,
+      steps: [
+        'Identify the LCP element in DevTools → Performance',
+        'Preload the LCP resource and serve responsive formats (WebP/AVIF)',
+        'Add explicit dimensions to prevent layout shifts'
+      ]
+    };
+  }
+
+  if (title.includes('cls') || category.includes('layout')) {
+    return {
+      id: 'rec-cls',
+      categoryKey: 'vitals-cls',
+      icon: '🟡',
+      categoryLabel: 'Core Web Vitals',
+      problematicCode: `<!-- Missing dimensions cause layout shifts -->
+<img src="/images/product.jpg" alt="Product">
+<div id="ad-slot"></div>`,
+      fixedCode: `<!-- Reserve space to prevent CLS -->
+<img src="/images/product.jpg" alt="Product" width="800" height="600">
+<div id="ad-slot" style="min-height: 250px;"></div>`,
+      steps: [
+        'Add width/height (or aspect-ratio) to images and embeds',
+        'Reserve space for ads and dynamic widgets',
+        'Use font-display: swap for web fonts'
+      ]
+    };
+  }
+
+  if (category.includes('javascript') || title.includes('javascript') || title.includes('js')) {
+    return {
+      id: 'rec-js',
+      categoryKey: 'javascript',
+      icon: '🟡',
+      categoryLabel: 'Performance',
+      problematicCode: `<!-- Render-blocking scripts -->
+<script src="/js/vendor.bundle.js"></script>
+<script src="/js/app.js"></script>`,
+      fixedCode: `<!-- Defer non-critical scripts -->
+<script src="/js/vendor.bundle.js" defer></script>
+<script src="/js/app.js" defer></script>`,
+      steps: [
+        'Defer or async non-critical scripts',
+        'Split bundles and remove unused dependencies',
+        'Use code-splitting for heavy modules'
+      ]
+    };
+  }
+
+  if (category.includes('images') || title.includes('image')) {
+    return {
+      id: 'rec-images',
+      categoryKey: 'images',
+      icon: '🟡',
+      categoryLabel: 'Performance',
+      problematicCode: `<!-- Large unoptimized images -->
+<img src="/photos/team.jpg" alt="Team">`,
+      fixedCode: `<!-- Responsive images with WebP -->
+<picture>
+  <source srcset="/photos/team-400.webp 400w, /photos/team-800.webp 800w" type="image/webp">
+  <img src="/photos/team-800.jpg" width="800" height="600" loading="lazy" alt="Team">
+</picture>`,
+      steps: [
+        'Convert images to WebP/AVIF',
+        'Add srcset for responsive delivery',
+        'Lazy-load below-the-fold images'
+      ]
+    };
+  }
+
+  if (category.includes('css')) {
+    return {
+      id: 'rec-css',
+      categoryKey: 'css',
+      icon: '🟡',
+      categoryLabel: 'Performance',
+      problematicCode: `<!-- Large unused CSS -->
+<link rel="stylesheet" href="/css/app.css">`,
+      fixedCode: `<!-- Split critical CSS -->
+<style>/* critical above-the-fold styles */</style>
+<link rel="stylesheet" href="/css/app.css" media="print" onload="this.media='all'">`,
+      steps: [
+        'Remove unused CSS with Coverage tab',
+        'Inline critical CSS for above-the-fold',
+        'Defer non-critical styles'
+      ]
+    };
+  }
+
+  if (category.includes('caching') || title.includes('cache')) {
+    return {
+      id: 'rec-caching',
+      categoryKey: 'caching',
+      icon: '🟡',
+      categoryLabel: 'Performance',
+      problematicCode: `# Missing caching headers
+Cache-Control: no-store`,
+      fixedCode: `# Enable long-term caching for static assets
+Cache-Control: public, max-age=31536000, immutable`,
+      steps: [
+        'Set Cache-Control for static assets',
+        'Use asset versioning for cache busting',
+        'Verify cache headers in DevTools'
+      ]
+    };
+  }
+
+  if (category.includes('compression') || title.includes('compression')) {
+    return {
+      id: 'rec-compression',
+      categoryKey: 'compression',
+      icon: '🟡',
+      categoryLabel: 'Performance',
+      problematicCode: `# Text assets served without compression
+Content-Encoding: none`,
+      fixedCode: `# Enable Brotli or Gzip
+Content-Encoding: br`,
+      steps: [
+        'Enable Brotli (preferred) or Gzip on the server',
+        'Compress HTML/CSS/JS/JSON responses',
+        'Verify with network headers'
+      ]
+    };
+  }
+
+  if (category.includes('fonts') || title.includes('font')) {
+    return {
+      id: 'rec-fonts',
+      categoryKey: 'fonts',
+      icon: '🟡',
+      categoryLabel: 'Performance',
+      problematicCode: `@font-face {
+  font-family: 'Brand';
+  src: url('/fonts/brand.woff2') format('woff2');
+  font-display: auto;
+}`,
+      fixedCode: `@font-face {
+  font-family: 'Brand';
+  src: url('/fonts/brand.woff2') format('woff2');
+  font-display: swap;
+}`,
+      steps: [
+        'Use font-display: swap',
+        'Subset font files to required glyphs',
+        'Preload critical fonts'
+      ]
+    };
+  }
+
+  if (category.includes('network') || title.includes('request')) {
+    return {
+      id: 'rec-requests',
+      categoryKey: 'network',
+      icon: '🟡',
+      categoryLabel: 'Performance',
+      problematicCode: `<!-- Too many separate requests -->
+<script src="/js/vendor-1.js"></script>
+<script src="/js/vendor-2.js"></script>`,
+      fixedCode: `<!-- Bundle and defer where possible -->
+<script src="/js/vendors.bundle.js" defer></script>`,
+      steps: [
+        'Bundle small JS/CSS files',
+        'Remove unused third-party scripts',
+        'Use HTTP/2 and keep connections warm'
+      ]
+    };
+  }
+
+  if (category.includes('accessibility')) {
+    return {
+      id: 'rec-accessibility',
+      categoryKey: 'accessibility',
+      icon: '🔵',
+      categoryLabel: 'Accessibility',
+      problematicCode: `<!-- Missing labels -->
+<input type="text">
+<img src="logo.png">`,
+      fixedCode: `<!-- Add labels and alt text -->
+<label for="name">Name</label>
+<input id="name" type="text">
+<img src="logo.png" alt="Site logo">`,
+      steps: [
+        'Add labels for form inputs',
+        'Provide alt text for images',
+        'Ensure sufficient color contrast'
+      ]
+    };
+  }
+
+  return null;
+}
+
 function generateFixesData(desktop, mobile) {
   const fixes = [];
   const deskLighthouse = desktop.lighthouse || {};
   const mobLighthouse = mobile.lighthouse || {};
   const deskCWV = desktop.coreWebVitals || {};
   const mobCWV = mobile.coreWebVitals || {};
+  const opportunities = normalizeOpportunities(desktop, mobile);
 
   const mobilePerf = mobLighthouse.performance || 0;
-  const mobileLCP = mobCWV.lcpMs || 0;
-  const mobileTBT = mobCWV.fidMs || 0;
-  const mobileCLS = mobCWV.clsNum || 0;
+  const mobileLCP = pickMetric([mobCWV.lcpMs, mobCWV.lcp]) || 0;
+  const mobileTBT = pickMetric([mobCWV.tbtMs, mobCWV.tbt, mobCWV.inpMs, mobCWV.inp, mobCWV.fidMs, mobCWV.fid]) || 0;
+  const mobileCLS = pickMetric([mobCWV.clsNum, mobCWV.cls]) || 0;
 
   // LCP Fix - Most Critical
   if (mobileLCP > 2500) {
@@ -85,6 +461,7 @@ function generateFixesData(desktop, mobile) {
       title: `Reduce Largest Contentful Paint (LCP)`,
       subtitle: `Current: ${mobCWV.lcp || (mobileLCP/1000).toFixed(2) + 's'} → Target: <2.5s`,
       category: 'Core Web Vitals',
+      categoryKey: 'vitals-lcp',
       impact: mobileLCP > 4000 ? '+25 Performance Score' : '+15 Performance Score',
       summary: `Your LCP is ${mobCWV.lcp || (mobileLCP/1000).toFixed(2) + 's'}, which is ${mobileLCP > 4000 ? 'critically slow' : 'slower than recommended'}. LCP measures how long it takes for the largest content element (usually hero image or heading) to become visible. Google considers LCP a direct ranking factor.`,
       problematicCode: `<!-- Typical problematic pattern -->
@@ -123,16 +500,10 @@ function generateFixesData(desktop, mobile) {
         { file: 'images/background.png', size: '1.8MB', issue: 'Could use WebP format' }
       ],
       steps: [
-        'Convert images to WebP format using tools like Squoosh or Sharp',
-        'Generate multiple sizes (400w, 800w, 1200w) for responsive delivery',
-        'Add <code>width</code> and <code>height</code> attributes to prevent layout shift',
-        'Use <code>&lt;link rel="preload"&gt;</code> for LCP image'
-      ],
-      proSteps: [
-        'Set <code>fetchpriority="high"</code> on hero image and critical assets',
-        'Implement adaptive image loading based on connection speed using Network Information API',
-        'Configure CDN edge caching with stale-while-revalidate strategy',
-        'Set up automated image optimization pipeline with CI/CD integration'
+        'Identify your LCP element using Chrome DevTools → Performance → View Largest Contentful Paint',
+        'Convert LCP images to WebP and add <code>&lt;link rel="preload" as="image" fetchpriority="high"&gt;</code> in <code>&lt;head&gt;</code>',
+        'Add explicit <code>width</code> and <code>height</code> attributes to prevent layout shift',
+        'Set <code>loading="eager"</code> and <code>fetchpriority="high"</code> on the LCP image'
       ]
     });
   }
@@ -146,6 +517,7 @@ function generateFixesData(desktop, mobile) {
       title: 'Reduce JavaScript Execution Time',
       subtitle: `Total Blocking Time: ${mobileTBT}ms → Target: <200ms`,
       category: 'Performance',
+      categoryKey: 'javascript',
       impact: '+20 Performance Score',
       summary: `Your site has ${mobileTBT}ms of Total Blocking Time, meaning the main thread is blocked and can't respond to user input. This causes delays in interactivity and poor user experience.`,
       problematicCode: `<!-- Render-blocking scripts in <head> -->
@@ -185,16 +557,9 @@ function generateFixesData(desktop, mobile) {
         { file: 'js/main.js', size: '156KB', issue: 'Not minified or tree-shaken' }
       ],
       steps: [
-        'Use <code>defer</code> or <code>async</code> attributes on script tags',
-        'Split code by route/feature using dynamic imports',
-        'Remove unused JavaScript with tree-shaking',
-        'Minify and compress JavaScript files (gzip/brotli)'
-      ],
-      proSteps: [
-        'Consider removing jQuery if only used for simple DOM manipulation',
-        'Implement code splitting at component level with React.lazy() or Vue async components',
-        'Use a bundler like Webpack, Rollup, or Vite with advanced optimization (scope hoisting)',
-        'Set up performance budgets in CI/CD to prevent regression'
+        'Add <code>defer</code> or <code>async</code> attributes to all non-critical script tags',
+        'Open DevTools → Coverage tab to find and remove unused JavaScript',
+        'Enable minification and gzip/brotli compression on your server'
       ]
     });
   }
@@ -208,6 +573,7 @@ function generateFixesData(desktop, mobile) {
       title: 'Fix Cumulative Layout Shift (CLS)',
       subtitle: `Current: ${mobileCLS.toFixed(3)} → Target: <0.1`,
       category: 'Core Web Vitals',
+      categoryKey: 'vitals-cls',
       impact: '+10 Performance Score',
       summary: `Your CLS score is ${mobileCLS.toFixed(3)}, indicating unexpected layout shifts that frustrate users. This happens when elements move after the page initially loads, often due to images, ads, or web fonts loading late.`,
       problematicCode: `<!-- Missing dimensions cause shifts -->
@@ -262,16 +628,9 @@ function generateFixesData(desktop, mobile) {
         { file: 'Custom web fonts', size: 'N/A', issue: 'No font-display strategy' }
       ],
       steps: [
-        'Add <code>width</code> and <code>height</code> to all <code>&lt;img&gt;</code> and <code>&lt;video&gt;</code> tags',
-        'Use <code>aspect-ratio</code> CSS for responsive embeds',
-        'Set <code>font-display: swap</code> on @font-face declarations',
-        'Reserve space for ads with <code>min-height</code>'
-      ],
-      proSteps: [
-        'Avoid inserting content above existing content after page load',
-        'Use CSS transforms for animations (not top/left/margin)',
-        'Implement font preloading with <code>&lt;link rel="preload"&gt;</code> for critical fonts',
-        'Use content-visibility CSS property to optimize off-screen rendering'
+        'Add <code>width</code> and <code>height</code> attributes to all images and videos',
+        'Set <code>font-display: swap</code> on @font-face rules and preload critical fonts',
+        'Reserve space for ads/embeds with <code>min-height</code> or <code>aspect-ratio</code>'
       ]
     });
   }
@@ -285,6 +644,7 @@ function generateFixesData(desktop, mobile) {
       title: 'Optimize Images',
       subtitle: 'Reduce image file sizes by 60-80%',
       category: 'Performance',
+      categoryKey: 'images',
       impact: '+12 Performance Score',
       summary: 'Images account for a significant portion of page weight. Optimizing images can dramatically improve load times and reduce bandwidth costs.',
       problematicCode: `<!-- Unoptimized images -->
@@ -330,16 +690,10 @@ function generateFixesData(desktop, mobile) {
         { file: 'images/gallery/*.jpg', size: '18MB total', issue: '12 unoptimized images' }
       ],
       steps: [
-        'Convert to WebP format (70-80% smaller than JPEG)',
-        'Use <code>&lt;picture&gt;</code> element for format fallbacks',
-        'Generate multiple sizes for responsive delivery',
-        'Add <code>loading="lazy"</code> for below-the-fold images'
-      ],
-      proSteps: [
-        'Use image CDN for automatic optimization (Cloudinary, Imgix) with real-time transformations',
-        'Implement AVIF format support for even better compression (30% smaller than WebP)',
-        'Set up automated image compression pipeline with tools like Sharp or ImageOptim',
-        'Use blur-up or LQIP (Low Quality Image Placeholder) technique for progressive loading'
+        'Convert images to WebP format using Squoosh, Sharp, or your image CDN',
+        'Add <code>srcset</code> with multiple sizes (400w, 800w, 1200w) for responsive delivery',
+        'Set <code>loading="lazy"</code> on images below the fold',
+        'Add <code>width</code> and <code>height</code> attributes to prevent layout shift'
       ]
     });
   }
@@ -354,6 +708,7 @@ function generateFixesData(desktop, mobile) {
       title: 'Improve Accessibility',
       subtitle: `Score: ${accessScore}/100 → Target: >90`,
       category: 'Accessibility',
+      categoryKey: 'accessibility',
       impact: 'Legal compliance + SEO boost',
       summary: 'Accessibility improvements help users with disabilities and improve SEO. Common issues include missing alt text, poor color contrast, and missing ARIA labels.',
       problematicCode: `<!-- Missing alt text -->
@@ -405,15 +760,9 @@ function generateFixesData(desktop, mobile) {
       resources: [],
       steps: [
         'Add descriptive <code>alt</code> text to all images',
-        'Ensure color contrast ratio of 4.5:1 for text (7:1 for AAA)',
-        'Use semantic HTML (<code>&lt;button&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>)',
-        'Add <code>aria-label</code> where text labels aren\'t visible'
-      ],
-      proSteps: [
-        'Make all interactive elements keyboard accessible with proper focus indicators',
-        'Implement skip links for keyboard navigation to main content',
-        'Test with screen readers (NVDA, JAWS, VoiceOver) and fix announced content',
-        'Add live regions with <code>aria-live</code> for dynamic content updates'
+        'Ensure color contrast ratio of at least 4.5:1 for text',
+        'Use semantic HTML (<code>&lt;button&gt;</code>, <code>&lt;nav&gt;</code>, <code>&lt;main&gt;</code>) instead of <code>&lt;div&gt;</code>',
+        'Associate all form inputs with <code>&lt;label&gt;</code> elements'
       ]
     });
   }
@@ -421,6 +770,42 @@ function generateFixesData(desktop, mobile) {
   // Sort by severity
   const priorityOrder = { critical: 0, medium: 1, low: 2 };
   fixes.sort((a, b) => priorityOrder[a.severity] - priorityOrder[b.severity]);
+
+  if (opportunities.length) {
+    fixes.forEach(fix => {
+      if (!fix.categoryKey) return;
+      const evidence = findEvidenceForCategory(opportunities, fix.categoryKey);
+      fix.problematicCode = buildProblematicEvidenceBlock(fix, evidence, fix.problematicCode);
+    });
+  }
+
+  const recommendations = normalizeRecommendations(desktop, mobile);
+  if (recommendations.length) {
+    const usedCategories = new Set(fixes.map(f => f.categoryKey).filter(Boolean));
+    recommendations.forEach(rec => {
+      const template = buildRecommendationTemplate(rec);
+      if (!template) return;
+      if (usedCategories.has(template.categoryKey)) return;
+
+      usedCategories.add(template.categoryKey);
+      const evidence = findEvidenceForCategory(opportunities, template.categoryKey);
+      fixes.push({
+        id: `${template.id}-${rec.title.replace(/\s+/g, '-').toLowerCase()}`,
+        severity: toSeverity(rec.priority),
+        icon: template.icon,
+        title: rec.title,
+        subtitle: rec.impact || rec.category || 'Performance',
+        category: template.categoryLabel,
+        categoryKey: template.categoryKey,
+        impact: rec.impact || 'Impact varies by implementation',
+        summary: rec.description || 'This item was flagged by the analysis and should be addressed to improve performance.',
+        problematicCode: buildProblematicEvidenceBlock({}, evidence, template.problematicCode),
+        fixedCode: template.fixedCode,
+        resources: [],
+        steps: template.steps
+      });
+    });
+  }
 
   return fixes;
 }
@@ -442,7 +827,6 @@ function renderFixAccordion(fix, index) {
         <div class="fix-badges">
           <span class="fix-badge priority-${fix.severity}">${fix.severity}</span>
           <span class="fix-badge category">${fix.category}</span>
-          ${fix.proSteps && fix.proSteps.length > 0 ? '<span class="pro-badge"><span style="font-size: 0.7rem;">✨</span> PRO</span>' : ''}
           <span class="fix-expand-icon">▼</span>
         </div>
       </div>
@@ -504,7 +888,7 @@ function renderFixTabs(fix, accordionId) {
         <div class="code-block" style="position: relative;">
           <div class="code-block-header">
             <span class="code-block-title success">
-              ✅ Optimized Solution ${fix.proSteps && fix.proSteps.length > 0 ? '<span class="pro-badge" style="margin-left: 0.5rem;"><span style="font-size: 0.7rem;">✨</span> PRO</span>' : ''}
+              ✅ Optimized Solution
             </span>
             <button class="fix-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" onclick="copyCode('${accordionId}-solution')">
               📋 Copy
@@ -513,23 +897,6 @@ function renderFixTabs(fix, accordionId) {
           <div class="code-block-body">
             <pre id="${accordionId}-solution">${escapeHtml(fix.fixedCode)}</pre>
           </div>
-          ${fix.proSteps && fix.proSteps.length > 0 ? `
-            <!-- Pro Code Overlay -->
-            <div class="pro-code-overlay">
-              <div style="text-align: center; position: relative; z-index: 2;">
-                <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
-                <div style="font-weight: 700; font-size: 1rem; margin-bottom: 0.5rem;">
-                  Advanced Solution
-                </div>
-                <div style="font-size: 0.85rem; opacity: 0.9; margin-bottom: 1rem;">
-                  Unlock expert-level code examples
-                </div>
-                <button style="padding: 0.625rem 1.5rem; background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; border: none; border-radius: 6px; font-weight: 700; font-size: 0.85rem; cursor: pointer;" onclick="alert('Upgrade to Pro! (Demo functionality)')">
-                  Upgrade to Pro
-                </button>
-              </div>
-            </div>
-          ` : ''}
         </div>
       </div>
     </div>
@@ -554,32 +921,7 @@ function renderFixTabs(fix, accordionId) {
     <div class="fix-tab-content" id="${accordionId}-guide">
       <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
       <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
-        ${fix.steps.map(step => `<li style="margin-bottom: 0.75rem;">${step}</li>`).join('')}
-
-        ${fix.proSteps && fix.proSteps.length > 0 ? `
-          <!-- Pro Unlock Banner -->
-          <div class="pro-unlock-banner" style="margin: 1.5rem 0; list-style: none;">
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
-              <span style="font-size: 1.5rem;">🔒</span>
-              <div style="flex: 1;">
-                <div style="font-weight: 700; font-size: 0.95rem; margin-bottom: 0.25rem;">
-                  Unlock ${fix.proSteps.length} Advanced Steps
-                </div>
-                <div style="font-size: 0.8rem; opacity: 0.8;">
-                  Get expert-level optimization techniques with Site Mechanic Pro
-                </div>
-              </div>
-              <button style="padding: 0.5rem 1.25rem; background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; border: none; border-radius: 6px; font-weight: 700; font-size: 0.8rem; cursor: pointer; white-space: nowrap;" onclick="alert('Upgrade to Pro! (Demo functionality)')">
-                Upgrade to Pro
-              </button>
-            </div>
-          </div>
-
-          <!-- Pro Steps (Locked) -->
-          ${fix.proSteps.map(step => `
-            <li class="pro-step" style="margin-bottom: 0.75rem;">${step}</li>
-          `).join('')}
-        ` : ''}
+        ${[...fix.steps, ...(fix.proSteps || [])].map(step => `<li style="margin-bottom: 0.75rem;">${step}</li>`).join('')}
       </ol>
 
       <div class="fix-actions">

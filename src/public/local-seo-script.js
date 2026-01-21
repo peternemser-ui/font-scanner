@@ -151,48 +151,216 @@ function displayResults(data) {
   // Store results globally for PDF generation
   window.currentLocalSEOResults = data;
 
-  // 1. Overview Section with Score Circle
-  const overviewSection = document.createElement('div');
-  overviewSection.className = 'section';
-  overviewSection.innerHTML = createOverviewSection(data);
-  resultsContainer.appendChild(overviewSection);
+  const reportUrl = (data && data.url) || (document.getElementById('url')?.value || '').trim();
+  const scanStartedAt = data.scanStartedAt || window.SM_SCAN_STARTED_AT || new Date().toISOString();
+  const analyzerKey = window.SM_ANALYZER_KEY || 'local-seo';
 
-  // 2. Quick Wins Section (if any)
-  if (data.quickWins && data.quickWins.length > 0) {
-    const quickWinsSection = document.createElement('div');
-    quickWinsSection.className = 'section';
-    quickWinsSection.innerHTML = createQuickWinsSection(data.quickWins);
-    resultsContainer.appendChild(quickWinsSection);
+  let reportId = null;
+  if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
+    reportId = window.ReportUI.makeReportId({
+      analyzerKey,
+      normalizedUrl: reportUrl,
+      startedAtISO: scanStartedAt
+    });
+  } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
+    reportId = window.ReportUI.computeReportId(reportUrl, scanStartedAt, analyzerKey);
   }
 
-  // 3. Score Breakdown Cards
-  const breakdownSection = document.createElement('div');
-  breakdownSection.className = 'section';
-  breakdownSection.innerHTML = createScoreBreakdownCards(data.scores);
-  resultsContainer.appendChild(breakdownSection);
+  const isUnlocked = reportId && (
+    (window.CreditsManager && typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+    (window.CreditsManager && typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+  );
 
-  // 4. Accordion Sections
-  createAccordionSection(resultsContainer, 'nap-analysis', 'NAP Analysis (Name, Address, Phone)', 
-    () => renderNAPContent(data.analysis), data.scores.nap);
-  createAccordionSection(resultsContainer, 'schema-analysis', 'Structured Data & Schema', 
-    () => renderSchemaContent(data.analysis.schema), data.scores.schema);
-  createAccordionSection(resultsContainer, 'local-presence', 'Local Presence Signals',
-    () => renderLocalPresenceContent(data.analysis.localPresence), data.scores.presence);
-  createAccordionSection(resultsContainer, 'recommendations', 'All Recommendations',
-    () => renderRecommendationsContent(data.recommendations), null);
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    resultsContainer.setAttribute('data-sm-report-id', reportId);
+  }
 
-  // Pro Report Block
-  if (window.ProReportBlock && window.ProReportBlock.render) {
-    const proSection = document.createElement('div');
-    proSection.className = 'section';
-    proSection.style.marginTop = '2rem';
-    proSection.innerHTML = window.ProReportBlock.render({
-      context: 'local-seo',
-      features: ['pdf', 'csv', 'share'],
-      title: 'Unlock Report',
-      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+  if (window.ReportContainer && typeof window.ReportContainer.create === 'function') {
+    const summary = [
+      { label: 'Overall Score', score: Math.round(data.overallScore || 0) },
+      { label: 'NAP', score: Math.round(data.scores?.nap || 0) },
+      { label: 'Schema', score: Math.round(data.scores?.schema || 0) },
+      { label: 'Presence', score: Math.round(data.scores?.presence || 0) }
+    ];
+
+    const sections = [
+      {
+        id: 'local-seo-overview',
+        title: 'Local SEO Overview',
+        scoreTextRight: `${Math.round(data.overallScore || 0)}/100`,
+        contentHTML: createOverviewSection(data),
+        context: 'local-seo',
+        reportId
+      }
+    ];
+
+    if (data.quickWins && data.quickWins.length > 0) {
+      sections.push({
+        id: 'quick-wins',
+        title: 'Quick Wins',
+        scoreTextRight: 'High impact',
+        contentHTML: createQuickWinsSection(data.quickWins),
+        context: 'local-seo',
+        reportId
+      });
+    }
+
+    sections.push(
+      {
+        id: 'score-breakdown',
+        title: 'Score Breakdown',
+        scoreTextRight: 'By category',
+        contentHTML: createScoreBreakdownCards(data.scores),
+        context: 'local-seo',
+        reportId
+      },
+      {
+        id: 'nap-analysis',
+        title: 'NAP Analysis (Name, Address, Phone)',
+        scoreTextRight: Math.round(data.scores?.nap || 0),
+        contentHTML: renderNAPContent(data.analysis),
+        context: 'local-seo',
+        reportId
+      },
+      {
+        id: 'local-presence',
+        title: 'Local Presence Signals',
+        scoreTextRight: Math.round(data.scores?.presence || 0),
+        contentHTML: renderLocalPresenceContent(data.analysis.localPresence),
+        context: 'local-seo',
+        reportId
+      },
+      {
+        id: 'schema-analysis',
+        title: 'Structured Data & Schema',
+        scoreTextRight: Math.round(data.scores?.schema || 0),
+        contentHTML: (window.ReportUI && window.ReportUI.pro && typeof window.ReportUI.pro.lockContent === 'function' && !isUnlocked)
+          ? window.ReportUI.pro.lockContent(renderSchemaContent(data.analysis.schema), 'local-seo')
+          : renderSchemaContent(data.analysis.schema),
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'local-seo',
+        reportId
+      },
+      {
+        id: 'report-recommendations',
+        title: 'Report and Recommendations',
+        scoreTextRight: null,
+        contentHTML: (window.ReportUI && window.ReportUI.pro && typeof window.ReportUI.pro.lockContent === 'function' && !isUnlocked)
+          ? window.ReportUI.pro.lockContent(renderRecommendationsContent(data.recommendations), 'local-seo')
+          : renderRecommendationsContent(data.recommendations),
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'local-seo',
+        reportId
+      }
+    );
+
+    const reportHTML = window.ReportContainer.create({
+      url: reportUrl,
+      timestamp: scanStartedAt,
+      mode: 'local-seo',
+      title: 'Local SEO Report',
+      subtitle: 'Local SEO Inspection',
+      summary,
+      sections,
+      proBlock: true,
+      proBlockOptions: {
+        context: 'local-seo',
+        features: ['pdf', 'csv', 'share'],
+        title: 'Unlock Report',
+        subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+        reportId
+      }
     });
-    resultsContainer.appendChild(proSection);
+
+    resultsContainer.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
+  } else {
+    // Fallback to legacy layout if ReportContainer is unavailable
+    const overviewSection = document.createElement('div');
+    overviewSection.className = 'section';
+    overviewSection.innerHTML = createOverviewSection(data);
+    resultsContainer.appendChild(overviewSection);
+
+    if (data.quickWins && data.quickWins.length > 0) {
+      const quickWinsSection = document.createElement('div');
+      quickWinsSection.className = 'section';
+      quickWinsSection.innerHTML = createQuickWinsSection(data.quickWins);
+      resultsContainer.appendChild(quickWinsSection);
+    }
+
+    const breakdownSection = document.createElement('div');
+    breakdownSection.className = 'section';
+    breakdownSection.innerHTML = createScoreBreakdownCards(data.scores);
+    resultsContainer.appendChild(breakdownSection);
+
+    // Build accordions using ReportAccordion
+    const accordionContainer = document.createElement('div');
+    accordionContainer.className = 'accordion-container';
+
+    const accordionHTML = [
+      ReportAccordion.createSection({
+        id: 'nap-analysis',
+        title: 'NAP Analysis (Name, Address, Phone)',
+        scoreTextRight: `${data.scores.nap}/100`,
+        contentHTML: renderNAPContent(data.analysis)
+      }),
+      ReportAccordion.createSection({
+        id: 'local-presence',
+        title: 'Local Presence Signals',
+        scoreTextRight: `${data.scores.presence}/100`,
+        contentHTML: renderLocalPresenceContent(data.analysis.localPresence)
+      }),
+      ReportAccordion.createSection({
+        id: 'schema-analysis',
+        title: 'Structured Data & Schema',
+        scoreTextRight: `${data.scores.schema}/100`,
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'local-seo',
+        reportId: reportId,
+        contentHTML: renderSchemaContent(data.analysis.schema)
+      }),
+      ReportAccordion.createSection({
+        id: 'report-recommendations',
+        title: 'Report and Recommendations',
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'local-seo',
+        reportId: reportId,
+        contentHTML: renderRecommendationsContent(data.recommendations)
+      })
+    ].join('');
+
+    accordionContainer.innerHTML = accordionHTML;
+    resultsContainer.appendChild(accordionContainer);
+
+    // Initialize ReportAccordion interactions
+    ReportAccordion.initInteractions();
+
+    if (window.ProReportBlock && window.ProReportBlock.render) {
+      const proSection = document.createElement('div');
+      proSection.className = 'section';
+      proSection.style.marginTop = '2rem';
+      proSection.innerHTML = window.ProReportBlock.render({
+        context: 'local-seo',
+        features: ['pdf', 'csv', 'share'],
+        title: 'Unlock Report',
+        subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+        reportId
+      });
+      resultsContainer.appendChild(proSection);
+    }
+  }
+
+  if (window.ReportUI && reportId) {
+    window.ReportUI.setCurrentReportId(reportId);
+  }
+
+  if (window.CreditsManager && reportId) {
+    const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
+    if (typeof render === 'function') render(reportId);
   }
 }
 
@@ -205,8 +373,6 @@ function createOverviewSection(data) {
   const strokeDasharray = `${(score / 100) * circumference} ${circumference}`;
   
   return `
-    <h2>[LOCAL_SEO_OVERVIEW]</h2>
-    
     <div style="
       background: linear-gradient(135deg, ${gradeColor}10 0%, ${gradeColor}05 100%);
       border: 2px solid ${gradeColor};
@@ -264,7 +430,7 @@ function createOverviewSection(data) {
         
         <!-- Right: Quick Stats -->
         <div>
-          <h3 style="color: ${gradeColor}; margin: 0 0 1rem 0; font-size: 1.3rem;">>> Quick Stats</h3>
+          <h3 style="color: ${gradeColor}; margin: 0 0 1rem 0; font-size: 1.3rem;">Quick Stats</h3>
           <div style="display: grid; gap: 0.75rem;">
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
               <span style="color: #c0c0c0;">Overall Grade</span>
@@ -304,15 +470,7 @@ function createQuickWinsSection(quickWins) {
     ">
       <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
         <span style="font-size: 1.75rem;">⚡</span>
-        <h2 style="margin: 0; color: #ffd700; font-size: 1.4rem;">Quick Wins</h2>
-        <span style="
-          background: rgba(255, 215, 0, 0.2);
-          color: #ffd700;
-          padding: 0.25rem 0.75rem;
-          border-radius: 20px;
-          font-size: 0.8rem;
-          font-weight: 600;
-        ">High Impact • Low Effort</span>
+        <div style="margin: 0; color: #ffd700; font-size: 1.15rem; font-weight: 700;">High Impact • Low Effort</div>
       </div>
       <p style="color: #c0c0c0; margin: 0 0 1.5rem 0; font-size: 0.95rem;">
         These quick fixes can boost your local search visibility fast.
@@ -414,9 +572,6 @@ function createScoreBreakdownCards(scores) {
   const circumference = 2 * Math.PI * 60; // 376.99
 
   return `
-    <h2>[SCORE_BREAKDOWN]</h2>
-    <p style="color: #c0c0c0; margin-bottom: 1rem;">>> Category performance breakdown</p>
-    
     <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;">
       ${categories.map(cat => {
         const score = scores[cat.key] || 0;
@@ -473,59 +628,6 @@ function createScoreBreakdownCards(scores) {
       }).join('')}
     </div>
   `;
-}
-
-function createAccordionSection(container, id, title, contentCreator, score) {
-  const accordion = document.createElement('div');
-  accordion.className = 'accordion';
-  accordion.style.cssText = 'margin: 0.5rem 0;';
-  
-  const header = document.createElement('button');
-  header.className = 'accordion-header';
-  header.innerHTML = `
-    <span>${title}</span>
-    <span style="display: flex; align-items: center; gap: 0.5rem;">
-      ${score !== null ? `<span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
-      <span class="accordion-toggle">▼</span>
-    </span>
-  `;
-  
-  const content = document.createElement('div');
-  content.className = 'accordion-content';
-  content.id = `accordion-${id}`;
-  // Start collapsed - no height, no padding, no border, hidden overflow
-  content.style.cssText = 'max-height: 0; padding: 0; overflow: hidden; border-top: none; transition: max-height 0.3s ease, padding 0.3s ease;';
-  
-  const contentInner = document.createElement('div');
-  contentInner.className = 'accordion-content-inner';
-  content.appendChild(contentInner);
-  
-  header.addEventListener('click', () => {
-    const isExpanded = content.classList.contains('expanded');
-    
-    if (isExpanded) {
-      content.classList.remove('expanded');
-      header.classList.remove('active');
-      header.querySelector('.accordion-toggle').textContent = '▼';
-      content.style.maxHeight = '0';
-      content.style.padding = '0';
-      content.style.borderTop = 'none';
-    } else {
-      if (!contentInner.hasChildNodes()) {
-        contentInner.innerHTML = contentCreator();
-      }
-      content.classList.add('expanded');
-      header.classList.add('active');
-      header.querySelector('.accordion-toggle').textContent = '▲';
-      content.style.maxHeight = content.scrollHeight + 100 + 'px';
-      content.style.padding = '1rem 1.25rem';
-      content.style.borderTop = '1px solid #333';
-    }
-  });
-  
-  accordion.appendChild(header);
-  accordion.appendChild(content);
-  container.appendChild(accordion);
 }
 
 function renderNAPContent(analysis) {
@@ -784,60 +886,403 @@ function renderLocalPresenceContent(presence) {
 }
 
 function renderRecommendationsContent(recommendations) {
+  // Ensure toggle functions are available globally
+  ensureLocalSeoFixFunctions();
+
   if (!recommendations || recommendations.length === 0) {
     return `
-      <div style="text-align: center; padding: 2rem; color: #00ff41;">
-        <span style="font-size: 3rem;">🎉</span>
-        <h3 style="margin: 1rem 0 0.5rem;">Excellent Local SEO!</h3>
-        <p style="color: #c0c0c0;">No critical recommendations at this time.</p>
+      <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+          <span style="font-size: 1.5rem;">✓</span> Excellent Local SEO!
+        </h3>
+        <p style="color: #86efac; margin: 0;">Your site follows local SEO best practices. Keep monitoring for continued success.</p>
       </div>
     `;
   }
 
-  const grouped = {
-    critical: recommendations.filter(r => r.priority === 'critical'),
-    high: recommendations.filter(r => r.priority === 'high'),
-    medium: recommendations.filter(r => r.priority === 'medium')
+  // Group by priority/severity
+  const high = recommendations.filter(r => r.priority === 'critical' || r.priority === 'high');
+  const medium = recommendations.filter(r => r.priority === 'medium');
+  const low = recommendations.filter(r => r.priority === 'low');
+
+  const allRecs = [...high, ...medium, ...low];
+
+  let html = `
+    <div class="local-seo-fixes-container" style="margin-top: 1rem;">
+      <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+        <span style="font-size: 1.75rem;">🔍</span> Local SEO Fixes
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${allRecs.length} improvements found)</span>
+      </h3>
+      <div class="local-seo-fixes-list">
+  `;
+
+  allRecs.forEach((rec, index) => {
+    html += renderLocalSeoFixAccordion(rec, index);
+  });
+
+  html += `</div></div>`;
+
+  return html;
+}
+
+// Ensure global functions are defined for accordion toggle and tabs
+function ensureLocalSeoFixFunctions() {
+  if (typeof window === 'undefined') return;
+
+  // Toggle accordion
+  if (!window.toggleLocalSeoFixAccordion) {
+    window.toggleLocalSeoFixAccordion = function(accordionId) {
+      const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+      const content = document.getElementById(`${accordionId}-content`);
+      const icon = accordion?.querySelector('.local-seo-fix-expand-icon');
+
+      if (!accordion || !content) return;
+
+      const isExpanded = accordion.classList.contains('expanded');
+
+      if (isExpanded) {
+        accordion.classList.remove('expanded');
+        content.style.maxHeight = '0';
+        if (icon) icon.style.transform = 'rotate(0deg)';
+      } else {
+        accordion.classList.add('expanded');
+        content.style.maxHeight = content.scrollHeight + 'px';
+        if (icon) icon.style.transform = 'rotate(180deg)';
+      }
+    };
+  }
+
+  // Switch tabs
+  if (!window.switchLocalSeoFixTab) {
+    window.switchLocalSeoFixTab = function(accordionId, tabName) {
+      const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+      if (!accordion) return;
+
+      const tabs = accordion.querySelectorAll('.local-seo-fix-tab');
+      const contents = accordion.querySelectorAll('.local-seo-fix-tab-content');
+
+      tabs.forEach(tab => {
+        tab.style.background = 'transparent';
+        tab.style.color = '#aaa';
+        tab.style.borderColor = 'rgba(255,255,255,0.1)';
+        tab.classList.remove('active');
+      });
+      contents.forEach(content => {
+        content.style.display = 'none';
+        content.classList.remove('active');
+      });
+
+      const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+      const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+
+      if (activeTab) {
+        activeTab.style.background = 'rgba(255,255,255,0.1)';
+        activeTab.style.color = '#fff';
+        activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+        activeTab.classList.add('active');
+      }
+      if (activeContent) {
+        activeContent.style.display = 'block';
+        activeContent.classList.add('active');
+      }
+
+      // Update accordion height
+      const mainContent = document.getElementById(`${accordionId}-content`);
+      if (mainContent && accordion.classList.contains('expanded')) {
+        setTimeout(() => {
+          mainContent.style.maxHeight = mainContent.scrollHeight + 'px';
+        }, 50);
+      }
+    };
+  }
+
+  // Copy code
+  if (!window.copyLocalSeoCode) {
+    window.copyLocalSeoCode = function(elementId) {
+      const codeElement = document.getElementById(elementId);
+      if (!codeElement) return;
+
+      const text = codeElement.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = codeElement.parentElement.querySelector('button');
+        if (btn) {
+          const originalText = btn.textContent;
+          btn.textContent = '✓ Copied!';
+          setTimeout(() => { btn.textContent = originalText; }, 2000);
+        }
+      });
+    };
+  }
+}
+
+function renderLocalSeoFixAccordion(rec, index) {
+  const accordionId = `localseofix-${index}`;
+  const severity = rec.priority === 'critical' ? 'High' : 
+                   rec.priority === 'high' ? 'High' : 
+                   rec.priority === 'medium' ? 'Medium' : 'Low';
+  
+  const severityColors = {
+    High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+    Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
   };
+  const style = severityColors[severity] || severityColors.Medium;
+
+  // Generate code snippet based on recommendation type
+  const codeSnippet = getLocalSeoCodeSnippet(rec);
+  const steps = getLocalSeoSteps(rec);
 
   return `
-    <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> All Recommendations</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
-        Address these issues to improve your local search visibility.
-      </p>
-      
-      ${grouped.critical.length > 0 ? `
-        <h4 style="color: #ff4444; margin: 1rem 0 0.5rem; font-size: 0.9rem;">🔴 Critical Issues</h4>
-        ${grouped.critical.map(rec => renderRecommendation(rec, '#ff4444')).join('')}
-      ` : ''}
-      
-      ${grouped.high.length > 0 ? `
-        <h4 style="color: #ff8c00; margin: 1rem 0 0.5rem; font-size: 0.9rem;">🟠 High Priority</h4>
-        ${grouped.high.map(rec => renderRecommendation(rec, '#ff8c00')).join('')}
-      ` : ''}
-      
-      ${grouped.medium.length > 0 ? `
-        <h4 style="color: #ffd700; margin: 1rem 0 0.5rem; font-size: 0.9rem;">🟡 Medium Priority</h4>
-        ${grouped.medium.map(rec => renderRecommendation(rec, '#ffd700')).join('')}
-      ` : ''}
+    <div class="local-seo-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="local-seo-fix-header" onclick="toggleLocalSeoFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${rec.message}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">Local SEO Optimization</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${severity.toUpperCase()}</span>
+          <span class="local-seo-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+        </div>
+      </div>
+
+      <div class="local-seo-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps)}
+        </div>
+      </div>
     </div>
   `;
 }
 
-function renderRecommendation(rec, color) {
+function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
   return `
-    <div class="recommendation-card" style="
-      padding: 1rem 1rem 1rem 1.25rem;
-      margin: 0.5rem 0;
-      background: ${color}10;
-      border-left: 4px solid ${color};
-      border-radius: 4px;
-    ">
-      <h4 style="margin: 0 0 0.5rem 0; color: #ffffff;">${rec.message}</h4>
-      <p style="margin: 0; color: #c0c0c0; font-size: 0.9rem;">${rec.detail}</p>
+    <div class="local-seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="local-seo-fix-tab active" onclick="switchLocalSeoFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Summary</button>
+      <button class="local-seo-fix-tab" onclick="switchLocalSeoFixTab('${accordionId}', 'code')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">💻 Code</button>
+      <button class="local-seo-fix-tab" onclick="switchLocalSeoFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📖 Guide</button>
+    </div>
+
+    <!-- Summary Tab -->
+    <div class="local-seo-fix-tab-content active" id="${accordionId}-summary" style="display: block;">
+      <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem;">
+        <h5 style="margin: 0 0 0.75rem 0; color: #00ff41; font-size: 0.95rem;">What's the issue?</h5>
+        <p style="margin: 0 0 1rem 0; color: #c0c0c0; font-size: 0.9rem; line-height: 1.6;">${rec.detail}</p>
+        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+          <span style="background: rgba(0,255,65,0.1); color: #00ff41; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">Impact: ${rec.priority === 'critical' || rec.priority === 'high' ? 'High' : 'Medium'}</span>
+          <span style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">Category: Local SEO</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Code Tab -->
+    <div class="local-seo-fix-tab-content" id="${accordionId}-code" style="display: none;">
+      <div style="display: grid; gap: 1rem;">
+        <!-- Recommended Fix -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Implementation</span>
+            <button onclick="copyLocalSeoCode('${accordionId}-solution')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeLocalSeoHtml(codeSnippet)}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Guide Tab -->
+    <div class="local-seo-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        ${steps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
     </div>
   `;
+}
+
+function escapeLocalSeoHtml(str) {
+  if (!str) return '';
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getLocalSeoCodeSnippet(rec) {
+  const snippets = {
+    'Add LocalBusiness schema': `<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Your Business Name",
+  "image": "https://example.com/logo.jpg",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "123 Main St",
+    "addressLocality": "City",
+    "addressRegion": "State",
+    "postalCode": "12345",
+    "addressCountry": "US"
+  },
+  "telephone": "+1-555-555-5555",
+  "openingHoursSpecification": [{
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "opens": "09:00",
+    "closes": "17:00"
+  }]
+}
+</script>`,
+    'Add contact email': `<!-- Add visible email address -->
+<a href="mailto:contact@yourbusiness.com">
+  contact@yourbusiness.com
+</a>
+
+<!-- Or in schema -->
+"email": "contact@yourbusiness.com"`,
+    'Add opening hours to schema': `"openingHoursSpecification": [
+  {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+    "opens": "09:00",
+    "closes": "17:00"
+  },
+  {
+    "@type": "OpeningHoursSpecification",
+    "dayOfWeek": ["Saturday"],
+    "opens": "10:00",
+    "closes": "14:00"
+  }
+]`,
+    'Display customer reviews': `<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "Your Business",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "4.5",
+    "reviewCount": "89"
+  },
+  "review": [{
+    "@type": "Review",
+    "author": {"@type": "Person", "name": "Customer Name"},
+    "reviewRating": {"@type": "Rating", "ratingValue": "5"},
+    "reviewBody": "Great service!"
+  }]
+}
+</script>`
+  };
+
+  // Match by message
+  for (const [key, snippet] of Object.entries(snippets)) {
+    if (rec.message.toLowerCase().includes(key.toLowerCase())) {
+      return snippet;
+    }
+  }
+
+  return `<!-- Implementation for: ${rec.message} -->
+<!-- Add the appropriate structured data or HTML elements -->`;
+}
+
+function getLocalSeoSteps(rec) {
+  const stepsMap = {
+    'Add LocalBusiness schema': [
+      'Create a JSON-LD script block in your page head or body',
+      'Add your business name, address, phone number, and hours',
+      'Include geo-coordinates for better local search visibility',
+      'Test with Google Rich Results Test tool',
+      'Submit updated sitemap to Google Search Console'
+    ],
+    'Add contact email': [
+      'Add a visible email address on your contact page',
+      'Include email in your LocalBusiness schema markup',
+      'Consider using a professional domain email (not Gmail/Yahoo)',
+      'Add email to your Google Business Profile'
+    ],
+    'Add opening hours to schema': [
+      'Add openingHoursSpecification to your LocalBusiness schema',
+      'Include hours for each day of the week',
+      'Mark special holiday hours if applicable',
+      'Keep hours consistent with Google Business Profile'
+    ],
+    'Display customer reviews': [
+      'Add aggregateRating to your schema with average rating and count',
+      'Include individual review snippets if available',
+      'Consider adding a reviews widget to your site',
+      'Encourage customers to leave Google reviews',
+      'Respond to reviews to show engagement'
+    ]
+  };
+
+  for (const [key, steps] of Object.entries(stepsMap)) {
+    if (rec.message.toLowerCase().includes(key.toLowerCase())) {
+      return steps;
+    }
+  }
+
+  return [
+    'Review the current implementation on your site',
+    'Apply the recommended code changes',
+    'Test with Google Rich Results Test',
+    'Monitor Search Console for improvements'
+  ];
 }
 
 // Helper functions

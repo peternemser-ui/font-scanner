@@ -45,11 +45,16 @@ async function analyzeReputation() {
   // Update button state
   analyzeButton.disabled = true;
   const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-  buttonText.textContent = 'Running scan...';
+  buttonText.textContent = 'Analyzing...';
 
   // Setup UI
   const resultsDiv = document.getElementById('results');
   const errorMessage = document.getElementById('errorMessage');
+
+  // Clear report metadata from previous scans
+  document.body.removeAttribute('data-report-id');
+  document.body.removeAttribute('data-sm-screenshot-url');
+  document.body.removeAttribute('data-sm-scan-started-at');
 
   resultsDiv.classList.add('hidden');
   errorMessage.classList.add('hidden');
@@ -209,6 +214,20 @@ async function analyzeReputation() {
     const results = await response.json();
     currentResults = results;
 
+    // Set report metadata from API response
+    const reportId = results && results.reportId ? String(results.reportId) : '';
+    const screenshotUrl = results && results.screenshotUrl ? String(results.screenshotUrl) : '';
+    if (reportId) {
+      if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
+        window.ReportUI.setCurrentReportId(reportId);
+      } else {
+        document.body.setAttribute('data-report-id', reportId);
+      }
+    }
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
+
     // Complete the loader
     loader.complete();
 
@@ -226,7 +245,7 @@ async function analyzeReputation() {
     const analyzeButton = document.getElementById('analyzeButton');
     analyzeButton.disabled = false;
     const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-    buttonText.textContent = 'Run scan';
+    buttonText.textContent = 'Analyze';
   }
 }
 
@@ -235,237 +254,183 @@ function displayReputationResults(data) {
   const resultsContent = document.getElementById('resultsContent');
   resultsContent.innerHTML = '';
 
-  // Overall Reputation Summary with Circular Dials
-  const summaryHtml = `
-    <div class="summary-section security-summary-panel">
-      <h2>[IP_REPUTATION_ANALYSIS]</h2>
-      <p>>> target: ${data.input || 'N/A'}</p>
-      <p>>> ip_address: ${data.ipAddress || 'N/A'}</p>
-      <p>>> hostname: ${data.hostname || 'N/A'}</p>
-      <p>>> timestamp: ${new Date(data.timestamp).toLocaleString()}</p>
-      
-      <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">>> Reputation Summary</h3>
+  const reportInput = (data && data.input) || (document.getElementById('urlInput')?.value || '').trim();
+  const scanStartedAt = data.scanStartedAt || window.SM_SCAN_STARTED_AT || new Date().toISOString();
+  const analyzerKey = window.SM_ANALYZER_KEY || 'ip-reputation';
 
-      <!-- Circular Progress Dials -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0;">
-        <!-- Overall Reputation Score -->
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Overall Reputation</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="rgba(0, 0, 0, 0.1)"
-              stroke-width="10"
-            />
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="${getScoreColor(data.overallScore)}"
-              stroke-width="10"
-              stroke-linecap="round"
-              stroke-dasharray="${(data.overallScore / 100) * 471.24} 471.24"
-              transform="rotate(-90 90 90)"
-            />
-            <text
-              x="90"
-              y="90"
-              text-anchor="middle"
-              dy="0.35em"
-              font-size="3.5rem"
-              font-weight="bold"
-              fill="#f9fff2"
-              stroke="rgba(0, 0, 0, 0.65)"
-              stroke-width="2.5"
-              paint-order="stroke fill"
-              style="text-shadow: 0 0 18px ${getScoreColor(data.overallScore)}, 0 0 30px rgba(0,0,0,0.6);"
-            >
-              ${data.overallScore}
-            </text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${getScoreColor(data.overallScore)}; font-weight: 600; font-size: 1.1rem;">
-            ${getGrade(data.overallScore)}
-          </div>
-        </div>
+  let reportId = null;
+  if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
+    reportId = window.ReportUI.makeReportId({
+      analyzerKey,
+      normalizedUrl: reportInput,
+      startedAtISO: scanStartedAt
+    });
+  } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
+    reportId = window.ReportUI.computeReportId(reportInput, scanStartedAt, analyzerKey);
+  }
 
-        <!-- Blacklist Score -->
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Blacklist Status</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="rgba(0, 0, 0, 0.1)"
-              stroke-width="10"
-            />
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="${getScoreColor(data.blacklistScore || 0)}"
-              stroke-width="10"
-              stroke-linecap="round"
-              stroke-dasharray="${((data.blacklistScore || 0) / 100) * 471.24} 471.24"
-              transform="rotate(-90 90 90)"
-            />
-            <text
-              x="90"
-              y="90"
-              text-anchor="middle"
-              dy="0.35em"
-              font-size="3.5rem"
-              font-weight="bold"
-              fill="#f9fff2"
-              stroke="rgba(0, 0, 0, 0.65)"
-              stroke-width="2.5"
-              paint-order="stroke fill"
-              style="text-shadow: 0 0 18px ${getScoreColor(data.blacklistScore || 0)}, 0 0 30px rgba(0,0,0,0.6);"
-            >
-              ${data.blacklistScore || 0}
-            </text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${getScoreColor(data.blacklistScore || 0)}; font-weight: 600; font-size: 1.1rem;">
-            ${data.blacklistStatus || 'Unknown'}
-          </div>
-        </div>
+  const isUnlocked = reportId && (
+    (window.CreditsManager && typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+    (window.CreditsManager && typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+  );
 
-        <!-- Email Reputation Score -->
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">Email Reputation</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="rgba(0, 0, 0, 0.1)"
-              stroke-width="10"
-            />
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="${getScoreColor(data.emailScore || 0)}"
-              stroke-width="10"
-              stroke-linecap="round"
-              stroke-dasharray="${((data.emailScore || 0) / 100) * 471.24} 471.24"
-              transform="rotate(-90 90 90)"
-            />
-            <text
-              x="90"
-              y="90"
-              text-anchor="middle"
-              dy="0.35em"
-              font-size="3.5rem"
-              font-weight="bold"
-              fill="#f9fff2"
-              stroke="rgba(0, 0, 0, 0.65)"
-              stroke-width="2.5"
-              paint-order="stroke fill"
-              style="text-shadow: 0 0 18px ${getScoreColor(data.emailScore || 0)}, 0 0 30px rgba(0,0,0,0.6);"
-            >
-              ${data.emailScore || 0}
-            </text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${getScoreColor(data.emailScore || 0)}; font-weight: 600; font-size: 1.1rem;">
-            ${data.emailStatus || 'Unknown'}
-          </div>
-        </div>
-      </div>
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    resultsContent.setAttribute('data-sm-report-id', reportId);
+  }
 
-      <!-- Additional Score Cards -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
-        <!-- SSL Score -->
-        <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">SSL/TLS</div>
-          <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.sslScore || 0)};">${data.sslScore || 0}</div>
-          <div style="font-size: 0.8rem; color: ${getScoreColor(data.sslScore || 0)};">${data.sslStatus || 'N/A'}</div>
-        </div>
+  // Build summary donuts (matching SEO pattern)
+  const summary = [
+    { label: 'Overall', score: data.overallScore || 0 },
+    { label: 'Blacklist', score: data.blacklistScore || 0 },
+    { label: 'Email', score: data.emailScore || 0 },
+    { label: 'SSL/TLS', score: data.sslScore || 0 },
+    { label: 'DNS Health', score: data.dnsScore || 0 },
+    { label: 'Port Security', score: data.portSecurityScore || 0 }
+  ];
 
-        <!-- DNS Score -->
-        <div style="background: rgba(153, 51, 255, 0.05); border: 1px solid rgba(153, 51, 255, 0.2); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">DNS Health</div>
-          <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.dnsScore || 0)};">${data.dnsScore || 0}</div>
-          <div style="font-size: 0.8rem; color: ${getScoreColor(data.dnsScore || 0)};">${data.dnsStatus || 'N/A'}</div>
-        </div>
-
-        <!-- Port Security Score -->
-        <div style="background: rgba(255, 165, 0, 0.05); border: 1px solid rgba(255, 165, 0, 0.2); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">Port Security</div>
-          <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.portSecurityScore || 0)};">${data.portSecurityScore || 0}</div>
-          <div style="font-size: 0.8rem; color: ${getScoreColor(data.portSecurityScore || 0)};">${data.portSecurityScore >= 90 ? 'Secure' : data.portSecurityScore >= 70 ? 'Good' : 'At Risk'}</div>
-        </div>
-
-        <!-- Analysis Time -->
-        <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1rem; text-align: center;">
-          <div style="font-size: 0.85rem; color: #808080; margin-bottom: 0.5rem;">Analysis Time</div>
-          <div style="font-size: 2rem; font-weight: bold; color: #00ff41;">${((data.analysisTime || 0) / 1000).toFixed(1)}s</div>
-          <div style="font-size: 0.8rem; color: #00ff41;">${data.blacklists?.length || 0} checks</div>
-        </div>
-      </div>
-    </div>
-  `;
-
-  resultsContent.innerHTML += summaryHtml;
+  // Build sections array for accordions
+  const sections = [];
 
   // Blacklist Details Section
   if (data.blacklists && data.blacklists.length > 0) {
-    resultsContent.innerHTML += createBlacklistSection(data.blacklists);
+    const listed = data.blacklists.filter(bl => bl.listed);
+    const clean = data.blacklists.filter(bl => !bl.listed);
+    const score = Math.round((clean.length / data.blacklists.length) * 100);
+    sections.push({
+      id: 'blacklist',
+      title: 'DNS Blacklist Status',
+      scoreTextRight: `${score}/100`,
+      contentHTML: createBlacklistContent(data.blacklists)
+    });
   }
 
   // SSL Certificate Section
   if (data.sslCert) {
-    resultsContent.innerHTML += createSSLSection(data.sslCert, data.sslScore);
+    sections.push({
+      id: 'ssl',
+      title: 'SSL/TLS Certificate',
+      scoreTextRight: `${Math.round(data.sslScore || 0)}/100`,
+      contentHTML: createSSLContent(data.sslCert, data.sslScore)
+    });
   }
 
   // DNS Health Section
   if (data.dnsHealth) {
-    resultsContent.innerHTML += createDNSHealthSection(data.dnsHealth, data.dnsScore);
-  }
-
-  // Port Security Section
-  if (data.portScan) {
-    resultsContent.innerHTML += createPortSecuritySection(data.portScan);
+    sections.push({
+      id: 'dns-health',
+      title: 'DNS Health',
+      scoreTextRight: `${Math.round(data.dnsScore || 0)}/100`,
+      contentHTML: createDNSHealthContent(data.dnsHealth, data.dnsScore)
+    });
   }
 
   // Email Configuration Section
   if (data.emailConfig) {
-    resultsContent.innerHTML += createEmailSection(data.emailConfig);
+    let emailScore = 0;
+    if (data.emailConfig.spf?.valid) emailScore += 40;
+    if (data.emailConfig.dkim?.valid) emailScore += 30;
+    if (data.emailConfig.dmarc?.valid) emailScore += 30;
+    sections.push({
+      id: 'email-deliverability',
+      title: 'Email Deliverability',
+      scoreTextRight: `${Math.round(emailScore)}/100`,
+      contentHTML: createEmailContent(data.emailConfig)
+    });
   }
 
   // Hosting & Network Information Section
   if (data.hostingInfo) {
-    resultsContent.innerHTML += createHostingSection(data.hostingInfo);
+    sections.push({
+      id: 'hosting-network',
+      title: 'Hosting & Network Information',
+      contentHTML: createHostingContent(data.hostingInfo)
+    });
   }
 
   // Threat Intelligence Section
   if (data.threatIntel) {
-    resultsContent.innerHTML += createThreatSection(data.threatIntel);
-  }
-
-  // Recommendations Section
-  if (data.recommendations && data.recommendations.length > 0) {
-    resultsContent.innerHTML += createRecommendationsSection(data.recommendations);
-  }
-
-
-  // Pro Report Block
-  if (window.ProReportBlock && window.ProReportBlock.render) {
-    const proBlockHtml = window.ProReportBlock.render({
-      context: 'ip-reputation',
-      features: ['pdf', 'csv', 'share'],
-      title: 'Unlock Report',
-      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+    let threatScore = 100;
+    if (data.threatIntel.hasThreats && data.threatIntel.threats) {
+      data.threatIntel.threats.forEach(threat => {
+        if (threat.severity === 'critical') threatScore -= 40;
+        else if (threat.severity === 'high') threatScore -= 25;
+        else if (threat.severity === 'medium') threatScore -= 15;
+        else if (threat.severity === 'low') threatScore -= 5;
+      });
+      threatScore = Math.max(0, threatScore);
+    }
+    sections.push({
+      id: 'threat-intelligence',
+      title: 'Threat Intelligence',
+      scoreTextRight: `${Math.round(threatScore)}/100`,
+      contentHTML: createThreatContent(data.threatIntel)
     });
-    resultsContent.insertAdjacentHTML('beforeend', proBlockHtml);
+  }
+
+  // Recommendations Section (Pro) - follows SEO pattern with conditional content
+  if (data.recommendations && data.recommendations.length > 0) {
+    sections.push({
+      id: 'report-recommendations',
+      title: 'Report and Recommendations',
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'ip-reputation',
+      reportId: reportId,
+      contentHTML: isUnlocked 
+        ? createRecommendationsContent(data.recommendations) 
+        : getRecommendationsPreviewContent(data.recommendations)
+    });
+  }
+
+  // Note: Screenshots are automatically handled by report-ui.js ensurePageScreenshotCard()
+  // Don't pass screenshots to ReportContainer to avoid duplicates
+
+  // Use ReportContainer.create() for consistent rendering (like SEO)
+  if (window.ReportContainer && typeof window.ReportContainer.create === 'function') {
+    const reportHTML = window.ReportContainer.create({
+      url: data.input || data.hostname || '',
+      timestamp: data.timestamp || new Date().toISOString(),
+      mode: 'ip-reputation',
+      title: 'IP Reputation Analysis',
+      subtitle: '',
+      summary,
+      sections,
+      screenshots: [], // Handled by report-ui.js
+      proBlock: true,
+      proBlockOptions: {
+        context: 'ip-reputation',
+        features: ['pdf', 'csv', 'share'],
+        title: 'Unlock Report',
+        subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+        reportId
+      }
+    });
+    // Wrap in report-scope for proper CSS styling of accordions
+    resultsContent.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
+  } else {
+    // Fallback: manual rendering with report-scope wrapper
+    let fallbackHTML = `<div class="report-header"><h1 class="report-header__title">IP Reputation Analysis</h1></div>`;
+    sections.forEach(section => {
+      if (window.ReportAccordion && window.ReportAccordion.createSection) {
+        fallbackHTML += window.ReportAccordion.createSection(section);
+      }
+    });
+    resultsContent.innerHTML = `<div class="report-scope">${fallbackHTML}</div>`;
+  }
+
+  // Initialize ReportAccordion interactions
+  if (window.ReportAccordion && window.ReportAccordion.initInteractions) {
+    window.ReportAccordion.initInteractions();
+  }
+
+  if (window.ReportUI && reportId) {
+    window.ReportUI.setCurrentReportId(reportId);
+  }
+
+  if (window.CreditsManager && reportId) {
+    const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
+    if (typeof render === 'function') render(reportId);
   }
 }
 
@@ -506,7 +471,12 @@ function createBlacklistSection(blacklists) {
     </div>
   `;
 
-  return createAccordionSection('blacklist', 'DNS Blacklist Status', content, score);
+  return ReportAccordion.createSection({
+    id: 'blacklist',
+    title: 'DNS Blacklist Status',
+    scoreTextRight: `${Math.round(score)}/100`,
+    contentHTML: content
+  });
 }
 
 // Create Email Configuration Section
@@ -562,7 +532,12 @@ function createEmailSection(emailConfig) {
   if (emailConfig.dkim?.valid) score += 30;
   if (emailConfig.dmarc?.valid) score += 30;
 
-  return createAccordionSection('email-deliverability', 'Email Deliverability', content, score);
+  return ReportAccordion.createSection({
+    id: 'email-deliverability',
+    title: 'Email Deliverability',
+    scoreTextRight: `${Math.round(score)}/100`,
+    contentHTML: content
+  });
 }
 
 // Create Hosting & Network Information Section
@@ -606,7 +581,11 @@ function createHostingSection(hostingInfo) {
       </div>
   `;
 
-  return createAccordionSection('hosting-network', 'Hosting & Network Information', content);
+  return ReportAccordion.createSection({
+    id: 'hosting-network',
+    title: 'Hosting & Network Information',
+    contentHTML: content
+  });
 }
 
 // Create Threat Intelligence Section
@@ -659,11 +638,17 @@ function createThreatSection(threatIntel) {
     score = Math.max(0, score);
   }
 
-  return createAccordionSection('threat-intelligence', 'Threat Intelligence', content, score);
+  return ReportAccordion.createSection({
+    id: 'threat-intelligence',
+    title: 'Threat Intelligence',
+    scoreTextRight: `${Math.round(score)}/100`,
+    contentHTML: content
+  });
 }
 
 // Create Recommendations Section
-function createRecommendationsSection(recommendations) {
+function createRecommendationsSection(recommendations, options = {}) {
+  const { locked = false, context = 'ip-reputation', reportId = null } = options;
   const priorityOrder = { high: 1, medium: 2, low: 3 };
   const sorted = recommendations.sort((a, b) =>
     priorityOrder[a.priority] - priorityOrder[b.priority]
@@ -696,7 +681,15 @@ function createRecommendationsSection(recommendations) {
       </div>
   `;
 
-  return createAccordionSection('recommendations', 'Recommendations', content);
+  return ReportAccordion.createSection({
+    id: 'report-recommendations',
+    title: 'Report and Recommendations',
+    isPro: true,
+    locked: locked,
+    context: context,
+    reportId: reportId,
+    contentHTML: content
+  });
 }
 
 // Utility functions
@@ -759,6 +752,601 @@ function getRiskColor(risk) {
   }
 }
 
+// Content-only helper functions (for use with ReportContainer.create())
+function createBlacklistContent(blacklists) {
+  const listed = blacklists.filter(bl => bl.listed);
+  const clean = blacklists.filter(bl => !bl.listed);
+
+  return `
+    <p style="color: var(--text-secondary, #808080); margin-bottom: 1.5rem;">Checked against ${blacklists.length} major DNSBL databases</p>
+
+    ${listed.length > 0 ? `
+      <div style="background: rgba(255, 68, 68, 0.1); border: 2px solid #ff4444; border-radius: 8px; padding: 1.5rem; margin-bottom: 1.5rem;">
+        <h3 style="color: #ff4444; margin-top: 0;">⚠️ Listed on ${listed.length} Blacklist(s)</h3>
+        <div style="display: grid; gap: 1rem;">
+          ${listed.map(bl => `
+            <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); padding: 1rem; border-radius: 4px;">
+              <div style="font-weight: 600; color: #ff4444; margin-bottom: 0.5rem;">${bl.name}</div>
+              <div style="color: var(--text-primary, #ffffff); font-size: 0.9rem;">${bl.description || 'This IP/domain is listed on this blacklist'}</div>
+              ${bl.details ? `<div style="color: var(--text-secondary, #808080); font-size: 0.85rem; margin-top: 0.5rem;">${bl.details}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : ''}
+
+    <div style="background: rgba(var(--accent-primary-rgb), 0.05); border: 1px solid rgba(var(--accent-primary-rgb), 0.2); border-radius: 8px; padding: 1.5rem;">
+      <h3 style="color: var(--accent-primary); margin-top: 0;">✓ Clean on ${clean.length} Blacklist(s)</h3>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+        ${clean.map(bl => `
+          <span style="background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.85rem; color: var(--accent-primary);">
+            ${bl.name}
+          </span>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function createSSLContent(sslCert, sslScore) {
+  if (!sslCert) return '';
+  const isValid = sslCert.valid;
+
+  return `
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1.5rem;">
+      <div style="background: ${isValid ? 'rgba(var(--accent-primary-rgb), 0.05)' : 'rgba(255, 68, 68, 0.05)'}; border: 1px solid ${isValid ? 'rgba(var(--accent-primary-rgb), 0.25)' : 'rgba(255, 68, 68, 0.25)'}; border-radius: 8px; padding: 1.5rem; text-align: center;">
+        <div style="font-size: 3rem; margin-bottom: 0.5rem;">${isValid ? '✅' : '❌'}</div>
+        <div style="color: ${isValid ? 'var(--accent-primary)' : '#ff4444'}; font-weight: 600; font-size: 1.2rem;">${isValid ? 'Valid Certificate' : 'Invalid/Missing'}</div>
+        <div style="color: var(--text-secondary, #808080); font-size: 0.9rem; margin-top: 0.5rem;">Score: ${sslScore || 0}/100</div>
+      </div>
+
+      ${isValid ? `
+      <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
+        <h3 style="color: #00d9ff; margin-top: 0;">📋 Certificate Details</h3>
+        <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
+          <div><span style="color: var(--text-secondary, #808080);">Issuer:</span> <span style="color: var(--text-primary, #fff);">${sslCert.issuer}</span></div>
+          <div><span style="color: var(--text-secondary, #808080);">Subject:</span> <span style="color: var(--text-primary, #fff);">${sslCert.subject}</span></div>
+          <div><span style="color: var(--text-secondary, #808080);">Protocol:</span> <span style="color: ${sslCert.protocol === 'TLSv1.3' ? 'var(--accent-primary)' : sslCert.protocol === 'TLSv1.2' ? '#00d9ff' : '#ffa500'};">${sslCert.protocol}</span></div>
+          <div><span style="color: var(--text-secondary, #808080);">Cipher:</span> <span style="color: var(--text-primary, #fff);">${sslCert.cipher || 'N/A'}</span></div>
+        </div>
+      </div>
+
+      <div style="background: ${sslCert.daysUntilExpiry > 30 ? 'rgba(var(--accent-primary-rgb), 0.05)' : sslCert.daysUntilExpiry > 14 ? 'rgba(255, 165, 0, 0.05)' : 'rgba(255, 68, 68, 0.05)'}; border: 1px solid ${sslCert.daysUntilExpiry > 30 ? 'rgba(var(--accent-primary-rgb), 0.2)' : sslCert.daysUntilExpiry > 14 ? 'rgba(255, 165, 0, 0.2)' : 'rgba(255, 68, 68, 0.2)'}; border-radius: 8px; padding: 1.5rem;">
+        <h3 style="color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'}; margin-top: 0;">⏰ Validity Period</h3>
+        <div style="display: grid; gap: 0.5rem; font-size: 0.9rem;">
+          <div><span style="color: var(--text-secondary, #808080);">Valid From:</span> <span style="color: var(--text-primary, #fff);">${new Date(sslCert.validFrom).toLocaleDateString()}</span></div>
+          <div><span style="color: var(--text-secondary, #808080);">Valid Until:</span> <span style="color: var(--text-primary, #fff);">${new Date(sslCert.validTo).toLocaleDateString()}</span></div>
+          <div style="margin-top: 0.5rem; padding: 0.5rem; background: var(--bg-tertiary, rgba(0,0,0,0.3)); border-radius: 4px; text-align: center;">
+            <span style="font-size: 1.5rem; font-weight: bold; color: ${sslCert.daysUntilExpiry > 30 ? 'var(--accent-primary)' : sslCert.daysUntilExpiry > 14 ? '#ffa500' : '#ff4444'};">${sslCert.daysUntilExpiry}</span>
+            <span style="color: var(--text-secondary, #808080);"> days remaining</span>
+          </div>
+        </div>
+      </div>
+      ` : `
+      <div style="background: rgba(255, 68, 68, 0.05); border: 1px solid rgba(255, 68, 68, 0.2); border-radius: 8px; padding: 1.5rem; grid-column: span 2;">
+        <h3 style="color: #ff4444; margin-top: 0;">⚠️ Certificate Issue</h3>
+        <p style="color: var(--text-secondary, #cccccc);">${sslCert.error || 'SSL certificate could not be verified'}</p>
+      </div>
+      `}
+    </div>
+    ${sslCert.selfSigned ? `
+      <div style="margin-top: 1rem; padding: 1rem; background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); border-radius: 4px;">
+        <span style="color: #ffa500;">⚠️ Self-Signed Certificate:</span> <span style="color: var(--text-secondary, #cccccc);">This certificate is self-signed and will show warnings in browsers.</span>
+      </div>
+    ` : ''}
+  `;
+}
+
+function createDNSHealthContent(dnsHealth, dnsScore) {
+  if (!dnsHealth) return '';
+
+  return `
+    <p style="color: var(--text-secondary, #808080); margin-bottom: 1.5rem;">DNS configuration and infrastructure analysis</p>
+
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+      <div style="background: rgba(var(--accent-primary-rgb), 0.05); border: 1px solid rgba(var(--accent-primary-rgb), 0.2); border-radius: 8px; padding: 1.5rem;">
+        <h3 style="color: var(--accent-primary); margin-top: 0;">📡 Nameservers</h3>
+        ${dnsHealth.nsRecords && dnsHealth.nsRecords.length > 0 ? `
+          <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+            ${dnsHealth.nsRecords.map(ns => `
+              <span style="background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-size: 0.85rem; color: var(--accent-primary); font-family: monospace;">
+                ${ns}
+              </span>
+            `).join('')}
+          </div>
+          <div style="margin-top: 0.75rem; color: ${dnsHealth.nsRecords.length >= 2 ? 'var(--accent-primary)' : '#ffa500'}; font-size: 0.85rem;">
+            ${dnsHealth.nsRecords.length >= 2 ? '✓ Redundancy: OK' : '⚠️ Add more nameservers for redundancy'}
+          </div>
+        ` : '<p style="color: var(--text-secondary, #808080);">No NS records found</p>'}
+      </div>
+
+      <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
+        <h3 style="color: #00d9ff; margin-top: 0;">📧 Mail Servers (MX)</h3>
+        ${dnsHealth.mxRecords && dnsHealth.mxRecords.length > 0 ? `
+          <div style="display: grid; gap: 0.5rem;">
+            ${dnsHealth.mxRecords.slice(0, 5).map(mx => `
+              <div style="display: flex; justify-content: space-between; background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); padding: 0.5rem; border-radius: 4px; font-size: 0.85rem;">
+                <span style="color: var(--text-primary, #fff); font-family: monospace;">${mx.exchange}</span>
+                <span style="color: #00d9ff;">Priority: ${mx.priority}</span>
+              </div>
+            `).join('')}
+          </div>
+        ` : '<p style="color: var(--text-secondary, #808080);">No MX records found (email may not be configured)</p>'}
+      </div>
+
+      <div style="background: rgba(153, 51, 255, 0.05); border: 1px solid rgba(153, 51, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
+        <h3 style="color: #9933ff; margin-top: 0;">🔐 CAA Records</h3>
+        ${dnsHealth.hasCAA ? `
+          <div style="display: grid; gap: 0.5rem;">
+            ${dnsHealth.caaRecords.map(caa => `
+              <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); padding: 0.5rem; border-radius: 4px; font-size: 0.85rem; color: var(--text-primary, #fff);">
+                ${caa.issue || caa.issuewild || 'CAA record'}
+              </div>
+            `).join('')}
+          </div>
+          <div style="margin-top: 0.75rem; color: var(--accent-primary); font-size: 0.85rem;">✓ CAA configured</div>
+        ` : `
+          <p style="color: var(--text-secondary, #808080);">No CAA records found</p>
+          <div style="margin-top: 0.75rem; color: #ffa500; font-size: 0.85rem;">⚠️ Consider adding CAA to restrict certificate issuance</div>
+        `}
+      </div>
+    </div>
+
+    ${dnsHealth.issues && dnsHealth.issues.length > 0 ? `
+      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); border-radius: 8px;">
+        <h4 style="color: #ffa500; margin: 0 0 0.75rem 0;">⚠️ DNS Issues Detected</h4>
+        <ul style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary, #cccccc);">
+          ${dnsHealth.issues.map(issue => `<li style="margin-bottom: 0.5rem;">${issue}</li>`).join('')}
+        </ul>
+      </div>
+    ` : ''}
+  `;
+}
+
+function createEmailContent(emailConfig) {
+  return `
+    <div style="display: grid; gap: 1.5rem;">
+      <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); border-left: 4px solid ${emailConfig.spf?.valid ? 'var(--accent-primary)' : '#ff4444'}; padding: 1rem; border-radius: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h3 style="margin: 0; color: var(--text-primary, #ffffff);">SPF (Sender Policy Framework)</h3>
+          <span style="background: ${emailConfig.spf?.valid ? 'rgba(var(--accent-primary-rgb), 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.spf?.valid ? 'var(--accent-primary)' : '#ff4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+            ${emailConfig.spf?.valid ? '✓ Valid' : '✗ Missing/Invalid'}
+          </span>
+        </div>
+        <div style="color: var(--text-secondary, #cccccc); font-size: 0.9rem; font-family: 'JetBrains Mono', monospace; word-break: break-all;">
+          ${emailConfig.spf?.record || 'No SPF record found'}
+        </div>
+        ${emailConfig.spf?.issues ? `<div style="color: #ffa500; margin-top: 0.5rem; font-size: 0.85rem;">⚠️ ${emailConfig.spf.issues}</div>` : ''}
+      </div>
+
+      <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); border-left: 4px solid ${emailConfig.dkim?.valid ? 'var(--accent-primary)' : '#ffa500'}; padding: 1rem; border-radius: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h3 style="margin: 0; color: var(--text-primary, #ffffff);">DKIM (DomainKeys Identified Mail)</h3>
+          <span style="background: ${emailConfig.dkim?.valid ? 'rgba(var(--accent-primary-rgb), 0.2)' : 'rgba(255, 165, 0, 0.2)'}; color: ${emailConfig.dkim?.valid ? 'var(--accent-primary)' : '#ffa500'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+            ${emailConfig.dkim?.valid ? '✓ Configured' : 'ℹ️ Check Required'}
+          </span>
+        </div>
+        <div style="color: var(--text-secondary, #cccccc); font-size: 0.9rem;">
+          ${emailConfig.dkim?.status || 'DKIM requires selector-specific lookup'}
+        </div>
+      </div>
+
+      <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); border-left: 4px solid ${emailConfig.dmarc?.valid ? 'var(--accent-primary)' : '#ff4444'}; padding: 1rem; border-radius: 4px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+          <h3 style="margin: 0; color: var(--text-primary, #ffffff);">DMARC (Domain-based Message Authentication)</h3>
+          <span style="background: ${emailConfig.dmarc?.valid ? 'rgba(var(--accent-primary-rgb), 0.2)' : 'rgba(255, 68, 68, 0.2)'}; color: ${emailConfig.dmarc?.valid ? 'var(--accent-primary)' : '#ff4444'}; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.85rem; font-weight: 600;">
+            ${emailConfig.dmarc?.valid ? '✓ Valid' : '✗ Missing/Invalid'}
+          </span>
+        </div>
+        <div style="color: var(--text-secondary, #cccccc); font-size: 0.9rem; font-family: 'JetBrains Mono', monospace; word-break: break-all;">
+          ${emailConfig.dmarc?.record || 'No DMARC record found'}
+        </div>
+        ${emailConfig.dmarc?.policy ? `<div style="color: #00d9ff; margin-top: 0.5rem; font-size: 0.85rem;">Policy: ${emailConfig.dmarc.policy}</div>` : ''}
+      </div>
+    </div>
+  `;
+}
+
+function createHostingContent(hostingInfo) {
+  return `
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+      <div style="background: rgba(var(--accent-primary-rgb), 0.05); border: 1px solid rgba(var(--accent-primary-rgb), 0.2); border-radius: 8px; padding: 1.5rem;">
+        <h3 style="color: var(--accent-primary); margin-top: 0;">📍 Location</h3>
+        <div style="display: grid; gap: 0.5rem;">
+          <div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">Country:</span> ${hostingInfo.country || 'Unknown'} ${hostingInfo.countryCode ? `(${hostingInfo.countryCode})` : ''}</div>
+          ${hostingInfo.city ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">City:</span> ${hostingInfo.city}</div>` : ''}
+          ${hostingInfo.region ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">Region:</span> ${hostingInfo.region}</div>` : ''}
+          ${hostingInfo.timezone ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">Timezone:</span> ${hostingInfo.timezone}</div>` : ''}
+        </div>
+      </div>
+
+      <div style="background: rgba(0, 217, 255, 0.05); border: 1px solid rgba(0, 217, 255, 0.2); border-radius: 8px; padding: 1.5rem;">
+        <h3 style="color: #00d9ff; margin-top: 0;">🔌 ISP/Hosting</h3>
+        <div style="display: grid; gap: 0.5rem;">
+          <div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">Provider:</span> ${hostingInfo.isp || 'Unknown'}</div>
+          ${hostingInfo.org ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">Organization:</span> ${hostingInfo.org}</div>` : ''}
+          ${hostingInfo.asn ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">ASN:</span> ${hostingInfo.asn}</div>` : ''}
+          ${hostingInfo.asnName ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">AS Name:</span> ${hostingInfo.asnName}</div>` : ''}
+        </div>
+      </div>
+
+      ${hostingInfo.isProxy !== undefined || hostingInfo.isVpn !== undefined || hostingInfo.isTor !== undefined ? `
+        <div style="background: rgba(255, 165, 0, 0.05); border: 1px solid rgba(255, 165, 0, 0.2); border-radius: 8px; padding: 1.5rem;">
+          <h3 style="color: #ffa500; margin-top: 0;">🔒 Network Type</h3>
+          <div style="display: grid; gap: 0.5rem;">
+            ${hostingInfo.isProxy !== undefined ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">Proxy:</span> ${hostingInfo.isProxy ? '⚠️ Yes' : '✓ No'}</div>` : ''}
+            ${hostingInfo.isVpn !== undefined ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">VPN:</span> ${hostingInfo.isVpn ? '⚠️ Yes' : '✓ No'}</div>` : ''}
+            ${hostingInfo.isTor !== undefined ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">Tor:</span> ${hostingInfo.isTor ? '⚠️ Yes' : '✓ No'}</div>` : ''}
+            ${hostingInfo.isHosting !== undefined ? `<div style="color: var(--text-primary, #ffffff);"><span style="color: var(--text-secondary, #808080);">Hosting:</span> ${hostingInfo.isHosting ? 'Yes' : 'No'}</div>` : ''}
+          </div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function createThreatContent(threatIntel) {
+  return `
+    <div style="background: ${threatIntel.hasThreats ? 'rgba(255, 68, 68, 0.1)' : 'rgba(var(--accent-primary-rgb), 0.05)'}; border: 2px solid ${threatIntel.hasThreats ? '#ff4444' : 'rgba(var(--accent-primary-rgb), 0.2)'}; border-radius: 8px; padding: 1.5rem;">
+      <h3 style="color: ${threatIntel.hasThreats ? '#ff4444' : 'var(--accent-primary)'}; margin-top: 0;">
+        ${threatIntel.hasThreats ? '⚠️ Threats Detected' : '✓ No Known Threats'}
+      </h3>
+
+      ${threatIntel.threats && threatIntel.threats.length > 0 ? `
+        <div style="display: grid; gap: 1rem; margin-top: 1rem;">
+          ${threatIntel.threats.map(threat => `
+            <div style="background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); padding: 1rem; border-radius: 4px;">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <div style="font-weight: 600; color: var(--text-primary, #ffffff);">${threat.type}</div>
+                <span style="background: ${getSeverityColor(threat.severity)}; color: #000000; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 1rem;">
+                  ${threat.severity.toUpperCase()}
+                </span>
+              </div>
+              <div style="color: var(--text-secondary, #cccccc); font-size: 0.9rem;">${threat.description}</div>
+              ${threat.source ? `<div style="color: var(--text-secondary, #808080); font-size: 0.85rem; margin-top: 0.5rem;">Source: ${threat.source}</div>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : `
+        <p style="color: var(--accent-primary); margin-top: 1rem;">
+          No known malicious activity or security threats associated with this IP/domain.
+        </p>
+      `}
+
+      ${threatIntel.riskLevel ? `
+        <div style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); border-radius: 4px;">
+          <div style="color: var(--text-primary, #ffffff); font-weight: 600; margin-bottom: 0.5rem;">Risk Assessment</div>
+          <div style="color: var(--text-secondary, #cccccc);">Overall Risk Level: <span style="color: ${getRiskColor(threatIntel.riskLevel)}; font-weight: 600;">${threatIntel.riskLevel.toUpperCase()}</span></div>
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+/**
+ * Render preview content for locked recommendations section
+ */
+function getRecommendationsPreviewContent(recommendations = []) {
+  const high = recommendations.filter(r => r.priority === 'high').length;
+  const medium = recommendations.filter(r => r.priority === 'medium').length;
+  const low = recommendations.filter(r => r.priority === 'low').length;
+
+  const previewItems = [];
+  if (high > 0) previewItems.push(`${high} high-priority fixes`);
+  if (medium > 0) previewItems.push(`${medium} medium-priority improvements`);
+  if (low > 0) previewItems.push(`${low} low-priority suggestions`);
+  
+  if (previewItems.length === 0) {
+    previewItems.push('Actionable recommendations', 'Priority-based fixes');
+  }
+
+  return `
+    <div style="padding: 1rem;">
+      <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
+        Unlock to view:
+      </p>
+      <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
+        ${previewItems.slice(0, 3).map(item => `<li>${item}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+}
+
+function createRecommendationsContent(recommendations) {
+  ensureIpRepFixStyles();
+  const priorityOrder = { high: 1, medium: 2, low: 3 };
+  const sorted = [...recommendations].sort((a, b) =>
+    priorityOrder[a.priority] - priorityOrder[b.priority]
+  );
+
+  const fixCount = sorted.length;
+
+  return `
+    <div class="iprep-fixes-container" style="margin-top: 1rem;">
+      <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+        <span style="font-size: 1.75rem;">🔍</span> Reputation Fixes
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixCount} improvement${fixCount !== 1 ? 's' : ''} found)</span>
+      </h3>
+      <div class="iprep-fixes-list">
+        ${sorted.map((rec, index) => renderIpRepFixAccordion(rec, index)).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function renderIpRepFixAccordion(rec, index) {
+  const accordionId = `iprepfix-${rec.id || index}`;
+  const severityColors = {
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+    low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
+  };
+  const style = severityColors[rec.priority] || severityColors.medium;
+  const category = rec.category || 'IP Reputation';
+
+  return `
+    <div class="iprep-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="iprep-fix-header" onclick="toggleIpRepFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${rec.title}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${category}</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${rec.priority.toUpperCase()}</span>
+          <span class="iprep-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+        </div>
+      </div>
+
+      <div class="iprep-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderIpRepFixTabs(rec, accordionId)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderIpRepFixTabs(rec, accordionId) {
+  return `
+    <div class="iprep-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="iprep-fix-tab active" onclick="switchIpRepFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Summary</button>
+      <button class="iprep-fix-tab" onclick="switchIpRepFixTab('${accordionId}', 'code')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">💻 Code</button>
+      <button class="iprep-fix-tab" onclick="switchIpRepFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🔧 Fix Guide</button>
+    </div>
+
+    <!-- Summary Tab -->
+    <div class="iprep-fix-tab-content active" id="${accordionId}-summary">
+      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        ${rec.description}
+      </p>
+      ${rec.impact ? `
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+        <div style="color: #c0c0c0; font-size: 0.9rem;">${rec.impact}</div>
+      </div>
+      ` : ''}
+    </div>
+
+    <!-- Code Tab -->
+    <div class="iprep-fix-tab-content" id="${accordionId}-code" style="display: none;">
+      <div style="display: grid; gap: 1rem;">
+        <!-- Recommended Action -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Action</span>
+            <button onclick="copyIpRepCode('${accordionId}-action')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-action" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlIpRep(rec.action || rec.description)}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fix Guide Tab -->
+    <div class="iprep-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        ${getIpRepDefaultSteps(rec).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+    </div>
+  `;
+}
+
+function getIpRepDefaultSteps(rec) {
+  const stepsMap = {
+    'Configure SPF Record': [
+      'Access your domain DNS settings',
+      'Add a TXT record with SPF configuration',
+      'Example: "v=spf1 include:_spf.yourprovider.com ~all"',
+      'Test with SPF validation tools'
+    ],
+    'Implement DMARC Policy': [
+      'Create a DMARC record at _dmarc.yourdomain.com',
+      'Start with p=none for monitoring',
+      'Add rua= for aggregate reports',
+      'Gradually increase policy strictness'
+    ],
+    'Configure DKIM': [
+      'Generate DKIM keys through your email provider',
+      'Add the public key as a TXT record',
+      'Enable DKIM signing in your email server',
+      'Verify with DKIM testing tools'
+    ],
+    'Add CAA DNS Records': [
+      'Identify your certificate authority',
+      'Add CAA record specifying allowed CAs',
+      'Example: "0 issue \\"letsencrypt.org\\""',
+      'Test with CAA lookup tools'
+    ],
+    'Monitor Reputation Regularly': [
+      'Set up monitoring with blacklist check services',
+      'Configure alerts for reputation changes',
+      'Review email authentication weekly',
+      'Address issues promptly when detected'
+    ]
+  };
+  return stepsMap[rec.title] || [
+    'Review the current issue',
+    'Follow the recommended action',
+    'Test and verify the fix',
+    'Monitor for improvements'
+  ];
+}
+
+// Toggle accordion
+function toggleIpRepFixAccordion(accordionId) {
+  const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  const content = document.getElementById(`${accordionId}-content`);
+  const icon = accordion?.querySelector('.iprep-fix-expand-icon');
+
+  if (!accordion || !content) return;
+
+  const isExpanded = accordion.classList.contains('expanded');
+
+  if (isExpanded) {
+    accordion.classList.remove('expanded');
+    content.style.maxHeight = '0';
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  } else {
+    accordion.classList.add('expanded');
+    content.style.maxHeight = content.scrollHeight + 'px';
+    if (icon) icon.style.transform = 'rotate(180deg)';
+  }
+}
+
+// Switch tabs
+function switchIpRepFixTab(accordionId, tabName) {
+  const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  if (!accordion) return;
+
+  const tabs = accordion.querySelectorAll('.iprep-fix-tab');
+  const contents = accordion.querySelectorAll('.iprep-fix-tab-content');
+
+  tabs.forEach(tab => {
+    tab.style.background = 'transparent';
+    tab.style.color = '#aaa';
+    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+    tab.classList.remove('active');
+  });
+  contents.forEach(content => {
+    content.style.display = 'none';
+    content.classList.remove('active');
+  });
+
+  const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+  const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+
+  if (activeTab) {
+    activeTab.style.background = 'rgba(255,255,255,0.1)';
+    activeTab.style.color = '#fff';
+    activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+    activeTab.classList.add('active');
+  }
+  if (activeContent) {
+    activeContent.style.display = 'block';
+    activeContent.classList.add('active');
+  }
+
+  // Update accordion height
+  const content = document.getElementById(`${accordionId}-content`);
+  if (content && accordion.classList.contains('expanded')) {
+    setTimeout(() => {
+      content.style.maxHeight = content.scrollHeight + 'px';
+    }, 50);
+  }
+}
+
+// Copy code
+function copyIpRepCode(elementId) {
+  const codeElement = document.getElementById(elementId);
+  if (!codeElement) return;
+
+  const text = codeElement.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = codeElement.parentElement.querySelector('button');
+    if (btn) {
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = originalText; }, 2000);
+    }
+  });
+}
+
+function ensureIpRepFixStyles() {
+  if (document.getElementById('iprep-fixes-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'iprep-fixes-styles';
+  style.textContent = `
+    .iprep-fix-accordion.expanded .iprep-fix-expand-icon {
+      transform: rotate(180deg);
+    }
+    .iprep-fix-header:hover {
+      background: rgba(255,255,255,0.03);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function escapeHtmlIpRep(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // Create SSL Certificate Section
 function createSSLSection(sslCert, sslScore) {
   if (!sslCert) return '';
@@ -815,7 +1403,12 @@ function createSSLSection(sslCert, sslScore) {
       ` : ''}
   `;
   
-  return createAccordionSection('ssl', 'SSL/TLS Certificate', content, sslScore);
+  return ReportAccordion.createSection({
+    id: 'ssl',
+    title: 'SSL/TLS Certificate',
+    scoreTextRight: `${Math.round(sslScore)}/100`,
+    contentHTML: content
+  });
 }
 
 // Create DNS Health Section
@@ -887,7 +1480,12 @@ function createDNSHealthSection(dnsHealth, dnsScore) {
       ` : ''}
   `;
 
-  return createAccordionSection('dns-health', 'DNS Health', content, dnsScore);
+  return ReportAccordion.createSection({
+    id: 'dns-health',
+    title: 'DNS Health',
+    scoreTextRight: `${Math.round(dnsScore)}/100`,
+    contentHTML: content
+  });
 }
 
 // Create Port Security Section
@@ -955,7 +1553,12 @@ function createPortSecuritySection(portScan) {
     score = Math.max(0, score);
   }
 
-  return createAccordionSection('port-security', 'Port Security Scan', content, score);
+  return ReportAccordion.createSection({
+    id: 'port-security',
+    title: 'Port Security Scan',
+    scoreTextRight: `${Math.round(score)}/100`,
+    contentHTML: content
+  });
 }
 
 function showError(message) {
@@ -966,50 +1569,6 @@ function showError(message) {
   setTimeout(() => {
     errorMessage.classList.add('hidden');
   }, 5000);
-}
-
-// Helper function to create accordion sections
-function createAccordionSection(id, title, contentHTML, score = null) {
-  const accordionId = `accordion-${id}`;
-  
-  return `
-    <div class="accordion" style="margin-bottom: 0.5rem;">
-      <button class="accordion-header" onclick="toggleIPAccordion('${accordionId}')">
-        <span>${title}</span>
-        <span style="display: flex; align-items: center; gap: 0.5rem;">
-          ${score !== null ? `<span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
-          <span class="accordion-toggle" id="${accordionId}-toggle">▼</span>
-        </span>
-      </button>
-      <div class="accordion-content" id="${accordionId}" style="max-height: 0; padding: 0; overflow: hidden; border-top: none; transition: max-height 0.3s ease, padding 0.3s ease;">
-        <div class="accordion-content-inner">
-          ${contentHTML}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-// Toggle accordion function
-function toggleIPAccordion(accordionId) {
-  const content = document.getElementById(accordionId);
-  const toggle = document.getElementById(accordionId + '-toggle');
-  
-  if (!content || !toggle) return;
-  
-  const isExpanded = content.style.maxHeight !== '0px' && content.style.maxHeight !== '';
-  
-  if (isExpanded) {
-    content.style.maxHeight = '0';
-    content.style.padding = '0';
-    content.style.borderTop = 'none';
-    toggle.textContent = '▼';
-  } else {
-    content.style.maxHeight = content.scrollHeight + 'px';
-    content.style.padding = '1rem 1.25rem';
-    content.style.borderTop = '1px solid #333';
-    toggle.textContent = '▲';
-  }
 }
 
 /**

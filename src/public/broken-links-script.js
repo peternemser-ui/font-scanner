@@ -144,75 +144,176 @@ function displayResults(data) {
   // Store results globally
   window.currentBrokenLinksResults = data;
 
+  // Wrap in report-scope for proper CSS styling of accordions
+  const reportScope = document.createElement('div');
+  reportScope.className = 'report-scope';
+  resultsContainer.appendChild(reportScope);
+
   // 1. Overview Section with Score Circle
   const overviewSection = document.createElement('div');
   overviewSection.className = 'section';
   overviewSection.innerHTML = createOverviewSection(data);
-  resultsContainer.appendChild(overviewSection);
+  reportScope.appendChild(overviewSection);
+  
+  // 1.5. Show warning if no links found (site blocking or JS rendering issue)
+  if (data.totalLinks === 0 || data.summary.broken + data.summary.redirects + data.summary.working + data.summary.external === 0) {
+    const warningSection = document.createElement('div');
+    warningSection.className = 'section';
+    warningSection.innerHTML = `
+      <div style="
+        background: linear-gradient(135deg, rgba(255,140,0,0.15), rgba(255,68,68,0.1));
+        border: 2px solid rgba(255,140,0,0.6);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+      ">
+        <h3 style="color: #ff8c00; margin: 0 0 0.75rem 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+          ⚠️ No Links Discovered
+        </h3>
+        <p style="color: #c0c0c0; margin: 0 0 0.75rem 0; line-height: 1.6;">
+          The crawler was unable to find any links on <strong>${data.url}</strong>. This usually indicates one of the following:
+        </p>
+        <ul style="color: #c0c0c0; margin: 0 0 1rem 1rem; line-height: 1.8;">
+          <li><strong>Bot Detection:</strong> The site is blocking automated crawlers (common with CloudFlare, Akamai, etc.)</li>
+          <li><strong>JavaScript Rendering:</strong> Links are generated dynamically by JavaScript that requires a browser</li>
+          <li><strong>Access Restrictions:</strong> The site returned a 403 Forbidden or similar error</li>
+          <li><strong>Unusual Navigation:</strong> The site uses custom navigation (data-href, onclick handlers, etc.)</li>
+        </ul>
+        <p style="color: #808080; margin: 0; font-size: 0.85rem; font-style: italic;">
+          Try running the scan again, or contact support if this issue persists. Some enterprise sites cannot be crawled externally.
+        </p>
+      </div>
+    `;
+    reportScope.appendChild(warningSection);
+  }
 
   // 2. Summary Cards
   const summarySection = document.createElement('div');
   summarySection.className = 'section';
   summarySection.innerHTML = createSummaryCards(data.summary);
-  resultsContainer.appendChild(summarySection);
+  reportScope.appendChild(summarySection);
 
-  // 3. Accordion Sections - Link Status
+  // 3. Accordion Sections using ReportAccordion
+  const accordionContainer = document.createElement('div');
+  accordionContainer.className = 'accordion-container';
+
+  let accordionHTML = '';
+
   if (data.links.broken && data.links.broken.length > 0) {
-    createAccordionSection(resultsContainer, 'broken-links', `Broken Links (${data.links.broken.length})`, 
-      () => renderBrokenLinksContent(data.links.broken), null, true);
+    accordionHTML += ReportAccordion.createSection({
+      id: 'broken-links',
+      title: `Broken Links (${data.links.broken.length})`,
+      contentHTML: renderBrokenLinksContent(data.links.broken)
+    });
   }
-  
+
   if (data.links.redirects && data.links.redirects.length > 0) {
-    createAccordionSection(resultsContainer, 'redirects', `Redirects (${data.links.redirects.length})`, 
-      () => renderRedirectsContent(data.links.redirects, data.redirectAnalysis), null, false);
+    accordionHTML += ReportAccordion.createSection({
+      id: 'redirects',
+      title: `Redirects (${data.links.redirects.length})`,
+      contentHTML: renderRedirectsContent(data.links.redirects, data.redirectAnalysis)
+    });
   }
-  
+
   if (data.links.working && data.links.working.length > 0) {
-    createAccordionSection(resultsContainer, 'working-links', `Working Links (${data.summary.working} total)`, 
-      () => renderWorkingLinksContent(data.links.working, data.summary.working), null, false);
+    accordionHTML += ReportAccordion.createSection({
+      id: 'working-links',
+      title: `Working Links (${data.summary.working} total)`,
+      contentHTML: renderWorkingLinksContent(data.links.working, data.summary.working)
+    });
   }
-  
+
   if (data.links.external && data.links.external.length > 0) {
-    createAccordionSection(resultsContainer, 'external-links', `External Links (${data.summary.external} total)`, 
-      () => renderExternalLinksContent(data.links.external, data.summary.external), null, false);
+    accordionHTML += ReportAccordion.createSection({
+      id: 'external-links',
+      title: `External Links (${data.summary.external} total)`,
+      contentHTML: renderExternalLinksContent(data.links.external, data.summary.external)
+    });
   }
 
-  // 4. NEW: Anchor Text Analysis
-  if (data.anchorAnalysis) {
-    createAccordionSection(resultsContainer, 'anchor-analysis', 'Anchor Text Analysis', 
-      () => renderAnchorAnalysisContent(data.anchorAnalysis), null, false);
+  // Anchor Text Analysis - only show if there's actual anchor data
+  if (data.anchorAnalysis && data.anchorAnalysis.totalAnchors > 0) {
+    accordionHTML += ReportAccordion.createSection({
+      id: 'anchor-analysis',
+      title: 'Anchor Text Analysis',
+      contentHTML: renderAnchorAnalysisContent(data.anchorAnalysis)
+    });
   }
 
-  // 5. NEW: Link Attributes Audit
-  if (data.attributeAnalysis) {
-    createAccordionSection(resultsContainer, 'attribute-analysis', 'Link Attributes Audit', 
-      () => renderAttributeAnalysisContent(data.attributeAnalysis), null, false);
+  // Link Attributes Audit - only show if there are external links to audit
+  if (data.attributeAnalysis && (data.attributeAnalysis.secureExternalLinks > 0 || data.attributeAnalysis.insecureExternalLinks > 0 || data.attributeAnalysis.nofollowCount > 0)) {
+    accordionHTML += ReportAccordion.createSection({
+      id: 'attribute-analysis',
+      title: 'Link Attributes Audit',
+      contentHTML: renderAttributeAnalysisContent(data.attributeAnalysis)
+    });
   }
 
-  // 6. NEW: Redirect Chain Analysis
+  // Redirect Chain Analysis
   if (data.redirectAnalysis && data.redirectAnalysis.total > 0) {
-    createAccordionSection(resultsContainer, 'redirect-analysis', 'Redirect Chain Analysis', 
-      () => renderRedirectAnalysisContent(data.redirectAnalysis), null, false);
+    accordionHTML += ReportAccordion.createSection({
+      id: 'redirect-analysis',
+      title: 'Redirect Chain Analysis',
+      contentHTML: renderRedirectAnalysisContent(data.redirectAnalysis)
+    });
   }
 
-  // 7. Recommendations
+  // Report and Recommendations (PRO)
   if (data.recommendations && data.recommendations.length > 0) {
-    createAccordionSection(resultsContainer, 'recommendations', 'Recommendations',
-      () => renderRecommendationsContent(data.recommendations), null, false);
+    accordionHTML += ReportAccordion.createSection({
+      id: 'report-recommendations',
+      title: `Report and Recommendations (${data.recommendations.length})`,
+      isPro: true,
+      locked: !window.ProAccess?.hasProAccess?.(),
+      context: 'broken-links',
+      contentHTML: renderRecommendationsAndExportContent(data)
+    });
   }
 
-  // 8. Pro Report Block
+  accordionContainer.innerHTML = accordionHTML;
+  reportScope.appendChild(accordionContainer);
+
+  // Initialize ReportAccordion interactions
+  ReportAccordion.initInteractions();
+
+  // 9. Pro Report Block
   if (window.ProReportBlock && window.ProReportBlock.render) {
+    // Compute and set report ID for monetization
+    const reportUrl = data.url || document.getElementById('url').value.trim();
+    const scanStartedAt = window.SM_SCAN_STARTED_AT || document.body.getAttribute('data-sm-scan-started-at');
+    const analyzerKey = window.SM_ANALYZER_KEY;
+    
+    let reportId = null;
+    if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
+      reportId = window.ReportUI.makeReportId({
+        analyzerKey,
+        normalizedUrl: reportUrl,
+        startedAtISO: scanStartedAt
+      });
+    } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
+      reportId = window.ReportUI.computeReportId(reportUrl, scanStartedAt, analyzerKey);
+    }
+    
+    if (reportId) {
+      document.body.setAttribute('data-report-id', reportId);
+    }
+    
     const proSection = document.createElement('div');
     proSection.className = 'section';
     proSection.style.marginTop = '2rem';
     proSection.innerHTML = window.ProReportBlock.render({
       context: 'broken-links',
-      features: ['pdf', 'csv', 'share'],
+      features: ['pdf', 'excel', 'csv', 'share'],
       title: 'Unlock Report',
-      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+      subtitle: 'PDF export, Excel spreadsheet, share link, and export data for this scan.',
+      reportId: reportId
     });
-    resultsContainer.appendChild(proSection);
+    reportScope.appendChild(proSection);
+    
+    // Refresh paywall state to show correct buttons
+    if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+      window.CreditsManager.renderPaywallState();
+    }
   }
 }
 
@@ -223,8 +324,11 @@ function createOverviewSection(data) {
   const circumference = 2 * Math.PI * 75;
   const strokeDasharray = `${(score / 100) * circumference} ${circumference}`;
   
+  // Check if scan failed to find links
+  const noLinksFound = data.totalLinks === 0 || (s.broken === 0 && s.redirects === 0 && s.working === 0 && s.external === 0);
+  
   return `
-    <h2>[BROKEN_LINK_ANALYSIS]</h2>
+    <h2>Broken Link Analysis</h2>
     <p>>> url: ${data.url || 'N/A'}</p>
     <p>>> timestamp: ${new Date().toLocaleString()}</p>
     
@@ -387,231 +491,213 @@ function createSummaryCards(summary) {
   `;
 }
 
-function createAccordionSection(container, id, title, contentCreator, score, startOpen = false) {
-  const accordion = document.createElement('div');
-  accordion.className = 'accordion';
-  accordion.style.cssText = 'margin: 0.5rem 0;';
-  
-  const header = document.createElement('button');
-  header.className = 'accordion-header';
-  header.innerHTML = `
-    <span>${title}</span>
-    <span style="display: flex; align-items: center; gap: 0.5rem;">
-      ${score !== null ? `<span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
-      <span class="accordion-toggle">${startOpen ? '▲' : '▼'}</span>
-    </span>
+// Reusable export button helper
+function renderExportButton(functionName, color, isUnlocked) {
+  return `
+    <button onclick="${functionName}()" style="
+      background: ${isUnlocked ? `rgba(${hexToRgb(color)}, 0.15)` : 'rgba(128,128,128,0.15)'};
+      color: ${isUnlocked ? color : '#888'};
+      border: 1px solid ${isUnlocked ? `rgba(${hexToRgb(color)}, 0.4)` : 'rgba(128,128,128,0.4)'};
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      transition: all 0.2s;
+    " title="${isUnlocked ? 'Export to Excel' : 'PRO feature - Unlock to export'}">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+        <polyline points="14 2 14 8 20 8"></polyline>
+      </svg>
+      Export ${isUnlocked ? '' : '<span style="font-size: 0.65rem; background: rgba(255,215,0,0.2); color: #ffd700; padding: 0.1rem 0.3rem; border-radius: 3px; margin-left: 0.25rem;">PRO</span>'}
+    </button>
   `;
-  
-  const content = document.createElement('div');
-  content.className = 'accordion-content';
-  content.id = `accordion-${id}`;
-  
-  // Start collapsed or expanded based on startOpen
-  if (startOpen) {
-    content.style.cssText = 'max-height: 5000px; padding: 1rem 1.25rem; overflow: visible; border-top: 1px solid #333;';
-    content.classList.add('expanded');
-    header.classList.add('active');
-  } else {
-    content.style.cssText = 'max-height: 0; padding: 0; overflow: hidden; border-top: none; transition: max-height 0.3s ease, padding 0.3s ease;';
-  }
-  
-  const contentInner = document.createElement('div');
-  contentInner.className = 'accordion-content-inner';
-  
-  // Load content immediately if startOpen
-  if (startOpen) {
-    contentInner.innerHTML = contentCreator();
-  }
-  
-  content.appendChild(contentInner);
-  
-  header.addEventListener('click', () => {
-    const isExpanded = content.classList.contains('expanded');
-    
-    if (isExpanded) {
-      content.classList.remove('expanded');
-      header.classList.remove('active');
-      header.querySelector('.accordion-toggle').textContent = '▼';
-      content.style.maxHeight = '0';
-      content.style.padding = '0';
-      content.style.borderTop = 'none';
-    } else {
-      if (!contentInner.hasChildNodes()) {
-        contentInner.innerHTML = contentCreator();
-      }
-      content.classList.add('expanded');
-      header.classList.add('active');
-      header.querySelector('.accordion-toggle').textContent = '▲';
-      content.style.maxHeight = content.scrollHeight + 100 + 'px';
-      content.style.padding = '1rem 1.25rem';
-      content.style.borderTop = '1px solid #333';
-    }
-  });
-  
-  accordion.appendChild(header);
-  accordion.appendChild(content);
-  container.appendChild(accordion);
+}
+
+// Helper to convert hex to RGB for rgba()
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}` : '128, 128, 128';
 }
 
 function renderBrokenLinksContent(broken) {
+  const headers = [
+    { label: 'Broken URL', align: 'left' },
+    { label: 'Status', align: 'center' },
+    { label: 'Found On', align: 'center' },
+    { label: 'Link Text', align: 'left' }
+  ];
+
+  const renderRow = (link) => `
+    <tr style="border-bottom: 1px solid #222;">
+      <td style="padding: 0.75rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <a href="${link.url}" target="_blank" rel="noopener" style="color: #ff6b6b;">${truncateUrl(link.url)}</a>
+      </td>
+      <td style="padding: 0.75rem; text-align: center;">
+        <span style="background: rgba(255,68,68,0.2); color: #ff6b6b; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600;">
+          ${link.statusCode || 'ERR'}
+        </span>
+      </td>
+      <td style="padding: 0.75rem; text-align: center; color: #808080;">${link.foundOn.length} page(s)</td>
+      <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c0c0c0;">
+        ${link.text || '—'}
+      </td>
+    </tr>
+  `;
+
+  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
+
   return `
     <div>
-      <h3 style="color: #ff4444; margin: 0 0 0.75rem 0; font-size: 1rem;">>> Critical: Fix These Links</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 style="color: #ff4444; margin: 0; font-size: 1rem;">>> Critical: Fix These Links</h3>
+        ${renderExportButton('exportBrokenLinksToExcel', '#E74C3C', isUnlocked)}
+      </div>
       <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
         Broken links hurt SEO and user experience. These need immediate attention.
       </p>
-      
-      <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-          <thead>
-            <tr style="border-bottom: 2px solid #333;">
-              <th style="text-align: left; padding: 0.75rem; color: #c0c0c0;">Broken URL</th>
-              <th style="text-align: center; padding: 0.75rem; color: #c0c0c0;">Status</th>
-              <th style="text-align: center; padding: 0.75rem; color: #c0c0c0;">Found On</th>
-              <th style="text-align: left; padding: 0.75rem; color: #c0c0c0;">Link Text</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${broken.slice(0, 50).map(link => `
-              <tr style="border-bottom: 1px solid #222;">
-                <td style="padding: 0.75rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                  <a href="${link.url}" target="_blank" rel="noopener" style="color: #ff6b6b;">${truncateUrl(link.url)}</a>
-                </td>
-                <td style="padding: 0.75rem; text-align: center;">
-                  <span style="background: rgba(255,68,68,0.2); color: #ff6b6b; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600;">
-                    ${link.statusCode || 'ERR'}
-                  </span>
-                </td>
-                <td style="padding: 0.75rem; text-align: center; color: #808080;">${link.foundOn.length} page(s)</td>
-                <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c0c0c0;">
-                  ${link.text || '—'}
-                </td>
-              </tr>
-            `).join('')}
-          </tbody>
-        </table>
-        ${broken.length > 50 ? `<p style="margin-top: 1rem; color: #808080; font-size: 0.85rem;">Showing first 50 of ${broken.length} broken links</p>` : ''}
-      </div>
+      ${renderPaginatedTable(broken, 'broken-links', renderRow, headers)}
     </div>
   `;
 }
 
 function renderRedirectsContent(redirects, redirectAnalysis) {
+  const headers = [
+    { label: 'Original URL', align: 'left' },
+    { label: 'Type', align: 'center' },
+    { label: 'Chain', align: 'center' },
+    { label: 'Final Destination', align: 'left' }
+  ];
+
+  const renderRow = (link) => {
+    const chainLength = (link.redirectChain || []).length;
+    const typeColor = link.redirectType === 'permanent' || link.redirectType === 'permanent-308' ? '#00ff41' : '#ff8c00';
+    const typeLabel = link.redirectType === 'permanent' ? '301' :
+                     link.redirectType === 'temporary' ? '302' :
+                     link.redirectType === 'temporary-307' ? '307' :
+                     link.redirectType === 'permanent-308' ? '308' : link.statusCode;
+    return `
+      <tr style="border-bottom: 1px solid #222;">
+        <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+          <a href="${link.url}" target="_blank" rel="noopener" style="color: #F5B041;">${truncateUrl(link.url)}</a>
+        </td>
+        <td style="padding: 0.75rem; text-align: center;">
+          <span style="background: ${typeColor}20; color: ${typeColor}; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">
+            ${typeLabel}
+          </span>
+        </td>
+        <td style="padding: 0.75rem; text-align: center;">
+          <span style="color: ${chainLength > 2 ? '#E74C3C' : '#58D68D'}; font-weight: 600;">
+            ${chainLength} hop${chainLength !== 1 ? 's' : ''}
+          </span>
+          ${link.redirectLoop ? '<span style="color: #E74C3C; margin-left: 0.5rem;">⚠️ LOOP</span>' : ''}
+        </td>
+        <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: ${link.redirectEndsInError ? '#E74C3C' : '#58D68D'};">
+            link.redirectEndsInError ? '❌ Error' :
+            link.redirectChain && link.redirectChain.length > 0 ? truncateUrl(link.redirectChain[link.redirectChain.length - 1]?.url || link.redirectChain[0]) : '—'}
+        </td>
+      </tr>
+    `;
+  };
+
+  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
+
   return `
     <div>
-      <h3 style="color: #ffd700; margin: 0 0 0.75rem 0; font-size: 1rem;">>> Redirect Chains</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 style="color: #F5B041; margin: 0; font-size: 1rem;">>> Redirect Chains</h3>
+        ${renderExportButton('exportRedirectsToExcel', '#F5B041', isUnlocked)}
+      </div>
       <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
         Update these links to point directly to their final destination to improve page speed.
       </p>
-      
-      <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
-          <thead>
-            <tr style="border-bottom: 2px solid #333;">
-              <th style="text-align: left; padding: 0.75rem; color: #c0c0c0;">Original URL</th>
-              <th style="text-align: center; padding: 0.75rem; color: #c0c0c0;">Type</th>
-              <th style="text-align: center; padding: 0.75rem; color: #c0c0c0;">Chain</th>
-              <th style="text-align: left; padding: 0.75rem; color: #c0c0c0;">Final Destination</th>
-            </tr>
-          </thead>
-          <tbody>
-            ${redirects.slice(0, 30).map(link => {
-              const chainLength = (link.redirectChain || []).length;
-              const typeColor = link.redirectType === 'permanent' || link.redirectType === 'permanent-308' ? '#00ff41' : '#ff8c00';
-              const typeLabel = link.redirectType === 'permanent' ? '301' : 
-                               link.redirectType === 'temporary' ? '302' :
-                               link.redirectType === 'temporary-307' ? '307' :
-                               link.redirectType === 'permanent-308' ? '308' : link.statusCode;
-              return `
-              <tr style="border-bottom: 1px solid #222;">
-                <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                  <a href="${link.url}" target="_blank" rel="noopener" style="color: #ffd700;">${truncateUrl(link.url)}</a>
-                </td>
-                <td style="padding: 0.75rem; text-align: center;">
-                  <span style="background: ${typeColor}20; color: ${typeColor}; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">
-                    ${typeLabel}
-                  </span>
-                </td>
-                <td style="padding: 0.75rem; text-align: center;">
-                  <span style="color: ${chainLength > 2 ? '#ff4444' : '#00ff41'}; font-weight: 600;">
-                    ${chainLength} hop${chainLength !== 1 ? 's' : ''}
-                  </span>
-                  ${link.redirectLoop ? '<span style="color: #ff4444; margin-left: 0.5rem;">⚠️ LOOP</span>' : ''}
-                </td>
-                <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: ${link.redirectEndsInError ? '#ff4444' : '#00ff41'};">
-                  ${link.finalDestination ? truncateUrl(link.finalDestination) : 
-                    link.redirectEndsInError ? '❌ Error' : 
-                    link.redirectChain.length > 0 ? truncateUrl(link.redirectChain[link.redirectChain.length - 1]?.url || link.redirectChain[0]) : '—'}
-                </td>
-              </tr>
-            `}).join('')}
-          </tbody>
-        </table>
-        ${redirects.length > 30 ? `<p style="margin-top: 1rem; color: #808080; font-size: 0.85rem;">Showing first 30 of ${redirects.length} redirects</p>` : ''}
-      </div>
+      ${renderPaginatedTable(redirects, 'redirects', renderRow, headers)}
     </div>
   `;
 }
 
 function renderWorkingLinksContent(working, total) {
+  const headers = [
+    { label: 'URL', align: 'left' },
+    { label: 'Link Text', align: 'left' },
+    { label: 'Found On', align: 'center' }
+  ];
+
+  const renderRow = (link) => `
+    <tr style="border-bottom: 1px solid #222;">
+      <td style="padding: 0.75rem; max-width: 350px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <a href="${link.url}" target="_blank" rel="noopener" style="color: #5DADE2;">${truncateUrl(link.url)}</a>
+      </td>
+      <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c0c0c0;">
+        ${link.text || '—'}
+      </td>
+      <td style="padding: 0.75rem; text-align: center; color: #808080;">${link.foundOn ? link.foundOn.length : 1}</td>
+    </tr>
+  `;
+
+  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
+
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> Healthy Internal Links</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
-        All these links are working correctly. Showing sample of ${working.length} (${total} total).
-      </p>
-      
-      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-        ${working.slice(0, 20).map(link => `
-          <a href="${link.url}" target="_blank" rel="noopener" style="
-            background: rgba(0,255,65,0.1);
-            color: #00ff41;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            border: 1px solid rgba(0,255,65,0.3);
-            max-width: 250px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          ">${truncateUrl(link.url)}</a>
-        `).join('')}
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 style="color: #5DADE2; margin: 0; font-size: 1rem;">>> Healthy Internal Links</h3>
+        ${renderExportButton('exportWorkingLinksToExcel', '#5DADE2', isUnlocked)}
       </div>
+      <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
+        All these links are working correctly. Showing ${working.length} of ${total} total.
+      </p>
+      ${renderPaginatedTable(working, 'working-links', renderRow, headers)}
     </div>
   `;
 }
 
 function renderExternalLinksContent(external, total) {
+  const headers = [
+    { label: 'External URL', align: 'left' },
+    { label: 'Link Text', align: 'left' },
+    { label: 'Status', align: 'center' },
+    { label: 'Found On', align: 'center' }
+  ];
+
+  const renderRow = (link) => `
+    <tr style="border-bottom: 1px solid #222;">
+      <td style="padding: 0.75rem; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+        <a href="${link.url}" target="_blank" rel="noopener noreferrer" style="color: #7FB3D5;">${truncateUrl(link.url)}</a>
+      </td>
+      <td style="padding: 0.75rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #c0c0c0;">
+        ${link.text || '—'}
+      </td>
+      <td style="padding: 0.75rem; text-align: center;">
+        <span style="background: rgba(93,173,226,0.2); color: #5DADE2; padding: 0.25rem 0.5rem; border-radius: 4px; font-weight: 600; font-size: 0.8rem;">
+          ${link.statusCode || 'OK'}
+        </span>
+      </td>
+      <td style="padding: 0.75rem; text-align: center; color: #808080;">${link.foundOn ? link.foundOn.length : 1}</td>
+    </tr>
+  `;
+
+  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
+
   return `
     <div>
-      <h3 style="color: #00d9ff; margin: 0 0 0.75rem 0; font-size: 1rem;">>> External Outbound Links</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
-        Links pointing to other domains. Showing sample of ${external.length} (${total} total).
-      </p>
-      
-      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
-        ${external.slice(0, 20).map(link => `
-          <a href="${link.url}" target="_blank" rel="noopener" style="
-            background: rgba(0,217,255,0.1);
-            color: #00d9ff;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
-            text-decoration: none;
-            font-size: 0.85rem;
-            border: 1px solid rgba(0,217,255,0.3);
-            max-width: 250px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          ">${truncateUrl(link.url)}</a>
-        `).join('')}
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 style="color: #7FB3D5; margin: 0; font-size: 1rem;">>> External Outbound Links</h3>
+        ${renderExportButton('exportExternalLinksToExcel', '#7FB3D5', isUnlocked)}
       </div>
+      <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
+        Links pointing to other domains. Showing ${external.length} of ${total} total.
+      </p>
+      ${renderPaginatedTable(external, 'external-links', renderRow, headers)}
     </div>
   `;
 }
 
 function renderRecommendationsContent(recommendations) {
+  // Ensure global fix functions are available
+  ensureBrokenLinksFixFunctions();
+
   const grouped = {
     critical: recommendations.filter(r => r.priority === 'critical'),
     high: recommendations.filter(r => r.priority === 'high'),
@@ -619,44 +705,536 @@ function renderRecommendationsContent(recommendations) {
     success: recommendations.filter(r => r.priority === 'success')
   };
 
+  // Combine all fixes for accordion rendering
+  const allFixes = [
+    ...grouped.critical.map(r => ({ ...r, severity: 'High' })),
+    ...grouped.high.map(r => ({ ...r, severity: 'High' })),
+    ...grouped.medium.map(r => ({ ...r, severity: 'Medium' })),
+    ...grouped.success.map(r => ({ ...r, severity: 'Low' }))
+  ];
+
+  if (allFixes.length === 0) {
+    return `
+      <div style="text-align: center; padding: 2rem;">
+        <span style="font-size: 3rem;">✅</span>
+        <h3 style="color: #00ff41; margin: 1rem 0 0.5rem;">All Clear!</h3>
+        <p style="color: #808080;">No link issues detected. Your site's link health is excellent.</p>
+      </div>
+    `;
+  }
+
   return `
-    <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> Action Items</h3>
-      
-      ${grouped.critical.length > 0 ? `
-        <h4 style="color: #ff4444; margin: 1rem 0 0.5rem; font-size: 0.9rem;">🔴 Critical</h4>
-        ${grouped.critical.map(rec => renderRecommendation(rec, '#ff4444')).join('')}
-      ` : ''}
-      
-      ${grouped.high.length > 0 ? `
-        <h4 style="color: #ff8c00; margin: 1rem 0 0.5rem; font-size: 0.9rem;">🟠 High Priority</h4>
-        ${grouped.high.map(rec => renderRecommendation(rec, '#ff8c00')).join('')}
-      ` : ''}
-      
-      ${grouped.medium.length > 0 ? `
-        <h4 style="color: #ffd700; margin: 1rem 0 0.5rem; font-size: 0.9rem;">🟡 Medium Priority</h4>
-        ${grouped.medium.map(rec => renderRecommendation(rec, '#ffd700')).join('')}
-      ` : ''}
-      
-      ${grouped.success.length > 0 ? `
-        ${grouped.success.map(rec => renderRecommendation(rec, '#00ff41')).join('')}
-      ` : ''}
+    <div class="broken-links-fixes-container" style="margin-top: 1rem;">
+      <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+        <span style="font-size: 1.75rem;">🔗</span> Link Fixes
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${allFixes.length} recommendations)</span>
+      </h3>
+      <div class="broken-links-fixes-list">
+        ${allFixes.map((fix, index) => renderBrokenLinksFixAccordion(fix, index)).join('')}
+      </div>
     </div>
   `;
 }
 
-function renderRecommendation(rec, color) {
+function renderBrokenLinksFixAccordion(fix, index) {
+  const accordionId = `blfix-${fix.category?.replace(/\s+/g, '-').toLowerCase() || index}`;
+  const severityColors = {
+    High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+    Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
+  };
+  const style = severityColors[fix.severity] || severityColors.Medium;
+
   return `
-    <div style="
-      padding: 1rem 1rem 1rem 1.25rem;
-      margin: 0.5rem 0;
-      background: ${color}10;
-      border-left: 4px solid ${color};
-      border-radius: 4px;
+    <div class="broken-links-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
     ">
-      <h4 style="margin: 0 0 0.5rem 0; color: #ffffff;">${rec.message}</h4>
-      <p style="margin: 0; color: #c0c0c0; font-size: 0.9rem;">${rec.detail}</p>
-      <p style="margin: 0.5rem 0 0 0; color: #808080; font-size: 0.85rem; font-style: italic;">ⓘ ${rec.impact}</p>
+      <div class="broken-links-fix-header" onclick="toggleBrokenLinksFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${escapeBrokenLinksHtml(fix.message)}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${escapeBrokenLinksHtml(fix.category || 'Link Issue')}</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${fix.severity.toUpperCase()}</span>
+          <span class="broken-links-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+        </div>
+      </div>
+
+      <div class="broken-links-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderBrokenLinksFixTabs(fix, accordionId)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderBrokenLinksFixTabs(fix, accordionId) {
+  return `
+    <div class="broken-links-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="broken-links-fix-tab active" onclick="switchBrokenLinksFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Summary</button>
+      <button class="broken-links-fix-tab" onclick="switchBrokenLinksFixTab('${accordionId}', 'code')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">💻 Code</button>
+      <button class="broken-links-fix-tab" onclick="switchBrokenLinksFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🔧 Fix Guide</button>
+    </div>
+
+    <!-- Summary Tab -->
+    <div class="broken-links-fix-tab-content active" id="${accordionId}-summary">
+      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        ${escapeBrokenLinksHtml(fix.detail)}
+      </p>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+        <div style="color: #c0c0c0; font-size: 0.9rem;">${escapeBrokenLinksHtml(fix.impact)}</div>
+      </div>
+    </div>
+
+    <!-- Code Tab -->
+    <div class="broken-links-fix-tab-content" id="${accordionId}-code" style="display: none;">
+      <div style="display: grid; gap: 1rem;">
+        <!-- Current Issue -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
+            <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
+            <button onclick="copyBrokenLinksCode('${accordionId}-problem')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${getBrokenLinksCodeSnippet(fix, 'problem')}</pre>
+        </div>
+
+        <!-- Fixed Code -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
+            <button onclick="copyBrokenLinksCode('${accordionId}-solution')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${getBrokenLinksCodeSnippet(fix, 'solution')}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fix Guide Tab -->
+    <div class="broken-links-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        ${getBrokenLinksSteps(fix).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+    </div>
+  `;
+}
+
+function escapeBrokenLinksHtml(text) {
+  if (!text) return '';
+  const div = document.createElement('div');
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+function getBrokenLinksCodeSnippet(fix, type) {
+  const category = fix.category || '';
+  
+  const snippets = {
+    'Broken Links': {
+      problem: `<!-- Broken link found -->
+<a href="https://example.com/old-page">Read more</a>
+<!-- Returns 404 - Page not found -->`,
+      solution: `<!-- Option 1: Update to correct URL -->
+<a href="https://example.com/new-page">Read more</a>
+
+<!-- Option 2: Remove if no replacement exists -->
+<span>Content no longer available</span>
+
+<!-- Option 3: Create a redirect (in .htaccess) -->
+Redirect 301 /old-page /new-page`
+    },
+    'Redirect Chains': {
+      problem: `<!-- Redirect chain detected -->
+Page A → Page B → Page C → Final Page
+<!-- 3+ hops waste crawl budget and slow loading -->`,
+      solution: `<!-- Update link to point directly to final destination -->
+<a href="https://example.com/final-page">Link</a>
+
+<!-- Or fix server-side redirects (.htaccess) -->
+Redirect 301 /page-a /final-page
+Redirect 301 /page-b /final-page
+Redirect 301 /page-c /final-page`
+    },
+    'Redirect Loops': {
+      problem: `<!-- Redirect loop detected -->
+Page A → Page B → Page A (infinite loop!)
+<!-- Browser will fail to load the page -->`,
+      solution: `<!-- Review and fix redirect rules -->
+# Check .htaccess or server config for conflicting rules
+
+# Correct configuration:
+Redirect 301 /old-page /new-page
+# Ensure /new-page does NOT redirect back to /old-page`
+    },
+    'Temporary Redirects': {
+      problem: `<!-- Using temporary redirect (302) -->
+HTTP/1.1 302 Found
+Location: /new-page
+
+<!-- 302/307 don't pass full link equity -->`,
+      solution: `<!-- Use permanent redirect (301) instead -->
+HTTP/1.1 301 Moved Permanently
+Location: /new-page
+
+# In .htaccess:
+Redirect 301 /old-page /new-page
+
+# In nginx:
+rewrite ^/old-page$ /new-page permanent;`
+    },
+    'Link Security': {
+      problem: `<!-- Insecure external link -->
+<a href="https://external-site.com" target="_blank">
+  External Link
+</a>
+<!-- Missing rel attributes - vulnerable to tabnabbing -->`,
+      solution: `<!-- Add security attributes -->
+<a href="https://external-site.com" 
+   target="_blank" 
+   rel="noopener noreferrer">
+  External Link
+</a>
+
+<!-- noopener: prevents window.opener access -->
+<!-- noreferrer: hides referrer info + includes noopener -->`
+    },
+    'Anchor Text': {
+      problem: `<!-- Generic anchor text -->
+<a href="/pricing">Click here</a>
+<a href="/blog/seo-tips">Read more</a>
+<a href="/contact">Learn more</a>
+
+<!-- These provide no SEO value -->`,
+      solution: `<!-- Use descriptive anchor text -->
+<a href="/pricing">View pricing plans</a>
+<a href="/blog/seo-tips">10 SEO Tips for Beginners</a>
+<a href="/contact">Contact our support team</a>
+
+<!-- Anchor text should describe the destination -->`
+    },
+    'Accessibility': {
+      problem: `<!-- Empty or inaccessible link -->
+<a href="/page"></a>
+<a href="/page"><img src="icon.png"></a>
+<!-- No accessible text for screen readers -->`,
+      solution: `<!-- Option 1: Add visible text -->
+<a href="/page">Go to page</a>
+
+<!-- Option 2: Add aria-label -->
+<a href="/page" aria-label="Go to page">
+  <img src="icon.png" alt="">
+</a>
+
+<!-- Option 3: Add alt text to image -->
+<a href="/page">
+  <img src="icon.png" alt="Go to page">
+</a>`
+    }
+  };
+
+  const categorySnippets = snippets[category] || {
+    problem: `<!-- Link issue detected -->
+<!-- Review the specific link causing this issue -->`,
+    solution: `<!-- Fix the link according to the recommendation -->
+<!-- See the Fix Guide tab for detailed steps -->`
+  };
+
+  return categorySnippets[type] || categorySnippets.problem;
+}
+
+function getBrokenLinksSteps(fix) {
+  const category = fix.category || '';
+  
+  const stepsMap = {
+    'Broken Links': [
+      'Identify all broken links using the list in this report',
+      'For each broken link, check if the page moved or was deleted',
+      'If moved: update the href to the new URL',
+      'If deleted: remove the link or replace with relevant alternative',
+      'Consider setting up a custom 404 page to help users who land on missing pages',
+      'Re-run the broken link scan to verify fixes'
+    ],
+    'Redirect Chains': [
+      'Review the redirect chain analysis in this report',
+      'Identify the final destination URL for each chain',
+      'Update your links to point directly to the final URL',
+      'If you control the intermediate pages, consolidate redirects',
+      'Update any internal links that point to redirected URLs',
+      'Test that links now resolve in 1-2 hops maximum'
+    ],
+    'Redirect Loops': [
+      'Identify the URLs involved in the loop from this report',
+      'Review your .htaccess file or server redirect configuration',
+      'Look for conflicting redirect rules that create the loop',
+      'Remove or correct the conflicting rules',
+      'Test the affected URLs to confirm the loop is broken',
+      'Clear browser cache before testing'
+    ],
+    'Temporary Redirects': [
+      'Identify 302/307 redirects that should be permanent',
+      'For each temporary redirect, decide if it should be 301',
+      'Update server configuration to use 301 status codes',
+      'In .htaccess: Change "Redirect 302" to "Redirect 301"',
+      'In nginx: Use "permanent" instead of "redirect"',
+      'Verify changes with curl -I <URL> to check response headers'
+    ],
+    'Link Security': [
+      'Find all external links that open in new tabs (target="_blank")',
+      'Add rel="noopener noreferrer" to each of these links',
+      'For modern browsers, rel="noopener" alone is usually sufficient',
+      'Consider automating this with a script for existing content',
+      'Update your CMS templates to include these attributes by default',
+      'Verify that window.opener is null on the opened pages'
+    ],
+    'Anchor Text': [
+      'Review the list of generic anchor texts in this report',
+      'For each "click here" or "read more" link, identify the destination',
+      'Replace with descriptive text that explains where the link goes',
+      'Include relevant keywords naturally in the anchor text',
+      'Avoid over-optimized exact-match anchor text',
+      'Make anchor text unique - avoid repeating the same text for different links'
+    ],
+    'Accessibility': [
+      'Find all empty links and image-only links in this report',
+      'For empty links: add visible text content',
+      'For image links: add alt text that describes the link purpose',
+      'Alternative: add aria-label attribute to the link',
+      'Test with a screen reader to verify accessibility',
+      'Consider using the WAVE browser extension for validation'
+    ]
+  };
+
+  return stepsMap[category] || [
+    'Review the specific issue in the report details',
+    'Identify affected links using the tables above',
+    'Apply the recommended fix from the Code tab',
+    'Test the changes in a development environment',
+    'Deploy fixes and re-run the scan to verify'
+  ];
+}
+
+function ensureBrokenLinksFixFunctions() {
+  // Toggle accordion
+  if (typeof window.toggleBrokenLinksFixAccordion !== 'function') {
+    window.toggleBrokenLinksFixAccordion = function(accordionId) {
+      const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+      const content = document.getElementById(`${accordionId}-content`);
+      const icon = accordion?.querySelector('.broken-links-fix-expand-icon');
+
+      if (!accordion || !content) return;
+
+      const isExpanded = accordion.classList.contains('expanded');
+
+      if (isExpanded) {
+        accordion.classList.remove('expanded');
+        content.style.maxHeight = '0';
+        if (icon) icon.style.transform = 'rotate(0deg)';
+      } else {
+        accordion.classList.add('expanded');
+        content.style.maxHeight = content.scrollHeight + 'px';
+        if (icon) icon.style.transform = 'rotate(180deg)';
+      }
+    };
+  }
+
+  // Switch tabs
+  if (typeof window.switchBrokenLinksFixTab !== 'function') {
+    window.switchBrokenLinksFixTab = function(accordionId, tabName) {
+      const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+      if (!accordion) return;
+
+      const tabs = accordion.querySelectorAll('.broken-links-fix-tab');
+      const contents = accordion.querySelectorAll('.broken-links-fix-tab-content');
+
+      tabs.forEach(tab => {
+        tab.style.background = 'transparent';
+        tab.style.color = '#aaa';
+        tab.style.borderColor = 'rgba(255,255,255,0.1)';
+        tab.classList.remove('active');
+      });
+      contents.forEach(content => {
+        content.style.display = 'none';
+        content.classList.remove('active');
+      });
+
+      const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+      const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+
+      if (activeTab) {
+        activeTab.style.background = 'rgba(255,255,255,0.1)';
+        activeTab.style.color = '#fff';
+        activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+        activeTab.classList.add('active');
+      }
+      if (activeContent) {
+        activeContent.style.display = 'block';
+        activeContent.classList.add('active');
+      }
+
+      // Update accordion height
+      const content = document.getElementById(`${accordionId}-content`);
+      if (content && accordion.classList.contains('expanded')) {
+        setTimeout(() => {
+          content.style.maxHeight = content.scrollHeight + 'px';
+        }, 50);
+      }
+    };
+  }
+
+  // Copy code
+  if (typeof window.copyBrokenLinksCode !== 'function') {
+    window.copyBrokenLinksCode = function(elementId) {
+      const codeElement = document.getElementById(elementId);
+      if (!codeElement) return;
+
+      const text = codeElement.textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = codeElement.parentElement.querySelector('button');
+        if (btn) {
+          const originalText = btn.textContent;
+          btn.textContent = '✓ Copied!';
+          setTimeout(() => { btn.textContent = originalText; }, 2000);
+        }
+      });
+    };
+  }
+}
+
+// Combined Recommendations + Export Content
+function renderRecommendationsAndExportContent(data) {
+  const recommendations = data.recommendations || [];
+
+  // Initialize export handlers after render
+  setTimeout(() => initExportHandlers(data), 100);
+
+  return `
+    <div>
+      <!-- Recommendations Section -->
+      ${renderRecommendationsContent(recommendations)}
+
+      <!-- Export Section (inline) -->
+      <div style="
+        margin-top: 2rem;
+        padding-top: 1.5rem;
+        border-top: 1px solid #333;
+      ">
+        <h3 style="color: #00d9ff; margin: 0 0 0.75rem 0; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+          📊 Export Report Data
+        </h3>
+        <p style="color: #808080; margin: 0 0 1rem 0; font-size: 0.85rem;">
+          Download your broken links report in Excel or CSV format to share with your team or track fixes.
+        </p>
+        <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+          <button id="exportExcelBtn" style="
+            background: rgba(0,217,255,0.15);
+            color: #00d9ff;
+            border: 1px solid rgba(0,217,255,0.4);
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+          " onmouseover="this.style.background='rgba(0,217,255,0.25)'" onmouseout="this.style.background='rgba(0,217,255,0.15)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+              <polyline points="10 9 9 9 8 9"></polyline>
+            </svg>
+            Export to Excel
+          </button>
+          <button id="exportCsvBtn" style="
+            background: rgba(0,255,65,0.1);
+            color: #00ff41;
+            border: 1px solid rgba(0,255,65,0.3);
+            padding: 0.6rem 1.25rem;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.2s;
+          " onmouseover="this.style.background='rgba(0,255,65,0.2)'" onmouseout="this.style.background='rgba(0,255,65,0.1)'">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+              <polyline points="7 10 12 15 17 10"></polyline>
+              <line x1="12" y1="15" x2="12" y2="3"></line>
+            </svg>
+            Export to CSV
+          </button>
+        </div>
+      </div>
     </div>
   `;
 }
@@ -789,10 +1367,14 @@ function renderAttributeAnalysisContent(analysis) {
   const securityScore = analysis.insecureExternalLinks === 0 ? 100 :
     Math.round((analysis.secureExternalLinks / (analysis.secureExternalLinks + analysis.insecureExternalLinks)) * 100);
   const securityColor = securityScore === 100 ? '#00ff41' : securityScore >= 80 ? '#ffd700' : '#ff4444';
+  const isUnlocked = window.ProAccess?.hasProAccess?.() || false;
   
   return `
     <div>
-      <h3 style="color: #9933ff; margin: 0 0 0.75rem 0; font-size: 1rem;">>> Link Attributes Overview</h3>
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+        <h3 style="color: #9933ff; margin: 0; font-size: 1rem;">>> Link Attributes Overview</h3>
+        ${renderExportButton('exportSecurityIssuesToExcel', '#9933ff', isUnlocked)}
+      </div>
       <p style="color: #c0c0c0; margin-bottom: 1.5rem; font-size: 0.9rem;">
         Proper link attributes improve security, SEO, and control how link equity flows through your site.
       </p>
@@ -1095,4 +1677,721 @@ function getScoreColor(score) {
   if (score >= 60) return '#ffd700';
   if (score >= 40) return '#ff8c00';
   return '#ff4444';
+}
+
+function createProUpgradePrompt(message) {
+  return `
+    <div style="
+      text-align: center;
+      padding: 2rem;
+      background: linear-gradient(135deg, rgba(255,215,0,0.1) 0%, rgba(255,140,0,0.05) 100%);
+      border: 1px dashed rgba(255,215,0,0.4);
+      border-radius: 12px;
+    ">
+      <div style="
+        width: 60px;
+        height: 60px;
+        margin: 0 auto 1rem;
+        background: linear-gradient(135deg, #ffd700, #ff8c00);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.5rem;
+      ">🔒</div>
+      <h3 style="color: #ffd700; margin: 0 0 0.5rem 0; font-size: 1.1rem;">Pro Feature</h3>
+      <p style="color: #c0c0c0; margin: 0 0 1.5rem 0; font-size: 0.9rem;">${message}</p>
+      <button onclick="openPricingModal()" style="
+        background: linear-gradient(135deg, #ffd700, #ff8c00);
+        color: #000;
+        border: none;
+        padding: 0.75rem 2rem;
+        border-radius: 8px;
+        font-weight: 600;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: transform 0.2s, box-shadow 0.2s;
+      " onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 20px rgba(255,215,0,0.3)';" onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+        Upgrade to Pro
+      </button>
+    </div>
+  `;
+}
+
+async function checkProAccess() {
+  // Check if CreditsManager has Pro status
+  if (window.CreditsManager && typeof window.CreditsManager.hasProAccess === 'function') {
+    return await window.CreditsManager.hasProAccess();
+  }
+  // Fallback: check for reportUnlocked in session
+  const reportId = document.body.getAttribute('data-report-id');
+  if (reportId && window.CreditsManager && window.CreditsManager.isReportUnlocked) {
+    return window.CreditsManager.isReportUnlocked(reportId);
+  }
+  return false;
+}
+
+function openPricingModal() {
+  if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+    window.PricingModal.open();
+  } else {
+    alert('Please sign up for Pro access at sitemechanic.io/pricing');
+  }
+}
+
+// Global export handler for ProReportBlock
+window.exportExcel = async function(format, buttonEl) {
+  const data = window.currentBrokenLinksResults;
+  if (!data) {
+    console.error('No broken links data available for export');
+    return;
+  }
+  exportToExcel(data);
+};
+
+// ============================================
+// EXPORT SECTION (Pro Feature)
+// ============================================
+function createExportSection() {
+  return `
+    <div style="
+      background: linear-gradient(135deg, rgba(0,217,255,0.1) 0%, rgba(0,255,65,0.05) 100%);
+      border: 1px solid rgba(0,217,255,0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+    ">
+      <h3 style="color: #00d9ff; margin: 0 0 0.75rem 0; font-size: 1.1rem; display: flex; align-items: center; gap: 0.5rem;">
+        📊 Export Broken Links Data
+        <span style="
+          background: linear-gradient(135deg, #ffd700, #ff8c00);
+          color: #000;
+          font-size: 0.6rem;
+          font-weight: 700;
+          padding: 0.15rem 0.4rem;
+          border-radius: 3px;
+          text-transform: uppercase;
+        ">PRO</span>
+      </h3>
+      <p style="color: #808080; margin: 0 0 1rem 0; font-size: 0.85rem;">
+        Download your broken links report in Excel format to share with your team or track fixes.
+      </p>
+      <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+        <button id="exportExcelBtn" style="
+          background: rgba(0,217,255,0.15);
+          color: #00d9ff;
+          border: 1px solid rgba(0,217,255,0.4);
+          padding: 0.6rem 1.25rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.2s;
+        " onmouseover="this.style.background='rgba(0,217,255,0.25)'" onmouseout="this.style.background='rgba(0,217,255,0.15)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <line x1="16" y1="13" x2="8" y2="13"></line>
+            <line x1="16" y1="17" x2="8" y2="17"></line>
+            <polyline points="10 9 9 9 8 9"></polyline>
+          </svg>
+          Export to Excel
+        </button>
+        <button id="exportCsvBtn" style="
+          background: rgba(0,255,65,0.1);
+          color: #00ff41;
+          border: 1px solid rgba(0,255,65,0.3);
+          padding: 0.6rem 1.25rem;
+          border-radius: 8px;
+          font-weight: 600;
+          font-size: 0.9rem;
+          cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          transition: all 0.2s;
+        " onmouseover="this.style.background='rgba(0,255,65,0.2)'" onmouseout="this.style.background='rgba(0,255,65,0.1)'">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+          Export to CSV
+        </button>
+      </div>
+    </div>
+  `;
+}
+
+function initExportHandlers(data) {
+  const excelBtn = document.getElementById('exportExcelBtn');
+  const csvBtn = document.getElementById('exportCsvBtn');
+
+  if (excelBtn) {
+    excelBtn.addEventListener('click', async () => {
+      const hasPro = await checkProAccess();
+      if (!hasPro) {
+        openPricingModal();
+        return;
+      }
+      exportToExcel(data);
+    });
+  }
+
+  if (csvBtn) {
+    csvBtn.addEventListener('click', async () => {
+      const hasPro = await checkProAccess();
+      if (!hasPro) {
+        openPricingModal();
+        return;
+      }
+      exportToCsv(data);
+    });
+  }
+}
+
+function exportToExcel(data) {
+  // Create Excel-compatible XML (SpreadsheetML)
+  const worksheets = [];
+
+  // Sheet 1: Summary
+  const summaryRows = [
+    ['Broken Links Report'],
+    ['URL', data.url],
+    ['Scan Date', new Date().toLocaleString()],
+    ['Pages Scanned', data.pagesScanned],
+    ['Total Links', data.totalLinks],
+    [''],
+    ['Summary'],
+    ['Broken Links', data.summary.broken],
+    ['Redirects', data.summary.redirects],
+    ['Working Links', data.summary.working],
+    ['External Links', data.summary.external],
+    ['Score', data.score],
+    ['Grade', data.grade]
+  ];
+  worksheets.push({ name: 'Summary', rows: summaryRows });
+
+  // Sheet 2: Broken Links
+  if (data.links.broken && data.links.broken.length > 0) {
+    const brokenRows = [['URL', 'Status Code', 'Link Text', 'Found On Pages']];
+    data.links.broken.forEach(link => {
+      brokenRows.push([
+        link.url,
+        link.statusCode || 'ERR',
+        link.text || '',
+        link.foundOn.length
+      ]);
+    });
+    worksheets.push({ name: 'Broken Links', rows: brokenRows });
+  }
+
+  // Sheet 3: Redirects
+  if (data.links.redirects && data.links.redirects.length > 0) {
+    const redirectRows = [['Original URL', 'Status Code', 'Redirect Type', 'Chain Length', 'Final Destination']];
+    data.links.redirects.forEach(link => {
+      redirectRows.push([
+        link.url,
+        link.statusCode,
+        link.redirectType || '',
+        (link.redirectChain || []).length,
+        link.finalDestination || ''
+      ]);
+    });
+    worksheets.push({ name: 'Redirects', rows: redirectRows });
+  }
+
+  // Sheet 4: Recommendations
+  if (data.recommendations && data.recommendations.length > 0) {
+    const recRows = [['Priority', 'Category', 'Message', 'Detail', 'Impact']];
+    data.recommendations.forEach(rec => {
+      recRows.push([
+        rec.priority,
+        rec.category,
+        rec.message,
+        rec.detail,
+        rec.impact
+      ]);
+    });
+    worksheets.push({ name: 'Recommendations', rows: recRows });
+  }
+
+  // Generate Excel XML
+  let xml = '<?xml version="1.0"?>\n<?mso-application progid="Excel.Sheet"?>\n';
+  xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n';
+  xml += ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+
+  worksheets.forEach(sheet => {
+    xml += `<Worksheet ss:Name="${escapeXml(sheet.name)}">\n<Table>\n`;
+    sheet.rows.forEach(row => {
+      xml += '<Row>\n';
+      row.forEach(cell => {
+        const value = cell !== null && cell !== undefined ? String(cell) : '';
+        const type = typeof cell === 'number' ? 'Number' : 'String';
+        xml += `<Cell><Data ss:Type="${type}">${escapeXml(value)}</Data></Cell>\n`;
+      });
+      xml += '</Row>\n';
+    });
+    xml += '</Table>\n</Worksheet>\n';
+  });
+
+  xml += '</Workbook>';
+
+  // Download
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `broken-links-report-${new Date().toISOString().split('T')[0]}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+// Export working links to Excel - called from inline button
+window.exportWorkingLinksToExcel = async function() {
+  const hasPro = await checkProAccess();
+  if (!hasPro) {
+    openPricingModal();
+    return;
+  }
+  
+  const data = window.currentBrokenLinksResults;
+  if (!data || !data.links || !data.links.working) {
+    alert('No link data available to export');
+    return;
+  }
+
+  const rows = [
+    ['Working Links Export'],
+    ['URL', data.url],
+    ['Scan Date', new Date().toLocaleString()],
+    ['Total Working Links', data.summary.working],
+    [''],
+    ['URL', 'Link Text', 'Found On Pages']
+  ];
+
+  data.links.working.forEach(link => {
+    rows.push([
+      link.url,
+      link.text || '',
+      link.foundOn ? link.foundOn.length : 1
+    ]);
+  });
+
+  // Generate Excel XML
+  let xml = '<?xml version="1.0"?>\n<?mso-application progid="Excel.Sheet"?>\n';
+  xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n';
+  xml += ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+  xml += '<Worksheet ss:Name="Working Links">\n<Table>\n';
+
+  rows.forEach(row => {
+    xml += '<Row>\n';
+    row.forEach(cell => {
+      const value = cell !== null && cell !== undefined ? String(cell) : '';
+      const type = typeof cell === 'number' ? 'Number' : 'String';
+      xml += `<Cell><Data ss:Type="${type}">${escapeXml(value)}</Data></Cell>\n`;
+    });
+    xml += '</Row>\n';
+  });
+
+  xml += '</Table>\n</Worksheet>\n</Workbook>';
+
+  // Download
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `working-links-${new Date().toISOString().split('T')[0]}.xls`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+};
+
+// Export broken links to Excel
+window.exportBrokenLinksToExcel = async function() {
+  const hasPro = await checkProAccess();
+  if (!hasPro) {
+    openPricingModal();
+    return;
+  }
+  
+  const data = window.currentBrokenLinksResults;
+  if (!data || !data.links || !data.links.broken || data.links.broken.length === 0) {
+    alert('No broken links to export');
+    return;
+  }
+
+  const rows = [
+    ['Broken Links Export'],
+    ['URL', data.url],
+    ['Scan Date', new Date().toLocaleString()],
+    ['Total Broken Links', data.links.broken.length],
+    [''],
+    ['URL', 'Status Code', 'Link Text', 'Found On Pages']
+  ];
+
+  data.links.broken.forEach(link => {
+    rows.push([
+      link.url,
+      link.statusCode || 'ERR',
+      link.text || '',
+      link.foundOn ? link.foundOn.length : 1
+    ]);
+  });
+
+  downloadExcelFile(rows, 'Broken Links', `broken-links-${new Date().toISOString().split('T')[0]}.xls`);
+};
+
+// Export redirects to Excel
+window.exportRedirectsToExcel = async function() {
+  const hasPro = await checkProAccess();
+  if (!hasPro) {
+    openPricingModal();
+    return;
+  }
+  
+  const data = window.currentBrokenLinksResults;
+  if (!data || !data.links || !data.links.redirects || data.links.redirects.length === 0) {
+    alert('No redirects to export');
+    return;
+  }
+
+  const rows = [
+    ['Redirects Export'],
+    ['URL', data.url],
+    ['Scan Date', new Date().toLocaleString()],
+    ['Total Redirects', data.links.redirects.length],
+    [''],
+    ['Original URL', 'Status Code', 'Redirect Type', 'Chain Length', 'Final Destination']
+  ];
+
+  data.links.redirects.forEach(link => {
+    rows.push([
+      link.url,
+      link.statusCode || '',
+      link.redirectType || '',
+      (link.redirectChain || []).length,
+      link.finalDestination || ''
+    ]);
+  });
+
+  downloadExcelFile(rows, 'Redirects', `redirects-${new Date().toISOString().split('T')[0]}.xls`);
+};
+
+// Export external links to Excel
+window.exportExternalLinksToExcel = async function() {
+  const hasPro = await checkProAccess();
+  if (!hasPro) {
+    openPricingModal();
+    return;
+  }
+  
+  const data = window.currentBrokenLinksResults;
+  if (!data || !data.links || !data.links.external || data.links.external.length === 0) {
+    alert('No external links to export');
+    return;
+  }
+
+  const rows = [
+    ['External Links Export'],
+    ['URL', data.url],
+    ['Scan Date', new Date().toLocaleString()],
+    ['Total External Links', data.summary.external],
+    [''],
+    ['External URL', 'Link Text', 'Status Code', 'Found On Pages']
+  ];
+
+  data.links.external.forEach(link => {
+    rows.push([
+      link.url,
+      link.text || '',
+      link.statusCode || 'OK',
+      link.foundOn ? link.foundOn.length : 1
+    ]);
+  });
+
+  downloadExcelFile(rows, 'External Links', `external-links-${new Date().toISOString().split('T')[0]}.xls`);
+};
+
+// Export security issues (Link Attributes Audit) to Excel
+window.exportSecurityIssuesToExcel = async function() {
+  const hasPro = await checkProAccess();
+  if (!hasPro) {
+    openPricingModal();
+    return;
+  }
+  
+  const data = window.currentBrokenLinksResults;
+  if (!data || !data.attributeAnalysis) {
+    alert('No link attribute data to export');
+    return;
+  }
+
+  const analysis = data.attributeAnalysis;
+  const rows = [
+    ['Link Attributes Audit Export'],
+    ['URL', data.url],
+    ['Scan Date', new Date().toLocaleString()],
+    [''],
+    ['SUMMARY'],
+    ['Nofollow Links', analysis.nofollowCount],
+    ['Sponsored Links', analysis.sponsoredCount],
+    ['UGC Links', analysis.ugcCount],
+    ['Secure External Links', analysis.secureExternalLinks],
+    ['Insecure External Links', analysis.insecureExternalLinks],
+    [''],
+    ['INTERNAL LINK EQUITY FLOW'],
+    ['Followed', analysis.internalLinkFlow?.followed || 0],
+    ['Nofollowed', analysis.internalLinkFlow?.nofollowed || 0],
+    ['Ratio', analysis.internalLinkFlow?.ratio || 'N/A'],
+    ['']
+  ];
+
+  // Add security issues if any
+  if (analysis.securityIssues && analysis.securityIssues.length > 0) {
+    rows.push(['SECURITY ISSUES TO FIX']);
+    rows.push(['URL', 'Issue', 'Recommended Fix']);
+    analysis.securityIssues.forEach(issue => {
+      rows.push([
+        issue.url,
+        issue.risk || 'Missing security attributes',
+        issue.fix || 'Add rel="noopener noreferrer"'
+      ]);
+    });
+  }
+
+  downloadExcelFile(rows, 'Link Attributes', `link-attributes-audit-${new Date().toISOString().split('T')[0]}.xls`);
+};
+// Shared Excel download helper
+function downloadExcelFile(rows, sheetName, filename) {
+  let xml = '<?xml version="1.0"?>\n<?mso-application progid="Excel.Sheet"?>\n';
+  xml += '<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"\n';
+  xml += ' xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet">\n';
+  xml += `<Worksheet ss:Name="${escapeXml(sheetName)}">\n<Table>\n`;
+
+  rows.forEach(row => {
+    xml += '<Row>\n';
+    row.forEach(cell => {
+      const value = cell !== null && cell !== undefined ? String(cell) : '';
+      const type = typeof cell === 'number' ? 'Number' : 'String';
+      xml += `<Cell><Data ss:Type="${type}">${escapeXml(value)}</Data></Cell>\n`;
+    });
+    xml += '</Row>\n';
+  });
+
+  xml += '</Table>\n</Worksheet>\n</Workbook>';
+
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function exportToCsv(data) {
+  const rows = [
+    ['Broken Links Report'],
+    ['URL', data.url],
+    ['Scan Date', new Date().toLocaleString()],
+    [''],
+    ['BROKEN LINKS'],
+    ['URL', 'Status Code', 'Link Text', 'Found On Pages']
+  ];
+
+  if (data.links.broken) {
+    data.links.broken.forEach(link => {
+      rows.push([
+        link.url,
+        link.statusCode || 'ERR',
+        link.text || '',
+        link.foundOn.length
+      ]);
+    });
+  }
+
+  rows.push(['']);
+  rows.push(['REDIRECTS']);
+  rows.push(['Original URL', 'Status Code', 'Redirect Type', 'Chain Length', 'Final Destination']);
+
+  if (data.links.redirects) {
+    data.links.redirects.forEach(link => {
+      rows.push([
+        link.url,
+        link.statusCode,
+        link.redirectType || '',
+        (link.redirectChain || []).length,
+        link.finalDestination || ''
+      ]);
+    });
+  }
+
+  // Convert to CSV
+  const csv = rows.map(row =>
+    row.map(cell => {
+      const value = cell !== null && cell !== undefined ? String(cell) : '';
+      // Escape quotes and wrap in quotes if contains comma, quote, or newline
+      if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+        return `"${value.replace(/"/g, '""')}"`;
+      }
+      return value;
+    }).join(',')
+  ).join('\n');
+
+  // Download
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `broken-links-report-${new Date().toISOString().split('T')[0]}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+
+function escapeXml(str) {
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// ============================================
+// PAGINATION
+// ============================================
+const ITEMS_PER_PAGE = 25;
+const paginationState = {
+  'broken-links': { page: 1, total: 0 },
+  'redirects': { page: 1, total: 0 },
+  'working-links': { page: 1, total: 0 },
+  'external-links': { page: 1, total: 0 }
+};
+
+function renderPaginatedTable(items, tableId, renderRow, headers) {
+  const state = paginationState[tableId] || { page: 1, total: items.length };
+  state.total = items.length;
+  paginationState[tableId] = state;
+
+  const totalPages = Math.ceil(items.length / ITEMS_PER_PAGE);
+  const startIdx = (state.page - 1) * ITEMS_PER_PAGE;
+  const endIdx = Math.min(startIdx + ITEMS_PER_PAGE, items.length);
+  const pageItems = items.slice(startIdx, endIdx);
+
+  return `
+    <div style="overflow-x: auto;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+        <thead>
+          <tr style="border-bottom: 2px solid #333;">
+            ${headers.map(h => `<th style="text-align: ${h.align || 'left'}; padding: 0.75rem; color: #c0c0c0;">${h.label}</th>`).join('')}
+          </tr>
+        </thead>
+        <tbody>
+          ${pageItems.map(renderRow).join('')}
+        </tbody>
+      </table>
+    </div>
+    ${items.length > ITEMS_PER_PAGE ? renderPaginationControls(tableId, state.page, totalPages, items.length) : ''}
+  `;
+}
+
+function renderPaginationControls(tableId, currentPage, totalPages, totalItems) {
+  const startItem = (currentPage - 1) * ITEMS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * ITEMS_PER_PAGE, totalItems);
+
+  return `
+    <div style="
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      padding: 0.75rem;
+      background: rgba(255,255,255,0.03);
+      border-radius: 8px;
+    ">
+      <span style="color: #808080; font-size: 0.85rem;">
+        Showing ${startItem}-${endItem} of ${totalItems} items
+      </span>
+      <div style="display: flex; gap: 0.5rem;">
+        <button
+          onclick="changePage('${tableId}', ${currentPage - 1})"
+          ${currentPage === 1 ? 'disabled' : ''}
+          style="
+            background: ${currentPage === 1 ? 'rgba(255,255,255,0.05)' : 'rgba(0,217,255,0.15)'};
+            color: ${currentPage === 1 ? '#555' : '#00d9ff'};
+            border: 1px solid ${currentPage === 1 ? '#333' : 'rgba(0,217,255,0.3)'};
+            padding: 0.4rem 0.75rem;
+            border-radius: 4px;
+            cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'};
+            font-size: 0.85rem;
+          "
+        >← Prev</button>
+        <span style="
+          color: #00d9ff;
+          padding: 0.4rem 0.75rem;
+          font-size: 0.85rem;
+          font-weight: 600;
+        ">${currentPage} / ${totalPages}</span>
+        <button
+          onclick="changePage('${tableId}', ${currentPage + 1})"
+          ${currentPage === totalPages ? 'disabled' : ''}
+          style="
+            background: ${currentPage === totalPages ? 'rgba(255,255,255,0.05)' : 'rgba(0,217,255,0.15)'};
+            color: ${currentPage === totalPages ? '#555' : '#00d9ff'};
+            border: 1px solid ${currentPage === totalPages ? '#333' : 'rgba(0,217,255,0.3)'};
+            padding: 0.4rem 0.75rem;
+            border-radius: 4px;
+            cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'};
+            font-size: 0.85rem;
+          "
+        >Next →</button>
+      </div>
+    </div>
+  `;
+}
+
+function changePage(tableId, newPage) {
+  const state = paginationState[tableId];
+  if (!state) return;
+
+  const totalPages = Math.ceil(state.total / ITEMS_PER_PAGE);
+  if (newPage < 1 || newPage > totalPages) return;
+
+  state.page = newPage;
+
+  // Re-render the content
+  const data = window.currentBrokenLinksResults;
+  if (!data) return;
+
+  const accordion = document.querySelector(`#accordion-${tableId}`);
+  if (!accordion) return;
+
+  const contentInner = accordion.querySelector('.accordion-content-inner');
+  if (!contentInner) return;
+
+  // Re-render based on table type
+  switch(tableId) {
+    case 'broken-links':
+      contentInner.innerHTML = renderBrokenLinksContent(data.links.broken);
+      break;
+    case 'redirects':
+      contentInner.innerHTML = renderRedirectsContent(data.links.redirects, data.redirectAnalysis);
+      break;
+    case 'working-links':
+      contentInner.innerHTML = renderWorkingLinksContent(data.links.working, data.summary.working);
+      break;
+    case 'external-links':
+      contentInner.innerHTML = renderExternalLinksContent(data.links.external, data.summary.external);
+      break;
+  }
 }

@@ -112,7 +112,7 @@ const ALL_DIAGNOSTICS = [
     label: 'Core Web Vitals',
     id: 'core-web-vitals',
     category: 'performance',
-    tier: 'free',
+    tier: 'pro',
     description: 'LCP, FID, CLS metrics'
   },
   {
@@ -120,7 +120,7 @@ const ALL_DIAGNOSTICS = [
     label: 'Lighthouse Metrics',
     id: 'performance-analyzer',
     category: 'performance',
-    tier: 'free',
+    tier: 'pro',
     description: 'Full Lighthouse performance audit'
   },
   {
@@ -163,7 +163,7 @@ const ALL_DIAGNOSTICS = [
     label: 'Tracking & Analytics',
     id: 'tag-intelligence',
     category: 'seo',
-    tier: 'pro',
+    tier: 'free',
     description: 'Analytics tags, pixels, and tracking scripts'
   },
   {
@@ -268,7 +268,6 @@ const ALL_DIAGNOSTICS = [
     label: 'FAQ',
     id: 'faq',
     category: 'help',
-    tier: 'free',
     description: 'Scans, paid reports, and troubleshooting'
   }
 ];
@@ -303,6 +302,7 @@ const MORE_DIAGNOSTICS_CONFIG = ALL_DIAGNOSTICS
       label: d.label,
       id: d.id,
       badge: null, // Removed "Saves time" badges
+      tier: d.tier, // Include tier for FREE badge display
       category: d.category,
       stage: 2
     };
@@ -593,9 +593,14 @@ function renderNavigation(activePageId) {
     const isActive = item.id === activePageId;
     const activeClass = isActive ? 'active' : '';
     const ariaCurrent = isActive ? 'aria-current="page"' : '';
-    const badge = item.badge
-      ? `<span class="hot-badge">${item.badge}</span>`
-      : '';
+    
+    // Badge logic: item.badge for custom badges, tier for free/pro indicators
+    let badge = '';
+    if (item.badge) {
+      badge = `<span class="hot-badge">${item.badge}</span>`;
+    } else if (item.tier === 'free') {
+      badge = `<span class="free-badge" style="background: #00ff41; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem; display: inline-block; vertical-align: middle;">FREE</span>`;
+    }
 
     let href = item.href;
     if (currentUrl && !['dashboard'].includes(item.id)) {
@@ -905,6 +910,19 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
   initializeDropdownMenu();
   initializeHeaderLanguageSwitcher();
   
+  // Global click handler to close dropdowns when clicking outside
+  document.addEventListener('click', function(e) {
+    // Close auth dropdown when clicking outside
+    const authWrapper = document.getElementById('authDropdownWrapper');
+    const authTrigger = document.getElementById('authUserTrigger');
+    if (authWrapper && authWrapper.classList.contains('open')) {
+      if (!authWrapper.contains(e.target)) {
+        authWrapper.classList.remove('open');
+        if (authTrigger) authTrigger.setAttribute('aria-expanded', 'false');
+      }
+    }
+  });
+  
   // Initialize scan context bar
   addScanContextStyles();
   renderScanContextBar();
@@ -1109,34 +1127,161 @@ function initializeDropdownMenu() {
   if (!dropdown || !trigger || !menu) {
     return;
   }
+  
+  // Move menu to body and use fixed positioning to escape stacking contexts
+  document.body.appendChild(menu);
+  // Start hidden
+  menu.style.cssText = 'display: none !important; visibility: hidden !important;';
+  let isOpen = false;
+  
+  // Helper to detect if we're in light mode
+  function isLightMode() {
+    return document.body.classList.contains('white-theme');
+  }
+  
+  // Set up hover handlers ONCE for all nav-links (before menu is shown)
+  menu.querySelectorAll('.nav-link').forEach(el => {
+    el.addEventListener('mouseenter', function() {
+      const light = isLightMode();
+      // Theme-specific hover colors: cyan for dark, red for light
+      if (light) {
+        this.style.background = 'rgba(221, 56, 56, 0.12)';
+        this.style.color = '#dd3838';
+        this.style.boxShadow = '0 2px 8px rgba(221, 56, 56, 0.15)';
+      } else {
+        this.style.background = 'rgba(91, 244, 231, 0.15)';
+        this.style.color = '#5bf4e7';
+        this.style.boxShadow = '0 2px 8px rgba(91, 244, 231, 0.2)';
+      }
+      this.style.transform = 'translateX(4px)';
+    });
+    el.addEventListener('mouseleave', function() {
+      this.style.background = 'transparent';
+      this.style.transform = 'translateX(0)';
+      this.style.boxShadow = 'none';
+      // Use appropriate text color based on current theme
+      this.style.color = isLightMode() ? '#333333' : '#e0e0e0';
+    });
+  });
+  
+  function updateMenuPosition() {
+    if (!isOpen) return;
+    const rect = trigger.getBoundingClientRect();
+    const topPos = rect.bottom + 8;
+    const rightPos = window.innerWidth - rect.right;
+    const maxHeight = window.innerHeight - topPos - 20;
+    menu.style.top = `${topPos}px`;
+    menu.style.right = `${rightPos}px`;
+    menu.style.maxHeight = `${maxHeight}px`;
+  }
+  
+  function showMenu() {
+    const rect = trigger.getBoundingClientRect();
+    const topPos = rect.bottom + 8;
+    const rightPos = window.innerWidth - rect.right;
+    // Calculate max height - leave some space at bottom
+    const maxHeight = window.innerHeight - topPos - 20;
+    
+    // Detect current theme
+    const lightMode = isLightMode();
+    
+    // Theme-aware colors
+    const bgColor = lightMode ? '#ffffff' : 'rgba(30, 30, 35, 0.98)';
+    const borderColor = lightMode ? '#e0e0e0' : 'rgba(255,255,255,0.1)';
+    const shadowColor = lightMode ? 'rgba(0,0,0,0.15)' : 'rgba(0,0,0,0.5)';
+    const textColor = lightMode ? '#333333' : '#e0e0e0';
+    const labelColor = lightMode ? '#888' : '#888';
+    const iconColor = lightMode ? '#666' : '#999';
+    const dividerColor = lightMode ? '#e8e8e8' : 'rgba(255,255,255,0.1)';
+    
+    menu.style.cssText = `
+      position: fixed !important;
+      top: ${topPos}px !important;
+      right: ${rightPos}px !important;
+      left: auto !important;
+      display: block !important;
+      opacity: 1 !important;
+      visibility: visible !important;
+      pointer-events: auto !important;
+      transform: none !important;
+      z-index: 2147483647 !important;
+      min-width: 320px !important;
+      max-width: 360px !important;
+      max-height: ${maxHeight}px !important;
+      overflow-y: auto !important;
+      background: ${bgColor} !important;
+      border: 1px solid ${borderColor} !important;
+      border-radius: 12px !important;
+      box-shadow: 0 10px 40px ${shadowColor} !important;
+      padding: 0.5rem !important;
+    `;
+    
+    // Make all children visible since menu is no longer inside .nav-dropdown
+    menu.querySelectorAll('.dropdown-category').forEach(el => {
+      el.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important; position: relative !important; left: auto !important; top: auto !important; pointer-events: auto !important; z-index: auto !important;';
+    });
+    menu.querySelectorAll('.dropdown-category-header').forEach(el => {
+      el.style.cssText = `display: flex !important; visibility: visible !important; opacity: 1 !important; position: relative !important; left: auto !important; top: auto !important; pointer-events: auto !important; border-top: 1px solid ${dividerColor} !important;`;
+    });
+    menu.querySelectorAll('.dropdown-category-icon').forEach(el => {
+      el.style.cssText = `display: inline-flex !important; visibility: visible !important; opacity: 0.6 !important; position: relative !important; left: auto !important; top: auto !important; color: ${iconColor} !important;`;
+    });
+    menu.querySelectorAll('.dropdown-category-label').forEach(el => {
+      el.style.cssText = `display: inline !important; visibility: visible !important; opacity: 1 !important; position: relative !important; left: auto !important; top: auto !important; color: ${labelColor} !important;`;
+    });
+    menu.querySelectorAll('.nav-link').forEach(el => {
+      // Set base styles - theme-appropriate text color with smooth transitions
+      el.style.cssText = `display: flex !important; visibility: visible !important; opacity: 1 !important; position: relative !important; left: auto !important; top: auto !important; pointer-events: auto !important; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: 8px; color: ${textColor}; text-decoration: none; transition: all 0.2s ease; white-space: nowrap; background: transparent; transform: translateX(0); box-shadow: none;`;
+    });
+    dropdown.classList.add('open');
+    trigger.setAttribute('aria-expanded', 'true');
+    isOpen = true;
+  }
+  
+  function hideMenu() {
+    menu.style.cssText = 'display: none !important; visibility: hidden !important;';
+    dropdown.classList.remove('open');
+    trigger.setAttribute('aria-expanded', 'false');
+    isOpen = false;
+  }
+  
   // Toggle dropdown on trigger click
   trigger.addEventListener('click', (e) => {
     e.preventDefault();
     e.stopPropagation();
     
-    const isOpen = dropdown.classList.contains('open');
-    dropdown.classList.toggle('open');
-    trigger.setAttribute('aria-expanded', !isOpen);
+    // Close account dropdown if open
+    const authMenu = document.getElementById('authUserDropdown');
+    const authWrapper = document.getElementById('authDropdownWrapper');
+    if (authMenu && authMenu.style.display === 'block') {
+      authMenu.style.cssText = 'display: none !important;';
+      if (authWrapper) authWrapper.classList.remove('open');
+    }
     
+    if (!isOpen) {
+      showMenu();
+    } else {
+      hideMenu();
+    }
   });
   
+  // Reposition menu when page scrolls so it stays anchored to trigger
+  window.addEventListener('scroll', updateMenuPosition, { passive: true });
+  window.addEventListener('resize', updateMenuPosition, { passive: true });
+  
   // Close dropdown when clicking outside
-  setTimeout(() => {
-    document.addEventListener('click', (e) => {
-      if (dropdown.classList.contains('open') && 
-          !trigger.contains(e.target) && 
-          !menu.contains(e.target)) {
-        dropdown.classList.remove('open');
-        trigger.setAttribute('aria-expanded', 'false');
-      }
-    });
-  }, 200);
+  document.addEventListener('click', (e) => {
+    if (isOpen && 
+        !trigger.contains(e.target) && 
+        !menu.contains(e.target)) {
+      hideMenu();
+    }
+  });
   
   // Close dropdown on Escape key
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && dropdown.classList.contains('open')) {
-      dropdown.classList.remove('open');
-      trigger.setAttribute('aria-expanded', 'false');
+    if (e.key === 'Escape' && isOpen) {
+      hideMenu();
       trigger.focus();
     }
   });
@@ -1145,8 +1290,7 @@ function initializeDropdownMenu() {
   const navLinks = menu.querySelectorAll('.nav-link');
   navLinks.forEach(link => {
     link.addEventListener('click', () => {
-      dropdown.classList.remove('open');
-      trigger.setAttribute('aria-expanded', 'false');
+      hideMenu();
     });
   });
 }
@@ -1222,6 +1366,109 @@ function initializeHeaderLanguageSwitcher() {
   }
 }
 
+function getProManagerForNav() {
+  if (window.proManager && typeof window.proManager.isAuthenticated === 'function') {
+    return window.proManager;
+  }
+
+  const readAuthState = () => {
+    let user = null;
+    let token = null;
+    try {
+      token = localStorage.getItem('sm_token');
+      const rawUser = localStorage.getItem('sm_user');
+      user = rawUser ? JSON.parse(rawUser) : null;
+    } catch {
+      user = null;
+      token = null;
+    }
+    return { user, token };
+  };
+
+  const getAuthHeaders = () => {
+    const { token } = readAuthState();
+    if (!token) return {};
+    return { Authorization: `Bearer ${token}` };
+  };
+
+  const clearAuth = () => {
+    try {
+      localStorage.removeItem('sm_user');
+      localStorage.removeItem('sm_token');
+    } catch {
+      // ignore
+    }
+  };
+
+  return {
+    isAuthenticated: () => {
+      const { user, token } = readAuthState();
+      return !!user && !!token;
+    },
+    isPro: () => {
+      const { user } = readAuthState();
+      return !!user && user.plan === 'pro';
+    },
+    isAdmin: () => {
+      const { user } = readAuthState();
+      return !!user && user.is_admin === 1;
+    },
+    getEmail: () => {
+      const { user } = readAuthState();
+      return user?.email || null;
+    },
+    logout: async () => {
+      try {
+        const { token } = readAuthState();
+        if (token) {
+          await fetch('/api/auth/logout', {
+            method: 'POST',
+            headers: getAuthHeaders()
+          });
+        }
+      } catch {
+        // ignore
+      } finally {
+        clearAuth();
+        window.location.href = '/';
+      }
+    },
+    openCustomerPortal: async () => {
+      const { token } = readAuthState();
+      if (!token) {
+        window.location.href = '/auth.html';
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/payment/create-portal-session', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...getAuthHeaders()
+          },
+          body: JSON.stringify({
+            returnUrl: window.location.origin + '/account.html'
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to create portal session');
+        }
+
+        const data = await response.json();
+        const portalUrl = data.portalUrl || data.url;
+        if (data.success && portalUrl) {
+          window.location.href = portalUrl;
+        }
+      } catch (error) {
+        console.error('Failed to open customer portal:', error);
+        alert('Failed to open billing portal. Please try again.');
+      }
+    }
+  };
+}
+
 /**
  * Initialize authentication links in header
  */
@@ -1229,12 +1476,7 @@ function initializeAuthLinks() {
   const container = document.getElementById('authLinksContainer');
   if (!container) return;
 
-  // Check if pro-utils.js is loaded
-  if (typeof window.proManager === 'undefined') {
-    return;
-  }
-
-  const proMgr = window.proManager;
+  const proMgr = getProManagerForNav();
 
   // Render auth links based on authentication status
   if (proMgr.isAuthenticated()) {
@@ -1242,16 +1484,17 @@ function initializeAuthLinks() {
     const email = proMgr.getEmail() || '';
     const initials = email.substring(0, 2).toUpperCase();
 
+    // Render everything together in the container (matching .nav-dropdown pattern)
     container.innerHTML = `
-      <div class="auth-user-menu">
-        <button class="auth-user-trigger" id="authUserTrigger" aria-expanded="false" aria-haspopup="true">
+      <div class="auth-dropdown" id="authDropdownWrapper">
+        <button class="auth-user-trigger" id="authUserTrigger" type="button" aria-expanded="false" aria-haspopup="true">
           <span class="auth-user-avatar">${initials}</span>
           ${isPro ? '<span class="auth-user-pro-badge">✨ PRO</span>' : ''}
           <svg class="auth-dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M6 9l6 6 6-6"/>
           </svg>
         </button>
-        <div class="auth-user-dropdown" id="authUserDropdown">
+        <div class="auth-dropdown-menu" id="authUserDropdown">
           <div class="auth-user-info">
             <div class="auth-user-email">${email}</div>
             <div class="auth-user-plan">${isPro ? 'Pro Plan' : 'Free Plan'}</div>
@@ -1291,32 +1534,74 @@ function initializeAuthLinks() {
       </div>
     `;
 
-    // Initialize dropdown functionality
+    // Move dropdown menu to body to escape all stacking contexts
+    const menu = document.getElementById('authUserDropdown');
+    if (menu) {
+      document.body.appendChild(menu);
+    }
+
+    // Set up click handler directly on trigger
+    const wrapper = document.getElementById('authDropdownWrapper');
     const trigger = document.getElementById('authUserTrigger');
-    const dropdown = document.getElementById('authUserDropdown');
-
-    if (trigger && dropdown) {
-      trigger.addEventListener('click', (e) => {
+    const movedMenu = document.getElementById('authUserDropdown');
+    
+    if (trigger && wrapper && movedMenu) {
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
         e.stopPropagation();
-        const isOpen = trigger.getAttribute('aria-expanded') === 'true';
-        trigger.setAttribute('aria-expanded', !isOpen);
-        dropdown.classList.toggle('active');
-      });
-
-      // Close on outside click
-      document.addEventListener('click', (e) => {
-        if (!container.contains(e.target)) {
+        
+        // Close nav dropdown if open
+        const navDropdown = document.querySelector('.nav-dropdown.open');
+        if (navDropdown) {
+          navDropdown.classList.remove('open');
+        }
+        
+        const isOpen = movedMenu.style.display === 'block';
+        
+        // Check if light theme is active
+        const isLightTheme = document.body.classList.contains('white-theme');
+        const bgColor = isLightTheme ? 'rgba(255, 255, 255, 0.98)' : 'rgba(20, 20, 20, 0.98)';
+        const borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.2)';
+        const shadowColor = isLightTheme ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.5)';
+        
+        if (!isOpen) {
+          // Position the fixed menu relative to trigger
+          const rect = trigger.getBoundingClientRect();
+          movedMenu.style.cssText = `
+            position: fixed !important;
+            top: ${rect.bottom + 8}px !important;
+            right: ${window.innerWidth - rect.right}px !important;
+            left: auto !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            pointer-events: auto !important;
+            transform: none !important;
+            z-index: 2147483647 !important;
+            display: block !important;
+            min-width: 240px !important;
+            background: ${bgColor} !important;
+            border: 1px solid ${borderColor} !important;
+            border-radius: 8px !important;
+            box-shadow: 0 8px 32px ${shadowColor} !important;
+            padding: 0.5rem !important;
+          `;
+          wrapper.classList.add('open');
+          trigger.setAttribute('aria-expanded', 'true');
+        } else {
+          movedMenu.style.cssText = 'display: none !important;';
+          wrapper.classList.remove('open');
           trigger.setAttribute('aria-expanded', 'false');
-          dropdown.classList.remove('active');
         }
       });
-
-      // Close on Escape
-      document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape' && dropdown.classList.contains('active')) {
+      
+      // Close on outside click
+      document.addEventListener('click', function(e) {
+        if (movedMenu.style.display === 'block' && 
+            !trigger.contains(e.target) && 
+            !movedMenu.contains(e.target)) {
+          movedMenu.style.cssText = 'display: none !important;';
+          wrapper.classList.remove('open');
           trigger.setAttribute('aria-expanded', 'false');
-          dropdown.classList.remove('active');
-          trigger.focus();
         }
       });
     }
@@ -1365,7 +1650,7 @@ function ensureGlobalFooter() {
       const footerContent = `
         <div class="footer-content">
           <span class="footer-text">
-            Site Mechanic by <strong>Peter Freedman</strong> |
+            &copy; 2026 Site Mechanic by <strong>Peter Freedman</strong> |
             <span style="opacity: 0.7;">v${data.build}</span> |
             Web optimization & development services |
             <a href="/faq.html" class="site-footer-link">FAQ</a> |
@@ -1392,7 +1677,7 @@ function ensureGlobalFooter() {
       const footerContent = `
         <div class="footer-content">
           <span class="footer-text">
-            Site Mechanic by <strong>Peter Freedman</strong> |
+            &copy; 2026 Site Mechanic by <strong>Peter Freedman</strong> |
             Web optimization & development services |
             <a href="/faq.html" class="site-footer-link">FAQ</a> |
             <a href="mailto:peter@sitemechanic.io" class="site-footer-link">peter@sitemechanic.io</a>

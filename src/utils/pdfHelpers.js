@@ -14,6 +14,7 @@
  */
 
 const PDFDocument = require('pdfkit');
+const SVGtoPDF = require('svg-to-pdfkit');
 const fs = require('fs');
 const path = require('path');
 const { resolveReportId } = require('./resolveReportId');
@@ -144,20 +145,22 @@ function addPdfHeader(doc, title, url, subtitle = null, options = {}) {
 
   let currentY = startY;
 
-  // Logo (top right)
+  // Site Mechanic Logo (top left)
   if (showLogo) {
     try {
-      const logoPath = path.join(__dirname, '../public/assets/logo-dark.svg');
+      const logoPath = path.join(__dirname, '../public/assets/logo-pdf.svg');
       if (fs.existsSync(logoPath)) {
-        // SVG logo positioned top right
-        doc.image(logoPath, 450, currentY, { width: 95 });
+        const svgContent = fs.readFileSync(logoPath, 'utf8');
+        // Render SVG logo in upper left - width ~150px to fit nicely
+        SVGtoPDF(doc, svgContent, 50, currentY, { width: 150, height: 23 });
+        currentY += 35; // Move down after logo
       }
     } catch (error) {
       logger.warn('Could not load logo for PDF header:', error.message);
     }
   }
 
-  // Main title (no brackets, clean Material Design)
+  // Main title
   doc
     .fontSize(24)
     .font('Helvetica-Bold')
@@ -403,21 +406,175 @@ function addBulletList(doc, items, options = {}) {
 }
 
 /**
- * Check if page break is needed
+ * Check if page break is needed - Enhanced version
  *
- * Consolidates page break check pattern
+ * Consolidates page break check pattern with intelligent handling
+ * for charts, tables, and sections that shouldn't be split
  *
  * @param {Object} doc - PDFDocument instance
  * @param {number} requiredSpace - Required space in points (default: 150)
+ * @param {Object} options - Additional options
+ * @param {boolean} options.forceBreak - Force a page break regardless of space
+ * @param {string} options.sectionType - Type of section ('chart', 'table', 'recommendation', 'card')
+ * @returns {boolean} - True if page was added
  *
  * @example
  * checkPageBreakNeeded(doc, 200);
+ * checkPageBreakNeeded(doc, 300, { sectionType: 'chart' });
  */
-function checkPageBreakNeeded(doc, requiredSpace = 150) {
-  if (doc.y > 700 - requiredSpace) {
+function checkPageBreakNeeded(doc, requiredSpace = 150, options = {}) {
+  const { forceBreak = false, sectionType = null } = options;
+
+  // Page dimensions for US Letter (612 x 792 points)
+  const pageHeight = 792;
+  const bottomMargin = 50; // Footer space
+  const safeZone = pageHeight - bottomMargin;
+
+  // Add extra padding for specific section types
+  let adjustedRequired = requiredSpace;
+  if (sectionType === 'chart') {
+    adjustedRequired = Math.max(requiredSpace, 300); // Charts need more space
+  } else if (sectionType === 'gauge-pair') {
+    adjustedRequired = Math.max(requiredSpace, 400); // Dual gauges + comparison
+  } else if (sectionType === 'table') {
+    adjustedRequired = Math.max(requiredSpace, 200); // Tables need consistent space
+  } else if (sectionType === 'recommendation') {
+    adjustedRequired = Math.max(requiredSpace, 120); // Recommendations with actions
+  } else if (sectionType === 'card') {
+    adjustedRequired = Math.max(requiredSpace, 150); // Cards should fit completely
+  }
+
+  const needsBreak = forceBreak || (doc.y > safeZone - adjustedRequired);
+
+  if (needsBreak) {
+    doc.addPage();
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Ensure content block stays together on same page
+ * If block doesn't fit, starts on new page
+ *
+ * @param {Object} doc - PDFDocument instance
+ * @param {number} blockHeight - Height of the content block
+ * @param {Function} renderFn - Function to render the block
+ */
+function keepTogether(doc, blockHeight, renderFn) {
+  if (checkPageBreakNeeded(doc, blockHeight)) {
+    // Already on new page
+  }
+  renderFn();
+}
+
+/**
+ * Calculate remaining space on current page
+ * 
+ * @param {Object} doc - PDFDocument instance
+ * @returns {number} Available space in points before page break needed
+ */
+function getRemainingSpace(doc) {
+  const pageHeight = 792;
+  const bottomMargin = 50;
+  const safeZone = pageHeight - bottomMargin;
+  return Math.max(0, safeZone - doc.y);
+}
+
+/**
+ * Ensure a section starts on a fresh page for clean layout
+ * Use this for major sections that should never be squeezed at page bottom
+ * 
+ * @param {Object} doc - PDFDocument instance
+ * @param {number} minSpace - Minimum space needed for section header + first content (default: 300)
+ */
+function ensureFreshPage(doc, minSpace = 300) {
+  const remaining = getRemainingSpace(doc);
+  if (remaining < minSpace) {
     doc.addPage();
   }
 }
+
+/**
+ * Height calculator for common PDF components
+ * Use these to pre-calculate space needed before rendering
+ */
+const heightCalculators = {
+  /**
+   * Calculate bar chart height
+   * @param {number} itemCount - Number of bars
+   * @param {number} barHeight - Height per bar (default 25)
+   * @param {number} spacing - Space between bars (default 8)
+   */
+  barChart: (itemCount, barHeight = 25, spacing = 8) => {
+    return itemCount * (barHeight + spacing) + 40; // +40 for labels/margins
+  },
+
+  /**
+   * Calculate pie/donut chart height
+   * @param {number} radius - Chart radius (default 70)
+   * @param {number} legendItems - Number of legend items
+   */
+  pieChart: (radius = 70, legendItems = 4) => {
+    return Math.max(radius * 2, legendItems * 18) + 40; // radius*2 or legend height
+  },
+
+  /**
+   * Calculate gauge chart height
+   * @param {number} radius - Gauge radius (default 60)
+   */
+  gaugeChart: (radius = 60) => {
+    return radius + 80; // radius + labels + margin
+  },
+
+  /**
+   * Calculate dual gauge section height (2 gauges side by side)
+   */
+  dualGauges: (radius = 60) => {
+    return radius + 100;
+  },
+
+  /**
+   * Calculate table height
+   * @param {number} rowCount - Number of data rows
+   * @param {number} rowHeight - Height per row (default 25)
+   */
+  table: (rowCount, rowHeight = 25) => {
+    return 30 + (rowCount * rowHeight) + 20; // header + rows + margin
+  },
+
+  /**
+   * Calculate recommendation card height based on content
+   * @param {string} description - Description text
+   * @param {string} solution - Solution text
+   * @param {boolean} hasFix - Whether there's a fix section
+   */
+  recommendationCard: (description = '', solution = '', hasFix = false) => {
+    const descLines = Math.ceil(description.length / 70);
+    const solLines = solution ? Math.ceil(solution.length / 70) : 0;
+    return 50 + (descLines * 12) + (solLines * 12) + (hasFix ? 50 : 0);
+  },
+
+  /**
+   * Calculate progress bar height
+   */
+  progressBar: () => 35,
+
+  /**
+   * Calculate metric grid height
+   * @param {number} itemCount - Number of metrics
+   * @param {number} columns - Number of columns
+   */
+  metricGrid: (itemCount, columns = 4) => {
+    const rows = Math.ceil(itemCount / columns);
+    return rows * 80 + 20;
+  },
+
+  /**
+   * Calculate section header height
+   */
+  sectionHeader: () => 60
+};
 
 /**
  * Get score color based on value
@@ -459,10 +616,13 @@ function getGrade(score) {
 }
 
 /**
- * Add recommendations section
+ * Add recommendations section - Enhanced version
  *
- * Consolidates recommendations display pattern
- * Groups recommendations by priority
+ * Displays prioritized recommendations with full details:
+ * - Title and description
+ * - Actions/steps to fix
+ * - Impact information
+ * - Implementation difficulty
  *
  * @param {Object} doc - PDFDocument instance
  * @param {Array<Object>} recommendations - Recommendations array
@@ -470,63 +630,229 @@ function getGrade(score) {
  *
  * @example
  * addRecommendationsSection(doc, [
- *   { priority: 'high', message: 'Fix this', actions: ['Do A', 'Do B'] }
+ *   { priority: 'high', title: 'Fix issue', description: 'Details...', actions: ['Do A', 'Do B'], impact: 'high' }
  * ]);
  */
 function addRecommendationsSection(doc, recommendations, options = {}) {
-  const { maxRecommendations = 10 } = options;
+  const {
+    showAllRecommendations = true,
+    maxRecommendations = 20,
+    includeImpact = true,
+    includeDifficulty = true
+  } = options;
 
-  addSectionHeader(doc, '[RECOMMENDATIONS]');
+  addMaterialSectionHeader(doc, 'Recommendations', {
+    description: 'Prioritized actionable improvements',
+    accentColor: COLORS.warning,
+    checkPageBreak: true,
+    requiredSpace: 200
+  });
 
   if (!recommendations || recommendations.length === 0) {
-    doc
-      .fontSize(10)
-      .fillColor('#00ff41')
-      .text('> All checks passed! No critical recommendations at this time.', 60, doc.y);
+    drawCard(doc, 50, doc.y, 512, 60, {
+      backgroundColor: '#E8F5E9',
+      borderColor: COLORS.success
+    });
+
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.success)
+       .text('All checks passed!', 70, doc.y + 15);
+
+    doc.fontSize(10)
+       .font('Helvetica')
+       .fillColor(COLORS.textSecondary)
+       .text('No critical issues detected. Continue monitoring for best results.', 70, doc.y + 10);
+
+    doc.y += 70;
     return;
   }
 
-  const displayRecs = recommendations.slice(0, maxRecommendations);
+  // Group by priority
+  const high = recommendations.filter(r => r.priority === 'high' || r.priority === 'critical');
+  const medium = recommendations.filter(r => r.priority === 'medium');
+  const low = recommendations.filter(r => r.priority === 'low' || r.priority === 'info');
 
-  displayRecs.forEach((rec, index) => {
-    checkPageBreakNeeded(doc);
+  const limit = showAllRecommendations ? recommendations.length : maxRecommendations;
+  let rendered = 0;
 
-    // Priority badge
-    const priorityColor = rec.priority === 'high' ? '#ff4444' :
-                         rec.priority === 'medium' ? '#ffa500' : '#bb86fc';
+  // High Priority
+  if (high.length > 0) {
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.error)
+       .text('High Priority', 50, doc.y);
 
-    doc
-      .fontSize(10)
-      .fillColor(priorityColor)
-      .font('Helvetica-Bold')
-      .text(`[${rec.priority?.toUpperCase() || 'INFO'}]`, 60, doc.y, { continued: true })
-      .fillColor('#333333')
-      .font('Helvetica')
-      .text(` ${rec.message || rec.text || rec.recommendation}`, { width: 465 });
+    doc.moveDown(0.5);
 
-    // Actions
-    if (rec.actions && rec.actions.length > 0) {
-      rec.actions.forEach(action => {
-        doc
-          .fontSize(9)
-          .fillColor('#666666')
-          .text(`  • ${action}`, 80, doc.y);
-      });
+    for (const rec of high) {
+      if (rendered >= limit) break;
+      renderRecommendationCard(doc, rec, 'high', includeImpact, includeDifficulty);
+      rendered++;
     }
 
-    doc.moveDown();
+    doc.moveDown(1);
+  }
+
+  // Medium Priority
+  if (medium.length > 0 && rendered < limit) {
+    checkPageBreakNeeded(doc, 150);
+
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.warning)
+       .text('Medium Priority', 50, doc.y);
+
+    doc.moveDown(0.5);
+
+    for (const rec of medium) {
+      if (rendered >= limit) break;
+      renderRecommendationCard(doc, rec, 'medium', includeImpact, includeDifficulty);
+      rendered++;
+    }
+
+    doc.moveDown(1);
+  }
+
+  // Low Priority
+  if (low.length > 0 && rendered < limit) {
+    checkPageBreakNeeded(doc, 120);
+
+    doc.fontSize(12)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.info)
+       .text('Low Priority / Suggestions', 50, doc.y);
+
+    doc.moveDown(0.5);
+
+    for (const rec of low) {
+      if (rendered >= limit) break;
+      renderRecommendationCard(doc, rec, 'low', includeImpact, includeDifficulty);
+      rendered++;
+    }
+  }
+
+  // Show count of remaining
+  if (!showAllRecommendations && recommendations.length > limit) {
+    doc.moveDown(0.5);
+    doc.fontSize(9)
+       .fillColor(COLORS.textSecondary)
+       .text(`+ ${recommendations.length - limit} additional recommendations available in full report`, 50, doc.y);
+  }
+}
+
+/**
+ * Render a single recommendation card with full details
+ * @private
+ */
+function renderRecommendationCard(doc, rec, priority, includeImpact, includeDifficulty) {
+  // Calculate card height based on content
+  const title = rec.title || rec.message || rec.text || rec.recommendation || 'Recommendation';
+  const description = rec.description || '';
+  const actions = rec.actions || rec.steps || [];
+  const fix = rec.fix || rec.solution || rec.howToFix || '';
+
+  const descLines = Math.ceil(description.length / 70);
+  const fixLines = fix ? Math.ceil(fix.length / 70) : 0;
+  const actionsHeight = actions.length * 14;
+
+  const cardHeight = 35 + (descLines * 12) + actionsHeight + (fixLines > 0 ? 20 + (fixLines * 12) : 0) + 15;
+
+  checkPageBreakNeeded(doc, cardHeight + 10, { sectionType: 'recommendation' });
+
+  // Card background based on priority
+  const bgColors = {
+    high: '#FFEBEE',
+    medium: '#FFF3E0',
+    low: '#E3F2FD'
+  };
+  const borderColors = {
+    high: COLORS.error,
+    medium: COLORS.warning,
+    low: COLORS.info
+  };
+
+  drawCard(doc, 50, doc.y, 512, cardHeight, {
+    backgroundColor: bgColors[priority] || bgColors.low,
+    borderColor: borderColors[priority] || borderColors.low
   });
 
-  if (recommendations.length > maxRecommendations) {
-    doc
-      .fontSize(9)
-      .fillColor('#999999')
-      .text(
-        `> ${recommendations.length - maxRecommendations} additional recommendations not shown`,
-        60,
-        doc.y
-      );
+  const cardStartY = doc.y;
+  let currentY = cardStartY + 12;
+
+  // Priority badge
+  doc.fontSize(8)
+     .font('Helvetica-Bold')
+     .fillColor(borderColors[priority])
+     .text(priority.toUpperCase(), 70, currentY);
+
+  // Title
+  doc.fontSize(10)
+     .font('Helvetica-Bold')
+     .fillColor(COLORS.textPrimary)
+     .text(title, 120, currentY - 2, { width: 405 });
+
+  currentY += 18;
+
+  // Description
+  if (description) {
+    doc.fontSize(9)
+       .font('Helvetica')
+       .fillColor(COLORS.textSecondary)
+       .text(description, 70, currentY, { width: 465 });
+    currentY = doc.y + 8;
   }
+
+  // Actions / How to fix
+  if (actions.length > 0) {
+    doc.fontSize(8)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.success)
+       .text('How to Fix:', 70, currentY);
+    currentY += 12;
+
+    actions.forEach(action => {
+      doc.fontSize(8)
+         .font('Helvetica')
+         .fillColor(COLORS.success)
+         .text(`  → ${action}`, 80, currentY, { width: 455 });
+      currentY = doc.y + 2;
+    });
+  } else if (fix) {
+    doc.fontSize(8)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.success)
+       .text('Solution:', 70, currentY);
+
+    doc.fontSize(8)
+       .font('Helvetica')
+       .fillColor(COLORS.success)
+       .text(fix, 120, currentY, { width: 405 });
+    currentY = doc.y + 8;
+  }
+
+  // Impact and difficulty badges (if available)
+  if ((includeImpact && rec.impact) || (includeDifficulty && rec.difficulty)) {
+    currentY += 5;
+    let badgeX = 70;
+
+    if (includeImpact && rec.impact) {
+      const impactColors = { high: COLORS.error, medium: COLORS.warning, low: COLORS.info };
+      doc.fontSize(7)
+         .fillColor(impactColors[rec.impact] || COLORS.textSecondary)
+         .text(`Impact: ${rec.impact.toUpperCase()}`, badgeX, currentY);
+      badgeX += 80;
+    }
+
+    if (includeDifficulty && rec.difficulty) {
+      const difficultyColors = { easy: COLORS.success, medium: COLORS.warning, hard: COLORS.error };
+      doc.fontSize(7)
+         .fillColor(difficultyColors[rec.difficulty] || COLORS.textSecondary)
+         .text(`Effort: ${rec.difficulty.toUpperCase()}`, badgeX, currentY);
+    }
+  }
+
+  doc.y = cardStartY + cardHeight + 10;
 }
 
 /**
@@ -697,17 +1023,18 @@ function drawMetricGrid(doc, metrics, x, y, options = {}) {
  *
  * @param {Object} doc - PDFDocument instance
  * @param {string} title - Section title
- * @param {Object} options - { accentColor, description, checkPageBreak }
+ * @param {Object} options - { accentColor, description, checkPageBreak, requiredSpace }
  */
 function addMaterialSectionHeader(doc, title, options = {}) {
   const {
     accentColor = COLORS.primary,
     description = null,
-    checkPageBreak = true
+    checkPageBreak = true,
+    requiredSpace = 150 // Increased default to prevent section cut-offs
   } = options;
 
   if (checkPageBreak) {
-    checkPageBreakNeeded(doc, 60);
+    checkPageBreakNeeded(doc, requiredSpace);
   }
 
   // Colored accent bar (left side)
@@ -751,6 +1078,10 @@ module.exports = {
 
   // Utilities
   checkPageBreakNeeded,
+  keepTogether,
+  getRemainingSpace,
+  ensureFreshPage,
+  heightCalculators,
   getScoreColor,
   getGrade,
 

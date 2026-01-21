@@ -9,6 +9,10 @@
 
 /* global html2canvas */
 
+// Site Mechanic logo as PNG data URL (red text logo)
+// This is pre-rendered for consistent PDF output
+const SITE_MECHANIC_LOGO_BASE64 = null; // Will use styled text instead
+
 class PDFExportUtility {
   constructor(options = {}) {
     this.options = {
@@ -16,11 +20,63 @@ class PDFExportUtility {
       reportTitle: options.reportTitle || 'Site Mechanic Report',
       reportSubtitle: options.reportSubtitle || 'Web Analysis',
       url: options.url || '',
-      brandColor: options.brandColor || '#00ff41',
+      brandColor: options.brandColor || '#dd3838',
       scale: options.scale || 2,
       pageFormat: options.pageFormat || 'a4',
       ...options
     };
+    
+    // Cache for logo image
+    this._logoImageData = null;
+    this._logoLoaded = false;
+  }
+
+  /**
+   * Pre-load the Site Mechanic logo SVG and convert to PNG for PDF embedding
+   * @private
+   */
+  async _loadLogo() {
+    if (this._logoLoaded) return this._logoImageData;
+    
+    try {
+      // Fetch the SVG logo
+      const response = await fetch('/assets/logo-pdf.svg');
+      if (!response.ok) throw new Error('Logo not found');
+      
+      const svgText = await response.text();
+      
+      // Create an image from SVG
+      const img = new Image();
+      const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(svgBlob);
+      
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+        img.src = url;
+      });
+      
+      // Render to canvas
+      const canvas = document.createElement('canvas');
+      const scale = 2; // Higher resolution
+      canvas.width = img.width * scale || 300;
+      canvas.height = img.height * scale || 50;
+      
+      const ctx = canvas.getContext('2d');
+      ctx.scale(scale, scale);
+      ctx.drawImage(img, 0, 0);
+      
+      URL.revokeObjectURL(url);
+      
+      this._logoImageData = canvas.toDataURL('image/png');
+      this._logoLoaded = true;
+      
+      return this._logoImageData;
+    } catch (error) {
+      console.warn('Could not load logo for PDF:', error.message);
+      this._logoLoaded = true;
+      return null;
+    }
   }
 
   /**
@@ -293,7 +349,8 @@ class PDFExportUtility {
   }
 
   /**
-   * Generate PDF from content
+   * Generate PDF from content with intelligent page breaks
+   * Prevents charts, cards, and sections from being cut in the middle
    * @private
    */
   async _generatePDF(content) {
@@ -301,123 +358,48 @@ class PDFExportUtility {
       throw new Error('Required libraries not loaded. Please include jsPDF and html2canvas.');
     }
 
+    // Pre-load logo for header
+    const logoImageData = await this._loadLogo();
+
     const { jsPDF } = window.jspdf;
-
-    // Capture content as canvas with high quality
-    const canvas = await html2canvas(content, {
-      scale: this.options.scale,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: 1200, // Fixed width for consistency
-      onclone: (clonedDoc) => {
-        // Apply additional print styles to cloned document
-        const clonedContent = clonedDoc.querySelector('[data-pdf-export-root="true"]');
-        if (clonedContent) {
-          clonedContent.style.width = '1200px';
-          clonedContent.style.padding = '20px';
-        }
-        // Hide elements marked as no-print (e.g., "Want More Detailed Analysis?" sections)
-        const noPrintElements = clonedDoc.querySelectorAll('.no-print, .pdf-exclude, [data-hide-in-pdf]');
-        noPrintElements.forEach(el => {
-          el.style.display = 'none';
-        });
-      }
-    });
-
-    // Fast path for single-page documents (also avoids "unused" diagnostics in some toolchains)
-    const imgData = canvas.toDataURL('image/png');
 
     // Create PDF
     const pdf = new jsPDF('p', 'mm', this.options.pageFormat);
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
 
-    // Header height (only on first page)
-    const headerHeight = 60; // Increased for new minimal header design
+    // Layout constants
+    const headerHeight = 60;
     const footerHeight = 10;
     const margin = 10;
-
-    // Add professional header (only on first page)
-    this._addPDFHeader(pdf, pageWidth);
-
-    // Calculate image dimensions
     const contentWidth = pageWidth - (2 * margin);
-    const contentHeight = (canvas.height * contentWidth) / canvas.width;
 
-    // Handle multi-page content
-    let remainingHeight = contentHeight;
-    let yOffset = 0;
-    let currentPage = 1;
+    // Add professional header with logo (only on first page)
+    this._addPDFHeader(pdf, pageWidth, logoImageData);
 
-    const firstPageTopMargin = headerHeight;
-    const firstPageAvailableHeight = pageHeight - firstPageTopMargin - footerHeight - margin;
-    if (contentHeight <= firstPageAvailableHeight) {
-      pdf.addImage(
-        imgData,
-        'PNG',
+    // Find content sections that should not be split
+    const keepTogetherElements = this._findKeepTogetherElements(content);
+
+    if (keepTogetherElements.length > 0) {
+      // Use intelligent section-based rendering
+      await this._renderSectionsIntelligently(pdf, content, keepTogetherElements, {
+        pageWidth,
+        pageHeight,
+        headerHeight,
+        footerHeight,
         margin,
-        firstPageTopMargin,
-        contentWidth,
-        contentHeight
-      );
-
-      const totalPages = pdf.internal.getNumberOfPages();
-      for (let i = 1; i <= totalPages; i++) {
-        pdf.setPage(i);
-        this._addPDFFooter(pdf, pageWidth, pageHeight, i, totalPages);
-      }
-
-      pdf.save(this.options.filename);
-      return;
-    }
-
-    while (remainingHeight > 0) {
-      if (currentPage > 1) {
-        pdf.addPage();
-        // Header only on first page - don't add it here
-      }
-
-      // First page has header, subsequent pages start from top
-      const topMargin = currentPage === 1 ? headerHeight : margin;
-      const availableHeight = pageHeight - topMargin - footerHeight - margin;
-      const sliceHeight = Math.min(remainingHeight, availableHeight);
-
-      // Calculate the portion of the canvas to use
-      const canvasSliceHeight = (sliceHeight / contentWidth) * canvas.width;
-      const canvasYOffset = (yOffset / contentWidth) * canvas.width;
-
-      // Create a temporary canvas for this slice
-      const sliceCanvas = document.createElement('canvas');
-      sliceCanvas.width = canvas.width;
-      sliceCanvas.height = canvasSliceHeight;
-      const sliceContext = sliceCanvas.getContext('2d');
-
-      sliceContext.drawImage(
-        canvas,
-        0, canvasYOffset,
-        canvas.width, canvasSliceHeight,
-        0, 0,
-        canvas.width, canvasSliceHeight
-      );
-
-      const sliceImgData = sliceCanvas.toDataURL('image/png');
-
-      // Add to PDF - adjust Y position based on whether this is first page
-      const yPosition = currentPage === 1 ? headerHeight : margin;
-      pdf.addImage(
-        sliceImgData,
-        'PNG',
+        contentWidth
+      });
+    } else {
+      // Fallback to improved canvas slicing with smart break points
+      await this._renderWithSmartSlicing(pdf, content, {
+        pageWidth,
+        pageHeight,
+        headerHeight,
+        footerHeight,
         margin,
-        yPosition,
-        contentWidth,
-        sliceHeight
-      );
-
-      remainingHeight -= sliceHeight;
-      yOffset += sliceHeight;
-      currentPage++;
+        contentWidth
+      });
     }
 
     // Add footers to all pages
@@ -432,30 +414,383 @@ class PDFExportUtility {
   }
 
   /**
-   * Add professional header to PDF (minimal, clean style)
+   * Find elements that should be kept together (not split across pages)
    * @private
    */
-  _addPDFHeader(pdf, pageWidth) {
-    let yPos = 15;
+  _findKeepTogetherElements(content) {
+    // Selectors for elements that should never be split
+    const keepTogetherSelectors = [
+      '.pdf-keep-together',
+      '.card',
+      '.metric-card',
+      '.chart-container',
+      '.gauge-chart',
+      '.score-card',
+      '.recommendation-card',
+      '.result-section',
+      '.analysis-card',
+      'canvas',
+      'svg',
+      '.report-accordion',
+      '.accordion-item',
+      '[data-pdf-keep-together]',
+      '.metric-grid',
+      '.cwv-metric',
+      '.performance-metric',
+      '.issue-card',
+      '.finding-card',
+      'table',
+      '.data-table',
+      // Screenshot containers - should not be split across pages
+      '.screenshot-container',
+      '.report-shell__screenshot-wrapper',
+      '.page-screenshot'
+    ];
 
-    // Title - SITE MECHANIC (large, bold, black)
-    pdf.setTextColor(0, 0, 0);
-    pdf.setFontSize(24);
-    pdf.setFont('helvetica', 'bold');
-    pdf.text('SITE MECHANIC', 15, yPos);
-    yPos += 8;
+    const elements = [];
+    const selector = keepTogetherSelectors.join(', ');
+    const candidates = content.querySelectorAll(selector);
+
+    candidates.forEach(el => {
+      // Skip nested elements - only process top-level keepable elements
+      const hasKeepableParent = el.parentElement?.closest(selector);
+      if (!hasKeepableParent) {
+        const rect = el.getBoundingClientRect();
+        const contentRect = content.getBoundingClientRect();
+        elements.push({
+          element: el,
+          top: rect.top - contentRect.top,
+          height: rect.height,
+          bottom: rect.bottom - contentRect.top
+        });
+      }
+    });
+
+    // Sort by top position
+    return elements.sort((a, b) => a.top - b.top);
+  }
+
+  /**
+   * Render content using intelligent section-based approach
+   * @private
+   */
+  async _renderSectionsIntelligently(pdf, content, sections, layout) {
+    const { pageWidth, pageHeight, headerHeight, footerHeight, margin, contentWidth } = layout;
+    const scale = this.options.scale;
+
+    // Capture full content
+    const fullCanvas = await html2canvas(content, {
+      scale: scale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: 1200,
+      onclone: (clonedDoc) => this._prepareClonedContent(clonedDoc)
+    });
+
+    const canvasToMM = (pixels) => (pixels / scale) * (contentWidth / (fullCanvas.width / scale));
+
+    let currentPage = 1;
+    let currentY = headerHeight; // Start after header on first page
+    let processedHeight = 0;
+    const contentHeightMM = canvasToMM(fullCanvas.height);
+
+    // Group sections into pages, respecting keep-together boundaries
+    while (processedHeight < contentHeightMM) {
+      if (currentPage > 1) {
+        pdf.addPage();
+        currentY = margin;
+      }
+
+      const availableHeight = pageHeight - currentY - footerHeight - margin;
+
+      // Find the best break point
+      let sliceHeightMM = availableHeight;
+      let breakAtSectionBoundary = false;
+
+      // Check if any section would be cut
+      for (const section of sections) {
+        const sectionTopMM = canvasToMM(section.top);
+        const sectionBottomMM = canvasToMM(section.bottom);
+        const sectionHeightMM = canvasToMM(section.height);
+
+        const sliceEndMM = processedHeight + sliceHeightMM;
+
+        // If section starts before slice end but ends after, we're cutting it
+        if (sectionTopMM < sliceEndMM && sectionBottomMM > sliceEndMM) {
+          // Check if section fits on current page entirely
+          if (sectionHeightMM <= availableHeight) {
+            // Move break point to before this section
+            sliceHeightMM = Math.max(10, sectionTopMM - processedHeight);
+            breakAtSectionBoundary = true;
+          } else if (sectionHeightMM > pageHeight - margin * 2 - footerHeight) {
+            // Section is too tall to fit on any page - let it be split
+            // but try to break at a sensible point within it
+            sliceHeightMM = availableHeight;
+          } else {
+            // Section can fit on next page - break before it
+            sliceHeightMM = Math.max(10, sectionTopMM - processedHeight);
+            breakAtSectionBoundary = true;
+          }
+          break;
+        }
+      }
+
+      // Ensure we make progress
+      sliceHeightMM = Math.max(20, Math.min(sliceHeightMM, contentHeightMM - processedHeight));
+
+      // Calculate canvas coordinates
+      const canvasYStart = (processedHeight / contentHeightMM) * fullCanvas.height;
+      const canvasSliceHeight = (sliceHeightMM / contentHeightMM) * fullCanvas.height;
+
+      // Create slice canvas
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = fullCanvas.width;
+      sliceCanvas.height = Math.max(1, Math.round(canvasSliceHeight));
+      const ctx = sliceCanvas.getContext('2d');
+
+      ctx.drawImage(
+        fullCanvas,
+        0, Math.round(canvasYStart),
+        fullCanvas.width, Math.round(canvasSliceHeight),
+        0, 0,
+        sliceCanvas.width, sliceCanvas.height
+      );
+
+      // Add to PDF
+      const imgData = sliceCanvas.toDataURL('image/png');
+      pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, sliceHeightMM);
+
+      processedHeight += sliceHeightMM;
+      currentPage++;
+    }
+  }
+
+  /**
+   * Render with smart slicing - finds natural break points
+   * @private
+   */
+  async _renderWithSmartSlicing(pdf, content, layout) {
+    const { pageWidth, pageHeight, headerHeight, footerHeight, margin, contentWidth } = layout;
+
+    // Capture content as canvas with high quality
+    const canvas = await html2canvas(content, {
+      scale: this.options.scale,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+      windowWidth: 1200,
+      onclone: (clonedDoc) => this._prepareClonedContent(clonedDoc)
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const contentHeight = (canvas.height * contentWidth) / canvas.width;
+
+    // Check if fits on single page
+    const firstPageAvailableHeight = pageHeight - headerHeight - footerHeight - margin;
+    if (contentHeight <= firstPageAvailableHeight) {
+      pdf.addImage(imgData, 'PNG', margin, headerHeight, contentWidth, contentHeight);
+      return;
+    }
+
+    // Multi-page: find smart break points
+    const breakPoints = this._findSmartBreakPoints(canvas, contentHeight, layout);
+    let currentPage = 1;
+    let yOffset = 0;
+
+    for (let i = 0; i < breakPoints.length; i++) {
+      if (currentPage > 1) {
+        pdf.addPage();
+      }
+
+      const topMargin = currentPage === 1 ? headerHeight : margin;
+      const sliceHeight = breakPoints[i] - yOffset;
+
+      // Calculate canvas slice
+      const canvasSliceHeight = (sliceHeight / contentWidth) * canvas.width;
+      const canvasYOffset = (yOffset / contentWidth) * canvas.width;
+
+      const sliceCanvas = document.createElement('canvas');
+      sliceCanvas.width = canvas.width;
+      sliceCanvas.height = Math.max(1, Math.round(canvasSliceHeight));
+      const ctx = sliceCanvas.getContext('2d');
+
+      ctx.drawImage(
+        canvas,
+        0, Math.round(canvasYOffset),
+        canvas.width, Math.round(canvasSliceHeight),
+        0, 0,
+        sliceCanvas.width, sliceCanvas.height
+      );
+
+      const sliceImgData = sliceCanvas.toDataURL('image/png');
+      pdf.addImage(sliceImgData, 'PNG', margin, topMargin, contentWidth, sliceHeight);
+
+      yOffset = breakPoints[i];
+      currentPage++;
+    }
+  }
+
+  /**
+   * Find smart break points by analyzing canvas for natural breaks
+   * Looks for horizontal bands of consistent color (whitespace/borders)
+   * @private
+   */
+  _findSmartBreakPoints(canvas, contentHeightMM, layout) {
+    const { pageHeight, headerHeight, footerHeight, margin } = layout;
+    const breakPoints = [];
+    let currentY = 0;
+
+    const firstPageAvailable = pageHeight - headerHeight - footerHeight - margin;
+    const subsequentPageAvailable = pageHeight - margin - footerHeight - margin;
+
+    while (currentY < contentHeightMM) {
+      const isFirstPage = breakPoints.length === 0;
+      const availableHeight = isFirstPage ? firstPageAvailable : subsequentPageAvailable;
+      let targetBreak = currentY + availableHeight;
+
+      if (targetBreak >= contentHeightMM) {
+        breakPoints.push(contentHeightMM);
+        break;
+      }
+
+      // Look for a good break point within a tolerance zone
+      const tolerance = Math.min(30, availableHeight * 0.15); // 15% or 30mm max
+      const searchStart = targetBreak - tolerance;
+      const searchEnd = targetBreak;
+
+      // Scan canvas for whitespace rows in the tolerance zone
+      const bestBreak = this._findWhitespaceBreak(canvas, contentHeightMM, searchStart, searchEnd);
+
+      breakPoints.push(bestBreak || targetBreak);
+      currentY = breakPoints[breakPoints.length - 1];
+    }
+
+    return breakPoints;
+  }
+
+  /**
+   * Find a row of whitespace/consistent color in the canvas
+   * @private
+   */
+  _findWhitespaceBreak(canvas, contentHeightMM, searchStartMM, searchEndMM) {
+    const ctx = canvas.getContext('2d');
+    const scale = canvas.width / 1200; // Based on windowWidth: 1200
+
+    // Convert mm to canvas pixels
+    const mmToCanvasY = (mm) => (mm / contentHeightMM) * canvas.height;
+
+    const startY = Math.floor(mmToCanvasY(searchStartMM));
+    const endY = Math.floor(mmToCanvasY(searchEndMM));
+
+    // Sample every few pixels for performance
+    const sampleStep = Math.max(1, Math.floor((endY - startY) / 50));
+
+    let bestBreakY = null;
+    let bestScore = -1;
+
+    for (let y = endY; y >= startY; y -= sampleStep) {
+      // Get a row of pixels
+      const rowData = ctx.getImageData(0, y, canvas.width, 1).data;
+
+      // Check if row is mostly uniform (whitespace or border)
+      let uniformScore = 0;
+      let prevR = rowData[0], prevG = rowData[1], prevB = rowData[2];
+
+      for (let x = 0; x < canvas.width; x += 10) {
+        const i = x * 4;
+        const r = rowData[i], g = rowData[i + 1], b = rowData[i + 2];
+
+        // Check if similar to previous pixel
+        const diff = Math.abs(r - prevR) + Math.abs(g - prevG) + Math.abs(b - prevB);
+        if (diff < 30) uniformScore++;
+
+        // Bonus for white/light colors (likely spacing)
+        if (r > 240 && g > 240 && b > 240) uniformScore += 2;
+
+        prevR = r; prevG = g; prevB = b;
+      }
+
+      if (uniformScore > bestScore) {
+        bestScore = uniformScore;
+        bestBreakY = y;
+      }
+    }
+
+    if (bestBreakY !== null && bestScore > canvas.width / 20) {
+      // Convert back to mm
+      return (bestBreakY / canvas.height) * contentHeightMM;
+    }
+
+    return null;
+  }
+
+  /**
+   * Prepare cloned content for html2canvas
+   * @private
+   */
+  _prepareClonedContent(clonedDoc) {
+    const clonedContent = clonedDoc.querySelector('[data-pdf-export-root="true"]');
+    if (clonedContent) {
+      clonedContent.style.width = '1200px';
+      clonedContent.style.padding = '20px';
+    }
+    // Hide elements marked as no-print
+    const noPrintElements = clonedDoc.querySelectorAll('.no-print, .pdf-exclude, [data-hide-in-pdf]');
+    noPrintElements.forEach(el => {
+      el.style.display = 'none';
+    });
+  }
+
+  /**
+   * Add professional header to PDF with Site Mechanic branding
+   * @param {Object} pdf - jsPDF instance
+   * @param {number} pageWidth - Page width in mm
+   * @param {string|null} logoImageData - Logo as base64 PNG data URL, or null for text fallback
+   * @private
+   */
+  _addPDFHeader(pdf, pageWidth, logoImageData = null) {
+    let yPos = 12;
+
+    // Try to add logo image if available
+    if (logoImageData) {
+      try {
+        // Logo dimensions: roughly 50mm wide, proportional height
+        const logoWidth = 50;
+        const logoHeight = 8; // Approximate height based on SVG aspect ratio
+        pdf.addImage(logoImageData, 'PNG', 15, yPos, logoWidth, logoHeight);
+        yPos += logoHeight + 3;
+      } catch (error) {
+        console.warn('Could not add logo image to PDF:', error.message);
+        // Fall back to text logo
+        pdf.setTextColor(221, 56, 56);
+        pdf.setFontSize(22);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('Site Mechanic', 15, yPos + 5);
+        yPos += 10;
+      }
+    } else {
+      // Text logo fallback - styled text in brand red (#dd3838)
+      pdf.setTextColor(221, 56, 56); // #dd3838 brand red
+      pdf.setFontSize(22);
+      pdf.setFont('helvetica', 'bold');
+      pdf.text('Site Mechanic', 15, yPos + 5);
+      yPos += 10;
+    }
 
     // Subtitle - Web Diagnostics & Performance Analysis
-    pdf.setFontSize(11);
+    pdf.setFontSize(10);
     pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(60, 60, 60);
+    pdf.setTextColor(100, 100, 100);
     pdf.text('Web Diagnostics & Performance Analysis', 15, yPos);
     yPos += 5;
 
-    // Horizontal line separator
-    pdf.setDrawColor(0, 0, 0);
+    // Brand accent line in red
+    pdf.setDrawColor(221, 56, 56);
     pdf.setLineWidth(0.8);
-    pdf.line(15, yPos, Math.min(85, pageWidth - 15), yPos);
+    pdf.line(15, yPos, 85, yPos);
     yPos += 8;
 
     // Report Type

@@ -78,6 +78,8 @@
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
     <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/reportShell.css" />
+    <link rel="stylesheet" href="/css/components/reportAccordion.css" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -348,106 +350,6 @@
       .severity-warning { background: #f59e0b; color: black; }
       .severity-info { background: #3b82f6; color: white; }
       .severity-good { background: #10b981; color: white; }
-      
-      /* ========================================
-         ACCORDION STYLES (for <details> elements)
-         ======================================== */
-      .accordion-container {
-        display: flex;
-        flex-direction: column;
-        gap: 0.75rem;
-      }
-      
-      details.accordion {
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-        overflow: hidden;
-        transition: all 0.2s ease;
-      }
-      
-      details.accordion:hover {
-        border-color: rgba(255, 255, 255, 0.2);
-      }
-      
-      details.accordion[open] {
-        border-color: rgba(16, 185, 129, 0.3);
-      }
-      
-      details.accordion > summary.accordion__header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1rem 1.25rem;
-        cursor: pointer;
-        user-select: none;
-        list-style: none;
-        background: transparent;
-        transition: background 0.2s ease;
-      }
-      
-      details.accordion > summary.accordion__header::-webkit-details-marker {
-        display: none;
-      }
-      
-      details.accordion > summary.accordion__header:hover {
-        background: rgba(255, 255, 255, 0.03);
-      }
-      
-      details.accordion[open] > summary.accordion__header {
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      }
-      
-      .accordion__title {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 1rem;
-        font-weight: 600;
-        color: #e5e5e5;
-        margin: 0;
-      }
-      
-      .accordion__badge {
-        padding: 0.25rem 0.75rem;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: 500;
-        color: #9ca3af;
-      }
-      
-      .accordion__content {
-        padding: 1.25rem;
-        background: rgba(0, 0, 0, 0.1);
-      }
-      
-      /* Light theme adjustments */
-      .white-theme details.accordion {
-        background: rgba(0, 0, 0, 0.02);
-        border-color: rgba(0, 0, 0, 0.1);
-      }
-      
-      .white-theme details.accordion:hover {
-        border-color: rgba(0, 0, 0, 0.2);
-      }
-      
-      .white-theme details.accordion[open] {
-        border-color: rgba(16, 185, 129, 0.4);
-      }
-      
-      .white-theme .accordion__title {
-        color: #1a1a1a;
-      }
-      
-      .white-theme .accordion__badge {
-        background: rgba(0, 0, 0, 0.08);
-        color: #4b5563;
-      }
-      
-      .white-theme .accordion__content {
-        background: rgba(0, 0, 0, 0.02);
-      }
     </style>
     
     <!-- Schema.org Structured Data -->
@@ -550,14 +452,14 @@
               aria-required="true"
             />
             
-            <button id="analyzeButton" class="btn btn-primary" data-i18n="fontScanner.analyzeFonts" aria-label="Start enhanced font analysis">ANALYZE FONTS</button>
+            <button id="analyzeButton" class="btn btn-primary" aria-label="Analyze fonts">Analyze</button>
           </div>
         
           <!-- Options Panel -->
           <div class="options-panel" style="margin-top: 1rem;">
             <label>
               <input type="checkbox" id="multiPageOption" />
-              <span data-i18n="fontScanner.multiPageScan">Multi-page scan (analyze fonts across multiple pages)</span>
+              <span>Multi-page scan (analyze fonts across multiple pages)</span>
             </label>
             <div id="multiPageOptions" style="display: none; margin-left: 24px; margin-top: 8px;">
               <label>
@@ -597,11 +499,18 @@
 
     <!-- Report UI Components -->
     <script src="/js/report-ui.js"></script>
+    <script src="/js/components/reportAccordion.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
     <script src="/js/components/ProReportBlock.js"></script>
     <script src="/js/components/PricingModal.js"></script>
+
+    <!-- Shell + Entitlements (SEO pattern) -->
+    <script src="/assets/js/ui.js"></script>
+    <script src="/assets/js/report-shell.js"></script>
+    <script src="/assets/js/billing.js"></script>
+    <script src="/assets/js/entitlements.js"></script>
 
     <script src="enhanced-fonts-script.js"></script>
   </body>

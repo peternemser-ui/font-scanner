@@ -72,7 +72,7 @@ function getScoreColor(score) {
  * @param {number} score - Score (0-100)
  * @param {string} label - Chart label
  * @param {number} x - X position (center)
- * @param {number} y - Y position (center)
+ * @param {number} y - Y position (center of the arc, arc draws ABOVE this point)
  * @param {Object} options - { radius, width, showValue, showLabel, showTicks }
  * @returns {number} - Height consumed
  */
@@ -86,27 +86,32 @@ function drawGaugeChart(doc, score, label, x, y, options = {}) {
   } = options;
 
   const safeScore = Math.max(0, Math.min(100, score || 0));
+  const color = getScoreColor(safeScore);
 
+  // Background arc (light gray) - full semicircle
   doc.save();
-
-  // Background arc (light gray)
   doc.strokeColor(COLORS.divider);
   doc.lineWidth(width);
   doc.arc(x, y, radius, Math.PI, 0, false);
   doc.stroke();
+  doc.restore();
 
-  // Foreground arc (colored based on score)
-  const color = getScoreColor(safeScore);
-  const scoreAngle = Math.PI * (safeScore / 100);
-  const endAngle = Math.PI - scoreAngle;
-
-  doc.strokeColor(color);
-  doc.lineWidth(width);
-  doc.arc(x, y, radius, Math.PI, endAngle, false);
-  doc.stroke();
+  // Foreground arc (colored based on score) - partial based on score
+  if (safeScore > 0) {
+    doc.save();
+    const scoreAngle = Math.PI * (safeScore / 100);
+    const endAngle = Math.PI - scoreAngle;
+    
+    doc.strokeColor(color);
+    doc.lineWidth(width);
+    doc.arc(x, y, radius, Math.PI, endAngle, false);
+    doc.stroke();
+    doc.restore();
+  }
 
   // Draw tick marks (optional)
   if (showTicks) {
+    doc.save();
     doc.strokeColor(COLORS.textDisabled);
     doc.lineWidth(1);
 
@@ -121,40 +126,42 @@ function drawGaugeChart(doc, score, label, x, y, options = {}) {
       doc.lineTo(outerX, outerY);
       doc.stroke();
     }
+    doc.restore();
   }
 
-  doc.restore();
-
-  // Score value in center
+  // Score value in center of the arc
   if (showValue) {
-    doc.fontSize(32)
-       .font('Helvetica-Bold')
+    const valueY = y - radius / 2; // Position value in the center of the arc area
+    
+    doc.font('Helvetica-Bold')
+       .fontSize(Math.max(18, radius / 2.5))
        .fillColor(color)
-       .text(Math.round(safeScore).toString(), x - 30, y - 15, {
-         width: 60,
+       .text(Math.round(safeScore).toString(), x - radius, valueY, {
+         width: radius * 2,
          align: 'center'
        });
 
-    doc.fontSize(10)
+    doc.font('Helvetica')
+       .fontSize(9)
        .fillColor(COLORS.textSecondary)
-       .text('/100', x - 30, y + 15, {
-         width: 60,
+       .text('/100', x - radius, valueY + Math.max(18, radius / 2.5), {
+         width: radius * 2,
          align: 'center'
        });
   }
 
   // Label below gauge
   if (showLabel && label) {
-    doc.fontSize(10)
-       .font('Helvetica')
+    doc.font('Helvetica')
+       .fontSize(10)
        .fillColor(COLORS.textSecondary)
-       .text(label, x - 70, y + radius + 15, {
-         width: 140,
+       .text(label, x - radius - 10, y + 15, {
+         width: (radius + 10) * 2,
          align: 'center'
        });
   }
 
-  return radius * 2 + 50; // Height consumed
+  return radius + 50; // Height consumed (just the bottom half + label)
 }
 
 /**

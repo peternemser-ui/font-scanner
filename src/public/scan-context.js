@@ -157,6 +157,10 @@ const ExportGate = {
    * @returns {boolean}
    */
   isPro() {
+    // Check demo domains first (for testing with vail.com etc.)
+    if (window.ProAccess && window.ProAccess.isDemoDomain()) {
+      return true;
+    }
     return window.proManager && window.proManager.isPro();
   },
   
@@ -385,6 +389,32 @@ window.ExportGate = ExportGate;
  * Provides a single source of truth for Pro access and paywall triggers
  */
 const ProAccess = {
+  // Demo domains that get free pro access (for product review/testing)
+  DEMO_DOMAINS: ['vail.com', 'www.vail.com'],
+
+  isDemoDomain(domain) {
+    // Try the provided domain first
+    let hostname = this.normalizeDomain(domain);
+
+    // If no domain provided, try getCurrentDomain
+    if (!hostname) {
+      hostname = this.normalizeDomain(this.getCurrentDomain());
+    }
+
+    // If still no hostname, try the URL input field directly (fallback)
+    if (!hostname) {
+      try {
+        const urlInput = document.getElementById('url') || document.getElementById('urlInput');
+        if (urlInput && urlInput.value) {
+          hostname = new URL(urlInput.value.startsWith('http') ? urlInput.value : 'https://' + urlInput.value).hostname.toLowerCase();
+        }
+      } catch (e) {}
+    }
+
+    if (!hostname) return false;
+    return this.DEMO_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+  },
+
   getEntitlement() {
     try {
       const raw = localStorage.getItem('sm_pro_entitlement');
@@ -407,6 +437,9 @@ const ProAccess = {
     return ScanContext.getDomain() || this.normalizeDomain(window.currentSeoResults?.url || window.location.hostname);
   },
   hasProAccess(domainOverride) {
+    // Auto-unlock for demo domains
+    if (this.isDemoDomain(domainOverride)) return true;
+
     const entitlement = this.getEntitlement();
     if (!entitlement) return false;
     const now = Date.now();

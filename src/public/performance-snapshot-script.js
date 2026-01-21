@@ -359,14 +359,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
       </div>
-
-      <!-- Raw Data -->
-      <details style="margin-top: 2rem;">
-        <summary style="cursor: pointer; color: #888;">📋 View Raw Data</summary>
-        <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.75rem; margin-top: 1rem;">
-${JSON.stringify(data, null, 2)}
-        </pre>
-      </details>
     `;
 
     resultsContent.innerHTML = html;

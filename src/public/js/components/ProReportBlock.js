@@ -66,10 +66,15 @@
       label: 'Export PDF',
       description: 'Client-ready report'
     },
+    excel: {
+      icon: '📗',
+      label: 'Export Excel',
+      description: 'Spreadsheet data'
+    },
     csv: {
       icon: '📊',
       label: 'Export CSV',
-      description: 'Spreadsheet data'
+      description: 'Raw data export'
     },
     json: {
       icon: '🔧',
@@ -98,6 +103,11 @@
    * @param {string} reportId - Optional report identifier
    */
   function isPro(reportId) {
+    // Check demo domains first (for testing with vail.com etc.)
+    if (window.ProAccess && typeof window.ProAccess.isDemoDomain === 'function' && window.ProAccess.isDemoDomain()) {
+      return true;
+    }
+
     // Check if specific report is unlocked via credits
     if (reportId && window.CreditsManager) {
       if (
@@ -179,6 +189,7 @@
 
     const userIsPro = isPro(reportId);
     const handler = feature === 'pdf' ? 'exportPDF' :
+                    feature === 'excel' ? 'exportExcel' :
                     feature === 'csv' ? 'exportCSV' :
                     feature === 'json' ? 'exportJSON' :
                     feature === 'share' ? 'shareResults' : null;

@@ -186,6 +186,8 @@ p {
    PAGE LAYOUT
    ======================================== */
 .page-shell {
+  position: relative;
+  z-index: 1;
   max-width: var(--max-width);
   margin: 0;
   padding: var(--space-6) var(--space-5);
@@ -393,7 +395,7 @@ p {
     rgba(var(--accent-primary-rgb), 1),
     rgba(var(--accent-primary-rgb), 0.78)
   );
-  color: var(--accent-primary-contrast, #ffffff) !important;
+  color: var(--accent-primary-contrast, #000000) !important;
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -441,10 +443,49 @@ p {
   font-size: 1rem;
 }
 
-/* Icon-only button */
+/* Icon-only button (legacy) */
 .btn-icon {
   padding: 0.625rem;
   border-radius: var(--radius-sm);
+}
+
+/* Plain text button with icon */
+.text-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0;
+  min-width: unset;
+  min-height: unset;
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  color: var(--color-muted);
+  font-size: 0.875rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: color var(--duration-fast);
+}
+
+.text-btn:hover,
+.text-btn:focus,
+.text-btn:active {
+  background: none !important;
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+  transform: none !important;
+  color: var(--color-text);
+}
+
+.text-btn:focus-visible {
+  outline: 2px solid var(--accent-primary) !important;
+  outline-offset: 2px;
+}
+
+.text-btn svg {
+  flex-shrink: 0;
 }
 
 /* ========================================
@@ -824,32 +865,6 @@ body:not(.white-theme) .score--warning {
 
 body:not(.white-theme) .score--critical {
   background: rgba(239, 68, 68, 0.15);
-}
-
-/* ========================================
-   FOOTER (Non-fixed)
-   ======================================== */
-.site-footer {
-  padding: var(--space-5) var(--space-4);
-  text-align: left;
-  background: var(--color-surface);
-  border-top: 1px solid var(--color-border);
-}
-
-.site-footer p {
-  margin: 0;
-  font-size: 0.8125rem;
-  color: var(--color-muted);
-}
-
-.site-footer a {
-  color: var(--color-muted);
-  text-decoration: none;
-  transition: color var(--duration-fast);
-}
-
-.site-footer a:hover {
-  color: var(--color-text);
 }
 
 /* ========================================

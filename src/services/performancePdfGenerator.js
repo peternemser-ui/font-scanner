@@ -9,6 +9,8 @@ const {
   addPdfHeader,
   addMaterialSectionHeader,
   checkPageBreakNeeded,
+  ensureFreshPage,
+  heightCalculators,
   getScoreColor,
   getGrade,
   drawScoreSummaryCard,
@@ -573,6 +575,9 @@ class PerformancePdfGenerator {
       const hasResources = resources.scripts || resources.stylesheets || resources.images || resources.fonts;
 
       if (hasResources) {
+        // Pie chart needs at least 250px (radius*2 + legend + margins)
+        checkPageBreakNeeded(doc, 280);
+        
         doc.fontSize(11)
            .font('Helvetica-Bold')
            .fillColor(COLORS.textPrimary)
@@ -636,7 +641,9 @@ class PerformancePdfGenerator {
         }
 
         // Bar chart for resource counts and sizes
-        checkPageBreakNeeded(doc, 200);
+        // Calculate accurate height: ~4 bars at 30px height + spacing
+        const barChartEstimate = 4 * (30 + 8) + 60; // bars + header + margins
+        checkPageBreakNeeded(doc, barChartEstimate);
 
         doc.fontSize(11)
            .font('Helvetica-Bold')
@@ -768,7 +775,11 @@ class PerformancePdfGenerator {
       return;
     }
 
-    checkPageBreakNeeded(doc, 400);
+    // Gauge charts + comparison chart need significant space (~450px)
+    // If we're past halfway down the page, start fresh
+    if (doc.y > 350) {
+      doc.addPage();
+    }
     addMaterialSectionHeader(doc, 'Desktop vs Mobile Comparison', {
       description: 'Performance metrics across device types'
     });
@@ -830,7 +841,8 @@ class PerformancePdfGenerator {
       }
     ];
 
-    checkPageBreakNeeded(doc, 250);
+    // Comparison chart needs ~280px (6 metrics * 40px row height + legend)
+    checkPageBreakNeeded(doc, 280);
 
     const comparisonHeight = drawComparisonChart(
       doc,
@@ -850,22 +862,23 @@ class PerformancePdfGenerator {
   }
 
   /**
-   * Recommendations with Priority Cards
+   * Recommendations with Priority Cards - Full content with proper page breaks
    */
   addRecommendations(doc, results) {
     if (!results.recommendations || results.recommendations.length === 0) {
       return;
     }
 
-    checkPageBreakNeeded(doc, 250);
+    // Start recommendations on new page to avoid mid-page breaks
+    doc.addPage();
     addMaterialSectionHeader(doc, 'Performance Recommendations', {
       description: 'Prioritized optimizations to improve page speed'
     });
 
     // Group by priority
-    const high = results.recommendations.filter(r => r.priority === 'high').slice(0, 5);
-    const medium = results.recommendations.filter(r => r.priority === 'medium').slice(0, 5);
-    const low = results.recommendations.filter(r => r.priority === 'low').slice(0, 3);
+    const high = results.recommendations.filter(r => r.priority === 'high');
+    const medium = results.recommendations.filter(r => r.priority === 'medium');
+    const low = results.recommendations.filter(r => r.priority === 'low');
 
     // High Priority
     if (high.length > 0) {
@@ -877,35 +890,68 @@ class PerformancePdfGenerator {
       doc.moveDown(0.5);
 
       high.forEach((rec, index) => {
-        checkPageBreakNeeded(doc, 90);
+        // Calculate card height based on content
+        const descLines = Math.ceil((rec.description || '').length / 70);
+        const solutionLines = rec.solution ? Math.ceil(rec.solution.length / 70) : 0;
+        const cardHeight = 50 + (descLines * 12) + (solutionLines * 12) + (rec.fix ? 40 : 0);
+        
+        checkPageBreakNeeded(doc, cardHeight + 20);
 
-        drawCard(doc, 50, doc.y, 512, 75, {
+        drawCard(doc, 50, doc.y, 512, cardHeight, {
           backgroundColor: '#FFEBEE',
           borderColor: COLORS.error
         });
 
+        const cardStartY = doc.y;
+
         doc.fontSize(8)
            .font('Helvetica-Bold')
            .fillColor(COLORS.error)
-           .text('HIGH', 70, doc.y + 12);
+           .text('HIGH', 70, cardStartY + 12);
 
         doc.fontSize(10)
            .font('Helvetica-Bold')
            .fillColor(COLORS.textPrimary)
-           .text(`${index + 1}. ${rec.title}`, 120, doc.y - 2, { width: 395 });
+           .text(`${index + 1}. ${rec.title}`, 120, cardStartY + 10, { width: 395 });
 
-        doc.fontSize(9)
-           .font('Helvetica')
-           .fillColor(COLORS.textSecondary)
-           .text(rec.description.substring(0, 120) + (rec.description.length > 120 ? '...' : ''), 70, doc.y + 5, { width: 445 });
+        let currentY = cardStartY + 28;
 
-        if (rec.solution) {
-          doc.fontSize(8)
-             .fillColor(COLORS.info)
-             .text(`Solution: ${rec.solution.substring(0, 80)}${rec.solution.length > 80 ? '...' : ''}`, 70, doc.y + 3, { width: 445 });
+        // Full description
+        if (rec.description) {
+          doc.fontSize(9)
+             .font('Helvetica')
+             .fillColor(COLORS.textSecondary)
+             .text(rec.description, 70, currentY, { width: 445 });
+          currentY = doc.y + 8;
         }
 
-        doc.y += 85;
+        // Solution
+        if (rec.solution) {
+          doc.fontSize(8)
+             .font('Helvetica-Bold')
+             .fillColor(COLORS.info)
+             .text('Solution:', 70, currentY);
+          doc.fontSize(8)
+             .font('Helvetica')
+             .fillColor(COLORS.info)
+             .text(rec.solution, 120, currentY, { width: 395 });
+          currentY = doc.y + 8;
+        }
+
+        // Fix/How to fix
+        if (rec.fix) {
+          doc.fontSize(8)
+             .font('Helvetica-Bold')
+             .fillColor(COLORS.success)
+             .text('How to Fix:', 70, currentY);
+          doc.fontSize(8)
+             .font('Helvetica')
+             .fillColor(COLORS.success)
+             .text(rec.fix, 130, currentY, { width: 385 });
+          currentY = doc.y + 8;
+        }
+
+        doc.y = cardStartY + cardHeight + 10;
       });
 
       doc.moveDown(1);
@@ -913,7 +959,7 @@ class PerformancePdfGenerator {
 
     // Medium Priority
     if (medium.length > 0) {
-      checkPageBreakNeeded(doc, 100);
+      checkPageBreakNeeded(doc, 150);
 
       doc.fontSize(11)
          .font('Helvetica-Bold')
@@ -923,55 +969,119 @@ class PerformancePdfGenerator {
       doc.moveDown(0.5);
 
       medium.forEach((rec, index) => {
-        checkPageBreakNeeded(doc, 75);
+        // Calculate card height based on content
+        const descLines = Math.ceil((rec.description || '').length / 70);
+        const solutionLines = rec.solution ? Math.ceil(rec.solution.length / 70) : 0;
+        const cardHeight = 45 + (descLines * 12) + (solutionLines * 12) + (rec.fix ? 35 : 0);
+        
+        checkPageBreakNeeded(doc, cardHeight + 15);
 
-        drawCard(doc, 50, doc.y, 512, 60, {
+        drawCard(doc, 50, doc.y, 512, cardHeight, {
           backgroundColor: '#FFF3E0',
           borderColor: COLORS.warning
         });
 
+        const cardStartY = doc.y;
+
         doc.fontSize(8)
            .font('Helvetica-Bold')
            .fillColor(COLORS.warning)
-           .text('MEDIUM', 70, doc.y + 10);
+           .text('MEDIUM', 70, cardStartY + 10);
 
         doc.fontSize(10)
            .font('Helvetica-Bold')
            .fillColor(COLORS.textPrimary)
-           .text(`${index + 1}. ${rec.title}`, 130, doc.y - 3, { width: 385 });
+           .text(`${index + 1}. ${rec.title}`, 130, cardStartY + 8, { width: 385 });
 
-        doc.fontSize(9)
-           .font('Helvetica')
-           .fillColor(COLORS.textSecondary)
-           .text(rec.description.substring(0, 100) + (rec.description.length > 100 ? '...' : ''), 70, doc.y + 5, { width: 445 });
+        let currentY = cardStartY + 25;
 
-        doc.y += 70;
+        // Full description
+        if (rec.description) {
+          doc.fontSize(9)
+             .font('Helvetica')
+             .fillColor(COLORS.textSecondary)
+             .text(rec.description, 70, currentY, { width: 445 });
+          currentY = doc.y + 6;
+        }
+
+        // Solution
+        if (rec.solution) {
+          doc.fontSize(8)
+             .font('Helvetica-Bold')
+             .fillColor(COLORS.info)
+             .text('Solution:', 70, currentY);
+          doc.fontSize(8)
+             .font('Helvetica')
+             .fillColor(COLORS.info)
+             .text(rec.solution, 120, currentY, { width: 395 });
+          currentY = doc.y + 6;
+        }
+
+        // Fix
+        if (rec.fix) {
+          doc.fontSize(8)
+             .font('Helvetica-Bold')
+             .fillColor(COLORS.success)
+             .text('How to Fix:', 70, currentY);
+          doc.fontSize(8)
+             .font('Helvetica')
+             .fillColor(COLORS.success)
+             .text(rec.fix, 130, currentY, { width: 385 });
+        }
+
+        doc.y = cardStartY + cardHeight + 8;
       });
-
-      if (results.recommendations.filter(r => r.priority === 'medium').length > 5) {
-        doc.fontSize(9)
-           .fillColor(COLORS.textSecondary)
-           .text(`... and ${results.recommendations.filter(r => r.priority === 'medium').length - 5} more medium priority recommendations`, 50, doc.y);
-      }
 
       doc.moveDown(1);
     }
 
-    // Low Priority Summary
-    if (low.length > 0 || results.recommendations.filter(r => r.priority === 'low').length > 0) {
-      checkPageBreakNeeded(doc, 60);
+    // Low Priority - Show full details too
+    if (low.length > 0) {
+      checkPageBreakNeeded(doc, 150);
 
-      drawCard(doc, 50, doc.y, 512, 50, {
-        backgroundColor: '#E3F2FD',
-        borderColor: COLORS.info
-      });
-
-      doc.fontSize(10)
+      doc.fontSize(11)
          .font('Helvetica-Bold')
          .fillColor(COLORS.info)
-         .text(`🔵 Low Priority: ${results.recommendations.filter(r => r.priority === 'low').length} recommendations`, 70, doc.y + 18);
+         .text('🔵 Low Priority', 50, doc.y);
 
-      doc.y += 60;
+      doc.moveDown(0.5);
+
+      low.forEach((rec, index) => {
+        const descLines = Math.ceil((rec.description || '').length / 70);
+        const cardHeight = 40 + (descLines * 12) + (rec.solution ? 25 : 0);
+        
+        checkPageBreakNeeded(doc, cardHeight + 15);
+
+        drawCard(doc, 50, doc.y, 512, cardHeight, {
+          backgroundColor: '#E3F2FD',
+          borderColor: COLORS.info
+        });
+
+        const cardStartY = doc.y;
+
+        doc.fontSize(10)
+           .font('Helvetica-Bold')
+           .fillColor(COLORS.textPrimary)
+           .text(`${index + 1}. ${rec.title}`, 70, cardStartY + 10, { width: 445 });
+
+        let currentY = cardStartY + 26;
+
+        if (rec.description) {
+          doc.fontSize(9)
+             .font('Helvetica')
+             .fillColor(COLORS.textSecondary)
+             .text(rec.description, 70, currentY, { width: 445 });
+          currentY = doc.y + 5;
+        }
+
+        if (rec.solution) {
+          doc.fontSize(8)
+             .fillColor(COLORS.info)
+             .text(`→ ${rec.solution}`, 70, currentY, { width: 445 });
+        }
+
+        doc.y = cardStartY + cardHeight + 8;
+      });
     }
   }
 

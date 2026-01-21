@@ -22,11 +22,36 @@
     return s;
   }
 
+  function getScoreColorClass(scoreTextRight) {
+    if (scoreTextRight === null || scoreTextRight === undefined) return '';
+
+    let numericScore = null;
+
+    if (typeof scoreTextRight === 'number' && !Number.isNaN(scoreTextRight)) {
+      numericScore = scoreTextRight;
+    } else {
+      const s = String(scoreTextRight).trim();
+      // Extract number from formats like "85/100" or "85"
+      const match = s.match(/^(\d{1,3})(?:\/\d+)?$/);
+      if (match) {
+        numericScore = parseInt(match[1], 10);
+      }
+    }
+
+    if (numericScore === null) return '';
+
+    // Color thresholds: 80+ green, 50-79 yellow, 0-49 red
+    if (numericScore >= 80) return 'report-accordion__score-badge--good';
+    if (numericScore >= 50) return 'report-accordion__score-badge--warning';
+    return 'report-accordion__score-badge--poor';
+  }
+
   function createSection({ id, title, scoreTextRight = '—', isPro = false, locked = false, contentHTML = '', context = 'report', reportId = null }) {
     const safeId = safeDomId(id);
     const headerId = `report-accordion-header-${safeId}`;
     const bodyId = `report-accordion-body-${safeId}`;
     const formattedScore = formatScoreText(scoreTextRight);
+    const scoreColorClass = getScoreColorClass(scoreTextRight);
     const cardHTML = (function() {
       if (!locked) return '';
       if (window.PaidUnlockCard && typeof window.PaidUnlockCard.render === 'function') {
@@ -64,7 +89,7 @@
           <div class="report-accordion__title">${title}</div>
           <div class="report-accordion__meta">
             ${isPro ? '<span class="report-accordion__pro-pill">PRO</span>' : ''}
-            ${formattedScore && formattedScore !== '—' ? `<span class="report-accordion__score-badge">${formattedScore}</span>` : ''}
+            ${formattedScore && formattedScore !== '—' ? `<span class="report-accordion__score-badge ${scoreColorClass}">${formattedScore}</span>` : ''}
             <span class="report-accordion__chevron">▾</span>
           </div>
         </button>

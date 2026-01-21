@@ -19,7 +19,12 @@ document.getElementById('multiPageToggle').addEventListener('change', (e) => {
 // Translation helper
 function t(key, fallback) {
   if (window.i18n && typeof window.i18n.t === 'function') {
-    return window.i18n.t(key) || fallback;
+    const result = window.i18n.t(key);
+    // If result is undefined, null, empty, or equals the key itself, use fallback
+    if (!result || result === key) {
+      return fallback;
+    }
+    return result;
   }
   return fallback;
 }
@@ -150,7 +155,7 @@ async function analyze() {
   // Disable inputs during scan
   results.style.display = 'none';
   btn.disabled = true;
-  buttonText.textContent = t('common.runningScan', 'Running scan...');
+  buttonText.textContent = 'Analyzing...';
   btn.style.opacity = '0.6';
   urlInput.disabled = true;
   
@@ -230,7 +235,7 @@ async function analyze() {
     // Re-enable button
     btn.disabled = false;
     const buttonText = btn.querySelector('#buttonText') || btn;
-    buttonText.textContent = t('common.runScan', 'Run scan');
+    buttonText.textContent = 'Analyze';
     btn.style.opacity = '1';
     urlInput.disabled = false;
   }
@@ -251,242 +256,622 @@ function getGradeColor(grade) {
 }
 
 function displayResults(data) {
+  try {
+  console.log('[Brand] displayResults called with data:', data);
   const results = document.getElementById('results');
   const score = data.score || 0;
   const isMultiPage = data.multiPage === true;
   
-  // Multi-page badge
-  const multiPageBadge = isMultiPage ? `
-    <span style="display: inline-block; margin-left: 0.5rem; padding: 2px 8px; background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 1), rgba(var(--accent-primary-rgb), 0.7)); color: var(--accent-primary-contrast); font-size: 0.65rem; border-radius: 3px; font-weight: 700; vertical-align: middle;">
-      ${data.pagesAnalyzed} ${t('brandConsistency.pagesScanned', 'PAGES SCANNED')}
-    </span>
-  ` : '';
+  // Generate report ID for pro features
+  const urlValue = document.getElementById('url')?.value || data.url || '';
+  const reportId = data.reportId || `brand_${btoa(urlValue).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16)}`;
   
-  // Score breakdown items for circular dials
-  const breakdownItems = data.scoreBreakdown ? Object.entries(data.scoreBreakdown).slice(0, 3) : [];
+  // Set report ID on body for paywall systems
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+  }
   
-  results.innerHTML = `
-    <!-- Executive Summary Section (matches SEO page design) -->
-    <div class="section">
-      <h2>[BRAND_ANALYSIS_RESULTS]${multiPageBadge}</h2>
-      <p>>> url: ${data.url}</p>
-      ${isMultiPage ? `<p>>> mode: ${t('brandConsistency.multiPageAnalysis', 'Multi-page analysis')} (${data.pagesAnalyzed} pages)</p>` : ''}
-      <p>>> timestamp: ${new Date(data.timestamp).toLocaleString()}</p>
+  // Store results globally for unlock handling
+  window.currentBrandResults = data;
+  
+  // Initialize entitlements if available
+  if (window.SmEntitlements && typeof window.SmEntitlements.init === 'function') {
+    window.SmEntitlements.init({ reportId: reportId || undefined });
+  }
+  
+  // Check if report is unlocked
+  const isUnlocked = !!(
+    reportId &&
+    window.CreditsManager &&
+    (
+      (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+      (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+    )
+  );
+  
+  // Get timestamp
+  const startedAt = data.timestamp || window.SM_SCAN_STARTED_AT || '';
+  
+  // Calculate component scores for donuts
+  const colorPaletteScore = data.scoreBreakdown?.colorPalette?.score || 0;
+  const colorPaletteMax = data.scoreBreakdown?.colorPalette?.maxScore || 30;
+  const typographyScore = data.scoreBreakdown?.typography?.score || 0;
+  const typographyMax = data.scoreBreakdown?.typography?.maxScore || 25;
+  const brandIdentityScore = data.scoreBreakdown?.brandIdentity?.score || 0;
+  const brandIdentityMax = data.scoreBreakdown?.brandIdentity?.maxScore || 20;
+  
+  // Build summary donuts (SEO pattern) - show raw scores
+  const summary = [
+    { label: t('brandConsistency.overall', 'Overall'), score: score },
+    { label: t('brandConsistency.colors', 'Colors'), score: Math.round((colorPaletteScore / colorPaletteMax) * 100) || 0 },
+    { label: t('brandConsistency.type', 'Type'), score: Math.round((typographyScore / typographyMax) * 100) || 0 },
+    { label: t('brandConsistency.identity', 'Identity'), score: Math.round((brandIdentityScore / brandIdentityMax) * 100) || 0 }
+  ];
+  
+  // Calculate accordion scores
+  const colorAnalysisScore = data.colorAnalysis?.harmonyScore || 70;
+  const typographyAnalysisScore = data.typographyAnalysis?.typographyScore || 50;
+  const brandIdScore = (data.consistency?.hasLogo ? 75 : 25) + (data.consistency?.hasFavicon ? 25 : 0);
+  const uiConsistencyScore = data.consistency?.buttonStyleConsistency === 'Excellent' ? 85 :
+    data.consistency?.buttonStyleConsistency === 'Good' ? 70 : 50;
+  
+  // Pro preview for locked state
+  const proFixesPreview = getBrandProFixesPreview();
+  
+  // Build sections array (SEO pattern)
+  const sections = [
+    // Color Palette Accordion
+    {
+      id: 'color-palette',
+      title: t('brandConsistency.colorPaletteAnalysis', 'Color Palette Analysis'),
+      scoreTextRight: `${Math.round(colorAnalysisScore)}/100`,
+      contentHTML: renderColorPaletteContent(data)
+    },
+    
+    // Color Contrast Accessibility Accordion
+    data.contrastAnalysis ? {
+      id: 'color-contrast',
+      title: t('brandConsistency.colorContrastAccessibility', 'Color Contrast Accessibility'),
+      scoreTextRight: `${Math.round(data.contrastAnalysis.score || 50)}/100`,
+      contentHTML: renderColorContrastContent(data.contrastAnalysis)
+    } : null,
+    
+    // Color Usage Breakdown Accordion
+    data.colorUsageAnalysis ? {
+      id: 'color-usage',
+      title: t('brandConsistency.colorUsageBreakdown', 'Color Usage Breakdown'),
+      contentHTML: renderColorUsageContent(data.colorUsageAnalysis)
+    } : null,
+    
+    // Typography Accordion
+    {
+      id: 'typography',
+      title: t('brandConsistency.typographyAnalysis', 'Typography Analysis'),
+      scoreTextRight: `${Math.round(typographyAnalysisScore)}/100`,
+      contentHTML: renderTypographyContent(data)
+    },
+    
+    // Visual Hierarchy Accordion
+    data.hierarchyAnalysis ? {
+      id: 'visual-hierarchy',
+      title: t('brandConsistency.visualHierarchy', 'Visual Hierarchy'),
+      scoreTextRight: `${Math.round(data.hierarchyAnalysis.score || 50)}/100`,
+      contentHTML: renderVisualHierarchyContent(data.hierarchyAnalysis)
+    } : null,
+    
+    // Brand Identity Accordion
+    {
+      id: 'brand-identity',
+      title: t('brandConsistency.brandIdentity', 'Brand Identity'),
+      scoreTextRight: `${Math.round(brandIdScore)}/100`,
+      contentHTML: renderBrandIdentityContent(data)
+    },
+    
+    // Brand Assets Accordion
+    data.brandElements?.brandAssets ? {
+      id: 'brand-assets',
+      title: t('brandConsistency.brandAssets', 'Brand Assets'),
+      contentHTML: renderBrandAssetsContent(data.brandElements.brandAssets)
+    } : null,
+    
+    // UI Consistency Accordion
+    {
+      id: 'ui-consistency',
+      title: t('brandConsistency.uiConsistency', 'UI Consistency'),
+      scoreTextRight: `${Math.round(uiConsistencyScore)}/100`,
+      contentHTML: renderUIConsistencyContent(data)
+    },
+    
+    // Cross-Page Consistency Accordion (Multi-Page Mode Only)
+    (data.multiPage && data.crossPageConsistency) ? {
+      id: 'cross-page-consistency',
+      title: t('brandConsistency.crossPageConsistency', 'Cross-Page Consistency'),
+      scoreTextRight: `${Math.round(data.crossPageConsistency.score || 80)}/100`,
+      contentHTML: renderCrossPageConsistencyContent(data)
+    } : null,
+    
+    // Competitive Brand Comparison (PRO)
+    {
+      id: 'competitive-comparison',
+      title: t('brandConsistency.competitiveBrandComparison', 'Competitive Brand Comparison'),
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'brand-consistency',
+      reportId,
+      contentHTML: isUnlocked ? renderCompetitiveComparisonContent(data) : proFixesPreview
+    },
+    
+    // Report and Recommendations (PRO)
+    {
+      id: 'report-recommendations',
+      title: t('brandConsistency.reportAndRecommendations', 'Report and Recommendations'),
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'brand-consistency',
+      reportId,
+      contentHTML: isUnlocked ? renderBrandProFixes(data) : proFixesPreview
+    }
+  ].filter(Boolean);
+  
+  // Build screenshot URL
+  const screenshotUrl = data.screenshotUrl || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+  if (screenshotUrl) {
+    document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+  }
+  
+  // Build screenshots array (SEO pattern)
+  const screenshots = screenshotUrl
+    ? [{ src: screenshotUrl, alt: 'Page screenshot', device: '' }]
+    : [];
+  
+  // Use ReportContainer.create() - SEO pattern
+  const reportHTML = (window.ReportContainer && typeof window.ReportContainer.create === 'function')
+    ? window.ReportContainer.create({
+        url: data.url || urlValue,
+        timestamp: startedAt,
+        mode: 'brand',
+        title: t('brandConsistency.reportTitle', 'Brand Analysis Report'),
+        subtitle: isMultiPage ? `${data.pagesAnalyzed || 1} ${t('brandConsistency.pagesAnalyzed', 'pages analyzed')}` : '',
+        summary,
+        sections,
+        screenshots,
+        proBlock: true,
+        proBlockOptions: {
+          context: 'brand-consistency',
+          features: ['pdf', 'csv', 'share'],
+          title: t('pricing.unlockReportTitle', 'Unlock Report'),
+          subtitle: t('pricing.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
+          reportId
+        }
+      })
+    : generateBrandFallbackHTML(data, sections);
+  
+  results.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
+  
+  // Add score breakdown after header (before accordions)
+  if (data.scoreBreakdown) {
+    const breakdownHTML = generateScoreBreakdown(data.scoreBreakdown);
+    const accordionContainer = results.querySelector('.report-shell__accordions, [class*="accordion"]');
+    if (accordionContainer && breakdownHTML) {
+      accordionContainer.insertAdjacentHTML('beforebegin', breakdownHTML);
+    }
+  }
+  
+  // Handle screenshot retry
+  if (reportId) {
+    const img = results.querySelector('.screenshot-item__img');
+    if (img && img.getAttribute('src')) {
+      attachBrandScreenshotRetry(img, img.getAttribute('src'));
+    }
+  }
+  
+  // Initialize ReportAccordion interactions
+  if (window.ReportAccordion && typeof window.ReportAccordion.initInteractions === 'function') {
+    window.ReportAccordion.initInteractions();
+  }
+  
+  // Refresh paywall UI
+  if (reportId && window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+    window.CreditsManager.renderPaywallState(reportId);
+  }
+  
+  // If already unlocked, reveal Pro content
+  if (isUnlocked) {
+    revealBrandProContent();
+  }
+  
+  // Listen for unlock events
+  if (!window.__brandUnlockListenerAttached) {
+    window.__brandUnlockListenerAttached = true;
+    window.addEventListener('reportUnlocked', (e) => {
+      const unlockedId = e && e.detail ? e.detail.reportId : '';
+      if (!unlockedId || unlockedId !== document.body.getAttribute('data-report-id')) return;
       
-      <!-- Enhanced Overall Score Display with SVG Circular Dials (matches SEO pattern) -->
-      <div style="
-        background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.05) 0%, rgba(var(--accent-primary-rgb), 0.02) 100%);
-        border: 2px solid ${getScoreColor(score)};
-        border-radius: 12px;
-        padding: 2rem;
-        margin: 2rem 0;
-        box-shadow: 0 4px 20px rgba(var(--accent-primary-rgb), 0.15);
+      // Replace recommendations section with full content
+      const recBody = document.querySelector('[data-accordion-body="report-recommendations"]');
+      if (recBody) {
+        recBody.innerHTML = renderBrandProFixes(window.currentBrandResults || data);
+      }
+      
+      // Replace competitive comparison with full content
+      const compBody = document.querySelector('[data-accordion-body="competitive-comparison"]');
+      if (compBody) {
+        compBody.innerHTML = renderCompetitiveComparisonContent(window.currentBrandResults || data);
+      }
+      
+      revealBrandProContent();
+      
+      if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+        window.CreditsManager.renderPaywallState(unlockedId);
+      }
+    });
+  }
+  } catch (err) {
+    console.error('[Brand] displayResults error:', err);
+    alert('Error displaying results: ' + err.message);
+  }
+}
+
+// Fallback HTML if ReportContainer is not available
+function generateBrandFallbackHTML(data, sections) {
+  return `
+    <h2>${t('brandConsistency.reportTitle', 'Brand Analysis Report')}</h2>
+    <p>URL: ${data.url || 'N/A'}</p>
+    <div id="accordions-container"></div>
+  `;
+}
+
+// Reveal Pro content after unlock
+function revealBrandProContent() {
+  const overlays = document.querySelectorAll('.report-shell__lock-overlay');
+  overlays.forEach((overlay) => {
+    const locked = overlay.querySelector('.is-locked');
+    if (!locked) return;
+    
+    const fragment = document.createDocumentFragment();
+    while (locked.firstChild) {
+      fragment.appendChild(locked.firstChild);
+    }
+    overlay.replaceWith(fragment);
+  });
+}
+
+// Screenshot retry for lazy loading
+function attachBrandScreenshotRetry(imgEl, baseUrl, options = {}) {
+  if (!imgEl || !baseUrl) return;
+  const maxAttempts = Number.isFinite(options.maxAttempts) ? options.maxAttempts : 6;
+  const baseDelayMs = Number.isFinite(options.baseDelayMs) ? options.baseDelayMs : 750;
+  
+  let attempts = 0;
+  let settled = false;
+  
+  const cacheBust = (url) => {
+    const joiner = url.includes('?') ? '&' : '?';
+    return `${url}${joiner}cb=${Date.now()}`;
+  };
+  
+  const showFallback = () => {
+    const wrapper = imgEl.closest('.screenshot-item') || imgEl.parentElement;
+    if (!wrapper) return;
+    imgEl.style.display = 'none';
+    if (wrapper.querySelector('[data-sm-screenshot-fallback]')) return;
+    
+    const msg = document.createElement('div');
+    msg.setAttribute('data-sm-screenshot-fallback', 'true');
+    msg.textContent = t('common.screenshotUnavailable', 'Screenshot unavailable');
+    msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 10px; color: var(--text-secondary); text-align: center;';
+    wrapper.appendChild(msg);
+  };
+  
+  const tryReload = () => {
+    if (settled) return;
+    attempts += 1;
+    imgEl.src = cacheBust(baseUrl);
+  };
+  
+  const onLoad = () => { settled = true; };
+  
+  const onError = () => {
+    if (settled) return;
+    if (attempts >= maxAttempts) {
+      settled = true;
+      showFallback();
+      return;
+    }
+    const delay = baseDelayMs * Math.min(attempts + 1, 6);
+    window.setTimeout(tryReload, delay);
+  };
+  
+  imgEl.addEventListener('load', onLoad, { once: true });
+  imgEl.addEventListener('error', onError);
+  tryReload();
+}
+
+// Pro fixes preview for locked state
+function getBrandProFixesPreview() {
+  return `
+    <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; text-align: center;">
+      <p style="color: rgba(255,255,255,0.6); margin: 0;">
+        ${t('brandConsistency.unlockToSee', 'Unlock this report to see detailed recommendations and fixes.')}
+      </p>
+      <ul style="text-align: left; margin: 1rem 0; padding-left: 1.5rem; color: rgba(255,255,255,0.5);">
+        <li>${t('brandConsistency.proPreview.colorOptimization', 'Color palette optimization')}</li>
+        <li>${t('brandConsistency.proPreview.typographyGuidelines', 'Typography guidelines')}</li>
+        <li>${t('brandConsistency.proPreview.brandConsistencyTips', 'Brand consistency tips')}</li>
+      </ul>
+    </div>
+  `;
+}
+
+// ============================================
+// PRO FIXES - TABBED ACCORDION PATTERN (SEO style)
+// ============================================
+function renderBrandProFixes(data) {
+  ensureBrandFixStyles();
+  const fixes = buildBrandFixCards(data);
+  
+  if (fixes.length === 0) {
+    return `
+      <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+          <span style="font-size: 1.5rem;">✓</span> ${t('brandConsistency.excellentBrand', 'Excellent Brand Consistency!')}
+        </h3>
+        <p style="color: #86efac; margin: 0;">${t('brandConsistency.brandOptimized', 'Your brand elements are well-optimized. Keep monitoring for continued consistency.')}</p>
+      </div>
+    `;
+  }
+  
+  // Group by severity
+  const high = fixes.filter(f => f.severity === 'High');
+  const medium = fixes.filter(f => f.severity === 'Medium');
+  const low = fixes.filter(f => f.severity === 'Low');
+  
+  let html = `
+    <div class="brand-fixes-container" style="margin-top: 1rem;">
+      <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+        <span style="font-size: 1.75rem;">🎨</span> ${t('brandConsistency.brandFixes', 'Brand Fixes')}
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} ${t('brandConsistency.improvementsFound', 'improvements found')})</span>
+      </h3>
+      <div class="brand-fixes-list">
+  `;
+  
+  const allFixes = [...high, ...medium, ...low];
+  allFixes.forEach((fix, index) => {
+    html += renderBrandFixAccordion(fix, index);
+  });
+  
+  html += `</div></div>`;
+  return html;
+}
+
+function buildBrandFixCards(data) {
+  const fixes = [];
+  const recommendations = data.recommendations || [];
+  
+  recommendations.forEach((rec, i) => {
+    const priority = rec.priority || 'medium';
+    const severity = priority === 'critical' || priority === 'high' ? 'High' : 
+                     priority === 'medium' ? 'Medium' : 'Low';
+    
+    fixes.push({
+      id: `brand-fix-${i}`,
+      title: rec.message || rec.title || 'Brand Improvement',
+      category: rec.category || 'Brand Optimization',
+      severity,
+      description: rec.detail || rec.description || '',
+      impact: rec.impact || t('brandConsistency.improveBrandConsistency', 'Improve brand consistency and recognition'),
+      problematicCode: rec.currentIssue || '',
+      fixedCode: rec.action || rec.fix || '',
+      steps: rec.steps || getBrandDefaultSteps(rec.type)
+    });
+  });
+  
+  return fixes;
+}
+
+function renderBrandFixAccordion(fix, index) {
+  const accordionId = `brandfix-${fix.id || index}`;
+  const severityColors = {
+    High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+    Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
+  };
+  const style = severityColors[fix.severity] || severityColors.Medium;
+  
+  return `
+    <div class="brand-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="brand-fix-header" onclick="toggleBrandFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
       ">
-        <h3 style="color: var(--accent-primary); margin: 0 0 1.5rem 0; font-size: 1.3rem;">>> ${t('brandConsistency.auditSummary', 'Brand Audit Summary')}</h3>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${escapeBrandHtml(fix.title)}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category}</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${fix.severity.toUpperCase()}</span>
+          <span class="brand-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+        </div>
+      </div>
+      
+      <div class="brand-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderBrandFixTabs(fix, accordionId)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderBrandFixTabs(fix, accordionId) {
+  return `
+    <div class="brand-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="brand-fix-tab active" onclick="switchBrandFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 ${t('common.summary', 'Summary')}</button>
+      <button class="brand-fix-tab" onclick="switchBrandFixTab('${accordionId}', 'code')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">💻 ${t('common.code', 'Code')}</button>
+      <button class="brand-fix-tab" onclick="switchBrandFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🔧 ${t('common.fixGuide', 'Fix Guide')}</button>
+    </div>
+    
+    <!-- Summary Tab -->
+    <div class="brand-fix-tab-content active" id="${accordionId}-summary">
+      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        ${escapeBrandHtml(fix.description)}
+      </p>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('common.expectedImpact', 'Expected Impact')}</div>
+        <div style="color: #c0c0c0; font-size: 0.9rem;">${escapeBrandHtml(fix.impact)}</div>
+      </div>
+    </div>
+    
+    <!-- Code Tab -->
+    <div class="brand-fix-tab-content" id="${accordionId}-code" style="display: none;">
+      <div style="display: grid; gap: 1rem;">
+        ${fix.problematicCode ? `
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
+            <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('common.currentIssue', 'Current Issue')}</span>
+            <button onclick="copyBrandCode('${accordionId}-problem')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 ${t('common.copy', 'Copy')}</button>
+          </div>
+          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeBrandHtml(fix.problematicCode)}</pre>
+        </div>
+        ` : ''}
         
-        <!-- Circular Progress Dials -->
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; margin: 2rem 0;">
-          <!-- Overall Score -->
-          <div style="text-align: center;">
-            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff; font-size: 1.1rem;">${t('brandConsistency.overallScore', 'Overall Brand Score')}</div>
-            <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-              <circle
-                cx="90"
-                cy="90"
-                r="75"
-                fill="none"
-                stroke="rgba(0, 0, 0, 0.1)"
-                stroke-width="10"
-              />
-              <circle
-                cx="90"
-                cy="90"
-                r="75"
-                fill="none"
-                stroke="${getScoreColor(score)}"
-                stroke-width="10"
-                stroke-linecap="round"
-                stroke-dasharray="${(score / 100) * 471.24} 471.24"
-                transform="rotate(-90 90 90)"
-              />
-              <text
-                x="90"
-                y="90"
-                text-anchor="middle"
-                dy="0.35em"
-                font-size="3.5rem"
-                font-weight="bold"
-                fill="#f9fff2"
-                stroke="rgba(0, 0, 0, 0.65)"
-                stroke-width="2.5"
-                paint-order="stroke fill"
-                style="text-shadow: 0 0 18px ${getScoreColor(score)}, 0 0 30px rgba(0,0,0,0.6);"
-              >
-                ${score}
-              </text>
-            </svg>
-            <div style="margin-top: 0.5rem; color: ${getScoreColor(score)}; font-weight: 600; font-size: 1.1rem;">
-              ${t('brandConsistency.grade', 'Grade')}: ${data.grade}
-            </div>
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('common.recommendedFix', 'Recommended Fix')}</span>
+            <button onclick="copyBrandCode('${accordionId}-solution')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 ${t('common.copy', 'Copy')}</button>
           </div>
-
-          <!-- Color Palette Score -->
-          <div style="text-align: center;">
-            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('brandConsistency.colorPalette', 'Color Palette')}</div>
-            <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-              <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
-              <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor((data.scoreBreakdown?.colorPalette?.score || 50) * 3.33)}" stroke-width="10" stroke-linecap="round"
-                stroke-dasharray="${((data.scoreBreakdown?.colorPalette?.score || 15) / 30) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
-              <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2"
-                stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill"
-                style="text-shadow: 0 0 18px ${getScoreColor((data.scoreBreakdown?.colorPalette?.score || 50) * 3.33)}, 0 0 30px rgba(0,0,0,0.6);">
-                ${data.scoreBreakdown?.colorPalette?.score || '-'}
-              </text>
-            </svg>
-            <div style="margin-top: 0.5rem; color: ${getScoreColor((data.scoreBreakdown?.colorPalette?.score || 50) * 3.33)}; font-weight: 600; font-size: 1.1rem;">
-              ${data.scoreBreakdown?.colorPalette?.score || 0}/30
-            </div>
-          </div>
-
-          <!-- Typography Score -->
-          <div style="text-align: center;">
-            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('brandConsistency.typography', 'Typography')}</div>
-            <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-              <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
-              <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor((data.scoreBreakdown?.typography?.score || 50) * 4)}" stroke-width="10" stroke-linecap="round"
-                stroke-dasharray="${((data.scoreBreakdown?.typography?.score || 12) / 25) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
-              <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2"
-                stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill"
-                style="text-shadow: 0 0 18px ${getScoreColor((data.scoreBreakdown?.typography?.score || 50) * 4)}, 0 0 30px rgba(0,0,0,0.6);">
-                ${data.scoreBreakdown?.typography?.score || '-'}
-              </text>
-            </svg>
-            <div style="margin-top: 0.5rem; color: ${getScoreColor((data.scoreBreakdown?.typography?.score || 50) * 4)}; font-weight: 600; font-size: 1.1rem;">
-              ${data.scoreBreakdown?.typography?.score || 0}/25
-            </div>
-          </div>
-
-          <!-- Brand Identity Score -->
-          <div style="text-align: center;">
-            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('brandConsistency.brandIdentity', 'Brand Identity')}</div>
-            <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-              <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
-              <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor((data.scoreBreakdown?.brandIdentity?.score || 50) * 5)}" stroke-width="10" stroke-linecap="round"
-                stroke-dasharray="${((data.scoreBreakdown?.brandIdentity?.score || 10) / 20) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
-              <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2"
-                stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill"
-                style="text-shadow: 0 0 18px ${getScoreColor((data.scoreBreakdown?.brandIdentity?.score || 50) * 5)}, 0 0 30px rgba(0,0,0,0.6);">
-                ${data.scoreBreakdown?.brandIdentity?.score || '-'}
-              </text>
-            </svg>
-            <div style="margin-top: 0.5rem; color: ${getScoreColor((data.scoreBreakdown?.brandIdentity?.score || 50) * 5)}; font-weight: 600; font-size: 1.1rem;">
-              ${data.scoreBreakdown?.brandIdentity?.score || 0}/20
-            </div>
-          </div>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeBrandHtml(fix.fixedCode)}</pre>
         </div>
       </div>
     </div>
     
-    <!-- Score Breakdown -->
-    ${data.scoreBreakdown ? generateScoreBreakdown(data.scoreBreakdown) : ''}
-    
-    <!-- Accordions Container -->
-    <div id="accordions-container" style="margin-top: 2rem;"></div>
+    <!-- Fix Guide Tab -->
+    <div class="brand-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('common.stepByStepFix', 'Step-by-Step Fix')}:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        ${fix.steps.map(step => `<li style="margin-bottom: 0.5rem;">${escapeBrandHtml(step)}</li>`).join('')}
+      </ol>
+    </div>
   `;
-  
-  // Store results globally for PDF generation
-  window.currentBrandResults = data;
-  
-  // Create accordion sections
-  const container = document.getElementById('accordions-container');
-  
-  // Color Palette Accordion (with export)
-  createAccordionSection(container, 'color-palette', t('brandConsistency.colorPaletteAnalysis', 'Color Palette Analysis'), 
-    () => renderColorPaletteContent(data), 
-    data.colorAnalysis?.harmonyScore || 70);
-  
-  // Color Contrast Accessibility Accordion (NEW)
-  if (data.contrastAnalysis) {
-    createAccordionSection(container, 'color-contrast', t('brandConsistency.colorContrastAccessibility', 'Color Contrast Accessibility'), 
-      () => renderColorContrastContent(data.contrastAnalysis), 
-      data.contrastAnalysis.score || 50);
-  }
-  
-  // Color Usage Breakdown Accordion (NEW)
-  if (data.colorUsageAnalysis) {
-    createAccordionSection(container, 'color-usage', t('brandConsistency.colorUsageBreakdown', 'Color Usage Breakdown'), 
-      () => renderColorUsageContent(data.colorUsageAnalysis), 
-      null);
-  }
-  
-  // Typography Accordion
-  createAccordionSection(container, 'typography', t('brandConsistency.typographyAnalysis', 'Typography Analysis'), 
-    () => renderTypographyContent(data), 
-    data.typographyAnalysis?.typographyScore || 50);
-  
-  // Visual Hierarchy Accordion (NEW)
-  if (data.hierarchyAnalysis) {
-    createAccordionSection(container, 'visual-hierarchy', t('brandConsistency.visualHierarchy', 'Visual Hierarchy'), 
-      () => renderVisualHierarchyContent(data.hierarchyAnalysis), 
-      data.hierarchyAnalysis.score || 50);
-  }
-  
-  // Brand Identity Accordion
-  createAccordionSection(container, 'brand-identity', t('brandConsistency.brandIdentity', 'Brand Identity'), 
-    () => renderBrandIdentityContent(data), 
-    (data.consistency.hasLogo ? 75 : 25) + (data.consistency.hasFavicon ? 25 : 0));
-  
-  // Brand Assets Accordion (NEW)
-  if (data.brandElements?.brandAssets) {
-    createAccordionSection(container, 'brand-assets', t('brandConsistency.brandAssets', 'Brand Assets (Meta Tags)'), 
-      () => renderBrandAssetsContent(data.brandElements.brandAssets), 
-      null);
-  }
-  
-  // UI Consistency Accordion
-  createAccordionSection(container, 'ui-consistency', t('brandConsistency.uiConsistency', 'UI Consistency'), 
-    () => renderUIConsistencyContent(data), 
-    data.consistency.buttonStyleConsistency === 'Excellent' ? 85 : 
-    data.consistency.buttonStyleConsistency === 'Good' ? 70 : 50);
-  
-  // Cross-Page Consistency Accordion (Multi-Page Mode Only)
-  if (data.multiPage && data.crossPageConsistency) {
-    createAccordionSection(container, 'cross-page-consistency', t('brandConsistency.crossPageConsistency', 'Cross-Page Consistency'), 
-      () => renderCrossPageConsistencyContent(data), 
-      data.crossPageConsistency.score || 80,
-      data.crossPageConsistency.issues?.length > 0); // Start expanded if there are issues
-  }
-  
-  // Page Breakdown Accordion (Multi-Page Mode Only)
-  if (data.multiPage && data.pageBreakdown && data.pageBreakdown.length > 1) {
-    createAccordionSection(container, 'page-breakdown', t('brandConsistency.pageBreakdown', 'Per-Page Breakdown'), 
-      () => renderPageBreakdownContent(data.pageBreakdown), 
-      null);
-  }
-  
-  // Competitive Brand Comparison (PRO) Accordion (NEW)
-  createAccordionSection(container, 'competitive-comparison', t('brandConsistency.competitiveBrandComparison', 'Competitive Brand Comparison'), 
-    () => renderCompetitiveComparisonContent(data), 
-    null, false, true); // isPro = true
-  
-  // Recommendations Accordion (start expanded if there are issues)
-  if (data.recommendations && data.recommendations.length > 0) {
-    createAccordionSection(container, 'recommendations', t('brandConsistency.recommendations', 'Recommendations'), 
-      () => renderRecommendationsContent(data.recommendations), 
-      null, data.recommendations[0]?.priority === 'critical');
-  }
+}
 
+function getBrandDefaultSteps(type) {
+  const stepsMap = {
+    excessiveColors: [
+      t('brandConsistency.steps.auditColors', 'Audit your current color usage'),
+      t('brandConsistency.steps.definePalette', 'Define a primary, secondary, and accent color'),
+      t('brandConsistency.steps.createStyleGuide', 'Create a brand style guide'),
+      t('brandConsistency.steps.applyCSSVariables', 'Apply consistent CSS variables')
+    ],
+    tooManyFonts: [
+      t('brandConsistency.steps.listFonts', 'List all fonts currently in use'),
+      t('brandConsistency.steps.choosePrimary', 'Choose 2-3 primary fonts'),
+      t('brandConsistency.steps.updateCSS', 'Update CSS to use only selected fonts'),
+      t('brandConsistency.steps.testReadability', 'Test for readability across devices')
+    ],
+    noLogo: [
+      t('brandConsistency.steps.designLogo', 'Design or obtain a logo'),
+      t('brandConsistency.steps.addLogoHeader', 'Add logo to header with proper alt text'),
+      t('brandConsistency.steps.ensureAccessibility', 'Ensure logo is accessible')
+    ]
+  };
+  return stepsMap[type] || [
+    t('brandConsistency.steps.reviewIssue', 'Review the current implementation'),
+    t('brandConsistency.steps.applyFix', 'Apply the recommended fix'),
+    t('brandConsistency.steps.testVerify', 'Test and verify changes')
+  ];
+}
 
-  // Pro Report Block
-  if (window.ProReportBlock && window.ProReportBlock.render) {
-    const proBlockHtml = window.ProReportBlock.render({
-      context: 'brand-consistency',
-      features: ['pdf', 'csv', 'share'],
-      title: 'Unlock Report',
-      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
-    });
-    container.insertAdjacentHTML('beforeend', proBlockHtml);
-  }
+function ensureBrandFixStyles() {
+  if (document.getElementById('brand-fix-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'brand-fix-styles';
+  style.textContent = `
+    .brand-fix-header:hover { background: rgba(255,255,255,0.02); }
+    .brand-fix-accordion.expanded .brand-fix-expand-icon { transform: rotate(180deg); }
+    .brand-fix-tab:hover { background: rgba(255,255,255,0.05) !important; }
+    .brand-fix-tab.active { background: rgba(255,255,255,0.1) !important; border-color: rgba(255,255,255,0.2) !important; color: #fff !important; }
+  `;
+  document.head.appendChild(style);
+}
+
+function escapeBrandHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// Status color helper
+function getStatusColor(status) {
+  if (!status) return 'rgba(255,255,255,0.5)';
+  const s = status.toLowerCase();
+  if (s === 'excellent' || s === 'detected' || s === 'present') return 'var(--accent-primary)';
+  if (s === 'good') return '#90EE90';
+  if (s === 'fair') return '#ffd700';
+  if (s === 'poor' || s === 'missing') return '#ff6b6b';
+  return 'rgba(255,255,255,0.5)';
 }
 
 // Translate status words
@@ -500,116 +885,6 @@ function translateStatus(status) {
     'N/A': t('common.na', 'N/A')
   };
   return statusMap[status] || status;
-}
-
-function generateStatCard(label, value, sublabel) {
-  const statusColor = getStatusColor(sublabel);
-  return `
-    <div class="stat-card" style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; text-align: center;">
-      <div style="font-size: 1.5rem; font-weight: 600; color: #fff;">${value}</div>
-      <div style="font-size: 0.8rem; color: rgba(255,255,255,0.6); margin-top: 0.25rem;">${label}</div>
-      <div style="font-size: 0.75rem; color: ${statusColor}; margin-top: 0.25rem;">${sublabel}</div>
-    </div>
-  `;
-}
-
-function getStatusColor(status) {
-  if (!status) return 'rgba(255,255,255,0.5)';
-  const s = status.toLowerCase();
-  if (s === 'excellent' || s === 'detected' || s === 'present') return 'var(--accent-primary)';
-  if (s === 'good') return '#90EE90';
-  if (s === 'fair') return '#ffd700';
-  if (s === 'poor' || s === 'missing') return '#ff6b6b';
-  return 'rgba(255,255,255,0.5)';
-}
-
-function generateScoreBreakdown(breakdown) {
-  if (!breakdown) return '';
-  
-  // Translate breakdown category names
-  const categoryNames = {
-    colorPalette: t('brandConsistency.colorPalette', 'Color Palette'),
-    typography: t('brandConsistency.typography', 'Typography'),
-    brandIdentity: t('brandConsistency.brandIdentity', 'Brand Identity'),
-    uiConsistency: t('brandConsistency.uiConsistency', 'UI Consistency'),
-    colorHarmony: t('brandConsistency.colorHarmony', 'Color Harmony')
-  };
-  
-  return `
-    <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem;">
-      <h3 style="margin: 0 0 1rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.scoreBreakdown', 'Score Breakdown')}</h3>
-      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-        ${Object.entries(breakdown).map(([key, item]) => `
-          <div style="display: flex; align-items: center; gap: 1rem;">
-            <div style="flex: 1; min-width: 120px; color: rgba(255,255,255,0.8);">${categoryNames[key] || key.replace(/([A-Z])/g, ' $1').trim()}</div>
-            <div style="flex: 2; background: rgba(255,255,255,0.1); border-radius: 4px; height: 8px; overflow: hidden;">
-              <div style="width: ${(item.score / item.maxScore) * 100}%; height: 100%; background: ${getScoreColor((item.score / item.maxScore) * 100)}; border-radius: 4px;"></div>
-            </div>
-            <div style="min-width: 60px; text-align: right; color: ${getScoreColor((item.score / item.maxScore) * 100)}; font-weight: 500;">${item.score}/${item.maxScore}</div>
-          </div>
-        `).join('')}
-      </div>
-    </div>
-  `;
-}
-
-function createAccordionSection(container, id, displayTitle, contentCreator, score, startExpanded = false, isPro = false) {
-  const accordion = document.createElement('div');
-  accordion.className = 'accordion';
-  
-  const proBadge = isPro ? `<span style="margin-left: 0.5rem; font-size: 0.65rem; padding: 0.2rem 0.5rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border-radius: 3px; text-transform: uppercase; letter-spacing: 0.05em;">PRO</span>` : '';
-  
-  const scoreDisplay = score !== null ? `
-    <span style="display: flex; align-items: center; gap: 0.5rem;">
-      <span style="color: ${getScoreColor(score)}; font-size: 0.9rem;">${Math.round(score)}/100</span>
-      <span class="accordion-toggle">▼</span>
-    </span>
-  ` : '<span class="accordion-toggle">▼</span>';
-  
-  const header = document.createElement('button');
-  header.className = 'accordion-header';
-  header.innerHTML = `<span>${displayTitle}${proBadge}</span>${scoreDisplay}`;
-  
-  const content = document.createElement('div');
-  content.className = 'accordion-content';
-  content.id = `accordion-${id}`;
-  content.style.cssText = 'max-height: 0; padding: 0; overflow: hidden; border-top: none; transition: max-height 0.3s ease, padding 0.3s ease;';
-  
-  const contentInner = document.createElement('div');
-  contentInner.className = 'accordion-content-inner';
-  content.appendChild(contentInner);
-  
-  header.addEventListener('click', () => {
-    const isExpanded = content.classList.contains('expanded');
-    
-    if (isExpanded) {
-      content.classList.remove('expanded');
-      header.classList.remove('active');
-      header.querySelector('.accordion-toggle').textContent = '▼';
-      content.style.maxHeight = '0';
-      content.style.padding = '0';
-      content.style.borderTop = 'none';
-    } else {
-      if (!contentInner.hasChildNodes()) {
-        contentInner.innerHTML = contentCreator();
-      }
-      content.classList.add('expanded');
-      header.classList.add('active');
-      header.querySelector('.accordion-toggle').textContent = '▲';
-      content.style.maxHeight = content.scrollHeight + 200 + 'px';
-      content.style.padding = '1rem 1.25rem';
-      content.style.borderTop = '1px solid #333';
-    }
-  });
-  
-  accordion.appendChild(header);
-  accordion.appendChild(content);
-  container.appendChild(accordion);
-  
-  // Auto-expand if needed
-  if (startExpanded) {
-    setTimeout(() => header.click(), 100);
-  }
 }
 
 function renderColorPaletteContent(data) {
@@ -1468,6 +1743,124 @@ function renderPageBreakdownContent(pageBreakdown) {
         <p style="margin: 0; font-size: 0.8rem; color: rgba(255,255,255,0.6);">
           <span style="color: var(--accent-primary);">★</span> = ${t('brandConsistency.homepage', 'Homepage (primary page)')}
         </p>
+      </div>
+    </div>
+  `;
+}
+
+// ============================================
+// GLOBAL FUNCTIONS FOR TABBED ACCORDION
+// ============================================
+window.toggleBrandFixAccordion = function(accordionId) {
+  const content = document.getElementById(`${accordionId}-content`);
+  const accordion = content?.closest('.brand-fix-accordion');
+  if (!content || !accordion) return;
+  
+  const isExpanded = accordion.classList.contains('expanded');
+  
+  // Close all others
+  document.querySelectorAll('.brand-fix-accordion.expanded').forEach(a => {
+    if (a !== accordion) {
+      a.classList.remove('expanded');
+      const c = a.querySelector('.brand-fix-content');
+      if (c) c.style.maxHeight = '0';
+    }
+  });
+  
+  // Toggle this one
+  if (isExpanded) {
+    accordion.classList.remove('expanded');
+    content.style.maxHeight = '0';
+  } else {
+    accordion.classList.add('expanded');
+    content.style.maxHeight = content.scrollHeight + 'px';
+  }
+};
+
+window.switchBrandFixTab = function(accordionId, tabName) {
+  const container = document.getElementById(`${accordionId}-content`)?.parentElement?.parentElement;
+  if (!container) return;
+  
+  // Update tabs
+  container.querySelectorAll('.brand-fix-tab').forEach((tab, i) => {
+    const tabNames = ['summary', 'code', 'guide'];
+    if (tabNames[i] === tabName) {
+      tab.classList.add('active');
+      tab.style.background = 'rgba(255,255,255,0.1)';
+      tab.style.borderColor = 'rgba(255,255,255,0.2)';
+      tab.style.color = '#fff';
+    } else {
+      tab.classList.remove('active');
+      tab.style.background = 'transparent';
+      tab.style.borderColor = 'rgba(255,255,255,0.1)';
+      tab.style.color = '#aaa';
+    }
+  });
+  
+  // Update content
+  const summaryEl = document.getElementById(`${accordionId}-summary`);
+  const codeEl = document.getElementById(`${accordionId}-code`);
+  const guideEl = document.getElementById(`${accordionId}-guide`);
+  
+  if (summaryEl) summaryEl.style.display = tabName === 'summary' ? 'block' : 'none';
+  if (codeEl) codeEl.style.display = tabName === 'code' ? 'block' : 'none';
+  if (guideEl) guideEl.style.display = tabName === 'guide' ? 'block' : 'none';
+  
+  // Recalculate max-height for smooth animation
+  const content = document.getElementById(`${accordionId}-content`);
+  if (content) {
+    content.style.maxHeight = 'none';
+    content.style.maxHeight = content.scrollHeight + 'px';
+  }
+};
+
+window.copyBrandCode = function(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  
+  const text = el.textContent || el.innerText;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.querySelector(`button[onclick="copyBrandCode('${elementId}')"]`);
+    if (btn) {
+      const original = btn.innerHTML;
+      btn.innerHTML = '✓ ' + t('common.copied', 'Copied');
+      setTimeout(() => { btn.innerHTML = original; }, 1500);
+    }
+  }).catch(err => {
+    console.error('Copy failed:', err);
+  });
+};
+
+// Generate score breakdown HTML (separate from accordions)
+function generateScoreBreakdown(scoreBreakdown) {
+  if (!scoreBreakdown) return '';
+  
+  const items = Object.entries(scoreBreakdown);
+  if (items.length === 0) return '';
+  
+  return `
+    <div style="margin: 1.5rem 0; padding: 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
+      <h3 style="margin: 0 0 1rem 0; color: #fff; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+        <span>📊</span> ${t('brandConsistency.scoreBreakdown', 'Score Breakdown')}
+      </h3>
+      <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+        ${items.map(([key, data]) => {
+          const score = data.score || 0;
+          const maxScore = data.maxScore || 100;
+          const percentage = Math.round((score / maxScore) * 100);
+          const color = percentage >= 70 ? '#00ff41' : percentage >= 40 ? '#ffd700' : '#ff4444';
+          const label = t(`brandConsistency.breakdown.${key}`, key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase()));
+          
+          return `
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+              <span style="min-width: 120px; font-size: 0.85rem; color: rgba(255,255,255,0.7);">${label}</span>
+              <div style="flex: 1; height: 8px; background: rgba(255,255,255,0.1); border-radius: 4px; overflow: hidden;">
+                <div style="height: 100%; width: ${percentage}%; background: ${color}; border-radius: 4px; transition: width 0.3s;"></div>
+              </div>
+              <span style="min-width: 60px; text-align: right; font-size: 0.85rem; color: ${color}; font-weight: 600;">${score}/${maxScore}</span>
+            </div>
+          `;
+        }).join('')}
       </div>
     </div>
   `;

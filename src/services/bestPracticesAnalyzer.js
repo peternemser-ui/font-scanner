@@ -222,6 +222,12 @@ class BestPracticesAnalyzer {
 
   async analyzeAccessibility(page) {
     const accessibility = await page.evaluate(() => {
+      // Helper function must be defined inside evaluate (browser context)
+      const formatNumber = (num, decimals = 2) => {
+        if (typeof num !== 'number' || isNaN(num)) return '0';
+        return num.toFixed(decimals);
+      };
+      
       const analysis = {
         minFontSize: Infinity,
         contrastIssues: 0,

@@ -70,6 +70,8 @@
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
     <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/reportShell.css" />
+    <link rel="stylesheet" href="/css/components/reportAccordion.css" />
 
     <!-- Schema.org Structured Data -->
     <script type="application/ld+json">
@@ -160,18 +162,18 @@
                 <div class="form-row">
                     <label for="url" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
                     <input type="url" id="url" class="input" data-i18n-placeholder="common.enterUrl" placeholder="https://example.com" aria-label="Enter website URL for brand analysis" required aria-required="true">
-                    <button id="analyzeBtn" class="btn btn-primary" aria-label="Run brand scan">
-                        <span id="buttonText" data-i18n="common.runScan">Run scan</span>
+                    <button id="analyzeBtn" class="btn btn-primary" aria-label="Analyze brand consistency">
+                        <span id="buttonText">Analyze</span>
                     </button>
                 </div>
                 <div class="form-row" style="margin-top: 1rem; justify-content: flex-start; gap: 1rem; flex-wrap: wrap;">
                     <label class="toggle-switch" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                         <input type="checkbox" id="multiPageToggle" style="width: 18px; height: 18px; accent-color: var(--primary);">
-                        <span style="font-size: 0.9rem; color: var(--text-primary);" data-i18n="brandConsistency.multiPageMode">Multi-page analysis</span>
+                        <span style="font-size: 0.9rem; color: var(--text-primary);">Multi-page analysis</span>
                         <span class="pro-badge" style="background: linear-gradient(135deg, #00ff41, #00cc33); color: #000; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 700;">PRO</span>
                     </label>
                     <div id="maxPagesContainer" style="display: none; align-items: center; gap: 0.5rem;">
-                        <label for="maxPages" style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="brandConsistency.maxPages">Max pages:</label>
+                        <label for="maxPages" style="font-size: 0.85rem; color: var(--text-secondary);">Max pages:</label>
                         <select id="maxPages" style="padding: 0.35rem 0.5rem; border-radius: 4px; background: var(--surface); color: var(--text-primary); border: 1px solid var(--border);">
                             <option value="3">3</option>
                             <option value="5" selected>5</option>
@@ -187,15 +189,10 @@
         <div id="loadingContainer"></div>
 
         <!-- Results Container -->
-        <div id="results" class="results-container" style="display: none;">
+        <div id="results" class="results-container report-scope" style="display: none;">
             <!-- Results will be dynamically inserted here by brand-consistency-script.js -->
         </div>
     </main>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-        <p>&copy; 2025 Site Mechanic. Built for developers who care about quality.</p>
-    </footer>
 
     <!-- Shared JavaScript for theme and font controls -->
     <script src="/theme-controls.js"></script>
@@ -224,6 +221,12 @@
     <script src="/js/components/ScreenshotLightbox.js"></script>
     <script src="/js/components/ProReportBlock.js"></script>
     <script src="/js/components/PricingModal.js"></script>
+    <script src="/js/components/reportAccordion.js"></script>
+    
+    <!-- Pro/Billing Components -->
+    <script src="/assets/js/billing.js"></script>
+    <script src="/assets/js/entitlements.js"></script>
+    <script src="/assets/js/report-shell.js"></script>
 
     <!-- Brand Consistency Script -->
     <script src="/brand-consistency-script.js"></script>

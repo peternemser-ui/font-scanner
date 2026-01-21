@@ -743,19 +743,19 @@ body.white-theme .action-card:hover {
   background: var(--module-bg);
 }
 
-/* Font Analysis Module - Purple Theme */
+/* Font Analysis Module - Cyan Theme */
 .module-fonts,
 .section-fonts,
 [data-module="fonts"] {
-  --module-primary: #bb86fc;
-  --module-primary-dark: #9d5fdb;
-  --module-bg: rgba(187, 134, 252, 0.05);
-  --module-border: rgba(187, 134, 252, 0.3);
-  --module-glow: rgba(187, 134, 252, 0.4);
+  --module-primary: #5bf4e7;
+  --module-primary-dark: #4dd8cc;
+  --module-bg: rgba(91, 244, 231, 0.05);
+  --module-border: rgba(91, 244, 231, 0.3);
+  --module-glow: rgba(91, 244, 231, 0.35);
 }
 
 .module-fonts .section-header {
-  background: linear-gradient(135deg, rgba(187, 134, 252, 0.15), rgba(187, 134, 252, 0.05));
+  background: linear-gradient(135deg, rgba(91, 244, 231, 0.15), rgba(91, 244, 231, 0.05));
   border-left: 4px solid var(--module-primary);
   box-shadow: 0 0 20px var(--module-glow);
 }
@@ -935,4 +935,142 @@ body.white-theme .module-section-header:hover {
 
 body.white-theme .module-action-btn:hover {
   color: #ffffff;
+}
+
+/* ===================================================================
+   PDF EXPORT HELPERS
+   Classes to control how elements are handled during PDF export
+   =================================================================== */
+
+/* Elements that should stay together - never split across pages */
+.pdf-keep-together {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Force page break before an element */
+.pdf-page-break-before {
+  break-before: page;
+  page-break-before: always;
+}
+
+/* Force page break after an element */
+.pdf-page-break-after {
+  break-after: page;
+  page-break-after: always;
+}
+
+/* Suggest page break can happen here */
+.pdf-page-break-auto {
+  break-before: auto;
+  page-break-before: auto;
+}
+
+/* Hide elements in PDF export */
+.pdf-exclude,
+.no-print,
+[data-hide-in-pdf] {
+  /* These are hidden via JS during PDF export */
+}
+
+/* PDF Export Mode - Applied during export */
+.pdf-export-mode {
+  background: #ffffff !important;
+  color: #1a1a1a !important;
+}
+
+.pdf-export-mode * {
+  -webkit-print-color-adjust: exact !important;
+  print-color-adjust: exact !important;
+}
+
+/* Cards - keep together */
+.pdf-export-mode .card,
+.pdf-export-mode .metric-card,
+.pdf-export-mode .analysis-card,
+.pdf-export-mode .result-card,
+.pdf-export-mode .issue-card,
+.pdf-export-mode .finding-card,
+.pdf-export-mode .recommendation-card {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Charts and visualizations - keep together */
+.pdf-export-mode .chart-container,
+.pdf-export-mode .gauge-chart,
+.pdf-export-mode .bar-chart,
+.pdf-export-mode .pie-chart,
+.pdf-export-mode canvas,
+.pdf-export-mode svg {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Metric grids - keep together */
+.pdf-export-mode .metric-grid,
+.pdf-export-mode .cwv-metric,
+.pdf-export-mode .performance-metric,
+.pdf-export-mode .score-card {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Tables - avoid breaking rows */
+.pdf-export-mode table {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pdf-export-mode tr {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Accordions - keep individual items together */
+.pdf-export-mode .accordion-item,
+.pdf-export-mode .report-accordion {
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+/* Section headers - avoid orphan headers */
+.pdf-export-mode .section-header,
+.pdf-export-mode .result-section-title,
+.pdf-export-mode h2,
+.pdf-export-mode h3 {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+/* Print media query - for native print/PDF */
+@media print {
+  .no-print,
+  .pdf-exclude,
+  [data-hide-in-pdf] {
+    display: none !important;
+  }
+
+  .pdf-keep-together,
+  .card,
+  .metric-card,
+  .chart-container,
+  .gauge-chart,
+  canvas,
+  svg,
+  table,
+  .accordion-item {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  h2, h3, .section-header {
+    break-after: avoid;
+    page-break-after: avoid;
+  }
+
+  body {
+    background: #ffffff !important;
+    color: #1a1a1a !important;
+  }
 }

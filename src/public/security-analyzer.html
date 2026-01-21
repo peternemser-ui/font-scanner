@@ -65,6 +65,10 @@
     <link rel="stylesheet" href="analyzer-loading.css" />
     <link rel="stylesheet" href="ui-components.css" />
     <link rel="stylesheet" href="spacing-fixes.css" />
+    <!-- Fix Accordion Styles (shared with Performance) -->
+    <link rel="stylesheet" href="fix-accordion.css" />
+    <!-- Report Shell (consistent header format) -->
+    <link rel="stylesheet" href="/css/components/reportShell.css" />
     <!-- PDF Export Styles -->
     <link rel="stylesheet" href="/pdf-export-styles.css">
     <link rel="stylesheet" href="/css/components/modal.css" />
@@ -183,7 +187,7 @@
               aria-required="true"
             />
             <button id="analyzeButton" class="btn btn-primary" aria-label="Run security scan">
-              <span id="buttonText">Run scan</span>
+              <span id="buttonText">Analyze</span>
             </button>
           </div>
           <p class="helper-text">Tests SSL/TLS, security headers (CSP, HSTS, X-Frame-Options), and OWASP-aligned checks.</p>
@@ -210,11 +214,6 @@
       <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
     </main>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-      <p>&copy; 2025 Site Mechanic. Built for developers who care about quality.</p>
-    </footer>
-
     <!-- Scripts -->
     <script src="theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
@@ -231,12 +230,14 @@
     <script src="/pdf-export-integration.js"></script>
 
     <script src="/js/report-ui.js"></script>
+    <script src="/js/components/reportShell.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
     <script src="/js/components/ProReportBlock.js"></script>
     <script src="/js/components/PricingModal.js"></script>
 
+    <script src="security-fixes-renderer.js"></script>
     <script src="security-script.js"></script>
   </body>
 </html>

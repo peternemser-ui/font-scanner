@@ -17,6 +17,13 @@ const DEVICE_PROFILES = {
     deviceScaleFactor: 3,
     isMobile: true
   },
+  'iphone-15-pro': {
+    name: 'iPhone 15 Pro',
+    viewport: { width: 393, height: 852 },
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15',
+    deviceScaleFactor: 3,
+    isMobile: true
+  },
   'iphone-se': {
     name: 'iPhone SE',
     viewport: { width: 375, height: 667 },
@@ -31,6 +38,13 @@ const DEVICE_PROFILES = {
     deviceScaleFactor: 2.75,
     isMobile: true
   },
+  'pixel-8': {
+    name: 'Pixel 8',
+    viewport: { width: 412, height: 915 },
+    userAgent: 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/119.0.0.0',
+    deviceScaleFactor: 2.75,
+    isMobile: true
+  },
   'galaxy-s23': {
     name: 'Galaxy S23',
     viewport: { width: 360, height: 800 },
@@ -38,9 +52,23 @@ const DEVICE_PROFILES = {
     deviceScaleFactor: 2,
     isMobile: true
   },
+  'galaxy-s24': {
+    name: 'Galaxy S24',
+    viewport: { width: 360, height: 780 },
+    userAgent: 'Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 Chrome/119.0.0.0',
+    deviceScaleFactor: 2,
+    isMobile: true
+  },
   'ipad': {
     name: 'iPad',
     viewport: { width: 768, height: 1024 },
+    userAgent: 'Mozilla/5.0 (iPad; CPU OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
+    deviceScaleFactor: 2,
+    isMobile: true
+  },
+  'ipad-pro': {
+    name: 'iPad Pro',
+    viewport: { width: 1024, height: 1366 },
     userAgent: 'Mozilla/5.0 (iPad; CPU OS 16_0 like Mac OS X) AppleWebKit/605.1.15',
     deviceScaleFactor: 2,
     isMobile: true
@@ -320,6 +348,10 @@ class MobileAnalyzerService {
   async checkTouchTargets(page) {
     try {
       const targets = await page.evaluate(() => {
+        const roundTo = (value, decimals = 0) => {
+          const factor = Math.pow(10, decimals);
+          return Math.round(value * factor) / factor;
+        };
         const MIN_SIZE = 44; // WCAG AAA minimum
         const interactive = document.querySelectorAll('button, a, input, textarea, select, [role="button"]');
         const issues = [];
@@ -368,6 +400,10 @@ class MobileAnalyzerService {
   async analyzeReadability(page) {
     try {
       const readability = await page.evaluate(() => {
+        const roundTo = (value, decimals = 0) => {
+          const factor = Math.pow(10, decimals);
+          return Math.round(value * factor) / factor;
+        };
         const issues = [];
         const bodyText = document.querySelectorAll('p, span, div, h1, h2, h3, h4, h5, h6, li');
         let smallFontCount = 0;
@@ -396,7 +432,12 @@ class MobileAnalyzerService {
           smallFontPercentage: roundTo((smallFontCount / bodyText.length) * 100, 0),
           goodLineHeight: goodLineHeightCount,
           goodLineHeightPercentage: roundTo((goodLineHeightCount / bodyText.length) * 100, 0),
-          readabilityScore: Math.max(0, 100 - roundTo((smallFontCount / bodyText.length) * 50, 0))
+          readabilityScore: Math.max(
+            0,
+            100 -
+              roundTo((smallFontCount / Math.max(bodyText.length, 1)) * 60, 0) -
+              roundTo(((bodyText.length - goodLineHeightCount) / Math.max(bodyText.length, 1)) * 30, 0)
+          )
         };
       });
 
@@ -459,7 +500,7 @@ class MobileAnalyzerService {
           }
         });
 
-        // Color contrast (simplified check)
+        // Color contrast (simplified placeholder)
         const textElements = document.querySelectorAll('p, span, h1, h2, h3, h4, h5, h6');
         const lowContrastCount = 0;
 
@@ -475,12 +516,17 @@ class MobileAnalyzerService {
           lastLevel = level;
         });
 
+        const missingAlt = images.length - Array.from(images).filter(img => img.alt).length;
+        const altPenalty = images.length ? (missingAlt / images.length) * 40 : 0;
+        const headingPenalty = headingIssues ? 15 : 0;
+        const contrastPenalty = lowContrastCount * 5;
+
         return {
           totalImages: images.length,
-          missingAlt: images.length - Array.from(images).filter(img => img.alt).length,
+          missingAlt,
           headingCount: headings.length,
-          headingIssues: headingIssues,
-          a11yScore: Math.max(0, 100 - (lowContrastCount * 5))
+          headingIssues,
+          a11yScore: Math.max(0, 100 - altPenalty - headingPenalty - contrastPenalty)
         };
       });
 
@@ -971,7 +1017,7 @@ class MobileAnalyzerService {
     let count = 0;
 
     Object.entries(devices).forEach(([key, device]) => {
-      if (device.performance?.score) {
+      if (device.performance && typeof device.performance.score === 'number') {
         summary.byDevice[key] = device.performance.score;
         totalScore += device.performance.score;
         count++;
@@ -991,7 +1037,7 @@ class MobileAnalyzerService {
     let count = 0;
 
     Object.entries(devices).forEach(([key, device]) => {
-      if (device.accessibility?.a11yScore) {
+      if (device.accessibility && typeof device.accessibility.a11yScore === 'number') {
         totalScore += device.accessibility.a11yScore;
         count++;
       }
@@ -1010,7 +1056,7 @@ class MobileAnalyzerService {
     let count = 0;
 
     Object.entries(devices).forEach(([key, device]) => {
-      if (device.readability?.readabilityScore) {
+      if (device.readability && typeof device.readability.readabilityScore === 'number') {
         totalScore += device.readability.readabilityScore;
         count++;
       }
@@ -1029,7 +1075,7 @@ class MobileAnalyzerService {
     let count = 0;
 
     Object.entries(devices).forEach(([key, device]) => {
-      if (device.touchTargets?.compliancePercentage) {
+      if (device.touchTargets && typeof device.touchTargets.compliancePercentage === 'number') {
         totalCompliance += device.touchTargets.compliancePercentage;
         count++;
         if (device.touchTargets.issueDetails?.length > 0) {

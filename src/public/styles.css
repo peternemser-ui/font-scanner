@@ -70,12 +70,12 @@ summary:focus-visible,
   --text-muted: #808080;
   
   /* Accent Colors */
-  --accent-primary: #dd3838;      /* Brand red - primary actions */
-  --accent-primary-dark: #c52f2f;
-  --accent-primary-rgb: 221, 56, 56;
-  --accent-primary-contrast: #ffffff;
-  --accent-secondary: #bb86fc;    /* Purple - secondary actions */
-  --accent-secondary-dark: #9d5fdb;
+  --accent-primary: #5bf4e7;      /* Cyan - primary actions (dark mode) */
+  --accent-primary-dark: #4dd8cc;
+  --accent-primary-rgb: 91, 244, 231;
+  --accent-primary-contrast: #000000;
+  --accent-secondary: #5bf4e7;    /* Cyan - secondary actions (no purple in dark mode) */
+  --accent-secondary-dark: #4dd8cc;
   
   /* Status Colors */
   --status-success: var(--accent-primary);
@@ -357,8 +357,90 @@ body {
   padding: 0;
   min-height: 100vh;
   overflow-x: hidden;
+  position: relative;
   /* Dynamic font size using multiplier */
   font-size: calc(var(--base-font-size) * var(--font-size-multiplier));
+  /* Flexbox for sticky footer */
+  display: flex;
+  flex-direction: column;
+}
+
+/* Subtle background graphic (optional)
+   Place the PNG at: src/public/assets/images/tools-background.png
+   Served as: /assets/images/tools-background.png
+*/
+:root {
+  --bg-graphic-url: url('/assets/images/tools-background.png');
+  --bg-graphic-opacity: 0.07;
+  --bg-graphic-size: min(1100px, 92vw) auto;
+  --bg-graphic-position: center 18vh;
+  --graph-paper-major: rgba(148, 163, 184, 0.22);
+  --graph-paper-minor: rgba(148, 163, 184, 0.12);
+  --graph-paper-major-size: 28px;
+  --graph-paper-minor-size: 7px;
+  --graph-paper-opacity: 0.35;
+}
+
+body.white-theme {
+  --bg-graphic-opacity: 0.045;
+  --graph-paper-major: rgba(148, 163, 184, 0.28);
+  --graph-paper-minor: rgba(148, 163, 184, 0.16);
+  --graph-paper-opacity: 0.4;
+}
+
+/* Stronger graph paper on CRO analyzer page */
+body[data-sm-analyzer-key="cro-analysis"] {
+  --graph-paper-major: rgba(148, 163, 184, 0.35);
+  --graph-paper-minor: rgba(148, 163, 184, 0.2);
+  --graph-paper-opacity: 0.55;
+  --graph-paper-major-size: 26px;
+  --graph-paper-minor-size: 6px;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image: var(--bg-graphic-url);
+  background-repeat: no-repeat;
+  background-position: var(--bg-graphic-position);
+  background-size: var(--bg-graphic-size);
+  opacity: var(--bg-graphic-opacity);
+  filter: grayscale(100%);
+  z-index: 0;
+}
+
+/* Graph paper background overlay (all pages) */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--graph-paper-major) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--graph-paper-major) 1px, transparent 1px),
+    linear-gradient(to right, var(--graph-paper-minor) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--graph-paper-minor) 1px, transparent 1px);
+  background-size:
+    var(--graph-paper-major-size) var(--graph-paper-major-size),
+    var(--graph-paper-major-size) var(--graph-paper-major-size),
+    var(--graph-paper-minor-size) var(--graph-paper-minor-size),
+    var(--graph-paper-minor-size) var(--graph-paper-minor-size);
+  background-position: 0 0, 0 0, 0 0, 0 0;
+  opacity: var(--graph-paper-opacity);
+  z-index: 0;
+}
+
+/* Ensure content paints above the background layer */
+#nav-placeholder,
+.container,
+main,
+header,
+footer,
+.site-footer-bar {
+  position: relative;
+  z-index: 1;
 }
 
 /* Dark mode background (when white-theme class is NOT present) */
@@ -367,9 +449,27 @@ body:not(.white-theme) {
   background: #000000 !important;
 }
 
+/* Dark mode links: prevent default visited-purple and keep links on-brand */
+body:not(.white-theme) a:not(.btn):not(.nav-link):not(.action-card-button) {
+  color: var(--accent-primary);
+  text-decoration-color: rgba(var(--accent-primary-rgb), 0.7);
+}
+
+body:not(.white-theme) a:not(.btn):not(.nav-link):not(.action-card-button):visited {
+  color: var(--accent-primary);
+}
+
+body:not(.white-theme) a:not(.btn):not(.nav-link):not(.action-card-button):hover {
+  color: var(--accent-primary);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 2px;
+}
+
 .site-footer-bar {
   position: static;
   width: 100%;
+  margin-top: auto; /* Push to bottom of viewport */
   background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   color: #f8fbff;
   padding: 0.65rem 1.75rem;
@@ -608,7 +708,7 @@ p {
   height: var(--unified-header-height);
   background: var(--bg-primary);
   border-bottom: 1px solid var(--border-primary);
-  z-index: 1000;
+  z-index: 5000;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -813,7 +913,7 @@ body.white-theme .app-logo-light {
   border: none;
   cursor: pointer;
   padding: 6px;
-  z-index: 1001;
+  z-index: 5001;
   transition: all 0.3s ease;
 }
 
@@ -846,7 +946,7 @@ body.white-theme .app-logo-light {
   right: 0;
   bottom: 0;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 1000;
+  z-index: 6000;
   opacity: 0;
   pointer-events: none; /* Don't block clicks when invisible */
   transition: opacity 0.3s ease;
@@ -869,7 +969,7 @@ body.white-theme .app-logo-light {
   height: 100dvh; /* Dynamic viewport height for mobile browsers */
   background: var(--bg-primary);
   border-right: 1px solid var(--border-primary);
-  z-index: 1001;
+  z-index: 6001;
   overflow: hidden; /* Parent hides overflow, child scrolls */
   transition: left 0.3s ease;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
@@ -1097,7 +1197,7 @@ body.white-theme .app-logo-light {
   top: auto;
   left: auto;
   right: auto;
-  z-index: 900;
+  z-index: 4500;
   background: var(--bg-secondary);
   border-bottom: 1px solid var(--border-primary);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -1546,7 +1646,7 @@ button:active {
 #analyzeBtn,
 #scanButton {
   background-color: var(--accent-primary) !important;
-  color: #ffffff !important;
+  color: var(--accent-primary-contrast, #000000) !important;
   border: 2px solid var(--accent-primary) !important;
   font-weight: 600 !important;
   /* Remove conflicting inline styles */
@@ -2416,7 +2516,7 @@ body.white-theme #analyzeBtn:focus {
    NOTE: UI kit buttons use `.btn` + variants (e.g. `.btn-primary`) and manage
    their own colors. Avoid overriding them here.
 */
-body.white-theme button:not(.btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle) {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle) {
   background-color: #f8f9fa !important; /* Light neutral background */
   color: #1a1a1a !important; /* Dark text */
   border: 2px solid #dee2e6 !important; /* Subtle border */
@@ -2427,12 +2527,12 @@ body.white-theme button[style*="color"] {
   color: inherit !important; /* Respect inline color for special buttons */
 }
 
-body.white-theme button:not(.btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):hover {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):hover {
   background-color: #e9ecef !important; /* Slightly darker on hover */
   border-color: #adb5bd !important;
 }
 
-body.white-theme button:not(.btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):disabled {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):disabled {
   background-color: #e9ecef !important; /* Subtle disabled state */
   color: #6c757d !important; /* Muted but readable text */
   border-color: #dee2e6 !important;
@@ -2720,7 +2820,7 @@ body.white-theme .badge {
 
 /* Button contrast improvements */
 body.white-theme .btn,
-body.white-theme button:not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle) {
+body.white-theme button:not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle) {
   font-weight: 600 !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
 }

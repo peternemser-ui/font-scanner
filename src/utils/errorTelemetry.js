@@ -375,11 +375,23 @@ class ErrorTelemetry {
     this.errorRates.lastHour.push(timestamp);
     this.errorRates.lastDay.push(timestamp);
 
-    // Cleanup old entries
+    // Cleanup old entries - aggressively trim rate arrays to prevent memory bloat
     const now = Date.now();
     this.errorRates.lastMinute = this.errorRates.lastMinute.filter(t => now - t < 60000);
     this.errorRates.lastHour = this.errorRates.lastHour.filter(t => now - t < 3600000);
     this.errorRates.lastDay = this.errorRates.lastDay.filter(t => now - t < 86400000);
+    
+    // Cap array sizes to prevent unbounded growth
+    const maxRateEntries = 1000;
+    if (this.errorRates.lastMinute.length > maxRateEntries) {
+      this.errorRates.lastMinute = this.errorRates.lastMinute.slice(-maxRateEntries);
+    }
+    if (this.errorRates.lastHour.length > maxRateEntries) {
+      this.errorRates.lastHour = this.errorRates.lastHour.slice(-maxRateEntries);
+    }
+    if (this.errorRates.lastDay.length > maxRateEntries * 10) {
+      this.errorRates.lastDay = this.errorRates.lastDay.slice(-maxRateEntries * 10);
+    }
   }
 
   /**

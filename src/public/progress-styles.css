@@ -305,3 +305,216 @@ body.white-theme .step-name {
 body.white-theme .progress-bar {
   background: linear-gradient(90deg, #4caf50 0%, #2e7d32 100%);
 }
+
+/* ============================================
+   DASHBOARD VISUAL IMPACT ANIMATIONS
+   ============================================ */
+
+/* Score gauge drawing animation */
+@keyframes drawGauge {
+  from {
+    stroke-dasharray: 0 364.42;
+  }
+}
+
+@keyframes drawGaugeMini {
+  from {
+    stroke-dasharray: 0 251.33;
+  }
+}
+
+/* Card entrance animation */
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Score number count up effect */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Score glow pulse for attention */
+@keyframes scoreGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 4px currentColor);
+  }
+  50% {
+    filter: drop-shadow(0 0 12px currentColor);
+  }
+}
+
+/* Subtle hover glow */
+@keyframes hoverGlow {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+  }
+  50% {
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  }
+}
+
+/* Button shine sweep effect */
+@keyframes buttonShine {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+
+/* Staggered list item entrance */
+@keyframes listItemSlide {
+  from {
+    opacity: 0;
+    transform: translateX(-12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Pulsing attention border */
+@keyframes attentionBorder {
+  0%, 100% {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 0 rgba(var(--accent-primary-rgb), 0.4);
+  }
+  50% {
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 0 4px rgba(var(--accent-primary-rgb), 0.1);
+  }
+}
+
+/* Dashboard animated score gauge */
+.score-gauge-animated {
+  animation: drawGauge 1.2s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.score-gauge-mini-animated {
+  animation: drawGaugeMini 0.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Staggered mini score animations */
+.mini-score-0 .score-gauge-mini-animated { animation-delay: 0s; }
+.mini-score-1 .score-gauge-mini-animated { animation-delay: 0.1s; }
+.mini-score-2 .score-gauge-mini-animated { animation-delay: 0.2s; }
+.mini-score-3 .score-gauge-mini-animated { animation-delay: 0.3s; }
+.mini-score-4 .score-gauge-mini-animated { animation-delay: 0.4s; }
+
+/* Dashboard card entrance */
+.dashboard-animate-in {
+  animation: slideUpFade 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  opacity: 0;
+}
+
+.dashboard-animate-in-delay-1 { animation-delay: 0.1s; }
+.dashboard-animate-in-delay-2 { animation-delay: 0.2s; }
+.dashboard-animate-in-delay-3 { animation-delay: 0.3s; }
+
+/* Score text animation */
+.score-text-animated {
+  animation: countUp 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  animation-delay: 0.8s;
+  opacity: 0;
+}
+
+/* Mini score hover effect */
+.mini-score-container {
+  transition: transform 0.2s ease, filter 0.2s ease;
+  cursor: pointer;
+}
+
+.mini-score-container:hover {
+  transform: translateY(-4px) scale(1.05);
+}
+
+.mini-score-container:hover svg circle:last-of-type {
+  filter: drop-shadow(0 0 8px currentColor);
+}
+
+/* Enhanced button with shine */
+.btn-shine {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+}
+
+.btn-shine:hover::after {
+  animation: buttonShine 0.6s ease forwards;
+}
+
+/* Insight list item animation */
+.insight-item {
+  animation: listItemSlide 0.4s ease forwards;
+  opacity: 0;
+}
+
+.insight-item:nth-child(1) { animation-delay: 0.1s; }
+.insight-item:nth-child(2) { animation-delay: 0.15s; }
+.insight-item:nth-child(3) { animation-delay: 0.2s; }
+.insight-item:nth-child(4) { animation-delay: 0.25s; }
+.insight-item:nth-child(5) { animation-delay: 0.3s; }
+
+/* Attention-grabbing recommended fix card */
+.recommended-fix-card {
+  animation: attentionBorder 2s ease infinite;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.recommended-fix-card:hover {
+  transform: translateY(-2px);
+  animation-play-state: paused;
+}
+
+/* Score color classes for consistency */
+.score-excellent { color: #10b981; }
+.score-good { color: #3b82f6; }
+.score-warning { color: #f59e0b; }
+.score-poor { color: #ef4444; }
+
+.score-bg-excellent { background: rgba(16, 185, 129, 0.15); border-color: rgba(16, 185, 129, 0.4); }
+.score-bg-good { background: rgba(59, 130, 246, 0.15); border-color: rgba(59, 130, 246, 0.4); }
+.score-bg-warning { background: rgba(245, 158, 11, 0.15); border-color: rgba(245, 158, 11, 0.4); }
+.score-bg-poor { background: rgba(239, 68, 68, 0.15); border-color: rgba(239, 68, 68, 0.4); }
+
+/* Light theme adjustments for dashboard animations */
+body.white-theme .score-excellent { color: #059669; }
+body.white-theme .score-good { color: #2563eb; }
+body.white-theme .score-warning { color: #d97706; }
+body.white-theme .score-poor { color: #dc2626; }
+
+body.white-theme .score-bg-excellent { background: rgba(16, 185, 129, 0.1); }
+body.white-theme .score-bg-good { background: rgba(59, 130, 246, 0.1); }
+body.white-theme .score-bg-warning { background: rgba(245, 158, 11, 0.1); }
+body.white-theme .score-bg-poor { background: rgba(239, 68, 68, 0.1); }

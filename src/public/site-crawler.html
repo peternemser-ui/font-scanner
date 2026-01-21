@@ -57,6 +57,7 @@
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
+    <link rel="stylesheet" href="ui.css" />
     
     <!-- Shared Report Components CSS -->
     <link rel="stylesheet" href="/css/components/reportShell.css?v=FRESH-JAN8-2026">
@@ -68,9 +69,7 @@
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
     <link rel="stylesheet" href="/css/components/pricing-modal.css" />
 
-    <!-- Shared UI System -->
-    <link rel="stylesheet" href="ui.css" />
-    <!-- Existing Stylesheets -->
+    <!-- Page-specific styles -->
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="progress-styles.css" />
     <link rel="stylesheet" href="analyzer-loading.css" />
@@ -94,71 +93,64 @@
       .page-item {
         display: flex;
         align-items: center;
-        gap: 0.5rem;
-        padding: 0.75rem 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 4px;
-        margin-bottom: 0.5rem;
+        gap: 0.75rem;
+        padding: 1rem;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-primary);
+        border-radius: var(--radius-md);
+        margin-bottom: 0.75rem;
         transition: all 0.2s ease;
       }
       .page-item:hover {
-        background: rgba(255, 255, 255, 0.06);
-        border-color: rgba(var(--accent-primary-rgb), 0.3);
+        background: var(--bg-hover);
+        border-color: var(--accent-primary);
+        transform: translateY(-1px);
       }
       .page-item a {
         color: #60a5fa;
         text-decoration: none;
-        word-break: break-all;
         flex: 1;
+        overflow-wrap: break-word;
+        word-break: break-all;
       }
       .page-item a:hover {
         text-decoration: underline;
+        color: #93c5fd;
       }
       
       /* Options panel */
       .options-panel {
         margin-top: 1rem;
-        padding: 1rem;
-        background: rgba(255, 255, 255, 0.03);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
+        padding: 1.25rem;
+        background: var(--bg-tertiary);
+        border: 1px solid var(--border-primary);
+        border-radius: var(--radius-lg);
       }
       .options-panel label {
         display: flex;
         align-items: center;
-        gap: 8px;
-        margin-bottom: 0.75rem;
+        gap: 0.75rem;
+        margin-bottom: 1rem;
         cursor: pointer;
+        color: var(--text-secondary);
+        font-size: 0.95rem;
+      }
+      .options-panel label:last-child {
+        margin-bottom: 0;
       }
       .options-panel input[type="number"] {
         width: 80px;
-        padding: 4px 8px;
-        background: rgba(0, 0, 0, 0.3);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 4px;
-        color: inherit;
+        padding: 0.5rem;
+        background: var(--bg-input);
+        border: 1px solid var(--border-primary);
+        border-radius: var(--radius-sm);
+        color: var(--text-primary);
+        font-family: var(--font-mono);
       }
       .options-panel input[type="checkbox"] {
         width: 18px;
         height: 18px;
-      }
-      
-      /* Action buttons */
-      .action-btn {
-        padding: 4px 8px;
-        border-radius: 4px;
-        border: none;
         cursor: pointer;
-        font-size: 0.75rem;
-        transition: all 0.2s ease;
-      }
-      .action-btn.analyze {
-        background: #10b981;
-        color: white;
-      }
-      .action-btn.analyze:hover {
-        background: #059669;
       }
     </style>
     
@@ -241,7 +233,7 @@
       
       <!-- Page Header -->
       <header class="page-header">
-        <h1 class="page-header__title">Site Crawler</h1>
+        <h1 class="page-header__title">Site Crawler <span class="badge badge-pro">PRO</span></h1>
         <p class="page-header__subtitle">Discover all pages on a website with intelligent link extraction and sitemap generation.</p>
       </header>
 
@@ -314,6 +306,12 @@
     <!-- Shared Report Components -->
     <script src="/js/components/reportShell.js?v=FRESH-JAN8-2026"></script>
     <script src="/js/components/reportAccordion.js?v=FRESH-JAN8-2026"></script>
+
+    <!-- Billing & Entitlement Dependencies -->
+    <script src="/assets/js/ui.js"></script>
+    <script src="/assets/js/billing.js"></script>
+    <script src="/assets/js/entitlements.js"></script>
+    <script src="/js/report-shell.js"></script>
 
     <!-- D3.js for tree visualization -->
     <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>

@@ -35,6 +35,47 @@ if (typeof window.getUrlParameter === 'function') {
 }
 
 /**
+ * MEMORY MANAGEMENT: Clean up previous scan data to prevent memory leaks
+ * Called before each new scan to free up memory from prior results
+ */
+function cleanupPreviousScanData() {
+  // Clear report metadata from previous scans
+  document.body.removeAttribute('data-report-id');
+  document.body.removeAttribute('data-sm-screenshot-url');
+  document.body.removeAttribute('data-sm-scan-started-at');
+  
+  // Clear global results cache
+  if (window._a11yFullResults) {
+    window._a11yFullResults = null;
+  }
+  
+  // Clear results container to free DOM memory
+  if (resultsContent) {
+    resultsContent.innerHTML = '';
+  }
+  
+  // Remove any dynamically created elements from previous scans
+  const oldPatienceMessage = document.getElementById('patience-message');
+  if (oldPatienceMessage) {
+    oldPatienceMessage.remove();
+  }
+  
+  const oldLoadingContainer = document.getElementById('loadingContainer');
+  if (oldLoadingContainer) {
+    oldLoadingContainer.innerHTML = '';
+  }
+  
+  // Clear any chart instances if Chart.js is being used
+  if (window.Chart && Chart.instances) {
+    Object.values(Chart.instances).forEach(chart => {
+      try { chart.destroy(); } catch (e) { /* ignore */ }
+    });
+  }
+  
+  console.log('[Memory] Cleaned up previous scan data');
+}
+
+/**
  * Main analysis function
  */
 async function analyzeAccessibility() {
@@ -45,10 +86,13 @@ async function analyzeAccessibility() {
     return;
   }
 
+  // MEMORY CLEANUP: Clear previous scan data before starting new scan
+  cleanupPreviousScanData();
+
   // Update button state
   analyzeButton.disabled = true;
   const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-  buttonText.textContent = 'Running scan...';
+  buttonText.textContent = 'Analyzing...';
 
   // Reset UI
   results.classList.add('hidden');
@@ -173,6 +217,20 @@ async function analyzeAccessibility() {
 
     const data = await response.json();
     
+    // Set report metadata from API response
+    const reportId = data && data.reportId ? String(data.reportId) : '';
+    const screenshotUrl = data && data.screenshotUrl ? String(data.screenshotUrl) : '';
+    if (reportId) {
+      if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
+        window.ReportUI.setCurrentReportId(reportId);
+      } else {
+        document.body.setAttribute('data-report-id', reportId);
+      }
+    }
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
+    
     // Complete the loader
     loader.complete();
     
@@ -189,7 +247,7 @@ async function analyzeAccessibility() {
     // Reset button state
     analyzeButton.disabled = false;
     const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-    buttonText.textContent = 'Run scan';
+    buttonText.textContent = 'Analyze';
   }
 }
 
@@ -226,11 +284,55 @@ function displayAccessibilityResults(results) {
   const container = resultsContent;
   container.innerHTML = '';
 
+  // Create report scope wrapper for consistent styling
+  const reportScope = document.createElement('div');
+  reportScope.className = 'report-scope';
+
+  // Report Title Header using ReportContainer for consistency
+  const reportHeader = document.createElement('div');
+  const timestamp = new Date().toISOString();
+  const displayUrl = results.url || urlInput.value.trim();
+
+  // Use ReportContainer.renderHeader if available, otherwise fallback
+  if (window.ReportContainer && window.ReportContainer.renderHeader) {
+    reportHeader.innerHTML = window.ReportContainer.renderHeader({
+      url: displayUrl,
+      timestamp: timestamp,
+      mode: 'accessibility',
+      title: 'Accessibility Report: WCAG Compliance',
+      showModeBadge: false,
+      showModeMeta: false
+    });
+  } else {
+    // Fallback header
+    reportHeader.innerHTML = `
+      <div class="report-header">
+        <h1 class="report-header__title">Accessibility Report: WCAG Compliance</h1>
+        <div class="report-header__meta">
+          <span class="meta-item">
+            <svg class="meta-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M2 12h20M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/>
+            </svg>
+            <span class="meta-item__text">${displayUrl}</span>
+          </span>
+          <span class="meta-item">
+            <svg class="meta-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <span class="meta-item__text">${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+          </span>
+        </div>
+      </div>
+    `;
+  }
+  reportScope.appendChild(reportHeader);
+
   // Summary Section
   const summary = document.createElement('div');
   summary.className = 'section';
   summary.innerHTML = `
-    <h2>[ACCESSIBILITY_OVERVIEW]</h2>
     
     <!-- Performance Score Overview -->
     <div style="
@@ -305,7 +407,7 @@ function displayAccessibilityResults(results) {
       </div>
     </div>
   `;
-  container.appendChild(summary);
+  reportScope.appendChild(summary);
   
   // Store results globally for PDF generation/share
   window.currentAccessibilityResults = {
@@ -318,14 +420,14 @@ function displayAccessibilityResults(results) {
     const comparisonSection = document.createElement('div');
     comparisonSection.className = 'section';
     comparisonSection.innerHTML = createDesktopMobileComparison(results);
-    container.appendChild(comparisonSection);
+    reportScope.appendChild(comparisonSection);
   }
 
   // WCAG Compliance Levels Section
   const wcagLevelsSection = document.createElement('div');
   wcagLevelsSection.className = 'section';
   wcagLevelsSection.innerHTML = createWCAGLevelsSection(results);
-  container.appendChild(wcagLevelsSection);
+  reportScope.appendChild(wcagLevelsSection);
 
   // Calculate average scores for accordion headers
   const avgWcagScore = results.desktop?.wcag?.score && results.mobile?.wcag?.score 
@@ -336,31 +438,59 @@ function displayAccessibilityResults(results) {
   const avgKeyboardScore = results.keyboard?.score || 0;
   const avgAriaScore = results.aria?.score || 0;
 
-  // Create accordion sections
-  createAccordionSection(container, 'wcag-compliance', 'WCAG 2.1 Compliance', () => renderWCAGContent(results.desktop?.wcag, results.mobile?.wcag), avgWcagScore);
-  createAccordionSection(container, 'color-contrast', 'Color Contrast Analysis', () => renderContrastContent(results.contrast), avgContrastScore);
-  createAccordionSection(container, 'keyboard-navigation', 'Keyboard Navigation', () => renderKeyboardContent(results.keyboard), avgKeyboardScore);
-  createAccordionSection(container, 'aria-implementation', 'ARIA & Semantics', () => renderARIAContent(results.aria), avgAriaScore);
-  createAccordionSection(
-    container,
-    'recommendations',
-    'Accessibility Recommendations',
-    () => renderRecommendationsContent(results.recommendations),
-    null,
-    {
+  // Create accordion sections using ReportAccordion
+  const accordionSection = document.createElement('div');
+  accordionSection.className = 'accordion-container';
+
+  const accordionHTML = [
+    ReportAccordion.createSection({
+      id: 'wcag-compliance',
+      title: 'WCAG 2.1 Compliance',
+      scoreTextRight: `${avgWcagScore}/100`,
+      contentHTML: renderWCAGContent(results.desktop?.wcag, results.mobile?.wcag)
+    }),
+    ReportAccordion.createSection({
+      id: 'color-contrast',
+      title: 'Color Contrast Analysis',
+      scoreTextRight: `${avgContrastScore}/100`,
+      contentHTML: renderContrastContent(results.contrast)
+    }),
+    ReportAccordion.createSection({
+      id: 'keyboard-navigation',
+      title: 'Keyboard Navigation',
+      scoreTextRight: `${avgKeyboardScore}/100`,
+      contentHTML: renderKeyboardContent(results.keyboard)
+    }),
+    ReportAccordion.createSection({
+      id: 'aria-implementation',
+      title: 'ARIA & Semantics',
+      scoreTextRight: `${avgAriaScore}/100`,
       isPro: true,
-      previewHtml: renderLockedProPreview('Accessibility Recommendations', [
-        'Critical accessibility fixes',
-        'Prioritized remediation steps'
-      ])
-    }
-  );
+      locked: !userHasPro(),
+      context: 'accessibility',
+      contentHTML: renderARIAContent(results.aria)
+    }),
+    ReportAccordion.createSection({
+      id: 'report-recommendations',
+      title: 'Fix Code + Recommendations',
+      isPro: true,
+      locked: !userHasPro(),
+      context: 'accessibility',
+      contentHTML: renderRecommendationsContent(results.recommendations, results)
+    })
+  ].join('');
+
+  accordionSection.innerHTML = accordionHTML;
+  reportScope.appendChild(accordionSection);
+
+  // Initialize ReportAccordion interactions
+  ReportAccordion.initInteractions();
 
   // Summary block (mirror SEO layout)
   const summaryFooter = document.createElement('div');
   summaryFooter.className = 'section';
   summaryFooter.innerHTML = `
-    <h2>[SUMMARY]</h2>
+    <h2>Summary</h2>
     <div class="seo-summary">
       <div class="summary-stats">
         <div class="stat-item">
@@ -378,7 +508,7 @@ function displayAccessibilityResults(results) {
       </div>
     </div>
   `;
-  container.appendChild(summaryFooter);
+  reportScope.appendChild(summaryFooter);
 
   // Monetization actions (export/share)
   const actionsFooter = document.createElement('div');
@@ -417,7 +547,10 @@ function displayAccessibilityResults(results) {
       </div>
     `;
   }
-  container.appendChild(actionsFooter);
+  reportScope.appendChild(actionsFooter);
+  
+  // Append the complete report scope to container
+  container.appendChild(reportScope);
 }
 
 /**
@@ -432,7 +565,7 @@ function createWCAGLevelsSection(results) {
   else if (score >= 60) currentLevel = 'A';
 
   return `
-    <h2>[WCAG_COMPLIANCE_LEVELS]</h2>
+    <h2>WCAG Compliance Levels</h2>
     <div class="wcag-section-container" style="padding-left: 1rem;">
       <p style="color: #ffd700; margin-bottom: 1.5rem;">>> Understanding WCAG 2.1 Conformance Levels</p>
       
@@ -646,7 +779,7 @@ function createDesktopMobileComparison(results) {
   const anyFailed = desktopFailed || mobileFailed;
 
   return `
-    <h2>[DESKTOP_VS_MOBILE_COMPARISON]</h2>
+    <h2>Desktop vs Mobile Comparison</h2>
     <div style="padding-left: 1rem;">
       <p style="color: #bb86fc; margin-bottom: 1.5rem;">>> Analyzed both desktop and mobile for accessibility issues</p>
       
@@ -834,81 +967,6 @@ function createPlatformCard(title, score, data, color) {
       </div>
     `}
   `;
-}
-
-/**
- * Create an accordion section
- */
-function createAccordionSection(container, id, displayTitle, contentCreator, score, options = {}) {
-  const { isPro = false, previewHtml = '' } = options;
-  ensureProStyles();
-
-  const accordion = document.createElement('div');
-  accordion.className = 'accordion';
-  if (isPro) {
-    accordion.classList.add('pro-section');
-    accordion.dataset.pro = 'true';
-  }
-  
-  const header = document.createElement('button');
-  header.className = 'accordion-header';
-  const proBadge = isPro ? '<span class="pro-pill">PRO</span>' : '';
-  header.innerHTML = `
-    <span style="display: inline-flex; align-items: center; gap: 0.5rem;">${displayTitle} ${proBadge}</span>
-    <span style="display: flex; align-items: center; gap: 0.5rem;">
-      ${score !== null ? `<span style="color: ${getAccessibilityColor(score)}; font-size: 0.9rem;">${score}/100</span>` : ''}
-      <span class="accordion-toggle">▼</span>
-    </span>
-  `;
-  
-  const content = document.createElement('div');
-  content.className = 'accordion-content';
-  content.id = `accordion-${id}`;
-  
-  const contentInner = document.createElement('div');
-  contentInner.className = 'accordion-content-inner';
-  content.appendChild(contentInner);
-
-  const renderContent = () => {
-    const hasPro = !isPro || userHasPro();
-    if (isPro && !hasPro) {
-      contentInner.innerHTML = previewHtml || renderLockedProPreview(displayTitle, ['Example recommendations', 'Code fixes preview']);
-      return;
-    }
-    const contentHTML = contentCreator();
-    contentInner.innerHTML = contentHTML;
-  };
-  
-  // Add click handler for accordion
-  header.addEventListener('click', () => {
-    const isExpanded = content.classList.contains('expanded');
-    
-    if (isExpanded) {
-      // Collapse
-      content.classList.remove('expanded');
-      header.classList.remove('active');
-      header.querySelector('.accordion-toggle').textContent = '▼';
-      header.querySelector('.accordion-toggle').classList.remove('rotated');
-    } else {
-      // Paywall ping if locked
-      if (isPro && !userHasPro()) {
-        safeOpenProPaywall({ domain: getCurrentDomain(), context: 'fixes' });
-      }
-      // Expand and create content if not already created
-      if (!contentInner.hasChildNodes()) {
-        renderContent();
-      }
-      
-      content.classList.add('expanded');
-      header.classList.add('active');
-      header.querySelector('.accordion-toggle').textContent = '▲';
-      header.querySelector('.accordion-toggle').classList.add('rotated');
-    }
-  });
-  
-  accordion.appendChild(header);
-  accordion.appendChild(content);
-  container.appendChild(accordion);
 }
 
 function safeOpenProPaywall(payload = {}) {
@@ -1332,9 +1390,14 @@ function renderARIAContent(aria) {
 }
 
 /**
- * Render Recommendations Content
+ * Render Recommendations Content - Accordion + Tabs pattern
  */
-function renderRecommendationsContent(recommendations) {
+function renderRecommendationsContent(recommendations, fullResults) {
+  ensureA11yFixStyles();
+  
+  // Store fullResults for code generation
+  window._a11yFullResults = fullResults || {};
+  
   const introSection = `
     <div style="padding-left: 1rem; margin-bottom: 1.5rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(255,165,0,0.1); border-left: 3px solid #ffa500; border-radius: 4px;">
@@ -1349,8 +1412,8 @@ function renderRecommendationsContent(recommendations) {
     return `
       ${introSection}
       <div style="padding: 2rem; text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">A</div>
-        <h3 style="color: #bb86fc; margin: 0 0 0.5rem 0;">Excellent Accessibility!</h3>
+        <div style="font-size: 3rem; margin-bottom: 1rem;">✓</div>
+        <h3 style="color: #22c55e; margin: 0 0 0.5rem 0;">Excellent Accessibility!</h3>
         <p style="color: #c0c0c0;">No critical accessibility issues found. Your site meets WCAG 2.1 guidelines across both desktop and mobile!</p>
       </div>
     `;
@@ -1360,126 +1423,738 @@ function renderRecommendationsContent(recommendations) {
   const high = recommendations.filter(r => r.priority === 'high');
   const medium = recommendations.filter(r => r.priority === 'medium');
   const low = recommendations.filter(r => r.priority === 'low');
+  const allFixes = [...high, ...medium, ...low];
 
-  const getPriorityBadge = (priority) => {
-    const styles = {
-      high: { bg: 'rgba(255,68,68,0.15)', color: '#ff4444', border: '#ff4444', icon: 'H', label: 'CRITICAL' },
-      medium: { bg: 'rgba(255,165,0,0.15)', color: '#ffa500', border: '#ffa500', icon: 'M', label: 'IMPORTANT' },
-      low: { bg: 'rgba(0,204,255,0.15)', color: '#00ccff', border: '#00ccff', icon: 'L', label: 'MINOR' }
-    };
-    return styles[priority] || styles.medium;
-  };
+  let html = `
+    ${introSection}
+    <div class="a11y-fixes-container" style="margin-top: 1rem;">
+      <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+        <span style="font-size: 1.75rem;">♿</span> Accessibility Fixes
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${allFixes.length} improvements found)</span>
+      </h3>
+      <div class="a11y-fixes-list">
+  `;
 
-  const renderRecommendationCard = (rec) => {
-    const badge = getPriorityBadge(rec.priority);
-    return `
-      <div style="
-        background: ${badge.bg};
-        border: 2px solid ${badge.border};
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-      ">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-          <h4 style="color: ${badge.color}; margin: 0; font-size: 1.1rem;">
-            ${badge.icon} ${rec.title || 'Accessibility Issue'}
-          </h4>
-          <span style="
-            background: ${badge.bg};
-            color: ${badge.color};
-            padding: 0.25rem 0.75rem;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: bold;
-            border: 1px solid ${badge.border};
-          ">${badge.label}</span>
-        </div>
-        
-        <p style="color: #c0c0c0; margin: 0 0 1rem 0; line-height: 1.6;">
-          ${rec.description || 'No description available'}
-        </p>
-        
-        ${rec.wcagReference ? `
-          <div style="background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px; margin-bottom: 1rem;">
-            <span style="color: #808080; font-size: 0.85rem;">WCAG Reference:</span>
-            <span style="color: #bb86fc; font-weight: bold; margin-left: 0.5rem;">${rec.wcagReference}</span>
-          </div>
-        ` : ''}
-        
-        ${rec.impact ? `
-          <div style="margin-bottom: 1rem;">
-            <span style="color: #bb86fc; font-weight: bold;">Impact:</span>
-            <span style="color: #c0c0c0;"> ${rec.impact}</span>
-          </div>
-        ` : ''}
-        
-        ${rec.solution ? `
-          <div style="background: rgba(0,255,65,0.05); padding: 1rem; border-radius: 4px; border-left: 3px solid #00ff41;">
-            <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">✓ Solution:</div>
-            <p style="color: #c0c0c0; margin: 0; line-height: 1.6;">${rec.solution}</p>
-          </div>
-        ` : ''}
-      </div>
-    `;
+  allFixes.forEach((rec, index) => {
+    html += renderA11yFixAccordion(rec, index, fullResults);
+  });
+
+  html += `</div></div>`;
+  return html;
+}
+
+function renderA11yFixAccordion(rec, index, fullResults) {
+  const accordionId = `a11yfix-${index}`;
+  const priorityStyles = {
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴', label: 'HIGH' },
+    medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠', label: 'MEDIUM' },
+    low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢', label: 'LOW' }
   };
+  const style = priorityStyles[rec.priority] || priorityStyles.medium;
 
   return `
-    ${introSection}
-    <div style="padding-left: 1rem;">
-      <div style="
-        background: linear-gradient(135deg, rgba(255,68,68,0.1), rgba(255,165,0,0.1));
-        border: 2px solid #ff4444;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
+    <div class="a11y-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="a11y-fix-header" onclick="toggleA11yFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
       ">
-        <h3 style="color: #ff4444; margin: 0 0 0.75rem 0; font-size: 1.5rem;">
-          ~ Accessibility Improvement Opportunities
-        </h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-          ${high.length > 0 ? `
-          <div style="text-align: center; padding: 0.75rem; background: rgba(255,68,68,0.15); border-radius: 6px; border: 1px solid #ff4444;">
-            <div style="font-size: 2rem; color: #ff4444; font-weight: bold;">${high.length}</div>
-            <div style="color: #ff4444; font-size: 0.85rem; text-transform: uppercase;">Critical</div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${rec.title || 'Accessibility Issue'}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${rec.wcagReference || 'WCAG 2.1 Compliance'}</p>
           </div>
-          ` : ''}
-          ${medium.length > 0 ? `
-          <div style="text-align: center; padding: 0.75rem; background: rgba(255,165,0,0.15); border-radius: 6px; border: 1px solid #ffa500;">
-            <div style="font-size: 2rem; color: #ffa500; font-weight: bold;">${medium.length}</div>
-            <div style="color: #ffa500; font-size: 0.85rem; text-transform: uppercase;">Important</div>
-          </div>
-          ` : ''}
-          ${low.length > 0 ? `
-          <div style="text-align: center; padding: 0.75rem; background: rgba(0,204,255,0.15); border-radius: 6px; border: 1px solid #00ccff;">
-            <div style="font-size: 2rem; color: #00ccff; font-weight: bold;">${low.length}</div>
-            <div style="color: #00ccff; font-size: 0.85rem; text-transform: uppercase;">Minor</div>
-          </div>
-          ` : ''}
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${style.label}</span>
+          <span class="a11y-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
         </div>
       </div>
 
-      ${high.length > 0 ? `
-        <h4 style="color: #ff4444; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #ff4444; padding-bottom: 0.5rem;">
-          H CRITICAL - Fix Immediately
-        </h4>
-        ${high.map(rec => renderRecommendationCard(rec)).join('')}
-      ` : ''}
-
-      ${medium.length > 0 ? `
-        <h4 style="color: #ffa500; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #ffa500; padding-bottom: 0.5rem;">
-          M IMPORTANT - Address Soon
-        </h4>
-        ${medium.map(rec => renderRecommendationCard(rec)).join('')}
-      ` : ''}
-
-      ${low.length > 0 ? `
-        <h4 style="color: #00ccff; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #00ccff; padding-bottom: 0.5rem;">
-          L MINOR - Enhance When Possible
-        </h4>
-        ${low.map(rec => renderRecommendationCard(rec)).join('')}
-      ` : ''}
+      <div class="a11y-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderA11yFixTabs(rec, accordionId, fullResults)}
+        </div>
+      </div>
     </div>
   `;
+}
+
+function renderA11yFixTabs(rec, accordionId, fullResults) {
+  return `
+    <div class="a11y-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="a11y-fix-tab active" onclick="switchA11yFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Summary</button>
+      <button class="a11y-fix-tab" onclick="switchA11yFixTab('${accordionId}', 'code')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">💻 Code</button>
+      <button class="a11y-fix-tab" onclick="switchA11yFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🔧 Fix Guide</button>
+    </div>
+
+    <!-- Summary Tab -->
+    <div class="a11y-fix-tab-content active" id="${accordionId}-summary">
+      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        ${rec.description || 'No description available'}
+      </p>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+        <div style="color: #c0c0c0; font-size: 0.9rem;">${rec.impact || 'Improved accessibility and user experience for all users'}</div>
+      </div>
+    </div>
+
+    <!-- Code Tab -->
+    <div class="a11y-fix-tab-content" id="${accordionId}-code" style="display: none;">
+      <div style="display: grid; gap: 1rem;">
+        <!-- Current Issue -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
+            <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
+            <button onclick="copyA11yCode('${accordionId}-problem')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlA11y(getA11yProblemCode(rec, fullResults))}</pre>
+        </div>
+
+        <!-- Fixed Code -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
+            <button onclick="copyA11yCode('${accordionId}-solution')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlA11y(getA11ySolutionCode(rec, fullResults))}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fix Guide Tab -->
+    <div class="a11y-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <ol style="margin: 0 0 1.5rem 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        ${getA11yFixSteps(rec, fullResults).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+      ${getA11yExternalTools(rec)}
+    </div>
+  `;
+}
+
+function toggleA11yFixAccordion(accordionId) {
+  const content = document.getElementById(accordionId + '-content');
+  const header = content?.previousElementSibling;
+  const icon = header?.querySelector('.a11y-fix-expand-icon');
+  
+  if (!content) return;
+  
+  const isOpen = content.style.maxHeight && content.style.maxHeight !== '0px';
+  
+  if (isOpen) {
+    content.style.maxHeight = '0';
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  } else {
+    content.style.maxHeight = content.scrollHeight + 'px';
+    if (icon) icon.style.transform = 'rotate(180deg)';
+  }
+}
+
+function switchA11yFixTab(accordionId, tabName) {
+  const container = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  if (!container) return;
+  
+  // Update tab buttons
+  container.querySelectorAll('.a11y-fix-tab').forEach(tab => {
+    tab.classList.remove('active');
+    tab.style.background = 'transparent';
+    tab.style.color = '#aaa';
+    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+  });
+  
+  // Find clicked tab and activate
+  const tabs = container.querySelectorAll('.a11y-fix-tab');
+  const tabIndex = tabName === 'summary' ? 0 : tabName === 'code' ? 1 : 2;
+  if (tabs[tabIndex]) {
+    tabs[tabIndex].classList.add('active');
+    tabs[tabIndex].style.background = 'rgba(255,255,255,0.1)';
+    tabs[tabIndex].style.color = '#fff';
+    tabs[tabIndex].style.borderColor = 'rgba(255,255,255,0.2)';
+  }
+  
+  // Update tab content
+  container.querySelectorAll('.a11y-fix-tab-content').forEach(content => {
+    content.style.display = 'none';
+    content.classList.remove('active');
+  });
+  
+  const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+  if (activeContent) {
+    activeContent.style.display = 'block';
+    activeContent.classList.add('active');
+  }
+  
+  // Recalculate max-height after tab switch
+  const accordionContent = document.getElementById(accordionId + '-content');
+  if (accordionContent && accordionContent.style.maxHeight !== '0px') {
+    accordionContent.style.maxHeight = accordionContent.scrollHeight + 'px';
+  }
+}
+
+function copyA11yCode(elementId) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const btn = el.previousElementSibling?.querySelector('button') || 
+                el.closest('div')?.querySelector('button[onclick*="' + elementId + '"]');
+    if (btn) {
+      const original = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => btn.textContent = original, 2000);
+    }
+  });
+}
+
+function escapeHtmlA11y(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getA11yExternalTools(rec) {
+  const title = (rec.title || '').toLowerCase();
+  const tools = [];
+  
+  // Color contrast tools
+  if (title.includes('contrast') || title.includes('color')) {
+    tools.push({
+      name: 'WebAIM Contrast Checker',
+      url: 'https://webaim.org/resources/contrastchecker/',
+      icon: '🎨'
+    });
+    tools.push({
+      name: 'Coolors Contrast Checker',
+      url: 'https://coolors.co/contrast-checker',
+      icon: '🖌️'
+    });
+  }
+  
+  // Form labels / ARIA
+  if (title.includes('label') || title.includes('form') || title.includes('aria')) {
+    tools.push({
+      name: 'WAVE Accessibility Checker',
+      url: 'https://wave.webaim.org/',
+      icon: '🌊'
+    });
+  }
+  
+  // Keyboard / Focus
+  if (title.includes('focus') || title.includes('keyboard')) {
+    tools.push({
+      name: 'axe DevTools (Chrome)',
+      url: 'https://chrome.google.com/webstore/detail/axe-devtools-web-accessibility/lhdoppojpmngadmnindnejefpokejbdd',
+      icon: '🔧'
+    });
+  }
+  
+  // Heading structure
+  if (title.includes('heading')) {
+    tools.push({
+      name: 'HeadingsMap Extension',
+      url: 'https://chrome.google.com/webstore/detail/headingsmap/flbjommegcjonpdmenkdiocclhjacmbi',
+      icon: '📑'
+    });
+    tools.push({
+      name: 'WAVE Accessibility Checker',
+      url: 'https://wave.webaim.org/',
+      icon: '🌊'
+    });
+  }
+  
+  // Landmarks
+  if (title.includes('landmark')) {
+    tools.push({
+      name: 'Landmark Navigation Extension',
+      url: 'https://chrome.google.com/webstore/detail/landmark-navigation-via-k/ddpokpbjopmeeiiolheejjpkonlkklgp',
+      icon: '🗺️'
+    });
+  }
+  
+  // Mobile accessibility
+  if (title.includes('mobile')) {
+    tools.push({
+      name: 'Google Mobile-Friendly Test',
+      url: 'https://search.google.com/test/mobile-friendly',
+      icon: '📱'
+    });
+  }
+  
+  // Always include general tools for any accessibility issue
+  if (tools.length === 0 || tools.length < 3) {
+    if (!tools.find(t => t.name.includes('WAVE'))) {
+      tools.push({
+        name: 'WAVE Accessibility Checker',
+        url: 'https://wave.webaim.org/',
+        icon: '🌊'
+      });
+    }
+    if (!tools.find(t => t.name.includes('axe'))) {
+      tools.push({
+        name: 'axe DevTools (Chrome)',
+        url: 'https://chrome.google.com/webstore/detail/axe-devtools-web-accessibility/lhdoppojpmngadmnindnejefpokejbdd',
+        icon: '🔧'
+      });
+    }
+  }
+  
+  if (tools.length === 0) return '';
+  
+  const buttonStyle = `
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 255, 65, 0.3);
+    background: rgba(0, 255, 65, 0.1);
+    color: #00ff41;
+    text-decoration: none;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  `.replace(/\n\s+/g, ' ').trim();
+  
+  return `
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+      <h5 style="margin: 0 0 0.75rem 0; color: #aaa; font-size: 0.85rem; font-weight: 500;">🔗 External Testing Tools</h5>
+      <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+        ${tools.map(tool => `
+          <a href="${tool.url}" target="_blank" rel="noopener noreferrer" style="${buttonStyle}"
+             onmouseover="this.style.background='rgba(0,255,65,0.2)'; this.style.borderColor='rgba(0,255,65,0.5)';"
+             onmouseout="this.style.background='rgba(0,255,65,0.1)'; this.style.borderColor='rgba(0,255,65,0.3)';">
+            <span>${tool.icon}</span>
+            <span>${tool.name}</span>
+            <span style="opacity: 0.6;">↗</span>
+          </a>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+function getA11yProblemCode(rec, fullResults) {
+  if (rec.problemCode) return rec.problemCode;
+  
+  const title = (rec.title || '').toLowerCase();
+  const results = fullResults || window._a11yFullResults || {};
+  
+  // Color contrast - use real contrast issues from scan
+  if (title.includes('contrast')) {
+    const issues = results.contrast?.issues || [];
+    if (issues.length > 0) {
+      const examples = issues.slice(0, 3).map(issue => {
+        const selector = issue.selector || 'element';
+        const ratio = issue.ratio ? issue.ratio.toFixed(2) : '?';
+        const fg = issue.color || '#unknown';
+        const bg = issue.backgroundColor || '#unknown';
+        return `/* ${selector} */\n/* Contrast ratio: ${ratio}:1 (needs 4.5:1) */\ncolor: ${fg};\nbackground: ${bg};`;
+      }).join('\n\n');
+      return `/* Found ${issues.length} low contrast elements */\n\n${examples}`;
+    }
+    return `/* Low contrast detected */\n.text-element {\n  color: #888;      /* Too light */\n  background: #ccc; /* Not enough contrast */\n}`;
+  }
+  
+  // Missing form labels - use real missing labels from scan
+  if (title.includes('label') || title.includes('form')) {
+    const labels = results.aria?.missingLabels || [];
+    if (labels.length > 0) {
+      const examples = labels.slice(0, 3).map(label => {
+        const tag = label.tag || label.element || 'input';
+        const type = label.type || 'text';
+        const name = label.name || label.id || '';
+        return `<${tag} type="${type}"${name ? ` name="${name}"` : ''}>`;
+      }).join('\n');
+      return `<!-- ${labels.length} form elements missing labels -->\n\n${examples}\n\n<!-- Screen readers cannot identify these inputs -->`;
+    }
+    return `<!-- Form inputs without accessible labels -->\n<input type="email" name="email">\n<input type="password" name="password">\n<select name="country">...</select>`;
+  }
+  
+  // Missing focus indicators - use real data
+  if (title.includes('focus')) {
+    const missing = results.keyboard?.missingFocusIndicators || [];
+    if (missing.length > 0) {
+      const examples = missing.slice(0, 3).map(el => {
+        const tag = el.tag || 'button';
+        return `/* ${tag} has no focus style */\n${tag} { outline: none; }`;
+      }).join('\n\n');
+      return `/* ${missing.length} elements lack focus indicators */\n\n${examples}`;
+    }
+    return `/* Interactive elements hide focus */\nbutton, a, input {\n  outline: none; /* ✗ Hides keyboard focus */\n}\n\n/* or */\n*:focus {\n  outline: 0; /* ✗ Removes all focus indicators */\n}`;
+  }
+  
+  // Heading structure
+  if (title.includes('heading')) {
+    const headingStatus = results.aria?.headingStructure || 'Unknown';
+    if (headingStatus === 'Missing H1') {
+      return `<!-- Page is missing an h1 element -->\n<body>\n  <div class="header">Company Name</div>\n  <h2>Products</h2> <!-- First heading is h2 -->\n  <h3>Category</h3>\n</body>`;
+    } else if (headingStatus === 'Skipped Levels') {
+      return `<!-- Heading levels are skipped -->\n<h1>Page Title</h1>\n<h4>Subsection</h4> <!-- Skipped h2, h3 -->\n<h2>Another Section</h2>\n<h5>Details</h5> <!-- Skipped h3, h4 -->`;
+    }
+    return `<!-- Improper heading structure -->\n<div class="title">Page Title</div> <!-- Should be h1 -->\n<div class="subtitle">Section</div> <!-- Should be h2 -->`;
+  }
+  
+  // ARIA landmarks
+  if (title.includes('landmark')) {
+    return `<!-- No semantic structure -->\n<body>\n  <div class="header">...</div>\n  <div class="nav">...</div>\n  <div class="content">...</div>\n  <div class="sidebar">...</div>\n  <div class="footer">...</div>\n</body>\n\n<!-- Screen readers cannot navigate between sections -->`;
+  }
+  
+  // Mobile accessibility gap
+  if (title.includes('mobile')) {
+    const desktopScore = results.desktop?.accessibilityScore || '?';
+    const mobileScore = results.mobile?.accessibilityScore || '?';
+    return `/* Mobile accessibility is ${desktopScore - mobileScore} points lower */\n\n/* Common mobile issues: */\n\n/* Touch targets too small */\n.button {\n  padding: 4px 8px; /* < 44px */\n}\n\n/* Viewport not configured */\n<!-- Missing: <meta name="viewport" ...> -->`;
+  }
+  
+  return `/* Issue: ${rec.title} */\n/* ${rec.description || 'Current implementation needs improvement'} */`;
+}
+
+function getA11ySolutionCode(rec, fullResults) {
+  if (rec.solutionCode) return rec.solutionCode;
+  
+  const title = (rec.title || '').toLowerCase();
+  const results = fullResults || window._a11yFullResults || {};
+  
+  // Color contrast
+  if (title.includes('contrast')) {
+    return `/* WCAG AA compliant contrast (4.5:1 minimum) */
+
+/* Option 1: Use high-contrast color pairs */
+.text-element {
+  color: #1a1a1a;      /* Dark text */
+  background: #ffffff; /* Light background */
+}
+
+/* Option 2: CSS custom properties */
+:root {
+  --text-primary: #212121;
+  --text-secondary: #424242;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f5f5f5;
+}
+
+/* Option 3: Check with tools */
+/* Use: https://webaim.org/resources/contrastchecker/ */`;
+  }
+  
+  // Missing form labels
+  if (title.includes('label') || title.includes('form')) {
+    const labels = results.aria?.missingLabels || [];
+    const inputName = labels[0]?.name || 'email';
+    return `<!-- Option 1: Explicit label association -->
+<label for="${inputName}">${inputName.charAt(0).toUpperCase() + inputName.slice(1)}</label>
+<input type="text" id="${inputName}" name="${inputName}">
+
+<!-- Option 2: Wrapped label -->
+<label>
+  Email Address
+  <input type="email" name="email">
+</label>
+
+<!-- Option 3: ARIA label (when visual label not possible) -->
+<input type="search" aria-label="Search products" name="search">
+
+<!-- Option 4: aria-labelledby -->
+<span id="emailLabel">Email</span>
+<input type="email" aria-labelledby="emailLabel">`;
+  }
+  
+  // Missing focus indicators
+  if (title.includes('focus')) {
+    return `/* Visible focus indicators for all interactive elements */
+
+/* Option 1: Simple outline */
+:focus {
+  outline: 2px solid #0066cc;
+  outline-offset: 2px;
+}
+
+/* Option 2: Enhanced focus with fallback */
+:focus-visible {
+  outline: 3px solid #0066cc;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(0, 102, 204, 0.25);
+}
+
+/* Option 3: Custom per-element */
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px #fff, 0 0 0 5px #0066cc;
+}
+
+a:focus-visible {
+  outline: 2px dashed currentColor;
+  outline-offset: 4px;
+}`;
+  }
+  
+  // Heading structure
+  if (title.includes('heading')) {
+    return `<!-- Proper heading hierarchy -->
+<body>
+  <header>
+    <h1>Site Name or Page Title</h1>
+  </header>
+  
+  <main>
+    <h2>Main Section</h2>
+    <p>Content...</p>
+    
+    <h3>Subsection</h3>
+    <p>More content...</p>
+    
+    <h2>Another Main Section</h2>
+    <h3>Its Subsection</h3>
+  </main>
+</body>
+
+<!-- Rules:
+  - One h1 per page
+  - Don't skip levels (h1 → h2 → h3)
+  - Use headings for structure, not styling
+-->`;
+  }
+  
+  // ARIA landmarks
+  if (title.includes('landmark')) {
+    return `<!-- Semantic HTML5 structure -->
+<body>
+  <header role="banner">
+    <nav role="navigation" aria-label="Main">
+      <!-- Primary navigation -->
+    </nav>
+  </header>
+  
+  <main role="main">
+    <article>
+      <!-- Main content -->
+    </article>
+    
+    <aside role="complementary">
+      <!-- Related content -->
+    </aside>
+  </main>
+  
+  <footer role="contentinfo">
+    <!-- Footer content -->
+  </footer>
+</body>
+
+<!-- Screen readers can now navigate:
+  - "Go to main content"
+  - "Go to navigation"
+  - "Go to footer"
+-->`;
+  }
+  
+  // Mobile accessibility
+  if (title.includes('mobile')) {
+    return `<!-- Viewport configuration -->
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+/* Minimum touch target size (44x44px) */
+button, a, input, select {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 16px;
+}
+
+/* Adequate spacing between targets */
+.button-group button {
+  margin: 8px;
+}
+
+/* Responsive text sizing */
+html {
+  font-size: 16px; /* Minimum */
+}
+
+@media (max-width: 768px) {
+  body {
+    font-size: 1rem; /* Don't go smaller */
+    line-height: 1.5;
+  }
+}`;
+  }
+  
+  return `/* Fix for: ${rec.title} */\n\n${rec.solution || '/* Implement the recommended accessibility improvement */'}`;
+}
+
+function getA11yFixSteps(rec, fullResults) {
+  if (rec.steps && rec.steps.length) return rec.steps;
+  
+  const title = (rec.title || '').toLowerCase();
+  const results = fullResults || window._a11yFullResults || {};
+  
+  // Color contrast
+  if (title.includes('contrast')) {
+    const count = results.contrast?.issuesCount || 'multiple';
+    return [
+      `Open browser DevTools and navigate to the Elements panel`,
+      `Use the Accessibility pane or "Inspect" to check color contrast ratios`,
+      `Found ${count} elements below 4.5:1 contrast ratio`,
+      `Use WebAIM Contrast Checker to find compliant color alternatives`,
+      `Update CSS with new color values that meet WCAG AA (4.5:1 for text)`,
+      `Test with browser extensions like axe DevTools or WAVE`
+    ];
+  }
+  
+  // Form labels
+  if (title.includes('label') || title.includes('form')) {
+    const count = results.aria?.missingLabels?.length || 'some';
+    return [
+      `Identify the ${count} form inputs missing accessible labels`,
+      `For each input, add a <label> element with matching for/id attributes`,
+      `If visual labels aren't possible, use aria-label attribute`,
+      `Ensure labels are programmatically associated (not just visually positioned)`,
+      `Test with a screen reader: input purpose should be announced`
+    ];
+  }
+  
+  // Focus indicators
+  if (title.includes('focus')) {
+    const count = results.keyboard?.missingFocusIndicators?.length || 'multiple';
+    return [
+      `Found ${count} interactive elements without visible focus`,
+      `Remove any CSS that hides outlines (outline: none, outline: 0)`,
+      `Add :focus-visible styles for keyboard users`,
+      `Ensure focus indicator has minimum 3:1 contrast ratio`,
+      `Test by tabbing through page - focus should always be visible`,
+      `Consider users with both keyboard and mouse (use :focus-visible)`
+    ];
+  }
+  
+  // Heading structure
+  if (title.includes('heading')) {
+    return [
+      `Run a heading outline check (browser extensions or DevTools)`,
+      `Ensure page has exactly one <h1> element`,
+      `Verify headings follow sequential order (h1 → h2 → h3)`,
+      `Don't skip heading levels (e.g., h2 directly to h4)`,
+      `Use headings for document structure, not for styling`,
+      `Test with screen reader "headings list" navigation`
+    ];
+  }
+  
+  // ARIA landmarks
+  if (title.includes('landmark')) {
+    return [
+      `Replace generic <div> elements with semantic HTML5 elements`,
+      `Use <header>, <nav>, <main>, <aside>, <footer>`,
+      `Add role attributes for older browser support if needed`,
+      `Use aria-label to differentiate multiple nav elements`,
+      `Test with screen reader landmark navigation (NVDA: D key, JAWS: R key)`,
+      `Verify all major page sections have appropriate landmarks`
+    ];
+  }
+  
+  // Mobile accessibility
+  if (title.includes('mobile')) {
+    return [
+      `Add proper viewport meta tag to <head>`,
+      `Audit all interactive elements for 44x44px minimum touch target`,
+      `Increase padding on buttons and links for touch`,
+      `Ensure adequate spacing between clickable elements (8px minimum)`,
+      `Test with mobile screen reader (VoiceOver, TalkBack)`,
+      `Verify text is readable without zooming (16px minimum)`
+    ];
+  }
+  
+  return [
+    `Review the specific WCAG criterion: ${rec.wcagReference || 'relevant guideline'}`,
+    `Identify all affected elements on the page`,
+    `Implement the recommended code fix`,
+    `Test with assistive technology (screen reader, keyboard-only)`,
+    `Validate with automated tools (axe, WAVE, Lighthouse)`
+  ];
+}
+
+function ensureA11yFixStyles() {
+  if (document.getElementById('a11y-fix-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'a11y-fix-styles';
+  style.textContent = `
+    .a11y-fix-accordion {
+      transition: all 0.2s ease;
+    }
+    .a11y-fix-accordion:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+    .a11y-fix-header:hover {
+      background: rgba(255,255,255,0.03);
+    }
+    .a11y-fix-tab {
+      transition: all 0.2s ease;
+    }
+    .a11y-fix-tab:hover:not(.active) {
+      background: rgba(255,255,255,0.05) !important;
+      color: #ccc !important;
+    }
+  `;
+  document.head.appendChild(style);
 }
 
 // -------- Monetization actions (gated) --------

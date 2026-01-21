@@ -97,6 +97,10 @@
     const effectiveShowModeMeta = Boolean(showModeMeta) && !isRedundant;
 
     return `
+      <div class="print-header">
+        <span class="print-header__left">Site Mechanic Report</span>
+        <span class="print-header__right">${displayUrl || ''} | ${formattedTimestamp || ''}</span>
+      </div>
       <div class="report-header">
         <h1 class="report-header__title">${displayTitle}</h1>
         ${effectiveShowModeBadge && modeLabel ? `<div class="report-header__badge">${modeLabel}</div>` : ''}
@@ -129,6 +133,14 @@
               <span class="meta-item__text">${modeLabel}</span>
             </span>
           ` : ''}
+          <button class="text-btn" onclick="window.ReportContainer.printReport()" title="Print Report">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="6 9 6 2 18 2 18 9"/>
+              <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
+              <rect x="6" y="14" width="12" height="8"/>
+            </svg>
+            Print
+          </button>
         </div>
       </div>
     `;
@@ -220,7 +232,8 @@
       sections = [],
       screenshots,
       proBlock = true,
-      proBlockOptions = {}
+      proBlockOptions = {},
+      customHeaderContent = '' // Custom content to inject after summary (e.g., charts, special sections)
     } = options;
 
     let html = '';
@@ -238,6 +251,11 @@
       html += renderSummary(summary);
     }
 
+    // Custom header content (for specialized reports like competitive analysis)
+    if (customHeaderContent) {
+      html += customHeaderContent;
+    }
+
     // Main content sections (accordions)
     if (sections && sections.length > 0) {
       sections.forEach(section => {
@@ -252,7 +270,50 @@
       html += renderProBlock(proBlockOptions);
     }
 
+    // Print footer (visible only when printing)
+    html += renderPrintFooter();
+
     return html;
+  }
+
+  /**
+   * Render print footer (visible only when printing)
+   */
+  function renderPrintFooter() {
+    const currentYear = new Date().getFullYear();
+    return `
+      <div class="print-footer">
+        <span class="print-footer__left">© ${currentYear} Site Mechanic</span>
+        <span class="print-footer__center">sitemechanic.io</span>
+        <span class="print-footer__right">Confidential</span>
+      </div>
+    `;
+  }
+
+  /**
+   * Print the report
+   * Hides pro sections for non-paying users
+   */
+  function printReport() {
+    // Check if user has pro access
+    const hasPro = typeof window.userHasPro === 'function' ? window.userHasPro() : false;
+
+    // Add class to body for print styling
+    document.body.classList.add('printing-report');
+
+    if (!hasPro) {
+      // Add class to hide pro sections when not paid
+      document.body.classList.add('print-free-tier');
+    }
+
+    // Trigger print dialog
+    window.print();
+
+    // Remove classes after print dialog closes
+    setTimeout(() => {
+      document.body.classList.remove('printing-report');
+      document.body.classList.remove('print-free-tier');
+    }, 1000);
   }
 
   // Public API
@@ -262,6 +323,7 @@
     renderSummary,
     renderProBlock,
     renderScreenshots,
+    printReport,
 
     // Utility
     formatTimestamp,

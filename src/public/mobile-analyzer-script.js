@@ -24,10 +24,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // Device name mapping for display
   const deviceNames = {
     'iphone-14': 'iPhone 14',
+    'iphone-15-pro': 'iPhone 15 Pro',
     'iphone-se': 'iPhone SE',
     'pixel-7': 'Pixel 7',
+    'pixel-8': 'Pixel 8',
     'galaxy-s23': 'Galaxy S23',
-    'ipad': 'iPad'
+    'galaxy-s24': 'Galaxy S24',
+    'ipad': 'iPad',
+    'ipad-pro': 'iPad Pro'
   };
 
   // Build dynamic analysis steps based on selected devices
@@ -71,6 +75,11 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
+    // Clear report metadata from previous scans
+    document.body.removeAttribute('data-report-id');
+    document.body.removeAttribute('data-sm-screenshot-url');
+    document.body.removeAttribute('data-sm-scan-started-at');
+
     // Get selected devices
     const devices = [];
     document.querySelectorAll('.device-selector input[type="checkbox"]:checked').forEach(checkbox => {
@@ -91,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Update button text
     const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-    buttonText.textContent = 'Running scan...';
+    buttonText.textContent = 'Analyzing...';
 
     // Build dynamic steps based on selected devices
     const analysisSteps = buildAnalysisSteps(devices);
@@ -182,7 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       analyzeButton.disabled = false;
       const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-      buttonText.textContent = 'Run scan';
+      buttonText.textContent = 'Analyze';
     }
   }
 
@@ -228,22 +237,31 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
             `;
           }
+          const portraitSrc = device.portraitScreenshot || device.screenshot || '';
+          const landscapeSrc = device.landscapeScreenshot || '';
+          const deviceWidth = device.viewport?.width || device.width || '';
+          const deviceHeight = device.viewport?.height || device.height || '';
           return `
             <div style="margin-bottom: 2rem;">
               <h4 style="margin-bottom: 1rem;">${device.device}</h4>
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
-                ${device.portraitScreenshot ? `
+                ${portraitSrc ? `
                   <div style="text-align: center;">
-                    <img src="${device.portraitScreenshot}" alt="${device.device} portrait" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" onclick="window.open(this.src)">
-                    <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">📱 ${device.width}x${device.height}</div>
-                    <a href="${device.portraitScreenshot}" download="${device.device}-portrait.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">🔽 Click to enlarge</a>
+                    <img src="${portraitSrc}" alt="${device.device} portrait" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" onclick="window.open(this.src)">
+                    <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">📱 ${deviceWidth}x${deviceHeight}</div>
+                    <a href="${portraitSrc}" download="${device.device}-portrait.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">🔽 Click to enlarge</a>
                   </div>
                 ` : ''}
-                ${device.landscapeScreenshot ? `
+                ${landscapeSrc ? `
                   <div style="text-align: center;">
-                    <img src="${device.landscapeScreenshot}" alt="${device.device} landscape" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" onclick="window.open(this.src)">
-                    <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">🖥️ ${device.height}x${device.width}</div>
-                    <a href="${device.landscapeScreenshot}" download="${device.device}-landscape.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">🔽 Click to enlarge</a>
+                    <img src="${landscapeSrc}" alt="${device.device} landscape" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" onclick="window.open(this.src)">
+                    <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">🖥️ ${deviceHeight}x${deviceWidth}</div>
+                    <a href="${landscapeSrc}" download="${device.device}-landscape.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">🔽 Click to enlarge</a>
+                  </div>
+                ` : ''}
+                ${!portraitSrc && !landscapeSrc ? `
+                  <div style="padding: 1rem; border: 1px dashed var(--border-primary, rgba(255,255,255,0.1)); border-radius: 8px; color: var(--text-muted, #888);">
+                    Screenshot not available for this device.
                   </div>
                 ` : ''}
               </div>
@@ -293,13 +311,59 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const proLocked = !isReportUnlocked(reportId);
     
+    const majorScoreSections = [
+      ReportAccordion.createSection({
+        id: 'mobile-performance-summary',
+        title: 'Performance',
+        scoreTextRight: `${data.performanceSummary?.average || 0}/100`,
+        contentHTML: renderScoreSectionContent(
+          data.devices,
+          'performance',
+          'score',
+          data.recommendations,
+          'Performance',
+          ['Load time', 'DOM content loaded', 'First paint'],
+          data.performanceSummary?.average || 0
+        )
+      }),
+      ReportAccordion.createSection({
+        id: 'mobile-readability-summary',
+        title: 'Readability',
+        scoreTextRight: `${data.readabilitySummary?.average || 0}/100`,
+        contentHTML: renderScoreSectionContent(
+          data.devices,
+          'readability',
+          'readabilityScore',
+          data.recommendations,
+          'Readability',
+          ['Body font size', 'Line height', 'Text contrast'],
+          data.readabilitySummary?.average || 0
+        )
+      }),
+      ReportAccordion.createSection({
+        id: 'mobile-accessibility-summary',
+        title: 'Accessibility',
+        scoreTextRight: `${data.accessibilitySummary?.average || 0}/100`,
+        contentHTML: renderScoreSectionContent(
+          data.devices,
+          'accessibility',
+          'a11yScore',
+          data.recommendations,
+          'Accessibility',
+          ['Alt text coverage', 'Heading hierarchy', 'Contrast checks'],
+          data.accessibilitySummary?.average || 0
+        )
+      })
+    ];
+
     // Build accordions
     const accordions = [
       ReportAccordion.createSection({ id: 'mobile-screenshots', title: 'Device Screenshots', scoreTextRight: `${Object.keys(data.devices).length} Devices`, contentHTML: screenshotsContent }),
+      ...majorScoreSections,
       ...diagnosticsContent,
       ReportAccordion.createSection({
-        id: 'mobile-recommendations',
-        title: 'Recommendations',
+        id: 'report-recommendations',
+        title: 'Report and Recommendations',
         scoreTextRight: null,
         isPro: true,
         locked: proLocked,
@@ -334,6 +398,244 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
+  function formatScore(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return '0.00';
+    return numeric.toFixed(2);
+  }
+
+  function renderDeviceScoreBreakdown(devices = {}, metricKey, scoreKey, averageScore = 0) {
+    const items = Object.entries(devices)
+      .filter(([, device]) => device?.[metricKey]?.[scoreKey] !== undefined)
+      .map(([, device]) => ({
+        name: device.device || 'Device',
+        score: device[metricKey][scoreKey]
+      }));
+
+    const scores = items.map(item => Number(item.score) || 0);
+    const avg = scores.length ? (scores.reduce((sum, value) => sum + value, 0) / scores.length) : 0;
+    const min = scores.length ? Math.min(...scores) : 0;
+    const max = scores.length ? Math.max(...scores) : 0;
+
+    if (items.length === 0) {
+      return `
+        <div class="report-shell__card">
+          <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+            No per-device scores available. Using overall average for this category: <strong>${formatScore(averageScore)}/100</strong>.
+          </div>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="report-shell__card">
+        <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; display: grid; gap: 0.75rem;">
+          <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; font-size: 0.85rem; color: var(--text-tertiary);">
+            <div>Avg: <strong style="color: var(--text-primary);">${formatScore(avg)}/100</strong></div>
+            <div>Best: <strong style="color: var(--text-primary);">${formatScore(max)}/100</strong></div>
+            <div>Lowest: <strong style="color: var(--text-primary);">${formatScore(min)}/100</strong></div>
+          </div>
+          ${items.map(item => {
+            const safeScore = Math.max(0, Math.min(100, Number(item.score) || 0));
+            const barColor = safeScore >= 90 ? '#22c55e' : safeScore >= 70 ? '#eab308' : '#ef4444';
+            return `
+              <div style="display: grid; grid-template-columns: 120px 1fr 48px; gap: 0.75rem; align-items: center;">
+                <span>${item.name}</span>
+                <div style="height: 8px; background: rgba(255,255,255,0.08); border-radius: 999px; overflow: hidden;">
+                  <div style="width: ${safeScore}%; height: 100%; background: ${barColor};"></div>
+                </div>
+                <strong>${formatScore(safeScore)}/100</strong>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  function renderScoreSectionContent(devices, metricKey, scoreKey, recommendations = [], categoryLabel, criteria = [], summaryAverage = 0) {
+    const deviceEntries = Object.entries(devices || {});
+    const items = deviceEntries
+      .filter(([, device]) => device?.[metricKey]?.[scoreKey] !== undefined)
+      .map(([, device]) => ({
+        name: device.device || 'Device',
+        score: device[metricKey][scoreKey]
+      }));
+    const scores = items.map(item => Number(item.score) || 0);
+    const avg = scores.length ? (scores.reduce((sum, value) => sum + value, 0) / scores.length) : Number(summaryAverage) || 0;
+    const min = scores.length ? Math.min(...scores) : 0;
+    const max = scores.length ? Math.max(...scores) : 0;
+    const spread = scores.length ? Math.max(0, max - min) : 0;
+    const missingCount = Math.max(0, deviceEntries.length - items.length);
+    const lowestDevices = items
+      .slice()
+      .sort((a, b) => (a.score ?? 0) - (b.score ?? 0))
+      .slice(0, 2);
+    const highestDevices = items
+      .slice()
+      .sort((a, b) => (b.score ?? 0) - (a.score ?? 0))
+      .slice(0, 2);
+
+    const breakdown = renderDeviceScoreBreakdown(devices, metricKey, scoreKey, avg);
+    const categoryRecs = recommendations.filter(rec => rec.category === categoryLabel).slice(0, 3);
+
+    const criteriaList = criteria.length
+      ? `<ul style="margin: 0.25rem 0 0.75rem 1rem; color: var(--text-tertiary); font-size: 0.85rem;">
+          ${criteria.map(item => `<li>${item}</li>`).join('')}
+        </ul>`
+      : '';
+
+    const recList = categoryRecs.length
+      ? `<div style="display: grid; gap: 0.4rem;">
+           ${categoryRecs.map(rec => `
+             <div style="padding: 0.5rem 0.75rem; border-radius: 8px; background: rgba(255,255,255,0.04);">
+               <div style="font-weight: 600;">${rec.title}</div>
+               <div style="color: var(--text-tertiary); font-size: 0.85rem;">${rec.suggestion}</div>
+             </div>
+           `).join('')}
+         </div>`
+      : '<div style="color: var(--text-tertiary); font-size: 0.85rem;">No major issues flagged for this category.</div>';
+
+    let extraInsights = '';
+    if (metricKey === 'readability') {
+      const readabilityItems = deviceEntries
+        .map(([, device]) => ({
+          name: device.device || 'Device',
+          data: device.readability
+        }))
+        .filter(item => item.data && !item.data.error && item.data.totalElements);
+
+      if (!readabilityItems.length) {
+        extraInsights = `
+          <div style="margin-top: 0.75rem; color: var(--text-tertiary); font-size: 0.85rem;">
+            Readability details were not available for this scan. We will retry on the next run.
+          </div>
+        `;
+      } else {
+        const avgSmallFont = Math.round(readabilityItems.reduce((sum, item) => sum + (item.data.smallFontPercentage || 0), 0) / readabilityItems.length);
+        const avgLineHeight = Math.round(readabilityItems.reduce((sum, item) => sum + (item.data.goodLineHeightPercentage || 0), 0) / readabilityItems.length);
+        const totalElements = readabilityItems.reduce((sum, item) => sum + (item.data.totalElements || 0), 0);
+        const worst = readabilityItems.slice().sort((a, b) => (b.data.smallFontPercentage || 0) - (a.data.smallFontPercentage || 0))[0];
+
+        extraInsights = `
+          <div style="margin-top: 0.75rem; display: grid; gap: 0.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; font-size: 0.85rem; color: var(--text-tertiary);">
+              <div>Small text: <strong style="color: var(--text-primary);">${avgSmallFont}%</strong></div>
+              <div>Good line height: <strong style="color: var(--text-primary);">${avgLineHeight}%</strong></div>
+              <div>Elements checked: <strong style="color: var(--text-primary);">${totalElements}</strong></div>
+            </div>
+            ${worst ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Most small text on: <strong style="color: var(--text-primary);">${worst.name}</strong> (${Math.round(worst.data.smallFontPercentage || 0)}%).</div>` : ''}
+          </div>
+        `;
+      }
+    }
+
+    if (metricKey === 'performance') {
+      const perfItems = deviceEntries
+        .map(([, device]) => ({
+          name: device.device || 'Device',
+          data: device.performance
+        }))
+        .filter(item => item.data && !item.data.error);
+
+      if (!perfItems.length) {
+        extraInsights = `
+          <div style="margin-top: 0.75rem; color: var(--text-tertiary); font-size: 0.85rem;">
+            Performance timing metrics were not captured. Using score-only analysis.
+          </div>
+        `;
+      } else {
+        const avgDom = Math.round(perfItems.reduce((sum, item) => sum + (item.data.domContentLoaded || 0), 0) / perfItems.length);
+        const avgLoad = Math.round(perfItems.reduce((sum, item) => sum + (item.data.loadComplete || 0), 0) / perfItems.length);
+        const avgFcp = Math.round(perfItems.reduce((sum, item) => sum + (item.data.firstContentfulPaint || 0), 0) / perfItems.length);
+        const slowest = perfItems.slice().sort((a, b) => (b.data.loadComplete || 0) - (a.data.loadComplete || 0))[0];
+
+        extraInsights = `
+          <div style="margin-top: 0.75rem; display: grid; gap: 0.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; font-size: 0.85rem; color: var(--text-tertiary);">
+              <div>Avg DOM ready: <strong style="color: var(--text-primary);">${avgDom}ms</strong></div>
+              <div>Avg load: <strong style="color: var(--text-primary);">${avgLoad}ms</strong></div>
+              <div>Avg FCP: <strong style="color: var(--text-primary);">${avgFcp}ms</strong></div>
+            </div>
+            ${slowest ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Slowest load: <strong style="color: var(--text-primary);">${slowest.name}</strong> (${Math.round(slowest.data.loadComplete || 0)}ms).</div>` : ''}
+          </div>
+        `;
+      }
+    }
+
+    if (metricKey === 'accessibility') {
+      const a11yItems = deviceEntries
+        .map(([, device]) => ({
+          name: device.device || 'Device',
+          data: device.accessibility
+        }))
+        .filter(item => item.data && !item.data.error);
+
+      if (!a11yItems.length) {
+        extraInsights = `
+          <div style="margin-top: 0.75rem; color: var(--text-tertiary); font-size: 0.85rem;">
+            Accessibility detail checks were not captured. Using score-only analysis.
+          </div>
+        `;
+      } else {
+        const totalImages = a11yItems.reduce((sum, item) => sum + (item.data.totalImages || 0), 0);
+        const missingAlt = a11yItems.reduce((sum, item) => sum + (item.data.missingAlt || 0), 0);
+        const headingIssues = a11yItems.filter(item => item.data.headingIssues).length;
+        const altCoverage = totalImages ? Math.round(((totalImages - missingAlt) / totalImages) * 100) : 0;
+
+        extraInsights = `
+          <div style="margin-top: 0.75rem; display: grid; gap: 0.5rem;">
+            <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; font-size: 0.85rem; color: var(--text-tertiary);">
+              <div>Alt coverage: <strong style="color: var(--text-primary);">${altCoverage}%</strong></div>
+              <div>Images missing alt: <strong style="color: var(--text-primary);">${missingAlt}</strong></div>
+              <div>Heading issues: <strong style="color: var(--text-primary);">${headingIssues}</strong></div>
+            </div>
+          </div>
+        `;
+      }
+    }
+
+    const coverageLine = deviceEntries.length
+      ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Coverage: ${items.length}/${deviceEntries.length} devices scored${missingCount ? ` (missing ${missingCount})` : ''}.</div>`
+      : '';
+
+    const varianceLine = scores.length
+      ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Score spread: ${formatScore(spread)} points (best ${formatScore(max)}/100, lowest ${formatScore(min)}/100).</div>`
+      : `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Score spread not available. Using summary average ${formatScore(avg)}/100.</div>`;
+
+    const deviceHighlights = scores.length
+      ? `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;">
+          <div>
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">Lowest scoring</div>
+            ${lowestDevices.map(item => `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${item.name}: ${formatScore(item.score || 0)}/100</div>`).join('')}
+          </div>
+          <div>
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">Highest scoring</div>
+            ${highestDevices.map(item => `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${item.name}: ${formatScore(item.score || 0)}/100</div>`).join('')}
+          </div>
+        </div>`
+      : '';
+
+    return `
+      <div style="display: grid; gap: 0.75rem;">
+        ${breakdown}
+        <div class="report-shell__card">
+          <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
+            <div style="font-weight: 600; margin-bottom: 0.35rem;">Why this score?</div>
+            <div style="color: var(--text-tertiary); font-size: 0.9rem;">Measured on-device using the selected viewport(s).</div>
+            ${coverageLine}
+            ${varianceLine}
+            ${deviceHighlights}
+            ${extraInsights}
+            ${criteriaList}
+            <div style="font-weight: 600; margin: 0.75rem 0 0.35rem;">Top factors</div>
+            ${recList}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
   function createAllDiagnosticSections(data, firstDevice) {
     const sections = [];
     
@@ -477,7 +779,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderMobileSummarySection(stats) {
     return `
       <div class="section">
-        <h2>[SUMMARY]</h2>
+        <h2>Summary</h2>
         <div class="seo-summary">
           <div class="summary-stats">
             <div class="stat-item">
@@ -934,14 +1236,6 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         `).join('')}
       ` : '<p style="color: #888;">✅ No significant issues detected!</p>'}
-
-      <!-- Raw Data -->
-      <details style="margin-top: 2rem;">
-        <summary style="cursor: pointer; color: #888;">📋 View Raw Data</summary>
-        <pre style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 4px; overflow-x: auto; font-size: 0.75rem; margin-top: 1rem;">
-${JSON.stringify(data, null, 2)}
-        </pre>
-      </details>
     `;
 
     resultsContent.innerHTML = html;

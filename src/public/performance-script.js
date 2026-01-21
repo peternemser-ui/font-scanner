@@ -6,6 +6,47 @@
 // Deterministic analyzer key (stable forever)
 window.SM_ANALYZER_KEY = 'performance';
 
+/**
+ * MEMORY MANAGEMENT: Clean up previous scan data to prevent memory leaks
+ */
+function cleanupPreviousPerfData(container) {
+  // Clear report metadata from previous scans
+  document.body.removeAttribute('data-report-id');
+  document.body.removeAttribute('data-sm-screenshot-url');
+  document.body.removeAttribute('data-sm-scan-started-at');
+  
+  // Clear global results cache
+  if (window._perfFullResults) {
+    window._perfFullResults = null;
+  }
+  
+  // Clear results container
+  if (container) {
+    container.innerHTML = '';
+  }
+  
+  // Clear loading container
+  const loadingContainer = document.getElementById('loadingContainer');
+  if (loadingContainer) {
+    loadingContainer.innerHTML = '';
+  }
+  
+  // Remove patience message
+  const patienceMessage = document.getElementById('patience-message');
+  if (patienceMessage) {
+    patienceMessage.remove();
+  }
+  
+  // Destroy any Chart.js instances
+  if (window.Chart && Chart.instances) {
+    Object.values(Chart.instances).forEach(chart => {
+      try { chart.destroy(); } catch (e) { /* ignore */ }
+    });
+  }
+  
+  console.log('[Memory] Cleaned up previous performance scan data');
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
@@ -20,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
       showError('Please enter a URL');
       return;
     }
+
+    // MEMORY CLEANUP: Clear previous scan data
+    cleanupPreviousPerfData(resultsContainer);
 
     // Disable button during scan
     submitButton.disabled = true;
@@ -148,6 +192,20 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error(data.message || data.error || 'Performance analysis failed');
       }
 
+      // Set report metadata from API response
+      const reportId = (data.results && data.results.reportId) || (data && data.reportId) || '';
+      const screenshotUrl = (data.results && data.results.screenshotUrl) || (data && data.screenshotUrl) || '';
+      if (reportId) {
+        if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
+          window.ReportUI.setCurrentReportId(reportId);
+        } else {
+          document.body.setAttribute('data-report-id', reportId);
+        }
+      }
+      if (screenshotUrl) {
+        document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+      }
+
       if (data.success) {
         // Complete the loader
         loader.complete();
@@ -213,7 +271,7 @@ function displayPerformanceResults(results) {
   const summarySection = document.createElement('div');
   summarySection.className = 'section';
   summarySection.innerHTML = `
-    <h2>[PERFORMANCE_ANALYSIS_RESULTS]</h2>
+    <h2>Performance Analysis Results</h2>
     <p>>> url: ${results.url}</p>
     <p>>> timestamp: ${new Date(results.timestamp).toLocaleString()}</p>
     <p>>> analysis_duration: ${results.analysisDuration || 'N/A'}</p>
@@ -489,7 +547,7 @@ function displayPerformanceResults(results) {
     const comparisonSection = document.createElement('div');
     comparisonSection.className = 'section';
     comparisonSection.innerHTML = `
-      <h2>[DESKTOP_VS_MOBILE_COMPARISON]</h2>
+      <h2>Desktop vs Mobile Comparison</h2>
       <div style="padding-left: 1rem;">
         <p style="color: #00ff41; margin-bottom: 1.5rem;">>> Comprehensive analysis across both platforms</p>
         
@@ -716,7 +774,7 @@ function displayPerformanceResults(results) {
   createAccordionSection(container, 'resource-analysis', 'Resource Analysis', () => renderResourceAnalysisContent(results.resources), results.resources?.score || 0);
   createAccordionSection(container, 'network-performance', 'Network Performance', () => renderNetworkPerformanceContent(results.network), results.network?.score || 0);
   createAccordionSection(container, 'caching-optimization', 'Caching & Optimization', () => renderCachingOptimizationContent(results.caching), results.caching?.score || 0);
-  createAccordionSection(container, 'recommendations', 'Recommendations', () => renderRecommendationsContent(results.recommendations), null); // No score for recommendations
+  createAccordionSection(container, 'report-recommendations', 'Report and Recommendations', () => renderRecommendationsContent(results.recommendations), null, { isPro: true }); // Pro gated
 
   // Pro Report Block
   if (window.ProReportBlock && window.ProReportBlock.render) {
@@ -1333,7 +1391,7 @@ function renderCachingOptimizationContent(caching) {
     if (rate >= 80) return { color: '#00ff41', label: 'Excellent', icon: '✓' };
     if (rate >= 60) return { color: '#00ff41', label: 'Good', icon: '+' };
     if (rate >= 40) return { color: '#ffa500', label: 'Fair', icon: '~' };
-    return { color: '#ff4444', label: 'Poor', icon: 'H' };
+    return { color: '#ff4444', label: 'Poor', icon: '✗' };
   };
 
   const status = getCacheStatus(cacheRate);
@@ -1515,215 +1573,292 @@ function renderCachingOptimizationContent(caching) {
 }
 
 /**
- * Render Recommendations content
+ * Render Recommendations content - Accordion + Tabs Pattern
  */
 function renderRecommendationsContent(recommendations) {
-  const introSection = `
-    <div style="padding-left: 1rem; margin-bottom: 1.5rem;">
-      <div style="padding: 0.75rem 1rem; background: rgba(255,165,0,0.1); border-left: 3px solid #ffa500; border-radius: 4px;">
-        <p style="color: #ffa500; font-size: 0.9rem; margin: 0;">
-          ⓘ <strong>Cross-Platform Recommendations:</strong> These optimizations are analyzed based on both desktop and mobile performance to ensure comprehensive improvements.
-        </p>
-      </div>
-    </div>
-  `;
-  
   if (!recommendations || !recommendations.length) {
     return `
-      ${introSection}
-      <div style="padding: 2rem; text-align: center;">
-        <div style="font-size: 3rem; margin-bottom: 1rem;">!</div>
-        <h3 style="color: #00ff41; margin: 0 0 0.5rem 0;">Excellent Performance!</h3>
-        <p style="color: #c0c0c0;">No critical optimization recommendations at this time. Your site is performing well across both desktop and mobile!</p>
+      <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+          <span style="font-size: 1.5rem;">⚡</span> Excellent Performance!
+        </h3>
+        <p style="color: #86efac; margin: 0;">No critical optimization recommendations. Your site is performing well!</p>
       </div>
     `;
   }
 
-  // Group recommendations by priority
-  const high = recommendations.filter(r => r.priority === 'high');
-  const medium = recommendations.filter(r => r.priority === 'medium');
-  const low = recommendations.filter(r => r.priority === 'low');
+  // Sort by priority
+  const priorityOrder = { high: 0, medium: 1, low: 2 };
+  const sortedRecs = [...recommendations].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
 
-  const getPriorityBadge = (priority) => {
-    const styles = {
-      high: { bg: 'rgba(255,68,68,0.15)', color: '#ff4444', border: '#ff4444', icon: 'H', label: 'HIGH PRIORITY' },
-      medium: { bg: 'rgba(255,165,0,0.15)', color: '#ffa500', border: '#ffa500', icon: 'M', label: 'MEDIUM' },
-      low: { bg: 'rgba(0,204,255,0.15)', color: '#00ccff', border: '#00ccff', icon: 'L', label: 'LOW' }
-    };
-    return styles[priority] || styles.medium;
+  let html = `
+    <div class="perf-fixes-container" style="margin-top: 1rem;">
+      <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+        <span style="font-size: 1.75rem;">⚡</span> Performance Fixes
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${recommendations.length} improvements found)</span>
+      </h3>
+      <div class="perf-fixes-list">
+  `;
+
+  sortedRecs.forEach((rec, index) => {
+    html += renderPerfFixAccordion(rec, index);
+  });
+
+  html += `</div></div>`;
+
+  return html;
+}
+
+function renderPerfFixAccordion(rec, index) {
+  const accordionId = `perffix-${index}`;
+  const severityColors = {
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+    low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
   };
+  const style = severityColors[rec.priority] || severityColors.medium;
 
-  const renderRecommendationCard = (rec) => {
-    const badge = getPriorityBadge(rec.priority);
-    return `
-      <div style="
-        background: ${badge.bg};
-        border: 2px solid ${badge.border};
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 1.5rem;
-        position: relative;
-        overflow: hidden;
+  return `
+    <div class="perf-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="perf-fix-header" onclick="togglePerfFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
       ">
-        <!-- Priority Badge -->
-        <div style="
-          display: flex;
-          justify-content: space-between;
-          align-items: flex-start;
-          margin-bottom: 1rem;
-        ">
-          <div style="
-            background: ${badge.color}20;
-            border: 1px solid ${badge.color};
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${rec.title}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${rec.category || 'Performance'}</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
             padding: 0.25rem 0.75rem;
             border-radius: 20px;
             font-size: 0.75rem;
-            font-weight: bold;
-            color: ${badge.color};
-            letter-spacing: 1px;
-          ">
-            ${badge.icon} ${badge.label}
-          </div>
-          ${rec.category ? `
-            <div style="
-              color: #808080;
-              font-size: 0.85rem;
-              text-transform: uppercase;
-              letter-spacing: 1px;
-            ">
-              ${rec.category}
-            </div>
-          ` : ''}
-        </div>
-
-        <!-- Title -->
-        <h4 style="
-          color: ${badge.color};
-          font-size: 1.2rem;
-          margin: 0 0 0.75rem 0;
-          font-weight: bold;
-        ">
-          ⓘ ${rec.title}
-        </h4>
-
-        <!-- Description -->
-        <p style="
-          color: #e0e0e0;
-          font-size: 0.95rem;
-          line-height: 1.6;
-          margin: 0 0 1rem 0;
-        ">
-          ${rec.description}
-        </p>
-
-        <!-- Impact Badge -->
-        ${rec.impact ? `
-        <div style="
-          background: rgba(0,255,65,0.1);
-          border-left: 3px solid #00ff41;
-          padding: 0.75rem;
-          margin-bottom: 1rem;
-          border-radius: 4px;
-        ">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
-            C EXPECTED IMPACT
-          </div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">
-            ${rec.impact}
-          </div>
-        </div>
-        ` : ''}
-
-        <!-- Code Example -->
-        ${getCodeExample(rec.category, rec.title)}
-
-        <!-- Action Items -->
-        ${getActionItems(rec.category, rec.title)}
-      </div>
-    `;
-  };
-
-  return `
-    ${introSection}
-    <div style="padding-left: 1rem;">
-      <!-- Header with Summary -->
-      <div style="
-        background: linear-gradient(135deg, rgba(255,68,68,0.1), rgba(255,165,0,0.1));
-        border: 2px solid #ff4444;
-        border-radius: 8px;
-        padding: 1.5rem;
-        margin-bottom: 2rem;
-      ">
-        <h3 style="color: #ff4444; margin: 0 0 0.75rem 0; font-size: 1.5rem;">
-          ~ Performance Optimization Opportunities
-        </h3>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
-          ${high.length > 0 ? `
-          <div style="text-align: center; padding: 0.75rem; background: rgba(255,68,68,0.15); border-radius: 6px; border: 1px solid #ff4444;">
-            <div style="font-size: 2rem; color: #ff4444; font-weight: bold;">${high.length}</div>
-            <div style="color: #ff4444; font-size: 0.85rem; text-transform: uppercase;">High Priority</div>
-          </div>
-          ` : ''}
-          ${medium.length > 0 ? `
-          <div style="text-align: center; padding: 0.75rem; background: rgba(255,165,0,0.15); border-radius: 6px; border: 1px solid #ffa500;">
-            <div style="font-size: 2rem; color: #ffa500; font-weight: bold;">${medium.length}</div>
-            <div style="color: #ffa500; font-size: 0.85rem; text-transform: uppercase;">Medium Priority</div>
-          </div>
-          ` : ''}
-          ${low.length > 0 ? `
-          <div style="text-align: center; padding: 0.75rem; background: rgba(0,204,255,0.15); border-radius: 6px; border: 1px solid #00ccff;">
-            <div style="font-size: 2rem; color: #00ccff; font-weight: bold;">${low.length}</div>
-            <div style="color: #00ccff; font-size: 0.85rem; text-transform: uppercase;">Low Priority</div>
-          </div>
-          ` : ''}
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${(rec.priority || 'medium').toUpperCase()}</span>
+          <span class="perf-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
         </div>
       </div>
 
-      <!-- High Priority Recommendations -->
-      ${high.length > 0 ? `
-        <h4 style="color: #ff4444; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #ff4444; padding-bottom: 0.5rem;">
-          H HIGH PRIORITY - Address Immediately
-        </h4>
-        ${high.map(rec => renderRecommendationCard(rec)).join('')}
-      ` : ''}
-
-      <!-- Medium Priority Recommendations -->
-      ${medium.length > 0 ? `
-        <h4 style="color: #ffa500; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #ffa500; padding-bottom: 0.5rem;">
-          M MEDIUM PRIORITY - Plan for Next Sprint
-        </h4>
-        ${medium.map(rec => renderRecommendationCard(rec)).join('')}
-      ` : ''}
-
-      <!-- Low Priority Recommendations -->
-      ${low.length > 0 ? `
-        <h4 style="color: #00ccff; margin: 2rem 0 1rem 0; font-size: 1.3rem; border-bottom: 2px solid #00ccff; padding-bottom: 0.5rem;">
-          L LOW PRIORITY - Nice to Have
-        </h4>
-        ${low.map(rec => renderRecommendationCard(rec)).join('')}
-      ` : ''}
+      <div class="perf-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderPerfFixTabs(rec, accordionId)}
+        </div>
+      </div>
     </div>
   `;
 }
 
-/**
- * Get code example for specific recommendation
- */
-function getCodeExample(category, title) {
-  const examples = {
-    javascript: {
-      'Minimize JavaScript': `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            C CODE EXAMPLE
+function renderPerfFixTabs(rec, accordionId) {
+  const codeData = getPerfCodeExample(rec.category, rec.title);
+  const steps = getPerfActionItems(rec.category, rec.title);
+  
+  return `
+    <div class="perf-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="perf-fix-tab active" onclick="switchPerfFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Summary</button>
+      <button class="perf-fix-tab" onclick="switchPerfFixTab('${accordionId}', 'code')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">💻 Code</button>
+      <button class="perf-fix-tab" onclick="switchPerfFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🔧 Fix Guide</button>
+    </div>
+
+    <!-- Summary Tab -->
+    <div class="perf-fix-tab-content active" id="${accordionId}-summary">
+      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        ${rec.description || 'Optimize this area to improve performance.'}
+      </p>
+      ${rec.impact ? `
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+        <div style="color: #c0c0c0; font-size: 0.9rem;">${rec.impact}</div>
+      </div>
+      ` : ''}
+    </div>
+
+    <!-- Code Tab -->
+    <div class="perf-fix-tab-content" id="${accordionId}-code" style="display: none;">
+      <div style="display: grid; gap: 1rem;">
+        <!-- Current Issue -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
+            <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
+            <button onclick="copyPerfCode('${accordionId}-problem')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
           </div>
-          <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>// webpack.config.js
+          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${codeData.problem}</pre>
+        </div>
+
+        <!-- Fixed Code -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
+            <button onclick="copyPerfCode('${accordionId}-solution')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${codeData.solution}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fix Guide Tab -->
+    <div class="perf-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        ${steps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+    </div>
+  `;
+}
+
+// Toggle accordion
+function togglePerfFixAccordion(accordionId) {
+  const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  const content = document.getElementById(`${accordionId}-content`);
+  const icon = accordion?.querySelector('.perf-fix-expand-icon');
+
+  if (!accordion || !content) return;
+
+  const isExpanded = accordion.classList.contains('expanded');
+
+  if (isExpanded) {
+    accordion.classList.remove('expanded');
+    content.style.maxHeight = '0';
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  } else {
+    accordion.classList.add('expanded');
+    content.style.maxHeight = content.scrollHeight + 'px';
+    if (icon) icon.style.transform = 'rotate(180deg)';
+  }
+}
+
+// Switch tabs
+function switchPerfFixTab(accordionId, tabName) {
+  const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  if (!accordion) return;
+
+  const tabs = accordion.querySelectorAll('.perf-fix-tab');
+  const contents = accordion.querySelectorAll('.perf-fix-tab-content');
+
+  tabs.forEach(tab => {
+    tab.style.background = 'transparent';
+    tab.style.color = '#aaa';
+    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+    tab.classList.remove('active');
+  });
+  contents.forEach(content => {
+    content.style.display = 'none';
+    content.classList.remove('active');
+  });
+
+  const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+  const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+
+  if (activeTab) {
+    activeTab.style.background = 'rgba(255,255,255,0.1)';
+    activeTab.style.color = '#fff';
+    activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+    activeTab.classList.add('active');
+  }
+  if (activeContent) {
+    activeContent.style.display = 'block';
+    activeContent.classList.add('active');
+  }
+
+  // Update accordion height
+  const content = document.getElementById(`${accordionId}-content`);
+  if (content && accordion.classList.contains('expanded')) {
+    setTimeout(() => {
+      content.style.maxHeight = content.scrollHeight + 'px';
+    }, 50);
+  }
+}
+
+// Copy code
+function copyPerfCode(elementId) {
+  const codeElement = document.getElementById(elementId);
+  if (!codeElement) return;
+
+  const text = codeElement.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = codeElement.parentElement.querySelector('button');
+    if (btn) {
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = originalText; }, 2000);
+    }
+  });
+}
+
+/**
+ * Get code example for specific recommendation (problem + solution)
+ */
+function getPerfCodeExample(category, title) {
+  const examples = {
+    'Minimize JavaScript': {
+      problem: `<!-- Current: Large unoptimized bundle -->
+<script src="/bundle.js"></script>
+<!-- 500KB+ JavaScript blocking render -->
+<!-- ✗ No code splitting -->
+<!-- ✗ No tree shaking -->
+<!-- ✗ Vendor code bundled with app -->`,
+      solution: `// webpack.config.js
 optimization: {
   splitChunks: {
     chunks: 'all',
     cacheGroups: {
       vendor: {
-        test: /[\\\\/]node_modules[\\\\/]/,
+        test: /[\\/]node_modules[\\/]/,
         name: 'vendors',
         priority: 10
       }
@@ -1731,317 +1866,138 @@ optimization: {
   },
   usedExports: true, // Tree shaking
   minimize: true
-}</code></pre>
-        </div>
-      `
-    },
-    images: {
-      'Optimize Images': `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            C CODE EXAMPLE
-          </div>
-          <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>&lt;!-- Use modern image formats with fallbacks --&gt;
-&lt;picture&gt;
-  &lt;source srcset="image.avif" type="image/avif"&gt;
-  &lt;source srcset="image.webp" type="image/webp"&gt;
-  &lt;img src="image.jpg" alt="Description" loading="lazy"&gt;
-&lt;/picture&gt;
-
-&lt;!-- Or use responsive images --&gt;
-&lt;img srcset="small.jpg 480w, medium.jpg 800w, large.jpg 1200w"
-     sizes="(max-width: 600px) 480px, (max-width: 900px) 800px, 1200px"
-     src="large.jpg" alt="Description" loading="lazy"&gt;</code></pre>
-        </div>
-      `
-    },
-    css: {
-      'Reduce CSS Size': `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            C CODE EXAMPLE
-          </div>
-          <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>// Remove unused CSS with PurgeCSS
-module.exports = {
-  content: ['./src/**/*.{html,js,jsx,ts,tsx}'],
-  css: ['./src/**/*.css'],
-  output: './dist/styles.css',
-  safelist: ['active', 'disabled'] // Keep these classes
 }
 
-// Or use Critical CSS
-&lt;style&gt;
-  /* Inline critical above-the-fold CSS */
+<!-- Result: Smaller, split bundles -->
+<script src="/vendors.js" defer></script>
+<script src="/app.js" defer></script>`
+    },
+    'Optimize Images': {
+      problem: `<!-- Current: Unoptimized images -->
+<img src="hero.png" alt="Hero">
+<!-- ✗ PNG instead of WebP/AVIF -->
+<!-- ✗ No srcset for responsive -->
+<!-- ✗ No lazy loading -->
+<!-- ✗ 2MB image file -->`,
+      solution: `<!-- Optimized with modern formats -->
+<picture>
+  <source srcset="hero.avif" type="image/avif">
+  <source srcset="hero.webp" type="image/webp">
+  <img src="hero.jpg" alt="Hero" loading="lazy"
+       srcset="hero-400.jpg 400w, hero-800.jpg 800w"
+       sizes="(max-width: 600px) 400px, 800px">
+</picture>
+<!-- ✓ Modern formats (90% smaller) -->
+<!-- ✓ Responsive images -->
+<!-- ✓ Lazy loading -->`
+    },
+    'Reduce CSS Size': {
+      problem: `<!-- Current: Large CSS file -->
+<link rel="stylesheet" href="styles.css">
+<!-- ✗ 200KB+ CSS file -->
+<!-- ✗ Unused styles included -->
+<!-- ✗ Render-blocking -->`,
+      solution: `<!-- Critical CSS inline -->
+<style>
+  /* Above-the-fold styles only */
   .hero { ... }
   .nav { ... }
-&lt;/style&gt;
-&lt;link rel="preload" href="styles.css" as="style"&gt;
-&lt;link rel="stylesheet" href="styles.css"&gt;</code></pre>
-        </div>
-      `
+</style>
+<!-- Non-critical CSS async -->
+<link rel="preload" href="styles.css" as="style" 
+      onload="this.onload=null;this.rel='stylesheet'">
+<!-- ✓ Critical CSS inlined -->
+<!-- ✓ Non-blocking load -->`
     },
-    caching: {
-      'Improve Caching Strategy': `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            � CODE EXAMPLE
-          </div>
-          <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>// Nginx configuration
-location ~* \\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2)$ {
+    'Improve Caching Strategy': {
+      problem: `<!-- Current: No caching headers -->
+Cache-Control: no-cache
+<!-- ✗ Assets re-downloaded every visit -->
+<!-- ✗ Slow repeat visits -->`,
+      solution: `# Nginx configuration
+location ~* \\.(js|css|png|jpg|woff2)$ {
   expires 1y;
   add_header Cache-Control "public, immutable";
 }
 
-location ~* \\.(html)$ {
+location ~* \\.html$ {
   expires 1h;
   add_header Cache-Control "public, must-revalidate";
 }
-
-// Apache .htaccess
-&lt;FilesMatch "\\.(js|css|png|jpg|jpeg|gif|svg|woff|woff2)$"&gt;
-  Header set Cache-Control "max-age=31536000, public, immutable"
-&lt;/FilesMatch&gt;</code></pre>
-        </div>
-      `
+<!-- ✓ Static assets cached 1 year -->
+<!-- ✓ HTML revalidated hourly -->`
     },
-    compression: {
-      'Enable Text Compression': `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            C CODE EXAMPLE
-          </div>
-          <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>// Nginx - Enable Gzip
+    'Enable Text Compression': {
+      problem: `<!-- Current: No compression -->
+Content-Encoding: identity
+<!-- ✗ 500KB transferred -->
+<!-- ✗ Slow on mobile networks -->`,
+      solution: `# Enable Gzip in Nginx
 gzip on;
 gzip_vary on;
-gzip_types text/plain text/css text/xml text/javascript 
-           application/javascript application/json 
-           application/xml+rss application/rss+xml;
+gzip_types text/plain text/css application/javascript 
+           application/json;
 gzip_min_length 1000;
 gzip_comp_level 6;
 
-// Node.js/Express - Compression middleware
-const compression = require('compression');
-app.use(compression({
-  level: 6,
-  threshold: 1024, // Only compress files > 1KB
-  filter: (req, res) => {
-    if (req.headers['x-no-compression']) return false;
-    return compression.filter(req, res);
-  }
-}));</code></pre>
-        </div>
-      `
-    },
-    vitals: {
-      'Optimize Largest Contentful Paint (LCP)': `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            C CODE EXAMPLE
-          </div>
-          <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>&lt;!-- Preload LCP image --&gt;
-&lt;link rel="preload" as="image" href="hero.jpg" 
-      imagesrcset="hero-400.jpg 400w, hero-800.jpg 800w, hero-1200.jpg 1200w"
-      imagesizes="100vw"&gt;
-
-&lt;!-- Optimize hero image --&gt;
-&lt;img src="hero.jpg" 
-     srcset="hero-400.jpg 400w, hero-800.jpg 800w, hero-1200.jpg 1200w"
-     sizes="100vw"
-     alt="Hero"
-     fetchpriority="high"&gt;
-
-&lt;!-- Avoid render-blocking resources --&gt;
-&lt;link rel="stylesheet" href="styles.css" media="print" onload="this.media='all'"&gt;</code></pre>
-        </div>
-      `,
-      'Reduce Cumulative Layout Shift (CLS)': `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            C CODE EXAMPLE
-          </div>
-          <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>&lt;!-- Reserve space for images --&gt;
-&lt;img src="image.jpg" width="800" height="600" alt="Description"&gt;
-
-&lt;!-- Or use aspect-ratio CSS --&gt;
-&lt;style&gt;
-  .image-container {
-    aspect-ratio: 16 / 9;
-    width: 100%;
-  }
-  .image-container img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-&lt;/style&gt;
-
-&lt;!-- Reserve space for ads/embeds --&gt;
-&lt;div style="min-height: 250px;"&gt;
-  &lt;!-- Ad content loads here --&gt;
-&lt;/div&gt;</code></pre>
-        </div>
-      `
-    },
-    fonts: {
-      'Optimize Web Fonts': `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            C CODE EXAMPLE
-          </div>
-          <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>&lt;!-- Preload critical fonts --&gt;
-&lt;link rel="preload" href="font.woff2" as="font" type="font/woff2" crossorigin&gt;
-
-&lt;!-- Use font-display: swap --&gt;
-@font-face {
-  font-family: 'CustomFont';
-  src: url('font.woff2') format('woff2');
-  font-display: swap; /* Show fallback immediately */
-  font-weight: 400;
-  font-style: normal;
-}
-
-&lt;!-- Subset fonts to needed characters --&gt;
-&lt;link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap&text=ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789" rel="stylesheet"&gt;</code></pre>
-        </div>
-      `
-    },
-    network: {
-      'Reduce HTTP Requests': `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.5rem;">
-            C CODE EXAMPLE
-          </div>
-          <pre style="margin: 0; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem;"><code>// Bundle JavaScript modules
-import { module1 } from './module1';
-import { module2 } from './module2';
-// Webpack bundles these into one file
-
-// Use CSS sprites for small images
-.icon-home { background: url('sprites.png') 0 0; }
-.icon-user { background: url('sprites.png') -20px 0; }
-
-// Inline small, critical resources
-&lt;style&gt;/* Critical CSS */&lt;/style&gt;
-&lt;script&gt;/* Small inline script */&lt;/script&gt;
-
-// Use HTTP/2 Server Push
-Link: &lt;/styles.css&gt;; rel=preload; as=style
-Link: &lt;/app.js&gt;; rel=preload; as=script</code></pre>
-        </div>
-      `
+# Result:
+Content-Encoding: gzip
+<!-- ✓ 100KB transferred (80% smaller) -->`
     }
   };
-
-  const categoryExamples = examples[category];
-  if (categoryExamples && categoryExamples[title]) {
-    return categoryExamples[title];
-  }
-
-  return '';
+  
+  const defaultExample = {
+    problem: `<!-- Common performance issue -->
+<!-- ✗ Unoptimized resource loading -->
+<!-- ✗ Blocking render -->`,
+    solution: `<!-- Optimized implementation -->
+<!-- ✓ Async/defer loading -->
+<!-- ✓ Proper caching -->
+<!-- ✓ Compression enabled -->`
+  };
+  
+  return examples[title] || defaultExample;
 }
 
 /**
  * Get action items for specific recommendation
  */
-function getActionItems(category, title) {
-  const actions = {
-    javascript: {
-      'Minimize JavaScript': [
-        'Run a bundle analyzer to identify large dependencies',
-        'Implement code splitting for route-based chunks',
-        'Enable tree shaking in your build configuration',
-        'Consider lazy loading non-critical components'
-      ]
-    },
-    images: {
-      'Optimize Images': [
-        'Convert images to WebP or AVIF format',
-        'Implement responsive images with srcset',
-        'Add loading="lazy" to below-the-fold images',
-        'Use image CDN for automatic optimization',
-        'Compress images with tools like ImageOptim or Squoosh'
-      ]
-    },
-    css: {
-      'Reduce CSS Size': [
-        'Remove unused CSS with PurgeCSS or UnCSS',
-        'Minify CSS files in production build',
-        'Extract and inline critical CSS',
-        'Avoid importing entire CSS frameworks',
-        'Use CSS modules or scoped styles'
-      ]
-    },
-    caching: {
-      'Improve Caching Strategy': [
-        'Add Cache-Control headers to static assets',
-        'Use versioning/hashing for cache busting',
-        'Implement service worker for offline caching',
-        'Configure CDN caching rules',
-        'Add ETags for validation'
-      ]
-    },
-    compression: {
-      'Enable Text Compression': [
-        'Enable Gzip or Brotli compression on server',
-        'Verify compression for all text-based resources',
-        'Check compression headers in Network tab',
-        'Pre-compress static files during build',
-        'Configure compression level (6 is optimal)'
-      ]
-    },
-    vitals: {
-      'Optimize Largest Contentful Paint (LCP)': [
-        'Preload the LCP image or resource',
-        'Optimize server response time (TTFB)',
-        'Remove render-blocking JavaScript and CSS',
-        'Use a CDN for faster asset delivery',
-        'Implement server-side rendering or static generation'
-      ],
-      'Reduce Cumulative Layout Shift (CLS)': [
-        'Set explicit width and height on images and videos',
-        'Reserve space for ads, embeds, and dynamic content',
-        'Avoid inserting content above existing content',
-        'Use transform animations instead of layout properties',
-        'Preload fonts and use font-display: swap'
-      ]
-    },
-    fonts: {
-      'Optimize Web Fonts': [
-        'Preload critical fonts used above the fold',
-        'Use font-display: swap to prevent invisible text',
-        'Subset fonts to only needed characters',
-        'Self-host fonts instead of using Google Fonts',
-        'Use WOFF2 format for better compression'
-      ]
-    },
-    network: {
-      'Reduce HTTP Requests': [
-        'Bundle JavaScript and CSS files',
-        'Use CSS sprites for small icons',
-        'Inline critical small resources',
-        'Combine third-party scripts where possible',
-        'Enable HTTP/2 for multiplexing'
-      ]
-    }
+function getPerfActionItems(category, title) {
+  const items = {
+    'Minimize JavaScript': [
+      'Enable code splitting in your bundler (webpack/vite)',
+      'Use tree shaking to remove unused code',
+      'Split vendor code from application code',
+      'Add defer attribute to non-critical scripts'
+    ],
+    'Optimize Images': [
+      'Convert images to WebP or AVIF format',
+      'Implement responsive images with srcset',
+      'Add loading="lazy" to below-fold images',
+      'Use an image CDN for automatic optimization'
+    ],
+    'Reduce CSS Size': [
+      'Extract and inline critical CSS',
+      'Remove unused CSS with PurgeCSS',
+      'Load non-critical CSS asynchronously'
+    ],
+    'Improve Caching Strategy': [
+      'Set Cache-Control headers for static assets',
+      'Use content-based hashing in filenames',
+      'Configure 1-year cache for immutable assets'
+    ],
+    'Enable Text Compression': [
+      'Enable Gzip or Brotli compression on server',
+      'Verify compression with browser DevTools',
+      'Set minimum size threshold (1KB)'
+    ]
   };
-
-  const categoryActions = actions[category];
-  if (categoryActions && categoryActions[title]) {
-    return `
-      <div style="background: rgba(0,204,255,0.1); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-        <div style="color: #00ccff; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.75rem;">
-          ✓ ACTION ITEMS
-        </div>
-        <ul style="margin: 0; padding-left: 1.5rem; color: #c0c0c0; font-size: 0.9rem;">
-          ${categoryActions[title].map(action => `
-            <li style="margin-bottom: 0.5rem;">${action}</li>
-          `).join('')}
-        </ul>
-      </div>
-    `;
-  }
-
-  return '';
+  
+  return items[title] || [
+    'Analyze current implementation',
+    'Apply recommended optimizations', 
+    'Test and measure improvements'
+  ];
 }
 
 // Helper functions - Traditional traffic light system
@@ -2085,7 +2041,7 @@ function formatBytes(bytes, decimals = 2) {
 function getLoadingHTML() {
   return `
     <div class="section">
-      <h2>[ANALYZING]</h2>
+      <h2>Analyzing...</h2>
       <div style="padding-left: 1rem;">
         <p>>> running comprehensive performance analysis...</p>
         <p>>> measuring core web vitals...</p>
@@ -2102,7 +2058,7 @@ function showError(message) {
   const container = document.getElementById('perfResults');
   container.innerHTML = `
     <div class="section">
-      <h2 style="color: #ff0000;">[ERROR]</h2>
+      <h2 style="color: #ff0000;">Error</h2>
       <div style="padding-left: 1rem;">
         <p>>> analysis_failed</p>
         <p style="color: #ff6600;">>> ${message}</p>
@@ -2119,7 +2075,7 @@ function showError(message) {
 function getCrossBrowserLoadingHTML() {
   return `
     <div class="section">
-      <h2>[CROSS_BROWSER_ANALYSIS]</h2>
+      <h2>Cross-Browser Analysis</h2>
       <div style="padding-left: 1rem;">
         <p>>> running desktop analysis (Lighthouse)...</p>
         <p>>> running mobile analysis (Lighthouse)...</p>
@@ -2146,7 +2102,7 @@ function displayCrossBrowserResults(results) {
   const summarySection = document.createElement('div');
   summarySection.className = 'section';
   summarySection.innerHTML = `
-    <h2>[CROSS_BROWSER_COMPARISON_RESULTS]</h2>
+    <h2>Cross-Browser Comparison Results</h2>
     <p>>> url: ${results.url}</p>
     <p>>> timestamp: ${new Date(results.timestamp).toLocaleString()}</p>
     <p>>> analysis_duration: ${results.duration ? `${(results.duration / 1000).toFixed(1)}s` : 'N/A'}</p>

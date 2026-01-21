@@ -11,15 +11,16 @@
     const color = getScoreColor(safeScore);
     const circumference = 2 * Math.PI * 75;
     const dash = (safeScore / 100) * circumference;
+    const dashOffset = -(circumference * 0.25);
     return `
-      <div class="report-shell__summary-card">
+      <div class="report-shell__summary-card" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
         <div class="report-shell__summary-label">${label}</div>
-        <svg class="report-shell__donut" viewBox="0 0 180 180">
-          <circle cx="90" cy="90" r="75" fill="none" stroke="var(--donut-track, rgba(255,255,255,0.08))" stroke-width="12"></circle>
-          <circle cx="90" cy="90" r="75" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${dash} ${circumference}" transform="rotate(-90 90 90)" style="filter: drop-shadow(0 0 12px ${color}50);"></circle>
-          <text x="90" y="90" text-anchor="middle" dy="0.35em" fill="${color}" stroke="rgba(0,0,0,0.65)" stroke-width="2" paint-order="stroke fill">${typeof score === 'number' && !Number.isNaN(score) ? safeScore : '—'}</text>
+        <svg class="report-shell__donut" viewBox="0 0 180 180" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
+          <circle cx="90" cy="90" r="75" fill="none" stroke="#e5e7eb" stroke-width="12"></circle>
+          <circle cx="90" cy="90" r="75" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${dash} ${circumference}" stroke-dashoffset="${dashOffset}" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;"></circle>
+          <text x="90" y="90" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="36" font-weight="700" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">${typeof score === 'number' && !Number.isNaN(score) ? safeScore : '—'}</text>
         </svg>
-        <div class="report-shell__donut-grade" style="color:${color};">${typeof score === 'number' && !Number.isNaN(score) ? `${safeScore}/100` : '—'}</div>
+        <div class="report-shell__donut-grade" style="color:${color}; -webkit-print-color-adjust: exact; print-color-adjust: exact;">${typeof score === 'number' && !Number.isNaN(score) ? `${safeScore}/100` : '—'}</div>
       </div>
     `;
   }
@@ -58,9 +59,13 @@
       full: 'Lighthouse Audit',
       cwv: 'Core Web Vitals',
       quick: 'Quick Scan',
-      performance: 'Performance Analysis'
+      performance: 'Performance Analysis',
+      security: 'Security Audit',
+      seo: 'SEO Analysis',
+      accessibility: 'Accessibility Audit',
+      fonts: 'Font Analysis'
     };
-    const displayTitle = modeTitles[mode] || 'Performance Analysis';
+    const displayTitle = modeTitles[mode] || 'Analysis Results';
 
     return `
       <div class="section" style="margin-bottom: 1.5rem;">

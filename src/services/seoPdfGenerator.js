@@ -9,6 +9,8 @@ const {
   addPdfHeader,
   addMaterialSectionHeader,
   checkPageBreakNeeded,
+  ensureFreshPage,
+  heightCalculators,
   getScoreColor,
   getGrade,
   drawScoreSummaryCard,
@@ -19,7 +21,8 @@ const {
 const {
   drawBarChart,
   drawPieChart,
-  drawProgressBar
+  drawProgressBar,
+  drawGaugeChart
 } = require('../utils/pdfCharts');
 
 const logger = createLogger('SEOPdfGenerator');
@@ -229,7 +232,10 @@ class SEOPdfGenerator {
    * Add headings structure with bar chart
    */
   addHeadingsStructure(doc, headings) {
-    checkPageBreakNeeded(doc, 250);
+    // Start on new page if past halfway for clean layout
+    if (doc.y > 400) {
+      doc.addPage();
+    }
     addMaterialSectionHeader(doc, 'Headings Structure', {
       description: 'H1-H6 hierarchy and distribution'
     });
@@ -296,10 +302,11 @@ class SEOPdfGenerator {
   }
 
   /**
-   * Add image analysis with pie chart
+   * Add image analysis matching the web UI layout
    */
   addImageAnalysis(doc, images) {
-    checkPageBreakNeeded(doc, 300);
+    // Start on new page for clean layout
+    doc.addPage();
     addMaterialSectionHeader(doc, 'Image Analysis', {
       description: 'Alt text coverage and optimization'
     });
@@ -312,72 +319,215 @@ class SEOPdfGenerator {
     }
 
     const summary = images.summary;
+    const totalImages = summary.totalImages || 0;
+    const withAlt = summary.withAltText || 0;
+    const withoutAlt = summary.withoutAltText || totalImages - withAlt;
+    const altTextCoverage = totalImages > 0 ? (withAlt / totalImages) * 100 : 0;
+    const overallScore = summary.score || Math.round(altTextCoverage);
 
-    // Pie chart for alt text distribution
-    if (summary.totalImages > 0) {
-      const pieData = [
-        {
-          label: 'With Alt Text',
-          value: summary.withAltText || 0,
-          color: COLORS.success
-        },
-        {
-          label: 'Without Alt Text',
-          value: summary.withoutAltText || 0,
-          color: COLORS.error
+    // Image Optimization Overview - 3 gauge charts
+    doc.fontSize(11)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.textPrimary)
+       .text('Image Optimization Overview', 50, doc.y);
+
+    doc.moveDown(1);
+
+    // Position gauges - y is the CENTER of the arc (arc draws above this point)
+    const gaugeY = doc.y + 60; // Give space for the arc to draw above
+    const gaugeRadius = 55;
+
+    // Alt Text Coverage gauge (left)
+    drawGaugeChart(doc, altTextCoverage, 'Alt Text Coverage', 130, gaugeY, {
+      radius: gaugeRadius,
+      width: 12,
+      showValue: true,
+      showLabel: true
+    });
+
+    // Images Found gauge (center) - show count instead of percentage
+    drawGaugeChart(doc, 0, 'Images Found', 306, gaugeY, {
+      radius: gaugeRadius,
+      width: 12,
+      showValue: false,
+      showLabel: true
+    });
+    // Draw count in center manually (positioned in the arc)
+    const countY = gaugeY - gaugeRadius / 2;
+    doc.font('Helvetica-Bold')
+       .fontSize(22)
+       .fillColor(COLORS.textPrimary)
+       .text(totalImages.toString(), 306 - gaugeRadius, countY, { 
+         width: gaugeRadius * 2, 
+         align: 'center' 
+       });
+
+    // Overall Score gauge (right)
+    drawGaugeChart(doc, overallScore, 'Overall Score', 482, gaugeY, {
+      radius: gaugeRadius,
+      width: 12,
+      showValue: true,
+      showLabel: true
+    });
+
+    doc.y = gaugeY + 70; // Move past gauges and labels
+    doc.moveDown(1);
+
+    // Image Statistics - Progress bars
+    checkPageBreakNeeded(doc, 180);
+
+    doc.fontSize(11)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.textPrimary)
+       .text('Image Statistics', 50, doc.y);
+
+    doc.moveDown(0.5);
+
+    // With Alt progress bar
+    const withAltPercent = totalImages > 0 ? (withAlt / totalImages) * 100 : 0;
+    drawProgressBar(doc, withAltPercent, `With Alt: ${withAlt}`, 50, doc.y, {
+      width: 450,
+      height: 20,
+      showPercentage: false,
+      color: COLORS.success
+    });
+    doc.y += 35;
+
+    // Missing Alt progress bar
+    const missingAltPercent = totalImages > 0 ? (withoutAlt / totalImages) * 100 : 0;
+    drawProgressBar(doc, missingAltPercent, `Missing Alt: ${withoutAlt}`, 50, doc.y, {
+      width: 450,
+      height: 20,
+      showPercentage: false,
+      color: COLORS.error
+    });
+    doc.y += 35;
+
+    // Total Images progress bar
+    drawProgressBar(doc, 100, `Total Images: ${totalImages}`, 50, doc.y, {
+      width: 450,
+      height: 20,
+      showPercentage: false,
+      color: COLORS.primary
+    });
+    doc.y += 35;
+
+    doc.moveDown(1);
+
+    // Image Details table - starts on new page for clean layout
+    if (images.details && images.details.length > 0) {
+      // Calculate if table needs new page (header + first few rows)
+      const tableHeaderHeight = 30;
+      const rowHeight = 30;
+      const minRowsToShow = 3;
+      const neededForTable = tableHeaderHeight + (minRowsToShow * rowHeight) + 40;
+      
+      // If we can't fit header + at least 3 rows, start new page
+      if (doc.y + neededForTable > 700) {
+        doc.addPage();
+      }
+
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text('Image Details', 50, doc.y);
+
+      doc.moveDown(0.5);
+
+      // Table header
+      const tableX = 50;
+      const colWidths = { url: 150, dimensions: 70, alt: 100, status: 50, rec: 140 };
+      let tableY = doc.y;
+
+      doc.fontSize(8)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textSecondary);
+
+      doc.text('Image URL', tableX, tableY);
+      doc.text('Dimensions', tableX + colWidths.url, tableY);
+      doc.text('Alt Text', tableX + colWidths.url + colWidths.dimensions, tableY);
+      doc.text('Status', tableX + colWidths.url + colWidths.dimensions + colWidths.alt, tableY);
+      doc.text('Recommendation', tableX + colWidths.url + colWidths.dimensions + colWidths.alt + colWidths.status, tableY);
+
+      tableY += 15;
+
+      // Draw separator line
+      doc.strokeColor(COLORS.border)
+         .lineWidth(0.5)
+         .moveTo(tableX, tableY)
+         .lineTo(tableX + 510, tableY)
+         .stroke();
+
+      tableY += 8;
+
+      // Table rows - check page break before each row
+      const displayImages = images.details.slice(0, 15); // Show up to 15 rows
+
+      displayImages.forEach((img, index) => {
+        // Check if row will overflow - if so, start new page with header
+        if (tableY + rowHeight > 720) {
+          doc.addPage();
+          tableY = 50;
+          
+          // Redraw header on new page
+          doc.fontSize(8)
+             .font('Helvetica-Bold')
+             .fillColor(COLORS.textSecondary);
+          doc.text('Image URL', tableX, tableY);
+          doc.text('Dimensions', tableX + colWidths.url, tableY);
+          doc.text('Alt Text', tableX + colWidths.url + colWidths.dimensions, tableY);
+          doc.text('Status', tableX + colWidths.url + colWidths.dimensions + colWidths.alt, tableY);
+          doc.text('Recommendation', tableX + colWidths.url + colWidths.dimensions + colWidths.alt + colWidths.status, tableY);
+          tableY += 15;
+          doc.strokeColor(COLORS.border)
+             .lineWidth(0.5)
+             .moveTo(tableX, tableY)
+             .lineTo(tableX + 510, tableY)
+             .stroke();
+          tableY += 8;
         }
-      ];
 
-      const chartHeight = drawPieChart(doc, pieData, 150, doc.y + 80, {
-        radius: 60,
-        donutWidth: 20,
-        showLegend: true,
-        showPercentages: true
+        doc.fontSize(7)
+           .font('Helvetica')
+           .fillColor(COLORS.textPrimary);
+
+        // Image URL (truncated)
+        const urlDisplay = img.src ? img.src.substring(0, 25) + (img.src.length > 25 ? '...' : '') : 'Unknown';
+        doc.text(urlDisplay, tableX, tableY, { width: colWidths.url - 5 });
+
+        // Dimensions
+        const dims = img.dimensions || `${img.width || 0}x${img.height || 0}`;
+        doc.text(dims, tableX + colWidths.url, tableY);
+
+        // Alt Text
+        const altText = img.alt ? img.alt.substring(0, 15) + (img.alt.length > 15 ? '...' : '') : '✗ Missing';
+        doc.fillColor(img.alt ? COLORS.textPrimary : COLORS.error)
+           .text(altText, tableX + colWidths.url + colWidths.dimensions, tableY, { width: colWidths.alt - 5 });
+
+        // Status
+        doc.fillColor(img.alt ? COLORS.success : COLORS.error)
+           .text(img.alt ? 'Pass' : 'Fail', tableX + colWidths.url + colWidths.dimensions + colWidths.alt, tableY);
+
+        // Recommendation
+        doc.fillColor(COLORS.textSecondary)
+           .text(
+             img.alt ? 'Descriptive, helps SEO' : 'Add descriptive alt text for SEO + screen readers',
+             tableX + colWidths.url + colWidths.dimensions + colWidths.alt + colWidths.status,
+             tableY,
+             { width: colWidths.rec - 5 }
+           );
+
+        tableY += rowHeight;
       });
 
-      doc.y += chartHeight + 20;
-    }
-
-    // Optimization status
-    if (summary.oversized !== undefined) {
-      const optimized = summary.totalImages - summary.oversized;
-      const optimizedPercentage = summary.totalImages > 0 ?
-        (optimized / summary.totalImages) * 100 : 100;
-
-      const progressHeight = drawProgressBar(
-        doc,
-        optimizedPercentage,
-        `Optimized Images: ${optimized}/${summary.totalImages}`,
-        60,
-        doc.y,
-        { width: 400, showPercentage: true }
-      );
-
-      doc.y += progressHeight;
-      doc.moveDown(1);
-    }
-
-    // Sample images without alt text
-    if (images.details) {
-      const imagesWithoutAlt = images.details.filter(img => !img.alt).slice(0, 3);
-      if (imagesWithoutAlt.length > 0) {
-        doc.fontSize(10)
-           .font('Helvetica-Bold')
-           .fillColor(COLORS.textPrimary)
-           .text('Images Missing Alt Text:', 60, doc.y);
-
-        doc.moveDown(0.3);
-
-        imagesWithoutAlt.forEach(img => {
-          doc.fontSize(8)
-             .font('Helvetica')
-             .fillColor(COLORS.textSecondary)
-             .text(`• ${img.src.substring(0, 70)}${img.src.length > 70 ? '...' : ''}`,
-                   70, doc.y, { width: 475 });
-        });
-
-        doc.moveDown(1);
+      if (images.details.length > 15) {
+        doc.fontSize(8)
+           .fillColor(COLORS.textSecondary)
+           .text(`... and ${images.details.length - 15} more images`, tableX, tableY);
+        tableY += 15;
       }
+
+      doc.y = tableY + 10;
     }
 
     doc.moveDown(1);
@@ -387,7 +537,10 @@ class SEOPdfGenerator {
    * Add content analysis with bar chart
    */
   addContentAnalysis(doc, content) {
-    checkPageBreakNeeded(doc, 300);
+    // Start on new page for clean layout
+    if (doc.y > 350) {
+      doc.addPage();
+    }
     addMaterialSectionHeader(doc, 'Content Analysis', {
       description: 'Word count, readability, and keyword usage'
     });
@@ -457,7 +610,10 @@ class SEOPdfGenerator {
    * Add technical SEO checklist
    */
   addTechnicalSEO(doc, technical) {
-    checkPageBreakNeeded(doc, 200);
+    // Start on new page if past halfway
+    if (doc.y > 400) {
+      doc.addPage();
+    }
     addMaterialSectionHeader(doc, 'Technical SEO', {
       description: 'Technical implementation and best practices'
     });
@@ -525,11 +681,12 @@ class SEOPdfGenerator {
   }
 
   /**
-   * Add recommendations with priority grouping
+   * Add recommendations with priority grouping - Full content with fixes
    */
   addRecommendations(doc, recommendations) {
-    checkPageBreakNeeded(doc, 150);
-    addMaterialSectionHeader(doc, 'Recommendations', {
+    // Start recommendations on new page for clean layout
+    doc.addPage();
+    addMaterialSectionHeader(doc, 'SEO Recommendations', {
       description: 'Actionable improvements for better SEO'
     });
 
@@ -540,75 +697,117 @@ class SEOPdfGenerator {
       return;
     }
 
-    // Group by priority
-    const high = recommendations.filter(r => r.priority === 'high').slice(0, 5);
-    const medium = recommendations.filter(r => r.priority === 'medium').slice(0, 5);
-    const low = recommendations.filter(r => r.priority === 'low').slice(0, 5);
+    // Group by priority - show all recommendations
+    const high = recommendations.filter(r => r.priority === 'high');
+    const medium = recommendations.filter(r => r.priority === 'medium');
+    const low = recommendations.filter(r => r.priority === 'low');
 
     // High priority
     if (high.length > 0) {
       doc.fontSize(11)
          .font('Helvetica-Bold')
          .fillColor(COLORS.error)
-         .text('High Priority', 60, doc.y);
+         .text('🔴 High Priority', 60, doc.y);
 
       doc.moveDown(0.5);
 
-      high.forEach(rec => {
-        checkPageBreakNeeded(doc);
+      high.forEach((rec, index) => {
+        // Calculate needed space
+        const descLines = Math.ceil((rec.description || '').length / 65);
+        const actionsCount = rec.actions ? Math.min(rec.actions.length, 3) : 0;
+        const fixLines = rec.fix ? Math.ceil(rec.fix.length / 65) : 0;
+        const neededSpace = 40 + (descLines * 12) + (actionsCount * 14) + (fixLines * 12);
+        
+        checkPageBreakNeeded(doc, neededSpace);
 
         doc.fontSize(10)
            .font('Helvetica-Bold')
            .fillColor(COLORS.error)
-           .text(`• ${rec.title || rec.message}`, 70, doc.y);
+           .text(`${index + 1}. ${rec.title || rec.message}`, 70, doc.y);
 
-        doc.fontSize(9)
-           .font('Helvetica')
-           .fillColor(COLORS.textSecondary)
-           .text(rec.description || '', 80, doc.y + 3, { width: 465 });
+        if (rec.description) {
+          doc.fontSize(9)
+             .font('Helvetica')
+             .fillColor(COLORS.textSecondary)
+             .text(rec.description, 80, doc.y + 3, { width: 465 });
+        }
+
+        // Show all actions/fixes
+        if (rec.actions && rec.actions.length > 0) {
+          doc.moveDown(0.3);
+          doc.fontSize(8)
+             .font('Helvetica-Bold')
+             .fillColor(COLORS.success)
+             .text('How to Fix:', 85, doc.y);
+          rec.actions.forEach(action => {
+            doc.fontSize(8)
+               .font('Helvetica')
+               .fillColor(COLORS.success)
+               .text(`  → ${action}`, 95, doc.y);
+          });
+        }
+
+        if (rec.fix) {
+          doc.moveDown(0.3);
+          doc.fontSize(8)
+             .font('Helvetica-Bold')
+             .fillColor(COLORS.success)
+             .text('Fix:', 85, doc.y);
+          doc.fontSize(8)
+             .font('Helvetica')
+             .fillColor(COLORS.success)
+             .text(rec.fix, 105, doc.y, { width: 440 });
+        }
+
+        doc.moveDown(1);
+      });
+
+      doc.moveDown(0.5);
+    }
+
+    // Medium priority
+    if (medium.length > 0) {
+      checkPageBreakNeeded(doc, 120);
+
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.warning)
+         .text('🟡 Medium Priority', 60, doc.y);
+
+      doc.moveDown(0.5);
+
+      medium.forEach((rec, index) => {
+        const descLines = Math.ceil((rec.description || '').length / 65);
+        const actionsCount = rec.actions ? Math.min(rec.actions.length, 3) : 0;
+        const neededSpace = 35 + (descLines * 12) + (actionsCount * 14);
+        
+        checkPageBreakNeeded(doc, neededSpace);
+
+        doc.fontSize(10)
+           .font('Helvetica-Bold')
+           .fillColor(COLORS.warning)
+           .text(`${index + 1}. ${rec.title || rec.message}`, 70, doc.y);
+
+        if (rec.description) {
+          doc.fontSize(9)
+             .font('Helvetica')
+             .fillColor(COLORS.textSecondary)
+             .text(rec.description, 80, doc.y + 3, { width: 465 });
+        }
 
         if (rec.actions && rec.actions.length > 0) {
-          rec.actions.slice(0, 2).forEach(action => {
+          doc.moveDown(0.3);
+          rec.actions.slice(0, 3).forEach(action => {
             doc.fontSize(8)
-               .fillColor(COLORS.textSecondary)
-               .text(`  - ${action}`, 85, doc.y);
+               .fillColor(COLORS.info)
+               .text(`  → ${action}`, 85, doc.y);
           });
         }
 
         doc.moveDown(0.8);
       });
 
-      doc.moveDown(1);
-    }
-
-    // Medium priority
-    if (medium.length > 0) {
-      checkPageBreakNeeded(doc, 100);
-
-      doc.fontSize(11)
-         .font('Helvetica-Bold')
-         .fillColor(COLORS.warning)
-         .text('Medium Priority', 60, doc.y);
-
       doc.moveDown(0.5);
-
-      medium.forEach(rec => {
-        checkPageBreakNeeded(doc);
-
-        doc.fontSize(10)
-           .font('Helvetica-Bold')
-           .fillColor(COLORS.warning)
-           .text(`• ${rec.title || rec.message}`, 70, doc.y);
-
-        doc.fontSize(9)
-           .font('Helvetica')
-           .fillColor(COLORS.textSecondary)
-           .text(rec.description || '', 80, doc.y + 3, { width: 465 });
-
-        doc.moveDown(0.8);
-      });
-
-      doc.moveDown(1);
     }
 
     // Low priority
@@ -618,17 +817,25 @@ class SEOPdfGenerator {
       doc.fontSize(11)
          .font('Helvetica-Bold')
          .fillColor(COLORS.info)
-         .text('Low Priority', 60, doc.y);
+         .text('🔵 Low Priority', 60, doc.y);
 
       doc.moveDown(0.5);
 
-      low.forEach(rec => {
+      low.forEach((rec, index) => {
+        checkPageBreakNeeded(doc, 40);
+        
         doc.fontSize(9)
            .font('Helvetica')
            .fillColor(COLORS.textSecondary)
-           .text(`• ${rec.title || rec.message}`, 70, doc.y, { width: 475 });
+           .text(`${index + 1}. ${rec.title || rec.message}`, 70, doc.y, { width: 475 });
 
-        doc.moveDown(0.5);
+        if (rec.description) {
+          doc.fontSize(8)
+             .fillColor(COLORS.textSecondary)
+             .text(rec.description, 85, doc.y + 2, { width: 460 });
+        }
+
+        doc.moveDown(0.6);
       });
     }
   }

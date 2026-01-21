@@ -63,6 +63,7 @@
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
     <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/reportAccordion.css" />
 
     <!-- Shared UI System -->
     <link rel="stylesheet" href="ui.css">
@@ -190,9 +191,24 @@
     <script src="nav-template.js"></script>
     <script src="analyzer-loader.js"></script>
 
+    <!-- PDF Export Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="/pdf-export-utility.js"></script>
+    <script src="/pdf-export-integration.js"></script>
+
     <!-- Report UI Components -->
     <script src="/js/report-ui.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
+    <script src="/js/components/reportAccordion.js"></script>
+
+    <!-- Credits + paywall UI (ensures PaidUnlockCard states render) -->
+    <script src="/assets/js/ui.js"></script>
+
+    <!-- Shared report shell + billing/entitlements (new canonical paths) -->
+    <script src="/assets/js/report-shell.js"></script>
+    <script src="/assets/js/billing.js"></script>
+    <script src="/assets/js/entitlements.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
     <script src="/js/components/ProReportBlock.js"></script>

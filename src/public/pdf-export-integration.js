@@ -21,6 +21,8 @@
 function initPDFExport(config = {}) {
   // Detect page type from URL or data attribute
   const pageType = detectPageType();
+  const now = new Date();
+  const timestamp = now.toISOString().replace(/[:]/g, '-').replace('T', '_').split('.')[0];
 
   // Default configuration
   const defaultConfig = {
@@ -28,7 +30,7 @@ function initPDFExport(config = {}) {
     buttonSelector: config.buttonSelector || '#exportPdfBtn, .export-pdf-btn, #downloadPdfButton',
     reportSubtitle: config.reportSubtitle || getReportSubtitle(pageType),
     urlInputSelector: config.urlInputSelector || '#urlInput, #cwvUrlInput, #seoUrlInput, #securityUrlInput, #accessibilityUrlInput, input[type="url"]',
-    filename: config.filename || `${pageType}-report-${new Date().toISOString().split('T')[0]}.pdf`,
+    filename: config.filename || `${pageType}-report-${timestamp}.pdf`,
     onBeforeExport: config.onBeforeExport || null,
     onAfterExport: config.onAfterExport || null
   };
@@ -202,7 +204,81 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }, 500);
   }
+
+  // Set up click handlers for ProReportBlock export buttons
+  setupProReportBlockHandlers();
 });
+
+/**
+ * Set up click handlers for ProReportBlock export buttons
+ * Handles data-export="pdf", data-export="csv", data-export="share" buttons
+ */
+function setupProReportBlockHandlers() {
+  document.addEventListener('click', (e) => {
+    const button = e.target.closest('[data-export]');
+    if (!button) return;
+
+    const exportType = button.getAttribute('data-export');
+    const handler = button.getAttribute('data-handler');
+    const reportId = button.getAttribute('data-report-id');
+
+    // Check if button is locked/disabled
+    if (button.disabled || button.classList.contains('pro-report-block__action--locked')) {
+      return;
+    }
+
+    e.preventDefault();
+
+    // Try to call the handler function based on page context
+    const pageType = detectPageType();
+
+    if (exportType === 'pdf') {
+      // Try page-specific PDF export functions first
+      if (window.exportPerformancePDF && (pageType === 'performance' || pageType === 'performance-hub')) {
+        window.exportPerformancePDF();
+      } else if (window.exportSEOPDF && pageType === 'seo') {
+        window.exportSEOPDF();
+      } else if (window.exportSecurityPDF && pageType === 'security') {
+        window.exportSecurityPDF();
+      } else if (window.exportAccessibilityPDF && pageType === 'accessibility') {
+        window.exportAccessibilityPDF();
+      } else if (window.exportMobilePDF && pageType === 'mobile') {
+        window.exportMobilePDF();
+      } else if (window.exportCROPDF && pageType === 'cro') {
+        window.exportCROPDF();
+      } else if (window.exportDashboardPDF && pageType === 'dashboard') {
+        window.exportDashboardPDF();
+      } else if (typeof PDFExportUtility !== 'undefined') {
+        // Fallback to generic PDF export
+        exportCurrentPage({
+          contentSelector: detectContentSelector(),
+          buttonSelector: null,
+          reportSubtitle: getReportSubtitle(pageType),
+          filename: `${pageType}-report-${new Date().toISOString().split('T')[0]}.pdf`
+        });
+      }
+    } else if (exportType === 'csv') {
+      // Try page-specific CSV export functions
+      if (window.downloadPerformanceCSV && (pageType === 'performance' || pageType === 'performance-hub')) {
+        window.downloadPerformanceCSV();
+      } else if (window.downloadCSV) {
+        window.downloadCSV();
+      }
+    } else if (exportType === 'share') {
+      // Try page-specific share functions
+      if (window.copyPerformanceShareLink && (pageType === 'performance' || pageType === 'performance-hub')) {
+        window.copyPerformanceShareLink();
+      } else if (window.copyShareLink) {
+        window.copyShareLink();
+      } else {
+        // Fallback: copy current URL
+        navigator.clipboard.writeText(window.location.href).then(() => {
+          alert('Share link copied to clipboard');
+        });
+      }
+    }
+  });
+}
 
 // Export for module systems
 if (typeof module !== 'undefined' && module.exports) {

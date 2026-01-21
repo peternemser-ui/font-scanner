@@ -613,6 +613,7 @@
   position: relative !important;
   display: inline-flex;
   flex-shrink: 0;
+  z-index: 9999 !important;
 }
 
 .nav-dropdown-trigger {
@@ -638,9 +639,9 @@
 }
 
 .nav-dropdown-menu {
-  position: absolute !important;
-  top: 100% !important;
-  right: 0 !important;
+  position: absolute;
+  top: 100%;
+  right: 0;
   min-width: 320px;
   max-width: 360px;
   overflow-y: auto;
@@ -650,7 +651,7 @@
   border-radius: 12px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.5);
   padding: 0.5rem 0.5rem 0.5rem 0.5rem;
-  z-index: 10000 !important;
+  z-index: 99999 !important;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -994,6 +995,9 @@ details summary:hover {
   align-items: center;
   gap: 0.5rem;
   margin-right: 1rem;
+  position: relative;
+  z-index: 999999999;
+  overflow: visible;
 }
 
 /* Login/Sign Up links (not authenticated) */
@@ -1037,6 +1041,7 @@ details summary:hover {
 /* User menu (authenticated) */
 .auth-user-menu {
   position: relative;
+  z-index: 10000;
 }
 
 .auth-user-trigger {
@@ -1084,9 +1089,41 @@ details summary:hover {
   transform: rotate(180deg);
 }
 
+/* Auth dropdown wrapper - mirrors .nav-dropdown pattern */
+.auth-dropdown {
+  position: relative;
+  display: inline-flex;
+}
+
+/* Auth dropdown menu - uses position:fixed to escape stacking contexts */
+.auth-dropdown-menu {
+  position: fixed;
+  min-width: 240px;
+  background: rgba(20, 20, 20, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  padding: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transform: translateY(-10px);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s 0.2s;
+  z-index: 2147483647;
+}
+
+.auth-dropdown.open .auth-dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transform: translateY(0);
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0s 0s;
+}
+
+/* Legacy class for backwards compatibility */
 .auth-user-dropdown {
-  position: absolute;
-  top: calc(100% + 0.5rem);
+  position: fixed;
+  top: 0;
   right: 0;
   min-width: 240px;
   background: rgba(20, 20, 20, 0.98);
@@ -1097,8 +1134,8 @@ details summary:hover {
   opacity: 0;
   visibility: hidden;
   transform: translateY(-10px);
-  transition: all 0.2s ease;
-  z-index: 1000;
+  transition: opacity 0.2s ease, transform 0.2s ease, visibility 0.2s ease;
+  z-index: 999999;
 }
 
 .auth-user-dropdown.active {
@@ -1189,9 +1226,20 @@ details summary:hover {
 }
 
 /* Light theme adjustments */
-body.white-theme .auth-user-dropdown {
-  background: rgba(255, 255, 255, 0.98);
-  border-color: rgba(0, 0, 0, 0.2);
+body.white-theme .auth-user-dropdown,
+body.white-theme .auth-dropdown-menu {
+  background: rgba(255, 255, 255, 0.98) !important;
+  border-color: rgba(0, 0, 0, 0.15) !important;
+  border: 1px solid rgba(0, 0, 0, 0.15) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+body.white-theme .auth-user-info {
+  border-bottom-color: rgba(0, 0, 0, 0.1);
+}
+
+body.white-theme .auth-user-divider {
+  background: rgba(0, 0, 0, 0.1);
 }
 
 body.white-theme .auth-login {
@@ -1286,4 +1334,232 @@ body.white-theme .score-card,
 body.white-theme [class*="score-card"] {
   background: #ffffff !important;
   border-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+/* ========================================
+   DASHBOARD ENHANCED INTERACTIONS
+   Hover effects and micro-interactions
+   ======================================== */
+
+/* Dashboard card hover - enhanced lift and glow */
+.dashboard-card,
+.results-card,
+.category-card {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.3s ease;
+}
+
+.dashboard-card:hover,
+.results-card:hover,
+.category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3),
+              0 0 0 1px rgba(var(--accent-primary-rgb), 0.1);
+  border-color: rgba(var(--accent-primary-rgb), 0.3);
+}
+
+/* Category grid items - interactive hover */
+.category-item {
+  transition: transform 0.25s ease,
+              box-shadow 0.25s ease,
+              border-color 0.25s ease,
+              background 0.25s ease;
+  cursor: pointer;
+}
+
+.category-item:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  border-color: rgba(var(--accent-primary-rgb), 0.4);
+  background: rgba(var(--accent-primary-rgb), 0.05);
+}
+
+/* Score-based hover glow colors */
+.category-item.score-excellent:hover {
+  border-color: rgba(16, 185, 129, 0.5);
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.2);
+}
+
+.category-item.score-warning:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 8px 24px rgba(245, 158, 11, 0.2);
+}
+
+.category-item.score-poor:hover {
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 8px 24px rgba(239, 68, 68, 0.2);
+}
+
+/* Insight items - subtle hover lift */
+.insight-item {
+  transition: transform 0.2s ease,
+              background 0.2s ease,
+              border-color 0.2s ease;
+  cursor: pointer;
+}
+
+.insight-item:hover {
+  transform: translateX(4px);
+  background: rgba(var(--accent-primary-rgb), 0.05);
+  border-color: rgba(var(--accent-primary-rgb), 0.2);
+}
+
+/* Fix buttons - attention-grabbing hover */
+.fix-button,
+.insight-action-btn {
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.2s ease,
+              box-shadow 0.2s ease,
+              background 0.2s ease;
+}
+
+.fix-button:hover,
+.insight-action-btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 20px rgba(var(--accent-primary-rgb), 0.35);
+}
+
+.fix-button:active,
+.insight-action-btn:active {
+  transform: translateY(0) scale(0.98);
+}
+
+/* Button ripple effect */
+.fix-button::after,
+.insight-action-btn::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.4s ease, height 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
+}
+
+.fix-button:active::after,
+.insight-action-btn:active::after {
+  width: 200px;
+  height: 200px;
+  opacity: 1;
+  transition: width 0s, height 0s, opacity 0s;
+}
+
+/* Score gauge container - interactive hover */
+.score-gauge-container {
+  transition: transform 0.3s ease,
+              filter 0.3s ease;
+  cursor: default;
+}
+
+.score-gauge-container:hover {
+  transform: scale(1.03);
+}
+
+/* Mini score circles - hover glow */
+.mini-score-circle {
+  transition: filter 0.2s ease,
+              transform 0.2s ease;
+}
+
+.mini-score-container:hover .mini-score-circle {
+  filter: drop-shadow(0 0 12px currentColor);
+}
+
+/* Expandable section headers - hover feedback */
+.expandable-header,
+.section-toggle {
+  transition: background 0.2s ease,
+              padding-left 0.2s ease;
+  cursor: pointer;
+}
+
+.expandable-header:hover,
+.section-toggle:hover {
+  background: rgba(var(--accent-primary-rgb), 0.08);
+  padding-left: calc(1rem + 4px);
+}
+
+/* Quick action buttons grid */
+.quick-action {
+  transition: transform 0.2s ease,
+              box-shadow 0.2s ease,
+              border-color 0.2s ease,
+              background 0.2s ease;
+}
+
+.quick-action:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+  border-color: var(--accent-primary);
+  background: rgba(var(--accent-primary-rgb), 0.08);
+}
+
+.quick-action:active {
+  transform: translateY(-1px);
+}
+
+/* Icon animations on hover */
+.quick-action:hover svg,
+.category-item:hover svg,
+.insight-item:hover svg {
+  transform: scale(1.1);
+  transition: transform 0.2s ease;
+}
+
+/* Focus visible states for accessibility */
+.dashboard-card:focus-visible,
+.category-item:focus-visible,
+.insight-item:focus-visible,
+.quick-action:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Light theme hover adjustments */
+body.white-theme .dashboard-card:hover,
+body.white-theme .results-card:hover,
+body.white-theme .category-card:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12),
+              0 0 0 1px rgba(var(--accent-primary-rgb), 0.15);
+}
+
+body.white-theme .category-item:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+  background: rgba(var(--accent-primary-rgb), 0.04);
+}
+
+body.white-theme .insight-item:hover {
+  background: rgba(var(--accent-primary-rgb), 0.04);
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-card,
+  .results-card,
+  .category-card,
+  .category-item,
+  .insight-item,
+  .fix-button,
+  .insight-action-btn,
+  .score-gauge-container,
+  .mini-score-circle,
+  .expandable-header,
+  .section-toggle,
+  .quick-action {
+    transition: none;
+  }
+
+  .dashboard-card:hover,
+  .results-card:hover,
+  .category-card:hover,
+  .category-item:hover,
+  .score-gauge-container:hover {
+    transform: none;
+  }
 }

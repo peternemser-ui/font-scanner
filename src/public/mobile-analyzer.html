@@ -164,104 +164,6 @@
         padding: 0.25rem 0.5rem;
       }
 
-      /* Accordion Styles */
-      .accordion {
-        margin: 1rem 0;
-        padding: 0 2rem;
-        border-radius: 8px;
-        overflow: hidden;
-      }
-
-      .accordion-item {
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        margin-bottom: 1rem;
-        border-radius: 8px;
-        overflow: hidden;
-        background: rgba(255, 255, 255, 0.02);
-      }
-
-      .accordion-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 1.5rem 2.5rem !important;
-        cursor: pointer;
-        transition: background 0.2s ease;
-        user-select: none;
-        min-height: 70px;
-      }
-
-      .accordion-header:hover {
-        background: rgba(255, 255, 255, 0.05);
-      }
-
-      .accordion-header-left {
-        display: flex;
-        align-items: center;
-        gap: 0.75rem;
-      }
-
-      .accordion-icon {
-        font-size: 1.25rem;
-      }
-
-      .accordion-title {
-        font-weight: 600;
-        font-size: 1rem;
-      }
-
-      .accordion-header-right {
-        display: flex;
-        align-items: center;
-        gap: 1rem;
-      }
-
-      .accordion-score {
-        font-weight: 700;
-        font-size: 1rem;
-        padding: 0.35rem 0.85rem;
-        border-radius: 20px;
-      }
-
-      .accordion-score.excellent { background: rgba(var(--accent-primary-rgb), 0.2); color: var(--accent-primary); }
-      .accordion-score.good { background: rgba(59, 130, 246, 0.2); color: #60a5fa; }
-      .accordion-score.warning { background: rgba(251, 191, 36, 0.2); color: #fbbf24; }
-      .accordion-score.error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
-
-      .accordion-chevron {
-        transition: transform 0.3s ease;
-        font-size: 1.25rem;
-        color: #888;
-      }
-
-      .accordion-item.open .accordion-chevron {
-        transform: rotate(180deg);
-      }
-
-      .accordion-content {
-        display: block;
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-      }
-
-      .accordion-item.open > .accordion-content {
-        max-height: 5000px !important;
-        overflow: visible;
-      }
-
-      .accordion-body {
-        padding: 1rem 1.5rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
-        font-size: 0.85rem;
-      }
-
-      .accordion-body h4,
-      .accordion-body h5 {
-        font-size: 0.9rem;
-        margin: 0.75rem 0 0.5rem 0;
-      }
-
       .checklist-item {
         display: flex;
         align-items: center;
@@ -443,7 +345,7 @@
             "priceCurrency": "USD"
           },
           "featureList": [
-            "Multi-Device Testing (iPhone 14, Pixel 7, Galaxy S23, iPad)",
+            "Multi-Device Testing (iPhone 14, iPhone 15 Pro, Pixel 7, Pixel 8, iPhone SE, Galaxy S23, Galaxy S24, iPad, iPad Pro)",
             "Responsive Design Validation",
             "Touch Target Accessibility Analysis",
             "Mobile Performance Testing",
@@ -523,7 +425,7 @@
               aria-required="true"
             />
             <button id="analyzeButton" class="btn btn-primary" aria-label="Run mobile test">
-              <span id="buttonText">Run scan</span>
+              <span id="buttonText">Analyze</span>
             </button>
           </div>
           
@@ -536,8 +438,16 @@
                 iPhone 14 (390x844)
               </label>
               <label>
+                <input type="checkbox" id="device-iphone-15-pro" />
+                iPhone 15 Pro (393x852)
+              </label>
+              <label>
                 <input type="checkbox" id="device-pixel-7" checked />
                 Pixel 7 (412x915)
+              </label>
+              <label>
+                <input type="checkbox" id="device-pixel-8" />
+                Pixel 8 (412x915)
               </label>
               <label>
                 <input type="checkbox" id="device-iphone-se" />
@@ -548,8 +458,16 @@
                 Galaxy S23 (360x800)
               </label>
               <label>
+                <input type="checkbox" id="device-galaxy-s24" />
+                Galaxy S24 (360x780)
+              </label>
+              <label>
                 <input type="checkbox" id="device-ipad" />
                 iPad (768x1024)
+              </label>
+              <label>
+                <input type="checkbox" id="device-ipad-pro" />
+                iPad Pro (1024x1366)
               </label>
             </div>
           </div>
@@ -574,11 +492,6 @@
       <button type="button" class="screenshot-modal__close" id="screenshotModalClose" aria-label="Close">&times;</button>
       <img id="modalImage" src="" alt="Full size screenshot" />
     </div>
-
-    <!-- Footer -->
-    <footer class="site-footer">
-      <p>&copy; 2025 Site Mechanic. Built for developers who care about quality.</p>
-    </footer>
 
     <!-- Scripts -->
     <script src="theme-controls.js"></script>

@@ -208,7 +208,7 @@
               aria-required="true"
             />
             <button id="analyzeButton" class="btn btn-primary" aria-label="Run reputation scan">
-              <span id="buttonText">Run scan</span>
+              <span id="buttonText">Analyze</span>
             </button>
           </div>
           <p class="helper-text">Scans DNS blacklists, checks email deliverability, and verifies threat intelligence databases.</p>
@@ -235,11 +235,6 @@
       <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
     </main>
 
-    <!-- Footer -->
-    <footer class="site-footer">
-      <p>&copy; 2025 Site Mechanic. Built for developers who care about quality.</p>
-    </footer>
-
     <!-- Scripts -->
     <script src="theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
@@ -253,8 +248,19 @@
     <script src="/pdf-export-integration.js"></script>
 
     <!-- Report UI Components -->
+    <link rel="stylesheet" href="/css/components/reportShell.css" />
+    <link rel="stylesheet" href="/css/components/reportAccordion.css" />
     <script src="/js/report-ui.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
+    <script src="/js/components/reportAccordion.js"></script>
+
+    <!-- Credits + paywall UI (ensures PaidUnlockCard states render) -->
+    <script src="/assets/js/ui.js"></script>
+
+    <!-- Shared report shell + billing/entitlements (new canonical paths) -->
+    <script src="/assets/js/report-shell.js"></script>
+    <script src="/assets/js/billing.js"></script>
+    <script src="/assets/js/entitlements.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
     <script src="/js/components/ProReportBlock.js"></script>

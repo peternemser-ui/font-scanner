@@ -43,6 +43,41 @@ function formatStatus(icon, labelKey, fallback) {
   return `${icon} ${t(labelKey, fallback)}`;
 }
 
+/**
+ * MEMORY MANAGEMENT: Clean up previous scan data to prevent memory leaks
+ */
+function cleanupPreviousSeoData(container) {
+  // Clear report metadata from previous scans
+  document.body.removeAttribute('data-report-id');
+  document.body.removeAttribute('data-sm-screenshot-url');
+  document.body.removeAttribute('data-sm-scan-started-at');
+  
+  // Clear global results cache
+  if (window._seoFullResults) {
+    window._seoFullResults = null;
+  }
+  
+  // Clear results container
+  if (container) {
+    container.innerHTML = '';
+  }
+  
+  // Clear loading container
+  const loadingContainer = document.getElementById('loadingContainer');
+  if (loadingContainer) {
+    loadingContainer.innerHTML = '';
+  }
+  
+  // Destroy any Chart.js instances
+  if (window.Chart && Chart.instances) {
+    Object.values(Chart.instances).forEach(chart => {
+      try { chart.destroy(); } catch (e) { /* ignore */ }
+    });
+  }
+  
+  console.log('[Memory] Cleaned up previous SEO scan data');
+}
+
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
   document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
@@ -65,6 +100,9 @@ document.addEventListener('DOMContentLoaded', () => {
       showError(t('errors.urlRequired', 'Please enter a valid URL'));
       return;
     }
+
+    // MEMORY CLEANUP: Clear previous scan data
+    cleanupPreviousSeoData(resultsContainer);
 
     // Disable button during scan
     window.SM_IS_SCANNING = true;
@@ -267,6 +305,8 @@ function displaySEOResults(results) {
   if (reportId) {
     document.body.setAttribute('data-report-id', reportId);
   }
+  
+  // Set screenshot URL from API response (body attribute set after screenshotUrl is built later)
 
   // Ensure shared PaidUnlockCard handlers are active (if included)
   if (window.SmEntitlements && typeof window.SmEntitlements.init === 'function') {
@@ -354,25 +394,37 @@ function displaySEOResults(results) {
     },
     {
       id: 'security',
-      title: getSeoSectionTitle('security', 'Security Headers'),
+      title: getSeoSectionTitle('security', 'Security'),
       scoreTextRight: results.securityHeaders?.score,
-      contentHTML: renderSecurityHeadersContent(results.securityHeaders)
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'seo',
+      reportId,
+      contentHTML: isUnlocked ? renderSecurityHeadersContent(results.securityHeaders) : getProPreviewContent('security')
     },
     {
       id: 'structured-data',
-      title: getSeoSectionTitle('structuredData', 'Structured Data Schema'),
+      title: getSeoSectionTitle('structuredData', 'Structured Data'),
       scoreTextRight: results.structuredData?.score,
-      contentHTML: renderStructuredDataContent(results.structuredData)
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'seo',
+      reportId,
+      contentHTML: isUnlocked ? renderStructuredDataContent(results.structuredData) : getProPreviewContent('structuredData')
     },
     {
       id: 'additional-checks',
       title: getSeoSectionTitle('additional', 'Additional Checks'),
       scoreTextRight: results.additionalChecks?.score,
-      contentHTML: renderAdditionalChecksContent(results.additionalChecks)
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'seo',
+      reportId,
+      contentHTML: isUnlocked ? renderAdditionalChecksContent(results.additionalChecks) : getProPreviewContent('additionalChecks')
     },
     {
-      id: 'pro-fixes',
-      title: getSeoSectionTitle('fixCode', 'Fix Code + Recommendations'),
+      id: 'report-recommendations',
+      title: getSeoSectionTitle('fixCode', 'Report and Recommendations'),
       scoreTextRight: results.score?.overall,
       isPro: true,
       locked: !isUnlocked,
@@ -385,6 +437,11 @@ function displaySEOResults(results) {
   const screenshotUrl =
     results.screenshotUrl ||
     (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+
+  // Set screenshot URL body attribute for report-ui.js
+  if (screenshotUrl) {
+    document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+  }
 
   const screenshots = screenshotUrl
     ? [{ src: screenshotUrl, alt: 'Page screenshot', device: '' }]
@@ -558,6 +615,39 @@ function renderSeoFixesPreview(previewLines = []) {
   `;
 }
 
+/**
+ * Get preview content for PRO sections when locked
+ */
+function getProPreviewContent(sectionType) {
+  const previews = {
+    security: {
+      title: 'Security Analysis',
+      items: ['HTTPS configuration', 'Security headers audit', 'Cookie security settings']
+    },
+    structuredData: {
+      title: 'Structured Data',
+      items: ['Schema.org validation', 'Rich snippet eligibility', 'JSON-LD recommendations']
+    },
+    additionalChecks: {
+      title: 'Additional Checks',
+      items: ['Robots.txt analysis', 'Sitemap validation', 'Canonical URL check']
+    }
+  };
+  
+  const preview = previews[sectionType] || { title: 'Pro Analysis', items: ['Detailed analysis', 'Recommendations'] };
+  
+  return `
+    <div style="padding: 1rem;">
+      <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
+        Unlock to view:
+      </p>
+      <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
+        ${preview.items.map(item => `<li>${item}</li>`).join('')}
+      </ul>
+    </div>
+  `;
+}
+
 function getAnalyzedDomain(results) {
   const rawUrl = results && results.url ? String(results.url) : '';
   try {
@@ -569,37 +659,325 @@ function getAnalyzedDomain(results) {
 }
 
 function renderProFixes(results) {
-  ensureProStyles();
-  const cards = buildFixCards(results);
-  return `
-    <div class="fix-card-grid">
-      ${cards.map(card => renderFixCard(card)).join('')}
-    </div>
-  `;
-}
-
-function renderFixCard(card) {
-  const severityClass = card.severity === 'High' ? 'severity-high' : card.severity === 'Medium' ? 'severity-medium' : 'severity-low';
-  return `
-    <div class="fix-card">
-      <div style="display: flex; justify-content: space-between; align-items: center; gap: 0.5rem;">
-        <div style="font-weight: 700;">${card.title}</div>
-        <span class="severity ${severityClass}">${card.severity}</span>
+  ensureSeoFixStyles();
+  const fixes = buildFixCards(results);
+  
+  if (fixes.length === 0) {
+    return `
+      <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+        <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+          <span style="font-size: 1.5rem;">✓</span> Excellent SEO!
+        </h3>
+        <p style="color: #86efac; margin: 0;">Your site follows SEO best practices. Keep monitoring for continued success.</p>
       </div>
-      <div style="color: #ccc; font-size: 0.95rem;">${card.description}</div>
-      <div style="color: #8ae6b2; font-size: 0.9rem;">${t('seo.fixes.impact', 'Impact')}: ${card.impact}</div>
-      <code>${card.snippet}</code>
-      <div class="actions">
-        <button onclick="copyFixSnippet(${JSON.stringify(card.snippet)})">${t('seo.fixes.copySnippet', 'Copy snippet')}</button>
-      </div>
-    </div>
-  `;
-}
+    `;
+  }
 
-function copyFixSnippet(snippet) {
-  navigator.clipboard.writeText(snippet).then(() => {
-    alert(t('seo.fixes.snippetCopied', 'Snippet copied to clipboard'));
+  // Group by severity
+  const high = fixes.filter(f => f.severity === 'High');
+  const medium = fixes.filter(f => f.severity === 'Medium');
+  const low = fixes.filter(f => f.severity === 'Low');
+
+  let html = `
+    <div class="seo-fixes-container" style="margin-top: 1rem;">
+      <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+        <span style="font-size: 1.75rem;">🔍</span> SEO Fixes
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} improvements found)</span>
+      </h3>
+      <div class="seo-fixes-list">
+  `;
+
+  // Render all fixes grouped by severity
+  const allFixes = [...high, ...medium, ...low];
+  allFixes.forEach((fix, index) => {
+    html += renderSeoFixAccordion(fix, index);
   });
+
+  html += `</div></div>`;
+
+  return html;
+}
+
+function renderSeoFixAccordion(fix, index) {
+  const accordionId = `seofix-${fix.id || index}`;
+  const severityColors = {
+    High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+    Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
+  };
+  const style = severityColors[fix.severity] || severityColors.Medium;
+
+  return `
+    <div class="seo-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="seo-fix-header" onclick="toggleSeoFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || 'SEO Optimization'}</p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${fix.severity.toUpperCase()}</span>
+          <span class="seo-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+        </div>
+      </div>
+
+      <div class="seo-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderSeoFixTabs(fix, accordionId)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+function renderSeoFixTabs(fix, accordionId) {
+  return `
+    <div class="seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="seo-fix-tab active" onclick="switchSeoFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Summary</button>
+      <button class="seo-fix-tab" onclick="switchSeoFixTab('${accordionId}', 'code')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">💻 Code</button>
+      <button class="seo-fix-tab" onclick="switchSeoFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🔧 Fix Guide</button>
+    </div>
+
+    <!-- Summary Tab -->
+    <div class="seo-fix-tab-content active" id="${accordionId}-summary">
+      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        ${fix.description}
+      </p>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+        <div style="color: #c0c0c0; font-size: 0.9rem;">${fix.impact}</div>
+      </div>
+    </div>
+
+    <!-- Code Tab -->
+    <div class="seo-fix-tab-content" id="${accordionId}-code" style="display: none;">
+      <div style="display: grid; gap: 1rem;">
+        <!-- Current Issue -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
+            <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
+            <button onclick="copySeoCode('${accordionId}-problem')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtml(fix.problematicCode || fix.currentIssue || '<!-- Missing or incorrect implementation -->')}</pre>
+        </div>
+
+        <!-- Fixed Code -->
+        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
+            <button onclick="copySeoCode('${accordionId}-solution')" style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 4px;
+              border: 1px solid rgba(255,255,255,0.2);
+              background: rgba(255,255,255,0.05);
+              color: #fff;
+              cursor: pointer;
+              font-size: 0.75rem;
+            ">📋 Copy</button>
+          </div>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtml(fix.snippet || fix.fixedCode)}</pre>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fix Guide Tab -->
+    <div class="seo-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        ${(fix.steps || getDefaultSeoSteps(fix)).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+    </div>
+  `;
+}
+
+function getDefaultSeoSteps(fix) {
+  const stepsMap = {
+    'Tune your title tag': [
+      'Keep title between 50-60 characters',
+      'Place primary keyword near the beginning',
+      'Make it compelling and unique for each page'
+    ],
+    'Write a compelling meta description': [
+      'Write 150-160 characters that summarize page content',
+      'Include a clear call-to-action',
+      'Ensure uniqueness across all pages'
+    ],
+    'Add canonical + sitemap refs': [
+      'Add canonical link pointing to preferred URL',
+      'Create and submit XML sitemap to search engines',
+      'Reference sitemap in robots.txt'
+    ],
+    'Add JSON-LD (Article/Product)': [
+      'Identify the primary content type (Article, Product, etc.)',
+      'Add JSON-LD script with required properties',
+      'Test with Google Rich Results Test'
+    ],
+    'Preload critical assets': [
+      'Identify above-the-fold critical resources',
+      'Add preload hints for hero image and fonts',
+      'Verify with browser DevTools Network panel'
+    ],
+    'Defer non-critical JS': [
+      'Add defer attribute to non-essential scripts',
+      'Move analytics to async loading',
+      'Test that functionality still works correctly'
+    ]
+  };
+  return stepsMap[fix.title] || ['Review current implementation', 'Apply the recommended fix', 'Test and verify changes'];
+}
+
+// Toggle accordion
+function toggleSeoFixAccordion(accordionId) {
+  const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  const content = document.getElementById(`${accordionId}-content`);
+  const icon = accordion?.querySelector('.seo-fix-expand-icon');
+
+  if (!accordion || !content) return;
+
+  const isExpanded = accordion.classList.contains('expanded');
+
+  if (isExpanded) {
+    accordion.classList.remove('expanded');
+    content.style.maxHeight = '0';
+    if (icon) icon.style.transform = 'rotate(0deg)';
+  } else {
+    accordion.classList.add('expanded');
+    content.style.maxHeight = content.scrollHeight + 'px';
+    if (icon) icon.style.transform = 'rotate(180deg)';
+  }
+}
+
+// Switch tabs
+function switchSeoFixTab(accordionId, tabName) {
+  const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+  if (!accordion) return;
+
+  const tabs = accordion.querySelectorAll('.seo-fix-tab');
+  const contents = accordion.querySelectorAll('.seo-fix-tab-content');
+
+  tabs.forEach(tab => {
+    tab.style.background = 'transparent';
+    tab.style.color = '#aaa';
+    tab.style.borderColor = 'rgba(255,255,255,0.1)';
+    tab.classList.remove('active');
+  });
+  contents.forEach(content => {
+    content.style.display = 'none';
+    content.classList.remove('active');
+  });
+
+  const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+  const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+
+  if (activeTab) {
+    activeTab.style.background = 'rgba(255,255,255,0.1)';
+    activeTab.style.color = '#fff';
+    activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+    activeTab.classList.add('active');
+  }
+  if (activeContent) {
+    activeContent.style.display = 'block';
+    activeContent.classList.add('active');
+  }
+
+  // Update accordion height
+  const content = document.getElementById(`${accordionId}-content`);
+  if (content && accordion.classList.contains('expanded')) {
+    setTimeout(() => {
+      content.style.maxHeight = content.scrollHeight + 'px';
+    }, 50);
+  }
+}
+
+// Copy code
+function copySeoCode(elementId) {
+  const codeElement = document.getElementById(elementId);
+  if (!codeElement) return;
+
+  const text = codeElement.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = codeElement.parentElement.querySelector('button');
+    if (btn) {
+      const originalText = btn.textContent;
+      btn.textContent = '✓ Copied!';
+      setTimeout(() => { btn.textContent = originalText; }, 2000);
+    }
+  });
+}
+
+function ensureSeoFixStyles() {
+  if (document.getElementById('seo-fixes-styles')) return;
+  const style = document.createElement('style');
+  style.id = 'seo-fixes-styles';
+  style.textContent = `
+    .seo-fix-accordion.expanded .seo-fix-expand-icon {
+      transform: rotate(180deg);
+    }
+    .seo-fix-header:hover {
+      background: rgba(255,255,255,0.03);
+    }
+  `;
+  document.head.appendChild(style);
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function buildFixCards(results) {
@@ -612,113 +990,100 @@ function buildFixCards(results) {
   cards.push({
     title: 'Tune your title tag',
     severity: 'High',
-    impact: 'Improves CTR in SERPs',
+    category: 'Meta Tags',
+    impact: 'Improves CTR in SERPs by 15-30%',
     description: meta.title ? 'Adjust title length to 50-60 chars and front-load the keyword.' : 'Add a clear, unique <title> for this page.',
-    snippet: `<title>${meta.title || 'Primary Keyword | Brand'}</title>`
+    problematicCode: meta.title 
+      ? `<!-- Current title: ${meta.titleLength || 0} characters -->\n<title>${meta.title}</title>\n\n<!-- Issues: -->\n<!-- ${meta.titleLength < 50 ? '✗ Too short - missing keyword opportunity' : meta.titleLength > 60 ? '✗ Too long - will be truncated in SERPs' : '~ Could be optimized'} -->`
+      : `<!-- No title tag found -->\n<head>\n  <!-- ✗ Missing <title> tag -->\n</head>`,
+    snippet: `<title>${meta.title || 'Primary Keyword | Brand Name'}</title>\n\n<!-- Best practices: -->\n<!-- ✓ 50-60 characters -->\n<!-- ✓ Primary keyword near the start -->\n<!-- ✓ Brand name at the end -->`,
+    steps: [
+      'Keep title between 50-60 characters',
+      'Place primary keyword near the beginning',
+      'Make it compelling and unique for each page'
+    ]
   });
 
   cards.push({
     title: 'Write a compelling meta description',
     severity: 'Medium',
+    category: 'Meta Tags',
     impact: 'Higher click-through and relevance signals',
     description: 'Keep 150-160 chars, include a CTA, and ensure uniqueness.',
-    snippet: '<meta name="description" content="Describe the main value in 150-160 characters with a call to action." />'
+    problematicCode: meta.description 
+      ? `<!-- Current: ${meta.descriptionLength || 0} characters -->\n<meta name="description" content="${meta.description?.substring(0, 80)}..." />\n\n<!-- Issues: -->\n<!-- ${meta.descriptionLength < 150 ? '✗ Too short - not fully utilizing SERP space' : meta.descriptionLength > 160 ? '✗ Too long - will be truncated' : '~ Review for CTA'} -->`
+      : `<!-- No meta description found -->\n<head>\n  <!-- ✗ Missing meta description -->\n</head>`,
+    snippet: `<meta name="description" content="Describe the main value proposition in 150-160 characters. Include a clear call to action." />\n\n<!-- Best practices: -->\n<!-- ✓ 150-160 characters -->\n<!-- ✓ Include call-to-action -->\n<!-- ✓ Unique for each page -->`,
+    steps: [
+      'Write 150-160 characters that summarize page content',
+      'Include a clear call-to-action',
+      'Ensure uniqueness across all pages'
+    ]
   });
 
   cards.push({
     title: 'Add canonical + sitemap refs',
     severity: 'Medium',
+    category: 'Technical SEO',
     impact: 'Prevents duplicate indexing issues',
     description: 'Declare the preferred URL and list all discoverable URLs.',
-    snippet: `<link rel="canonical" href="https://${analyzedDomain}/" />\n<link rel="sitemap" type="application/xml" title="Sitemap" href="https://${analyzedDomain}/sitemap.xml" />`
+    problematicCode: `<!-- Common issues: -->\n<!-- ✗ No canonical URL declared -->\n<!-- ✗ Multiple versions indexed (www, non-www, http, https) -->\n<!-- ✗ Sitemap not referenced -->\n\n<head>\n  <!-- Missing canonical and sitemap links -->\n</head>`,
+    snippet: `<link rel="canonical" href="https://${analyzedDomain}/" />\n<link rel="sitemap" type="application/xml" title="Sitemap" href="https://${analyzedDomain}/sitemap.xml" />\n\n<!-- In robots.txt: -->\nSitemap: https://${analyzedDomain}/sitemap.xml`,
+    steps: [
+      'Add canonical link pointing to preferred URL',
+      'Create and submit XML sitemap to search engines',
+      'Reference sitemap in robots.txt'
+    ]
   });
 
   cards.push({
     title: 'Add JSON-LD (Article/Product)',
     severity: 'High',
-    impact: 'Rich results eligibility',
+    category: 'Structured Data',
+    impact: 'Rich results eligibility - up to 30% more visibility',
     description: 'Provide structured data for the primary page type.',
-    snippet: `<script type="application/ld+json">{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  "name": "${meta.title || 'Page Title'}",\n  "description": "${meta.description || 'Page description'}",\n  "url": "https://${analyzedDomain}/"\n}</script>`
+    problematicCode: structured.hasStructuredData 
+      ? `<!-- Structured data found but may need enhancement -->\n<!-- Current types: ${structured.types?.join(', ') || 'Unknown'} -->\n\n<!-- Check for: -->\n<!-- ~ Required properties -->\n<!-- ~ Recommended properties -->\n<!-- ~ Valid JSON-LD syntax -->`
+      : `<!-- No structured data found -->\n<head>\n  <!-- ✗ Missing JSON-LD structured data -->\n  <!-- ✗ Not eligible for rich results -->\n</head>`,
+    snippet: `<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  "name": "${meta.title || 'Page Title'}",\n  "description": "${meta.description || 'Page description'}",\n  "url": "https://${analyzedDomain}/"\n}\n</script>`,
+    steps: [
+      'Identify the primary content type (Article, Product, etc.)',
+      'Add JSON-LD script with required properties',
+      'Test with Google Rich Results Test'
+    ]
   });
 
   cards.push({
     title: 'Preload critical assets',
     severity: 'Medium',
-    impact: 'Faster LCP and render',
+    category: 'Performance',
+    impact: 'Faster LCP and render - improves Core Web Vitals',
     description: 'Preload hero image, main font, and critical CSS.',
-    snippet: `<link rel="preload" as="image" href="/path/to/hero.jpg" />\n<link rel="preload" as="style" href="/critical.css" />\n<link rel="preload" as="font" type="font/woff2" href="/fonts/main.woff2" crossorigin />`
+    problematicCode: `<!-- Common issues: -->\n<!-- ✗ Hero image not preloaded -->\n<!-- ✗ Web fonts cause layout shift -->\n<!-- ✗ Critical CSS not prioritized -->\n\n<head>\n  <!-- No preload hints -->\n  <link rel="stylesheet" href="/styles.css">\n</head>`,
+    snippet: `<link rel="preload" as="image" href="/hero.webp" />\n<link rel="preload" as="style" href="/critical.css" />\n<link rel="preload" as="font" type="font/woff2" href="/fonts/main.woff2" crossorigin />\n\n<!-- Best practices: -->\n<!-- ✓ Preload LCP image -->\n<!-- ✓ Preload critical fonts -->\n<!-- ✓ Use crossorigin for fonts -->`,
+    steps: [
+      'Identify above-the-fold critical resources',
+      'Add preload hints for hero image and fonts',
+      'Verify with browser DevTools Network panel'
+    ]
   });
 
   cards.push({
     title: 'Defer non-critical JS',
     severity: 'Low',
-    impact: 'Reduces blocking time',
+    category: 'Performance',
+    impact: 'Reduces blocking time - faster interactivity',
     description: 'Use defer for scripts that can wait until DOM is parsed.',
-    snippet: `<script src="/app.js" defer></script>\n<script src="/analytics.js" defer></script>`
+    problematicCode: `<!-- Common issues: -->\n<!-- ✗ Scripts blocking page render -->\n<!-- ✗ Analytics loading synchronously -->\n\n<head>\n  <script src="/app.js"></script>\n  <script src="/analytics.js"></script>\n</head>`,
+    snippet: `<head>\n  <!-- Defer non-essential scripts -->\n  <script src="/app.js" defer></script>\n  <script src="/analytics.js" defer></script>\n</head>\n\n<!-- Or load at end of body: -->\n<body>\n  <!-- content -->\n  <script src="/app.js"></script>\n</body>`,
+    steps: [
+      'Add defer attribute to non-essential scripts',
+      'Move analytics to async loading',
+      'Test that functionality still works correctly'
+    ]
   });
 
   return cards;
-}
-function ensureProStyles() {
-  if (document.getElementById('seo-fixes-styles')) return;
-  const style = document.createElement('style');
-  style.id = 'seo-fixes-styles';
-  style.textContent = `
-    .fix-card-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 1rem;
-    }
-    .fix-card {
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      border-radius: 10px;
-      padding: 1rem;
-      background: rgba(255, 255, 255, 0.02);
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    .fix-card .severity {
-      font-size: 0.8rem;
-      padding: 2px 8px;
-      border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.2);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .severity-high { color: #ff8c00; border-color: rgba(255, 140, 0, 0.4); }
-    .severity-medium { color: #ffd700; border-color: rgba(255, 215, 0, 0.4); }
-    .severity-low { color: var(--accent-primary); border-color: rgba(var(--accent-primary-rgb), 0.4); }
-    .fix-card code {
-      display: block;
-      background: rgba(0, 0, 0, 0.45);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 6px;
-      padding: 0.75rem;
-      white-space: pre-wrap;
-      font-size: 0.9rem;
-    }
-    .fix-card .actions {
-      display: flex;
-      justify-content: space-between;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-    .fix-card button {
-      padding: 0.5rem 0.9rem;
-      border-radius: 6px;
-      border: 1px solid rgba(255,255,255,0.15);
-      background: rgba(255,255,255,0.05);
-      color: #fff;
-      cursor: pointer;
-    }
-    .fix-card button[disabled] {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-  `;
-  document.head.appendChild(style);
 }
 
 /**

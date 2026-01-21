@@ -33,6 +33,14 @@ const DEVICE_PROFILES = {
     isMobile: true,
     hasTouch: true
   },
+  'iphone-15-pro': {
+    name: 'iPhone 15 Pro',
+    viewport: { width: 393, height: 852 },
+    userAgent: 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1',
+    deviceScaleFactor: 3,
+    isMobile: true,
+    hasTouch: true
+  },
   'iphone-se': {
     name: 'iPhone SE',
     viewport: { width: 375, height: 667 },
@@ -49,10 +57,26 @@ const DEVICE_PROFILES = {
     isMobile: true,
     hasTouch: true
   },
+  'pixel-8': {
+    name: 'Pixel 8',
+    viewport: { width: 412, height: 915 },
+    userAgent: 'Mozilla/5.0 (Linux; Android 14; Pixel 8) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
+    deviceScaleFactor: 2.75,
+    isMobile: true,
+    hasTouch: true
+  },
   'galaxy-s23': {
     name: 'Galaxy S23',
     viewport: { width: 360, height: 800 },
     userAgent: 'Mozilla/5.0 (Linux; Android 13; SM-S911B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Mobile Safari/537.36',
+    deviceScaleFactor: 2,
+    isMobile: true,
+    hasTouch: true
+  },
+  'galaxy-s24': {
+    name: 'Galaxy S24',
+    viewport: { width: 360, height: 780 },
+    userAgent: 'Mozilla/5.0 (Linux; Android 14; SM-S921B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Mobile Safari/537.36',
     deviceScaleFactor: 2,
     isMobile: true,
     hasTouch: true

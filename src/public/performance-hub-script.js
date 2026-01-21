@@ -237,10 +237,10 @@ document.addEventListener('DOMContentLoaded', () => {
   // Get title for each mode
   function getLoaderTitle(mode) {
     switch (mode) {
-      case 'quick': return '[QUICK SCAN]';
-      case 'full': return '[FULL LIGHTHOUSE ANALYSIS]';
-      case 'cwv': return '[CORE WEB VITALS]';
-      default: return '[ANALYZING]';
+      case 'quick': return 'Quick Scan';
+      case 'full': return 'Full Lighthouse Analysis';
+      case 'cwv': return 'Core Web Vitals';
+      default: return 'Analyzing';
     }
   }
 
@@ -263,7 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContent.innerHTML = '';
     errorMessage.classList.add('hidden');
     analyzeButton.disabled = true;
-    buttonText.textContent = 'Running scan...';
+    buttonText.textContent = 'Analyzing...';
 
     // Initialize AnalyzerLoader
     loader = new AnalyzerLoader('loadingContainer');
@@ -370,7 +370,7 @@ document.addEventListener('DOMContentLoaded', () => {
       showError(error.message);
     } finally {
       analyzeButton.disabled = false;
-      buttonText.textContent = 'Run scan';
+      buttonText.textContent = 'Analyze';
       if (loader) {
         loader.complete();
       }
@@ -776,12 +776,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const proLocked = !userHasPro();
     const topLevelRecs = Array.isArray(results.recommendations) ? results.recommendations : [];
-    const desktopForFixes = topLevelRecs.length
-      ? { ...desktop, recommendations: [...(desktop.recommendations || []), ...topLevelRecs] }
+    const topLevelOpps = Array.isArray(results.opportunities) ? results.opportunities : [];
+    const desktopForFixes = topLevelRecs.length || topLevelOpps.length
+      ? {
+          ...desktop,
+          recommendations: [...(desktop.recommendations || []), ...topLevelRecs],
+          opportunities: [...(desktop.opportunities || []), ...topLevelOpps]
+        }
       : desktop;
+    const mobileForFixes = {
+      ...mobile,
+      opportunities: mobile.opportunities || []
+    };
     const proContent = `
-      ${renderFreeFixBullets(desktopForFixes, mobile)}
-      ${renderFixesToMake(desktopForFixes, mobile)}
+      ${renderFreeFixBullets(desktopForFixes, mobileForFixes)}
+      ${renderFixesToMake(desktopForFixes, mobileForFixes)}
+      <div style="margin-top: 1.5rem;">
+        <h4 style="margin: 0 0 0.75rem 0;">Opportunities</h4>
+        ${opportunitiesContent}
+      </div>
       ${proLocked ? renderLockedProPreview('Paid report available', ['Client-ready exports', 'Share link', 'Fix code + recommendations']) : ''}
     `;
 
@@ -789,10 +802,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ReportAccordion.createSection({ id: 'lh-category-scores', title: 'Category Scores', scoreTextRight: formatScoreText(overallPerf), contentHTML: categoryScoresContent }),
       ReportAccordion.createSection({ id: 'lh-performance-metrics', title: 'Performance Metrics', scoreTextRight: formatScoreText(overallPerf), contentHTML: performanceMetricsContent }),
       ReportAccordion.createSection({ id: 'lh-cwv', title: 'Core Web Vitals', scoreTextRight: formatScoreText(overallPerf), contentHTML: cwvContent }),
-      ReportAccordion.createSection({ id: 'lh-opportunities', title: 'Opportunities', scoreTextRight: opportunitiesCount ? `${opportunitiesCount}` : '—', contentHTML: opportunitiesContent }),
-      ReportAccordion.createSection({ id: 'lh-diagnostics', title: 'Diagnostics', scoreTextRight: issuesCount ? `${issuesCount}` : '—', contentHTML: diagnosticsContent }),
       ReportAccordion.createSection({ id: 'lh-resources', title: 'Resource Breakdown', scoreTextRight: null, contentHTML: resourcesContent }),
-      ReportAccordion.createSection({ id: 'lh-additional', title: 'Additional Checks', scoreTextRight: null, contentHTML: additionalChecksContent }),
       ReportAccordion.createSection({ id: 'lh-fixes', title: 'Fix Code + Recommendations', scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
     ].join('');
 
@@ -1594,7 +1604,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const timestamp = new Date().toLocaleString();
     const lcpScore = scoreFromCwvValue(desktop.coreWebVitals?.lcpMs || desktop.coreWebVitals?.lcp, mobile.coreWebVitals?.lcpMs || mobile.coreWebVitals?.lcp, 'lcp');
     const clsScore = scoreFromCwvValue(desktop.coreWebVitals?.cls || desktop.coreWebVitals?.clsNum, mobile.coreWebVitals?.cls || mobile.coreWebVitals?.clsNum, 'cls');
-    const inpScore = scoreFromCwvValue(desktop.coreWebVitals?.fidMs || desktop.coreWebVitals?.inp, mobile.coreWebVitals?.fidMs || mobile.coreWebVitals?.inp, 'inp');
+    const inpScore = scoreFromCwvValue(desktop.coreWebVitals?.inpMs || desktop.coreWebVitals?.tbtMs || desktop.coreWebVitals?.fidMs, mobile.coreWebVitals?.inpMs || mobile.coreWebVitals?.tbtMs || mobile.coreWebVitals?.fidMs, 'inp');
 
     const derivedOverall = averageScores([lcpScore, clsScore, inpScore]);
     const apiOverall = normalizeScore(data.score ?? data.overallScore ?? data.performanceScore);
@@ -1628,22 +1638,21 @@ document.addEventListener('DOMContentLoaded', () => {
       ReportAccordion.createSection({
         id: 'cwv-lcp',
         title: buildMetricHeader({ label: 'LCP Details', desktopValue: desktop.coreWebVitals?.lcpMs, mobileValue: mobile.coreWebVitals?.lcpMs, metric: 'lcp' }),
-        scoreTextRight: valueOrDash(desktop.coreWebVitals?.lcp || mobile.coreWebVitals?.lcp),
+        scoreTextRight: formatScoreText(lcpScore),
         contentHTML: renderCWVDetailSection('LCP', desktop, mobile)
       }),
       ReportAccordion.createSection({
         id: 'cwv-cls',
         title: buildMetricHeader({ label: 'CLS Details', desktopValue: desktop.coreWebVitals?.clsNum, mobileValue: mobile.coreWebVitals?.clsNum, metric: 'cls' }),
-        scoreTextRight: valueOrDash(desktop.coreWebVitals?.cls || mobile.coreWebVitals?.cls),
+        scoreTextRight: formatScoreText(clsScore),
         contentHTML: renderCWVDetailSection('CLS', desktop, mobile)
       }),
       ReportAccordion.createSection({
         id: 'cwv-inp',
-        title: buildMetricHeader({ label: 'INP/TBT Details', desktopValue: desktop.coreWebVitals?.inpMs, mobileValue: mobile.coreWebVitals?.inpMs, metric: 'inp' }),
-        scoreTextRight: valueOrDash(desktop.coreWebVitals?.inp || desktop.coreWebVitals?.fid || mobile.coreWebVitals?.inp || mobile.coreWebVitals?.fid),
+        title: buildMetricHeader({ label: 'INP/TBT Details', desktopValue: desktop.coreWebVitals?.inpMs || desktop.coreWebVitals?.tbtMs, mobileValue: mobile.coreWebVitals?.inpMs || mobile.coreWebVitals?.tbtMs, metric: 'inp' }),
+        scoreTextRight: formatScoreText(inpScore),
         contentHTML: renderCWVDetailSection('INP', desktop, mobile)
       }),
-      ReportAccordion.createSection({ id: 'cwv-notes', title: 'Diagnostics & Notes', scoreTextRight: '—', contentHTML: renderCWVNotesSection(data) }),
       ReportAccordion.createSection({ id: 'cwv-fixes', title: 'Fix Code + Recommendations', scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
     ].join('');
 
@@ -2115,7 +2124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         t.classList.add('tabs__item--active');
       }
     });
-    buttonText.textContent = 'Run scan';
+    buttonText.textContent = 'Analyze';
     runAnalysis();
   };
 
@@ -2331,8 +2340,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function exportPerformancePDF() {
     if (!ensurePerformanceProAccess()) return;
     const current = window.currentPerformanceHubResults || {};
+    const baseTitle = (document && document.title) ? document.title : 'Performance Testing Hub - Website Speed & Optimization Tools';
+    const safeTitle = String(baseTitle).replace(/[<>:"/\\|?*]+/g, '').trim();
+    const now = new Date();
+    const timestamp = now.toISOString().replace(/[:]/g, '-').replace('T', '_').split('.')[0];
     const exporter = new PDFExportUtility({
-      filename: 'performance-report.pdf',
+      filename: `${safeTitle} - ${timestamp}.pdf`,
       reportTitle: 'Speed & UX Report',
       url: current.url || ''
     });
@@ -2424,7 +2437,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderPerformanceSummarySection(stats) {
     return `
       <div class="section">
-        <h2>[SUMMARY]</h2>
+        <h2>Summary</h2>
         <div class="seo-summary">
           <div class="summary-stats">
             <div class="stat-item">
@@ -2533,54 +2546,70 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    // Requested: replace Take Action blocks for Quick Scan + Core Web Vitals.
-    if (mode === 'quick' || mode === 'cwv') {
-      const reportId = getOrComputeReportId();
-      return renderPaidUnlockCard(reportId);
-    }
+    // Render "Continue Analyzing" section with links to other free scans
+    function renderContinueAnalyzingSection() {
+      const encodedUrl = escapeAttr(encodeURIComponent(url || ''));
+      const otherScans = [
+        {
+          href: `/seo-analyzer.html?url=${encodedUrl}`,
+          icon: '🔍',
+          title: 'SEO Analysis',
+          description: 'Meta tags, headings, structured data, and search optimization'
+        },
+        {
+          href: `/security-analyzer.html?url=${encodedUrl}`,
+          icon: '🔒',
+          title: 'Security Scan',
+          description: 'SSL, security headers, vulnerabilities, and OWASP compliance'
+        },
+        {
+          href: `/accessibility-analyzer.html?url=${encodedUrl}`,
+          icon: '♿',
+          title: 'Accessibility Audit',
+          description: 'WCAG compliance, screen reader compatibility, color contrast'
+        },
+        {
+          href: `/enhanced-fonts.html?url=${encodedUrl}`,
+          icon: '🔤',
+          title: 'Font Analysis',
+          description: 'Font loading performance, web font optimization, typography'
+        }
+      ];
 
-    // Use new ProReportBlock component if available
-    if (window.ProReportBlock && window.ProReportBlock.render) {
-      return window.ProReportBlock.render({
-        context: 'performance',
-        features: ['pdf', 'csv', 'share'],
-        title: 'Unlock Report',
-        subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
-      });
-    }
+      return `
+        <div class="section" style="margin-top: 1.5rem;">
+          <div style="background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.08), rgba(var(--accent-primary-rgb), 0.02)); border: 1px solid rgba(var(--accent-primary-rgb), 0.2); border-radius: 12px; padding: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+              <span style="font-size: 1.5rem;">🚀</span>
+              <div>
+                <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary);">Continue Analyzing</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary);">Get a complete picture of your site's health with these free scans</div>
+              </div>
+            </div>
 
-    // Fallback: Legacy Take Action section
-    const modeLabels = {
-      full: 'Lighthouse',
-      cwv: 'Core Web Vitals',
-      quick: 'Speed & UX'
-    };
-    const reportLabel = modeLabels[mode] || 'Speed & UX';
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem;">
+              ${otherScans.map(scan => `
+                <a href="${scan.href}" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.background='rgba(var(--accent-primary-rgb), 0.05)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.background='rgba(255,255,255,0.03)';">
+                  <span style="font-size: 1.5rem;">${scan.icon}</span>
+                  <div style="flex: 1; min-width: 0;">
+                    <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">${scan.title}</div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.3;">${scan.description}</div>
+                  </div>
+                  <span style="color: var(--accent-primary); font-size: 1.25rem;">›</span>
+                </a>
+              `).join('')}
+            </div>
 
-    return `
-      <div class="section">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="color: var(--accent-primary); font-weight: 600;">Unlock Report</span>
-            <span style="color: #666; font-size: 0.9rem;">PDF export, share link, export data, and fix packs for this scan.</span>
-          </div>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button onclick="exportPerformancePDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-              PDF Report
-            </button>
-            <button onclick="copyPerformanceShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              Share Link
-            </button>
-            <button onclick="downloadPerformanceCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
-              Export Data
-            </button>
+            <p style="margin: 1rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary); text-align: center;">
+              All scans are <strong style="color: var(--accent-primary);">free</strong> to run. Get comprehensive insights across all areas of your site.
+            </p>
           </div>
         </div>
-      </div>
-    `;
+      `;
+    }
+
+    // For Speed & UX, show Continue Analyzing instead of Unlock Report
+    return renderContinueAnalyzingSection();
   }
 
   function renderPerformanceActionFooter(url, mode) {
@@ -3081,7 +3110,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cancelPaymentBtn').addEventListener('click', () => {
       document.getElementById('paymentGateModal').remove();
       analyzeButton.disabled = false;
-      buttonText.textContent = 'Run scan';
+      buttonText.textContent = 'Analyze';
       if (loader) loader.complete();
     });
 
