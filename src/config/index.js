@@ -116,6 +116,16 @@ const config = {
     },
   },
 
+  // Billing Configuration
+  billing: {
+    // Stripe Price IDs
+    priceProMonthly: process.env.STRIPE_PRICE_PRO_MONTHLY || process.env.STRIPE_PRO_PRICE_ID,
+    priceProYearly: process.env.STRIPE_PRICE_PRO_YEARLY || process.env.STRIPE_PRO_ANNUAL_PRICE_ID,
+    priceSingleReport: process.env.STRIPE_PRICE_SINGLE_REPORT || process.env.STRIPE_PRICE_SINGLE_REPORT_10,
+    // App Base URL
+    appBaseUrl: process.env.APP_BASE_URL || process.env.BASE_URL || 'http://localhost:3000',
+  },
+
   // Competitive Analysis (Resource-intensive operations)
   competitiveAnalysis: {
     // Maximum number of competitors to analyze per request

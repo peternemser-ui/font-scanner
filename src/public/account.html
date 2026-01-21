@@ -22,12 +22,30 @@
   <style>
     .account-container {
       max-width: 1000px;
-      margin: 3rem auto;
-      padding: 0 2rem;
+      margin: 1.5rem 0 1.5rem 2rem;
+      padding: 0 2rem 0 0;
+    }
+
+    .account-breadcrumb {
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+
+    .account-breadcrumb a {
+      color: var(--accent-primary, #5bf4e7);
+      text-decoration: none;
+    }
+
+    .account-breadcrumb a:hover {
+      text-decoration: underline;
+    }
+
+    .account-breadcrumb span {
+      color: #888;
     }
 
     .account-header {
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
     }
 
     .account-header h1 {
@@ -49,7 +67,7 @@
     }
 
     .account-card {
-      background: rgba(255, 255, 255, 0.03);
+      background: #1a1a1a;
       border: 1px solid rgba(255, 255, 255, 0.1);
       border-radius: 12px;
       padding: 1.5rem;
@@ -133,6 +151,11 @@
       color: #3b82f6;
     }
 
+    .subscription-status.free {
+      background: rgba(255, 255, 255, 0.1);
+      color: #888;
+    }
+
     .account-actions {
       display: flex;
       flex-direction: column;
@@ -155,7 +178,7 @@
 
     .account-btn-primary {
       background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
-      color: var(--accent-primary-contrast);
+      color: #000000 !important;
     }
 
     .account-btn-primary:hover {
@@ -164,24 +187,24 @@
     }
 
     .account-btn-secondary {
-      background: rgba(255, 255, 255, 0.1);
+      background: #2a2a2a;
       color: #fff;
       border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
     .account-btn-secondary:hover {
-      background: rgba(255, 255, 255, 0.15);
+      background: #333;
       border-color: rgba(255, 255, 255, 0.3);
     }
 
     .account-btn-danger {
-      background: rgba(239, 68, 68, 0.1);
+      background: #3d1f1f;
       color: #ef4444;
       border: 1px solid rgba(239, 68, 68, 0.3);
     }
 
     .account-btn-danger:hover {
-      background: rgba(239, 68, 68, 0.2);
+      background: #4d2424;
       border-color: rgba(239, 68, 68, 0.4);
     }
 
@@ -237,6 +260,212 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
+
+    /* Recent Reports Card - Full Width */
+    .account-card--full {
+      grid-column: 1 / -1;
+    }
+
+    .account-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .account-card-header h2 {
+      margin: 0;
+    }
+
+    .account-card-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #888;
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-ghost:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.3);
+      color: #fff;
+    }
+
+    .btn-ghost:focus-visible {
+      outline: 2px solid var(--accent-primary);
+      outline-offset: 2px;
+    }
+
+    .btn-link {
+      background: transparent;
+      border: none;
+      color: var(--accent-primary, #5bf4e7);
+      padding: 0.4rem 0.75rem;
+      font-size: 0.75rem;
+      cursor: pointer;
+      text-decoration: none;
+      transition: opacity 0.2s ease;
+    }
+
+    .btn-link:hover {
+      opacity: 0.8;
+      text-decoration: underline;
+    }
+
+    /* Compact Table */
+    .table--compact {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+    }
+
+    .table--compact th {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      color: #888;
+      font-weight: 500;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .table--compact td {
+      padding: 0.625rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      color: #e5e7eb;
+    }
+
+    .table--compact tbody tr:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .table--compact tbody tr:focus-within {
+      background: rgba(var(--accent-primary-rgb), 0.05);
+    }
+
+    .table--compact .site-url {
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    /* Status Badges */
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .badge--ok {
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .badge--info {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+    }
+
+    .badge--muted {
+      background: rgba(255, 255, 255, 0.1);
+      color: #888;
+    }
+
+    .badge--danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+    }
+
+    /* Skeleton Rows */
+    .skeleton-row {
+      display: flex;
+      gap: 1rem;
+      padding: 0.625rem 0.75rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .skeleton-row .skeleton-cell {
+      height: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 4px;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .skeleton-row .skeleton-cell:nth-child(1) { width: 30%; }
+    .skeleton-row .skeleton-cell:nth-child(2) { width: 20%; }
+    .skeleton-row .skeleton-cell:nth-child(3) { width: 15%; }
+    .skeleton-row .skeleton-cell:nth-child(4) { width: 15%; }
+    .skeleton-row .skeleton-cell:nth-child(5) { width: 10%; }
+
+    /* Empty State */
+    .empty-state {
+      text-align: center;
+      padding: 2rem 1rem;
+      color: #888;
+    }
+
+    .empty-state p {
+      margin: 0 0 1rem 0;
+    }
+
+    /* Usage Block */
+    .usage-block {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .usage-main {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fff;
+    }
+
+    .usage-hint {
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    /* Disabled Upgrade Button */
+    .account-btn-disabled {
+      background: #1f1f1f !important;
+      color: #666 !important;
+      cursor: not-allowed !important;
+      pointer-events: none;
+    }
+
+    .upgrade-hint {
+      font-size: 0.75rem;
+      color: #666;
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+
+    .upgrade-hint a {
+      color: var(--accent-primary, #5bf4e7);
+      text-decoration: none;
+    }
+
+    .upgrade-hint a:hover {
+      text-decoration: underline;
+    }
   </style>
 </head>
 <body>
@@ -244,6 +473,13 @@
 
   <main class="page-shell">
     <div class="account-container">
+      <!-- Breadcrumb -->
+      <nav class="account-breadcrumb" aria-label="Breadcrumb">
+        <a href="/dashboard.html">Dashboard</a>
+        <span> / </span>
+        <span>My Account</span>
+      </nav>
+
       <!-- Success/Error Messages -->
       <div id="success-message" class="success-message hidden"></div>
       <div id="error-message" class="error-message hidden"></div>
@@ -309,13 +545,80 @@
           </div>
 
           <div class="account-actions">
+            <a href="/dashboard.html" class="account-btn account-btn-primary">
+              Run New Report
+            </a>
             <button class="account-btn account-btn-secondary" id="manageSubBtn">
               <span id="manageSubBtnText">Manage Billing</span>
             </button>
-            <div class="account-btn account-btn-primary account-btn-disabled" id="upgradeBtn" aria-disabled="true" tabindex="-1">
-              Upgrade to Pro (temporarily unavailable)
-            </div>
+            <button class="account-btn account-btn-primary" id="upgradeBtn">
+              Upgrade to Pro
+            </button>
           </div>
+
+          <!-- How It Works -->
+          <div class="how-it-works" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8125rem; color: #888;">
+            <strong style="color: #fff;">How it works:</strong>
+            Pro unlocks all paid features across all reports. Cancel anytime via Manage Billing.
+            Single report purchases ($10) unlock only that specific scan permanently.
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Reports Card (Full Width) -->
+      <div class="account-card account-card--full" aria-label="Recent reports">
+        <div class="account-card-header">
+          <h2>
+            <svg class="account-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            Recent Reports
+          </h2>
+          <div class="account-card-actions">
+            <button class="btn-ghost" id="refreshReportsBtn" aria-label="Refresh reports">
+              ↻ Refresh
+            </button>
+            <a href="/dashboard.html" class="btn-link">View all →</a>
+          </div>
+        </div>
+
+        <!-- Loading Skeleton -->
+        <div id="recentReportsLoading">
+          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
+          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
+          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
+        </div>
+
+        <!-- Reports Table -->
+        <table class="table--compact hidden" id="recentReportsTable">
+          <thead>
+            <tr>
+              <th>Site</th>
+              <th>Report</th>
+              <th>Run</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody id="recentReportsTbody">
+            <!-- Populated via JavaScript -->
+          </tbody>
+        </table>
+
+        <!-- Empty State -->
+        <div class="empty-state hidden" id="recentReportsEmpty">
+          <p>You haven't run any reports yet.</p>
+          <a href="/dashboard.html" class="account-btn account-btn-primary" style="display: inline-block; width: auto;">
+            Run your first report
+          </a>
+        </div>
+
+        <!-- Error State -->
+        <div class="empty-state hidden" id="recentReportsError">
+          <p>Failed to load reports.</p>
+          <button class="account-btn account-btn-secondary" id="retryReportsBtn" style="display: inline-block; width: auto;">
+            Retry
+          </button>
         </div>
       </div>
 

@@ -2,6 +2,7 @@ const express = require('express');
 const stripeService = require('../services/stripeService');
 const { createLogger } = require('../utils/logger');
 const { ValidationError, asyncHandler } = require('../utils/errorHandler');
+const { requireAuth } = require('../middleware/requireAuth');
 
 const logger = createLogger('BillingRoutes');
 const router = express.Router();
@@ -49,7 +50,157 @@ function validateReturnUrl(returnUrl, requestHost) {
 }
 
 /**
+ * POST /api/billing/checkout
+ * Unified checkout endpoint for subscriptions and single reports
+ * Body:
+ * {
+ *   purchaseType: "subscription" | "single_report",
+ *   interval?: "month" | "year" (required for subscription),
+ *   reportId?: string (required for single_report),
+ *   returnUrl?: string (optional, defaults to account page)
+ * }
+ */
+router.post(
+  '/checkout',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { purchaseType, interval, reportId, returnUrl } = req.body || {};
+    const user = req.user;
+
+    if (!purchaseType || !['subscription', 'single_report'].includes(purchaseType)) {
+      throw new ValidationError('purchaseType must be "subscription" or "single_report"');
+    }
+
+    if (purchaseType === 'subscription') {
+      if (!interval || !['month', 'year'].includes(interval)) {
+        throw new ValidationError('interval must be "month" or "year" for subscriptions');
+      }
+    }
+
+    if (purchaseType === 'single_report') {
+      if (!reportId || typeof reportId !== 'string') {
+        throw new ValidationError('single_report requires reportId');
+      }
+    }
+
+    // Determine return URL
+    const requestHost = req.get('host');
+    let safeReturnUrl;
+    if (returnUrl) {
+      safeReturnUrl = validateReturnUrl(returnUrl, requestHost);
+    } else {
+      // Default to account page
+      const baseUrl = stripeService.getBaseUrl(`${req.protocol}://${requestHost}`);
+      safeReturnUrl = `${baseUrl}/account.html`;
+    }
+
+    logger.info('Creating checkout session', {
+      userId: user.id,
+      purchaseType,
+      interval: interval || null,
+      reportId: reportId || null
+    });
+
+    let session;
+    if (purchaseType === 'subscription') {
+      session = await stripeService.createSubscriptionCheckout({
+        userId: user.id,
+        email: user.email,
+        interval,
+        successUrl: `${safeReturnUrl}?billing_success=true`,
+        cancelUrl: `${safeReturnUrl}?billing_canceled=true`
+      });
+    } else {
+      session = await stripeService.createSingleReportCheckout({
+        userId: user.id,
+        email: user.email,
+        reportId,
+        successUrl: `${safeReturnUrl}?billing_success=true&report_id=${encodeURIComponent(reportId)}`,
+        cancelUrl: `${safeReturnUrl}?billing_canceled=true`
+      });
+    }
+
+    res.json({ checkoutUrl: session.url });
+  })
+);
+
+/**
+ * GET /api/billing/portal
+ * Create Stripe Customer Portal session for subscription management
+ */
+router.get(
+  '/portal',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const user = req.user;
+    const requestHost = req.get('host');
+    const baseUrl = stripeService.getBaseUrl(`${req.protocol}://${requestHost}`);
+    const returnUrl = `${baseUrl}/account.html`;
+
+    logger.info('Creating portal session', { userId: user.id });
+
+    const session = await stripeService.createPortalSession(user.id, returnUrl);
+
+    res.json({ portalUrl: session.url });
+  })
+);
+
+/**
+ * GET /api/billing/status
+ * Get normalized billing info for the authenticated user
+ * Returns:
+ * {
+ *   plan: "free" | "pro",
+ *   subscriptionStatus: "active" | "trialing" | "canceled" | "past_due" | null,
+ *   subscriptionInterval: "month" | "year" | null,
+ *   currentPeriodEnd: ISO date string | null,
+ *   cancelAtPeriodEnd: boolean,
+ *   hasStripeCustomer: boolean,
+ *   purchasedReports: string[] (array of report IDs)
+ * }
+ */
+router.get(
+  '/status',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const user = req.user;
+
+    logger.info('Fetching billing status', { userId: user.id });
+
+    const status = await stripeService.getBillingStatus(user.id);
+
+    res.json(status);
+  })
+);
+
+/**
+ * GET /api/billing/verify-session?session_id=...
+ * Legacy endpoint for verifying billing sessions
+ * On success returns:
+ * {
+ *   paid: boolean,
+ *   purchaseType: "single_report" | "credit_pack",
+ *   reportId: string | null,
+ *   creditsAdded: 0 | 5 | 10 | 25
+ * }
+ */
+router.get(
+  '/verify-session',
+  asyncHandler(async (req, res) => {
+    const sessionId = req.query.session_id;
+    if (!sessionId || typeof sessionId !== 'string') {
+      throw new ValidationError('session_id is required');
+    }
+
+    const result = await stripeService.verifyBillingSession(sessionId);
+    res.json(result);
+  })
+);
+
+/**
  * POST /api/billing/create-checkout-session
+ * Legacy endpoint - now redirects to /checkout for subscriptions
+ * or handles credit packs directly
  * Body:
  * {
  *   purchaseType: "single_report" | "credit_pack",
@@ -92,7 +243,7 @@ router.post(
       throw new ValidationError('returnUrl is required');
     }
 
-    logger.info('Creating billing checkout session', {
+    logger.info('Creating billing checkout session (legacy)', {
       purchaseType,
       packId: packId || null,
       reportId: reportId || null,
@@ -108,29 +259,6 @@ router.post(
     });
 
     res.json({ checkoutUrl: session.url });
-  })
-);
-
-/**
- * GET /api/billing/verify-session?session_id=...
- * On success returns:
- * {
- *   paid: boolean,
- *   purchaseType: "single_report" | "credit_pack",
- *   reportId: string | null,
- *   creditsAdded: 0 | 5 | 10 | 25
- * }
- */
-router.get(
-  '/verify-session',
-  asyncHandler(async (req, res) => {
-    const sessionId = req.query.session_id;
-    if (!sessionId || typeof sessionId !== 'string') {
-      throw new ValidationError('session_id is required');
-    }
-
-    const result = await stripeService.verifyBillingSession(sessionId);
-    res.json(result);
   })
 );
 

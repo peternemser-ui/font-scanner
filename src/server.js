@@ -29,11 +29,12 @@ const {
   getRateLimitAnalytics
 } = require('./middleware/rateLimiter');
 const browserPool = require('./utils/browserPool');
-const { 
-  startScheduledCleanup, 
-  stopScheduledCleanup, 
-  getCleanupStats 
+const {
+  startScheduledCleanup,
+  stopScheduledCleanup,
+  getCleanupStats
 } = require('./utils/reportCleanup');
+const { optionalAuth } = require('./middleware/requireAuth');
 
 const logger = createLogger('Server');
 const app = express();
@@ -76,6 +77,37 @@ try {
 } catch (error) {
   logger.error('Failed to start report cleanup scheduler:', error);
 }
+
+// Memory monitoring - check every 5 minutes and warn if memory is high
+const MEMORY_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
+const MEMORY_WARNING_THRESHOLD_MB = 512; // Warn if heap exceeds 512MB
+let memoryMonitorInterval = setInterval(() => {
+  const used = process.memoryUsage();
+  const heapUsedMB = Math.round(used.heapUsed / 1024 / 1024);
+  
+  if (heapUsedMB > MEMORY_WARNING_THRESHOLD_MB) {
+    logger.warn('High memory usage detected', {
+      heapUsedMB,
+      heapTotalMB: Math.round(used.heapTotal / 1024 / 1024),
+      rssMB: Math.round(used.rss / 1024 / 1024),
+      threshold: MEMORY_WARNING_THRESHOLD_MB
+    });
+    
+    // Trigger cleanup of expired cache entries
+    try {
+      const { defaultCache } = require('./utils/cache');
+      defaultCache.cleanup();
+    } catch (e) {
+      // Ignore cleanup errors
+    }
+    
+    // Hint garbage collection if available
+    if (global.gc) {
+      global.gc();
+      logger.info('Garbage collection triggered due to high memory');
+    }
+  }
+}, MEMORY_CHECK_INTERVAL);
 
 // Security middleware
 /* app.use(
@@ -396,6 +428,7 @@ const pdfController = require('./controllers/pdfController');
 app.get('/api/pdf/pricing', pdfController.getPricing);
 app.post('/api/pdf/purchase', scanLimiter, pdfController.purchasePDFReport);
 app.get('/api/pdf/download/:token', downloadLimiter, pdfController.downloadPDFReport);
+app.post('/api/pdf/generate', scanLimiter, optionalAuth, pdfController.generatePDF);
 
 // Test endpoint for debugging
 app.get('/api/test', (req, res) => {
@@ -479,6 +512,16 @@ const gracefulShutdown = async (signal) => {
 
     // Cleanup tasks
     logger.info('Performing cleanup tasks...');
+
+    // Stop memory monitor interval
+    try {
+      if (memoryMonitorInterval) {
+        clearInterval(memoryMonitorInterval);
+        logger.info('Memory monitor stopped');
+      }
+    } catch (error) {
+      logger.error('Error stopping memory monitor:', error);
+    }
 
     // Stop report cleanup scheduler
     try {

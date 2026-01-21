@@ -46,6 +46,51 @@ class StripeService {
     return map[packId] || 0;
   }
 
+  /**
+   * Get subscription price ID based on interval
+   * @param {string} interval - 'month' or 'year'
+   * @returns {string} Stripe price ID
+   */
+  getSubscriptionPriceId(interval) {
+    const env = process.env;
+    if (interval === 'month') {
+      const priceId = env.STRIPE_PRICE_PRO_MONTHLY || env.STRIPE_PRO_PRICE_ID;
+      if (!priceId) {
+        throw new Error('Stripe price ID not configured: STRIPE_PRICE_PRO_MONTHLY');
+      }
+      return priceId;
+    }
+    if (interval === 'year') {
+      const priceId = env.STRIPE_PRICE_PRO_YEARLY || env.STRIPE_PRO_ANNUAL_PRICE_ID;
+      if (!priceId) {
+        throw new Error('Stripe price ID not configured: STRIPE_PRICE_PRO_YEARLY');
+      }
+      return priceId;
+    }
+    throw new Error('Invalid interval: must be "month" or "year"');
+  }
+
+  /**
+   * Get single report price ID
+   * @returns {string} Stripe price ID
+   */
+  getSingleReportPriceId() {
+    const priceId = process.env.STRIPE_PRICE_SINGLE_REPORT || process.env.STRIPE_PRICE_SINGLE_REPORT_10;
+    if (!priceId) {
+      throw new Error('Stripe price ID not configured: STRIPE_PRICE_SINGLE_REPORT');
+    }
+    return priceId;
+  }
+
+  /**
+   * Get the base URL for redirects
+   * @param {string} requestOrigin - The request origin (fallback)
+   * @returns {string} Base URL
+   */
+  getBaseUrl(requestOrigin) {
+    return process.env.APP_BASE_URL || process.env.BASE_URL || requestOrigin || 'http://localhost:3000';
+  }
+
   appendQuery(urlString, query) {
     const url = new URL(urlString);
     Object.entries(query).forEach(([key, value]) => {
@@ -361,6 +406,262 @@ class StripeService {
   }
 
   /**
+   * Create Stripe Checkout session for subscription (monthly or yearly)
+   * @param {Object} params
+   * @param {string} params.userId - User ID
+   * @param {string} params.email - User email
+   * @param {string} params.interval - 'month' or 'year'
+   * @param {string} params.successUrl - URL after successful payment
+   * @param {string} params.cancelUrl - URL if payment is canceled
+   */
+  async createSubscriptionCheckout({ userId, email, interval, successUrl, cancelUrl }) {
+    const customerId = await this.getOrCreateCustomer(userId, email);
+    const priceId = this.getSubscriptionPriceId(interval);
+
+    logger.info('Creating subscription checkout session', {
+      userId,
+      customerId,
+      interval,
+      priceId
+    });
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      line_items: [{
+        price: priceId,
+        quantity: 1,
+      }],
+      mode: 'subscription',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: {
+        userId,
+        purchaseType: 'subscription',
+        interval
+      },
+      allow_promotion_codes: true,
+      billing_address_collection: 'auto',
+      customer_update: {
+        address: 'auto'
+      }
+    });
+
+    logger.info('Subscription checkout session created', {
+      sessionId: session.id,
+      interval
+    });
+
+    return session;
+  }
+
+  /**
+   * Create Stripe Checkout session for single report purchase
+   * @param {Object} params
+   * @param {string} params.userId - User ID
+   * @param {string} params.email - User email
+   * @param {string} params.reportId - Report ID being purchased
+   * @param {string} params.successUrl - URL after successful payment
+   * @param {string} params.cancelUrl - URL if payment is canceled
+   */
+  async createSingleReportCheckout({ userId, email, reportId, successUrl, cancelUrl }) {
+    const customerId = await this.getOrCreateCustomer(userId, email);
+    const priceId = this.getSingleReportPriceId();
+
+    logger.info('Creating single report checkout session', {
+      userId,
+      customerId,
+      reportId,
+      priceId
+    });
+
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      line_items: [{
+        price: priceId,
+        quantity: 1,
+      }],
+      mode: 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
+      metadata: {
+        userId,
+        purchaseType: 'single_report',
+        reportId
+      },
+      allow_promotion_codes: false
+    });
+
+    logger.info('Single report checkout session created', {
+      sessionId: session.id,
+      reportId
+    });
+
+    return session;
+  }
+
+  /**
+   * Get normalized billing status for a user
+   * @param {string} userId
+   * @returns {Object} Billing status object
+   */
+  async getBillingStatus(userId) {
+    const db = getDatabase();
+
+    // Get user data with subscription fields
+    const user = await db.get(
+      `SELECT
+        id, email, plan, stripe_customer_id,
+        stripe_subscription_id, stripe_subscription_status,
+        stripe_current_period_end, stripe_subscription_interval
+      FROM users WHERE id = ?`,
+      [userId]
+    );
+
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Get purchased reports
+    let purchasedReports = [];
+    try {
+      const rows = await db.all(
+        'SELECT report_id FROM report_purchases WHERE user_id = ?',
+        [userId]
+      );
+      purchasedReports = rows.map(r => r.report_id);
+    } catch (e) {
+      // Table may not exist yet
+      logger.warn('Could not fetch purchased reports', { error: e.message });
+    }
+
+    // Determine if subscription is active
+    const activeStatuses = ['active', 'trialing'];
+    const isPro = activeStatuses.includes(user.stripe_subscription_status);
+
+    // Check if subscription should still have access (grace period)
+    let effectivePlan = user.plan || 'free';
+    if (user.stripe_subscription_status === 'canceled' && user.stripe_current_period_end) {
+      const periodEnd = new Date(user.stripe_current_period_end);
+      if (periodEnd > new Date()) {
+        // Still within paid period
+        effectivePlan = 'pro';
+      }
+    } else if (isPro) {
+      effectivePlan = 'pro';
+    }
+
+    // If we have a Stripe customer but no local subscription data, try to fetch from Stripe
+    let cancelAtPeriodEnd = false;
+    if (user.stripe_customer_id && !user.stripe_subscription_id) {
+      try {
+        const subscriptions = await stripe.subscriptions.list({
+          customer: user.stripe_customer_id,
+          status: 'all',
+          limit: 1
+        });
+
+        if (subscriptions.data.length > 0) {
+          const sub = subscriptions.data[0];
+          cancelAtPeriodEnd = sub.cancel_at_period_end || false;
+        }
+      } catch (e) {
+        logger.warn('Failed to fetch subscription from Stripe', { error: e.message });
+      }
+    }
+
+    return {
+      plan: effectivePlan,
+      subscriptionStatus: user.stripe_subscription_status || null,
+      subscriptionInterval: user.stripe_subscription_interval || null,
+      currentPeriodEnd: user.stripe_current_period_end || null,
+      cancelAtPeriodEnd,
+      hasStripeCustomer: !!user.stripe_customer_id,
+      purchasedReports
+    };
+  }
+
+  // ============================================
+  // Entitlement Helper Functions
+  // ============================================
+
+  /**
+   * Check if user has active Pro subscription
+   * @param {Object} user - User object with stripe_subscription_status and stripe_current_period_end
+   * @returns {boolean}
+   */
+  isPro(user) {
+    if (!user) return false;
+
+    const status = user.stripe_subscription_status;
+    const activeStatuses = ['active', 'trialing'];
+
+    // Direct active subscription
+    if (activeStatuses.includes(status)) {
+      return true;
+    }
+
+    // Canceled but still within grace period
+    if (status === 'canceled' && user.stripe_current_period_end) {
+      const periodEnd = new Date(user.stripe_current_period_end);
+      if (periodEnd > new Date()) {
+        return true;
+      }
+    }
+
+    // Legacy plan check
+    if (user.plan === 'pro') {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if user has purchased a specific report
+   * @param {string} userId - User ID
+   * @param {string} reportId - Report ID
+   * @returns {Promise<boolean>}
+   */
+  async hasReportPurchase(userId, reportId) {
+    if (!userId || !reportId) return false;
+
+    const db = getDatabase();
+    try {
+      const row = await db.get(
+        'SELECT 1 FROM report_purchases WHERE user_id = ? AND report_id = ?',
+        [userId, reportId]
+      );
+      return !!row;
+    } catch (e) {
+      // Table may not exist yet
+      logger.warn('Could not check report purchase', { error: e.message });
+      return false;
+    }
+  }
+
+  /**
+   * Check if user can access paid features for a report
+   * Pro users can access all reports, others need individual purchases
+   * @param {Object} user - User object
+   * @param {string} reportId - Report ID (optional)
+   * @returns {Promise<boolean>}
+   */
+  async canAccessPaid(user, reportId = null) {
+    // Pro users have access to everything
+    if (this.isPro(user)) {
+      return true;
+    }
+
+    // If no reportId provided, they need Pro
+    if (!user?.id || !reportId) {
+      return false;
+    }
+
+    // Check for individual report purchase
+    return this.hasReportPurchase(user.id, reportId);
+  }
+
+  /**
    * Handle Stripe webhook events
    */
   async handleWebhook(event) {
@@ -395,10 +696,102 @@ class StripeService {
         case 'checkout.session.async_payment_succeeded':
         case 'checkout.session.async_payment_failed': {
           const session = event.data.object;
+          const isPaid = session.payment_status === 'paid';
 
-          // Only fulfill billing purchases (no-auth, pay-per-report / credit packs).
-          // Subscription checkouts are handled by subscription.* events.
-          if (session && session.mode === 'payment') {
+          // Handle subscription checkouts
+          if (session && session.mode === 'subscription' && isPaid) {
+            const userId = session.metadata?.userId;
+            const interval = session.metadata?.interval;
+            const subscriptionId = session.subscription;
+
+            if (userId && subscriptionId) {
+              try {
+                // Fetch full subscription details from Stripe
+                const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+                const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+
+                // Update user with subscription details
+                await db.run(
+                  `UPDATE users SET
+                    plan = 'pro',
+                    stripe_subscription_id = ?,
+                    stripe_subscription_status = ?,
+                    stripe_current_period_end = ?,
+                    stripe_subscription_interval = ?
+                  WHERE id = ?`,
+                  [
+                    subscriptionId,
+                    subscription.status,
+                    currentPeriodEnd,
+                    interval || (subscription.items?.data?.[0]?.price?.recurring?.interval) || 'month',
+                    userId
+                  ]
+                );
+
+                logger.info('Subscription checkout completed - user updated', {
+                  userId,
+                  subscriptionId,
+                  status: subscription.status,
+                  interval
+                });
+
+                // Update entitlements
+                await db.run(`
+                  INSERT INTO entitlements (user_id, plan, stripe_subscription_id, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
+                  VALUES (?, 'pro', ?, ?, ?, -1, 250, 1)
+                  ON CONFLICT(user_id) DO UPDATE SET
+                    plan = 'pro',
+                    stripe_subscription_id = excluded.stripe_subscription_id,
+                    status = excluded.status,
+                    current_period_end = excluded.current_period_end,
+                    scans_remaining = -1,
+                    max_pages_per_scan = 250,
+                    pdf_export_enabled = 1,
+                    updated_at = CURRENT_TIMESTAMP
+                `, [userId, subscriptionId, subscription.status, currentPeriodEnd]);
+
+              } catch (e) {
+                logger.error('Failed to sync subscription from checkout', {
+                  sessionId: session.id,
+                  error: e.message
+                });
+              }
+            }
+          }
+
+          // Handle single report payment purchases (linked to user)
+          if (session && session.mode === 'payment' && isPaid) {
+            const purchaseType = session.metadata?.purchaseType;
+            const userId = session.metadata?.userId;
+            const reportId = session.metadata?.reportId;
+
+            if (purchaseType === 'single_report' && userId && reportId) {
+              try {
+                await db.run(
+                  `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at)
+                   VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                   ON CONFLICT(user_id, report_id) DO UPDATE SET
+                     stripe_checkout_session_id = excluded.stripe_checkout_session_id,
+                     purchased_at = CURRENT_TIMESTAMP`,
+                  [userId, reportId, session.id]
+                );
+
+                logger.info('Single report purchase recorded', {
+                  userId,
+                  reportId,
+                  sessionId: session.id
+                });
+              } catch (e) {
+                logger.error('Failed to record report purchase', {
+                  sessionId: session.id,
+                  userId,
+                  reportId,
+                  error: e.message
+                });
+              }
+            }
+
+            // Also store in billing_sessions for legacy support
             try {
               const stored = await this.upsertBillingSessionFromCheckoutSession(session);
               logger.info('Billing checkout session webhook stored', {
@@ -432,16 +825,33 @@ class StripeService {
           });
 
           // Determine plan based on subscription status
-          const plan = subscription.status === 'active' ? 'pro' : 'free';
+          const activeStatuses = ['active', 'trialing'];
+          const plan = activeStatuses.includes(subscription.status) ? 'pro' : 'free';
+          const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
-          // Update user plan
+          // Get interval from subscription items
+          const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'month';
+
+          // Update user with full subscription details
           const result = await db.run(
-            'UPDATE users SET plan = ? WHERE stripe_customer_id = ?',
-            [plan, customerId]
+            `UPDATE users SET
+              plan = ?,
+              stripe_subscription_id = ?,
+              stripe_subscription_status = ?,
+              stripe_current_period_end = ?,
+              stripe_subscription_interval = ?
+            WHERE stripe_customer_id = ?`,
+            [plan, subscription.id, subscription.status, currentPeriodEnd, interval, customerId]
           );
 
           if (result.changes > 0) {
-            logger.info('User plan updated', { customerId, plan });
+            logger.info('User subscription updated', {
+              customerId,
+              plan,
+              status: subscription.status,
+              interval,
+              currentPeriodEnd
+            });
 
             // Update entitlements
             const user = await db.get(
@@ -450,8 +860,6 @@ class StripeService {
             );
 
             if (user) {
-              const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
-
               await db.run(`
                 INSERT INTO entitlements (user_id, plan, stripe_subscription_id, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
                 VALUES (?, ?, ?, ?, ?, ?, ?, ?)
@@ -484,22 +892,31 @@ class StripeService {
         case 'customer.subscription.deleted': {
           const subscription = event.data.object;
           const customerId = subscription.customer;
+          const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
           logger.info('Subscription deleted', {
             subscriptionId: subscription.id,
-            customerId
+            customerId,
+            currentPeriodEnd
           });
 
-          // Downgrade to free plan
+          // Set status to canceled but keep current_period_end for grace period
+          // User retains access until the end of the paid period
           const result = await db.run(
-            'UPDATE users SET plan = ? WHERE stripe_customer_id = ?',
-            ['free', customerId]
+            `UPDATE users SET
+              stripe_subscription_status = 'canceled',
+              stripe_current_period_end = ?
+            WHERE stripe_customer_id = ?`,
+            [currentPeriodEnd, customerId]
           );
 
           if (result.changes > 0) {
-            logger.info('User downgraded to free', { customerId });
+            logger.info('User subscription marked as canceled with grace period', {
+              customerId,
+              accessUntil: currentPeriodEnd
+            });
 
-            // Update entitlements to free tier
+            // Update entitlements - keep pro access until period end
             const user = await db.get(
               'SELECT id FROM users WHERE stripe_customer_id = ?',
               [customerId]
@@ -508,16 +925,16 @@ class StripeService {
             if (user) {
               await db.run(`
                 UPDATE entitlements SET
-                  plan = 'free',
                   status = 'canceled',
-                  scans_remaining = 3,
-                  max_pages_per_scan = 10,
-                  pdf_export_enabled = 0,
+                  current_period_end = ?,
                   updated_at = CURRENT_TIMESTAMP
                 WHERE user_id = ?
-              `, [user.id]);
+              `, [currentPeriodEnd, user.id]);
 
-              logger.info('Entitlements downgraded', { userId: user.id });
+              logger.info('Entitlements marked as canceled with grace period', {
+                userId: user.id,
+                accessUntil: currentPeriodEnd
+              });
             }
           }
           break;

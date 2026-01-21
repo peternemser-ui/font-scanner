@@ -4,10 +4,12 @@
  */
 
 const paymentService = require('../services/paymentService');
+const stripeService = require('../services/stripeService');
 const seoPdfGenerator = require('../services/seoPdfGenerator');
 const performancePdfGenerator = require('../services/performancePdfGenerator');
 const accessibilityPdfGenerator = require('../services/accessibilityPdfGenerator');
 const securityPdfGenerator = require('../services/securityPdfGenerator');
+const tagIntelligencePdfGenerator = require('../services/tagIntelligencePdfGenerator');
 const pdfReportGenerator = require('../services/pdfReportGenerator');
 const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { createLogger } = require('../utils/logger');
@@ -52,7 +54,7 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
   }
 
   // Validate report type
-  const validReportTypes = ['seo', 'performance', 'accessibility', 'security', 'fonts'];
+  const validReportTypes = ['seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence'];
   if (!validReportTypes.includes(reportType)) {
     return res.status(400).json({
       success: false,
@@ -68,6 +70,7 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
     accessibility: 'accessibility',
     security: 'security',
     fonts: reportData?.analyzerKey || 'enhanced-fonts',
+    'tag-intelligence': 'tag-intelligence',
   };
 
   const resolvedReportId = resolveReportId({
@@ -120,6 +123,9 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
         break;
       case 'fonts':
         pdfResult = await pdfReportGenerator.generateComprehensiveReport(reportDataWithId);
+        break;
+      case 'tag-intelligence':
+        pdfResult = await tagIntelligencePdfGenerator.generateReport(reportDataWithId);
         break;
       default:
         throw new Error(`Unknown report type: ${reportType}`);
@@ -192,7 +198,11 @@ const downloadPDFReport = asyncHandler(async (req, res) => {
   const reportsDir = path.join(__dirname, '../../reports');
   const fs = require('fs');
 
-  const reportTypePrefix = reportType === 'fonts' ? 'font-analysis' : `${reportType}-analysis`;
+  const reportTypePrefixMap = {
+    fonts: 'font-analysis',
+    'tag-intelligence': 'tag-intelligence-analysis'
+  };
+  const reportTypePrefix = reportTypePrefixMap[reportType] || `${reportType}-analysis`;
   const expectedFilename = `${reportTypePrefix}-${reportId}.pdf`;
   const pdfPath = path.join(reportsDir, expectedFilename);
 
@@ -222,8 +232,138 @@ const downloadPDFReport = asyncHandler(async (req, res) => {
   });
 });
 
+/**
+ * Generate PDF report directly (for unlocked reports)
+ * POST /api/pdf/generate
+ * Returns PDF as direct download stream
+ *
+ * Requires paid access:
+ * - Pro subscribers can generate all PDFs
+ * - Users with single report purchase can generate that specific report
+ * - req.user is attached by optionalAuth middleware
+ */
+const generatePDF = asyncHandler(async (req, res) => {
+  const { reportType, reportData } = req.body;
+
+  if (!reportType || !reportData) {
+    return res.status(400).json({
+      success: false,
+      error: 'Report type and data are required'
+    });
+  }
+
+  const validReportTypes = ['seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence'];
+  if (!validReportTypes.includes(reportType)) {
+    return res.status(400).json({
+      success: false,
+      error: `Invalid report type. Must be one of: ${validReportTypes.join(', ')}`
+    });
+  }
+
+  logger.info(`PDF generation request`, { reportType, requestId: req.id });
+
+  const analyzerKeyByType = {
+    seo: 'seo',
+    performance: 'performance',
+    accessibility: 'accessibility',
+    security: 'security',
+    fonts: reportData?.analyzerKey || 'enhanced-fonts',
+    'tag-intelligence': 'tag-intelligence',
+  };
+
+  const resolvedReportId = resolveReportId({
+    reportId: reportData?.reportId,
+    analyzerKey: analyzerKeyByType[reportType],
+    url: reportData?.normalizedUrl || reportData?.url || reportData?.baseUrl,
+    startedAtISO: reportData?.scanStartedAt || reportData?.startedAt || reportData?.timestamp,
+  });
+
+  // Check entitlement - user must have paid access
+  const user = req.user; // Attached by optionalAuth middleware
+  const canAccess = await stripeService.canAccessPaid(user, resolvedReportId);
+
+  if (!canAccess) {
+    logger.info('PDF generation blocked - paid access required', {
+      reportType,
+      reportId: resolvedReportId,
+      userId: user?.id || 'anonymous'
+    });
+
+    return res.status(403).json({
+      success: false,
+      error: 'Paid access required',
+      message: 'You need a Pro subscription or to purchase this report to download the PDF.',
+      upgradeUrl: '/upgrade.html',
+      reportId: resolvedReportId
+    });
+  }
+
+  const reportDataWithId = {
+    ...reportData,
+    reportId: resolvedReportId || `gen-${Date.now()}`,
+    analyzerKey: analyzerKeyByType[reportType]
+  };
+
+  try {
+    let pdfResult;
+
+    switch (reportType) {
+      case 'seo':
+        pdfResult = await seoPdfGenerator.generateReport(reportDataWithId);
+        break;
+      case 'performance':
+        pdfResult = await performancePdfGenerator.generateReport(reportDataWithId);
+        break;
+      case 'accessibility':
+        pdfResult = await accessibilityPdfGenerator.generateReport(reportDataWithId);
+        break;
+      case 'security':
+        pdfResult = await securityPdfGenerator.generateReport(reportDataWithId);
+        break;
+      case 'fonts':
+        pdfResult = await pdfReportGenerator.generateComprehensiveReport(reportDataWithId);
+        break;
+      case 'tag-intelligence':
+        pdfResult = await tagIntelligencePdfGenerator.generateReport(reportDataWithId);
+        break;
+      default:
+        throw new Error(`Unknown report type: ${reportType}`);
+    }
+
+    logger.info(`PDF generated successfully`, { filename: pdfResult.filename, reportType });
+
+    const fs = require('fs');
+
+    // Stream the PDF file
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${pdfResult.filename}"`);
+
+    const fileStream = fs.createReadStream(pdfResult.filepath);
+    fileStream.pipe(res);
+
+    fileStream.on('error', (err) => {
+      logger.error('Error streaming PDF:', err);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          error: 'Error streaming PDF report'
+        });
+      }
+    });
+
+  } catch (error) {
+    logger.error('Error generating PDF:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to generate PDF report',
+      message: error.message
+    });
+  }
+});
+
 module.exports = {
   getPricing,
   purchasePDFReport,
-  downloadPDFReport
+  downloadPDFReport,
+  generatePDF
 };
