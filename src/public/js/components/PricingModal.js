@@ -199,8 +199,8 @@
       <div class="pricing-login-prompt">
         <p>Please log in to purchase a subscription or report.</p>
         <div class="pricing-login-prompt__actions">
-          <a href="/login.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}" class="btn btn--primary">Log In</a>
-          <a href="/signup.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}" class="btn btn--outline">Sign Up</a>
+          <a href="/auth.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}" class="btn btn--primary">Log In</a>
+          <a href="/auth.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}&mode=signup" class="btn btn--outline">Sign Up</a>
         </div>
       </div>
     `;
