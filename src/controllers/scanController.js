@@ -120,14 +120,7 @@ const scanWebsite = asyncHandler(async (req, res) => {
       
       // Get fonts from basicScan instead of pages
       const fontsData = scanResult.basicScan?.fonts;
-      
-      logger.info('🔍 DEBUG fonts data from basicScan:', {
-        hasFontsData: !!fontsData,
-        totalFonts: fontsData?.totalFonts || 0,
-        fontsArrayLength: fontsData?.fonts?.length || 0,
-        categorizedFonts: fontsData?.categorizedFonts
-      });
-      
+
       // Process fonts from the basicScan
       if (fontsData?.fonts && Array.isArray(fontsData.fonts)) {
   fontsData.fonts.forEach((font) => {
@@ -352,13 +345,6 @@ const scanWebsite = asyncHandler(async (req, res) => {
         lighthouseData = null;
       }
 
-      // Log font data before building response
-      logger.info('🔍 Font data being sent to frontend:', {
-        uniqueFontsCount: uniqueFonts.length,
-        uniqueFontsPreview: uniqueFonts.slice(0, 5),
-        categorizedFonts: categorizedFonts
-      });
-
       const transformedResults = {
         fonts: {
           fonts: uniqueFonts, // For the fonts tab
@@ -389,11 +375,6 @@ const scanWebsite = asyncHandler(async (req, res) => {
         summary: scanResult.summary || {},
         screenshot: mainScreenshot
       };
-
-      logger.info('🔍 Final transformedResults.fonts:', {
-        totalFonts: transformedResults.fonts.totalFonts,
-        fontsArrayLength: transformedResults.fonts.fonts.length
-      });
 
       const response = {
         success: true,

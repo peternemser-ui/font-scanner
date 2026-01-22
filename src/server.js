@@ -37,11 +37,27 @@ const {
 const { optionalAuth } = require('./middleware/requireAuth');
 
 const logger = createLogger('Server');
+
+// Production environment validation
+if (config.nodeEnv === 'production') {
+  if (!config.cors.origin) {
+    logger.error('CORS_ORIGIN must be set in production');
+    process.exit(1);
+  }
+  if (!process.env.JWT_SECRET) {
+    logger.error('JWT_SECRET must be set in production');
+    process.exit(1);
+  }
+  if (!process.env.STRIPE_SECRET_KEY) {
+    logger.error('STRIPE_SECRET_KEY must be set in production');
+    process.exit(1);
+  }
+}
 const app = express();
 const server = http.createServer(app);
 const io = new SocketIO(server, {
   cors: {
-    origin: config.corsOrigin || '*',
+    origin: config.cors.origin || '*',
     methods: ['GET', 'POST']
   }
 });
@@ -110,7 +126,7 @@ let memoryMonitorInterval = setInterval(() => {
 }, MEMORY_CHECK_INTERVAL);
 
 // Security middleware
-/* app.use(
+app.use(
   helmet({
     contentSecurityPolicy: {
       directives: {
@@ -119,15 +135,19 @@ let memoryMonitorInterval = setInterval(() => {
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         scriptSrc: [
           "'self'",
+          "'unsafe-inline'",
           'https://cdn.socket.io',
-          'https://cdn.jsdelivr.net'
+          'https://cdn.jsdelivr.net',
+          'https://js.stripe.com'
         ],
         imgSrc: ["'self'", 'data:', 'https:'],
+        connectSrc: ["'self'", 'https://api.stripe.com', 'wss:', 'ws:'],
+        frameSrc: ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
       },
     },
+    crossOriginEmbedderPolicy: false,
   })
 );
-*/
 // Rate limiting - Global limiter for all requests
 app.use(globalLimiter);
 

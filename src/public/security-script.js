@@ -42,8 +42,6 @@ function cleanupPreviousSecurityData() {
       try { chart.destroy(); } catch (e) { /* ignore */ }
     });
   }
-  
-  console.log('[Memory] Cleaned up previous security scan data');
 }
 
 // Initialize page
@@ -1437,7 +1435,10 @@ function renderLockedProPreview(title = 'Pro content', previewLines = []) {
         ${lines.slice(0, 2).map(line => `<li>${line}</li>`).join('')}
       </ul>
       <div class="pro-locked__blur"></div>
-      <button class="pro-locked__unlock" onclick="safeOpenProPaywall({ domain: '${getCurrentDomain()}', context: 'security' })">Unlock Report ($10 USD)</button>
+      <div class="pro-locked__buttons">
+        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="security">Unlock for $10</button>
+        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="security">Go Pro — $20/mo</button>
+      </div>
     </div>
   `;
 }
@@ -1509,16 +1510,37 @@ function ensureProStyles() {
       background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.4) 60%);
       pointer-events: none;
     }
+    .pro-locked__buttons {
+      position: relative;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+    }
     .pro-locked__unlock {
       position: relative;
-      margin-top: 0.75rem;
       padding: 0.55rem 1rem;
       border-radius: 8px;
-      border: 1px solid rgba(var(--accent-primary-rgb), 0.4);
-      background: rgba(var(--accent-primary-rgb), 0.12);
-      color: var(--accent-primary);
       font-weight: 700;
       cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .pro-locked__unlock--primary {
+      border: none;
+      background: linear-gradient(135deg, #5bf4e7, #0AFFEF);
+      color: #000;
+    }
+    .pro-locked__unlock--primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(91, 244, 231, 0.4);
+    }
+    .pro-locked__unlock--secondary {
+      border: 1px solid #5bf4e7;
+      background: transparent;
+      color: #5bf4e7;
+    }
+    .pro-locked__unlock--secondary:hover {
+      background: rgba(91, 244, 231, 0.1);
     }
   `;
   document.head.appendChild(style);

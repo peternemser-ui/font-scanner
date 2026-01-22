@@ -21,9 +21,9 @@ class PaymentService {
     this.downloadTokens = new Map(); // In production: use Redis or database
     this.tokenExpiryMs = 3600000; // 1 hour
     
-    // Demo mode - accepts test card numbers
-    this.demoMode = process.env.PAYMENT_DEMO_MODE !== 'false'; // Default to demo
-    this.testCardNumbers = ['4242424242424242', '5555555555554444'];
+    // Demo mode - accepts test card numbers (must be explicitly enabled)
+    this.demoMode = process.env.PAYMENT_DEMO_MODE === 'true';
+    this.testCardNumbers = this.demoMode ? ['4242424242424242', '5555555555554444'] : [];
     
     logger.info('Payment Service initialized', { 
       demoMode: this.demoMode, 
@@ -149,7 +149,7 @@ class PaymentService {
     };
 
     // Generate cryptographic hash
-    const secret = process.env.DOWNLOAD_TOKEN_SECRET || 'demo-secret-key-change-in-production';
+    const secret = process.env.DOWNLOAD_TOKEN_SECRET || process.env.NODE_ENV === 'production' ? (() => { throw new Error('DOWNLOAD_TOKEN_SECRET must be set in production'); })() : 'dev-only-download-secret';
     const dataString = JSON.stringify(tokenData);
     const hash = crypto.createHmac('sha256', secret)
       .update(dataString)
@@ -182,7 +182,7 @@ class PaymentService {
       }
 
       // Verify hash
-      const secret = process.env.DOWNLOAD_TOKEN_SECRET || 'demo-secret-key-change-in-production';
+      const secret = process.env.DOWNLOAD_TOKEN_SECRET || process.env.NODE_ENV === 'production' ? (() => { throw new Error('DOWNLOAD_TOKEN_SECRET must be set in production'); })() : 'dev-only-download-secret';
       const { hash, ...tokenData } = decoded;
       const dataString = JSON.stringify(tokenData);
       const expectedHash = crypto.createHmac('sha256', secret)

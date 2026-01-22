@@ -74,8 +74,6 @@ function cleanupPreviousSeoData(container) {
       try { chart.destroy(); } catch (e) { /* ignore */ }
     });
   }
-  
-  console.log('[Memory] Cleaned up previous SEO scan data');
 }
 
 // Initialize when DOM is ready

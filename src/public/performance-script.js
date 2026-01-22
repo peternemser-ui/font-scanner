@@ -43,8 +43,6 @@ function cleanupPreviousPerfData(container) {
       try { chart.destroy(); } catch (e) { /* ignore */ }
     });
   }
-  
-  console.log('[Memory] Cleaned up previous performance scan data');
 }
 
 // Initialize when DOM is ready

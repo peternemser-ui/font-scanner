@@ -1,11 +1,22 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY || 'sk_test_placeholder');
 const jwt = require('jsonwebtoken');
 const { getDatabase } = require('../db');
 const { createLogger } = require('../utils/logger');
 
 const logger = createLogger('StripeService');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-this-in-production-use-long-random-string';
+// Stripe key must be configured
+const STRIPE_SECRET_KEY = process.env.STRIPE_SECRET_KEY;
+if (!STRIPE_SECRET_KEY && process.env.NODE_ENV === 'production') {
+  throw new Error('STRIPE_SECRET_KEY environment variable must be set in production');
+}
+const stripe = require('stripe')(STRIPE_SECRET_KEY || 'sk_test_placeholder_dev_only');
+
+// JWT secret for entitlement tokens
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable must be set in production');
+}
+const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-secret-do-not-use-in-production';
 
 class StripeService {
   getBaseUrl(requestOrigin = null) {
@@ -106,7 +117,7 @@ class StripeService {
           ...payload,
           iss: 'site-mechanic',
         },
-        JWT_SECRET,
+        EFFECTIVE_JWT_SECRET,
         { expiresIn: '30d' }
       );
     } catch (e) {
@@ -958,8 +969,8 @@ class StripeService {
             attemptCount: invoice.attempt_count
           });
 
-          // TODO: Send email notification to user
-          // TODO: If attempt_count > 3, consider downgrading or suspending
+          // Future: Send email notification to user about failed payment
+          // Future: If attempt_count > 3, consider downgrading or suspending
 
           break;
         }
@@ -971,7 +982,7 @@ class StripeService {
             trialEnd: new Date(subscription.trial_end * 1000)
           });
 
-          // TODO: Send reminder email
+          // Future: Send reminder email about trial ending
 
           break;
         }

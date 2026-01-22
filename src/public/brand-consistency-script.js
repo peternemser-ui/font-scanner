@@ -257,7 +257,6 @@ function getGradeColor(grade) {
 
 function displayResults(data) {
   try {
-  console.log('[Brand] displayResults called with data:', data);
   const results = document.getElementById('results');
   const score = data.score || 0;
   const isMultiPage = data.multiPage === true;

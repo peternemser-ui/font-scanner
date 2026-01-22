@@ -8,6 +8,8 @@ const { v4: uuidv4 } = require('uuid');
 const { z } = require('zod');
 const { getDatabase } = require('../db');
 const { getQueue } = require('../queue/scanQueue');
+const stripeService = require('../services/stripeService');
+const { optionalAuth } = require('../middleware/requireAuth');
 
 // ============================================================
 // VALIDATION SCHEMAS
@@ -48,11 +50,11 @@ function validate(schema) {
 }
 
 /**
- * Check scan entitlement (for authenticated users)
+ * Check scan entitlement
+ * Uses IP-based rate limiting for anonymous users
+ * Authenticated users with Pro plans get unlimited scans
  */
 async function checkEntitlement(req, res, next) {
-  // TODO: Implement actual auth
-  // For now, use IP-based anonymous rate limiting
   const db = getDatabase();
   const ip = req.ip || req.connection.remoteAddress;
 
@@ -268,8 +270,9 @@ router.delete('/:scanId', async (req, res) => {
 /**
  * GET /api/scans/:scanId/pdf
  * Export scan results as PDF
+ * Uses optionalAuth to check user tier for watermarking
  */
-router.get('/:scanId/pdf', async (req, res) => {
+router.get('/:scanId/pdf', optionalAuth, async (req, res) => {
   const db = getDatabase();
   const pdfGenerator = require('../reports/pdfGenerator');
   const { scanId } = req.params;
@@ -326,9 +329,9 @@ router.get('/:scanId/pdf', async (req, res) => {
     });
 
     // Check user tier (for watermarking)
-    // TODO: Implement actual user tier checking
-    const isFreeTier = true; // Default to free tier for now
-    const watermark = isFreeTier;
+    // Pro users get unwatermarked PDFs
+    const isProUser = req.user && stripeService.isPro(req.user);
+    const watermark = !isProUser;
 
     // Generate PDF
     const pdfBuffer = await pdfGenerator.generatePDF(scanData, {

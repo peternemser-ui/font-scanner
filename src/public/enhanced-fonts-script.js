@@ -132,17 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function displayResults(data) {
     currentResults = data;
-    
-    // Debug: log full scan data availability
-    console.log('📊 Enhanced Fonts Results:', {
-      hasFullScan: !!data.fullScan,
-      fullScanKeys: data.fullScan ? Object.keys(data.fullScan) : [],
-      fontsKeys: data.fullScan?.fonts ? Object.keys(data.fullScan.fonts) : [],
-      hasAdvancedAnalysis: !!data.fullScan?.fonts?.advancedAnalysis,
-      advancedAnalysisKeys: data.fullScan?.fonts?.advancedAnalysis ? Object.keys(data.fullScan.fonts.advancedAnalysis) : [],
-      performanceKeys: data.fullScan?.performance ? Object.keys(data.fullScan.performance) : []
-    });
-    
+
     const totalIssues = (data.summary.duplicateCount || 0) + 
                         (data.summary.displayIssueCount || 0) + 
                         (data.summary.preloadIssueCount || 0);

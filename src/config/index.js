@@ -11,28 +11,30 @@ const config = {
   // Logging
   logLevel: process.env.LOG_LEVEL || 'INFO',
 
-  // Rate Limiting
+  // Rate Limiting (production defaults)
   rateLimit: {
-    // Global rate limit (all endpoints) - VERY HIGH FOR DEVELOPMENT
+    // Global rate limit (all endpoints)
     windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
-    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '10000', 10), // 10,000 per minute for development
-    
-    // Scan endpoint rate limit (more restrictive)
+    maxRequests: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS || '100', 10), // 100 per minute
+
+    // Scan endpoint rate limit (more restrictive - resource intensive)
     scanWindowMs: parseInt(process.env.SCAN_RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
-    scanMaxRequests: parseInt(process.env.SCAN_RATE_LIMIT_MAX_REQUESTS || '500', 10), // 500 per minute (increased from 50)
-    
+    scanMaxRequests: parseInt(process.env.SCAN_RATE_LIMIT_MAX_REQUESTS || '20', 10), // 20 per minute
+
     // Download endpoint rate limit
     downloadWindowMs: parseInt(process.env.DOWNLOAD_RATE_LIMIT_WINDOW_MS || '60000', 10), // 1 minute
-    downloadMaxRequests: parseInt(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS || '1000', 10), // 1000 per minute (increased from 100)
+    downloadMaxRequests: parseInt(process.env.DOWNLOAD_RATE_LIMIT_MAX_REQUESTS || '50', 10), // 50 per minute
 
     // Contact form endpoint rate limit (anti-spam)
     contactWindowMs: parseInt(process.env.CONTACT_RATE_LIMIT_WINDOW_MS || '3600000', 10), // 1 hour
-    contactMaxRequests: parseInt(process.env.CONTACT_RATE_LIMIT_MAX_REQUESTS || '20', 10), // 20 per hour
+    contactMaxRequests: parseInt(process.env.CONTACT_RATE_LIMIT_MAX_REQUESTS || '5', 10), // 5 per hour
   },
 
   // Security
   cors: {
-    origin: process.env.CORS_ORIGIN || '*',
+    // CORS_ORIGIN must be set in production (e.g., 'https://yourdomain.com')
+    // In development, defaults to '*' for convenience
+    origin: process.env.CORS_ORIGIN || (process.env.NODE_ENV === 'production' ? null : '*'),
   },
 
   // Puppeteer
@@ -153,10 +155,10 @@ const config = {
       resetTimeout: parseInt(process.env.COMPETITIVE_RESET_TIMEOUT || '300000', 10), // 5 minutes
     },
     
-    // Rate limiting - INCREASED FOR DEVELOPMENT
+    // Rate limiting (production defaults - resource intensive)
     rateLimit: {
       windowMs: parseInt(process.env.COMPETITIVE_RATE_WINDOW_MS || '60000', 10), // 1 minute
-      maxRequests: parseInt(process.env.COMPETITIVE_RATE_MAX_REQUESTS || '100', 10), // 100 per minute (increased from 10)
+      maxRequests: parseInt(process.env.COMPETITIVE_RATE_MAX_REQUESTS || '5', 10), // 5 per minute
     },
   },
 };

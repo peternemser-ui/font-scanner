@@ -3,7 +3,12 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { getDatabase } = require('../db');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'change-this-in-production-use-long-random-string';
+// JWT_SECRET must be set in production
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable must be set in production');
+}
+const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-secret-do-not-use-in-production';
 const SALT_ROUNDS = 10;
 const JWT_EXPIRES_IN = '7d';
 
@@ -52,7 +57,7 @@ class AuthService {
         email: user.email,
         plan: user.plan || 'free'
       },
-      JWT_SECRET,
+      EFFECTIVE_JWT_SECRET,
       { expiresIn: JWT_EXPIRES_IN }
     );
   }
@@ -226,12 +231,27 @@ class AuthService {
       [user.id, tokenHash, expiresAt.toISOString()]
     );
 
-    return { 
-      success: true, 
-      resetToken, // In production, email this instead of returning
+    // In production, the reset token should be emailed, not returned in response
+    // For development/testing, we return it for convenience
+    const isProduction = process.env.NODE_ENV === 'production';
+
+    if (isProduction) {
+      // Production: Log that email should be sent (integrate with email service)
+      // Future: Integrate with SendGrid, SES, or other email service
+      return {
+        success: true,
+        message: 'If this email exists, a reset link has been sent'
+      };
+    }
+
+    // Development only: return token for testing
+    return {
+      success: true,
+      resetToken,
       userId: user.id,
       email: user.email,
-      expiresAt 
+      expiresAt,
+      _devOnly: true
     };
   }
 
