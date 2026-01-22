@@ -5,19 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
     
-    <!-- Smart Redirect - Auth check before routing -->
+    <!-- Redirect to Dashboard -->
     <script>
-      // Check if user is authenticated
-      const token = localStorage.getItem('sm_token');
-      const user = localStorage.getItem('sm_user');
-
-      if (token && user) {
-        // Authenticated - go to dashboard
-        window.location.href = '/dashboard.html';
-      } else {
-        // Not authenticated - go to login
-        window.location.href = '/auth.html';
-      }
+      // Dashboard is the homepage
+      window.location.href = '/dashboard.html';
     </script>
 
     <!-- Primary Meta Tags -->
