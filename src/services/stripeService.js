@@ -714,6 +714,146 @@ class StripeService {
     return this.hasReportPurchase(user.id, reportId);
   }
 
+  // ============================================
+  // Unified Entitlement Resolver
+  // Single source of truth for billing entitlements
+  // ============================================
+
+  /**
+   * Get effective entitlements for a user
+   * Supports: single_report_unlock (reportId scoped), day_pass (24h), monthly_sub (subscription)
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} Entitlements object
+   */
+  async getEntitlements(userId) {
+    if (!userId) {
+      return this._defaultEntitlements();
+    }
+
+    const db = getDatabase();
+
+    // Get user with subscription data
+    const user = await db.get(
+      `SELECT id, email, plan, stripe_customer_id,
+        stripe_subscription_id, stripe_subscription_status,
+        stripe_current_period_end, stripe_subscription_interval
+      FROM users WHERE id = ?`,
+      [userId]
+    );
+
+    if (!user) {
+      return this._defaultEntitlements();
+    }
+
+    // Determine subscription state
+    const activeStatuses = ['active', 'trialing'];
+    const isActiveSub = activeStatuses.includes(user.stripe_subscription_status);
+    const interval = user.stripe_subscription_interval || 'month';
+    const periodEnd = user.stripe_current_period_end ? new Date(user.stripe_current_period_end) : null;
+    const now = new Date();
+
+    // Check grace period for canceled subscriptions
+    const inGracePeriod = user.stripe_subscription_status === 'canceled' && periodEnd && periodEnd > now;
+    const hasActiveAccess = isActiveSub || inGracePeriod || user.plan === 'pro';
+
+    // Determine entitlement type
+    let entitlementType = 'free';
+    if (hasActiveAccess) {
+      if (interval === 'day') {
+        entitlementType = 'day_pass';
+      } else {
+        entitlementType = 'monthly_sub'; // covers month and year intervals
+      }
+    }
+
+    // Get purchased reports
+    let purchasedReports = [];
+    try {
+      const rows = await db.all(
+        'SELECT report_id FROM report_purchases WHERE user_id = ?',
+        [userId]
+      );
+      purchasedReports = rows.map(r => r.report_id);
+    } catch (e) {
+      logger.warn('Could not fetch purchased reports for entitlements', { error: e.message });
+    }
+
+    return {
+      userId,
+      plan: hasActiveAccess ? 'pro' : 'free',
+      entitlementType,
+      subscription: hasActiveAccess ? {
+        status: user.stripe_subscription_status,
+        interval,
+        currentPeriodEnd: periodEnd ? periodEnd.toISOString() : null,
+        inGracePeriod
+      } : null,
+      purchasedReports,
+      permissions: {
+        canAccessProTools: hasActiveAccess,
+        canViewProSections: hasActiveAccess,
+        canExport: hasActiveAccess || purchasedReports.length > 0
+      }
+    };
+  }
+
+  /**
+   * Check if user can export a specific report
+   * @param {string} userId - User ID
+   * @param {string} reportId - Report ID
+   * @returns {Promise<boolean>}
+   */
+  async canUserExport(userId, reportId) {
+    const entitlements = await this.getEntitlements(userId);
+    // Pro/day pass can export anything
+    if (entitlements.permissions.canAccessProTools) {
+      return true;
+    }
+    // Check single report purchase
+    if (reportId && entitlements.purchasedReports.includes(reportId)) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * Check if user can access Pro tools (full analyzers, advanced features)
+   * @param {string} userId - User ID
+   * @returns {Promise<boolean>}
+   */
+  async canAccessProTools(userId) {
+    const entitlements = await this.getEntitlements(userId);
+    return entitlements.permissions.canAccessProTools;
+  }
+
+  /**
+   * Check if user can view Pro sections in reports
+   * @param {string} userId - User ID
+   * @returns {Promise<boolean>}
+   */
+  async canViewProSections(userId) {
+    const entitlements = await this.getEntitlements(userId);
+    return entitlements.permissions.canViewProSections;
+  }
+
+  /**
+   * Default entitlements for unauthenticated/unknown users
+   */
+  _defaultEntitlements() {
+    return {
+      userId: null,
+      plan: 'free',
+      entitlementType: 'free',
+      subscription: null,
+      purchasedReports: [],
+      permissions: {
+        canAccessProTools: false,
+        canViewProSections: false,
+        canExport: false
+      }
+    };
+  }
+
   /**
    * Verify a checkout session and record the purchase if successful
    * This is a fallback for when webhooks don't fire (e.g., local development)
@@ -1160,6 +1300,7 @@ class StripeService {
           break;
         }
 
+        case 'invoice.paid':
         case 'invoice.payment_succeeded': {
           const invoice = event.data.object;
           logger.info('Payment succeeded', {
@@ -1167,6 +1308,34 @@ class StripeService {
             customerId: invoice.customer,
             amount: invoice.amount_paid / 100
           });
+
+          // Sync subscription status on successful payment renewal
+          if (invoice.subscription) {
+            try {
+              const subscription = await stripe.subscriptions.retrieve(invoice.subscription);
+              const customerId = invoice.customer;
+              const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+              const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'month';
+
+              await db.run(
+                `UPDATE users SET
+                  plan = 'pro',
+                  stripe_subscription_status = ?,
+                  stripe_current_period_end = ?,
+                  stripe_subscription_interval = ?
+                WHERE stripe_customer_id = ?`,
+                [subscription.status, currentPeriodEnd, interval, customerId]
+              );
+
+              logger.info('Subscription renewed via invoice.paid', {
+                customerId,
+                subscriptionId: invoice.subscription,
+                currentPeriodEnd
+              });
+            } catch (syncErr) {
+              logger.warn('Failed to sync subscription from invoice.paid', { error: syncErr.message });
+            }
+          }
           break;
         }
 

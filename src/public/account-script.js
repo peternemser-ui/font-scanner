@@ -38,6 +38,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
       }
     }
+    // Clear ProReportBlock cache so other pages get fresh entitlements
+    if (window.ProReportBlock?.clearBillingCache) {
+      window.ProReportBlock.clearBillingCache();
+    }
     showSuccess('Payment successful! Your plan has been updated.');
     // Clean URL
     urlParams.delete('billing_success');

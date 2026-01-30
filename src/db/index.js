@@ -32,11 +32,11 @@ class Database {
         }
       });
 
-      // Enable foreign keys
-      await this.run('PRAGMA foreign_keys = ON');
-
-      // Enable WAL mode for better concurrency
+      // SQLite hardening PRAGMAs for production stability
       await this.run('PRAGMA journal_mode = WAL');
+      await this.run('PRAGMA synchronous = NORMAL');
+      await this.run('PRAGMA foreign_keys = ON');
+      await this.run('PRAGMA busy_timeout = 5000');
 
       // Run migrations
       await this.runMigrations();
@@ -260,8 +260,12 @@ async function initializeDatabase() {
   return db;
 }
 
+// Re-export repository layer for convenient access
+const repository = require('./repository');
+
 module.exports = {
   Database,
   getDatabase,
-  initializeDatabase
+  initializeDatabase,
+  repository
 };

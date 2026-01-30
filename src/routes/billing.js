@@ -205,6 +205,38 @@ router.get(
 );
 
 /**
+ * GET /api/me/entitlements
+ * Returns the effective entitlements for the authenticated user
+ * Single source of truth for billing permissions
+ * Returns:
+ * {
+ *   userId: string,
+ *   plan: "free" | "pro",
+ *   entitlementType: "free" | "day_pass" | "monthly_sub",
+ *   subscription: { status, interval, currentPeriodEnd, inGracePeriod } | null,
+ *   purchasedReports: string[],
+ *   permissions: {
+ *     canAccessProTools: boolean,
+ *     canViewProSections: boolean,
+ *     canExport: boolean
+ *   }
+ * }
+ */
+router.get(
+  '/entitlements',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const user = req.user;
+
+    logger.info('Fetching entitlements', { userId: user.id });
+
+    const entitlements = await stripeService.getEntitlements(user.id);
+
+    res.json(entitlements);
+  })
+);
+
+/**
  * POST /api/billing/verify-purchase
  * Verify a checkout session and record the purchase
  * This is the primary method for recording purchases (fallback for webhooks)

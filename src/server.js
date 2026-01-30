@@ -364,6 +364,9 @@ app.use('/api/payment', paymentRoutes);
 const billingRoutes = require('./routes/billing');
 app.use('/api/billing', billingRoutes);
 
+// /api/me/entitlements alias - points to the same handler as /api/billing/entitlements
+app.use('/api/me', billingRoutes);
+
 // Reports API (stored report snapshots)
 const reportsRoutes = require('./routes/reports');
 app.use('/api/reports', reportsRoutes);
