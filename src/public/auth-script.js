@@ -74,14 +74,16 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
     }
 
     // Store token and user data
+    // Store token with both key names for compatibility
     localStorage.setItem('sm_token', data.token);
+    localStorage.setItem('sm_auth_token', data.token);
     localStorage.setItem('sm_user', JSON.stringify(data.user));
 
     showSuccess('login', 'Login successful! Redirecting...');
 
-    // Check for redirect parameter
+    // Check for redirect parameter (supports both 'redirect' and 'returnTo')
     const urlParams = new URLSearchParams(window.location.search);
-    const redirectTo = urlParams.get('redirect') || '/dashboard.html';
+    const redirectTo = urlParams.get('redirect') || urlParams.get('returnTo') || '/dashboard.html';
 
     // Redirect after short delay
     setTimeout(() => {
@@ -132,15 +134,16 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
       throw new Error(data.error || 'Registration failed');
     }
 
-    // Store token and user data
+    // Store token and user data (both key names for compatibility)
     localStorage.setItem('sm_token', data.token);
+    localStorage.setItem('sm_auth_token', data.token);
     localStorage.setItem('sm_user', JSON.stringify(data.user));
 
     showSuccess('register', 'Account created! Redirecting...');
 
-    // Check for redirect parameter
+    // Check for redirect parameter (supports both 'redirect' and 'returnTo')
     const urlParams = new URLSearchParams(window.location.search);
-    const redirectTo = urlParams.get('redirect') || '/dashboard.html';
+    const redirectTo = urlParams.get('redirect') || urlParams.get('returnTo') || '/dashboard.html';
 
     // Redirect after short delay
     setTimeout(() => {
@@ -162,7 +165,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if (token && user) {
     // Already logged in - redirect to intended page or dashboard
     const urlParams = new URLSearchParams(window.location.search);
-    const redirectTo = urlParams.get('redirect') || '/dashboard.html';
+    const redirectTo = urlParams.get('redirect') || urlParams.get('returnTo') || '/dashboard.html';
     window.location.href = redirectTo;
   }
 

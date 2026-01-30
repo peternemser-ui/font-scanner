@@ -719,24 +719,51 @@ class CompetitiveAnalysisService {
     const metrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
     metrics.forEach(metric => {
       const yourScore = yourSite.scores[metric];
-      const maxCompetitor = Math.max(...competitors.map(c => c.scores[metric]));
+      const competitorScores = competitors.map(c => c.scores[metric]).filter(s => typeof s === 'number');
+      const maxCompetitor = competitorScores.length > 0 ? Math.max(...competitorScores) : 0;
+      const avgCompetitor = competitorScores.length > 0
+        ? Math.round(competitorScores.reduce((a, b) => a + b, 0) / competitorScores.length)
+        : 0;
       const gap = maxCompetitor - yourScore;
+
+      // Find the top competitor for this metric
+      const topCompetitor = competitors.find(c => c.scores[metric] === maxCompetitor);
 
       if (gap > 20) {
         recommendations.push({
           priority: 'high',
-          metric: metric.toUpperCase(),
+          metric: metric,
           gap: gap,
-          recommendation: `Close the ${gap}-point gap in ${metric}. Top competitor scores ${maxCompetitor} vs your ${yourScore}.`,
-          impact: 'Closing this gap could help you outrank competitors'
+          yourScore: yourScore,
+          topCompetitorScore: maxCompetitor,
+          avgCompetitorScore: avgCompetitor,
+          topCompetitorName: topCompetitor ? this.getDomainName(topCompetitor.url) : 'competitor',
+          recommendation: `Your ${this.formatMetricName(metric)} score of ${yourScore} is ${gap} points behind the leader (${maxCompetitor}). This is a significant competitive disadvantage that requires immediate attention. Focus on quick wins first: ${this.getQuickWins(metric)}`,
+          impact: `Closing this gap could significantly improve your competitive position and help you capture traffic currently going to competitors with better ${this.formatMetricName(metric)} scores.`
         });
       } else if (gap > 10) {
         recommendations.push({
           priority: 'medium',
-          metric: metric.toUpperCase(),
+          metric: metric,
           gap: gap,
-          recommendation: `Small ${gap}-point improvement needed in ${metric}.`,
-          impact: 'Quick wins to match competition'
+          yourScore: yourScore,
+          topCompetitorScore: maxCompetitor,
+          avgCompetitorScore: avgCompetitor,
+          topCompetitorName: topCompetitor ? this.getDomainName(topCompetitor.url) : 'competitor',
+          recommendation: `A ${gap}-point improvement in ${this.formatMetricName(metric)} would put you on par with top competitors. Your current score of ${yourScore} is close but not quite there. ${this.getMediumPriorityAdvice(metric)}`,
+          impact: `Moderate improvement opportunity. Closing this gap would make you more competitive and could lead to better user engagement and conversion rates.`
+        });
+      } else if (gap > 0) {
+        recommendations.push({
+          priority: 'low',
+          metric: metric,
+          gap: gap,
+          yourScore: yourScore,
+          topCompetitorScore: maxCompetitor,
+          avgCompetitorScore: avgCompetitor,
+          topCompetitorName: topCompetitor ? this.getDomainName(topCompetitor.url) : 'competitor',
+          recommendation: `You're close to the top in ${this.formatMetricName(metric)}! A small ${gap}-point improvement would help you match or exceed the competition. ${this.getLowPriorityAdvice(metric)}`,
+          impact: `Fine-tuning opportunity. You're already competitive here, but small improvements can make a difference.`
         });
       }
     });
@@ -745,6 +772,79 @@ class CompetitiveAnalysisService {
     recommendations.sort((a, b) => b.gap - a.gap);
 
     return recommendations.slice(0, 5); // Top 5 recommendations
+  }
+
+  /**
+   * Get quick wins for a metric
+   * @private
+   */
+  getQuickWins(metric) {
+    const quickWins = {
+      seo: 'optimize title tags, add meta descriptions, and ensure proper heading hierarchy',
+      performance: 'compress images, enable caching, and minimize JavaScript',
+      accessibility: 'add alt text to images, ensure proper color contrast, and fix ARIA labels',
+      security: 'implement HTTPS, add security headers, and update dependencies',
+      coreWebVitals: 'optimize LCP by preloading key resources and reduce CLS by sizing images'
+    };
+    return quickWins[metric] || 'review best practices and implement improvements';
+  }
+
+  /**
+   * Get medium priority advice for a metric
+   * @private
+   */
+  getMediumPriorityAdvice(metric) {
+    const advice = {
+      seo: 'Consider adding structured data, improving internal linking, and creating more targeted content.',
+      performance: 'Look into code splitting, lazy loading, and optimizing your critical rendering path.',
+      accessibility: 'Conduct a thorough WCAG audit and address any remaining issues.',
+      security: 'Review your CSP policy, enable additional security headers, and audit third-party scripts.',
+      coreWebVitals: 'Focus on Time to First Byte (TTFB) and optimize server response times.'
+    };
+    return advice[metric] || 'Review current implementation and identify optimization opportunities.';
+  }
+
+  /**
+   * Get low priority advice for a metric
+   * @private
+   */
+  getLowPriorityAdvice(metric) {
+    const advice = {
+      seo: 'Fine-tune your existing optimizations and monitor for any regressions.',
+      performance: 'Consider advanced techniques like service workers or edge caching.',
+      accessibility: 'Test with real users with disabilities and gather feedback.',
+      security: 'Stay updated on new security best practices and vulnerabilities.',
+      coreWebVitals: 'Monitor real-user metrics and address any edge cases.'
+    };
+    return advice[metric] || 'Continue monitoring and maintaining your current standards.';
+  }
+
+  /**
+   * Format metric name for display
+   * @private
+   */
+  formatMetricName(metric) {
+    const names = {
+      seo: 'SEO',
+      performance: 'Performance',
+      accessibility: 'Accessibility',
+      security: 'Security',
+      coreWebVitals: 'Core Web Vitals'
+    };
+    return names[metric] || metric;
+  }
+
+  /**
+   * Extract domain name from URL
+   * @private
+   */
+  getDomainName(url) {
+    try {
+      const urlObj = new URL(url);
+      return urlObj.hostname.replace('www.', '');
+    } catch (e) {
+      return url;
+    }
   }
 
   /**

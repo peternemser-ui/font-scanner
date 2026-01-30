@@ -891,7 +891,7 @@
   <script src="/seo-i18n.js"></script>
 
   <!-- PDF Export Styles -->
-  <link rel="stylesheet" href="/pdf-export-styles.css">
+  <link rel="stylesheet" href="/pdf-export-styles.css?v=2">
 </head>
 <body data-page="performance-hub">
   <!-- Navigation Bar -->
@@ -928,7 +928,7 @@
           <span class="tabs__time">~15-30s</span>
         </button>
         <button type="button" class="tabs__item" data-mode="full" id="tab-full" onclick="setPerformanceMode('full')">
-          <span class="tabs__label">Lighthouse audit</span>
+          <span class="tabs__label">Lighthouse Audit</span>
           <span class="tabs__desc">Complete performance audit</span>
           <span class="tabs__time">~2-3 min</span>
         </button>
@@ -967,12 +967,12 @@
   </main>
   
   <!-- PDF Libraries -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="/lib/html2canvas.min.js"></script>
+  <script src="/lib/jspdf.umd.min.js"></script>
 
   <!-- PDF Export Utility -->
-  <script src="/pdf-export-utility.js"></script>
-  <script src="/pdf-export-integration.js"></script>
+  <script src="/pdf-export-utility.js?v=2"></script>
+  <script src="/pdf-export-integration.js?v=2"></script>
 
   <!-- Footer Scripts -->
   <script src="/theme-controls.js"></script>
@@ -987,7 +987,7 @@
   <script src="/js/report-ui.js"></script>
   <script src="/js/components/reportShell.js?v=20260106a"></script>
   <script src="/js/components/reportAccordion.js?v=20260106a"></script>
-  <script src="/js/components/ReportContainer.js"></script>
+  <script src="/js/components/ReportContainer.js?v=20260128a"></script>
 
   <!-- Shared report shell + billing/entitlements (new canonical paths) -->
   <script src="/assets/js/report-shell.js"></script>
@@ -998,8 +998,11 @@
   <script src="/js/components/ProReportBlock.js"></script>
   <script src="/js/components/PricingModal.js"></script>
 
+  <!-- Report Storage (for saving/loading report snapshots) -->
+  <script src="/js/reportStorage.js?v=20260128a"></script>
+
   <!-- Analyzer Script -->
-  <script src="/performance-hub-script.js?v=20260106c"></script>
+  <script src="/performance-hub-script.js?v=20260128a"></script>
   
   <script>
     // PDF Export Function using improved utility
@@ -1032,7 +1035,7 @@
         document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
         this.classList.add('tabs__item--active');
         const mode = this.dataset.mode;
-        const modeLabels = { quick: 'Quick scan', cwv: 'Core Web Vitals', full: 'Lighthouse audit' };
+        const modeLabels = { quick: 'Quick scan', cwv: 'Core Web Vitals', full: 'Lighthouse Audit' };
         document.getElementById('selectedMode').textContent = modeLabels[mode] || mode;
       });
     });

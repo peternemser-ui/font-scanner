@@ -30,9 +30,9 @@
     });
   }
 
-  async function ensureCreditsManager() {
-    if (window.CreditsManager) return true;
-    return loadScriptOnce('/assets/js/ui.js');
+  async function ensureProReportBlock() {
+    if (window.ProReportBlock) return true;
+    return loadScriptOnce('/js/components/ProReportBlock.js');
   }
 
   async function ensurePricingModal() {
@@ -44,35 +44,43 @@
     return loadScriptOnce('/js/components/PricingModal.js');
   }
 
-  function render(reportId) {
-    if (!window.CreditsManager || typeof window.CreditsManager.renderPaywallState !== 'function') return;
-    window.CreditsManager.renderPaywallState(reportId);
-  }
-
-  async function unlockWithCredit(reportId) {
-    await ensureCreditsManager();
-    const id = getCurrentReportId(reportId);
-    if (!id || !window.CreditsManager) return false;
-
-    try {
-      window.CreditsManager.consumeCredit();
-      window.CreditsManager.unlockReport(id, 'credit');
-      render(id);
-      showToast('Report unlocked.');
-      return true;
-    } catch (e) {
-      showToast('No credits available.');
-      return false;
+  /**
+   * Check if user has access to a report (Pro subscription or purchased)
+   */
+  function hasAccess(reportId) {
+    if (window.ProReportBlock?.hasAccess) {
+      return window.ProReportBlock.hasAccess(reportId);
     }
+    return false;
   }
 
-  async function openPricing() {
+  /**
+   * Check if user is a Pro subscriber
+   */
+  function isPro() {
+    if (window.ProReportBlock?.isProSubscriber) {
+      return window.ProReportBlock.isProSubscriber();
+    }
+    return false;
+  }
+
+  async function openPricing(opts) {
     await ensurePricingModal();
     if (window.PricingModal && typeof window.PricingModal.open === 'function') {
-      window.PricingModal.open();
+      window.PricingModal.open(opts);
       return true;
     }
     return false;
+  }
+
+  async function openSingleReportPurchase(reportId) {
+    await ensurePricingModal();
+    if (window.PricingModal && typeof window.PricingModal.openSingleReport === 'function') {
+      window.PricingModal.openSingleReport({ reportId });
+      return true;
+    }
+    // Fallback: open general pricing modal
+    return openPricing();
   }
 
   function wireDomHandlers() {
@@ -80,11 +88,11 @@
       const target = e.target;
       if (!(target instanceof Element)) return;
 
+      // Legacy unlock-with-credit - redirect to pricing modal
       const unlockBtn = target.closest('[data-unlock-with-credit]');
       if (unlockBtn) {
         e.preventDefault();
-        const rid = unlockBtn.getAttribute('data-report-id') || getCurrentReportId('');
-        unlockWithCredit(rid);
+        openPricing();
         return;
       }
 
@@ -99,17 +107,11 @@
       if (buySingleBtn) {
         e.preventDefault();
         const reportId = buySingleBtn.getAttribute('data-report-id') || getCurrentReportId('');
-        if (!reportId || !window.SmBilling || typeof window.SmBilling.startCheckout !== 'function') {
-          showToast('Checkout is unavailable right now.');
+        if (!reportId) {
+          showToast('Run a scan first to purchase this report.');
           return;
         }
-        window.SmBilling.startCheckout({
-          purchaseType: 'single_report',
-          reportId: reportId,
-          returnUrl: window.SmBilling.buildReturnUrl ? window.SmBilling.buildReturnUrl() : undefined
-        }).catch(function () {
-          showToast('Checkout is unavailable right now.');
-        });
+        openSingleReportPurchase(reportId);
       }
     });
   }
@@ -118,8 +120,11 @@
     const o = opts || {};
     const reportId = getCurrentReportId(o.reportId || '');
 
-    ensureCreditsManager().then(function () {
-      if (reportId) render(reportId);
+    // Fetch billing status so access checks work
+    ensureProReportBlock().then(function () {
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        window.ProReportBlock.fetchBillingStatus();
+      }
     });
 
     wireDomHandlers();
@@ -127,9 +132,10 @@
 
   window.SmEntitlements = {
     init: init,
-    ensureCreditsManager: ensureCreditsManager,
-    render: render,
-    unlockWithCredit: unlockWithCredit,
-    openPricing: openPricing
+    ensureProReportBlock: ensureProReportBlock,
+    hasAccess: hasAccess,
+    isPro: isPro,
+    openPricing: openPricing,
+    openSingleReportPurchase: openSingleReportPurchase
   };
 })(window);

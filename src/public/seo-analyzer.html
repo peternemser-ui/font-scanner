@@ -65,7 +65,7 @@
     </style>
     
     <!-- PDF Export Styles -->
-    <link rel="stylesheet" href="/pdf-export-styles.css">
+    <link rel="stylesheet" href="/pdf-export-styles.css?v=2">
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
@@ -215,11 +215,12 @@
 
     <!-- ASCII Background Animation -->
 
-    <!-- PDF Export Libraries -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="/pdf-export-utility.js"></script>
-    <script src="/pdf-export-integration.js"></script>
+    <!-- PDF Export Libraries (local copies for reliability) -->
+    <script src="/lib/html2canvas.min.js"></script>
+    <script src="/lib/jspdf.umd.min.js"></script>
+    <script src="/lib/exceljs.min.js"></script>
+    <script src="/pdf-export-utility.js?v=2"></script>
+    <script src="/pdf-export-integration.js?v=2"></script>
 
     <!-- Report UI Components -->
     <script src="/js/report-ui.js"></script>
@@ -238,6 +239,9 @@
     <script src="/js/components/ScreenshotLightbox.js"></script>
     <script src="/js/components/ProReportBlock.js"></script>
     <script src="/js/components/PricingModal.js"></script>
+
+    <!-- Report Storage (for saving/loading report snapshots) -->
+    <script src="/js/reportStorage.js"></script>
 
     <!-- SEO Analyzer Script -->
     <script src="/seo-script.js"></script>

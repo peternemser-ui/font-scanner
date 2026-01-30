@@ -16,8 +16,11 @@
   max-width: 100% !important;
   padding: 18px 20px !important;
   margin: 0 !important;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica', Arial, sans-serif !important;
-  line-height: 1.6;
+  /* Modern monospace font stack for cleaner, more technical appearance */
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Cascadia Code', 'Consolas', 'Monaco', 'Courier New', monospace !important;
+  font-size: 11px !important;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
 }
 
 /* Ensure all sections are visible and properly formatted */
@@ -40,32 +43,36 @@
 
 .pdf-export-mode details {
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
-  padding: 12px;
-  margin-bottom: 12px;
+  border-radius: 4px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
   background: #f9fafb;
   page-break-inside: avoid;
 }
 
 .pdf-export-mode details summary {
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 10px !important;
   color: #1f2937;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   cursor: default;
   list-style: none;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .pdf-export-mode details summary::-webkit-details-marker {
   display: none;
 }
 
-/* Report header - keep visible and styled */
+/* Report header - compact monospace styling */
 .pdf-export-mode .report-header {
-  background: #f0f0f0 !important;
-  border: 1px solid #d0d0d0 !important;
-  border-radius: 8px;
-  padding: 12px 16px !important;
-  margin-bottom: 18px !important;
+  background: #f5f5f5 !important;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 4px;
+  padding: 10px 14px !important;
+  margin-bottom: 12px !important;
   page-break-inside: avoid;
   page-break-after: avoid;
   text-align: left !important;
@@ -74,18 +81,22 @@
 .pdf-export-mode .report-header h1,
 .pdf-export-mode .report-header h2 {
   color: #000000 !important;
-  font-size: 20px !important;
-  margin: 0 0 8px 0 !important;
+  font-size: 14px !important;
+  margin: 0 0 6px 0 !important;
   font-weight: 700;
   border-bottom: none !important;
   text-align: left !important;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .pdf-export-mode .report-header p {
   color: #4b5563 !important;
-  font-size: 11px !important;
-  margin: 4px 0 !important;
+  font-size: 9px !important;
+  margin: 3px 0 !important;
   line-height: 1.4;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode .report-header strong {
@@ -114,27 +125,31 @@
   display: none !important;
 }
 
-/* Make ReportAccordion headers look like section headers in PDF */
+/* Make ReportAccordion headers look like section headers in PDF - compact monospace */
 .pdf-export-mode .report-accordion__header {
   display: flex !important;
   width: 100% !important;
   border: 1px solid #e5e7eb !important;
-  background: #f9fafb !important;
+  background: #f5f5f5 !important;
   color: #111827 !important;
-  padding: 12px 14px !important;
-  border-radius: 8px !important;
+  padding: 8px 12px !important;
+  border-radius: 4px !important;
   cursor: default !important;
   justify-content: space-between !important;
   align-items: center !important;
   page-break-after: avoid;
   box-shadow: none !important;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
+  font-size: 10px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .pdf-export-mode .report-accordion__chevron {
   display: none !important;
 }
 
-/* Improve readability for text content */
+/* Improve readability for text content - modern monospace styling */
 .pdf-export-mode h1,
 .pdf-export-mode h2,
 .pdf-export-mode h3,
@@ -143,30 +158,36 @@
 .pdf-export-mode h6 {
   color: #000000 !important;
   page-break-after: avoid;
-  margin-top: 1.5em;
-  margin-bottom: 0.75em;
-  font-weight: 600;
+  margin-top: 1.2em;
+  margin-bottom: 0.5em;
+  font-weight: 700;
   letter-spacing: -0.02em;
   text-align: left !important;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode h1 {
-  font-size: 26px !important;
-  border-bottom: 3px solid #000000;
-  padding-bottom: 12px;
-  margin-bottom: 1em;
+  font-size: 18px !important;
+  border-bottom: 2px solid #dd3838;
+  padding-bottom: 8px;
+  margin-bottom: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
 }
 
 .pdf-export-mode h2 {
-  font-size: 20px !important;
-  border-bottom: 2px solid #e0e0e0;
-  padding-bottom: 8px;
-  margin-bottom: 0.75em;
+  font-size: 14px !important;
+  border-bottom: 1px solid #e0e0e0;
+  padding-bottom: 6px;
+  margin-bottom: 0.6em;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
 }
 
 .pdf-export-mode h3 {
-  font-size: 16px !important;
+  font-size: 12px !important;
   color: #333333 !important;
+  text-transform: uppercase;
 }
 
 /* Screenshot container - limit height to fit on a page */
@@ -194,8 +215,9 @@
 .pdf-export-mode p,
 .pdf-export-mode li {
   color: #374151 !important;
-  line-height: 1.6;
-  font-size: 14px !important;
+  line-height: 1.5;
+  font-size: 10px !important;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 /* Improve table styling for PDF - modern design */
@@ -213,17 +235,18 @@
 
 .pdf-export-mode th,
 .pdf-export-mode td {
-  padding: 12px 16px;
+  padding: 8px 12px;
   text-align: left;
   border-bottom: 1px solid #e8e8e8;
   color: #1a1a1a !important;
   background: #ffffff !important;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode th {
-  background: linear-gradient(180deg, #f8f8f8 0%, #f0f0f0 100%) !important;
+  background: #f5f5f5 !important;
   font-weight: 700;
-  font-size: 12px !important;
+  font-size: 9px !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: #000000 !important;
@@ -231,27 +254,28 @@
 }
 
 .pdf-export-mode td {
-  font-size: 11px !important;
-  line-height: 1.5;
+  font-size: 9px !important;
+  line-height: 1.4;
 }
 
 .pdf-export-mode tr:last-child td {
   border-bottom: none;
 }
 
-/* Score badges - modern, professional design */
+/* Score badges - modern, compact monospace design */
 .pdf-export-mode .score-badge,
 .pdf-export-mode .metric-score,
 .pdf-export-mode .grade {
   display: inline-block;
-  padding: 8px 16px;
-  border-radius: 8px;
+  padding: 4px 10px;
+  border-radius: 4px;
   font-weight: 700;
-  font-size: 18px !important;
-  min-width: 60px;
+  font-size: 12px !important;
+  min-width: 40px;
   text-align: center;
-  letter-spacing: -0.01em;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08) !important;
+  letter-spacing: 0;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
+  box-shadow: none !important;
 }
 
 .pdf-export-mode .score-badge.good,
@@ -275,28 +299,30 @@
   border: 2px solid #dc2626;
 }
 
-/* Cards and sections - modern, clean design */
+/* Cards and sections - compact monospace design */
 .pdf-export-mode .card,
 .pdf-export-mode .section,
 .pdf-export-mode .panel {
   background: #fafafa !important;
   border: 1px solid #e0e0e0 !important;
-  border-radius: 8px;
-  padding: 20px 24px;
-  margin-bottom: 20px;
+  border-radius: 4px;
+  padding: 12px 16px;
+  margin-bottom: 12px;
   page-break-inside: avoid;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+  box-shadow: none !important;
 }
 
 .pdf-export-mode .card__header,
 .pdf-export-mode .section__header {
-  font-size: 17px !important;
+  font-size: 11px !important;
   font-weight: 700;
   color: #000000 !important;
-  margin-bottom: 14px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #d0d0d0;
-  letter-spacing: -0.01em;
+  margin-bottom: 10px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #d0d0d0;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode .card__body,
@@ -306,40 +332,42 @@
   overflow: visible !important;
 }
 
-/* Metric displays - modern card style */
+/* Metric displays - compact monospace style */
 .pdf-export-mode .metric {
   display: inline-block;
-  margin: 10px 14px 10px 0;
-  padding: 16px 20px;
-  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%) !important;
-  border: 1px solid #d0d0d0;
-  border-radius: 8px;
-  min-width: 160px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.04) !important;
+  margin: 6px 10px 6px 0;
+  padding: 10px 14px;
+  background: #f8f8f8 !important;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  min-width: 120px;
+  box-shadow: none !important;
 }
 
 .pdf-export-mode .metric__label {
-  font-size: 10px !important;
+  font-size: 8px !important;
   color: #666666 !important;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.8px;
-  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode .metric__value {
-  font-size: 24px !important;
+  font-size: 16px !important;
   font-weight: 700;
   color: #000000 !important;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
-/* Issues and recommendations */
+/* Issues and recommendations - compact monospace */
 .pdf-export-mode .issue,
 .pdf-export-mode .recommendation {
-  padding: 12px;
-  margin-bottom: 12px;
-  border-left: 4px solid #6b7280;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  border-left: 3px solid #6b7280;
   background: #f9fafb !important;
   page-break-inside: avoid;
 }
@@ -368,15 +396,17 @@
 .pdf-export-mode .recommendation__title {
   font-weight: 700;
   color: #1f2937 !important;
-  font-size: 14px !important;
-  margin-bottom: 6px;
+  font-size: 10px !important;
+  margin-bottom: 4px;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode .issue__description,
 .pdf-export-mode .recommendation__description {
   color: #4b5563 !important;
-  font-size: 12px !important;
-  line-height: 1.5;
+  font-size: 9px !important;
+  line-height: 1.4;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 /* Lists */
@@ -390,21 +420,21 @@
   margin-bottom: 6px;
 }
 
-/* Code blocks */
+/* Code blocks - modern monospace */
 .pdf-export-mode pre,
 .pdf-export-mode code {
   background: #f3f4f6 !important;
   border: 1px solid #e5e7eb;
-  border-radius: 4px;
-  padding: 2px 6px;
-  font-family: 'Courier New', monospace;
-  font-size: 12px !important;
+  border-radius: 3px;
+  padding: 2px 5px;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
+  font-size: 9px !important;
   color: #1f2937 !important;
   page-break-inside: avoid;
 }
 
 .pdf-export-mode pre {
-  padding: 12px;
+  padding: 8px 10px;
   overflow-x: auto;
   white-space: pre-wrap;
   word-wrap: break-word;
@@ -482,11 +512,11 @@
 
 .pdf-export-mode .cwv-metric {
   display: block !important;
-  margin: 12px 0 !important;
-  padding: 16px !important;
+  margin: 8px 0 !important;
+  padding: 10px 12px !important;
   background: #f9fafb !important;
-  border: 2px solid #e0e0e0 !important;
-  border-radius: 8px;
+  border: 1px solid #e0e0e0 !important;
+  border-radius: 4px;
   page-break-inside: avoid;
   width: 100% !important;
   box-sizing: border-box !important;
@@ -513,43 +543,47 @@
 }
 
 .pdf-export-mode .cwv-metric-name {
-  font-size: 13px !important;
+  font-size: 9px !important;
   font-weight: 700 !important;
   color: #000000 !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   float: left !important;
   display: inline-block !important;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode .cwv-metric-value {
-  font-size: 28px !important;
+  font-size: 18px !important;
   font-weight: 700 !important;
   color: #000000 !important;
-  letter-spacing: -0.02em;
-  margin: 8px 0 !important;
+  letter-spacing: -0.01em;
+  margin: 6px 0 !important;
   display: block !important;
   clear: both !important;
   width: 100% !important;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode .cwv-metric-desc {
-  font-size: 11px !important;
+  font-size: 8px !important;
   color: #6b7280 !important;
-  margin: 4px 0 0 0 !important;
+  margin: 3px 0 0 0 !important;
   display: block !important;
   line-height: 1.4;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode .cwv-metric-badge {
   display: inline-block !important;
-  padding: 4px 10px !important;
-  border-radius: 6px !important;
-  font-size: 10px !important;
+  padding: 3px 8px !important;
+  border-radius: 3px !important;
+  font-size: 8px !important;
   font-weight: 700 !important;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   float: right !important;
+  font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', 'Consolas', monospace !important;
 }
 
 .pdf-export-mode .cwv-metric-badge.good {
@@ -1429,32 +1463,99 @@
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
   }
-  
-  /* Lock overlays - hide paywall, show blurred content */
+
+  /* ============================================
+     PRO REPORT INDICATOR
+     ============================================ */
+
+  .print-pro-tier .print-header::after {
+    content: 'PRO REPORT';
+    display: inline-block;
+    margin-left: 12px;
+    padding: 2px 8px;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+    border: 1px solid #059669;
+    border-radius: 3px;
+    font-family: 'Arial', sans-serif;
+    font-size: 8px;
+    font-weight: bold;
+    color: #ffffff !important;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Pro tier: Show all content unlocked */
+  .print-pro-tier .is-locked {
+    display: block !important;
+    opacity: 1 !important;
+    filter: none !important;
+  }
+
+  .print-pro-tier .report-shell__lock-overlay {
+    display: contents !important;
+  }
+
+  .print-pro-tier .report-shell__lock-paywall,
+  .print-pro-tier [data-paid-unlock-card],
+  .print-pro-tier [data-hide-when-unlocked],
+  .print-pro-tier .pro-report-block__unlock-prompt,
+  .print-pro-tier .pro-report-block__unlock-buttons {
+    display: none !important;
+  }
+
+  /* Pro tier: Remove [PRO] markers since content is unlocked */
+  .print-pro-tier .accordion-section--locked .report-accordion__header::after,
+  .print-pro-tier [data-locked="true"] .report-accordion__header::after {
+    content: '' !important;
+    display: none !important;
+  }
+
+  /* Pro tier: Show all fix code sections */
+  .print-pro-tier .seo-fix-content,
+  .print-pro-tier .seo-fix-accordion-content,
+  .print-pro-tier .seo-fix-tab-content,
+  .print-pro-tier .fix-code,
+  .print-pro-tier .fix-code-block,
+  .print-pro-tier .recommendation-details,
+  .print-pro-tier .fix-details,
+  .print-pro-tier .how-to-fix,
+  .print-pro-tier [data-pro-only],
+  .print-pro-tier .pro-only,
+  .print-pro-tier .pro-content {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    max-height: none !important;
+    overflow: visible !important;
+  }
+
+  /* Lock overlays - hide paywall, show blurred content (free tier) */
   .report-shell__lock-overlay {
     display: block !important;
   }
-  
+
   .report-shell__lock-paywall,
   [data-paid-unlock-card],
   [data-hide-when-unlocked],
   .pro-report-block__upgrade-prompt {
     display: none !important;
   }
-  
-  /* Show locked content but mark as PRO */
-  .is-locked {
+
+  /* Show locked content but mark as PRO (free tier only) */
+  .print-free-tier .is-locked {
     display: block !important;
     opacity: 0.5 !important;
     filter: blur(1px) !important;
   }
-  
-  /* Mark PRO sections when not unlocked */
+
+  /* Mark PRO sections when not unlocked (free tier only) */
   .print-free-tier .accordion-section--locked,
   .print-free-tier [data-locked="true"] {
     opacity: 0.8 !important;
   }
-  
+
   .print-free-tier .accordion-section--locked .report-accordion__header::after,
   .print-free-tier [data-locked="true"] .report-accordion__header::after {
     content: ' [PRO]';

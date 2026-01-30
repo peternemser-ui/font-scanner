@@ -8,10 +8,15 @@ let currentResults = null;
 
 /**
  * MEMORY MANAGEMENT: Clean up previous scan data to prevent memory leaks
+ * @param {boolean} preserveReportId - If true, don't clear the report_id (used for billing return re-scans)
  */
-function cleanupPreviousSecurityData() {
+function cleanupPreviousSecurityData(preserveReportId = false) {
   // Clear report metadata from previous scans
-  document.body.removeAttribute('data-report-id');
+  // IMPORTANT: Don't clear report_id when re-scanning after billing return,
+  // otherwise the purchased report_id gets lost and replaced with a new one
+  if (!preserveReportId) {
+    document.body.removeAttribute('data-report-id');
+  }
   document.body.removeAttribute('data-sm-screenshot-url');
   document.body.removeAttribute('data-sm-scan-started-at');
   
@@ -58,30 +63,120 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
   
-  // Auto-start scan if URL parameter is present
-  if (typeof window.getUrlParameter === 'function') {
-    const autoUrl = window.getUrlParameter();
+  // Handle URL parameters for report loading and billing return
+  (async function initFromUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const reportId = params.get('report_id') || '';
+    const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
+    const autoScan = params.get('auto_scan') === 'true';
+    const billingSuccess = params.get('billing_success') === 'true';
+
+    // If we have a report_id, set it immediately so hasAccess checks work
+    if (reportId) {
+      document.body.setAttribute('data-report-id', reportId);
+      console.log('[Security] Set report ID from URL:', reportId);
+    }
+
+    // If returning from billing, wait for billing return processing to complete
+    if (billingSuccess && !window.__smBillingReturnComplete) {
+      console.log('[Security] Waiting for billing return processing...');
+      await new Promise((resolve) => {
+        if (window.__smBillingReturnComplete) {
+          resolve();
+          return;
+        }
+        const handler = () => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        };
+        window.addEventListener('sm:billingReturnComplete', handler);
+        setTimeout(() => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        }, 5000);
+      });
+      console.log('[Security] Billing return processing complete');
+      return;
+    }
+
+    // If we have a report_id, try to load the stored report first
+    if (reportId && window.ReportStorage) {
+      console.log('[Security] Checking for stored report:', reportId);
+
+      // CRITICAL: Fetch billing status BEFORE displaying the report
+      // Force refresh to ensure we have the latest purchase data (e.g., coming from dashboard)
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        console.log('[Security] Fetching billing status (force refresh for report recall)...');
+        await window.ProReportBlock.fetchBillingStatus(true);
+        console.log('[Security] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportId), 'for reportId:', reportId);
+      }
+
+      const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displaySecurityResults);
+      if (loaded) {
+        // Stored report was loaded - fill URL input for context
+        if (autoUrl) urlInput.value = autoUrl;
+        return; // Don't auto-scan
+      }
+    }
+
+    // No stored report found - pre-fill URL but only auto-scan if explicitly requested
     if (autoUrl) {
       urlInput.value = autoUrl;
+    }
+    // Only auto-scan if explicitly requested with auto_scan=true
+    if (autoScan) {
       setTimeout(() => {
         analyzeSecurity();
       }, 500);
     }
-  }
+  })();
+
+  // Listen for restore scan results event (after payment return)
+  window.addEventListener('sm:restoreScanResults', (e) => {
+    const { results, url, analyzer } = e.detail || {};
+    if (results && analyzer?.includes('security')) {
+      console.log('[Security] Restoring scan results after payment');
+      if (url && urlInput) {
+        urlInput.value = url;
+      }
+      currentResults = results;
+      displaySecurityResults(results);
+    }
+  });
 });
 
 // Main analysis function
-async function analyzeSecurity() {
+/**
+ * @param {Object} options - Optional settings
+ * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
+ */
+async function analyzeSecurity(options = {}) {
+  let { preserveReportId = false } = options;
   const url = document.getElementById('urlInput').value.trim();
   const analyzeButton = document.getElementById('analyzeButton');
-  
+
   if (!url) {
     showError('Please enter a valid URL');
     return;
   }
 
+  // Auto-detect if we should preserve report_id: if there's an existing one and user has paid access
+  const existingReportId = document.body.getAttribute('data-report-id');
+  if (!preserveReportId && existingReportId && window.ProReportBlock?.hasAccess?.(existingReportId)) {
+    console.log('[Security] Auto-preserving purchased report_id:', existingReportId);
+    preserveReportId = true;
+  }
+
+  // CRITICAL: Save the existing report_id BEFORE cleanup if we need to preserve it
+  // This is used for billing return re-scans where the purchased report_id must be kept
+  const preservedReportId = preserveReportId ? existingReportId : null;
+  if (preservedReportId) {
+    console.log('[Security] Preserving purchased report_id:', preservedReportId);
+  }
+
   // MEMORY CLEANUP: Clear previous scan data
-  cleanupPreviousSecurityData();
+  // Pass preserveReportId to keep the purchased report_id during billing return re-scans
+  cleanupPreviousSecurityData(preserveReportId);
 
   // Update button state
   analyzeButton.disabled = true;
@@ -218,9 +313,15 @@ async function analyzeSecurity() {
     currentResults = results;
 
     // Set report metadata from API response
-    const reportId = results && results.reportId ? String(results.reportId) : '';
+    // CRITICAL: Use preserved report_id if this is a billing return re-scan
+    // The API returns a NEW report_id with new timestamp, but we must keep the purchased one
+    const apiReportId = results && results.reportId ? String(results.reportId) : '';
+    const reportId = preservedReportId || apiReportId;
     const screenshotUrl = results && results.screenshotUrl ? String(results.screenshotUrl) : '';
     if (reportId) {
+      if (preservedReportId) {
+        console.log('[Security] Using preserved report_id instead of API response:', reportId);
+      }
       if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
         window.ReportUI.setCurrentReportId(reportId);
       } else {
@@ -254,6 +355,12 @@ async function analyzeSecurity() {
 
 // Display complete security results
 function displaySecurityResults(data) {
+  // Ensure results container is visible (may be hidden if called directly without scan flow)
+  const resultsDiv = document.getElementById('results');
+  if (resultsDiv) {
+    resultsDiv.classList.remove('hidden');
+  }
+
   const resultsContent = document.getElementById('resultsContent');
   resultsContent.innerHTML = '';
 
@@ -261,18 +368,18 @@ function displaySecurityResults(data) {
   const url = data.url || document.getElementById('urlInput').value.trim();
   const timestamp = new Date().toLocaleString();
 
-  // Consistent Report Header (matches Speed & UX format)
-  const reportHeader = window.ReportShell && window.ReportShell.renderReportHeader
-    ? window.ReportShell.renderReportHeader({
+  // Consistent Report Header (clean, no redundant badges)
+  const reportHeader = window.ReportContainer && window.ReportContainer.renderHeader
+    ? window.ReportContainer.renderHeader({
         title: 'Security Report',
         url: url,
         timestamp: timestamp,
-        badgeText: 'Security Audit',
-        mode: 'security'
+        mode: 'security',
+        showModeBadge: false,
+        showModeMeta: false
       })
     : `
       <div class="section" style="margin-bottom: 1.5rem;">
-        <div style="display: inline-block; padding: 0.375rem 0.875rem; background: #ff4444; color: #fff; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; border-radius: 8px; margin-bottom: 1rem;">Security Audit</div>
         <h2 style="color: var(--text-primary, #fff); font-size: 1.5rem; margin: 0 0 1rem 0;">Security Report</h2>
         ${url ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🌐 ${url}</p>` : ''}
         <p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🕒 ${timestamp}</p>
@@ -283,7 +390,7 @@ function displaySecurityResults(data) {
   const summaryHtml = `
     ${reportHeader}
     <div class="summary-section security-summary-panel">
-      <h2>◈ Security Audit Summary</h2>
+      <h2>◈ Summary</h2>
       
       <!-- Circular Progress Dials -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0;">
@@ -682,7 +789,20 @@ function displaySecurityResults(data) {
     `;
   }
   resultsContent.appendChild(actionsFooter);
+
+  // Auto-save report if user has access (purchased or Pro)
+  const reportId = document.body.getAttribute('data-report-id') || '';
+  if (reportId && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
+    window.ReportStorage.autoSaveIfEligible(reportId, data, {
+      siteUrl: data.url || document.getElementById('urlInput').value.trim(),
+      analyzerType: 'security',
+      scannedAt: window.SM_SCAN_STARTED_AT || new Date().toISOString()
+    });
+  }
 }
+
+// Expose display function globally for billing return handler
+window.displaySecurityResults = displaySecurityResults;
 
 // Create desktop vs mobile comparison section
 function createDesktopMobileComparison(container, desktop, mobile) {
@@ -812,10 +932,15 @@ function createDesktopMobileComparison(container, desktop, mobile) {
           </div>
         </div>
       </div>
-      
+
+      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0, 0, 0, 0.15); border-radius: 6px; font-size: 0.8rem; color: #808080; line-height: 1.6;">
+        <p style="margin: 0 0 0.5rem 0;"><strong style="color: #a0a0a0;">CSP (Content Security Policy):</strong> A security header that helps prevent XSS attacks by controlling which resources the browser can load.</p>
+        <p style="margin: 0;"><strong style="color: #a0a0a0;">HSTS (HTTP Strict Transport Security):</strong> A header that forces browsers to only connect via HTTPS, preventing downgrade attacks.</p>
+      </div>
+
       ${Math.abs(desktop.securityScore - mobile.securityScore) > 10 ? `
         <div class="warning-message" style="background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); margin-top: 1rem; padding: 1rem; border-radius: 4px;">
-          <strong style="color: #ffa500;">~ Platform Security Gap:</strong> 
+          <strong style="color: #ffa500;">~ Platform Security Gap:</strong>
           ${Math.abs(desktop.securityScore - mobile.securityScore)} point difference detected. Investigate platform-specific issues.
         </div>
       ` : ''}
@@ -881,11 +1006,8 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       header.querySelector('.accordion-toggle').textContent = '▼';
       header.querySelector('.accordion-toggle').classList.remove('rotated');
     } else {
-      // Pro paywall prompt on open if locked
-      if (isPro && !userHasPro()) {
-        safeOpenProPaywall({ domain: getCurrentDomain(), context: 'security' });
-      }
       // Expand and create content if not already created
+      // (Shows locked preview inline if user doesn't have Pro, no modal popup)
       if (!contentInner.hasChildNodes()) {
         renderContent();
       }
@@ -1352,14 +1474,19 @@ function ensureSecurityProAccess() {
   return false;
 }
 
-function exportSecurityPDF() {
+async function exportSecurityPDF() {
   if (!ensureSecurityProAccess()) return;
-  const exporter = new PDFExportUtility({
-    filename: 'security-report.pdf',
-    reportTitle: 'Security Analysis Report',
-    url: window.currentSecurityResults?.url || ''
-  });
-  exporter.export('#results');
+  // Use the unified PDF export utility
+  if (typeof window.exportReportPDF === 'function') {
+    const button = document.querySelector('[data-export="pdf"]');
+    await window.exportReportPDF({
+      reportType: 'security',
+      buttonElement: button
+    });
+  } else {
+    console.error('PDF export utility not loaded');
+    alert('PDF export is not available. Please refresh the page.');
+  }
 }
 
 function copySecurityShareLink() {
@@ -1405,6 +1532,11 @@ function downloadSecurityCSV() {
   URL.revokeObjectURL(link.href);
 }
 
+// Expose export functions to window for onclick handlers
+window.exportSecurityPDF = exportSecurityPDF;
+window.copySecurityShareLink = copySecurityShareLink;
+window.downloadSecurityCSV = downloadSecurityCSV;
+
 // Pro gating helpers
 function getCurrentDomain() {
   if (window.ProAccess && typeof window.ProAccess.getCurrentDomain === 'function') {
@@ -1414,6 +1546,11 @@ function getCurrentDomain() {
 }
 
 function userHasPro() {
+  // Check new billing model first (ProReportBlock)
+  const reportId = document.body?.getAttribute('data-report-id') || '';
+  if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+    if (window.ProReportBlock.hasAccess(reportId)) return true;
+  }
   if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
     return window.ProAccess.hasProAccess(getCurrentDomain());
   }

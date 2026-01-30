@@ -925,13 +925,13 @@ function renderFixTabs(fix, accordionId) {
       </ol>
 
       <div class="fix-actions">
-        <button class="fix-btn fix-btn-primary" onclick="alert('Fix applied! (Demo functionality)')">
+        <button class="fix-btn fix-btn-primary" data-action="apply-fix" data-fix-id="${fix.id}">
           ✨ Apply Fix
         </button>
-        <button class="fix-btn fix-btn-secondary" onclick="alert('Test opened in new tab (Demo functionality)')">
+        <button class="fix-btn fix-btn-secondary" data-action="test-fix" data-fix-id="${fix.id}">
           🧪 Test Fix
         </button>
-        <button class="fix-btn fix-btn-secondary" onclick="window.open('https://web.dev/articles/${fix.id}', '_blank')">
+        <button class="fix-btn fix-btn-secondary" data-action="learn-more" data-fix-id="${fix.id}" data-learn-url="https://web.dev/articles/${fix.id}">
           📚 Learn More
         </button>
       </div>
@@ -1029,3 +1029,91 @@ function copyCode(elementId) {
 window.toggleFixAccordion = toggleFixAccordion;
 window.switchFixTab = switchFixTab;
 window.copyCode = copyCode;
+
+// Event delegation for dynamically generated performance fix accordions
+// This ensures clicks work even when content is added after page load
+document.addEventListener('click', function(e) {
+  // Handle accordion header clicks (expand/collapse)
+  const header = e.target.closest('.fix-header');
+  if (header) {
+    const accordion = header.closest('.fix-accordion');
+    if (accordion) {
+      const accordionId = accordion.getAttribute('data-fix-id');
+      if (accordionId) {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleFixAccordion(accordionId);
+      }
+    }
+    return;
+  }
+
+  // Handle tab button clicks
+  const tabButton = e.target.closest('.fix-tab');
+  if (tabButton) {
+    const accordion = tabButton.closest('.fix-accordion');
+    if (accordion) {
+      const accordionId = accordion.getAttribute('data-fix-id');
+      const tabText = tabButton.textContent.toLowerCase();
+      let tabName = 'summary';
+      if (tabText.includes('code')) tabName = 'code';
+      else if (tabText.includes('resources') || tabText.includes('docs')) tabName = 'resources';
+      else if (tabText.includes('guide') || tabText.includes('implement')) tabName = 'guide';
+      e.preventDefault();
+      e.stopPropagation();
+      switchFixTab(accordionId, tabName);
+    }
+    return;
+  }
+
+  // Handle copy button clicks
+  const copyBtn = e.target.closest('.copy-btn, [onclick*="copyCode"]');
+  if (copyBtn) {
+    const codeBlock = copyBtn.closest('.code-block');
+    if (codeBlock) {
+      const codeEl = codeBlock.querySelector('code');
+      if (codeEl) {
+        e.preventDefault();
+        e.stopPropagation();
+        copyCode(copyBtn, codeEl.textContent);
+      }
+    }
+    return;
+  }
+
+  // Handle fix action buttons (Apply Fix, Test Fix, Learn More)
+  const actionBtn = e.target.closest('[data-action]');
+  if (actionBtn) {
+    const action = actionBtn.getAttribute('data-action');
+    const fixId = actionBtn.getAttribute('data-fix-id');
+    e.preventDefault();
+    e.stopPropagation();
+
+    switch (action) {
+      case 'apply-fix':
+        // Show helpful message about applying the fix
+        alert(`To apply this fix:\n\n1. Review the code examples in the "Code" tab\n2. Copy the relevant snippets to your project\n3. Test thoroughly before deploying\n\nFix ID: ${fixId}`);
+        break;
+      case 'test-fix':
+        // Open relevant testing tools
+        const testUrls = {
+          'reduce-javascript': 'https://pagespeed.web.dev/',
+          'optimize-images': 'https://pagespeed.web.dev/',
+          'reduce-tbt': 'https://pagespeed.web.dev/',
+          'improve-lcp': 'https://pagespeed.web.dev/',
+          'reduce-cls': 'https://pagespeed.web.dev/',
+          'improve-fcp': 'https://pagespeed.web.dev/',
+          'improve-inp': 'https://pagespeed.web.dev/',
+          'improve-accessibility': 'https://wave.webaim.org/'
+        };
+        const testUrl = testUrls[fixId] || 'https://pagespeed.web.dev/';
+        window.open(testUrl, '_blank');
+        break;
+      case 'learn-more':
+        const learnUrl = actionBtn.getAttribute('data-learn-url') || `https://web.dev/articles/${fixId}`;
+        window.open(learnUrl, '_blank');
+        break;
+    }
+    return;
+  }
+});

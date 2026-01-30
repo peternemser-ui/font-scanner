@@ -101,7 +101,7 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.125rem;
   width: 100%;
 }
 
@@ -119,6 +119,12 @@
   display: inline-block;
 }
 
+.modal__title .sm-modal-title__logo--large {
+  width: 140px;
+  height: auto;
+  display: block;
+}
+
 .modal__title .sm-modal-title__logo--red {
   width: 240px;
   height: 36px;
@@ -132,7 +138,8 @@
 .modal__title .sm-modal-title--stacked .sm-modal-title__text {
   display: block;
   text-align: center;
-  font-size: 1.1rem;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
 }
 
 .modal__close {

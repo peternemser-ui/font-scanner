@@ -13,6 +13,88 @@ document.getElementById('url').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyzeCRO();
 });
 
+// Handle URL parameters for report loading and billing return
+(async function initFromUrlParams() {
+  const urlInput = document.getElementById('url');
+  const params = new URLSearchParams(window.location.search);
+  const reportId = params.get('report_id') || '';
+  const autoUrl = params.get('url') || '';
+  const autoScan = params.get('auto_scan') === 'true';
+  const billingSuccess = params.get('billing_success') === 'true';
+
+  // If we have a report_id, set it immediately so hasAccess checks work
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    console.log('[CRO] Set report ID from URL:', reportId);
+  }
+
+  // If returning from billing, wait for billing return processing to complete
+  if (billingSuccess && !window.__smBillingReturnComplete) {
+    console.log('[CRO] Waiting for billing return processing...');
+    await new Promise((resolve) => {
+      if (window.__smBillingReturnComplete) {
+        resolve();
+        return;
+      }
+      const handler = () => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      };
+      window.addEventListener('sm:billingReturnComplete', handler);
+      setTimeout(() => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      }, 5000);
+    });
+    console.log('[CRO] Billing return processing complete');
+    return;
+  }
+
+  // If we have a report_id, try to load the stored report first
+  if (reportId && window.ReportStorage) {
+    console.log('[CRO] Checking for stored report:', reportId);
+
+    // CRITICAL: Fetch billing status BEFORE displaying the report
+    // Force refresh to ensure we have the latest purchase data (e.g., coming from dashboard)
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      console.log('[CRO] Fetching billing status (force refresh for report recall)...');
+      await window.ProReportBlock.fetchBillingStatus(true);
+      console.log('[CRO] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportId), 'for reportId:', reportId);
+    }
+
+    const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayResults);
+    if (loaded) {
+      // Stored report was loaded - fill URL input for context
+      if (autoUrl && urlInput) urlInput.value = autoUrl;
+      return; // Don't auto-scan
+    }
+  }
+
+  // No stored report found - pre-fill URL but only auto-scan if explicitly requested
+  if (autoUrl && urlInput) {
+    urlInput.value = autoUrl;
+  }
+  // Only auto-scan if explicitly requested with auto_scan=true
+  if (autoScan) {
+    setTimeout(() => {
+      analyzeCRO();
+    }, 500);
+  }
+})();
+
+// Listen for restore scan results event (after payment return)
+window.addEventListener('sm:restoreScanResults', (e) => {
+  const { results: restoredResults, url, analyzer } = e.detail || {};
+  if (restoredResults && analyzer?.includes('cro')) {
+    console.log('[CRO] Restoring scan results after payment');
+    const urlInput = document.getElementById('url');
+    if (url && urlInput) {
+      urlInput.value = url;
+    }
+    displayResults(restoredResults);
+  }
+});
+
 // Analysis steps for the loader
 const analysisSteps = [
   { label: 'Initializing analysis', detail: 'Connecting to target website...' },
@@ -23,16 +105,39 @@ const analysisSteps = [
   { label: 'Generating CRO report', detail: 'Calculating conversion potential...' }
 ];
 
-async function analyzeCRO() {
+/**
+ * @param {Object} options - Optional settings
+ * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
+ */
+async function analyzeCRO(options = {}) {
+  let { preserveReportId = false } = options;
   const url = document.getElementById('url').value.trim();
-  
+
   if (!url) {
     alert('Please enter a URL');
     return;
   }
-  
+
+  // Auto-detect if we should preserve report_id: if there's an existing one and user has paid access
+  const existingReportId = document.body.getAttribute('data-report-id');
+  if (!preserveReportId && existingReportId && window.ProReportBlock?.hasAccess?.(existingReportId)) {
+    console.log('[CRO] Auto-preserving purchased report_id:', existingReportId);
+    preserveReportId = true;
+  }
+
+  // CRITICAL: Save the existing report_id BEFORE cleanup if we need to preserve it
+  // This is used for billing return re-scans where the purchased report_id must be kept
+  const preservedReportId = preserveReportId ? existingReportId : null;
+  if (preservedReportId) {
+    console.log('[CRO] Preserving purchased report_id:', preservedReportId);
+  }
+
   // Clear report metadata from previous scans
-  document.body.removeAttribute('data-report-id');
+  // IMPORTANT: Don't clear report_id when re-scanning after billing return,
+  // otherwise the purchased report_id gets lost and replaced with a new one
+  if (!preserveReportId) {
+    document.body.removeAttribute('data-report-id');
+  }
   document.body.removeAttribute('data-sm-screenshot-url');
   document.body.removeAttribute('data-sm-scan-started-at');
   
@@ -128,9 +233,15 @@ async function analyzeCRO() {
     const data = await response.json();
     
     // Set report metadata from API response
-    const reportId = data && data.reportId ? String(data.reportId) : '';
+    // CRITICAL: Use preserved report_id if this is a billing return re-scan
+    // The API returns a NEW report_id with new timestamp, but we must keep the purchased one
+    const apiReportId = data && data.reportId ? String(data.reportId) : '';
+    const reportId = preservedReportId || apiReportId;
     const screenshotUrl = data && data.screenshotUrl ? String(data.screenshotUrl) : '';
     if (reportId) {
+      if (preservedReportId) {
+        console.log('[CRO] Using preserved report_id instead of API response:', reportId);
+      }
       if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
         window.ReportUI.setCurrentReportId(reportId);
       } else {
@@ -166,13 +277,31 @@ async function analyzeCRO() {
 
 function displayResults(data) {
   const resultsContainer = document.getElementById('results');
+
+  // Ensure results container is visible (may be hidden if called directly without scan flow)
+  if (resultsContainer) {
+    resultsContainer.style.display = 'block';
+  }
+
   const url = document.getElementById('url').value;
   const timestamp = new Date().toLocaleString();
   const startedAt = document.body.getAttribute('data-sm-scan-started-at') || new Date().toISOString();
-  const reportId = data.reportId || `cro_${btoa(url).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16)}`;
+
+  // Prefer stored reportId, URL param, or generate new one
+  const urlParams = new URLSearchParams(window.location.search);
+  const urlReportId = urlParams.get('report_id') || '';
+  const reportId = data.reportId || urlReportId || `cro_${btoa(url).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16)}`;
+
+  // CRITICAL: Set report ID on body BEFORE checking unlock status
+  // This ensures ProReportBlock.hasAccess can find the report ID
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    console.log('[CRO] Set report ID on body:', reportId);
+  }
+
   const screenshotBase = data.screenshotUrl || document.body.getAttribute('data-sm-screenshot-url') || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
   const screenshotUrl = screenshotBase ? `${screenshotBase}${screenshotBase.includes('?') ? '&' : '?'}t=${Date.now()}` : '';
-  
+
   // Store results globally for PDF generation
   window.currentCROResults = data;
 
@@ -187,16 +316,44 @@ function displayResults(data) {
     document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
   }
 
-  // Check if report is unlocked (purchased)
+  // Check if report is unlocked (Pro subscription or purchased)
   const isReportUnlocked = (id) => {
-    if (reportId && window.CreditsManager) {
-      if (typeof window.CreditsManager.isUnlocked === 'function') return window.CreditsManager.isUnlocked(id);
-      if (typeof window.CreditsManager.isReportUnlocked === 'function') return window.CreditsManager.isReportUnlocked(id);
+    const rId = String(id || '').trim();
+
+    // Subscription-style Pro (or ProReportBlock helper)
+    if (window.ProReportBlock && typeof window.ProReportBlock.isPro === 'function') {
+      if (window.ProReportBlock.isPro(rId || null)) {
+        console.log('[CRO] isReportUnlocked: true via ProReportBlock.isPro');
+        return true;
+      }
     }
+
+    // Also check hasAccess which covers both Pro and purchased
+    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+      if (window.ProReportBlock.hasAccess(rId)) {
+        console.log('[CRO] isReportUnlocked: true via ProReportBlock.hasAccess');
+        return true;
+      }
+    }
+
+    // Per-report unlock via credits
+    if (rId && window.CreditsManager) {
+      if (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(rId)) {
+        console.log('[CRO] isReportUnlocked: true via CreditsManager.isUnlocked');
+        return true;
+      }
+      if (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(rId)) {
+        console.log('[CRO] isReportUnlocked: true via CreditsManager.isReportUnlocked');
+        return true;
+      }
+    }
+
+    console.log('[CRO] isReportUnlocked: false for reportId:', rId);
     return false;
   };
 
   const isUnlocked = isReportUnlocked(reportId);
+  console.log('[CRO] displayResults unlock check:', { reportId, isUnlocked });
 
   // Preview content for locked state (matches SEO pattern)
   const croFixesPreview = renderCROFixesPreview([
@@ -338,7 +495,19 @@ function displayResults(data) {
       }
     });
   }
+
+  // Auto-save report if user has access (purchased or Pro)
+  if (reportId && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
+    window.ReportStorage.autoSaveIfEligible(reportId, data, {
+      siteUrl: url,
+      analyzerType: 'cro',
+      scannedAt: window.SM_SCAN_STARTED_AT || new Date().toISOString()
+    });
+  }
 }
+
+// Expose display function globally for billing return handler
+window.displayCROResults = displayResults;
 
 // Reveal CRO PRO content (remove lock overlays)
 function revealCROProContent() {
@@ -2008,3 +2177,36 @@ if (document.readyState === 'loading') {
 } else {
   initCROPDFExport();
 }
+
+// Add click event delegation for CRO fix accordions and tabs
+document.addEventListener('click', function(e) {
+  // Handle tab clicks first
+  const tab = e.target.closest('.cro-fix-tab');
+  if (tab) {
+    const accordion = tab.closest('.cro-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      const tabText = tab.textContent.toLowerCase();
+      let tabName = 'summary';
+      if (tabText.includes('code')) tabName = 'code';
+      else if (tabText.includes('guide')) tabName = 'guide';
+      if (fixId && typeof window.switchCROFixTab === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+        window.switchCROFixTab(fixId, tabName);
+      }
+    }
+    return;
+  }
+  // Handle accordion header clicks
+  const header = e.target.closest('.cro-fix-header');
+  if (header) {
+    const accordion = header.closest('.cro-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      if (fixId && typeof window.toggleCROFixAccordion === 'function') {
+        window.toggleCROFixAccordion(fixId);
+      }
+    }
+  }
+});

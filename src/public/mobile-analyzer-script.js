@@ -60,23 +60,118 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') analyzeUrl();
   });
 
-  // Check for URL in query params
-  const params = new URLSearchParams(window.location.search);
-  const urlParam = params.get('url');
-  if (urlParam) {
-    urlInput.value = urlParam;
-    analyzeUrl();
-  }
+  // Handle URL parameters for report loading and billing return
+  (async function initFromUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const reportId = params.get('report_id') || '';
+    const autoUrl = params.get('url') || '';
+    const autoScan = params.get('auto_scan') === 'true';
+    const billingSuccess = params.get('billing_success') === 'true';
 
-  async function analyzeUrl() {
+    // If we have a report_id, set it immediately so hasAccess checks work
+    if (reportId) {
+      document.body.setAttribute('data-report-id', reportId);
+      console.log('[Mobile] Set report ID from URL:', reportId);
+    }
+
+    // If returning from billing, wait for billing return processing to complete
+    if (billingSuccess && !window.__smBillingReturnComplete) {
+      console.log('[Mobile] Waiting for billing return processing...');
+      await new Promise((resolve) => {
+        if (window.__smBillingReturnComplete) {
+          resolve();
+          return;
+        }
+        const handler = () => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        };
+        window.addEventListener('sm:billingReturnComplete', handler);
+        setTimeout(() => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        }, 5000);
+      });
+      console.log('[Mobile] Billing return processing complete');
+      return;
+    }
+
+    // If we have a report_id, try to load the stored report first
+    if (reportId && window.ReportStorage) {
+      console.log('[Mobile] Checking for stored report:', reportId);
+
+      // CRITICAL: Fetch billing status BEFORE displaying the report
+      // Force refresh to ensure we have the latest purchase data (e.g., coming from dashboard)
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        console.log('[Mobile] Fetching billing status (force refresh for report recall)...');
+        await window.ProReportBlock.fetchBillingStatus(true);
+        console.log('[Mobile] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportId), 'for reportId:', reportId);
+      }
+
+      const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayResults);
+      if (loaded) {
+        // Stored report was loaded - fill URL input for context
+        if (autoUrl) urlInput.value = autoUrl;
+        return; // Don't auto-scan
+      }
+    }
+
+    // No stored report found - pre-fill URL but only auto-scan if explicitly requested
+    if (autoUrl) {
+      urlInput.value = autoUrl;
+    }
+    // Only auto-scan if explicitly requested with auto_scan=true
+    if (autoScan) {
+      setTimeout(() => {
+        analyzeUrl();
+      }, 500);
+    }
+  })();
+
+  // Listen for restore scan results event (after payment return)
+  window.addEventListener('sm:restoreScanResults', (e) => {
+    const { results: restoredResults, url, analyzer } = e.detail || {};
+    if (restoredResults && analyzer?.includes('mobile')) {
+      console.log('[Mobile] Restoring scan results after payment');
+      if (url && urlInput) {
+        urlInput.value = url;
+      }
+      displayResults(restoredResults);
+    }
+  });
+
+  /**
+   * @param {Object} options - Optional settings
+   * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
+   */
+  async function analyzeUrl(options = {}) {
+    let { preserveReportId = false } = options;
     const url = urlInput.value.trim();
     if (!url) {
       showError('Please enter a valid URL');
       return;
     }
 
+    // Auto-detect if we should preserve report_id: if there's an existing one and user has paid access
+    const existingReportId = document.body.getAttribute('data-report-id');
+    if (!preserveReportId && existingReportId && window.ProReportBlock?.hasAccess?.(existingReportId)) {
+      console.log('[Mobile] Auto-preserving purchased report_id:', existingReportId);
+      preserveReportId = true;
+    }
+
+    // CRITICAL: Save the existing report_id BEFORE cleanup if we need to preserve it
+    // This is used for billing return re-scans where the purchased report_id must be kept
+    const preservedReportId = preserveReportId ? existingReportId : null;
+    if (preservedReportId) {
+      console.log('[Mobile] Preserving purchased report_id:', preservedReportId);
+    }
+
     // Clear report metadata from previous scans
-    document.body.removeAttribute('data-report-id');
+    // IMPORTANT: Don't clear report_id when re-scanning after billing return,
+    // otherwise the purchased report_id gets lost and replaced with a new one
+    if (!preserveReportId) {
+      document.body.removeAttribute('data-report-id');
+    }
     document.body.removeAttribute('data-sm-screenshot-url');
     document.body.removeAttribute('data-sm-scan-started-at');
 
@@ -159,10 +254,16 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
-      const reportId = data && data.reportId ? String(data.reportId) : '';
+      // CRITICAL: Use preserved report_id if this is a billing return re-scan
+      // The API returns a NEW report_id with new timestamp, but we must keep the purchased one
+      const apiReportId = data && data.reportId ? String(data.reportId) : '';
+      const reportId = preservedReportId || apiReportId;
       const screenshotUrl = data && data.screenshotUrl ? String(data.screenshotUrl) : '';
 
       if (reportId) {
+        if (preservedReportId) {
+          console.log('[Mobile] Using preserved report_id instead of API response:', reportId);
+        }
         if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
           window.ReportUI.setCurrentReportId(reportId);
         } else {
@@ -201,6 +302,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayResults(data, meta = {}) {
+    // Ensure results container is visible (may be hidden if called directly without scan flow)
+    if (results) {
+      results.classList.remove('hidden');
+    }
+
     const url = document.getElementById('urlInput').value;
     const timestamp = new Date().toLocaleString();
     const reportId = (meta && meta.reportId) ? String(meta.reportId) : (document.body.getAttribute('data-report-id') || '');
@@ -274,23 +380,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Other diagnostic sections (viewport, PWA, dark mode, etc.)
     const diagnosticsContent = createAllDiagnosticSections(data, firstDevice);
     
-    // Recommendations
-    const recommendationsContent = `
-      <div class="report-shell__card">
-        ${data.recommendations.length > 0 ? 
-          data.recommendations.map(rec => `
-            <div style="background: rgba(255, 255, 255, 0.03); padding: 1rem; margin-bottom: 0.75rem; border-radius: 8px; border-left: 3px solid ${rec.severity === 'high' ? '#ef4444' : rec.severity === 'medium' ? '#f59e0b' : '#22c55e'};">
-              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
-                <strong style="color: var(--text-primary, #fff);">${rec.title}</strong>
-                <span style="padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.75rem; background: rgba(255,255,255,0.1);">${rec.category}</span>
-              </div>
-              <div style="font-size: 0.9rem; color: var(--text-muted, #aaa);">${rec.suggestion}</div>
-            </div>
-          `).join('') 
-          : '<p style="color: var(--text-muted, #888);">✅ No significant issues detected!</p>'
-        }
-      </div>
-    `;
+    // Recommendations - use same accordion pattern as SEO
+    const recommendationsContent = renderMobileFixes(data.recommendations);
 
     const isReportUnlocked = (id) => {
       const reportId = String(id || '').trim();
@@ -391,13 +482,26 @@ document.addEventListener('DOMContentLoaded', () => {
     
     resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;
     window.mobileData = data;
+    window.currentMobileResults = data;  // For billing return restoration
     ReportAccordion.initInteractions();
 
     if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function' && reportId) {
       window.CreditsManager.renderPaywallState(reportId);
     }
+
+    // Auto-save report if user has access (purchased or Pro)
+    if (reportId && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
+      window.ReportStorage.autoSaveIfEligible(reportId, data, {
+        siteUrl: url,
+        analyzerType: 'mobile-analyzer',
+        scannedAt: window.SM_SCAN_STARTED_AT || new Date().toISOString()
+      });
+    }
   }
-  
+
+  // Expose display function globally for billing return handler
+  window.displayMobileResults = displayResults;
+
   function formatScore(value) {
     const numeric = Number(value);
     if (!Number.isFinite(numeric)) return '0.00';
@@ -843,8 +947,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
   
-  // Stub functions for export (can be implemented later)
-  window.exportMobilePDF = function() { alert('PDF export coming soon'); };
+  // Export functions using unified PDF export (server-side Puppeteer)
+  window.exportMobilePDF = async function() {
+    if (typeof window.exportReportPDF === 'function') {
+      const button = document.querySelector('[data-export="pdf"]') ||
+                     document.querySelector('button[onclick*="exportMobilePDF"]');
+      await window.exportReportPDF({
+        reportType: 'mobile',
+        buttonElement: button
+      });
+    } else {
+      console.error('PDF export utility not loaded');
+      alert('PDF export is not available. Please refresh the page.');
+    }
+  };
   window.copyMobileShareLink = function() { alert('Share link coming soon'); };
   window.downloadMobileCSV = function() { alert('CSV export coming soon'); };
 
@@ -1422,4 +1538,499 @@ document.addEventListener('DOMContentLoaded', () => {
       container.insertBefore(patienceEl, container.firstChild);
     }
   }
+
+  // =========================================================================
+  // Mobile Fix Accordion Functions - mirrors SEO pattern for consistency
+  // =========================================================================
+
+  function renderMobileFixes(recommendations) {
+    if (!recommendations || recommendations.length === 0) {
+      return `
+        <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+          <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
+            <span style="font-size: 1.5rem;">✓</span> Excellent Mobile Experience!
+          </h3>
+          <p style="color: #86efac; margin: 0;">Your site follows mobile best practices. Keep monitoring for continued success.</p>
+        </div>
+      `;
+    }
+
+    // Map severity to consistent format (error->High, warning->Medium, info->Low)
+    const normalizedRecs = recommendations.map((rec, idx) => ({
+      ...rec,
+      id: `mobile-fix-${idx}`,
+      severity: rec.severity === 'error' || rec.severity === 'high' ? 'High' :
+                rec.severity === 'warning' || rec.severity === 'medium' ? 'Medium' : 'Low'
+    }));
+
+    // Group by severity
+    const high = normalizedRecs.filter(r => r.severity === 'High');
+    const medium = normalizedRecs.filter(r => r.severity === 'Medium');
+    const low = normalizedRecs.filter(r => r.severity === 'Low');
+
+    let html = `
+      <div class="mobile-fixes-container" style="margin-top: 1rem;">
+        <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+          <span style="font-size: 1.75rem;">📱</span> Mobile Fixes
+          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${recommendations.length} improvements found)</span>
+        </h3>
+        <div class="mobile-fixes-list">
+    `;
+
+    // Render all fixes grouped by severity
+    const allFixes = [...high, ...medium, ...low];
+    allFixes.forEach((fix, index) => {
+      html += renderMobileFixAccordion(fix, index);
+    });
+
+    html += `</div></div>`;
+    return html;
+  }
+
+  function renderMobileFixAccordion(fix, index) {
+    const accordionId = `mobilefix-${fix.id || index}`;
+    const severityColors = {
+      High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+      Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+      Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
+    };
+    const style = severityColors[fix.severity] || severityColors.Medium;
+
+    return `
+      <div class="mobile-fix-accordion" data-fix-id="${accordionId}" style="
+        border: 1px solid ${style.border}33;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        overflow: hidden;
+        background: ${style.bg};
+      ">
+        <div class="mobile-fix-header" onclick="toggleMobileFixAccordion('${accordionId}')" style="
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 1rem 1.25rem;
+          cursor: pointer;
+          transition: background 0.2s;
+        ">
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="font-size: 1.25rem;">${style.icon}</span>
+            <div>
+              <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || 'Mobile Optimization'}</p>
+            </div>
+          </div>
+          <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <span style="
+              padding: 0.25rem 0.75rem;
+              border-radius: 20px;
+              font-size: 0.75rem;
+              font-weight: 600;
+              background: ${style.color}20;
+              color: ${style.color};
+              border: 1px solid ${style.color}40;
+            ">${fix.severity.toUpperCase()}</span>
+            <span class="mobile-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+          </div>
+        </div>
+
+        <div class="mobile-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+          <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+            ${renderMobileFixTabs(fix, accordionId)}
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderMobileFixTabs(fix, accordionId) {
+    const codeExamples = getMobileFixCode(fix);
+
+    return `
+      <div class="mobile-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+        <button class="mobile-fix-tab active" onclick="switchMobileFixTab('${accordionId}', 'summary')" style="
+          padding: 0.5rem 1rem;
+          border: 1px solid rgba(255,255,255,0.2);
+          border-radius: 6px;
+          background: rgba(255,255,255,0.1);
+          color: #fff;
+          cursor: pointer;
+          font-size: 0.85rem;
+        ">📋 Summary</button>
+        <button class="mobile-fix-tab" onclick="switchMobileFixTab('${accordionId}', 'code')" style="
+          padding: 0.5rem 1rem;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 6px;
+          background: transparent;
+          color: #aaa;
+          cursor: pointer;
+          font-size: 0.85rem;
+        ">💻 Code</button>
+        <button class="mobile-fix-tab" onclick="switchMobileFixTab('${accordionId}', 'guide')" style="
+          padding: 0.5rem 1rem;
+          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 6px;
+          background: transparent;
+          color: #aaa;
+          cursor: pointer;
+          font-size: 0.85rem;
+        ">🔧 Fix Guide</button>
+      </div>
+
+      <!-- Summary Tab -->
+      <div class="mobile-fix-tab-content active" id="${accordionId}-summary">
+        <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+          ${fix.suggestion || fix.description || 'Review and address this mobile optimization issue.'}
+        </p>
+        <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+          <div style="color: #c0c0c0; font-size: 0.9rem;">${getMobileFixImpact(fix)}</div>
+        </div>
+      </div>
+
+      <!-- Code Tab -->
+      <div class="mobile-fix-tab-content" id="${accordionId}-code" style="display: none;">
+        <div style="display: grid; gap: 1rem;">
+          <!-- Current Issue -->
+          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
+              <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
+              <button onclick="copyMobileCode('${accordionId}-problem')" style="
+                padding: 0.25rem 0.75rem;
+                border-radius: 4px;
+                border: 1px solid rgba(255,255,255,0.2);
+                background: rgba(255,255,255,0.05);
+                color: #fff;
+                cursor: pointer;
+                font-size: 0.75rem;
+              ">📋 Copy</button>
+            </div>
+            <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlForMobile(codeExamples.problem)}</pre>
+          </div>
+
+          <!-- Fixed Code -->
+          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
+              <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
+              <button onclick="copyMobileCode('${accordionId}-solution')" style="
+                padding: 0.25rem 0.75rem;
+                border-radius: 4px;
+                border: 1px solid rgba(255,255,255,0.2);
+                background: rgba(255,255,255,0.05);
+                color: #fff;
+                cursor: pointer;
+                font-size: 0.75rem;
+              ">📋 Copy</button>
+            </div>
+            <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlForMobile(codeExamples.solution)}</pre>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fix Guide Tab -->
+      <div class="mobile-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+        <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+        <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+          ${getMobileFixSteps(fix).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+        </ol>
+      </div>
+    `;
+  }
+
+  function escapeHtmlForMobile(str) {
+    if (!str) return '';
+    return str
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#039;');
+  }
+
+  function getMobileFixCode(fix) {
+    const codeMap = {
+      'Touch targets below WCAG minimum': {
+        problem: `/* Current: Touch targets too small */
+.button, .link {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+/* Issues: */
+/* ✗ Touch target smaller than 44×44px */
+/* ✗ Difficult to tap on mobile devices */
+/* ✗ Fails WCAG 2.5.5 Target Size */`,
+        solution: `/* Fixed: Proper touch target sizing */
+.button, .link {
+  min-height: 44px;
+  min-width: 44px;
+  padding: 12px 16px;
+  font-size: 16px;
+}
+
+/* Best practices: */
+/* ✓ Minimum 44×44px touch targets */
+/* ✓ 48×48px recommended for primary actions */
+/* ✓ 8px minimum spacing between targets */`
+      },
+      'Some text is too small on mobile': {
+        problem: `/* Current: Text too small for mobile */
+body {
+  font-size: 12px;
+}
+
+p, span {
+  font-size: 10px;
+  line-height: 1.2;
+}
+
+/* Issues: */
+/* ✗ Base font under 16px causes zoom on iOS */
+/* ✗ Poor readability at arm's length */`,
+        solution: `/* Fixed: Mobile-friendly typography */
+body {
+  font-size: 16px; /* Prevents iOS zoom */
+  -webkit-text-size-adjust: 100%;
+}
+
+p, span {
+  font-size: 1rem; /* 16px base */
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  body { font-size: 16px; }
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+}`
+      },
+      'Mobile performance is below recommended': {
+        problem: `<!-- Current: Unoptimized resources -->
+<head>
+  <link rel="stylesheet" href="/all-styles.css">
+  <script src="/bundle.js"></script>
+</head>
+
+<img src="/hero.png" width="1920">
+
+<!-- Issues: -->
+<!-- ✗ Render-blocking resources -->
+<!-- ✗ Unoptimized images -->
+<!-- ✗ No lazy loading -->`,
+        solution: `<!-- Fixed: Optimized for mobile -->
+<head>
+  <link rel="preload" as="image" href="/hero.webp">
+  <link rel="stylesheet" href="/critical.css">
+  <link rel="stylesheet" href="/styles.css" media="print" onload="this.media='all'">
+  <script src="/bundle.js" defer></script>
+</head>
+
+<img src="/hero.webp"
+     srcset="/hero-400.webp 400w, /hero-800.webp 800w"
+     sizes="(max-width: 768px) 100vw, 800px"
+     loading="lazy"
+     decoding="async">`
+      },
+      'Accessibility issues detected': {
+        problem: `<!-- Current: Accessibility issues -->
+<img src="/photo.jpg">
+<div onclick="navigate()">Click here</div>
+<div class="heading">Important Title</div>
+
+<!-- Issues: -->
+<!-- ✗ Missing alt text on images -->
+<!-- ✗ Non-semantic clickable elements -->
+<!-- ✗ Incorrect heading structure -->`,
+        solution: `<!-- Fixed: Accessible markup -->
+<img src="/photo.jpg" alt="Description of image content">
+
+<button type="button" onclick="navigate()">
+  Navigate to section
+</button>
+
+<h2>Important Title</h2>
+
+<!-- Best practices: -->
+<!-- ✓ Descriptive alt text -->
+<!-- ✓ Semantic HTML elements -->
+<!-- ✓ Proper heading hierarchy -->`
+      }
+    };
+
+    return codeMap[fix.title] || {
+      problem: `/* Current implementation */
+/* Review your ${fix.category || 'mobile'} setup */
+
+/* Issues detected: */
+/* ✗ ${fix.title || 'Optimization needed'}`,
+      solution: `/* Recommended implementation */
+/* Apply ${fix.category || 'mobile'} best practices */
+
+/* Benefits: */
+/* ✓ Improved mobile experience */
+/* ✓ Better performance scores */
+/* ✓ Enhanced usability */`
+    };
+  }
+
+  function getMobileFixImpact(fix) {
+    const impactMap = {
+      'Performance': 'Faster page load and improved Core Web Vitals scores',
+      'Readability': 'Better user experience with improved text legibility',
+      'Touch Targets': 'Easier tap interactions for mobile users',
+      'Accessibility': 'Better support for users with disabilities and assistive tech',
+      'Viewport': 'Proper scaling and layout on all device sizes',
+      'PWA': 'Enhanced mobile experience with app-like features'
+    };
+    return impactMap[fix.category] || 'Improved mobile user experience and engagement';
+  }
+
+  function getMobileFixSteps(fix) {
+    const stepsMap = {
+      'Mobile performance is below recommended': [
+        'Audit images and use modern formats (WebP, AVIF)',
+        'Minimize and defer non-critical JavaScript',
+        'Enable compression and browser caching',
+        'Use a Content Delivery Network (CDN)'
+      ],
+      'Some text is too small on mobile': [
+        'Set body font-size to at least 16px',
+        'Use relative units (rem/em) instead of fixed pixels',
+        'Test on actual devices at arm\'s length viewing distance'
+      ],
+      'Touch targets below WCAG minimum': [
+        'Increase button/link size to at least 44×44 pixels',
+        'Add padding around interactive elements',
+        'Ensure adequate spacing between tap targets'
+      ],
+      'Accessibility issues detected': [
+        'Add descriptive alt text to all images',
+        'Ensure proper heading hierarchy (h1 → h2 → h3)',
+        'Check color contrast meets WCAG AA standards (4.5:1)'
+      ]
+    };
+    return stepsMap[fix.title] || [
+      'Review current implementation',
+      'Apply the recommended changes',
+      'Test on multiple mobile devices',
+      'Verify the improvement'
+    ];
+  }
+
+  // Toggle mobile fix accordion
+  function toggleMobileFixAccordion(accordionId) {
+    const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+    const content = document.getElementById(`${accordionId}-content`);
+    const icon = accordion?.querySelector('.mobile-fix-expand-icon');
+
+    if (!accordion || !content) return;
+
+    const isExpanded = accordion.classList.contains('expanded');
+
+    if (isExpanded) {
+      accordion.classList.remove('expanded');
+      content.style.maxHeight = '0';
+      if (icon) icon.style.transform = 'rotate(0deg)';
+    } else {
+      accordion.classList.add('expanded');
+      content.style.maxHeight = content.scrollHeight + 'px';
+      if (icon) icon.style.transform = 'rotate(180deg)';
+    }
+  }
+  window.toggleMobileFixAccordion = toggleMobileFixAccordion;
+
+  // Switch mobile fix tabs
+  function switchMobileFixTab(accordionId, tabName) {
+    const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+    if (!accordion) return;
+
+    const tabs = accordion.querySelectorAll('.mobile-fix-tab');
+    const contents = accordion.querySelectorAll('.mobile-fix-tab-content');
+
+    tabs.forEach(tab => {
+      tab.style.background = 'transparent';
+      tab.style.color = '#aaa';
+      tab.style.borderColor = 'rgba(255,255,255,0.1)';
+      tab.classList.remove('active');
+    });
+    contents.forEach(content => {
+      content.style.display = 'none';
+      content.classList.remove('active');
+    });
+
+    const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+    const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+
+    if (activeTab) {
+      activeTab.style.background = 'rgba(255,255,255,0.1)';
+      activeTab.style.color = '#fff';
+      activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+      activeTab.classList.add('active');
+    }
+    if (activeContent) {
+      activeContent.style.display = 'block';
+      activeContent.classList.add('active');
+    }
+
+    // Update accordion height
+    const content = document.getElementById(`${accordionId}-content`);
+    if (content && accordion.classList.contains('expanded')) {
+      setTimeout(() => {
+        content.style.maxHeight = content.scrollHeight + 'px';
+      }, 50);
+    }
+  }
+  window.switchMobileFixTab = switchMobileFixTab;
+
+  // Copy code function
+  function copyMobileCode(elementId) {
+    const codeElement = document.getElementById(elementId);
+    if (!codeElement) return;
+
+    const text = codeElement.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      const btn = codeElement.parentElement.querySelector('button');
+      if (btn) {
+        const originalText = btn.textContent;
+        btn.textContent = '✓ Copied!';
+        setTimeout(() => { btn.textContent = originalText; }, 2000);
+      }
+    });
+  }
+  window.copyMobileCode = copyMobileCode;
+
+  // Event delegation for mobile fix accordions and tabs
+  document.addEventListener('click', function(e) {
+    // Handle tab clicks
+    const tab = e.target.closest('.mobile-fix-tab');
+    if (tab) {
+      const accordion = tab.closest('.mobile-fix-accordion');
+      if (accordion) {
+        const fixId = accordion.getAttribute('data-fix-id');
+        const tabText = tab.textContent.toLowerCase();
+        let tabName = 'summary';
+        if (tabText.includes('code')) tabName = 'code';
+        else if (tabText.includes('guide')) tabName = 'guide';
+
+        if (fixId && typeof window.switchMobileFixTab === 'function') {
+          e.preventDefault();
+          e.stopPropagation();
+          window.switchMobileFixTab(fixId, tabName);
+        }
+      }
+      return;
+    }
+
+    // Handle header clicks
+    const header = e.target.closest('.mobile-fix-header');
+    if (header) {
+      const accordion = header.closest('.mobile-fix-accordion');
+      if (accordion) {
+        const fixId = accordion.getAttribute('data-fix-id');
+        if (fixId && typeof window.toggleMobileFixAccordion === 'function') {
+          e.preventDefault();
+          window.toggleMobileFixAccordion(fixId);
+        }
+      }
+    }
+  });
 });

@@ -101,9 +101,28 @@ const ProGate = {
    * @returns {boolean}
    */
   isPro() {
-    // Check localStorage for demo purposes
-    // Replace with actual auth/subscription check
-    return localStorage.getItem('siteMechanic_isPro') === 'true';
+    // Check new billing model first (ProReportBlock)
+    if (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function') {
+      if (window.ProReportBlock.isProSubscriber()) return true;
+    }
+
+    // Note: localStorage check removed - use proper billing system instead
+    // To enable demo mode, use ProReportBlock billing status from server
+    return false;
+  },
+
+  /**
+   * Check if user has access to a specific report (Pro OR purchased)
+   * @param {string} reportId - The report ID to check
+   * @returns {boolean}
+   */
+  hasReportAccess(reportId) {
+    // Check new billing model first
+    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+      if (window.ProReportBlock.hasAccess(reportId)) return true;
+    }
+    // Fall back to isPro check
+    return this.isPro();
   },
 
   /**

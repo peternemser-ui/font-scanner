@@ -1705,14 +1705,27 @@ function ensureGlobalFooter() {
  */
 function initializeHamburgerMenu() {
   const hamburgerBtn = document.getElementById('hamburgerBtn');
-  const mobileNav = document.getElementById('mobileNav');
-  const mobileNavOverlay = document.getElementById('mobileNavOverlay');
+  let mobileNav = document.getElementById('mobileNav');
+  let mobileNavOverlay = document.getElementById('mobileNavOverlay');
   const mobileNavClose = document.getElementById('mobileNavClose');
   const body = document.body;
   if (!hamburgerBtn || !mobileNav || !mobileNavOverlay) {
     console.error('✗ Hamburger menu elements not found!');
     return;
   }
+
+  // Move mobile nav elements to body to escape stacking context of #nav-placeholder
+  // This ensures the mobile menu always appears on top of all page content
+  if (mobileNavOverlay.parentElement !== body) {
+    body.appendChild(mobileNavOverlay);
+  }
+  if (mobileNav.parentElement !== body) {
+    body.appendChild(mobileNav);
+  }
+
+  // Re-query after move
+  mobileNav = document.getElementById('mobileNav');
+  mobileNavOverlay = document.getElementById('mobileNavOverlay');
   // Open mobile menu
   const openMenu = () => {
     mobileNav.classList.add('active');

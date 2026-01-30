@@ -1,899 +1,610 @@
 /**
- * Universal PDF Export Utility
- * Handles PDF generation for all analyzer pages with:
- * - Automatic accordion expansion
- * - Print-friendly styling
- * - Multi-page support
- * - Consistent branding
+ * Unified PDF Export Utility
+ *
+ * SINGLE SOURCE OF TRUTH for all PDF exports in Site Mechanic.
+ * Uses server-side Puppeteer rendering for consistent, professional PDFs.
+ *
+ * Features:
+ * - Logo on every page
+ * - Table of contents
+ * - Executive summary
+ * - Page numbers (X / Y format)
+ * - Monospace font throughout
+ *
+ * Usage:
+ *   await window.exportReportPDF({ reportType: 'seo', reportId: 'abc123' });
  */
 
-/* global html2canvas */
+(function(window) {
+  'use strict';
 
-// Site Mechanic logo as PNG data URL (red text logo)
-// This is pre-rendered for consistent PDF output
-const SITE_MECHANIC_LOGO_BASE64 = null; // Will use styled text instead
-
-class PDFExportUtility {
-  constructor(options = {}) {
-    this.options = {
-      filename: options.filename || 'report.pdf',
-      reportTitle: options.reportTitle || 'Site Mechanic Report',
-      reportSubtitle: options.reportSubtitle || 'Web Analysis',
-      url: options.url || '',
-      brandColor: options.brandColor || '#dd3838',
-      scale: options.scale || 2,
-      pageFormat: options.pageFormat || 'a4',
-      ...options
-    };
-    
-    // Cache for logo image
-    this._logoImageData = null;
-    this._logoLoaded = false;
-  }
+  // Track active export to prevent duplicate generation
+  let activeExportPromise = null;
 
   /**
-   * Pre-load the Site Mechanic logo SVG and convert to PNG for PDF embedding
-   * @private
-   */
-  async _loadLogo() {
-    if (this._logoLoaded) return this._logoImageData;
-    
-    try {
-      // Fetch the SVG logo
-      const response = await fetch('/assets/logo-pdf.svg');
-      if (!response.ok) throw new Error('Logo not found');
-      
-      const svgText = await response.text();
-      
-      // Create an image from SVG
-      const img = new Image();
-      const svgBlob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
-      const url = URL.createObjectURL(svgBlob);
-      
-      await new Promise((resolve, reject) => {
-        img.onload = resolve;
-        img.onerror = reject;
-        img.src = url;
-      });
-      
-      // Render to canvas
-      const canvas = document.createElement('canvas');
-      const scale = 2; // Higher resolution
-      canvas.width = img.width * scale || 300;
-      canvas.height = img.height * scale || 50;
-      
-      const ctx = canvas.getContext('2d');
-      ctx.scale(scale, scale);
-      ctx.drawImage(img, 0, 0);
-      
-      URL.revokeObjectURL(url);
-      
-      this._logoImageData = canvas.toDataURL('image/png');
-      this._logoLoaded = true;
-      
-      return this._logoImageData;
-    } catch (error) {
-      console.warn('Could not load logo for PDF:', error.message);
-      this._logoLoaded = true;
-      return null;
-    }
-  }
-
-  /**
-   * Main export function
-   * @param {string} contentSelector - CSS selector for content to export
-   * @param {HTMLElement} buttonElement - The button that triggered the export (for loading state)
+   * Unified PDF Export Function
+   * This is the ONLY function that should be used for PDF exports.
+   *
+   * @param {Object} options - Export options
+   * @param {string} options.reportType - Type of report (seo, performance, security, etc.)
+   * @param {string} options.reportId - Optional report ID for tracking
+   * @param {HTMLElement} options.buttonElement - Optional button to show loading state
    * @returns {Promise<void>}
    */
-  async export(contentSelector, buttonElement = null) {
-    const reportId =
-      (buttonElement && buttonElement.dataset && buttonElement.dataset.reportId) ||
-      document.body.getAttribute('data-report-id') ||
-      null;
-
-    // PAYMENT GATE: allow export for Pro OR for an unlocked single report.
-    const isPaid = (function isExportAllowed() {
-      const hasPro = window.ExportGate
-        ? window.ExportGate.isPro()
-        : (window.proManager && typeof window.proManager.isPro === 'function' && window.proManager.isPro());
-      if (hasPro) return true;
-
-      if (reportId && window.CreditsManager) {
-        if (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) return true;
-        if (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId)) return true;
-      }
-
-      return false;
-    })();
-
-    if (!isPaid) {
-      if (window.ExportGate && typeof window.ExportGate.showPaywall === 'function') {
-        window.ExportGate.showPaywall();
-      } else {
-        alert('Pro access required for PDF export.');
-      }
-      return;
+  async function exportReportPDF(options = {}) {
+    // Prevent duplicate exports - return existing promise if one is active
+    if (activeExportPromise) {
+      console.log('[PDF Export] Export already in progress, returning existing promise');
+      return activeExportPromise;
     }
-    
-    const content = document.querySelector(contentSelector);
 
-    if (!content) {
-      throw new Error(`Content element not found: ${contentSelector}`);
-    }
+    const {
+      reportType = detectReportType(),
+      reportId = getReportId(),
+      buttonElement = null
+    } = options;
+
+    // Get auth token
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token') || '';
 
     // Show loading state
-    const originalButtonState = this._setButtonLoading(buttonElement, true);
+    const originalButtonState = setButtonLoading(buttonElement, true);
 
+    // Create and store the export promise
+    activeExportPromise = (async () => {
     try {
-      // Ensure paywall/unlock UI is up to date before we snapshot.
-      if (reportId && window.CreditsManager) {
-        const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
-        if (typeof render === 'function') {
-          try {
-            render(reportId);
-          } catch (e) {
-            // best-effort only
-          }
+      // Check if user has access (Pro or purchased report)
+      const hasAccess = await checkExportAccess(reportId);
+
+      if (!hasAccess) {
+        // Reset button before showing modal
+        setButtonLoading(buttonElement, false, originalButtonState);
+
+        // Show pricing modal
+        if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+          window.PricingModal.open({ reportId });
+        } else {
+          alert('Pro access required for PDF export.');
         }
-      }
-
-      // Step 1: Prepare content (expand accordions, apply print styles)
-      const restoreContent = await this._prepareContentForPDF(content);
-
-      // Step 2: Generate PDF
-      await this._generatePDF(content);
-
-      // Step 3: Restore original content state
-      restoreContent();
-    } catch (error) {
-      console.error('PDF export error:', error);
-      alert('Failed to generate PDF. Please try again.');
-      throw error;
-    } finally {
-      // Restore button state
-      this._setButtonLoading(buttonElement, false, originalButtonState);
-    }
-  }
-
-  /**
-   * Prepare content for PDF export
-   * - Expands all accordions
-   * - Shows all hidden sections
-   * - Applies print-friendly classes
-   * @private
-   */
-  async _prepareContentForPDF(content) {
-    const originalStates = {
-      accordions: [],
-      details: [],
-      hidden: [],
-      styles: []
-    };
-
-    // Mark export root so html2canvas.onclone can reliably find the right element.
-    content.setAttribute('data-pdf-export-root', 'true');
-
-    // Apply print-friendly CSS
-    content.classList.add('pdf-export-mode');
-
-    // 1. Expand all <details> elements
-    const detailsElements = content.querySelectorAll('details');
-    detailsElements.forEach((details, index) => {
-      originalStates.details[index] = details.open;
-      details.open = true;
-      details.setAttribute('data-pdf-expanded', 'true');
-    });
-
-    // 2. Expand all accordion-style elements (common patterns)
-    const accordionSelectors = [
-      '.accordion__content',
-      '.collapsible__content',
-      '.expandable__content',
-      '[data-accordion-content]',
-      '.report-accordion__body',
-      '.card__body.hidden',
-      '.card__body[style*="display: none"]',
-      '.section__content.collapsed'
-    ];
-
-    accordionSelectors.forEach(selector => {
-      const elements = content.querySelectorAll(selector);
-      elements.forEach((el, index) => {
-        const state = {
-          selector,
-          index,
-          display: el.style.display,
-          className: el.className,
-          maxHeight: el.style.maxHeight
-        };
-        originalStates.accordions.push(state);
-
-        // Force visibility
-        el.style.display = 'block';
-        el.style.maxHeight = 'none';
-        el.style.overflow = 'visible';
-        el.classList.remove('hidden', 'collapsed');
-        if (el.hasAttribute('hidden')) el.removeAttribute('hidden');
-        el.setAttribute('data-pdf-expanded', 'true');
-      });
-    });
-
-    // 3. Show hidden issues/recommendations sections
-    const hiddenSections = content.querySelectorAll('[style*="display: none"], .hidden:not([data-pdf-expanded])');
-    hiddenSections.forEach((el) => {
-      // Skip navigation, modals, and UI controls
-      if (el.closest('nav, .modal, .tabs, button, [role="button"]')) {
         return;
       }
 
-      originalStates.hidden.push({
-        element: el,
-        display: el.style.display,
-        className: el.className
-      });
+      // CRITICAL: Save the current report to storage before PDF export
+      // This ensures Puppeteer can load the same results when it renders the page
+      const currentResults = window.currentSeoResults ||
+                             window.currentPerformanceResults ||
+                             window.currentPerformanceHubResults?.data ||
+                             window.currentResults;
 
-      el.style.display = 'block';
-      el.classList.remove('hidden');
-    });
+      if (currentResults && window.ReportStorage?.saveReport) {
+        try {
+          const analyzedUrl = getAnalyzedUrl();
+          const analyzerKey = reportType === 'seo' ? 'seo' :
+                             reportType === 'performance' ? 'performance-hub' :
+                             reportType;
+          const scanStartedAt = document.body.getAttribute('data-sm-scan-started-at') ||
+                                window.SM_SCAN_STARTED_AT ||
+                                new Date().toISOString();
 
-    // 4. Expand all collapsible cards that have a toggle button
-    const toggleButtons = content.querySelectorAll('[data-toggle], .toggle-button, .expand-button');
-    toggleButtons.forEach(button => {
-      const targetId = button.getAttribute('data-toggle') || button.getAttribute('aria-controls');
-      if (targetId) {
-        const target = document.getElementById(targetId);
-        if (target) {
-          target.style.display = 'block';
-          target.style.maxHeight = 'none';
-          target.classList.add('expanded');
+          await window.ReportStorage.saveReport(reportId, currentResults, {
+            siteUrl: analyzedUrl,
+            analyzerType: analyzerKey,
+            scannedAt: scanStartedAt
+          });
+          console.log('[PDF Export] Saved report to storage for PDF rendering:', reportId);
+        } catch (saveError) {
+          console.warn('[PDF Export] Could not save report to storage:', saveError);
+          // Continue anyway - the PDF might still work if results are in memory
         }
       }
-      // Hide toggle buttons in PDF
-      button.style.display = 'none';
-    });
 
-    // 4. Ensure images are loaded (so screenshots render in the PDF)
-    await this._waitForImages(content);
-
-    // Ensure fonts are ready (helps avoid missing icon glyphs / layout shifts)
-    if (document.fonts && typeof document.fonts.ready === 'object' && typeof document.fonts.ready.then === 'function') {
-      try {
-        await document.fonts.ready;
-      } catch (e) {
-        // ignore
+      // Build URL with report_id param so Puppeteer can load the stored report
+      const currentUrl = new URL(window.location.href);
+      if (reportId && !currentUrl.searchParams.has('report_id')) {
+        currentUrl.searchParams.set('report_id', reportId);
       }
+      const pdfUrl = currentUrl.toString();
+
+      // Call server-side Puppeteer PDF renderer
+      // IMPORTANT: Send the report data directly so Puppeteer can inject it
+      const analyzedUrlValue = getAnalyzedUrl();
+      console.log('[PDF Export] Sending to server:', {
+        url: pdfUrl,
+        reportType: reportType,
+        reportId: reportId,
+        hasReportData: !!currentResults,
+        reportDataKeys: currentResults ? Object.keys(currentResults).slice(0, 5) : [],
+        analyzedUrl: analyzedUrlValue
+      });
+
+      const response = await fetch('/api/pdf/render', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': token ? `Bearer ${token}` : ''
+        },
+        body: JSON.stringify({
+          url: pdfUrl,
+          reportType: reportType,
+          reportId: reportId,
+          // Send report data directly so Puppeteer can inject it
+          reportData: currentResults,
+          analyzedUrl: analyzedUrlValue
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+
+        if (response.status === 403) {
+          // Reset button before showing modal
+          setButtonLoading(buttonElement, false, originalButtonState);
+
+          // Show pricing modal for unpaid users
+          if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+            window.PricingModal.open({ reportId });
+          } else {
+            alert(errorData.message || 'Pro access required for PDF export.');
+          }
+          return;
+        }
+
+        throw new Error(errorData.error || errorData.message || 'Failed to generate PDF');
+      }
+
+      // Download the PDF
+      const blob = await response.blob();
+      const url = getAnalyzedUrl();
+      const hostname = url ? new URL(url).hostname : 'report';
+      const timestamp = new Date().toISOString().split('T')[0];
+      const filename = `${reportType}-report-${hostname}-${timestamp}.pdf`;
+
+      downloadBlob(blob, filename);
+
+      // Show success message
+      if (window.ReportUI?.toast) {
+        window.ReportUI.toast('PDF downloaded successfully!');
+      }
+
+    } catch (error) {
+      console.error('PDF export error:', error);
+      alert('Failed to generate PDF: ' + (error.message || 'Unknown error. Please try again.'));
+    } finally {
+      setButtonLoading(buttonElement, false, originalButtonState);
+      activeExportPromise = null;
     }
+    })();
 
-    // 5. Force expand any elements with aria-expanded="false"
-    const collapsedElements = content.querySelectorAll('[aria-expanded="false"]');
-    collapsedElements.forEach(el => {
-      const controls = el.getAttribute('aria-controls');
-      if (controls) {
-        const target = document.getElementById(controls);
-        if (target) {
-          target.style.display = 'block';
-          target.style.maxHeight = 'none';
-          target.style.overflow = 'visible';
-          if (target.hasAttribute('hidden')) target.removeAttribute('hidden');
-          target.classList.add('expanded');
-        }
-      }
-    });
-
-    // Wait for any animations/transitions to complete
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    // Return restore function
-    return () => {
-      content.classList.remove('pdf-export-mode');
-      content.removeAttribute('data-pdf-export-root');
-
-      // Restore details elements
-      detailsElements.forEach((details, index) => {
-        details.open = originalStates.details[index];
-        details.removeAttribute('data-pdf-expanded');
-      });
-
-      // Restore accordions
-      originalStates.accordions.forEach(state => {
-        const elements = content.querySelectorAll(state.selector);
-        const el = elements[state.index];
-        if (el) {
-          el.style.display = state.display;
-          el.className = state.className;
-          el.style.maxHeight = state.maxHeight;
-          el.removeAttribute('data-pdf-expanded');
-        }
-      });
-
-      // Restore hidden sections
-      originalStates.hidden.forEach(({ element, display, className }) => {
-        element.style.display = display;
-        element.className = className;
-      });
-
-      // Restore toggle buttons
-      toggleButtons.forEach(button => {
-        button.style.display = '';
-      });
-    };
+    return activeExportPromise;
   }
 
   /**
-   * Wait for images to finish loading so html2canvas captures them.
-   * @private
+   * Check if user has access to export (Pro subscription or purchased report)
+   * Only trusts server-side billing status via ProReportBlock
    */
-  async _waitForImages(content) {
-    const images = Array.from(content.querySelectorAll('img'));
-    if (images.length === 0) return;
+  async function checkExportAccess(reportId) {
+    // Check ProReportBlock access (this checks server-side billing status)
+    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+      if (window.ProReportBlock.hasAccess(reportId)) return true;
+    }
 
-    const waiters = images.map((img) => {
-      if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+    // Check demo domains (only vail.com)
+    if (window.ProAccess?.isDemoDomain?.()) return true;
 
-      return new Promise((resolve) => {
-        const done = () => {
-          img.removeEventListener('load', done);
-          img.removeEventListener('error', done);
-          resolve();
-        };
-        img.addEventListener('load', done, { once: true });
-        img.addEventListener('error', done, { once: true });
-      });
-    });
+    // Note: Removed legacy localStorage checks (proManager, ProGate, CreditsManager)
+    // for security. Subscription status must come from server.
 
-    // Don't hang forever if some images are slow.
-    await Promise.race([
-      Promise.all(waiters),
-      new Promise((resolve) => setTimeout(resolve, 4000))
-    ]);
+    return false;
   }
 
   /**
-   * Generate PDF from content with intelligent page breaks
-   * Prevents charts, cards, and sections from being cut in the middle
-   * @private
+   * Detect report type from current page
    */
-  async _generatePDF(content) {
-    if (!window.jspdf || !window.html2canvas) {
-      throw new Error('Required libraries not loaded. Please include jsPDF and html2canvas.');
-    }
+  function detectReportType() {
+    const path = window.location.pathname.toLowerCase();
+    const pageAttr = document.body.getAttribute('data-page');
 
-    // Pre-load logo for header
-    const logoImageData = await this._loadLogo();
+    if (pageAttr) return pageAttr;
 
-    const { jsPDF } = window.jspdf;
+    if (path.includes('seo')) return 'seo';
+    if (path.includes('performance') || path.includes('speed') || path.includes('cwv')) return 'performance';
+    if (path.includes('security')) return 'security';
+    if (path.includes('accessibility') || path.includes('a11y')) return 'accessibility';
+    if (path.includes('mobile')) return 'mobile';
+    if (path.includes('font')) return 'fonts';
+    if (path.includes('broken-link')) return 'broken-links';
+    if (path.includes('brand')) return 'brand-consistency';
+    if (path.includes('competitive')) return 'competitive-analysis';
+    if (path.includes('cro')) return 'cro';
+    if (path.includes('local-seo')) return 'local-seo';
+    if (path.includes('ip-reputation')) return 'ip-reputation';
+    if (path.includes('gdpr')) return 'gdpr-compliance';
+    if (path.includes('tag-intelligence')) return 'tag-intelligence';
+    if (path.includes('hosting')) return 'hosting';
+    if (path.includes('dashboard')) return 'dashboard';
 
-    // Create PDF
-    const pdf = new jsPDF('p', 'mm', this.options.pageFormat);
-    const pageWidth = pdf.internal.pageSize.getWidth();
-    const pageHeight = pdf.internal.pageSize.getHeight();
-
-    // Layout constants
-    const headerHeight = 60;
-    const footerHeight = 10;
-    const margin = 10;
-    const contentWidth = pageWidth - (2 * margin);
-
-    // Add professional header with logo (only on first page)
-    this._addPDFHeader(pdf, pageWidth, logoImageData);
-
-    // Find content sections that should not be split
-    const keepTogetherElements = this._findKeepTogetherElements(content);
-
-    if (keepTogetherElements.length > 0) {
-      // Use intelligent section-based rendering
-      await this._renderSectionsIntelligently(pdf, content, keepTogetherElements, {
-        pageWidth,
-        pageHeight,
-        headerHeight,
-        footerHeight,
-        margin,
-        contentWidth
-      });
-    } else {
-      // Fallback to improved canvas slicing with smart break points
-      await this._renderWithSmartSlicing(pdf, content, {
-        pageWidth,
-        pageHeight,
-        headerHeight,
-        footerHeight,
-        margin,
-        contentWidth
-      });
-    }
-
-    // Add footers to all pages
-    const totalPages = pdf.internal.getNumberOfPages();
-    for (let i = 1; i <= totalPages; i++) {
-      pdf.setPage(i);
-      this._addPDFFooter(pdf, pageWidth, pageHeight, i, totalPages);
-    }
-
-    // Save the PDF
-    pdf.save(this.options.filename);
+    return 'report';
   }
 
   /**
-   * Find elements that should be kept together (not split across pages)
-   * @private
+   * Get report ID from various sources
    */
-  _findKeepTogetherElements(content) {
-    // Selectors for elements that should never be split
-    const keepTogetherSelectors = [
-      '.pdf-keep-together',
-      '.card',
-      '.metric-card',
-      '.chart-container',
-      '.gauge-chart',
-      '.score-card',
-      '.recommendation-card',
-      '.result-section',
-      '.analysis-card',
-      'canvas',
-      'svg',
-      '.report-accordion',
-      '.accordion-item',
-      '[data-pdf-keep-together]',
-      '.metric-grid',
-      '.cwv-metric',
-      '.performance-metric',
-      '.issue-card',
-      '.finding-card',
-      'table',
-      '.data-table',
-      // Screenshot containers - should not be split across pages
-      '.screenshot-container',
-      '.report-shell__screenshot-wrapper',
-      '.page-screenshot'
+  function getReportId() {
+    // Check body attribute
+    const bodyId = document.body.getAttribute('data-report-id');
+    if (bodyId) return bodyId;
+
+    // Check URL params
+    const params = new URLSearchParams(window.location.search);
+    const urlId = params.get('report_id') || params.get('reportId');
+    if (urlId) return urlId;
+
+    // Generate from timestamp and report type
+    return `${detectReportType()}-${Date.now()}`;
+  }
+
+  /**
+   * Get the URL that was analyzed (from input field or results)
+   */
+  function getAnalyzedUrl() {
+    // Try various URL input selectors
+    const urlInputSelectors = [
+      '#seoUrlInput', '#urlInput', '#cwvUrlInput', '#securityUrlInput',
+      '#accessibilityUrlInput', '#performanceUrlInput', 'input[type="url"]'
     ];
 
-    const elements = [];
-    const selector = keepTogetherSelectors.join(', ');
-    const candidates = content.querySelectorAll(selector);
-
-    candidates.forEach(el => {
-      // Skip nested elements - only process top-level keepable elements
-      const hasKeepableParent = el.parentElement?.closest(selector);
-      if (!hasKeepableParent) {
-        const rect = el.getBoundingClientRect();
-        const contentRect = content.getBoundingClientRect();
-        elements.push({
-          element: el,
-          top: rect.top - contentRect.top,
-          height: rect.height,
-          bottom: rect.bottom - contentRect.top
-        });
-      }
-    });
-
-    // Sort by top position
-    return elements.sort((a, b) => a.top - b.top);
-  }
-
-  /**
-   * Render content using intelligent section-based approach
-   * @private
-   */
-  async _renderSectionsIntelligently(pdf, content, sections, layout) {
-    const { pageWidth, pageHeight, headerHeight, footerHeight, margin, contentWidth } = layout;
-    const scale = this.options.scale;
-
-    // Capture full content
-    const fullCanvas = await html2canvas(content, {
-      scale: scale,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: 1200,
-      onclone: (clonedDoc) => this._prepareClonedContent(clonedDoc)
-    });
-
-    const canvasToMM = (pixels) => (pixels / scale) * (contentWidth / (fullCanvas.width / scale));
-
-    let currentPage = 1;
-    let currentY = headerHeight; // Start after header on first page
-    let processedHeight = 0;
-    const contentHeightMM = canvasToMM(fullCanvas.height);
-
-    // Group sections into pages, respecting keep-together boundaries
-    while (processedHeight < contentHeightMM) {
-      if (currentPage > 1) {
-        pdf.addPage();
-        currentY = margin;
-      }
-
-      const availableHeight = pageHeight - currentY - footerHeight - margin;
-
-      // Find the best break point
-      let sliceHeightMM = availableHeight;
-      let breakAtSectionBoundary = false;
-
-      // Check if any section would be cut
-      for (const section of sections) {
-        const sectionTopMM = canvasToMM(section.top);
-        const sectionBottomMM = canvasToMM(section.bottom);
-        const sectionHeightMM = canvasToMM(section.height);
-
-        const sliceEndMM = processedHeight + sliceHeightMM;
-
-        // If section starts before slice end but ends after, we're cutting it
-        if (sectionTopMM < sliceEndMM && sectionBottomMM > sliceEndMM) {
-          // Check if section fits on current page entirely
-          if (sectionHeightMM <= availableHeight) {
-            // Move break point to before this section
-            sliceHeightMM = Math.max(10, sectionTopMM - processedHeight);
-            breakAtSectionBoundary = true;
-          } else if (sectionHeightMM > pageHeight - margin * 2 - footerHeight) {
-            // Section is too tall to fit on any page - let it be split
-            // but try to break at a sensible point within it
-            sliceHeightMM = availableHeight;
-          } else {
-            // Section can fit on next page - break before it
-            sliceHeightMM = Math.max(10, sectionTopMM - processedHeight);
-            breakAtSectionBoundary = true;
-          }
-          break;
+    for (const selector of urlInputSelectors) {
+      const input = document.querySelector(selector);
+      if (input && input.value) {
+        try {
+          return input.value.startsWith('http') ? input.value : `https://${input.value}`;
+        } catch (e) {
+          // Invalid URL
         }
       }
-
-      // Ensure we make progress
-      sliceHeightMM = Math.max(20, Math.min(sliceHeightMM, contentHeightMM - processedHeight));
-
-      // Calculate canvas coordinates
-      const canvasYStart = (processedHeight / contentHeightMM) * fullCanvas.height;
-      const canvasSliceHeight = (sliceHeightMM / contentHeightMM) * fullCanvas.height;
-
-      // Create slice canvas
-      const sliceCanvas = document.createElement('canvas');
-      sliceCanvas.width = fullCanvas.width;
-      sliceCanvas.height = Math.max(1, Math.round(canvasSliceHeight));
-      const ctx = sliceCanvas.getContext('2d');
-
-      ctx.drawImage(
-        fullCanvas,
-        0, Math.round(canvasYStart),
-        fullCanvas.width, Math.round(canvasSliceHeight),
-        0, 0,
-        sliceCanvas.width, sliceCanvas.height
-      );
-
-      // Add to PDF
-      const imgData = sliceCanvas.toDataURL('image/png');
-      pdf.addImage(imgData, 'PNG', margin, currentY, contentWidth, sliceHeightMM);
-
-      processedHeight += sliceHeightMM;
-      currentPage++;
-    }
-  }
-
-  /**
-   * Render with smart slicing - finds natural break points
-   * @private
-   */
-  async _renderWithSmartSlicing(pdf, content, layout) {
-    const { pageWidth, pageHeight, headerHeight, footerHeight, margin, contentWidth } = layout;
-
-    // Capture content as canvas with high quality
-    const canvas = await html2canvas(content, {
-      scale: this.options.scale,
-      useCORS: true,
-      allowTaint: true,
-      backgroundColor: '#ffffff',
-      logging: false,
-      windowWidth: 1200,
-      onclone: (clonedDoc) => this._prepareClonedContent(clonedDoc)
-    });
-
-    const imgData = canvas.toDataURL('image/png');
-    const contentHeight = (canvas.height * contentWidth) / canvas.width;
-
-    // Check if fits on single page
-    const firstPageAvailableHeight = pageHeight - headerHeight - footerHeight - margin;
-    if (contentHeight <= firstPageAvailableHeight) {
-      pdf.addImage(imgData, 'PNG', margin, headerHeight, contentWidth, contentHeight);
-      return;
     }
 
-    // Multi-page: find smart break points
-    const breakPoints = this._findSmartBreakPoints(canvas, contentHeight, layout);
-    let currentPage = 1;
-    let yOffset = 0;
+    // Try to get from current results - check multiple sources
+    if (window.currentSeoResults?.url) return window.currentSeoResults.url;
+    if (window.currentPerformanceResults?.url) return window.currentPerformanceResults.url;
+    if (window.currentPerformanceHubResults?.url) return window.currentPerformanceHubResults.url;
+    if (window.currentResults?.url) return window.currentResults.url;
 
-    for (let i = 0; i < breakPoints.length; i++) {
-      if (currentPage > 1) {
-        pdf.addPage();
-      }
-
-      const topMargin = currentPage === 1 ? headerHeight : margin;
-      const sliceHeight = breakPoints[i] - yOffset;
-
-      // Calculate canvas slice
-      const canvasSliceHeight = (sliceHeight / contentWidth) * canvas.width;
-      const canvasYOffset = (yOffset / contentWidth) * canvas.width;
-
-      const sliceCanvas = document.createElement('canvas');
-      sliceCanvas.width = canvas.width;
-      sliceCanvas.height = Math.max(1, Math.round(canvasSliceHeight));
-      const ctx = sliceCanvas.getContext('2d');
-
-      ctx.drawImage(
-        canvas,
-        0, Math.round(canvasYOffset),
-        canvas.width, Math.round(canvasSliceHeight),
-        0, 0,
-        sliceCanvas.width, sliceCanvas.height
-      );
-
-      const sliceImgData = sliceCanvas.toDataURL('image/png');
-      pdf.addImage(sliceImgData, 'PNG', margin, topMargin, contentWidth, sliceHeight);
-
-      yOffset = breakPoints[i];
-      currentPage++;
-    }
-  }
-
-  /**
-   * Find smart break points by analyzing canvas for natural breaks
-   * Looks for horizontal bands of consistent color (whitespace/borders)
-   * @private
-   */
-  _findSmartBreakPoints(canvas, contentHeightMM, layout) {
-    const { pageHeight, headerHeight, footerHeight, margin } = layout;
-    const breakPoints = [];
-    let currentY = 0;
-
-    const firstPageAvailable = pageHeight - headerHeight - footerHeight - margin;
-    const subsequentPageAvailable = pageHeight - margin - footerHeight - margin;
-
-    while (currentY < contentHeightMM) {
-      const isFirstPage = breakPoints.length === 0;
-      const availableHeight = isFirstPage ? firstPageAvailable : subsequentPageAvailable;
-      let targetBreak = currentY + availableHeight;
-
-      if (targetBreak >= contentHeightMM) {
-        breakPoints.push(contentHeightMM);
-        break;
-      }
-
-      // Look for a good break point within a tolerance zone
-      const tolerance = Math.min(30, availableHeight * 0.15); // 15% or 30mm max
-      const searchStart = targetBreak - tolerance;
-      const searchEnd = targetBreak;
-
-      // Scan canvas for whitespace rows in the tolerance zone
-      const bestBreak = this._findWhitespaceBreak(canvas, contentHeightMM, searchStart, searchEnd);
-
-      breakPoints.push(bestBreak || targetBreak);
-      currentY = breakPoints[breakPoints.length - 1];
-    }
-
-    return breakPoints;
-  }
-
-  /**
-   * Find a row of whitespace/consistent color in the canvas
-   * @private
-   */
-  _findWhitespaceBreak(canvas, contentHeightMM, searchStartMM, searchEndMM) {
-    const ctx = canvas.getContext('2d');
-    const scale = canvas.width / 1200; // Based on windowWidth: 1200
-
-    // Convert mm to canvas pixels
-    const mmToCanvasY = (mm) => (mm / contentHeightMM) * canvas.height;
-
-    const startY = Math.floor(mmToCanvasY(searchStartMM));
-    const endY = Math.floor(mmToCanvasY(searchEndMM));
-
-    // Sample every few pixels for performance
-    const sampleStep = Math.max(1, Math.floor((endY - startY) / 50));
-
-    let bestBreakY = null;
-    let bestScore = -1;
-
-    for (let y = endY; y >= startY; y -= sampleStep) {
-      // Get a row of pixels
-      const rowData = ctx.getImageData(0, y, canvas.width, 1).data;
-
-      // Check if row is mostly uniform (whitespace or border)
-      let uniformScore = 0;
-      let prevR = rowData[0], prevG = rowData[1], prevB = rowData[2];
-
-      for (let x = 0; x < canvas.width; x += 10) {
-        const i = x * 4;
-        const r = rowData[i], g = rowData[i + 1], b = rowData[i + 2];
-
-        // Check if similar to previous pixel
-        const diff = Math.abs(r - prevR) + Math.abs(g - prevG) + Math.abs(b - prevB);
-        if (diff < 30) uniformScore++;
-
-        // Bonus for white/light colors (likely spacing)
-        if (r > 240 && g > 240 && b > 240) uniformScore += 2;
-
-        prevR = r; prevG = g; prevB = b;
-      }
-
-      if (uniformScore > bestScore) {
-        bestScore = uniformScore;
-        bestBreakY = y;
-      }
-    }
-
-    if (bestBreakY !== null && bestScore > canvas.width / 20) {
-      // Convert back to mm
-      return (bestBreakY / canvas.height) * contentHeightMM;
-    }
-
-    return null;
-  }
-
-  /**
-   * Prepare cloned content for html2canvas
-   * @private
-   */
-  _prepareClonedContent(clonedDoc) {
-    const clonedContent = clonedDoc.querySelector('[data-pdf-export-root="true"]');
-    if (clonedContent) {
-      clonedContent.style.width = '1200px';
-      clonedContent.style.padding = '20px';
-    }
-    // Hide elements marked as no-print
-    const noPrintElements = clonedDoc.querySelectorAll('.no-print, .pdf-exclude, [data-hide-in-pdf]');
-    noPrintElements.forEach(el => {
-      el.style.display = 'none';
-    });
-  }
-
-  /**
-   * Add professional header to PDF with Site Mechanic branding
-   * @param {Object} pdf - jsPDF instance
-   * @param {number} pageWidth - Page width in mm
-   * @param {string|null} logoImageData - Logo as base64 PNG data URL, or null for text fallback
-   * @private
-   */
-  _addPDFHeader(pdf, pageWidth, logoImageData = null) {
-    let yPos = 12;
-
-    // Try to add logo image if available
-    if (logoImageData) {
+    // Try to get from URL params
+    const params = new URLSearchParams(window.location.search);
+    const urlParam = params.get('url');
+    if (urlParam) {
       try {
-        // Logo dimensions: roughly 50mm wide, proportional height
-        const logoWidth = 50;
-        const logoHeight = 8; // Approximate height based on SVG aspect ratio
-        pdf.addImage(logoImageData, 'PNG', 15, yPos, logoWidth, logoHeight);
-        yPos += logoHeight + 3;
-      } catch (error) {
-        console.warn('Could not add logo image to PDF:', error.message);
-        // Fall back to text logo
-        pdf.setTextColor(221, 56, 56);
-        pdf.setFontSize(22);
-        pdf.setFont('helvetica', 'bold');
-        pdf.text('Site Mechanic', 15, yPos + 5);
-        yPos += 10;
+        return urlParam.startsWith('http') ? urlParam : `https://${urlParam}`;
+      } catch (e) {
+        // Invalid URL
       }
-    } else {
-      // Text logo fallback - styled text in brand red (#dd3838)
-      pdf.setTextColor(221, 56, 56); // #dd3838 brand red
-      pdf.setFontSize(22);
-      pdf.setFont('helvetica', 'bold');
-      pdf.text('Site Mechanic', 15, yPos + 5);
-      yPos += 10;
     }
 
-    // Subtitle - Web Diagnostics & Performance Analysis
-    pdf.setFontSize(10);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(100, 100, 100);
-    pdf.text('Web Diagnostics & Performance Analysis', 15, yPos);
-    yPos += 5;
-
-    // Brand accent line in red
-    pdf.setDrawColor(221, 56, 56);
-    pdf.setLineWidth(0.8);
-    pdf.line(15, yPos, 85, yPos);
-    yPos += 8;
-
-    // Report Type
-    pdf.setFontSize(13);
-    pdf.setFont('helvetica', 'bold');
-    pdf.setTextColor(0, 0, 0);
-    pdf.text(this.options.reportSubtitle, 15, yPos);
-    yPos += 6;
-
-    // URL
-    if (this.options.url) {
-      pdf.setFontSize(9);
-      pdf.setFont('helvetica', 'normal');
-      pdf.setTextColor(80, 80, 80);
-      pdf.text(`URL: ${this.options.url}`, 15, yPos);
-      yPos += 5;
-    }
-
-    // Generated date and time
-    const now = new Date();
-    const dateStr = now.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
-    });
-    const timeStr = now.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-    pdf.setFontSize(9);
-    pdf.setFont('helvetica', 'normal');
-    pdf.setTextColor(80, 80, 80);
-    pdf.text(`Generated: ${dateStr} at ${timeStr}`, 15, yPos);
+    return window.location.href;
   }
 
   /**
-   * Add footer to PDF (minimal style)
-   * @private
+   * Download a blob as a file
    */
-  _addPDFFooter(pdf, pageWidth, pageHeight, currentPage, totalPages) {
-    // Subtle top line
-    pdf.setDrawColor(220, 220, 220);
-    pdf.setLineWidth(0.3);
-    pdf.line(15, pageHeight - 12, pageWidth - 15, pageHeight - 12);
-
-    // Footer text
-    pdf.setTextColor(140, 140, 140);
-    pdf.setFontSize(7);
-    pdf.setFont('helvetica', 'normal');
-    pdf.text('Site Mechanic - Professional Web Analysis', 15, pageHeight - 6);
-
-    // Page numbers (right aligned)
-    pdf.setTextColor(100, 100, 100);
-    pdf.setFont('helvetica', 'bold');
-    const pageText = `Page ${currentPage} of ${totalPages}`;
-    const pageTextWidth = pdf.getTextWidth(pageText);
-    pdf.text(pageText, pageWidth - pageTextWidth - 15, pageHeight - 6);
+  function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   /**
-   * Set button loading state
-   * @private
+   * Inject CSS animation styles (only once)
    */
-  _setButtonLoading(button, isLoading, originalState = null) {
-    if (!button) return null;
+  function injectLoadingStyles() {
+    if (document.getElementById('pdf-export-loading-styles')) return;
+
+    const style = document.createElement('style');
+    style.id = 'pdf-export-loading-styles';
+    style.textContent = `
+      @keyframes pdf-spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+      @keyframes pdf-progress {
+        0% { width: 0%; }
+        15% { width: 15%; }
+        35% { width: 40%; }
+        55% { width: 65%; }
+        75% { width: 80%; }
+        90% { width: 90%; }
+        100% { width: 95%; }
+      }
+      @keyframes pdf-shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+      }
+
+      /* Full overlay for larger buttons (ProReportBlock) */
+      .pdf-generating-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.97);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 10px;
+        border-radius: inherit;
+        z-index: 10;
+        padding: 12px;
+      }
+      .pdf-generating-spinner {
+        width: 28px;
+        height: 28px;
+        border: 3px solid rgba(221, 56, 56, 0.15);
+        border-top-color: #dd3838;
+        border-radius: 50%;
+        animation: pdf-spin 0.7s linear infinite;
+      }
+      .pdf-generating-text {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1f2937;
+        text-align: center;
+        line-height: 1.3;
+      }
+      .pdf-generating-subtext {
+        font-size: 11px;
+        color: #6b7280;
+        margin-top: 2px;
+      }
+      .pdf-generating-progress {
+        width: 100%;
+        max-width: 120px;
+        height: 5px;
+        background: rgba(221, 56, 56, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+        margin-top: 6px;
+      }
+      .pdf-generating-progress-bar {
+        height: 100%;
+        background: linear-gradient(90deg, #dd3838 0%, #ef4444 50%, #dd3838 100%);
+        background-size: 200% 100%;
+        border-radius: 3px;
+        animation: pdf-progress 12s ease-out forwards, pdf-shimmer 1.5s linear infinite;
+      }
+      .pdf-generating-btn {
+        position: relative;
+        pointer-events: none;
+      }
+      .pdf-generating-btn > *:not(.pdf-generating-overlay):not(.pdf-inline-loading) {
+        opacity: 0.2;
+      }
+
+      /* Inline loading for smaller/simpler buttons */
+      .pdf-inline-loading {
+        display: inline-flex !important;
+        align-items: center;
+        gap: 8px;
+        color: #374151;
+        font-weight: 600;
+      }
+      .pdf-inline-spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(221, 56, 56, 0.2);
+        border-top-color: #dd3838;
+        border-radius: 50%;
+        animation: pdf-spin 0.7s linear infinite;
+        flex-shrink: 0;
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  /**
+   * Set button loading state with animated progress
+   */
+  function setButtonLoading(button, isLoading, originalState = null) {
+    if (!button) {
+      console.warn('setButtonLoading: no button provided');
+      return null;
+    }
 
     if (isLoading) {
+      injectLoadingStyles();
+
       const state = {
-        text: button.textContent,
+        innerHTML: button.innerHTML,
         disabled: button.disabled,
-        className: button.className
+        className: button.className,
+        style: button.getAttribute('style') || ''
       };
 
-      button.textContent = '⏳ Generating PDF...';
+      // Store state on the button itself as backup
+      button._pdfExportOriginalState = state;
+
       button.disabled = true;
-      button.style.opacity = '0.6';
-      button.style.cursor = 'wait';
+      button.classList.add('pdf-generating-btn');
+
+      // Detect if this is a ProReportBlock action button (larger) or inline button (smaller)
+      const isProReportBlock = button.classList.contains('pro-report-block__action') ||
+                               button.closest('.pro-report-block__action') ||
+                               button.querySelector('.pro-report-block__action-label');
+      const buttonRect = button.getBoundingClientRect();
+      const isLargeButton = buttonRect.height > 50 || isProReportBlock;
+
+      if (isLargeButton) {
+        // Full animated overlay for larger buttons
+        button.style.position = 'relative';
+        button.style.overflow = 'hidden';
+
+        const overlay = document.createElement('div');
+        overlay.className = 'pdf-generating-overlay';
+        overlay.innerHTML = `
+          <div class="pdf-generating-spinner"></div>
+          <div class="pdf-generating-text">
+            Generating PDF
+            <div class="pdf-generating-subtext">Creating client-ready report...</div>
+          </div>
+          <div class="pdf-generating-progress">
+            <div class="pdf-generating-progress-bar"></div>
+          </div>
+        `;
+        button.appendChild(overlay);
+      } else {
+        // Simple inline spinner for smaller buttons
+        const inlineLoader = document.createElement('span');
+        inlineLoader.className = 'pdf-inline-loading';
+        inlineLoader.innerHTML = `
+          <span class="pdf-inline-spinner"></span>
+          <span>Generating...</span>
+        `;
+        button.innerHTML = '';
+        button.appendChild(inlineLoader);
+        button.style.opacity = '1';
+        button.style.cursor = 'wait';
+      }
 
       return state;
-    } else if (originalState) {
-      button.textContent = originalState.text;
-      button.disabled = originalState.disabled;
-      button.style.opacity = '';
-      button.style.cursor = '';
+    } else {
+      // Restore button state - use provided state or backup from button
+      const stateToRestore = originalState || button._pdfExportOriginalState;
+
+      // Always try to remove overlay/loader elements
+      const overlay = button.querySelector('.pdf-generating-overlay');
+      if (overlay) overlay.remove();
+
+      const inlineLoader = button.querySelector('.pdf-inline-loading');
+      if (inlineLoader) inlineLoader.remove();
+
+      if (stateToRestore) {
+        button.innerHTML = stateToRestore.innerHTML;
+        button.disabled = stateToRestore.disabled;
+        button.className = stateToRestore.className;
+        button.setAttribute('style', stateToRestore.style || '');
+      }
+
+      // Clean up
+      button.classList.remove('pdf-generating-btn');
+      delete button._pdfExportOriginalState;
     }
 
     return null;
   }
 
-  /**
-   * Static helper to create and export in one call
-   */
-  static async quickExport(contentSelector, options = {}) {
-    const exporter = new PDFExportUtility(options);
-    const button = document.querySelector(options.buttonSelector);
-    await exporter.export(contentSelector, button);
-  }
-}
+  // ============================================================
+  // LEGACY COMPATIBILITY LAYER
+  // These functions exist to maintain backwards compatibility
+  // with existing page-specific export calls.
+  // They all redirect to the unified exportReportPDF function.
+  // ============================================================
 
-// Export for use
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = PDFExportUtility;
-} else {
+  /**
+   * @deprecated Use exportReportPDF({ reportType: 'seo' }) instead
+   */
+  window.exportSEOPDF = async function() {
+    const button = document.querySelector('[data-export="pdf"]');
+    await exportReportPDF({ reportType: 'seo', buttonElement: button });
+  };
+
+  /**
+   * @deprecated Use exportReportPDF({ reportType: 'performance' }) instead
+   */
+  window.exportPerformancePDF = async function() {
+    const button = document.querySelector('[data-export="pdf"]');
+    await exportReportPDF({ reportType: 'performance', buttonElement: button });
+  };
+
+  /**
+   * @deprecated Use exportReportPDF({ reportType: 'security' }) instead
+   */
+  window.exportSecurityPDF = async function() {
+    const button = document.querySelector('[data-export="pdf"]');
+    await exportReportPDF({ reportType: 'security', buttonElement: button });
+  };
+
+  /**
+   * @deprecated Use exportReportPDF({ reportType: 'accessibility' }) instead
+   */
+  window.exportAccessibilityPDF = async function() {
+    const button = document.querySelector('[data-export="pdf"]');
+    await exportReportPDF({ reportType: 'accessibility', buttonElement: button });
+  };
+
+  /**
+   * @deprecated Use exportReportPDF({ reportType: 'mobile' }) instead
+   */
+  window.exportMobilePDF = async function() {
+    const button = document.querySelector('[data-export="pdf"]');
+    await exportReportPDF({ reportType: 'mobile', buttonElement: button });
+  };
+
+  /**
+   * @deprecated Use exportReportPDF({ reportType: 'cro' }) instead
+   */
+  window.exportCROPDF = async function() {
+    const button = document.querySelector('[data-export="pdf"]');
+    await exportReportPDF({ reportType: 'cro', buttonElement: button });
+  };
+
+  /**
+   * @deprecated Use exportReportPDF({ reportType: 'dashboard' }) instead
+   */
+  window.exportDashboardPDF = async function() {
+    const button = document.querySelector('[data-export="pdf"]');
+    await exportReportPDF({ reportType: 'dashboard', buttonElement: button });
+  };
+
+  /**
+   * Generic exportPDF function for backwards compatibility
+   * @deprecated Use exportReportPDF() instead
+   */
+  window.exportPDF = async function(format, buttonEl) {
+    await exportReportPDF({ buttonElement: buttonEl });
+  };
+
+  /**
+   * Legacy PDFExportUtility class for backwards compatibility
+   * @deprecated Use exportReportPDF() instead
+   */
+  class PDFExportUtility {
+    constructor(options = {}) {
+      this.options = options;
+      console.warn('PDFExportUtility is deprecated. Use window.exportReportPDF() instead.');
+    }
+
+    async export(contentSelector, buttonElement = null) {
+      await exportReportPDF({
+        reportType: this.options.reportType || detectReportType(),
+        reportId: this.options.reportId,
+        buttonElement: buttonElement
+      });
+    }
+
+    static async quickExport(contentSelector, options = {}) {
+      await exportReportPDF(options);
+    }
+  }
+
+  // ============================================================
+  // PUBLIC API
+  // ============================================================
+
+  // Main export function
+  window.exportReportPDF = exportReportPDF;
+
+  // Legacy class (for backwards compatibility)
   window.PDFExportUtility = PDFExportUtility;
-}
+
+  // Helper functions (exposed for advanced usage)
+  window.PDFExport = {
+    export: exportReportPDF,
+    detectReportType,
+    getReportId,
+    checkAccess: checkExportAccess
+  };
+
+})(window);

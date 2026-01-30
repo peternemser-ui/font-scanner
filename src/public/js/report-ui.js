@@ -96,6 +96,78 @@
     }, 2600);
   }
 
+  function showPaymentSuccessBanner(purchaseType) {
+    // Remove any existing banner
+    const existing = document.getElementById('sm-payment-success-banner');
+    if (existing) existing.remove();
+
+    const isSubscription = purchaseType === 'subscription';
+    const title = isSubscription ? 'Pro Subscription Activated!' : 'Report Unlocked!';
+
+    const banner = document.createElement('div');
+    banner.id = 'sm-payment-success-banner';
+    banner.innerHTML = `
+      <div id="sm-payment-success-inner" style="
+        position: fixed;
+        top: 80px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+        color: white;
+        padding: 16px 32px 16px 24px;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+        max-width: 500px;
+        text-align: center;
+        animation: slideDown 0.3s ease-out;
+      ">
+        <style>
+          @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+          }
+        </style>
+        <div style="display: flex; align-items: center; gap: 12px; justify-content: center;">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <strong style="font-size: 18px;">${title}</strong>
+        </div>
+        <button id="sm-payment-close-btn" style="
+          margin-left: 16px;
+          background: rgba(255,255,255,0.2);
+          border: none;
+          color: white;
+          cursor: pointer;
+          padding: 4px 8px;
+          border-radius: 4px;
+          font-size: 16px;
+          line-height: 1;
+        " aria-label="Close">&times;</button>
+      </div>
+    `;
+    document.body.appendChild(banner);
+
+    // Add close button handler
+    const closeBtn = document.getElementById('sm-payment-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        banner.remove();
+      });
+    }
+
+    // Auto-remove after 10 seconds
+    setTimeout(() => {
+      if (banner.parentElement) {
+        banner.style.opacity = '0';
+        banner.style.transition = 'opacity 0.3s ease-out';
+        setTimeout(() => banner.remove(), 300);
+      }
+    }, 10000);
+  }
+
   function flushQueuedToasts() {
     const queue = getToastQueue();
     if (!queue.length) return;
@@ -291,6 +363,13 @@
 
     const root = getResultsRoot(resultsContent);
     if (!root) return;
+
+    // Skip if ReportContainer already rendered a screenshot section
+    const reportContainerScreenshot = root.querySelector('.screenshot-section');
+    if (reportContainerScreenshot) {
+      return; // Don't add duplicate screenshot card
+    }
+
     const existingCard = root.querySelector('[data-sm-page-screenshot-card]');
     const headerEl = root.querySelector('.report-header');
     const firstNonScreenshotChild = Array.from(root.children || []).find(
@@ -398,23 +477,14 @@
 
     waitingForResults = false;
 
-    await ensureCreditsManagerLoaded();
-    if (window.CreditsManager) {
-      const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
-      if (typeof render === 'function') render(reportId);
-
-      const isUnlocked =
-        (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
-        (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId));
-
-      if (isUnlocked) {
-        revealProOnlyContent();
-      }
+    // Check if user has access via new billing model
+    if (window.ProReportBlock?.hasAccess?.(reportId)) {
+      revealProOnlyContent();
     }
   }
 
   async function startSingleReportCheckout(reportId) {
-    // returnUrl must be an absolute URL on an allowed domain
+    // Build return URL for Stripe redirect
     const params = new URLSearchParams(window.location.search);
     params.delete('session_id');
     params.delete('sessionId');
@@ -422,12 +492,18 @@
     params.set('reportId', reportId);
     const returnUrl = `${window.location.origin}${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
 
-    const response = await fetch('/api/billing/create-checkout-session', {
+    // Get auth token for authenticated checkout (check both key names)
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch('/api/billing/checkout', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({
         purchaseType: 'single_report',
-        packId: null,
         reportId,
         returnUrl
       })
@@ -438,75 +514,443 @@
       window.location.href = data.checkoutUrl;
       return;
     }
+
+    // Handle auth requirement
+    if (response.status === 401) {
+      showToast('Please sign in to purchase reports.');
+      return;
+    }
+
     showToast('Checkout is unavailable right now.');
   }
 
+  // Flag to indicate billing return is being processed
+  // Other scripts should wait for this before displaying reports
+  let billingReturnInProgress = false;
+  let billingReturnPromise = null;
+
   async function handleBillingReturnIfPresent() {
-    let sessionId = '';
-    try {
-      const params = new URLSearchParams(window.location.search);
-      sessionId = params.get('session_id') || params.get('sessionId') || '';
-    } catch (e) {
-      sessionId = '';
-    }
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id') || params.get('sessionId') || '';
+    const billingSuccess = params.get('billing_success') === 'true';
+    // Get report_id from URL first, fall back to sessionStorage (saved before checkout)
+    const reportIdFromUrl = params.get('report_id') || params.get('reportId') || '';
+    const reportIdFromStorage = sessionStorage.getItem('sm_checkout_report_id') || '';
+    const reportId = reportIdFromUrl || reportIdFromStorage;
 
-    if (!sessionId) return;
+    // Debug: Log billing return state
+    console.log('[BillingReturn] URL params:', {
+      fullUrl: window.location.href,
+      sessionId,
+      billingSuccess,
+      reportIdFromUrl,
+      reportIdFromStorage,
+      finalReportId: reportId,
+      allParams: Object.fromEntries(params.entries())
+    });
 
-    await ensureCreditsManagerLoaded();
-    if (!window.CreditsManager) return;
-
-    // Dedupe refreshes
-    if (typeof window.CreditsManager.hasPurchaseReceipt === 'function' && window.CreditsManager.hasPurchaseReceipt(sessionId)) {
-      return;
-    }
-
-    const verifyResp = await fetch(`/api/billing/verify-session?session_id=${encodeURIComponent(sessionId)}`);
-    const verification = await verifyResp.json().catch(() => null);
-    if (!verifyResp.ok || !verification || verification.paid !== true) {
-      return;
-    }
-
-    if (verification.purchaseType === 'credit_pack') {
-      const creditsAdded = parseInt(verification.creditsAdded || 0, 10) || 0;
-      if (creditsAdded > 0) {
-        window.CreditsManager.addCredits(creditsAdded);
-        showToast(`${creditsAdded} credits added.`);
+    // CRITICAL: Set the report_id as the current report ID IMMEDIATELY
+    // This ensures that when results are rendered, they use the purchased reportId
+    // instead of computing a new one based on current time
+    if (reportId) {
+      setCurrentReportId(reportId);
+      // Also add it to URL params if not already there (for analyzer scripts to pick up)
+      if (!reportIdFromUrl && reportId) {
+        params.set('report_id', reportId);
+        const newUrl = `${window.location.pathname}?${params.toString()}`;
+        window.history.replaceState({}, document.title, newUrl);
       }
+      console.log('[BillingReturn] Set current report ID:', reportId);
     }
 
-    if (verification.purchaseType === 'single_report') {
-      const rid = verification.reportId || getCurrentReportId();
-      if (rid) {
-        window.CreditsManager.unlockReport(rid, 'single');
-        const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
-        if (typeof render === 'function') render(rid);
+    // Handle new billing_success flow FIRST (from /api/billing/checkout)
+    // This takes priority over legacy session_id flow
+    if (billingSuccess) {
+      // Signal that billing return is being processed
+      billingReturnInProgress = true;
+      window.__smBillingReturnInProgress = true;
+      const checkoutSessionId = params.get('session_id') || '';
+
+      // Dedupe using sessionStorage (include session_id to avoid re-processing same session)
+      const receiptKey = `sm_billing_success_${checkoutSessionId || reportId || 'subscription'}`;
+      if (sessionStorage.getItem(receiptKey)) {
+        // Already processed, but still reveal content and clean URL
         revealProOnlyContent();
-        showToast('Report unlocked.');
+        params.delete('billing_success');
+        params.delete('billing_canceled');
+        params.delete('session_id');
+        const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+        window.history.replaceState({}, document.title, newUrl);
+        return;
       }
+
+      // If we have a session_id, verify and record the purchase first
+      // This is essential for local dev where webhooks don't fire
+      if (checkoutSessionId) {
+        const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token') || '';
+        if (token) {
+          try {
+            const verifyResp = await fetch('/api/billing/verify-purchase', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              body: JSON.stringify({ session_id: checkoutSessionId })
+            });
+            const verifyResult = await verifyResp.json().catch(() => null);
+            if (verifyResult?.success) {
+              console.log('Purchase verified and recorded:', verifyResult);
+            } else {
+              console.warn('Purchase verification result:', verifyResult);
+            }
+          } catch (e) {
+            console.warn('Failed to verify purchase:', e);
+          }
+        }
+      }
+
+      // Clear billing cache and fetch fresh status BEFORE displaying results
+      // This ensures ProReportBlock.hasAccess() returns true during render
+      if (window.ProReportBlock?.clearBillingCache) {
+        window.ProReportBlock.clearBillingCache();
+      }
+
+      // Fetch and cache billing status - must complete before displaying results
+      let billingStatus = null;
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        billingStatus = await window.ProReportBlock.fetchBillingStatus();
+      }
+
+      // Debug: Log billing status to verify purchase is included
+      console.log('[BillingReturn] Billing status after verification:', {
+        plan: billingStatus?.plan,
+        purchasedReports: billingStatus?.purchasedReports,
+        reportId,
+        hasAccess: reportId ? billingStatus?.purchasedReports?.includes(reportId) : false
+      });
+
+      // Verify purchase and show appropriate message
+      if (billingStatus) {
+        if (billingStatus.plan === 'pro') {
+          showToast('Pro subscription activated! Unlocking premium content...');
+        } else if (reportId && billingStatus.purchasedReports?.includes(reportId)) {
+          showToast('Report unlocked!');
+        } else if (reportId) {
+          // Purchase may have been recorded but not yet in billing status
+          // Still proceed with reveal since verifyAndRecordPurchase succeeded
+          console.log('[BillingReturn] Report not in purchasedReports yet, but continuing with unlock');
+          showToast('Report unlocked!');
+        }
+      }
+
+      // Mark as processed
+      sessionStorage.setItem(receiptKey, 'true');
+
+      // Restore the URL that was being analyzed before checkout
+      const cachedUrl = sessionStorage.getItem('sm_checkout_url');
+      const cachedResults = sessionStorage.getItem('sm_checkout_results');
+      const cachedAnalyzer = sessionStorage.getItem('sm_checkout_analyzer');
+
+      if (cachedUrl) {
+        // Try to auto-fill the URL input
+        const urlInput = document.getElementById('urlInput') ||
+                         document.querySelector('input[type="url"], input[name="url"], input[id*="url" i]');
+        if (urlInput) {
+          urlInput.value = cachedUrl;
+        }
+      }
+
+      // Restore and display cached scan results
+      // Now that billing cache is populated, hasAccess() will return true during render
+      let displayedFromCache = false;
+      let loadedFromStorage = false;
+      if (cachedResults) {
+        try {
+          const results = JSON.parse(cachedResults);
+
+          // Dispatch event for analyzer-specific result restoration
+          const restoreEvent = new CustomEvent('sm:restoreScanResults', {
+            detail: { results, url: cachedUrl, analyzer: cachedAnalyzer }
+          });
+          window.dispatchEvent(restoreEvent);
+
+          // Also try direct display functions
+          if (window.displaySEOResults && cachedAnalyzer?.includes('seo')) {
+            window.currentSeoResults = results;
+            window.displaySEOResults(results);
+            displayedFromCache = true;
+          } else if (window.displaySecurityResults && cachedAnalyzer?.includes('security')) {
+            window.currentSecurityResults = results;
+            window.displaySecurityResults(results);
+            displayedFromCache = true;
+          } else if (window.displayPerformanceResults && cachedAnalyzer?.includes('performance')) {
+            window.currentPerformanceResults = results;
+            window.displayPerformanceResults(results);
+            displayedFromCache = true;
+          } else if (window.displayAccessibilityResults && cachedAnalyzer?.includes('accessibility')) {
+            window.currentAccessibilityResults = results;
+            window.displayAccessibilityResults(results);
+            displayedFromCache = true;
+          } else if (window.displayMobileResults && cachedAnalyzer?.includes('mobile')) {
+            window.currentMobileResults = results;
+            window.displayMobileResults(results);
+            displayedFromCache = true;
+          } else if (window.displayCROResults && cachedAnalyzer?.includes('cro')) {
+            window.currentCROResults = results;
+            window.displayCROResults(results);
+            displayedFromCache = true;
+          } else if (window.displayCWVResults && (cachedAnalyzer?.includes('cwv') || cachedAnalyzer?.includes('core-web-vitals'))) {
+            window.currentCWVResults = results;
+            window.displayCWVResults(results);
+            displayedFromCache = true;
+          } else if (window.displayResults && (cachedAnalyzer?.includes('gdpr') || cachedAnalyzer?.includes('privacy'))) {
+            window.__gdprCurrentData = results;
+            window.displayResults(results);
+            displayedFromCache = true;
+          } else if (window.displayReputationResults && (cachedAnalyzer?.includes('ip-reputation') || cachedAnalyzer?.includes('reputation'))) {
+            window.currentResults = results;
+            window.displayReputationResults(results);
+            displayedFromCache = true;
+          } else if (window.displayFontsResults && (cachedAnalyzer?.includes('fonts') || cachedAnalyzer?.includes('typography'))) {
+            window.currentFontsResults = results;
+            window.displayFontsResults(results);
+            displayedFromCache = true;
+          } else if (window.displayCrawlerResults && (cachedAnalyzer?.includes('crawler') || cachedAnalyzer?.includes('site-crawler'))) {
+            // Site Crawler
+            window.currentCrawlerResults = results;
+            window.displayCrawlerResults(results);
+            displayedFromCache = true;
+          } else if (window.displayLocalSEOResults && (cachedAnalyzer?.includes('local-seo') || cachedAnalyzer?.includes('local_seo'))) {
+            // Local SEO
+            window.currentLocalSEOResults = results;
+            window.displayLocalSEOResults(results);
+            displayedFromCache = true;
+          } else if (window.displayBrokenLinksResults && (cachedAnalyzer?.includes('broken-links') || cachedAnalyzer?.includes('broken_links'))) {
+            // Broken Links
+            window.currentBrokenLinksResults = results;
+            window.displayBrokenLinksResults(results);
+            displayedFromCache = true;
+          } else if (window.displayBrandResults && (cachedAnalyzer?.includes('brand-consistency') || cachedAnalyzer?.includes('brand_consistency'))) {
+            // Brand Consistency
+            window.currentBrandResults = results;
+            window.displayBrandResults(results);
+            displayedFromCache = true;
+          } else if (window.displayCompetitiveResults && cachedAnalyzer?.includes('competitive')) {
+            // Competitive Analysis
+            window.currentCompetitiveResults = results;
+            window.competitiveData = results;
+            window.displayCompetitiveResults(results);
+            displayedFromCache = true;
+          } else {
+            // Display function not available yet - leave cache for analyzer script to pick up
+            console.log('[BillingReturn] Display function not available, leaving cache for analyzer script');
+          }
+
+          // Set screenshot URL from cached results before revealing content
+          const cachedScreenshotUrl = results?.screenshotUrl || results?.results?.screenshotUrl;
+          if (cachedScreenshotUrl) {
+            document.body.setAttribute('data-sm-screenshot-url', cachedScreenshotUrl);
+            console.log('[BillingReturn] Set screenshot URL from cached results:', cachedScreenshotUrl);
+          }
+
+          // Also call revealProOnlyContent to handle any sections that were rendered locked
+          // before the billing status was available (e.g., from cached HTML)
+          setTimeout(() => {
+            revealProOnlyContent();
+            showPaymentSuccessBanner('single_report');
+            // Explicitly call ensurePageScreenshotCard since MutationObserver might not trigger
+            ensurePageScreenshotCard(reportId);
+          }, 100);
+        } catch (e) {
+          console.warn('Failed to restore scan results:', e);
+          showPaymentSuccessBanner('single_report');
+        }
+      } else if (reportId) {
+        // No cached results in sessionStorage, but we have a reportId
+        // Try to load from stored reports (database) and display
+        console.log('[BillingReturn] No cached results, trying to load stored report:', reportId);
+
+        if (window.ReportStorage && typeof window.ReportStorage.loadReport === 'function') {
+          try {
+            const stored = await window.ReportStorage.loadReport(reportId);
+            if (stored && stored.data) {
+              // Validate stored data - check for error responses or invalid structure
+              const data = stored.data;
+              const hasError = data.error || typeof data === 'string';
+              if (hasError) {
+                console.warn('[BillingReturn] Stored report contains error data, skipping display:', {
+                  errorType: typeof data.error,
+                  dataType: typeof data
+                });
+              } else {
+                console.log('[BillingReturn] Found stored report, displaying...');
+              }
+
+              // Try to display using the appropriate display function (skip if error data)
+              const analyzerType = stored.metadata?.analyzerType || '';
+              if (hasError) {
+                // Don't try to display error data
+              } else
+              if (window.displaySEOResults && analyzerType.includes('seo')) {
+                window.currentSeoResults = stored.data;
+                window.displaySEOResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displaySecurityResults && analyzerType.includes('security')) {
+                window.currentSecurityResults = stored.data;
+                window.displaySecurityResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displayPerformanceResults && (analyzerType.includes('performance') || analyzerType.includes('speed'))) {
+                window.currentPerformanceResults = stored.data;
+                window.displayPerformanceResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displayAccessibilityResults && analyzerType.includes('accessibility')) {
+                window.currentAccessibilityResults = stored.data;
+                window.displayAccessibilityResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displayMobileResults && analyzerType.includes('mobile')) {
+                window.currentMobileResults = stored.data;
+                window.displayMobileResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displayCROResults && analyzerType.includes('cro')) {
+                window.currentCROResults = stored.data;
+                window.displayCROResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displayCWVResults && (analyzerType.includes('cwv') || analyzerType.includes('core-web-vitals'))) {
+                window.currentCWVResults = stored.data;
+                window.displayCWVResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displayResults && (analyzerType.includes('gdpr') || analyzerType.includes('privacy'))) {
+                window.__gdprCurrentData = stored.data;
+                window.displayResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displayReputationResults && (analyzerType.includes('ip-reputation') || analyzerType.includes('reputation'))) {
+                window.currentResults = stored.data;
+                window.displayReputationResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displayFontsResults && (analyzerType.includes('fonts') || analyzerType.includes('typography'))) {
+                window.currentFontsResults = stored.data;
+                window.displayFontsResults(stored.data);
+                loadedFromStorage = true;
+              } else if (window.displayCompetitiveResults && analyzerType.includes('competitive')) {
+                window.currentCompetitiveResults = stored.data;
+                window.competitiveData = stored.data;
+                window.displayCompetitiveResults(stored.data);
+                loadedFromStorage = true;
+              }
+
+              if (loadedFromStorage) {
+                // Set screenshot URL from stored data before revealing content
+                const storedScreenshotUrl = stored.data?.screenshotUrl || stored.data?.results?.screenshotUrl;
+                if (storedScreenshotUrl) {
+                  document.body.setAttribute('data-sm-screenshot-url', storedScreenshotUrl);
+                  console.log('[BillingReturn] Set screenshot URL from stored data:', storedScreenshotUrl);
+                }
+
+                // Reveal pro content after display
+                setTimeout(() => {
+                  revealProOnlyContent();
+                  showPaymentSuccessBanner('single_report');
+                  // Explicitly call ensurePageScreenshotCard since MutationObserver might not trigger
+                  // due to waitingForResults flag state
+                  ensurePageScreenshotCard(reportId);
+                }, 100);
+              }
+            }
+          } catch (e) {
+            console.warn('[BillingReturn] Failed to load stored report:', e);
+          }
+        }
+
+        if (!loadedFromStorage) {
+          // No stored report found either - show banner prompting re-scan
+          showPaymentSuccessBanner('single_report');
+        }
+      } else if (cachedUrl) {
+        // No report_id but have URL - show banner
+        showPaymentSuccessBanner('single_report');
+      }
+
+      // Clear cached data - but only clear if we successfully displayed results
+      // This allows analyzer scripts (GDPR, IP Reputation, etc.) to pick up cached data
+      // if the display function wasn't available here
+      const handledByReportUI = displayedFromCache || loadedFromStorage;
+      if (handledByReportUI) {
+        sessionStorage.removeItem('sm_checkout_url');
+        sessionStorage.removeItem('sm_checkout_report_id');
+        sessionStorage.removeItem('sm_checkout_results');
+        sessionStorage.removeItem('sm_checkout_analyzer');
+      } else {
+        console.log('[BillingReturn] Results not handled by report-ui.js, leaving sessionStorage for analyzer script');
+      }
+
+      // Clean up URL
+      params.delete('billing_success');
+      params.delete('billing_canceled');
+      params.delete('session_id');
+      const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+      window.history.replaceState({}, document.title, newUrl);
+
+      // Signal that billing return processing is complete
+      billingReturnInProgress = false;
+      window.__smBillingReturnInProgress = false;
+      window.__smBillingReturnComplete = true;
+      window.dispatchEvent(new CustomEvent('sm:billingReturnComplete', {
+        detail: { reportId: reportId, billingStatus }
+      }));
+
+      return; // Exit early - don't process legacy flow
     }
 
-    if (typeof window.CreditsManager.addPurchaseReceipt === 'function') {
-      window.CreditsManager.addPurchaseReceipt(sessionId);
-    }
+    // Handle legacy session_id flow (for backwards compatibility)
+    // This only runs if billing_success was NOT present
+    if (sessionId && !billingSuccess) {
+      // Dedupe refreshes using sessionStorage
+      const receiptKey = `sm_purchase_receipt_${sessionId}`;
+      if (sessionStorage.getItem(receiptKey)) return;
 
-    // Remove session_id from URL
-    try {
-      const params = new URLSearchParams(window.location.search);
+      const verifyResp = await fetch(`/api/billing/verify-session?session_id=${encodeURIComponent(sessionId)}`);
+      const verification = await verifyResp.json().catch(() => null);
+      if (!verifyResp.ok || !verification || verification.paid !== true) {
+        return;
+      }
+
+      // Handle subscription purchase
+      if (verification.purchaseType === 'subscription') {
+        showToast('Pro subscription activated!');
+        if (window.ProReportBlock?.clearBillingCache) {
+          window.ProReportBlock.clearBillingCache();
+        }
+        revealProOnlyContent();
+      }
+
+      // Handle single report purchase
+      if (verification.purchaseType === 'single_report') {
+        const rid = verification.reportId || getCurrentReportId();
+        if (rid) {
+          revealProOnlyContent();
+          showToast('Report unlocked!');
+        }
+      }
+
+      // Mark as processed
+      sessionStorage.setItem(receiptKey, 'true');
+
+      // Remove session_id from URL
       params.delete('session_id');
       params.delete('sessionId');
       const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
       window.history.replaceState({}, document.title, newUrl);
-    } catch (e) {
-      // ignore
     }
   }
 
 
   // If reportId is provided in the URL, set it early so updateProUI()
   // and unlock checks reference the same reportId across redirects.
+  // Check both camelCase (legacy) and snake_case (billing flow)
   try {
     const params = new URLSearchParams(window.location.search);
-    const reportIdFromQuery = params.get('reportId');
+    const reportIdFromQuery = params.get('reportId') || params.get('report_id') || '';
     if (reportIdFromQuery) setCurrentReportId(reportIdFromQuery);
   } catch (e) {
     // ignore
@@ -534,6 +978,40 @@
   }
 
   /**
+   * Print the current report
+   * Centralizes print logic for consistent behavior across all pages
+   */
+  function printReport() {
+    // Check if user has pro access (for hiding pro sections)
+    const hasPro = (
+      (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+      (typeof window.userHasPro === 'function' && window.userHasPro())
+    );
+
+    // Add class to body for print styling
+    document.body.classList.add('printing-report');
+
+    if (!hasPro) {
+      // Add class to hide pro sections when not paid
+      document.body.classList.add('print-free-tier');
+    }
+
+    // Trigger print dialog
+    window.print();
+
+    // Remove classes after print dialog closes
+    // Use both afterprint event and timeout fallback
+    const cleanup = () => {
+      document.body.classList.remove('printing-report');
+      document.body.classList.remove('print-free-tier');
+    };
+
+    window.addEventListener('afterprint', cleanup, { once: true });
+    // Fallback timeout in case afterprint doesn't fire
+    setTimeout(cleanup, 2000);
+  }
+
+  /**
    * Global event delegation for common UI patterns
    */
   function initGlobalEventDelegation() {
@@ -541,6 +1019,14 @@
     window.__reportUIInitialized = true;
 
     document.addEventListener('click', async (e) => {
+      // Print report buttons
+      const printBtn = e.target.closest('[data-print-report]');
+      if (printBtn) {
+        e.preventDefault();
+        printReport();
+        return;
+      }
+
       // Screenshot thumbnails
       const screenshot = e.target.closest('[data-screenshot]');
       if (screenshot && window.ScreenshotLightbox) {
@@ -553,61 +1039,13 @@
         }
       }
 
-      // Unlock with credit button
+      // Legacy unlock with credit button - redirect to pricing modal
       const unlockWithCredit = e.target.closest('[data-unlock-with-credit]');
       if (unlockWithCredit) {
         e.preventDefault();
-        if (!window.CreditsManager) {
-          await ensureCreditsManagerLoaded();
-        }
-        let reportId = unlockWithCredit.dataset.reportId ||
-                        document.body.getAttribute('data-report-id');
-
-        if (!reportId) {
-          const computed = computeReportId(getReportUrl(), getScanStartedAt(), getAnalyzerKey());
-          if (computed) {
-            reportId = computed;
-            setCurrentReportId(reportId);
-          }
-        }
-
-        if (!reportId) {
-          showToast('Run a scan first to unlock this report.');
-          return;
-        }
-
-        // Use CreditsManager if available, otherwise fallback to ProReportBlock
-        const manager = window.CreditsManager || window.ProReportBlock;
-
-        if (manager) {
-          const hasCredits = window.CreditsManager ?
-                            window.CreditsManager.getCredits() >= 1 :
-                            window.ProReportBlock.getCredits() >= 1;
-
-          if (hasCredits) {
-            // Consume credit and unlock report
-            if (window.CreditsManager) {
-              try {
-                window.CreditsManager.consumeCredit();
-              } catch (err) {
-                showToast('No credits available.');
-                return;
-              }
-              if (reportId) {
-                window.CreditsManager.unlockReport(reportId, 'credit');
-                const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
-                if (typeof render === 'function') render(reportId);
-                revealProOnlyContent();
-                showToast('1 credit used — report unlocked');
-              }
-            } else if (window.ProReportBlock) {
-              window.ProReportBlock.useCredit(reportId);
-              revealProOnlyContent();
-              showToast('1 credit used — report unlocked');
-            }
-          } else if (window.PricingModal) {
-            window.PricingModal.open();
-          }
+        // New billing model: open pricing modal instead of using credits
+        if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+          window.PricingModal.open();
         }
       }
 
@@ -733,10 +1171,28 @@
    * Call this once per page load
    */
   function init() {
-    // If we're returning from Stripe, apply entitlements/credits first.
+    // If we're returning from Stripe, apply entitlements first.
     handleBillingReturnIfPresent().catch(() => undefined);
 
     initGlobalEventDelegation();
+
+    // Handle print events (for Ctrl+P / Cmd+P keyboard shortcuts)
+    // This ensures proper CSS classes are applied even when not using the print button
+    window.addEventListener('beforeprint', () => {
+      const hasPro = (
+        (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+        (typeof window.userHasPro === 'function' && window.userHasPro())
+      );
+      document.body.classList.add('printing-report');
+      if (!hasPro) {
+        document.body.classList.add('print-free-tier');
+      }
+    });
+
+    window.addEventListener('afterprint', () => {
+      document.body.classList.remove('printing-report');
+      document.body.classList.remove('print-free-tier');
+    });
 
     flushQueuedToasts();
 
@@ -751,15 +1207,15 @@
 
     ensureReportIdOnceResultsExist();
 
-    // Preload credits helpers so Pro blocks can render correctly.
-    ensureCreditsManagerLoaded().then((loaded) => {
-      if (!loaded || !window.CreditsManager) return;
-      const currentReportId = document.body.getAttribute('data-report-id');
-      if (currentReportId) {
-        const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
-        if (typeof render === 'function') render(currentReportId);
-      }
-    });
+    // Fetch billing status so Pro blocks can render correctly
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      window.ProReportBlock.fetchBillingStatus().then(() => {
+        const currentReportId = document.body.getAttribute('data-report-id');
+        if (currentReportId && window.ProReportBlock.hasAccess(currentReportId)) {
+          revealProOnlyContent();
+        }
+      });
+    }
 
     // Initialize ReportAccordion if available
     if (window.ReportAccordion && window.ReportAccordion.initInteractions) {
@@ -830,24 +1286,120 @@
 
   if (typeof window.shareResults !== 'function') {
     window.shareResults = function shareResults() {
-      if (typeof window.copyShareLink === 'function') return window.copyShareLink();
-      if (window.ExportGate && typeof window.ExportGate.showPaywall === 'function' && !window.ExportGate.isPro()) {
-        window.ExportGate.showPaywall();
+      // Check if user has access before sharing
+      const reportId = getCurrentReportId();
+      if (!window.ProReportBlock?.hasAccess?.(reportId)) {
+        showToast('Purchase report to get shareable link');
         return;
       }
-      alert('Share link is not available on this page.');
+
+      if (typeof window.copyShareLink === 'function') {
+        return window.copyShareLink();
+      }
+
+      // Generic share link implementation
+      const url = getReportUrl();
+      if (!reportId) {
+        showToast('Run a scan first to share');
+        return;
+      }
+
+      const shareUrl = new URL(window.location.href);
+      shareUrl.searchParams.set('report_id', reportId);
+      if (url) {
+        shareUrl.searchParams.set('url', url);
+      }
+      shareUrl.searchParams.delete('billing_success');
+      shareUrl.searchParams.delete('session_id');
+      shareUrl.searchParams.delete('auto_scan');
+
+      navigator.clipboard.writeText(shareUrl.toString()).then(() => {
+        showToast('Share link copied to clipboard!');
+      }).catch(() => {
+        showToast('Failed to copy link');
+      });
     };
   }
 
   if (typeof window.exportCSV !== 'function') {
     window.exportCSV = function exportCSV() {
-      alert('CSV export is not available yet.');
+      // Check if user has access
+      const reportId = getCurrentReportId();
+      if (!window.ProReportBlock?.hasAccess?.(reportId)) {
+        showToast('Purchase report to export CSV');
+        return;
+      }
+
+      // Try analyzer-specific CSV export
+      if (typeof window.exportSeoCSV === 'function') {
+        return window.exportSeoCSV();
+      }
+      if (typeof window.exportPerformanceCSV === 'function') {
+        return window.exportPerformanceCSV();
+      }
+      if (typeof window.exportSecurityCSV === 'function') {
+        return window.exportSecurityCSV();
+      }
+
+      showToast('CSV export not available for this report type');
+    };
+  }
+
+  // Export Excel handler
+  if (typeof window.exportExcel !== 'function') {
+    window.exportExcel = function exportExcel() {
+      // Check if user has access
+      const reportId = getCurrentReportId();
+      if (!window.ProReportBlock?.hasAccess?.(reportId)) {
+        showToast('Purchase report to export Excel');
+        return;
+      }
+
+      // Try analyzer-specific Excel export
+      if (typeof window.exportSeoExcel === 'function') {
+        return window.exportSeoExcel();
+      }
+      if (typeof window.exportPerformanceExcel === 'function') {
+        return window.exportPerformanceExcel();
+      }
+      if (typeof window.exportSecurityExcel === 'function') {
+        return window.exportSecurityExcel();
+      }
+
+      // Fallback to CSV if Excel not available
+      if (typeof window.exportCSV === 'function') {
+        showToast('Excel not available, exporting CSV instead');
+        return window.exportCSV();
+      }
+
+      showToast('Excel export not available for this report type');
     };
   }
 
   if (typeof window.exportJSON !== 'function') {
     window.exportJSON = function exportJSON() {
-      alert('JSON export is not available yet.');
+      // Check if user has access
+      const reportId = getCurrentReportId();
+      if (!window.ProReportBlock?.hasAccess?.(reportId)) {
+        showToast('Purchase report to export JSON');
+        return;
+      }
+
+      // Generic JSON export - use current results
+      const results = window.currentSeoResults || window.currentPerformanceResults || window.currentSecurityResults;
+      if (!results) {
+        showToast('No results to export');
+        return;
+      }
+
+      const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `report-${reportId || 'export'}.json`;
+      link.click();
+      URL.revokeObjectURL(url);
+      showToast('JSON exported');
     };
   }
 
@@ -870,6 +1422,9 @@
 
     // Initialization
     init,
+
+    // Print functionality
+    printReport,
 
     // Deterministic report identity helpers
     makeReportId,
@@ -897,32 +1452,46 @@
       close: () => window.ScreenshotLightbox?.close()
     },
 
-    // Pro gating helpers (delegates to ProGate)
+    // Pro gating helpers (delegates to ProGate/ProReportBlock)
     pro: {
       showPaywall: (opts) => {
-        if (typeof window.openProPaywall === 'function') {
+        if (window.PricingModal?.open) {
+          return window.PricingModal.open(opts);
+        } else if (typeof window.openProPaywall === 'function') {
           return window.openProPaywall(opts);
         } else if (window.ProGate?.showUpgradePrompt) {
           return window.ProGate.showUpgradePrompt(opts);
         }
       },
-      isPro: () => window.ProGate?.isPro() || false,
+      isPro: () => window.ProReportBlock?.isProSubscriber?.() || window.ProGate?.isPro() || false,
+      hasAccess: (reportId) => window.ProReportBlock?.hasAccess?.(reportId) || false,
       lockContent: (contentHTML, context) => {
-        const credits = window.CreditsManager?.getCredits ? window.CreditsManager.getCredits() : 0;
-        const card = window.PaidUnlockCard?.render
-          ? window.PaidUnlockCard.render({ context: context || 'feature', reportId: getCurrentReportId(), credits })
+        const reportId = getCurrentReportId();
+        const unlockPrompt = window.ProReportBlock?.renderUnlockPrompt
+          ? window.ProReportBlock.renderUnlockPrompt({ context: context || 'feature', reportId })
           : `
-              <div class="report-shell__lock-overlay">
-                <div class="is-locked">${contentHTML}</div>
-                <button class="report-shell__lock-cta" data-pro-unlock data-context="${context || 'feature'}">
-                  Unlock Report ($10 USD)
-                </button>
+              <div class="pro-report-block__unlock-prompt" data-locked-overlay>
+                <div class="pro-report-block__unlock-header">
+                  <span class="pro-report-block__unlock-icon">🔒</span>
+                  <span class="pro-report-block__unlock-text">Unlock this report</span>
+                </div>
+                <div class="pro-report-block__unlock-buttons">
+                  <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="${context || 'feature'}" ${reportId ? `data-report-id="${reportId}"` : ''}>
+                    Unlock for $10
+                  </button>
+                  <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="${context || 'feature'}">
+                    Go Pro — $20/mo
+                  </button>
+                </div>
+                <p class="pro-report-block__unlock-hint">
+                  Pro unlocks all reports. Single purchase unlocks only this scan.
+                </p>
               </div>
             `;
         return `
           <div class="report-shell__lock-overlay">
             <div class="is-locked">${contentHTML}</div>
-            <div data-paid-unlock-card>${card}</div>
+            <div class="report-shell__lock-paywall" data-hide-when-unlocked>${unlockPrompt}</div>
           </div>
         `;
       }

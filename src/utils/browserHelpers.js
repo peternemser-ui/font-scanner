@@ -145,6 +145,53 @@ async function executeWithTimeout(asyncFn, timeoutMs, errorMessage) {
 }
 
 /**
+ * Wait for Cloudflare challenge to potentially auto-resolve
+ * Many Cloudflare JS challenges auto-solve after a few seconds
+ *
+ * @param {Object} page - Puppeteer page object
+ * @param {number} maxWaitMs - Maximum time to wait (default: 10000)
+ * @returns {Promise<boolean>} True if challenge resolved, false if still present
+ */
+async function waitForCloudflareChallenge(page, maxWaitMs = 10000) {
+  const checkInterval = 1000;
+  const maxChecks = Math.ceil(maxWaitMs / checkInterval);
+
+  for (let i = 0; i < maxChecks; i++) {
+    await new Promise(resolve => setTimeout(resolve, checkInterval));
+
+    try {
+      const content = await page.content();
+      const title = await page.title().catch(() => '');
+
+      // Check if challenge is still present
+      const challengeIndicators = [
+        /checking your browser/i,
+        /verify you are human/i,
+        /just a moment/i,
+        /cloudflare/i,
+        /security check/i
+      ];
+
+      const stillHasChallenge = challengeIndicators.some(pattern =>
+        pattern.test(content) || pattern.test(title)
+      );
+
+      if (!stillHasChallenge) {
+        logger.info('Cloudflare challenge appears to have resolved', { attempt: i + 1 });
+        return true;
+      }
+
+      logger.debug('Cloudflare challenge still present, waiting...', { attempt: i + 1, maxChecks });
+    } catch (error) {
+      logger.warn('Error checking Cloudflare challenge status', { error: error.message });
+    }
+  }
+
+  logger.warn('Cloudflare challenge did not resolve within timeout', { maxWaitMs });
+  return false;
+}
+
+/**
  * Detect bot protection on page
  *
  * Consolidates bot detection logic from seoAnalyzer.js, accessibilityAnalyzerService.js
@@ -413,6 +460,7 @@ module.exports = {
   // Core functions
   executeWithTimeout,
   detectBotProtection,
+  waitForCloudflareChallenge,
   setDeviceProfile,
   navigateToPage,
   waitForPageReady,

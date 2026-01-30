@@ -88,6 +88,7 @@ function initializePdfGeneration(results, analyzerType, options = {}) {
  * Finalize PDF generation
  *
  * Consolidates the pattern:
+ *   - Add page numbers to all pages
  *   - End document
  *   - Wait for stream finish
  *   - Return result with filename, filepath, reportId
@@ -97,13 +98,44 @@ function initializePdfGeneration(results, analyzerType, options = {}) {
  * @param {string} filename - PDF filename
  * @param {string} filepath - PDF file path
  * @param {string} reportId - Report ID
+ * @param {Object} options - Additional options
+ * @param {string} options.reportTitle - Report title for footer
  * @returns {Promise<Object>} { filename, filepath, reportId }
  *
  * @example
- * return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+ * return finalizePdfGeneration(doc, stream, filename, filepath, reportId, { reportTitle: 'SEO Analysis Report' });
  */
-function finalizePdfGeneration(doc, stream, filename, filepath, reportId) {
+function finalizePdfGeneration(doc, stream, filename, filepath, reportId, options = {}) {
   return new Promise((resolve, reject) => {
+    const { reportTitle = 'Analysis Report' } = options;
+
+    // Add page numbers to all pages (requires bufferPages: true)
+    const pageCount = doc.bufferedPageRange().count;
+    for (let i = 0; i < pageCount; i++) {
+      doc.switchToPage(i);
+
+      // Footer with report title, branding, and page numbers
+      const footerY = 760; // Near bottom of US Letter page (792pt)
+
+      // Left: Report title
+      doc.fontSize(8)
+         .font('Helvetica')
+         .fillColor('#666666')
+         .text(reportTitle, 50, footerY, { width: 200, lineBreak: false });
+
+      // Center: Branding
+      doc.fontSize(8)
+         .font('Helvetica-Bold')
+         .fillColor('#dd3838')
+         .text('sitemechanic.io', 250, footerY, { width: 112, align: 'center', lineBreak: false });
+
+      // Right: Page numbers
+      doc.fontSize(8)
+         .font('Helvetica-Bold')
+         .fillColor('#333333')
+         .text(`${i + 1} / ${pageCount}`, 462, footerY, { width: 100, align: 'right', lineBreak: false });
+    }
+
     doc.end();
 
     stream.on('finish', () => {
@@ -116,6 +148,123 @@ function finalizePdfGeneration(doc, stream, filename, filepath, reportId) {
       reject(error);
     });
   });
+}
+
+/**
+ * Add Table of Contents page
+ *
+ * Creates a professional TOC with section names and page numbers
+ * Call this after all content is added but before finalizePdfGeneration
+ *
+ * @param {Object} doc - PDFDocument instance
+ * @param {Array} sections - Array of { title, page } objects
+ * @param {Object} options - Styling options
+ *
+ * @example
+ * addTableOfContents(doc, [
+ *   { title: 'Executive Summary', page: 2 },
+ *   { title: 'Meta Tags Analysis', page: 3 },
+ * ]);
+ */
+function addTableOfContents(doc, sections, options = {}) {
+  const { startPage = 1 } = options;
+
+  // Switch to first page to insert TOC after cover
+  doc.switchToPage(startPage);
+
+  // Insert a new page for TOC (we'll add content at a specific position)
+  // Note: PDFKit doesn't support inserting pages, so we need to plan TOC page in advance
+
+  doc.fontSize(18)
+     .font('Helvetica-Bold')
+     .fillColor(COLORS.textPrimary)
+     .text('TABLE OF CONTENTS', 50, 50);
+
+  // Red accent bar
+  doc.rect(50, 78, 50, 3)
+     .fillColor('#dd3838')
+     .fill();
+
+  let currentY = 100;
+
+  sections.forEach((section, index) => {
+    const num = String(index + 1).padStart(2, '0');
+
+    // Section number and title
+    doc.fontSize(11)
+       .font('Helvetica')
+       .fillColor('#dd3838')
+       .text(`${num}.`, 50, currentY, { continued: true, width: 25 })
+       .fillColor(COLORS.textPrimary)
+       .text(` ${section.title}`, { continued: true, width: 380 });
+
+    // Dotted line (simulated with periods)
+    const titleWidth = doc.widthOfString(`${num}. ${section.title}`);
+    const dotsWidth = 450 - titleWidth - 30;
+    const dots = '.'.repeat(Math.max(3, Math.floor(dotsWidth / 4)));
+
+    doc.fillColor('#cccccc')
+       .text(` ${dots} `, { continued: true, width: dotsWidth });
+
+    // Page number
+    doc.fillColor(COLORS.textPrimary)
+       .font('Helvetica-Bold')
+       .text(`${section.page}`, { width: 30, align: 'right' });
+
+    currentY += 25;
+
+    // Add score if available
+    if (section.score !== undefined) {
+      doc.fontSize(9)
+         .font('Helvetica')
+         .fillColor(getScoreColor(section.score))
+         .text(`Score: ${section.score}/100`, 75, currentY - 5);
+      currentY += 15;
+    }
+  });
+
+  // Note about page numbers
+  doc.fontSize(8)
+     .font('Helvetica-Oblique')
+     .fillColor('#888888')
+     .text('Page numbers are based on the final rendered document.', 50, currentY + 20);
+}
+
+/**
+ * Track sections for automatic TOC generation
+ * Call this when adding major sections to track them
+ *
+ * @param {Object} doc - PDFDocument instance
+ * @param {string} title - Section title
+ * @param {number} score - Optional section score
+ * @returns {Object} Section info with page number
+ */
+function trackSection(doc, title, score = null) {
+  // Initialize tracking array if not exists
+  if (!doc._tocSections) {
+    doc._tocSections = [];
+  }
+
+  const pageNum = doc.bufferedPageRange().start + doc.bufferedPageRange().count;
+
+  const section = {
+    title,
+    page: pageNum,
+    score
+  };
+
+  doc._tocSections.push(section);
+  return section;
+}
+
+/**
+ * Get tracked sections for TOC
+ *
+ * @param {Object} doc - PDFDocument instance
+ * @returns {Array} Array of tracked sections
+ */
+function getTrackedSections(doc) {
+  return doc._tocSections || [];
 }
 
 /**
@@ -1069,6 +1218,11 @@ module.exports = {
   addPdfHeader,
   addSectionHeader,
   addSubSectionHeader,
+
+  // Table of Contents
+  addTableOfContents,
+  trackSection,
+  getTrackedSections,
 
   // Content
   addKeyValue,

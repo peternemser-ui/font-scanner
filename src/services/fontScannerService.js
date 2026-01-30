@@ -4,6 +4,7 @@ const FontAnalyzer = require('./fontAnalyzer');
 const performanceAnalyzer = require('./performanceAnalyzer');
 const bestPracticesAnalyzer = require('./bestPracticesAnalyzer');
 const simpleAnalyzer = require('./simpleAnalyzer');
+const { waitForCloudflareChallenge, detectBotProtection } = require('../utils/browserHelpers');
 
 const logger = createLogger('FontScannerService');
 
@@ -121,6 +122,13 @@ class FontScannerService {
           logger.error(`Page navigation error for ${url}:`, error.message);
           throw new Error(`Failed to access the website: ${error.message}. Please check the URL and try again.`);
         }
+      }
+
+      // Check for and wait for Cloudflare challenge to resolve
+      const botDetection = await detectBotProtection(page, null);
+      if (botDetection.isDetected) {
+        logger.info('Bot protection detected, waiting for challenge to resolve...');
+        await waitForCloudflareChallenge(page, 8000);
       }
 
       // Wait for fonts to load (reduced wait time)

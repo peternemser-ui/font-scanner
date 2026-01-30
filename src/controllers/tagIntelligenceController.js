@@ -289,6 +289,36 @@ const analyzeEnhancedFonts = asyncHandler(async (req, res) => {
     families: Array.from(p.families)
   }));
 
+  // Get fontDelivery and fallbackStability from first page result (single-page scan)
+  const firstPageResult = pageResults[0] || {};
+  // Always return objects (not null) so frontend can check for properties
+  const fontDeliveryData = firstPageResult.fontDelivery || {
+    requests: [],
+    totalBytes: 0,
+    totalBytesKB: '0',
+    totalRequests: 0,
+    averageLoadTime: 0,
+    preconnects: [],
+    preconnectsMissing: 0,
+    preloads: [],
+    preloadsCount: 0,
+    formats: { woff2: 0, woff: 0, ttf: 0, otf: 0, legacy: 0, unknown: 0 },
+    modernFormatPercentage: 0,
+    hasLegacyFormats: false,
+    score: 100,
+    loadingHints: { preconnectCount: 0, preloadCount: 0, criticalFontCount: 0 }
+  };
+  const fallbackStabilityData = firstPageResult.fallbackStability || {
+    fallbackStacks: [],
+    fallbackStacksSummary: { total: 0, excellent: 0, good: 0, poor: 0 },
+    metricOverrides: [],
+    hasMetricOverrides: false,
+    fontDisplayBreakdown: { swap: [], optional: [], block: [], fallback: [], auto: [] },
+    fontDisplaySummary: { optimal: 0, acceptable: 0, problematic: 0 },
+    clsRisk: { level: 'low', score: 100, risks: [], hasMetricOverrides: false },
+    score: 100
+  };
+
   const response = {
     url: reachableUrl,
     analyzedAt: new Date().toISOString(),
@@ -312,6 +342,10 @@ const analyzeEnhancedFonts = asyncHandler(async (req, res) => {
     },
     recommendations: generateFontRecommendations(allDuplicates, allDisplayIssues, allPreloadIssues, providers),
     pageResults: maxPages > 1 ? pageResults : undefined,
+    // NEW: Font delivery metrics (network data, preconnects, preloads, formats)
+    fontDelivery: fontDeliveryData,
+    // NEW: Fallback stability data (CLS risk, font-display, metric overrides)
+    fallbackStability: fallbackStabilityData,
     // Include original font scanner data for full functionality
     fullScan: fullScanData ? {
       fonts: fullScanData.fonts,

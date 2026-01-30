@@ -6,6 +6,44 @@
 // Deterministic analyzer key (stable forever)
 window.SM_ANALYZER_KEY = 'site-crawler';
 
+// ============================================================
+// PRE-DOMCONTENTLOADED SETUP
+// These must run BEFORE DOMContentLoaded to handle billing return
+// since report-ui.js may dispatch events before this script's
+// DOMContentLoaded handler runs.
+// ============================================================
+
+// Queue for pending restore calls (before displayResults is defined)
+window.__crawlerPendingRestore = null;
+
+// Wrapper function that queues calls until real displayResults is ready
+window.displayCrawlerResults = function(data) {
+  if (window.__crawlerDisplayResultsReady && typeof window.__crawlerRealDisplayResults === 'function') {
+    // Real function is ready, call it directly
+    window.__crawlerRealDisplayResults(data);
+  } else {
+    // Queue the call for later
+    console.log('[Crawler] Queueing displayCrawlerResults call (DOM not ready)');
+    window.__crawlerPendingRestore = data;
+  }
+};
+
+// Also expose as displayResults for compatibility
+window.displayResults = window.displayCrawlerResults;
+
+// Listen for restore scan results event BEFORE DOMContentLoaded
+// This ensures we capture the event even if it fires before our main handler
+window.addEventListener('sm:restoreScanResults', (e) => {
+  const { results: restoredResults, url, analyzer } = e.detail || {};
+  if (restoredResults && (analyzer?.includes('crawler') || analyzer?.includes('site-crawler'))) {
+    console.log('[Crawler] Received sm:restoreScanResults event');
+    // Store the URL for later
+    window.__crawlerRestoreUrl = url;
+    // Call the wrapper (which will queue or call directly)
+    window.displayCrawlerResults(restoredResults);
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   const urlInput = document.getElementById('urlInput');
@@ -39,13 +77,73 @@ document.addEventListener('DOMContentLoaded', () => {
     if (e.key === 'Enter') startCrawl();
   });
 
-  // Check for URL in query params
-  const params = new URLSearchParams(window.location.search);
-  const urlParam = params.get('url');
-  if (urlParam) {
-    urlInput.value = urlParam;
-    startCrawl();
-  }
+  // Handle URL parameters for report loading and billing return
+  (async function initFromUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const reportId = params.get('report_id') || '';
+    const autoUrl = params.get('url') || '';
+    const autoScan = params.get('auto_scan') === 'true';
+    const billingSuccess = params.get('billing_success') === 'true';
+
+    // If we have a report_id, set it immediately so hasAccess checks work
+    if (reportId) {
+      document.body.setAttribute('data-report-id', reportId);
+      console.log('[Crawler] Set report ID from URL:', reportId);
+    }
+
+    // If returning from billing, wait for billing return processing to complete
+    if (billingSuccess && !window.__smBillingReturnComplete) {
+      console.log('[Crawler] Waiting for billing return processing...');
+      await new Promise((resolve) => {
+        if (window.__smBillingReturnComplete) {
+          resolve();
+          return;
+        }
+        const handler = () => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        };
+        window.addEventListener('sm:billingReturnComplete', handler);
+        setTimeout(() => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        }, 5000);
+      });
+      console.log('[Crawler] Billing return processing complete');
+      return; // Don't auto-scan after billing return - results will be restored
+    }
+
+    // If we have a report_id, try to load the stored report first
+    if (reportId && window.ReportStorage) {
+      console.log('[Crawler] Checking for stored report:', reportId);
+
+      // CRITICAL: Fetch billing status BEFORE displaying the report
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        console.log('[Crawler] Fetching billing status...');
+        await window.ProReportBlock.fetchBillingStatus(true);
+        console.log('[Crawler] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportId));
+      }
+
+      const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayResults);
+      if (loaded) {
+        if (autoUrl && urlInput) urlInput.value = autoUrl;
+        return; // Don't auto-scan
+      }
+    }
+
+    // No stored report found - pre-fill URL
+    if (autoUrl && urlInput) {
+      urlInput.value = autoUrl;
+    }
+
+    // Only auto-crawl if URL param present AND not coming from billing/report recall
+    if (autoUrl && !reportId && !billingSuccess) {
+      startCrawl();
+    }
+  })();
+
+  // Note: sm:restoreScanResults listener is set up before DOMContentLoaded
+  // to ensure we catch events that fire before this handler runs
 
   async function startCrawl() {
     const url = urlInput.value.trim();
@@ -96,7 +194,18 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       const data = await response.json();
-      
+
+      // Extract and set report metadata from API response
+      console.log('[site-crawler-script] Setting report metadata from API response');
+      const apiReportId = data?.reportId || data?.results?.reportId;
+      const screenshotUrl = data?.screenshotUrl || data?.results?.screenshotUrl;
+      if (apiReportId) {
+        document.body.setAttribute('data-report-id', apiReportId);
+      }
+      if (screenshotUrl) {
+        document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+      }
+
       if (loader) {
         loader.complete();
         setTimeout(() => {
@@ -129,6 +238,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Store results globally for PDF generation and unlock handlers
     window.currentCrawlerResults = data;
 
+    // CRITICAL: Make results container visible (it starts hidden)
+    // This is needed when loading from storage since we bypass startCrawl()
+    results.classList.remove('hidden');
+
     const pages = data.results?.pages || [];
     const hostname = new URL(data.url || 'https://example.com').hostname;
     
@@ -139,16 +252,22 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const scanStartedAt = window.SM_SCAN_STARTED_AT || document.body.getAttribute('data-sm-scan-started-at');
     const analyzerKey = window.SM_ANALYZER_KEY || 'site-crawler';
-    let reportId = null;
-    if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
-      reportId = window.ReportUI.makeReportId({
-        analyzerKey,
-        normalizedUrl: data.url,
-        startedAtISO: scanStartedAt
-      });
-    } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
-      reportId = window.ReportUI.computeReportId(data.url, scanStartedAt, analyzerKey);
+
+    // CRITICAL: Use existing reportId from body attribute if set (from billing return)
+    // Only compute a new one if not already set
+    let reportId = document.body.getAttribute('data-report-id') || data.reportId || null;
+    if (!reportId) {
+      if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
+        reportId = window.ReportUI.makeReportId({
+          analyzerKey,
+          normalizedUrl: data.url,
+          startedAtISO: scanStartedAt
+        });
+      } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
+        reportId = window.ReportUI.computeReportId(data.url, scanStartedAt, analyzerKey);
+      }
     }
+    console.log('[Crawler] displayResults using reportId:', reportId);
     if (reportId) {
       document.body.setAttribute('data-report-id', reportId);
     }
@@ -160,15 +279,44 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Check if report is unlocked (for Report and Recommendations section)
-    const isUnlocked = !!(
-      reportId &&
-      window.CreditsManager &&
-      (
-        (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
-        (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
-      )
-    );
+    // Check if report is unlocked (Pro subscription or purchased)
+    const isReportUnlocked = (id) => {
+      const rId = String(id || '').trim();
+
+      // Subscription-style Pro (or ProReportBlock helper)
+      if (window.ProReportBlock && typeof window.ProReportBlock.isPro === 'function') {
+        if (window.ProReportBlock.isPro(rId || null)) {
+          console.log('[Crawler] isReportUnlocked: true via ProReportBlock.isPro');
+          return true;
+        }
+      }
+
+      // Also check hasAccess which covers both Pro and purchased
+      if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+        if (window.ProReportBlock.hasAccess(rId)) {
+          console.log('[Crawler] isReportUnlocked: true via ProReportBlock.hasAccess');
+          return true;
+        }
+      }
+
+      // Per-report unlock via credits
+      if (rId && window.CreditsManager) {
+        if (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(rId)) {
+          console.log('[Crawler] isReportUnlocked: true via CreditsManager.isUnlocked');
+          return true;
+        }
+        if (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(rId)) {
+          console.log('[Crawler] isReportUnlocked: true via CreditsManager.isReportUnlocked');
+          return true;
+        }
+      }
+
+      console.log('[Crawler] isReportUnlocked: false for reportId:', rId);
+      return false;
+    };
+
+    const isUnlocked = isReportUnlocked(reportId);
+    console.log('[Crawler] displayResults unlock check:', { reportId, isUnlocked });
 
     // Preview content for locked state
     const crawlerFixesPreview = renderCrawlerFixesPreview();
@@ -318,6 +466,36 @@ document.addEventListener('DOMContentLoaded', () => {
     window.crawlData = data;
   }
 
+  // Expose display function globally for billing return handler
+  // Store the real function and mark it as ready
+  window.__crawlerRealDisplayResults = displayResults;
+  window.__crawlerDisplayResultsReady = true;
+
+  // Update the wrapper functions to point to the real function
+  window.displayResults = displayResults;
+  window.displayCrawlerResults = displayResults;
+
+  // Process any pending restore that came in before DOM was ready
+  if (window.__crawlerPendingRestore) {
+    console.log('[Crawler] Processing pending restore from queue');
+    const pendingData = window.__crawlerPendingRestore;
+    window.__crawlerPendingRestore = null;
+
+    // Restore URL if available
+    if (window.__crawlerRestoreUrl) {
+      const urlInput = document.getElementById('urlInput');
+      if (urlInput) {
+        urlInput.value = window.__crawlerRestoreUrl;
+      }
+      window.__crawlerRestoreUrl = null;
+    }
+
+    // Use setTimeout to ensure all DOM elements are fully initialized
+    setTimeout(() => {
+      displayResults(pendingData);
+    }, 50);
+  }
+
   // ============================================================
   // Section Content Renderers (SEO pattern)
   // ============================================================
@@ -348,14 +526,6 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderVisualSitemapContent(siteStructure, hostname) {
     return `
       <div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-        <button onclick="printSitemap()" class="text-btn" title="Print Sitemap">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="6 9 6 2 18 2 18 9"/>
-            <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
-            <rect x="6" y="14" width="12" height="8"/>
-          </svg>
-          Print
-        </button>
         <button onclick="downloadSitemapImage()" class="text-btn" title="Save Image">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
@@ -1032,6 +1202,39 @@ Sitemap: https://example.com/sitemap.xml`,
     }
   }
   window.switchCrawlerFixTab = switchCrawlerFixTab;
+
+  // Add click event delegation for crawler fix accordions and tabs
+  document.addEventListener('click', function(e) {
+    // Handle tab clicks first
+    const tab = e.target.closest('.crawler-fix-tab');
+    if (tab) {
+      const accordion = tab.closest('.crawler-fix-accordion');
+      if (accordion) {
+        const fixId = accordion.getAttribute('data-fix-id');
+        const tabText = tab.textContent.toLowerCase();
+        let tabName = 'summary';
+        if (tabText.includes('code')) tabName = 'code';
+        else if (tabText.includes('guide')) tabName = 'guide';
+        if (fixId && typeof window.switchCrawlerFixTab === 'function') {
+          e.preventDefault();
+          e.stopPropagation();
+          window.switchCrawlerFixTab(fixId, tabName);
+        }
+      }
+      return;
+    }
+    // Handle accordion header clicks
+    const header = e.target.closest('.crawler-fix-header');
+    if (header) {
+      const accordion = header.closest('.crawler-fix-accordion');
+      if (accordion) {
+        const fixId = accordion.getAttribute('data-fix-id');
+        if (fixId && typeof window.toggleCrawlerFixAccordion === 'function') {
+          window.toggleCrawlerFixAccordion(fixId);
+        }
+      }
+    }
+  });
 
   // Copy code utility
   function copyCrawlerCode(elementId) {

@@ -15,6 +15,7 @@ const {
   getGrade,
   drawScoreSummaryCard,
   drawMetricGrid,
+  trackSection,
   COLORS
 } = require('../utils/pdfHelpers');
 
@@ -53,29 +54,125 @@ class SEOPdfGenerator {
       { reportsDir: this.reportsDir }
     );
 
+    const reportTitle = 'SEO Analysis Report';
+
     try {
       // Material Design header
       addPdfHeader(
         doc,
-        'SEO Analysis Report',
+        reportTitle,
         seoResults.url,
         'Comprehensive search engine optimization analysis'
       );
 
+      // Add Table of Contents page
+      doc.addPage();
+      this.addTableOfContents(doc, seoResults);
+
       // Generate report sections with Material Design
+      // Each section is tracked for TOC
+      trackSection(doc, 'Executive Summary', seoResults.overallScore);
       this.addExecutiveSummary(doc, seoResults);
+
+      trackSection(doc, 'Meta Tags Analysis', seoResults.metaTags?.score);
       this.addMetaTagsAnalysis(doc, seoResults.metaTags);
+
+      trackSection(doc, 'Headings Structure', seoResults.headings?.score);
       this.addHeadingsStructure(doc, seoResults.headings);
+
+      trackSection(doc, 'Image Analysis', seoResults.images?.summary?.score);
       this.addImageAnalysis(doc, seoResults.images);
+
+      trackSection(doc, 'Content Analysis', seoResults.content?.score);
       this.addContentAnalysis(doc, seoResults.content);
+
+      trackSection(doc, 'Technical SEO', seoResults.technical?.score);
       this.addTechnicalSEO(doc, seoResults.technical);
+
+      trackSection(doc, 'Recommendations');
       this.addRecommendations(doc, seoResults.recommendations);
 
-      return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+      return finalizePdfGeneration(doc, stream, filename, filepath, reportId, { reportTitle });
     } catch (error) {
       logger.error('Error creating SEO PDF:', error);
       throw error;
     }
+  }
+
+  /**
+   * Add Table of Contents
+   */
+  addTableOfContents(doc, results) {
+    doc.fontSize(18)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.textPrimary)
+       .text('TABLE OF CONTENTS', 50, 50);
+
+    // Red accent bar
+    doc.rect(50, 78, 50, 3)
+       .fillColor('#dd3838')
+       .fill();
+
+    let currentY = 100;
+
+    const sections = [
+      { title: 'Executive Summary', score: results.overallScore, page: 3 },
+      { title: 'Meta Tags Analysis', score: results.metaTags?.score, page: 3 },
+      { title: 'Headings Structure', score: results.headings?.score, page: 4 },
+      { title: 'Image Analysis', score: results.images?.summary?.score, page: 5 },
+      { title: 'Content Analysis', score: results.content?.score, page: 6 },
+      { title: 'Technical SEO', score: results.technical?.score, page: 7 },
+      { title: 'Recommendations', page: 8 }
+    ];
+
+    sections.forEach((section, index) => {
+      const num = String(index + 1).padStart(2, '0');
+
+      // Number in red
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor('#dd3838')
+         .text(`${num}.`, 50, currentY, { continued: false });
+
+      // Title
+      doc.fontSize(11)
+         .font('Helvetica')
+         .fillColor(COLORS.textPrimary)
+         .text(section.title, 75, currentY, { continued: false });
+
+      // Dotted line
+      const titleWidth = doc.widthOfString(section.title);
+      const dotsStartX = 75 + titleWidth + 10;
+      const dotsEndX = 480;
+      const dotsCount = Math.floor((dotsEndX - dotsStartX) / 5);
+
+      doc.fontSize(11)
+         .fillColor('#cccccc')
+         .text('.'.repeat(dotsCount), dotsStartX, currentY, { continued: false });
+
+      // Page number
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text(`${section.page}`, 490, currentY, { continued: false });
+
+      // Score badge if available
+      if (section.score !== undefined && section.score !== null) {
+        const scoreColor = getScoreColor(section.score);
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor(scoreColor)
+           .text(`[${Math.round(section.score)}/100]`, 515, currentY, { continued: false });
+      }
+
+      currentY += 28;
+    });
+
+    // Note about page numbers
+    doc.fontSize(8)
+       .font('Helvetica-Oblique')
+       .fillColor('#888888')
+       .text('Page numbers are approximate. See footer for exact page reference.', 50, currentY + 30);
   }
 
   /**

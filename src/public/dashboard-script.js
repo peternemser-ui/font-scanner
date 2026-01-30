@@ -404,14 +404,6 @@ function displayDashboard(data) {
     <div class="section dashboard-animate-in" style="border-left: 4px solid ${getScoreColor(overallScore)};">
       <div style="display: flex; justify-content: space-between; align-items: center; margin: 0 0 1.25rem 0;">
         <h2 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600; margin: 0;">Results for ${displayDomain}</h2>
-        <button onclick="window.print()" title="Print report" class="text-btn">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="6 9 6 2 18 2 18 9"></polyline>
-            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
-            <rect x="6" y="14" width="12" height="8"></rect>
-          </svg>
-          Print
-        </button>
       </div>
 
       <!-- ROW 1: Site Health Score + Summary Text -->
@@ -453,7 +445,7 @@ function displayDashboard(data) {
             ${summary}
           </p>
           <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
-            Analyzed: ${data.url} • Started: ${new Date(data.startedAt || data.timestamp).toLocaleString()} • Duration: ${data.duration}s
+            Analyzed: ${data.url} • Started: ${new Date(data.startedAt || data.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short' })} • Duration: ${data.duration}s
           </p>
         </div>
       </div>

@@ -95,6 +95,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const data = await response.json();
 
+      // Extract and set report metadata from API response
+      console.log('[tag-intelligence-script] Setting report metadata from API response');
+      const apiReportId = data?.reportId || data?.results?.reportId;
+      const screenshotUrl = data?.screenshotUrl || data?.results?.screenshotUrl;
+      if (apiReportId) {
+        document.body.setAttribute('data-report-id', apiReportId);
+      }
+      if (screenshotUrl) {
+        document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+      }
+
       // Store results globally for PDF export
       window.SM_TAG_INTELLIGENCE_RESULTS = data;
 
@@ -1352,7 +1363,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /**
  * Server-side PDF Export for Tag Intelligence
- * Overrides the default client-side export with professional PDFKit generation
+ * Uses unified PDF export function (server-side Puppeteer)
  */
 window.exportPDF = async function exportTagIntelligencePDF(format, buttonEl) {
   const results = window.SM_TAG_INTELLIGENCE_RESULTS;
@@ -1366,60 +1377,14 @@ window.exportPDF = async function exportTagIntelligencePDF(format, buttonEl) {
     return;
   }
 
-  // Show loading state
-  if (buttonEl) {
-    buttonEl.disabled = true;
-    buttonEl.textContent = 'Generating PDF...';
-  }
-
-  try {
-    const response = await fetch('/api/pdf/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        reportType: 'tag-intelligence',
-        reportData: results
-      })
+  // Use unified PDF export function (server-side Puppeteer)
+  if (typeof window.exportReportPDF === 'function') {
+    await window.exportReportPDF({
+      reportType: 'tag-intelligence',
+      buttonElement: buttonEl
     });
-
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ error: 'PDF generation failed' }));
-      throw new Error(error.error || error.message || 'PDF generation failed');
-    }
-
-    // Download the PDF
-    const blob = await response.blob();
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `tag-intelligence-report-${new Date().toISOString().split('T')[0]}.pdf`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    window.URL.revokeObjectURL(url);
-
-    if (window.ReportUI?.toast) {
-      window.ReportUI.toast('PDF downloaded successfully!');
-    }
-
-  } catch (error) {
-    console.error('PDF export error:', error);
-    if (window.ReportUI?.toast) {
-      window.ReportUI.toast('PDF export failed: ' + error.message);
-    } else {
-      alert('PDF export failed: ' + error.message);
-    }
-  } finally {
-    // Reset button state
-    if (buttonEl) {
-      buttonEl.disabled = false;
-      buttonEl.innerHTML = `
-        <span class="pro-report-block__action-icon">📄</span>
-        <div class="pro-report-block__action-text">
-          <div class="pro-report-block__action-label">Export PDF</div>
-          <div class="pro-report-block__action-description">Client-ready report</div>
-        </div>
-      `;
-    }
+  } else {
+    console.error('PDF export utility not loaded');
+    alert('PDF export is not available. Please refresh the page.');
   }
 };

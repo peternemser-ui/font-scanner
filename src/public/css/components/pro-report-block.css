@@ -182,43 +182,120 @@ a.pro-report-block__action--link {
   border-radius: var(--radius-sm, 6px);
 }
 
-/* Upgrade Prompt */
-.pro-report-block__upgrade-prompt {
+/* ========================================
+   UNLOCK PROMPT - New Billing Model
+   ======================================== */
+
+/* Unlock Prompt Container */
+.pro-report-block__unlock-prompt {
   margin-top: 1.5rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-  display: grid;
-  grid-template-columns: 1fr auto;
-  grid-template-areas:
-    'spacer credits'
-    'buttons buttons';
-  gap: 0.75rem 1rem;
-  align-items: start;
+  padding: 1.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: var(--radius-lg, 12px);
+  text-align: center;
 }
 
-/* Credit Info */
-.pro-report-block__credit-info {
-  grid-area: credits;
+/* Unlock Header */
+.pro-report-block__unlock-header {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-self: end;
-  gap: 0.25rem;
-  margin: 0;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
 }
 
-.pro-report-block__credit-balance {
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--accent-primary, var(--color-primary, #5bf4e7));
+.pro-report-block__unlock-icon {
+  font-size: 1.25rem;
 }
 
-.pro-report-block__credit-info [data-credits-label] {
-  font-size: 0.875rem;
-  color: var(--text-secondary, #9ca3af);
+.pro-report-block__unlock-text {
+  font-size: 1rem;
   font-weight: 600;
+  color: var(--text-primary, #fff);
 }
 
+/* Unlock Buttons */
+.pro-report-block__unlock-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.pro-report-block__unlock-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 160px;
+}
+
+.pro-report-block__unlock-btn--primary {
+  background: var(--pro-block-gradient, linear-gradient(135deg, var(--color-primary, #5bf4e7) 0%, var(--color-secondary, #0AFFEF) 100%));
+  color: var(--color-black, #000);
+}
+
+.pro-report-block__unlock-btn--primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(91, 244, 231, 0.4);
+}
+
+.pro-report-block__unlock-btn--secondary {
+  background: transparent;
+  border: 1px solid var(--color-primary, #5bf4e7);
+  color: var(--color-primary, #5bf4e7);
+}
+
+.pro-report-block__unlock-btn--secondary:hover {
+  background: rgba(91, 244, 231, 0.1);
+  transform: translateY(-2px);
+}
+
+.pro-report-block__unlock-btn:focus {
+  outline: 2px solid var(--color-primary, #5bf4e7);
+  outline-offset: 2px;
+}
+
+/* Unlock Hint Text */
+.pro-report-block__unlock-hint {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #9ca3af);
+  line-height: 1.4;
+}
+
+/* Badge Variants */
+.pro-report-block__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: var(--radius-sm, 6px);
+}
+
+.pro-report-block__badge--pro {
+  background: var(--color-primary, #5bf4e7);
+  color: var(--color-black, #000);
+}
+
+.pro-report-block__badge--purchased {
+  background: var(--color-success, #00E68A);
+  color: var(--color-black, #000);
+}
+
+/* Helper text (generic) */
 .pro-report-block__helper-text {
   font-size: 0.875rem;
   color: var(--text-secondary, #9ca3af);
@@ -375,7 +452,15 @@ a.pro-report-block__action--link {
 /* Compact Variant */
 .pro-report-block--compact {
   margin-top: 1.5rem;
-  padding: 1.5rem;
+  padding: 1rem;
+  background: transparent;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  box-shadow: none;
+}
+
+.pro-report-block--compact:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .pro-report-block--compact .pro-report-block__actions {
@@ -383,21 +468,40 @@ a.pro-report-block__action--link {
   margin-bottom: 0;
 }
 
-.pro-report-block__upgrade-button--compact {
+.pro-report-block--compact.pro-report-block--locked {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.pro-report-block__unlock-btn--compact {
   width: 100%;
-  padding: 1rem 1.5rem;
+  padding: 0.75rem 1.25rem;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: center;
+  gap: 0.5rem;
+  background: transparent;
+  border: 1px solid var(--color-warning, #FFB84D);
+  color: var(--color-warning, #FFB84D);
+  font-size: 0.875rem;
+  font-weight: 600;
+  border-radius: var(--radius-md, 8px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pro-report-block__unlock-btn--compact:hover {
+  background: rgba(255, 184, 77, 0.1);
+  transform: translateY(-1px);
 }
 
 /* Minimal Variant */
 .pro-report-block--minimal {
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   padding: 0;
   background: transparent;
   border: none;
   box-shadow: none;
+  display: inline-flex;
 }
 
 .pro-report-block--minimal:hover {
@@ -405,9 +509,20 @@ a.pro-report-block__action--link {
   box-shadow: none;
 }
 
-.pro-report-block__upgrade-button--minimal {
-  padding: 0.625rem 1.25rem;
-  font-size: 0.875rem;
+.pro-report-block__unlock-btn--minimal {
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid var(--color-warning, #FFB84D);
+  color: var(--color-warning, #FFB84D);
+  border-radius: var(--radius-sm, 6px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pro-report-block__unlock-btn--minimal:hover {
+  background: rgba(255, 184, 77, 0.1);
 }
 
 /* Report Header Styles (for ReportContainer) */
@@ -536,6 +651,22 @@ a.pro-report-block__action--link {
 
   .pro-report-block__actions {
     grid-template-columns: 1fr;
+  }
+
+  /* Unlock prompt responsive */
+  .pro-report-block__unlock-prompt {
+    padding: 1.25rem;
+  }
+
+  .pro-report-block__unlock-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .pro-report-block__unlock-btn {
+    width: 100%;
+    min-width: unset;
+    padding: 0.875rem 1rem;
   }
 
   .report-header__title {

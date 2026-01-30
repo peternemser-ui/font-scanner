@@ -1822,6 +1822,42 @@ function switchPerfFixTab(accordionId, tabName) {
   }
 }
 
+window.togglePerfFixAccordion = togglePerfFixAccordion;
+window.switchPerfFixTab = switchPerfFixTab;
+
+// Add click event delegation for performance fix accordions and tabs
+document.addEventListener('click', function(e) {
+  // Handle tab clicks first
+  const tab = e.target.closest('.perf-fix-tab');
+  if (tab) {
+    const accordion = tab.closest('.perf-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      const tabText = tab.textContent.toLowerCase();
+      let tabName = 'summary';
+      if (tabText.includes('code')) tabName = 'code';
+      else if (tabText.includes('guide')) tabName = 'guide';
+      if (fixId && typeof window.switchPerfFixTab === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+        window.switchPerfFixTab(fixId, tabName);
+      }
+    }
+    return;
+  }
+  // Handle accordion header clicks
+  const header = e.target.closest('.perf-fix-header');
+  if (header) {
+    const accordion = header.closest('.perf-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      if (fixId && typeof window.togglePerfFixAccordion === 'function') {
+        window.togglePerfFixAccordion(fixId);
+      }
+    }
+  }
+});
+
 // Copy code
 function copyPerfCode(elementId) {
   const codeElement = document.getElementById(elementId);
@@ -2519,6 +2555,117 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
  * Open PDF purchase modal (shared function)
  */
 // PDF purchase modal removed - monetization disabled
+
+/**
+ * Export performance results to CSV
+ */
+function exportPerformanceCSV() {
+  const results = window.currentPerformanceResults;
+  if (!results) {
+    console.warn('No performance results available to export');
+    return;
+  }
+
+  const rows = [];
+
+  // Header
+  rows.push(['Metric', 'Value', 'Unit', 'Status']);
+
+  // URL info
+  rows.push(['URL', results.url || '', '', '']);
+  rows.push(['Scan Date', new Date().toISOString(), '', '']);
+  rows.push(['', '', '', '']);
+
+  // Performance Score
+  const score = results.score || results.performanceScore || 0;
+  rows.push(['Performance Score', score, 'points', score >= 90 ? 'Good' : score >= 50 ? 'Needs Improvement' : 'Poor']);
+  rows.push(['', '', '', '']);
+
+  // Core Web Vitals
+  rows.push(['--- Core Web Vitals ---', '', '', '']);
+
+  const vitals = results.coreWebVitals || results.vitals || {};
+  if (vitals.LCP !== undefined) {
+    const lcpMs = typeof vitals.LCP === 'number' ? vitals.LCP : 0;
+    rows.push(['Largest Contentful Paint (LCP)', lcpMs, 'ms', lcpMs <= 2500 ? 'Good' : lcpMs <= 4000 ? 'Needs Improvement' : 'Poor']);
+  }
+  if (vitals.FID !== undefined) {
+    const fidMs = typeof vitals.FID === 'number' ? vitals.FID : 0;
+    rows.push(['First Input Delay (FID)', fidMs, 'ms', fidMs <= 100 ? 'Good' : fidMs <= 300 ? 'Needs Improvement' : 'Poor']);
+  }
+  if (vitals.CLS !== undefined) {
+    const cls = typeof vitals.CLS === 'number' ? vitals.CLS : 0;
+    rows.push(['Cumulative Layout Shift (CLS)', cls.toFixed(3), '', cls <= 0.1 ? 'Good' : cls <= 0.25 ? 'Needs Improvement' : 'Poor']);
+  }
+  if (vitals.FCP !== undefined) {
+    const fcpMs = typeof vitals.FCP === 'number' ? vitals.FCP : 0;
+    rows.push(['First Contentful Paint (FCP)', fcpMs, 'ms', fcpMs <= 1800 ? 'Good' : fcpMs <= 3000 ? 'Needs Improvement' : 'Poor']);
+  }
+  if (vitals.TTFB !== undefined) {
+    const ttfbMs = typeof vitals.TTFB === 'number' ? vitals.TTFB : 0;
+    rows.push(['Time to First Byte (TTFB)', ttfbMs, 'ms', ttfbMs <= 800 ? 'Good' : ttfbMs <= 1800 ? 'Needs Improvement' : 'Poor']);
+  }
+  if (vitals.SI !== undefined) {
+    const siMs = typeof vitals.SI === 'number' ? vitals.SI : 0;
+    rows.push(['Speed Index (SI)', siMs, 'ms', siMs <= 3400 ? 'Good' : siMs <= 5800 ? 'Needs Improvement' : 'Poor']);
+  }
+  if (vitals.TBT !== undefined) {
+    const tbtMs = typeof vitals.TBT === 'number' ? vitals.TBT : 0;
+    rows.push(['Total Blocking Time (TBT)', tbtMs, 'ms', tbtMs <= 200 ? 'Good' : tbtMs <= 600 ? 'Needs Improvement' : 'Poor']);
+  }
+
+  rows.push(['', '', '', '']);
+
+  // Resource breakdown if available
+  if (results.resources) {
+    rows.push(['--- Resource Analysis ---', '', '', '']);
+    const resources = results.resources;
+    if (resources.totalSize !== undefined) rows.push(['Total Size', resources.totalSize, 'bytes', '']);
+    if (resources.totalRequests !== undefined) rows.push(['Total Requests', resources.totalRequests, '', '']);
+    if (resources.scripts !== undefined) rows.push(['Scripts', typeof resources.scripts === 'object' ? resources.scripts.count || 0 : resources.scripts, '', '']);
+    if (resources.stylesheets !== undefined) rows.push(['Stylesheets', typeof resources.stylesheets === 'object' ? resources.stylesheets.count || 0 : resources.stylesheets, '', '']);
+    if (resources.images !== undefined) rows.push(['Images', typeof resources.images === 'object' ? resources.images.count || 0 : resources.images, '', '']);
+    if (resources.fonts !== undefined) rows.push(['Fonts', typeof resources.fonts === 'object' ? resources.fonts.count || 0 : resources.fonts, '', '']);
+    rows.push(['', '', '', '']);
+  }
+
+  // Recommendations if available
+  if (results.recommendations && results.recommendations.length > 0) {
+    rows.push(['--- Recommendations ---', '', '', '']);
+    results.recommendations.forEach((rec, index) => {
+      const title = rec.title || rec.name || `Recommendation ${index + 1}`;
+      const impact = rec.impact || rec.priority || '';
+      const savings = rec.savings || rec.estimatedSavings || '';
+      rows.push([title, impact, savings, rec.category || '']);
+    });
+  }
+
+  // Convert to CSV string
+  const csvContent = rows.map(row =>
+    row.map(cell => {
+      const cellStr = String(cell);
+      // Escape quotes and wrap in quotes if contains comma, quote, or newline
+      if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+        return '"' + cellStr.replace(/"/g, '""') + '"';
+      }
+      return cellStr;
+    }).join(',')
+  ).join('\n');
+
+  // Download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const urlParam = results.url ? results.url.replace(/[^a-zA-Z0-9]/g, '_').substring(0, 30) : 'performance';
+  link.href = URL.createObjectURL(blob);
+  link.download = `performance_report_${urlParam}_${new Date().toISOString().split('T')[0]}.csv`;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(link.href);
+}
+
+window.exportPerformanceCSV = exportPerformanceCSV;
 
 
 

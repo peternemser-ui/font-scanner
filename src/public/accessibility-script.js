@@ -23,24 +23,176 @@ urlInput.addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyzeAccessibility();
 });
 
-// Auto-start scan if URL parameter is present
-if (typeof window.getUrlParameter === 'function') {
-  const autoUrl = window.getUrlParameter();
+// Handle URL parameters for report loading and billing return
+(async function initFromUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const reportId = params.get('report_id') || '';
+  const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
+  const autoScan = params.get('auto_scan') === 'true';
+  const billingSuccess = params.get('billing_success') === 'true';
+
+  // If we have a report_id, set it immediately so hasAccess checks work
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    console.log('[Accessibility] Set report ID from URL:', reportId);
+  }
+
+  // If returning from billing, wait for billing return processing to complete
+  if (billingSuccess && !window.__smBillingReturnComplete) {
+    console.log('[Accessibility] Waiting for billing return processing...');
+    await new Promise((resolve) => {
+      if (window.__smBillingReturnComplete) {
+        resolve();
+        return;
+      }
+      const handler = () => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      };
+      window.addEventListener('sm:billingReturnComplete', handler);
+      setTimeout(() => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      }, 5000);
+    });
+    console.log('[Accessibility] Billing return processing complete');
+    // Don't return - fall through to load the stored report below
+  }
+
+  // If we have a report_id, try to load the stored report first
+  if (reportId) {
+    console.log('[Accessibility] Checking for stored report:', reportId);
+
+    // CRITICAL: Fetch billing status BEFORE displaying the report
+    // Force refresh to ensure we have the latest purchase data (e.g., coming from dashboard)
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      console.log('[Accessibility] Fetching billing status (force refresh for report recall)...');
+      await window.ProReportBlock.fetchBillingStatus(true); // Force refresh
+      const hasAccessResult = window.ProReportBlock.hasAccess(reportId);
+      console.log('[Accessibility] Billing status fetched, hasAccess:', hasAccessResult, 'for reportId:', reportId);
+    }
+
+    let loaded = false;
+
+    // First, try to load from database (ReportStorage)
+    if (window.ReportStorage) {
+      loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayAccessibilityResults, {
+        expectedAnalyzerType: 'accessibility'
+      });
+    }
+
+    // If not in database, check sessionStorage for cached results (billing return fallback)
+    if (!loaded) {
+      const cachedResults = sessionStorage.getItem('sm_checkout_results');
+      const cachedAnalyzer = sessionStorage.getItem('sm_checkout_analyzer') || '';
+      if (cachedResults && cachedAnalyzer.includes('accessibility')) {
+        try {
+          console.log('[Accessibility] Loading cached results from sessionStorage');
+          const results = JSON.parse(cachedResults);
+          displayAccessibilityResults(results);
+          // Clear after successful display
+          sessionStorage.removeItem('sm_checkout_results');
+          sessionStorage.removeItem('sm_checkout_analyzer');
+          loaded = true;
+        } catch (e) {
+          console.warn('[Accessibility] Failed to parse cached results:', e);
+        }
+      }
+    }
+
+    if (loaded) {
+      // Stored report was loaded - fill URL input for context
+      if (autoUrl) urlInput.value = autoUrl;
+      return; // Don't auto-scan
+    }
+
+    // Report not in storage - check if user has paid access (purchased report)
+    const hasAccess = window.ProReportBlock?.hasAccess?.(reportId);
+    if (hasAccess && autoUrl) {
+      // User has paid access but report data isn't saved - show helpful message
+      console.log('[Accessibility] Purchased report not in storage, showing regenerate message');
+      urlInput.value = autoUrl;
+
+      // Show a message explaining the situation
+      const messageDiv = document.createElement('div');
+      messageDiv.id = 'sm-report-regenerate-message';
+      messageDiv.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+          color: white;
+          padding: 16px 20px;
+          border-radius: 8px;
+          margin-bottom: 16px;
+          display: flex;
+          align-items: center;
+          gap: 12px;
+          box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        ">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="8" x2="12" y2="12"></line>
+            <line x1="12" y1="16" x2="12.01" y2="16"></line>
+          </svg>
+          <div>
+            <strong>Report needs to be regenerated</strong><br>
+            <span style="font-size: 0.9em; opacity: 0.9;">
+              Click "Analyze" to view your purchased report. It will be saved for instant access next time.
+            </span>
+          </div>
+        </div>
+      `;
+
+      // Insert message before the form
+      const formContainer = document.querySelector('.analyzer-form') || urlInput.closest('form') || urlInput.parentElement;
+      if (formContainer) {
+        formContainer.parentElement.insertBefore(messageDiv, formContainer);
+      }
+
+      return;
+    }
+  }
+
+  // No stored report found - pre-fill URL but only auto-scan if explicitly requested
   if (autoUrl) {
     urlInput.value = autoUrl;
+  }
+  // Only auto-scan if explicitly requested with auto_scan=true
+  if (autoScan) {
     setTimeout(() => {
       analyzeAccessibility();
     }, 500);
   }
-}
+})();
+
+// Listen for restore scan results event (after payment return)
+window.addEventListener('sm:restoreScanResults', (e) => {
+  const { results, url, analyzer } = e.detail || {};
+  if (results && analyzer?.includes('accessibility')) {
+    console.log('[Accessibility] Restoring scan results after payment');
+    if (url && urlInput) {
+      urlInput.value = url;
+    }
+    window._a11yFullResults = results;
+    window.currentAccessibilityResults = {
+      ...results,
+      url: results.url || url || urlInput.value.trim()
+    };
+    displayAccessibilityResults(results);
+  }
+});
 
 /**
  * MEMORY MANAGEMENT: Clean up previous scan data to prevent memory leaks
  * Called before each new scan to free up memory from prior results
+ * @param {boolean} preserveReportId - If true, don't clear the report_id (used for billing return re-scans)
  */
-function cleanupPreviousScanData() {
+function cleanupPreviousScanData(preserveReportId = false) {
   // Clear report metadata from previous scans
-  document.body.removeAttribute('data-report-id');
+  // IMPORTANT: Don't clear report_id when re-scanning after billing return,
+  // otherwise the purchased report_id gets lost and replaced with a new one
+  if (!preserveReportId) {
+    document.body.removeAttribute('data-report-id');
+  }
   document.body.removeAttribute('data-sm-screenshot-url');
   document.body.removeAttribute('data-sm-scan-started-at');
   
@@ -55,6 +207,11 @@ function cleanupPreviousScanData() {
   }
   
   // Remove any dynamically created elements from previous scans
+  const regenerateMessage = document.getElementById('sm-report-regenerate-message');
+  if (regenerateMessage) {
+    regenerateMessage.remove();
+  }
+
   const oldPatienceMessage = document.getElementById('patience-message');
   if (oldPatienceMessage) {
     oldPatienceMessage.remove();
@@ -75,17 +232,35 @@ function cleanupPreviousScanData() {
 
 /**
  * Main analysis function
+ * @param {Object} options - Optional settings
+ * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
  */
-async function analyzeAccessibility() {
+async function analyzeAccessibility(options = {}) {
+  let { preserveReportId = false } = options;
   const url = urlInput.value.trim();
-  
+
   if (!url) {
     showError('Please enter a valid URL');
     return;
   }
 
+  // Auto-detect if we should preserve report_id: if there's an existing one and user has paid access
+  const existingReportId = document.body.getAttribute('data-report-id');
+  if (!preserveReportId && existingReportId && window.ProReportBlock?.hasAccess?.(existingReportId)) {
+    console.log('[Accessibility] Auto-preserving purchased report_id:', existingReportId);
+    preserveReportId = true;
+  }
+
+  // CRITICAL: Save the existing report_id BEFORE cleanup if we need to preserve it
+  // This is used for billing return re-scans where the purchased report_id must be kept
+  const preservedReportId = preserveReportId ? existingReportId : null;
+  if (preservedReportId) {
+    console.log('[Accessibility] Preserving purchased report_id:', preservedReportId);
+  }
+
   // MEMORY CLEANUP: Clear previous scan data before starting new scan
-  cleanupPreviousScanData();
+  // Pass preserveReportId to keep the purchased report_id during billing return re-scans
+  cleanupPreviousScanData(preserveReportId);
 
   // Update button state
   analyzeButton.disabled = true;
@@ -214,11 +389,17 @@ async function analyzeAccessibility() {
     }
 
     const data = await response.json();
-    
+
     // Set report metadata from API response
-    const reportId = data && data.reportId ? String(data.reportId) : '';
+    // CRITICAL: Use preserved report_id if this is a billing return re-scan
+    // The API returns a NEW report_id with new timestamp, but we must keep the purchased one
+    const apiReportId = data && data.reportId ? String(data.reportId) : '';
+    const reportId = preservedReportId || apiReportId;
     const screenshotUrl = data && data.screenshotUrl ? String(data.screenshotUrl) : '';
     if (reportId) {
+      if (preservedReportId) {
+        console.log('[Accessibility] Using preserved report_id instead of API response:', reportId);
+      }
       if (window.ReportUI && typeof window.ReportUI.setCurrentReportId === 'function') {
         window.ReportUI.setCurrentReportId(reportId);
       } else {
@@ -278,9 +459,55 @@ function animateProgress() {
 /**
  * Display accessibility results
  */
-function displayAccessibilityResults(results) {
-  const container = resultsContent;
+function displayAccessibilityResults(resultData) {
+  // Ensure results container is visible (may be hidden if called directly without scan flow)
+  const resultsEl = document.getElementById('results');
+  if (resultsEl) {
+    resultsEl.classList.remove('hidden');
+  }
+
+  const container = resultsContent || document.getElementById('resultsContent');
   container.innerHTML = '';
+
+  // Validate that this looks like accessibility data (not security/seo/etc.)
+  if (resultData && !resultData.accessibilityScore && !resultData.wcagLevel && !resultData.desktop?.accessibilityScore) {
+    // Check if this is actually data from a different analyzer
+    if (resultData.securityScore || resultData.owaspCompliance || resultData.score?.overall || resultData.overallScore) {
+      console.error('[Accessibility] Wrong report type loaded - data appears to be from a different analyzer:', {
+        hasSecurityScore: !!resultData.securityScore,
+        hasOwaspCompliance: !!resultData.owaspCompliance,
+        hasSeoScore: !!resultData.score?.overall,
+        hasOverallScore: !!resultData.overallScore
+      });
+      container.innerHTML = `
+        <div style="
+          background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+          color: white;
+          padding: 20px;
+          border-radius: 8px;
+          margin: 20px 0;
+          text-align: center;
+        ">
+          <h3 style="margin: 0 0 10px 0;">Report Type Mismatch</h3>
+          <p style="margin: 0;">The stored report appears to be from a different analyzer. Please run a new accessibility scan.</p>
+          <button onclick="window.location.reload()" style="
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: white;
+            color: #dc2626;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+          ">Run New Scan</button>
+        </div>
+      `;
+      return;
+    }
+  }
+
+  // Use resultData as the results variable for the rest of the function
+  const results = resultData;
 
   // Create report scope wrapper for consistent styling
   const reportScope = document.createElement('div');
@@ -319,7 +546,7 @@ function displayAccessibilityResults(results) {
               <circle cx="12" cy="12" r="10"/>
               <polyline points="12 6 12 12 16 14"/>
             </svg>
-            <span class="meta-item__text">${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+            <span class="meta-item__text">${new Date().toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short' })}</span>
           </span>
         </div>
       </div>
@@ -361,7 +588,7 @@ function displayAccessibilityResults(results) {
               font-weight: 900;
               color: #000000;
               line-height: 1;
-            ">${results.accessibilityScore}</div>
+            ">${results.accessibilityScore ?? 0}</div>
             <div style="
               font-size: 0.9rem;
               color: #666666;
@@ -546,9 +773,19 @@ function displayAccessibilityResults(results) {
     `;
   }
   reportScope.appendChild(actionsFooter);
-  
+
   // Append the complete report scope to container
   container.appendChild(reportScope);
+
+  // Auto-save report if user has access (purchased or Pro)
+  const reportId = document.body.getAttribute('data-report-id') || '';
+  if (reportId && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
+    window.ReportStorage.autoSaveIfEligible(reportId, results, {
+      siteUrl: results.url || urlInput.value.trim(),
+      analyzerType: 'accessibility',
+      scannedAt: window.SM_SCAN_STARTED_AT || new Date().toISOString()
+    });
+  }
 }
 
 /**
@@ -989,8 +1226,16 @@ function getCurrentDomain() {
 }
 
 function userHasPro() {
+  // Check new billing model first (ProReportBlock)
+  const reportId = document.body?.getAttribute('data-report-id') || '';
+  if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+    if (window.ProReportBlock.hasAccess(reportId)) return true;
+  }
   if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
     return window.ProAccess.hasProAccess(getCurrentDomain());
+  }
+  if (window.ExportGate && window.ExportGate.isPro()) {
+    return true;
   }
   return false;
 }
@@ -1672,6 +1917,42 @@ function switchA11yFixTab(accordionId, tabName) {
   }
 }
 
+window.toggleA11yFixAccordion = toggleA11yFixAccordion;
+window.switchA11yFixTab = switchA11yFixTab;
+
+// Add click event delegation for accessibility fix accordions and tabs
+document.addEventListener('click', function(e) {
+  // Handle tab clicks first
+  const tab = e.target.closest('.a11y-fix-tab');
+  if (tab) {
+    const accordion = tab.closest('.a11y-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      const tabText = tab.textContent.toLowerCase();
+      let tabName = 'summary';
+      if (tabText.includes('code')) tabName = 'code';
+      else if (tabText.includes('guide')) tabName = 'guide';
+      if (fixId && typeof window.switchA11yFixTab === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+        window.switchA11yFixTab(fixId, tabName);
+      }
+    }
+    return;
+  }
+  // Handle accordion header clicks
+  const header = e.target.closest('.a11y-fix-header');
+  if (header) {
+    const accordion = header.closest('.a11y-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      if (fixId && typeof window.toggleA11yFixAccordion === 'function') {
+        window.toggleA11yFixAccordion(fixId);
+      }
+    }
+  }
+});
+
 function copyA11yCode(elementId) {
   const el = document.getElementById(elementId);
   if (!el) return;
@@ -2192,14 +2473,27 @@ function ensureAccessibilityProAccess() {
   return false;
 }
 
-function exportAccessibilityPDF() {
+async function exportAccessibilityPDF() {
   if (!ensureAccessibilityProAccess()) return;
-  const exporter = new PDFExportUtility({
-    filename: 'accessibility-report.pdf',
-    reportTitle: 'Accessibility Analysis Report',
-    url: window.currentAccessibilityResults?.url || ''
-  });
-  exporter.export('#results');
+
+  const results = window.currentAccessibilityResults;
+  if (!results) {
+    alert('No scan results to export. Run a scan first.');
+    return;
+  }
+
+  // Use unified PDF export function (server-side Puppeteer)
+  if (typeof window.exportReportPDF === 'function') {
+    const button = document.querySelector('[data-export="pdf"]') ||
+                   document.querySelector('button[onclick*="exportAccessibilityPDF"]');
+    await window.exportReportPDF({
+      reportType: 'accessibility',
+      buttonElement: button
+    });
+  } else {
+    console.error('PDF export utility not loaded');
+    alert('PDF export is not available. Please refresh the page.');
+  }
 }
 
 function copyAccessibilityShareLink() {
@@ -2242,6 +2536,14 @@ function downloadAccessibilityCSV() {
   document.body.removeChild(link);
   URL.revokeObjectURL(link.href);
 }
+
+// Expose Pro export actions globally for inline handlers
+window.exportAccessibilityPDF = exportAccessibilityPDF;
+window.copyAccessibilityShareLink = copyAccessibilityShareLink;
+window.downloadAccessibilityCSV = downloadAccessibilityCSV;
+
+// Expose display function globally for billing return handler
+window.displayAccessibilityResults = displayAccessibilityResults;
 
 function countAccessibilityIssues(results) {
   if (!results) return 0;
@@ -2324,3 +2626,74 @@ function getWCAGLevelDescription(level) {
 }
 
 // PDF purchase modal removed - monetization disabled
+
+/**
+ * Export Accessibility results as CSV
+ */
+window.exportAccessibilityCSV = function() {
+  const results = window.currentAccessibilityResults;
+  if (!results) {
+    alert('No scan results to export. Run a scan first.');
+    return;
+  }
+
+  const rows = [];
+  // Header
+  rows.push(['Category', 'Item', 'Value', 'Status', 'Score']);
+
+  // Overall Score
+  rows.push(['Overall', 'Accessibility Score', '', results.accessibilityScore >= 90 ? 'Excellent' : results.accessibilityScore >= 70 ? 'Good' : results.accessibilityScore >= 50 ? 'Fair' : 'Poor', results.accessibilityScore || '']);
+  rows.push(['Overall', 'WCAG Level', results.wcagLevel || 'Not Compliant', '', '']);
+
+  // Violations
+  rows.push(['Violations', 'Total Violations', String(results.violationsCount || 0), results.violationsCount === 0 ? 'Good' : 'Issue', '']);
+
+  // Contrast Issues
+  const contrastIssues = results.contrastIssues ?? results.contrast?.issues?.length ?? 0;
+  rows.push(['Contrast', 'Contrast Issues', String(contrastIssues), contrastIssues === 0 ? 'Good' : 'Issue', results.contrast?.score || '']);
+
+  // Keyboard Accessibility
+  const keyboardIssues = results.keyboard?.issues?.length ?? 0;
+  rows.push(['Keyboard', 'Keyboard Issues', String(keyboardIssues), keyboardIssues === 0 ? 'Good' : 'Issue', results.keyboard?.score || '']);
+
+  // ARIA
+  const ariaIssues = results.aria?.issues?.length ?? 0;
+  rows.push(['ARIA', 'ARIA Issues', String(ariaIssues), ariaIssues === 0 ? 'Good' : 'Issue', results.aria?.score || '']);
+
+  // Recommendations
+  const recommendationsCount = results.recommendations?.length || 0;
+  rows.push(['Recommendations', 'Total Recommendations', String(recommendationsCount), '', '']);
+
+  // Passed Checks
+  const passedChecks = results.bestPracticesCount || results.passedChecks || 0;
+  rows.push(['Best Practices', 'Passed Checks', String(passedChecks), '', '']);
+
+  // URL
+  rows.push(['Info', 'Scanned URL', results.url || '', '', '']);
+
+  // Convert to CSV string
+  const csvContent = rows.map(row =>
+    row.map(cell => {
+      const cellStr = String(cell || '');
+      // Escape quotes and wrap in quotes if contains comma, quote, or newline
+      if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+        return '"' + cellStr.replace(/"/g, '""') + '"';
+      }
+      return cellStr;
+    }).join(',')
+  ).join('\n');
+
+  // Download
+  const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  const filename = `accessibility-report-${results.url ? new URL(results.url).hostname : 'site'}-${new Date().toISOString().split('T')[0]}.csv`;
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+};

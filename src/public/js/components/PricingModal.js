@@ -1,15 +1,24 @@
 /**
  * Site Mechanic - Pricing Modal Component
- * Shows subscription and single report purchase options
+ * Swiss / International Typographic Style
  *
  * Options:
  * - Pro Monthly: $20/month
  * - Pro Yearly: $180/year (Save 25%)
+ * - Day Pass: $20 for 24 hours (no auto-renewal)
  * - Single Report: $10 one-time
  */
 
 (function(window) {
   'use strict';
+
+  // DEV flag - set to true to enable debug assertions
+  const DEV_MODE = false;
+
+  // Stripe logo SVG (white version for dark backgrounds)
+  const STRIPE_LOGO_SVG = `<svg class="sm-modal__footer-stripe" viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path fill-rule="evenodd" clip-rule="evenodd" d="M60 12.8C60 8.55 57.95 5.2 54 5.2C50.05 5.2 47.6 8.55 47.6 12.75C47.6 17.7 50.5 20.35 54.65 20.35C56.7 20.35 58.25 19.85 59.45 19.1V15.85C58.25 16.55 56.85 17 55.1 17C53.4 17 51.9 16.35 51.7 14.25H59.95C59.95 14.05 60 13.15 60 12.8ZM51.65 11.35C51.65 9.35 52.85 8.45 54 8.45C55.1 8.45 56.25 9.35 56.25 11.35H51.65ZM41.2 5.2C39.45 5.2 38.35 6 37.75 6.5L37.55 5.45H33.9V24.55L38 23.7V19.95C38.6 20.35 39.5 20.9 41.15 20.9C44.55 20.9 47.6 18.3 47.6 12.85C47.55 7.85 44.45 5.2 41.2 5.2ZM40.3 17.05C39.15 17.05 38.5 16.65 38.05 16.15L38 9.55C38.5 9 39.2 8.6 40.3 8.6C42.1 8.6 43.35 10.55 43.35 12.85C43.35 15.2 42.1 17.05 40.3 17.05ZM28.05 4.3L32.2 3.45V0L28.05 0.85V4.3ZM32.2 5.45H28.05V20.6H32.2V5.45ZM23.65 6.7L23.4 5.45H19.8V20.6H23.9V10.1C24.85 8.85 26.45 9.1 26.95 9.25V5.45C26.4 5.25 24.6 4.9 23.65 6.7ZM15.4 1.8L11.4 2.65L11.35 16.35C11.35 18.65 13.1 20.4 15.4 20.4C16.65 20.4 17.55 20.2 18.05 19.9V16.55C17.55 16.75 15.35 17.4 15.35 15.1V8.8H18.05V5.45H15.35L15.4 1.8ZM4.15 9.9C4.15 9.2 4.75 8.9 5.7 8.9C7.05 8.9 8.75 9.3 10.1 10.05V6.2C8.65 5.6 7.2 5.35 5.7 5.35C2.3 5.35 0 7.2 0 10.1C0 14.7 6.35 13.95 6.35 15.95C6.35 16.8 5.6 17.1 4.6 17.1C3.1 17.1 1.2 16.5 0.2 15.55V19.5C1.55 20.1 2.95 20.4 4.6 20.4C8.1 20.4 10.55 18.6 10.55 15.65C10.5 10.65 4.15 11.55 4.15 9.9Z" fill="currentColor"/>
+  </svg>`;
 
   // State
   let currentState = {
@@ -24,11 +33,10 @@
   // ============================================
 
   function getAuthToken() {
-    // Try proManager first, then localStorage
     if (window.proManager && typeof window.proManager.getToken === 'function') {
       return window.proManager.getToken();
     }
-    return localStorage.getItem('sm_auth_token') || null;
+    return localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token') || null;
   }
 
   function isLoggedIn() {
@@ -45,13 +53,21 @@
   }
 
   function getReportUrl() {
+    // Try multiple ID patterns used across analyzers
     const input = document.getElementById('urlInput') ||
+                  document.getElementById('url') ||
+                  document.getElementById('ipReputationInput') ||
                   document.querySelector('input[type="url"], input[name="url"], input[id*="url" i]');
     const value = input && typeof input.value === 'string' ? input.value.trim() : '';
-    if (value) return value;
+    if (value) {
+      console.log('[PricingModal] getReportUrl found:', value, 'from input:', input?.id);
+      return value;
+    }
 
     const params = new URLSearchParams(window.location.search);
-    return (params.get('url') || '').trim();
+    const urlParam = (params.get('url') || '').trim();
+    console.log('[PricingModal] getReportUrl from params:', urlParam);
+    return urlParam;
   }
 
   function getAnalyzerKey() {
@@ -97,12 +113,54 @@
   }
 
   function getCurrentReportId() {
+    // Check body attribute first
     let reportId = document.body.getAttribute('data-report-id') || '';
+
+    // Check URL params if not found on body
+    if (!reportId) {
+      const params = new URLSearchParams(window.location.search);
+      reportId = params.get('report_id') || params.get('reportId') || '';
+      if (reportId) {
+        document.body.setAttribute('data-report-id', reportId);
+      }
+    }
+
+    // Compute from scan data if still not found
     if (!reportId) {
       reportId = computeReportId(getReportUrl(), getScanStartedAt(), getAnalyzerKey());
       if (reportId) document.body.setAttribute('data-report-id', reportId);
     }
     return reportId;
+  }
+
+  // ============================================
+  // Debug: Price Clipping Assertion
+  // ============================================
+
+  function debugCheckPriceClipping() {
+    if (!DEV_MODE) return;
+
+    requestAnimationFrame(() => {
+      const priceElements = document.querySelectorAll('.sm-plan-card__amount');
+      priceElements.forEach((el) => {
+        if (el.scrollWidth > el.clientWidth) {
+          console.warn('[PricingModal] Price text is clipped!', {
+            element: el,
+            text: el.textContent,
+            scrollWidth: el.scrollWidth,
+            clientWidth: el.clientWidth,
+            computedStyles: {
+              display: getComputedStyle(el).display,
+              overflow: getComputedStyle(el).overflow,
+              whiteSpace: getComputedStyle(el).whiteSpace,
+              maxWidth: getComputedStyle(el).maxWidth,
+              width: getComputedStyle(el).width,
+              flex: getComputedStyle(el).flex
+            }
+          });
+        }
+      });
+    });
   }
 
   // ============================================
@@ -120,7 +178,6 @@
       if (!resp.ok) return null;
       return await resp.json();
     } catch (e) {
-      console.warn('Failed to fetch billing status:', e);
       return null;
     }
   }
@@ -135,11 +192,38 @@
     if (interval) body.interval = interval;
     if (reportId) body.reportId = reportId;
 
+    // Include site URL and analyzer type for purchase records
+    const siteUrl = getReportUrl();
+    if (siteUrl) body.siteUrl = siteUrl;
+
+    // Determine analyzer type from page or body attribute
+    const analyzerType = document.body.getAttribute('data-sm-analyzer-key') ||
+                         document.body.getAttribute('data-analyzer-key') ||
+                         window.SM_ANALYZER_KEY ||
+                         window.location.pathname.replace(/.*\//, '').replace('.html', '').replace('-analyzer', '') ||
+                         'unknown';
+    if (analyzerType) body.analyzerType = analyzerType;
+
     const params = new URLSearchParams(window.location.search);
     params.delete('billing_success');
     params.delete('billing_canceled');
-    if (reportId) params.set('report_id', reportId);
+    if (reportId) {
+      params.set('report_id', reportId);
+    } else {
+      console.warn('[PricingModal] createCheckout: No reportId provided!', {
+        dataReportId: document.body.getAttribute('data-report-id'),
+        computedId: computeReportId(getReportUrl(), getScanStartedAt(), getAnalyzerKey()),
+        url: getReportUrl(),
+        scanStarted: getScanStartedAt(),
+        analyzerKey: getAnalyzerKey()
+      });
+    }
+    // Include the scanned URL in return URL so it's available after billing
+    if (siteUrl && !params.has('url')) {
+      params.set('url', siteUrl);
+    }
     body.returnUrl = `${window.location.origin}${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+    console.log('[PricingModal] createCheckout returnUrl:', body.returnUrl);
 
     const resp = await fetch('/api/billing/checkout', {
       method: 'POST',
@@ -152,7 +236,8 @@
 
     const data = await resp.json();
     if (!resp.ok) {
-      throw new Error(data.error || 'Checkout failed');
+      console.error('[PricingModal] Checkout error response:', data);
+      throw new Error(data.message || data.error || 'Checkout failed');
     }
 
     return data.checkoutUrl;
@@ -184,122 +269,168 @@
   // Render Functions
   // ============================================
 
-  function renderModalTitle() {
+  function renderHeader() {
     return `
-      <span class="sm-modal-title">
-        <img class="sm-modal-title__logo app-logo-dark" src="/assets/logo-dark.svg" alt="Site Mechanic" />
-        <img class="sm-modal-title__logo app-logo-light" src="/assets/logo-light.svg" alt="Site Mechanic" />
-        <span class="sm-modal-title__text">Unlock Pro Features</span>
-      </span>
+      <div class="sm-modal__header">
+        <img class="sm-modal__logo app-logo-dark" src="/assets/logo-dark.svg" alt="Site Mechanic" />
+        <img class="sm-modal__logo app-logo-light" src="/assets/logo-light.svg" alt="Site Mechanic" />
+        <span class="sm-modal__title-text">Unlock Pro Features</span>
+        <button type="button" class="sm-modal__close" data-action="close" aria-label="Close">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
     `;
   }
 
   function renderLoginPrompt() {
     return `
-      <div class="pricing-login-prompt">
-        <p>Please log in to purchase a subscription or report.</p>
-        <div class="pricing-login-prompt__actions">
-          <a href="/auth.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}" class="btn btn--primary">Log In</a>
-          <a href="/auth.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}&mode=signup" class="btn btn--outline">Sign Up</a>
+      <div class="sm-pricing-login">
+        <p class="sm-pricing-login__text">Sign in to purchase a subscription or single report.</p>
+        <div class="sm-pricing-login__actions">
+          <a href="/auth.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}" class="sm-btn sm-btn--primary">Sign In</a>
+          <a href="/auth.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}&mode=signup" class="sm-btn sm-btn--outline">Create Account</a>
         </div>
       </div>
     `;
   }
 
-  function renderProBadge() {
+  function renderError(message) {
+    if (!message) return '';
     return `
-      <span class="pricing-card__badge pricing-card__badge--pro">Current Plan</span>
+      <div class="sm-pricing-error">
+        <span class="sm-pricing-error__icon">!</span>
+        <span class="sm-pricing-error__msg">${message}</span>
+        <button class="sm-pricing-error__retry" data-action="retry">Retry</button>
+      </div>
     `;
   }
 
-  function renderSaveBadge() {
-    return `
-      <span class="pricing-card__badge pricing-card__badge--save">Save 25%</span>
-    `;
-  }
-
-  function renderPurchasedBadge() {
-    return `
-      <span class="pricing-card__badge pricing-card__badge--purchased">Purchased</span>
-    `;
-  }
-
-  function renderPricingCard(type, options = {}) {
+  function renderPlanCard(type, options = {}) {
     const { isPro, isYearly, reportPurchased, loading, reportId } = options;
 
+    // Monthly Plan
     if (type === 'monthly') {
       const isCurrentPlan = isPro && !isYearly;
+      const cardClass = isCurrentPlan ? 'sm-plan-card sm-plan-card--current' : 'sm-plan-card';
+
+      let buttonHtml;
+      if (isCurrentPlan) {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--current" data-action="portal">Manage Plan</button>`;
+      } else if (isPro) {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--switch" data-action="checkout" data-type="subscription" data-interval="month" ${loading ? 'disabled' : ''}>Switch to Monthly</button>`;
+      } else {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--primary" data-action="checkout" data-type="subscription" data-interval="month" ${loading ? 'disabled' : ''}>${loading ? 'Processing...' : 'Subscribe'}</button>`;
+      }
+
       return `
-        <div class="pricing-card ${isCurrentPlan ? 'pricing-card--current' : ''}">
-          ${isCurrentPlan ? renderProBadge() : ''}
-          <h4 class="pricing-card__name">Pro Monthly</h4>
-          <div class="pricing-card__price">
-            <span class="pricing-card__amount">$20</span>
-            <span class="pricing-card__period">/month</span>
+        <div class="${cardClass}">
+          <div class="sm-plan-card__header">
+            <h3 class="sm-plan-card__title">Pro Monthly</h3>
+            ${isCurrentPlan ? '<span class="sm-plan-card__badge sm-plan-card__badge--current">Current</span>' : ''}
           </div>
-          <ul class="pricing-card__features">
-            <li>Unlimited scans</li>
-            <li>PDF exports</li>
-            <li>All pro features</li>
-          </ul>
-          ${isCurrentPlan
-            ? `<button class="pricing-card__button pricing-card__button--manage" data-action="portal">Manage Billing</button>`
-            : isPro
-              ? `<button class="pricing-card__button pricing-card__button--switch" data-action="checkout" data-type="subscription" data-interval="month" ${loading ? 'disabled' : ''}>Switch to Monthly</button>`
-              : `<button class="pricing-card__button" data-action="checkout" data-type="subscription" data-interval="month" ${loading ? 'disabled' : ''}>${loading ? 'Loading...' : 'Start Monthly'}</button>`
-          }
+          <div class="sm-plan-card__price">
+            <span class="sm-plan-card__amount">$20</span>
+            <span class="sm-plan-card__period">per month</span>
+          </div>
+          <p class="sm-plan-card__desc">Billed monthly, cancel anytime</p>
+          ${buttonHtml}
         </div>
       `;
     }
 
+    // Yearly Plan
     if (type === 'yearly') {
       const isCurrentPlan = isPro && isYearly;
+      const cardClass = isCurrentPlan ? 'sm-plan-card sm-plan-card--current sm-plan-card--featured' : 'sm-plan-card sm-plan-card--featured';
+
+      let buttonHtml;
+      if (isCurrentPlan) {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--current" data-action="portal">Manage Plan</button>`;
+      } else if (isPro) {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--switch" data-action="checkout" data-type="subscription" data-interval="year" ${loading ? 'disabled' : ''}>Switch to Yearly</button>`;
+      } else {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--featured" data-action="checkout" data-type="subscription" data-interval="year" ${loading ? 'disabled' : ''}>${loading ? 'Processing...' : 'Subscribe'}</button>`;
+      }
+
       return `
-        <div class="pricing-card pricing-card--featured ${isCurrentPlan ? 'pricing-card--current' : ''}">
-          ${isCurrentPlan ? renderProBadge() : renderSaveBadge()}
-          <h4 class="pricing-card__name">Pro Yearly</h4>
-          <div class="pricing-card__price">
-            <span class="pricing-card__amount">$180</span>
-            <span class="pricing-card__period">/year</span>
+        <div class="${cardClass}">
+          <div class="sm-plan-card__header">
+            <h3 class="sm-plan-card__title">Pro Yearly</h3>
+            ${isCurrentPlan ? '<span class="sm-plan-card__badge sm-plan-card__badge--current">Current</span>' : '<span class="sm-plan-card__badge sm-plan-card__badge--save">Save 25%</span>'}
           </div>
-          <p class="pricing-card__effective">$15/month effective</p>
-          <ul class="pricing-card__features">
-            <li>Unlimited scans</li>
-            <li>PDF exports</li>
-            <li>All pro features</li>
-            <li>25% savings</li>
-          </ul>
-          ${isCurrentPlan
-            ? `<button class="pricing-card__button pricing-card__button--manage" data-action="portal">Manage Billing</button>`
-            : isPro
-              ? `<button class="pricing-card__button pricing-card__button--switch" data-action="checkout" data-type="subscription" data-interval="year" ${loading ? 'disabled' : ''}>Switch to Yearly</button>`
-              : `<button class="pricing-card__button pricing-card__button--featured" data-action="checkout" data-type="subscription" data-interval="year" ${loading ? 'disabled' : ''}>${loading ? 'Loading...' : 'Start Yearly'}</button>`
-          }
+          <div class="sm-plan-card__price">
+            <span class="sm-plan-card__amount">$180</span>
+            <span class="sm-plan-card__period">per year</span>
+          </div>
+          <p class="sm-plan-card__desc">$15/mo effective rate</p>
+          ${buttonHtml}
         </div>
       `;
     }
 
+    // Day Pass
+    if (type === 'daypass') {
+      const isDay = options.isDay;
+      const isCurrentPlan = isPro && isDay;
+      const cardClass = isCurrentPlan ? 'sm-plan-card sm-plan-card--current' : 'sm-plan-card';
+
+      let buttonHtml;
+      if (isCurrentPlan) {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--current" data-action="portal">Manage Pass</button>`;
+      } else if (isPro) {
+        // User already has monthly/yearly, don't offer downgrade to day pass
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--disabled" disabled>You have Pro</button>`;
+      } else {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--primary" data-action="checkout" data-type="subscription" data-interval="day" ${loading ? 'disabled' : ''}>${loading ? 'Processing...' : 'Get Day Pass'}</button>`;
+      }
+
+      return `
+        <div class="${cardClass}">
+          <div class="sm-plan-card__header">
+            <h3 class="sm-plan-card__title">Day Pass</h3>
+            ${isCurrentPlan ? '<span class="sm-plan-card__badge sm-plan-card__badge--current">Active</span>' : ''}
+          </div>
+          <div class="sm-plan-card__price">
+            <span class="sm-plan-card__amount">$20</span>
+            <span class="sm-plan-card__period">24 hours</span>
+          </div>
+          <p class="sm-plan-card__desc">Full Pro access for one day</p>
+          ${buttonHtml}
+        </div>
+      `;
+    }
+
+    // Single Report
     if (type === 'single') {
       const purchased = reportPurchased;
+      const cardClass = purchased ? 'sm-plan-card sm-plan-card--purchased' : 'sm-plan-card';
+
+      let buttonHtml;
+      if (isPro) {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--disabled" disabled>Included with Pro</button>`;
+      } else if (purchased) {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--purchased" disabled>Purchased</button>`;
+      } else if (!reportId) {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--disabled" disabled>Run scan first</button>`;
+      } else {
+        buttonHtml = `<button class="sm-plan-card__btn sm-plan-card__btn--primary" data-action="checkout" data-type="single_report" data-report-id="${reportId}" ${loading ? 'disabled' : ''}>${loading ? 'Processing...' : 'Buy Report'}</button>`;
+      }
+
       return `
-        <div class="pricing-card ${purchased ? 'pricing-card--purchased' : ''}">
-          ${purchased ? renderPurchasedBadge() : ''}
-          <h4 class="pricing-card__name">Single Report</h4>
-          <div class="pricing-card__price">
-            <span class="pricing-card__amount">$10</span>
-            <span class="pricing-card__period">one-time</span>
+        <div class="${cardClass}">
+          <div class="sm-plan-card__header">
+            <h3 class="sm-plan-card__title">This Report</h3>
+            ${purchased ? '<span class="sm-plan-card__badge sm-plan-card__badge--purchased">Owned</span>' : ''}
           </div>
-          <ul class="pricing-card__features">
-            <li>This scan only</li>
-            <li>PDF export</li>
-            <li>All pro features</li>
-          </ul>
-          ${isPro
-            ? `<button class="pricing-card__button" disabled>Included in Pro</button>`
-            : purchased
-              ? `<button class="pricing-card__button pricing-card__button--unlocked" disabled>Report Unlocked</button>`
-              : `<button class="pricing-card__button" data-action="checkout" data-type="single_report" data-report-id="${reportId || ''}" ${loading || !reportId ? 'disabled' : ''}>${!reportId ? 'Run scan first' : loading ? 'Loading...' : 'Buy This Report'}</button>`
-          }
+          <div class="sm-plan-card__price">
+            <span class="sm-plan-card__amount">$10</span>
+            <span class="sm-plan-card__period">one-time</span>
+          </div>
+          <p class="sm-plan-card__desc">Permanent access to this report</p>
+          ${buttonHtml}
         </div>
       `;
     }
@@ -307,45 +438,89 @@
     return '';
   }
 
-  function renderError(message) {
-    if (!message) return '';
-    return `
-      <div class="pricing-error">
-        <span class="pricing-error__icon">!</span>
-        <span class="pricing-error__message">${message}</span>
-        <button class="pricing-error__retry" data-action="retry">Retry</button>
-      </div>
-    `;
-  }
-
-  function renderModalContent() {
+  function renderBody() {
     const { loading, error, billingStatus } = currentState;
     const reportId = getCurrentReportId();
     currentState.reportId = reportId;
 
-    // Not logged in
+    console.log('[PricingModal] renderBody reportId:', reportId, {
+      fromBody: document.body.getAttribute('data-report-id'),
+      scanStarted: getScanStartedAt(),
+      analyzerKey: getAnalyzerKey(),
+      url: getReportUrl()
+    });
+
     if (!isLoggedIn()) {
       return renderLoginPrompt();
     }
 
     const isPro = billingStatus?.plan === 'pro';
     const isYearly = billingStatus?.subscriptionInterval === 'year';
+    const isDay = billingStatus?.subscriptionInterval === 'day';
     const purchasedReports = billingStatus?.purchasedReports || [];
     const reportPurchased = reportId && purchasedReports.includes(reportId);
 
+    console.log('[PricingModal] renderBody billing check:', {
+      reportId,
+      isPro,
+      purchasedReports,
+      reportPurchased,
+      billingStatus
+    });
+
+    // Show single report card if there's a reportId (scan has been run)
+    // The card will show appropriate button state (Buy/Purchased/Included with Pro)
+    const showSingleReport = !!reportId;
+
+    // Grid: Monthly, Yearly, Day Pass (+ Single Report if applicable)
+    // 3 subscription options + optional single report = 3 or 4 cards
+    const cardCount = showSingleReport ? 4 : 3;
+    const gridClass = `sm-pricing-grid sm-pricing-grid--${cardCount}`;
+
     return `
       ${error ? renderError(error) : ''}
-      <div class="pricing-cards">
-        ${renderPricingCard('monthly', { isPro, isYearly, loading })}
-        ${renderPricingCard('yearly', { isPro, isYearly, loading })}
-        ${renderPricingCard('single', { isPro, reportPurchased, loading, reportId })}
+      <div class="${gridClass}">
+        ${renderPlanCard('monthly', { isPro, isYearly, isDay, loading })}
+        ${renderPlanCard('yearly', { isPro, isYearly, isDay, loading })}
+        ${renderPlanCard('daypass', { isPro, isYearly, isDay, loading })}
+        ${showSingleReport ? renderPlanCard('single', { isPro, reportPurchased, loading, reportId }) : ''}
       </div>
-      <p class="pricing-footer">
-        ${isPro
-          ? `You're on the Pro plan. <button class="pricing-footer__link" data-action="portal">Manage your subscription</button>`
-          : 'All plans include a 7-day money-back guarantee.'
-        }
-      </p>
+    `;
+  }
+
+  function renderFooter() {
+    const isPro = currentState.billingStatus?.plan === 'pro';
+
+    if (isPro) {
+      return `
+        <div class="sm-modal__footer">
+          <span>Powered by</span>
+          ${STRIPE_LOGO_SVG}
+          <span>|</span>
+          <button class="sm-modal__footer-link" data-action="portal">Manage subscription</button>
+        </div>
+      `;
+    }
+
+    return `
+      <div class="sm-modal__footer">
+        <span>Powered by</span>
+        ${STRIPE_LOGO_SVG}
+      </div>
+    `;
+  }
+
+  function renderModal() {
+    return `
+      <div class="sm-modal__overlay" data-pricing-modal role="dialog" aria-modal="true" aria-label="Pricing options">
+        <div class="sm-modal__panel">
+          ${renderHeader()}
+          <div class="sm-modal__body">
+            ${renderBody()}
+          </div>
+          ${renderFooter()}
+        </div>
+      </div>
     `;
   }
 
@@ -353,16 +528,28 @@
   // Modal Management
   // ============================================
 
-  function updateModalContent() {
-    const modalBody = document.querySelector('.modal-overlay[data-modal-id="pricing-modal"] .modal__body') ||
-                      document.querySelector('#pricing-modal .modal__body');
-    if (modalBody) {
-      modalBody.innerHTML = renderModalContent();
-      setupEventListeners(modalBody);
+  function updateBody() {
+    const body = document.querySelector('[data-pricing-modal] .sm-modal__body');
+    if (body) {
+      body.innerHTML = renderBody();
+      setupEventListeners(document.querySelector('[data-pricing-modal]'));
     }
+
+    const footer = document.querySelector('[data-pricing-modal] .sm-modal__footer');
+    if (footer) {
+      footer.outerHTML = renderFooter();
+      setupEventListeners(document.querySelector('[data-pricing-modal]'));
+    }
+
+    // Debug: Check for price clipping after render
+    debugCheckPriceClipping();
   }
 
   async function open(options = {}) {
+    // Remove existing modal if present
+    const existing = document.querySelector('[data-pricing-modal]');
+    if (existing) existing.remove();
+
     const reportId = options.reportId || getCurrentReportId();
     currentState = {
       loading: false,
@@ -371,63 +558,29 @@
       reportId
     };
 
-    // Pre-fetch billing status if logged in
+    // Pre-fetch billing status
     if (isLoggedIn()) {
       currentState.billingStatus = await fetchBillingStatus();
     }
 
-    // Prefer the shared Modal component
-    if (window.Modal && typeof window.Modal.open === 'function') {
-      window.Modal.open('pricing-modal', {
-        title: renderModalTitle(),
-        size: 'large',
-        className: 'modal--pricing',
-        dismissible: true,
-        showCloseButton: true,
-        content: renderModalContent(),
-        onOpen: () => {
-          const overlay = document.querySelector('.modal-overlay[data-modal-id="pricing-modal"]');
-          const modal = overlay ? overlay.querySelector('.modal') : null;
-          if (modal) setupEventListeners(modal);
-        }
-      });
-      return;
-    }
+    // Insert modal
+    document.body.insertAdjacentHTML('beforeend', renderModal());
 
-    // Legacy fallback
-    let modal = document.getElementById('pricing-modal');
-    if (modal) modal.remove();
+    // Lock body scroll
+    document.body.classList.add('sm-modal-open');
+    document.documentElement.classList.add('sm-modal-open');
 
-    const modalHTML = `
-      <div class="modal-overlay" id="pricing-modal" role="dialog" aria-modal="true" aria-labelledby="pricing-modal-title">
-        <div class="modal modal--large modal--pricing">
-          <div class="modal__header">
-            <h3 class="modal__title" id="pricing-modal-title">${renderModalTitle()}</h3>
-            <button type="button" class="modal__close" data-modal-close="pricing-modal" aria-label="Close modal">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-          <div class="modal__body">
-            ${renderModalContent()}
-          </div>
-        </div>
-      </div>
-    `;
-
-    document.body.insertAdjacentHTML('beforeend', modalHTML);
-    modal = document.getElementById('pricing-modal');
-
+    // Animate in
     requestAnimationFrame(() => {
-      modal.classList.add('modal-overlay--open');
-      const content = modal.querySelector('.modal');
-      if (content) content.classList.add('modal--open');
-    });
+      const overlay = document.querySelector('[data-pricing-modal]');
+      if (overlay) {
+        overlay.classList.add('sm-modal__overlay--open');
+        setupEventListeners(overlay);
 
-    document.body.style.overflow = 'hidden';
-    setupEventListeners(modal);
+        // Debug: Check for price clipping after render
+        debugCheckPriceClipping();
+      }
+    });
   }
 
   function openSingleReport(options = {}) {
@@ -435,20 +588,14 @@
   }
 
   function close() {
-    if (window.Modal && typeof window.Modal.close === 'function') {
-      window.Modal.close('pricing-modal');
-      return;
-    }
+    const overlay = document.querySelector('[data-pricing-modal]');
+    if (!overlay) return;
 
-    const modal = document.getElementById('pricing-modal');
-    if (!modal) return;
+    overlay.classList.remove('sm-modal__overlay--open');
+    document.body.classList.remove('sm-modal-open');
+    document.documentElement.classList.remove('sm-modal-open');
 
-    modal.classList.remove('modal-overlay--open');
-    const content = modal.querySelector('.modal');
-    if (content) content.classList.remove('modal--open');
-
-    document.body.style.overflow = '';
-    setTimeout(() => modal.remove(), 300);
+    setTimeout(() => overlay.remove(), 200);
   }
 
   // ============================================
@@ -456,45 +603,41 @@
   // ============================================
 
   function setupEventListeners(container) {
-    // Close button
-    const closeBtn = container.querySelector('[data-modal-close]');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', close);
-    }
+    if (!container) return;
 
-    // Overlay click
-    if (container.classList && container.classList.contains('modal-overlay')) {
-      container.addEventListener('click', (e) => {
-        if (e.target === container) close();
-      });
-    }
+    // Close button
+    container.querySelectorAll('[data-action="close"]').forEach(btn => {
+      btn.onclick = close;
+    });
+
+    // Overlay click to close
+    container.onclick = (e) => {
+      if (e.target === container) close();
+    };
 
     // Checkout buttons
     container.querySelectorAll('[data-action="checkout"]').forEach(btn => {
-      btn.addEventListener('click', handleCheckout);
+      btn.onclick = handleCheckout;
     });
 
     // Portal buttons
     container.querySelectorAll('[data-action="portal"]').forEach(btn => {
-      btn.addEventListener('click', handlePortal);
+      btn.onclick = handlePortal;
     });
 
     // Retry button
-    const retryBtn = container.querySelector('[data-action="retry"]');
-    if (retryBtn) {
-      retryBtn.addEventListener('click', handleRetry);
-    }
+    container.querySelectorAll('[data-action="retry"]').forEach(btn => {
+      btn.onclick = handleRetry;
+    });
 
     // ESC key
-    if (!window.Modal) {
-      const escHandler = (e) => {
-        if (e.key === 'Escape') {
-          close();
-          document.removeEventListener('keydown', escHandler);
-        }
-      };
-      document.addEventListener('keydown', escHandler);
-    }
+    const escHandler = (e) => {
+      if (e.key === 'Escape') {
+        close();
+        document.removeEventListener('keydown', escHandler);
+      }
+    };
+    document.addEventListener('keydown', escHandler);
   }
 
   async function handleCheckout(e) {
@@ -503,7 +646,15 @@
 
     const purchaseType = btn.dataset.type;
     const interval = btn.dataset.interval || null;
-    const reportId = btn.dataset.reportId || currentState.reportId || null;
+    // Get reportId from multiple sources - button dataset, state, or compute fresh
+    let reportId = btn.dataset.reportId || currentState.reportId || getCurrentReportId() || null;
+
+    console.log('[PricingModal] handleCheckout reportId sources:', {
+      fromButton: btn.dataset.reportId,
+      fromState: currentState.reportId,
+      fromGetCurrent: getCurrentReportId(),
+      final: reportId
+    });
 
     if (purchaseType === 'single_report' && !reportId) {
       showToast('Run a scan first to purchase a report');
@@ -512,15 +663,131 @@
 
     currentState.loading = true;
     currentState.error = null;
-    updateModalContent();
+    updateBody();
 
     try {
+      // Cache the current URL being analyzed before redirecting to checkout
+      const urlToAnalyze = getReportUrl();
+      if (urlToAnalyze) {
+        sessionStorage.setItem('sm_checkout_url', urlToAnalyze);
+      }
+      if (reportId) {
+        sessionStorage.setItem('sm_checkout_report_id', reportId);
+      }
+
+      // Get analyzer type to determine which results to save
+      const analyzerType = document.body.getAttribute('data-sm-analyzer-key') ||
+                          window.SM_ANALYZER_KEY ||
+                          window.location.pathname.replace(/.*\//, '').replace('.html', '').replace('-analyzer', '') ||
+                          'unknown';
+
+      // Get scan results based on analyzer type (more reliable than || chain)
+      let resultsToSave = null;
+      if (analyzerType.includes('seo')) {
+        resultsToSave = window.currentSeoResults;
+      } else if (analyzerType.includes('security')) {
+        resultsToSave = window.currentSecurityResults;
+      } else if (analyzerType.includes('performance') || analyzerType.includes('speed') || analyzerType.includes('cwv')) {
+        resultsToSave = window.currentPerformanceResults || window.currentCWVResults;
+      } else if (analyzerType.includes('accessibility')) {
+        resultsToSave = window.currentAccessibilityResults;
+      } else if (analyzerType.includes('mobile')) {
+        resultsToSave = window.currentMobileResults || window.mobileData;
+      } else if (analyzerType.includes('cro')) {
+        resultsToSave = window.currentCROResults;
+      } else if (analyzerType.includes('gdpr') || analyzerType.includes('privacy')) {
+        resultsToSave = window.__gdprCurrentData || window.currentGDPRResults;
+      } else if (analyzerType.includes('ip-reputation') || analyzerType.includes('reputation')) {
+        resultsToSave = window.currentResults || window.currentIPReputationResults;
+      } else if (analyzerType.includes('tag')) {
+        resultsToSave = window.currentTagResults || window.tagIntelligenceData;
+      } else if (analyzerType.includes('hosting')) {
+        resultsToSave = window.currentHostingResults;
+      } else if (analyzerType.includes('brand')) {
+        resultsToSave = window.currentBrandResults;
+      } else if (analyzerType.includes('fonts') || analyzerType.includes('typography')) {
+        resultsToSave = window.currentFontsResults;
+      } else if (analyzerType.includes('crawler') || analyzerType.includes('site-crawler')) {
+        resultsToSave = window.currentCrawlerResults;
+      } else if (analyzerType.includes('local-seo') || analyzerType.includes('local_seo')) {
+        resultsToSave = window.currentLocalSEOResults;
+      } else if (analyzerType.includes('broken-links') || analyzerType.includes('broken_links')) {
+        resultsToSave = window.currentBrokenLinksResults;
+      } else if (analyzerType.includes('competitive')) {
+        resultsToSave = window.currentCompetitiveResults || window.competitiveData;
+      }
+      // Fallback to checking all globals if analyzer type not matched
+      if (!resultsToSave) {
+        resultsToSave = window.currentSeoResults ||
+                        window.currentSecurityResults ||
+                        window.currentPerformanceResults ||
+                        window.currentAccessibilityResults ||
+                        window.currentMobileResults ||
+                        window.currentCROResults ||
+                        window.currentCWVResults ||
+                        window.currentCrawlerResults ||
+                        window.currentLocalSEOResults ||
+                        window.currentBrokenLinksResults ||
+                        window.currentCompetitiveResults ||
+                        window.competitiveData ||
+                        window.__gdprCurrentData ||
+                        window.currentResults ||
+                        window.mobileData ||
+                        window.lastScanResults ||
+                        null;
+      }
+
+      console.log('[PricingModal] Analyzer type:', analyzerType, 'Results to save:', !!resultsToSave);
+
+      // CRITICAL: Save results to DATABASE before checkout (not just sessionStorage)
+      // This ensures purchased reports can be recalled even if results are too large for sessionStorage
+      if (resultsToSave && reportId && window.ReportStorage?.saveBeforeCheckout) {
+        const scanStartedAt = document.body.getAttribute('data-sm-scan-started-at') ||
+                             window.SM_SCAN_STARTED_AT ||
+                             new Date().toISOString();
+
+        console.log('[PricingModal] Saving report to database before checkout:', {
+          reportId,
+          analyzerType,
+          hasResults: !!resultsToSave,
+          resultKeys: Object.keys(resultsToSave || {}).slice(0, 10)
+        });
+
+        try {
+          const saved = await window.ReportStorage.saveBeforeCheckout(reportId, resultsToSave, {
+            siteUrl: urlToAnalyze,
+            analyzerType,
+            scannedAt: scanStartedAt
+          });
+          console.log('[PricingModal] Save result:', saved ? 'SUCCESS' : 'FAILED');
+        } catch (saveErr) {
+          console.error('[PricingModal] Error saving report:', saveErr);
+        }
+      } else {
+        console.warn('[PricingModal] Cannot save report - missing:', {
+          hasResults: !!resultsToSave,
+          hasReportId: !!reportId,
+          hasReportStorage: !!window.ReportStorage?.saveBeforeCheckout
+        });
+      }
+
+      // Also try to cache in sessionStorage as a fallback (may fail for large results)
+      if (resultsToSave) {
+        try {
+          sessionStorage.setItem('sm_checkout_results', JSON.stringify(resultsToSave));
+          sessionStorage.setItem('sm_checkout_analyzer', window.location.pathname);
+        } catch (e) {
+          // Results too large for sessionStorage, but we already saved to database
+          console.warn('Could not cache scan results in sessionStorage (already saved to database):', e);
+        }
+      }
+
       const checkoutUrl = await createCheckout(purchaseType, interval, reportId);
       window.location.href = checkoutUrl;
     } catch (err) {
       currentState.loading = false;
       currentState.error = err.message || 'Checkout failed. Please try again.';
-      updateModalContent();
+      updateBody();
     }
   }
 
@@ -535,7 +802,7 @@
     if (isLoggedIn()) {
       currentState.billingStatus = await fetchBillingStatus();
     }
-    updateModalContent();
+    updateBody();
   }
 
   // ============================================
@@ -556,7 +823,7 @@
     open,
     openSingleReport,
     close,
-    CREDIT_PACK_OPTIONS, // Legacy compat
+    CREDIT_PACK_OPTIONS,
     fetchBillingStatus,
     openBillingPortal
   };

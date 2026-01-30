@@ -941,45 +941,47 @@ body.white-theme .app-logo-light {
 .mobile-nav-overlay {
   display: none;
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  height: 100dvh;
   background: rgba(0, 0, 0, 0.7);
-  z-index: 6000;
+  z-index: 2147483646 !important;
   opacity: 0;
-  pointer-events: none; /* Don't block clicks when invisible */
+  pointer-events: none;
   transition: opacity 0.3s ease;
+  isolation: isolate;
 }
 
 .mobile-nav-overlay.active {
   opacity: 1;
-  pointer-events: auto; /* Allow clicks when visible */
+  pointer-events: auto;
 }
 
 /* Mobile Navigation Drawer */
 .mobile-nav {
-  display: flex; /* Always flex, don't toggle display */
+  display: flex;
   position: fixed;
   top: 0;
-  left: -100%; /* Hidden off-screen */
+  left: -100%;
   width: 280px;
   max-width: 85vw;
-  height: 100vh; /* Explicit height */
-  height: 100dvh; /* Dynamic viewport height for mobile browsers */
-  background: var(--bg-primary);
-  border-right: 1px solid var(--border-primary);
-  z-index: 6001;
-  overflow: hidden; /* Parent hides overflow, child scrolls */
+  height: 100vh;
+  height: 100dvh;
+  background: var(--bg-primary, #0a0a0a);
+  border-right: 1px solid var(--border-primary, #1a1a1a);
+  z-index: 2147483647 !important;
+  overflow: hidden;
   transition: left 0.3s ease;
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
   flex-direction: column;
-  visibility: hidden; /* Hide when off-screen to prevent interactions */
+  visibility: hidden;
+  isolation: isolate;
 }
 
 .mobile-nav.active {
-  left: 0; /* Slide in */
-  visibility: visible; /* Make visible */
+  left: 0;
+  visibility: visible;
 }
 
 .mobile-nav-header {
@@ -1021,9 +1023,11 @@ body.white-theme .app-logo-light {
   position: relative;
   padding: 0.5rem 0;
   flex: 1;
-  overflow-y: scroll !important; /* Force scrolling */
+  overflow-y: auto !important;
   overflow-x: hidden;
   -webkit-overflow-scrolling: touch;
+  background: inherit;
+  z-index: inherit;
 }
 
 .mobile-nav-items .nav-link {

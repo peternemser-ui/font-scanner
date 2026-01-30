@@ -1,435 +1,770 @@
 /**
  * Site Mechanic - Pricing Modal Styles
- * Subscription and single report purchase UI
+ * Swiss / International Typographic Style
  *
- * Layout: 3 cards (Pro Monthly, Pro Yearly, Single Report)
+ * Design principles:
+ * - Tight hierarchy with disciplined type scale
+ * - Left-aligned content blocks
+ * - Subtle hairline rules, clean spacing (8/12/16/24/32)
+ * - Negative tracking on large type, positive on micro labels
+ * - Grid-system cards with consistent internal rhythm
  */
 
 /* ============================================
-   Pricing Cards Grid
+   Typography Tokens (Modal-scoped)
    ============================================ */
 
-.pricing-cards {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin-bottom: 1.5rem;
+.sm-modal__overlay {
+  /* Font stack */
+  --sm-font: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* Type scale */
+  --sm-text-11: 11px;
+  --sm-text-12: 12px;
+  --sm-text-13: 13px;
+  --sm-text-14: 14px;
+  --sm-text-15: 15px;
+  --sm-text-17: 17px;
+  --sm-text-18: 18px;
+  --sm-text-28: 28px;
+  --sm-text-32: 32px;
+
+  /* Line heights */
+  --sm-leading-tight: 1.15;
+  --sm-leading-snug: 1.25;
+  --sm-leading-normal: 1.35;
+
+  /* Tracking */
+  --sm-tracking-tight: -0.02em;
+  --sm-tracking-tighter: -0.03em;
+  --sm-tracking-wide: 0.08em;
+
+  /* Spacing scale */
+  --sm-space-4: 4px;
+  --sm-space-6: 6px;
+  --sm-space-8: 8px;
+  --sm-space-12: 12px;
+  --sm-space-16: 16px;
+  --sm-space-20: 20px;
+  --sm-space-24: 24px;
+  --sm-space-32: 32px;
+
+  /* Colors */
+  --sm-border-light: rgba(255, 255, 255, 0.08);
+  --sm-border-medium: rgba(255, 255, 255, 0.12);
+  --sm-text-primary: #fff;
+  --sm-text-secondary: #a1a1aa;
+  --sm-text-tertiary: #71717a;
+  --sm-bg-panel: #18181b;
+  --sm-bg-card: #1f1f23;
+  --sm-bg-card-hover: #27272a;
+  --sm-accent: #5bf4e7;
+  --sm-accent-hover: #4de3d6;
+  --sm-success: #22c55e;
+  --sm-success-dark: #16a34a;
+
+  /* Card */
+  --sm-card-radius: 12px;
+  --sm-card-padding: 16px;
+  --sm-btn-radius: 10px;
+  --sm-btn-height: 42px;
 }
 
-@media (max-width: 900px) {
-  .pricing-cards {
+/* ============================================
+   Body Lock
+   ============================================ */
+
+html.sm-modal-open,
+body.sm-modal-open {
+  overflow: hidden !important;
+  height: 100%;
+}
+
+/* ============================================
+   Global Box-Sizing
+   ============================================ */
+
+.sm-modal__overlay,
+.sm-modal__overlay *,
+.sm-modal__overlay *::before,
+.sm-modal__overlay *::after {
+  box-sizing: border-box;
+}
+
+/* ============================================
+   Overlay
+   ============================================ */
+
+.sm-modal__overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 99999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.88);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  opacity: 0;
+  visibility: hidden;
+  overflow: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  font-family: var(--sm-font);
+}
+
+.sm-modal__overlay--open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ============================================
+   Panel
+   ============================================ */
+
+.sm-modal__panel {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(920px, calc(100vw - 32px));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100vh - 32px);
+  background: var(--sm-bg-panel);
+  border: 1px solid var(--sm-border-light);
+  border-radius: 14px;
+  overflow: hidden;
+  transform: scale(0.96) translateY(6px);
+  transition: transform 0.2s ease;
+}
+
+.sm-modal__overlay--open .sm-modal__panel {
+  transform: scale(1) translateY(0);
+}
+
+/* ============================================
+   Header - Stacked Layout
+   ============================================ */
+
+.sm-modal__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 10px 16px 8px;
+  border-bottom: 1px solid var(--sm-border-light);
+  flex-shrink: 0;
+  position: relative;
+}
+
+.sm-modal__logo {
+  height: 28px;
+  width: auto;
+  opacity: 0.95;
+}
+
+.sm-modal__title-text {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--sm-text-secondary);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+}
+
+.sm-modal__close {
+  position: absolute;
+  top: var(--sm-space-12);
+  right: var(--sm-space-12);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  color: var(--sm-text-tertiary);
+  cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+  flex-shrink: 0;
+}
+
+.sm-modal__close:hover {
+  color: var(--sm-text-primary);
+  border-color: var(--sm-border-medium);
+}
+
+.sm-modal__close:focus {
+  outline: 2px solid var(--sm-accent);
+  outline-offset: 2px;
+}
+
+.sm-modal__close svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+}
+
+/* ============================================
+   Body
+   ============================================ */
+
+.sm-modal__body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 12px;
+  min-height: 0;
+  width: 100%;
+  max-width: 100%;
+}
+
+.sm-modal__body::-webkit-scrollbar {
+  width: 5px;
+}
+
+.sm-modal__body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sm-modal__body::-webkit-scrollbar-thumb {
+  background: var(--sm-border-medium);
+  border-radius: 3px;
+}
+
+/* ============================================
+   Pricing Grid
+   ============================================ */
+
+.sm-pricing-grid {
+  display: grid;
+  gap: 10px;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+}
+
+.sm-pricing-grid--4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.sm-pricing-grid--3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.sm-pricing-grid--2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  max-width: 500px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+@media (max-width: 1024px) {
+  .sm-pricing-grid--4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sm-pricing-grid--3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sm-pricing-grid--3 .sm-plan-card:nth-child(3) {
+    grid-column: 1 / -1;
+    max-width: 240px;
+    justify-self: center;
+    width: 100%;
+  }
+}
+
+@media (max-width: 640px) {
+  .sm-pricing-grid--4,
+  .sm-pricing-grid--3,
+  .sm-pricing-grid--2 {
     grid-template-columns: 1fr;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
+    max-width: 100%;
+  }
+
+  .sm-pricing-grid--3 .sm-plan-card:nth-child(3) {
+    max-width: 100%;
   }
 }
 
 /* ============================================
-   Pricing Card Base
+   Plan Card - Wide & Short
    ============================================ */
 
-.pricing-card {
-  position: relative;
+.sm-plan-card {
   display: flex;
   flex-direction: column;
-  padding: 1.5rem;
-  background: var(--bg-elevated, #111418);
-  border: 2px solid var(--border-color, rgba(255, 255, 255, 0.1));
-  border-radius: var(--radius-lg, 12px);
-  transition: all 0.3s ease;
+  padding: 14px 16px;
+  background: var(--sm-bg-card);
+  border: 1px solid var(--sm-border-light);
+  border-radius: 10px;
+  transition: border-color 0.15s ease, background 0.15s ease;
+  min-width: 0;
+  max-width: 100%;
+  overflow: visible;
+  text-align: center;
 }
 
-.pricing-card:hover {
-  border-color: var(--color-primary, #5bf4e7);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(91, 244, 231, 0.15);
+.sm-plan-card:hover {
+  border-color: var(--sm-border-medium);
+  background: var(--sm-bg-card-hover);
 }
 
-/* Featured card (yearly) */
-.pricing-card--featured {
-  border-color: var(--color-primary, #5bf4e7);
-  background: linear-gradient(180deg, rgba(91, 244, 231, 0.08) 0%, var(--bg-elevated, #111418) 100%);
+.sm-plan-card--featured {
+  border-color: rgba(91, 244, 231, 0.25);
+  background: linear-gradient(180deg, rgba(91, 244, 231, 0.04) 0%, transparent 100%);
 }
 
-.pricing-card--featured:hover {
-  box-shadow: 0 12px 32px rgba(91, 244, 231, 0.25);
+.sm-plan-card--featured:hover {
+  border-color: rgba(91, 244, 231, 0.4);
 }
 
-/* Current plan */
-.pricing-card--current {
-  border-color: var(--color-success, #0FFF73);
+.sm-plan-card--current {
+  border-color: rgba(34, 197, 94, 0.3);
 }
 
-.pricing-card--current:hover {
-  border-color: var(--color-success, #0FFF73);
-}
-
-/* Purchased report */
-.pricing-card--purchased {
-  border-color: var(--color-success, #0FFF73);
+.sm-plan-card--purchased {
+  border-color: rgba(34, 197, 94, 0.3);
   opacity: 0.85;
 }
 
 /* ============================================
-   Pricing Card Badges
+   Card: Title
    ============================================ */
 
-.pricing-card__badge {
-  position: absolute;
-  top: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 0.25rem 0.75rem;
-  font-size: 0.6875rem;
+.sm-plan-card__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+  overflow: visible;
+}
+
+.sm-plan-card__title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--sm-text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+/* ============================================
+   Card: Badge (green pill on its own line)
+   ============================================ */
+
+.sm-plan-card__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  font-size: 10px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  border-radius: var(--radius-sm, 6px);
+  border-radius: 12px;
+  line-height: 1;
   white-space: nowrap;
 }
 
-.pricing-card__badge--pro {
-  background: var(--color-success, #0FFF73);
-  color: var(--color-black, #000);
+.sm-plan-card__badge--save {
+  background: var(--sm-success);
+  color: #fff;
 }
 
-.pricing-card__badge--save {
-  background: var(--color-primary, #5bf4e7);
-  color: var(--color-black, #000);
+.sm-plan-card__badge--current {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--sm-success);
 }
 
-.pricing-card__badge--purchased {
-  background: var(--color-success, #0FFF73);
-  color: var(--color-black, #000);
+.sm-plan-card__badge--purchased {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--sm-success);
 }
 
 /* ============================================
-   Pricing Card Content
+   Card: Price (compact)
    ============================================ */
 
-.pricing-card__name {
-  margin: 0 0 0.75rem 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--text-primary, #fff);
-  text-align: center;
-}
-
-.pricing-card__price {
+.sm-plan-card__price {
   display: flex;
-  align-items: baseline;
-  justify-content: center;
-  gap: 0.25rem;
-  margin-bottom: 0.5rem;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  margin-bottom: 4px;
+  overflow: visible;
+  min-width: 0;
 }
 
-.pricing-card__amount {
-  font-size: 2.25rem;
+.sm-plan-card__amount {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: visible;
+  font-size: 32px;
   font-weight: 700;
-  color: var(--color-primary, #5bf4e7);
+  color: var(--sm-text-primary);
   line-height: 1;
+  letter-spacing: -0.03em;
 }
 
-.pricing-card__period {
-  font-size: 0.9375rem;
-  color: var(--text-secondary, #9ca3af);
+.sm-plan-card__period {
+  display: inline-block;
+  white-space: nowrap;
+  overflow: visible;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--sm-text-tertiary);
+  line-height: 1.4;
 }
 
-.pricing-card__effective {
-  margin: 0 0 1rem 0;
-  font-size: 0.8125rem;
-  color: var(--color-success, #0FFF73);
+/* ============================================
+   Card: Description
+   ============================================ */
+
+.sm-plan-card__desc {
+  margin: 0 0 8px 0;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--sm-text-tertiary);
+  line-height: 1.3;
   text-align: center;
 }
 
 /* ============================================
-   Pricing Card Features
+   Card: CTA Button - Swiss Minimal
    ============================================ */
 
-.pricing-card__features {
-  flex: 1;
-  margin: 0 0 1.25rem 0;
-  padding: 0;
-  list-style: none;
-}
-
-.pricing-card__features li {
-  position: relative;
-  padding: 0.375rem 0 0.375rem 1.5rem;
-  font-size: 0.875rem;
-  color: var(--text-secondary, #9ca3af);
-}
-
-.pricing-card__features li::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 16px;
-  height: 16px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%235bf4e7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='20 6 9 17 4 12'/%3E%3C/svg%3E");
-  background-size: contain;
-  background-repeat: no-repeat;
-}
-
-/* ============================================
-   Pricing Card Button
-   ============================================ */
-
-.pricing-card__button {
+.sm-plan-card__btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
-  padding: 0.75rem 1rem;
-  background: var(--bg-card, #161A1F);
-  border: 1px solid var(--color-primary, #5bf4e7);
-  border-radius: var(--radius-md, 8px);
-  color: var(--color-primary, #5bf4e7);
-  font-size: 0.9375rem;
+  height: 40px;
+  padding: 0 16px;
+  margin-top: auto;
+  font-family: var(--sm-font);
+  font-size: 13px;
   font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
+  letter-spacing: -0.01em;
 }
 
-.pricing-card__button:hover:not(:disabled) {
-  background: var(--color-primary, #5bf4e7);
-  color: var(--color-black, #000);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(91, 244, 231, 0.3);
-}
-
-.pricing-card__button:focus {
-  outline: 2px solid var(--color-primary, #5bf4e7);
+.sm-plan-card__btn:focus {
+  outline: 2px solid var(--sm-accent);
   outline-offset: 2px;
 }
 
-.pricing-card__button:disabled {
-  opacity: 0.5;
+.sm-plan-card__btn:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Primary: Light bg, dark text */
+.sm-plan-card__btn--primary {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--sm-border-medium);
+  color: var(--sm-text-primary);
+}
+
+.sm-plan-card__btn--primary:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* Featured: Accent bg */
+.sm-plan-card__btn--featured {
+  background: var(--sm-accent);
+  border: 1px solid var(--sm-accent);
+  color: #0a0a0a;
+}
+
+.sm-plan-card__btn--featured:hover:not(:disabled) {
+  background: var(--sm-accent-hover);
+  border-color: var(--sm-accent-hover);
+}
+
+/* Current: Success outline */
+.sm-plan-card__btn--current {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: var(--sm-success);
+}
+
+.sm-plan-card__btn--current:hover:not(:disabled) {
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.5);
+}
+
+/* Switch: Muted */
+.sm-plan-card__btn--switch {
+  background: transparent;
+  border: 1px solid var(--sm-border-light);
+  color: var(--sm-text-secondary);
+}
+
+.sm-plan-card__btn--switch:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: var(--sm-border-medium);
+  color: var(--sm-text-primary);
+}
+
+/* Purchased: Success */
+.sm-plan-card__btn--purchased {
+  background: rgba(34, 197, 94, 0.08);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: var(--sm-success);
+  cursor: default;
+}
+
+/* Disabled */
+.sm-plan-card__btn--disabled,
+.sm-plan-card__btn:disabled {
+  background: transparent;
+  border: 1px solid var(--sm-border-light);
+  color: var(--sm-text-tertiary);
   cursor: not-allowed;
-}
-
-/* Featured button */
-.pricing-card__button--featured {
-  background: var(--color-primary, #5bf4e7);
-  color: var(--color-black, #000);
-}
-
-.pricing-card__button--featured:hover:not(:disabled) {
-  background: #4de3d0;
-  box-shadow: 0 8px 24px rgba(91, 244, 231, 0.4);
-}
-
-/* Manage billing button */
-.pricing-card__button--manage {
-  background: transparent;
-  border-color: var(--color-success, #0FFF73);
-  color: var(--color-success, #0FFF73);
-}
-
-.pricing-card__button--manage:hover:not(:disabled) {
-  background: var(--color-success, #0FFF73);
-  color: var(--color-black, #000);
-}
-
-/* Switch plan button */
-.pricing-card__button--switch {
-  background: transparent;
-  border-color: var(--text-tertiary, #6b7280);
-  color: var(--text-secondary, #9ca3af);
-}
-
-.pricing-card__button--switch:hover:not(:disabled) {
-  background: var(--bg-hover, #1f242a);
-  border-color: var(--color-primary, #5bf4e7);
-  color: var(--color-primary, #5bf4e7);
-}
-
-/* Unlocked button */
-.pricing-card__button--unlocked {
-  background: transparent;
-  border-color: var(--color-success, #0FFF73);
-  color: var(--color-success, #0FFF73);
+  opacity: 0.6;
 }
 
 /* ============================================
-   Pricing Footer
+   Footer - Stripe Powered
    ============================================ */
 
-.pricing-footer {
-  margin: 0;
-  padding-top: 1rem;
-  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
-  font-size: 0.875rem;
-  color: var(--text-tertiary, #6b7280);
-  text-align: center;
-}
-
-.pricing-footer__link {
-  background: none;
-  border: none;
-  padding: 0;
-  color: var(--color-primary, #5bf4e7);
-  font-size: inherit;
-  cursor: pointer;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-}
-
-.pricing-footer__link:hover {
-  color: #4de3d0;
-}
-
-/* ============================================
-   Pricing Error
-   ============================================ */
-
-.pricing-error {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 1rem;
-  padding: 0.75rem 1rem;
-  background: rgba(239, 68, 68, 0.1);
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  border-radius: var(--radius-md, 8px);
-}
-
-.pricing-error__icon {
+.sm-modal__footer {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 24px;
-  height: 24px;
+  gap: 6px;
+  padding: 6px 12px;
+  border-top: 1px solid var(--sm-border-light);
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--sm-text-tertiary);
+  flex-shrink: 0;
+  line-height: 1.2;
+}
+
+.sm-modal__footer-stripe {
+  height: 16px;
+  width: auto;
+  opacity: 0.7;
+}
+
+.sm-modal__footer-link {
+  background: none;
+  border: none;
+  padding: 0;
+  font-family: var(--sm-font);
+  font-size: inherit;
+  font-weight: 500;
+  color: var(--sm-text-secondary);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--sm-border-medium);
+  transition: color 0.15s ease;
+}
+
+.sm-modal__footer-link:hover {
+  color: var(--sm-text-primary);
+}
+
+/* ============================================
+   Error - Compact
+   ============================================ */
+
+.sm-pricing-error {
+  display: flex;
+  align-items: center;
+  gap: var(--sm-space-12);
+  margin-bottom: var(--sm-space-16);
+  padding: var(--sm-space-12);
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.2);
+  border-radius: 10px;
+}
+
+.sm-pricing-error__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
   background: #ef4444;
   border-radius: 50%;
   color: #fff;
-  font-size: 0.875rem;
+  font-size: 11px;
   font-weight: 700;
   flex-shrink: 0;
 }
 
-.pricing-error__message {
+.sm-pricing-error__msg {
   flex: 1;
+  font-size: var(--sm-text-13);
   color: #fca5a5;
-  font-size: 0.875rem;
+  line-height: var(--sm-leading-normal);
+  min-width: 0;
 }
 
-.pricing-error__retry {
-  padding: 0.375rem 0.75rem;
+.sm-pricing-error__retry {
+  padding: var(--sm-space-6) var(--sm-space-12);
   background: transparent;
-  border: 1px solid #ef4444;
-  border-radius: var(--radius-sm, 6px);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  border-radius: 6px;
   color: #ef4444;
-  font-size: 0.8125rem;
+  font-family: var(--sm-font);
+  font-size: var(--sm-text-12);
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: background 0.15s ease;
+  flex-shrink: 0;
 }
 
-.pricing-error__retry:hover {
-  background: #ef4444;
-  color: #fff;
+.sm-pricing-error__retry:hover {
+  background: rgba(239, 68, 68, 0.1);
 }
 
 /* ============================================
    Login Prompt
    ============================================ */
 
-.pricing-login-prompt {
+.sm-pricing-login {
   text-align: center;
-  padding: 2rem 1rem;
+  padding: var(--sm-space-24) var(--sm-space-16);
 }
 
-.pricing-login-prompt p {
-  margin: 0 0 1.5rem 0;
-  font-size: 1rem;
-  color: var(--text-secondary, #9ca3af);
+.sm-pricing-login__text {
+  margin: 0 0 var(--sm-space-20) 0;
+  font-size: var(--sm-text-14);
+  font-weight: 400;
+  color: var(--sm-text-secondary);
+  line-height: var(--sm-leading-normal);
 }
 
-.pricing-login-prompt__actions {
+.sm-pricing-login__actions {
   display: flex;
-  gap: 1rem;
   justify-content: center;
-}
-
-.pricing-login-prompt__actions .btn {
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9375rem;
+  gap: var(--sm-space-12);
+  flex-wrap: wrap;
 }
 
 /* ============================================
-   Accessibility: Reduce motion
+   Generic Buttons
+   ============================================ */
+
+.sm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 40px;
+  padding: 0 var(--sm-space-20);
+  font-family: var(--sm-font);
+  font-size: var(--sm-text-13);
+  font-weight: 600;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.sm-btn--primary {
+  background: #00c9b7;
+  border: 1px solid #00c9b7;
+  color: #000;
+  font-weight: 700;
+}
+
+.sm-btn--primary:hover {
+  background: #00b8a7;
+  border-color: #00b8a7;
+  color: #000;
+}
+
+.sm-btn--outline {
+  background: transparent;
+  border: 1px solid var(--sm-border-medium);
+  color: var(--sm-text-primary);
+}
+
+.sm-btn--outline:hover {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================
+   Mobile Adjustments
+   ============================================ */
+
+@media (max-width: 640px) {
+  .sm-modal__overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .sm-modal__panel {
+    width: 100%;
+    max-width: 100%;
+    max-height: 92vh;
+    border-radius: 14px 14px 0 0;
+  }
+
+  .sm-modal__header {
+    padding: 8px 12px 6px;
+  }
+
+  .sm-modal__logo {
+    height: 24px;
+  }
+
+  .sm-modal__title-text {
+    font-size: 12px;
+  }
+
+  .sm-modal__body {
+    padding: 10px;
+  }
+
+  .sm-plan-card {
+    padding: 10px;
+  }
+
+  .sm-plan-card__title {
+    font-size: 16px;
+  }
+
+  .sm-plan-card__amount {
+    font-size: 24px;
+  }
+
+  .sm-plan-card__btn {
+    height: 36px;
+    font-size: 12px;
+  }
+
+  .sm-modal__footer {
+    padding: 6px 10px;
+  }
+}
+
+/* ============================================
+   Reduce Motion
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
-  .pricing-card,
-  .pricing-card__button {
+  .sm-modal__overlay,
+  .sm-modal__panel,
+  .sm-plan-card,
+  .sm-plan-card__btn {
     transition: none;
   }
-
-  .pricing-card:hover,
-  .pricing-card__button:hover {
-    transform: none;
-  }
-}
-
-/* ============================================
-   Legacy Support (credit packs)
-   ============================================ */
-
-.pricing-options {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
-}
-
-.pricing-option {
-  position: relative;
-  padding: 1.5rem;
-  background: var(--bg-elevated, #111418);
-  border: 2px solid var(--border-color, rgba(255, 255, 255, 0.1));
-  border-radius: var(--radius-lg, 12px);
-  transition: all 0.3s ease;
-}
-
-.pricing-option:hover {
-  border-color: var(--color-primary, #5bf4e7);
-  transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(91, 244, 231, 0.2);
-}
-
-.pricing-option__header {
-  margin-bottom: 1rem;
-}
-
-.pricing-option__name {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.125rem;
-  font-weight: 700;
-  color: var(--text-primary, #fff);
-}
-
-.pricing-option__description {
-  margin: 0;
-  font-size: 0.875rem;
-  color: var(--text-secondary, #9ca3af);
-}
-
-.pricing-option__button {
-  width: 100%;
-  padding: 0.875rem 1.5rem;
-  background: var(--bg-card, #161A1F);
-  border: 1px solid var(--color-primary, #5bf4e7);
-  border-radius: var(--radius-lg, 12px);
-  color: var(--color-primary, #5bf4e7);
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.pricing-option__button:hover {
-  background: var(--color-primary, #5bf4e7);
-  color: var(--color-black, #000);
 }

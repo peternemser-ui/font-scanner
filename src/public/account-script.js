@@ -17,9 +17,31 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Check for billing return URLs
   const urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('billing_success') === 'true') {
+    // Verify and record the purchase first (essential for local dev where webhooks don't fire)
+    const sessionId = urlParams.get('session_id');
+    if (sessionId) {
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      if (token) {
+        try {
+          const verifyResp = await fetch('/api/billing/verify-purchase', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({ session_id: sessionId })
+          });
+          const verifyResult = await verifyResp.json().catch(() => null);
+          console.log('Account page: Purchase verification result:', verifyResult);
+        } catch (e) {
+          console.warn('Account page: Failed to verify purchase:', e);
+        }
+      }
+    }
     showSuccess('Payment successful! Your plan has been updated.');
     // Clean URL
     urlParams.delete('billing_success');
+    urlParams.delete('session_id');
     const newUrl = urlParams.toString()
       ? `${window.location.pathname}?${urlParams.toString()}`
       : window.location.pathname;
@@ -40,18 +62,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load user data
   await loadUserData();
   await loadBillingStatus();
-  await loadRecentReports();
+  displayPurchasedReports();
 
-  // Wire up refresh button
-  const refreshBtn = document.getElementById('refreshReportsBtn');
-  if (refreshBtn) {
-    refreshBtn.addEventListener('click', loadRecentReports);
-  }
-
-  // Wire up retry button
-  const retryBtn = document.getElementById('retryReportsBtn');
-  if (retryBtn) {
-    retryBtn.addEventListener('click', loadRecentReports);
+  // Wire up refresh purchased reports button
+  const refreshPurchasedBtn = document.getElementById('refreshPurchasedBtn');
+  if (refreshPurchasedBtn) {
+    refreshPurchasedBtn.addEventListener('click', async () => {
+      await loadBillingStatus();
+      displayPurchasedReports();
+    });
   }
 
   // Wire up upgrade button
@@ -133,7 +152,7 @@ async function loadUserData() {
  */
 async function loadBillingStatus() {
   try {
-    const token = localStorage.getItem('sm_auth_token');
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
     if (!token) return;
 
     const response = await fetch('/api/billing/status', {
@@ -147,7 +166,7 @@ async function loadBillingStatus() {
     }
 
     billingStatus = await response.json();
-    updateBillingUI(billingStatus);
+    await updateBillingUI(billingStatus);
 
   } catch (error) {
     console.error('Failed to load billing status:', error);
@@ -159,7 +178,7 @@ async function loadBillingStatus() {
 /**
  * Update billing UI based on billing status
  */
-function updateBillingUI(status) {
+async function updateBillingUI(status) {
   const planEl = document.getElementById('userPlan');
   const detailsEl = document.getElementById('subscriptionDetails');
   const upgradeBtn = document.getElementById('upgradeBtn');
@@ -171,10 +190,11 @@ function updateBillingUI(status) {
   const isTrialing = status.subscriptionStatus === 'trialing';
   const isCanceled = status.subscriptionStatus === 'canceled';
   const isYearly = status.subscriptionInterval === 'year';
+  const isDay = status.subscriptionInterval === 'day';
 
   // Update plan badge
   if (isPro) {
-    const intervalLabel = isYearly ? 'YEARLY' : 'MONTHLY';
+    const intervalLabel = isDay ? 'DAY PASS' : isYearly ? 'YEARLY' : 'MONTHLY';
     if (isCanceled) {
       planEl.innerHTML = `<span class="plan-badge canceled">PRO (${intervalLabel}) - CANCELED</span>`;
     } else {
@@ -192,8 +212,20 @@ function updateBillingUI(status) {
       day: 'numeric'
     });
 
-    const statusLabel = isCanceled ? 'Canceled' : isTrialing ? 'Trialing' : 'Active';
+    // Day passes have special display - show time remaining
+    let periodEndDisplay = periodEnd;
+    if (isDay) {
+      const endDate = new Date(status.currentPeriodEnd);
+      const now = new Date();
+      const hoursRemaining = Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60)));
+      periodEndDisplay = hoursRemaining > 0 ? `${hoursRemaining}h remaining` : 'Expired';
+    }
+
+    const statusLabel = isCanceled ? 'Canceled' : isTrialing ? 'Trialing' : isDay ? 'Active (24h)' : 'Active';
     const statusClass = isCanceled ? 'canceled' : isTrialing ? 'trialing' : 'active';
+
+    // Day passes always show "Expires" since they don't auto-renew
+    const periodLabel = isDay ? 'Expires' : (isCanceled || status.cancelAtPeriodEnd ? 'Access Until' : 'Renews');
 
     detailsEl.innerHTML = `
       <div class="account-info-row">
@@ -203,10 +235,10 @@ function updateBillingUI(status) {
         </span>
       </div>
       <div class="account-info-row">
-        <span class="account-info-label">${isCanceled || status.cancelAtPeriodEnd ? 'Access Until' : 'Renews'}</span>
-        <span class="account-info-value">${periodEnd}</span>
+        <span class="account-info-label">${periodLabel}</span>
+        <span class="account-info-value">${periodEndDisplay}</span>
       </div>
-      ${isCanceled || status.cancelAtPeriodEnd ? `
+      ${(isCanceled || status.cancelAtPeriodEnd) && !isDay ? `
         <div class="account-info-row">
           <span class="account-info-label">Note</span>
           <span class="account-info-value" style="color: #ef4444;">Subscription ends on ${periodEnd}</span>
@@ -384,8 +416,8 @@ document.getElementById('manageSubBtn').addEventListener('click', async () => {
     btn.disabled = true;
     btnText.innerHTML = '<span class="loading-spinner"></span> Loading...';
 
-    // Try new billing portal endpoint first
-    const token = localStorage.getItem('sm_auth_token');
+    // Try new billing portal endpoint first (check both token keys)
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
     if (token) {
       const response = await fetch('/api/billing/portal', {
         headers: { 'Authorization': `Bearer ${token}` }
@@ -512,102 +544,6 @@ document.getElementById('logoutBtn').addEventListener('click', async () => {
   }
 });
 
-/**
- * Load recent reports for the account page
- */
-async function loadRecentReports() {
-  const loadingEl = document.getElementById('recentReportsLoading');
-  const tableEl = document.getElementById('recentReportsTable');
-  const tbodyEl = document.getElementById('recentReportsTbody');
-  const emptyEl = document.getElementById('recentReportsEmpty');
-  const errorEl = document.getElementById('recentReportsError');
-  const refreshBtn = document.getElementById('refreshReportsBtn');
-
-  // Show loading, hide others
-  if (loadingEl) loadingEl.classList.remove('hidden');
-  if (tableEl) tableEl.classList.add('hidden');
-  if (emptyEl) emptyEl.classList.add('hidden');
-  if (errorEl) errorEl.classList.add('hidden');
-  if (refreshBtn) refreshBtn.disabled = true;
-
-  try {
-    const response = await fetch('/api/usage/recent-scans?limit=8', {
-      headers: proManager.getAuthHeaders()
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch reports');
-    }
-
-    const data = await response.json();
-    const scans = data.scans || [];
-
-    // Hide loading
-    if (loadingEl) loadingEl.classList.add('hidden');
-
-    if (scans.length === 0) {
-      // Show empty state
-      if (emptyEl) emptyEl.classList.remove('hidden');
-    } else {
-      // Render table
-      if (tbodyEl) {
-        tbodyEl.innerHTML = scans.map(scan => renderReportRow(scan)).join('');
-      }
-      if (tableEl) tableEl.classList.remove('hidden');
-    }
-  } catch (error) {
-    console.error('Error loading recent reports:', error);
-    if (loadingEl) loadingEl.classList.add('hidden');
-    if (errorEl) errorEl.classList.remove('hidden');
-  } finally {
-    if (refreshBtn) refreshBtn.disabled = false;
-  }
-}
-
-/**
- * Render a single report row
- */
-function renderReportRow(scan) {
-  const siteUrl = truncateUrl(scan.siteUrl || 'Unknown');
-  const reportType = formatReportType(scan.analyzerType);
-  const runDate = formatDate(scan.createdAt);
-  const statusBadge = getStatusBadge(scan.status);
-  const accessBadge = getAccessBadge(scan);
-  const scanId = scan.id || '';
-
-  return `
-    <tr>
-      <td class="site-url" title="${escapeHtml(scan.siteUrl || '')}">${escapeHtml(siteUrl)}</td>
-      <td>${escapeHtml(reportType)}</td>
-      <td>${escapeHtml(runDate)}</td>
-      <td>${statusBadge} ${accessBadge}</td>
-      <td>
-        <a href="/dashboard.html?scan=${encodeURIComponent(scanId)}" class="btn-link" style="padding: 0;">Open</a>
-      </td>
-    </tr>
-  `;
-}
-
-/**
- * Get access badge (PRO, PURCHASED, FREE)
- */
-function getAccessBadge(scan) {
-  if (!billingStatus) return '';
-
-  const isPro = billingStatus.plan === 'pro';
-  if (isPro) {
-    return '<span class="badge badge--pro" style="background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; margin-left: 4px;">PRO</span>';
-  }
-
-  // Check if this report was purchased
-  const purchasedReports = billingStatus.purchasedReports || [];
-  const reportId = scan.reportId || '';
-  if (reportId && purchasedReports.includes(reportId)) {
-    return '<span class="badge badge--ok" style="margin-left: 4px;">PURCHASED</span>';
-  }
-
-  return '<span class="badge badge--muted" style="margin-left: 4px;">FREE</span>';
-}
 
 /**
  * Truncate URL for display
@@ -632,48 +568,66 @@ function formatReportType(type) {
   const types = {
     'full': 'Full Scan',
     'seo': 'SEO',
+    'seo-analyzer': 'SEO',
     'accessibility': 'Accessibility',
+    'accessibility-analyzer': 'Accessibility',
     'performance': 'Performance',
+    'performance-hub': 'Performance',
+    'speed-ux-pro': 'Speed & UX',
+    'speed-ux-quick': 'Speed & UX - Quick',
+    'speed-ux-cwv': 'Speed & UX - CWV',
+    'speed-ux-full': 'Speed & UX - Lighthouse',
     'security': 'Security',
+    'security-analyzer': 'Security',
+    'tag-intelligence': 'Tag Intelligence',
+    'cwv': 'Core Web Vitals',
+    'core-web-vitals': 'Core Web Vitals',
     'fonts': 'Fonts',
+    'enhanced-fonts': 'Fonts & Typography',
     'brand': 'Brand',
+    'brand-consistency': 'Brand & Design',
     'cro': 'CRO',
-    'mobile': 'Mobile'
+    'cro-analyzer': 'CRO',
+    'mobile': 'Mobile',
+    'mobile-analyzer': 'Mobile',
+    'ip-reputation': 'IP Reputation',
+    'ip-reputation-analyzer': 'IP Reputation',
+    'gdpr': 'Privacy Compliance',
+    'gdpr-compliance': 'Privacy Compliance',
+    'hosting': 'Hosting',
+    'hosting-analyzer': 'Hosting',
+    'competitive': 'Competitive Analysis',
+    'competitive-analysis': 'Competitive Analysis',
+    'local-seo': 'Local SEO',
+    'broken-links': 'Broken Links',
+    'site-crawler': 'Site Crawler'
   };
   return types[type] || type || 'Full Scan';
 }
 
 /**
- * Format date for display
+ * Format date for display in user's local timezone
  */
 function formatDate(dateStr) {
   if (!dateStr) return 'N/A';
   try {
     const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
+    if (isNaN(date.getTime())) return 'N/A';
+
+    // Format in user's local timezone with timezone abbreviation
+    return date.toLocaleString('en-US', {
       month: 'short',
       day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: true,
+      timeZoneName: 'short'
     });
   } catch {
     return 'N/A';
   }
 }
 
-/**
- * Get status badge HTML
- */
-function getStatusBadge(status) {
-  const statusMap = {
-    'completed': { class: 'badge--ok', text: 'Completed' },
-    'running': { class: 'badge--info', text: 'Running' },
-    'queued': { class: 'badge--muted', text: 'Queued' },
-    'failed': { class: 'badge--danger', text: 'Failed' }
-  };
-  const info = statusMap[status] || { class: 'badge--muted', text: status || 'Unknown' };
-  return `<span class="badge ${info.class}">${escapeHtml(info.text)}</span>`;
-}
 
 /**
  * Escape HTML to prevent XSS
@@ -684,3 +638,219 @@ function escapeHtml(str) {
   div.textContent = str;
   return div.innerHTML;
 }
+
+// Pagination state for purchased reports
+let purchasedReportsPage = 1;
+const REPORTS_PER_PAGE = 20;
+
+/**
+ * Display purchased reports section with pagination
+ */
+function displayPurchasedReports(page = 1) {
+  // Validate page number
+  page = Math.max(1, parseInt(page) || 1);
+  purchasedReportsPage = page;
+
+  const card = document.getElementById('purchasedReportsCard');
+  const tbody = document.getElementById('purchasedReportsTbody');
+  const tableEl = document.getElementById('purchasedReportsTable');
+  const loadingEl = document.getElementById('purchasedReportsLoading');
+  const emptyEl = document.getElementById('purchasedReportsEmpty');
+  const descEl = document.getElementById('purchasedReportsDesc');
+
+  console.log('[Account] displayPurchasedReports called', {
+    hasCard: !!card,
+    hasTbody: !!tbody,
+    billingStatus,
+    purchasedReportDetails: billingStatus?.purchasedReportDetails
+  });
+
+  if (!card || !tbody) return;
+
+  // Hide loading
+  if (loadingEl) loadingEl.classList.add('hidden');
+
+  // Get purchased report details from billing status
+  const purchases = billingStatus?.purchasedReportDetails || [];
+
+  console.log('[Account] Purchased reports to display:', purchases);
+
+  if (purchases.length === 0) {
+    // No purchased reports - show empty state
+    if (tableEl) tableEl.classList.add('hidden');
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    if (descEl) descEl.classList.add('hidden');
+    removePaginationControls();
+    return;
+  }
+
+  // Show the table
+  if (tableEl) tableEl.classList.remove('hidden');
+  if (emptyEl) emptyEl.classList.add('hidden');
+  if (descEl) descEl.classList.remove('hidden');
+
+  // Calculate pagination
+  const totalPages = Math.ceil(purchases.length / REPORTS_PER_PAGE);
+  const startIndex = (page - 1) * REPORTS_PER_PAGE;
+  const endIndex = startIndex + REPORTS_PER_PAGE;
+  const paginatedPurchases = purchases.slice(startIndex, endIndex);
+
+  // Render purchased reports for current page
+  tbody.innerHTML = paginatedPurchases.map(purchase => renderPurchasedReportRow(purchase)).join('');
+
+  // Render pagination controls if needed
+  if (purchases.length > REPORTS_PER_PAGE) {
+    renderPaginationControls(page, totalPages, purchases.length);
+  } else {
+    removePaginationControls();
+  }
+}
+
+/**
+ * Render pagination controls
+ */
+function renderPaginationControls(currentPage, totalPages, totalItems) {
+  let paginationEl = document.getElementById('purchasedReportsPagination');
+
+  if (!paginationEl) {
+    paginationEl = document.createElement('div');
+    paginationEl.id = 'purchasedReportsPagination';
+    paginationEl.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-top: 1px solid var(--border-primary, #e5e7eb); margin-top: 1rem;';
+
+    const tableEl = document.getElementById('purchasedReportsTable');
+    if (tableEl && tableEl.parentNode) {
+      tableEl.parentNode.insertBefore(paginationEl, tableEl.nextSibling);
+    }
+  }
+
+  const startItem = (currentPage - 1) * REPORTS_PER_PAGE + 1;
+  const endItem = Math.min(currentPage * REPORTS_PER_PAGE, totalItems);
+
+  paginationEl.innerHTML = `
+    <span style="color: var(--text-secondary, #6b7280); font-size: 0.875rem;">
+      Showing ${startItem}-${endItem} of ${totalItems} reports
+    </span>
+    <div style="display: flex; gap: 0.5rem;">
+      <button
+        id="paginationPrevBtn"
+        ${currentPage === 1 ? 'disabled' : ''}
+        style="padding: 0.5rem 1rem; border: 1px solid var(--border-primary, #e5e7eb); border-radius: 6px; background: ${currentPage === 1 ? 'var(--bg-secondary, #f3f4f6)' : 'var(--bg-primary, #fff)'}; color: ${currentPage === 1 ? 'var(--text-muted, #9ca3af)' : 'var(--text-primary, #111827)'}; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'}; font-size: 0.875rem;"
+      >
+        ← Previous
+      </button>
+      <span style="padding: 0.5rem 1rem; color: var(--text-secondary, #6b7280); font-size: 0.875rem;">
+        Page ${currentPage} of ${totalPages}
+      </span>
+      <button
+        id="paginationNextBtn"
+        ${currentPage === totalPages ? 'disabled' : ''}
+        style="padding: 0.5rem 1rem; border: 1px solid var(--border-primary, #e5e7eb); border-radius: 6px; background: ${currentPage === totalPages ? 'var(--bg-secondary, #f3f4f6)' : 'var(--bg-primary, #fff)'}; color: ${currentPage === totalPages ? 'var(--text-muted, #9ca3af)' : 'var(--text-primary, #111827)'}; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'}; font-size: 0.875rem;"
+      >
+        Next →
+      </button>
+    </div>
+  `;
+
+  // Add event listeners (more reliable than inline onclick)
+  const prevBtn = document.getElementById('paginationPrevBtn');
+  const nextBtn = document.getElementById('paginationNextBtn');
+
+  if (prevBtn && currentPage > 1) {
+    prevBtn.addEventListener('click', function() {
+      console.log('[Account] Previous button clicked, going to page', currentPage - 1);
+      displayPurchasedReports(currentPage - 1);
+    });
+  }
+
+  if (nextBtn && currentPage < totalPages) {
+    nextBtn.addEventListener('click', function() {
+      console.log('[Account] Next button clicked, going to page', currentPage + 1);
+      displayPurchasedReports(currentPage + 1);
+    });
+  }
+}
+
+/**
+ * Remove pagination controls
+ */
+function removePaginationControls() {
+  const paginationEl = document.getElementById('purchasedReportsPagination');
+  if (paginationEl) {
+    paginationEl.remove();
+  }
+}
+
+/**
+ * Render a single purchased report row
+ */
+function renderPurchasedReportRow(purchase) {
+  const siteUrl = truncateUrl(purchase.siteUrl || 'Unknown');
+  const fullSiteUrl = purchase.siteUrl || '';
+  const reportType = formatReportType(purchase.analyzerType);
+  const purchaseDate = formatDate(purchase.purchasedAt);
+  const reportId = purchase.reportId || '';
+
+  // Determine the link based on analyzer type
+  const analyzerPages = {
+    'seo': '/seo-analyzer.html',
+    'seo-analyzer': '/seo-analyzer.html',
+    'security': '/security-analyzer.html',
+    'security-analyzer': '/security-analyzer.html',
+    'accessibility': '/accessibility-analyzer.html',
+    'accessibility-analyzer': '/accessibility-analyzer.html',
+    'performance': '/performance-hub.html',
+    'performance-hub': '/performance-hub.html',
+    'speed-ux-pro': '/performance-hub.html',
+    'speed-ux-quick': '/performance-hub.html',
+    'speed-ux-cwv': '/performance-hub.html',
+    'speed-ux-full': '/performance-hub.html',
+    'tag-intelligence': '/tag-intelligence.html',
+    'cwv': '/core-web-vitals.html',
+    'core-web-vitals': '/core-web-vitals.html',
+    'ip-reputation': '/ip-reputation-analyzer.html',
+    'ip-reputation-analyzer': '/ip-reputation-analyzer.html',
+    'mobile': '/mobile-analyzer.html',
+    'mobile-analyzer': '/mobile-analyzer.html',
+    'cro': '/cro-analyzer.html',
+    'cro-analyzer': '/cro-analyzer.html',
+    'cro-analysis': '/cro-analyzer.html',
+    'gdpr': '/gdpr-compliance.html',
+    'gdpr-compliance': '/gdpr-compliance.html',
+    'fonts': '/enhanced-fonts.html',
+    'enhanced-fonts': '/enhanced-fonts.html',
+    'brand': '/brand-consistency.html',
+    'brand-consistency': '/brand-consistency.html',
+    'hosting': '/hosting-analyzer.html',
+    'hosting-analyzer': '/hosting-analyzer.html',
+    'competitive': '/competitive-analysis.html',
+    'competitive-analysis': '/competitive-analysis.html',
+    'local-seo': '/local-seo.html',
+    'broken-links': '/broken-links.html',
+    'site-crawler': '/site-crawler.html'
+  };
+  const basePage = analyzerPages[purchase.analyzerType] || '/dashboard.html';
+
+  // Build URL with report_id and url (for auto-fill)
+  // Don't set auto_scan - we want to try loading from database first
+  // If report not in database, user can manually trigger scan
+  const params = new URLSearchParams();
+  params.set('report_id', reportId);
+  if (fullSiteUrl) {
+    params.set('url', fullSiteUrl);
+  }
+  const viewUrl = `${basePage}?${params.toString()}`;
+
+  return `
+    <tr>
+      <td class="site-url" title="${escapeHtml(fullSiteUrl)}">${escapeHtml(siteUrl)}</td>
+      <td>${escapeHtml(reportType)}</td>
+      <td>${escapeHtml(purchaseDate)}</td>
+      <td>
+        <a href="${viewUrl}" class="btn-link" style="padding: 0;">View Report</a>
+      </td>
+    </tr>
+  `;
+}
+
+// Expose pagination function to window for onclick handlers
+window.displayPurchasedReports = displayPurchasedReports;

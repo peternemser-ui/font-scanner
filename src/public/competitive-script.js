@@ -42,6 +42,114 @@ document.addEventListener('DOMContentLoaded', () => {
   document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
 });
 
+// ============================================
+// BILLING RETURN HANDLING
+// ============================================
+(async function initCompetitiveAnalysis() {
+  const params = new URLSearchParams(window.location.search);
+  const reportId = params.get('report_id') || '';
+  const autoUrl = params.get('url') || '';
+  const billingSuccess = params.get('billing_success') === 'true';
+
+  // If we have a report_id, set it immediately so hasAccess checks work
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    console.log('[Competitive] Set report_id from URL:', reportId);
+  }
+
+  // Pre-fill URL input if provided
+  const urlInput = document.getElementById('yourUrl');
+  if (autoUrl && urlInput) {
+    urlInput.value = autoUrl;
+  }
+
+  // If returning from billing, wait for billing return processing to complete
+  if (billingSuccess && !window.__smBillingReturnComplete) {
+    console.log('[Competitive] Waiting for billing return processing...');
+    await new Promise((resolve) => {
+      if (window.__smBillingReturnComplete) {
+        resolve();
+        return;
+      }
+      const handler = () => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      };
+      window.addEventListener('sm:billingReturnComplete', handler);
+      // Timeout fallback
+      setTimeout(() => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      }, 5000);
+    });
+    console.log('[Competitive] Billing return processing complete');
+
+    // Check if results were already displayed by report-ui.js
+    const resultsContainer = document.getElementById('results');
+    if (window.currentCompetitiveResults && resultsContainer && resultsContainer.style.display !== 'none' && resultsContainer.innerHTML.trim()) {
+      console.log('[Competitive] Results already displayed by report-ui.js');
+      return;
+    }
+
+    // report-ui.js couldn't display results, try to get them ourselves
+    console.log('[Competitive] Attempting to display results after billing return...');
+
+    // First check sessionStorage (set by PricingModal before checkout)
+    try {
+      const cachedResults = sessionStorage.getItem('sm_checkout_results');
+      if (cachedResults) {
+        const data = JSON.parse(cachedResults);
+        if (data && data.yourSite) { // Verify it's competitive analysis data
+          console.log('[Competitive] Found cached results in sessionStorage, displaying...');
+          displayResults(data);
+          sessionStorage.removeItem('sm_checkout_results');
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn('[Competitive] Failed to parse cached results:', e);
+    }
+
+    // Fall back to loading from database
+    if (reportId && window.ReportStorage) {
+      try {
+        const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayResults);
+        if (loaded) {
+          console.log('[Competitive] Loaded report from database');
+          return;
+        }
+      } catch (e) {
+        console.warn('[Competitive] Failed to load from database:', e);
+      }
+    }
+
+    console.log('[Competitive] No cached results found after billing return');
+    return;
+  }
+
+  // If we have a report_id (e.g., from dashboard), try to load stored report
+  if (reportId && window.ReportStorage) {
+    console.log('[Competitive] Checking for stored report:', reportId);
+
+    // Fetch billing status first to ensure hasAccess works correctly
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      console.log('[Competitive] Fetching billing status (force refresh)...');
+      await window.ProReportBlock.fetchBillingStatus(true);
+    }
+
+    // Try to load the stored report
+    try {
+      const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayResults);
+      if (loaded) {
+        console.log('[Competitive] Stored report loaded successfully');
+        return;
+      }
+    } catch (e) {
+      console.warn('[Competitive] Failed to load stored report:', e);
+    }
+  }
+})();
+
 // Handle real-time progress updates
 function handleProgressUpdate(data) {
   // Update loader based on WebSocket data
@@ -130,22 +238,78 @@ window.addCompetitorInput = addCompetitorInput;
 function removeCompetitor(button) {
   const container = document.getElementById('competitorInputs');
   const row = button.parentElement;
-  
+
   if (container.querySelectorAll('.competitor-input-row').length <= 1) {
     alert('At least one competitor is required');
     return;
   }
-  
+
   row.remove();
-  
+
   // Show add button if below max
   document.getElementById('addCompetitorBtn').style.display = 'block';
 }
 
+// Expose removeCompetitor for HTML onclick handlers
+window.removeCompetitor = removeCompetitor;
+
 // Initialize event listeners on page load
 document.addEventListener('DOMContentLoaded', () => {
-  // Note: Add competitor and remove buttons use inline onclick handlers in HTML
-  // No additional event listeners needed here
+  // Add Competitor button
+  const addBtn = document.getElementById('addCompetitorBtn');
+  if (addBtn) {
+    addBtn.addEventListener('click', addCompetitorInput);
+  }
+
+  // Use event delegation for Remove buttons (handles dynamically added buttons)
+  const competitorInputs = document.getElementById('competitorInputs');
+  if (competitorInputs) {
+    competitorInputs.addEventListener('click', (e) => {
+      if (e.target.classList.contains('remove-competitor')) {
+        removeCompetitor(e.target);
+      }
+    });
+  }
+});
+
+// ============================================
+// EVENT DELEGATION FOR COMPETITIVE FIX ACCORDIONS
+// Replaces inline onclick handlers (blocked by CSP)
+// ============================================
+document.addEventListener('click', function(e) {
+  // Handle tab clicks first (more specific)
+  const tab = e.target.closest('.competitive-fix-tab');
+  if (tab) {
+    const accordion = tab.closest('.competitive-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      // Determine which tab was clicked based on text content
+      const tabText = tab.textContent.toLowerCase();
+      let tabName = 'summary';
+      if (tabText.includes('comparison') || tabText.includes('analysis') || tabText.includes('gap')) tabName = 'analysis';
+      else if (tabText.includes('guide') || tabText.includes('action') || tabText.includes('fix') || tabText.includes('maintain') || tabText.includes('lead')) tabName = 'guide';
+
+      if (fixId && typeof window.switchCompetitiveFixTab === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+        window.switchCompetitiveFixTab(fixId, tabName);
+      }
+    }
+    return;
+  }
+
+  // Handle accordion header clicks
+  const header = e.target.closest('.competitive-fix-header');
+  if (header) {
+    const accordion = header.closest('.competitive-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      if (fixId && typeof window.toggleCompetitiveFixAccordion === 'function') {
+        e.preventDefault();
+        window.toggleCompetitiveFixAccordion(fixId);
+      }
+    }
+  }
 });
 
 // Validate URL format
@@ -340,7 +504,18 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
     }
     
     const data = await response.json();
-    
+
+    // Extract and set report metadata from API response
+    console.log('[competitive-script] Setting report metadata from API response');
+    const apiReportId = data?.reportId || data?.results?.reportId;
+    const screenshotUrl = data?.screenshotUrl || data?.results?.screenshotUrl;
+    if (apiReportId) {
+      document.body.setAttribute('data-report-id', apiReportId);
+    }
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
+
     // Join WebSocket session room for real-time updates
     if (data.sessionId && socket) {
       socket.emit('join-session', data.sessionId);
@@ -397,8 +572,9 @@ function displayResults(data) {
   const resultsDiv = document.getElementById('results');
   const reportId = data.reportId || '';
   
-  // Store data globally for chart access
+  // Store data globally for chart access and billing return
   window.competitiveData = data;
+  window.currentCompetitiveResults = data;
   
   try {
     // Build summary donuts from scores
@@ -432,7 +608,10 @@ function displayResults(data) {
       : renderFallbackResults(data);
 
     resultsDiv.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
-    
+
+    // Show the results div (important for billing return flow)
+    resultsDiv.style.display = 'block';
+
     // Initialize charts after DOM is updated
     setTimeout(() => {
       initializeCharts(data);
@@ -447,11 +626,82 @@ function displayResults(data) {
     if (reportId && window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
       window.CreditsManager.renderPaywallState(reportId);
     }
-    
+
+    // Check if already unlocked and reveal Pro content
+    const isUnlocked = !!(
+      (data && (data.unlocked === true || data.purchased === true)) ||
+      (reportId && window.ProReportBlock?.hasAccess?.(reportId))
+    );
+
+    console.log('[Competitive] Display unlock check:', { reportId, isUnlocked, dataUnlocked: data?.unlocked, dataPurchased: data?.purchased });
+
+    if (isUnlocked) {
+      revealCompetitiveProContent();
+    }
+
+    // Listen for unlock events (when user purchases during this session)
+    if (!window.__competitiveUnlockListenerAttached) {
+      window.__competitiveUnlockListenerAttached = true;
+      window.addEventListener('reportUnlocked', (e) => {
+        const unlockedId = e && e.detail ? e.detail.reportId : '';
+        if (!unlockedId || unlockedId !== document.body.getAttribute('data-report-id')) return;
+
+        console.log('[Competitive] Report unlocked event received:', unlockedId);
+
+        // Re-render the Pro sections with full content
+        const storedData = window.currentCompetitiveResults || window.competitiveData;
+        if (storedData) {
+          // Re-render head-to-head
+          const h2hBody = document.querySelector('[data-accordion-body="head-to-head"]');
+          if (h2hBody) {
+            h2hBody.innerHTML = renderHeadToHeadContent(storedData);
+          }
+
+          // Re-render strengths-weaknesses
+          const swBody = document.querySelector('[data-accordion-body="strengths-weaknesses"]');
+          if (swBody) {
+            swBody.innerHTML = renderStrengthsWeaknessesContent(storedData);
+          }
+
+          // Re-render recommendations
+          const recBody = document.querySelector('[data-accordion-body="report-recommendations"]');
+          if (recBody && storedData.recommendations) {
+            recBody.innerHTML = renderRecommendationsContent(storedData.recommendations);
+          }
+        }
+
+        revealCompetitiveProContent();
+
+        if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+          window.CreditsManager.renderPaywallState(unlockedId);
+        }
+      });
+    }
+
   } catch (error) {
     console.error('Error rendering results:', error);
     alert(`Error displaying results: ${error.message}`);
   }
+}
+
+// Reveal Pro content after unlock (removes lock overlays)
+function revealCompetitiveProContent() {
+  console.log('[Competitive] Revealing Pro content...');
+  const overlays = document.querySelectorAll('.report-shell__lock-overlay');
+  overlays.forEach((overlay) => {
+    const locked = overlay.querySelector('.is-locked');
+    if (locked) {
+      // Move content out of the locked wrapper
+      const parent = overlay.parentElement;
+      if (parent) {
+        parent.innerHTML = locked.innerHTML;
+      }
+    }
+  });
+
+  // Also remove any remaining lock indicators
+  document.querySelectorAll('[data-hide-when-unlocked]').forEach(el => el.remove());
+  document.querySelectorAll('.pro-locked').forEach(el => el.classList.remove('pro-locked'));
 }
 
 // Build summary donuts for competitive analysis
@@ -486,14 +736,29 @@ function buildCompetitiveSummary(data) {
 
 // Build sections for ReportContainer
 function buildCompetitiveSections(data, reportId) {
-  const isUnlocked = !!(
-    reportId &&
-    window.CreditsManager &&
-    (
-      (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
-      (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
-    )
-  );
+  // Use ProReportBlock.hasAccess() which checks both Pro subscription and purchased reports
+  // Default to LOCKED (false) - user must prove they have access
+  let isUnlocked = false;
+
+  if (reportId && window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+    isUnlocked = window.ProReportBlock.hasAccess(reportId);
+  }
+
+  // Fallback: also check CreditsManager for immediate unlock state
+  if (!isUnlocked && reportId && window.CreditsManager) {
+    if (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) {
+      isUnlocked = true;
+    } else if (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId)) {
+      isUnlocked = true;
+    }
+  }
+
+  // Also check if data itself has unlock status from database
+  if (!isUnlocked && data && (data.unlocked === true || data.purchased === true)) {
+    isUnlocked = true;
+  }
+
+  console.log('[Competitive] Access check:', { reportId, isUnlocked, dataUnlocked: data?.unlocked, dataPurchased: data?.purchased });
   
   const sections = [];
   
@@ -1643,20 +1908,44 @@ function renderCompetitivePosition(data) {
   return `<section class="section"><h2>◈ Competitive Position Summary</h2>${renderCompetitivePositionContent(data)}</section>`;
 }
 
-// Head-to-head content (for accordion)
+// Head-to-head content (for accordion) - Enhanced with sub-accordions per metric
 function renderHeadToHeadContent(data) {
+  ensureCompetitiveFixStyles();
   const metrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
   const allSites = [
     { name: 'You', ...data.yourSite, isYou: true },
     ...data.competitors.map(c => ({ name: getDomainName(c.url), ...c, isYou: false }))
   ];
-  
+
+  // Build metric analysis for sub-accordions
+  const metricAnalysis = metrics.map(metric => {
+    const yourScore = data.yourSite.scores[metric];
+    const competitorScores = data.competitors.map(c => ({ name: getDomainName(c.url), score: c.scores[metric], url: c.url }));
+    const maxScore = Math.max(yourScore, ...competitorScores.map(c => c.score));
+    const avgCompetitor = competitorScores.reduce((a, c) => a + c.score, 0) / competitorScores.length;
+    const leader = yourScore >= maxScore ? 'You' : competitorScores.find(c => c.score === maxScore)?.name || 'Competitor';
+    const isWinning = yourScore >= maxScore;
+    const gap = maxScore - yourScore;
+
+    return {
+      metric,
+      yourScore,
+      competitorScores,
+      maxScore,
+      avgCompetitor,
+      leader,
+      isWinning,
+      gap
+    };
+  });
+
   return `
     <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-      Detailed score breakdown across all competitors
+      Click each metric below to see detailed competitive analysis and actionable insights.
     </p>
-    
-    <div style="overflow-x: auto;">
+
+    <!-- Summary Table -->
+    <div style="overflow-x: auto; margin-bottom: 2rem;">
       <table class="comparison-table">
         <thead>
           <tr>
@@ -1705,7 +1994,274 @@ function renderHeadToHeadContent(data) {
         </tbody>
       </table>
     </div>
+
+    <!-- Detailed Metric Sub-Accordions -->
+    <h4 style="color: var(--text-primary); margin: 0 0 1rem 0; font-size: 1rem;">📊 Detailed Metric Analysis</h4>
+    <div class="competitive-fixes-list">
+      ${metricAnalysis.map((analysis, index) => renderMetricAccordion(analysis, index, data)).join('')}
+    </div>
   `;
+}
+
+// Render individual metric accordion for head-to-head
+function renderMetricAccordion(analysis, index, data) {
+  const accordionId = `h2h-metric-${index}`;
+  const isWinning = analysis.isWinning;
+  const style = isWinning
+    ? { bg: 'rgba(0, 255, 65, 0.08)', border: '#00ff41', color: '#00ff41', icon: '👑' }
+    : { bg: 'rgba(255, 165, 0, 0.08)', border: '#ffa500', color: '#ffa500', icon: '📈' };
+
+  const statusText = isWinning
+    ? 'You\'re leading!'
+    : `${analysis.gap} points behind ${analysis.leader}`;
+
+  return `
+    <div class="competitive-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="competitive-fix-header" onclick="toggleCompetitiveFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">${formatMetricName(analysis.metric)}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">
+              Your score: <strong>${analysis.yourScore}</strong> | ${statusText}
+            </p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${isWinning ? 'WINNING' : 'OPPORTUNITY'}</span>
+          <span class="competitive-fix-expand-icon" style="color: var(--text-secondary); transition: transform 0.3s;">▼</span>
+        </div>
+      </div>
+
+      <div class="competitive-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderMetricTabs(analysis, accordionId, data)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Render tabs for metric accordion
+function renderMetricTabs(analysis, accordionId, data) {
+  const metricName = formatMetricName(analysis.metric);
+  const actionSteps = getCompetitiveActionSteps({ metric: analysis.metric });
+
+  return `
+    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="competitive-fix-tab active" onclick="switchCompetitiveFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Overview</button>
+      <button class="competitive-fix-tab" onclick="switchCompetitiveFixTab('${accordionId}', 'analysis')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📊 Comparison</button>
+      <button class="competitive-fix-tab" onclick="switchCompetitiveFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🎯 Action Steps</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div class="competitive-fix-tab-content active" id="${accordionId}-summary">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Your Score</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: ${analysis.isWinning ? '#00ff41' : '#ffa500'};">${analysis.yourScore}</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Best Competitor</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: var(--text-primary);">${analysis.maxScore}</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Avg Competitor</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: var(--text-secondary);">${Math.round(analysis.avgCompetitor)}</div>
+        </div>
+      </div>
+      <div style="background: ${analysis.isWinning ? 'rgba(0,255,65,0.1)' : 'rgba(255,165,0,0.1)'}; border-left: 3px solid ${analysis.isWinning ? '#00ff41' : '#ffa500'}; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: ${analysis.isWinning ? '#00ff41' : '#ffa500'}; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
+          ${analysis.isWinning ? '✓ Competitive Advantage' : '⚠ Improvement Opportunity'}
+        </div>
+        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+          ${analysis.isWinning
+            ? `You're outperforming all competitors in ${metricName}. Focus on maintaining this advantage while they try to catch up.`
+            : `Closing this ${analysis.gap}-point gap could significantly improve your competitive position. ${analysis.leader} is setting the benchmark here.`
+          }
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison Tab -->
+    <div class="competitive-fix-tab-content" id="${accordionId}-analysis" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--text-primary);">${metricName} Leaderboard</h5>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        ${[{ name: 'You', score: analysis.yourScore, isYou: true }, ...analysis.competitorScores.map(c => ({ ...c, isYou: false }))]
+          .sort((a, b) => b.score - a.score)
+          .map((site, rank) => `
+            <div style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0.75rem 1rem;
+              background: ${site.isYou ? 'rgba(var(--accent-primary-rgb), 0.15)' : 'rgba(0,0,0,0.2)'};
+              border-radius: 6px;
+              border-left: 3px solid ${rank === 0 ? '#ffd700' : site.isYou ? 'var(--accent-primary)' : 'transparent'};
+            ">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="
+                  width: 24px;
+                  height: 24px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  border-radius: 50%;
+                  background: ${rank === 0 ? '#ffd700' : 'rgba(255,255,255,0.1)'};
+                  color: ${rank === 0 ? '#000' : 'var(--text-secondary)'};
+                  font-size: 0.75rem;
+                  font-weight: bold;
+                ">${rank + 1}</span>
+                <span style="font-weight: ${site.isYou ? 'bold' : 'normal'}; color: ${site.isYou ? 'var(--accent-primary)' : 'var(--text-primary)'};">
+                  ${site.isYou ? '👤 You' : site.name}
+                </span>
+              </div>
+              <span style="font-weight: bold; font-size: 1.1rem; color: ${rank === 0 ? '#ffd700' : 'var(--text-primary)'};">
+                ${site.score}
+              </span>
+            </div>
+          `).join('')}
+      </div>
+      <div style="margin-top: 1rem; padding: 1rem; background: rgba(91, 244, 231, 0.1); border-radius: 8px; border: 1px solid rgba(91, 244, 231, 0.2);">
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+          <strong style="color: var(--accent-primary);">What this means:</strong> ${getMetricCompetitiveInsight(analysis)}
+        </p>
+      </div>
+    </div>
+
+    <!-- Action Steps Tab -->
+    <div class="competitive-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--text-primary);">
+        ${analysis.isWinning ? '🛡️ Maintain Your Lead' : '🎯 Close the Gap'}
+      </h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+        ${(analysis.isWinning ? getDefensiveSteps(analysis.metric) : actionSteps).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(91, 244, 231, 0.1); border-radius: 8px; border: 1px solid rgba(91, 244, 231, 0.2);">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-primary); font-weight: 600; margin-bottom: 0.5rem;">
+          <span>💡</span> Pro Tip
+        </div>
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+          ${getProTip({ metric: analysis.metric })}
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// Get competitive insight for a metric
+function getMetricCompetitiveInsight(analysis) {
+  const metric = analysis.metric.toLowerCase();
+  const isWinning = analysis.isWinning;
+  const gap = analysis.gap;
+
+  if (isWinning) {
+    return `You're the ${formatMetricName(metric)} leader in your competitive set. This is a significant advantage - competitors would need to make substantial improvements to match you.`;
+  }
+
+  const insights = {
+    performance: `A ${gap}-point performance gap means users experience noticeably faster load times on competitor sites. This directly impacts user engagement, bounce rates, and can affect search rankings.`,
+    seo: `Being ${gap} points behind in SEO means competitors likely have better search visibility. They may be capturing organic traffic you're missing, particularly for competitive keywords.`,
+    accessibility: `This ${gap}-point accessibility gap could mean competitors are reaching audiences you're not. It may also expose you to compliance risks that competitors have already addressed.`,
+    security: `Competitors with ${gap} more security points likely have stronger trust signals. This is especially important for e-commerce or sites handling sensitive information.`,
+    corewebvitals: `Core Web Vitals directly affect Google rankings. This ${gap}-point gap means competitors may rank higher in search results and provide a better user experience.`
+  };
+
+  return insights[metric] || `This ${gap}-point gap represents a competitive disadvantage that should be addressed to stay competitive in your market.`;
+}
+
+// Get defensive steps for maintaining lead
+function getDefensiveSteps(metric) {
+  const stepsMap = {
+    performance: [
+      'Set up continuous performance monitoring to catch regressions early',
+      'Document your performance optimizations so they\'re not accidentally removed',
+      'Monitor competitor performance to stay ahead of their improvements',
+      'Invest in performance budgets to prevent feature creep from slowing you down',
+      'Consider progressive enhancement to maintain speed as you add features'
+    ],
+    seo: [
+      'Continue producing high-quality, relevant content regularly',
+      'Monitor your keyword rankings and react to changes quickly',
+      'Keep your technical SEO updated as best practices evolve',
+      'Build and maintain a healthy backlink profile',
+      'Watch for algorithm updates and adapt your strategy accordingly'
+    ],
+    accessibility: [
+      'Include accessibility testing in your development workflow',
+      'Train your team on accessibility best practices',
+      'Conduct regular audits to catch any regressions',
+      'Stay updated on WCAG guidelines as they evolve',
+      'Gather feedback from users with disabilities to improve further'
+    ],
+    security: [
+      'Keep all dependencies and software up to date',
+      'Conduct regular security audits and penetration testing',
+      'Monitor for new vulnerabilities affecting your stack',
+      'Implement security logging and monitoring',
+      'Have an incident response plan ready'
+    ],
+    corewebvitals: [
+      'Set up real user monitoring (RUM) to track actual performance',
+      'Monitor Core Web Vitals in Google Search Console regularly',
+      'Test changes in staging to prevent CWV regressions',
+      'Keep an eye on third-party scripts that could impact CWV',
+      'Stay informed about CWV threshold changes from Google'
+    ]
+  };
+
+  return stepsMap[metric.toLowerCase()] || [
+    'Continue monitoring your metrics regularly',
+    'Stay informed about industry best practices',
+    'React quickly if competitors start catching up',
+    'Invest in continuous improvement',
+    'Document what\'s working so it can be maintained'
+  ];
 }
 
 // Legacy wrapper
@@ -1713,26 +2269,30 @@ function renderHeadToHead(data, metrics) {
   return `<section class="section"><h2>⚔️ Head-to-Head Battle</h2>${renderHeadToHeadContent(data)}</section>`;
 }
 
-// Strengths and weaknesses content (for accordion)
+// Strengths and weaknesses content (for accordion) - Enhanced with sub-accordions
 function renderStrengthsWeaknessesContent(data) {
+  ensureCompetitiveFixStyles();
   const metrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
   const yourScores = data.yourSite.scores;
-  
+
   // Calculate what you're winning and losing at
   const strengths = [];
   const weaknesses = [];
-  
+
   metrics.forEach(metric => {
     const yourScore = yourScores[metric];
-    const competitorScores = data.competitors.map(c => c.scores[metric]);
-    const maxCompetitor = Math.max(...competitorScores);
-    const avgCompetitor = competitorScores.reduce((a, b) => a + b, 0) / competitorScores.length;
-    
+    const competitorScores = data.competitors.map(c => ({ name: getDomainName(c.url), score: c.scores[metric], url: c.url }));
+    const maxCompetitor = Math.max(...competitorScores.map(c => c.score));
+    const avgCompetitor = competitorScores.reduce((a, c) => a + c.score, 0) / competitorScores.length;
+
     if (yourScore >= maxCompetitor) {
       strengths.push({
         metric,
         score: yourScore,
         lead: yourScore - avgCompetitor,
+        maxCompetitor,
+        avgCompetitor,
+        competitorScores,
         status: 'dominant'
       });
     } else if (yourScore >= avgCompetitor) {
@@ -1740,78 +2300,480 @@ function renderStrengthsWeaknessesContent(data) {
         metric,
         score: yourScore,
         lead: yourScore - avgCompetitor,
+        maxCompetitor,
+        avgCompetitor,
+        competitorScores,
         status: 'ahead'
       });
     } else {
+      const leader = data.competitors.find(c => c.scores[metric] === maxCompetitor);
       weaknesses.push({
         metric,
         score: yourScore,
         gap: maxCompetitor - yourScore,
         avgGap: avgCompetitor - yourScore,
-        leader: data.competitors.find(c => c.scores[metric] === maxCompetitor)
+        maxCompetitor,
+        avgCompetitor,
+        competitorScores,
+        leader: leader ? { name: getDomainName(leader.url), score: leader.scores[metric], url: leader.url } : null
       });
     }
   });
-  
+
   return `
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 1rem;">
-      <!-- Strengths -->
-      <div style="background: rgba(var(--accent-primary-rgb), 0.05); padding: 1.5rem; border-radius: 8px; border: 2px solid rgba(var(--accent-primary-rgb), 0.3);">
-        <h3 style="margin: 0 0 1rem 0; color: var(--accent-primary); display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.5rem;">💪</span> Strengths (${strengths.length})
-        </h3>
-        ${strengths.length > 0 ? `
-          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            ${strengths.map(s => `
-              <div style="background: rgba(var(--accent-primary-rgb), 0.1); padding: 1rem; border-radius: 6px; border-left: 3px solid var(--accent-primary);">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-weight: bold;">${formatMetricName(s.metric)}</span>
-                  <span style="color: var(--accent-primary); font-weight: bold; font-size: 1.1rem;">${s.score}</span>
-                </div>
-                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                  ${s.status === 'dominant' ? '👑 <strong>DOMINATING</strong> - Best in category!' : 
-                    `✓ <strong>+${s.lead.toFixed(0)} above average</strong>`}
-                </div>
-              </div>
-            `).join('')}
-          </div>
-        ` : `
-          <p style="color: var(--text-secondary); font-style: italic;">
-            No clear strengths identified. Focus on improving across all areas.
-          </p>
-        `}
+    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+      Based on your competitive analysis, here's where you excel and where you need improvement. Click each item for detailed insights.
+    </p>
+
+    <!-- Summary Stats -->
+    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
+      <div style="background: rgba(0,255,65,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(0,255,65,0.3);">
+        <div style="font-size: 2rem; font-weight: bold; color: #00ff41;">${strengths.filter(s => s.status === 'dominant').length}</div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary);">Categories Leading</div>
       </div>
-      
-      <!-- Weaknesses -->
-      <div style="background: rgba(255, 75, 75, 0.05); padding: 1.5rem; border-radius: 8px; border: 2px solid rgba(255, 75, 75, 0.3);">
-        <h3 style="margin: 0 0 1rem 0; color: #ff4444; display: flex; align-items: center; gap: 0.5rem;">
-          <span style="font-size: 1.5rem;">~</span> Weaknesses (${weaknesses.length})
-        </h3>
-        ${weaknesses.length > 0 ? `
-          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
-            ${weaknesses.map(w => `
-              <div style="background: rgba(255, 75, 75, 0.1); padding: 1rem; border-radius: 6px; border-left: 3px solid #ff4444;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                  <span style="font-weight: bold;">${formatMetricName(w.metric)}</span>
-                  <span style="color: #ff4444; font-weight: bold; font-size: 1.1rem;">${w.score}</span>
-                </div>
-                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                  ~ <strong>-${w.gap.toFixed(0)} behind leader</strong>
-                </div>
-                <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                  Leader: <strong>${getDomainName(w.leader.url)}</strong> (${w.leader.scores[w.metric]})
-                </div>
-              </div>
-            `).join('')}
+      <div style="background: rgba(91,244,231,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(91,244,231,0.3);">
+        <div style="font-size: 2rem; font-weight: bold; color: var(--accent-primary);">${strengths.filter(s => s.status === 'ahead').length}</div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary);">Above Average</div>
+      </div>
+      <div style="background: rgba(255,165,0,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(255,165,0,0.3);">
+        <div style="font-size: 2rem; font-weight: bold; color: #ffa500;">${weaknesses.length}</div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary);">Need Improvement</div>
+      </div>
+      <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="font-size: 2rem; font-weight: bold; color: var(--text-primary);">${data.yourSite.scores.overall}</div>
+        <div style="font-size: 0.75rem; color: var(--text-secondary);">Overall Score</div>
+      </div>
+    </div>
+
+    <!-- Strengths Section -->
+    ${strengths.length > 0 ? `
+      <h4 style="color: #00ff41; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.25rem;">💪</span> Your Competitive Strengths (${strengths.length})
+      </h4>
+      <div class="competitive-fixes-list" style="margin-bottom: 2rem;">
+        ${strengths.map((s, index) => renderStrengthAccordion(s, index, data)).join('')}
+      </div>
+    ` : ''}
+
+    <!-- Weaknesses Section -->
+    ${weaknesses.length > 0 ? `
+      <h4 style="color: #ff4444; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+        <span style="font-size: 1.25rem;">⚠️</span> Areas Needing Improvement (${weaknesses.length})
+      </h4>
+      <div class="competitive-fixes-list">
+        ${weaknesses.map((w, index) => renderWeaknessAccordion(w, index, data)).join('')}
+      </div>
+    ` : `
+      <div style="background: linear-gradient(135deg, rgba(0,255,65,0.1), rgba(91,244,231,0.05)); border: 1px solid rgba(0,255,65,0.3); border-radius: 16px; padding: 2rem; text-align: center;">
+        <h3 style="margin: 0 0 1rem 0; color: #00ff41;">🏆 Outstanding Performance!</h3>
+        <p style="color: var(--text-secondary); margin: 0;">You have no significant weaknesses. You're leading or competitive in all measured areas!</p>
+      </div>
+    `}
+  `;
+}
+
+// Render strength accordion
+function renderStrengthAccordion(strength, index, data) {
+  const accordionId = `strength-${index}`;
+  const isDominant = strength.status === 'dominant';
+  const style = isDominant
+    ? { bg: 'rgba(255, 215, 0, 0.08)', border: '#ffd700', color: '#ffd700', icon: '👑' }
+    : { bg: 'rgba(0, 255, 65, 0.08)', border: '#00ff41', color: '#00ff41', icon: '💪' };
+
+  return `
+    <div class="competitive-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="competitive-fix-header" onclick="toggleCompetitiveFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">${formatMetricName(strength.metric)}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">
+              Score: <strong>${strength.score}</strong> | +${strength.lead.toFixed(0)} above average
+            </p>
           </div>
-        ` : `
-          <p style="color: var(--accent-primary); font-style: italic;">
-            ! No weaknesses! You're leading or competitive in all areas!
-          </p>
-        `}
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${isDominant ? 'DOMINANT' : 'AHEAD'}</span>
+          <span class="competitive-fix-expand-icon" style="color: var(--text-secondary); transition: transform 0.3s;">▼</span>
+        </div>
+      </div>
+
+      <div class="competitive-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderStrengthTabs(strength, accordionId)}
+        </div>
       </div>
     </div>
   `;
+}
+
+// Render strength tabs
+function renderStrengthTabs(strength, accordionId) {
+  const metricName = formatMetricName(strength.metric);
+  const defensiveSteps = getDefensiveSteps(strength.metric);
+
+  return `
+    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="competitive-fix-tab active" onclick="switchCompetitiveFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Overview</button>
+      <button class="competitive-fix-tab" onclick="switchCompetitiveFixTab('${accordionId}', 'analysis')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📊 Comparison</button>
+      <button class="competitive-fix-tab" onclick="switchCompetitiveFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🛡️ Maintain Lead</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div class="competitive-fix-tab-content active" id="${accordionId}-summary">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Your Score</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: #00ff41;">${strength.score}</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Best Competitor</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: var(--text-primary);">${strength.maxCompetitor}</div>
+        </div>
+        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Your Lead</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: #ffd700;">+${strength.lead.toFixed(0)}</div>
+        </div>
+      </div>
+      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
+          ${strength.status === 'dominant' ? '👑 Category Leader' : '✓ Competitive Advantage'}
+        </div>
+        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+          ${getStrengthExplanation(strength)}
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparison Tab -->
+    <div class="competitive-fix-tab-content" id="${accordionId}-analysis" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--text-primary);">${metricName} Standings</h5>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        ${[{ name: 'You', score: strength.score, isYou: true }, ...strength.competitorScores]
+          .sort((a, b) => b.score - a.score)
+          .map((site, rank) => `
+            <div style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0.75rem 1rem;
+              background: ${site.isYou ? 'rgba(0,255,65,0.15)' : 'rgba(0,0,0,0.2)'};
+              border-radius: 6px;
+              border-left: 3px solid ${site.isYou ? '#00ff41' : 'transparent'};
+            ">
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="
+                  width: 24px;
+                  height: 24px;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  border-radius: 50%;
+                  background: ${rank === 0 ? '#ffd700' : 'rgba(255,255,255,0.1)'};
+                  color: ${rank === 0 ? '#000' : 'var(--text-secondary)'};
+                  font-size: 0.75rem;
+                  font-weight: bold;
+                ">${rank + 1}</span>
+                <span style="font-weight: ${site.isYou ? 'bold' : 'normal'}; color: ${site.isYou ? '#00ff41' : 'var(--text-primary)'};">
+                  ${site.isYou ? '👤 You' : site.name}
+                </span>
+              </div>
+              <span style="font-weight: bold; font-size: 1.1rem; color: ${rank === 0 ? '#ffd700' : 'var(--text-primary)'};">
+                ${site.score}
+              </span>
+            </div>
+          `).join('')}
+      </div>
+    </div>
+
+    <!-- Maintain Lead Tab -->
+    <div class="competitive-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--text-primary);">🛡️ How to Protect Your Advantage</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+        ${defensiveSteps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,215,0,0.1); border-radius: 8px; border: 1px solid rgba(255,215,0,0.2);">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: #ffd700; font-weight: 600; margin-bottom: 0.5rem;">
+          <span>⚠️</span> Watch Out
+        </div>
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+          ${getCompetitorThreatWarning(strength)}
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// Render weakness accordion
+function renderWeaknessAccordion(weakness, index, data) {
+  const accordionId = `weakness-${index}`;
+  const isUrgent = weakness.gap > 20;
+  const style = isUrgent
+    ? { bg: 'rgba(255, 68, 68, 0.08)', border: '#ff4444', color: '#ff4444', icon: '🔴' }
+    : { bg: 'rgba(255, 165, 0, 0.08)', border: '#ffa500', color: '#ffa500', icon: '🟠' };
+
+  return `
+    <div class="competitive-fix-accordion" data-fix-id="${accordionId}" style="
+      border: 1px solid ${style.border}33;
+      border-radius: 12px;
+      margin-bottom: 1rem;
+      overflow: hidden;
+      background: ${style.bg};
+    ">
+      <div class="competitive-fix-header" onclick="toggleCompetitiveFixAccordion('${accordionId}')" style="
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 1rem 1.25rem;
+        cursor: pointer;
+        transition: background 0.2s;
+      ">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="font-size: 1.25rem;">${style.icon}</span>
+          <div>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">${formatMetricName(weakness.metric)}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">
+              Score: <strong>${weakness.score}</strong> | ${weakness.gap} points behind ${weakness.leader?.name || 'leader'}
+            </p>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+          <span style="
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: ${style.color}20;
+            color: ${style.color};
+            border: 1px solid ${style.color}40;
+          ">${isUrgent ? 'URGENT' : 'IMPROVE'}</span>
+          <span class="competitive-fix-expand-icon" style="color: var(--text-secondary); transition: transform 0.3s;">▼</span>
+        </div>
+      </div>
+
+      <div class="competitive-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
+        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          ${renderWeaknessTabs(weakness, accordionId)}
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// Render weakness tabs
+function renderWeaknessTabs(weakness, accordionId) {
+  const metricName = formatMetricName(weakness.metric);
+  const actionSteps = getCompetitiveActionSteps({ metric: weakness.metric });
+
+  return `
+    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <button class="competitive-fix-tab active" onclick="switchCompetitiveFixTab('${accordionId}', 'summary')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 6px;
+        background: rgba(255,255,255,0.1);
+        color: #fff;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📋 Overview</button>
+      <button class="competitive-fix-tab" onclick="switchCompetitiveFixTab('${accordionId}', 'analysis')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">📊 Gap Analysis</button>
+      <button class="competitive-fix-tab" onclick="switchCompetitiveFixTab('${accordionId}', 'guide')" style="
+        padding: 0.5rem 1rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        border-radius: 6px;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 0.85rem;
+      ">🎯 Fix It</button>
+    </div>
+
+    <!-- Overview Tab -->
+    <div class="competitive-fix-tab-content active" id="${accordionId}-summary">
+      <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
+        <div style="background: rgba(255,68,68,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Your Score</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: #ff6666;">${weakness.score}</div>
+        </div>
+        <div style="background: rgba(0,255,65,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Leader Score</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: #00ff41;">${weakness.leader?.score || weakness.maxCompetitor}</div>
+        </div>
+        <div style="background: rgba(255,165,0,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Gap to Close</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: #ffa500;">${weakness.gap}</div>
+        </div>
+      </div>
+      <div style="background: rgba(255,68,68,0.1); border-left: 3px solid #ff4444; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #ff4444; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
+          ⚠️ Competitive Disadvantage
+        </div>
+        <div style="color: var(--text-secondary); font-size: 0.9rem;">
+          ${getWeaknessExplanation(weakness)}
+        </div>
+      </div>
+    </div>
+
+    <!-- Gap Analysis Tab -->
+    <div class="competitive-fix-tab-content" id="${accordionId}-analysis" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--text-primary);">${metricName} Gap Breakdown</h5>
+
+      <!-- Visual Gap Bar -->
+      <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+        <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+          <span style="color: #ff6666;">You: ${weakness.score}</span>
+          <span style="color: #00ff41;">Leader: ${weakness.leader?.score || weakness.maxCompetitor}</span>
+        </div>
+        <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${weakness.score}%; background: linear-gradient(90deg, #ff4444, #ffa500);"></div>
+          <div style="position: absolute; left: ${weakness.score}%; top: 0; height: 100%; width: ${weakness.gap}%; background: rgba(255,255,255,0.2);"></div>
+        </div>
+        <div style="text-align: center; margin-top: 0.5rem;">
+          <span style="color: #ffa500; font-weight: bold;">${weakness.gap} point gap to close</span>
+        </div>
+      </div>
+
+      <!-- Competitor Standings -->
+      <h6 style="margin: 1rem 0 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">All Competitors:</h6>
+      <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+        ${[{ name: 'You', score: weakness.score, isYou: true }, ...weakness.competitorScores]
+          .sort((a, b) => b.score - a.score)
+          .map((site, rank) => `
+            <div style="
+              display: flex;
+              justify-content: space-between;
+              align-items: center;
+              padding: 0.5rem 0.75rem;
+              background: ${site.isYou ? 'rgba(255,68,68,0.15)' : 'rgba(0,0,0,0.2)'};
+              border-radius: 4px;
+              border-left: 2px solid ${site.isYou ? '#ff4444' : rank === 0 ? '#00ff41' : 'transparent'};
+            ">
+              <span style="color: ${site.isYou ? '#ff6666' : 'var(--text-primary)'}; font-size: 0.9rem;">
+                ${site.isYou ? '👤 You' : site.name}
+              </span>
+              <span style="font-weight: bold; color: ${rank === 0 ? '#00ff41' : 'var(--text-primary)'};">
+                ${site.score}
+              </span>
+            </div>
+          `).join('')}
+      </div>
+    </div>
+
+    <!-- Fix It Tab -->
+    <div class="competitive-fix-tab-content" id="${accordionId}-guide" style="display: none;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--text-primary);">🎯 Action Plan to Close the Gap</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: var(--text-secondary); line-height: 1.8;">
+        ${actionSteps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
+      </ol>
+      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(91, 244, 231, 0.1); border-radius: 8px; border: 1px solid rgba(91, 244, 231, 0.2);">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: var(--accent-primary); font-weight: 600; margin-bottom: 0.5rem;">
+          <span>💡</span> Pro Tip
+        </div>
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+          ${getProTip({ metric: weakness.metric })}
+        </p>
+      </div>
+      <div style="margin-top: 1rem; padding: 1rem; background: rgba(255,215,0,0.1); border-radius: 8px; border: 1px solid rgba(255,215,0,0.2);">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: #ffd700; font-weight: 600; margin-bottom: 0.5rem;">
+          <span>🎯</span> Target Score
+        </div>
+        <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+          Aim for <strong style="color: #ffd700;">${weakness.leader?.score || weakness.maxCompetitor}+</strong> to match or exceed ${weakness.leader?.name || 'the leader'} in ${metricName}.
+        </p>
+      </div>
+    </div>
+  `;
+}
+
+// Helper functions for S&W content
+function getStrengthExplanation(strength) {
+  const metric = strength.metric.toLowerCase();
+  const explanations = {
+    performance: `Your site loads faster than competitors, providing a better user experience. This advantage impacts user engagement, SEO rankings, and conversion rates.`,
+    seo: `Your SEO implementation is stronger than competitors, giving you better search visibility and organic traffic potential.`,
+    accessibility: `Your site is more accessible than competitors, reaching a wider audience and demonstrating commitment to inclusive design.`,
+    security: `Your security posture is stronger, building more trust with users and protecting against potential vulnerabilities.`,
+    corewebvitals: `Your Core Web Vitals are better than competitors, which directly impacts Google search rankings and user experience.`
+  };
+  return explanations[metric] || `You're outperforming competitors in ${formatMetricName(metric)}, giving you a significant competitive advantage.`;
+}
+
+function getWeaknessExplanation(weakness) {
+  const metric = weakness.metric.toLowerCase();
+  const gap = weakness.gap;
+  const explanations = {
+    performance: `Your site is ${gap} points slower than the leader. Users may experience longer load times, potentially increasing bounce rates and reducing engagement.`,
+    seo: `You're ${gap} points behind in SEO. This gap could mean competitors are capturing organic traffic and rankings that you're missing.`,
+    accessibility: `Your accessibility score is ${gap} points lower. This limits your reach to users with disabilities and could pose compliance risks.`,
+    security: `Your security is ${gap} points weaker. Users may trust competitor sites more, especially for sensitive transactions.`,
+    corewebvitals: `Core Web Vitals gap of ${gap} points could affect your Google rankings. Competitors may rank higher in search results.`
+  };
+  return explanations[metric] || `The ${gap}-point gap in ${formatMetricName(metric)} puts you at a disadvantage compared to ${weakness.leader?.name || 'competitors'}.`;
+}
+
+function getCompetitorThreatWarning(strength) {
+  const metric = strength.metric.toLowerCase();
+  const warnings = {
+    performance: `Performance is constantly evolving. Competitors may invest in optimization at any time. Monitor their speeds regularly.`,
+    seo: `SEO rankings can shift quickly with algorithm updates or competitor content strategies. Stay vigilant with your SEO efforts.`,
+    accessibility: `Accessibility standards are becoming more stringent. Competitors may catch up to meet compliance requirements.`,
+    security: `Security threats evolve daily. What's secure today may be vulnerable tomorrow. Keep your security measures updated.`,
+    corewebvitals: `Google updates CWV thresholds periodically. Competitors may be working to improve their scores.`
+  };
+  return warnings[metric] || `Your competitors are likely working to improve. Don't get complacent - continue to invest in this area to maintain your lead.`;
 }
 
 // Legacy wrapper
@@ -1965,7 +2927,10 @@ function renderCompetitiveFixAccordion(rec, index) {
   };
   const style = priorityColors[rec.priority] || priorityColors.medium;
   const metricName = formatMetricName(rec.metric);
-  
+  const competitorName = rec.topCompetitorName || 'competitor';
+  const yourScore = typeof rec.yourScore === 'number' ? rec.yourScore : '?';
+  const topScore = typeof rec.topCompetitorScore === 'number' ? rec.topCompetitorScore : '?';
+
   return `
     <div class="competitive-fix-accordion" data-fix-id="${accordionId}" style="
       border: 1px solid ${style.border}33;
@@ -1974,7 +2939,7 @@ function renderCompetitiveFixAccordion(rec, index) {
       overflow: hidden;
       background: ${style.bg};
     ">
-      <div class="competitive-fix-header" onclick="toggleCompetitiveFixAccordion('${accordionId}')" style="
+      <div class="competitive-fix-header" style="
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -1986,7 +2951,7 @@ function renderCompetitiveFixAccordion(rec, index) {
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
             <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">Close ${rec.gap}-point gap in ${metricName}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">Top competitor: ${rec.topCompetitorScore || '?'} vs yours: ${rec.yourScore || '?'}</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">${competitorName}: <strong>${topScore}</strong> vs yours: <strong>${yourScore}</strong></p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -2067,18 +3032,40 @@ function renderCompetitiveFixTabs(rec, accordionId) {
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div style="text-align: center; padding: 1rem; background: rgba(255,68,68,0.1); border-radius: 8px;">
               <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Your Score</div>
-              <div style="font-size: 2rem; font-weight: bold; color: #ff6666;">${rec.yourScore || '?'}</div>
+              <div style="font-size: 2rem; font-weight: bold; color: #ff6666;">${rec.yourScore ?? '?'}</div>
             </div>
             <div style="text-align: center; padding: 1rem; background: rgba(0,255,65,0.1); border-radius: 8px;">
-              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Top Competitor</div>
-              <div style="font-size: 2rem; font-weight: bold; color: #00ff41;">${rec.topCompetitorScore || '?'}</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${rec.topCompetitorName || 'Top Competitor'}</div>
+              <div style="font-size: 2rem; font-weight: bold; color: #00ff41;">${rec.topCompetitorScore ?? '?'}</div>
             </div>
           </div>
-          <div style="margin-top: 1rem; text-align: center;">
-            <div style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,165,0,0.2); border-radius: 20px; color: #ffa500; font-weight: 600;">
-              Gap: ${rec.gap} points
+
+          <!-- Visual Gap Bar -->
+          <div style="margin-top: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.8rem;">
+              <span style="color: #ff6666;">You: ${rec.yourScore ?? '?'}</span>
+              <span style="color: #00ff41;">${rec.topCompetitorName || 'Leader'}: ${rec.topCompetitorScore ?? '?'}</span>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); height: 12px; border-radius: 6px; overflow: hidden; position: relative;">
+              <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${Math.min(rec.yourScore || 0, 100)}%; background: linear-gradient(90deg, #ff4444, #ff6666); border-radius: 6px 0 0 6px;"></div>
+              <div style="position: absolute; left: ${Math.min(rec.yourScore || 0, 100)}%; top: 0; height: 100%; width: ${Math.min(rec.gap || 0, 100 - (rec.yourScore || 0))}%; background: repeating-linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,165,0,0.3) 5px, rgba(255,165,0,0.1) 5px, rgba(255,165,0,0.1) 10px);"></div>
+            </div>
+            <div style="text-align: center; margin-top: 0.75rem;">
+              <span style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,165,0,0.2); border-radius: 20px; color: #ffa500; font-weight: 600; font-size: 0.9rem;">
+                ${rec.gap} point gap to close
+              </span>
             </div>
           </div>
+
+          <!-- Avg Competitor Context -->
+          ${rec.avgCompetitorScore ? `
+          <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(91,244,231,0.1); border-radius: 6px; border: 1px solid rgba(91,244,231,0.2);">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <span style="color: var(--text-secondary); font-size: 0.85rem;">Average competitor score:</span>
+              <span style="color: var(--accent-primary); font-weight: bold;">${rec.avgCompetitorScore}</span>
+            </div>
+          </div>
+          ` : ''}
         </div>
 
         <!-- What This Means -->
@@ -2086,6 +3073,16 @@ function renderCompetitiveFixTabs(rec, accordionId) {
           <h5 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">What This Means</h5>
           <p style="color: var(--text-secondary); margin: 0; line-height: 1.6;">
             ${getGapExplanation(rec)}
+          </p>
+        </div>
+
+        <!-- Target Score -->
+        <div style="background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.05)); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,215,0,0.3);">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: #ffd700; font-weight: 600; margin-bottom: 0.5rem;">
+            <span>🎯</span> Target Score
+          </div>
+          <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
+            Aim for <strong style="color: #ffd700;">${(rec.topCompetitorScore || 0) + 5}+</strong> to surpass ${rec.topCompetitorName || 'the leader'} and establish yourself as the ${metricName} leader in your competitive set.
           </p>
         </div>
       </div>
@@ -2267,3 +3264,8 @@ function setupThemeChangeListener() {
 
 // Initialize theme listener on page load
 setupThemeChangeListener();
+
+// ============================================
+// GLOBAL EXPORTS for billing return & report-ui.js
+// ============================================
+window.displayCompetitiveResults = displayResults;

@@ -565,60 +565,54 @@
         </div>
       </div>
 
-      <!-- Recent Reports Card (Full Width) -->
-      <div class="account-card account-card--full" aria-label="Recent reports">
+      <!-- Purchased Reports Card (Full Width) -->
+      <div class="account-card account-card--full" id="purchasedReportsCard" aria-label="Purchased reports">
         <div class="account-card-header">
           <h2>
             <svg class="account-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/>
             </svg>
-            Recent Reports
+            Purchased Reports
           </h2>
           <div class="account-card-actions">
-            <button class="btn-ghost" id="refreshReportsBtn" aria-label="Refresh reports">
+            <button class="btn-ghost" id="refreshPurchasedBtn" aria-label="Refresh purchased reports">
               ↻ Refresh
             </button>
-            <a href="/dashboard.html" class="btn-link">View all →</a>
           </div>
         </div>
 
+        <p style="margin-bottom: 1rem; color: #888; font-size: 0.875rem;" id="purchasedReportsDesc">
+          These reports have been permanently unlocked with your single purchase.
+        </p>
+
         <!-- Loading Skeleton -->
-        <div id="recentReportsLoading">
-          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
-          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
-          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
+        <div id="purchasedReportsLoading">
+          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
+          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
+          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
         </div>
 
-        <!-- Reports Table -->
-        <table class="table--compact hidden" id="recentReportsTable">
+        <!-- Purchased Reports Table -->
+        <table class="table--compact hidden" id="purchasedReportsTable">
           <thead>
             <tr>
               <th>Site</th>
-              <th>Report</th>
-              <th>Run</th>
-              <th>Status</th>
+              <th>Report Type</th>
+              <th>Purchased</th>
               <th>Action</th>
             </tr>
           </thead>
-          <tbody id="recentReportsTbody">
+          <tbody id="purchasedReportsTbody">
             <!-- Populated via JavaScript -->
           </tbody>
         </table>
 
         <!-- Empty State -->
-        <div class="empty-state hidden" id="recentReportsEmpty">
-          <p>You haven't run any reports yet.</p>
-          <a href="/dashboard.html" class="account-btn account-btn-primary" style="display: inline-block; width: auto;">
-            Run your first report
-          </a>
-        </div>
-
-        <!-- Error State -->
-        <div class="empty-state hidden" id="recentReportsError">
-          <p>Failed to load reports.</p>
-          <button class="account-btn account-btn-secondary" id="retryReportsBtn" style="display: inline-block; width: auto;">
-            Retry
-          </button>
+        <div class="empty-state hidden" id="purchasedReportsEmpty">
+          <p>You haven't purchased any individual reports yet.</p>
+          <p style="font-size: 0.875rem; color: #666; margin-top: 0.5rem;">
+            Individual report purchases ($10) permanently unlock Pro features for a specific scan.
+          </p>
         </div>
       </div>
 
@@ -690,6 +684,6 @@
 
   <script src="/pro-utils.js"></script>
   <script src="/nav-template.js"></script>
-  <script src="/account-script.js"></script>
+  <script src="/account-script.js?v=20260128a"></script>
 </body>
 </html>

@@ -123,11 +123,22 @@ async function analyze() {
     }
     
     const data = await response.json();
-    
+
+    // Extract and set report metadata from API response
+    console.log('[local-seo-script] Setting report metadata from API response');
+    const apiReportId = data?.reportId || data?.results?.reportId;
+    const screenshotUrl = data?.screenshotUrl || data?.results?.screenshotUrl;
+    if (apiReportId) {
+      document.body.setAttribute('data-report-id', apiReportId);
+    }
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
+
     loader.nextStep(3);
     loader.nextStep(4);
     loader.complete();
-    
+
     displayResults(data);
     results.style.display = 'block';
     
@@ -147,7 +158,10 @@ async function analyze() {
 function displayResults(data) {
   const resultsContainer = document.getElementById('results');
   resultsContainer.innerHTML = '';
-  
+
+  // CRITICAL: Show results container (it starts hidden)
+  resultsContainer.style.display = 'block';
+
   // Store results globally for PDF generation
   window.currentLocalSEOResults = data;
 
@@ -155,20 +169,29 @@ function displayResults(data) {
   const scanStartedAt = data.scanStartedAt || window.SM_SCAN_STARTED_AT || new Date().toISOString();
   const analyzerKey = window.SM_ANALYZER_KEY || 'local-seo';
 
-  let reportId = null;
-  if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
-    reportId = window.ReportUI.makeReportId({
-      analyzerKey,
-      normalizedUrl: reportUrl,
-      startedAtISO: scanStartedAt
-    });
-  } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
-    reportId = window.ReportUI.computeReportId(reportUrl, scanStartedAt, analyzerKey);
+  // CRITICAL: Use existing reportId from body attribute if set (from billing return)
+  // Only compute a new one if not already set
+  let reportId = document.body.getAttribute('data-report-id') || data.reportId || null;
+  if (!reportId) {
+    if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
+      reportId = window.ReportUI.makeReportId({
+        analyzerKey,
+        normalizedUrl: reportUrl,
+        startedAtISO: scanStartedAt
+      });
+    } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
+      reportId = window.ReportUI.computeReportId(reportUrl, scanStartedAt, analyzerKey);
+    }
   }
+  console.log('[LocalSEO] displayResults using reportId:', reportId);
 
-  const isUnlocked = reportId && (
-    (window.CreditsManager && typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
-    (window.CreditsManager && typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+  // Check if report is unlocked (Pro subscription or purchased single report)
+  // Use hasAccess() which checks both Pro subscription and purchased reports
+  const isUnlocked = !!(
+    reportId &&
+    window.ProReportBlock &&
+    typeof window.ProReportBlock.hasAccess === 'function' &&
+    window.ProReportBlock.hasAccess(reportId)
   );
 
   if (reportId) {
@@ -1328,3 +1351,81 @@ function getSocialIcon(platform) {
   };
   return icons[platform] || '🔗';
 }
+
+// ============================================================
+// Expose display function globally for billing return handler
+// ============================================================
+window.displayResults = displayResults;
+window.displayLocalSEOResults = displayResults;
+
+// ============================================================
+// Billing Return Handling
+// ============================================================
+(async function initFromUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const reportId = params.get('report_id') || '';
+  const autoUrl = params.get('url') || '';
+  const billingSuccess = params.get('billing_success') === 'true';
+
+  // If we have a report_id, set it immediately so hasAccess checks work
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    console.log('[LocalSEO] Set report ID from URL:', reportId);
+  }
+
+  // Pre-fill URL if provided
+  if (autoUrl) {
+    const urlInput = document.getElementById('url');
+    if (urlInput) urlInput.value = autoUrl;
+  }
+
+  // If returning from billing, wait for billing return processing to complete
+  if (billingSuccess && !window.__smBillingReturnComplete) {
+    console.log('[LocalSEO] Waiting for billing return processing...');
+    await new Promise((resolve) => {
+      if (window.__smBillingReturnComplete) {
+        resolve();
+        return;
+      }
+      const handler = () => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      };
+      window.addEventListener('sm:billingReturnComplete', handler);
+      setTimeout(() => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      }, 5000);
+    });
+    console.log('[LocalSEO] Billing return processing complete');
+    return; // Results will be restored by report-ui.js
+  }
+
+  // If we have a report_id, try to load the stored report
+  if (reportId && window.ReportStorage) {
+    console.log('[LocalSEO] Checking for stored report:', reportId);
+
+    // Fetch billing status BEFORE displaying the report
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      console.log('[LocalSEO] Fetching billing status...');
+      await window.ProReportBlock.fetchBillingStatus(true);
+    }
+
+    const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayResults);
+    if (loaded) {
+      console.log('[LocalSEO] Loaded stored report successfully');
+      return;
+    }
+  }
+})();
+
+// Listen for restore scan results event (after payment return)
+window.addEventListener('sm:restoreScanResults', (e) => {
+  const { results: restoredResults, url, analyzer } = e.detail || {};
+  if (restoredResults && (analyzer?.includes('local-seo') || analyzer?.includes('local_seo'))) {
+    console.log('[LocalSEO] Restoring scan results after payment');
+    const urlInput = document.getElementById('url');
+    if (url && urlInput) urlInput.value = url;
+    displayResults(restoredResults);
+  }
+});

@@ -611,12 +611,12 @@ function renderSecurityFixTabs(fix, accordionId) {
       </ol>
 
       <div class="fix-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
-        <button class="fix-btn fix-btn-primary" style="padding: 0.625rem 1.25rem; background: var(--accent-primary); color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer;" onclick="window.open('https://developer.mozilla.org/en-US/docs/Web/Security', '_blank')">
-          📚 Security Docs
-        </button>
-        <button class="fix-btn fix-btn-secondary" style="padding: 0.625rem 1.25rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; border-radius: 6px; font-weight: 500; cursor: pointer;" onclick="window.open('https://securityheaders.com/', '_blank')">
-          🧪 Test Headers
-        </button>
+        <a href="${getSecurityDocsUrl(fix.category, fix.title)}" target="_blank" rel="noopener noreferrer" class="fix-btn fix-btn-primary" style="padding: 0.625rem 1.25rem; background: var(--accent-primary); color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+          📚 Learn More
+        </a>
+        <a href="https://securityheaders.com/" target="_blank" rel="noopener noreferrer" class="fix-btn fix-btn-secondary" style="padding: 0.625rem 1.25rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; border-radius: 6px; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
+          🧪 Test Your Headers
+        </a>
       </div>
     </div>
   `;
@@ -628,12 +628,58 @@ function escapeSecurityHtml(text) {
   return div.innerHTML;
 }
 
+// Get contextual documentation URL based on the security issue
+function getSecurityDocsUrl(category, title) {
+  const titleLower = (title || '').toLowerCase();
+
+  // Specific documentation links for common issues
+  if (titleLower.includes('content security policy') || titleLower.includes('csp')) {
+    return 'https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP';
+  }
+  if (titleLower.includes('strict transport') || titleLower.includes('hsts')) {
+    return 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Strict-Transport-Security';
+  }
+  if (titleLower.includes('clickjacking') || titleLower.includes('x-frame')) {
+    return 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options';
+  }
+  if (titleLower.includes('mime') || titleLower.includes('x-content-type')) {
+    return 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Content-Type-Options';
+  }
+  if (titleLower.includes('cookie')) {
+    return 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies';
+  }
+  if (titleLower.includes('subresource') || titleLower.includes('integrity') || titleLower.includes('sri')) {
+    return 'https://developer.mozilla.org/en-US/docs/Web/Security/Subresource_Integrity';
+  }
+  if (titleLower.includes('https') || titleLower.includes('ssl') || titleLower.includes('tls')) {
+    return 'https://developer.mozilla.org/en-US/docs/Web/Security/Transport_Layer_Security';
+  }
+
+  // Category-based fallbacks
+  if (category === 'Security Headers') {
+    return 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers#security';
+  }
+  if (category === 'SSL/TLS') {
+    return 'https://developer.mozilla.org/en-US/docs/Web/Security/Transport_Layer_Security';
+  }
+  if (category === 'Cookies') {
+    return 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Cookies';
+  }
+
+  // Default fallback
+  return 'https://developer.mozilla.org/en-US/docs/Web/Security';
+}
+
 // Accordion toggle function
 function toggleSecurityFixAccordion(accordionId) {
+  console.log('[SecurityFixes] Toggle accordion:', accordionId);
   const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
   const content = document.getElementById(`${accordionId}-content`);
 
-  if (!accordion || !content) return;
+  if (!accordion || !content) {
+    console.error('[SecurityFixes] Accordion not found:', accordionId);
+    return;
+  }
 
   const isExpanded = accordion.classList.contains('expanded');
 
@@ -648,6 +694,63 @@ function toggleSecurityFixAccordion(accordionId) {
     }, 50);
   }
 }
+
+// Event delegation for security fix accordions (more reliable than inline onclick)
+document.addEventListener('click', function(e) {
+  // Handle accordion header clicks
+  const header = e.target.closest('.fix-header');
+  if (header) {
+    const accordion = header.closest('.fix-accordion');
+    if (accordion) {
+      const accordionId = accordion.getAttribute('data-fix-id');
+      if (accordionId) {
+        toggleSecurityFixAccordion(accordionId);
+      }
+    }
+    return;
+  }
+
+  // Handle tab button clicks
+  const tabButton = e.target.closest('.fix-tab');
+  if (tabButton) {
+    const accordion = tabButton.closest('.fix-accordion');
+    if (accordion) {
+      const accordionId = accordion.getAttribute('data-fix-id');
+      // Determine which tab was clicked based on text content
+      const tabText = tabButton.textContent.toLowerCase();
+      let tabName = 'summary';
+      if (tabText.includes('code')) tabName = 'code';
+      else if (tabText.includes('resources')) tabName = 'resources';
+      else if (tabText.includes('guide')) tabName = 'guide';
+
+      switchSecurityFixTab(accordionId, tabName);
+    }
+    return;
+  }
+
+  // Handle copy button clicks
+  const copyButton = e.target.closest('[onclick*="copySecurityCode"]');
+  if (copyButton) {
+    const onclickAttr = copyButton.getAttribute('onclick');
+    const match = onclickAttr && onclickAttr.match(/copySecurityCode\(['"]([^'"]+)['"]\)/);
+    if (match) {
+      copySecurityCode(match[1]);
+    }
+    return;
+  }
+
+  // Handle action buttons (Security Docs, Test Headers)
+  const actionBtn = e.target.closest('.fix-btn');
+  if (actionBtn) {
+    const btnText = actionBtn.textContent.toLowerCase();
+    if (btnText.includes('security docs') || btnText.includes('docs')) {
+      window.open('https://developer.mozilla.org/en-US/docs/Web/Security', '_blank');
+    } else if (btnText.includes('test headers')) {
+      window.open('https://securityheaders.com/', '_blank');
+    }
+    return;
+  }
+});
 
 // Tab switching function
 function switchSecurityFixTab(accordionId, tabName) {

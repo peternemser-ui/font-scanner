@@ -1,5 +1,9 @@
 const { createLogger } = require('../utils/logger');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
+
+// Use stealth plugin to avoid bot detection
+puppeteer.use(StealthPlugin());
 
 const logger = createLogger('CrossBrowserTestingService');
 

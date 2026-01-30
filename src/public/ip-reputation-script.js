@@ -4,7 +4,16 @@
 // Deterministic analyzer key (stable forever)
 window.SM_ANALYZER_KEY = 'ip-reputation';
 
+// Expose displayReputationResults globally EARLY so report-ui.js can find it during billing return
+// (function declarations are hoisted, so displayReputationResults exists even though it's defined below)
+window.displayReputationResults = displayReputationResults;
+
 let currentResults = null;
+// Also expose as window.currentResults for PricingModal to find
+Object.defineProperty(window, 'currentResults', {
+  get: () => currentResults,
+  set: (val) => { currentResults = val; }
+});
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
@@ -20,26 +29,161 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Auto-start scan if URL parameter is present
-  if (typeof window.getUrlParameter === 'function') {
-    const autoUrl = window.getUrlParameter();
+  // Check for stored report or auto-start scan
+  (async function initFromUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const reportId = params.get('report_id') || '';
+    const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
+    const billingSuccess = params.get('billing_success') === 'true';
+
+    console.log('[IP Reputation] initFromUrlParams starting:', { reportId, autoUrl, billingSuccess });
+
+    // If we have a report_id, set it immediately so hasAccess checks work
+    if (reportId) {
+      document.body.setAttribute('data-report-id', reportId);
+    }
+
+    // Fill URL input if we have a URL
     if (autoUrl) {
       urlInput.value = autoUrl;
+    }
+
+    // If returning from billing, wait for billing return processing to complete
+    // This ensures the purchase is verified before we try to display the report
+    if (billingSuccess && !window.__smBillingReturnComplete) {
+      console.log('[IP Reputation] Waiting for billing return processing...');
+      await new Promise(resolve => {
+        if (window.__smBillingReturnComplete) {
+          resolve();
+          return;
+        }
+        const handler = () => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        };
+        window.addEventListener('sm:billingReturnComplete', handler);
+        // Timeout fallback in case event is missed
+        setTimeout(() => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        }, 5000);
+      });
+      console.log('[IP Reputation] Billing return processing complete');
+      // After billing return, report-ui.js should have displayed the report
+      // Show results container if it was hidden
+      const resultsDiv = document.getElementById('results');
+      if (resultsDiv) resultsDiv.classList.remove('hidden');
+      return;
+    }
+
+    // Recovery: Check sessionStorage for checkout data when billing params are missing from URL
+    // This handles cases where Stripe redirect loses the URL parameters
+    const checkoutReportId = sessionStorage.getItem('sm_checkout_report_id');
+    const checkoutUrl = sessionStorage.getItem('sm_checkout_url');
+    if (checkoutReportId && checkoutUrl && !billingSuccess && !reportId) {
+      console.log('[IP Reputation] Found checkout data in sessionStorage, checking if purchase completed...', { checkoutReportId, checkoutUrl });
+
+      // Fetch billing status to verify purchase
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        await window.ProReportBlock.fetchBillingStatus(true);
+
+        if (window.ProReportBlock.hasAccess(checkoutReportId)) {
+          console.log('[IP Reputation] Purchase confirmed! Attempting to load stored report...');
+          document.body.setAttribute('data-report-id', checkoutReportId);
+          urlInput.value = checkoutUrl;
+
+          // Try to load from database storage
+          if (window.ReportStorage) {
+            const loaded = await window.ReportStorage.tryLoadAndDisplay(checkoutReportId, displayReputationResults);
+            if (loaded) {
+              console.log('[IP Reputation] Stored report loaded successfully after recovery');
+              const resultsDiv = document.getElementById('results');
+              if (resultsDiv) resultsDiv.classList.remove('hidden');
+              sessionStorage.removeItem('sm_checkout_url');
+              sessionStorage.removeItem('sm_checkout_report_id');
+              return;
+            }
+          }
+
+          // If no stored report, run scan with preserved report ID
+          console.log('[IP Reputation] No stored report found, running scan with preserved report ID');
+          sessionStorage.removeItem('sm_checkout_url');
+          sessionStorage.removeItem('sm_checkout_report_id');
+          setTimeout(() => analyzeReputation({ preserveReportId: true }), 500);
+          return;
+        } else {
+          console.log('[IP Reputation] Purchase not confirmed, clearing checkout data');
+          sessionStorage.removeItem('sm_checkout_url');
+          sessionStorage.removeItem('sm_checkout_report_id');
+        }
+      }
+    }
+
+    // If we have a report_id (not from billing return), try to load the stored report first
+    if (reportId && window.ReportStorage) {
+      console.log('[IP Reputation] Checking for stored report:', reportId);
+
+      // Fetch billing status to ensure we have access
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        console.log('[IP Reputation] Fetching billing status for report recall...');
+        await window.ProReportBlock.fetchBillingStatus(true);
+        console.log('[IP Reputation] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportId));
+      }
+
+      const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayReputationResults);
+      if (loaded) {
+        console.log('[IP Reputation] Stored report loaded successfully');
+        // Show results container
+        const resultsDiv = document.getElementById('results');
+        if (resultsDiv) resultsDiv.classList.remove('hidden');
+        return; // Don't auto-scan
+      } else {
+        console.log('[IP Reputation] No stored report found or failed to load');
+
+        // If user has purchased this report but no stored data, auto-run scan
+        if (autoUrl && window.ProReportBlock?.hasAccess && window.ProReportBlock.hasAccess(reportId)) {
+          console.log('[IP Reputation] User has access but no stored report - auto-running scan');
+          setTimeout(() => {
+            analyzeReputation({ preserveReportId: true });
+          }, 500);
+          return;
+        }
+      }
+    }
+
+    // Auto-start scan if URL parameter is present and no stored report was loaded
+    if (autoUrl && !reportId) {
       setTimeout(() => {
         analyzeReputation();
       }, 500);
     }
-  }
+  })();
 });
 
 // Main analysis function
-async function analyzeReputation() {
+async function analyzeReputation(options = {}) {
   const input = document.getElementById('urlInput').value.trim();
   const analyzeButton = document.getElementById('analyzeButton');
 
   if (!input) {
     showError('Please enter a valid IP address or domain name');
     return;
+  }
+
+  // If this is a recovery scan (after purchase), preserve the report ID
+  // Otherwise, clear old report ID when starting a NEW scan
+  if (!options.preserveReportId) {
+    document.body.removeAttribute('data-report-id');
+    const currentParams = new URLSearchParams(window.location.search);
+    if (currentParams.has('report_id')) {
+      currentParams.delete('report_id');
+      currentParams.delete('billing_success');
+      const cleanUrl = `${window.location.pathname}${currentParams.toString() ? `?${currentParams.toString()}` : ''}`;
+      window.history.replaceState({}, document.title, cleanUrl);
+      console.log('[IP Reputation] Cleared old report_id for new scan');
+    }
+  } else {
+    console.log('[IP Reputation] Preserving report_id for recovery scan:', document.body.getAttribute('data-report-id'));
   }
 
   // Update button state
@@ -51,8 +195,14 @@ async function analyzeReputation() {
   const resultsDiv = document.getElementById('results');
   const errorMessage = document.getElementById('errorMessage');
 
-  // Clear report metadata from previous scans
-  document.body.removeAttribute('data-report-id');
+  // For recalled scans (loaded from storage), report_id would be on the body
+  // For new scans, we generate a fresh one
+  const preservedReportId = document.body.getAttribute('data-report-id') || '';
+
+  // Clear report metadata from previous scans (but preserve URL-based report_id)
+  if (!preservedReportId) {
+    document.body.removeAttribute('data-report-id');
+  }
   document.body.removeAttribute('data-sm-screenshot-url');
   document.body.removeAttribute('data-sm-scan-started-at');
 
@@ -258,21 +408,37 @@ function displayReputationResults(data) {
   const scanStartedAt = data.scanStartedAt || window.SM_SCAN_STARTED_AT || new Date().toISOString();
   const analyzerKey = window.SM_ANALYZER_KEY || 'ip-reputation';
 
-  let reportId = null;
-  if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
-    reportId = window.ReportUI.makeReportId({
-      analyzerKey,
-      normalizedUrl: reportInput,
-      startedAtISO: scanStartedAt
-    });
-  } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
-    reportId = window.ReportUI.computeReportId(reportInput, scanStartedAt, analyzerKey);
+  // Check for preserved report_id from URL params (recall scan)
+  const params = new URLSearchParams(window.location.search);
+  const preservedReportId = params.get('report_id') || '';
+
+  // Use preserved report_id if available, otherwise generate new one
+  let reportId = preservedReportId || null;
+  if (!reportId) {
+    if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
+      reportId = window.ReportUI.makeReportId({
+        analyzerKey,
+        normalizedUrl: reportInput,
+        startedAtISO: scanStartedAt
+      });
+    } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
+      reportId = window.ReportUI.computeReportId(reportInput, scanStartedAt, analyzerKey);
+    }
   }
 
-  const isUnlocked = reportId && (
-    (window.CreditsManager && typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
-    (window.CreditsManager && typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+  // Check if report is unlocked (follows SEO pattern - checks both new and legacy billing)
+  const isUnlocked = !!(
+    reportId && (
+      // New billing model: Pro subscription or purchased single report
+      (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(reportId)) ||
+      // Legacy CreditsManager
+      (window.CreditsManager && (
+        (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+        (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+      ))
+    )
   );
+  console.log('[IP Reputation] isUnlocked check:', { reportId, isUnlocked, hasProReportBlock: !!window.ProReportBlock });
 
   if (reportId) {
     document.body.setAttribute('data-report-id', reportId);
@@ -432,7 +598,19 @@ function displayReputationResults(data) {
     const render = window.CreditsManager.renderPaywallState || window.CreditsManager.updateProUI;
     if (typeof render === 'function') render(reportId);
   }
+
+  // Auto-save report snapshot if user has access (Pro or purchased)
+  if (reportId && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
+    window.ReportStorage.autoSaveIfEligible(reportId, data, {
+      siteUrl: reportInput,
+      analyzerType: 'ip-reputation',
+      scannedAt: scanStartedAt
+    });
+  }
 }
+
+// Expose displayReputationResults globally so report-ui.js can use it for billing return
+window.displayReputationResults = displayReputationResults;
 
 // Create Blacklist Details Section
 function createBlacklistSection(blacklists) {
@@ -1310,6 +1488,43 @@ function switchIpRepFixTab(accordionId, tabName) {
     }, 50);
   }
 }
+
+// Expose accordion functions to window
+window.toggleIpRepFixAccordion = toggleIpRepFixAccordion;
+window.switchIpRepFixTab = switchIpRepFixTab;
+
+// Add click event delegation for IP reputation fix accordions and tabs
+document.addEventListener('click', function(e) {
+  // Handle tab clicks first
+  const tab = e.target.closest('.iprep-fix-tab');
+  if (tab) {
+    const accordion = tab.closest('.iprep-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      const tabText = tab.textContent.toLowerCase();
+      let tabName = 'summary';
+      if (tabText.includes('code')) tabName = 'code';
+      else if (tabText.includes('guide')) tabName = 'guide';
+      if (fixId && typeof window.switchIpRepFixTab === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+        window.switchIpRepFixTab(fixId, tabName);
+      }
+    }
+    return;
+  }
+  // Handle accordion header clicks
+  const header = e.target.closest('.iprep-fix-header');
+  if (header) {
+    const accordion = header.closest('.iprep-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      if (fixId && typeof window.toggleIpRepFixAccordion === 'function') {
+        window.toggleIpRepFixAccordion(fixId);
+      }
+    }
+  }
+});
 
 // Copy code
 function copyIpRepCode(elementId) {

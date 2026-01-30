@@ -33,19 +33,23 @@
   };
 
   /**
-   * Format timestamp in user-friendly format
+   * Format timestamp in user's local timezone
    */
   function formatTimestamp(timestamp) {
     if (!timestamp) return '';
 
     try {
       const date = new Date(timestamp);
-      return date.toLocaleDateString('en-US', {
+      if (isNaN(date.getTime())) return timestamp;
+
+      return date.toLocaleString('en-US', {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
+        hour: 'numeric',
+        minute: '2-digit',
+        hour12: true,
+        timeZoneName: 'short'
       });
     } catch (e) {
       return timestamp;
@@ -133,14 +137,6 @@
               <span class="meta-item__text">${modeLabel}</span>
             </span>
           ` : ''}
-          <button class="text-btn" onclick="window.ReportContainer.printReport()" title="Print Report">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <polyline points="6 9 6 2 18 2 18 9"/>
-              <path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/>
-              <rect x="6" y="14" width="12" height="8"/>
-            </svg>
-            Print
-          </button>
         </div>
       </div>
     `;
@@ -292,28 +288,37 @@
 
   /**
    * Print the report
-   * Hides pro sections for non-paying users
+   * Delegates to ReportUI.printReport if available, otherwise falls back to direct implementation
    */
   function printReport() {
-    // Check if user has pro access
-    const hasPro = typeof window.userHasPro === 'function' ? window.userHasPro() : false;
+    // Prefer ReportUI.printReport for consistency
+    if (window.ReportUI && typeof window.ReportUI.printReport === 'function') {
+      window.ReportUI.printReport();
+      return;
+    }
 
-    // Add class to body for print styling
+    // Fallback implementation for pages without report-ui.js
+    const hasPro = (
+      (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+      (typeof window.userHasPro === 'function' && window.userHasPro())
+    );
+
     document.body.classList.add('printing-report');
 
     if (!hasPro) {
-      // Add class to hide pro sections when not paid
       document.body.classList.add('print-free-tier');
     }
 
-    // Trigger print dialog
     window.print();
 
-    // Remove classes after print dialog closes
-    setTimeout(() => {
+    // Cleanup after print
+    const cleanup = () => {
       document.body.classList.remove('printing-report');
       document.body.classList.remove('print-free-tier');
-    }, 1000);
+    };
+
+    window.addEventListener('afterprint', cleanup, { once: true });
+    setTimeout(cleanup, 2000);
   }
 
   // Public API

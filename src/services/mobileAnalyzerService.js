@@ -6,6 +6,7 @@
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { roundTo } = require('../utils/formatHelpers');
+const { waitForCloudflareChallenge, detectBotProtection } = require('../utils/browserHelpers');
 
 const logger = createLogger('MobileAnalyzer');
 
@@ -172,7 +173,17 @@ class MobileAnalyzerService {
         });
 
         // Navigate to page
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+        const response = await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+
+        // Check for and wait for Cloudflare challenge to resolve
+        const botDetection = await detectBotProtection(page, response);
+        if (botDetection.isDetected) {
+          logger.info('Bot protection detected, waiting for challenge to resolve...', { device: device.name });
+          const resolved = await waitForCloudflareChallenge(page, 8000);
+          if (!resolved) {
+            logger.warn('Cloudflare challenge did not resolve', { device: device.name, url });
+          }
+        }
 
         // Capture screenshot (base64)
         if (options.captureScreenshots !== false) {

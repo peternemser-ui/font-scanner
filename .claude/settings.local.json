@@ -2,7 +2,33 @@
   "permissions": {
     "allow": [
       "Bash(powershell -Command \"Get-Content ''f:\\\\dev\\\\font-scanner\\\\src\\\\public\\\\hosting-analyzer-script.js'' | Select-Object -Last 2\")",
-      "Bash(sort:*)"
+      "Bash(sort:*)",
+      "Bash(git push:*)",
+      "Bash(curl:*)",
+      "Bash(node -e:*)",
+      "Bash(TOKEN=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiIxZDFkYzU1YS1lNmUwLTQwZWQtOGRlYi1hZjEyNDljMzk2NjUiLCJlbWFpbCI6InRlc3RAZXhhbXBsZS5jb20iLCJwbGFuIjoiZnJlZSIsImlhdCI6MTc2OTA1MjEzOSwiZXhwIjoxNzY5NjU2OTM5fQ.yk3Tspe210wqsg_3bwVMA6laCpEztLyKVzRJroHDeN0\")",
+      "Bash(start \"http://localhost:3000/dashboard.html#pricing\")",
+      "Bash(node --check:*)",
+      "Bash(git add:*)",
+      "Bash(git rm:*)",
+      "Bash(git commit:*)",
+      "Bash(gh pr create --title \"feat: Report shell unification and production readiness\" --body \"$\\(cat <<''EOF''\n## Summary\n- Unify report shell components across all analyzers for consistent UI/UX\n- Complete production readiness hardening with security improvements\n- Implement Stripe billing with subscriptions and single report purchases\n- Add premium PDF generators for all analyzer types\n- Make dashboard the homepage with improved navigation\n\n## Key Changes\n\n### Security & Production Readiness\n- Enable Helmet security middleware \\(CSP, HSTS, X-Frame-Options\\)\n- Add production validation for JWT_SECRET, STRIPE_SECRET_KEY, CORS_ORIGIN\n- Set production-appropriate rate limits\n- Disable payment demo mode by default\n- Fix password reset to not return token in production\n\n### Billing & Monetization\n- Implement Stripe checkout for Pro subscriptions \\(monthly/yearly\\)\n- Add single report purchase flow\n- Create billing success/cancel pages\n- Add entitlements system for paid features\n\n### Report Components\n- Unify report accordion and shell components\n- Add ProReportBlock for consistent paywall UI\n- Implement PricingModal component\n- Add screenshot lightbox functionality\n\n### PDF Generators\n- Add premium PDF generators for all analyzers\n- Improve PDF styling with Material Design\n- Add charts and visualizations to PDF reports\n\n## Test plan\n- [ ] Verify security headers are present in responses\n- [ ] Test rate limiting with production values\n- [ ] Verify Stripe checkout flow works\n- [ ] Test PDF generation for all analyzer types\n- [ ] Verify dashboard loads correctly as homepage\n\n🤖 Generated with [Claude Code]\\(https://claude.com/claude-code\\)\nEOF\n\\)\")",
+      "Bash(taskkill:*)",
+      "Bash(netstat:*)",
+      "Bash(findstr:*)",
+      "Bash(cmd //c \"taskkill /PID 185572 /F\")",
+      "Bash(npm start)",
+      "Bash(ping:*)",
+      "Bash(cmd //c \"taskkill /PID 201568 /F\")",
+      "Bash(sqlite3:*)",
+      "Bash(lsof:*)",
+      "Bash(xargs kill:*)",
+      "Bash(timeout /t 2 /nobreak)",
+      "Bash(timeout /t 5 /nobreak)",
+      "Bash(powershell -Command \"Stop-Process -Id 105796 -Force\")",
+      "Bash(powershell -Command \"Stop-Process -Id 36180 -Force\")",
+      "Bash(npm install:*)",
+      "Bash(node:*)"
     ]
   }
 }

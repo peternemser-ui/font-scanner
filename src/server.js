@@ -1,3 +1,6 @@
+// Load environment variables from .env file
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -361,6 +364,10 @@ app.use('/api/payment', paymentRoutes);
 const billingRoutes = require('./routes/billing');
 app.use('/api/billing', billingRoutes);
 
+// Reports API (stored report snapshots)
+const reportsRoutes = require('./routes/reports');
+app.use('/api/reports', reportsRoutes);
+
 // Usage Stats API
 const usageRoutes = require('./routes/usage');
 app.use('/api/usage', usageRoutes);
@@ -449,6 +456,7 @@ app.get('/api/pdf/pricing', pdfController.getPricing);
 app.post('/api/pdf/purchase', scanLimiter, pdfController.purchasePDFReport);
 app.get('/api/pdf/download/:token', downloadLimiter, pdfController.downloadPDFReport);
 app.post('/api/pdf/generate', scanLimiter, optionalAuth, pdfController.generatePDF);
+app.post('/api/pdf/render', scanLimiter, optionalAuth, pdfController.renderPDF);
 
 // Test endpoint for debugging
 app.get('/api/test', (req, res) => {

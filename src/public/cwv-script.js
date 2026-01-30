@@ -19,13 +19,370 @@ urlInput.addEventListener('keypress', (e) => {
   }
 });
 
+// Handle URL parameters for report loading and billing return
+(async function initFromUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const reportId = params.get('report_id') || '';
+  const autoUrl = params.get('url') || '';
+  const autoScan = params.get('auto_scan') === 'true';
+  const billingSuccess = params.get('billing_success') === 'true';
+
+  // If we have a report_id, set it immediately so hasAccess checks work
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    console.log('[CWV] Set report ID from URL:', reportId);
+  }
+
+  // If returning from billing, wait for billing return processing to complete
+  if (billingSuccess && !window.__smBillingReturnComplete) {
+    console.log('[CWV] Waiting for billing return processing...');
+    await new Promise((resolve) => {
+      if (window.__smBillingReturnComplete) {
+        resolve();
+        return;
+      }
+      const handler = () => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      };
+      window.addEventListener('sm:billingReturnComplete', handler);
+      setTimeout(() => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      }, 5000);
+    });
+    console.log('[CWV] Billing return processing complete');
+    return;
+  }
+
+  // If we have a report_id, try to load the stored report first
+  if (reportId && window.ReportStorage) {
+    console.log('[CWV] Checking for stored report:', reportId);
+
+    // CRITICAL: Fetch billing status BEFORE displaying the report
+    // Force refresh to ensure we have the latest purchase data (e.g., coming from dashboard)
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      console.log('[CWV] Fetching billing status (force refresh for report recall)...');
+      await window.ProReportBlock.fetchBillingStatus(true);
+      console.log('[CWV] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportId), 'for reportId:', reportId);
+    }
+
+    const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayResults);
+    if (loaded) {
+      // Stored report was loaded - fill URL input for context
+      if (autoUrl && urlInput) urlInput.value = autoUrl;
+      return; // Don't auto-scan
+    }
+  }
+
+  // No stored report found - pre-fill URL but only auto-scan if explicitly requested
+  if (autoUrl && urlInput) {
+    urlInput.value = autoUrl;
+  }
+  // Only auto-scan if explicitly requested with auto_scan=true
+  if (autoScan) {
+    setTimeout(() => {
+      analyzeButton.click();
+    }, 500);
+  }
+})();
+
+// Listen for restore scan results event (after payment return)
+window.addEventListener('sm:restoreScanResults', (e) => {
+  const { results: restoredResults, url, analyzer } = e.detail || {};
+  if (restoredResults && (analyzer?.includes('cwv') || analyzer?.includes('core-web-vitals'))) {
+    console.log('[CWV] Restoring scan results after payment');
+    if (url && urlInput) {
+      urlInput.value = url;
+    }
+    displayResults(restoredResults);
+  }
+});
+
+// Store pending URL for resuming after payment
+let pendingCWVAnalysisUrl = null;
+
+/**
+ * Check if user can run a CWV report (has subscription OR purchased this report)
+ * @returns {Promise<boolean>}
+ */
+async function checkCanRunCWVReport() {
+  // Ensure billing status is fetched
+  if (window.ProReportBlock?.fetchBillingStatus) {
+    await window.ProReportBlock.fetchBillingStatus();
+  }
+
+  // Check if user is a Pro subscriber (any subscription tier)
+  if (window.ProReportBlock?.isProSubscriber?.()) {
+    console.log('[CWV] User is Pro subscriber, allowing access');
+    return true;
+  }
+
+  // Check if CWV report type has been purchased
+  const reportId = document.body.getAttribute('data-report-id') || '';
+  if (reportId && window.ProReportBlock?.isReportPurchased?.(reportId)) {
+    console.log('[CWV] Report is purchased, allowing access:', reportId);
+    return true;
+  }
+
+  // Also check localStorage for CWV purchases
+  const purchaseKey = 'sm_report_purchased_cwv';
+  const purchaseTimestamp = localStorage.getItem(purchaseKey);
+  if (purchaseTimestamp) {
+    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+    if (parseInt(purchaseTimestamp, 10) > oneDayAgo) {
+      console.log('[CWV] Recent purchase found for CWV');
+      return true;
+    }
+  }
+
+  console.log('[CWV] No access found for CWV report');
+  return false;
+}
+
+/**
+ * Show payment gate modal for CWV
+ */
+function showCWVPaymentGate(url) {
+  const modalHTML = `
+    <div id="cwvPaymentGateModal" style="
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      backdrop-filter: blur(8px);
+    ">
+      <div style="
+        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+        border: 2px solid #10b981;
+        border-radius: 16px;
+        padding: 2.5rem;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        animation: cwvSlideIn 0.3s ease-out;
+      ">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
+          <h2 style="color: #10b981; margin: 0 0 0.5rem 0; font-size: 1.75rem;">Core Web Vitals Report</h2>
+          <p style="color: #aaa; margin: 0; font-size: 1rem;">Get detailed CWV analysis including LCP, INP, and CLS metrics for mobile and desktop.</p>
+        </div>
+
+        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+          <h3 style="color: #fff; margin: 0 0 1rem 0; font-size: 1.1rem;">What's included:</h3>
+          <ul style="list-style: none; padding: 0; margin: 0;">
+            <li style="color: #ccc; margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
+              <span style="position: absolute; left: 0; color: #10b981;">✓</span>
+              Mobile & Desktop CWV metrics
+            </li>
+            <li style="color: #ccc; margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
+              <span style="position: absolute; left: 0; color: #10b981;">✓</span>
+              Google ranking impact analysis
+            </li>
+            <li style="color: #ccc; margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
+              <span style="position: absolute; left: 0; color: #10b981;">✓</span>
+              Detailed metric breakdowns
+            </li>
+            <li style="color: #ccc; margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
+              <span style="position: absolute; left: 0; color: #10b981;">✓</span>
+              Actionable recommendations
+            </li>
+          </ul>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 1.5rem;">
+          <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
+            <div style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem;">
+              <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">$10</div>
+              <div style="color: #888; font-size: 0.75rem;">This report only</div>
+            </div>
+            <div style="flex: 1; background: rgba(91, 244, 231, 0.1); border: 1px solid rgba(91, 244, 231, 0.3); border-radius: 8px; padding: 1rem;">
+              <div style="font-size: 1.5rem; font-weight: bold; color: #5bf4e7;">$20/mo</div>
+              <div style="color: #888; font-size: 0.75rem;">All reports</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+          <button id="cwvProceedPaymentBtn" style="
+            background: linear-gradient(135deg, #10b981, #10b981dd);
+            border: none;
+            color: #fff;
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 1rem;
+          ">
+            Unlock for $10
+          </button>
+          <button id="cwvGoProBtn" style="
+            background: transparent;
+            border: 1px solid #5bf4e7;
+            color: #5bf4e7;
+            padding: 0.875rem 1.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1rem;
+          ">
+            Go Pro — $20/mo
+          </button>
+          <button id="cwvCancelPaymentBtn" style="
+            background: transparent;
+            border: none;
+            color: #888;
+            padding: 0.5rem;
+            cursor: pointer;
+            font-size: 0.875rem;
+          ">
+            Cancel
+          </button>
+        </div>
+
+        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
+          <div style="color: #666; font-size: 0.8rem; margin-bottom: 0.5rem;">
+            🔒 Secure payment powered by Stripe
+          </div>
+          <div style="color: #555; font-size: 0.75rem;">
+            Pro unlocks all reports • Single purchase unlocks this scan only
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <style>
+      @keyframes cwvSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(-20px) scale(0.95);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+        }
+      }
+    </style>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', modalHTML);
+
+  document.getElementById('cwvCancelPaymentBtn').addEventListener('click', () => {
+    document.getElementById('cwvPaymentGateModal').remove();
+    analyzeButton.disabled = false;
+    analyzeButton.textContent = 'ANALYZE CWV';
+  });
+
+  document.getElementById('cwvProceedPaymentBtn').addEventListener('click', () => {
+    createCWVPaymentSession(url);
+  });
+
+  document.getElementById('cwvGoProBtn').addEventListener('click', () => {
+    document.getElementById('cwvPaymentGateModal').remove();
+    if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+      window.PricingModal.open();
+    }
+  });
+}
+
+/**
+ * Create Stripe checkout session for CWV report
+ */
+async function createCWVPaymentSession(url) {
+  const proceedBtn = document.getElementById('cwvProceedPaymentBtn');
+  proceedBtn.disabled = true;
+  proceedBtn.textContent = 'Creating checkout...';
+
+  try {
+    const startedAt = document.body.getAttribute('data-sm-scan-started-at') || window.SM_SCAN_STARTED_AT || '';
+    const analyzerKey = 'core-web-vitals';
+    const reportId = document.body.getAttribute('data-report-id') ||
+      (window.ReportUI && typeof window.ReportUI.makeReportId === 'function'
+        ? window.ReportUI.makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt })
+        : '');
+
+    const params = new URLSearchParams(window.location.search);
+    params.delete('session_id');
+    params.delete('sessionId');
+    params.delete('canceled');
+    if (reportId) params.set('reportId', reportId);
+    params.set('url', url);
+    params.set('report_type', 'cwv');
+    params.set('auto_scan', 'true');
+    const returnUrl = `${window.location.origin}${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
+
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    const response = await fetch('/api/billing/checkout', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        purchaseType: 'single_report',
+        reportId: reportId || null,
+        returnUrl
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok || !data.checkoutUrl) {
+      throw new Error((data && data.error) || 'Failed to create payment session');
+    }
+
+    window.location.href = data.checkoutUrl;
+
+  } catch (error) {
+    console.error('Payment error:', error);
+    proceedBtn.disabled = false;
+    proceedBtn.textContent = 'Unlock for $10';
+    alert(`Payment error: ${error.message}`);
+  }
+}
+
+// Check URL params for billing return and mark purchase
+(function handleCWVBillingReturn() {
+  const params = new URLSearchParams(window.location.search);
+  const billingSuccess = params.get('billing_success') === 'true';
+  const sessionId = params.get('session_id') || params.get('sessionId');
+  const reportType = params.get('report_type');
+
+  if ((billingSuccess || sessionId) && reportType === 'cwv') {
+    console.log('[CWV] Marking CWV as purchased after billing return');
+    localStorage.setItem('sm_report_purchased_cwv', Date.now().toString());
+    if (window.ProReportBlock?.clearBillingCache) {
+      window.ProReportBlock.clearBillingCache();
+    }
+  }
+})();
+
 analyzeButton.addEventListener('click', async () => {
   const url = urlInput.value.trim();
-  
+
   if (!url) {
     alert('Please enter a URL');
     return;
   }
+
+  // ==================== PAYMENT GATE CHECK ====================
+  const canRun = await checkCanRunCWVReport();
+  if (!canRun) {
+    console.log('[CWV] Payment required for CWV report');
+    pendingCWVAnalysisUrl = url;
+    showCWVPaymentGate(url);
+    return;
+  }
+  console.log('[CWV] Access granted, proceeding with analysis');
+  // ==================== END PAYMENT GATE ====================
 
   analyzeButton.disabled = true;
   analyzeButton.textContent = 'ANALYZING...';
@@ -144,10 +501,22 @@ analyzeButton.addEventListener('click', async () => {
     }
 
     const data = await response.json();
-    
+
+    // Extract and set report metadata from API response
+    const apiReportId = data?.reportId || data?.results?.reportId;
+    const screenshotUrl = data?.screenshotUrl || data?.results?.screenshotUrl;
+    if (apiReportId) {
+      document.body.setAttribute('data-report-id', apiReportId);
+      console.log('[CWV] Set report ID from API:', apiReportId);
+    }
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+      console.log('[CWV] Set screenshot URL from API:', screenshotUrl);
+    }
+
     // Complete the loader
     loader.complete();
-    
+
     // Show results after animation completes
     setTimeout(() => {
       displayResults(data);
@@ -164,6 +533,15 @@ analyzeButton.addEventListener('click', async () => {
 });
 
 function displayResults(data) {
+  // Store results globally for PDF generation and billing return restoration
+  window.currentCWVResults = data;
+
+  // Ensure results container is visible (may be hidden if called directly without scan flow)
+  const resultsEl = document.getElementById('cwvResults');
+  if (resultsEl) {
+    resultsEl.style.display = 'block';
+  }
+
   const { desktop, mobile, score, grade, recommendations, issues, comparison } = data;
 
   resultsContainer.innerHTML = `
@@ -311,7 +689,20 @@ function displayResults(data) {
 
     <!-- PDF Download button removed - monetization disabled -->
   `;
+
+  // Auto-save report if user has access (purchased or Pro)
+  const reportId = document.body.getAttribute('data-report-id') || '';
+  if (reportId && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
+    window.ReportStorage.autoSaveIfEligible(reportId, data, {
+      siteUrl: urlInput.value.trim(),
+      analyzerType: 'core-web-vitals',
+      scannedAt: window.SM_SCAN_STARTED_AT || new Date().toISOString()
+    });
+  }
 }
+
+// Expose display function globally for billing return handler
+window.displayCWVResults = displayResults;
 
 function renderCWVMetrics(device) {
   return `
@@ -686,7 +1077,7 @@ function toggleCWVAccordion(accordionId) {
   const content = document.getElementById(accordionId);
   const header = content.previousElementSibling;
   const chevron = header.querySelector('.accordion-chevron');
-  
+
   if (content.style.maxHeight && content.style.maxHeight !== '0px') {
     // Collapse
     content.style.maxHeight = '0px';
@@ -699,7 +1090,7 @@ function toggleCWVAccordion(accordionId) {
     content.style.padding = '1rem 1.25rem';
     content.style.borderTopWidth = '1px';
     chevron.style.transform = 'rotate(180deg)';
-    
+
     // Adjust max-height after content loads (images, etc.)
     setTimeout(() => {
       if (content.style.maxHeight !== '0px') {
@@ -708,6 +1099,23 @@ function toggleCWVAccordion(accordionId) {
     }, 100);
   }
 }
+
+window.toggleCWVAccordion = toggleCWVAccordion;
+
+// Add click event delegation for CWV accordions
+document.addEventListener('click', function(e) {
+  // Handle accordion header clicks
+  const header = e.target.closest('.cwv-accordion-header');
+  if (header) {
+    const accordion = header.closest('.cwv-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-accordion-id') || accordion.getAttribute('data-fix-id');
+      if (fixId && typeof window.toggleCWVAccordion === 'function') {
+        window.toggleCWVAccordion(fixId);
+      }
+    }
+  }
+});
 
 // Auto-start scan if URL parameter is present
 if (typeof window.getUrlParameter === 'function') {

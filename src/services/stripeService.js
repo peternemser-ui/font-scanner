@@ -59,11 +59,18 @@ class StripeService {
 
   /**
    * Get subscription price ID based on interval
-   * @param {string} interval - 'month' or 'year'
+   * @param {string} interval - 'day', 'month' or 'year'
    * @returns {string} Stripe price ID
    */
   getSubscriptionPriceId(interval) {
     const env = process.env;
+    if (interval === 'day') {
+      const priceId = env.STRIPE_PRICE_DAY_PASS;
+      if (!priceId) {
+        throw new Error('Stripe price ID not configured: STRIPE_PRICE_DAY_PASS');
+      }
+      return priceId;
+    }
     if (interval === 'month') {
       const priceId = env.STRIPE_PRICE_PRO_MONTHLY || env.STRIPE_PRO_PRICE_ID;
       if (!priceId) {
@@ -78,7 +85,7 @@ class StripeService {
       }
       return priceId;
     }
-    throw new Error('Invalid interval: must be "month" or "year"');
+    throw new Error('Invalid interval: must be "day", "month" or "year"');
   }
 
   /**
@@ -421,7 +428,7 @@ class StripeService {
    * @param {Object} params
    * @param {string} params.userId - User ID
    * @param {string} params.email - User email
-   * @param {string} params.interval - 'month' or 'year'
+   * @param {string} params.interval - 'day', 'month' or 'year'
    * @param {string} params.successUrl - URL after successful payment
    * @param {string} params.cancelUrl - URL if payment is canceled
    */
@@ -436,7 +443,8 @@ class StripeService {
       priceId
     });
 
-    const session = await stripe.checkout.sessions.create({
+    // Build session options
+    const sessionOptions = {
       customer: customerId,
       line_items: [{
         price: priceId,
@@ -455,7 +463,22 @@ class StripeService {
       customer_update: {
         address: 'auto'
       }
-    });
+    };
+
+    // Day pass: set to cancel at period end so it doesn't auto-renew
+    if (interval === 'day') {
+      sessionOptions.subscription_data = {
+        metadata: {
+          userId,
+          purchaseType: 'subscription',
+          interval: 'day'
+        }
+      };
+      // Note: cancel_at_period_end must be set after subscription is created via webhook
+      // Stripe Checkout doesn't support setting this directly
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionOptions);
 
     logger.info('Subscription checkout session created', {
       sessionId: session.id,
@@ -474,7 +497,7 @@ class StripeService {
    * @param {string} params.successUrl - URL after successful payment
    * @param {string} params.cancelUrl - URL if payment is canceled
    */
-  async createSingleReportCheckout({ userId, email, reportId, successUrl, cancelUrl }) {
+  async createSingleReportCheckout({ userId, email, reportId, successUrl, cancelUrl, siteUrl, analyzerType }) {
     const customerId = await this.getOrCreateCustomer(userId, email);
     const priceId = this.getSingleReportPriceId();
 
@@ -482,7 +505,9 @@ class StripeService {
       userId,
       customerId,
       reportId,
-      priceId
+      priceId,
+      siteUrl,
+      analyzerType
     });
 
     const session = await stripe.checkout.sessions.create({
@@ -497,7 +522,9 @@ class StripeService {
       metadata: {
         userId,
         purchaseType: 'single_report',
-        reportId
+        reportId,
+        siteUrl: siteUrl || '',
+        analyzerType: analyzerType || ''
       },
       allow_promotion_codes: false
     });
@@ -532,17 +559,31 @@ class StripeService {
       throw new Error('User not found');
     }
 
-    // Get purchased reports
+    // Get purchased reports with full details
     let purchasedReports = [];
+    let purchasedReportDetails = [];
     try {
       const rows = await db.all(
-        'SELECT report_id FROM report_purchases WHERE user_id = ?',
+        'SELECT report_id, site_url, analyzer_type, purchased_at FROM report_purchases WHERE user_id = ? ORDER BY purchased_at DESC',
         [userId]
       );
+      logger.info('Fetched purchased reports from database', {
+        userId,
+        count: rows?.length || 0,
+        reports: rows?.map(r => ({ reportId: r.report_id, siteUrl: r.site_url, analyzerType: r.analyzer_type }))
+      });
       purchasedReports = rows.map(r => r.report_id);
+      purchasedReportDetails = rows.map(r => ({
+        reportId: r.report_id,
+        siteUrl: r.site_url || '',
+        analyzerType: r.analyzer_type || '',
+        // SQLite CURRENT_TIMESTAMP returns UTC but without 'Z' suffix
+        // Append 'Z' so JavaScript Date() correctly interprets as UTC
+        purchasedAt: r.purchased_at ? r.purchased_at.replace(' ', 'T') + 'Z' : null
+      }));
     } catch (e) {
-      // Table may not exist yet
-      logger.warn('Could not fetch purchased reports', { error: e.message });
+      // Table may not exist yet or columns missing
+      logger.warn('Could not fetch purchased reports', { error: e.message, stack: e.stack });
     }
 
     // Determine if subscription is active
@@ -587,7 +628,8 @@ class StripeService {
       currentPeriodEnd: user.stripe_current_period_end || null,
       cancelAtPeriodEnd,
       hasStripeCustomer: !!user.stripe_customer_id,
-      purchasedReports
+      purchasedReports,
+      purchasedReportDetails
     };
   }
 
@@ -670,6 +712,150 @@ class StripeService {
 
     // Check for individual report purchase
     return this.hasReportPurchase(user.id, reportId);
+  }
+
+  /**
+   * Verify a checkout session and record the purchase if successful
+   * This is a fallback for when webhooks don't fire (e.g., local development)
+   * @param {string} sessionId - Stripe checkout session ID
+   * @param {string} userId - User ID to verify against
+   * @returns {Promise<Object>} Verification result
+   */
+  async verifyAndRecordPurchase(sessionId, userId) {
+    if (!sessionId || !userId) {
+      logger.warn('verifyAndRecordPurchase called with missing params', { sessionId: !!sessionId, userId: !!userId });
+      return { success: false, error: 'Missing session ID or user ID' };
+    }
+
+    logger.info('Verifying purchase from checkout session', { sessionId, userId });
+
+    const db = getDatabase();
+
+    try {
+      // Retrieve the session from Stripe
+      const session = await stripe.checkout.sessions.retrieve(sessionId);
+
+      if (!session) {
+        logger.warn('Session not found in Stripe', { sessionId });
+        return { success: false, error: 'Session not found' };
+      }
+
+      logger.info('Retrieved Stripe session', {
+        sessionId,
+        paymentStatus: session.payment_status,
+        metadata: session.metadata
+      });
+
+      // Verify the session belongs to this user (convert both to string for comparison)
+      const metadataUserId = String(session.metadata?.userId || '');
+      const requestUserId = String(userId);
+      if (metadataUserId !== requestUserId) {
+        logger.warn('Session user mismatch', { sessionUserId: metadataUserId, requestUserId });
+        return { success: false, error: 'Session does not belong to this user' };
+      }
+
+      // Check if payment was successful
+      if (session.payment_status !== 'paid') {
+        logger.warn('Payment not completed', { sessionId, paymentStatus: session.payment_status });
+        return { success: false, error: 'Payment not completed', paymentStatus: session.payment_status };
+      }
+
+      const purchaseType = session.metadata?.purchaseType;
+      const reportId = session.metadata?.reportId;
+      const siteUrl = session.metadata?.siteUrl || '';
+      const analyzerType = session.metadata?.analyzerType || '';
+
+      // Handle single report purchase
+      if (purchaseType === 'single_report' && reportId) {
+        // Check if already recorded
+        const existing = await db.get(
+          'SELECT 1 FROM report_purchases WHERE user_id = ? AND report_id = ?',
+          [userId, reportId]
+        );
+
+        if (!existing) {
+          // Record the purchase
+          await db.run(
+            `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at, site_url, analyzer_type)
+             VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+             ON CONFLICT(user_id, report_id) DO UPDATE SET
+               stripe_checkout_session_id = excluded.stripe_checkout_session_id,
+               purchased_at = CURRENT_TIMESTAMP,
+               site_url = COALESCE(excluded.site_url, site_url),
+               analyzer_type = COALESCE(excluded.analyzer_type, analyzer_type)`,
+            [userId, reportId, sessionId, siteUrl, analyzerType]
+          );
+
+          logger.info('Single report purchase recorded via session verification', {
+            userId,
+            reportId,
+            sessionId,
+            siteUrl,
+            analyzerType
+          });
+        }
+
+        return {
+          success: true,
+          purchaseType: 'single_report',
+          reportId,
+          siteUrl,
+          analyzerType
+        };
+      }
+
+      // Handle subscription purchase
+      if (purchaseType === 'subscription' || session.mode === 'subscription') {
+        const subscriptionId = session.subscription;
+        const interval = session.metadata?.interval || 'month';
+
+        if (subscriptionId) {
+          // Fetch subscription details
+          const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+          // Update user's subscription status
+          await db.run(
+            `UPDATE users SET
+               plan = 'pro',
+               stripe_subscription_id = ?,
+               stripe_subscription_status = ?,
+               stripe_current_period_end = ?,
+               stripe_subscription_interval = ?
+             WHERE id = ?`,
+            [
+              subscriptionId,
+              subscription.status,
+              new Date(subscription.current_period_end * 1000).toISOString(),
+              interval,
+              userId
+            ]
+          );
+
+          logger.info('Subscription recorded via session verification', {
+            userId,
+            subscriptionId,
+            status: subscription.status
+          });
+
+          return {
+            success: true,
+            purchaseType: 'subscription',
+            subscriptionId,
+            interval
+          };
+        }
+      }
+
+      return { success: false, error: 'Unknown purchase type' };
+
+    } catch (error) {
+      logger.error('Failed to verify and record purchase', {
+        sessionId,
+        userId,
+        error: error.message
+      });
+      return { success: false, error: error.message };
+    }
   }
 
   /**
@@ -775,22 +961,28 @@ class StripeService {
             const purchaseType = session.metadata?.purchaseType;
             const userId = session.metadata?.userId;
             const reportId = session.metadata?.reportId;
+            const siteUrl = session.metadata?.siteUrl || '';
+            const analyzerType = session.metadata?.analyzerType || '';
 
             if (purchaseType === 'single_report' && userId && reportId) {
               try {
                 await db.run(
-                  `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at)
-                   VALUES (?, ?, ?, CURRENT_TIMESTAMP)
+                  `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at, site_url, analyzer_type)
+                   VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
                    ON CONFLICT(user_id, report_id) DO UPDATE SET
                      stripe_checkout_session_id = excluded.stripe_checkout_session_id,
-                     purchased_at = CURRENT_TIMESTAMP`,
-                  [userId, reportId, session.id]
+                     purchased_at = CURRENT_TIMESTAMP,
+                     site_url = COALESCE(excluded.site_url, site_url),
+                     analyzer_type = COALESCE(excluded.analyzer_type, analyzer_type)`,
+                  [userId, reportId, session.id, siteUrl, analyzerType]
                 );
 
                 logger.info('Single report purchase recorded', {
                   userId,
                   reportId,
-                  sessionId: session.id
+                  sessionId: session.id,
+                  siteUrl,
+                  analyzerType
                 });
               } catch (e) {
                 logger.error('Failed to record report purchase', {
@@ -842,6 +1034,23 @@ class StripeService {
 
           // Get interval from subscription items
           const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'month';
+
+          // Day pass: automatically set to cancel at period end so it doesn't auto-renew
+          if (event.type === 'customer.subscription.created' && interval === 'day' && !subscription.cancel_at_period_end) {
+            try {
+              await stripe.subscriptions.update(subscription.id, {
+                cancel_at_period_end: true
+              });
+              logger.info('Day pass subscription set to cancel at period end', {
+                subscriptionId: subscription.id
+              });
+            } catch (cancelErr) {
+              logger.error('Failed to set day pass to cancel at period end', {
+                subscriptionId: subscription.id,
+                error: cancelErr.message
+              });
+            }
+          }
 
           // Update user with full subscription details
           const result = await db.run(

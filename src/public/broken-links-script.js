@@ -121,7 +121,18 @@ async function analyzeLinks() {
     }
     
     const data = await response.json();
-    
+
+    // Extract and set report metadata from API response
+    console.log('[broken-links-script] Setting report metadata from API response');
+    const apiReportId = data?.reportId || data?.results?.reportId;
+    const screenshotUrl = data?.screenshotUrl || data?.results?.screenshotUrl;
+    if (apiReportId) {
+      document.body.setAttribute('data-report-id', apiReportId);
+    }
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
+
     loader.nextStep(4);
     loader.nextStep(5);
     loader.complete();
@@ -140,9 +151,45 @@ async function analyzeLinks() {
 function displayResults(data) {
   const resultsContainer = document.getElementById('results');
   resultsContainer.innerHTML = '';
-  
+
+  // CRITICAL: Show results container (it starts hidden)
+  resultsContainer.style.display = 'block';
+
   // Store results globally
   window.currentBrokenLinksResults = data;
+
+  // CRITICAL: Compute reportId and isUnlocked EARLY so accordions can use it
+  // Use existing reportId from body attribute if set (from billing return/dashboard recall)
+  const reportUrl = data.url || document.getElementById('url')?.value?.trim() || '';
+  const scanStartedAt = window.SM_SCAN_STARTED_AT || document.body.getAttribute('data-sm-scan-started-at');
+  const analyzerKey = window.SM_ANALYZER_KEY || 'broken-links';
+
+  let reportId = document.body.getAttribute('data-report-id') || data.reportId || null;
+  if (!reportId && window.ReportUI) {
+    if (typeof window.ReportUI.makeReportId === 'function') {
+      reportId = window.ReportUI.makeReportId({
+        analyzerKey,
+        normalizedUrl: reportUrl,
+        startedAtISO: scanStartedAt
+      });
+    } else if (typeof window.ReportUI.computeReportId === 'function') {
+      reportId = window.ReportUI.computeReportId(reportUrl, scanStartedAt, analyzerKey);
+    }
+  }
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+  }
+  console.log('[BrokenLinks] displayResults using reportId:', reportId);
+
+  // Check if report is unlocked (Pro subscription or purchased single report)
+  // Use hasAccess() which checks both Pro subscription and purchased reports
+  const isUnlocked = !!(
+    reportId &&
+    window.ProReportBlock &&
+    typeof window.ProReportBlock.hasAccess === 'function' &&
+    window.ProReportBlock.hasAccess(reportId)
+  );
+  console.log('[BrokenLinks] isUnlocked:', isUnlocked, 'reportId:', reportId);
 
   // Wrap in report-scope for proper CSS styling of accordions
   const reportScope = document.createElement('div');
@@ -264,8 +311,9 @@ function displayResults(data) {
       id: 'report-recommendations',
       title: `Report and Recommendations (${data.recommendations.length})`,
       isPro: true,
-      locked: !window.ProAccess?.hasProAccess?.(),
+      locked: !isUnlocked,
       context: 'broken-links',
+      reportId: reportId,
       contentHTML: renderRecommendationsAndExportContent(data)
     });
   }
@@ -276,28 +324,8 @@ function displayResults(data) {
   // Initialize ReportAccordion interactions
   ReportAccordion.initInteractions();
 
-  // 9. Pro Report Block
+  // 9. Pro Report Block (reportId and isUnlocked already computed at top of function)
   if (window.ProReportBlock && window.ProReportBlock.render) {
-    // Compute and set report ID for monetization
-    const reportUrl = data.url || document.getElementById('url').value.trim();
-    const scanStartedAt = window.SM_SCAN_STARTED_AT || document.body.getAttribute('data-sm-scan-started-at');
-    const analyzerKey = window.SM_ANALYZER_KEY;
-    
-    let reportId = null;
-    if (window.ReportUI && typeof window.ReportUI.makeReportId === 'function') {
-      reportId = window.ReportUI.makeReportId({
-        analyzerKey,
-        normalizedUrl: reportUrl,
-        startedAtISO: scanStartedAt
-      });
-    } else if (window.ReportUI && typeof window.ReportUI.computeReportId === 'function') {
-      reportId = window.ReportUI.computeReportId(reportUrl, scanStartedAt, analyzerKey);
-    }
-    
-    if (reportId) {
-      document.body.setAttribute('data-report-id', reportId);
-    }
-    
     const proSection = document.createElement('div');
     proSection.className = 'section';
     proSection.style.marginTop = '2rem';
@@ -309,12 +337,18 @@ function displayResults(data) {
       reportId: reportId
     });
     reportScope.appendChild(proSection);
-    
+
     // Refresh paywall state to show correct buttons
     if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
       window.CreditsManager.renderPaywallState();
     }
   }
+
+  // CRITICAL: Ensure fix accordion functions are available after DOM render
+  // This must be called after all content is added to the DOM
+  setTimeout(() => {
+    ensureBrokenLinksFixFunctions();
+  }, 50);
 }
 
 function createOverviewSection(data) {
@@ -892,118 +926,142 @@ function escapeBrokenLinksHtml(text) {
 
 function getBrokenLinksCodeSnippet(fix, type) {
   const category = fix.category || '';
-  
-  const snippets = {
-    'Broken Links': {
-      problem: `<!-- Broken link found -->
-<a href="https://example.com/old-page">Read more</a>
-<!-- Returns 404 - Page not found -->`,
-      solution: `<!-- Option 1: Update to correct URL -->
-<a href="https://example.com/new-page">Read more</a>
+  const data = window.currentBrokenLinksResults || {};
 
-<!-- Option 2: Remove if no replacement exists -->
-<span>Content no longer available</span>
+  // Get actual data based on category
+  if (category === 'Broken Links' && data.links?.broken) {
+    const brokenLinks = data.links.broken.slice(0, 5); // Show up to 5 examples
+    if (type === 'problem') {
+      if (brokenLinks.length === 0) return '<!-- No broken links found -->';
+      return brokenLinks.map(link =>
+        `❌ ${link.url}\n   Status: ${link.statusCode || 'Error'}\n   Found on: ${link.foundOn || 'Homepage'}\n   Text: "${link.text || 'No anchor text'}"`
+      ).join('\n\n');
+    } else {
+      return `For each broken link above:
 
-<!-- Option 3: Create a redirect (in .htaccess) -->
-Redirect 301 /old-page /new-page`
-    },
-    'Redirect Chains': {
-      problem: `<!-- Redirect chain detected -->
-Page A → Page B → Page C → Final Page
-<!-- 3+ hops waste crawl budget and slow loading -->`,
-      solution: `<!-- Update link to point directly to final destination -->
-<a href="https://example.com/final-page">Link</a>
+1. Check if page moved → Update href to new URL
+2. If deleted → Remove link or replace content
+3. If external → Contact site owner or remove
 
-<!-- Or fix server-side redirects (.htaccess) -->
-Redirect 301 /page-a /final-page
-Redirect 301 /page-b /final-page
-Redirect 301 /page-c /final-page`
-    },
-    'Redirect Loops': {
-      problem: `<!-- Redirect loop detected -->
-Page A → Page B → Page A (infinite loop!)
-<!-- Browser will fail to load the page -->`,
-      solution: `<!-- Review and fix redirect rules -->
-# Check .htaccess or server config for conflicting rules
+Example .htaccess redirect:
+Redirect 301 /old-page /new-page`;
+    }
+  }
 
-# Correct configuration:
-Redirect 301 /old-page /new-page
-# Ensure /new-page does NOT redirect back to /old-page`
-    },
-    'Temporary Redirects': {
-      problem: `<!-- Using temporary redirect (302) -->
-HTTP/1.1 302 Found
-Location: /new-page
+  if (category === 'Link Security' && data.attributeAnalysis?.insecureLinks) {
+    const insecureLinks = data.attributeAnalysis.insecureLinks.slice(0, 5);
+    if (type === 'problem') {
+      if (insecureLinks.length === 0) return '<!-- No insecure links found -->';
+      return insecureLinks.map(link =>
+        `⚠️ ${link.url}\n   Opens in: new tab (target="_blank")\n   Missing: rel="noopener noreferrer"`
+      ).join('\n\n');
+    } else {
+      return `Add security attributes to external links:
 
-<!-- 302/307 don't pass full link equity -->`,
-      solution: `<!-- Use permanent redirect (301) instead -->
-HTTP/1.1 301 Moved Permanently
-Location: /new-page
-
-# In .htaccess:
-Redirect 301 /old-page /new-page
-
-# In nginx:
-rewrite ^/old-page$ /new-page permanent;`
-    },
-    'Link Security': {
-      problem: `<!-- Insecure external link -->
-<a href="https://external-site.com" target="_blank">
-  External Link
-</a>
-<!-- Missing rel attributes - vulnerable to tabnabbing -->`,
-      solution: `<!-- Add security attributes -->
-<a href="https://external-site.com" 
-   target="_blank" 
+<a href="https://external-site.com"
+   target="_blank"
    rel="noopener noreferrer">
-  External Link
+  Link Text
 </a>
 
-<!-- noopener: prevents window.opener access -->
-<!-- noreferrer: hides referrer info + includes noopener -->`
-    },
-    'Anchor Text': {
-      problem: `<!-- Generic anchor text -->
-<a href="/pricing">Click here</a>
-<a href="/blog/seo-tips">Read more</a>
-<a href="/contact">Learn more</a>
+This prevents:
+• tabnabbing attacks (noopener)
+• referrer leakage (noreferrer)`;
+    }
+  }
 
-<!-- These provide no SEO value -->`,
-      solution: `<!-- Use descriptive anchor text -->
-<a href="/pricing">View pricing plans</a>
-<a href="/blog/seo-tips">10 SEO Tips for Beginners</a>
-<a href="/contact">Contact our support team</a>
+  if (category === 'Accessibility' && data.anchorAnalysis?.emptyTexts) {
+    const emptyLinks = data.anchorAnalysis.emptyTexts.slice(0, 5);
+    if (type === 'problem') {
+      if (emptyLinks.length === 0) return '<!-- No empty links found -->';
+      return emptyLinks.map(link =>
+        `⚠️ ${link.url || link}\n   Issue: No accessible text for screen readers`
+      ).join('\n\n');
+    } else {
+      return `Add accessible text to links:
 
-<!-- Anchor text should describe the destination -->`
-    },
-    'Accessibility': {
-      problem: `<!-- Empty or inaccessible link -->
-<a href="/page"></a>
-<a href="/page"><img src="icon.png"></a>
-<!-- No accessible text for screen readers -->`,
-      solution: `<!-- Option 1: Add visible text -->
-<a href="/page">Go to page</a>
+Option 1 - Visible text:
+<a href="/page">Descriptive text</a>
 
-<!-- Option 2: Add aria-label -->
-<a href="/page" aria-label="Go to page">
+Option 2 - aria-label:
+<a href="/page" aria-label="Description">
   <img src="icon.png" alt="">
 </a>
 
-<!-- Option 3: Add alt text to image -->
+Option 3 - Image alt:
 <a href="/page">
-  <img src="icon.png" alt="Go to page">
-</a>`
+  <img src="icon.png" alt="Description">
+</a>`;
     }
-  };
+  }
 
-  const categorySnippets = snippets[category] || {
-    problem: `<!-- Link issue detected -->
-<!-- Review the specific link causing this issue -->`,
-    solution: `<!-- Fix the link according to the recommendation -->
-<!-- See the Fix Guide tab for detailed steps -->`
-  };
+  if (category === 'Anchor Text' && data.anchorAnalysis?.genericTexts) {
+    const genericLinks = data.anchorAnalysis.genericTexts.slice(0, 5);
+    if (type === 'problem') {
+      if (genericLinks.length === 0) return '<!-- No generic anchor texts found -->';
+      return genericLinks.map(link =>
+        `⚠️ "${link.text || link}" → ${link.url || 'unknown URL'}\n   Issue: Generic text provides no SEO value`
+      ).join('\n\n');
+    } else {
+      return `Replace generic anchor text with descriptive text:
 
-  return categorySnippets[type] || categorySnippets.problem;
+Instead of:           Use:
+"Click here"     →   "View pricing plans"
+"Read more"      →   "Read our SEO guide"
+"Learn more"     →   "Learn about our services"
+
+Good anchor text describes the destination.`;
+    }
+  }
+
+  if (category === 'Redirect Chains' && data.redirectAnalysis?.longChains) {
+    const chains = data.redirectAnalysis.longChains.slice(0, 3);
+    if (type === 'problem') {
+      if (chains.length === 0) return '<!-- No redirect chains found -->';
+      return chains.map(chain =>
+        `⚠️ Redirect Chain (${chain.length || chain.hops} hops):\n   ${chain.chain?.join(' → ') || chain.url || 'See redirect analysis'}`
+      ).join('\n\n');
+    } else {
+      return `Update links to point directly to final destination:
+
+Before: Page A → B → C → Final
+After:  Page A → Final
+
+In .htaccess, consolidate redirects:
+Redirect 301 /page-a /final-destination
+Redirect 301 /page-b /final-destination`;
+    }
+  }
+
+  if (category === 'Redirect Loops' && data.redirectAnalysis?.loops) {
+    const loops = data.redirectAnalysis.loops.slice(0, 3);
+    if (type === 'problem') {
+      if (loops.length === 0) return '<!-- No redirect loops found -->';
+      return loops.map(loop =>
+        `🔄 Redirect Loop:\n   ${loop.chain?.join(' → ') || loop.url || 'See redirect analysis'}\n   (loops back to start)`
+      ).join('\n\n');
+    } else {
+      return `Fix redirect loops in server config:
+
+1. Identify conflicting rules
+2. Remove circular redirects
+3. Ensure each URL has ONE destination
+
+Example fix in .htaccess:
+# WRONG - creates loop
+Redirect 301 /a /b
+Redirect 301 /b /a
+
+# CORRECT - single destination
+Redirect 301 /a /final
+Redirect 301 /b /final`;
+    }
+  }
+
+  // Fallback for other categories
+  return type === 'problem'
+    ? `Review the ${category} issues in this report.\nSee the summary tab for details.`
+    : `Follow the recommendations in the Fix Guide tab\nto resolve ${category} issues.`;
 }
 
 function getBrokenLinksSteps(fix) {
@@ -1078,76 +1136,120 @@ function getBrokenLinksSteps(fix) {
 }
 
 function ensureBrokenLinksFixFunctions() {
-  // Toggle accordion
-  if (typeof window.toggleBrokenLinksFixAccordion !== 'function') {
-    window.toggleBrokenLinksFixAccordion = function(accordionId) {
-      const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
-      const content = document.getElementById(`${accordionId}-content`);
-      const icon = accordion?.querySelector('.broken-links-fix-expand-icon');
+  // Toggle accordion - ALWAYS define to ensure it's available
+  window.toggleBrokenLinksFixAccordion = function(accordionId) {
+    console.log('[BrokenLinks] toggleBrokenLinksFixAccordion called with:', accordionId);
+    const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+    const content = document.getElementById(`${accordionId}-content`);
+    const icon = accordion?.querySelector('.broken-links-fix-expand-icon');
 
-      if (!accordion || !content) return;
+    console.log('[BrokenLinks] Found elements:', { accordion: !!accordion, content: !!content, icon: !!icon });
 
-      const isExpanded = accordion.classList.contains('expanded');
+    if (!accordion || !content) {
+      console.warn('[BrokenLinks] Missing elements for accordion:', accordionId);
+      return;
+    }
 
-      if (isExpanded) {
-        accordion.classList.remove('expanded');
-        content.style.maxHeight = '0';
-        if (icon) icon.style.transform = 'rotate(0deg)';
-      } else {
-        accordion.classList.add('expanded');
+    const isExpanded = accordion.classList.contains('expanded');
+    console.log('[BrokenLinks] isExpanded:', isExpanded);
+
+    if (isExpanded) {
+      accordion.classList.remove('expanded');
+      content.style.maxHeight = '0';
+      if (icon) icon.style.transform = 'rotate(0deg)';
+    } else {
+      accordion.classList.add('expanded');
+      content.style.maxHeight = content.scrollHeight + 'px';
+      console.log('[BrokenLinks] Setting maxHeight to:', content.scrollHeight + 'px');
+      if (icon) icon.style.transform = 'rotate(180deg)';
+    }
+  };
+
+  // Also set up event delegation for clicks on fix headers (more reliable than inline onclick)
+  if (!window.__brokenLinksFixClickHandlerInitialized) {
+    window.__brokenLinksFixClickHandlerInitialized = true;
+    document.addEventListener('click', function(e) {
+      const header = e.target.closest('.broken-links-fix-header');
+      if (header) {
+        const accordion = header.closest('.broken-links-fix-accordion');
+        if (accordion) {
+          const accordionId = accordion.getAttribute('data-fix-id');
+          if (accordionId) {
+            console.log('[BrokenLinks] Event delegation click on:', accordionId);
+            window.toggleBrokenLinksFixAccordion(accordionId);
+          }
+        }
+      }
+    });
+    console.log('[BrokenLinks] Event delegation click handler initialized');
+  }
+
+  // Switch tabs - ALWAYS define to ensure it's available
+  window.switchBrokenLinksFixTab = function(accordionId, tabName) {
+    console.log('[BrokenLinks] switchBrokenLinksFixTab called:', accordionId, tabName);
+    const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
+    if (!accordion) return;
+
+    const tabs = accordion.querySelectorAll('.broken-links-fix-tab');
+    const contents = accordion.querySelectorAll('.broken-links-fix-tab-content');
+
+    tabs.forEach(tab => {
+      tab.style.background = 'transparent';
+      tab.style.color = '#aaa';
+      tab.style.borderColor = 'rgba(255,255,255,0.1)';
+      tab.classList.remove('active');
+    });
+    contents.forEach(content => {
+      content.style.display = 'none';
+      content.classList.remove('active');
+    });
+
+    const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+    const activeContent = document.getElementById(`${accordionId}-${tabName}`);
+
+    if (activeTab) {
+      activeTab.style.background = 'rgba(255,255,255,0.1)';
+      activeTab.style.color = '#fff';
+      activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
+      activeTab.classList.add('active');
+    }
+    if (activeContent) {
+      activeContent.style.display = 'block';
+      activeContent.classList.add('active');
+    }
+
+    // Update accordion height
+    const content = document.getElementById(`${accordionId}-content`);
+    if (content && accordion.classList.contains('expanded')) {
+      setTimeout(() => {
         content.style.maxHeight = content.scrollHeight + 'px';
-        if (icon) icon.style.transform = 'rotate(180deg)';
+      }, 50);
+    }
+  };
+
+  // Event delegation for tab clicks
+  if (!window.__brokenLinksTabClickHandlerInitialized) {
+    window.__brokenLinksTabClickHandlerInitialized = true;
+    document.addEventListener('click', function(e) {
+      const tab = e.target.closest('.broken-links-fix-tab');
+      if (tab) {
+        const accordion = tab.closest('.broken-links-fix-accordion');
+        if (accordion) {
+          const accordionId = accordion.getAttribute('data-fix-id');
+          const tabText = tab.textContent.toLowerCase();
+          let tabName = 'summary';
+          if (tabText.includes('code')) tabName = 'code';
+          else if (tabText.includes('guide')) tabName = 'guide';
+          console.log('[BrokenLinks] Event delegation tab click:', accordionId, tabName);
+          window.switchBrokenLinksFixTab(accordionId, tabName);
+        }
       }
-    };
+    });
+    console.log('[BrokenLinks] Tab click handler initialized');
   }
 
-  // Switch tabs
-  if (typeof window.switchBrokenLinksFixTab !== 'function') {
-    window.switchBrokenLinksFixTab = function(accordionId, tabName) {
-      const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
-      if (!accordion) return;
-
-      const tabs = accordion.querySelectorAll('.broken-links-fix-tab');
-      const contents = accordion.querySelectorAll('.broken-links-fix-tab-content');
-
-      tabs.forEach(tab => {
-        tab.style.background = 'transparent';
-        tab.style.color = '#aaa';
-        tab.style.borderColor = 'rgba(255,255,255,0.1)';
-        tab.classList.remove('active');
-      });
-      contents.forEach(content => {
-        content.style.display = 'none';
-        content.classList.remove('active');
-      });
-
-      const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
-      const activeContent = document.getElementById(`${accordionId}-${tabName}`);
-
-      if (activeTab) {
-        activeTab.style.background = 'rgba(255,255,255,0.1)';
-        activeTab.style.color = '#fff';
-        activeTab.style.borderColor = 'rgba(255,255,255,0.2)';
-        activeTab.classList.add('active');
-      }
-      if (activeContent) {
-        activeContent.style.display = 'block';
-        activeContent.classList.add('active');
-      }
-
-      // Update accordion height
-      const content = document.getElementById(`${accordionId}-content`);
-      if (content && accordion.classList.contains('expanded')) {
-        setTimeout(() => {
-          content.style.maxHeight = content.scrollHeight + 'px';
-        }, 50);
-      }
-    };
-  }
-
-  // Copy code
-  if (typeof window.copyBrokenLinksCode !== 'function') {
-    window.copyBrokenLinksCode = function(elementId) {
+  // Copy code - ALWAYS define to ensure it's available
+  window.copyBrokenLinksCode = function(elementId) {
       const codeElement = document.getElementById(elementId);
       if (!codeElement) return;
 
@@ -1161,7 +1263,6 @@ function ensureBrokenLinksFixFunctions() {
         }
       });
     };
-  }
 }
 
 // Combined Recommendations + Export Content
@@ -1719,12 +1820,20 @@ function createProUpgradePrompt(message) {
 }
 
 async function checkProAccess() {
+  const reportId = document.body.getAttribute('data-report-id');
+
+  // Check ProReportBlock (new billing model) - hasAccess checks both Pro and purchased reports
+  if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+    if (window.ProReportBlock.hasAccess(reportId)) {
+      return true;
+    }
+  }
+
   // Check if CreditsManager has Pro status
   if (window.CreditsManager && typeof window.CreditsManager.hasProAccess === 'function') {
     return await window.CreditsManager.hasProAccess();
   }
   // Fallback: check for reportUnlocked in session
-  const reportId = document.body.getAttribute('data-report-id');
   if (reportId && window.CreditsManager && window.CreditsManager.isReportUnlocked) {
     return window.CreditsManager.isReportUnlocked(reportId);
   }
@@ -2395,3 +2504,81 @@ function changePage(tableId, newPage) {
       break;
   }
 }
+
+// ============================================================
+// Expose display function globally for billing return handler
+// ============================================================
+window.displayResults = displayResults;
+window.displayBrokenLinksResults = displayResults;
+
+// ============================================================
+// Billing Return Handling
+// ============================================================
+(async function initFromUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  const reportId = params.get('report_id') || '';
+  const autoUrl = params.get('url') || '';
+  const billingSuccess = params.get('billing_success') === 'true';
+
+  // If we have a report_id, set it immediately so hasAccess checks work
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    console.log('[BrokenLinks] Set report ID from URL:', reportId);
+  }
+
+  // Pre-fill URL if provided
+  if (autoUrl) {
+    const urlInput = document.getElementById('url');
+    if (urlInput) urlInput.value = autoUrl;
+  }
+
+  // If returning from billing, wait for billing return processing to complete
+  if (billingSuccess && !window.__smBillingReturnComplete) {
+    console.log('[BrokenLinks] Waiting for billing return processing...');
+    await new Promise((resolve) => {
+      if (window.__smBillingReturnComplete) {
+        resolve();
+        return;
+      }
+      const handler = () => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      };
+      window.addEventListener('sm:billingReturnComplete', handler);
+      setTimeout(() => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      }, 5000);
+    });
+    console.log('[BrokenLinks] Billing return processing complete');
+    return; // Results will be restored by report-ui.js
+  }
+
+  // If we have a report_id, try to load the stored report
+  if (reportId && window.ReportStorage) {
+    console.log('[BrokenLinks] Checking for stored report:', reportId);
+
+    // Fetch billing status BEFORE displaying the report
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      console.log('[BrokenLinks] Fetching billing status...');
+      await window.ProReportBlock.fetchBillingStatus(true);
+    }
+
+    const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayResults);
+    if (loaded) {
+      console.log('[BrokenLinks] Loaded stored report successfully');
+      return;
+    }
+  }
+})();
+
+// Listen for restore scan results event (after payment return)
+window.addEventListener('sm:restoreScanResults', (e) => {
+  const { results: restoredResults, url, analyzer } = e.detail || {};
+  if (restoredResults && (analyzer?.includes('broken-links') || analyzer?.includes('broken_links'))) {
+    console.log('[BrokenLinks] Restoring scan results after payment');
+    const urlInput = document.getElementById('url');
+    if (url && urlInput) urlInput.value = url;
+    displayResults(restoredResults);
+  }
+});

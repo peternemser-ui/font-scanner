@@ -5,6 +5,139 @@
 window.SM_ANALYZER_KEY = 'brand-consistency';
 document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
 
+// ============================================
+// BILLING RETURN HANDLING - queue for later
+// ============================================
+window.__brandPendingRestore = null;
+
+// Listen for billing return restore event (early, before displayResults is defined)
+window.addEventListener('sm:restoreScanResults', (e) => {
+  console.log('[Brand] Received sm:restoreScanResults event:', e.detail);
+  const data = e.detail?.data || e.detail;
+  if (data) {
+    if (typeof window.__brandRealDisplayResults === 'function') {
+      window.__brandRealDisplayResults(data);
+    } else {
+      console.log('[Brand] Queueing restore (displayResults not ready yet)');
+      window.__brandPendingRestore = data;
+    }
+  }
+});
+
+// ============================================
+// INITIALIZATION - Handle billing return & stored reports
+// ============================================
+(async function initBrandConsistency() {
+  const params = new URLSearchParams(window.location.search);
+  const reportId = params.get('report_id') || '';
+  const autoUrl = params.get('url') || '';
+  const billingSuccess = params.get('billing_success') === 'true';
+
+  // If we have a report_id, set it immediately so hasAccess checks work
+  if (reportId) {
+    document.body.setAttribute('data-report-id', reportId);
+    console.log('[Brand] Set report_id from URL:', reportId);
+  }
+
+  // Pre-fill URL input if provided
+  const urlInput = document.getElementById('url');
+  if (autoUrl && urlInput) {
+    urlInput.value = autoUrl;
+  }
+
+  // If returning from billing, wait for billing return processing to complete
+  if (billingSuccess && !window.__smBillingReturnComplete) {
+    console.log('[Brand] Waiting for billing return processing...');
+    await new Promise((resolve) => {
+      if (window.__smBillingReturnComplete) {
+        resolve();
+        return;
+      }
+      const handler = () => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      };
+      window.addEventListener('sm:billingReturnComplete', handler);
+      // Timeout fallback
+      setTimeout(() => {
+        window.removeEventListener('sm:billingReturnComplete', handler);
+        resolve();
+      }, 5000);
+    });
+    console.log('[Brand] Billing return processing complete');
+
+    // Check if results were already displayed by report-ui.js
+    // If currentBrandResults exists and results container has content, we're done
+    const resultsContainer = document.getElementById('results');
+    if (window.currentBrandResults && resultsContainer && resultsContainer.innerHTML.trim()) {
+      console.log('[Brand] Results already displayed by report-ui.js');
+      return;
+    }
+
+    // report-ui.js couldn't display results (displayBrandResults wasn't available)
+    // Try to get results from sessionStorage cache or stored report
+    console.log('[Brand] Attempting to display results after billing return...');
+
+    // First check sessionStorage (set by PricingModal before checkout)
+    try {
+      const cachedResults = sessionStorage.getItem('sm_checkout_results');
+      if (cachedResults) {
+        const data = JSON.parse(cachedResults);
+        console.log('[Brand] Found cached results in sessionStorage, displaying...');
+        displayResults(data);
+        sessionStorage.removeItem('sm_checkout_results');
+        return;
+      }
+    } catch (e) {
+      console.warn('[Brand] Failed to parse cached results:', e);
+    }
+
+    // Fall back to loading from database
+    if (reportId && window.ReportStorage) {
+      try {
+        const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displayResults);
+        if (loaded) {
+          console.log('[Brand] Loaded report from database');
+          return;
+        }
+      } catch (e) {
+        console.warn('[Brand] Failed to load from database:', e);
+      }
+    }
+
+    console.log('[Brand] No cached results found after billing return');
+    return;
+  }
+
+  // If we have a report_id (e.g., from dashboard), try to load stored report
+  if (reportId && window.ReportStorage) {
+    console.log('[Brand] Checking for stored report:', reportId);
+
+    // Fetch billing status first to ensure hasAccess works correctly
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      console.log('[Brand] Fetching billing status (force refresh)...');
+      await window.ProReportBlock.fetchBillingStatus(true);
+    }
+
+    // Try to load the stored report
+    try {
+      const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, (data) => {
+        if (typeof displayResults === 'function') {
+          displayResults(data);
+        } else if (typeof window.__brandRealDisplayResults === 'function') {
+          window.__brandRealDisplayResults(data);
+        }
+      });
+      if (loaded) {
+        console.log('[Brand] Stored report loaded successfully');
+        return;
+      }
+    } catch (e) {
+      console.warn('[Brand] Failed to load stored report:', e);
+    }
+  }
+})();
+
 document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('url').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyze();
@@ -225,7 +358,6 @@ async function analyze() {
     
     setTimeout(() => {
       displayResults(data);
-      results.style.display = 'block';
     }, 500);
     
   } catch (error) {
@@ -260,16 +392,27 @@ function displayResults(data) {
   const results = document.getElementById('results');
   const score = data.score || 0;
   const isMultiPage = data.multiPage === true;
-  
-  // Generate report ID for pro features
-  const urlValue = document.getElementById('url')?.value || data.url || '';
-  const reportId = data.reportId || `brand_${btoa(urlValue).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16)}`;
-  
+
+  // Show results container
+  if (results) {
+    results.classList.remove('hidden');
+    results.style.display = 'block';
+  }
+
+  // Use existing reportId from body (set by billing return) or generate new one
+  let reportId = document.body.getAttribute('data-report-id') || data.reportId || null;
+  if (!reportId) {
+    const urlValue = document.getElementById('url')?.value || data.url || '';
+    reportId = `brand_${btoa(urlValue).replace(/[^a-zA-Z0-9]/g, '').slice(0, 16)}`;
+  }
+
   // Set report ID on body for paywall systems
   if (reportId) {
     document.body.setAttribute('data-report-id', reportId);
   }
-  
+
+  console.log('[Brand] displayResults - reportId:', reportId);
+
   // Store results globally for unlock handling
   window.currentBrandResults = data;
   
@@ -278,15 +421,16 @@ function displayResults(data) {
     window.SmEntitlements.init({ reportId: reportId || undefined });
   }
   
-  // Check if report is unlocked
-  const isUnlocked = !!(
-    reportId &&
-    window.CreditsManager &&
-    (
-      (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
-      (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
-    )
-  );
+  // Check if report is unlocked (Pro subscription or purchased single report)
+  // Use hasAccess() which checks both Pro subscription and purchased reports
+  // Default to LOCKED (false) - user must prove they have access
+  let isUnlocked = false;
+
+  if (reportId && window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+    isUnlocked = window.ProReportBlock.hasAccess(reportId);
+  }
+
+  console.log('[Brand] Access check:', { reportId, isUnlocked });
   
   // Get timestamp
   const startedAt = data.timestamp || window.SM_SCAN_STARTED_AT || '';
@@ -389,18 +533,9 @@ function displayResults(data) {
       contentHTML: renderCrossPageConsistencyContent(data)
     } : null,
     
-    // Competitive Brand Comparison (PRO)
-    {
-      id: 'competitive-comparison',
-      title: t('brandConsistency.competitiveBrandComparison', 'Competitive Brand Comparison'),
-      isPro: true,
-      locked: !isUnlocked,
-      context: 'brand-consistency',
-      reportId,
-      contentHTML: isUnlocked ? renderCompetitiveComparisonContent(data) : proFixesPreview
-    },
-    
     // Report and Recommendations (PRO)
+    // When locked: show full content BLURRED with paywall overlay (like second screenshot)
+    // When unlocked: show full content without blur
     {
       id: 'report-recommendations',
       title: t('brandConsistency.reportAndRecommendations', 'Report and Recommendations'),
@@ -408,7 +543,7 @@ function displayResults(data) {
       locked: !isUnlocked,
       context: 'brand-consistency',
       reportId,
-      contentHTML: isUnlocked ? renderBrandProFixes(data) : proFixesPreview
+      contentHTML: renderBrandProFixes(data)  // Always render full content - CSS handles blur when locked
     }
   ].filter(Boolean);
   
@@ -586,14 +721,14 @@ function attachBrandScreenshotRetry(imgEl, baseUrl, options = {}) {
   tryReload();
 }
 
-// Pro fixes preview for locked state
+// Pro fixes preview for locked state (matches SEO pattern)
 function getBrandProFixesPreview() {
   return `
-    <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; text-align: center;">
-      <p style="color: rgba(255,255,255,0.6); margin: 0;">
+    <div>
+      <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
         ${t('brandConsistency.unlockToSee', 'Unlock this report to see detailed recommendations and fixes.')}
       </p>
-      <ul style="text-align: left; margin: 1rem 0; padding-left: 1.5rem; color: rgba(255,255,255,0.5);">
+      <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
         <li>${t('brandConsistency.proPreview.colorOptimization', 'Color palette optimization')}</li>
         <li>${t('brandConsistency.proPreview.typographyGuidelines', 'Typography guidelines')}</li>
         <li>${t('brandConsistency.proPreview.brandConsistencyTips', 'Brand consistency tips')}</li>
@@ -645,27 +780,858 @@ function renderBrandProFixes(data) {
 
 function buildBrandFixCards(data) {
   const fixes = [];
-  const recommendations = data.recommendations || [];
-  
-  recommendations.forEach((rec, i) => {
-    const priority = rec.priority || 'medium';
-    const severity = priority === 'critical' || priority === 'high' ? 'High' : 
-                     priority === 'medium' ? 'Medium' : 'Low';
-    
-    fixes.push({
-      id: `brand-fix-${i}`,
-      title: rec.message || rec.title || 'Brand Improvement',
-      category: rec.category || 'Brand Optimization',
-      severity,
-      description: rec.detail || rec.description || '',
-      impact: rec.impact || t('brandConsistency.improveBrandConsistency', 'Improve brand consistency and recognition'),
-      problematicCode: rec.currentIssue || '',
-      fixedCode: rec.action || rec.fix || '',
-      steps: rec.steps || getBrandDefaultSteps(rec.type)
-    });
+  let fixIndex = 0;
+
+  // Extract all available data
+  const colorAnalysis = data.colorAnalysis || {};
+  const colors = data.colors || [];
+  const typographyAnalysis = data.typographyAnalysis || {};
+  const fonts = typographyAnalysis.fonts || data.fonts || [];
+  const consistency = data.consistency || {};
+  const crossPage = data.crossPageConsistency || {};
+  const contrastAnalysis = data.contrastAnalysis || {};
+  const brandScore = data.brandScore || data.overallScore || 0;
+
+  // ========================================
+  // 1. COLOR PALETTE ANALYSIS (Always provide)
+  // ========================================
+
+  const colorCount = colors.length || (colorAnalysis.colors?.length || 0);
+  const harmonyScore = colorAnalysis.harmonyScore || colorAnalysis.harmony?.score || 50;
+  const colorList = colors.length ? colors : (colorAnalysis.colors || ['#000000', '#ffffff', '#666666']);
+
+  // Color palette optimization - always relevant
+  fixes.push({
+    id: `brand-fix-${fixIndex++}`,
+    title: colorCount > 5
+      ? `Optimize color palette (${colorCount} colors detected)`
+      : 'Establish a formal brand color system',
+    category: 'Color Palette',
+    severity: colorCount > 7 ? 'High' : 'Medium',
+    description: colorCount > 5
+      ? `Your site uses ${colorCount} different colors. While variety can be intentional, a focused palette of 5-7 strategic colors creates stronger brand recognition. Each color should serve a specific purpose in your design system.`
+      : `We detected ${colorCount} primary colors. To strengthen brand consistency, formalize these into a documented color system with defined roles for each color.`,
+    impact: 'Stronger visual identity, faster design decisions, consistent brand experience',
+    problematicCode: `/* Current colors detected on your site */
+${colorList.slice(0, 12).map((c, i) => `color-${i + 1}: ${c};`).join('\n')}
+${colorCount > 12 ? `\n/* ...and ${colorCount - 12} additional colors */` : ''}
+
+/* Issues:
+ * - Colors may not have defined roles
+ * - Inconsistent usage across components
+ * - No documentation for when to use each color
+ */`,
+    fixedCode: `/* Recommended Brand Color System */
+:root {
+  /* Primary Brand Colors */
+  --brand-primary: ${colorList[0] || '#2563eb'};      /* Main brand color - CTAs, links */
+  --brand-primary-dark: ${darkenColor(colorList[0]) || '#1d4ed8'};  /* Hover states */
+  --brand-primary-light: ${lightenColor(colorList[0]) || '#3b82f6'}; /* Backgrounds */
+
+  /* Secondary Colors */
+  --brand-secondary: ${colorList[1] || '#10b981'};    /* Success states, accents */
+  --brand-accent: ${colorList[2] || '#f59e0b'};       /* Highlights, badges */
+
+  /* Neutral Colors */
+  --text-primary: #1a1a2e;        /* Headings, important text */
+  --text-secondary: #4a5568;      /* Body text, descriptions */
+  --text-muted: #718096;          /* Captions, helper text */
+
+  /* Background Colors */
+  --bg-primary: #ffffff;          /* Main background */
+  --bg-secondary: #f7fafc;        /* Cards, sections */
+  --bg-tertiary: #edf2f7;         /* Subtle backgrounds */
+
+  /* Semantic Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-info: #3b82f6;
+}
+
+/* Usage Examples */
+.btn-primary {
+  background: var(--brand-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--brand-primary-dark);
+}
+
+.card {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}`,
+    steps: [
+      'Document your brand\'s primary color and its meaning',
+      'Define 2-3 secondary/accent colors with specific use cases',
+      'Create a neutral palette for text and backgrounds',
+      'Add semantic colors for success/error/warning states',
+      'Replace all hardcoded colors with CSS variables',
+      'Create a style guide documenting when to use each color'
+    ]
   });
-  
+
+  // Color harmony recommendation
+  fixes.push({
+    id: `brand-fix-${fixIndex++}`,
+    title: `Improve color harmony${harmonyScore ? ` (Score: ${Math.round(harmonyScore)}%)` : ''}`,
+    category: 'Color Palette',
+    severity: harmonyScore < 60 ? 'High' : 'Medium',
+    description: `Color harmony ensures your palette creates a cohesive, professional appearance. ${harmonyScore < 60
+      ? `Your harmony score of ${Math.round(harmonyScore)}% indicates colors may clash or lack intentional relationship.`
+      : 'Fine-tuning your color relationships will elevate your brand\'s visual appeal.'}`,
+    impact: 'Professional appearance, improved user trust, better visual hierarchy',
+    problematicCode: `/* Current color analysis */
+Detected primary colors:
+${colorList.slice(0, 5).map(c => `  ${c}`).join('\n')}
+
+Potential issues:
+• Colors may not follow harmony principles
+• Inconsistent saturation levels
+• No clear color relationship strategy`,
+    fixedCode: `/* Color Harmony Strategies */
+
+/* 1. COMPLEMENTARY (High Contrast) */
+/* Colors opposite on the wheel - bold, energetic */
+--primary: #2563eb;    /* Blue */
+--accent: #f59e0b;     /* Orange - complement */
+
+/* 2. ANALOGOUS (Harmonious) */
+/* Colors next to each other - calm, unified */
+--primary: #2563eb;    /* Blue */
+--secondary: #7c3aed;  /* Purple */
+--tertiary: #06b6d4;   /* Cyan */
+
+/* 3. TRIADIC (Balanced) */
+/* Three evenly spaced colors - vibrant, balanced */
+--primary: #2563eb;    /* Blue */
+--secondary: #10b981;  /* Green */
+--accent: #ef4444;     /* Red */
+
+/* 4. SPLIT-COMPLEMENTARY (Nuanced) */
+/* One color + two adjacent to its complement */
+--primary: #2563eb;    /* Blue */
+--accent-1: #f97316;   /* Orange-red */
+--accent-2: #eab308;   /* Yellow-orange */
+
+/* Tool Recommendation: Use coolors.co or Adobe Color
+   to generate harmonious palettes from your primary color */`,
+    steps: [
+      'Choose your primary brand color as the foundation',
+      'Select a harmony type that matches your brand personality',
+      'Use a tool like coolors.co to generate complementary colors',
+      'Ensure sufficient contrast between text and backgrounds',
+      'Test your palette in different contexts (buttons, cards, alerts)',
+      'Validate with colorblind simulation tools'
+    ]
+  });
+
+  // ========================================
+  // 2. TYPOGRAPHY ANALYSIS (Always provide)
+  // ========================================
+
+  const fontCount = fonts.length;
+  const fontList = fonts.map(f => f.family || f.name || f);
+
+  fixes.push({
+    id: `brand-fix-${fixIndex++}`,
+    title: fontCount > 2
+      ? `Consolidate typography (${fontCount} fonts detected)`
+      : 'Optimize typography system',
+    category: 'Typography',
+    severity: fontCount > 3 ? 'High' : 'Medium',
+    description: fontCount > 2
+      ? `Your site loads ${fontCount} different fonts, which impacts performance and visual consistency. Industry best practice is 2-3 fonts maximum: one for headings, one for body text, and optionally one for code/special content.`
+      : 'A well-structured typography system ensures readability and reinforces brand identity across all content.',
+    impact: 'Faster page loads, improved readability, stronger brand voice',
+    problematicCode: `/* Fonts detected on your site */
+${fontList.slice(0, 8).map((f, i) => `Font ${i + 1}: "${f}"`).join('\n')}
+${fontCount > 8 ? `\n/* ...and ${fontCount - 8} more fonts */` : ''}
+
+/* Performance impact:
+ * Each font file adds ~20-100KB
+ * Multiple fonts delay text rendering
+ * Inconsistent fonts weaken brand recognition
+ */`,
+    fixedCode: `/* Professional Typography System */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@700&display=swap');
+
+:root {
+  /* Font Families */
+  --font-heading: 'Playfair Display', Georgia, serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+
+  /* Font Sizes - Modular Scale (1.25 ratio) */
+  --text-xs: 0.75rem;     /* 12px */
+  --text-sm: 0.875rem;    /* 14px */
+  --text-base: 1rem;      /* 16px */
+  --text-lg: 1.125rem;    /* 18px */
+  --text-xl: 1.25rem;     /* 20px */
+  --text-2xl: 1.5rem;     /* 24px */
+  --text-3xl: 1.875rem;   /* 30px */
+  --text-4xl: 2.25rem;    /* 36px */
+  --text-5xl: 3rem;       /* 48px */
+
+  /* Line Heights */
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+}
+
+/* Typography Classes */
+h1, .h1 {
+  font-family: var(--font-heading);
+  font-size: var(--text-5xl);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+  letter-spacing: -0.025em;
+}
+
+h2, .h2 {
+  font-family: var(--font-heading);
+  font-size: var(--text-4xl);
+  font-weight: var(--font-bold);
+  line-height: var(--leading-tight);
+}
+
+body, p, li {
+  font-family: var(--font-body);
+  font-size: var(--text-base);
+  font-weight: var(--font-normal);
+  line-height: var(--leading-normal);
+}
+
+.text-small {
+  font-size: var(--text-sm);
+  line-height: var(--leading-normal);
+}
+
+code, pre {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}`,
+    steps: [
+      'Select one display/heading font that reflects your brand personality',
+      'Choose a highly readable body font (Inter, Open Sans, or system fonts)',
+      'Define a modular type scale for consistent sizing',
+      'Set appropriate line heights (1.5+ for body text)',
+      'Limit font weights to 3-4 variants',
+      'Use font-display: swap for better performance',
+      'Consider self-hosting fonts for reliability'
+    ]
+  });
+
+  // ========================================
+  // 3. BRAND IDENTITY ELEMENTS
+  // ========================================
+
+  const hasLogo = consistency.hasLogo !== false;
+  const hasFavicon = consistency.hasFavicon !== false;
+
+  if (!hasLogo || !hasFavicon) {
+    fixes.push({
+      id: `brand-fix-${fixIndex++}`,
+      title: 'Complete brand identity essentials',
+      category: 'Brand Identity',
+      severity: 'High',
+      description: `${!hasLogo ? 'No logo was detected. ' : ''}${!hasFavicon ? 'No favicon was detected. ' : ''}These fundamental brand elements are critical for recognition and professionalism.`,
+      impact: 'Instant brand recognition, professional credibility, memorable user experience',
+      problematicCode: `<!-- Current state -->
+<head>
+  <title>Your Website</title>
+  ${!hasFavicon ? '<!-- ❌ No favicon detected -->' : '<!-- ✓ Favicon present -->'}
+</head>
+<body>
+  <header>
+    ${!hasLogo ? '<!-- ❌ No logo detected -->\n    <span>Site Name</span>' : '<!-- ✓ Logo present -->'}
+  </header>
+</body>`,
+      fixedCode: `<!-- Complete Brand Identity Implementation -->
+<head>
+  <title>Your Brand Name</title>
+
+  <!-- Favicon Package (generate at realfavicongenerator.net) -->
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+  <link rel="manifest" href="/site.webmanifest">
+  <meta name="theme-color" content="${colorList[0] || '#2563eb'}">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:image" content="/og-image.png">
+  <meta property="og:title" content="Your Brand Name">
+</head>
+
+<body>
+  <header>
+    <!-- Logo with proper accessibility -->
+    <a href="/" class="logo" aria-label="Your Brand - Return to homepage">
+      <!-- SVG logo for scalability -->
+      <svg viewBox="0 0 200 50" role="img" aria-hidden="true">
+        <!-- Your logo SVG code here -->
+      </svg>
+      <!-- Or use responsive images -->
+      <picture>
+        <source srcset="/logo-dark.svg" media="(prefers-color-scheme: dark)">
+        <img src="/logo.svg" alt="" width="150" height="40" loading="eager">
+      </picture>
+    </a>
+  </header>
+</body>
+
+/* Logo CSS */
+.logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.logo img, .logo svg {
+  height: 40px;
+  width: auto;
+}
+
+@media (max-width: 768px) {
+  .logo img, .logo svg {
+    height: 32px;
+  }
+}`,
+      steps: [
+        'Design or commission a professional logo (SVG format preferred)',
+        'Create light and dark mode versions of your logo',
+        'Generate a complete favicon package at realfavicongenerator.net',
+        'Add Open Graph images for social media sharing',
+        'Ensure logo links to homepage with proper accessibility',
+        'Test logo visibility on various background colors',
+        'Create a brand assets page for consistent usage'
+      ]
+    });
+  }
+
+  // ========================================
+  // 4. UI CONSISTENCY
+  // ========================================
+
+  const buttonConsistency = consistency.buttonStyleConsistency || 'Unknown';
+
+  fixes.push({
+    id: `brand-fix-${fixIndex++}`,
+    title: `Standardize UI components${buttonConsistency !== 'Unknown' ? ` (Buttons: ${buttonConsistency})` : ''}`,
+    category: 'UI Consistency',
+    severity: buttonConsistency === 'Poor' ? 'High' : 'Medium',
+    description: 'Consistent UI components across your site build user trust and reduce cognitive load. Every button, card, form, and interactive element should follow the same design patterns.',
+    impact: 'Intuitive user experience, faster development, maintainable codebase',
+    problematicCode: `/* Common UI inconsistency problems */
+
+/* Inconsistent buttons */
+.btn { padding: 10px 20px; border-radius: 4px; }
+.button { padding: 8px 16px; border-radius: 8px; }
+.cta { padding: 12px 24px; border-radius: 0; }
+
+/* Inconsistent cards */
+.card-1 { box-shadow: 0 2px 4px rgba(0,0,0,0.1); border-radius: 8px; }
+.card-2 { border: 1px solid #ddd; border-radius: 4px; }
+
+/* Inconsistent spacing */
+.section-a { padding: 40px; }
+.section-b { padding: 2rem; }
+.section-c { padding: 32px 16px; }`,
+    fixedCode: `/* Unified Design System */
+:root {
+  /* Spacing Scale */
+  --space-1: 0.25rem;   /* 4px */
+  --space-2: 0.5rem;    /* 8px */
+  --space-3: 0.75rem;   /* 12px */
+  --space-4: 1rem;      /* 16px */
+  --space-6: 1.5rem;    /* 24px */
+  --space-8: 2rem;      /* 32px */
+  --space-12: 3rem;     /* 48px */
+  --space-16: 4rem;     /* 64px */
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px rgba(0, 0, 0, 0.15);
+}
+
+/* Button System */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: var(--text-sm);
+  line-height: 1;
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.btn-primary {
+  background: var(--brand-primary);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: var(--brand-primary-dark);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-secondary {
+  background: transparent;
+  border-color: var(--brand-primary);
+  color: var(--brand-primary);
+}
+
+.btn-sm { padding: var(--space-2) var(--space-4); font-size: var(--text-xs); }
+.btn-lg { padding: var(--space-4) var(--space-8); font-size: var(--text-base); }
+
+/* Card System */
+.card {
+  background: var(--bg-primary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-6);
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: var(--shadow-lg);
+}
+
+/* Section Spacing */
+.section {
+  padding: var(--space-16) var(--space-4);
+}
+
+@media (min-width: 768px) {
+  .section {
+    padding: var(--space-16) var(--space-8);
+  }
+}`,
+    steps: [
+      'Define a spacing scale (4px base unit is common)',
+      'Standardize border-radius values',
+      'Create consistent shadow elevation levels',
+      'Build a button system with variants (primary, secondary, ghost)',
+      'Create a card component with consistent styling',
+      'Document all components in a style guide',
+      'Audit existing code and migrate to the new system'
+    ]
+  });
+
+  // ========================================
+  // 5. VISUAL HIERARCHY & LAYOUT
+  // ========================================
+
+  fixes.push({
+    id: `brand-fix-${fixIndex++}`,
+    title: 'Strengthen visual hierarchy',
+    category: 'Visual Design',
+    severity: 'Medium',
+    description: 'Visual hierarchy guides users through your content in order of importance. Clear hierarchy improves comprehension, reduces cognitive load, and increases conversion rates.',
+    impact: 'Better content comprehension, improved user engagement, higher conversions',
+    problematicCode: `/* Weak visual hierarchy */
+.page-content {
+  /* Everything same size - no clear importance */
+}
+
+h1 { font-size: 24px; font-weight: 600; color: #333; }
+h2 { font-size: 22px; font-weight: 600; color: #333; }
+h3 { font-size: 20px; font-weight: 600; color: #333; }
+p  { font-size: 18px; color: #333; }
+
+/* CTAs blend in with content */
+.cta-button { background: #666; color: white; }`,
+    fixedCode: `/* Strong visual hierarchy system */
+
+/* 1. SIZE CONTRAST - Use significant size differences */
+h1 { font-size: 3rem; }     /* 48px - Huge for hero headlines */
+h2 { font-size: 2rem; }     /* 32px - Clear section breaks */
+h3 { font-size: 1.5rem; }   /* 24px - Subsections */
+p  { font-size: 1rem; }     /* 16px - Body text baseline */
+
+/* 2. WEIGHT CONTRAST */
+h1, h2 { font-weight: 700; }  /* Bold for impact */
+h3 { font-weight: 600; }      /* Semi-bold for emphasis */
+p { font-weight: 400; }       /* Regular for readability */
+
+/* 3. COLOR CONTRAST */
+h1 { color: var(--text-primary); }    /* Darkest for headlines */
+p { color: var(--text-secondary); }   /* Softer for body */
+.meta { color: var(--text-muted); }   /* Subtle for metadata */
+
+/* 4. SPACING FOR RHYTHM */
+h1 { margin-bottom: 1.5rem; }
+h2 { margin-top: 3rem; margin-bottom: 1rem; }
+p + p { margin-top: 1rem; }
+
+/* 5. CTA PROMINENCE */
+.cta-primary {
+  background: var(--brand-primary);
+  color: white;
+  font-size: 1.125rem;
+  padding: 1rem 2rem;
+  box-shadow: var(--shadow-lg);
+  /* Make it impossible to miss */
+}
+
+/* 6. Z-PATTERN / F-PATTERN LAYOUTS */
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+}
+
+.hero-content {
+  /* Primary content left for F-pattern reading */
+}
+
+.hero-visual {
+  /* Supporting visual right */
+}`,
+    steps: [
+      'Create dramatic size contrast between heading levels',
+      'Use font weight to establish importance',
+      'Apply color contrast strategically',
+      'Add generous whitespace around important elements',
+      'Make primary CTAs visually prominent',
+      'Follow F-pattern or Z-pattern layouts for landing pages',
+      'Test hierarchy by squinting at the page - most important elements should stand out'
+    ]
+  });
+
+  // ========================================
+  // 6. ACCESSIBILITY & CONTRAST
+  // ========================================
+
+  const contrastScore = contrastAnalysis.score || 70;
+
+  fixes.push({
+    id: `brand-fix-${fixIndex++}`,
+    title: `Ensure WCAG-compliant contrast${contrastScore < 80 ? ` (Score: ${Math.round(contrastScore)}%)` : ''}`,
+    category: 'Accessibility',
+    severity: contrastScore < 70 ? 'High' : 'Medium',
+    description: `Color contrast affects readability for all users and is required for accessibility compliance. ${contrastScore < 70
+      ? `Your contrast score of ${Math.round(contrastScore)}% indicates potential accessibility issues.`
+      : 'Maintaining strong contrast ensures your content is readable by everyone, including users with visual impairments.'}`,
+    impact: 'Legal compliance (ADA, WCAG), wider audience reach, better readability',
+    problematicCode: `/* Common contrast failures */
+.hero-text {
+  color: #888888;           /* Gray text */
+  background: #cccccc;      /* Light gray bg */
+  /* Contrast: 1.9:1 ❌ FAILS WCAG */
+}
+
+.subtle-link {
+  color: #aaa;              /* Too light */
+  /* Hard to read, especially in bright environments */
+}
+
+.placeholder::placeholder {
+  color: #ccc;              /* Nearly invisible */
+}`,
+    fixedCode: `/* WCAG 2.1 Compliant Contrast */
+
+/* Normal text requires 4.5:1 minimum */
+.body-text {
+  color: #374151;           /* Gray 700 */
+  background: #ffffff;      /* White */
+  /* Contrast: 9.2:1 ✓ AAA */
+}
+
+/* Large text (18px+ or 14px+ bold) requires 3:1 minimum */
+.heading {
+  color: #6b7280;           /* Gray 500 */
+  background: #ffffff;
+  /* Contrast: 5.0:1 ✓ AA for large text */
+}
+
+/* UI components require 3:1 for boundaries */
+.input {
+  border: 2px solid #6b7280;
+  /* Contrast: 5.0:1 ✓ */
+}
+
+/* Links must be distinguishable (not just by color) */
+.link {
+  color: var(--brand-primary);
+  text-decoration: underline;
+  /* Underline ensures colorblind users can identify links */
+}
+
+.link:hover {
+  text-decoration: none;
+  background: var(--brand-primary-light);
+  /* Additional indicator on hover */
+}
+
+/* Accessible placeholder text */
+.input::placeholder {
+  color: #6b7280;           /* Gray 500 - readable */
+  opacity: 1;
+}
+
+/* Color combinations to avoid */
+/* ❌ Red/Green (colorblind issues)
+   ❌ Blue/Purple (hard to distinguish)
+   ❌ Light gray on white
+   ❌ White on yellow or light colors */
+
+/* Tools:
+   - WebAIM Contrast Checker
+   - Chrome DevTools Accessibility Audit
+   - Stark Figma/Sketch plugin
+   - axe DevTools browser extension */`,
+    steps: [
+      'Audit all text/background combinations with a contrast checker',
+      'Ensure 4.5:1 minimum for normal text (WCAG AA)',
+      'Ensure 3:1 minimum for large text and UI elements',
+      'Don\'t rely solely on color to convey information',
+      'Add underlines to links, icons to buttons',
+      'Test with colorblind simulation tools',
+      'Run automated accessibility audits (Lighthouse, axe)',
+      'Consider offering a high-contrast mode'
+    ]
+  });
+
+  // ========================================
+  // 7. RESPONSIVE BRAND CONSISTENCY
+  // ========================================
+
+  fixes.push({
+    id: `brand-fix-${fixIndex++}`,
+    title: 'Maintain brand consistency across devices',
+    category: 'Responsive Design',
+    severity: 'Medium',
+    description: 'Your brand should feel cohesive whether viewed on a phone, tablet, or desktop. This includes consistent typography scaling, proper logo sizing, and maintaining visual hierarchy at all screen sizes.',
+    impact: 'Consistent brand experience, improved mobile engagement, professional appearance',
+    problematicCode: `/* Responsive branding issues */
+
+/* Logo too large/small on mobile */
+.logo { width: 200px; }  /* Fixed size - doesn't adapt */
+
+/* Typography doesn't scale */
+h1 { font-size: 48px; }  /* Too large on mobile */
+
+/* Spacing inconsistent */
+.section { padding: 80px; }  /* Wastes mobile space */
+
+/* Brand colors may shift */
+/* Different components use different shades */`,
+    fixedCode: `/* Responsive Brand System */
+
+/* Fluid Typography with clamp() */
+:root {
+  --text-base: clamp(0.875rem, 0.8rem + 0.25vw, 1rem);
+  --text-lg: clamp(1rem, 0.9rem + 0.5vw, 1.25rem);
+  --text-xl: clamp(1.25rem, 1rem + 1vw, 1.75rem);
+  --text-2xl: clamp(1.5rem, 1.2rem + 1.5vw, 2.5rem);
+  --text-3xl: clamp(2rem, 1.5rem + 2.5vw, 3.5rem);
+  --text-hero: clamp(2.5rem, 2rem + 3vw, 5rem);
+}
+
+/* Responsive Logo */
+.logo {
+  width: clamp(100px, 15vw, 180px);
+  height: auto;
+}
+
+/* Responsive Spacing */
+:root {
+  --space-section: clamp(3rem, 5vw + 1rem, 8rem);
+  --space-content: clamp(1rem, 3vw, 2rem);
+}
+
+.section {
+  padding: var(--space-section) var(--space-content);
+}
+
+/* Responsive Color Variables (same across breakpoints) */
+:root {
+  --brand-primary: #2563eb;  /* Never change based on breakpoint */
+}
+
+/* Touch-Friendly Interactive Elements */
+@media (pointer: coarse) {
+  .btn {
+    min-height: 44px;      /* iOS minimum touch target */
+    min-width: 44px;
+    padding: 12px 24px;
+  }
+
+  .nav-link {
+    padding: 12px 16px;    /* Larger tap targets */
+  }
+}
+
+/* Maintain hierarchy on mobile */
+@media (max-width: 768px) {
+  h1 { font-size: var(--text-2xl); }  /* Scale down but keep hierarchy */
+  h2 { font-size: var(--text-xl); }
+
+  /* Stack layouts */
+  .hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+}`,
+    steps: [
+      'Use clamp() for fluid typography that scales smoothly',
+      'Make logo responsive with clamp() or max-width',
+      'Keep color variables consistent across all breakpoints',
+      'Ensure touch targets are at least 44x44px on mobile',
+      'Test brand appearance at 320px, 768px, 1024px, and 1440px',
+      'Maintain visual hierarchy at all screen sizes',
+      'Use the same components everywhere - don\'t create mobile-only variants'
+    ]
+  });
+
+  // ========================================
+  // 8. DARK MODE SUPPORT
+  // ========================================
+
+  fixes.push({
+    id: `brand-fix-${fixIndex++}`,
+    title: 'Implement dark mode support',
+    category: 'Brand Experience',
+    severity: 'Low',
+    description: 'Dark mode is now expected by users, with 80%+ of people using it regularly. A well-designed dark mode protects your brand\'s appearance while respecting user preferences.',
+    impact: 'Better user experience, reduced eye strain, modern brand perception',
+    problematicCode: `/* No dark mode consideration */
+body {
+  background: white;
+  color: #333;
+}
+
+.card {
+  background: #f5f5f5;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Users on dark mode see bright white screen - poor experience */`,
+    fixedCode: `/* Dark Mode Implementation */
+
+/* Define semantic color tokens */
+:root {
+  /* Light mode (default) */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8fafc;
+  --color-bg-tertiary: #f1f5f9;
+  --color-text-primary: #0f172a;
+  --color-text-secondary: #475569;
+  --color-text-muted: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+
+  /* Brand colors stay consistent */
+  --brand-primary: #2563eb;
+  --brand-primary-light: #3b82f6;
+}
+
+/* Dark mode overrides */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg-primary: #0f172a;
+    --color-bg-secondary: #1e293b;
+    --color-bg-tertiary: #334155;
+    --color-text-primary: #f8fafc;
+    --color-text-secondary: #cbd5e1;
+    --color-text-muted: #64748b;
+    --color-border: #334155;
+    --color-shadow: rgba(0, 0, 0, 0.4);
+
+    /* Adjust brand color for dark backgrounds */
+    --brand-primary: #3b82f6;  /* Slightly lighter for visibility */
+  }
+}
+
+/* Usage */
+body {
+  background: var(--color-bg-primary);
+  color: var(--color-text-primary);
+}
+
+.card {
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  box-shadow: 0 4px 6px var(--color-shadow);
+}
+
+/* Manual dark mode toggle (optional) */
+[data-theme="dark"] {
+  --color-bg-primary: #0f172a;
+  /* ... dark mode values */
+}
+
+/* Dark mode logo swap */
+.logo-light { display: block; }
+.logo-dark { display: none; }
+
+@media (prefers-color-scheme: dark) {
+  .logo-light { display: none; }
+  .logo-dark { display: block; }
+}`,
+    steps: [
+      'Create semantic color tokens (bg-primary, text-secondary, etc.)',
+      'Design your dark palette - don\'t just invert colors',
+      'Use prefers-color-scheme media query for automatic switching',
+      'Provide light/dark versions of logo and images',
+      'Test all components in dark mode',
+      'Consider offering a manual toggle for user control',
+      'Ensure brand colors remain recognizable in both modes'
+    ]
+  });
+
   return fixes;
+}
+
+// Helper functions for color manipulation
+function darkenColor(hex) {
+  if (!hex || !hex.startsWith('#')) return '#1d4ed8';
+  try {
+    const r = Math.max(0, parseInt(hex.slice(1, 3), 16) - 30);
+    const g = Math.max(0, parseInt(hex.slice(3, 5), 16) - 30);
+    const b = Math.max(0, parseInt(hex.slice(5, 7), 16) - 30);
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  } catch (e) {
+    return '#1d4ed8';
+  }
+}
+
+function lightenColor(hex) {
+  if (!hex || !hex.startsWith('#')) return '#3b82f6';
+  try {
+    const r = Math.min(255, parseInt(hex.slice(1, 3), 16) + 30);
+    const g = Math.min(255, parseInt(hex.slice(3, 5), 16) + 30);
+    const b = Math.min(255, parseInt(hex.slice(5, 7), 16) + 30);
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  } catch (e) {
+    return '#3b82f6';
+  }
 }
 
 function renderBrandFixAccordion(fix, index) {
@@ -1816,7 +2782,7 @@ window.switchBrandFixTab = function(accordionId, tabName) {
 window.copyBrandCode = function(elementId) {
   const el = document.getElementById(elementId);
   if (!el) return;
-  
+
   const text = el.textContent || el.innerText;
   navigator.clipboard.writeText(text).then(() => {
     const btn = document.querySelector(`button[onclick="copyBrandCode('${elementId}')"]`);
@@ -1829,6 +2795,55 @@ window.copyBrandCode = function(elementId) {
     console.error('Copy failed:', err);
   });
 };
+
+// ============================================
+// EVENT DELEGATION FOR FIX ACCORDIONS AND TABS
+// (Required because CSP blocks inline onclick handlers)
+// ============================================
+document.addEventListener('click', function(e) {
+  // Handle tab clicks
+  const tab = e.target.closest('.brand-fix-tab');
+  if (tab) {
+    const accordion = tab.closest('.brand-fix-accordion');
+    if (accordion) {
+      const accordionId = accordion.getAttribute('data-fix-id');
+      const tabText = tab.textContent.toLowerCase();
+      let tabName = 'summary';
+      if (tabText.includes('code')) tabName = 'code';
+      else if (tabText.includes('guide')) tabName = 'guide';
+      if (accordionId && typeof window.switchBrandFixTab === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+        window.switchBrandFixTab(accordionId, tabName);
+      }
+    }
+    return;
+  }
+
+  // Handle accordion header clicks
+  const header = e.target.closest('.brand-fix-header');
+  if (header) {
+    const accordion = header.closest('.brand-fix-accordion');
+    if (accordion) {
+      const accordionId = accordion.getAttribute('data-fix-id');
+      if (accordionId && typeof window.toggleBrandFixAccordion === 'function') {
+        window.toggleBrandFixAccordion(accordionId);
+      }
+    }
+    return;
+  }
+
+  // Handle copy button clicks
+  const copyBtn = e.target.closest('button');
+  if (copyBtn) {
+    const onclickAttr = copyBtn.getAttribute('onclick') || '';
+    const copyMatch = onclickAttr.match(/copyBrandCode\(['"]([^'"]+)['"]\)/);
+    if (copyMatch && copyMatch[1]) {
+      e.preventDefault();
+      window.copyBrandCode(copyMatch[1]);
+    }
+  }
+});
 
 // Generate score breakdown HTML (separate from accordions)
 function generateScoreBreakdown(scoreBreakdown) {
@@ -1864,3 +2879,24 @@ function generateScoreBreakdown(scoreBreakdown) {
     </div>
   `;
 }
+
+// ============================================
+// INITIALIZATION - Set up global display functions
+// ============================================
+(function() {
+  // Store reference to real displayResults for event listeners
+  window.__brandRealDisplayResults = displayResults;
+
+  // Make displayResults globally available for report-ui.js billing return
+  window.displayResults = displayResults;
+  window.displayBrandResults = displayResults;
+
+  // Process any pending restore from billing return
+  if (window.__brandPendingRestore) {
+    console.log('[Brand] Processing pending restore from billing return');
+    displayResults(window.__brandPendingRestore);
+    window.__brandPendingRestore = null;
+  }
+
+  console.log('[Brand] displayResults ready');
+})();

@@ -361,9 +361,124 @@ const generatePDF = asyncHandler(async (req, res) => {
   }
 });
 
+/**
+ * Render PDF using Puppeteer (screenshot-perfect output)
+ * POST /api/pdf/render
+ *
+ * This endpoint renders the actual page using headless Chrome
+ * for pixel-perfect PDF output that matches the web UI exactly.
+ */
+const renderPDF = asyncHandler(async (req, res) => {
+  const { url, reportType, reportId, reportData, analyzedUrl } = req.body;
+
+  if (!url) {
+    return res.status(400).json({
+      success: false,
+      error: 'URL is required'
+    });
+  }
+
+  // Check entitlement - user must have paid access
+  // In development mode, allow access for testing
+  const isDev = process.env.NODE_ENV !== 'production';
+  const user = req.user;
+  const canAccess = isDev || await stripeService.canAccessPaid(user, reportId);
+
+  if (!canAccess) {
+    logger.info('PDF render blocked - paid access required', {
+      reportType,
+      reportId,
+      userId: user?.id || 'anonymous'
+    });
+
+    return res.status(403).json({
+      success: false,
+      error: 'Paid access required',
+      message: 'You need a Pro subscription or to purchase this report to download the PDF.',
+      upgradeUrl: '/upgrade.html',
+      reportId
+    });
+  }
+
+  logger.info('Rendering PDF with Puppeteer', {
+    url,
+    reportType,
+    reportId,
+    hasReportData: !!reportData,
+    reportDataKeys: reportData ? Object.keys(reportData).slice(0, 5) : [],
+    analyzedUrl: analyzedUrl
+  });
+
+  try {
+    const puppeteerPdfService = require('../services/puppeteerPdfService');
+
+    // Build the full URL if it's a relative path
+    const fullUrl = url.startsWith('http')
+      ? url
+      : `http://localhost:${process.env.PORT || 3000}${url}`;
+
+    // Get auth token from request to pass to Puppeteer
+    const authToken = req.headers.authorization?.replace('Bearer ', '') || '';
+    const cookies = authToken ? [{
+      name: 'sm_auth_token',
+      value: authToken,
+      domain: 'localhost'
+    }] : [];
+
+    const result = await puppeteerPdfService.generatePdfFromUrl({
+      url: fullUrl,
+      reportId: reportId || `render-${Date.now()}`,
+      reportType: reportType || 'report',
+      cookies,
+      waitTime: 3000,
+      expandAccordions: true,
+      isPaid: true, // User has verified paid access at this point
+      reportData: reportData, // Pass report data for direct injection
+      analyzedUrl: analyzedUrl // Pass analyzed URL
+    });
+
+    // Stream the PDF file
+    const fs = require('fs');
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+
+    const fileStream = fs.createReadStream(result.filepath);
+    fileStream.pipe(res);
+
+    fileStream.on('error', (err) => {
+      logger.error('Error streaming rendered PDF:', err);
+      if (!res.headersSent) {
+        res.status(500).json({
+          success: false,
+          error: 'Error streaming PDF'
+        });
+      }
+    });
+
+    // Clean up file after sending (with delay)
+    fileStream.on('end', () => {
+      setTimeout(() => {
+        fs.unlink(result.filepath, (err) => {
+          if (err) logger.warn('Could not delete temp PDF:', err.message);
+        });
+      }, 5000);
+    });
+
+  } catch (error) {
+    logger.error('Error rendering PDF with Puppeteer:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to render PDF',
+      message: error.message
+    });
+  }
+});
+
 module.exports = {
   getPricing,
   purchasePDFReport,
   downloadPDFReport,
-  generatePDF
+  generatePDF,
+  renderPDF
 };

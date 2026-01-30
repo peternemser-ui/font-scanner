@@ -2,7 +2,7 @@
  * Performance Hub Script
  * Unified performance analysis with three modes:
  * - Quick Scan: Fast resource analysis without Lighthouse
- * - Full Analysis: Complete Lighthouse audit with desktop/mobile
+ * - Full Analysis: Complete Lighthouse Audit with desktop/mobile
  * - Core Web Vitals: Google ranking metrics focus
  */
 
@@ -95,8 +95,83 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let currentMode = 'quick';
   let loader = null;
+  let pendingAnalysisUrl = null; // Store URL for resuming after payment
 
   handleBillingReturnIfPresent();
+
+  /**
+   * Check if user can run a report (has subscription OR purchased this report type)
+   * @param {string} mode - The analysis mode (quick, full, cwv)
+   * @returns {Promise<boolean>}
+   */
+  async function checkCanRunReport(mode) {
+    // Quick scan is always free - no payment required
+    if (mode === 'quick') {
+      console.log('[PerformanceHub] Quick scan is free, allowing access');
+      return true;
+    }
+
+    // Ensure billing status is fetched
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      await window.ProReportBlock.fetchBillingStatus();
+    }
+
+    // Check if user is a Pro subscriber (any subscription tier)
+    if (window.ProReportBlock?.isProSubscriber?.()) {
+      console.log('[PerformanceHub] User is Pro subscriber, allowing access');
+      return true;
+    }
+
+    // Get report type for checking purchase
+    const reportType = mode === 'full' ? 'lighthouse' : mode === 'cwv' ? 'cwv' : mode;
+
+    // Check if this specific report type has been purchased
+    // For single report purchases, we check against the report type
+    const reportId = document.body.getAttribute('data-report-id') || '';
+    if (reportId && window.ProReportBlock?.isReportPurchased?.(reportId)) {
+      console.log('[PerformanceHub] Report is purchased, allowing access:', reportId);
+      return true;
+    }
+
+    // Also check localStorage for mode-based purchases (legacy support)
+    const purchaseKey = `sm_report_purchased_${reportType}`;
+    const purchaseTimestamp = localStorage.getItem(purchaseKey);
+    if (purchaseTimestamp) {
+      // Check if purchase is within 24 hours (single report validity)
+      const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+      if (parseInt(purchaseTimestamp, 10) > oneDayAgo) {
+        console.log('[PerformanceHub] Recent purchase found for:', reportType);
+        return true;
+      }
+    }
+
+    console.log('[PerformanceHub] No access found for mode:', mode);
+    return false;
+  }
+
+  /**
+   * Handle successful payment - resume the pending analysis
+   */
+  function onPaymentSuccess(reportType) {
+    console.log('[PerformanceHub] Payment successful for:', reportType);
+
+    // Store purchase in localStorage
+    const purchaseKey = `sm_report_purchased_${reportType}`;
+    localStorage.setItem(purchaseKey, Date.now().toString());
+
+    // Clear billing cache to refresh status
+    if (window.ProReportBlock?.clearBillingCache) {
+      window.ProReportBlock.clearBillingCache();
+    }
+
+    // Resume the analysis if we have a pending URL
+    if (pendingAnalysisUrl) {
+      urlInput.value = pendingAnalysisUrl;
+      pendingAnalysisUrl = null;
+      // Small delay to ensure UI is ready
+      setTimeout(() => runAnalysis(), 100);
+    }
+  }
 
   // Attach shared click handlers for PaidUnlockCard (if loaded on this page)
   if (window.SmEntitlements && typeof window.SmEntitlements.init === 'function') {
@@ -120,7 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     updateModeIndicator();
 
     // Keep analyzer key aligned with the selected mode
-    const key = mode === 'quick' ? 'speed-ux-quick' : 'speed-ux-pro';
+    const key = mode === 'quick' ? 'speed-ux-quick' : mode === 'cwv' ? 'speed-ux-cwv' : 'speed-ux-full';
     window.SM_ANALYZER_KEY = key;
     document.body.setAttribute('data-sm-analyzer-key', key);
   };
@@ -134,12 +209,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeLabels = {
       'quick': 'Quick scan',
       'cwv': 'Core Web Vitals',
-      'full': 'Lighthouse audit'
+      'full': 'Lighthouse Audit'
     };
     const modeDescriptions = {
       'quick': 'Resource analysis focusing on requests, page weight, blocking assets, and server response time.',
       'cwv': 'Core Web Vitals deep dive: LCP, CLS, INP/TBT with risk flags and pass/fail indicators.',
-      'full': 'Complete Lighthouse audit across Performance, Accessibility, Best Practices, and SEO (desktop + mobile).'
+      'full': 'Complete Lighthouse Audit across Performance, Accessibility, Best Practices, and SEO (desktop + mobile).'
     };
     if (modeIndicator) {
       modeIndicator.textContent = modeLabels[currentMode] || 'Quick scan';
@@ -169,22 +244,348 @@ document.addEventListener('DOMContentLoaded', () => {
   const params = new URLSearchParams(window.location.search);
   const urlParam = params.get('url');
   const modeParam = params.get('mode');
-  
-  if (modeParam && ['quick', 'full', 'cwv'].includes(modeParam)) {
-    currentMode = modeParam;
+  const reportIdParam = params.get('report_id');
+  const autoScan = params.get('auto_scan') === 'true';
+  const reportTypeParam = params.get('report_type'); // lighthouse, cwv, etc.
+  const billingSuccessParam = params.get('billing_success') === 'true';
+  const sessionIdParam = params.get('session_id') || params.get('sessionId');
+
+  // If returning from successful payment, mark the report type as purchased
+  // This must happen BEFORE mode initialization so checkCanRunReport passes
+  if ((billingSuccessParam || sessionIdParam) && reportTypeParam) {
+    console.log('[PerformanceHub] Marking report type as purchased after billing return:', reportTypeParam);
+    const purchaseKey = `sm_report_purchased_${reportTypeParam}`;
+    localStorage.setItem(purchaseKey, Date.now().toString());
+    // Also clear billing cache to get fresh status
+    if (window.ProReportBlock?.clearBillingCache) {
+      window.ProReportBlock.clearBillingCache();
+    }
+  }
+
+  // Set mode from report_type parameter (from billing return) or mode parameter
+  const effectiveMode = reportTypeParam === 'lighthouse' ? 'full' :
+                        reportTypeParam === 'cwv' ? 'cwv' :
+                        modeParam;
+
+  if (effectiveMode && ['quick', 'full', 'cwv'].includes(effectiveMode)) {
+    currentMode = effectiveMode;
     modeTabs.forEach(t => {
       t.classList.remove('tabs__item--active');
-      if (t.dataset.mode === modeParam) {
+      if (t.dataset.mode === effectiveMode) {
         t.classList.add('tabs__item--active');
       }
     });
     updateModeIndicator();
   }
-  
-  if (urlParam) {
-    urlInput.value = urlParam;
-    runAnalysis();
+
+  // Generic display function for loading stored reports
+  // Exposed globally for Puppeteer PDF rendering
+  window.displayResults = displayResults;
+  function displayResults(data) {
+    if (!data) return;
+
+    // Validate data structure - check for error responses
+    if (data.error || typeof data === 'string') {
+      console.error('[PerformanceHub] Cannot display error data:', data);
+      displayError(data.error || 'Invalid report data', null);
+      return;
+    }
+
+    // Get URL from input field or data
+    const urlFromInput = urlInput?.value;
+    const reportUrl = data.url || urlFromInput || '';
+
+    // Store globally - include URL for PDF export
+    window.currentPerformanceResults = { ...data, url: reportUrl };
+
+    // Show results container
+    results.classList.remove('hidden');
+    resultsContent.innerHTML = '';
+
+    // Determine mode from data if possible and display with error handling
+    // Detection logic - check in order of specificity:
+    // 1. Full (Lighthouse): has desktop.lighthouse or mobile.lighthouse with category scores
+    // 2. CWV: has desktop/mobile with coreWebVitals but NO lighthouse scores
+    // 3. Quick: has summary object with totalRequests etc.
+    try {
+      // Check for results wrapper (API returns { results: {...} })
+      const results = data.results || data;
+
+      // Check for Full/Lighthouse structure (lighthouse category scores)
+      // Lighthouse data has desktop.lighthouse.performance, accessibility, etc.
+      // Key differentiator: lighthouse object with category scores (performance, accessibility, bestPractices, seo)
+      const hasLighthouseScores = (obj) => obj?.lighthouse && (
+        typeof obj.lighthouse.performance === 'number' ||
+        typeof obj.lighthouse.accessibility === 'number' ||
+        typeof obj.lighthouse.bestPractices === 'number'
+      );
+      const hasLighthouseStructure = results.lighthouse ||
+                                     hasLighthouseScores(results.desktop) ||
+                                     hasLighthouseScores(results.mobile) ||
+                                     // Fallback: performanceScore without coreWebVitals suggests Lighthouse
+                                     ((results.desktop?.performanceScore !== undefined && !results.desktop?.coreWebVitals?.lcp) ||
+                                      (results.mobile?.performanceScore !== undefined && !results.mobile?.coreWebVitals?.lcp));
+
+      // Check for CWV-only structure (coreWebVitals but NO lighthouse scores)
+      const hasCWVStructure = (results.desktop?.coreWebVitals || results.mobile?.coreWebVitals) ||
+                              (results.cwv || results.lcp || results.cls || results.inp);
+
+      // Route to appropriate display function
+      // Lighthouse takes priority because it includes CWV data too
+      if (hasLighthouseStructure) {
+        console.log('[PerformanceHub] Detected Lighthouse/Full report structure');
+        displayFullResults(data);
+      } else if (hasCWVStructure) {
+        console.log('[PerformanceHub] Detected CWV report structure');
+        displayCWVResults(data);
+      } else if (results.summary && typeof results.summary === 'object') {
+        // Quick results have summary.totalRequests, etc.
+        console.log('[PerformanceHub] Detected Quick scan structure');
+        displayQuickResults(data);
+      } else if (results.desktop || results.mobile) {
+        // Fallback: if we have desktop/mobile but couldn't determine type, try CWV
+        console.warn('[PerformanceHub] Could not determine report type, trying CWV display');
+        displayCWVResults(data);
+      } else {
+        // Default to quick results as last resort
+        console.warn('[PerformanceHub] Unknown data structure, defaulting to quick display');
+        displayQuickResults(data);
+      }
+    } catch (renderError) {
+      console.error('[PerformanceHub] Error rendering results:', renderError);
+      displayError('Failed to render report. The data may be corrupted.', { error: renderError.message });
+    }
   }
+
+  // Check for stored report or auto-start scan
+  (async function initFromUrlParams() {
+    console.log('[PerformanceHub] initFromUrlParams starting', {
+      reportIdParam,
+      urlParam,
+      hasReportStorage: !!window.ReportStorage,
+      hasPuppeteerData: !!window.__PUPPETEER_INJECTED_DATA__
+    });
+
+    try {
+    // PUPPETEER INJECTION CHECK: If data was injected directly, use it immediately
+    if (window.__PUPPETEER_INJECTED_DATA__) {
+      console.log('[PerformanceHub] Using Puppeteer-injected data');
+      const injectedData = window.__PUPPETEER_INJECTED_DATA__;
+      const injectedUrl = window.__PUPPETEER_ANALYZED_URL__ || '';
+
+      // Set the URL input
+      if (injectedUrl && urlInput) {
+        urlInput.value = injectedUrl;
+      }
+
+      // Display the results immediately
+      try {
+        displayResults(injectedData);
+        console.log('[PerformanceHub] Puppeteer-injected data displayed successfully');
+        return; // Don't continue with normal init flow
+      } catch (e) {
+        console.error('[PerformanceHub] Failed to display Puppeteer-injected data:', e);
+        // Fall through to normal flow
+      }
+    }
+
+    const billingSuccess = params.get('billing_success') === 'true';
+
+    // If we have a report_id, set it immediately so hasAccess checks work
+    if (reportIdParam) {
+      document.body.setAttribute('data-report-id', reportIdParam);
+    }
+
+    // If returning from billing, wait for billing return processing to complete
+    // This ensures the purchase is verified before we try to display the report
+    if (billingSuccess && !window.__smBillingReturnComplete) {
+      console.log('[PerformanceHub] Waiting for billing return processing...');
+      await new Promise((resolve) => {
+        // Check if already complete
+        if (window.__smBillingReturnComplete) {
+          resolve();
+          return;
+        }
+        // Wait for the event
+        const handler = () => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        };
+        window.addEventListener('sm:billingReturnComplete', handler);
+        // Timeout fallback in case event is missed
+        setTimeout(() => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        }, 5000);
+      });
+      console.log('[PerformanceHub] Billing return processing complete');
+
+      // CRITICAL: If report-ui.js already displayed results, don't re-display
+      // This prevents clearing the screenshot card that was just added
+      const resultsContent = document.getElementById('resultsContent');
+      if (resultsContent && resultsContent.children.length > 0) {
+        console.log('[PerformanceHub] Results already displayed by report-ui.js, skipping duplicate display');
+        return;
+      }
+    }
+
+    // If we have a report_id, try to load the stored report first
+    // This handles both dashboard recall AND billing return
+    console.log('[PerformanceHub] Checking report_id condition:', { reportIdParam, hasReportStorage: !!window.ReportStorage });
+    if (reportIdParam && window.ReportStorage) {
+      console.log('[PerformanceHub] Checking for stored report:', reportIdParam);
+
+      // CRITICAL: Fetch billing status BEFORE displaying the report
+      // Force refresh to ensure we have the latest purchase data (e.g., coming from dashboard)
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        console.log('[PerformanceHub] Fetching billing status (force refresh for report recall)...');
+        await window.ProReportBlock.fetchBillingStatus(true);
+        console.log('[PerformanceHub] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportIdParam), 'for reportId:', reportIdParam);
+      } else {
+        console.log('[PerformanceHub] ProReportBlock.fetchBillingStatus not available');
+      }
+
+      // First try to get the stored report data to extract the URL
+      console.log('[PerformanceHub] About to call ReportStorage.loadReport for:', reportIdParam);
+      const stored = await window.ReportStorage.loadReport(reportIdParam);
+      console.log('[PerformanceHub] ReportStorage.loadReport returned:', stored ? { hasData: !!stored.data, metadata: stored.metadata } : null);
+      if (!stored) {
+        console.warn('[PerformanceHub] No stored report found in database for:', reportIdParam);
+      } else if (!stored.data) {
+        console.warn('[PerformanceHub] Stored report has no data:', reportIdParam);
+      }
+      if (stored && stored.data) {
+        // Validate stored data - must have expected structure for one of the modes
+        const data = stored.data;
+        const results = data.results || data;
+
+        // CWV structure: has desktop/mobile with coreWebVitals, or top-level cwv/lcp/cls/inp
+        const isValidCWV = data.desktop || data.mobile || data.cwv || data.lcp || data.cls || data.inp;
+
+        // Lighthouse/Full structure: has lighthouse scores nested in desktop/mobile
+        // Check both data.desktop.lighthouse and data.results.desktop.lighthouse patterns
+        const hasLighthouseScores = (obj) => obj?.lighthouse && (
+          typeof obj.lighthouse.performance === 'number' ||
+          typeof obj.lighthouse.accessibility === 'number' ||
+          typeof obj.lighthouse.bestPractices === 'number'
+        );
+        const isValidFull = data.lighthouse ||
+                           hasLighthouseScores(data.desktop) ||
+                           hasLighthouseScores(data.mobile) ||
+                           hasLighthouseScores(results.desktop) ||
+                           hasLighthouseScores(results.mobile);
+
+        // Quick structure: has summary object with resource stats
+        const isValidQuick = data.summary && typeof data.summary === 'object';
+        const hasError = data.error || typeof data === 'string';
+
+        console.log('[PerformanceHub] Data validation:', {
+          isValidCWV,
+          isValidFull,
+          isValidQuick,
+          hasError,
+          hasDataDesktop: !!data.desktop,
+          hasDataMobile: !!data.mobile,
+          hasResultsDesktop: !!results?.desktop,
+          hasResultsMobile: !!results?.mobile,
+          hasDesktopLighthouse: !!data.desktop?.lighthouse || !!results?.desktop?.lighthouse,
+          dataKeys: Object.keys(data).slice(0, 10),
+          resultsKeys: results ? Object.keys(results).slice(0, 10) : null
+        });
+
+        if (hasError || (!isValidCWV && !isValidFull && !isValidQuick)) {
+          console.warn('[PerformanceHub] Stored report has invalid data structure, ignoring:', {
+            hasError,
+            isValidCWV,
+            isValidFull,
+            isValidQuick,
+            dataType: typeof data,
+            dataKeys: typeof data === 'object' ? Object.keys(data).slice(0, 10) : null
+          });
+          // Clean URL to prevent reload loop with bad report
+          const cleanParams = new URLSearchParams(window.location.search);
+          cleanParams.delete('report_id');
+          const cleanedUrl = `${window.location.pathname}${cleanParams.toString() ? `?${cleanParams.toString()}` : ''}`;
+          window.history.replaceState({}, '', cleanedUrl);
+          // Don't display invalid report, let user run a fresh scan
+        } else {
+          console.log('[PerformanceHub] Stored report validation passed, preparing to display');
+          // Extract URL from stored report metadata or data
+          const storedUrl = stored.metadata?.siteUrl || stored.data?.url || urlParam;
+          console.log('[PerformanceHub] Using stored URL:', storedUrl);
+          if (storedUrl) {
+            urlInput.value = storedUrl;
+          }
+
+          // CRITICAL: Fetch billing status BEFORE displaying report
+          // Force refresh to ensure we have the latest purchase data (e.g., coming from dashboard)
+          if (window.ProReportBlock?.fetchBillingStatus) {
+            console.log('[PerformanceHub] Fetching billing status for stored report recall...');
+            await window.ProReportBlock.fetchBillingStatus(true);
+            console.log('[PerformanceHub] Billing status fetched, hasAccess:',
+              window.ProReportBlock.hasAccess(reportIdParam), 'for reportId:', reportIdParam);
+          }
+
+          // Set screenshot URL from stored data BEFORE displaying
+          const storedScreenshotUrl = stored.data?.screenshotUrl || stored.data?.results?.screenshotUrl;
+          if (storedScreenshotUrl) {
+            document.body.setAttribute('data-sm-screenshot-url', storedScreenshotUrl);
+            console.log('[PerformanceHub] Set screenshot URL for stored report:', storedScreenshotUrl);
+          } else if (reportIdParam) {
+            // Fallback: construct from report ID (screenshot file may exist on disk)
+            const fallbackScreenshotUrl = `/reports/${encodeURIComponent(reportIdParam)}/screenshot.jpg`;
+            document.body.setAttribute('data-sm-screenshot-url', fallbackScreenshotUrl);
+            console.log('[PerformanceHub] Set fallback screenshot URL:', fallbackScreenshotUrl);
+          }
+
+          // Display the report with error handling
+          try {
+            console.log('[PerformanceHub] Calling displayResults with stored data');
+            displayResults(stored.data);
+            console.log('[PerformanceHub] displayResults completed successfully');
+            window.ReportStorage.showStoredReportBanner?.(stored.metadata);
+            // Clean URL after successful display so refresh doesn't reload stored report
+            const cleanParams = new URLSearchParams(window.location.search);
+            cleanParams.delete('report_id');
+            const cleanedUrl = `${window.location.pathname}${cleanParams.toString() ? `?${cleanParams.toString()}` : ''}`;
+            window.history.replaceState({}, '', cleanedUrl);
+            console.log('[PerformanceHub] Report displayed successfully, returning');
+            return; // Don't auto-scan - successful display
+          } catch (displayError) {
+            console.error('[PerformanceHub] Failed to display stored report:', displayError);
+            // Clear any partial render
+            resultsContent.innerHTML = '';
+            results.classList.add('hidden');
+            // Clean URL to prevent reload loop with bad report
+            const cleanParams = new URLSearchParams(window.location.search);
+            cleanParams.delete('report_id');
+            const cleanedUrl = `${window.location.pathname}${cleanParams.toString() ? `?${cleanParams.toString()}` : ''}`;
+            window.history.replaceState({}, '', cleanedUrl);
+            // Continue to allow fresh scan
+          }
+        }
+      }
+    } else if (reportIdParam) {
+      console.warn('[PerformanceHub] Report ID provided but no ReportStorage available or report not loaded');
+    }
+
+    // No stored report found - pre-fill URL but only auto-scan if explicitly requested
+    console.log('[PerformanceHub] Reached end of initFromUrlParams, falling through to URL pre-fill', { urlParam, autoScan });
+    if (urlParam) {
+      urlInput.value = urlParam;
+    }
+    // Only auto-scan if explicitly requested with auto_scan=true
+    if (autoScan) {
+      runAnalysis();
+    }
+    } catch (initError) {
+      console.error('[PerformanceHub] CRITICAL ERROR in initFromUrlParams:', initError);
+      // Try to at least pre-fill the URL if we have one
+      if (urlParam && urlInput) {
+        urlInput.value = urlParam;
+      }
+    }
+  })();
 
   // Initialize active tab from markup or default
   const initiallyActive = modeTabs.find(t => t.classList.contains('tabs__item--active'));
@@ -255,8 +656,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const activeTab = document.querySelector('.tabs__item.tabs__item--active');
     if (activeTab && activeTab.dataset.mode) {
       currentMode = activeTab.dataset.mode;
-
+      // Update the mode indicator to reflect the current mode
+      updateModeIndicator();
     }
+
+    // ==================== PAYMENT GATE CHECK ====================
+    // Check if user can run this report (subscription or purchase required for non-free modes)
+    const canRun = await checkCanRunReport(currentMode);
+    if (!canRun) {
+      console.log('[PerformanceHub] Payment required for mode:', currentMode);
+      // Store URL for resuming after payment
+      pendingAnalysisUrl = url;
+      // Get report type for payment gate
+      const reportType = currentMode === 'full' ? 'lighthouse' : currentMode;
+      // Show payment gate modal
+      showPaymentGate(reportType, url);
+      return;
+    }
+    console.log('[PerformanceHub] Access granted, proceeding with analysis');
+    // ==================== END PAYMENT GATE ====================
 
     // Show loading with AnalyzerLoader
     results.classList.remove('hidden');
@@ -264,6 +682,12 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMessage.classList.add('hidden');
     analyzeButton.disabled = true;
     buttonText.textContent = 'Analyzing...';
+
+    // Remove any stored report banner from previous session
+    const storedReportBanner = document.getElementById('sm-stored-report-banner');
+    if (storedReportBanner) {
+      storedReportBanner.remove();
+    }
 
     // Initialize AnalyzerLoader
     loader = new AnalyzerLoader('loadingContainer');
@@ -336,20 +760,30 @@ document.addEventListener('DOMContentLoaded', () => {
       window.SM_SCAN_STARTED_AT = scanStartedAt;
       document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
 
-      // Deterministic analyzer key for this scan
-      const analyzerKey = currentMode === 'quick' ? 'speed-ux-quick' : 'speed-ux-pro';
+      // Deterministic analyzer key for this scan - specific to mode type
+      const analyzerKey = currentMode === 'quick' ? 'speed-ux-quick' : currentMode === 'cwv' ? 'speed-ux-cwv' : 'speed-ux-full';
       window.SM_ANALYZER_KEY = analyzerKey;
       document.body.setAttribute('data-sm-analyzer-key', analyzerKey);
 
       // Deterministic reportId for paywall / exports
+      // Priority: body attribute > URL params > computed
+      const urlParams = new URLSearchParams(window.location.search);
       const reportId =
         document.body.getAttribute('data-report-id') ||
+        urlParams.get('report_id') || urlParams.get('reportId') ||
         (window.ReportUI && typeof window.ReportUI.makeReportId === 'function'
           ? window.ReportUI.makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: scanStartedAt })
           : window.ReportUI && typeof window.ReportUI.computeReportId === 'function'
           ? window.ReportUI.computeReportId(url, scanStartedAt, analyzerKey)
           : '');
       if (reportId) document.body.setAttribute('data-report-id', reportId);
+
+      // CRITICAL: Fetch billing status BEFORE displaying results
+      // This ensures ProReportBlock.hasAccess() returns the correct value
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        console.log('[PerformanceHub] Fetching billing status before display...');
+        await window.ProReportBlock.fetchBillingStatus(false); // Don't force refresh, use cache if available
+      }
 
       switch (currentMode) {
         case 'quick':
@@ -364,6 +798,50 @@ document.addEventListener('DOMContentLoaded', () => {
           data = await runCWVAnalysis(url, scanStartedAt);
           displayCWVResults(data);
           break;
+      }
+
+      // Extract and set screenshot URL from API response
+      const screenshotUrl = data?.screenshotUrl || data?.results?.screenshotUrl;
+      if (screenshotUrl) {
+        document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+        console.log('[PerformanceHub] Set screenshot URL:', screenshotUrl);
+      }
+
+      // Update report ID from API response if available (more accurate than computed)
+      const apiReportId = data?.reportId || data?.results?.reportId;
+      if (apiReportId) {
+        document.body.setAttribute('data-report-id', apiReportId);
+        console.log('[PerformanceHub] Updated report ID from API:', apiReportId);
+      }
+
+      // Store the results globally for potential auto-save
+      // Include URL for PDF export and other utilities
+      window.currentPerformanceResults = { ...data, url };
+      console.log('[PerformanceHub] Stored results globally:', {
+        mode: currentMode,
+        analyzerKey,
+        reportId,
+        hasData: !!data,
+        dataKeys: data ? Object.keys(data).slice(0, 10) : [],
+        hasDesktop: !!data?.desktop,
+        hasLighthouse: !!data?.desktop?.lighthouse || !!data?.results?.desktop?.lighthouse
+      });
+
+      // Auto-save report snapshot if user has access (Pro or purchased)
+      if (reportId && data && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
+        console.log('[PerformanceHub] Calling autoSaveIfEligible for:', { reportId, analyzerKey });
+        window.ReportStorage.autoSaveIfEligible(reportId, data, {
+          siteUrl: url,
+          analyzerType: analyzerKey,
+          scannedAt: scanStartedAt
+        });
+      } else {
+        console.log('[PerformanceHub] Skipping auto-save:', {
+          hasReportId: !!reportId,
+          hasData: !!data,
+          hasReportStorage: !!window.ReportStorage,
+          hasAutoSave: typeof window.ReportStorage?.autoSaveIfEligible === 'function'
+        });
       }
 
     } catch (error) {
@@ -695,9 +1173,14 @@ document.addEventListener('DOMContentLoaded', () => {
       ${accordions}
     `;
 
+    // Count all issues: explicit issues + likely causes
+    const quickIssuesCount =
+      (issues?.length || 0) +
+      (recommendations.likelyCauses?.length || 0);
+
     const summaryStats = calculatePerformanceSummary({
       mode: 'quick',
-      issues: issues.length,
+      issues: quickIssuesCount,
       recommendations: recommendations.recommendations?.length || 0,
       checks: countQuickChecks(summary)
     });
@@ -753,17 +1236,25 @@ document.addEventListener('DOMContentLoaded', () => {
     const resourcesContent = renderResourceBreakdownSection(results);
     const additionalChecksContent = renderAdditionalChecksSection(results);
 
+    // Count opportunities (performance improvements needed)
     const opportunitiesCount =
       (desktop.opportunities?.length || 0) +
       (mobile.opportunities?.length || 0) +
-      (Array.isArray(results.opportunities) ? results.opportunities.length : 0) +
+      (Array.isArray(results.opportunities) ? results.opportunities.length : 0);
+
+    // Count recommendations
+    const recommendationsCount =
+      (desktop.recommendations?.length || 0) +
+      (mobile.recommendations?.length || 0) +
       (Array.isArray(results.recommendations) ? results.recommendations.length : 0);
 
+    // Count diagnostics
     const diagnosticsCount =
       (desktop.diagnostics?.length || 0) +
       (mobile.diagnostics?.length || 0) +
       (Array.isArray(results.diagnostics) ? results.diagnostics.length : 0);
 
+    // Count category-specific issues (accessibility, best practices, SEO)
     const categoryIssuesCount =
       (desktop.accessibilityDetails?.issues?.length || 0) +
       (desktop.bestPracticesDetails?.issues?.length || 0) +
@@ -772,7 +1263,9 @@ document.addEventListener('DOMContentLoaded', () => {
       (mobile.bestPracticesDetails?.issues?.length || 0) +
       (mobile.seoDetails?.issues?.length || 0);
 
-    const issuesCount = diagnosticsCount + categoryIssuesCount;
+    // Total issues = opportunities + recommendations + diagnostics + category issues
+    // These all represent actionable items that need attention
+    const issuesCount = opportunitiesCount + recommendationsCount + diagnosticsCount + categoryIssuesCount;
 
     const proLocked = !userHasPro();
     const topLevelRecs = Array.isArray(results.recommendations) ? results.recommendations : [];
@@ -809,7 +1302,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const summaryStats = calculatePerformanceSummary({
       mode: 'full',
       issues: issuesCount,
-      recommendations: opportunitiesCount,
+      recommendations: recommendationsCount,
       checks: countLighthouseChecks(desktop, mobile)
     });
 
@@ -1656,9 +2149,21 @@ document.addEventListener('DOMContentLoaded', () => {
       ReportAccordion.createSection({ id: 'cwv-fixes', title: 'Fix Code + Recommendations', scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
     ].join('');
 
+    // Count CWV issues: failed metrics + recommendations + opportunities
+    const cwvIssuesCount =
+      (desktop.recommendations?.length || 0) +
+      (mobile.recommendations?.length || 0) +
+      (desktop.opportunities?.length || 0) +
+      (mobile.opportunities?.length || 0) +
+      (data.recommendations?.length || 0) +
+      (Array.isArray(data.opportunities) ? data.opportunities.length : 0);
+
+    // Count failed CWV metrics (scores below 90 are issues)
+    const failedMetrics = [lcpScore, clsScore, inpScore].filter(s => s !== null && s < 90).length;
+
     const summaryStats = calculatePerformanceSummary({
       mode: 'cwv',
-      issues: data.recommendations?.length || 0,
+      issues: cwvIssuesCount + failedMetrics,
       recommendations: data.recommendations?.length || 0,
       checks: countCWVChecks(desktop, mobile)
     });
@@ -2337,19 +2842,19 @@ document.addEventListener('DOMContentLoaded', () => {
     return false;
   }
 
-  function exportPerformancePDF() {
+  async function exportPerformancePDF() {
     if (!ensurePerformanceProAccess()) return;
-    const current = window.currentPerformanceHubResults || {};
-    const baseTitle = (document && document.title) ? document.title : 'Performance Testing Hub - Website Speed & Optimization Tools';
-    const safeTitle = String(baseTitle).replace(/[<>:"/\\|?*]+/g, '').trim();
-    const now = new Date();
-    const timestamp = now.toISOString().replace(/[:]/g, '-').replace('T', '_').split('.')[0];
-    const exporter = new PDFExportUtility({
-      filename: `${safeTitle} - ${timestamp}.pdf`,
-      reportTitle: 'Speed & UX Report',
-      url: current.url || ''
-    });
-    exporter.export('#results');
+    // Use the unified PDF export utility
+    if (typeof window.exportReportPDF === 'function') {
+      const button = document.querySelector('[data-export="pdf"]');
+      await window.exportReportPDF({
+        reportType: 'performance',
+        buttonElement: button
+      });
+    } else {
+      console.error('PDF export utility not loaded');
+      alert('PDF export is not available. Please refresh the page.');
+    }
   }
 
   function copyPerformanceShareLink() {
@@ -2471,9 +2976,20 @@ document.addEventListener('DOMContentLoaded', () => {
     function getOrComputeReportId() {
       const startedAt = document.body.getAttribute('data-sm-scan-started-at') || window.SM_SCAN_STARTED_AT || '';
       const analyzerKey = document.body.getAttribute('data-sm-analyzer-key') || window.SM_ANALYZER_KEY || '';
+
+      // Check body attribute first
       const existing = document.body.getAttribute('data-report-id') || '';
       if (existing) return existing;
 
+      // Check URL params (from billing return or dashboard)
+      const params = new URLSearchParams(window.location.search);
+      const fromUrl = params.get('report_id') || params.get('reportId') || '';
+      if (fromUrl) {
+        document.body.setAttribute('data-report-id', fromUrl);
+        return fromUrl;
+      }
+
+      // Compute new reportId as fallback
       const computed =
         window.ReportUI && typeof window.ReportUI.makeReportId === 'function'
           ? window.ReportUI.makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt })
@@ -2608,8 +3124,40 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
     }
 
-    // For Speed & UX, show Continue Analyzing instead of Unlock Report
-    return renderContinueAnalyzingSection();
+    // Get the report ID for this scan
+    const reportId = getOrComputeReportId();
+
+    // Render ProReportBlock (Unlock Report section) - only for paid scan modes (CWV, Full)
+    function renderUnlockReportSection() {
+      // Check if ProReportBlock component is available
+      if (window.ProReportBlock && typeof window.ProReportBlock.render === 'function') {
+        return window.ProReportBlock.render({
+          context: mode === 'cwv' ? 'speed-ux-cwv' : 'speed-ux-full',
+          features: ['pdf', 'excel', 'csv', 'share'],
+          title: 'Unlock Report',
+          subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+          reportId
+        });
+      }
+
+      // Fallback if ProReportBlock not loaded
+      return '';
+    }
+
+    // For quick scan: Show CWV & Lighthouse promotion + other free scans
+    // Quick scan is FREE - no "Unlock Report" section needed
+    if (mode === 'quick') {
+      return `
+        ${renderPaidUnlockCard(reportId)}
+        ${renderContinueAnalyzingSection()}
+      `;
+    }
+
+    // For CWV and Full modes: Show Unlock Report section + other free scans
+    return `
+      ${renderUnlockReportSection()}
+      ${renderContinueAnalyzingSection()}
+    `;
   }
 
   function renderPerformanceActionFooter(url, mode) {
@@ -2646,7 +3194,10 @@ document.addEventListener('DOMContentLoaded', () => {
           ${lines.slice(0, 2).map(line => `<li>${line}</li>`).join('')}
         </ul>
         <div class="pro-locked__blur"></div>
-        <button class="pro-locked__unlock" onclick="openProPaywall({ domain: '${getCurrentDomain()}', context: 'performance' })">Purchase Report ($10 USD)</button>
+        <div class="pro-locked__buttons">
+          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="performance">Unlock for $10</button>
+          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="performance">Go Pro — $20/mo</button>
+        </div>
       </div>
     `;
   }
@@ -2700,17 +3251,39 @@ document.addEventListener('DOMContentLoaded', () => {
         background: linear-gradient(180deg, rgba(0,0,0,0) 0%, rgba(0,0,0,0.75) 100%);
         z-index: 0;
       }
+      .pro-locked__buttons {
+        position: relative;
+        z-index: 1;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        margin-top: 0.75rem;
+      }
       .pro-locked__unlock {
         position: relative;
         z-index: 1;
-        margin-top: 0.75rem;
-        background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
-        color: var(--accent-primary-contrast);
-        border: none;
         padding: 0.6rem 1rem;
         border-radius: 6px;
         font-weight: 700;
         cursor: pointer;
+        transition: all 0.2s ease;
+      }
+      .pro-locked__unlock--primary {
+        border: none;
+        background: linear-gradient(135deg, #5bf4e7, #0AFFEF);
+        color: #000;
+      }
+      .pro-locked__unlock--primary:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(91, 244, 231, 0.4);
+      }
+      .pro-locked__unlock--secondary {
+        border: 1px solid #5bf4e7;
+        background: transparent;
+        color: #5bf4e7;
+      }
+      .pro-locked__unlock--secondary:hover {
+        background: rgba(91, 244, 231, 0.1);
       }
       .summary-footer {
         margin: 2rem 0 0 0;
@@ -2908,6 +3481,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function userHasPro() {
+    // Check new billing model first (ProReportBlock)
+    const reportId = document.body?.getAttribute('data-report-id') || '';
+    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+      if (window.ProReportBlock.hasAccess(reportId)) return true;
+    }
     if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
       return window.ProAccess.hasProAccess(getCurrentDomain());
     }
@@ -2921,6 +3499,10 @@ document.addEventListener('DOMContentLoaded', () => {
   window.exportPerformancePDF = exportPerformancePDF;
   window.copyPerformanceShareLink = copyPerformanceShareLink;
   window.downloadPerformanceCSV = downloadPerformanceCSV;
+
+  // Expose display functions globally for billing return flow
+  window.displayPerformanceResults = displayResults;
+  window.displayCWVResults = displayCWVResults;
 
   // ==================== PAYMENT GATE FUNCTIONS ====================
 
@@ -3038,30 +3620,23 @@ document.addEventListener('DOMContentLoaded', () => {
             </ul>
           </div>
 
-          <!-- Price -->
-          <div style="text-align: center; margin-bottom: 2rem;">
-            <div style="font-size: 3rem; font-weight: bold; color: ${info.color}; margin-bottom: 0.25rem;">$10</div>
-            <div style="color: #888; font-size: 0.9rem;">One-time payment • No subscription • Instant access</div>
+          <!-- Pricing Options -->
+          <div style="text-align: center; margin-bottom: 1.5rem;">
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
+              <div style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: ${info.color};">$10</div>
+                <div style="color: #888; font-size: 0.75rem;">This report only</div>
+              </div>
+              <div style="flex: 1; background: rgba(91, 244, 231, 0.1); border: 1px solid rgba(91, 244, 231, 0.3); border-radius: 8px; padding: 1rem;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: #5bf4e7;">$20/mo</div>
+                <div style="color: #888; font-size: 0.75rem;">All reports</div>
+              </div>
+            </div>
           </div>
 
           <!-- Actions -->
-          <div style="display: flex; gap: 1rem;">
-            <button id="cancelPaymentBtn" style="
-              flex: 1;
-              background: rgba(255, 255, 255, 0.1);
-              border: 1px solid rgba(255, 255, 255, 0.2);
-              color: #fff;
-              padding: 0.875rem 1.5rem;
-              border-radius: 8px;
-              cursor: pointer;
-              font-weight: 600;
-              font-size: 1rem;
-              transition: all 0.2s;
-            " onmouseover="this.style.background='rgba(255, 255, 255, 0.15)'" onmouseout="this.style.background='rgba(255, 255, 255, 0.1)'">
-              Cancel
-            </button>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <button id="proceedPaymentBtn" style="
-              flex: 2;
               background: linear-gradient(135deg, ${info.color}, ${info.color}dd);
               border: none;
               color: #fff;
@@ -3073,7 +3648,30 @@ document.addEventListener('DOMContentLoaded', () => {
               transition: all 0.2s;
               box-shadow: 0 4px 12px ${info.color}40;
             " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px ${info.color}60'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px ${info.color}40'">
-              Get Report for $10
+              Unlock for $10
+            </button>
+            <button id="goProBtn" style="
+              background: transparent;
+              border: 1px solid #5bf4e7;
+              color: #5bf4e7;
+              padding: 0.875rem 1.5rem;
+              border-radius: 8px;
+              cursor: pointer;
+              font-weight: 600;
+              font-size: 1rem;
+              transition: all 0.2s;
+            " onmouseover="this.style.background='rgba(91, 244, 231, 0.1)'" onmouseout="this.style.background='transparent'">
+              Go Pro — $20/mo
+            </button>
+            <button id="cancelPaymentBtn" style="
+              background: transparent;
+              border: none;
+              color: #888;
+              padding: 0.5rem;
+              cursor: pointer;
+              font-size: 0.875rem;
+            ">
+              Cancel
             </button>
           </div>
 
@@ -3083,7 +3681,7 @@ document.addEventListener('DOMContentLoaded', () => {
               🔒 Secure payment powered by Stripe
             </div>
             <div style="color: #555; font-size: 0.75rem;">
-              No account needed • Instant access • 24-hour validity
+              Pro unlocks all reports • Single purchase unlocks this scan only
             </div>
           </div>
         </div>
@@ -3117,6 +3715,14 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('proceedPaymentBtn').addEventListener('click', () => {
       createPaymentSession(reportType, url);
     });
+
+    // Go Pro button opens pricing modal
+    document.getElementById('goProBtn').addEventListener('click', () => {
+      document.getElementById('paymentGateModal').remove();
+      if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+        window.PricingModal.open();
+      }
+    });
   }
 
   /**
@@ -3143,14 +3749,24 @@ document.addEventListener('DOMContentLoaded', () => {
       params.delete('sessionId');
       params.delete('canceled');
       if (reportId) params.set('reportId', reportId);
+      // Include URL and report type for resuming analysis after payment
+      params.set('url', url);
+      params.set('report_type', reportType);
+      params.set('auto_scan', 'true'); // Auto-run scan after payment
       const returnUrl = `${window.location.origin}${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
 
-      const response = await fetch('/api/billing/create-checkout-session', {
+      // Get auth token for authenticated checkout (check both key names)
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
+      const response = await fetch('/api/billing/checkout', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({
           purchaseType: 'single_report',
-          packId: null,
           reportId: reportId || null,
           returnUrl
         })
@@ -3168,7 +3784,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('Payment error:', error);
       proceedBtn.disabled = false;
-      proceedBtn.textContent = 'Get Report for $10';
+      proceedBtn.textContent = 'Unlock for $10';
       alert(`Payment error: ${error.message}`);
     }
   }

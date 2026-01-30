@@ -153,15 +153,39 @@ window.ScanContext = ScanContext;
  */
 const ExportGate = {
   /**
-   * Check if user has Pro status
+   * Check if user has Pro subscription status
+   * Only trusts server-side billing status, not client-side localStorage
+   * NOTE: Demo domain check is done in hasAccess() instead, not here
    * @returns {boolean}
    */
   isPro() {
-    // Check demo domains first (for testing with vail.com etc.)
-    if (window.ProAccess && window.ProAccess.isDemoDomain()) {
-      return true;
+    // Check server-side billing model only
+    // Note: Demo domain check removed - was causing false positives
+    // due to stale ScanContext. Use hasAccess() for report access checks.
+    if (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function') {
+      return window.ProReportBlock.isProSubscriber();
     }
-    return window.proManager && window.proManager.isPro();
+    // Note: Removed localStorage fallback (proManager.isPro) for security
+    return false;
+  },
+
+  /**
+   * Check if user has access to a specific report (Pro OR purchased)
+   * @param {string} reportId - Optional report ID to check
+   * @returns {boolean}
+   */
+  hasAccess(reportId) {
+    if (this.isPro()) return true;
+    // Check if specific report is purchased
+    if (reportId && window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+      return window.ProReportBlock.hasAccess(reportId);
+    }
+    // Try to get reportId from body attribute
+    const bodyReportId = document.body?.getAttribute('data-report-id') || '';
+    if (bodyReportId && window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+      return window.ProReportBlock.hasAccess(bodyReportId);
+    }
+    return false;
   },
   
   /**

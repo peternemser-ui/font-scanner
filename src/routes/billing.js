@@ -64,7 +64,7 @@ router.post(
   '/checkout',
   requireAuth,
   asyncHandler(async (req, res) => {
-    const { purchaseType, interval, reportId, returnUrl } = req.body || {};
+    const { purchaseType, interval, reportId, returnUrl, siteUrl, analyzerType } = req.body || {};
     const user = req.user;
 
     if (!purchaseType || !['subscription', 'single_report'].includes(purchaseType)) {
@@ -72,8 +72,8 @@ router.post(
     }
 
     if (purchaseType === 'subscription') {
-      if (!interval || !['month', 'year'].includes(interval)) {
-        throw new ValidationError('interval must be "month" or "year" for subscriptions');
+      if (!interval || !['day', 'month', 'year'].includes(interval)) {
+        throw new ValidationError('interval must be "day", "month" or "year" for subscriptions');
       }
     }
 
@@ -98,25 +98,56 @@ router.post(
       userId: user.id,
       purchaseType,
       interval: interval || null,
-      reportId: reportId || null
+      reportId: reportId || null,
+      returnUrl: safeReturnUrl
     });
 
+    // Helper to properly append query params to a URL that may already have params
+    // Note: Stripe's {CHECKOUT_SESSION_ID} placeholder must NOT be URL-encoded
+    function appendQueryParams(baseUrl, params) {
+      const url = new URL(baseUrl);
+      Object.entries(params).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) {
+          url.searchParams.set(key, value);
+        }
+      });
+      return url.toString();
+    }
+
+    // Build success URLs with the {CHECKOUT_SESSION_ID} placeholder
+    // Stripe requires this exact literal string (not URL-encoded) to replace with the actual session ID
     let session;
     if (purchaseType === 'subscription') {
+      // Build URL without session_id first, then append it manually
+      const baseSuccessUrl = appendQueryParams(safeReturnUrl, { billing_success: 'true' });
+      const successUrl = baseSuccessUrl + '&session_id={CHECKOUT_SESSION_ID}';
+      const cancelUrl = appendQueryParams(safeReturnUrl, { billing_canceled: 'true' });
+
+      logger.info('Stripe checkout URLs (subscription)', { successUrl, cancelUrl });
+
       session = await stripeService.createSubscriptionCheckout({
         userId: user.id,
         email: user.email,
         interval,
-        successUrl: `${safeReturnUrl}?billing_success=true`,
-        cancelUrl: `${safeReturnUrl}?billing_canceled=true`
+        successUrl,
+        cancelUrl
       });
     } else {
+      // Build URL without session_id first, then append it manually
+      const baseSuccessUrl = appendQueryParams(safeReturnUrl, { billing_success: 'true', report_id: reportId });
+      const successUrl = baseSuccessUrl + '&session_id={CHECKOUT_SESSION_ID}';
+      const cancelUrl = appendQueryParams(safeReturnUrl, { billing_canceled: 'true' });
+
+      logger.info('Stripe checkout URLs (single_report)', { successUrl, cancelUrl, reportId });
+
       session = await stripeService.createSingleReportCheckout({
         userId: user.id,
         email: user.email,
         reportId,
-        successUrl: `${safeReturnUrl}?billing_success=true&report_id=${encodeURIComponent(reportId)}`,
-        cancelUrl: `${safeReturnUrl}?billing_canceled=true`
+        siteUrl: siteUrl || '',
+        analyzerType: analyzerType || '',
+        successUrl,
+        cancelUrl
       });
     }
 
@@ -170,6 +201,45 @@ router.get(
     const status = await stripeService.getBillingStatus(user.id);
 
     res.json(status);
+  })
+);
+
+/**
+ * POST /api/billing/verify-purchase
+ * Verify a checkout session and record the purchase
+ * This is the primary method for recording purchases (fallback for webhooks)
+ * Body: { session_id: string }
+ */
+router.post(
+  '/verify-purchase',
+  requireAuth,
+  asyncHandler(async (req, res) => {
+    const { session_id } = req.body || {};
+    const user = req.user;
+
+    if (!session_id || typeof session_id !== 'string') {
+      throw new ValidationError('session_id is required');
+    }
+
+    logger.info('Verifying purchase from session', { userId: user.id, sessionId: session_id });
+
+    const result = await stripeService.verifyAndRecordPurchase(session_id, user.id);
+
+    if (result.success) {
+      logger.info('Purchase verified and recorded', {
+        userId: user.id,
+        purchaseType: result.purchaseType,
+        reportId: result.reportId
+      });
+    } else {
+      logger.warn('Purchase verification failed', {
+        userId: user.id,
+        sessionId: session_id,
+        error: result.error
+      });
+    }
+
+    res.json(result);
   })
 );
 

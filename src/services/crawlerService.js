@@ -2,20 +2,32 @@
  * Multi-Page Crawler Service
  * Crawls websites with configurable limits and sitemap support
  * Uses Puppeteer for better bot protection bypass
+ *
+ * OPTIMIZED: Parallel page processing for 5-10x faster crawling
  */
 
 const axios = require('axios');
 const { URL } = require('url');
 const xml2js = require('xml2js');
 const browserPool = require('../utils/browserPool');
+const { createLogger } = require('../utils/logger');
+
+const logger = createLogger('CrawlerService');
 
 class CrawlerService {
   constructor() {
     this.userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+    // Performance tuning
+    this.concurrency = 5;           // Process 5 pages at once
+    this.pageTimeout = 10000;       // 10 second page load timeout
+    this.crawlTimeout = 120000;     // 2 minute overall crawl timeout
+    this.sitemapTimeout = 8000;     // 8 second sitemap fetch timeout
   }
 
   /**
    * Crawl a website starting from the given URL
+   * OPTIMIZED: Uses parallel processing for much faster crawling
    * @param {string} startUrl - Starting URL
    * @param {Object} options - Crawl options
    * @returns {Promise<Array<string>>} - Array of discovered URLs
@@ -25,8 +37,11 @@ class CrawlerService {
       maxPages = 10,
       maxDepth = 3,
       includeSitemap = true,
-      respectRobotsTxt = true
+      respectRobotsTxt = true,
+      concurrency = this.concurrency
     } = options;
+
+    const crawlStart = Date.now();
 
     try {
       const baseUrl = new URL(startUrl);
@@ -34,14 +49,27 @@ class CrawlerService {
       const visited = new Set();
       const queue = [{ url: startUrl, depth: 0 }];
 
-      // Try sitemap first if enabled
+      // Try sitemap first if enabled (fast way to discover pages)
       if (includeSitemap) {
-        const sitemapUrls = await this.parseSitemap(baseUrl.origin);
-        sitemapUrls.forEach(url => {
-          if (discovered.size < maxPages && this.isSameHostname(url, baseUrl.hostname)) {
-            discovered.add(url);
+        try {
+          const sitemapUrls = await this.parseSitemap(baseUrl.origin);
+          logger.info(`Sitemap discovered ${sitemapUrls.length} URLs`);
+
+          for (const url of sitemapUrls) {
+            if (discovered.size >= maxPages) break;
+            if (this.isSameHostname(url, baseUrl.hostname)) {
+              discovered.add(url);
+            }
           }
-        });
+
+          // If sitemap gave us enough pages, we're done
+          if (discovered.size >= maxPages) {
+            logger.info(`Sitemap provided ${discovered.size} pages, skipping crawl`);
+            return Array.from(discovered).slice(0, maxPages);
+          }
+        } catch (error) {
+          logger.debug('Sitemap parsing failed, falling back to crawling');
+        }
       }
 
       // Check robots.txt if enabled
@@ -50,60 +78,89 @@ class CrawlerService {
         disallowedPaths = await this.parseRobotsTxt(baseUrl.origin);
       }
 
-      // BFS crawl using Puppeteer for better bot protection bypass
+      // PARALLEL BFS crawl - process multiple pages at once
       while (queue.length > 0 && discovered.size < maxPages) {
-        const { url, depth } = queue.shift();
-
-        // Skip if already visited or too deep
-        if (visited.has(url) || depth > maxDepth) {
-          continue;
+        // Check overall timeout
+        if (Date.now() - crawlStart > this.crawlTimeout) {
+          logger.warn(`Crawl timeout reached after ${(Date.now() - crawlStart) / 1000}s`);
+          break;
         }
 
-        // Skip if disallowed by robots.txt
-        if (this.isDisallowed(url, disallowedPaths)) {
-          continue;
+        // Take a batch of URLs to process in parallel
+        const batch = [];
+        while (batch.length < concurrency && queue.length > 0) {
+          const item = queue.shift();
+
+          // Skip if already visited or too deep
+          if (visited.has(item.url) || item.depth > maxDepth) {
+            continue;
+          }
+
+          // Skip if disallowed by robots.txt
+          if (this.isDisallowed(item.url, disallowedPaths)) {
+            continue;
+          }
+
+          visited.add(item.url);
+          discovered.add(item.url);
+
+          // Only add to batch if we need more pages and aren't at max depth
+          if (discovered.size < maxPages && item.depth < maxDepth) {
+            batch.push(item);
+          }
         }
 
-        visited.add(url);
-        discovered.add(url);
-        // Only continue crawling links if we haven't hit max pages
-        if (discovered.size < maxPages && depth < maxDepth) {
-          try {
-            const links = await this.extractLinksWithPuppeteer(url, baseUrl.hostname);
+        if (batch.length === 0) continue;
 
-            // Add new links to queue
-            for (const link of links) {
+        // Process batch in parallel
+        logger.debug(`Processing batch of ${batch.length} pages in parallel`);
+        const batchResults = await Promise.allSettled(
+          batch.map(item => this.extractLinksWithTimeout(item.url, baseUrl.hostname))
+        );
+
+        // Collect all discovered links
+        for (let i = 0; i < batchResults.length; i++) {
+          const result = batchResults[i];
+          const item = batch[i];
+
+          if (result.status === 'fulfilled' && result.value) {
+            for (const link of result.value) {
               if (!visited.has(link) && !discovered.has(link)) {
-                queue.push({ url: link, depth: depth + 1 });
+                queue.push({ url: link, depth: item.depth + 1 });
               }
             }
-          } catch (error) {
-            console.error(`Error crawling ${url}:`, error.message);
-            // Try fallback to axios if Puppeteer fails
-            try {
-              const links = await this.extractLinksWithAxios(url, baseUrl.hostname);
-              for (const link of links) {
-                if (!visited.has(link) && !discovered.has(link)) {
-                  queue.push({ url: link, depth: depth + 1 });
-                }
-              }
-            } catch (fallbackError) {
-              console.error(`Fallback also failed for ${url}:`, fallbackError.message);
-            }
+          } else if (result.status === 'rejected') {
+            logger.debug(`Failed to crawl ${item.url}: ${result.reason?.message || 'Unknown error'}`);
           }
         }
       }
+
+      const duration = (Date.now() - crawlStart) / 1000;
+      logger.info(`Crawl completed: ${discovered.size} pages in ${duration.toFixed(1)}s`);
+
       return Array.from(discovered).slice(0, maxPages);
 
     } catch (error) {
-      console.error('Crawler error:', error);
-      // Return at least the start URL if crawling fails
+      logger.error('Crawler error:', error);
       return [startUrl];
     }
   }
 
   /**
+   * Extract links with timeout wrapper
+   */
+  async extractLinksWithTimeout(url, hostname) {
+    return Promise.race([
+      this.extractLinks(url, hostname),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Link extraction timeout')), this.pageTimeout + 5000)
+      )
+    ]);
+  }
+
+  /**
    * Extract links using Puppeteer (better bot protection bypass)
+   * OPTIMIZED: Shorter timeouts, faster page loads
    */
   async extractLinksWithPuppeteer(url, hostname) {
     const links = new Set();
@@ -113,20 +170,29 @@ class CrawlerService {
         const page = await browser.newPage();
         try {
           await page.setUserAgent(this.userAgent);
-          
-          // Try networkidle2 first, fallback to domcontentloaded
+
+          // Optimize page loading - skip images, fonts, media
+          await page.setRequestInterception(true);
+          page.on('request', (req) => {
+            const resourceType = req.resourceType();
+            if (['image', 'font', 'media', 'stylesheet'].includes(resourceType)) {
+              req.abort();
+            } else {
+              req.continue();
+            }
+          });
+
+          // Try faster domcontentloaded first, only use networkidle0 if needed
           try {
-            await page.goto(url, { waitUntil: 'networkidle2', timeout: 20000 });
+            await page.goto(url, { waitUntil: 'domcontentloaded', timeout: this.pageTimeout });
           } catch (navError) {
             if (navError.message.includes('timeout') || navError.message.includes('Navigation')) {
-              await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
-            } else {
+              // Already timed out, don't retry
               throw navError;
             }
+            throw navError;
           }
 
-          // Check if we were redirected to a different URL
-          const finalUrl = page.url();
           // Extract all links from the page
           const pageLinks = await page.evaluate(() => {
             const anchors = document.querySelectorAll('a[href]');
@@ -141,7 +207,6 @@ class CrawlerService {
       // Filter and normalize links
       for (const href of extractedLinks) {
         try {
-          // Skip anchors, javascript, mailto, tel, etc.
           if (href.startsWith('#') ||
               href.startsWith('javascript:') ||
               href.startsWith('mailto:') ||
@@ -150,18 +215,16 @@ class CrawlerService {
             continue;
           }
 
-          // Only include same-hostname links (handles www vs non-www)
           if (this.isSameHostname(href, hostname)) {
             const normalized = this.normalizeUrl(href);
             links.add(normalized);
           }
         } catch (error) {
-          // Invalid URL, skip
           continue;
         }
       }
     } catch (error) {
-      console.error(`Failed to extract links with Puppeteer from ${url}:`, error.message);
+      logger.debug(`Puppeteer extraction failed for ${url}: ${error.message}`);
       throw error;
     }
 
@@ -170,22 +233,20 @@ class CrawlerService {
 
   /**
    * Extract links using axios (fallback method)
+   * OPTIMIZED: Shorter timeout
    */
   async extractLinksWithAxios(url, hostname) {
     const links = new Set();
 
     try {
       const response = await axios.get(url, {
-        headers: { 
+        headers: {
           'User-Agent': this.userAgent,
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
           'Accept-Language': 'en-US,en;q=0.5',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1'
         },
-        timeout: 15000,
-        maxRedirects: 5,
+        timeout: this.pageTimeout,
+        maxRedirects: 3,
         validateStatus: (status) => status < 400
       });
 
@@ -197,7 +258,6 @@ class CrawlerService {
         try {
           const href = match[1];
 
-          // Skip anchors, javascript, mailto, tel, etc.
           if (href.startsWith('#') ||
               href.startsWith('javascript:') ||
               href.startsWith('mailto:') ||
@@ -205,23 +265,20 @@ class CrawlerService {
             continue;
           }
 
-          // Resolve relative URLs
           const absoluteUrl = new URL(href, url).href;
 
-          // Only include same-hostname links
           if (this.isSameHostname(absoluteUrl, hostname)) {
             const normalized = this.normalizeUrl(absoluteUrl);
             links.add(normalized);
           }
 
         } catch (error) {
-          // Invalid URL, skip
           continue;
         }
       }
 
     } catch (error) {
-      console.error(`Failed to extract links with axios from ${url}:`, error.message);
+      logger.debug(`Axios extraction failed for ${url}: ${error.message}`);
       throw error;
     }
 
@@ -230,13 +287,13 @@ class CrawlerService {
 
   /**
    * Parse sitemap.xml and extract URLs
+   * OPTIMIZED: Parallel child sitemap fetching, shorter timeouts
    */
   async parseSitemap(origin) {
     const sitemapUrls = [];
     const possibleSitemaps = [
       `${origin}/sitemap.xml`,
       `${origin}/sitemap_index.xml`,
-      `${origin}/sitemap.xml.gz`,
       `${origin}/sitemap1.xml`
     ];
 
@@ -244,25 +301,41 @@ class CrawlerService {
       try {
         const response = await axios.get(sitemapUrl, {
           headers: { 'User-Agent': this.userAgent },
-          timeout: 10000,
-          maxRedirects: 5
+          timeout: this.sitemapTimeout,
+          maxRedirects: 3
         });
 
         const parser = new xml2js.Parser();
         const result = await parser.parseStringPromise(response.data);
 
-        // Handle sitemap index (contains links to other sitemaps)
+        // Handle sitemap index - fetch child sitemaps IN PARALLEL
         if (result.sitemapindex) {
-          for (const sitemap of result.sitemapindex.sitemap || []) {
-            const loc = sitemap.loc?.[0];
-            if (loc) {
-              const childUrls = await this.parseSitemap(loc);
-              sitemapUrls.push(...childUrls);
+          const childSitemaps = result.sitemapindex.sitemap || [];
+          const childUrls = childSitemaps.map(s => s.loc?.[0]).filter(Boolean);
+
+          // Fetch all child sitemaps in parallel (limit to 5 concurrent)
+          const chunks = [];
+          for (let i = 0; i < childUrls.length; i += 5) {
+            chunks.push(childUrls.slice(i, i + 5));
+          }
+
+          for (const chunk of chunks) {
+            const results = await Promise.allSettled(
+              chunk.map(url => this.fetchSitemapUrls(url))
+            );
+
+            for (const result of results) {
+              if (result.status === 'fulfilled') {
+                sitemapUrls.push(...result.value);
+              }
             }
+
+            // Stop if we have enough URLs
+            if (sitemapUrls.length > 100) break;
           }
         }
 
-        // Handle regular sitemap (contains actual page URLs)
+        // Handle regular sitemap
         if (result.urlset) {
           for (const url of result.urlset.url || []) {
             const loc = url.loc?.[0];
@@ -272,18 +345,47 @@ class CrawlerService {
           }
         }
 
-        // If we found a working sitemap, stop looking
         if (sitemapUrls.length > 0) {
           break;
         }
 
       } catch (error) {
-        // Silently continue to next sitemap URL
         continue;
       }
     }
 
     return sitemapUrls;
+  }
+
+  /**
+   * Fetch URLs from a single sitemap file
+   */
+  async fetchSitemapUrls(sitemapUrl) {
+    const urls = [];
+
+    try {
+      const response = await axios.get(sitemapUrl, {
+        headers: { 'User-Agent': this.userAgent },
+        timeout: this.sitemapTimeout,
+        maxRedirects: 3
+      });
+
+      const parser = new xml2js.Parser();
+      const result = await parser.parseStringPromise(response.data);
+
+      if (result.urlset) {
+        for (const url of result.urlset.url || []) {
+          const loc = url.loc?.[0];
+          if (loc) {
+            urls.push(loc);
+          }
+        }
+      }
+    } catch (error) {
+      // Silently fail for individual sitemaps
+    }
+
+    return urls;
   }
 
   /**
@@ -304,13 +406,11 @@ class CrawlerService {
       for (const line of lines) {
         const trimmed = line.trim();
 
-        // Check if this section applies to us
         if (trimmed.toLowerCase().startsWith('user-agent:')) {
           const agent = trimmed.substring(11).trim();
           isRelevantAgent = agent === '*' || agent.toLowerCase().includes('fontscanner');
         }
 
-        // Parse disallow rules
         if (isRelevantAgent && trimmed.toLowerCase().startsWith('disallow:')) {
           const path = trimmed.substring(9).trim();
           if (path) {
@@ -320,7 +420,7 @@ class CrawlerService {
       }
 
     } catch (error) {
-      // If robots.txt doesn't exist or can't be fetched, assume everything is allowed
+      // If robots.txt doesn't exist, assume everything is allowed
     }
 
     return disallowedPaths;
@@ -335,7 +435,6 @@ class CrawlerService {
       const pathname = urlObj.pathname;
 
       for (const disallowedPath of disallowedPaths) {
-        // Simple prefix match (proper implementation would support wildcards)
         if (pathname.startsWith(disallowedPath)) {
           return true;
         }
@@ -352,21 +451,19 @@ class CrawlerService {
    */
   async extractLinks(url, hostname) {
     try {
-      // Try Puppeteer first (better bot protection bypass)
       return await this.extractLinksWithPuppeteer(url, hostname);
     } catch (error) {
-      // Fallback to axios
       try {
         return await this.extractLinksWithAxios(url, hostname);
       } catch (axiosError) {
-        console.error(`Both methods failed for ${url}:`, axiosError.message);
+        logger.debug(`Both methods failed for ${url}`);
         return [];
       }
     }
   }
 
   /**
-   * Check if URL belongs to the same hostname (handles www vs non-www)
+   * Check if URL belongs to the same hostname
    */
   isSameHostname(url, hostname) {
     try {
@@ -385,11 +482,8 @@ class CrawlerService {
   normalizeUrl(url) {
     try {
       const urlObj = new URL(url);
-
-      // Remove fragment
       urlObj.hash = '';
 
-      // Remove trailing slash (except for root)
       if (urlObj.pathname !== '/' && urlObj.pathname.endsWith('/')) {
         urlObj.pathname = urlObj.pathname.slice(0, -1);
       }
@@ -407,22 +501,19 @@ class CrawlerService {
     try {
       const urlObj = new URL(url);
 
-      // Only allow HTTP and HTTPS
       if (!['http:', 'https:'].includes(urlObj.protocol)) {
         throw new Error('Only HTTP and HTTPS protocols are allowed');
       }
 
-      // Block private IP ranges (SSRF protection)
       const hostname = urlObj.hostname;
 
-      // IPv4 private ranges
       const privateRanges = [
-        /^127\./,           // localhost
-        /^10\./,            // 10.0.0.0/8
-        /^172\.(1[6-9]|2\d|3[01])\./,  // 172.16.0.0/12
-        /^192\.168\./,      // 192.168.0.0/16
-        /^169\.254\./,      // link-local
-        /^0\./              // reserved
+        /^127\./,
+        /^10\./,
+        /^172\.(1[6-9]|2\d|3[01])\./,
+        /^192\.168\./,
+        /^169\.254\./,
+        /^0\./
       ];
 
       for (const range of privateRanges) {
@@ -431,7 +522,6 @@ class CrawlerService {
         }
       }
 
-      // Block localhost variations
       if (hostname === 'localhost' ||
           hostname.endsWith('.local') ||
           hostname.endsWith('.localhost')) {

@@ -264,18 +264,78 @@ document.addEventListener('DOMContentLoaded', () => {
       submitButton.click();
     }
   });
-  
-  // Auto-start scan if URL parameter is present
-  if (typeof window.getUrlParameter === 'function') {
-    const autoUrl = window.getUrlParameter();
+
+  // Check for stored report or auto-start scan
+  (async function initFromUrlParams() {
+    const params = new URLSearchParams(window.location.search);
+    const reportId = params.get('report_id') || '';
+    const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
+    const autoScan = params.get('auto_scan') === 'true';
+    const billingSuccess = params.get('billing_success') === 'true';
+
+    // If we have a report_id, set it immediately so hasAccess checks work
+    if (reportId) {
+      document.body.setAttribute('data-report-id', reportId);
+    }
+
+    // If returning from billing, wait for billing return processing to complete
+    // This ensures the purchase is verified before we try to display the report
+    if (billingSuccess && !window.__smBillingReturnComplete) {
+      console.log('[SEO] Waiting for billing return processing...');
+      await new Promise((resolve) => {
+        // Check if already complete
+        if (window.__smBillingReturnComplete) {
+          resolve();
+          return;
+        }
+        // Wait for the event
+        const handler = () => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        };
+        window.addEventListener('sm:billingReturnComplete', handler);
+        // Timeout fallback in case event is missed
+        setTimeout(() => {
+          window.removeEventListener('sm:billingReturnComplete', handler);
+          resolve();
+        }, 5000);
+      });
+      console.log('[SEO] Billing return processing complete');
+      // After billing return, don't auto-load stored report - it was already displayed by handleBillingReturnIfPresent
+      return;
+    }
+
+    // If we have a report_id, try to load the stored report first
+    if (reportId && window.ReportStorage) {
+      console.log('[SEO] Checking for stored report:', reportId);
+
+      // CRITICAL: Fetch billing status BEFORE displaying the report
+      // Force refresh to ensure we have the latest purchase data (e.g., coming from dashboard)
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        console.log('[SEO] Fetching billing status (force refresh for report recall)...');
+        await window.ProReportBlock.fetchBillingStatus(true);
+        console.log('[SEO] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportId), 'for reportId:', reportId);
+      }
+
+      const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displaySEOResults);
+      if (loaded) {
+        // Stored report was loaded - fill URL input for context
+        if (autoUrl) urlInput.value = autoUrl;
+        return; // Don't auto-scan
+      }
+    }
+
+    // No stored report found - pre-fill URL but only auto-scan if explicitly requested
     if (autoUrl) {
       urlInput.value = autoUrl;
-      // Trigger scan after a short delay to ensure all scripts are loaded
+    }
+    // Only auto-scan if explicitly requested with auto_scan=true
+    if (autoScan) {
       setTimeout(() => {
         submitButton.click();
       }, 500);
     }
-  }
+  })();
 
   // Re-render results when language changes
   window.addEventListener('languageChanged', () => {
@@ -288,6 +348,23 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // Listen for restore scan results event (after payment return)
+  window.addEventListener('sm:restoreScanResults', (e) => {
+    const { results, url, analyzer } = e.detail || {};
+    if (results && analyzer?.includes('seo')) {
+      // Fill URL input
+      if (url && urlInput) {
+        urlInput.value = url;
+      }
+      // Display results
+      window.currentSeoResults = results;
+      displaySEOResults(results);
+    }
+  });
+
+  // Expose displaySEOResults globally for billing return handler
+  window.displaySEOResults = displaySEOResults;
 });
 
 /**
@@ -299,9 +376,22 @@ function displaySEOResults(results) {
   // Store results globally for PDF generation + follow-up UI updates
   window.currentSeoResults = results;
 
-  const reportId = results && results.reportId ? String(results.reportId) : '';
+  // Get reportId with fallback chain:
+  // 1. From results object
+  // 2. From body attribute (may be set from URL param on billing return)
+  // 3. From URL params
+  let reportId = results && results.reportId ? String(results.reportId) : '';
+  if (!reportId) {
+    reportId = document.body.getAttribute('data-report-id') || '';
+  }
+  if (!reportId) {
+    const params = new URLSearchParams(window.location.search);
+    reportId = params.get('report_id') || params.get('reportId') || '';
+  }
   if (reportId) {
     document.body.setAttribute('data-report-id', reportId);
+    // Also update results object for consistency
+    if (results) results.reportId = reportId;
   }
   
   // Set screenshot URL from API response (body attribute set after screenshotUrl is built later)
@@ -333,12 +423,16 @@ function displaySEOResults(results) {
   }
 
   // Gated Fix Code + Recommendations (reference implementation)
+  // Check both new billing model (ProReportBlock) and legacy (CreditsManager)
   const isUnlocked = !!(
-    reportId &&
-    window.CreditsManager &&
-    (
-      (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
-      (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+    reportId && (
+      // New billing model: Pro subscription or purchased single report
+      (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(reportId)) ||
+      // Legacy CreditsManager
+      (window.CreditsManager && (
+        (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+        (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+      ))
     )
   );
 
@@ -462,7 +556,7 @@ function displaySEOResults(results) {
         proBlock: true,
         proBlockOptions: {
           context: 'seo',
-          features: ['pdf', 'csv', 'share'],
+          features: ['pdf', 'excel', 'csv', 'share'],
           title: t('pricing.unlockReportTitle', 'Unlock Report'),
           subtitle: t('pricing.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
           reportId
@@ -524,6 +618,15 @@ function displaySEOResults(results) {
       if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
         window.CreditsManager.renderPaywallState(unlockedId);
       }
+    });
+  }
+
+  // Auto-save report snapshot if user has access (Pro or purchased)
+  if (reportId && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
+    window.ReportStorage.autoSaveIfEligible(reportId, results, {
+      siteUrl: results.url || results.siteUrl || '',
+      analyzerType: 'seo',
+      scannedAt: results.startedAt || results.timestamp
     });
   }
 }
@@ -881,9 +984,12 @@ function getDefaultSeoSteps(fix) {
 
 // Toggle accordion
 function toggleSeoFixAccordion(accordionId) {
+  console.log('[SEO] toggleSeoFixAccordion called:', accordionId);
   const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
   const content = document.getElementById(`${accordionId}-content`);
   const icon = accordion?.querySelector('.seo-fix-expand-icon');
+
+  console.log('[SEO] accordion:', accordion, 'content:', content);
 
   if (!accordion || !content) return;
 
@@ -899,9 +1005,12 @@ function toggleSeoFixAccordion(accordionId) {
     if (icon) icon.style.transform = 'rotate(180deg)';
   }
 }
+// Expose immediately to window for inline onclick handlers
+window.toggleSeoFixAccordion = toggleSeoFixAccordion;
 
 // Switch tabs
 function switchSeoFixTab(accordionId, tabName) {
+  console.log('[SEO] switchSeoFixTab called:', accordionId, tabName);
   const accordion = document.querySelector(`[data-fix-id="${accordionId}"]`);
   if (!accordion) return;
 
@@ -957,6 +1066,52 @@ function copySeoCode(elementId) {
     }
   });
 }
+// Expose functions to window immediately for inline onclick handlers
+window.switchSeoFixTab = switchSeoFixTab;
+window.copySeoCode = copySeoCode;
+
+// Expose render functions for PDF generation (Puppeteer needs these)
+window.renderSecurityHeadersContent = renderSecurityHeadersContent;
+window.renderStructuredDataContent = renderStructuredDataContent;
+window.renderAdditionalChecksContent = renderAdditionalChecksContent;
+window.renderProFixes = renderProFixes;
+window.buildFixCards = buildFixCards;
+
+// Add click event delegation for fix accordions and tabs
+document.addEventListener('click', function(e) {
+  // Handle tab clicks first (more specific)
+  const tab = e.target.closest('.seo-fix-tab');
+  if (tab) {
+    const accordion = tab.closest('.seo-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      // Determine which tab was clicked based on text content
+      const tabText = tab.textContent.toLowerCase();
+      let tabName = 'summary';
+      if (tabText.includes('code')) tabName = 'code';
+      else if (tabText.includes('guide')) tabName = 'guide';
+
+      if (fixId && typeof window.switchSeoFixTab === 'function') {
+        e.preventDefault();
+        e.stopPropagation();
+        window.switchSeoFixTab(fixId, tabName);
+      }
+    }
+    return;
+  }
+
+  // Handle accordion header clicks
+  const header = e.target.closest('.seo-fix-header');
+  if (header) {
+    const accordion = header.closest('.seo-fix-accordion');
+    if (accordion) {
+      const fixId = accordion.getAttribute('data-fix-id');
+      if (fixId && typeof window.toggleSeoFixAccordion === 'function') {
+        window.toggleSeoFixAccordion(fixId);
+      }
+    }
+  }
+});
 
 function ensureSeoFixStyles() {
   if (document.getElementById('seo-fixes-styles')) return;
@@ -2845,3 +3000,1013 @@ function showError(message) {
  * Open PDF purchase modal
  */
 // PDF purchase modal removed - monetization disabled
+
+// Note: Accordion functions are exposed to window immediately after their definitions
+// See toggleSeoFixAccordion, switchSeoFixTab, copySeoCode above
+
+/**
+ * Export SEO results as comprehensive CSV
+ * Includes all scan data: meta tags, headings, content, images, links,
+ * performance, security, structured data, and recommendations
+ */
+window.exportSeoCSV = function() {
+  const results = window.currentSeoResults;
+  if (!results) {
+    alert('No scan results to export. Run a scan first.');
+    return;
+  }
+
+  const rows = [];
+
+  // Helper to add a row
+  const addRow = (category, item, value, status = '', details = '') => {
+    rows.push([category, item, String(value ?? ''), status, details]);
+  };
+
+  // Helper to check status
+  const checkStatus = (condition, goodText = 'Good', badText = 'Issue') => condition ? goodText : badText;
+
+  // Header
+  rows.push(['Category', 'Item', 'Value', 'Status', 'Details']);
+
+  // ============ OVERVIEW ============
+  addRow('Overview', 'URL', results.url || '');
+  addRow('Overview', 'Scan Date', results.timestamp || new Date().toISOString());
+  if (results.score) {
+    addRow('Overview', 'Overall SEO Score', results.score.overall || '', results.score.overall >= 80 ? 'Good' : results.score.overall >= 50 ? 'Needs Work' : 'Poor');
+    addRow('Overview', 'Grade', results.score.grade || '');
+  }
+
+  // ============ META TAGS ============
+  if (results.metaTags) {
+    const meta = results.metaTags;
+    addRow('Meta Tags', 'Section Score', meta.score || '', checkStatus(meta.score >= 80));
+
+    // Title
+    addRow('Meta Tags', 'Title', meta.title || '', checkStatus(meta.title, 'Present', 'Missing'));
+    addRow('Meta Tags', 'Title Length', meta.titleLength || 0,
+      meta.titleLength >= 50 && meta.titleLength <= 60 ? 'Optimal' :
+      meta.titleLength >= 30 && meta.titleLength <= 70 ? 'Acceptable' : 'Needs Work',
+      'Recommended: 50-60 characters');
+
+    // Description
+    addRow('Meta Tags', 'Description', meta.description || '', checkStatus(meta.description, 'Present', 'Missing'));
+    addRow('Meta Tags', 'Description Length', meta.descriptionLength || 0,
+      meta.descriptionLength >= 120 && meta.descriptionLength <= 160 ? 'Optimal' :
+      meta.descriptionLength >= 80 && meta.descriptionLength <= 200 ? 'Acceptable' : 'Needs Work',
+      'Recommended: 120-160 characters');
+
+    // Technical meta tags
+    addRow('Meta Tags', 'Canonical URL', meta.canonical || '', checkStatus(meta.canonical, 'Present', 'Missing'));
+    addRow('Meta Tags', 'Robots', meta.robots || 'Not set', meta.robots ? 'Present' : 'Default');
+    addRow('Meta Tags', 'Viewport', meta.viewport || '', checkStatus(meta.viewport, 'Present', 'Missing'));
+    addRow('Meta Tags', 'Language', meta.language || '', checkStatus(meta.language, 'Present', 'Missing'));
+    addRow('Meta Tags', 'Charset', meta.charset || '', checkStatus(meta.charset, 'Present', 'Missing'));
+    addRow('Meta Tags', 'Author', meta.author || '', meta.author ? 'Present' : 'Not set');
+    addRow('Meta Tags', 'Keywords', meta.keywords || '', meta.keywords ? 'Present' : 'Not set');
+
+    // Open Graph tags
+    addRow('Meta Tags', 'OG:Title', meta.ogTitle || '', checkStatus(meta.ogTitle, 'Present', 'Missing'));
+    addRow('Meta Tags', 'OG:Description', meta.ogDescription || '', checkStatus(meta.ogDescription, 'Present', 'Missing'));
+    addRow('Meta Tags', 'OG:Image', meta.ogImage || '', checkStatus(meta.ogImage, 'Present', 'Missing'));
+    addRow('Meta Tags', 'OG:URL', meta.ogUrl || '', checkStatus(meta.ogUrl, 'Present', 'Missing'));
+    addRow('Meta Tags', 'OG:Type', meta.ogType || '', meta.ogType ? 'Present' : 'Not set');
+    addRow('Meta Tags', 'OG:Site Name', meta.ogSiteName || '', meta.ogSiteName ? 'Present' : 'Not set');
+
+    // Twitter Card tags
+    addRow('Meta Tags', 'Twitter:Card', meta.twitterCard || '', checkStatus(meta.twitterCard, 'Present', 'Missing'));
+    addRow('Meta Tags', 'Twitter:Title', meta.twitterTitle || '', meta.twitterTitle ? 'Present' : 'Not set');
+    addRow('Meta Tags', 'Twitter:Description', meta.twitterDescription || '', meta.twitterDescription ? 'Present' : 'Not set');
+    addRow('Meta Tags', 'Twitter:Image', meta.twitterImage || '', meta.twitterImage ? 'Present' : 'Not set');
+    addRow('Meta Tags', 'Twitter:Site', meta.twitterSite || '', meta.twitterSite ? 'Present' : 'Not set');
+
+    // Meta tag issues
+    if (meta.issues && meta.issues.length > 0) {
+      meta.issues.forEach((issue, i) => addRow('Meta Tags', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+    if (meta.recommendations && meta.recommendations.length > 0) {
+      meta.recommendations.forEach((rec, i) => addRow('Meta Tags', `Recommendation ${i + 1}`, rec, 'Suggestion'));
+    }
+  }
+
+  // ============ HEADINGS ============
+  if (results.headingStructure) {
+    const h = results.headingStructure;
+    addRow('Headings', 'Section Score', h.score || '', checkStatus(h.score >= 80));
+    addRow('Headings', 'H1 Count', h.h1?.length || h.h1Count || 0, (h.h1?.length || h.h1Count) === 1 ? 'Good' : 'Issue', 'Should have exactly 1 H1');
+    addRow('Headings', 'H2 Count', h.h2?.length || h.h2Count || 0);
+    addRow('Headings', 'H3 Count', h.h3?.length || h.h3Count || 0);
+    addRow('Headings', 'H4 Count', h.h4?.length || h.h4Count || 0);
+    addRow('Headings', 'H5 Count', h.h5?.length || h.h5Count || 0);
+    addRow('Headings', 'H6 Count', h.h6?.length || h.h6Count || 0);
+    addRow('Headings', 'Total Headings', h.total || h.totalCount || 0, (h.total || h.totalCount) >= 3 ? 'Good' : 'Low');
+
+    // H1 texts
+    if (h.h1 && Array.isArray(h.h1)) {
+      h.h1.forEach((text, i) => addRow('Headings', `H1 Text ${i + 1}`, text));
+    }
+
+    // Heading hierarchy
+    if (h.hierarchy && Array.isArray(h.hierarchy)) {
+      h.hierarchy.slice(0, 20).forEach((item, i) => {
+        addRow('Headings', `Hierarchy ${i + 1}`, item.text || '', item.level || '');
+      });
+    }
+
+    if (h.issues && h.issues.length > 0) {
+      h.issues.forEach((issue, i) => addRow('Headings', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+    if (h.recommendations && h.recommendations.length > 0) {
+      h.recommendations.forEach((rec, i) => addRow('Headings', `Recommendation ${i + 1}`, rec, 'Suggestion'));
+    }
+  }
+
+  // ============ CONTENT ANALYSIS ============
+  if (results.contentAnalysis) {
+    const c = results.contentAnalysis;
+    addRow('Content', 'Section Score', c.score || '', checkStatus(c.score >= 80));
+    addRow('Content', 'Word Count', c.wordCount || 0, c.wordCount >= 300 ? 'Good' : c.wordCount >= 150 ? 'Low' : 'Very Low', 'Recommended: 300+ words');
+    addRow('Content', 'Sentence Count', c.sentenceCount || 0);
+    addRow('Content', 'Paragraph Count', c.paragraphCount || 0);
+    addRow('Content', 'Character Count', c.characterCount || 0);
+    addRow('Content', 'Avg Words/Sentence', c.averageWordsPerSentence || 0, c.averageWordsPerSentence <= 25 ? 'Good' : 'Too Long', 'Recommended: 15-25 words');
+    addRow('Content', 'Text-to-HTML Ratio', ((c.textToHTMLRatio || 0) * 100).toFixed(1) + '%', c.textToHTMLRatio >= 0.1 ? 'Good' : 'Low', 'Recommended: 10%+');
+
+    if (c.readabilityScore !== undefined) {
+      addRow('Content', 'Readability Score', c.readabilityScore);
+    }
+    if (c.readingLevel) {
+      addRow('Content', 'Reading Level', c.readingLevel);
+    }
+
+    if (c.issues && c.issues.length > 0) {
+      c.issues.forEach((issue, i) => addRow('Content', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+    if (c.recommendations && c.recommendations.length > 0) {
+      c.recommendations.forEach((rec, i) => addRow('Content', `Recommendation ${i + 1}`, rec, 'Suggestion'));
+    }
+  }
+
+  // ============ IMAGES ============
+  if (results.imageAnalysis || results.images) {
+    const img = results.imageAnalysis || results.images;
+    addRow('Images', 'Section Score', img.score || '', checkStatus(img.score >= 80));
+    addRow('Images', 'Total Images', img.total || img.totalCount || 0);
+    addRow('Images', 'With Alt Text', img.withAlt || 0, 'Good');
+    addRow('Images', 'Without Alt Text', img.withoutAlt || img.missingAlt || 0, (img.withoutAlt || img.missingAlt) === 0 ? 'Good' : 'Issue', 'All images need alt text');
+
+    // Count lazy loaded
+    if (img.images && Array.isArray(img.images)) {
+      const lazyCount = img.images.filter(i => i.loading === 'lazy').length;
+      const eagerCount = img.images.filter(i => i.loading !== 'lazy').length;
+      addRow('Images', 'Lazy Loaded', lazyCount);
+      addRow('Images', 'Eager Loaded', eagerCount, eagerCount > 5 ? 'Consider lazy loading' : 'OK');
+
+      // Large images
+      const largeImages = img.images.filter(i => (i.width * i.height) > 1920 * 1080);
+      addRow('Images', 'Large Images (>1080p)', largeImages.length, largeImages.length === 0 ? 'Good' : 'Optimize');
+
+      // List first 20 images
+      img.images.slice(0, 20).forEach((image, i) => {
+        const altStatus = image.alt ? 'Has alt' : 'Missing alt';
+        addRow('Images', `Image ${i + 1}`, image.src || '', altStatus, `${image.width || '?'}x${image.height || '?'}`);
+      });
+    }
+
+    if (img.issues && img.issues.length > 0) {
+      img.issues.forEach((issue, i) => addRow('Images', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+    if (img.recommendations && img.recommendations.length > 0) {
+      img.recommendations.forEach((rec, i) => addRow('Images', `Recommendation ${i + 1}`, rec, 'Suggestion'));
+    }
+  }
+
+  // ============ LINKS ============
+  if (results.linkAnalysis || results.links) {
+    const l = results.linkAnalysis || results.links;
+    addRow('Links', 'Section Score', l.score || '', checkStatus(l.score >= 80));
+    addRow('Links', 'Total Links', l.total || l.totalCount || 0);
+    addRow('Links', 'Internal Links', l.internal || l.internalCount || 0);
+    addRow('Links', 'External Links', l.external || l.externalCount || 0);
+    addRow('Links', 'NoFollow Links', l.noFollow || l.nofollowCount || 0);
+    addRow('Links', 'Broken Format Links', l.brokenFormat || l.brokenCount || 0, (l.brokenFormat || l.brokenCount) === 0 ? 'Good' : 'Issue');
+
+    // List first 30 links
+    if (l.links && Array.isArray(l.links)) {
+      const emptyAnchors = l.links.filter(link => !link.text || link.text.length === 0).length;
+      addRow('Links', 'Empty Anchor Text', emptyAnchors, emptyAnchors === 0 ? 'Good' : 'Issue');
+
+      l.links.slice(0, 30).forEach((link, i) => {
+        const type = link.isExternal ? 'External' : 'Internal';
+        const flags = [
+          link.hasNoFollow ? 'nofollow' : '',
+          link.hasNoOpener ? 'noopener' : '',
+          link.target === '_blank' ? 'new tab' : ''
+        ].filter(Boolean).join(', ');
+        addRow('Links', `Link ${i + 1}`, link.href || '', type, flags || link.text?.substring(0, 50) || '');
+      });
+    }
+
+    if (l.issues && l.issues.length > 0) {
+      l.issues.forEach((issue, i) => addRow('Links', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+    if (l.recommendations && l.recommendations.length > 0) {
+      l.recommendations.forEach((rec, i) => addRow('Links', `Recommendation ${i + 1}`, rec, 'Suggestion'));
+    }
+  }
+
+  // ============ MOBILE RESPONSIVENESS ============
+  if (results.mobileResponsive) {
+    const m = results.mobileResponsive;
+    addRow('Mobile', 'Section Score', m.score || '', checkStatus(m.score >= 80));
+    addRow('Mobile', 'Mobile Friendly', m.isMobileFriendly ? 'Yes' : 'No', checkStatus(m.isMobileFriendly));
+    addRow('Mobile', 'Has Viewport Meta', m.hasViewport ? 'Yes' : 'No', checkStatus(m.hasViewport));
+    addRow('Mobile', 'Touch Friendly', m.isTouchFriendly ? 'Yes' : 'No', checkStatus(m.isTouchFriendly));
+    addRow('Mobile', 'Responsive Design', m.isResponsive ? 'Yes' : 'No', checkStatus(m.isResponsive));
+
+    if (m.issues && m.issues.length > 0) {
+      m.issues.forEach((issue, i) => addRow('Mobile', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+  }
+
+  // ============ PERFORMANCE METRICS ============
+  if (results.performanceMetrics) {
+    const p = results.performanceMetrics;
+    addRow('Performance', 'Section Score', p.score || '', checkStatus(p.score >= 80));
+
+    if (p.fcp) addRow('Performance', 'First Contentful Paint (FCP)', p.fcp + 'ms', p.fcp < 1800 ? 'Good' : p.fcp < 3000 ? 'Moderate' : 'Poor');
+    if (p.lcp) addRow('Performance', 'Largest Contentful Paint (LCP)', p.lcp + 'ms', p.lcp < 2500 ? 'Good' : p.lcp < 4000 ? 'Moderate' : 'Poor');
+    if (p.cls !== undefined) addRow('Performance', 'Cumulative Layout Shift (CLS)', p.cls, p.cls < 0.1 ? 'Good' : p.cls < 0.25 ? 'Moderate' : 'Poor');
+    if (p.tbt) addRow('Performance', 'Total Blocking Time (TBT)', p.tbt + 'ms', p.tbt < 200 ? 'Good' : p.tbt < 600 ? 'Moderate' : 'Poor');
+    if (p.tti) addRow('Performance', 'Time to Interactive (TTI)', p.tti + 'ms');
+    if (p.ttfb) addRow('Performance', 'Time to First Byte (TTFB)', p.ttfb + 'ms', p.ttfb < 800 ? 'Good' : 'Slow');
+    if (p.domContentLoaded) addRow('Performance', 'DOM Content Loaded', p.domContentLoaded + 'ms');
+    if (p.load) addRow('Performance', 'Page Load Time', p.load + 'ms');
+    if (p.pageSize) addRow('Performance', 'Page Size', (p.pageSize / 1024).toFixed(1) + ' KB');
+    if (p.requestCount) addRow('Performance', 'Total Requests', p.requestCount);
+
+    if (p.issues && p.issues.length > 0) {
+      p.issues.forEach((issue, i) => addRow('Performance', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+    if (p.recommendations && p.recommendations.length > 0) {
+      p.recommendations.forEach((rec, i) => addRow('Performance', `Recommendation ${i + 1}`, rec, 'Suggestion'));
+    }
+  }
+
+  // ============ SECURITY HEADERS ============
+  if (results.securityHeaders) {
+    const s = results.securityHeaders;
+    addRow('Security', 'Section Score', s.score || '', checkStatus(s.score >= 80));
+    addRow('Security', 'HTTPS', s.isHttps ? 'Yes' : 'No', checkStatus(s.isHttps));
+
+    // Individual headers
+    const headers = s.headers || s;
+    if (headers.contentSecurityPolicy !== undefined) {
+      addRow('Security', 'Content-Security-Policy', headers.contentSecurityPolicy ? 'Present' : 'Missing', checkStatus(headers.contentSecurityPolicy));
+    }
+    if (headers.xFrameOptions !== undefined) {
+      addRow('Security', 'X-Frame-Options', headers.xFrameOptions || 'Missing', checkStatus(headers.xFrameOptions));
+    }
+    if (headers.xContentTypeOptions !== undefined) {
+      addRow('Security', 'X-Content-Type-Options', headers.xContentTypeOptions || 'Missing', checkStatus(headers.xContentTypeOptions));
+    }
+    if (headers.strictTransportSecurity !== undefined) {
+      addRow('Security', 'Strict-Transport-Security', headers.strictTransportSecurity ? 'Present' : 'Missing', checkStatus(headers.strictTransportSecurity));
+    }
+    if (headers.referrerPolicy !== undefined) {
+      addRow('Security', 'Referrer-Policy', headers.referrerPolicy || 'Missing', checkStatus(headers.referrerPolicy));
+    }
+    if (headers.permissionsPolicy !== undefined) {
+      addRow('Security', 'Permissions-Policy', headers.permissionsPolicy ? 'Present' : 'Missing', headers.permissionsPolicy ? 'Good' : 'Optional');
+    }
+
+    if (s.issues && s.issues.length > 0) {
+      s.issues.forEach((issue, i) => addRow('Security', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+    if (s.recommendations && s.recommendations.length > 0) {
+      s.recommendations.forEach((rec, i) => addRow('Security', `Recommendation ${i + 1}`, rec, 'Suggestion'));
+    }
+  }
+
+  // ============ STRUCTURED DATA ============
+  if (results.structuredData) {
+    const sd = results.structuredData;
+    addRow('Structured Data', 'Section Score', sd.score || '', checkStatus(sd.score >= 80));
+    addRow('Structured Data', 'Has Structured Data', sd.hasStructuredData ? 'Yes' : 'No', checkStatus(sd.hasStructuredData, 'Good', 'Missing'));
+    addRow('Structured Data', 'JSON-LD Found', sd.jsonLdCount || 0);
+    addRow('Structured Data', 'Microdata Found', sd.microdataCount || 0);
+
+    // Schema types
+    if (sd.schemaTypes && sd.schemaTypes.length > 0) {
+      addRow('Structured Data', 'Schema Types', sd.schemaTypes.join(', '));
+    }
+
+    // JSON-LD details
+    if (sd.jsonLd && Array.isArray(sd.jsonLd)) {
+      sd.jsonLd.slice(0, 5).forEach((item, i) => {
+        addRow('Structured Data', `JSON-LD ${i + 1} Type`, item['@type'] || 'Unknown');
+      });
+    }
+
+    if (sd.issues && sd.issues.length > 0) {
+      sd.issues.forEach((issue, i) => addRow('Structured Data', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+    if (sd.recommendations && sd.recommendations.length > 0) {
+      sd.recommendations.forEach((rec, i) => addRow('Structured Data', `Recommendation ${i + 1}`, rec, 'Suggestion'));
+    }
+  }
+
+  // ============ ADDITIONAL CHECKS ============
+  if (results.additionalChecks) {
+    const ac = results.additionalChecks;
+    addRow('Additional Checks', 'Section Score', ac.score || '', checkStatus(ac.score >= 80));
+
+    // Common additional checks
+    if (ac.hasRobotsTxt !== undefined) addRow('Additional Checks', 'robots.txt', ac.hasRobotsTxt ? 'Found' : 'Missing', checkStatus(ac.hasRobotsTxt));
+    if (ac.hasSitemap !== undefined) addRow('Additional Checks', 'Sitemap', ac.hasSitemap ? 'Found' : 'Missing', checkStatus(ac.hasSitemap));
+    if (ac.hasFavicon !== undefined) addRow('Additional Checks', 'Favicon', ac.hasFavicon ? 'Found' : 'Missing', checkStatus(ac.hasFavicon));
+    if (ac.hasAppleTouchIcon !== undefined) addRow('Additional Checks', 'Apple Touch Icon', ac.hasAppleTouchIcon ? 'Found' : 'Missing');
+    if (ac.has404Page !== undefined) addRow('Additional Checks', 'Custom 404 Page', ac.has404Page ? 'Yes' : 'No');
+    if (ac.hasSSL !== undefined) addRow('Additional Checks', 'SSL Certificate', ac.hasSSL ? 'Valid' : 'Issue', checkStatus(ac.hasSSL));
+    if (ac.mixedContent !== undefined) addRow('Additional Checks', 'Mixed Content', ac.mixedContent ? 'Issue Found' : 'None', checkStatus(!ac.mixedContent));
+    if (ac.hasAMP !== undefined) addRow('Additional Checks', 'AMP Version', ac.hasAMP ? 'Yes' : 'No');
+    if (ac.hasPWA !== undefined) addRow('Additional Checks', 'PWA Ready', ac.hasPWA ? 'Yes' : 'No');
+
+    // Checks array
+    if (ac.checks && Array.isArray(ac.checks)) {
+      ac.checks.forEach((check, i) => {
+        addRow('Additional Checks', check.name || `Check ${i + 1}`, check.value || '', check.passed ? 'Pass' : 'Fail');
+      });
+    }
+
+    if (ac.issues && ac.issues.length > 0) {
+      ac.issues.forEach((issue, i) => addRow('Additional Checks', `Issue ${i + 1}`, issue, 'Issue'));
+    }
+    if (ac.recommendations && ac.recommendations.length > 0) {
+      ac.recommendations.forEach((rec, i) => addRow('Additional Checks', `Recommendation ${i + 1}`, rec, 'Suggestion'));
+    }
+  }
+
+  // ============ SCORE BREAKDOWN ============
+  if (results.score && results.score.breakdown) {
+    const breakdown = results.score.breakdown;
+    Object.entries(breakdown).forEach(([category, data]) => {
+      const score = typeof data === 'number' ? data : data?.score;
+      if (score !== undefined) {
+        addRow('Score Breakdown', category, score, score >= 80 ? 'Good' : score >= 50 ? 'Needs Work' : 'Poor');
+      }
+    });
+  }
+
+  // Convert to CSV string with proper escaping
+  const csvContent = rows.map(row =>
+    row.map(cell => {
+      const cellStr = String(cell ?? '');
+      // Escape quotes and wrap in quotes if contains comma, quote, or newline
+      if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n') || cellStr.includes('\r')) {
+        return '"' + cellStr.replace(/"/g, '""') + '"';
+      }
+      return cellStr;
+    }).join(',')
+  ).join('\n');
+
+  // Add BOM for Excel UTF-8 compatibility
+  const bom = '\uFEFF';
+  const blob = new Blob([bom + csvContent], { type: 'text/csv;charset=utf-8;' });
+  const link = document.createElement('a');
+  const url = URL.createObjectURL(blob);
+  const hostname = results.url ? new URL(results.url).hostname : 'site';
+  const filename = `seo-report-${hostname}-${new Date().toISOString().split('T')[0]}.csv`;
+
+  link.setAttribute('href', url);
+  link.setAttribute('download', filename);
+  link.style.visibility = 'hidden';
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+
+  // Show confirmation
+  if (window.ReportUI?.toast) {
+    window.ReportUI.toast(`CSV exported: ${rows.length - 1} data points`);
+  }
+};
+
+/**
+ * Export SEO results as professionally designed Excel workbook
+ * Uses ExcelJS for full styling support (colors, fonts, borders)
+ */
+window.exportSeoExcel = async function() {
+  const results = window.currentSeoResults;
+  if (!results) {
+    alert('No scan results to export. Run a scan first.');
+    return;
+  }
+
+  // Check if ExcelJS is loaded
+  if (typeof ExcelJS === 'undefined') {
+    alert('Excel export library not loaded. Please try again or use CSV export.');
+    return;
+  }
+
+  // Show loading toast
+  if (window.ReportUI?.toast) {
+    window.ReportUI.toast('Generating Excel report...');
+  }
+
+  // Brand colors
+  const COLORS = {
+    brand: 'DD3838',        // Site Mechanic red
+    brandDark: 'B82E2E',
+    headerBg: '1a1a2e',     // Dark header
+    headerText: 'FFFFFF',
+    good: '22C55E',         // Green
+    goodBg: 'DCFCE7',
+    warning: 'F59E0B',      // Orange
+    warningBg: 'FEF3C7',
+    bad: 'EF4444',          // Red
+    badBg: 'FEE2E2',
+    neutral: '6B7280',      // Gray
+    neutralBg: 'F3F4F6',
+    white: 'FFFFFF',
+    lightGray: 'F9FAFB',
+    borderColor: 'E5E7EB',
+    textDark: '1F2937',
+    textMuted: '6B7280',
+  };
+
+  // Style presets
+  const styles = {
+    title: { font: { bold: true, size: 18, color: { argb: COLORS.brand } } },
+    subtitle: { font: { bold: true, size: 14, color: { argb: COLORS.textDark } } },
+    sectionHeader: {
+      font: { bold: true, size: 11, color: { argb: COLORS.headerText } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.headerBg } },
+      alignment: { vertical: 'middle', horizontal: 'left' },
+      border: { bottom: { style: 'thin', color: { argb: COLORS.borderColor } } }
+    },
+    tableHeader: {
+      font: { bold: true, size: 10, color: { argb: COLORS.headerText } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.brand } },
+      alignment: { vertical: 'middle', horizontal: 'center' },
+      border: {
+        top: { style: 'thin', color: { argb: COLORS.borderColor } },
+        bottom: { style: 'thin', color: { argb: COLORS.borderColor } },
+        left: { style: 'thin', color: { argb: COLORS.borderColor } },
+        right: { style: 'thin', color: { argb: COLORS.borderColor } }
+      }
+    },
+    dataRow: {
+      font: { size: 10, color: { argb: COLORS.textDark } },
+      alignment: { vertical: 'middle', wrapText: true },
+      border: {
+        bottom: { style: 'thin', color: { argb: COLORS.borderColor } },
+        left: { style: 'thin', color: { argb: COLORS.borderColor } },
+        right: { style: 'thin', color: { argb: COLORS.borderColor } }
+      }
+    },
+    altRow: {
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.lightGray } }
+    },
+    goodStatus: {
+      font: { bold: true, color: { argb: COLORS.good } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.goodBg } }
+    },
+    warningStatus: {
+      font: { bold: true, color: { argb: COLORS.warning } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.warningBg } }
+    },
+    badStatus: {
+      font: { bold: true, color: { argb: COLORS.bad } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.badBg } }
+    },
+    score: (score) => ({
+      font: { bold: true, size: 12, color: { argb: score >= 80 ? COLORS.good : score >= 50 ? COLORS.warning : COLORS.bad } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: score >= 80 ? COLORS.goodBg : score >= 50 ? COLORS.warningBg : COLORS.badBg } },
+      alignment: { horizontal: 'center', vertical: 'middle' }
+    }),
+    codeBlock: {
+      font: { name: 'Consolas', size: 9, color: { argb: COLORS.textDark } },
+      fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: COLORS.neutralBg } },
+      alignment: { wrapText: true, vertical: 'top' }
+    }
+  };
+
+  // Helper functions
+  const applyStyle = (cell, style) => {
+    if (style.font) cell.font = style.font;
+    if (style.fill) cell.fill = style.fill;
+    if (style.alignment) cell.alignment = style.alignment;
+    if (style.border) cell.border = style.border;
+  };
+
+  const getStatusStyle = (status) => {
+    if (!status) return null;
+    const s = String(status).toLowerCase();
+    if (s.includes('good') || s.includes('pass') || s.includes('present') || s.includes('valid') || s.includes('optimal') || s === 'yes') {
+      return styles.goodStatus;
+    } else if (s.includes('issue') || s.includes('fail') || s.includes('missing') || s.includes('poor') || s.includes('bad') || s === 'no') {
+      return styles.badStatus;
+    } else if (s.includes('warning') || s.includes('moderate') || s.includes('needs') || s.includes('low') || s.includes('review')) {
+      return styles.warningStatus;
+    }
+    return null;
+  };
+
+  const addStyledRow = (ws, data, isHeader = false, isAlt = false) => {
+    const row = ws.addRow(data);
+    row.eachCell((cell, colNumber) => {
+      if (isHeader) {
+        applyStyle(cell, styles.tableHeader);
+      } else {
+        applyStyle(cell, styles.dataRow);
+        if (isAlt) applyStyle(cell, styles.altRow);
+        // Check for status column styling
+        const statusStyle = getStatusStyle(cell.value);
+        if (statusStyle && colNumber >= 3) {
+          applyStyle(cell, statusStyle);
+        }
+      }
+    });
+    row.height = isHeader ? 22 : 18;
+    return row;
+  };
+
+  const addSectionTitle = (ws, title, colspan = 4) => {
+    ws.addRow([]);
+    const row = ws.addRow([title]);
+    ws.mergeCells(row.number, 1, row.number, colspan);
+    const cell = ws.getCell(row.number, 1);
+    applyStyle(cell, styles.sectionHeader);
+    row.height = 26;
+    return row;
+  };
+
+  // Create workbook
+  const wb = new ExcelJS.Workbook();
+  wb.creator = 'Site Mechanic';
+  wb.created = new Date();
+
+  // ============ OVERVIEW SHEET ============
+  const wsOverview = wb.addWorksheet('Overview', {
+    properties: { tabColor: { argb: COLORS.brand } }
+  });
+  wsOverview.columns = [
+    { width: 25 }, { width: 50 }, { width: 15 }, { width: 30 }
+  ];
+
+  // Title row
+  const titleRow = wsOverview.addRow(['SEO Analysis Report']);
+  wsOverview.mergeCells(1, 1, 1, 4);
+  applyStyle(wsOverview.getCell('A1'), styles.title);
+  titleRow.height = 30;
+
+  // Subtitle with branding
+  const brandRow = wsOverview.addRow(['Powered by Site Mechanic']);
+  applyStyle(wsOverview.getCell('A2'), { font: { size: 10, italic: true, color: { argb: COLORS.textMuted } } });
+
+  wsOverview.addRow([]);
+
+  // URL and Date
+  const urlRow = wsOverview.addRow(['Analyzed URL:', results.url || '']);
+  applyStyle(wsOverview.getCell('A4'), { font: { bold: true } });
+
+  const dateRow = wsOverview.addRow(['Scan Date:', new Date(results.timestamp || Date.now()).toLocaleString()]);
+  applyStyle(wsOverview.getCell('A5'), { font: { bold: true } });
+
+  wsOverview.addRow([]);
+
+  // Overall Score - Big and prominent
+  const scoreLabel = wsOverview.addRow(['OVERALL SEO SCORE']);
+  wsOverview.mergeCells(scoreLabel.number, 1, scoreLabel.number, 4);
+  applyStyle(wsOverview.getCell(`A${scoreLabel.number}`), styles.subtitle);
+
+  const overallScore = results.score?.overall || 0;
+  const scoreRow = wsOverview.addRow([overallScore, '/100', results.score?.grade || '']);
+  applyStyle(wsOverview.getCell(`A${scoreRow.number}`), {
+    font: { bold: true, size: 36, color: { argb: overallScore >= 80 ? COLORS.good : overallScore >= 50 ? COLORS.warning : COLORS.bad } }
+  });
+  applyStyle(wsOverview.getCell(`B${scoreRow.number}`), { font: { size: 14, color: { argb: COLORS.textMuted } } });
+  applyStyle(wsOverview.getCell(`C${scoreRow.number}`), styles.score(overallScore));
+  scoreRow.height = 45;
+
+  wsOverview.addRow([]);
+
+  // Score Breakdown
+  addSectionTitle(wsOverview, '📊 Score Breakdown', 4);
+  addStyledRow(wsOverview, ['Category', 'Score', 'Status', 'Grade'], true);
+
+  if (results.score?.breakdown) {
+    let rowIdx = 0;
+    Object.entries(results.score.breakdown).forEach(([category, data]) => {
+      const score = typeof data === 'number' ? data : data?.score;
+      if (score !== undefined) {
+        const status = score >= 80 ? 'Good' : score >= 50 ? 'Needs Work' : 'Poor';
+        const grade = score >= 90 ? 'A' : score >= 80 ? 'B' : score >= 70 ? 'C' : score >= 60 ? 'D' : 'F';
+        const row = addStyledRow(wsOverview, [category, score, status, grade], false, rowIdx % 2 === 1);
+        // Style the score cell
+        applyStyle(row.getCell(2), styles.score(score));
+        rowIdx++;
+      }
+    });
+  }
+
+  // ============ META TAGS SHEET ============
+  if (results.metaTags) {
+    const meta = results.metaTags;
+    const wsMeta = wb.addWorksheet('Meta Tags');
+    wsMeta.columns = [{ width: 22 }, { width: 60 }, { width: 12 }, { width: 35 }];
+
+    // Title with score
+    const metaTitle = wsMeta.addRow(['🏷️ Meta Tags Analysis', '', `Score: ${meta.score || 0}`, '']);
+    wsMeta.mergeCells(1, 1, 1, 2);
+    applyStyle(wsMeta.getCell('A1'), styles.title);
+    applyStyle(wsMeta.getCell('C1'), styles.score(meta.score || 0));
+    metaTitle.height = 28;
+    wsMeta.addRow([]);
+
+    // Basic Meta Tags section
+    addSectionTitle(wsMeta, '📝 Basic Meta Tags', 4);
+    addStyledRow(wsMeta, ['Tag', 'Value', 'Status', 'Notes'], true);
+    const basicTags = [
+      ['Title', meta.title || '', meta.title ? 'Present' : 'Missing', `${meta.titleLength || 0} chars`],
+      ['Description', (meta.description || '').substring(0, 80) + '...', meta.description ? 'Present' : 'Missing', `${meta.descriptionLength || 0} chars`],
+      ['Canonical URL', meta.canonical || '', meta.canonical ? 'Present' : 'Missing', ''],
+      ['Robots', meta.robots || 'Not set', meta.robots ? 'Present' : 'Default', ''],
+      ['Viewport', meta.viewport ? 'Configured' : '', meta.viewport ? 'Present' : 'Missing', ''],
+      ['Language', meta.language || '', meta.language ? 'Present' : 'Missing', ''],
+      ['Charset', meta.charset || '', meta.charset ? 'Present' : 'Missing', ''],
+    ];
+    basicTags.forEach((row, i) => addStyledRow(wsMeta, row, false, i % 2 === 1));
+
+    wsMeta.addRow([]);
+
+    // Open Graph section
+    addSectionTitle(wsMeta, '📘 Open Graph Tags', 4);
+    addStyledRow(wsMeta, ['Tag', 'Value', 'Status', 'Notes'], true);
+    const ogTags = [
+      ['og:title', meta.ogTitle || '', meta.ogTitle ? 'Present' : 'Missing', ''],
+      ['og:description', (meta.ogDescription || '').substring(0, 60) + '...', meta.ogDescription ? 'Present' : 'Missing', ''],
+      ['og:image', meta.ogImage ? 'Set' : '', meta.ogImage ? 'Present' : 'Missing', 'Recommended: 1200x630px'],
+      ['og:url', meta.ogUrl || '', meta.ogUrl ? 'Present' : 'Missing', ''],
+      ['og:type', meta.ogType || '', meta.ogType ? 'Present' : 'Not set', ''],
+    ];
+    ogTags.forEach((row, i) => addStyledRow(wsMeta, row, false, i % 2 === 1));
+
+    wsMeta.addRow([]);
+
+    // Twitter Card section
+    addSectionTitle(wsMeta, '🐦 Twitter Card Tags', 4);
+    addStyledRow(wsMeta, ['Tag', 'Value', 'Status', 'Notes'], true);
+    const twitterTags = [
+      ['twitter:card', meta.twitterCard || '', meta.twitterCard ? 'Present' : 'Missing', ''],
+      ['twitter:title', meta.twitterTitle || '', meta.twitterTitle ? 'Present' : 'Not set', ''],
+      ['twitter:description', (meta.twitterDescription || '').substring(0, 60), meta.twitterDescription ? 'Present' : 'Not set', ''],
+      ['twitter:image', meta.twitterImage ? 'Set' : '', meta.twitterImage ? 'Present' : 'Not set', ''],
+    ];
+    twitterTags.forEach((row, i) => addStyledRow(wsMeta, row, false, i % 2 === 1));
+
+    // Issues and recommendations
+    if (meta.issues?.length > 0) {
+      wsMeta.addRow([]);
+      addSectionTitle(wsMeta, '⚠️ Issues Found', 4);
+      meta.issues.forEach(issue => {
+        const row = wsMeta.addRow([issue]);
+        wsMeta.mergeCells(row.number, 1, row.number, 4);
+        applyStyle(row.getCell(1), { font: { color: { argb: COLORS.bad } } });
+      });
+    }
+  }
+
+  // ============ HEADINGS SHEET ============
+  if (results.headingStructure) {
+    const h = results.headingStructure;
+    const wsHead = wb.addWorksheet('Headings');
+    wsHead.columns = [{ width: 15 }, { width: 70 }, { width: 12 }];
+
+    const headTitle = wsHead.addRow(['📑 Headings Analysis', '', `Score: ${h.score || 0}`]);
+    applyStyle(wsHead.getCell('A1'), styles.title);
+    applyStyle(wsHead.getCell('C1'), styles.score(h.score || 0));
+    headTitle.height = 28;
+    wsHead.addRow([]);
+
+    addSectionTitle(wsHead, 'Heading Counts', 3);
+    addStyledRow(wsHead, ['Level', 'Count', 'Status'], true);
+    const h1Count = h.h1?.length || h.h1Count || 0;
+    addStyledRow(wsHead, ['H1', h1Count, h1Count === 1 ? 'Good' : 'Issue'], false, false);
+    addStyledRow(wsHead, ['H2', h.h2?.length || h.h2Count || 0, ''], false, true);
+    addStyledRow(wsHead, ['H3', h.h3?.length || h.h3Count || 0, ''], false, false);
+    addStyledRow(wsHead, ['H4', h.h4?.length || h.h4Count || 0, ''], false, true);
+    addStyledRow(wsHead, ['H5', h.h5?.length || h.h5Count || 0, ''], false, false);
+    addStyledRow(wsHead, ['H6', h.h6?.length || h.h6Count || 0, ''], false, true);
+    addStyledRow(wsHead, ['Total', h.total || h.totalCount || 0, (h.total || h.totalCount) >= 3 ? 'Good' : 'Low'], false, false);
+
+    if (h.h1 && Array.isArray(h.h1) && h.h1.length > 0) {
+      wsHead.addRow([]);
+      addSectionTitle(wsHead, 'H1 Content', 3);
+      h.h1.forEach((text, i) => addStyledRow(wsHead, [`H1 #${i + 1}`, text, ''], false, i % 2 === 1));
+    }
+  }
+
+  // ============ CONTENT SHEET ============
+  if (results.contentAnalysis) {
+    const c = results.contentAnalysis;
+    const wsContent = wb.addWorksheet('Content');
+    wsContent.columns = [{ width: 25 }, { width: 20 }, { width: 12 }, { width: 30 }];
+
+    const contTitle = wsContent.addRow(['📄 Content Analysis', '', `Score: ${c.score || 0}`, '']);
+    applyStyle(wsContent.getCell('A1'), styles.title);
+    applyStyle(wsContent.getCell('C1'), styles.score(c.score || 0));
+    contTitle.height = 28;
+    wsContent.addRow([]);
+
+    addSectionTitle(wsContent, 'Content Metrics', 4);
+    addStyledRow(wsContent, ['Metric', 'Value', 'Status', 'Target'], true);
+    addStyledRow(wsContent, ['Word Count', c.wordCount || 0, c.wordCount >= 300 ? 'Good' : 'Low', '300+ recommended'], false, false);
+    addStyledRow(wsContent, ['Sentences', c.sentenceCount || 0, '', ''], false, true);
+    addStyledRow(wsContent, ['Paragraphs', c.paragraphCount || 0, '', ''], false, false);
+    addStyledRow(wsContent, ['Avg Words/Sentence', c.averageWordsPerSentence || 0, c.averageWordsPerSentence <= 25 ? 'Good' : 'Long', '15-25 words'], false, true);
+    addStyledRow(wsContent, ['Text-to-HTML Ratio', ((c.textToHTMLRatio || 0) * 100).toFixed(1) + '%', c.textToHTMLRatio >= 0.1 ? 'Good' : 'Low', '10%+'], false, false);
+  }
+
+  // ============ IMAGES SHEET ============
+  if (results.imageAnalysis || results.images) {
+    const img = results.imageAnalysis || results.images;
+    const wsImg = wb.addWorksheet('Images');
+    wsImg.columns = [{ width: 8 }, { width: 55 }, { width: 35 }, { width: 15 }, { width: 10 }];
+
+    const imgTitle = wsImg.addRow(['🖼️ Images Analysis', '', '', `Score: ${img.score || 0}`, '']);
+    applyStyle(wsImg.getCell('A1'), styles.title);
+    applyStyle(wsImg.getCell('D1'), styles.score(img.score || 0));
+    imgTitle.height = 28;
+    wsImg.addRow([]);
+
+    addSectionTitle(wsImg, 'Image Statistics', 5);
+    addStyledRow(wsImg, ['', 'Metric', 'Value', 'Status', ''], true);
+    addStyledRow(wsImg, ['', 'Total Images', img.total || 0, '', ''], false, false);
+    addStyledRow(wsImg, ['', 'With Alt Text', img.withAlt || 0, 'Good', ''], false, true);
+    addStyledRow(wsImg, ['', 'Missing Alt Text', img.withoutAlt || img.missingAlt || 0, (img.withoutAlt || img.missingAlt) === 0 ? 'Good' : 'Issue', ''], false, false);
+
+    if (img.images && img.images.length > 0) {
+      wsImg.addRow([]);
+      addSectionTitle(wsImg, 'Image Details (first 30)', 5);
+      addStyledRow(wsImg, ['#', 'Source', 'Alt Text', 'Size', 'Loading'], true);
+      img.images.slice(0, 30).forEach((image, i) => {
+        addStyledRow(wsImg, [
+          i + 1,
+          (image.src || '').substring(0, 60),
+          image.alt || '(missing)',
+          `${image.width || '?'}x${image.height || '?'}`,
+          image.loading || 'eager'
+        ], false, i % 2 === 1);
+      });
+    }
+  }
+
+  // ============ LINKS SHEET ============
+  if (results.linkAnalysis || results.links) {
+    const l = results.linkAnalysis || results.links;
+    const wsLinks = wb.addWorksheet('Links');
+    wsLinks.columns = [{ width: 8 }, { width: 55 }, { width: 35 }, { width: 12 }, { width: 20 }];
+
+    const linkTitle = wsLinks.addRow(['🔗 Links Analysis', '', '', `Score: ${l.score || 0}`, '']);
+    applyStyle(wsLinks.getCell('A1'), styles.title);
+    applyStyle(wsLinks.getCell('D1'), styles.score(l.score || 0));
+    linkTitle.height = 28;
+    wsLinks.addRow([]);
+
+    addSectionTitle(wsLinks, 'Link Statistics', 5);
+    addStyledRow(wsLinks, ['', 'Metric', 'Value', 'Status', ''], true);
+    addStyledRow(wsLinks, ['', 'Total Links', l.total || 0, '', ''], false, false);
+    addStyledRow(wsLinks, ['', 'Internal', l.internal || 0, '', ''], false, true);
+    addStyledRow(wsLinks, ['', 'External', l.external || 0, '', ''], false, false);
+    addStyledRow(wsLinks, ['', 'Broken/Empty', l.brokenFormat || 0, (l.brokenFormat || 0) === 0 ? 'Good' : 'Issue', ''], false, true);
+
+    if (l.links && l.links.length > 0) {
+      wsLinks.addRow([]);
+      addSectionTitle(wsLinks, 'Link Details (first 50)', 5);
+      addStyledRow(wsLinks, ['#', 'URL', 'Anchor Text', 'Type', 'Attributes'], true);
+      l.links.slice(0, 50).forEach((link, i) => {
+        addStyledRow(wsLinks, [
+          i + 1,
+          (link.href || '').substring(0, 60),
+          (link.text || '').substring(0, 40),
+          link.isExternal ? 'External' : 'Internal',
+          [link.hasNoFollow ? 'nofollow' : '', link.target === '_blank' ? 'new tab' : ''].filter(Boolean).join(', ') || '-'
+        ], false, i % 2 === 1);
+      });
+    }
+  }
+
+  // ============ PERFORMANCE SHEET ============
+  if (results.performanceMetrics) {
+    const p = results.performanceMetrics;
+    const wsPerf = wb.addWorksheet('Performance');
+    wsPerf.columns = [{ width: 35 }, { width: 20 }, { width: 12 }, { width: 15 }];
+
+    const perfTitle = wsPerf.addRow(['⚡ Performance Metrics', '', `Score: ${p.score || 0}`, '']);
+    applyStyle(wsPerf.getCell('A1'), styles.title);
+    applyStyle(wsPerf.getCell('C1'), styles.score(p.score || 0));
+    perfTitle.height = 28;
+    wsPerf.addRow([]);
+
+    addSectionTitle(wsPerf, 'Core Web Vitals', 4);
+    addStyledRow(wsPerf, ['Metric', 'Value', 'Status', 'Target'], true);
+    if (p.fcp) addStyledRow(wsPerf, ['First Contentful Paint', p.fcp + 'ms', p.fcp < 1800 ? 'Good' : p.fcp < 3000 ? 'Moderate' : 'Poor', '< 1.8s'], false, false);
+    if (p.lcp) addStyledRow(wsPerf, ['Largest Contentful Paint', p.lcp + 'ms', p.lcp < 2500 ? 'Good' : p.lcp < 4000 ? 'Moderate' : 'Poor', '< 2.5s'], false, true);
+    if (p.cls !== undefined) addStyledRow(wsPerf, ['Cumulative Layout Shift', p.cls, p.cls < 0.1 ? 'Good' : p.cls < 0.25 ? 'Moderate' : 'Poor', '< 0.1'], false, false);
+    if (p.tbt) addStyledRow(wsPerf, ['Total Blocking Time', p.tbt + 'ms', p.tbt < 200 ? 'Good' : p.tbt < 600 ? 'Moderate' : 'Poor', '< 200ms'], false, true);
+    if (p.ttfb) addStyledRow(wsPerf, ['Time to First Byte', p.ttfb + 'ms', p.ttfb < 800 ? 'Good' : 'Slow', '< 800ms'], false, false);
+  }
+
+  // ============ SECURITY SHEET ============
+  if (results.securityHeaders) {
+    const s = results.securityHeaders;
+    const wsSec = wb.addWorksheet('Security');
+    wsSec.columns = [{ width: 30 }, { width: 40 }, { width: 12 }];
+
+    const secTitle = wsSec.addRow(['🔒 Security Analysis', '', `Score: ${s.score || 0}`]);
+    applyStyle(wsSec.getCell('A1'), styles.title);
+    applyStyle(wsSec.getCell('C1'), styles.score(s.score || 0));
+    secTitle.height = 28;
+    wsSec.addRow([]);
+
+    addSectionTitle(wsSec, 'Security Headers', 3);
+    addStyledRow(wsSec, ['Header', 'Value', 'Status'], true);
+    addStyledRow(wsSec, ['HTTPS', s.isHttps ? 'Yes' : 'No', s.isHttps ? 'Good' : 'Issue'], false, false);
+    const headers = s.headers || s;
+    if (headers.contentSecurityPolicy !== undefined)
+      addStyledRow(wsSec, ['Content-Security-Policy', headers.contentSecurityPolicy ? 'Present' : 'Missing', headers.contentSecurityPolicy ? 'Good' : 'Issue'], false, true);
+    if (headers.xFrameOptions !== undefined)
+      addStyledRow(wsSec, ['X-Frame-Options', headers.xFrameOptions || 'Missing', headers.xFrameOptions ? 'Good' : 'Issue'], false, false);
+    if (headers.strictTransportSecurity !== undefined)
+      addStyledRow(wsSec, ['Strict-Transport-Security', headers.strictTransportSecurity ? 'Present' : 'Missing', headers.strictTransportSecurity ? 'Good' : 'Issue'], false, true);
+  }
+
+  // ============ FIX CODE SHEET ============
+  if (typeof buildFixCards === 'function') {
+    try {
+      const fixCards = buildFixCards(results);
+      if (fixCards && fixCards.length > 0) {
+        const wsFix = wb.addWorksheet('Fix Code', { properties: { tabColor: { argb: COLORS.good } } });
+        wsFix.columns = [{ width: 100 }];
+
+        const fixTitle = wsFix.addRow(['🔧 Fix Code + Recommendations']);
+        applyStyle(wsFix.getCell('A1'), styles.title);
+        fixTitle.height = 30;
+        wsFix.addRow(['Actionable fixes to improve your SEO score']);
+        applyStyle(wsFix.getCell('A2'), { font: { italic: true, color: { argb: COLORS.textMuted } } });
+        wsFix.addRow([]);
+
+        fixCards.forEach((fix, index) => {
+          // Fix header
+          const headerRow = wsFix.addRow([`FIX ${index + 1}: ${fix.title}`]);
+          applyStyle(headerRow.getCell(1), {
+            font: { bold: true, size: 12, color: { argb: COLORS.white } },
+            fill: { type: 'pattern', pattern: 'solid', fgColor: { argb: fix.severity === 'High' ? COLORS.bad : fix.severity === 'Medium' ? COLORS.warning : COLORS.neutral } }
+          });
+          headerRow.height = 24;
+
+          wsFix.addRow([`Severity: ${fix.severity || 'Medium'} | Category: ${fix.category || 'General'}`]);
+          wsFix.addRow([`Impact: ${fix.impact || ''}`]);
+          wsFix.addRow([]);
+          wsFix.addRow([fix.description || '']);
+          wsFix.addRow([]);
+
+          // Problem code
+          const probHeader = wsFix.addRow(['❌ CURRENT ISSUE:']);
+          applyStyle(probHeader.getCell(1), { font: { bold: true, color: { argb: COLORS.bad } } });
+          (fix.problematicCode || '').split('\n').forEach(line => {
+            const row = wsFix.addRow([line]);
+            applyStyle(row.getCell(1), styles.codeBlock);
+          });
+          wsFix.addRow([]);
+
+          // Solution code
+          const solHeader = wsFix.addRow(['✅ RECOMMENDED FIX:']);
+          applyStyle(solHeader.getCell(1), { font: { bold: true, color: { argb: COLORS.good } } });
+          (fix.snippet || '').split('\n').forEach(line => {
+            const row = wsFix.addRow([line]);
+            applyStyle(row.getCell(1), styles.codeBlock);
+          });
+          wsFix.addRow([]);
+
+          // Steps
+          if (fix.steps && fix.steps.length > 0) {
+            const stepsHeader = wsFix.addRow(['📋 IMPLEMENTATION STEPS:']);
+            applyStyle(stepsHeader.getCell(1), { font: { bold: true } });
+            fix.steps.forEach((step, i) => wsFix.addRow([`${i + 1}. ${step}`]));
+          }
+          wsFix.addRow([]);
+          wsFix.addRow(['─'.repeat(80)]);
+          wsFix.addRow([]);
+        });
+      }
+    } catch (e) {
+      console.warn('Could not generate Fix Code sheet:', e);
+    }
+  }
+
+  // ============ GENERATE FILE ============
+  const hostname = results.url ? new URL(results.url).hostname : 'site';
+  const filename = `seo-report-${hostname}-${new Date().toISOString().split('T')[0]}.xlsx`;
+
+  try {
+    const buffer = await wb.xlsx.writeBuffer();
+    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    URL.revokeObjectURL(url);
+
+    if (window.ReportUI?.toast) {
+      window.ReportUI.toast(`Excel exported: ${wb.worksheets.length} sheets`);
+    }
+  } catch (err) {
+    console.error('Excel export error:', err);
+    alert('Failed to export Excel. Try CSV export instead.');
+  }
+};
+
+/**
+ * Copy shareable link to clipboard
+ */
+window.copyShareLink = function() {
+  const reportId = document.body.getAttribute('data-report-id') || '';
+  const url = window.currentSeoResults?.url || '';
+
+  if (!reportId) {
+    alert('No report to share. Run a scan first.');
+    return;
+  }
+
+  // Build share URL with report_id
+  const shareUrl = new URL(window.location.href);
+  shareUrl.searchParams.set('report_id', reportId);
+  if (url) {
+    shareUrl.searchParams.set('url', url);
+  }
+  shareUrl.searchParams.delete('billing_success');
+  shareUrl.searchParams.delete('session_id');
+  shareUrl.searchParams.delete('auto_scan');
+
+  navigator.clipboard.writeText(shareUrl.toString()).then(() => {
+    if (window.ReportUI?.toast) {
+      window.ReportUI.toast('Share link copied to clipboard!');
+    } else {
+      alert('Share link copied to clipboard!');
+    }
+  }).catch(() => {
+    // Fallback for older browsers
+    const textArea = document.createElement('textarea');
+    textArea.value = shareUrl.toString();
+    textArea.style.position = 'fixed';
+    textArea.style.left = '-999999px';
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand('copy');
+      if (window.ReportUI?.toast) {
+        window.ReportUI.toast('Share link copied to clipboard!');
+      } else {
+        alert('Share link copied to clipboard!');
+      }
+    } catch (e) {
+      alert('Failed to copy link. URL: ' + shareUrl.toString());
+    }
+    document.body.removeChild(textArea);
+  });
+};
+
+/**
+ * Export SEO results as PDF
+ * Uses the unified PDF export utility (pdf-export-utility.js)
+ * @deprecated Direct calls should use window.exportReportPDF() instead
+ */
+window.exportSEOPDF = async function() {
+  const results = window.currentSeoResults;
+  if (!results) {
+    alert('No scan results to export. Run a scan first.');
+    return;
+  }
+
+  const container = document.getElementById('seoResults');
+  if (!container || container.hidden) {
+    alert('No results to export. Run a scan first.');
+    return;
+  }
+
+  // Use the unified PDF export utility
+  if (typeof window.exportReportPDF === 'function') {
+    const button = document.querySelector('[data-export="pdf"]');
+    await window.exportReportPDF({
+      reportType: 'seo',
+      buttonElement: button
+    });
+  } else {
+    console.error('PDF export utility not loaded');
+    alert('PDF export is not available. Please refresh the page.');
+  }
+};

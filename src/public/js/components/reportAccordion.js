@@ -54,24 +54,30 @@
     const scoreColorClass = getScoreColorClass(scoreTextRight);
     const cardHTML = (function() {
       if (!locked) return '';
-      if (window.PaidUnlockCard && typeof window.PaidUnlockCard.render === 'function') {
-        return window.PaidUnlockCard.render({
-          context,
-          reportId,
-          credits: 0
-        });
+
+      // Use ProReportBlock if available
+      if (window.ProReportBlock && typeof window.ProReportBlock.renderUnlockPrompt === 'function') {
+        return window.ProReportBlock.renderUnlockPrompt({ context, reportId });
       }
 
-      // Fallback markup (keeps event handlers working)
+      // Fallback markup - new billing model (no credits)
       return `
-        <div class="pro-report-block__upgrade-prompt" data-locked-overlay>
-          <div class="pro-report-block__credit-info">
-            <span class="pro-report-block__credit-balance"><span data-credits-label>Credits:</span> <span data-credit-balance>0</span></span>
+        <div class="pro-report-block__unlock-prompt" data-locked-overlay>
+          <div class="pro-report-block__unlock-header">
+            <span class="pro-report-block__unlock-icon">🔒</span>
+            <span class="pro-report-block__unlock-text">Unlock this report</span>
           </div>
-          <div class="pro-report-block__cta-buttons">
-            <button class="pro-report-block__upgrade-button pro-report-block__upgrade-button--primary" data-buy-single-report ${reportId ? `data-report-id="${reportId}"` : ''} data-context="${context}">Buy single report — $10</button>
-            <button class="pro-report-block__upgrade-button pro-report-block__upgrade-button--secondary" data-open-pricing-modal>Buy credits & save</button>
+          <div class="pro-report-block__unlock-buttons">
+            <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="${context}" ${reportId ? `data-report-id="${reportId}"` : ''}>
+              Unlock for $10
+            </button>
+            <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="${context}">
+              Go Pro — $20/mo
+            </button>
           </div>
+          <p class="pro-report-block__unlock-hint">
+            Pro unlocks all reports. Single purchase unlocks only this scan.
+          </p>
         </div>
       `;
     })();

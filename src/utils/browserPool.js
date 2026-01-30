@@ -10,9 +10,13 @@
  */
 
 const GenericPool = require('generic-pool');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-extra');
+const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const { createLogger } = require('./logger');
 const config = require('../config');
+
+// Use stealth plugin to avoid bot detection (Cloudflare, etc.)
+puppeteer.use(StealthPlugin());
 
 const logger = createLogger('BrowserPool');
 
