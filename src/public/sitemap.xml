@@ -93,9 +93,17 @@
     <priority>0.8</priority>
   </url>
 
-  <!-- Performance Analyzer -->
+  <!-- Performance Analyzer (redirects to Performance Hub) -->
   <url>
     <loc>https://sitemechanic.io/performance-analyzer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/performance-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/performance-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/performance-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/performance-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/performance-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/performance-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/performance-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/performance-analyzer.html"/>
     <lastmod>2026-01-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -104,6 +112,14 @@
   <!-- Accessibility Analyzer -->
   <url>
     <loc>https://sitemechanic.io/accessibility-analyzer.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/accessibility-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/accessibility-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/accessibility-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/accessibility-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/accessibility-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/accessibility-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/accessibility-analyzer.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/accessibility-analyzer.html"/>
     <lastmod>2026-01-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
@@ -332,6 +348,70 @@
     <lastmod>2026-01-02</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
+  </url>
+
+  <!-- Upgrade / Pricing -->
+  <url>
+    <loc>https://sitemechanic.io/upgrade.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/upgrade.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/upgrade.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/upgrade.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/upgrade.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/upgrade.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/upgrade.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/upgrade.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/upgrade.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Privacy Policy -->
+  <url>
+    <loc>https://sitemechanic.io/privacy.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/privacy.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/privacy.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- Terms of Service -->
+  <url>
+    <loc>https://sitemechanic.io/terms.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/terms.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/terms.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
+  </url>
+
+  <!-- Refund Policy -->
+  <url>
+    <loc>https://sitemechanic.io/refunds.html</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/refunds.html"/>
+    <xhtml:link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/refunds.html"/>
+    <xhtml:link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/refunds.html"/>
+    <xhtml:link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/refunds.html"/>
+    <xhtml:link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/refunds.html"/>
+    <xhtml:link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/refunds.html"/>
+    <xhtml:link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/refunds.html"/>
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/refunds.html"/>
+    <lastmod>2026-01-02</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
   </url>
 
 </urlset>
