@@ -39,15 +39,25 @@ class I18n {
 
   /**
    * Detect user's preferred language
+   * Priority: URL ?lang= > localStorage > browser language > fallback
    */
   detectLanguage() {
-    // 1. Check localStorage
+    // 1. Check URL parameter ?lang=xx (highest priority)
+    const params = new URLSearchParams(window.location.search);
+    const urlLang = params.get('lang');
+    if (urlLang && this.supportedLanguages.includes(urlLang)) {
+      // Persist URL override to localStorage for consistency
+      localStorage.setItem('preferred-language', urlLang);
+      return urlLang;
+    }
+
+    // 2. Check localStorage
     const savedLang = localStorage.getItem('preferred-language') || localStorage.getItem('preferredLanguage');
     if (savedLang && this.supportedLanguages.includes(savedLang)) {
       return savedLang;
     }
 
-    // 2. Check browser language
+    // 3. Check browser language (Accept-Language header equivalent)
     const browserLang = navigator.language || navigator.userLanguage;
     const langCode = browserLang.split('-')[0]; // 'en-US' -> 'en'
 
@@ -55,7 +65,7 @@ class I18n {
       return langCode;
     }
 
-    // 3. Fallback
+    // 4. Fallback
     return this.fallbackLanguage;
   }
 
@@ -145,6 +155,9 @@ class I18n {
    * Translate all elements with data-i18n attribute
    */
   translatePage() {
+    // Update html lang attribute for SEO and accessibility
+    document.documentElement.setAttribute('lang', this.currentLanguage);
+
     // Translate elements with data-i18n attribute
     document.querySelectorAll('[data-i18n]').forEach(element => {
       const key = element.getAttribute('data-i18n');
