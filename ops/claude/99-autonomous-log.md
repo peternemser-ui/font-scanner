@@ -97,13 +97,33 @@ ops/claude/          <- Workstream docs
 
 ## Phase 2 - Code Quality + Consistency
 
-### Status: PENDING
+### Status: PARTIAL (Safe changes only)
+
+**Backend cleanup:**
+- Removed unused imports from performanceController, securityController
+- Fixed empty catch block in db/index.js
+- Prefixed unused param in middleware/metrics.js
+
+**Commit:** `bb40e22` - refactor: remove unused imports and fix empty block
+
+**Not addressed (too risky for autonomous):**
+- 384 console.log statements (may be needed for debugging)
+- 435 unused variables in frontend (require case-by-case review)
 
 ---
 
 ## Phase 3 - UI Tokens + Layout Consistency
 
-### Status: PENDING
+### Status: VERIFIED (No changes needed)
+
+**Findings:**
+- design-tokens.css: Well-organized semantic color system ✓
+- pricing-modal.css: Proper overflow handling (max-height: 85vh, overflow-y: auto) ✓
+- Modal mobile responsiveness: max-height: 92vh on small screens ✓
+- styles.css: Uses CSS variables consistently ✓
+
+**Note:** styles.css defines its own CSS variables with same values as design-tokens.css.
+This is intentional duplication for backwards compatibility. Consolidation deferred to avoid breakage.
 
 ---
 
@@ -145,7 +165,17 @@ ops/claude/          <- Workstream docs
 
 ## Phase 6 - Final Verification
 
-### Status: PENDING
+### Status: COMPLETE
+
+**Test Results (unchanged from baseline):**
+- Test Suites: 11 failed, 9 passed (20 total)
+- Tests: 87 failed, 125 passed (212 total)
+- Note: Failures are pre-existing, not introduced by this session
+
+**Lint Results (improved):**
+- Before: 1075 problems (640 errors, 435 warnings)
+- After: 1069 problems (638 errors, 431 warnings)
+- Improvement: 6 fewer problems (2 errors, 4 warnings fixed)
 
 ---
 
@@ -153,13 +183,35 @@ ops/claude/          <- Workstream docs
 
 | Commit | Message | Files Changed |
 |--------|---------|---------------|
-| | | |
+| 7b1dbc5 | chore: remove unused files (safe deletion) | 9 files deleted |
+| 648e54a | feat: add URL ?lang= parameter support to i18n | 2 files |
+| bb40e22 | refactor: remove unused imports and fix empty block | 4 files |
 
 ---
 
 ## Remaining TODOs / Risk Notes
 
-- [ ] Fix pre-existing test failures (87 tests)
-- [ ] Address lint errors (640 errors, 435 warnings)
-- [ ] Verify pricing consistency across all modals
+### Pre-existing Issues (Not introduced by this session)
+- [ ] Fix 87 failing tests (mostly proManager.test.js - ProManager not defined)
+- [ ] Address 638 lint errors (mainly console.log statements + globals)
+- [ ] Address 431 lint warnings (mainly unused variables)
+
+### Deferred Improvements (Require manual review)
+- [ ] Remove noisy console.logs (384 statements - some may be needed)
+- [ ] Consolidate design-tokens.css with styles.css variables
+- [ ] Consolidate reportShell.js (2 versions: js/components/ and assets/js/)
+
+### Verified Complete
+- [x] Pricing consistent: $5 single, $20 day pass, $30/mo, $240/yr
+- [x] All HTML files have lang="en"
+- [x] i18n supports URL ?lang= parameter override
+- [x] PricingModal has proper overflow handling
+- [x] 9 unused files removed (2695 lines)
+
+---
+
+**Session End:** 2026-01-31T16:35:00Z
+**Total Commits:** 3
+**Lines Deleted:** ~2700
+**Lines Added:** ~180
 
