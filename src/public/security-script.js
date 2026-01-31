@@ -51,18 +51,49 @@ function cleanupPreviousSecurityData(preserveReportId = false) {
 
 // Initialize page
 document.addEventListener('DOMContentLoaded', () => {
-  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+  // Initialize PageShell for unified page structure
+  // Note: Security analyzer has custom scan logic (preserveReportId), so we handle events manually
+  const shell = window.PageShell.init('#page-container', {
+    pageId: 'security-analyzer',
+    pageTitle: 'Security',
+    pageDescription: 'SSL/TLS validation, security headers audit, and vulnerability checks.',
+    analyzerType: 'security',
+
+    urlInput: {
+      placeholder: 'https://example.com',
+      label: 'Website URL to analyze',
+      helperText: 'Tests SSL/TLS, security headers (CSP, HSTS, X-Frame-Options), and OWASP-aligned checks.'
+    },
+
+    scanButton: {
+      text: 'Analyze',
+      loadingText: 'Analyzing...'
+    },
+
+    // Use standard IDs (no legacy mapping needed)
+    legacyIds: {
+      urlInput: 'urlInput',
+      scanButton: 'analyzeButton',
+      results: 'results'
+    }
+
+    // NOTE: We do NOT pass onScanComplete here because security has custom
+    // preserveReportId logic in analyzeSecurity(). We handle events manually below.
+  });
+
+  // Get element references (PageShell created these with our IDs)
   const analyzeButton = document.getElementById('analyzeButton');
   const urlInput = document.getElementById('urlInput');
 
+  // Attach event listeners for custom scan handling
   analyzeButton.addEventListener('click', () => analyzeSecurity());
-  
+
   urlInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') {
       analyzeSecurity();
     }
   });
-  
+
   // Handle URL parameters for report loading and billing return
   (async function initFromUrlParams() {
     const params = new URLSearchParams(window.location.search);
@@ -355,6 +386,12 @@ async function analyzeSecurity(options = {}) {
 
 // Display complete security results
 function displaySecurityResults(data) {
+  // Validate data - ignore cached error responses
+  if (!data || data.error || typeof data === 'string') {
+    console.warn('[Security] Ignoring invalid/error data:', data?.error || data);
+    return;
+  }
+
   // Ensure results container is visible (may be hidden if called directly without scan flow)
   const resultsDiv = document.getElementById('results');
   if (resultsDiv) {
@@ -772,15 +809,15 @@ function displaySecurityResults(data) {
           <span style="color: #666; font-size: 0.9rem;">Export or share this security report</span>
         </div>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button onclick="exportSecurityPDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
+          <button data-action="export-pdf" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
             PDF Report
           </button>
-          <button onclick="copySecurityShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <button data-action="copy-share-link" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             Share Link
           </button>
-          <button onclick="downloadSecurityCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <button data-action="download-csv" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
             Export Data
           </button>
@@ -1573,8 +1610,8 @@ function renderLockedProPreview(title = 'Pro content', previewLines = []) {
       </ul>
       <div class="pro-locked__blur"></div>
       <div class="pro-locked__buttons">
-        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="security">Unlock for $10</button>
-        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="security">Go Pro — $20/mo</button>
+        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="security">Unlock for $5</button>
+        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="security">Go Pro — $30/mo</button>
       </div>
     </div>
   `;

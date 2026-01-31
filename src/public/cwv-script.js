@@ -107,6 +107,14 @@ let pendingCWVAnalysisUrl = null;
  * @returns {Promise<boolean>}
  */
 async function checkCanRunCWVReport() {
+  // CRITICAL: Check for post-payment bypass flag first
+  // This allows the scan to run immediately after payment without waiting for billing sync
+  if (window.__cwvPaymentBypass) {
+    console.log('[CWV] Payment bypass flag detected - allowing access');
+    delete window.__cwvPaymentBypass; // Clear the flag after use
+    return true;
+  }
+
   // Ensure billing status is fetched
   if (window.ProReportBlock?.fetchBillingStatus) {
     await window.ProReportBlock.fetchBillingStatus();
@@ -125,13 +133,55 @@ async function checkCanRunCWVReport() {
     return true;
   }
 
-  // Also check localStorage for CWV purchases
-  const purchaseKey = 'sm_report_purchased_cwv';
-  const purchaseTimestamp = localStorage.getItem(purchaseKey);
-  if (purchaseTimestamp) {
-    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
-    if (parseInt(purchaseTimestamp, 10) > oneDayAgo) {
-      console.log('[CWV] Recent purchase found for CWV');
+  // Check for recent payment verification (set after returning from Stripe)
+  const params = new URLSearchParams(window.location.search);
+  const url = params.get('url') || '';
+  if (url) {
+    // Use normalized URL + hash for consistent key matching
+    const normalizedUrl = window.ReportUI?.normalizeUrlForReportId?.(url) || url;
+    const urlHash = window.ReportUI?.hashForStorageKey?.(normalizedUrl) || normalizedUrl.replace(/[^a-z0-9]/gi, '').slice(0, 16);
+    const verificationKey = `sm_payment_verified_cwv_${urlHash}`;
+    const verificationTime = localStorage.getItem(verificationKey);
+    if (verificationTime) {
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      if (parseInt(verificationTime, 10) > oneHourAgo) {
+        console.log('[CWV] Recent payment verification found for this URL');
+        return true;
+      }
+    }
+    // Also check legacy key format for backwards compatibility
+    const legacyVerificationKey = 'sm_payment_verified_' + url;
+    const legacyVerificationTime = localStorage.getItem(legacyVerificationKey);
+    if (legacyVerificationTime) {
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      if (parseInt(legacyVerificationTime, 10) > oneHourAgo) {
+        console.log('[CWV] Recent payment verification found for this URL (legacy key)');
+        return true;
+      }
+    }
+  }
+
+  // Also check localStorage for CWV purchases (with URL-specific key)
+  if (url) {
+    const normalizedUrl = window.ReportUI?.normalizeUrlForReportId?.(url) || url;
+    const urlHash = window.ReportUI?.hashForStorageKey?.(normalizedUrl) || normalizedUrl.replace(/[^a-z0-9]/gi, '').slice(0, 16);
+    const purchaseKey = `sm_report_purchased_cwv_${urlHash}`;
+    const purchaseTimestamp = localStorage.getItem(purchaseKey);
+    if (purchaseTimestamp) {
+      const oneHourAgo = Date.now() - (60 * 60 * 1000);
+      if (parseInt(purchaseTimestamp, 10) > oneHourAgo) {
+        console.log('[CWV] Recent purchase found for CWV + URL');
+        return true;
+      }
+    }
+  }
+  // Fallback to legacy key (no URL)
+  const legacyPurchaseKey = 'sm_report_purchased_cwv';
+  const legacyPurchaseTimestamp = localStorage.getItem(legacyPurchaseKey);
+  if (legacyPurchaseTimestamp) {
+    const oneHourAgo = Date.now() - (60 * 60 * 1000);
+    if (parseInt(legacyPurchaseTimestamp, 10) > oneHourAgo) {
+      console.log('[CWV] Recent purchase found for CWV (legacy key)');
       return true;
     }
   }
@@ -151,7 +201,7 @@ function showCWVPaymentGate(url) {
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(0, 0, 0, 0.8);
+      background: var(--modal-backdrop, rgba(0, 0, 0, 0.85));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -159,38 +209,38 @@ function showCWVPaymentGate(url) {
       backdrop-filter: blur(8px);
     ">
       <div style="
-        background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
-        border: 2px solid #10b981;
+        background: var(--bg-card);
+        border: 2px solid var(--color-success, #10b981);
         border-radius: 16px;
         padding: 2.5rem;
         max-width: 500px;
         width: 90%;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        box-shadow: var(--shadow-2xl);
         animation: cwvSlideIn 0.3s ease-out;
       ">
         <div style="text-align: center; margin-bottom: 2rem;">
           <div style="font-size: 4rem; margin-bottom: 1rem;">📊</div>
-          <h2 style="color: #10b981; margin: 0 0 0.5rem 0; font-size: 1.75rem;">Core Web Vitals Report</h2>
-          <p style="color: #aaa; margin: 0; font-size: 1rem;">Get detailed CWV analysis including LCP, INP, and CLS metrics for mobile and desktop.</p>
+          <h2 style="color: var(--color-success, #10b981); margin: 0 0 0.5rem 0; font-size: 1.75rem;">Core Web Vitals Report</h2>
+          <p style="color: var(--color-text-secondary, #6b7280); margin: 0; font-size: 1rem;">Get detailed CWV analysis including LCP, INP, and CLS metrics for mobile and desktop.</p>
         </div>
 
-        <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
-          <h3 style="color: #fff; margin: 0 0 1rem 0; font-size: 1.1rem;">What's included:</h3>
+        <div style="background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+          <h3 style="color: var(--color-text, #fff); margin: 0 0 1rem 0; font-size: 1.1rem;">What's included:</h3>
           <ul style="list-style: none; padding: 0; margin: 0;">
-            <li style="color: #ccc; margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
-              <span style="position: absolute; left: 0; color: #10b981;">✓</span>
+            <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--color-success, #10b981);">✓</span>
               Mobile & Desktop CWV metrics
             </li>
-            <li style="color: #ccc; margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
-              <span style="position: absolute; left: 0; color: #10b981;">✓</span>
+            <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--color-success, #10b981);">✓</span>
               Google ranking impact analysis
             </li>
-            <li style="color: #ccc; margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
-              <span style="position: absolute; left: 0; color: #10b981;">✓</span>
+            <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--color-success, #10b981);">✓</span>
               Detailed metric breakdowns
             </li>
-            <li style="color: #ccc; margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
-              <span style="position: absolute; left: 0; color: #10b981;">✓</span>
+            <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
+              <span style="position: absolute; left: 0; color: var(--color-success, #10b981);">✓</span>
               Actionable recommendations
             </li>
           </ul>
@@ -198,20 +248,20 @@ function showCWVPaymentGate(url) {
 
         <div style="text-align: center; margin-bottom: 1.5rem;">
           <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
-            <div style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">$10</div>
-              <div style="color: #888; font-size: 0.75rem;">This report only</div>
+            <div style="flex: 1; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
+              <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-success, #10b981);">$5</div>
+              <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">This report only</div>
             </div>
-            <div style="flex: 1; background: rgba(91, 244, 231, 0.1); border: 1px solid rgba(91, 244, 231, 0.3); border-radius: 8px; padding: 1rem;">
-              <div style="font-size: 1.5rem; font-weight: bold; color: #5bf4e7;">$20/mo</div>
-              <div style="color: #888; font-size: 0.75rem;">All reports</div>
+            <div style="flex: 1; background: var(--color-primary-dim); border: 1px solid var(--color-primary); border-radius: 8px; padding: 1rem;">
+              <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);">$30/mo</div>
+              <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">All reports</div>
             </div>
           </div>
         </div>
 
         <div style="display: flex; flex-direction: column; gap: 0.75rem;">
           <button id="cwvProceedPaymentBtn" style="
-            background: linear-gradient(135deg, #10b981, #10b981dd);
+            background: var(--color-success, #10b981);
             border: none;
             color: #fff;
             padding: 0.875rem 1.5rem;
@@ -220,24 +270,24 @@ function showCWVPaymentGate(url) {
             font-weight: 700;
             font-size: 1rem;
           ">
-            Unlock for $10
+            Unlock for $5
           </button>
           <button id="cwvGoProBtn" style="
             background: transparent;
-            border: 1px solid #5bf4e7;
-            color: #5bf4e7;
+            border: 2px solid var(--color-primary);
+            color: var(--color-primary);
             padding: 0.875rem 1.5rem;
             border-radius: 8px;
             cursor: pointer;
             font-weight: 600;
             font-size: 1rem;
           ">
-            Go Pro — $20/mo
+            Go Pro — $30/mo
           </button>
           <button id="cwvCancelPaymentBtn" style="
             background: transparent;
             border: none;
-            color: #888;
+            color: var(--color-text-muted, #6b7280);
             padding: 0.5rem;
             cursor: pointer;
             font-size: 0.875rem;
@@ -246,11 +296,11 @@ function showCWVPaymentGate(url) {
           </button>
         </div>
 
-        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-          <div style="color: #666; font-size: 0.8rem; margin-bottom: 0.5rem;">
+        <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+          <div style="color: var(--color-text-muted, #6b7280); font-size: 0.8rem; margin-bottom: 0.5rem;">
             🔒 Secure payment powered by Stripe
           </div>
-          <div style="color: #555; font-size: 0.75rem;">
+          <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">
             Pro unlocks all reports • Single purchase unlocks this scan only
           </div>
         </div>
@@ -320,47 +370,106 @@ async function createCWVPaymentSession(url) {
     const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
     const headers = { 'Content-Type': 'application/json' };
     if (token) {
-      headers['Authorization'] = `Bearer ${token}`;
+      headers['Authorization'] = `Bearer ${token}`;  // Include token for tracking even on public endpoint
     }
 
-    const response = await fetch('/api/billing/checkout', {
+    // Use authenticated billing endpoint ONLY if logged in AND have reportId
+    // Otherwise use public payment endpoint (no reportId required)
+    const useAuthEndpoint = token && reportId;
+    const endpoint = useAuthEndpoint ? '/api/billing/checkout' : '/api/payment/create-report-payment';
+    const payload = useAuthEndpoint ? {
+      purchaseType: 'single_report',
+      reportId: reportId,
+      returnUrl
+    } : {
+      reportType: 'cwv',
+      url: url,
+      returnUrl
+    };
+
+    console.log('[CWV Payment] Request:', { endpoint, payload, hasToken: !!token, reportId, useAuthEndpoint });
+    
+    const response = await fetch(endpoint, {
       method: 'POST',
       headers,
-      body: JSON.stringify({
-        purchaseType: 'single_report',
-        reportId: reportId || null,
-        returnUrl
-      })
+      body: JSON.stringify(payload)
     });
 
     const data = await response.json();
+    console.log('[CWV Payment] Response:', { status: response.status, data });
+    console.log('[CWV Payment] Full response data:', JSON.stringify(data, null, 2));
 
-    if (!response.ok || !data.checkoutUrl) {
-      throw new Error((data && data.error) || 'Failed to create payment session');
+    if (!response.ok) {
+      const errorMsg = data?.error || data?.message || JSON.stringify(data) || 'Failed to create payment session';
+      console.error('[CWV Payment] Error:', errorMsg);
+      console.error('[CWV Payment] Full error object:', data);
+      throw new Error(errorMsg);
     }
 
-    window.location.href = data.checkoutUrl;
+    if (!data.checkoutUrl && !data.url) {
+      console.error('[CWV Payment] No checkout URL in response:', data);
+      throw new Error('Payment session created but no checkout URL received');
+    }
+
+    window.location.href = data.checkoutUrl || data.url;
 
   } catch (error) {
-    console.error('Payment error:', error);
+    console.error('[CWV Payment] Exception:', error);
     proceedBtn.disabled = false;
-    proceedBtn.textContent = 'Unlock for $10';
+    proceedBtn.textContent = 'Unlock for $5';
     alert(`Payment error: ${error.message}`);
   }
 }
 
 // Check URL params for billing return and mark purchase
-(function handleCWVBillingReturn() {
+(async function handleCWVBillingReturn() {
   const params = new URLSearchParams(window.location.search);
   const billingSuccess = params.get('billing_success') === 'true';
+  const paymentSuccess = params.get('payment') === 'success';
   const sessionId = params.get('session_id') || params.get('sessionId');
-  const reportType = params.get('report_type');
+  const reportType = params.get('report_type') || params.get('type');
+  const autoScan = params.get('auto_scan') === 'true';
+  const url = params.get('url');
 
-  if ((billingSuccess || sessionId) && reportType === 'cwv') {
-    console.log('[CWV] Marking CWV as purchased after billing return');
+  if ((billingSuccess || paymentSuccess || sessionId) && (reportType === 'cwv' || reportType === 'core-web-vitals')) {
+    console.log('[CWV] Payment successful - setting up bypass and auto-scan');
+    
+    // Set a SESSION flag to bypass payment check for this scan
+    // This is critical - it allows the immediate scan to proceed
+    window.__cwvPaymentBypass = true;
+    
+    // Mark as purchased with extended cache (1 hour to allow scan to complete)
+    // Use URL-specific keys to prevent cache collision between different URLs
+    const normalizedUrl = window.ReportUI?.normalizeUrlForReportId?.(url) || url;
+    const urlHash = window.ReportUI?.hashForStorageKey?.(normalizedUrl) || (url || '').replace(/[^a-z0-9]/gi, '').slice(0, 16);
+    localStorage.setItem(`sm_report_purchased_cwv_${urlHash}`, Date.now().toString());
+    localStorage.setItem(`sm_payment_verified_cwv_${urlHash}`, Date.now().toString());
+    // Also set legacy keys for backwards compatibility
     localStorage.setItem('sm_report_purchased_cwv', Date.now().toString());
+    localStorage.setItem('sm_payment_verified_' + (url || ''), Date.now().toString());
+    
+    // Force clear and refresh billing cache
     if (window.ProReportBlock?.clearBillingCache) {
+      console.log('[CWV] Clearing billing cache');
       window.ProReportBlock.clearBillingCache();
+    }
+    
+    // Wait for ProReportBlock to be initialized and fetch billing status
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      console.log('[CWV] Force fetching billing status after payment');
+      await window.ProReportBlock.fetchBillingStatus(true); // Force refresh
+    }
+
+    // If auto_scan is requested and we have a URL, trigger the scan
+    if (autoScan && url && urlInput && analyzeButton) {
+      console.log('[CWV] Auto-triggering scan after payment for:', url);
+      urlInput.value = url;
+      
+      // Wait a bit longer to ensure all systems are ready
+      setTimeout(() => {
+        console.log('[CWV] Clicking analyze button now');
+        analyzeButton.click();
+      }, 1000);
     }
   }
 })();
@@ -497,10 +606,19 @@ analyzeButton.addEventListener('click', async () => {
     });
 
     if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
+      let errorMessage = `HTTP error! status: ${response.status}`;
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.error || errorData.message || errorMessage;
+        console.error('[CWV] API error:', { status: response.status, error: errorData });
+      } catch (parseErr) {
+        console.error('[CWV] API error (non-JSON):', response.status, response.statusText);
+      }
+      throw new Error(errorMessage);
     }
 
     const data = await response.json();
+    console.log('[CWV] Analysis complete:', { hasDesktop: !!data.desktop, hasMobile: !!data.mobile });
 
     // Extract and set report metadata from API response
     const apiReportId = data?.reportId || data?.results?.reportId;
@@ -533,6 +651,12 @@ analyzeButton.addEventListener('click', async () => {
 });
 
 function displayResults(data) {
+  // Validate data - ignore cached error responses
+  if (!data || data.error || typeof data === 'string') {
+    console.warn('[CWV] Ignoring invalid/error data:', data?.error || data);
+    return;
+  }
+
   // Store results globally for PDF generation and billing return restoration
   window.currentCWVResults = data;
 
@@ -1042,7 +1166,7 @@ function createCWVAccordionSection(id, icon, title, contentHTML, score = null) {
 
   return `
     <div class="accordion" style="margin-bottom: 0.5rem; border-radius: 8px; overflow: hidden; background: rgba(255, 255, 255, 0.03);">
-      <div class="accordion-header" onclick="toggleCWVAccordion('${id}')" style="
+      <div class="accordion-header" data-action="toggle-cwv-accordion" data-accordion-id="${id}" style="
         display: flex;
         justify-content: space-between;
         align-items: center;

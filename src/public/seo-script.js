@@ -78,264 +78,56 @@ function cleanupPreviousSeoData(container) {
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', () => {
-  document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
-  const urlInput = document.getElementById('seoUrlInput');
-  const submitButton = document.getElementById('seoAnalyzeButton');
-  const resultsContainer = document.getElementById('seoResults');
-  
-  // Create loading container if it doesn't exist
-  let loadingContainer = document.getElementById('loadingContainer');
-  if (!loadingContainer) {
-    loadingContainer = document.createElement('div');
-    loadingContainer.id = 'loadingContainer';
-    resultsContainer.parentNode.insertBefore(loadingContainer, resultsContainer);
-  }
+  // Initialize PageShell for unified page structure
+  const shell = window.PageShell.init('#page-container', {
+    pageId: 'seo-analyzer',
+    pageTitle: t('seo.title', 'SEO Analyzer'),
+    pageDescription: t('seo.subtitle', 'Search Engine Optimization Audit'),
+    analyzerType: 'seo',
+    apiEndpoint: '/api/seo',
 
-  // Handle button click
-  submitButton.addEventListener('click', async () => {
-    const url = urlInput.value.trim();
-    if (!url) {
-      showError(t('errors.urlRequired', 'Please enter a valid URL'));
-      return;
-    }
+    i18n: {
+      title: 'seo.title',
+      subtitle: 'seo.subtitle'
+    },
 
-    // MEMORY CLEANUP: Clear previous scan data
-    cleanupPreviousSeoData(resultsContainer);
+    urlInput: {
+      placeholder: 'https://yoursite.com',
+      label: t('common.websiteUrl', 'Website URL'),
+      i18nPlaceholder: 'common.enterUrl',
+      i18nLabel: 'common.websiteUrl'
+    },
 
-    // Disable button during scan
-    window.SM_IS_SCANNING = true;
-    submitButton.disabled = true;
-    const buttonText = submitButton.querySelector('#buttonText') || submitButton;
-    buttonText.textContent = t('seo.analyzing', 'ANALYZING...');
-    submitButton.style.opacity = '0.6';
-    urlInput.disabled = true;
+    scanButton: {
+      text: t('seo.analyze', 'Analyze'),
+      loadingText: t('seo.analyzing', 'Analyzing...')
+    },
 
-    // Show loading state with new animation
-    resultsContainer.hidden = true;
-    const loader = new AnalyzerLoader('loadingContainer');
-    
-    // Add ASCII art patience message
-    const loaderMessageEl = document.createElement('div');
-    loaderMessageEl.id = 'patience-message';
-    loaderMessageEl.style.cssText = `
-      margin: 0 0 1.5rem 0;
-      padding: 1rem;
-      background: rgba(var(--accent-primary-rgb), 0.05);
-      border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
-      border-radius: 6px;
-      text-align: center;
-      overflow: visible;
-    `;
-    loaderMessageEl.innerHTML = `
-      <div style="overflow-x: auto; overflow-y: visible;">
-        <pre class="ascii-art-responsive" style="margin: 0 auto; font-size: 0.65rem; line-height: 1.1; color: var(--accent-primary); font-family: monospace; text-shadow: 2px 2px 0px rgba(var(--accent-primary-rgb), 0.3), 3px 3px 0px rgba(0, 200, 50, 0.2), 4px 4px 0px rgba(0, 150, 35, 0.1); display: inline-block; text-align: left;">
-   ___   __    ____  ___   ___  ____     ___   ____     ___   ___   ______  ____  ____  _  __  ______
-  / _ \\\\ / /   / __/ / _ | / __/ / __/    / _ ) / __/    / _ \\\\ / _ | /_  __/ /  _/ / __/ / |/ / /_  __/
- / ___// /__ / _/  / __ |/_  /  / _/     / _  |/ _/     / ___// __ |  / /   _/ /  / _/  /    /   / /   
-/_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
-      </div>
-      <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em;">
-        ${t('seo.loadingTitle', 'Analysis in progress...')}
-      </p>
-      <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(var(--accent-primary-rgb), 0.7);">
-        ${t('seo.mayTake', 'This usually takes 10-20 seconds')}
-      </p>
-    `;
-
-    // Add color cycling style if not already added
-    if (!document.getElementById('ascii-art-style')) {
-      const style = document.createElement('style');
-      style.id = 'ascii-art-style';
-      style.textContent = `
-        @keyframes color-cycle {
-          0% { color: var(--accent-primary); }
-          20% { color: #00ffff; }
-          40% { color: #0099ff; }
-          60% { color: #9933ff; }
-          80% { color: #ff33cc; }
-          100% { color: var(--accent-primary); }
-        }
-        .ascii-art-responsive {
-          font-size: clamp(0.35rem, 1.2vw, 0.65rem);
-          white-space: pre;
-          max-width: 100%;
-        }
-        #patience-message {
-          overflow: visible;
-        }
-        #patience-message > div {
-          -webkit-overflow-scrolling: touch;
-        }
-      `;
-      document.head.appendChild(style);
-    }
-    
-    loader.start([
+    loadingSteps: [
       { label: t('seo.steps.running', 'Running SEO analysis'), detail: t('seo.steps.initializing', 'Initializing scan engine...') },
       { label: t('seo.steps.metaTags', 'Checking meta tags'), detail: t('seo.steps.metaTagsDetail', 'Analyzing title, description, keywords...') },
       { label: t('seo.steps.content', 'Analyzing content quality'), detail: t('seo.steps.contentDetail', 'Evaluating headings, text, readability...') },
       { label: t('seo.steps.mobile', 'Testing mobile responsiveness'), detail: t('seo.steps.mobileDetail', 'Checking viewport and layout...') },
       { label: t('seo.steps.performance', 'Measuring performance'), detail: t('seo.steps.performanceDetail', 'Testing load speed and optimization...') }
-    ], '[SEO ANALYZER]', 25);
-    
-    // Insert ASCII art after loader starts
-    setTimeout(() => {
-      const analyzerLoading = loadingContainer.querySelector('.analyzer-loading');
-      if (analyzerLoading && !document.getElementById('patience-message')) {
-        analyzerLoading.insertBefore(loaderMessageEl, analyzerLoading.firstChild);
-      }
-    }, 100);
+    ],
 
-    try {
-      const scanStartedAt = new Date().toISOString();
-      window.SM_SCAN_STARTED_AT = scanStartedAt;
-      document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+    legacyIds: {
+      urlInput: 'seoUrlInput',
+      scanButton: 'seoAnalyzeButton',
+      results: 'seoResults'
+    },
 
-      // Set up AbortController with 60 second timeout (increased from 45s)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000);
+    timeout: 60000,
 
-      const response = await fetch('/api/seo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, scanStartedAt }),
-        signal: controller.signal
-      });
+    onScanComplete: (results) => {
+      displaySEOResults(results);
+    },
 
-      clearTimeout(timeoutId);
-
-      let data;
-      try {
-        data = await response.json();
-      } catch (parseError) {
-        data = {};
-      }
-
-      if (!response.ok || data.success === false) {
-        throw new Error(data.message || data.error || 'SEO analysis failed');
-      }
-
-      if (data.success) {
-        // Complete the loader first
-        loader.complete();
-
-        setTimeout(() => {
-          // Preserve report identity + artifacts for downstream paywall / screenshot UI
-          displaySEOResults({
-            ...(data.results || {}),
-            reportId: data.reportId || data.results?.reportId,
-            startedAt: data.startedAt || data.results?.startedAt,
-            screenshotUrl: data.screenshotUrl || data.results?.screenshotUrl
-          });
-        }, 1000);
-      } else {
-        loader.showError(data.message || data.error || 'SEO analysis failed');
-      }
-
-    } catch (error) {
+    onScanError: (error, errorMessage) => {
       console.error('SEO scan error:', error);
-
-      // Provide better error messages based on error type
-      let errorMessage = 'Failed to analyze website. Please try again.';
-
-      if (error.name === 'AbortError' || error.message.includes('aborted')) {
-        errorMessage = 'Analysis timed out after 45 seconds. This website may be too slow or complex to analyze. Please try a different website or try again later.';
-      } else if (error.message.includes('bot protection') || error.message.includes('cloudflare')) {
-        errorMessage = 'This website blocks automated analysis. Try a different website.';
-      } else if (error.message.includes('not accessible') || error.message.includes('unreachable')) {
-        errorMessage = 'Website is not accessible. Please check the URL and ensure the website is online.';
-      } else if (error.message) {
-        errorMessage = error.message;
-      }
-
-      loader.showError(errorMessage);
-    } finally {
-      window.SM_IS_SCANNING = false;
-      submitButton.disabled = false;
-      const buttonText = submitButton.querySelector('#buttonText') || submitButton;
-      buttonText.textContent = t('seo.analyze', 'ANALYZE SEO');
-      submitButton.style.opacity = '1';
+      shell.showError(errorMessage);
     }
   });
-
-  // Allow Enter key to submit
-  urlInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      submitButton.click();
-    }
-  });
-
-  // Check for stored report or auto-start scan
-  (async function initFromUrlParams() {
-    const params = new URLSearchParams(window.location.search);
-    const reportId = params.get('report_id') || '';
-    const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
-    const autoScan = params.get('auto_scan') === 'true';
-    const billingSuccess = params.get('billing_success') === 'true';
-
-    // If we have a report_id, set it immediately so hasAccess checks work
-    if (reportId) {
-      document.body.setAttribute('data-report-id', reportId);
-    }
-
-    // If returning from billing, wait for billing return processing to complete
-    // This ensures the purchase is verified before we try to display the report
-    if (billingSuccess && !window.__smBillingReturnComplete) {
-      console.log('[SEO] Waiting for billing return processing...');
-      await new Promise((resolve) => {
-        // Check if already complete
-        if (window.__smBillingReturnComplete) {
-          resolve();
-          return;
-        }
-        // Wait for the event
-        const handler = () => {
-          window.removeEventListener('sm:billingReturnComplete', handler);
-          resolve();
-        };
-        window.addEventListener('sm:billingReturnComplete', handler);
-        // Timeout fallback in case event is missed
-        setTimeout(() => {
-          window.removeEventListener('sm:billingReturnComplete', handler);
-          resolve();
-        }, 5000);
-      });
-      console.log('[SEO] Billing return processing complete');
-      // After billing return, don't auto-load stored report - it was already displayed by handleBillingReturnIfPresent
-      return;
-    }
-
-    // If we have a report_id, try to load the stored report first
-    if (reportId && window.ReportStorage) {
-      console.log('[SEO] Checking for stored report:', reportId);
-
-      // CRITICAL: Fetch billing status BEFORE displaying the report
-      // Force refresh to ensure we have the latest purchase data (e.g., coming from dashboard)
-      if (window.ProReportBlock?.fetchBillingStatus) {
-        console.log('[SEO] Fetching billing status (force refresh for report recall)...');
-        await window.ProReportBlock.fetchBillingStatus(true);
-        console.log('[SEO] Billing status fetched, hasAccess:', window.ProReportBlock.hasAccess(reportId), 'for reportId:', reportId);
-      }
-
-      const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displaySEOResults);
-      if (loaded) {
-        // Stored report was loaded - fill URL input for context
-        if (autoUrl) urlInput.value = autoUrl;
-        return; // Don't auto-scan
-      }
-    }
-
-    // No stored report found - pre-fill URL but only auto-scan if explicitly requested
-    if (autoUrl) {
-      urlInput.value = autoUrl;
-    }
-    // Only auto-scan if explicitly requested with auto_scan=true
-    if (autoScan) {
-      setTimeout(() => {
-        submitButton.click();
-      }, 500);
-    }
-  })();
 
   // Re-render results when language changes
   window.addEventListener('languageChanged', () => {
@@ -354,8 +146,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const { results, url, analyzer } = e.detail || {};
     if (results && analyzer?.includes('seo')) {
       // Fill URL input
-      if (url && urlInput) {
-        urlInput.value = url;
+      if (url) {
+        shell.setUrl(url);
       }
       // Display results
       window.currentSeoResults = results;
@@ -371,6 +163,12 @@ document.addEventListener('DOMContentLoaded', () => {
  * Display SEO analysis results
  */
 function displaySEOResults(results) {
+  // Validate data - ignore cached error responses
+  if (!results || results.error || typeof results === 'string') {
+    console.warn('[SEO] Ignoring invalid/error data:', results?.error || results);
+    return;
+  }
+
   const container = document.getElementById('seoResults');
 
   // Store results globally for PDF generation + follow-up UI updates
@@ -816,7 +614,7 @@ function renderSeoFixAccordion(fix, index) {
       overflow: hidden;
       background: ${style.bg};
     ">
-      <div class="seo-fix-header" onclick="toggleSeoFixAccordion('${accordionId}')" style="
+      <div class="seo-fix-header" data-action="toggle-accordion" data-accordion-id="${accordionId}" style="
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -857,7 +655,7 @@ function renderSeoFixAccordion(fix, index) {
 function renderSeoFixTabs(fix, accordionId) {
   return `
     <div class="seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
-      <button class="seo-fix-tab active" onclick="switchSeoFixTab('${accordionId}', 'summary')" style="
+      <button class="seo-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
@@ -866,7 +664,7 @@ function renderSeoFixTabs(fix, accordionId) {
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 Summary</button>
-      <button class="seo-fix-tab" onclick="switchSeoFixTab('${accordionId}', 'code')" style="
+      <button class="seo-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -875,7 +673,7 @@ function renderSeoFixTabs(fix, accordionId) {
         cursor: pointer;
         font-size: 0.85rem;
       ">💻 Code</button>
-      <button class="seo-fix-tab" onclick="switchSeoFixTab('${accordionId}', 'guide')" style="
+      <button class="seo-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -904,7 +702,7 @@ function renderSeoFixTabs(fix, accordionId) {
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
             <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
-            <button onclick="copySeoCode('${accordionId}-problem')" style="
+            <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
@@ -921,7 +719,7 @@ function renderSeoFixTabs(fix, accordionId) {
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
             <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
-            <button onclick="copySeoCode('${accordionId}-solution')" style="
+            <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
@@ -2989,7 +2787,7 @@ function showError(message) {
       <div style="padding-left: 1rem;">
         <p>>> ${t('seo.report.error.analysisFailed', 'analysis_failed')}</p>
         <p style="color: #ff6600;">>> ${message}</p>
-        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ff6600; color: #000; border: none; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold;">${t('seo.report.error.retry', 'RETRY')}</button>
+        <button data-action="reload-page" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ff6600; color: #000; border: none; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold;">${t('seo.report.error.retry', 'RETRY')}</button>
       </div>
     </div>
   `;

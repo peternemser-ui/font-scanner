@@ -83,20 +83,45 @@ urlInput.addEventListener('keypress', (e) => {
 
     // If not in database, check sessionStorage for cached results (billing return fallback)
     if (!loaded) {
-      const cachedResults = sessionStorage.getItem('sm_checkout_results');
-      const cachedAnalyzer = sessionStorage.getItem('sm_checkout_analyzer') || '';
-      if (cachedResults && cachedAnalyzer.includes('accessibility')) {
-        try {
-          console.log('[Accessibility] Loading cached results from sessionStorage');
-          const results = JSON.parse(cachedResults);
-          displayAccessibilityResults(results);
-          // Clear after successful display
-          sessionStorage.removeItem('sm_checkout_results');
-          sessionStorage.removeItem('sm_checkout_analyzer');
-          loaded = true;
-        } catch (e) {
-          console.warn('[Accessibility] Failed to parse cached results:', e);
+      // Try new unique key format first
+      let cachedResults = null;
+      const checkoutKey = sessionStorage.getItem('sm_checkout_key');
+      if (checkoutKey && checkoutKey.includes('accessibility')) {
+        const raw = sessionStorage.getItem(checkoutKey);
+        if (raw) {
+          try {
+            const data = JSON.parse(raw);
+            cachedResults = data.results;
+            console.log('[Accessibility] Loading cached results from unique key:', checkoutKey);
+          } catch (e) {
+            console.warn('[Accessibility] Failed to parse cached results from unique key:', e);
+          }
         }
+      }
+      // Fall back to legacy key
+      if (!cachedResults) {
+        const legacyResults = sessionStorage.getItem('sm_checkout_results');
+        const cachedAnalyzer = sessionStorage.getItem('sm_checkout_analyzer') || '';
+        if (legacyResults && cachedAnalyzer.includes('accessibility')) {
+          try {
+            cachedResults = JSON.parse(legacyResults);
+            console.log('[Accessibility] Loading cached results from legacy sessionStorage');
+          } catch (e) {
+            console.warn('[Accessibility] Failed to parse cached results:', e);
+          }
+        }
+      }
+
+      if (cachedResults) {
+        displayAccessibilityResults(cachedResults);
+        // Clear after successful display
+        if (checkoutKey) {
+          sessionStorage.removeItem(checkoutKey);
+          sessionStorage.removeItem('sm_checkout_key');
+        }
+        sessionStorage.removeItem('sm_checkout_results');
+        sessionStorage.removeItem('sm_checkout_analyzer');
+        loaded = true;
       }
     }
 
@@ -460,6 +485,12 @@ function animateProgress() {
  * Display accessibility results
  */
 function displayAccessibilityResults(resultData) {
+  // Validate data - ignore cached error responses
+  if (!resultData || resultData.error || typeof resultData === 'string') {
+    console.warn('[Accessibility] Ignoring invalid/error data:', resultData?.error || resultData);
+    return;
+  }
+
   // Ensure results container is visible (may be hidden if called directly without scan flow)
   const resultsEl = document.getElementById('results');
   if (resultsEl) {
@@ -490,7 +521,7 @@ function displayAccessibilityResults(resultData) {
         ">
           <h3 style="margin: 0 0 10px 0;">Report Type Mismatch</h3>
           <p style="margin: 0;">The stored report appears to be from a different analyzer. Please run a new accessibility scan.</p>
-          <button onclick="window.location.reload()" style="
+          <button data-action="reload-page" style="
             margin-top: 15px;
             padding: 10px 20px;
             background: white;
@@ -756,15 +787,15 @@ function displayAccessibilityResults(resultData) {
           <span style="color: #666; font-size: 0.9rem;">Export or share this accessibility report</span>
         </div>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button onclick="exportAccessibilityPDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
+          <button data-action="export-pdf" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
             PDF Report
           </button>
-          <button onclick="copyAccessibilityShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <button data-action="copy-share-link" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
             Share Link
           </button>
-          <button onclick="downloadAccessibilityCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+          <button data-action="download-csv" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
             Export Data
           </button>
@@ -1253,8 +1284,8 @@ function renderLockedProPreview(title = 'Pro content', previewLines = []) {
       </ul>
       <div class="pro-locked__blur"></div>
       <div class="pro-locked__buttons">
-        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="fixes">Unlock for $10</button>
-        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="fixes">Go Pro — $20/mo</button>
+        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="fixes">Unlock for $5</button>
+        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="fixes">Go Pro — $30/mo</button>
       </div>
     </div>
   `;
@@ -1727,7 +1758,7 @@ function renderA11yFixAccordion(rec, index, fullResults) {
       overflow: hidden;
       background: ${style.bg};
     ">
-      <div class="a11y-fix-header" onclick="toggleA11yFixAccordion('${accordionId}')" style="
+      <div class="a11y-fix-header" data-action="toggle-accordion" data-accordion-id="${accordionId}" style="
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -1768,7 +1799,7 @@ function renderA11yFixAccordion(rec, index, fullResults) {
 function renderA11yFixTabs(rec, accordionId, fullResults) {
   return `
     <div class="a11y-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
-      <button class="a11y-fix-tab active" onclick="switchA11yFixTab('${accordionId}', 'summary')" style="
+      <button class="a11y-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
@@ -1777,7 +1808,7 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 Summary</button>
-      <button class="a11y-fix-tab" onclick="switchA11yFixTab('${accordionId}', 'code')" style="
+      <button class="a11y-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -1786,7 +1817,7 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
         cursor: pointer;
         font-size: 0.85rem;
       ">💻 Code</button>
-      <button class="a11y-fix-tab" onclick="switchA11yFixTab('${accordionId}', 'guide')" style="
+      <button class="a11y-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -1815,7 +1846,7 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
             <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
-            <button onclick="copyA11yCode('${accordionId}-problem')" style="
+            <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
@@ -1832,7 +1863,7 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
             <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
-            <button onclick="copyA11yCode('${accordionId}-solution')" style="
+            <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
@@ -1920,49 +1951,73 @@ function switchA11yFixTab(accordionId, tabName) {
 window.toggleA11yFixAccordion = toggleA11yFixAccordion;
 window.switchA11yFixTab = switchA11yFixTab;
 
-// Add click event delegation for accessibility fix accordions and tabs
+// Add click event delegation for accessibility fix accordions, tabs, and actions
 document.addEventListener('click', function(e) {
-  // Handle tab clicks first
-  const tab = e.target.closest('.a11y-fix-tab');
-  if (tab) {
-    const accordion = tab.closest('.a11y-fix-accordion');
-    if (accordion) {
-      const fixId = accordion.getAttribute('data-fix-id');
-      const tabText = tab.textContent.toLowerCase();
-      let tabName = 'summary';
-      if (tabText.includes('code')) tabName = 'code';
-      else if (tabText.includes('guide')) tabName = 'guide';
-      if (fixId && typeof window.switchA11yFixTab === 'function') {
+  const target = e.target.closest('[data-action]');
+  if (target) {
+    const action = target.getAttribute('data-action');
+
+    switch (action) {
+      case 'reload-page':
         e.preventDefault();
-        e.stopPropagation();
-        window.switchA11yFixTab(fixId, tabName);
+        window.location.reload();
+        return;
+
+      case 'export-pdf':
+        e.preventDefault();
+        if (typeof exportAccessibilityPDF === 'function') exportAccessibilityPDF();
+        return;
+
+      case 'copy-share-link':
+        e.preventDefault();
+        if (typeof copyAccessibilityShareLink === 'function') copyAccessibilityShareLink();
+        return;
+
+      case 'download-csv':
+        e.preventDefault();
+        if (typeof downloadAccessibilityCSV === 'function') downloadAccessibilityCSV();
+        return;
+
+      case 'toggle-accordion': {
+        const accordionId = target.getAttribute('data-accordion-id');
+        if (accordionId && typeof window.toggleA11yFixAccordion === 'function') {
+          window.toggleA11yFixAccordion(accordionId);
+        }
+        return;
       }
-    }
-    return;
-  }
-  // Handle accordion header clicks
-  const header = e.target.closest('.a11y-fix-header');
-  if (header) {
-    const accordion = header.closest('.a11y-fix-accordion');
-    if (accordion) {
-      const fixId = accordion.getAttribute('data-fix-id');
-      if (fixId && typeof window.toggleA11yFixAccordion === 'function') {
-        window.toggleA11yFixAccordion(fixId);
+
+      case 'switch-tab': {
+        const accordionId = target.getAttribute('data-accordion-id');
+        const tabName = target.getAttribute('data-tab');
+        if (accordionId && tabName && typeof window.switchA11yFixTab === 'function') {
+          e.preventDefault();
+          e.stopPropagation();
+          window.switchA11yFixTab(accordionId, tabName);
+        }
+        return;
+      }
+
+      case 'copy-code': {
+        const copyTarget = target.getAttribute('data-copy-target');
+        if (copyTarget) {
+          e.preventDefault();
+          copyA11yCode(copyTarget, target);
+        }
+        return;
       }
     }
   }
 });
 
-function copyA11yCode(elementId) {
+function copyA11yCode(elementId, btn) {
   const el = document.getElementById(elementId);
   if (!el) return;
   navigator.clipboard.writeText(el.textContent).then(() => {
-    const btn = el.previousElementSibling?.querySelector('button') || 
-                el.closest('div')?.querySelector('button[onclick*="' + elementId + '"]');
-    if (btn) {
-      const original = btn.textContent;
-      btn.textContent = '✓ Copied!';
-      setTimeout(() => btn.textContent = original, 2000);
+    const targetBtn = btn || document.querySelector(`button[data-copy-target="${elementId}"]`);
+    if (targetBtn) {
+      const original = targetBtn.textContent;
+      targetBtn.textContent = '✓ Copied!';
+      setTimeout(() => targetBtn.textContent = original, 2000);
     }
   });
 }
@@ -2085,9 +2140,7 @@ function getA11yExternalTools(rec) {
       <h5 style="margin: 0 0 0.75rem 0; color: #aaa; font-size: 0.85rem; font-weight: 500;">🔗 External Testing Tools</h5>
       <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
         ${tools.map(tool => `
-          <a href="${tool.url}" target="_blank" rel="noopener noreferrer" style="${buttonStyle}"
-             onmouseover="this.style.background='rgba(0,255,65,0.2)'; this.style.borderColor='rgba(0,255,65,0.5)';"
-             onmouseout="this.style.background='rgba(0,255,65,0.1)'; this.style.borderColor='rgba(0,255,65,0.3)';">
+          <a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="a11y-tool-link" style="${buttonStyle}">
             <span>${tool.icon}</span>
             <span>${tool.name}</span>
             <span style="opacity: 0.6;">↗</span>
@@ -2455,6 +2508,13 @@ function ensureA11yFixStyles() {
     .a11y-fix-tab:hover:not(.active) {
       background: rgba(255,255,255,0.05) !important;
       color: #ccc !important;
+    }
+    .a11y-tool-link {
+      transition: all 0.2s ease;
+    }
+    .a11y-tool-link:hover {
+      background: rgba(0,255,65,0.2) !important;
+      border-color: rgba(0,255,65,0.5) !important;
     }
   `;
   document.head.appendChild(style);

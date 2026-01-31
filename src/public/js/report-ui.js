@@ -756,6 +756,20 @@
         try {
           const results = cachedData?.results || JSON.parse(cachedResults);
 
+          // IMPORTANT: Validate that cached data is not an error response
+          // This prevents displaying stale "Route not found" or other errors
+          if (results?.error || typeof results === 'string') {
+            console.warn('[BillingReturn] Ignoring cached error data:', results?.error || results);
+            // Clear the corrupted cache
+            const checkoutKey = sessionStorage.getItem('sm_checkout_key');
+            if (checkoutKey) sessionStorage.removeItem(checkoutKey);
+            sessionStorage.removeItem('sm_checkout_key');
+            sessionStorage.removeItem('sm_checkout_results');
+            sessionStorage.removeItem('sm_checkout_analyzer');
+            // Don't dispatch event with error data - let page load normally
+            throw new Error('Cached data contains error, skipping restore');
+          }
+
           // Dispatch event for analyzer-specific result restoration
           const restoreEvent = new CustomEvent('sm:restoreScanResults', {
             detail: { results, url: cachedUrl, analyzer: cachedAnalyzer }

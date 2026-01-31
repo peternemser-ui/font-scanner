@@ -7,10 +7,65 @@
  */
 
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize PageShell for unified page structure
+  const shell = window.PageShell.init('#page-container', {
+    pageId: 'performance-hub',
+    pageTitle: 'Speed & UX',
+    pageDescription: 'Analyze page load speed, Core Web Vitals, and Lighthouse performance metrics.',
+    analyzerType: 'speed-ux-quick',
+
+    urlInput: {
+      placeholder: 'https://example.com',
+      label: 'Website URL'
+    },
+
+    scanButton: {
+      text: 'Analyze',
+      loadingText: 'Analyzing...'
+    },
+
+    // Rich tabs for Performance Hub
+    richTabs: true,
+    tabs: [
+      {
+        id: 'quick',
+        label: 'Quick scan',
+        description: 'Resource analysis focusing on requests, page weight, blocking assets, and server response time.',
+        timeEstimate: '~5-10s',
+        isPro: false
+      },
+      {
+        id: 'cwv',
+        label: 'Core Web Vitals',
+        description: 'Google ranking metrics including LCP, FID, CLS, and INP.',
+        timeEstimate: '~15-30s',
+        isPro: false
+      },
+      {
+        id: 'full',
+        label: 'Lighthouse Audit',
+        description: 'Complete performance audit with detailed desktop and mobile Lighthouse scores.',
+        timeEstimate: '~2-3 min',
+        isPro: false
+      }
+    ],
+
+    // Standard IDs (no legacy mapping needed)
+    legacyIds: {
+      urlInput: 'urlInput',
+      scanButton: 'analyzeButton',
+      results: 'results'
+    }
+
+    // NOTE: We handle events manually below because Performance Hub has
+    // complex mode-based logic and billing checks
+  });
+
   // Deterministic analyzer key (stable forever). Updated per-mode at scan time.
   window.SM_ANALYZER_KEY = 'speed-ux-quick';
   document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
 
+  // Get element references (PageShell created these with our IDs)
   const urlInput = document.getElementById('urlInput');
   const analyzeButton = document.getElementById('analyzeButton');
   const buttonText = document.getElementById('buttonText');
@@ -133,14 +188,28 @@ document.addEventListener('DOMContentLoaded', () => {
       return true;
     }
 
-    // Also check localStorage for mode-based purchases (legacy support)
-    const purchaseKey = `sm_report_purchased_${reportType}`;
-    const purchaseTimestamp = localStorage.getItem(purchaseKey);
-    if (purchaseTimestamp) {
-      // Check if purchase is within 24 hours (single report validity)
+    // Also check localStorage for mode-based purchases with URL-specific key
+    const url = urlInput?.value?.trim() || '';
+    if (url) {
+      const normalizedUrl = window.ReportUI?.normalizeUrlForReportId?.(url) || url;
+      const urlHash = window.ReportUI?.hashForStorageKey?.(normalizedUrl) || url.replace(/[^a-z0-9]/gi, '').slice(0, 16);
+      const purchaseKey = `sm_report_purchased_${reportType}_${urlHash}`;
+      const purchaseTimestamp = localStorage.getItem(purchaseKey);
+      if (purchaseTimestamp) {
+        const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+        if (parseInt(purchaseTimestamp, 10) > oneDayAgo) {
+          console.log('[PerformanceHub] Recent purchase found for:', reportType, '+ URL');
+          return true;
+        }
+      }
+    }
+    // Fallback to legacy key (no URL) for backwards compatibility
+    const legacyPurchaseKey = `sm_report_purchased_${reportType}`;
+    const legacyPurchaseTimestamp = localStorage.getItem(legacyPurchaseKey);
+    if (legacyPurchaseTimestamp) {
       const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
-      if (parseInt(purchaseTimestamp, 10) > oneDayAgo) {
-        console.log('[PerformanceHub] Recent purchase found for:', reportType);
+      if (parseInt(legacyPurchaseTimestamp, 10) > oneDayAgo) {
+        console.log('[PerformanceHub] Recent purchase found for:', reportType, '(legacy key)');
         return true;
       }
     }
@@ -155,9 +224,17 @@ document.addEventListener('DOMContentLoaded', () => {
   function onPaymentSuccess(reportType) {
     console.log('[PerformanceHub] Payment successful for:', reportType);
 
-    // Store purchase in localStorage
-    const purchaseKey = `sm_report_purchased_${reportType}`;
-    localStorage.setItem(purchaseKey, Date.now().toString());
+    // Store purchase in localStorage with URL-specific key
+    const url = urlInput?.value?.trim() || pendingAnalysisUrl || '';
+    if (url) {
+      const normalizedUrl = window.ReportUI?.normalizeUrlForReportId?.(url) || url;
+      const urlHash = window.ReportUI?.hashForStorageKey?.(normalizedUrl) || url.replace(/[^a-z0-9]/gi, '').slice(0, 16);
+      const purchaseKey = `sm_report_purchased_${reportType}_${urlHash}`;
+      localStorage.setItem(purchaseKey, Date.now().toString());
+    }
+    // Also set legacy key for backwards compatibility
+    const legacyPurchaseKey = `sm_report_purchased_${reportType}`;
+    localStorage.setItem(legacyPurchaseKey, Date.now().toString());
 
     // Clear billing cache to refresh status
     if (window.ProReportBlock?.clearBillingCache) {
@@ -246,20 +323,39 @@ document.addEventListener('DOMContentLoaded', () => {
   const modeParam = params.get('mode');
   const reportIdParam = params.get('report_id');
   const autoScan = params.get('auto_scan') === 'true';
-  const reportTypeParam = params.get('report_type'); // lighthouse, cwv, etc.
+  const reportTypeParam = params.get('report_type') || params.get('type'); // lighthouse, cwv, etc. (Stripe returns 'type')
   const billingSuccessParam = params.get('billing_success') === 'true';
+  const paymentSuccessParam = params.get('payment') === 'success'; // Stripe single-report purchase return
   const sessionIdParam = params.get('session_id') || params.get('sessionId');
 
   // If returning from successful payment, mark the report type as purchased
   // This must happen BEFORE mode initialization so checkCanRunReport passes
-  if ((billingSuccessParam || sessionIdParam) && reportTypeParam) {
+  if ((billingSuccessParam || sessionIdParam || paymentSuccessParam) && reportTypeParam) {
     console.log('[PerformanceHub] Marking report type as purchased after billing return:', reportTypeParam);
-    const purchaseKey = `sm_report_purchased_${reportTypeParam}`;
-    localStorage.setItem(purchaseKey, Date.now().toString());
+    // Use URL-specific purchase key to prevent collision between different URLs
+    if (urlParam) {
+      const normalizedUrl = window.ReportUI?.normalizeUrlForReportId?.(urlParam) || urlParam;
+      const urlHash = window.ReportUI?.hashForStorageKey?.(normalizedUrl) || urlParam.replace(/[^a-z0-9]/gi, '').slice(0, 16);
+      const purchaseKey = `sm_report_purchased_${reportTypeParam}_${urlHash}`;
+      localStorage.setItem(purchaseKey, Date.now().toString());
+    }
+    // Also set legacy key for backwards compatibility
+    const legacyPurchaseKey = `sm_report_purchased_${reportTypeParam}`;
+    localStorage.setItem(legacyPurchaseKey, Date.now().toString());
+    // Set session marker so ProReportBlock knows this is a valid same-session payment
+    sessionStorage.setItem('sm_payment_completed_session', Date.now().toString());
     // Also clear billing cache to get fresh status
     if (window.ProReportBlock?.clearBillingCache) {
       window.ProReportBlock.clearBillingCache();
     }
+    // Clean up payment-related params from URL to prevent re-processing on refresh
+    // Keep url, report_type (or type), and auto_scan for the analysis flow
+    const cleanParams = new URLSearchParams();
+    if (urlParam) cleanParams.set('url', urlParam);
+    if (reportTypeParam) cleanParams.set('report_type', reportTypeParam);
+    if (autoScan) cleanParams.set('auto_scan', 'true');
+    const cleanUrl = window.location.pathname + (cleanParams.toString() ? '?' + cleanParams.toString() : '');
+    window.history.replaceState({}, '', cleanUrl);
   }
 
   // Set mode from report_type parameter (from billing return) or mode parameter
@@ -285,9 +381,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!data) return;
 
     // Validate data structure - check for error responses
+    // IMPORTANT: If cached data contains an error (e.g., from previous failed fetch),
+    // don't display it as an error - this could show stale "Route not found" errors.
+    // Instead, log and return silently to allow fresh scan.
     if (data.error || typeof data === 'string') {
-      console.error('[PerformanceHub] Cannot display error data:', data);
-      displayError(data.error || 'Invalid report data', null);
+      console.warn('[PerformanceHub] Received error data, ignoring cached error:', data.error || data);
+      // Clear any corrupted cache that might have stored error responses
+      const reportId = document.body.getAttribute('data-report-id');
+      if (reportId && window.ReportStorage) {
+        console.log('[PerformanceHub] Clearing potentially corrupted cache for:', reportId);
+        try {
+          localStorage.removeItem(`sm_report_${reportId}`);
+        } catch (e) {
+          console.warn('[PerformanceHub] Could not clear cache:', e);
+        }
+      }
+      // Don't display the error - let the page load normally and user can re-run scan
       return;
     }
 
@@ -920,23 +1029,39 @@ document.addEventListener('DOMContentLoaded', () => {
   async function runCWVAnalysis(url, scanStartedAt) {
     if (loader) loader.nextStep(0);
 
-    const response = await fetch('/api/core-web-vitals', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY })
-    });
+    console.log('[PerformanceHub] Starting CWV analysis for:', url);
 
-    if (loader) loader.nextStep(3);
+    try {
+      const response = await fetch('/api/core-web-vitals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY })
+      });
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'CWV analysis failed');
+      if (loader) loader.nextStep(3);
+
+      if (!response.ok) {
+        let errorMessage = 'CWV analysis failed';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorData.message || errorMessage;
+          console.error('[PerformanceHub] CWV API error:', { status: response.status, error: errorData });
+        } catch (parseErr) {
+          console.error('[PerformanceHub] CWV API error (non-JSON):', response.status, response.statusText);
+          errorMessage = `Server error (${response.status}): ${response.statusText}`;
+        }
+        throw new Error(errorMessage);
+      }
+
+      const data = await response.json();
+      console.log('[PerformanceHub] CWV analysis complete:', { hasDesktop: !!data.desktop, hasMobile: !!data.mobile });
+      if (loader) loader.nextStep(4);
+
+      return data;
+    } catch (fetchErr) {
+      console.error('[PerformanceHub] CWV fetch error:', fetchErr);
+      throw fetchErr;
     }
-
-    const data = await response.json();
-    if (loader) loader.nextStep(4);
-    
-    return data;
   }
 
   /**
@@ -1070,7 +1195,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <pre style="color: #fca5a5; font-size: 0.85rem; margin: 0.5rem 0 0 0; overflow-x: auto;">${JSON.stringify(details, null, 2)}</pre>
           </details>
         ` : ''}
-        <button onclick="location.reload()" style="margin-top: 1.5rem; background: #ef4444; border: none; color: #fff; padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
+        <button data-action="reload" style="margin-top: 1.5rem; background: #ef4444; border: none; color: #fff; padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
           Try Again
         </button>
       </div>
@@ -2805,7 +2930,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${config.buttons.map(btn => {
             const isPrimary = btn.style === 'primary';
             return `
-              <button onclick="switchToMode('${btn.mode}')" style="
+              <button data-action="switch-mode" data-mode="${btn.mode}" class="perf-mode-btn ${isPrimary ? 'perf-mode-btn--primary' : ''}" style="
                 background: ${isPrimary ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'transparent'};
                 border: ${isPrimary ? 'none' : '1px solid rgba(255,255,255,0.2)'};
                 color: #fff;
@@ -2817,7 +2942,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 display: inline-flex;
                 align-items: center;
                 gap: 0.5rem;
-              " onmouseover="this.style.transform='translateY(-2px)'; ${isPrimary ? `this.style.boxShadow='0 4px 12px rgba(59,130,246,0.4)'` : ''}" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none'">
+              ">
                 <span>${btn.icon}</span>
                 ${btn.label}
               </button>
@@ -3105,7 +3230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.75rem;">
               ${otherScans.map(scan => `
-                <a href="${scan.href}" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; text-decoration: none; transition: all 0.2s ease;" onmouseover="this.style.borderColor='var(--accent-primary)'; this.style.background='rgba(var(--accent-primary-rgb), 0.05)';" onmouseout="this.style.borderColor='rgba(255,255,255,0.08)'; this.style.background='rgba(255,255,255,0.03)';">
+                <a href="${scan.href}" class="perf-scan-link" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; text-decoration: none; transition: all 0.2s ease;">
                   <span style="font-size: 1.5rem;">${scan.icon}</span>
                   <div style="flex: 1; min-width: 0;">
                     <div style="font-weight: 600; color: var(--text-primary); font-size: 0.95rem;">${scan.title}</div>
@@ -3173,9 +3298,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="pro-pill">PRO</span>
         </div>
         <div class="take-action__actions">
-          <button class="take-action__btn" ${locked ? '' : ''} onclick="exportPerformancePDF()">Export PDF</button>
-          <button class="take-action__btn" onclick="copyPerformanceShareLink()">Share Link</button>
-          <button class="take-action__btn" onclick="downloadPerformanceCSV()">Download CSV</button>
+          <button class="take-action__btn" data-action="export-pdf">Export PDF</button>
+          <button class="take-action__btn" data-action="share-link">Share Link</button>
+          <button class="take-action__btn" data-action="download-csv">Download CSV</button>
         </div>
         ${locked ? renderLockedProPreview('Pro export locked', ['Export PDF', 'Share Link', 'Download CSV']) : ''}
       </div>
@@ -3195,8 +3320,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </ul>
         <div class="pro-locked__blur"></div>
         <div class="pro-locked__buttons">
-          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="performance">Unlock for $10</button>
-          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="performance">Go Pro — $20/mo</button>
+          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="performance">Unlock for $5</button>
+          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="performance">Go Pro — $30/mo</button>
         </div>
       </div>
     `;
@@ -3495,10 +3620,85 @@ document.addEventListener('DOMContentLoaded', () => {
     return false;
   }
 
+  // Export to Excel (XLSX format simulation using CSV with Excel-compatible formatting)
+  function downloadPerformanceExcel() {
+    if (!ensurePerformanceProAccess()) return;
+    const current = window.currentPerformanceHubResults || {};
+    const mode = current.mode || 'quick';
+    const data = current.data || current;
+    const url = current.url || '';
+
+    // Build comprehensive Excel-compatible data
+    const rows = [];
+
+    // Header section
+    rows.push(['Site Mechanic - Performance Report']);
+    rows.push(['Generated', new Date().toISOString()]);
+    rows.push(['URL', url]);
+    rows.push(['Mode', mode.toUpperCase()]);
+    rows.push([]);
+
+    // Core metrics
+    rows.push(['CORE METRICS']);
+    rows.push(['Metric', 'Value', 'Target', 'Status']);
+
+    if (mode === 'cwv') {
+      const desktop = data.desktop || {};
+      const mobile = data.mobile || {};
+      const cwvDesktop = desktop.coreWebVitals || {};
+      const cwvMobile = mobile.coreWebVitals || {};
+
+      rows.push(['LCP (Desktop)', cwvDesktop.lcpMs || cwvDesktop.lcp || 'N/A', '<2.5s', cwvDesktop.lcpMs < 2500 ? 'Pass' : 'Needs Improvement']);
+      rows.push(['LCP (Mobile)', cwvMobile.lcpMs || cwvMobile.lcp || 'N/A', '<2.5s', cwvMobile.lcpMs < 2500 ? 'Pass' : 'Needs Improvement']);
+      rows.push(['CLS (Desktop)', cwvDesktop.cls || cwvDesktop.clsNum || 'N/A', '<0.1', cwvDesktop.clsNum < 0.1 ? 'Pass' : 'Needs Improvement']);
+      rows.push(['CLS (Mobile)', cwvMobile.cls || cwvMobile.clsNum || 'N/A', '<0.1', cwvMobile.clsNum < 0.1 ? 'Pass' : 'Needs Improvement']);
+      rows.push(['INP/TBT (Desktop)', cwvDesktop.inpMs || cwvDesktop.tbtMs || 'N/A', '<200ms', (cwvDesktop.inpMs || cwvDesktop.tbtMs) < 200 ? 'Pass' : 'Needs Improvement']);
+      rows.push(['INP/TBT (Mobile)', cwvMobile.inpMs || cwvMobile.tbtMs || 'N/A', '<200ms', (cwvMobile.inpMs || cwvMobile.tbtMs) < 200 ? 'Pass' : 'Needs Improvement']);
+    } else {
+      rows.push(['Performance Score', data?.performanceScore || data?.score || data?.overallScore || 'N/A', '>90', '']);
+      rows.push(['Total Requests', data?.summary?.totalRequests || 'N/A', '', '']);
+      rows.push(['Page Weight (KB)', data?.summary?.estimatedPageWeightKB || 'N/A', '', '']);
+    }
+
+    rows.push([]);
+    rows.push(['RECOMMENDATIONS']);
+    const recs = data?.recommendations || [];
+    if (Array.isArray(recs) && recs.length > 0) {
+      recs.forEach((rec, i) => {
+        rows.push([`${i + 1}`, typeof rec === 'string' ? rec : (rec.title || rec.description || JSON.stringify(rec))]);
+      });
+    } else {
+      rows.push(['No specific recommendations']);
+    }
+
+    // Generate CSV content
+    const csv = rows
+      .map(row => row.map(val => `"${String(val ?? '').replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+
+    // Download as .xlsx-compatible CSV (Excel can open CSV files)
+    const blob = new Blob(['\ufeff' + csv], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `performance-report-${mode}-${new Date().toISOString().split('T')[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(link.href);
+
+    if (window.ReportUI?.toast) {
+      window.ReportUI.toast('Excel export downloaded successfully');
+    }
+  }
+
   // Expose Pro actions globally for inline handlers
   window.exportPerformancePDF = exportPerformancePDF;
   window.copyPerformanceShareLink = copyPerformanceShareLink;
   window.downloadPerformanceCSV = downloadPerformanceCSV;
+
+  // Bind to report-ui.js expected function names
+  window.exportPerformanceExcel = downloadPerformanceExcel;
+  window.exportPerformanceCSV = downloadPerformanceCSV;
 
   // Expose display functions globally for billing return flow
   window.displayPerformanceResults = displayResults;
@@ -3583,7 +3783,7 @@ document.addEventListener('DOMContentLoaded', () => {
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(0, 0, 0, 0.8);
+        background: var(--modal-backdrop, rgba(0, 0, 0, 0.85));
         display: flex;
         align-items: center;
         justify-content: center;
@@ -3591,28 +3791,28 @@ document.addEventListener('DOMContentLoaded', () => {
         backdrop-filter: blur(8px);
       ">
         <div style="
-          background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+          background: var(--bg-card);
           border: 2px solid ${info.color};
           border-radius: 16px;
           padding: 2.5rem;
           max-width: 500px;
           width: 90%;
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+          box-shadow: var(--shadow-2xl);
           animation: slideIn 0.3s ease-out;
         ">
           <!-- Header -->
           <div style="text-align: center; margin-bottom: 2rem;">
             <div style="font-size: 4rem; margin-bottom: 1rem;">${info.icon}</div>
             <h2 style="color: ${info.color}; margin: 0 0 0.5rem 0; font-size: 1.75rem;">${info.title}</h2>
-            <p style="color: #aaa; margin: 0; font-size: 1rem;">${info.description}</p>
+            <p style="color: var(--color-text-secondary, #6b7280); margin: 0; font-size: 1rem;">${info.description}</p>
           </div>
 
           <!-- Features -->
-          <div style="background: rgba(255, 255, 255, 0.03); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
-            <h3 style="color: #fff; margin: 0 0 1rem 0; font-size: 1.1rem;">What's included:</h3>
+          <div style="background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
+            <h3 style="color: var(--color-text, #fff); margin: 0 0 1rem 0; font-size: 1.1rem;">What's included:</h3>
             <ul style="list-style: none; padding: 0; margin: 0;">
               ${info.features.map(feature => `
-                <li style="color: #ccc; margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
+                <li style="color: var(--color-text-secondary, #6b7280); margin-bottom: 0.75rem; padding-left: 1.5rem; position: relative;">
                   <span style="position: absolute; left: 0; color: ${info.color};">✓</span>
                   ${feature}
                 </li>
@@ -3623,13 +3823,13 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- Pricing Options -->
           <div style="text-align: center; margin-bottom: 1.5rem;">
             <div style="display: flex; gap: 1rem; justify-content: center; margin-bottom: 1rem;">
-              <div style="flex: 1; background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 1rem;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: ${info.color};">$10</div>
-                <div style="color: #888; font-size: 0.75rem;">This report only</div>
+              <div style="flex: 1; background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 8px; padding: 1rem;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: ${info.color};">$5</div>
+                <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">This report only</div>
               </div>
-              <div style="flex: 1; background: rgba(91, 244, 231, 0.1); border: 1px solid rgba(91, 244, 231, 0.3); border-radius: 8px; padding: 1rem;">
-                <div style="font-size: 1.5rem; font-weight: bold; color: #5bf4e7;">$20/mo</div>
-                <div style="color: #888; font-size: 0.75rem;">All reports</div>
+              <div style="flex: 1; background: var(--color-primary-dim); border: 1px solid var(--color-primary); border-radius: 8px; padding: 1rem;">
+                <div style="font-size: 1.5rem; font-weight: bold; color: var(--color-primary);">$30/mo</div>
+                <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">All reports</div>
               </div>
             </div>
           </div>
@@ -3637,7 +3837,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- Actions -->
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             <button id="proceedPaymentBtn" style="
-              background: linear-gradient(135deg, ${info.color}, ${info.color}dd);
+              background: ${info.color};
               border: none;
               color: #fff;
               padding: 0.875rem 1.5rem;
@@ -3647,26 +3847,26 @@ document.addEventListener('DOMContentLoaded', () => {
               font-size: 1rem;
               transition: all 0.2s;
               box-shadow: 0 4px 12px ${info.color}40;
-            " onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 6px 16px ${info.color}60'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 12px ${info.color}40'">
-              Unlock for $10
+            " class="perf-payment-btn perf-payment-btn--primary">
+              Unlock for $5
             </button>
-            <button id="goProBtn" style="
+            <button id="goProBtn" class="perf-payment-btn perf-payment-btn--outline" style="
               background: transparent;
-              border: 1px solid #5bf4e7;
-              color: #5bf4e7;
+              border: 2px solid var(--color-primary);
+              color: var(--color-primary);
               padding: 0.875rem 1.5rem;
               border-radius: 8px;
               cursor: pointer;
               font-weight: 600;
               font-size: 1rem;
               transition: all 0.2s;
-            " onmouseover="this.style.background='rgba(91, 244, 231, 0.1)'" onmouseout="this.style.background='transparent'">
-              Go Pro — $20/mo
+            ">
+              Go Pro — $30/mo
             </button>
             <button id="cancelPaymentBtn" style="
               background: transparent;
               border: none;
-              color: #888;
+              color: var(--color-text-muted, #6b7280);
               padding: 0.5rem;
               cursor: pointer;
               font-size: 0.875rem;
@@ -3676,11 +3876,11 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <!-- Trust badges -->
-          <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255, 255, 255, 0.1);">
-            <div style="color: #666; font-size: 0.8rem; margin-bottom: 0.5rem;">
+          <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+            <div style="color: var(--color-text-muted, #6b7280); font-size: 0.8rem; margin-bottom: 0.5rem;">
               🔒 Secure payment powered by Stripe
             </div>
-            <div style="color: #555; font-size: 0.75rem;">
+            <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">
               Pro unlocks all reports • Single purchase unlocks this scan only
             </div>
           </div>
@@ -3759,33 +3959,122 @@ document.addEventListener('DOMContentLoaded', () => {
       const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
       const headers = { 'Content-Type': 'application/json' };
       if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+        headers['Authorization'] = `Bearer ${token}`;  // Include token for tracking even on public endpoint
       }
 
-      const response = await fetch('/api/billing/checkout', {
+      // Use authenticated billing endpoint ONLY if logged in AND have reportId
+      // Otherwise use public payment endpoint (no reportId required)
+      const useAuthEndpoint = token && reportId;
+      const endpoint = useAuthEndpoint ? '/api/billing/checkout' : '/api/payment/create-report-payment';
+      const payload = useAuthEndpoint ? {
+        purchaseType: 'single_report',
+        reportId: reportId,
+        returnUrl
+      } : {
+        reportType: reportType,
+        url: url,
+        returnUrl
+      };
+
+      console.log('[Performance Hub Payment] Request:', { endpoint, payload, hasToken: !!token, reportId, useAuthEndpoint });
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers,
-        body: JSON.stringify({
-          purchaseType: 'single_report',
-          reportId: reportId || null,
-          returnUrl
-        })
+        body: JSON.stringify(payload)
       });
 
       const data = await response.json();
+      console.log('[Performance Hub Payment] Response:', { status: response.status, data });
+      console.log('[Performance Hub Payment] Full response data:', JSON.stringify(data, null, 2));
 
-      if (!response.ok || !data.checkoutUrl) {
-        throw new Error((data && data.error) || 'Failed to create payment session');
+      if (!response.ok) {
+        const errorMsg = data?.error || data?.message || JSON.stringify(data) || 'Failed to create payment session';
+        console.error('[Performance Hub Payment] Error:', errorMsg);
+        console.error('[Performance Hub Payment] Full error object:', data);
+        throw new Error(errorMsg);
+      }
+
+      if (!data.checkoutUrl && !data.url) {
+        console.error('[Performance Hub Payment] No checkout URL in response:', data);
+        throw new Error('Payment session created but no checkout URL received');
       }
 
       // Redirect to Stripe Checkout
-      window.location.href = data.checkoutUrl;
+      window.location.href = data.checkoutUrl || data.url;
 
     } catch (error) {
-      console.error('Payment error:', error);
+      console.error('[Performance Hub Payment] Exception:', error);
       proceedBtn.disabled = false;
-      proceedBtn.textContent = 'Unlock for $10';
+      proceedBtn.textContent = 'Unlock for $5';
       alert(`Payment error: ${error.message}`);
     }
+  }
+
+  // ==================== EVENT DELEGATION (CSP-COMPLIANT) ====================
+  // Handle data-action buttons without inline onclick handlers
+
+  document.addEventListener('click', function(e) {
+    const target = e.target.closest('[data-action]');
+    if (!target) return;
+
+    const action = target.getAttribute('data-action');
+
+    switch (action) {
+      case 'reload':
+        location.reload();
+        break;
+      case 'switch-mode':
+        const mode = target.getAttribute('data-mode');
+        if (mode && typeof switchToMode === 'function') {
+          switchToMode(mode);
+        }
+        break;
+      case 'export-pdf':
+        if (typeof exportPerformancePDF === 'function') {
+          exportPerformancePDF();
+        }
+        break;
+      case 'share-link':
+        if (typeof copyPerformanceShareLink === 'function') {
+          copyPerformanceShareLink();
+        }
+        break;
+      case 'download-csv':
+        if (typeof downloadPerformanceCSV === 'function') {
+          downloadPerformanceCSV();
+        }
+        break;
+    }
+  });
+
+  // ==================== DYNAMIC CSS FOR HOVER EFFECTS ====================
+  // Add CSS for hover effects to replace inline onmouseover/onmouseout
+
+  if (!document.getElementById('perf-hub-hover-styles')) {
+    const style = document.createElement('style');
+    style.id = 'perf-hub-hover-styles';
+    style.textContent = `
+      .perf-mode-btn:hover {
+        transform: translateY(-2px);
+      }
+      .perf-mode-btn--primary:hover {
+        box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+      }
+      .perf-scan-link:hover {
+        border-color: var(--accent-primary) !important;
+        background: rgba(var(--accent-primary-rgb), 0.05) !important;
+      }
+      .perf-payment-btn:hover {
+        transform: translateY(-2px);
+      }
+      .perf-payment-btn--primary:hover {
+        box-shadow: 0 6px 16px currentColor;
+      }
+      .perf-payment-btn--outline:hover {
+        background: var(--color-primary-dim, rgba(91, 244, 231, 0.1)) !important;
+      }
+    `;
+    document.head.appendChild(style);
   }
 });
