@@ -291,16 +291,48 @@
       const hostname = (u.hostname || '').toLowerCase();
       if (!hostname) return '';
 
-      const port = u.port ? `:${u.port}` : '';
+      // Strip default ports (80 for http, 443 for https)
+      let port = '';
+      if (u.port) {
+        const isDefaultPort = (protocol === 'https:' && u.port === '443') ||
+                              (protocol === 'http:' && u.port === '80');
+        if (!isDefaultPort) {
+          port = `:${u.port}`;
+        }
+      }
+
       let path = u.pathname || '';
       if (path === '/') path = '';
       else path = path.replace(/\/$/, '');
 
-      const search = u.search || '';
+      // Sort query parameters for consistent ordering
+      let search = '';
+      if (u.search) {
+        const params = new URLSearchParams(u.search);
+        const sorted = new URLSearchParams([...params.entries()].sort());
+        const sortedSearch = sorted.toString();
+        if (sortedSearch) {
+          search = '?' + sortedSearch;
+        }
+      }
       return `${protocol}//${hostname}${port}${path}${search}`;
     } catch (e) {
       return raw.replace(/\/$/, '');
     }
+  }
+
+  /**
+   * Simple hash for storage keys (not cryptographic).
+   * Returns a short alphanumeric string suitable for localStorage/sessionStorage keys.
+   */
+  function hashForStorageKey(str) {
+    let hash = 0;
+    const s = String(str || '');
+    for (let i = 0; i < s.length; i++) {
+      hash = ((hash << 5) - hash) + s.charCodeAt(i);
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(36);
   }
 
   function makeReportId({ analyzerKey, normalizedUrl, startedAtISO }) {
@@ -425,6 +457,38 @@
         </a>
       </div>
     `;
+
+    // Add retry logic for screenshot loading failures
+    const img = shell.querySelector('.report-shell__screenshot');
+    if (img) {
+      let retryCount = 0;
+      const maxRetries = 5;
+      const retryDelay = 2000; // 2 seconds between retries
+
+      img.onerror = function() {
+        if (retryCount < maxRetries) {
+          retryCount++;
+          console.log(`[ReportUI] Screenshot load failed, retry ${retryCount}/${maxRetries} in ${retryDelay}ms`);
+          setTimeout(() => {
+            // Add new cache buster for retry
+            const retryUrl = screenshotUrl.split('?')[0] + `?t=${Date.now()}`;
+            img.src = retryUrl;
+          }, retryDelay);
+        } else {
+          console.warn('[ReportUI] Screenshot failed to load after all retries');
+          // Show placeholder message
+          const link = shell.querySelector('.report-shell__screenshot-link');
+          if (link) {
+            link.innerHTML = `
+              <div style="padding: 3rem; text-align: center; color: var(--color-text-muted, #6b7280);">
+                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📷</div>
+                <div>Screenshot unavailable</div>
+              </div>
+            `;
+          }
+        }
+      };
+    }
 
     // Prefer inserting the screenshot after the report header so the report always starts with the heading/meta.
     if (preferredAnchor) {
@@ -649,8 +713,31 @@
 
       // Restore the URL that was being analyzed before checkout
       const cachedUrl = sessionStorage.getItem('sm_checkout_url');
-      const cachedResults = sessionStorage.getItem('sm_checkout_results');
-      const cachedAnalyzer = sessionStorage.getItem('sm_checkout_analyzer');
+
+      // Try new unique key format first, then fall back to legacy
+      let cachedResults = null;
+      let cachedData = null;
+      const checkoutKey = sessionStorage.getItem('sm_checkout_key');
+      if (checkoutKey) {
+        const raw = sessionStorage.getItem(checkoutKey);
+        if (raw) {
+          try {
+            cachedData = JSON.parse(raw);
+            cachedResults = JSON.stringify(cachedData.results); // For compatibility
+          } catch (e) {
+            console.warn('[ReportUI] Could not parse cached checkout data:', e);
+          }
+        }
+      }
+      // Fall back to legacy key
+      if (!cachedResults) {
+        cachedResults = sessionStorage.getItem('sm_checkout_results');
+      }
+
+      // Prefer analyzer from cached data (more specific, e.g., 'speed-ux-quick')
+      // Fall back to pathname-based key for legacy checkout data
+      const cachedAnalyzer = cachedData?.analyzer || sessionStorage.getItem('sm_checkout_analyzer');
+      console.log('[BillingReturn] Cached analyzer:', cachedAnalyzer, 'from', cachedData?.analyzer ? 'cachedData' : 'sessionStorage');
 
       if (cachedUrl) {
         // Try to auto-fill the URL input
@@ -667,7 +754,7 @@
       let loadedFromStorage = false;
       if (cachedResults) {
         try {
-          const results = JSON.parse(cachedResults);
+          const results = cachedData?.results || JSON.parse(cachedResults);
 
           // Dispatch event for analyzer-specific result restoration
           const restoreEvent = new CustomEvent('sm:restoreScanResults', {
@@ -684,8 +771,9 @@
             window.currentSecurityResults = results;
             window.displaySecurityResults(results);
             displayedFromCache = true;
-          } else if (window.displayPerformanceResults && cachedAnalyzer?.includes('performance')) {
+          } else if (window.displayPerformanceResults && (cachedAnalyzer?.includes('performance') || cachedAnalyzer?.includes('speed') || cachedAnalyzer?.includes('cwv'))) {
             window.currentPerformanceResults = results;
+            window.currentPerformanceHubResults = results;
             window.displayPerformanceResults(results);
             displayedFromCache = true;
           } else if (window.displayAccessibilityResults && cachedAnalyzer?.includes('accessibility')) {
@@ -800,8 +888,9 @@
                 window.currentSecurityResults = stored.data;
                 window.displaySecurityResults(stored.data);
                 loadedFromStorage = true;
-              } else if (window.displayPerformanceResults && (analyzerType.includes('performance') || analyzerType.includes('speed'))) {
+              } else if (window.displayPerformanceResults && (analyzerType.includes('performance') || analyzerType.includes('speed') || analyzerType.includes('cwv'))) {
                 window.currentPerformanceResults = stored.data;
+                window.currentPerformanceHubResults = stored.data;
                 window.displayPerformanceResults(stored.data);
                 loadedFromStorage = true;
               } else if (window.displayAccessibilityResults && analyzerType.includes('accessibility')) {
@@ -1103,7 +1192,7 @@
         } else if (typeof window.ProGate !== 'undefined' && window.ProGate.showUpgradePrompt) {
           window.ProGate.showUpgradePrompt({ context });
         } else {
-          alert('Unlock Report ($10 USD)');
+          alert('Unlock Report ($5 USD)');
         }
       }
 
@@ -1431,6 +1520,8 @@
     computeReportId,
     getCurrentReportId,
     setCurrentReportId,
+    normalizeUrlForReportId,
+    hashForStorageKey,
 
     // Accordion management (delegates to ReportAccordion)
     accordions: {
@@ -1477,10 +1568,10 @@
                 </div>
                 <div class="pro-report-block__unlock-buttons">
                   <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="${context || 'feature'}" ${reportId ? `data-report-id="${reportId}"` : ''}>
-                    Unlock for $10
+                    Unlock for $5
                   </button>
                   <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="${context || 'feature'}">
-                    Go Pro — $20/mo
+                    Go Pro — $30/mo
                   </button>
                 </div>
                 <p class="pro-report-block__unlock-hint">
