@@ -6,10 +6,7 @@
     <meta name="theme-color" content="#000000" />
     
     <!-- Redirect to Dashboard -->
-    <script>
-      // Dashboard is the homepage
-      window.location.href = '/dashboard.html';
-    </script>
+    <script src="/js/redirect.js" data-redirect="/dashboard.html"></script>
 
     <!-- Primary Meta Tags -->
     <title>Site Mechanic - Website Diagnostics & Optimization Platform</title>
@@ -19,6 +16,16 @@
     <meta name="author" content="Site Mechanic" />
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <link rel="canonical" href="https://sitemechanic.io/" />
+
+    <!-- Hreflang Tags for Multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/" />
+    <link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/" />
+    <link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/" />
+    <link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/" />
+    <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/" />
+    <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/" />
+    <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/" />
+    <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/" />
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
@@ -220,13 +227,7 @@
 
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-TZ2S73Q6BK"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-TZ2S73Q6BK');
-    </script>
+    <script src="/js/gtag-init.js"></script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->

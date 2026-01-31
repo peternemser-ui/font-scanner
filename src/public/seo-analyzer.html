@@ -14,6 +14,16 @@
     <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
     <link rel="canonical" href="https://sitemechanic.io/seo-analyzer.html" />
 
+    <!-- Hreflang Tags for Multilingual SEO -->
+    <link rel="alternate" hreflang="en" href="https://sitemechanic.io/en/seo-analyzer.html" />
+    <link rel="alternate" hreflang="es" href="https://sitemechanic.io/es/seo-analyzer.html" />
+    <link rel="alternate" hreflang="fr" href="https://sitemechanic.io/fr/seo-analyzer.html" />
+    <link rel="alternate" hreflang="de" href="https://sitemechanic.io/de/seo-analyzer.html" />
+    <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/seo-analyzer.html" />
+    <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/seo-analyzer.html" />
+    <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/seo-analyzer.html" />
+    <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/seo-analyzer.html" />
+
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://fontscanner.app/seo-analyzer.html" />
@@ -49,6 +59,7 @@
     <link rel="stylesheet" href="ui-components.css" />
     <!-- Report UI Components are included via /assets/css/components.css -->
     <link rel="stylesheet" href="spacing-fixes.css" />
+    <link rel="stylesheet" href="/css/components/page-shell.css" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -152,48 +163,10 @@
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
-    
-    <main class="page-shell">
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html" data-i18n="nav.dashboard">Dashboard</a>
-        <span class="breadcrumb-sep">›</span>
-        <span aria-current="page" data-i18n="nav.seo">SEO</span>
-      </nav>
-      
-      <!-- Page Header -->
-      <header class="page-header">
-        <h1 class="page-header__title" data-i18n="seo.title">SEO Analyzer</h1>
-        <p class="page-header__subtitle" data-i18n="seo.subtitle">Search Engine Optimization Audit</p>
-      </header>
 
-      <!-- Input Card -->
-      <section class="card">
-        <div class="card__body">
-          <div class="form-row">
-            <label for="seoUrlInput" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
-            <input 
-              type="url" 
-              id="seoUrlInput" 
-              class="input"
-              data-i18n="common.websiteUrl"
-              data-i18n-attr="aria-label"
-              data-i18n-placeholder="common.enterUrl"
-              placeholder="https://yoursite.com" 
-              required
-              aria-required="true"
-            />
-            <button id="seoAnalyzeButton" class="btn btn-primary" aria-label="Analyze SEO">
-              <span id="buttonText">Analyze</span>
-            </button>
-          </div>
-        </div>
-      </section>
-
-      <!-- Results Container -->
-      <div id="seoResults" class="results-container" hidden>
-        <!-- Results will be dynamically inserted here by seo-script.js -->
-      </div>
+    <!-- Page Shell Container (rendered by PageShell.js) -->
+    <main id="page-container" class="page-shell">
+      <!-- PageShell renders: breadcrumb, header, input card, results container -->
     </main>
 
     <!-- Shared JavaScript for theme and font controls -->
@@ -226,6 +199,7 @@
     <script src="/js/report-ui.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
+    <script src="/js/components/PageShell.js"></script>
 
     <!-- Credits + paywall UI (ensures PaidUnlockCard states render) -->
     <script src="/assets/js/ui.js"></script>
