@@ -1,6 +1,6 @@
 const securityAnalyzerService = require('../services/securityAnalyzerService');
 const { asyncHandler } = require('../utils/errorHandler');
-const { normalizeUrl, validateUrl } = require('../utils/validators');
+// validators imported via processUrl from controllerHelpers
 const { createLogger } = require('../utils/logger');
 const {
   getAnalyzerKeyOverride,

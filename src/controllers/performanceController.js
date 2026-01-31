@@ -11,7 +11,6 @@ const { attachToResponse } = require('../utils/scanTimestamp');
 const {
   getAnalyzerKeyOverride,
   buildReportMetadata,
-  attachReportMetadata,
   processUrl
 } = require('../utils/controllerHelpers');
 

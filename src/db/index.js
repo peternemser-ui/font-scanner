@@ -3,7 +3,6 @@
  */
 
 const sqlite3 = require('sqlite3').verbose();
-const { promisify } = require('util');
 const fs = require('fs');
 const path = require('path');
 
@@ -32,17 +31,42 @@ class Database {
         }
       });
 
-      // Enable foreign keys
-      await this.run('PRAGMA foreign_keys = ON');
-
-      // Enable WAL mode for better concurrency
-      await this.run('PRAGMA journal_mode = WAL');
+      // Apply PRAGMA hardening with graceful error handling
+      await this.applyPragmas();
 
       // Run migrations
       await this.runMigrations();
     } catch (error) {
       console.error('Failed to initialize database:', error);
       throw error;
+    }
+  }
+
+  /**
+   * Apply SQLite PRAGMAs for hardening
+   * Each PRAGMA is applied with graceful error handling
+   */
+  async applyPragmas() {
+    const pragmas = [
+      // Enable foreign key constraints
+      { sql: 'PRAGMA foreign_keys = ON', name: 'foreign_keys' },
+      // WAL mode for better concurrency (unless environment denies)
+      { sql: 'PRAGMA journal_mode = WAL', name: 'journal_mode' },
+      // Busy timeout (5 seconds) to handle concurrent access
+      { sql: 'PRAGMA busy_timeout = 5000', name: 'busy_timeout' },
+      // NORMAL sync for balance of safety and speed
+      { sql: 'PRAGMA synchronous = NORMAL', name: 'synchronous' },
+      // Store temp tables in memory for performance
+      { sql: 'PRAGMA temp_store = MEMORY', name: 'temp_store' }
+    ];
+
+    for (const pragma of pragmas) {
+      try {
+        await this.run(pragma.sql);
+      } catch (error) {
+        // Log but don't crash - some environments may deny certain pragmas
+        console.warn(`Failed to apply PRAGMA ${pragma.name}:`, error.message);
+      }
     }
   }
 
@@ -154,10 +178,10 @@ class Database {
 
           await this.run(statement);
         } catch (error) {
-          // Handle specific errors gracefully
-          if (error.message.includes('duplicate column name') ||
-              error.message.includes('already exists')) {
-          } else {
+          // Handle specific errors gracefully - ignore duplicate column/table errors
+          const isDuplicate = error.message.includes('duplicate column name') ||
+                              error.message.includes('already exists');
+          if (!isDuplicate) {
             console.error('Migration statement error:', error.message);
             console.error('Statement:', statement.substring(0, 200));
             throw error;

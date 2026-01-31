@@ -98,7 +98,7 @@ const metricsHandler = async (req, res) => {
 };
 
 // Helper functions to track scan metrics
-const startScan = (scanType) => {
+const startScan = (_scanType) => {
   activeScans.inc();
   return Date.now();
 };
