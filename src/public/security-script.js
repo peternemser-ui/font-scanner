@@ -219,6 +219,7 @@ async function analyzeSecurity(options = {}) {
   const errorMessage = document.getElementById('errorMessage');
 
   resultsDiv.classList.add('hidden');
+  resultsDiv.setAttribute('hidden', '');
   errorMessage.classList.add('hidden');
 
   // Create loading container if it doesn't exist
@@ -370,6 +371,7 @@ async function analyzeSecurity(options = {}) {
     setTimeout(() => {
       displaySecurityResults(results);
       resultsDiv.classList.remove('hidden');
+      resultsDiv.removeAttribute('hidden');
     }, 1000);
 
   } catch (error) {
@@ -396,6 +398,7 @@ function displaySecurityResults(data) {
   const resultsDiv = document.getElementById('results');
   if (resultsDiv) {
     resultsDiv.classList.remove('hidden');
+    resultsDiv.removeAttribute('hidden');
   }
 
   const resultsContent = document.getElementById('resultsContent');
@@ -1728,7 +1731,8 @@ function showError(message) {
   errorDiv.textContent = message;
   errorDiv.classList.remove('hidden');
   resultsDiv.classList.add('hidden');
-  
+  resultsDiv.setAttribute('hidden', '');
+
   setTimeout(() => {
     errorDiv.classList.add('hidden');
   }, 5000);

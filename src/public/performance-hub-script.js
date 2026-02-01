@@ -409,8 +409,9 @@ document.addEventListener('DOMContentLoaded', () => {
     // Store globally - include URL for PDF export
     window.currentPerformanceResults = { ...data, url: reportUrl };
 
-    // Show results container
+    // Show results container (remove both CSS class and HTML attribute)
     results.classList.remove('hidden');
+    results.removeAttribute('hidden');
     resultsContent.innerHTML = '';
 
     // Determine mode from data if possible and display with error handling
@@ -667,6 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Clear any partial render
             resultsContent.innerHTML = '';
             results.classList.add('hidden');
+            results.setAttribute('hidden', '');
             // Clean URL to prevent reload loop with bad report
             const cleanParams = new URLSearchParams(window.location.search);
             cleanParams.delete('report_id');
@@ -787,8 +789,9 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[PerformanceHub] Access granted, proceeding with analysis');
     // ==================== END PAYMENT GATE ====================
 
-    // Show loading with AnalyzerLoader
+    // Show loading with AnalyzerLoader (remove both CSS class and HTML attribute)
     results.classList.remove('hidden');
+    results.removeAttribute('hidden');
     resultsContent.innerHTML = '';
     errorMessage.classList.add('hidden');
     analyzeButton.disabled = true;
