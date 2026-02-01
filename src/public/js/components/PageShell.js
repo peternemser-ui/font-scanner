@@ -652,11 +652,13 @@
       container.innerHTML = '';
     }
 
-    // Set up event listeners
+    // Set up event listeners (skip if manual handling)
     setupEventListeners();
 
-    // Handle URL parameters
-    handleUrlParams();
+    // Handle URL parameters (skip if manual handling - page script handles this)
+    if (!config.manualEventHandling) {
+      handleUrlParams();
+    }
 
     // Create instance object
     const instance = {
