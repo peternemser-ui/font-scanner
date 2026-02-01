@@ -55,10 +55,12 @@ document.addEventListener('DOMContentLoaded', () => {
       urlInput: 'urlInput',
       scanButton: 'analyzeButton',
       results: 'results'
-    }
+    },
 
-    // NOTE: We handle events manually below because Performance Hub has
-    // complex mode-based logic and billing checks
+    // CRITICAL: Disable PageShell's automatic event listeners
+    // Performance Hub has complex mode-based logic and billing checks
+    // that require manual event handling
+    manualEventHandling: true
   });
 
   // Deterministic analyzer key (stable forever). Updated per-mode at scan time.
