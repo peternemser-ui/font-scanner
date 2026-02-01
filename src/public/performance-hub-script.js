@@ -1148,10 +1148,26 @@ document.addEventListener('DOMContentLoaded', () => {
    * Smooth scroll to results with fade-in animation
    */
   function scrollToResults() {
+    console.log('[CWV Debug] scrollToResults called');
+
+    // Ensure results container is visible first (belt and suspenders)
+    if (results) {
+      results.classList.remove('hidden');
+      results.removeAttribute('hidden');
+      results.style.display = '';
+    }
+
     // Wait for DOM to update
     setTimeout(() => {
       const resultsElement = document.getElementById('results');
+      console.log('[CWV Debug] resultsElement found:', !!resultsElement);
+
       if (resultsElement) {
+        // Ensure it's definitely visible
+        resultsElement.classList.remove('hidden');
+        resultsElement.removeAttribute('hidden');
+        resultsElement.style.display = '';
+
         // Fade in animation
         resultsContent.style.opacity = '0';
         resultsContent.style.transform = 'translateY(20px)';
@@ -1167,7 +1183,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           resultsContent.style.opacity = '1';
           resultsContent.style.transform = 'translateY(0)';
+          console.log('[CWV Debug] Animation completed, opacity set to 1');
         }, 200);
+      } else {
+        console.error('[CWV Debug] Results element not found!');
       }
     }, 100);
   }
@@ -1411,15 +1430,17 @@ document.addEventListener('DOMContentLoaded', () => {
       ...mobile,
       opportunities: mobile.opportunities || []
     };
-    const proContent = `
-      ${renderFreeFixBullets(desktopForFixes, mobileForFixes)}
-      ${renderFixesToMake(desktopForFixes, mobileForFixes)}
-      <div style="margin-top: 1.5rem;">
-        <h4 style="margin: 0 0 0.75rem 0;">Opportunities</h4>
-        ${opportunitiesContent}
-      </div>
-      ${proLocked ? renderLockedProPreview('Paid report available', ['Client-ready exports', 'Share link', 'Fix code + recommendations']) : ''}
-    `;
+    // CRITICAL: Only render pro content if user has access, otherwise show lock preview
+    const proContent = proLocked
+      ? renderLockedProPreview('Paid report available', ['Client-ready exports', 'Share link', 'Fix code + recommendations'])
+      : `
+        ${renderFreeFixBullets(desktopForFixes, mobileForFixes)}
+        ${renderFixesToMake(desktopForFixes, mobileForFixes)}
+        <div style="margin-top: 1.5rem;">
+          <h4 style="margin: 0 0 0.75rem 0;">Opportunities</h4>
+          ${opportunitiesContent}
+        </div>
+      `;
 
     const accordions = [
       ReportAccordion.createSection({ id: 'lh-category-scores', title: 'Category Scores', scoreTextRight: formatScoreText(overallPerf), contentHTML: categoryScoresContent }),
@@ -2221,8 +2242,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Display Core Web Vitals Results
   function displayCWVResults(data) {
+    console.log('[CWV Debug] displayCWVResults called with data:', data);
+    console.log('[CWV Debug] resultsContent element:', resultsContent);
+    console.log('[CWV Debug] results element:', results);
+
     const desktop = normalizeCWVDevice(data.desktop || {});
     const mobile = normalizeCWVDevice(data.mobile || {});
+    console.log('[CWV Debug] Normalized desktop:', desktop);
+    console.log('[CWV Debug] Normalized mobile:', mobile);
     const url = urlInput.value;
     const timestamp = new Date().toLocaleString();
     const lcpScore = scoreFromCwvValue(desktop.coreWebVitals?.lcpMs || desktop.coreWebVitals?.lcp, mobile.coreWebVitals?.lcpMs || mobile.coreWebVitals?.lcp, 'lcp');
@@ -2250,11 +2277,15 @@ document.addEventListener('DOMContentLoaded', () => {
     ]);
 
     const proLocked = !userHasPro();
-    const proContent = `
-      ${renderFreeFixBullets(desktop, mobile)}
-      ${renderFixesToMake(desktop, mobile)}
-      ${proLocked ? renderLockedProPreview('Paid report available', ['Client-ready exports', 'Share link', 'Fix code + recommendations']) : ''}
-    `;
+    console.log('[CWV Debug] proLocked status:', proLocked);
+
+    // CRITICAL: Only render pro content if user has access, otherwise show lock preview
+    const proContent = proLocked
+      ? renderLockedProPreview('Paid report available', ['Client-ready exports', 'Share link', 'Fix code + recommendations'])
+      : `
+        ${renderFreeFixBullets(desktop, mobile)}
+        ${renderFixesToMake(desktop, mobile)}
+      `;
 
     const accordions = [
       ReportAccordion.createSection({ id: 'cwv-overview', title: 'CWV Overview', scoreTextRight: formatScoreText(overallScore), contentHTML: renderCWVOverviewSection(desktop, mobile) }),
@@ -2307,12 +2338,28 @@ document.addEventListener('DOMContentLoaded', () => {
       ${renderPerformanceTakeActionSection(url, 'cwv')}
     `;
 
+    console.log('[CWV Debug] Generated HTML length:', html?.length);
+    console.log('[CWV Debug] resultsContent before innerHTML:', resultsContent?.innerHTML?.length);
+
+    // Clear loading container to ensure it doesn't block results
+    const loadingContainer = document.getElementById('loadingContainer');
+    if (loadingContainer) {
+      loadingContainer.innerHTML = '';
+      loadingContainer.style.display = 'none';
+    }
+
     resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;
+
+    console.log('[CWV Debug] resultsContent after innerHTML:', resultsContent?.innerHTML?.length);
+    console.log('[CWV Debug] results.hidden:', results?.hidden);
+    console.log('[CWV Debug] results.classList:', results?.classList?.toString());
+
     window.currentPerformanceHubResults = { mode: 'cwv', url, data };
     ReportAccordion.initInteractions();
     showPdfExportButton();
     animateScoreRings();
     scrollToResults();
+    console.log('[CWV Debug] displayCWVResults completed');
   }
 
   function renderCWVMetrics(data) {
@@ -3613,15 +3660,23 @@ document.addEventListener('DOMContentLoaded', () => {
   function userHasPro() {
     // Check new billing model first (ProReportBlock)
     const reportId = document.body?.getAttribute('data-report-id') || '';
+    console.log('[userHasPro] Checking access for reportId:', reportId);
+
     if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
-      if (window.ProReportBlock.hasAccess(reportId)) return true;
+      const hasAccess = window.ProReportBlock.hasAccess(reportId);
+      console.log('[userHasPro] ProReportBlock.hasAccess result:', hasAccess);
+      if (hasAccess) return true;
     }
     if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
-      return window.ProAccess.hasProAccess(getCurrentDomain());
+      const hasProAccess = window.ProAccess.hasProAccess(getCurrentDomain());
+      console.log('[userHasPro] ProAccess.hasProAccess result:', hasProAccess);
+      return hasProAccess;
     }
     if (window.ExportGate && window.ExportGate.isPro()) {
+      console.log('[userHasPro] ExportGate.isPro: true');
       return true;
     }
+    console.log('[userHasPro] No pro access found, returning false');
     return false;
   }
 

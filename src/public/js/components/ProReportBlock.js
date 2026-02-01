@@ -3,8 +3,9 @@
  * Conversion-focused export & upgrade CTA
  *
  * New billing model:
- * - Pro subscription ($20/mo or $180/yr) - unlocks all reports
- * - Single report purchase ($10) - unlocks specific report
+ * - Pro subscription ($30/mo or $240/yr) - unlocks all reports
+ * - Day Pass ($20) - unlocks all reports for 24 hours
+ * - Single report purchase ($5) - unlocks specific report
  */
 
 (function(window) {
@@ -72,16 +73,36 @@
   }
 
   /**
-   * Check if user has Pro subscription
+   * Check if user has Pro subscription or Day Pass (full Pro access)
    * Only trusts server-side billing status, not client-side localStorage
    * NOTE: Demo domain check is NOT done here - it must be done in hasAccess()
    * with the specific domain being analyzed to avoid stale context issues
    */
   function isProSubscriber() {
-    // Only trust server-side cached billing status
-    const hasCachedPro = cachedBillingStatus?.plan === 'pro';
-    if (hasCachedPro) {
-      console.log('[ProReportBlock] isProSubscriber: true (cached billing status)');
+    console.log('[ProReportBlock] isProSubscriber checking cachedBillingStatus:', {
+      exists: !!cachedBillingStatus,
+      permissions: cachedBillingStatus?.permissions,
+      plan: cachedBillingStatus?.plan
+    });
+
+    // Use server-derived permissions if available (new format)
+    if (cachedBillingStatus?.permissions?.accessProTools) {
+      console.log('[ProReportBlock] isProSubscriber: TRUE (permissions.accessProTools)');
+      return true;
+    }
+
+    // Fallback: check plan directly for backwards compatibility
+    const plan = cachedBillingStatus?.plan;
+    if (plan === 'pro' || plan === 'day_pass') {
+      // For day_pass, also verify it hasn't expired
+      if (plan === 'day_pass' && cachedBillingStatus?.dayPassExpiresAt) {
+        const expiresAt = new Date(cachedBillingStatus.dayPassExpiresAt);
+        if (expiresAt <= new Date()) {
+          console.log('[ProReportBlock] isProSubscriber: FALSE (day pass expired)');
+          return false;
+        }
+      }
+      console.log('[ProReportBlock] isProSubscriber: TRUE (plan=' + plan + ')');
       return true;
     }
 
@@ -92,7 +113,7 @@
     // Note: Removed legacy localStorage checks (proManager, ProGate) for security
     // Subscription status must come from server via fetchBillingStatus()
 
-    console.log('[ProReportBlock] isProSubscriber: false', {
+    console.log('[ProReportBlock] isProSubscriber: FALSE', {
       cachedBillingStatus: cachedBillingStatus ? 'exists' : 'null',
       plan: cachedBillingStatus?.plan || 'none'
     });
@@ -114,11 +135,89 @@
   }
 
   /**
+   * Check if report type has been purchased via localStorage IN THIS SESSION
+   * This handles the case where user just returned from Stripe payment
+   * and the server-side billing status hasn't been updated yet.
+   *
+   * We use sessionStorage to track that a payment was completed in THIS browser session,
+   * preventing stale localStorage data from granting access.
+   */
+  function isReportTypePurchasedLocally() {
+    // Only trust localStorage if we have a session marker indicating
+    // the payment was completed in this browser session
+    const sessionPaymentMarker = sessionStorage.getItem('sm_payment_completed_session');
+    if (!sessionPaymentMarker) {
+      return false;
+    }
+
+    const reportTypes = ['cwv', 'lighthouse', 'full'];
+    const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
+
+    // Get current URL for URL-specific key checking
+    let currentUrl = '';
+    try {
+      const urlInput = document.getElementById('url') || document.getElementById('urlInput');
+      if (urlInput && urlInput.value) {
+        currentUrl = urlInput.value.trim();
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    // Also check URL params (for billing return flow)
+    if (!currentUrl) {
+      try {
+        const params = new URLSearchParams(window.location.search);
+        currentUrl = params.get('url') || '';
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    for (const type of reportTypes) {
+      // First try URL-specific key
+      if (currentUrl) {
+        const normalizedUrl = window.ReportUI?.normalizeUrlForReportId?.(currentUrl) || currentUrl;
+        const urlHash = window.ReportUI?.hashForStorageKey?.(normalizedUrl) || currentUrl.replace(/[^a-z0-9]/gi, '').slice(0, 16);
+        const purchaseKey = `sm_report_purchased_${type}_${urlHash}`;
+        const timestamp = localStorage.getItem(purchaseKey);
+        if (timestamp && parseInt(timestamp, 10) > oneDayAgo) {
+          console.log('[ProReportBlock] Found valid localStorage purchase with session marker (URL-specific):', { type, purchaseKey });
+          return true;
+        }
+      }
+      // Fallback to legacy key (no URL)
+      const legacyPurchaseKey = `sm_report_purchased_${type}`;
+      const legacyTimestamp = localStorage.getItem(legacyPurchaseKey);
+      if (legacyTimestamp && parseInt(legacyTimestamp, 10) > oneDayAgo) {
+        console.log('[ProReportBlock] Found valid localStorage purchase with session marker (legacy):', { type, purchaseKey: legacyPurchaseKey });
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
    * Check if user has access to a report (Pro OR purchased OR demo domain)
    * If no reportId is provided, falls back to the current report from body attribute
    */
   function hasAccess(reportId) {
-    if (isProSubscriber()) return true;
+    console.log('[ProReportBlock] hasAccess called with reportId:', reportId);
+
+    const isProSub = isProSubscriber();
+    console.log('[ProReportBlock] isProSubscriber check:', isProSub);
+    if (isProSub) {
+      console.log('[ProReportBlock] hasAccess: TRUE via isProSubscriber');
+      return true;
+    }
+
+    // Check localStorage purchases (handles just-completed Stripe payments)
+    const localPurchase = isReportTypePurchasedLocally();
+    console.log('[ProReportBlock] isReportTypePurchasedLocally check:', localPurchase);
+    if (localPurchase) {
+      console.log('[ProReportBlock] hasAccess: TRUE via localStorage purchase');
+      return true;
+    }
 
     // Check demo domains - get domain from multiple sources (most specific first)
     // 1. Body attribute (if explicitly set by page)
@@ -146,8 +245,10 @@
 
     console.log('[ProReportBlock] hasAccess domain check:', { currentDomain, source: document.body?.getAttribute('data-scan-domain') ? 'body' : document.getElementById('url')?.value ? 'urlInput' : 'scanContext' });
 
-    if (currentDomain && window.ProAccess?.isDemoDomain?.(currentDomain)) {
-      console.log('[ProReportBlock] hasAccess: true (demo domain)', { currentDomain });
+    const isDemoResult = currentDomain && window.ProAccess?.isDemoDomain?.(currentDomain);
+    console.log('[ProReportBlock] isDemoDomain check:', { currentDomain, isDemoResult, demoDomains: window.ProAccess?.DEMO_DOMAINS });
+    if (isDemoResult) {
+      console.log('[ProReportBlock] hasAccess: TRUE via demo domain', { currentDomain });
       return true;
     }
 
@@ -190,14 +291,14 @@
             data-context="${context}"
             ${reportId ? `data-report-id="${reportId}"` : ''}
           >
-            Unlock for $10
+            Unlock for $5
           </button>
           <button
             class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary"
             data-open-pricing-modal
             data-context="${context}"
           >
-            Go Pro — $20/mo
+            Go Pro — $30/mo
           </button>
         </div>
         <p class="pro-report-block__unlock-hint">
@@ -265,8 +366,8 @@
     const {
       context = 'report',
       features = ['pdf', 'csv', 'share'],
-      title = 'Export & Share',
-      subtitle = 'Download reports, export data, and share results.',
+      title = 'Unlock Report',
+      subtitle = 'PDF export, share link, export data, and fix packs for this scan.',
       showBadge = true,
       reportId = null
     } = options;
@@ -274,22 +375,35 @@
     const userHasAccess = hasAccess(reportId);
     const isPro = isProSubscriber();
     const isPurchased = isReportPurchased(reportId);
+    const hasLocalPurchase = isReportTypePurchasedLocally();
 
-    // Determine badge text
+    // Determine badge text and style
     let badgeText = '';
-    if (isPro) badgeText = 'PRO';
-    else if (isPurchased) badgeText = 'PURCHASED';
+    let badgeStyle = 'purchased';
+    if (isPro) {
+      badgeText = 'PRO';
+      badgeStyle = 'pro';
+    } else if (isPurchased || hasLocalPurchase) {
+      badgeText = 'UNLOCKED';
+      badgeStyle = 'purchased';
+    }
+
+    // Use different title when user has access
+    const displayTitle = userHasAccess ? 'Export & Share' : title;
+    const displaySubtitle = userHasAccess
+      ? 'Download reports, export data, and share results.'
+      : subtitle;
 
     return `
       <div class="pro-report-block" data-pro-report-block ${reportId ? `data-report-id="${reportId}"` : ''}>
         <div class="pro-report-block__header">
-          <div class="pro-report-block__icon">📊</div>
+          <div class="pro-report-block__icon">${userHasAccess ? '📊' : '🔒'}</div>
           <div class="pro-report-block__text">
             <h3 class="pro-report-block__title">
-              ${title}
-              ${showBadge && userHasAccess ? `<span class="pro-report-block__badge pro-report-block__badge--${isPro ? 'pro' : 'purchased'}">${badgeText}</span>` : ''}
+              ${displayTitle}
+              ${showBadge && userHasAccess ? `<span class="pro-report-block__badge pro-report-block__badge--${badgeStyle}">${badgeText}</span>` : ''}
             </h3>
-            <p class="pro-report-block__subtitle">${subtitle}</p>
+            <p class="pro-report-block__subtitle">${displaySubtitle}</p>
           </div>
         </div>
         <div class="pro-report-block__actions">

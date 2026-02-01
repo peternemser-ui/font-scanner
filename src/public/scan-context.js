@@ -16,13 +16,42 @@
 
 const ScanContext = {
   STORAGE_KEY: 'sm_current_scan',
-  
+
+  /**
+   * Generate a unique storage key for a specific analyzer+url combination
+   * @param {string} analyzerType - The analyzer type
+   * @param {string} url - The URL being analyzed
+   * @returns {string} The storage key
+   */
+  _getUniqueKey(analyzerType, url) {
+    if (!analyzerType || !url) return null;
+    // Simple hash for URL
+    let hash = 0;
+    const normalizedUrl = (url || '').trim().toLowerCase();
+    for (let i = 0; i < normalizedUrl.length; i++) {
+      hash = ((hash << 5) - hash) + normalizedUrl.charCodeAt(i);
+      hash = hash & hash;
+    }
+    return `sm_scan_${analyzerType}_${Math.abs(hash).toString(36)}`;
+  },
+
   /**
    * Get the current scan context
+   * @param {string} [analyzerType] - Optional analyzer type for specific context
+   * @param {string} [url] - Optional URL for specific context
    * @returns {Object|null} The scan context or null if none exists
    */
-  get() {
+  get(analyzerType, url) {
     try {
+      // Try unique key first if both params provided
+      if (analyzerType && url) {
+        const uniqueKey = this._getUniqueKey(analyzerType, url);
+        if (uniqueKey) {
+          const data = localStorage.getItem(uniqueKey);
+          if (data) return JSON.parse(data);
+        }
+      }
+      // Fall back to shared key
       const data = localStorage.getItem(this.STORAGE_KEY);
       return data ? JSON.parse(data) : null;
     } catch (error) {
@@ -30,7 +59,7 @@ const ScanContext = {
       return null;
     }
   },
-  
+
   /**
    * Save a new scan context
    * @param {Object} scanData - The scan results and metadata
@@ -45,21 +74,39 @@ const ScanContext = {
       } catch (e) {
         // Keep as-is if URL parsing fails
       }
-      
+
+      // Get analyzer type from data or global
+      const analyzerType = scanData.analyzerType ||
+                          document.body?.getAttribute('data-sm-analyzer-key') ||
+                          window.SM_ANALYZER_KEY ||
+                          'unknown';
+
       const context = {
         domain,
         url: scanData.url,
+        analyzerType,
         selectedUrls: scanData.selectedUrls || [scanData.url],
         selectedModules: scanData.selectedModules || ['fonts', 'seo', 'performance', 'accessibility', 'security'],
         finishedAt: new Date().toISOString(),
         results: scanData.results || scanData
       };
-      
+
+      // Save to unique key for this analyzer+url
+      const uniqueKey = this._getUniqueKey(analyzerType, scanData.url);
+      if (uniqueKey) {
+        try {
+          localStorage.setItem(uniqueKey, JSON.stringify(context));
+        } catch (e) {
+          console.warn('[ScanContext] Failed to save to unique key (storage full?):', e);
+        }
+      }
+
+      // Also save to shared key for backwards compatibility
       localStorage.setItem(this.STORAGE_KEY, JSON.stringify(context));
 
       // Dispatch custom event for cross-page reactivity
       window.dispatchEvent(new CustomEvent('scanContextUpdated', { detail: context }));
-      
+
       return context;
     } catch (error) {
       console.error('[ScanContext] Failed to save scan context:', error);
@@ -461,17 +508,35 @@ const ProAccess = {
     return ScanContext.getDomain() || this.normalizeDomain(window.currentSeoResults?.url || window.location.hostname);
   },
   hasProAccess(domainOverride) {
+    console.log('[ProAccess] hasProAccess called with domainOverride:', domainOverride);
+
     // Auto-unlock for demo domains
-    if (this.isDemoDomain(domainOverride)) return true;
+    const isDemo = this.isDemoDomain(domainOverride);
+    console.log('[ProAccess] isDemoDomain check:', isDemo);
+    if (isDemo) {
+      console.log('[ProAccess] hasProAccess: TRUE via demo domain');
+      return true;
+    }
 
     const entitlement = this.getEntitlement();
-    if (!entitlement) return false;
+    console.log('[ProAccess] getEntitlement result:', entitlement);
+    if (!entitlement) {
+      console.log('[ProAccess] hasProAccess: FALSE (no entitlement)');
+      return false;
+    }
+
     const now = Date.now();
     const expires = entitlement.expiresAt ? new Date(entitlement.expiresAt).getTime() : 0;
-    if (!expires || now >= expires) return false;
+    if (!expires || now >= expires) {
+      console.log('[ProAccess] hasProAccess: FALSE (entitlement expired)', { now, expires });
+      return false;
+    }
+
     const targetDomain = this.normalizeDomain(domainOverride || this.getCurrentDomain());
     const entitlementDomain = this.normalizeDomain(entitlement.domain);
-    return Boolean(targetDomain && entitlementDomain && entitlementDomain === targetDomain && entitlement.token);
+    const result = Boolean(targetDomain && entitlementDomain && entitlementDomain === targetDomain && entitlement.token);
+    console.log('[ProAccess] hasProAccess domain match:', { targetDomain, entitlementDomain, result });
+    return result;
   },
   openProPaywall(payload = {}) {
     const { domain, context } = payload || {};

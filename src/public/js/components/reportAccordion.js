@@ -69,10 +69,10 @@
           </div>
           <div class="pro-report-block__unlock-buttons">
             <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="${context}" ${reportId ? `data-report-id="${reportId}"` : ''}>
-              Unlock for $10
+              Unlock for $5
             </button>
             <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="${context}">
-              Go Pro — $20/mo
+              Go Pro — $30/mo
             </button>
           </div>
           <p class="pro-report-block__unlock-hint">
@@ -107,7 +107,7 @@
           data-accordion-body="${safeId}"
           hidden
         >
-          ${locked ? `<div class="report-shell__lock-overlay"><div class="is-locked">${contentHTML}</div><div class="report-shell__lock-paywall" data-paid-unlock-card data-hide-when-unlocked>${cardHTML}</div></div>` : contentHTML}
+          ${locked ? `<div class="report-shell__lock-overlay"><div class="report-shell__lock-paywall" data-paid-unlock-card>${cardHTML}</div></div>` : contentHTML}
         </div>
       </div>
     `;
