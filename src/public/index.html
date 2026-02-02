@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
-    
+
     <!-- Redirect to Dashboard -->
     <script src="/js/redirect.js" data-redirect="/dashboard.html"></script>
 
@@ -233,38 +233,125 @@
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
 
-    <div class="container">
-      <!-- Breadcrumb Navigation -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/">Home</a>
-        <span class="breadcrumb-separator">›</span>
-        <span class="breadcrumb-current">Site Mechanic</span>
-      </nav>
-      
-      <!-- Page Title -->
-      <div class="page-header">
-        <h1 class="page-title">🔧 Site Mechanic</h1>
-        <p class="page-subtitle">Website inspection and diagnostics platform. Find issues, understand severity, and know what to fix first.</p>
-      </div>
+    <div class="container" style="max-width: none; padding: 0; margin-top: 0 !important; padding-top: 0 !important;">
+      <!-- Homepage Hero Section -->
+      <section class="homepage-hero">
+        <div class="hero-grid">
+          <!-- Left Column: Headline, Form, Example Chips -->
+          <div class="hero-left">
+            <h1 class="hero-headline" data-i18n="homepage.hero.headline">Scan any website.
+Get prioritized fixes.</h1>
 
-      <!-- Header -->
-      <header class="form-container">
-        <!-- URL Input Form -->
-        <div style="margin-top: 2rem;">
-          <label for="urlInput" class="visually-hidden" data-i18n="fontScanner.enterUrl">Website URL to analyze</label>
-          <input
-            type="text"
-            id="urlInput"
-            data-i18n-placeholder="fontScanner.enterUrl"
-            placeholder="example.com or https://example.com"
-            aria-label="Enter website URL to analyze"
-            required
-            aria-required="true"
-          />
+            <p class="hero-subhead" data-i18n="homepage.hero.subhead">Performance, SEO, accessibility, security, and typography diagnostics in one scan.</p>
 
-          <button id="analyzeButton" data-i18n="fontScanner.inspectWebsite" aria-label="Start website inspection">INSPECT</button>
+            <!-- URL Input Form -->
+            <form class="hero-form" onsubmit="return false;">
+              <div class="hero-form__row">
+                <label for="urlInput" class="visually-hidden" data-i18n="homepage.hero.placeholder">Website URL to analyze</label>
+                <input
+                  type="text"
+                  id="urlInput"
+                  class="hero-form__input"
+                  data-i18n-placeholder="homepage.hero.placeholder"
+                  placeholder="https://example.com"
+                  aria-label="Enter website URL to analyze"
+                  required
+                  aria-required="true"
+                />
+                <button id="analyzeButton" class="hero-form__button" data-i18n="homepage.hero.button" aria-label="Start website scan">Analyze</button>
+              </div>
+            </form>
+
+            <p class="hero-helper-text" data-i18n="homepage.hero.helperText">Most scans finish in ~30 seconds</p>
+
+            <!-- Example URL Chips -->
+            <div class="example-chips">
+              <span class="example-chips__label" data-i18n="homepage.exampleUrls.label">Try:</span>
+              <button type="button" class="example-chip" data-url="example.com" data-i18n="homepage.exampleUrls.example1">example.com</button>
+              <button type="button" class="example-chip" data-url="wikipedia.org" data-i18n="homepage.exampleUrls.example2">wikipedia.org</button>
+              <button type="button" class="example-chip" data-url="github.com" data-i18n="homepage.exampleUrls.example3">github.com</button>
+            </div>
+
+            <!-- What's Included Link -->
+            <a href="#feature-strip" class="whats-included-link">
+              <span data-i18n="homepage.hero.whatsIncluded">What's included</span>
+              <span class="whats-included-link__arrow">↓</span>
+            </a>
+          </div>
+
+          <!-- Right Column: What You'll Get Panel -->
+          <aside class="hero-right">
+            <h2 class="hero-right__title" data-i18n="homepage.whatYouGet.title">What you'll get</h2>
+            <ul class="hero-right__list">
+              <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet1">Issue severity ranking</li>
+              <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet2">Actionable fixes</li>
+              <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet3">Score breakdowns</li>
+              <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet4">Code snippets</li>
+            </ul>
+
+            <!-- Pro Callout -->
+            <div class="hero-right__pro-callout">
+              <p data-i18n="homepage.whatYouGet.proCallout">Pro reports include PDF export and client-ready recommendations</p>
+            </div>
+
+            <!-- Sample Report Link -->
+            <a href="/results.html?demo=true" class="hero-right__sample-link">
+              <span data-i18n="homepage.whatYouGet.sampleReport">See a sample report</span>
+              <span>→</span>
+            </a>
+          </aside>
         </div>
-      </header>
+      </section>
+
+      <!-- Feature Strip -->
+      <section id="feature-strip" class="feature-strip">
+        <h2 class="feature-strip__title" data-i18n="homepage.featureStrip.title">What's included</h2>
+        <div class="feature-strip__grid">
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.performance.title">Performance</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.performance.desc">Core Web Vitals & load speed</p>
+          </div>
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.seo.title">SEO</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.seo.desc">Meta tags & structured data</p>
+          </div>
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.accessibility.title">Accessibility</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.accessibility.desc">WCAG compliance checks</p>
+          </div>
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.security.title">Security</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.security.desc">Headers & SSL validation</p>
+          </div>
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.typography.title">Typography</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.typography.desc">Font loading & consistency</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pro Upsell Block -->
+      <section class="pro-upsell">
+        <div class="pro-upsell__card">
+          <div class="pro-upsell__content">
+            <h2 class="pro-upsell__title" data-i18n="homepage.proUpsell.title">Unlock Pro Reports</h2>
+            <div class="pro-upsell__bullets">
+              <span class="pro-upsell__bullet" data-i18n="homepage.proUpsell.bullet1">PDF export</span>
+              <span class="pro-upsell__bullet" data-i18n="homepage.proUpsell.bullet2">Client-ready fixes</span>
+              <span class="pro-upsell__bullet" data-i18n="homepage.proUpsell.bullet3">Saved reports</span>
+            </div>
+          </div>
+          <button type="button" class="pro-upsell__cta" id="openPricingModal" data-i18n="homepage.proUpsell.cta">See pricing</button>
+        </div>
+      </section>
+
+      <!-- Homepage Footer Bar -->
+      <div class="homepage-footer-bar">
+        <p class="homepage-footer-bar__text">
+          <span data-i18n="homepage.footer.needHelp">Need help?</span>
+          <a href="mailto:support@sitemechanic.io" class="homepage-footer-bar__link" data-i18n="homepage.footer.contactSupport">Contact support</a>
+        </p>
+      </div>
 
       <!-- Results Container -->
       <div id="results" class="results-container hidden" role="region" aria-live="polite">

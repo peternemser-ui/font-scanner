@@ -3,15 +3,31 @@
    =================================================================== */
 
 /* ===================================================================
-   BREADCRUMB NAVIGATION
+   BREADCRUMB NAVIGATION - Swiss Design System
    =================================================================== */
 .breadcrumb {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 0.85rem;
-  padding: 0.75rem 0;
+  font-family: var(--font-sans);
+  font-size: 0.8125rem;
+  padding: var(--space-4, 0.25rem) 0;
   color: var(--text-secondary, #888);
+  line-height: var(--leading-tight, 1.2);
+}
+
+.breadcrumb-list {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8, 0.5rem);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.breadcrumb-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8, 0.5rem);
 }
 
 .breadcrumb-bar {
@@ -21,7 +37,7 @@
 .breadcrumb-container {
   max-width: 1400px;
   margin: 0;
-  padding: 0 1.5rem;
+  padding: 0 var(--space-24, 1.5rem);
 }
 
 .breadcrumb-section {
@@ -30,25 +46,35 @@
 }
 
 .breadcrumb-context {
-  margin-left: 0.5rem;
+  margin-left: var(--space-8, 0.5rem);
   color: var(--text-muted, #666);
   font-size: 0.8em;
 }
 
-.breadcrumb a {
+.breadcrumb a,
+.breadcrumb-link {
   color: var(--accent-primary);
   text-decoration: none;
-  transition: color 0.2s ease;
+  transition: color 0.15s ease;
 }
 
-.breadcrumb a:hover {
+.breadcrumb a:hover,
+.breadcrumb-link:hover {
   color: var(--accent-secondary);
   text-decoration: underline;
+}
+
+.breadcrumb a:focus-visible,
+.breadcrumb-link:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+  border-radius: 2px;
 }
 
 .breadcrumb-separator {
   color: var(--text-muted, #666);
   font-weight: 300;
+  user-select: none;
 }
 
 .breadcrumb-current {
@@ -60,8 +86,8 @@
    PAGE HEADER
    =================================================================== */
 .page-header {
-  margin-bottom: 1.5rem;
-  padding: 2rem;
+  margin-bottom: 0.75rem;
+  padding: 1rem 1.25rem;
   border: 1px solid var(--border-primary, rgba(255, 255, 255, 0.1));
   border-radius: var(--radius-lg, 12px);
   background: var(--bg-card, rgba(255, 255, 255, 0.02));
@@ -72,7 +98,7 @@
   font-size: clamp(1.5rem, 4vw, 2rem);
   font-weight: 700;
   color: var(--text-primary, #fff);
-  margin: 0 0 0.5rem 0;
+  margin: 0 0 0.25rem 0;
   line-height: 1.2;
   text-align: left;
 }

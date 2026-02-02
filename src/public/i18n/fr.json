@@ -3,6 +3,65 @@
     "name": "SITE MECHANIC",
     "tagline": "Diagnostics Web et Analyse de Performance"
   },
+  "homepage": {
+    "hero": {
+      "headline": "Analysez n'importe quel site web.\nObtenez des corrections prioritaires.",
+      "subhead": "Diagnostics de performance, SEO, accessibilité, sécurité et typographie en une seule analyse.",
+      "placeholder": "https://exemple.com",
+      "helperText": "La plupart des analyses se terminent en ~30 secondes",
+      "button": "Analyser",
+      "whatsIncluded": "Ce qui est inclus"
+    },
+    "whatYouGet": {
+      "title": "Ce que vous obtiendrez",
+      "bullet1": "Classement par gravité des problèmes",
+      "bullet2": "Corrections exploitables",
+      "bullet3": "Détail des scores",
+      "bullet4": "Extraits de code",
+      "proCallout": "Les rapports Pro incluent l'export PDF et des recommandations prêtes pour les clients",
+      "sampleReport": "Voir un exemple de rapport"
+    },
+    "exampleUrls": {
+      "label": "Essayez :",
+      "example1": "example.com",
+      "example2": "wikipedia.org",
+      "example3": "github.com"
+    },
+    "featureStrip": {
+      "title": "Ce qui est inclus",
+      "performance": {
+        "title": "Performance",
+        "desc": "Core Web Vitals et vitesse de chargement"
+      },
+      "seo": {
+        "title": "SEO",
+        "desc": "Balises meta et données structurées"
+      },
+      "accessibility": {
+        "title": "Accessibilité",
+        "desc": "Vérifications de conformité WCAG"
+      },
+      "security": {
+        "title": "Sécurité",
+        "desc": "En-têtes et validation SSL"
+      },
+      "typography": {
+        "title": "Typographie",
+        "desc": "Chargement des polices et cohérence"
+      }
+    },
+    "proUpsell": {
+      "title": "Débloquez les Rapports Pro",
+      "bullet1": "Export PDF",
+      "bullet2": "Corrections prêtes pour clients",
+      "bullet3": "Rapports sauvegardés",
+      "cta": "Voir les tarifs"
+    },
+    "footer": {
+      "needHelp": "Besoin d'aide ?",
+      "contactSupport": "Contacter le support"
+    }
+  },
   "nav": {
     "dashboard": "Tableau de Bord",
     "fontScanner": "Polices et Typographie",
@@ -41,7 +100,6 @@
   },
   "dashboard": {
     "title": "Aperçu du Site Web",
-    "breadcrumb": "tableau de bord / aperçu",
     "runAudit": "LANCER L'AUDIT COMPLET",
     "analyzing": "ANALYSE EN COURS...",
     "enterUrl": "Entrez l'URL du site web à analyser...",
@@ -64,7 +122,70 @@
     "fair": "Moyen",
     "needsWork": "Nécessite des Améliorations",
     "error": "Erreur",
-    "na": "N/D"
+    "na": "N/D",
+    "breadcrumb": {
+      "home": "Accueil",
+      "current": "Tableau de Bord"
+    },
+    "header": {
+      "title": "Tableau de Bord",
+      "subtitle": "Analysez un site pour trouver des problèmes de performance, SEO, accessibilité et sécurité. Débloquez un rapport avec des recommandations et corrections prioritaires."
+    },
+    "scan": {
+      "title": "Analyser un site",
+      "urlLabel": "URL du site",
+      "urlPlaceholder": "https://exemple.com",
+      "howItWorks": "Comment ça marche:",
+      "howItWorksText": "Lancez une analyse pour voir les problèmes clés. Si vous voulez un export client, vous pouvez débloquer un rapport avec des recommandations.",
+      "note": "Note:",
+      "noteText": "Certains sites bloquent les analyses automatisées. Essayez vos propres sites ou"
+    },
+    "howItWorks": {
+      "title": "Comment Ça Marche",
+      "step1Title": "Entrez une URL",
+      "step1Desc": "Collez n'importe quelle URL de site web à analyser. Fonctionne avec la plupart des sites publics.",
+      "step2Title": "Obtenez un Rapport d'Analyse",
+      "step2Desc": "Voyez les problèmes de SEO, performance, accessibilité, sécurité et polices en quelques secondes.",
+      "step3Title": "Examinez les Problèmes",
+      "step3Desc": "Développez chaque section pour voir les résultats détaillés, les scores et les gains rapides.",
+      "step4Title": "Débloquez les Rapports Pro",
+      "step4Desc": "Exportez en PDF, obtenez le code de correction et partagez avec vos clients."
+    },
+    "faq": {
+      "title": "FAQ",
+      "viewAll": "Voir toutes les FAQ",
+      "commonQuestions": "Questions fréquentes",
+      "tagBasics": "Bases",
+      "tagBilling": "Facturation",
+      "tagHelp": "Aide",
+      "q1": "Qu'est-ce que Site Mechanic?",
+      "a1": "Site Mechanic est un ensemble de modules de diagnostic de sites web (Vitesse & UX, SEO, Accessibilité, Sécurité, Polices & Design, et plus). Collez une URL, lancez une analyse et obtenez les problèmes prioritaires.",
+      "q2": "Ai-je besoin d'un compte pour lancer des analyses?",
+      "a2": "Non. La plupart des analyses peuvent être lancées sans connexion. Si vous choisissez de débloquer un rapport payant, vous serez invité à vous connecter.",
+      "q3": "Combien de temps prennent les analyses?",
+      "a3": "Les analyses rapides prennent généralement moins d'une minute; les audits Lighthouse peuvent prendre quelques minutes.",
+      "q4": "Qu'est-ce qu'un rapport payant?",
+      "a4": "Un rapport payant est un export/partage pour une analyse spécifique, comme l'export PDF, les liens de partage ou les conseils de correction.",
+      "q5": "Comment fonctionnent les crédits?",
+      "a5": "Les crédits débloquent les rapports payants pour des analyses individuelles. Si vous avez des crédits, vous pouvez débloquer avec 1 crédit.",
+      "q6": "L'analyse est bloquée. Que dois-je faire?",
+      "a6": "Essayez une URL plus simple (page d'accueil vs route profonde) et relancez. Si le problème persiste, contactez-nous.",
+      "moreAnswers": "Plus de réponses sur la",
+      "faqPage": "page FAQ"
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Envoyez un message au support. Incluez l'URL que vous avez analysée si cela peut aider.",
+      "nameLabel": "Nom (optionnel)",
+      "namePlaceholder": "Votre nom",
+      "emailLabel": "Email",
+      "emailPlaceholder": "vous@entreprise.com",
+      "urlLabel": "URL du site (optionnel)",
+      "urlPlaceholder": "https://exemple.com",
+      "messageLabel": "Message",
+      "messagePlaceholder": "Comment pouvons-nous vous aider?",
+      "submitButton": "Envoyer le message"
+    }
   },
   "fontScanner": {
     "title": "Polices et Typographie",
@@ -1080,8 +1201,110 @@
     "help": "Aide",
     "settings": "Paramètres",
     "language": "Langue",
-    "pageScreenshotAlt": "Capture d’écran de la page",
-    "footer": "© 2025 Site Mechanic. Conçu pour les développeurs qui se soucient de la qualité."
+    "pageScreenshotAlt": "Capture d'écran de la page",
+    "footer": "© 2026 Site Mechanic par Peter Freedman | Services d'optimisation et développement web",
+    "runScan": "Analyser",
+    "analyzing": "Analyse en cours..."
+  },
+  "performanceHub": {
+    "title": "Vitesse & UX",
+    "subtitle": "Performance, Core Web Vitals & Lighthouse",
+    "breadcrumb": {
+      "home": "Accueil",
+      "current": "Hub Performance"
+    },
+    "header": {
+      "title": "Hub de Test de Performance",
+      "subtitle": "Analysez la vitesse de chargement, les Core Web Vitals (LCP, FID, CLS) et les métriques Lighthouse"
+    },
+    "tabs": {
+      "quick": "Scan Rapide",
+      "cwv": "Core Web Vitals",
+      "full": "Audit Lighthouse"
+    },
+    "scan": {
+      "placeholder": "Entrez l'URL du site...",
+      "button": "Analyser la Performance",
+      "analyzing": "Analyse en cours...",
+      "quickDesc": "Aperçu rapide de performance",
+      "cwvDesc": "Analyse détaillée des Core Web Vitals",
+      "fullDesc": "Audit Lighthouse complet"
+    },
+    "scores": {
+      "performance": "Performance",
+      "accessibility": "Accessibilité",
+      "bestPractices": "Bonnes Pratiques",
+      "seo": "SEO",
+      "overall": "Score Global"
+    },
+    "metrics": {
+      "lcp": "Largest Contentful Paint",
+      "fid": "First Input Delay",
+      "cls": "Cumulative Layout Shift",
+      "fcp": "First Contentful Paint",
+      "tti": "Time to Interactive",
+      "tbt": "Total Blocking Time",
+      "si": "Speed Index"
+    },
+    "status": {
+      "good": "Bon",
+      "needsImprovement": "À Améliorer",
+      "poor": "Faible"
+    },
+    "sections": {
+      "overview": "Aperçu",
+      "diagnostics": "Diagnostics",
+      "opportunities": "Opportunités",
+      "resources": "Analyse des Ressources",
+      "fixes": "Recommandations de Correction"
+    },
+    "device": {
+      "desktop": "Bureau",
+      "mobile": "Mobile"
+    },
+    "resources": {
+      "css": "CSS",
+      "js": "JavaScript",
+      "images": "Images",
+      "fonts": "Polices",
+      "thirdParty": "Tiers",
+      "total": "Total"
+    },
+    "fixes": {
+      "critical": "Critique",
+      "medium": "Moyen",
+      "low": "Priorité Faible",
+      "copyCode": "Copier le Code",
+      "viewDetails": "Voir les Détails"
+    }
+  },
+  "languageAudit": {
+    "title": "Audit de Langue",
+    "subtitle": "Vérification de Configuration i18n",
+    "description": "Analysez votre page pour une configuration de langue appropriée et les signaux SEO",
+    "score": "Score de Langue",
+    "grade": "Note",
+    "issues": "Problèmes Trouvés",
+    "checks": {
+      "htmlLang": "Attribut html lang",
+      "contentLanguage": "En-tête Content-Language",
+      "hreflang": "Balises hreflang",
+      "metaLanguage": "Balises meta de langue",
+      "consistency": "Cohérence de langue",
+      "direction": "Direction du texte (dir)"
+    },
+    "severity": {
+      "critical": "Critique",
+      "high": "Élevé",
+      "medium": "Moyen",
+      "low": "Faible",
+      "info": "Info"
+    },
+    "recommendations": {
+      "addHtmlLang": "Ajoutez l'attribut lang à votre balise <html>",
+      "addHreflang": "Envisagez d'ajouter des balises hreflang pour le SEO multilingue",
+      "addContentLanguage": "Ajoutez l'en-tête HTTP Content-Language"
+    }
   },
   "errors": {
     "urlRequired": "Veuillez entrer une URL valide",

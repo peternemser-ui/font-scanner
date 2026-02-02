@@ -48,7 +48,7 @@
     
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:wght@400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
@@ -70,7 +70,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -450,209 +450,150 @@
   <body data-page="dashboard">
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
-    
-    <main class="page-shell">
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
-        <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">Dashboard</span>
-      </nav>
-      
-      <!-- Page Header -->
-      <header class="page-header">
-        <h1 class="page-header__title">Dashboard</h1>
-        <p class="page-header__subtitle">Scan a site to find issues across performance, SEO, accessibility, and security. When you need something shareable, unlock a report with prioritized recommendations and fixes.</p>
-      </header>
 
+    <main class="page-shell" style="padding: 0;">
+      <!-- Homepage Hero Section -->
+      <section class="homepage-hero">
+        <div class="hero-grid">
+          <!-- Single Column Layout -->
+          <div class="hero-left">
+            <h1 class="hero-headline" data-i18n="homepage.hero.headline">Scan any website.
+Get prioritized fixes — and shareable reports.</h1>
 
+            <p class="hero-subhead" data-i18n="homepage.hero.subhead">Performance, SEO, accessibility, security, and typography diagnostics in one scan.</p>
 
-      <!-- Scan a Site Card -->
-      <section class="card scan-card-enhanced">
-        <h2 class="card__title">Scan a site</h2>
-        <div class="form-row">
-          <label for="dashboardUrlInput" class="form-row__label">Website URL</label>
-          <div class="form-row__group">
-            <input
-              type="url"
-              id="dashboardUrlInput"
-              class="input"
-              placeholder="https://example.com"
-              aria-label="Enter website URL to audit"
-              aria-describedby="urlHelp"
-              required
-              aria-required="true"
-            />
-            <button id="dashboardAnalyzeButton" type="button" class="btn btn-primary" aria-label="Analyze the entered URL">
-              Analyze
-            </button>
+            <!-- URL Input Form - Full Width -->
+            <form class="hero-form" onsubmit="return false;">
+              <div class="hero-form__row">
+                <label for="dashboardUrlInput" class="visually-hidden" data-i18n="homepage.hero.placeholder">Website URL to analyze</label>
+                <input
+                  type="url"
+                  id="dashboardUrlInput"
+                  class="hero-form__input"
+                  data-i18n-placeholder="homepage.hero.placeholder"
+                  placeholder="https://example.com"
+                  aria-label="Enter website URL to analyze"
+                  required
+                  aria-required="true"
+                />
+                <button id="dashboardAnalyzeButton" type="button" class="hero-form__button" data-i18n="homepage.hero.button" aria-label="Start website scan">Analyze</button>
+              </div>
+            </form>
+
+            <p class="hero-helper-text" data-i18n="homepage.hero.helperText">Most scans finish in ~30 seconds</p>
+
+            <!-- What You'll Get Panel - Below Form -->
+            <aside class="hero-right">
+              <h2 class="hero-right__title" data-i18n="homepage.whatYouGet.title">What you'll get</h2>
+              <ul class="hero-right__list">
+                <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet1">Issue severity ranking</li>
+                <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet2">Actionable fixes</li>
+                <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet3">Score breakdowns</li>
+                <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet4">Code snippets</li>
+              </ul>
+
+              <!-- Pro Callout -->
+              <div class="hero-right__pro-callout">
+                <p data-i18n="homepage.whatYouGet.proCallout">Pro reports include PDF export and client-ready recommendations</p>
+              </div>
+
+              <!-- Sample Report Link -->
+              <a href="/results.html?demo=true" class="hero-right__sample-link">
+                <span data-i18n="homepage.whatYouGet.sampleReport">See a sample report</span>
+                <span>→</span>
+              </a>
+            </aside>
+
+            <!-- Example URL Chips -->
+            <div class="example-chips">
+              <span class="example-chips__label" data-i18n="homepage.exampleUrls.label">Try:</span>
+              <button type="button" class="example-chip" data-url="example.com" data-i18n="homepage.exampleUrls.example1">example.com</button>
+              <button type="button" class="example-chip" data-url="wikipedia.org" data-i18n="homepage.exampleUrls.example2">wikipedia.org</button>
+              <button type="button" class="example-chip" data-url="github.com" data-i18n="homepage.exampleUrls.example3">github.com</button>
+            </div>
+
+            <!-- What's Included Link -->
+            <a href="#feature-strip" class="whats-included-link">
+              <span data-i18n="homepage.hero.whatsIncluded">What's included</span>
+              <span class="whats-included-link__arrow">↓</span>
+            </a>
           </div>
-          <p id="urlHelp" class="helper-text">
-            <strong>How it works:</strong> Run a scan to see key issues and next steps. If you want a client-ready export, you can unlock a report with recommendations and fixes.
-            <br />
-            <strong>Note:</strong> Some sites block automated scans. Try your own sites or <code>example.com</code>.
-          </p>
+
+          <!-- Abstract diagnostic graphic - nodes/connections -->
+          <div class="hero-graphic" aria-hidden="true">
+            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <circle cx="40" cy="60" r="4" fill="currentColor" opacity="0.15"/>
+              <circle cx="100" cy="35" r="6" fill="currentColor" opacity="0.2"/>
+              <circle cx="160" cy="70" r="4" fill="currentColor" opacity="0.15"/>
+              <circle cx="70" cy="110" r="5" fill="currentColor" opacity="0.18"/>
+              <circle cx="130" cy="130" r="4" fill="currentColor" opacity="0.12"/>
+              <circle cx="170" cy="150" r="3" fill="currentColor" opacity="0.1"/>
+              <circle cx="50" cy="160" r="3" fill="currentColor" opacity="0.1"/>
+              <line x1="40" y1="60" x2="100" y2="35" stroke="currentColor" stroke-width="1" opacity="0.08"/>
+              <line x1="100" y1="35" x2="160" y2="70" stroke="currentColor" stroke-width="1" opacity="0.08"/>
+              <line x1="100" y1="35" x2="70" y2="110" stroke="currentColor" stroke-width="1" opacity="0.08"/>
+              <line x1="70" y1="110" x2="130" y2="130" stroke="currentColor" stroke-width="1" opacity="0.08"/>
+              <line x1="130" y1="130" x2="170" y2="150" stroke="currentColor" stroke-width="1" opacity="0.06"/>
+              <line x1="70" y1="110" x2="50" y2="160" stroke="currentColor" stroke-width="1" opacity="0.06"/>
+              <line x1="160" y1="70" x2="130" y2="130" stroke="currentColor" stroke-width="1" opacity="0.06"/>
+            </svg>
+          </div>
         </div>
       </section>
+
+      <!-- Feature Strip -->
+      <section id="feature-strip" class="feature-strip">
+        <h2 class="feature-strip__title" data-i18n="homepage.featureStrip.title">What's included</h2>
+        <div class="feature-strip__grid">
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.performance.title">Performance</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.performance.desc">Core Web Vitals & load speed</p>
+          </div>
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.seo.title">SEO</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.seo.desc">Meta tags & structured data</p>
+          </div>
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.accessibility.title">Accessibility</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.accessibility.desc">WCAG compliance checks</p>
+          </div>
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.security.title">Security</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.security.desc">Headers & SSL validation</p>
+          </div>
+          <div class="feature-strip__item">
+            <h3 class="feature-strip__item-title" data-i18n="homepage.featureStrip.typography.title">Typography</h3>
+            <p class="feature-strip__item-desc" data-i18n="homepage.featureStrip.typography.desc">Font loading & consistency</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Pro Upsell Block -->
+      <section class="pro-upsell">
+        <div class="pro-upsell__card">
+          <div class="pro-upsell__content">
+            <h2 class="pro-upsell__title" data-i18n="homepage.proUpsell.title">Unlock Pro Reports</h2>
+            <div class="pro-upsell__bullets">
+              <span class="pro-upsell__bullet" data-i18n="homepage.proUpsell.bullet1">PDF export</span>
+              <span class="pro-upsell__bullet" data-i18n="homepage.proUpsell.bullet2">Client-ready fixes</span>
+              <span class="pro-upsell__bullet" data-i18n="homepage.proUpsell.bullet3">Saved reports</span>
+            </div>
+          </div>
+          <button type="button" class="pro-upsell__cta" id="openPricingModal" data-i18n="homepage.proUpsell.cta">See pricing</button>
+        </div>
+      </section>
+
+      <!-- Homepage Footer Bar -->
+      <div class="homepage-footer-bar">
+        <p class="homepage-footer-bar__text">
+          <span data-i18n="homepage.footer.needHelp">Need help?</span>
+          <a href="mailto:support@sitemechanic.io" class="homepage-footer-bar__link" data-i18n="homepage.footer.contactSupport">Contact support</a>
+        </p>
+      </div>
 
       <!-- Results Container (appears after scan) -->
-      <section id="dashboardResults" class="card" style="display: none;">
+      <section id="dashboardResults" class="card" style="display: none; max-width: var(--container-hero, 1120px); margin: 0 auto; padding: 0 var(--swiss-section-gap, 20px);">
         <!-- Results will be dynamically inserted here -->
-      </section>
-
-      <!-- How It Works Section -->
-      <section class="card" aria-label="How Site Mechanic works" style="margin-top: 1.5rem;">
-        <h2 class="card__title" style="margin-bottom: 1.5rem;">How It Works</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1.5rem;">
-          <!-- Step 1 -->
-          <div style="text-align: center; padding: 1rem;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, rgba(91, 244, 231, 0.2), rgba(91, 244, 231, 0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 2px solid rgba(91, 244, 231, 0.3);">
-              <span style="font-size: 1.25rem; font-weight: 700; color: var(--accent-primary, #5bf4e7);">1</span>
-            </div>
-            <h3 style="font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; color: var(--text-primary, #fff);">Enter a URL</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary, #888); margin: 0; line-height: 1.5;">Paste any website URL to analyze. Works with most public websites.</p>
-          </div>
-          <!-- Step 2 -->
-          <div style="text-align: center; padding: 1rem;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, rgba(91, 244, 231, 0.2), rgba(91, 244, 231, 0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 2px solid rgba(91, 244, 231, 0.3);">
-              <span style="font-size: 1.25rem; font-weight: 700; color: var(--accent-primary, #5bf4e7);">2</span>
-            </div>
-            <h3 style="font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; color: var(--text-primary, #fff);">Get a Scan Report</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary, #888); margin: 0; line-height: 1.5;">See issues across SEO, performance, accessibility, security, and fonts in seconds.</p>
-          </div>
-          <!-- Step 3 -->
-          <div style="text-align: center; padding: 1rem;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, rgba(91, 244, 231, 0.2), rgba(91, 244, 231, 0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 2px solid rgba(91, 244, 231, 0.3);">
-              <span style="font-size: 1.25rem; font-weight: 700; color: var(--accent-primary, #5bf4e7);">3</span>
-            </div>
-            <h3 style="font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; color: var(--text-primary, #fff);">Review Issues</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary, #888); margin: 0; line-height: 1.5;">Expand each section to see detailed findings, scores, and quick wins.</p>
-          </div>
-          <!-- Step 4 -->
-          <div style="text-align: center; padding: 1rem;">
-            <div style="width: 48px; height: 48px; border-radius: 50%; background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.05)); display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem; border: 2px solid rgba(16, 185, 129, 0.3);">
-              <span style="font-size: 1.25rem;">&#x2728;</span>
-            </div>
-            <h3 style="font-size: 1rem; font-weight: 600; margin: 0 0 0.5rem; color: var(--text-primary, #fff);">Unlock Pro Reports</h3>
-            <p style="font-size: 0.85rem; color: var(--text-secondary, #888); margin: 0; line-height: 1.5;">Export PDFs, get fix code, and share with clients. Pay per report or use credits.</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- FAQ (below Scan a site) -->
-      <section class="card" aria-label="Frequently asked questions">
-        <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap;">
-          <h2 class="card__title" style="margin: 0;">FAQ</h2>
-          <a href="/faq.html" class="link" style="font-weight: 700;">View all FAQs</a>
-        </div>
-
-        <div class="faq-group" style="margin-top: 0.75rem;">
-          <h3 class="faq-group__title">Common questions</h3>
-
-          <details class="faq-item">
-            <summary>
-              <span class="faq-item__q">
-                <span class="faq-item__tag">Basics</span>
-                <span>What is Site Mechanic?</span>
-              </span>
-              <span class="faq-item__chev" aria-hidden="true">›</span>
-            </summary>
-            <div class="faq-item__a">Site Mechanic is a set of website diagnostics modules (Speed &amp; UX, SEO, Accessibility, Security, Fonts &amp; Design, Hosting, and more). Paste a URL, run a scan, and get prioritized issues. If you need a shareable outcome, you can unlock a report with recommendations and fixes.</div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span class="faq-item__q">
-                <span class="faq-item__tag">Basics</span>
-                <span>Do I need an account to run scans?</span>
-              </span>
-              <span class="faq-item__chev" aria-hidden="true">›</span>
-            </summary>
-            <div class="faq-item__a">No. Most scans can be run without signing in. If you choose to unlock a paid report or export, you may be prompted to sign in so we can associate the purchase with your account.</div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span class="faq-item__q">
-                <span class="faq-item__tag">Basics</span>
-                <span>How long do scans take?</span>
-              </span>
-              <span class="faq-item__chev" aria-hidden="true">›</span>
-            </summary>
-            <div class="faq-item__a">Quick scans are typically under a minute; Lighthouse audits can take a few minutes. If a site is slow or blocks automation, scans can take longer or fail.</div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span class="faq-item__q">
-                <span class="faq-item__tag">Billing</span>
-                <span>What is a paid report?</span>
-              </span>
-              <span class="faq-item__chev" aria-hidden="true">›</span>
-            </summary>
-            <div class="faq-item__a">A paid report is an export/share outcome for a specific scan, such as PDF export, share links, downloadable data, or extended fix guidance. You can usually run the scan for free and then decide whether to purchase the report.</div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span class="faq-item__q">
-                <span class="faq-item__tag">Billing</span>
-                <span>How do credits work?</span>
-              </span>
-              <span class="faq-item__chev" aria-hidden="true">›</span>
-            </summary>
-            <div class="faq-item__a">Credits unlock paid reports for individual scans. When a report is locked, you’ll see options to buy a single report or buy a credit pack. If you already have credits, you can unlock with 1 credit.</div>
-          </details>
-
-          <details class="faq-item">
-            <summary>
-              <span class="faq-item__q">
-                <span class="faq-item__tag">Help</span>
-                <span>The scan is stuck. What should I do?</span>
-              </span>
-              <span class="faq-item__chev" aria-hidden="true">›</span>
-            </summary>
-            <div class="faq-item__a">Try a simpler URL (homepage vs. deep route) and re-run. If the issue persists, email <a href="mailto:peter@sitemechanic.io">peter@sitemechanic.io</a> with the URL and module name so we can reproduce.</div>
-          </details>
-
-          <p class="faq-meta" style="margin-bottom: 0;">More answers on the <a href="/faq.html">FAQ page</a>.</p>
-        </div>
-      </section>
-
-      <!-- Contact (below FAQ) -->
-      <section class="card" aria-label="Contact support">
-        <h2 class="card__title" style="margin-bottom: 0.5rem;">Contact</h2>
-        <p class="helper-text" style="margin-top: 0;">Send a message to support. Include the URL you scanned if it helps.</p>
-
-        <form id="dashboardContactForm" class="form-row" autocomplete="on">
-          <div class="form-row" style="margin-top: 0.75rem;">
-            <label for="contactName" class="form-row__label">Name (optional)</label>
-            <input id="contactName" name="name" class="input" type="text" placeholder="Your name" maxlength="200" />
-          </div>
-
-          <div class="form-row" style="margin-top: 0.75rem;">
-            <label for="contactEmail" class="form-row__label">Email</label>
-            <input id="contactEmail" name="email" class="input" type="email" placeholder="you@company.com" required maxlength="320" />
-          </div>
-
-          <div class="form-row" style="margin-top: 0.75rem;">
-            <label for="contactUrl" class="form-row__label">Website URL (optional)</label>
-            <input id="contactUrl" name="url" class="input" type="url" placeholder="https://example.com" maxlength="2000" />
-          </div>
-
-          <div class="form-row" style="margin-top: 0.75rem;">
-            <label for="contactMessage" class="form-row__label">Message</label>
-            <textarea id="contactMessage" name="message" class="input" rows="5" placeholder="What can we help with?" required maxlength="5000" style="resize: vertical;"></textarea>
-          </div>
-
-          <!-- Honeypot anti-spam field (hidden) -->
-          <input type="text" name="website" tabindex="-1" autocomplete="off" style="position:absolute; left:-10000px; top:auto; width:1px; height:1px; overflow:hidden;" aria-hidden="true" />
-
-          <div style="display: flex; gap: 0.75rem; align-items: center; margin-top: 1rem; flex-wrap: wrap;">
-            <button id="contactSubmitButton" type="submit" class="btn btn-primary">Send message</button>
-            <div id="contactFormStatus" class="helper-text" role="status" aria-live="polite" style="margin: 0;"></div>
-          </div>
-        </form>
       </section>
 
       <!-- Unified Loading Container -->
@@ -723,11 +664,11 @@
     <script src="/pdf-export-integration.js?v=2"></script>
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js?v=20260128a"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/components/PricingModal.js"></script>
 
     <!-- Dashboard Script -->

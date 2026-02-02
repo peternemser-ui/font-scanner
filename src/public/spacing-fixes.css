@@ -76,7 +76,7 @@
 [class*="card"]:not(.accordion-item):not(.provider-card):not(.recommendation-card):not(.price-stat-card):not(.wcag-level-card),
 [class*="panel"],
 [class*="box"]:not([class*="checkbox"]):not(.wcag-status-box):not(.wcag-note-box) {
-  padding: 2rem !important;
+  padding: .5rem !important;
 }
 
 /* Smaller padding for nested cards within cards */
@@ -210,7 +210,7 @@ div[style*="padding:1.5rem"] {
 .page-hero,
 .hero-section,
 [class*="hero"] {
-  padding: 2.5rem 2rem !important;
+  padding: 1.25rem 1rem !important;
 }
 
 /* Modal and dialog content */

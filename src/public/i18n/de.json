@@ -3,6 +3,65 @@
     "name": "SITE MECHANIC",
     "tagline": "Web-Diagnose & Leistungsanalyse"
   },
+  "homepage": {
+    "hero": {
+      "headline": "Analysieren Sie jede Website.\nErhalten Sie priorisierte Korrekturen.",
+      "subhead": "Diagnose für Leistung, SEO, Barrierefreiheit, Sicherheit und Typografie in einem Scan.",
+      "placeholder": "https://beispiel.de",
+      "helperText": "Die meisten Scans sind in ~30 Sekunden abgeschlossen",
+      "button": "Analysieren",
+      "whatsIncluded": "Was enthalten ist"
+    },
+    "whatYouGet": {
+      "title": "Was Sie erhalten",
+      "bullet1": "Priorisierung nach Schweregrad",
+      "bullet2": "Umsetzbare Korrekturen",
+      "bullet3": "Score-Aufschlüsselung",
+      "bullet4": "Code-Snippets",
+      "proCallout": "Pro-Berichte beinhalten PDF-Export und kundenfertige Empfehlungen",
+      "sampleReport": "Beispielbericht ansehen"
+    },
+    "exampleUrls": {
+      "label": "Testen Sie:",
+      "example1": "example.com",
+      "example2": "wikipedia.org",
+      "example3": "github.com"
+    },
+    "featureStrip": {
+      "title": "Was enthalten ist",
+      "performance": {
+        "title": "Leistung",
+        "desc": "Core Web Vitals & Ladegeschwindigkeit"
+      },
+      "seo": {
+        "title": "SEO",
+        "desc": "Meta-Tags & strukturierte Daten"
+      },
+      "accessibility": {
+        "title": "Barrierefreiheit",
+        "desc": "WCAG-Konformitätsprüfungen"
+      },
+      "security": {
+        "title": "Sicherheit",
+        "desc": "Header & SSL-Validierung"
+      },
+      "typography": {
+        "title": "Typografie",
+        "desc": "Schriftladen & Konsistenz"
+      }
+    },
+    "proUpsell": {
+      "title": "Pro-Berichte freischalten",
+      "bullet1": "PDF-Export",
+      "bullet2": "Kundenfertige Korrekturen",
+      "bullet3": "Gespeicherte Berichte",
+      "cta": "Preise ansehen"
+    },
+    "footer": {
+      "needHelp": "Brauchen Sie Hilfe?",
+      "contactSupport": "Support kontaktieren"
+    }
+  },
   "nav": {
     "dashboard": "Dashboard",
     "fontScanner": "Schriften & Typografie",
@@ -41,7 +100,6 @@
   },
   "dashboard": {
     "title": "Website-Übersicht",
-    "breadcrumb": "dashboard / übersicht",
     "runAudit": "VOLLSTÄNDIGE PRÜFUNG STARTEN",
     "analyzing": "ANALYSIERT...",
     "enterUrl": "Website-URL eingeben...",
@@ -50,6 +108,11 @@
     "typography": "Typografie",
     "detailedAnalysis": "Detaillierte Analyse",
     "priorityRecommendations": "Prioritätsempfehlungen",
+    "typographyAnalysis": "Typografie-Analyse",
+    "seoAnalysis": "SEO-Analyse",
+    "performanceAnalysis": "Leistungsanalyse",
+    "accessibilityAnalysis": "Barrierefreiheits-Analyse",
+    "securityAnalysis": "Sicherheitsanalyse",
     "viewDetails": "Details anzeigen",
     "score": "Punktzahl",
     "grade": "Note",
@@ -59,7 +122,70 @@
     "fair": "Befriedigend",
     "needsWork": "Verbesserungsbedarf",
     "error": "Fehler",
-    "na": "N/V"
+    "na": "N/V",
+    "breadcrumb": {
+      "home": "Startseite",
+      "current": "Dashboard"
+    },
+    "header": {
+      "title": "Dashboard",
+      "subtitle": "Analysieren Sie eine Website, um Probleme bei Leistung, SEO, Barrierefreiheit und Sicherheit zu finden. Schalten Sie einen Bericht mit priorisierten Empfehlungen frei."
+    },
+    "scan": {
+      "title": "Website analysieren",
+      "urlLabel": "Website-URL",
+      "urlPlaceholder": "https://beispiel.de",
+      "howItWorks": "So funktioniert es:",
+      "howItWorksText": "Führen Sie einen Scan durch, um wichtige Probleme und nächste Schritte zu sehen. Für einen kundenfreundlichen Export können Sie einen Bericht freischalten.",
+      "note": "Hinweis:",
+      "noteText": "Einige Websites blockieren automatisierte Scans. Versuchen Sie Ihre eigenen Websites oder"
+    },
+    "howItWorks": {
+      "title": "So Funktioniert Es",
+      "step1Title": "URL eingeben",
+      "step1Desc": "Fügen Sie eine beliebige Website-URL ein. Funktioniert mit den meisten öffentlichen Websites.",
+      "step2Title": "Scan-Bericht erhalten",
+      "step2Desc": "Sehen Sie Probleme bei SEO, Leistung, Barrierefreiheit, Sicherheit und Schriften in Sekunden.",
+      "step3Title": "Probleme überprüfen",
+      "step3Desc": "Erweitern Sie jeden Abschnitt für detaillierte Ergebnisse, Punkte und Quick Wins.",
+      "step4Title": "Pro-Berichte freischalten",
+      "step4Desc": "Exportieren Sie PDFs, erhalten Sie Fix-Code und teilen Sie mit Kunden."
+    },
+    "faq": {
+      "title": "FAQ",
+      "viewAll": "Alle FAQs anzeigen",
+      "commonQuestions": "Häufige Fragen",
+      "tagBasics": "Grundlagen",
+      "tagBilling": "Abrechnung",
+      "tagHelp": "Hilfe",
+      "q1": "Was ist Site Mechanic?",
+      "a1": "Site Mechanic ist eine Sammlung von Website-Diagnose-Modulen (Geschwindigkeit & UX, SEO, Barrierefreiheit, Sicherheit, Schriften & Design und mehr). URL eingeben, Scan starten, priorisierte Probleme erhalten.",
+      "q2": "Brauche ich ein Konto für Scans?",
+      "a2": "Nein. Die meisten Scans können ohne Anmeldung durchgeführt werden. Für einen kostenpflichtigen Bericht werden Sie gebeten, sich anzumelden.",
+      "q3": "Wie lange dauern Scans?",
+      "a3": "Schnelle Scans dauern typischerweise unter einer Minute; Lighthouse-Audits können einige Minuten dauern.",
+      "q4": "Was ist ein kostenpflichtiger Bericht?",
+      "a4": "Ein kostenpflichtiger Bericht ist ein Export/Teilen-Ergebnis für einen spezifischen Scan, wie PDF-Export, Teilen-Links oder erweiterte Fix-Anleitung.",
+      "q5": "Wie funktionieren Credits?",
+      "a5": "Credits schalten kostenpflichtige Berichte für einzelne Scans frei. Mit Credits können Sie mit 1 Credit freischalten.",
+      "q6": "Der Scan hängt. Was soll ich tun?",
+      "a6": "Versuchen Sie eine einfachere URL (Startseite vs. tiefe Route) und starten Sie neu. Bei anhaltenden Problemen kontaktieren Sie uns.",
+      "moreAnswers": "Weitere Antworten auf der",
+      "faqPage": "FAQ-Seite"
+    },
+    "contact": {
+      "title": "Kontakt",
+      "description": "Senden Sie eine Nachricht an den Support. Fügen Sie die gescannte URL hinzu, wenn es hilft.",
+      "nameLabel": "Name (optional)",
+      "namePlaceholder": "Ihr Name",
+      "emailLabel": "E-Mail",
+      "emailPlaceholder": "sie@firma.de",
+      "urlLabel": "Website-URL (optional)",
+      "urlPlaceholder": "https://beispiel.de",
+      "messageLabel": "Nachricht",
+      "messagePlaceholder": "Wie können wir helfen?",
+      "submitButton": "Nachricht senden"
+    }
   },
   "common": {
     "loading": "Wird geladen...",
@@ -76,7 +202,109 @@
     "pleaseEnterUrl": "Bitte geben Sie eine URL ein",
     "mayTake": "Dies kann 15-30 Sekunden dauern",
     "pageScreenshotAlt": "Seiten-Screenshot",
-    "footer": "© 2025 Site Mechanic. Für Entwickler, denen Qualität wichtig ist."
+    "footer": "© 2026 Site Mechanic von Peter Freedman | Web-Optimierung und Entwicklung",
+    "runScan": "Analysieren",
+    "analyzing": "Analysiert..."
+  },
+  "performanceHub": {
+    "title": "Geschwindigkeit & UX",
+    "subtitle": "Leistung, Core Web Vitals & Lighthouse",
+    "breadcrumb": {
+      "home": "Startseite",
+      "current": "Performance Hub"
+    },
+    "header": {
+      "title": "Performance Test Hub",
+      "subtitle": "Analysieren Sie Ladegeschwindigkeit, Core Web Vitals (LCP, FID, CLS) und Lighthouse-Metriken"
+    },
+    "tabs": {
+      "quick": "Schnellscan",
+      "cwv": "Core Web Vitals",
+      "full": "Lighthouse Audit"
+    },
+    "scan": {
+      "placeholder": "Website-URL eingeben...",
+      "button": "Leistung analysieren",
+      "analyzing": "Analysiert...",
+      "quickDesc": "Schneller Leistungsüberblick",
+      "cwvDesc": "Detaillierte Core Web Vitals Analyse",
+      "fullDesc": "Vollständiges Lighthouse Audit"
+    },
+    "scores": {
+      "performance": "Leistung",
+      "accessibility": "Barrierefreiheit",
+      "bestPractices": "Best Practices",
+      "seo": "SEO",
+      "overall": "Gesamtpunktzahl"
+    },
+    "metrics": {
+      "lcp": "Largest Contentful Paint",
+      "fid": "First Input Delay",
+      "cls": "Cumulative Layout Shift",
+      "fcp": "First Contentful Paint",
+      "tti": "Time to Interactive",
+      "tbt": "Total Blocking Time",
+      "si": "Speed Index"
+    },
+    "status": {
+      "good": "Gut",
+      "needsImprovement": "Verbesserungsbedarf",
+      "poor": "Schlecht"
+    },
+    "sections": {
+      "overview": "Übersicht",
+      "diagnostics": "Diagnose",
+      "opportunities": "Möglichkeiten",
+      "resources": "Ressourcenanalyse",
+      "fixes": "Fix-Empfehlungen"
+    },
+    "device": {
+      "desktop": "Desktop",
+      "mobile": "Mobil"
+    },
+    "resources": {
+      "css": "CSS",
+      "js": "JavaScript",
+      "images": "Bilder",
+      "fonts": "Schriften",
+      "thirdParty": "Drittanbieter",
+      "total": "Gesamt"
+    },
+    "fixes": {
+      "critical": "Kritisch",
+      "medium": "Mittel",
+      "low": "Niedrige Priorität",
+      "copyCode": "Code kopieren",
+      "viewDetails": "Details anzeigen"
+    }
+  },
+  "languageAudit": {
+    "title": "Sprach-Audit",
+    "subtitle": "i18n-Konfigurationsprüfung",
+    "description": "Analysieren Sie Ihre Seite auf korrekte Sprachkonfiguration und SEO-Signale",
+    "score": "Sprach-Score",
+    "grade": "Note",
+    "issues": "Gefundene Probleme",
+    "checks": {
+      "htmlLang": "HTML lang-Attribut",
+      "contentLanguage": "Content-Language Header",
+      "hreflang": "Hreflang-Tags",
+      "metaLanguage": "Meta-Sprach-Tags",
+      "consistency": "Sprachkonsistenz",
+      "direction": "Textrichtung (dir)"
+    },
+    "severity": {
+      "critical": "Kritisch",
+      "high": "Hoch",
+      "medium": "Mittel",
+      "low": "Niedrig",
+      "info": "Info"
+    },
+    "recommendations": {
+      "addHtmlLang": "Fügen Sie das lang-Attribut zu Ihrem <html>-Tag hinzu",
+      "addHreflang": "Erwägen Sie hreflang-Tags für mehrsprachiges SEO",
+      "addContentLanguage": "Fügen Sie den Content-Language HTTP-Header hinzu"
+    }
   },
   "fontScanner": {
     "title": "Schriften & Typografie",

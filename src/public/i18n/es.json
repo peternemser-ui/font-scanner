@@ -3,6 +3,65 @@
     "name": "SITE MECHANIC",
     "tagline": "Diagnósticos Web y Análisis de Rendimiento"
   },
+  "homepage": {
+    "hero": {
+      "headline": "Escanea cualquier sitio web.\nObtén correcciones priorizadas.",
+      "subhead": "Diagnósticos de rendimiento, SEO, accesibilidad, seguridad y tipografía en un solo escaneo.",
+      "placeholder": "https://ejemplo.com",
+      "helperText": "La mayoría de los escaneos terminan en ~30 segundos",
+      "button": "Analizar",
+      "whatsIncluded": "Qué está incluido"
+    },
+    "whatYouGet": {
+      "title": "Lo que obtendrás",
+      "bullet1": "Clasificación de gravedad de problemas",
+      "bullet2": "Correcciones accionables",
+      "bullet3": "Desglose de puntuaciones",
+      "bullet4": "Fragmentos de código",
+      "proCallout": "Los informes Pro incluyen exportación PDF y recomendaciones listas para clientes",
+      "sampleReport": "Ver un informe de ejemplo"
+    },
+    "exampleUrls": {
+      "label": "Prueba:",
+      "example1": "example.com",
+      "example2": "wikipedia.org",
+      "example3": "github.com"
+    },
+    "featureStrip": {
+      "title": "Qué está incluido",
+      "performance": {
+        "title": "Rendimiento",
+        "desc": "Core Web Vitals y velocidad de carga"
+      },
+      "seo": {
+        "title": "SEO",
+        "desc": "Meta etiquetas y datos estructurados"
+      },
+      "accessibility": {
+        "title": "Accesibilidad",
+        "desc": "Verificaciones de cumplimiento WCAG"
+      },
+      "security": {
+        "title": "Seguridad",
+        "desc": "Encabezados y validación SSL"
+      },
+      "typography": {
+        "title": "Tipografía",
+        "desc": "Carga de fuentes y consistencia"
+      }
+    },
+    "proUpsell": {
+      "title": "Desbloquea Informes Pro",
+      "bullet1": "Exportación PDF",
+      "bullet2": "Correcciones listas para clientes",
+      "bullet3": "Informes guardados",
+      "cta": "Ver precios"
+    },
+    "footer": {
+      "needHelp": "¿Necesitas ayuda?",
+      "contactSupport": "Contactar soporte"
+    }
+  },
   "nav": {
     "dashboard": "Panel",
     "fontScanner": "Fuentes y Tipografía",
@@ -41,7 +100,6 @@
   },
   "dashboard": {
     "title": "Descripción General del Sitio",
-    "breadcrumb": "panel / descripción general",
     "runAudit": "EJECUTAR AUDITORÍA COMPLETA",
     "analyzing": "ANALIZANDO...",
     "enterUrl": "Ingrese la URL del sitio web a analizar...",
@@ -64,7 +122,70 @@
     "fair": "Regular",
     "needsWork": "Necesita Mejoras",
     "error": "Error",
-    "na": "N/D"
+    "na": "N/D",
+    "breadcrumb": {
+      "home": "Inicio",
+      "current": "Panel"
+    },
+    "header": {
+      "title": "Panel",
+      "subtitle": "Escanea un sitio para encontrar problemas de rendimiento, SEO, accesibilidad y seguridad. Cuando necesites algo compartible, desbloquea un informe con recomendaciones y correcciones priorizadas."
+    },
+    "scan": {
+      "title": "Escanear un sitio",
+      "urlLabel": "URL del sitio web",
+      "urlPlaceholder": "https://ejemplo.com",
+      "howItWorks": "Cómo funciona:",
+      "howItWorksText": "Ejecuta un escaneo para ver problemas clave y próximos pasos. Si deseas una exportación lista para clientes, puedes desbloquear un informe con recomendaciones y correcciones.",
+      "note": "Nota:",
+      "noteText": "Algunos sitios bloquean escaneos automatizados. Prueba con tus propios sitios o"
+    },
+    "howItWorks": {
+      "title": "Cómo Funciona",
+      "step1Title": "Ingresa una URL",
+      "step1Desc": "Pega cualquier URL de sitio web para analizar. Funciona con la mayoría de sitios públicos.",
+      "step2Title": "Obtén un Informe de Escaneo",
+      "step2Desc": "Ve problemas de SEO, rendimiento, accesibilidad, seguridad y fuentes en segundos.",
+      "step3Title": "Revisa los Problemas",
+      "step3Desc": "Expande cada sección para ver hallazgos detallados, puntuaciones y ganancias rápidas.",
+      "step4Title": "Desbloquea Informes Pro",
+      "step4Desc": "Exporta PDFs, obtén código de corrección y comparte con clientes. Paga por informe o usa créditos."
+    },
+    "faq": {
+      "title": "Preguntas Frecuentes",
+      "viewAll": "Ver todas las preguntas",
+      "commonQuestions": "Preguntas comunes",
+      "tagBasics": "Básico",
+      "tagBilling": "Facturación",
+      "tagHelp": "Ayuda",
+      "q1": "¿Qué es Site Mechanic?",
+      "a1": "Site Mechanic es un conjunto de módulos de diagnóstico web (Velocidad y UX, SEO, Accesibilidad, Seguridad, Fuentes y Diseño, Hosting y más). Pega una URL, ejecuta un escaneo y obtén problemas priorizados. Si necesitas un resultado compartible, puedes desbloquear un informe con recomendaciones y correcciones.",
+      "q2": "¿Necesito una cuenta para ejecutar escaneos?",
+      "a2": "No. La mayoría de los escaneos se pueden ejecutar sin iniciar sesión. Si eliges desbloquear un informe de pago o exportar, se te puede pedir que inicies sesión para asociar la compra con tu cuenta.",
+      "q3": "¿Cuánto tardan los escaneos?",
+      "a3": "Los escaneos rápidos suelen tardar menos de un minuto; las auditorías de Lighthouse pueden tardar unos minutos. Si un sitio es lento o bloquea la automatización, los escaneos pueden tardar más o fallar.",
+      "q4": "¿Qué es un informe de pago?",
+      "a4": "Un informe de pago es un resultado de exportación/compartición para un escaneo específico, como exportación PDF, enlaces para compartir, datos descargables o guía de corrección extendida. Generalmente puedes ejecutar el escaneo gratis y luego decidir si comprar el informe.",
+      "q5": "¿Cómo funcionan los créditos?",
+      "a5": "Los créditos desbloquean informes de pago para escaneos individuales. Cuando un informe está bloqueado, verás opciones para comprar un informe individual o un paquete de créditos. Si ya tienes créditos, puedes desbloquear con 1 crédito.",
+      "q6": "El escaneo está atascado. ¿Qué debo hacer?",
+      "a6": "Prueba con una URL más simple (página principal vs. ruta profunda) y vuelve a ejecutar. Si el problema persiste, envía un correo a peter@sitemechanic.io con la URL y el nombre del módulo para que podamos reproducirlo.",
+      "moreAnswers": "Más respuestas en la",
+      "faqPage": "página de preguntas frecuentes"
+    },
+    "contact": {
+      "title": "Contacto",
+      "description": "Envía un mensaje a soporte. Incluye la URL que escaneaste si ayuda.",
+      "nameLabel": "Nombre (opcional)",
+      "namePlaceholder": "Tu nombre",
+      "emailLabel": "Correo electrónico",
+      "emailPlaceholder": "tu@empresa.com",
+      "urlLabel": "URL del sitio web (opcional)",
+      "urlPlaceholder": "https://ejemplo.com",
+      "messageLabel": "Mensaje",
+      "messagePlaceholder": "¿En qué podemos ayudarte?",
+      "submitButton": "Enviar mensaje"
+    }
   },
   "fontScanner": {
     "title": "Fuentes y Tipografía",
@@ -1081,7 +1202,81 @@
     "settings": "Configuración",
     "language": "Idioma",
     "pageScreenshotAlt": "Captura de pantalla de la página",
-    "footer": "© 2025 Site Mechanic. Creado para desarrolladores que se preocupan por la calidad."
+    "footer": "© 2025 Site Mechanic. Creado para desarrolladores que se preocupan por la calidad.",
+    "runScan": "Analizar",
+    "analyzing": "Analizando..."
+  },
+  "performanceHub": {
+    "title": "Velocidad y UX",
+    "subtitle": "Rendimiento, Core Web Vitals y Lighthouse",
+    "breadcrumb": {
+      "home": "Inicio",
+      "current": "Centro de Rendimiento"
+    },
+    "header": {
+      "title": "Centro de Pruebas de Rendimiento",
+      "subtitle": "Analiza la velocidad de carga, Core Web Vitals (LCP, FID, CLS) y métricas de rendimiento de Lighthouse para una UX óptima"
+    },
+    "tabs": {
+      "quick": "Escaneo Rápido",
+      "cwv": "Core Web Vitals",
+      "full": "Auditoría Lighthouse"
+    },
+    "scan": {
+      "placeholder": "Ingrese URL del sitio web...",
+      "button": "Analizar Rendimiento",
+      "analyzing": "Analizando...",
+      "quickDesc": "Vista rápida del rendimiento",
+      "cwvDesc": "Análisis detallado de Core Web Vitals",
+      "fullDesc": "Auditoría completa de Lighthouse"
+    },
+    "scores": {
+      "performance": "Rendimiento",
+      "accessibility": "Accesibilidad",
+      "bestPractices": "Mejores Prácticas",
+      "seo": "SEO",
+      "overall": "Puntuación General"
+    },
+    "metrics": {
+      "lcp": "Largest Contentful Paint",
+      "fid": "First Input Delay",
+      "cls": "Cumulative Layout Shift",
+      "fcp": "First Contentful Paint",
+      "tti": "Time to Interactive",
+      "tbt": "Total Blocking Time",
+      "si": "Speed Index"
+    },
+    "status": {
+      "good": "Bueno",
+      "needsImprovement": "Necesita Mejoras",
+      "poor": "Pobre"
+    },
+    "sections": {
+      "overview": "Resumen",
+      "diagnostics": "Diagnósticos",
+      "opportunities": "Oportunidades",
+      "resources": "Análisis de Recursos",
+      "fixes": "Recomendaciones de Corrección"
+    },
+    "device": {
+      "desktop": "Escritorio",
+      "mobile": "Móvil"
+    },
+    "resources": {
+      "css": "CSS",
+      "js": "JavaScript",
+      "images": "Imágenes",
+      "fonts": "Fuentes",
+      "thirdParty": "Terceros",
+      "total": "Total"
+    },
+    "fixes": {
+      "critical": "Crítico",
+      "medium": "Medio",
+      "low": "Baja Prioridad",
+      "copyCode": "Copiar Código",
+      "viewDetails": "Ver Detalles"
+    }
   },
   "errors": {
     "urlRequired": "Por favor ingrese una URL válida",
@@ -1091,7 +1286,10 @@
     "timeout": "Tiempo de espera agotado",
     "unauthorized": "Acceso no autorizado",
     "notFound": "Recurso no encontrado",
-    "serverError": "Ocurrió un error del servidor"
+    "serverError": "Ocurrió un error del servidor",
+    "checkoutFailed": "Error en el pago",
+    "checkoutFailedRetry": "Error en el pago. Por favor intente de nuevo.",
+    "unableToOpenBillingPortal": "No se puede abrir el portal de facturación"
   },
   "messages": {
     "analysisStarted": "Análisis iniciado para {{url}}",
@@ -1158,7 +1356,9 @@
     "currentPassword": "Contraseña Actual",
     "newPassword": "Nueva Contraseña",
     "updatePassword": "Actualizar Contraseña",
-    "cancel": "Cancelar"
+    "cancel": "Cancelar",
+    "pleaseLoginToContinue": "Por favor inicia sesión para continuar",
+    "pleaseLoginToManageBilling": "Por favor inicia sesión para administrar la facturación"
   },
   "account": {
     "title": "Mi Cuenta",
@@ -1209,6 +1409,104 @@
     "faqQuestion2": "¿Qué métodos de pago aceptan?",
     "faqAnswer2": "Aceptamos todas las principales tarjetas de crédito a través de Stripe (Visa, Mastercard, Amex).",
     "faqQuestion3": "¿Ofrecen reembolsos?",
-    "faqAnswer3": "Sí, ofrecemos una garantía de devolución de dinero de 14 días si no estás satisfecho."
+    "faqAnswer3": "Sí, ofrecemos una garantía de devolución de dinero de 14 días si no estás satisfecho.",
+    "modal": {
+      "unlockProFeatures": "Desbloquear Funciones Pro",
+      "closeModal": "Cerrar modal",
+      "loginPrompt": "Inicia sesión para comprar una suscripción o informe individual.",
+      "signIn": "Iniciar Sesión",
+      "createAccount": "Crear Cuenta",
+      "retry": "Reintentar",
+      "poweredBy": "Desarrollado por",
+      "manageSubscription": "Gestionar suscripción",
+      "pleaseLoginToContinue": "Por favor inicia sesión para continuar",
+      "pleaseLoginToManageBilling": "Por favor inicia sesión para administrar la facturación"
+    },
+    "plans": {
+      "proMonthly": "Pro Mensual",
+      "proYearly": "Pro Anual",
+      "dayPass": "Pase de un Día",
+      "thisReport": "Este Informe"
+    },
+    "periods": {
+      "perMonth": "por mes",
+      "perYear": "por año",
+      "hours24": "24 horas",
+      "oneTime": "único pago",
+      "effectiveMonthly": "$20/mes efectivo"
+    },
+    "badges": {
+      "current": "Actual",
+      "save33": "Ahorra 33%",
+      "active": "Activo",
+      "owned": "Adquirido"
+    },
+    "buttons": {
+      "subscribe": "Suscribirse",
+      "managePlan": "Gestionar Plan",
+      "switchToMonthly": "Cambiar a Mensual",
+      "switchToYearly": "Cambiar a Anual",
+      "getDayPass": "Obtener Pase de un Día",
+      "activePass": "Pase Activo",
+      "youHavePro": "Ya tienes Pro",
+      "buyReport": "Comprar Informe",
+      "purchased": "Comprado",
+      "includedWithPro": "Incluido con Pro",
+      "runScanFirst": "Ejecuta un escaneo primero",
+      "processing": "Procesando..."
+    },
+    "benefits": {
+      "unlimitedProTools": "Herramientas Pro ilimitadas",
+      "exportPdfs": "Exportar PDFs",
+      "cancelAnytime": "Cancela cuando quieras",
+      "bestValue": "Mejor valor",
+      "fullProAccess": "Acceso Pro completo",
+      "expiresIn24h": "Expira en 24h",
+      "unlocksThisReport": "Desbloquea este informe",
+      "exportPdf": "Exportar PDF",
+      "permanentAccess": "Acceso permanente"
+    }
+  },
+  "languageAudit": {
+    "title": "Auditoría de Idioma",
+    "subtitle": "Verificación de Configuración i18n",
+    "description": "Analiza tu página para una configuración de idioma adecuada y señales SEO",
+    "score": "Puntuación de Idioma",
+    "grade": "Calificación",
+    "issues": "Problemas Encontrados",
+    "checks": {
+      "htmlLang": "Atributo html lang",
+      "contentLanguage": "Encabezado Content-Language",
+      "hreflang": "Etiquetas hreflang",
+      "metaLanguage": "Etiquetas meta de idioma",
+      "consistency": "Consistencia de idioma",
+      "direction": "Dirección del texto (dir)"
+    },
+    "severity": {
+      "critical": "Crítico",
+      "high": "Alto",
+      "medium": "Medio",
+      "low": "Bajo",
+      "info": "Info"
+    },
+    "issues": {
+      "MISSING_HTML_LANG": "Falta el atributo html lang",
+      "INVALID_HTML_LANG": "Valor de html lang inválido",
+      "MISMATCHED_XML_LANG": "xml:lang difiere de lang",
+      "MISSING_CONTENT_LANGUAGE_HEADER": "Sin encabezado Content-Language",
+      "INVALID_CONTENT_LANGUAGE": "Encabezado Content-Language inválido",
+      "NO_HREFLANG_TAGS": "No se encontraron etiquetas hreflang",
+      "INVALID_HREFLANG": "Valor de hreflang inválido",
+      "MISSING_HREFLANG_HREF": "Falta href en hreflang",
+      "MISSING_X_DEFAULT": "Falta hreflang x-default",
+      "INVALID_OG_LOCALE": "Formato og:locale inválido",
+      "INCONSISTENT_LANGUAGE_SIGNALS": "Señales de idioma inconsistentes",
+      "MISSING_RTL_DIR": "Falta dirección RTL"
+    },
+    "recommendations": {
+      "addHtmlLang": "Añade el atributo lang a tu etiqueta <html>",
+      "addHreflang": "Considera añadir etiquetas hreflang para SEO multilingüe",
+      "addContentLanguage": "Añade el encabezado HTTP Content-Language"
+    }
   }
 }

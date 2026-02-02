@@ -3,6 +3,65 @@
     "name": "サイトメカニック",
     "tagline": "ウェブ診断とパフォーマンス分析"
   },
+  "homepage": {
+    "hero": {
+      "headline": "どんなサイトもスキャン。\n優先度付きの修正を取得。",
+      "subhead": "パフォーマンス、SEO、アクセシビリティ、セキュリティ、タイポグラフィの診断を1回のスキャンで。",
+      "placeholder": "https://example.com",
+      "helperText": "ほとんどのスキャンは約30秒で完了します",
+      "button": "分析する",
+      "whatsIncluded": "含まれる内容"
+    },
+    "whatYouGet": {
+      "title": "取得できる内容",
+      "bullet1": "問題の重要度ランキング",
+      "bullet2": "実行可能な修正",
+      "bullet3": "スコアの内訳",
+      "bullet4": "コードスニペット",
+      "proCallout": "Proレポートにはpdfエクスポートとクライアント向け推奨事項が含まれます",
+      "sampleReport": "サンプルレポートを見る"
+    },
+    "exampleUrls": {
+      "label": "試す:",
+      "example1": "example.com",
+      "example2": "wikipedia.org",
+      "example3": "github.com"
+    },
+    "featureStrip": {
+      "title": "含まれる内容",
+      "performance": {
+        "title": "パフォーマンス",
+        "desc": "Core Web Vitalsと読み込み速度"
+      },
+      "seo": {
+        "title": "SEO",
+        "desc": "メタタグと構造化データ"
+      },
+      "accessibility": {
+        "title": "アクセシビリティ",
+        "desc": "WCAGコンプライアンスチェック"
+      },
+      "security": {
+        "title": "セキュリティ",
+        "desc": "ヘッダーとSSL検証"
+      },
+      "typography": {
+        "title": "タイポグラフィ",
+        "desc": "フォント読み込みと一貫性"
+      }
+    },
+    "proUpsell": {
+      "title": "Proレポートをアンロック",
+      "bullet1": "PDFエクスポート",
+      "bullet2": "クライアント向け修正",
+      "bullet3": "保存されたレポート",
+      "cta": "料金を見る"
+    },
+    "footer": {
+      "needHelp": "ヘルプが必要ですか？",
+      "contactSupport": "サポートに連絡"
+    }
+  },
   "nav": {
     "dashboard": "ダッシュボード",
     "fontScanner": "フォントとタイポグラフィ",
@@ -41,7 +100,6 @@
   },
   "dashboard": {
     "title": "総合概要",
-    "breadcrumb": "ダッシュボード / 総合概要",
     "runAudit": "完全監査を実行",
     "analyzing": "分析中...",
     "enterUrl": "ウェブサイトのURLを入力...",
@@ -59,7 +117,70 @@
     "fair": "普通",
     "needsWork": "改善が必要",
     "error": "エラー",
-    "na": "該当なし"
+    "na": "該当なし",
+    "breadcrumb": {
+      "home": "ホーム",
+      "current": "ダッシュボード"
+    },
+    "header": {
+      "title": "ダッシュボード",
+      "subtitle": "サイトをスキャンして、パフォーマンス、SEO、アクセシビリティ、セキュリティの問題を発見。共有可能なものが必要な場合は、優先順位付けされた推奨事項と修正を含むレポートを解除できます。"
+    },
+    "scan": {
+      "title": "サイトをスキャン",
+      "urlLabel": "ウェブサイトURL",
+      "urlPlaceholder": "https://example.com",
+      "howItWorks": "使い方：",
+      "howItWorksText": "スキャンを実行して、主要な問題と次のステップを確認します。クライアント向けエクスポートが必要な場合は、推奨事項と修正を含むレポートを解除できます。",
+      "note": "注意：",
+      "noteText": "一部のサイトは自動スキャンをブロックします。自分のサイトか"
+    },
+    "howItWorks": {
+      "title": "使い方",
+      "step1Title": "URLを入力",
+      "step1Desc": "分析するウェブサイトURLを貼り付けます。ほとんどの公開サイトで動作します。",
+      "step2Title": "スキャンレポートを取得",
+      "step2Desc": "SEO、パフォーマンス、アクセシビリティ、セキュリティ、フォントの問題を数秒で確認。",
+      "step3Title": "問題を確認",
+      "step3Desc": "各セクションを展開して、詳細な発見、スコア、クイックウィンを確認。",
+      "step4Title": "Proレポートを解除",
+      "step4Desc": "PDFをエクスポート、修正コードを取得、クライアントと共有。レポートごとに支払いまたはクレジットを使用。"
+    },
+    "faq": {
+      "title": "よくある質問",
+      "viewAll": "すべてのFAQを見る",
+      "commonQuestions": "よくある質問",
+      "tagBasics": "基本",
+      "tagBilling": "請求",
+      "tagHelp": "ヘルプ",
+      "q1": "Site Mechanicとは？",
+      "a1": "Site Mechanicは、ウェブサイト診断モジュールのセット（速度とUX、SEO、アクセシビリティ、セキュリティ、フォントとデザイン、ホスティングなど）です。URLを貼り付け、スキャンを実行し、優先順位付けされた問題を取得します。共有可能な結果が必要な場合は、推奨事項と修正を含むレポートを解除できます。",
+      "q2": "スキャンを実行するにはアカウントが必要ですか？",
+      "a2": "いいえ。ほとんどのスキャンはサインインせずに実行できます。有料レポートやエクスポートを解除する場合は、購入をアカウントに関連付けるためにサインインを求められることがあります。",
+      "q3": "スキャンにはどのくらい時間がかかりますか？",
+      "a3": "クイックスキャンは通常1分以内です。Lighthouse監査は数分かかることがあります。サイトが遅いか自動化をブロックしている場合、スキャンに時間がかかるか失敗することがあります。",
+      "q4": "有料レポートとは何ですか？",
+      "a4": "有料レポートは、特定のスキャンのエクスポート/共有結果です。PDFエクスポート、共有リンク、ダウンロード可能なデータ、または拡張修正ガイダンスなどがあります。通常、スキャンは無料で実行でき、その後レポートを購入するかどうかを決定できます。",
+      "q5": "クレジットはどのように機能しますか？",
+      "a5": "クレジットは個別のスキャンの有料レポートを解除します。レポートがロックされている場合、単一レポートの購入またはクレジットパックの購入オプションが表示されます。すでにクレジットがある場合は、1クレジットで解除できます。",
+      "q6": "スキャンが止まっています。どうすればいいですか？",
+      "a6": "より簡単なURL（深いルートではなくホームページ）を試して再実行してください。問題が続く場合は、URLとモジュール名をpeter@sitemechanic.ioにメールで送信してください。",
+      "moreAnswers": "詳細は",
+      "faqPage": "FAQページ"
+    },
+    "contact": {
+      "title": "お問い合わせ",
+      "description": "サポートにメッセージを送信してください。役立つ場合はスキャンしたURLを含めてください。",
+      "nameLabel": "名前（任意）",
+      "namePlaceholder": "お名前",
+      "emailLabel": "メール",
+      "emailPlaceholder": "you@company.com",
+      "urlLabel": "ウェブサイトURL（任意）",
+      "urlPlaceholder": "https://example.com",
+      "messageLabel": "メッセージ",
+      "messagePlaceholder": "どのようなご用件ですか？",
+      "submitButton": "メッセージを送信"
+    }
   },
   "common": {
     "loading": "読み込み中...",
@@ -76,7 +197,81 @@
     "pleaseEnterUrl": "URLを入力してください",
     "mayTake": "15-30秒かかる場合があります",
     "pageScreenshotAlt": "ページのスクリーンショット",
-    "footer": "© 2025 Site Mechanic。品質を大切にする開発者のために。"
+    "footer": "© 2025 Site Mechanic。品質を大切にする開発者のために。",
+    "runScan": "分析する",
+    "analyzing": "分析中..."
+  },
+  "performanceHub": {
+    "title": "速度とUX",
+    "subtitle": "パフォーマンス、Core Web VitalsとLighthouse",
+    "breadcrumb": {
+      "home": "ホーム",
+      "current": "パフォーマンステストハブ"
+    },
+    "header": {
+      "title": "パフォーマンステストハブ",
+      "subtitle": "ページ読み込み速度、Core Web Vitals（LCP、FID、CLS）、Lighthouseパフォーマンス指標を分析して最適なUXを実現"
+    },
+    "tabs": {
+      "quick": "クイックスキャン",
+      "cwv": "Core Web Vitals",
+      "full": "Lighthouse監査"
+    },
+    "scan": {
+      "placeholder": "ウェブサイトURLを入力...",
+      "button": "パフォーマンスを分析",
+      "analyzing": "分析中...",
+      "quickDesc": "簡易パフォーマンス概要",
+      "cwvDesc": "詳細なCore Web Vitals分析",
+      "fullDesc": "完全なLighthouse監査"
+    },
+    "scores": {
+      "performance": "パフォーマンス",
+      "accessibility": "アクセシビリティ",
+      "bestPractices": "ベストプラクティス",
+      "seo": "SEO",
+      "overall": "総合スコア"
+    },
+    "metrics": {
+      "lcp": "最大コンテンツ描画",
+      "fid": "初回入力遅延",
+      "cls": "累積レイアウトシフト",
+      "fcp": "最初のコンテンツ描画",
+      "tti": "インタラクティブまでの時間",
+      "tbt": "合計ブロッキング時間",
+      "si": "スピードインデックス"
+    },
+    "status": {
+      "good": "良好",
+      "needsImprovement": "改善が必要",
+      "poor": "不良"
+    },
+    "sections": {
+      "overview": "概要",
+      "diagnostics": "診断",
+      "opportunities": "改善の機会",
+      "resources": "リソース分析",
+      "fixes": "修正の推奨事項"
+    },
+    "device": {
+      "desktop": "デスクトップ",
+      "mobile": "モバイル"
+    },
+    "resources": {
+      "css": "CSS",
+      "js": "JavaScript",
+      "images": "画像",
+      "fonts": "フォント",
+      "thirdParty": "サードパーティ",
+      "total": "合計"
+    },
+    "fixes": {
+      "critical": "重大",
+      "medium": "中程度",
+      "low": "低優先度",
+      "copyCode": "コードをコピー",
+      "viewDetails": "詳細を表示"
+    }
   },
   "fontScanner": {
     "title": "フォント＆タイポグラフィ",
@@ -1001,8 +1196,151 @@
     }
   },
   "pricing": {
+    "title": "Site Mechanic Proにアップグレード",
+    "subtitle": "無制限のスキャン、高度な推奨事項、エキスパートレベルの最適化ツールを解放",
     "unlockReportTitle": "レポートを解放",
-    "unlockReportSubtitle": "PDFエクスポート、リンク共有、データエクスポート、このスキャンの修正パック。"
+    "unlockReportSubtitle": "PDFエクスポート、リンク共有、データエクスポート、このスキャンの修正パック。",
+    "monthly": "月額",
+    "annual": "年額 17%オフ",
+    "free": "無料",
+    "pro": "Pro",
+    "mostPopular": "人気No.1",
+    "perMonth": "/月",
+    "scansPerMonth": "スキャン/月",
+    "unlimitedScans": "無制限スキャン",
+    "basicRecommendations": "完全な修正推奨",
+    "advancedRecommendations": "アナライザーごとの優先推奨",
+    "onePagePerScan": "1ページ/スキャン",
+    "upToPages": "最大250ページ/スキャン",
+    "noExport": "エクスポートなし",
+    "pdfExport": "透かしなしのPDFエクスポート",
+    "expertTips": "エキスパートレベルの最適化ヒント",
+    "prioritySupport": "優先メールサポート",
+    "getStarted": "始める",
+    "upgradeNow": "今すぐアップグレード",
+    "faq": "よくある質問",
+    "faqQuestion1": "いつでもキャンセルできますか？",
+    "faqAnswer1": "はい、いつでもサブスクリプションをキャンセルできます。長期契約はありません。",
+    "faqQuestion2": "どの支払い方法を受け付けていますか？",
+    "faqAnswer2": "Stripe経由で主要なクレジットカード（Visa、Mastercard、Amex）を受け付けています。",
+    "faqQuestion3": "返金はありますか？",
+    "faqAnswer3": "はい、ご満足いただけない場合は14日間の返金保証があります。",
+    "modal": {
+      "unlockProFeatures": "Pro機能を解放",
+      "closeModal": "モーダルを閉じる",
+      "loginPrompt": "サブスクリプションまたは個別レポートを購入するにはログインしてください。",
+      "signIn": "ログイン",
+      "createAccount": "アカウント作成",
+      "retry": "再試行",
+      "poweredBy": "提供",
+      "manageSubscription": "サブスクリプション管理",
+      "pleaseLoginToContinue": "続行するにはログインしてください",
+      "pleaseLoginToManageBilling": "請求管理にはログインしてください"
+    },
+    "plans": {
+      "proMonthly": "Pro月額",
+      "proYearly": "Pro年額",
+      "dayPass": "デイパス",
+      "thisReport": "このレポート"
+    },
+    "periods": {
+      "perMonth": "月額",
+      "perYear": "年額",
+      "hours24": "24時間",
+      "oneTime": "1回限り",
+      "effectiveMonthly": "実質$20/月"
+    },
+    "badges": {
+      "current": "現在",
+      "save33": "33%オフ",
+      "active": "有効",
+      "owned": "所有"
+    },
+    "buttons": {
+      "subscribe": "購読する",
+      "managePlan": "プラン管理",
+      "switchToMonthly": "月額に変更",
+      "switchToYearly": "年額に変更",
+      "getDayPass": "デイパスを取得",
+      "activePass": "有効なパス",
+      "youHavePro": "Pro加入済み",
+      "buyReport": "レポートを購入",
+      "purchased": "購入済み",
+      "includedWithPro": "Proに含まれる",
+      "runScanFirst": "まずスキャンを実行",
+      "processing": "処理中..."
+    },
+    "benefits": {
+      "unlimitedProTools": "無制限のProツール",
+      "exportPdfs": "PDFエクスポート",
+      "cancelAnytime": "いつでもキャンセル可能",
+      "bestValue": "最もお得",
+      "fullProAccess": "完全なProアクセス",
+      "expiresIn24h": "24時間で期限切れ",
+      "unlocksThisReport": "このレポートを解放",
+      "exportPdf": "PDFエクスポート",
+      "permanentAccess": "永久アクセス"
+    }
+  },
+  "errors": {
+    "urlRequired": "有効なURLを入力してください",
+    "invalidUrl": "無効なURL形式です",
+    "networkError": "ネットワークエラーが発生しました",
+    "analysisFailedretry": "分析に失敗しました。再試行してください。",
+    "timeout": "リクエストがタイムアウトしました",
+    "unauthorized": "アクセスが許可されていません",
+    "notFound": "リソースが見つかりません",
+    "serverError": "サーバーエラーが発生しました",
+    "checkoutFailed": "チェックアウトに失敗しました",
+    "checkoutFailedRetry": "チェックアウトに失敗しました。再試行してください。",
+    "unableToOpenBillingPortal": "請求ポータルを開けません"
+  },
+  "auth": {
+    "welcomeBack": "おかえりなさい",
+    "createAccount": "アカウント作成",
+    "login": "ログイン",
+    "register": "登録",
+    "email": "メール",
+    "password": "パスワード",
+    "confirmPassword": "パスワード確認",
+    "forgotPassword": "パスワードをお忘れですか？",
+    "alreadyHaveAccount": "すでにアカウントをお持ちですか？",
+    "dontHaveAccount": "アカウントをお持ちでないですか？",
+    "loginButton": "ログイン",
+    "registerButton": "アカウント作成",
+    "loggingIn": "ログイン中...",
+    "creatingAccount": "アカウント作成中...",
+    "passwordRequirements": "8文字以上、大文字、小文字、数字を含む必要があります",
+    "loginSuccess": "ログイン成功！リダイレクト中...",
+    "registerSuccess": "アカウント作成成功！リダイレクト中...",
+    "logoutButton": "ログアウト",
+    "changePassword": "パスワード変更",
+    "currentPassword": "現在のパスワード",
+    "newPassword": "新しいパスワード",
+    "updatePassword": "パスワードを更新",
+    "cancel": "キャンセル",
+    "pleaseLoginToContinue": "続行するにはログインしてください",
+    "pleaseLoginToManageBilling": "請求管理にはログインしてください"
+  },
+  "account": {
+    "title": "マイアカウント",
+    "subtitle": "サブスクリプション、請求、アカウント設定を管理",
+    "accountInfo": "アカウント情報",
+    "subscription": "サブスクリプション",
+    "quickActions": "クイックアクション",
+    "email": "メール",
+    "plan": "プラン",
+    "memberSince": "メンバー開始日",
+    "status": "ステータス",
+    "scansRemaining": "残りスキャン数",
+    "freePlan": "無料プラン",
+    "proPlan": "PRO",
+    "manageBilling": "請求管理",
+    "upgradeToPro": "Proにアップグレード",
+    "goToDashboard": "ダッシュボードへ",
+    "passwordChanged": "パスワードが変更されました！",
+    "perDay": "/ 日",
+    "perMonth": "/ 月"
   },
   "notices": {
     "botProtectionTitle": "ボット保護に関するお知らせ：",

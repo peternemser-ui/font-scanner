@@ -3,6 +3,65 @@
     "name": "SITE MECHANIC",
     "tagline": "Web Diagnostics & Performance Analysis"
   },
+  "homepage": {
+    "hero": {
+      "headline": "Scan any website.\nGet prioritized fixes — and shareable reports.",
+      "subhead": "Performance, SEO, accessibility, security, and typography diagnostics in one scan.",
+      "placeholder": "https://example.com",
+      "helperText": "Most scans finish in ~30 seconds",
+      "button": "Analyze",
+      "whatsIncluded": "What's included"
+    },
+    "whatYouGet": {
+      "title": "What you'll get",
+      "bullet1": "Issue severity ranking",
+      "bullet2": "Actionable fixes",
+      "bullet3": "Score breakdowns",
+      "bullet4": "Code snippets",
+      "proCallout": "Pro reports include PDF export and client-ready recommendations",
+      "sampleReport": "See a sample report"
+    },
+    "exampleUrls": {
+      "label": "Try:",
+      "example1": "example.com",
+      "example2": "wikipedia.org",
+      "example3": "github.com"
+    },
+    "featureStrip": {
+      "title": "What's included",
+      "performance": {
+        "title": "Performance",
+        "desc": "Core Web Vitals & load speed"
+      },
+      "seo": {
+        "title": "SEO",
+        "desc": "Meta tags & structured data"
+      },
+      "accessibility": {
+        "title": "Accessibility",
+        "desc": "WCAG compliance checks"
+      },
+      "security": {
+        "title": "Security",
+        "desc": "Headers & SSL validation"
+      },
+      "typography": {
+        "title": "Typography",
+        "desc": "Font loading & consistency"
+      }
+    },
+    "proUpsell": {
+      "title": "Unlock Pro Reports",
+      "bullet1": "PDF export",
+      "bullet2": "Client-ready fixes",
+      "bullet3": "Saved reports",
+      "cta": "See pricing"
+    },
+    "footer": {
+      "needHelp": "Need help?",
+      "contactSupport": "Contact support"
+    }
+  },
   "nav": {
     "dashboard": "Dashboard",
     "fontScanner": "Fonts & Typography",
@@ -41,7 +100,6 @@
   },
   "dashboard": {
     "title": "Website Overview",
-    "breadcrumb": "dashboard / overview",
     "runAudit": "RUN FULL AUDIT",
     "analyzing": "ANALYZING...",
     "enterUrl": "Enter website URL to analyze...",
@@ -64,7 +122,70 @@
     "fair": "Fair",
     "needsWork": "Needs Work",
     "error": "Error",
-    "na": "N/A"
+    "na": "N/A",
+    "breadcrumb": {
+      "home": "Home",
+      "current": "Dashboard"
+    },
+    "header": {
+      "title": "Dashboard",
+      "subtitle": "Scan a site to find issues across performance, SEO, accessibility, and security. When you need something shareable, unlock a report with prioritized recommendations and fixes."
+    },
+    "scan": {
+      "title": "Scan a site",
+      "urlLabel": "Website URL",
+      "urlPlaceholder": "https://example.com",
+      "howItWorks": "How it works:",
+      "howItWorksText": "Run a scan to see key issues and next steps. If you want a client-ready export, you can unlock a report with recommendations and fixes.",
+      "note": "Note:",
+      "noteText": "Some sites block automated scans. Try your own sites or"
+    },
+    "howItWorks": {
+      "title": "How It Works",
+      "step1Title": "Enter a URL",
+      "step1Desc": "Paste any website URL to analyze. Works with most public websites.",
+      "step2Title": "Get a Scan Report",
+      "step2Desc": "See issues across SEO, performance, accessibility, security, and fonts in seconds.",
+      "step3Title": "Review Issues",
+      "step3Desc": "Expand each section to see detailed findings, scores, and quick wins.",
+      "step4Title": "Unlock Pro Reports",
+      "step4Desc": "Export PDFs, get fix code, and share with clients. Pay per report or use credits."
+    },
+    "faq": {
+      "title": "FAQ",
+      "viewAll": "View all FAQs",
+      "commonQuestions": "Common questions",
+      "tagBasics": "Basics",
+      "tagBilling": "Billing",
+      "tagHelp": "Help",
+      "q1": "What is Site Mechanic?",
+      "a1": "Site Mechanic is a set of website diagnostics modules (Speed & UX, SEO, Accessibility, Security, Fonts & Design, Hosting, and more). Paste a URL, run a scan, and get prioritized issues. If you need a shareable outcome, you can unlock a report with recommendations and fixes.",
+      "q2": "Do I need an account to run scans?",
+      "a2": "No. Most scans can be run without signing in. If you choose to unlock a paid report or export, you may be prompted to sign in so we can associate the purchase with your account.",
+      "q3": "How long do scans take?",
+      "a3": "Quick scans are typically under a minute; Lighthouse audits can take a few minutes. If a site is slow or blocks automation, scans can take longer or fail.",
+      "q4": "What is a paid report?",
+      "a4": "A paid report is an export/share outcome for a specific scan, such as PDF export, share links, downloadable data, or extended fix guidance. You can usually run the scan for free and then decide whether to purchase the report.",
+      "q5": "How do credits work?",
+      "a5": "Credits unlock paid reports for individual scans. When a report is locked, you'll see options to buy a single report or buy a credit pack. If you already have credits, you can unlock with 1 credit.",
+      "q6": "The scan is stuck. What should I do?",
+      "a6": "Try a simpler URL (homepage vs. deep route) and re-run. If the issue persists, email peter@sitemechanic.io with the URL and module name so we can reproduce.",
+      "moreAnswers": "More answers on the",
+      "faqPage": "FAQ page"
+    },
+    "contact": {
+      "title": "Contact",
+      "description": "Send a message to support. Include the URL you scanned if it helps.",
+      "nameLabel": "Name (optional)",
+      "namePlaceholder": "Your name",
+      "emailLabel": "Email",
+      "emailPlaceholder": "you@company.com",
+      "urlLabel": "Website URL (optional)",
+      "urlPlaceholder": "https://example.com",
+      "messageLabel": "Message",
+      "messagePlaceholder": "What can we help with?",
+      "submitButton": "Send message"
+    }
   },
   "fontScanner": {
     "title": "Fonts & Typography",
@@ -1100,6 +1221,78 @@
     "runScan": "Analyze",
     "analyzing": "Analyzing..."
   },
+  "performanceHub": {
+    "title": "Speed & UX",
+    "subtitle": "Performance, Core Web Vitals & Lighthouse",
+    "breadcrumb": {
+      "home": "Home",
+      "current": "Performance Hub"
+    },
+    "header": {
+      "title": "Performance Testing Hub",
+      "subtitle": "Analyze page load speed, Core Web Vitals (LCP, FID, CLS), and Lighthouse performance metrics for optimal UX"
+    },
+    "tabs": {
+      "quick": "Quick Scan",
+      "cwv": "Core Web Vitals",
+      "full": "Lighthouse Audit"
+    },
+    "scan": {
+      "placeholder": "Enter website URL...",
+      "button": "Analyze Performance",
+      "analyzing": "Analyzing...",
+      "quickDesc": "Quick performance overview",
+      "cwvDesc": "Detailed Core Web Vitals analysis",
+      "fullDesc": "Full Lighthouse audit"
+    },
+    "scores": {
+      "performance": "Performance",
+      "accessibility": "Accessibility",
+      "bestPractices": "Best Practices",
+      "seo": "SEO",
+      "overall": "Overall Score"
+    },
+    "metrics": {
+      "lcp": "Largest Contentful Paint",
+      "fid": "First Input Delay",
+      "cls": "Cumulative Layout Shift",
+      "fcp": "First Contentful Paint",
+      "tti": "Time to Interactive",
+      "tbt": "Total Blocking Time",
+      "si": "Speed Index"
+    },
+    "status": {
+      "good": "Good",
+      "needsImprovement": "Needs Improvement",
+      "poor": "Poor"
+    },
+    "sections": {
+      "overview": "Overview",
+      "diagnostics": "Diagnostics",
+      "opportunities": "Opportunities",
+      "resources": "Resource Analysis",
+      "fixes": "Fix Recommendations"
+    },
+    "device": {
+      "desktop": "Desktop",
+      "mobile": "Mobile"
+    },
+    "resources": {
+      "css": "CSS",
+      "js": "JavaScript",
+      "images": "Images",
+      "fonts": "Fonts",
+      "thirdParty": "Third Party",
+      "total": "Total"
+    },
+    "fixes": {
+      "critical": "Critical",
+      "medium": "Medium",
+      "low": "Low Priority",
+      "copyCode": "Copy Code",
+      "viewDetails": "View Details"
+    }
+  },
   "errors": {
     "urlRequired": "Please enter a valid URL",
     "invalidUrl": "Invalid URL format",
@@ -1108,7 +1301,10 @@
     "timeout": "Request timed out",
     "unauthorized": "Unauthorized access",
     "notFound": "Resource not found",
-    "serverError": "Server error occurred"
+    "serverError": "Server error occurred",
+    "checkoutFailed": "Checkout failed",
+    "checkoutFailedRetry": "Checkout failed. Please try again.",
+    "unableToOpenBillingPortal": "Unable to open billing portal"
   },
   "messages": {
     "analysisStarted": "Analysis started for {{url}}",
@@ -1175,7 +1371,9 @@
     "currentPassword": "Current Password",
     "newPassword": "New Password",
     "updatePassword": "Update Password",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "pleaseLoginToContinue": "Please log in to continue",
+    "pleaseLoginToManageBilling": "Please log in to manage billing"
   },
   "account": {
     "title": "My Account",
@@ -1226,6 +1424,104 @@
     "faqQuestion2": "What payment methods do you accept?",
     "faqAnswer2": "We accept all major credit cards via Stripe (Visa, Mastercard, Amex).",
     "faqQuestion3": "Do you offer refunds?",
-    "faqAnswer3": "Yes, we offer a 14-day money-back guarantee if you're not satisfied."
+    "faqAnswer3": "Yes, we offer a 14-day money-back guarantee if you're not satisfied.",
+    "modal": {
+      "unlockProFeatures": "Unlock Pro Features",
+      "closeModal": "Close modal",
+      "loginPrompt": "Sign in to purchase a subscription or single report.",
+      "signIn": "Sign In",
+      "createAccount": "Create Account",
+      "retry": "Retry",
+      "poweredBy": "Powered by",
+      "manageSubscription": "Manage subscription",
+      "pleaseLoginToContinue": "Please log in to continue",
+      "pleaseLoginToManageBilling": "Please log in to manage billing"
+    },
+    "plans": {
+      "proMonthly": "Pro Monthly",
+      "proYearly": "Pro Yearly",
+      "dayPass": "Day Pass",
+      "thisReport": "This Report"
+    },
+    "periods": {
+      "perMonth": "per month",
+      "perYear": "per year",
+      "hours24": "24 hours",
+      "oneTime": "one-time",
+      "effectiveMonthly": "$20/mo effective"
+    },
+    "badges": {
+      "current": "Current",
+      "save33": "Save 33%",
+      "active": "Active",
+      "owned": "Owned"
+    },
+    "buttons": {
+      "subscribe": "Subscribe",
+      "managePlan": "Manage Plan",
+      "switchToMonthly": "Switch to Monthly",
+      "switchToYearly": "Switch to Yearly",
+      "getDayPass": "Get Day Pass",
+      "activePass": "Active Pass",
+      "youHavePro": "You have Pro",
+      "buyReport": "Buy Report",
+      "purchased": "Purchased",
+      "includedWithPro": "Included with Pro",
+      "runScanFirst": "Run scan first",
+      "processing": "Processing..."
+    },
+    "benefits": {
+      "unlimitedProTools": "Unlimited Pro tools",
+      "exportPdfs": "Export PDFs",
+      "cancelAnytime": "Cancel anytime",
+      "bestValue": "Best value",
+      "fullProAccess": "Full Pro access",
+      "expiresIn24h": "Expires in 24h",
+      "unlocksThisReport": "Unlocks this report",
+      "exportPdf": "Export PDF",
+      "permanentAccess": "Permanent access"
+    }
+  },
+  "languageAudit": {
+    "title": "Language Audit",
+    "subtitle": "i18n Configuration Check",
+    "description": "Analyze your page for proper language configuration and SEO signals",
+    "score": "Language Score",
+    "grade": "Grade",
+    "issues": "Issues Found",
+    "checks": {
+      "htmlLang": "HTML lang attribute",
+      "contentLanguage": "Content-Language header",
+      "hreflang": "Hreflang tags",
+      "metaLanguage": "Meta language tags",
+      "consistency": "Language consistency",
+      "direction": "Text direction (dir)"
+    },
+    "severity": {
+      "critical": "Critical",
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "info": "Info"
+    },
+    "issues": {
+      "MISSING_HTML_LANG": "Missing html lang attribute",
+      "INVALID_HTML_LANG": "Invalid html lang value",
+      "MISMATCHED_XML_LANG": "xml:lang differs from lang",
+      "MISSING_CONTENT_LANGUAGE_HEADER": "No Content-Language header",
+      "INVALID_CONTENT_LANGUAGE": "Invalid Content-Language header",
+      "NO_HREFLANG_TAGS": "No hreflang tags found",
+      "INVALID_HREFLANG": "Invalid hreflang value",
+      "MISSING_HREFLANG_HREF": "Missing hreflang href",
+      "MISSING_X_DEFAULT": "Missing x-default hreflang",
+      "INVALID_OG_LOCALE": "Invalid og:locale format",
+      "INCONSISTENT_LANGUAGE_SIGNALS": "Inconsistent language signals",
+      "MISSING_RTL_DIR": "Missing RTL direction"
+    },
+    "recommendations": {
+      "addHtmlLang": "Add lang attribute to your <html> tag",
+      "addHreflang": "Consider adding hreflang tags for multilingual SEO",
+      "addContentLanguage": "Add Content-Language HTTP header"
+    }
   }
 }

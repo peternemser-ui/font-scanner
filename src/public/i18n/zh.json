@@ -3,6 +3,65 @@
     "name": "网站诊断师",
     "tagline": "网站诊断与性能分析"
   },
+  "homepage": {
+    "hero": {
+      "headline": "扫描任何网站。\n获取优先修复建议。",
+      "subhead": "性能、SEO、无障碍、安全和排版诊断，一次扫描搞定。",
+      "placeholder": "https://example.com",
+      "helperText": "大多数扫描在约30秒内完成",
+      "button": "分析",
+      "whatsIncluded": "包含内容"
+    },
+    "whatYouGet": {
+      "title": "您将获得",
+      "bullet1": "问题严重性排名",
+      "bullet2": "可执行的修复",
+      "bullet3": "分数明细",
+      "bullet4": "代码片段",
+      "proCallout": "专业版报告包括PDF导出和客户就绪的建议",
+      "sampleReport": "查看示例报告"
+    },
+    "exampleUrls": {
+      "label": "试试:",
+      "example1": "example.com",
+      "example2": "wikipedia.org",
+      "example3": "github.com"
+    },
+    "featureStrip": {
+      "title": "包含内容",
+      "performance": {
+        "title": "性能",
+        "desc": "核心网页指标和加载速度"
+      },
+      "seo": {
+        "title": "SEO",
+        "desc": "元标签和结构化数据"
+      },
+      "accessibility": {
+        "title": "无障碍",
+        "desc": "WCAG合规检查"
+      },
+      "security": {
+        "title": "安全",
+        "desc": "头部和SSL验证"
+      },
+      "typography": {
+        "title": "排版",
+        "desc": "字体加载和一致性"
+      }
+    },
+    "proUpsell": {
+      "title": "解锁专业版报告",
+      "bullet1": "PDF导出",
+      "bullet2": "客户就绪修复",
+      "bullet3": "保存的报告",
+      "cta": "查看价格"
+    },
+    "footer": {
+      "needHelp": "需要帮助？",
+      "contactSupport": "联系支持"
+    }
+  },
   "nav": {
     "dashboard": "仪表板",
     "fontScanner": "字体与排版",
@@ -41,7 +100,69 @@
   },
   "dashboard": {
     "title": "综合概览",
-    "breadcrumb": "仪表板 / 综合概览",
+    "breadcrumb": {
+      "home": "首页",
+      "current": "仪表板"
+    },
+    "header": {
+      "title": "仪表板",
+      "subtitle": "扫描网站以发现性能、SEO、可访问性和安全性问题。当需要可分享的内容时，解锁包含优先建议和修复的报告。"
+    },
+    "scan": {
+      "title": "扫描网站",
+      "urlLabel": "网站URL",
+      "urlPlaceholder": "https://example.com",
+      "howItWorks": "使用方法：",
+      "howItWorksText": "运行扫描以查看关键问题和后续步骤。如果需要客户级导出，可以解锁包含建议和修复的报告。",
+      "note": "注意：",
+      "noteText": "部分网站会阻止自动扫描。请尝试您自己的网站或"
+    },
+    "howItWorks": {
+      "title": "使用方法",
+      "step1Title": "输入URL",
+      "step1Desc": "粘贴任何网站URL进行分析。适用于大多数公开网站。",
+      "step2Title": "获取扫描报告",
+      "step2Desc": "几秒内查看SEO、性能、可访问性、安全和字体问题。",
+      "step3Title": "查看问题",
+      "step3Desc": "展开各部分查看详细发现、评分和快速优化建议。",
+      "step4Title": "解锁Pro报告",
+      "step4Desc": "导出PDF、获取修复代码并与客户分享。按报告付费或使用积分。"
+    },
+    "faq": {
+      "title": "常见问题",
+      "viewAll": "查看所有FAQ",
+      "commonQuestions": "常见问题",
+      "tagBasics": "基础",
+      "tagBilling": "账单",
+      "tagHelp": "帮助",
+      "q1": "什么是Site Mechanic？",
+      "a1": "Site Mechanic是一套网站诊断模块（速度与UX、SEO、可访问性、安全、字体与设计、托管等）。粘贴URL、运行扫描、获取优先级问题。如需可分享结果，可解锁包含建议和修复的报告。",
+      "q2": "运行扫描需要账户吗？",
+      "a2": "不需要。大多数扫描无需登录即可运行。如果选择解锁付费报告或导出，可能会提示登录以将购买关联到您的账户。",
+      "q3": "扫描需要多长时间？",
+      "a3": "快速扫描通常不到一分钟；Lighthouse审核可能需要几分钟。如果网站较慢或阻止自动化，扫描可能需要更长时间或失败。",
+      "q4": "什么是付费报告？",
+      "a4": "付费报告是特定扫描的导出/分享结果，如PDF导出、分享链接、可下载数据或扩展修复指南。通常可以免费运行扫描，然后决定是否购买报告。",
+      "q5": "积分如何使用？",
+      "a5": "积分用于解锁单个扫描的付费报告。当报告被锁定时，您会看到购买单个报告或购买积分包的选项。如果已有积分，可以使用1个积分解锁。",
+      "q6": "扫描卡住了怎么办？",
+      "a6": "尝试更简单的URL（首页而非深层路由）并重新运行。如问题持续，请发送邮件至peter@sitemechanic.io，附上URL和模块名称以便我们复现。",
+      "moreAnswers": "更多答案请访问",
+      "faqPage": "FAQ页面"
+    },
+    "contact": {
+      "title": "联系我们",
+      "description": "发送消息给支持团队。如有帮助请附上扫描的URL。",
+      "nameLabel": "姓名（可选）",
+      "namePlaceholder": "您的姓名",
+      "emailLabel": "邮箱",
+      "emailPlaceholder": "you@company.com",
+      "urlLabel": "网站URL（可选）",
+      "urlPlaceholder": "https://example.com",
+      "messageLabel": "消息",
+      "messagePlaceholder": "有什么可以帮您的？",
+      "submitButton": "发送消息"
+    },
     "runAudit": "运行完整审计",
     "analyzing": "分析中...",
     "enterUrl": "输入网站URL...",
@@ -76,7 +197,97 @@
     "pleaseEnterUrl": "请输入URL",
     "mayTake": "这可能需要15-30秒",
     "pageScreenshotAlt": "页面截图",
-    "footer": "© 2025 Site Mechanic。为重视质量的开发者而打造。"
+    "footer": "© 2025 Site Mechanic。为重视质量的开发者而打造。",
+    "runScan": "运行扫描",
+    "analyzing": "分析中...",
+    "close": "关闭",
+    "cancel": "取消",
+    "save": "保存",
+    "download": "下载",
+    "export": "导出",
+    "share": "分享",
+    "copy": "复制",
+    "copied": "已复制！",
+    "viewAll": "查看全部",
+    "learnMore": "了解更多",
+    "tryAgain": "重试",
+    "goBack": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "submit": "提交",
+    "search": "搜索"
+  },
+  "performanceHub": {
+    "title": "速度与用户体验",
+    "subtitle": "性能、Core Web Vitals 和 Lighthouse",
+    "breadcrumb": {
+      "home": "首页",
+      "current": "性能测试中心"
+    },
+    "header": {
+      "title": "性能测试中心",
+      "subtitle": "分析页面加载速度、Core Web Vitals（LCP、FID、CLS）和 Lighthouse 性能指标，优化用户体验"
+    },
+    "tabs": {
+      "quick": "快速扫描",
+      "cwv": "Core Web Vitals",
+      "full": "Lighthouse 审核"
+    },
+    "scan": {
+      "placeholder": "输入网站URL...",
+      "button": "分析性能",
+      "analyzing": "分析中...",
+      "quickDesc": "快速性能概览",
+      "cwvDesc": "详细的 Core Web Vitals 分析",
+      "fullDesc": "完整的 Lighthouse 审核"
+    },
+    "scores": {
+      "performance": "性能",
+      "accessibility": "可访问性",
+      "bestPractices": "最佳实践",
+      "seo": "SEO",
+      "overall": "综合得分"
+    },
+    "metrics": {
+      "lcp": "最大内容绘制",
+      "fid": "首次输入延迟",
+      "cls": "累计布局偏移",
+      "fcp": "首次内容绘制",
+      "tti": "可交互时间",
+      "tbt": "总阻塞时间",
+      "si": "速度指数"
+    },
+    "status": {
+      "good": "良好",
+      "needsImprovement": "需要改进",
+      "poor": "较差"
+    },
+    "sections": {
+      "overview": "概览",
+      "diagnostics": "诊断",
+      "opportunities": "优化机会",
+      "resources": "资源分析",
+      "fixes": "修复建议"
+    },
+    "device": {
+      "desktop": "桌面",
+      "mobile": "移动"
+    },
+    "resources": {
+      "css": "CSS",
+      "js": "JavaScript",
+      "images": "图片",
+      "fonts": "字体",
+      "thirdParty": "第三方",
+      "total": "总计"
+    },
+    "fixes": {
+      "critical": "严重",
+      "medium": "中等",
+      "low": "低优先级",
+      "copyCode": "复制代码",
+      "viewDetails": "查看详情"
+    }
   },
   "fontScanner": {
     "title": "字体与排版",
@@ -1001,8 +1212,151 @@
     }
   },
   "pricing": {
+    "title": "升级至 Site Mechanic Pro",
+    "subtitle": "解锁无限扫描、高级建议和专家级优化工具",
     "unlockReportTitle": "解锁报告",
-    "unlockReportSubtitle": "PDF 导出、分享链接、导出数据，以及此扫描的修复包。"
+    "unlockReportSubtitle": "PDF 导出、分享链接、导出数据，以及此扫描的修复包。",
+    "monthly": "月付",
+    "annual": "年付 节省17%",
+    "free": "免费",
+    "pro": "Pro",
+    "mostPopular": "最受欢迎",
+    "perMonth": "/月",
+    "scansPerMonth": "次扫描/月",
+    "unlimitedScans": "无限扫描",
+    "basicRecommendations": "完整修复建议",
+    "advancedRecommendations": "每个分析器的优先建议",
+    "onePagePerScan": "每次扫描1页",
+    "upToPages": "每次扫描最多250页",
+    "noExport": "无法导出",
+    "pdfExport": "无水印PDF导出",
+    "expertTips": "专家级优化建议",
+    "prioritySupport": "优先邮件支持",
+    "getStarted": "开始使用",
+    "upgradeNow": "立即升级",
+    "faq": "常见问题",
+    "faqQuestion1": "可以随时取消吗？",
+    "faqAnswer1": "是的，您可以随时取消订阅。无长期合同。",
+    "faqQuestion2": "接受哪些支付方式？",
+    "faqAnswer2": "我们通过Stripe接受所有主流信用卡（Visa、Mastercard、Amex）。",
+    "faqQuestion3": "提供退款吗？",
+    "faqAnswer3": "是的，如果您不满意，我们提供14天退款保证。",
+    "modal": {
+      "unlockProFeatures": "解锁 Pro 功能",
+      "closeModal": "关闭对话框",
+      "loginPrompt": "请登录以购买订阅或单个报告。",
+      "signIn": "登录",
+      "createAccount": "创建账户",
+      "retry": "重试",
+      "poweredBy": "技术支持",
+      "manageSubscription": "管理订阅",
+      "pleaseLoginToContinue": "请登录以继续",
+      "pleaseLoginToManageBilling": "请登录以管理账单"
+    },
+    "plans": {
+      "proMonthly": "Pro 月付",
+      "proYearly": "Pro 年付",
+      "dayPass": "日票",
+      "thisReport": "此报告"
+    },
+    "periods": {
+      "perMonth": "每月",
+      "perYear": "每年",
+      "hours24": "24小时",
+      "oneTime": "一次性",
+      "effectiveMonthly": "实际$20/月"
+    },
+    "badges": {
+      "current": "当前",
+      "save33": "节省33%",
+      "active": "有效",
+      "owned": "已拥有"
+    },
+    "buttons": {
+      "subscribe": "订阅",
+      "managePlan": "管理计划",
+      "switchToMonthly": "切换至月付",
+      "switchToYearly": "切换至年付",
+      "getDayPass": "获取日票",
+      "activePass": "有效通行证",
+      "youHavePro": "已拥有Pro",
+      "buyReport": "购买报告",
+      "purchased": "已购买",
+      "includedWithPro": "Pro已包含",
+      "runScanFirst": "请先运行扫描",
+      "processing": "处理中..."
+    },
+    "benefits": {
+      "unlimitedProTools": "无限Pro工具",
+      "exportPdfs": "导出PDF",
+      "cancelAnytime": "随时取消",
+      "bestValue": "最佳价值",
+      "fullProAccess": "完整Pro权限",
+      "expiresIn24h": "24小时后过期",
+      "unlocksThisReport": "解锁此报告",
+      "exportPdf": "导出PDF",
+      "permanentAccess": "永久访问"
+    }
+  },
+  "errors": {
+    "urlRequired": "请输入有效的URL",
+    "invalidUrl": "URL格式无效",
+    "networkError": "发生网络错误",
+    "analysisFailedretry": "分析失败，请重试。",
+    "timeout": "请求超时",
+    "unauthorized": "未授权访问",
+    "notFound": "资源未找到",
+    "serverError": "服务器错误",
+    "checkoutFailed": "结账失败",
+    "checkoutFailedRetry": "结账失败，请重试。",
+    "unableToOpenBillingPortal": "无法打开账单门户"
+  },
+  "auth": {
+    "welcomeBack": "欢迎回来",
+    "createAccount": "创建账户",
+    "login": "登录",
+    "register": "注册",
+    "email": "邮箱",
+    "password": "密码",
+    "confirmPassword": "确认密码",
+    "forgotPassword": "忘记密码？",
+    "alreadyHaveAccount": "已有账户？",
+    "dontHaveAccount": "没有账户？",
+    "loginButton": "登录",
+    "registerButton": "创建账户",
+    "loggingIn": "登录中...",
+    "creatingAccount": "创建账户中...",
+    "passwordRequirements": "必须8个字符以上，包含大写、小写和数字",
+    "loginSuccess": "登录成功！正在跳转...",
+    "registerSuccess": "账户创建成功！正在跳转...",
+    "logoutButton": "退出",
+    "changePassword": "更改密码",
+    "currentPassword": "当前密码",
+    "newPassword": "新密码",
+    "updatePassword": "更新密码",
+    "cancel": "取消",
+    "pleaseLoginToContinue": "请登录以继续",
+    "pleaseLoginToManageBilling": "请登录以管理账单"
+  },
+  "account": {
+    "title": "我的账户",
+    "subtitle": "管理您的订阅、账单和账户设置",
+    "accountInfo": "账户信息",
+    "subscription": "订阅",
+    "quickActions": "快捷操作",
+    "email": "邮箱",
+    "plan": "计划",
+    "memberSince": "注册日期",
+    "status": "状态",
+    "scansRemaining": "剩余扫描次数",
+    "freePlan": "免费计划",
+    "proPlan": "PRO",
+    "manageBilling": "管理账单",
+    "upgradeToPro": "升级到Pro",
+    "goToDashboard": "前往仪表板",
+    "passwordChanged": "密码已更改！",
+    "perDay": "/ 天",
+    "perMonth": "/ 月"
   },
   "notices": {
     "botProtectionTitle": "机器人保护提示：",

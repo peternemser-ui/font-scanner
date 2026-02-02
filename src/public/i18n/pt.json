@@ -3,6 +3,65 @@
     "name": "SITE MECHANIC",
     "tagline": "Diagnósticos Web e Análise de Desempenho"
   },
+  "homepage": {
+    "hero": {
+      "headline": "Escaneie qualquer site.\nObtenha correções priorizadas.",
+      "subhead": "Diagnósticos de desempenho, SEO, acessibilidade, segurança e tipografia em uma única análise.",
+      "placeholder": "https://exemplo.com",
+      "helperText": "A maioria das análises termina em ~30 segundos",
+      "button": "Analisar",
+      "whatsIncluded": "O que está incluído"
+    },
+    "whatYouGet": {
+      "title": "O que você receberá",
+      "bullet1": "Classificação por gravidade",
+      "bullet2": "Correções acionáveis",
+      "bullet3": "Detalhamento de pontuações",
+      "bullet4": "Trechos de código",
+      "proCallout": "Relatórios Pro incluem exportação PDF e recomendações prontas para clientes",
+      "sampleReport": "Ver relatório de exemplo"
+    },
+    "exampleUrls": {
+      "label": "Experimente:",
+      "example1": "example.com",
+      "example2": "wikipedia.org",
+      "example3": "github.com"
+    },
+    "featureStrip": {
+      "title": "O que está incluído",
+      "performance": {
+        "title": "Desempenho",
+        "desc": "Core Web Vitals e velocidade de carregamento"
+      },
+      "seo": {
+        "title": "SEO",
+        "desc": "Meta tags e dados estruturados"
+      },
+      "accessibility": {
+        "title": "Acessibilidade",
+        "desc": "Verificações de conformidade WCAG"
+      },
+      "security": {
+        "title": "Segurança",
+        "desc": "Cabeçalhos e validação SSL"
+      },
+      "typography": {
+        "title": "Tipografia",
+        "desc": "Carregamento de fontes e consistência"
+      }
+    },
+    "proUpsell": {
+      "title": "Desbloqueie Relatórios Pro",
+      "bullet1": "Exportação PDF",
+      "bullet2": "Correções prontas para clientes",
+      "bullet3": "Relatórios salvos",
+      "cta": "Ver preços"
+    },
+    "footer": {
+      "needHelp": "Precisa de ajuda?",
+      "contactSupport": "Contatar suporte"
+    }
+  },
   "nav": {
     "dashboard": "Painel",
     "fontScanner": "Fontes e Tipografia",
@@ -41,7 +100,6 @@
   },
   "dashboard": {
     "title": "Visão Geral do Site",
-    "breadcrumb": "painel / visão geral",
     "runAudit": "EXECUTAR AUDITORIA COMPLETA",
     "analyzing": "ANALISANDO...",
     "enterUrl": "Digite a URL do site...",
@@ -50,6 +108,11 @@
     "typography": "Tipografia",
     "detailedAnalysis": "Análise Detalhada",
     "priorityRecommendations": "Recomendações Prioritárias",
+    "typographyAnalysis": "Análise Tipográfica",
+    "seoAnalysis": "Análise SEO",
+    "performanceAnalysis": "Análise de Desempenho",
+    "accessibilityAnalysis": "Análise de Acessibilidade",
+    "securityAnalysis": "Análise de Segurança",
     "viewDetails": "Ver Detalhes",
     "score": "Pontuação",
     "grade": "Nota",
@@ -59,7 +122,70 @@
     "fair": "Regular",
     "needsWork": "Precisa Melhorar",
     "error": "Erro",
-    "na": "N/D"
+    "na": "N/D",
+    "breadcrumb": {
+      "home": "Início",
+      "current": "Painel"
+    },
+    "header": {
+      "title": "Painel",
+      "subtitle": "Analise um site para encontrar problemas de desempenho, SEO, acessibilidade e segurança. Desbloqueie um relatório com recomendações priorizadas."
+    },
+    "scan": {
+      "title": "Analisar um site",
+      "urlLabel": "URL do site",
+      "urlPlaceholder": "https://exemplo.com.br",
+      "howItWorks": "Como funciona:",
+      "howItWorksText": "Execute uma análise para ver problemas principais e próximos passos. Para um export pronto para cliente, desbloqueie um relatório.",
+      "note": "Nota:",
+      "noteText": "Alguns sites bloqueiam análises automatizadas. Tente seus próprios sites ou"
+    },
+    "howItWorks": {
+      "title": "Como Funciona",
+      "step1Title": "Digite uma URL",
+      "step1Desc": "Cole qualquer URL de site para analisar. Funciona com a maioria dos sites públicos.",
+      "step2Title": "Obtenha um Relatório",
+      "step2Desc": "Veja problemas de SEO, desempenho, acessibilidade, segurança e fontes em segundos.",
+      "step3Title": "Revise os Problemas",
+      "step3Desc": "Expanda cada seção para ver resultados detalhados, pontuações e ganhos rápidos.",
+      "step4Title": "Desbloqueie Relatórios Pro",
+      "step4Desc": "Exporte PDFs, obtenha código de correção e compartilhe com clientes."
+    },
+    "faq": {
+      "title": "FAQ",
+      "viewAll": "Ver todas as FAQs",
+      "commonQuestions": "Perguntas frequentes",
+      "tagBasics": "Básico",
+      "tagBilling": "Faturamento",
+      "tagHelp": "Ajuda",
+      "q1": "O que é o Site Mechanic?",
+      "a1": "Site Mechanic é um conjunto de módulos de diagnóstico de sites (Velocidade & UX, SEO, Acessibilidade, Segurança, Fontes & Design e mais). Cole uma URL, execute uma análise e obtenha problemas priorizados.",
+      "q2": "Preciso de uma conta para executar análises?",
+      "a2": "Não. A maioria das análises pode ser executada sem login. Para desbloquear um relatório pago, você será solicitado a fazer login.",
+      "q3": "Quanto tempo levam as análises?",
+      "a3": "Análises rápidas geralmente levam menos de um minuto; auditorias Lighthouse podem levar alguns minutos.",
+      "q4": "O que é um relatório pago?",
+      "a4": "Um relatório pago é um resultado de exportação/compartilhamento para uma análise específica, como exportação PDF, links de compartilhamento ou orientação estendida de correção.",
+      "q5": "Como funcionam os créditos?",
+      "a5": "Créditos desbloqueiam relatórios pagos para análises individuais. Com créditos, você pode desbloquear com 1 crédito.",
+      "q6": "A análise está travada. O que devo fazer?",
+      "a6": "Tente uma URL mais simples (página inicial vs. rota profunda) e execute novamente. Se o problema persistir, entre em contato conosco.",
+      "moreAnswers": "Mais respostas na",
+      "faqPage": "página de FAQ"
+    },
+    "contact": {
+      "title": "Contato",
+      "description": "Envie uma mensagem para o suporte. Inclua a URL que você analisou se ajudar.",
+      "nameLabel": "Nome (opcional)",
+      "namePlaceholder": "Seu nome",
+      "emailLabel": "Email",
+      "emailPlaceholder": "voce@empresa.com.br",
+      "urlLabel": "URL do site (opcional)",
+      "urlPlaceholder": "https://exemplo.com.br",
+      "messageLabel": "Mensagem",
+      "messagePlaceholder": "Como podemos ajudar?",
+      "submitButton": "Enviar mensagem"
+    }
   },
   "common": {
     "loading": "Carregando...",
@@ -608,7 +734,37 @@
     "pleaseEnterUrl": "Por favor, insira uma URL",
     "mayTake": "Isso pode levar 15-30 segundos",
     "pageScreenshotAlt": "Captura de tela da página",
-    "footer": "© 2025 Site Mechanic. Feito para desenvolvedores que se importam com qualidade."
+    "footer": "© 2026 Site Mechanic por Peter Freedman | Serviços de otimização e desenvolvimento web",
+    "runScan": "Analisar",
+    "analyzing": "Analisando...",
+    "info": "Informação",
+    "retry": "Tentar Novamente",
+    "cancel": "Cancelar",
+    "close": "Fechar",
+    "save": "Salvar",
+    "export": "Exportar",
+    "import": "Importar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "clear": "Limpar",
+    "apply": "Aplicar",
+    "reset": "Redefinir",
+    "back": "Voltar",
+    "next": "Próximo",
+    "previous": "Anterior",
+    "download": "Baixar",
+    "upload": "Enviar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "view": "Ver",
+    "copy": "Copiar",
+    "copied": "Copiado!",
+    "share": "Compartilhar",
+    "print": "Imprimir",
+    "help": "Ajuda",
+    "settings": "Configurações",
+    "warning": "Aviso"
   },
   "fontScanner": {
     "title": "Fontes e Tipografia",
@@ -1011,77 +1167,284 @@
     "botProtectionInstead": "em vez disso."
   },
   "auth": {
-    "welcomeBack": "Bienvenido de Nuevo",
-    "createAccount": "Crear Cuenta",
-    "login": "Iniciar Sesión",
-    "register": "Registrarse",
-    "email": "Correo Electrónico",
-    "password": "Contraseña",
-    "confirmPassword": "Confirmar Contraseña",
-    "forgotPassword": "¿Olvidaste tu contraseña?",
-    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
-    "dontHaveAccount": "¿No tienes una cuenta?",
-    "loginButton": "Iniciar Sesión",
-    "registerButton": "Crear Cuenta",
-    "loggingIn": "Iniciando sesión...",
-    "creatingAccount": "Creando cuenta...",
-    "passwordRequirements": "Debe tener 8+ caracteres con mayúsculas, minúsculas y números",
-    "loginSuccess": "¡Inicio de sesión exitoso! Redirigiendo...",
-    "registerSuccess": "¡Cuenta creada! Redirigiendo...",
-    "logoutButton": "Cerrar Sesión",
-    "changePassword": "Cambiar Contraseña",
-    "currentPassword": "Contraseña Actual",
-    "newPassword": "Nueva Contraseña",
-    "updatePassword": "Actualizar Contraseña",
-    "cancel": "Cancelar"
+    "welcomeBack": "Bem-vindo de Volta",
+    "createAccount": "Criar Conta",
+    "login": "Entrar",
+    "register": "Cadastrar",
+    "email": "Email",
+    "password": "Senha",
+    "confirmPassword": "Confirmar Senha",
+    "forgotPassword": "Esqueceu sua senha?",
+    "alreadyHaveAccount": "Já tem uma conta?",
+    "dontHaveAccount": "Não tem uma conta?",
+    "loginButton": "Entrar",
+    "registerButton": "Criar Conta",
+    "loggingIn": "Entrando...",
+    "creatingAccount": "Criando conta...",
+    "passwordRequirements": "Deve ter 8+ caracteres com maiúsculas, minúsculas e números",
+    "loginSuccess": "Login bem-sucedido! Redirecionando...",
+    "registerSuccess": "Conta criada! Redirecionando...",
+    "logoutButton": "Sair",
+    "changePassword": "Alterar Senha",
+    "currentPassword": "Senha Atual",
+    "newPassword": "Nova Senha",
+    "updatePassword": "Atualizar Senha",
+    "cancel": "Cancelar",
+    "pleaseLoginToContinue": "Por favor, faça login para continuar",
+    "pleaseLoginToManageBilling": "Por favor, faça login para gerenciar faturamento"
   },
   "account": {
-    "title": "Mi Cuenta",
-    "subtitle": "Administre su suscripción, facturación y configuración de cuenta",
-    "accountInfo": "Información de la Cuenta",
-    "subscription": "Suscripción",
-    "quickActions": "Acciones Rápidas",
-    "email": "Correo Electrónico",
-    "plan": "Plan",
-    "memberSince": "Miembro Desde",
-    "status": "Estado",
-    "scansRemaining": "Escaneos Restantes",
-    "freePlan": "PLAN GRATUITO",
+    "title": "Minha Conta",
+    "subtitle": "Gerencie sua assinatura, faturamento e configurações da conta",
+    "accountInfo": "Informações da Conta",
+    "subscription": "Assinatura",
+    "quickActions": "Ações Rápidas",
+    "email": "Email",
+    "plan": "Plano",
+    "memberSince": "Membro Desde",
+    "status": "Status",
+    "scansRemaining": "Análises Restantes",
+    "freePlan": "PLANO GRATUITO",
     "proPlan": "PRO",
-    "manageBilling": "Administrar Facturación",
-    "upgradeToPro": "Actualizar a Pro",
-    "goToDashboard": "Ir al Panel",
-    "passwordChanged": "¡Contraseña cambiada exitosamente!",
-    "perDay": "/ día",
-    "perMonth": "/ mes"
+    "manageBilling": "Gerenciar Faturamento",
+    "upgradeToPro": "Atualizar para Pro",
+    "goToDashboard": "Ir para o Painel",
+    "passwordChanged": "Senha alterada com sucesso!",
+    "perDay": "/ dia",
+    "perMonth": "/ mês"
   },
   "pricing": {
-    "title": "Actualizar a Site Mechanic Pro",
-    "subtitle": "Desbloquea escaneos ilimitados, recomendaciones avanzadas y herramientas de optimización de nivel experto",
-    "monthly": "Mensual",
-    "annual": "Anual Ahorra 17%",
-    "free": "Gratis",
+    "title": "Atualizar para Site Mechanic Pro",
+    "subtitle": "Desbloqueie análises ilimitadas, recomendações avançadas e ferramentas de otimização de nível expert",
+    "unlockReportTitle": "Desbloquear Relatório",
+    "unlockReportSubtitle": "Exportação PDF, link de compartilhamento, exportação de dados e pacotes de correção para esta análise.",
+    "monthly": "Mensal",
+    "annual": "Anual Economize 17%",
+    "free": "Grátis",
     "pro": "Pro",
-    "mostPopular": "MÁS POPULAR",
-    "perMonth": "/mes",
-    "scansPerMonth": "escaneos por mes",
-    "unlimitedScans": "Escaneos ilimitados",
-    "basicRecommendations": "Recomendações completas",
+    "mostPopular": "MAIS POPULAR",
+    "perMonth": "/mês",
+    "scansPerMonth": "análises por mês",
+    "unlimitedScans": "Análises ilimitadas",
+    "basicRecommendations": "Recomendações de correção completas",
     "advancedRecommendations": "Recomendações priorizadas por analisador",
-    "onePagePerScan": "1 página por escaneo",
-    "upToPages": "Hasta 250 páginas por escaneo",
-    "noExport": "Sin exportación",
-    "pdfExport": "Exportación PDF sin marca de agua",
-    "expertTips": "Consejos de optimización de nivel experto",
-    "prioritySupport": "Soporte prioritario por correo electrónico",
-    "getStarted": "Comenzar",
-    "upgradeNow": "Actualizar Ahora",
-    "faq": "Preguntas Frecuentes",
-    "faqQuestion1": "¿Puedo cancelar en cualquier momento?",
-    "faqAnswer1": "Sí, puedes cancelar tu suscripción en cualquier momento. Sin contratos a largo plazo.",
-    "faqQuestion2": "¿Qué métodos de pago aceptan?",
-    "faqAnswer2": "Aceptamos todas las principales tarjetas de crédito a través de Stripe (Visa, Mastercard, Amex).",
-    "faqQuestion3": "¿Ofrecen reembolsos?",
-    "faqAnswer3": "Sí, ofrecemos una garantía de devolución de dinero de 14 días si no estás satisfecho."
+    "onePagePerScan": "1 página por análise",
+    "upToPages": "Até 250 páginas por análise",
+    "noExport": "Sem exportação",
+    "pdfExport": "Exportação PDF sem marca d'água",
+    "expertTips": "Dicas de otimização de nível expert",
+    "prioritySupport": "Suporte prioritário por email",
+    "getStarted": "Começar",
+    "upgradeNow": "Atualizar Agora",
+    "faq": "Perguntas Frequentes",
+    "faqQuestion1": "Posso cancelar a qualquer momento?",
+    "faqAnswer1": "Sim, você pode cancelar sua assinatura a qualquer momento. Sem contratos de longo prazo.",
+    "faqQuestion2": "Quais métodos de pagamento vocês aceitam?",
+    "faqAnswer2": "Aceitamos todos os principais cartões de crédito via Stripe (Visa, Mastercard, Amex).",
+    "faqQuestion3": "Vocês oferecem reembolsos?",
+    "faqAnswer3": "Sim, oferecemos garantia de devolução do dinheiro de 14 dias se você não estiver satisfeito.",
+    "modal": {
+      "unlockProFeatures": "Desbloquear Recursos Pro",
+      "closeModal": "Fechar modal",
+      "loginPrompt": "Faça login para comprar uma assinatura ou relatório único.",
+      "signIn": "Entrar",
+      "createAccount": "Criar Conta",
+      "retry": "Tentar Novamente",
+      "poweredBy": "Desenvolvido por",
+      "manageSubscription": "Gerenciar assinatura",
+      "pleaseLoginToContinue": "Por favor, faça login para continuar",
+      "pleaseLoginToManageBilling": "Por favor, faça login para gerenciar faturamento"
+    },
+    "plans": {
+      "proMonthly": "Pro Mensal",
+      "proYearly": "Pro Anual",
+      "dayPass": "Passe Diário",
+      "thisReport": "Este Relatório"
+    },
+    "periods": {
+      "perMonth": "por mês",
+      "perYear": "por ano",
+      "hours24": "24 horas",
+      "oneTime": "único",
+      "effectiveMonthly": "R$20/mês efetivo"
+    },
+    "badges": {
+      "current": "Atual",
+      "save33": "Economize 33%",
+      "active": "Ativo",
+      "owned": "Adquirido"
+    },
+    "buttons": {
+      "subscribe": "Assinar",
+      "managePlan": "Gerenciar Plano",
+      "switchToMonthly": "Mudar para Mensal",
+      "switchToYearly": "Mudar para Anual",
+      "getDayPass": "Obter Passe Diário",
+      "activePass": "Passe Ativo",
+      "youHavePro": "Você tem Pro",
+      "buyReport": "Comprar Relatório",
+      "purchased": "Comprado",
+      "includedWithPro": "Incluído no Pro",
+      "runScanFirst": "Execute uma análise primeiro",
+      "processing": "Processando..."
+    },
+    "benefits": {
+      "unlimitedProTools": "Ferramentas Pro ilimitadas",
+      "exportPdfs": "Exportar PDFs",
+      "cancelAnytime": "Cancele a qualquer momento",
+      "bestValue": "Melhor valor",
+      "fullProAccess": "Acesso Pro completo",
+      "expiresIn24h": "Expira em 24h",
+      "unlocksThisReport": "Desbloqueia este relatório",
+      "exportPdf": "Exportar PDF",
+      "permanentAccess": "Acesso permanente"
+    }
+  },
+  "performanceHub": {
+    "title": "Velocidade & UX",
+    "subtitle": "Desempenho, Core Web Vitals & Lighthouse",
+    "breadcrumb": {
+      "home": "Início",
+      "current": "Hub de Desempenho"
+    },
+    "header": {
+      "title": "Hub de Teste de Desempenho",
+      "subtitle": "Analise velocidade de carregamento, Core Web Vitals (LCP, FID, CLS) e métricas Lighthouse"
+    },
+    "tabs": {
+      "quick": "Análise Rápida",
+      "cwv": "Core Web Vitals",
+      "full": "Auditoria Lighthouse"
+    },
+    "scan": {
+      "placeholder": "Digite a URL do site...",
+      "button": "Analisar Desempenho",
+      "analyzing": "Analisando...",
+      "quickDesc": "Visão geral rápida de desempenho",
+      "cwvDesc": "Análise detalhada de Core Web Vitals",
+      "fullDesc": "Auditoria Lighthouse completa"
+    },
+    "scores": {
+      "performance": "Desempenho",
+      "accessibility": "Acessibilidade",
+      "bestPractices": "Boas Práticas",
+      "seo": "SEO",
+      "overall": "Pontuação Geral"
+    },
+    "metrics": {
+      "lcp": "Largest Contentful Paint",
+      "fid": "First Input Delay",
+      "cls": "Cumulative Layout Shift",
+      "fcp": "First Contentful Paint",
+      "tti": "Time to Interactive",
+      "tbt": "Total Blocking Time",
+      "si": "Speed Index"
+    },
+    "status": {
+      "good": "Bom",
+      "needsImprovement": "Precisa Melhorar",
+      "poor": "Ruim"
+    },
+    "sections": {
+      "overview": "Visão Geral",
+      "diagnostics": "Diagnósticos",
+      "opportunities": "Oportunidades",
+      "resources": "Análise de Recursos",
+      "fixes": "Recomendações de Correção"
+    },
+    "device": {
+      "desktop": "Desktop",
+      "mobile": "Móvel"
+    },
+    "resources": {
+      "css": "CSS",
+      "js": "JavaScript",
+      "images": "Imagens",
+      "fonts": "Fontes",
+      "thirdParty": "Terceiros",
+      "total": "Total"
+    },
+    "fixes": {
+      "critical": "Crítico",
+      "medium": "Médio",
+      "low": "Baixa Prioridade",
+      "copyCode": "Copiar Código",
+      "viewDetails": "Ver Detalhes"
+    }
+  },
+  "languageAudit": {
+    "title": "Auditoria de Idioma",
+    "subtitle": "Verificação de Configuração i18n",
+    "description": "Analise sua página para configuração de idioma adequada e sinais de SEO",
+    "score": "Pontuação de Idioma",
+    "grade": "Nota",
+    "issues": "Problemas Encontrados",
+    "checks": {
+      "htmlLang": "Atributo html lang",
+      "contentLanguage": "Cabeçalho Content-Language",
+      "hreflang": "Tags hreflang",
+      "metaLanguage": "Tags meta de idioma",
+      "consistency": "Consistência de idioma",
+      "direction": "Direção do texto (dir)"
+    },
+    "severity": {
+      "critical": "Crítico",
+      "high": "Alto",
+      "medium": "Médio",
+      "low": "Baixo",
+      "info": "Info"
+    },
+    "recommendations": {
+      "addHtmlLang": "Adicione o atributo lang à sua tag <html>",
+      "addHreflang": "Considere adicionar tags hreflang para SEO multilíngue",
+      "addContentLanguage": "Adicione o cabeçalho HTTP Content-Language"
+    }
+  },
+  "errors": {
+    "urlRequired": "Por favor, insira uma URL válida",
+    "invalidUrl": "Formato de URL inválido",
+    "networkError": "Ocorreu um erro de rede",
+    "analysisFailedretry": "A análise falhou. Por favor, tente novamente.",
+    "timeout": "Tempo limite da requisição esgotado",
+    "unauthorized": "Acesso não autorizado",
+    "notFound": "Recurso não encontrado",
+    "serverError": "Ocorreu um erro no servidor",
+    "checkoutFailed": "Checkout falhou",
+    "checkoutFailedRetry": "Checkout falhou. Por favor, tente novamente.",
+    "unableToOpenBillingPortal": "Não foi possível abrir o portal de faturamento"
+  },
+  "messages": {
+    "analysisStarted": "Análise iniciada para {{url}}",
+    "analysisCompleted": "Análise concluída com sucesso",
+    "noIssuesFound": "Excelente! Todas as áreas estão funcionando bem. Continue assim!",
+    "issuesFound": "Encontrados {{count}} problemas que precisam de atenção",
+    "recommendationsGenerated": "Geradas {{count}} recomendações",
+    "reportDownloaded": "Relatório baixado com sucesso",
+    "settingsSaved": "Configurações salvas com sucesso"
+  },
+  "grades": {
+    "aPlus": "A+",
+    "a": "A",
+    "aMinus": "A-",
+    "bPlus": "B+",
+    "b": "B",
+    "bMinus": "B-",
+    "cPlus": "C+",
+    "c": "C",
+    "cMinus": "C-",
+    "d": "D",
+    "f": "F"
+  },
+  "status": {
+    "excellent": "Excelente",
+    "good": "Bom",
+    "fair": "Regular",
+    "poor": "Ruim",
+    "critical": "Crítico",
+    "passing": "Aprovado",
+    "failing": "Reprovado",
+    "pending": "Pendente",
+    "inProgress": "Em Andamento",
+    "completed": "Concluído"
   }
 }

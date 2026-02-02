@@ -1,0 +1,203 @@
+/**
+ * PageShell Component Styles
+ * Additional styles for the unified page shell component
+ *
+ * Most styles are inherited from:
+ * - ui-components.css (breadcrumb, page-header)
+ * - ui.css (tabs, form elements)
+ * - styles.css (base styles, colors)
+ */
+
+/* ========================================
+   PAGE SHELL LAYOUT
+   Override ui.css padding for tighter spacing
+   ======================================== */
+
+.page-shell {
+  padding-top: 0.25rem;
+}
+
+@media (max-width: 768px) {
+  .page-shell {
+    padding-top: 0.125rem;
+  }
+}
+
+/* ========================================
+   MODE INDICATOR
+   Shows the currently selected mode for multi-mode analyzers
+   ======================================== */
+
+.mode-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  font-size: 0.85rem;
+}
+
+.mode-indicator__label {
+  color: var(--text-muted, #808080);
+  font-weight: 400;
+}
+
+.mode-indicator__value {
+  color: var(--accent-primary, #5bf4e7);
+  font-weight: 600;
+}
+
+.mode-indicator__time {
+  font-size: 0.75rem;
+  padding: 0.15rem 0.5rem;
+  background: rgba(var(--accent-primary-rgb, 91, 244, 231), 0.1);
+  border-radius: 4px;
+  color: var(--accent-primary, #5bf4e7);
+}
+
+.mode-description {
+  margin: 0.5rem 0 1rem 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #d0d0d0);
+  line-height: 1.4;
+}
+
+/* ========================================
+   TABS PRO BADGE
+   Badge shown on tabs that require pro access
+   ======================================== */
+
+.tabs__pro-badge {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.4rem;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #ffd700, #ffb700);
+  color: #000;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+.tabs__free-badge {
+  display: inline-block;
+  width: fit-content;
+  margin-top: 4px;
+  padding: 3px 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.3);
+}
+
+/* ========================================
+   RESULTS CONTAINER TRANSITIONS
+   Smooth show/hide for results area
+   ======================================== */
+
+.results-container {
+  transition: opacity 0.3s ease;
+}
+
+.results-container[hidden] {
+  display: none;
+}
+
+.results-container.fade-in {
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ========================================
+   LIGHT THEME OVERRIDES
+   ======================================== */
+
+.white-theme .mode-indicator__label {
+  color: var(--text-muted, #6b7280);
+}
+
+.white-theme .mode-indicator__value {
+  color: var(--accent-primary-light, #00b4a6);
+}
+
+.white-theme .mode-indicator__time {
+  background: rgba(0, 180, 166, 0.1);
+  color: var(--accent-primary-light, #00b4a6);
+}
+
+.white-theme .mode-description {
+  color: var(--text-secondary-light, #4b5563);
+}
+
+.white-theme .tabs__pro-badge {
+  background: linear-gradient(135deg, #ffc107, #ff9800);
+}
+
+.white-theme .tabs__free-badge {
+  background: linear-gradient(135deg, #4ade80, #22c55e);
+  color: #fff;
+  box-shadow: 0 1px 3px rgba(34, 197, 94, 0.25);
+}
+
+/* ========================================
+   HELPER TEXT
+   Supplementary text below form inputs
+   ======================================== */
+
+.helper-text {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted, #808080);
+  line-height: 1.4;
+}
+
+.white-theme .helper-text {
+  color: var(--text-muted, #6b7280);
+}
+
+/* ========================================
+   FORM ROW ALIGNMENT
+   Ensure proper alignment in input card
+   ======================================== */
+
+.card__body .form-row {
+  display: flex;
+  gap: 0.75rem;
+  align-items: stretch;
+}
+
+.card__body .form-row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.card__body .form-row .btn {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+/* Responsive: Stack on small screens */
+@media (max-width: 480px) {
+  .card__body .form-row {
+    flex-direction: column;
+  }
+
+  .card__body .form-row .btn {
+    width: 100%;
+  }
+}

@@ -57,8 +57,42 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Dashboard contact form (support)
+  // Example chip handlers (Swiss-minimal homepage)
+  document.querySelectorAll('.example-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+      if (urlInput) {
+        urlInput.value = chip.dataset.url;
+        urlInput.focus();
+      }
+    });
+  });
+
+  // Pricing modal trigger (Swiss-minimal homepage)
+  const pricingModalTrigger = document.getElementById('openPricingModal');
+  if (pricingModalTrigger) {
+    pricingModalTrigger.addEventListener('click', () => {
+      window.dispatchEvent(new CustomEvent('openPricingModal'));
+    });
+  }
+
+  // Dashboard contact form (support) - no longer present in Swiss-minimal layout
   initializeDashboardContactForm();
+
+  // Event delegation for category-link hover effects (CSP-compliant)
+  document.addEventListener('mouseover', function(e) {
+    const link = e.target.closest('.category-link-hover');
+    if (link) {
+      link.style.borderColor = link.getAttribute('data-hover-border');
+      link.style.background = link.getAttribute('data-hover-bg');
+    }
+  });
+  document.addEventListener('mouseout', function(e) {
+    const link = e.target.closest('.category-link-hover');
+    if (link) {
+      link.style.borderColor = link.getAttribute('data-default-border');
+      link.style.background = link.getAttribute('data-default-bg');
+    }
+  });
 });
 
 function initializeDashboardContactForm() {
@@ -572,7 +606,7 @@ function displayDashboard(data) {
           <!-- Export Options -->
           <h4 style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">Client-Ready Reports</h4>
           <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-            <button onclick="copyShareLink()" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 8px; color: var(--accent-primary); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;">
+            <button data-action="copy-share-link" style="display: flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 8px; color: var(--accent-primary); cursor: pointer; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
               Copy Link
             </button>
@@ -782,8 +816,12 @@ function createCategoryLink(title, description, link, scores, icon) {
       border-radius: 10px;
       text-decoration: none;
       transition: all 0.2s ease;
-    " onmouseover="this.style.borderColor='${statusColor}'; this.style.background='${isLightMode ? '#f0f0f0' : 'rgba(255,255,255,0.05)'}';"
-       onmouseout="this.style.borderColor='${linkBorder}'; this.style.background='${linkBg}';">
+    "
+       class="category-link-hover"
+       data-hover-border="${statusColor}"
+       data-hover-bg="${isLightMode ? '#f0f0f0' : 'rgba(255,255,255,0.05)'}"
+       data-default-border="${linkBorder}"
+       data-default-bg="${linkBg}">
       ${miniDial}
       <div style="flex: 1; min-width: 0;">
         <div style="font-weight: 600; color: ${titleColor}; font-size: 1.05rem;">${title}</div>
