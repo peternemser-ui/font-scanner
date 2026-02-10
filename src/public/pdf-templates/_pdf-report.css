@@ -1,0 +1,969 @@
+/* =============================================================================
+   PDF Report Template — Shared Styles
+   Designed for A4 print output via Puppeteer
+   ============================================================================= */
+
+/* --- A4 Page Setup --- */
+@page {
+  size: A4;
+  /* Margins handled by Puppeteer page.pdf() to leave space for footer */
+}
+
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  width: 210mm;
+  margin: 0 auto;
+  padding: 0;
+  background: #ffffff;
+  color: #111827;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 12pt;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+/* --- CJK Font Overrides --- */
+html[lang="ja"] body, html[lang="ja"] body * {
+  font-family: 'Noto Sans JP', 'Inter', system-ui, sans-serif;
+}
+html[lang="zh"] body, html[lang="zh"] body * {
+  font-family: 'Noto Sans SC', 'Inter', system-ui, sans-serif;
+}
+html[lang="ko"] body, html[lang="ko"] body * {
+  font-family: 'Noto Sans KR', 'Inter', system-ui, sans-serif;
+}
+
+/* CJK slightly smaller to account for taller glyphs */
+html[lang="ja"] body,
+html[lang="zh"] body,
+html[lang="ko"] body {
+  font-size: 11.4pt;
+  line-height: 1.65;
+}
+
+/* =============================================================================
+   COVER PAGE
+   ============================================================================= */
+.pdf-cover {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 60px 50px;
+  text-align: center;
+  break-after: page;
+  page-break-after: always;
+  position: relative;
+}
+
+.pdf-cover__logo {
+  width: 200px;
+  margin-bottom: 40px;
+}
+
+.pdf-cover__logo svg {
+  width: 100%;
+  height: auto;
+}
+
+.pdf-cover__subtitle {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: #9ca3af;
+  font-weight: 500;
+  margin-bottom: 28px;
+}
+
+.pdf-cover__title {
+  font-family: 'DM Serif Text', 'Georgia', serif;
+  font-size: 2.4rem;
+  font-weight: 400;
+  color: #111827;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+}
+
+html[lang="ja"] .pdf-cover__title,
+html[lang="zh"] .pdf-cover__title,
+html[lang="ko"] .pdf-cover__title {
+  font-family: 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans KR', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 2rem;
+}
+
+.pdf-cover__accent-bar {
+  width: 48px;
+  height: 3px;
+  background: #dd3838;
+  margin: 0 auto 28px;
+}
+
+.pdf-cover__url {
+  font-size: 1rem;
+  color: #374151;
+  font-weight: 500;
+  word-break: break-all;
+  overflow-wrap: break-word;
+  max-width: 80%;
+  margin-bottom: 32px;
+}
+
+.pdf-cover__meta {
+  color: #6b7280;
+  font-size: 0.85rem;
+  line-height: 2;
+}
+
+.pdf-cover__score-box {
+  margin-top: 40px;
+  padding: 24px 48px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 12px;
+  display: inline-block;
+}
+
+.pdf-cover__score-label {
+  font-size: 0.7rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.pdf-cover__score-value {
+  font-size: 3rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  line-height: 1;
+}
+
+.pdf-cover__score-max {
+  font-size: 1.5rem;
+  color: #9ca3af;
+}
+
+/* Score colors */
+.score-excellent { color: #10b981; }
+.score-good { color: #22c55e; }
+.score-fair { color: #f59e0b; }
+.score-poor { color: #ef4444; }
+
+/* =============================================================================
+   TABLE OF CONTENTS
+   ============================================================================= */
+.pdf-toc {
+  padding: 50px 50px;
+  break-after: page;
+  page-break-after: always;
+  min-height: 100vh;
+}
+
+.pdf-toc__heading {
+  font-family: 'DM Serif Text', 'Georgia', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #111827;
+  margin-bottom: 32px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #dd3838;
+}
+
+html[lang="ja"] .pdf-toc__heading,
+html[lang="zh"] .pdf-toc__heading,
+html[lang="ko"] .pdf-toc__heading {
+  font-family: 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans KR', system-ui, sans-serif;
+  font-weight: 700;
+}
+
+.pdf-toc__list {
+  list-style: none;
+  padding: 0;
+}
+
+.pdf-toc__item {
+  display: flex;
+  align-items: baseline;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.pdf-toc__item--h2 {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: #111827;
+}
+
+.pdf-toc__item--h3 {
+  font-weight: 400;
+  font-size: 0.85rem;
+  color: #4b5563;
+  padding-left: 20px;
+}
+
+.pdf-toc__number {
+  width: 28px;
+  flex-shrink: 0;
+  color: #dd3838;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.pdf-toc__label {
+  flex-shrink: 0;
+}
+
+.pdf-toc__dots {
+  flex: 1;
+  border-bottom: 1px dotted #d1d5db;
+  margin: 0 8px;
+  min-width: 20px;
+}
+
+.pdf-toc__page {
+  flex-shrink: 0;
+  font-size: 0.8rem;
+  color: #6b7280;
+  font-variant-numeric: tabular-nums;
+  min-width: 20px;
+  text-align: right;
+}
+
+/* =============================================================================
+   EXECUTIVE SUMMARY
+   ============================================================================= */
+.pdf-exec {
+  padding: 50px 50px;
+  break-after: page;
+  page-break-after: always;
+  min-height: 100vh;
+}
+
+.pdf-exec__heading {
+  font-family: 'DM Serif Text', 'Georgia', serif;
+  font-size: 1.5rem;
+  font-weight: 400;
+  color: #111827;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #dd3838;
+}
+
+html[lang="ja"] .pdf-exec__heading,
+html[lang="zh"] .pdf-exec__heading,
+html[lang="ko"] .pdf-exec__heading {
+  font-family: 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans KR', system-ui, sans-serif;
+  font-weight: 700;
+}
+
+/* Overall score hero */
+.pdf-exec__score-hero {
+  text-align: center;
+  padding: 24px;
+  margin-bottom: 28px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 12px;
+  background: #fafafa;
+}
+
+.pdf-exec__score-hero-value {
+  font-size: 4rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.03em;
+}
+
+.pdf-exec__score-hero-max {
+  font-size: 1.5rem;
+  color: #9ca3af;
+}
+
+.pdf-exec__score-hero-grade {
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin-top: 4px;
+}
+
+.pdf-exec__score-hero-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #6b7280;
+  font-weight: 600;
+  margin-top: 8px;
+}
+
+/* Page screenshot */
+.pdf-exec__screenshot {
+  margin: 20px 0;
+  text-align: center;
+}
+.pdf-exec__screenshot-img {
+  max-width: 100%;
+  max-height: 320px;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Score grid */
+.pdf-exec__subheading {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 24px 0 12px;
+}
+
+.pdf-score-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.pdf-score-card {
+  padding: 14px 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  text-align: center;
+}
+
+.pdf-score-card__label {
+  font-size: 0.65rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.pdf-score-card__value {
+  font-size: 1.75rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1;
+}
+
+.pdf-score-card__weight {
+  font-size: 0.6rem;
+  color: #9ca3af;
+  margin-top: 2px;
+}
+
+/* Key findings */
+.pdf-findings-list {
+  list-style: none;
+  padding: 0;
+}
+
+.pdf-finding {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 8px 0;
+  font-size: 0.85rem;
+  color: #374151;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+  break-inside: avoid;
+}
+
+.pdf-finding__icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  margin-top: 1px;
+}
+
+.pdf-finding__icon--critical { background: #ef4444; }
+.pdf-finding__icon--warning { background: #f59e0b; }
+.pdf-finding__icon--pass { background: #10b981; }
+.pdf-finding__icon--info { background: #3b82f6; }
+
+.pdf-finding__text {
+  flex: 1;
+  line-height: 1.4;
+}
+
+/* =============================================================================
+   REPORT SECTIONS
+   ============================================================================= */
+.pdf-section {
+  padding: 50px 50px;
+  break-before: page;
+  page-break-before: always;
+}
+
+.pdf-section__header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #dd3838;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+.pdf-section__number {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #dd3838;
+  background: rgba(221, 56, 56, 0.08);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.pdf-section__title {
+  font-family: 'DM Serif Text', 'Georgia', serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  color: #111827;
+  flex: 1;
+}
+
+html[lang="ja"] .pdf-section__title,
+html[lang="zh"] .pdf-section__title,
+html[lang="ko"] .pdf-section__title {
+  font-family: 'Noto Sans JP', 'Noto Sans SC', 'Noto Sans KR', system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.pdf-section__intro {
+  font-size: 0.8rem;
+  line-height: 1.65;
+  color: #4b5563;
+  margin: 0 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.pdf-section__score {
+  font-size: 1.1rem;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 6px;
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Section score badge colors */
+.pdf-section__score--excellent { color: #10b981; background: rgba(16, 185, 129, 0.08); }
+.pdf-section__score--good { color: #22c55e; background: rgba(34, 197, 94, 0.08); }
+.pdf-section__score--fair { color: #f59e0b; background: rgba(245, 158, 11, 0.08); }
+.pdf-section__score--poor { color: #ef4444; background: rgba(239, 68, 68, 0.08); }
+
+.pdf-section__content {
+  margin-top: 16px;
+}
+
+/* Sub-section headings */
+.pdf-subsection__title {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #111827;
+  margin: 20px 0 10px;
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+/* =============================================================================
+   DATA TABLES
+   ============================================================================= */
+.pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  margin: 12px 0 20px;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pdf-table th {
+  background: #f9fafb;
+  font-weight: 600;
+  text-align: left;
+  padding: 8px 12px;
+  border-bottom: 2px solid #e5e7eb;
+  color: #374151;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.pdf-table td {
+  padding: 7px 12px;
+  border-bottom: 1px solid #f3f4f6;
+  color: #374151;
+  vertical-align: top;
+}
+
+.pdf-table tr:last-child td {
+  border-bottom: none;
+}
+
+.pdf-table--striped tr:nth-child(even) td {
+  background: #fafafa;
+}
+
+/* Truncated cell for long URLs */
+.pdf-table__truncate {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Full-width value cell */
+.pdf-table__value {
+  word-break: break-word;
+  max-width: 350px;
+}
+
+/* =============================================================================
+   STATUS BADGES
+   ============================================================================= */
+.pdf-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.pdf-status--pass {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.pdf-status--fail {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.pdf-status--warn {
+  color: #f59e0b;
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.pdf-status--info {
+  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.pdf-status--na {
+  color: #9ca3af;
+  background: rgba(156, 163, 175, 0.08);
+}
+
+/* =============================================================================
+   METRIC CARDS (inline stats)
+   ============================================================================= */
+.pdf-metrics-row {
+  display: flex;
+  gap: 12px;
+  margin: 12px 0 20px;
+  flex-wrap: wrap;
+}
+
+.pdf-metric {
+  flex: 1;
+  min-width: 100px;
+  padding: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-radius: 8px;
+  text-align: center;
+  break-inside: avoid;
+}
+
+.pdf-metric__value {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #111827;
+  line-height: 1;
+}
+
+.pdf-metric__label {
+  font-size: 0.65rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+  margin-top: 4px;
+}
+
+/* =============================================================================
+   ISSUE / RECOMMENDATION CARDS
+   ============================================================================= */
+.pdf-issues {
+  margin: 12px 0;
+}
+
+.pdf-issue {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 12px;
+  margin-bottom: 6px;
+  border-radius: 6px;
+  border-left: 3px solid;
+  font-size: 0.8rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+  background: #fafafa;
+}
+
+.pdf-issue--critical {
+  border-left-color: #ef4444;
+  background: rgba(239, 68, 68, 0.03);
+}
+
+.pdf-issue--warning {
+  border-left-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.03);
+}
+
+.pdf-issue--info {
+  border-left-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.03);
+}
+
+.pdf-issue--pass {
+  border-left-color: #10b981;
+  background: rgba(16, 185, 129, 0.03);
+}
+
+.pdf-issue__severity {
+  flex-shrink: 0;
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: #fff;
+  margin-top: 1px;
+}
+
+.pdf-issue__severity--critical { background: #ef4444; }
+.pdf-issue__severity--high { background: #f97316; }
+.pdf-issue__severity--medium { background: #f59e0b; color: #111827; }
+.pdf-issue__severity--low { background: #3b82f6; }
+
+.pdf-issue__text {
+  flex: 1;
+  color: #374151;
+  line-height: 1.4;
+}
+
+/* =============================================================================
+   PROGRESS BARS (for section metrics)
+   ============================================================================= */
+.pdf-progress {
+  margin: 6px 0;
+  break-inside: avoid;
+}
+
+.pdf-progress__label-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  margin-bottom: 3px;
+}
+
+.pdf-progress__label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.pdf-progress__value {
+  font-weight: 600;
+  color: #111827;
+}
+
+.pdf-progress__bar {
+  height: 6px;
+  background: #f3f4f6;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.pdf-progress__fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: none;
+}
+
+/* =============================================================================
+   CALLOUT BOX
+   ============================================================================= */
+.pdf-callout {
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid;
+  margin: 12px 0 16px;
+  font-size: 0.8rem;
+  break-inside: avoid;
+}
+
+.pdf-callout--tip {
+  background: rgba(59, 130, 246, 0.04);
+  border-color: rgba(59, 130, 246, 0.15);
+}
+
+.pdf-callout--warning {
+  background: rgba(245, 158, 11, 0.04);
+  border-color: rgba(245, 158, 11, 0.15);
+}
+
+.pdf-callout__title {
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 4px;
+}
+
+.pdf-callout__body {
+  color: #4b5563;
+  line-height: 1.5;
+}
+
+/* =============================================================================
+   RECOMMENDATIONS SECTION
+   ============================================================================= */
+.pdf-recs-group {
+  margin: 16px 0;
+}
+
+.pdf-recs-group__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  padding: 6px 0;
+  margin-bottom: 8px;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  break-after: avoid;
+}
+
+.pdf-rec {
+  padding: 10px 12px;
+  margin-bottom: 8px;
+  border-radius: 6px;
+  border-left: 3px solid #d1d5db;
+  background: #fafafa;
+  font-size: 0.8rem;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pdf-rec__text {
+  color: #374151;
+  line-height: 1.45;
+}
+
+/* =============================================================================
+   FIX CARDS (rich recommendation cards with code + steps)
+   ============================================================================= */
+.pdf-fix-card {
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  margin-bottom: 16px;
+  overflow: hidden;
+  break-inside: avoid;
+  page-break-inside: avoid;
+}
+
+.pdf-fix-card__header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  background: #fafafa;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pdf-fix-card__severity {
+  font-size: 0.6rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+.pdf-fix-card__severity--high { background: #ef4444; }
+.pdf-fix-card__severity--medium { background: #f59e0b; color: #111827; }
+.pdf-fix-card__severity--low { background: #3b82f6; }
+
+.pdf-fix-card__title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #111827;
+  flex: 1;
+}
+
+.pdf-fix-card__category {
+  font-size: 0.65rem;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 500;
+  flex-shrink: 0;
+}
+
+.pdf-fix-card__body {
+  padding: 14px;
+}
+
+.pdf-fix-card__description {
+  font-size: 0.8rem;
+  color: #374151;
+  line-height: 1.5;
+  margin-bottom: 10px;
+}
+
+.pdf-fix-card__impact {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.06);
+  padding: 4px 10px;
+  border-radius: 4px;
+  margin-bottom: 14px;
+}
+
+/* Code comparison: Current vs Recommended */
+.pdf-fix-card__code-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.pdf-fix-card__code-block {
+  border-radius: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.pdf-fix-card__code-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  padding: 5px 10px;
+  background: #f3f4f6;
+}
+
+.pdf-fix-card__code-label--bad {
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.pdf-fix-card__code-label--good {
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.pdf-fix-card__code-pre {
+  font-family: 'SF Mono', 'Consolas', 'Courier New', monospace;
+  font-size: 0.65rem;
+  line-height: 1.5;
+  padding: 8px 10px;
+  margin: 0;
+  background: #fafafa;
+  color: #374151;
+  white-space: pre-wrap;
+  word-break: break-word;
+  max-height: 160px;
+  overflow: hidden;
+}
+
+/* Step-by-step fix guide */
+.pdf-fix-card__steps {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pdf-fix-card__steps-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #6b7280;
+  margin-bottom: 6px;
+}
+
+.pdf-fix-card__step {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 0.78rem;
+  color: #374151;
+  line-height: 1.4;
+}
+
+.pdf-fix-card__step-num {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #dd3838;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+}
+
+/* =============================================================================
+   UTILITIES
+   ============================================================================= */
+.pdf-hidden { display: none !important; }
+.pdf-text-center { text-align: center; }
+.pdf-text-right { text-align: right; }
+.pdf-text-muted { color: #6b7280; }
+.pdf-text-small { font-size: 0.75rem; }
+.pdf-mt-4 { margin-top: 16px; }
+.pdf-mb-4 { margin-bottom: 16px; }
+.pdf-font-mono { font-family: 'SF Mono', 'Consolas', 'Courier New', monospace; font-size: 0.75rem; }
+
+/* Ensure all colored elements print correctly */
+* {
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
+}

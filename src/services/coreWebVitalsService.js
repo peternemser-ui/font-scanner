@@ -26,7 +26,10 @@ class CoreWebVitalsService {
     try {
       // Use fast Puppeteer-based analyzer (100% reliable, no Lighthouse)
       const cwvResults = await competitiveCWVAnalyzer.analyzeCoreWebVitals(url);
-      
+
+      // Surface redirect info if the page redirected
+      const finalUrl = cwvResults.finalUrl || null;
+
       // Extract metrics for display
       const metrics = cwvResults.metrics || {};
       
@@ -42,6 +45,7 @@ class CoreWebVitalsService {
 
       const results = {
         url,
+        finalUrl,
         timestamp: new Date().toISOString(),
         desktop: {
           device: 'desktop',

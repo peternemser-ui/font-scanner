@@ -1095,9 +1095,11 @@ details summary:hover {
   display: inline-flex;
 }
 
-/* Auth dropdown menu - uses position:fixed to escape stacking contexts */
+/* Auth dropdown menu - positioned relative to parent */
 .auth-dropdown-menu {
-  position: fixed;
+  position: absolute;
+  top: 100%;
+  right: 0;
   min-width: 240px;
   background: rgba(20, 20, 20, 0.98);
   border: 1px solid rgba(255, 255, 255, 0.2);
@@ -1122,8 +1124,8 @@ details summary:hover {
 
 /* Legacy class for backwards compatibility */
 .auth-user-dropdown {
-  position: fixed;
-  top: 0;
+  position: absolute;
+  top: 100%;
   right: 0;
   min-width: 240px;
   background: rgba(20, 20, 20, 0.98);
@@ -1157,8 +1159,97 @@ details summary:hover {
   word-break: break-word;
 }
 
+.auth-plan-badge {
+  font-size: 11px;
+  color: var(--color-text-muted, #888);
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 6px;
+  padding: 2px 8px;
+  margin-bottom: 0.25rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .auth-user-plan {
   font-size: 0.75rem;
+  color: #888;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* Plan badges for user dropdown */
+.plan-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border-radius: 9999px;
+  white-space: nowrap;
+}
+
+.plan-badge--free {
+  background: rgba(128, 128, 128, 0.2);
+  color: #999;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+.plan-badge--pro {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2), rgba(255, 170, 0, 0.15));
+  color: #ffd700;
+  border: 1px solid rgba(255, 215, 0, 0.4);
+}
+
+.plan-badge--daypass {
+  background: rgba(100, 200, 255, 0.15);
+  color: #64c8ff;
+  border: 1px solid rgba(100, 200, 255, 0.3);
+}
+
+.plan-badge--single {
+  background: rgba(180, 130, 255, 0.15);
+  color: #b482ff;
+  border: 1px solid rgba(180, 130, 255, 0.3);
+}
+
+.plan-detail {
+  font-size: 0.65rem;
+  color: #666;
+  font-weight: 400;
+}
+
+/* Light theme plan badge adjustments */
+body.white-theme .plan-badge--free {
+  background: rgba(128, 128, 128, 0.1);
+  color: #666;
+  border-color: rgba(128, 128, 128, 0.25);
+}
+
+body.white-theme .plan-badge--pro {
+  background: linear-gradient(135deg, rgba(255, 180, 0, 0.15), rgba(255, 140, 0, 0.1));
+  color: #c49000;
+  border-color: rgba(200, 150, 0, 0.4);
+}
+
+body.white-theme .plan-badge--daypass {
+  background: rgba(0, 120, 200, 0.1);
+  color: #0078c8;
+  border-color: rgba(0, 120, 200, 0.25);
+}
+
+body.white-theme .plan-badge--single {
+  background: rgba(130, 80, 200, 0.1);
+  color: #7040b0;
+  border-color: rgba(130, 80, 200, 0.25);
+}
+
+body.white-theme .plan-detail {
   color: #888;
 }
 
@@ -1166,6 +1257,44 @@ details summary:hover {
   height: 1px;
   background: rgba(255, 255, 255, 0.1);
   margin: 0.5rem 0;
+}
+
+/* Usage summary in dropdown */
+.auth-usage-summary {
+  padding: 0.5rem 0.75rem;
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 6px;
+  margin: 0.25rem 0.5rem;
+}
+
+.auth-usage-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.7rem;
+  padding: 0.125rem 0;
+}
+
+.auth-usage-label {
+  color: #888;
+}
+
+.auth-usage-value {
+  font-family: var(--font-family-mono, 'JetBrains Mono', monospace);
+  font-weight: 600;
+  color: #ccc;
+}
+
+body.white-theme .auth-usage-summary {
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.white-theme .auth-usage-label {
+  color: #666;
+}
+
+body.white-theme .auth-usage-value {
+  color: #333;
 }
 
 .auth-dropdown-item {
@@ -1187,6 +1316,20 @@ details summary:hover {
 .auth-dropdown-item:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+}
+
+.auth-dropdown-item:focus {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  outline: 2px solid rgba(var(--accent-primary-rgb), 0.6);
+  outline-offset: -2px;
+}
+
+.auth-dropdown-item:focus-visible {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  outline: 2px solid rgba(var(--accent-primary-rgb), 0.8);
+  outline-offset: -2px;
 }
 
 .auth-dropdown-item svg {
@@ -1268,6 +1411,11 @@ body.white-theme .auth-user-email {
   color: #000;
 }
 
+body.white-theme .auth-plan-badge {
+  color: #666;
+  border-color: rgba(0, 0, 0, 0.15);
+}
+
 body.white-theme .auth-user-plan {
   color: #666;
 }
@@ -1279,6 +1427,14 @@ body.white-theme .auth-dropdown-item {
 body.white-theme .auth-dropdown-item:hover {
   background: rgba(0, 0, 0, 0.05);
   color: #000;
+}
+
+body.white-theme .auth-dropdown-item:focus,
+body.white-theme .auth-dropdown-item:focus-visible {
+  background: rgba(0, 0, 0, 0.05);
+  color: #000;
+  outline: 2px solid rgba(var(--accent-primary-rgb), 0.6);
+  outline-offset: -2px;
 }
 
 /* ========================================

@@ -347,7 +347,7 @@ function renderBreadcrumb(activePageId) {
     parts.push(`<span class="breadcrumb-current" aria-current="page">${activeItem.label}</span>`);
   } else {
     parts.push(`<span class="breadcrumb-separator" aria-hidden="true">›</span>`);
-    parts.push(`<span class="breadcrumb-current" aria-current="page">Dashboard</span>`);
+    parts.push(`<span class="breadcrumb-current" aria-current="page" data-i18n="nav.dashboard">Dashboard</span>`);
   }
 
   // If we have a url context, expose it for screen readers without adding UI noise.
@@ -379,7 +379,7 @@ function renderUnifiedHeader(appTitle, subtitle) {
         class="hamburger-btn" 
         id="hamburgerBtn"
         type="button"
-        aria-label="Toggle navigation menu"
+        aria-label="${navT('nav.aria.toggleMenu', 'Toggle navigation menu')}"
         aria-expanded="false"
         aria-controls="mobileNav"
       >
@@ -390,7 +390,7 @@ function renderUnifiedHeader(appTitle, subtitle) {
       
       <!-- Center: App Logo and Subtitle -->
       <div class="unified-header-center">
-        <a href="/" class="app-logo-link" aria-label="Site Mechanic Home">
+        <a href="/" class="app-logo-link" aria-label="${navT('nav.aria.home', 'Site Mechanic Home')}">
           <img src="/assets/logo-dark.svg?v=${logoAssetVersion}" alt="Site Mechanic" class="app-logo app-logo-dark" />
           <img src="/assets/logo-light.svg?v=${logoAssetVersion}" alt="Site Mechanic" class="app-logo app-logo-light" />
         </a>
@@ -405,7 +405,7 @@ function renderUnifiedHeader(appTitle, subtitle) {
           id="headerThemeToggle"
           class="header-theme-toggle"
           type="button"
-          aria-label="Toggle dark/light theme"
+          aria-label="${navT('nav.aria.toggleTheme', 'Toggle dark/light theme')}"
           aria-pressed="false"
         >
           <svg class="theme-icon" width="24" height="24" viewBox="0 0 100 100">
@@ -440,23 +440,39 @@ function renderScanContextBar() {
   bar.innerHTML = `
     <div class="scan-context-content">
       <div class="scan-context-info">
-        <span class="scan-context-label">Currently analyzing:</span>
+        <span class="scan-context-label" data-i18n="dashboard.results.currentlyAnalyzing">Currently analyzing:</span>
         <span class="scan-context-domain">${domain}</span>
-        ${timeSince ? `<span class="scan-context-time">• Scanned ${timeSince}</span>` : ''}
+        ${timeSince ? `<span class="scan-context-time">${window.t ? window.t('dashboard.results.scannedAgo', {time: timeSince}) : '• Scanned ' + timeSince}</span>` : ''}
       </div>
       <div class="scan-context-actions">
-        <button onclick="window.ScanContext.clear(); window.location.href='/dashboard.html'" class="scan-context-btn scan-context-btn-secondary">
+        <button data-action="change-site" class="scan-context-btn scan-context-btn-secondary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-          Change Site
+          <span data-i18n="dashboard.results.changeSite">Change Site</span>
         </button>
-        <button onclick="window.location.href='/dashboard.html'" class="scan-context-btn scan-context-btn-primary">
+        <button data-action="new-scan" class="scan-context-btn scan-context-btn-primary">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          Run New Scan
+          <span data-i18n="dashboard.results.runNewScan">Run New Scan</span>
         </button>
       </div>
     </div>
   `;
   bar.style.display = 'block';
+
+  // Add event handlers for scan context actions
+  const changeSiteBtn = bar.querySelector('[data-action="change-site"]');
+  if (changeSiteBtn) {
+    changeSiteBtn.addEventListener('click', () => {
+      if (window.ScanContext) window.ScanContext.clear();
+      window.location.href = '/dashboard.html';
+    });
+  }
+
+  const newScanBtn = bar.querySelector('[data-action="new-scan"]');
+  if (newScanBtn) {
+    newScanBtn.addEventListener('click', () => {
+      window.location.href = '/dashboard.html';
+    });
+  }
 }
 
 /**
@@ -599,7 +615,7 @@ function renderNavigation(activePageId) {
     if (item.badge) {
       badge = `<span class="hot-badge">${item.badge}</span>`;
     } else if (item.tier === 'free') {
-      badge = `<span class="free-badge" style="background: #00ff41; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem; display: inline-block; vertical-align: middle;">FREE</span>`;
+      badge = `<span class="free-badge" style="background: #00ff41; color: #000; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-weight: 700; margin-left: 0.5rem; display: inline-block; vertical-align: middle;" data-i18n="nav.freeBadge">FREE</span>`;
     }
 
     let href = item.href;
@@ -705,7 +721,7 @@ function renderNavigation(activePageId) {
 
   return `
     <div class="nav-wrapper">
-      <button class="nav-scroll-btn nav-scroll-left" id="navScrollLeft" aria-label="Scroll navigation left">
+      <button class="nav-scroll-btn nav-scroll-left" id="navScrollLeft" aria-label="${navT('nav.aria.scrollLeft', 'Scroll navigation left')}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
       </button>
       <nav class="top-nav" role="navigation" aria-label="Main navigation" id="topNav">
@@ -726,7 +742,7 @@ function renderNavigation(activePageId) {
           </div>
         </div>
       </nav>
-      <button class="nav-scroll-btn nav-scroll-right" id="navScrollRight" aria-label="Scroll navigation right">
+      <button class="nav-scroll-btn nav-scroll-right" id="navScrollRight" aria-label="${navT('nav.aria.scrollRight', 'Scroll navigation right')}">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
       </button>
     </div>
@@ -736,7 +752,7 @@ function renderNavigation(activePageId) {
     <nav class="mobile-nav" id="mobileNav" role="navigation" aria-label="Mobile navigation">
       <div class="mobile-nav-header">
         <span class="mobile-nav-title" data-i18n="nav.menu">Menu</span>
-        <button class="mobile-nav-close" id="mobileNavClose" aria-label="Close navigation menu">
+        <button class="mobile-nav-close" id="mobileNavClose" aria-label="${navT('nav.aria.closeMenu', 'Close navigation menu')}">
           ✕
         </button>
       </div>
@@ -748,11 +764,11 @@ function renderNavigation(activePageId) {
         <button 
           id="mobileThemeToggle" 
           class="mobile-theme-toggle" 
-          aria-label="Toggle dark/light theme"
+          aria-label="${navT('nav.aria.toggleTheme', 'Toggle dark/light theme')}"
           aria-pressed="false"
         >
           <span class="theme-icon">🌓</span>
-          <span class="theme-label">Toggle Theme</span>
+          <span class="theme-label" data-i18n="nav.toggleTheme">${navT('nav.toggleTheme', 'Toggle Theme')}</span>
         </button>
       </div>
     </nav>
@@ -904,6 +920,15 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
   
   // Initialize controls after rendering
   ensureGlobalFooter(); // Create footer first (contains theme toggle)
+
+  // Load cookie consent manager globally
+  if (!window.CookieConsent && !document.getElementById('smCookieConsentScript')) {
+    var ccScript = document.createElement('script');
+    ccScript.id = 'smCookieConsentScript';
+    ccScript.src = '/js/cookie-consent.js';
+    document.body.appendChild(ccScript);
+  }
+
   initializeAuthLinks(); // Initialize authentication links
   initializeHamburgerMenu();
   initializeNavScroll();
@@ -944,6 +969,9 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
 
   // Progressive enhancement: ensure legacy accordions meet a11y requirements
   initializeGlobalAccordionA11y();
+
+  // Dispatch event for components waiting for nav to be ready
+  document.dispatchEvent(new CustomEvent('navTemplateReady'));
 }
 
 // =============================================================================
@@ -1361,9 +1389,35 @@ function initializeNavScroll() {
 function initializeHeaderLanguageSwitcher() {
   // Initialize language switcher into header container
   const container = document.getElementById('languageSelectorContainer');
-  if (container && window.languageSwitcher && !window.languageSwitcher.initialized) {
-    window.languageSwitcher.init('#languageSelectorContainer');
+  if (!container) {
+    console.warn('[Nav] Language selector container not found');
+    return;
   }
+
+  // Function to attempt initialization
+  const tryInit = () => {
+    if (window.languageSwitcher && !window.languageSwitcher.initialized) {
+      window.languageSwitcher.init('#languageSelectorContainer');
+      return true;
+    }
+    return false;
+  };
+
+  // Try immediately
+  if (tryInit()) return;
+
+  // If languageSwitcher not ready yet, wait for it
+  let attempts = 0;
+  const maxAttempts = 50; // 5 seconds max
+  const checkInterval = setInterval(() => {
+    attempts++;
+    if (tryInit() || attempts >= maxAttempts) {
+      clearInterval(checkInterval);
+      if (attempts >= maxAttempts) {
+        console.warn('[Nav] Language switcher initialization timed out');
+      }
+    }
+  }, 100);
 }
 
 function getProManagerForNav() {
@@ -1453,7 +1507,7 @@ function getProManagerForNav() {
         });
 
         if (!response.ok) {
-          throw new Error('Failed to create portal session');
+          throw new Error(navT('errors.portalSessionFailed', 'Failed to create portal session'));
         }
 
         const data = await response.json();
@@ -1463,16 +1517,55 @@ function getProManagerForNav() {
         }
       } catch (error) {
         console.error('Failed to open customer portal:', error);
-        alert('Failed to open billing portal. Please try again.');
+        alert(navT('errors.billingPortalFailed', 'Failed to open billing portal. Please try again.'));
       }
     }
   };
 }
 
 /**
+ * Get translation helper for nav
+ */
+function navT(key, fallback) {
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const result = window.i18n.t(key);
+    if (result && result !== key) return result;
+  }
+  return fallback;
+}
+
+/**
+ * Format time remaining for display
+ */
+function formatTimeRemaining(expiresAt) {
+  if (!expiresAt) return '';
+  const now = new Date();
+  const expires = new Date(expiresAt);
+  const diffMs = expires - now;
+  if (diffMs <= 0) return navT('userMenu.expired', 'expired');
+
+  const hours = Math.floor(diffMs / (1000 * 60 * 60));
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return navT('userMenu.daysLeft', '{count} days left').replace('{count}', days);
+  if (hours > 0) return navT('userMenu.hoursLeft', '{count} hours left').replace('{count}', hours);
+  return navT('userMenu.expiringNow', 'expiring soon');
+}
+
+/**
+ * Format renewal date for display
+ */
+function formatRenewalDate(dateStr) {
+  if (!dateStr) return '';
+  const date = new Date(dateStr);
+  const locale = window.i18n?.currentLanguage || 'en';
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
+}
+
+/**
  * Initialize authentication links in header
  */
-function initializeAuthLinks() {
+async function initializeAuthLinks() {
   const container = document.getElementById('authLinksContainer');
   if (!container) return;
 
@@ -1480,128 +1573,263 @@ function initializeAuthLinks() {
 
   // Render auth links based on authentication status
   if (proMgr.isAuthenticated()) {
-    const isPro = proMgr.isPro();
     const email = proMgr.getEmail() || '';
     const initials = email.substring(0, 2).toUpperCase();
+    const isAdmin = proMgr.isAdmin();
 
-    // Render everything together in the container (matching .nav-dropdown pattern)
+    // Fetch entitlements for plan display
+    let planDisplay = { planCode: 'free', planLabel: navT('userMenu.plans.free', 'Free') };
+    let usageData = { scans_remaining_today: 10, scan_limit_daily: 10, reports_remaining: 0, report_limit: 0 };
+    let planBadgeHtml = '';
+    let planDetailHtml = '';
+
+    try {
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      if (token) {
+        const response = await fetch('/api/auth/me/entitlements', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.ok) {
+          const data = await response.json();
+          planDisplay = data.display || planDisplay;
+          // Capture usage data
+          usageData = {
+            scans_remaining_today: data.scans_remaining_today ?? 10,
+            scan_limit_daily: data.scan_limit_daily ?? 10,
+            reports_remaining: data.reports_remaining ?? 0,
+            report_limit: data.report_limit ?? 0
+          };
+        }
+      }
+    } catch (e) {
+      console.warn('[Nav] Failed to fetch entitlements:', e);
+    }
+
+    // Build plan badge and detail based on plan type
+    const { planCode, expiresAt, renewsAt, reportsRemaining, status } = planDisplay;
+    const isCanceling = status === 'canceled' || (planDisplay.cancelAtPeriodEnd === true);
+
+    if (planCode === 'pro_annual') {
+      planBadgeHtml = `<span class="plan-badge plan-badge--pro">${navT('userMenu.plans.proAnnual', 'Pro Annual')}</span>`;
+      if (isCanceling && expiresAt) {
+        planDetailHtml = `<span class="plan-detail plan-detail--expires">${navT('userMenu.cancelsOn', 'Cancels on')} ${formatRenewalDate(expiresAt)}</span>`;
+      } else if (renewsAt) {
+        planDetailHtml = `<span class="plan-detail">${navT('userMenu.renews', 'renews')} ${formatRenewalDate(renewsAt)}</span>`;
+      } else if (expiresAt) {
+        planDetailHtml = `<span class="plan-detail plan-detail--expires">${navT('userMenu.expires', 'expires')} ${formatRenewalDate(expiresAt)}</span>`;
+      }
+    } else if (planCode === 'pro_monthly') {
+      planBadgeHtml = `<span class="plan-badge plan-badge--pro">${navT('userMenu.plans.proMonthly', 'Pro Monthly')}</span>`;
+      if (isCanceling && expiresAt) {
+        planDetailHtml = `<span class="plan-detail plan-detail--expires">${navT('userMenu.cancelsOn', 'Cancels on')} ${formatRenewalDate(expiresAt)}</span>`;
+      } else if (renewsAt) {
+        planDetailHtml = `<span class="plan-detail">${navT('userMenu.renews', 'renews')} ${formatRenewalDate(renewsAt)}</span>`;
+      } else if (expiresAt) {
+        planDetailHtml = `<span class="plan-detail plan-detail--expires">${navT('userMenu.expires', 'expires')} ${formatRenewalDate(expiresAt)}</span>`;
+      }
+    } else if (planCode === 'day_pass') {
+      planBadgeHtml = `<span class="plan-badge plan-badge--daypass">${navT('userMenu.plans.dayPass', '8 Hour Day Pass')}</span>`;
+      if (expiresAt) {
+        planDetailHtml = `<span class="plan-detail plan-detail--expires">${formatTimeRemaining(expiresAt)}</span>`;
+      }
+    } else if (planCode === 'single_report') {
+      planBadgeHtml = `<span class="plan-badge plan-badge--single">${navT('userMenu.plans.singleReport', 'Single Report')}</span>`;
+      if (reportsRemaining) {
+        planDetailHtml = `<span class="plan-detail">${navT('userMenu.unlocked', '{count} unlocked').replace('{count}', reportsRemaining)}</span>`;
+      }
+    } else {
+      planBadgeHtml = `<span class="plan-badge plan-badge--free">${navT('userMenu.plans.free', 'Free')}</span>`;
+    }
+
+    const isPro = planCode === 'pro_annual' || planCode === 'pro_monthly';
+    const managePlanLabel = isPro
+      ? navT('userMenu.managePlan', 'Manage Plan')
+      : navT('userMenu.upgradePlan', 'Upgrade Plan');
+
+    // Build compact plan summary for display under email
+    let planSummaryText = '';
+    const planLabel = planDisplay.planLabel || planCode;
+    if (planCode === 'pro_annual') {
+      planSummaryText = navT('userMenu.planSummary.proAnnual', 'Plan: Pro Annual (Unlimited)');
+    } else if (planCode === 'pro_monthly') {
+      planSummaryText = navT('userMenu.planSummary.proMonthly', 'Plan: Pro Monthly ({{remaining}}/{{limit}} reports left)').replace('{{remaining}}', usageData.reports_remaining).replace('{{limit}}', usageData.report_limit);
+    } else if (planCode === 'day_pass') {
+      planSummaryText = navT('userMenu.planSummary.dayPass', 'Plan: 8 Hour Day Pass ({{remaining}}/{{limit}} reports left)').replace('{{remaining}}', usageData.reports_remaining).replace('{{limit}}', usageData.report_limit);
+    } else if (planCode === 'single_report') {
+      planSummaryText = navT('userMenu.planSummary.singleReport', 'Plan: Single Report ({{count}} unlocked)').replace('{{count}}', usageData.reports_remaining);
+    } else {
+      planSummaryText = navT('userMenu.planSummary.free', 'Plan: Free ({{remaining}}/{{limit}} scans left today)').replace('{{remaining}}', usageData.scans_remaining_today).replace('{{limit}}', usageData.scan_limit_daily);
+    }
+
+    // Render dropdown with i18n and accessibility
     container.innerHTML = `
-      <div class="auth-dropdown" id="authDropdownWrapper">
-        <button class="auth-user-trigger" id="authUserTrigger" type="button" aria-expanded="false" aria-haspopup="true">
-          <span class="auth-user-avatar">${initials}</span>
-          ${isPro ? '<span class="auth-user-pro-badge">✨ PRO</span>' : ''}
-          <svg class="auth-dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <div class="auth-dropdown" id="authDropdownWrapper" role="navigation" aria-label="${navT('userMenu.ariaLabel', 'User menu')}">
+        <button class="auth-user-trigger" id="authUserTrigger" type="button"
+                aria-expanded="false" aria-haspopup="menu" aria-controls="authUserDropdown"
+                title="${navT('userMenu.openMenu', 'Open user menu')}">
+          <span class="auth-user-avatar" aria-hidden="true">${initials}</span>
+          <svg class="auth-dropdown-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
             <path d="M6 9l6 6 6-6"/>
           </svg>
         </button>
-        <div class="auth-dropdown-menu" id="authUserDropdown">
+        <div class="auth-dropdown-menu" id="authUserDropdown" role="menu" aria-labelledby="authUserTrigger">
           <div class="auth-user-info">
             <div class="auth-user-email">${email}</div>
-            <div class="auth-user-plan">${isPro ? 'Pro Plan' : 'Free Plan'}</div>
+            <div class="auth-plan-badge">${planSummaryText}</div>
+            <div class="auth-user-plan">
+              ${planBadgeHtml}
+              ${planDetailHtml}
+            </div>
           </div>
-          <div class="auth-user-divider"></div>
-          <a href="/account.html" class="auth-dropdown-item">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6"/>
+          <div class="auth-usage-summary">
+            <div class="auth-usage-row">
+              <span class="auth-usage-label">${navT('usage.scansToday', 'Scans today')}</span>
+              <span class="auth-usage-value">${usageData.scan_limit_daily === -1 ? navT('usage.unlimited', 'Unlimited') : `${usageData.scans_remaining_today}/${usageData.scan_limit_daily}`}</span>
+            </div>
+            <div class="auth-usage-row">
+              <span class="auth-usage-label">${navT('usage.reports', 'Reports')}</span>
+              <span class="auth-usage-value">${usageData.report_limit === -1 ? navT('usage.unlimited', 'Unlimited') : (usageData.report_limit === 0 ? '-' : `${usageData.reports_remaining}/${usageData.report_limit}`)}</span>
+            </div>
+          </div>
+          <div class="auth-user-divider" role="separator"></div>
+          <a href="/account.html" class="auth-dropdown-item" role="menuitem" tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><rect x="9" y="3" width="12" height="18" rx="2"/><path d="M15 9h2m-2 4h2"/>
             </svg>
-            Account
+            ${navT('userMenu.reportsAccount', 'Reports & Account')}
           </a>
-          ${!isPro ? '' : `
-            <button class="auth-dropdown-item" id="manageSubscriptionBtn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
-              </svg>
-              Manage Subscription
-            </button>
-          `}
-          ${proMgr.isAdmin() ? `
-            <div class="auth-user-divider"></div>
-            <a href="/admin.html" class="auth-dropdown-item" style="color: #ef4444;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button class="auth-dropdown-item" id="managePlanBtn" role="menuitem" tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
+            </svg>
+            ${managePlanLabel}
+          </button>
+          ${isAdmin ? `
+            <div class="auth-user-divider" role="separator"></div>
+            <a href="/admin.html" class="auth-dropdown-item auth-dropdown-item--admin" role="menuitem" tabindex="-1">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
                 <path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/>
               </svg>
-              Admin Dashboard
+              ${navT('userMenu.admin', 'Admin Dashboard')}
             </a>
           ` : ''}
-          <div class="auth-user-divider"></div>
-          <button class="auth-dropdown-item" id="logoutBtn">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <div class="auth-user-divider" role="separator"></div>
+          <button class="auth-dropdown-item auth-dropdown-item--logout" id="logoutBtn" role="menuitem" tabindex="-1">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
             </svg>
-            Logout
+            ${navT('userMenu.logout', 'Logout')}
           </button>
         </div>
       </div>
     `;
 
-    // Move dropdown menu to body to escape all stacking contexts
-    const menu = document.getElementById('authUserDropdown');
-    if (menu) {
-      document.body.appendChild(menu);
-    }
-
-    // Set up click handler directly on trigger
+    // Keep dropdown inside wrapper with relative positioning (no body move)
     const wrapper = document.getElementById('authDropdownWrapper');
     const trigger = document.getElementById('authUserTrigger');
     const movedMenu = document.getElementById('authUserDropdown');
-    
+
+    // Make wrapper position relative for absolute dropdown positioning
+    if (wrapper) {
+      wrapper.style.position = 'relative';
+    }
+
     if (trigger && wrapper && movedMenu) {
-      trigger.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        
-        // Close nav dropdown if open
-        const navDropdown = document.querySelector('.nav-dropdown.open');
-        if (navDropdown) {
-          navDropdown.classList.remove('open');
-        }
-        
-        const isOpen = movedMenu.style.display === 'block';
-        
-        // Check if light theme is active
+      const menuItems = movedMenu.querySelectorAll('[role="menuitem"]');
+      let currentFocusIndex = -1;
+
+      const openMenu = () => {
+        const triggerRect = trigger.getBoundingClientRect();
+        const menuTop = triggerRect.bottom + 8;
+        const menuRight = window.innerWidth - triggerRect.right;
         const isLightTheme = document.body.classList.contains('white-theme');
         const bgColor = isLightTheme ? 'rgba(255, 255, 255, 0.98)' : 'rgba(20, 20, 20, 0.98)';
         const borderColor = isLightTheme ? 'rgba(0, 0, 0, 0.15)' : 'rgba(255, 255, 255, 0.2)';
         const shadowColor = isLightTheme ? 'rgba(0, 0, 0, 0.12)' : 'rgba(0, 0, 0, 0.5)';
-        
-        if (!isOpen) {
-          // Position the fixed menu relative to trigger
-          const rect = trigger.getBoundingClientRect();
-          movedMenu.style.cssText = `
-            position: fixed !important;
-            top: ${rect.bottom + 8}px !important;
-            right: ${window.innerWidth - rect.right}px !important;
-            left: auto !important;
-            opacity: 1 !important;
-            visibility: visible !important;
-            pointer-events: auto !important;
-            transform: none !important;
-            z-index: 2147483647 !important;
-            display: block !important;
-            min-width: 240px !important;
-            background: ${bgColor} !important;
-            border: 1px solid ${borderColor} !important;
-            border-radius: 8px !important;
-            box-shadow: 0 8px 32px ${shadowColor} !important;
-            padding: 0.5rem !important;
-          `;
-          wrapper.classList.add('open');
-          trigger.setAttribute('aria-expanded', 'true');
+
+        movedMenu.style.cssText = `
+          position: absolute !important;
+          top: 100% !important;
+          right: 0 !important;
+          left: auto !important;
+          opacity: 1 !important;
+          visibility: visible !important;
+          pointer-events: auto !important;
+          transform: none !important;
+          z-index: 9999 !important;
+          display: block !important;
+          min-width: 260px !important;
+          background: ${bgColor} !important;
+          border: 1px solid ${borderColor} !important;
+          border-radius: 8px !important;
+          box-shadow: 0 8px 32px ${shadowColor} !important;
+          padding: 0.5rem !important;
+          margin-top: 0.5rem !important;
+        `;
+        wrapper.classList.add('open');
+        trigger.setAttribute('aria-expanded', 'true');
+        currentFocusIndex = -1;
+      };
+
+      const closeMenu = () => {
+        movedMenu.style.cssText = 'display: none !important;';
+        wrapper.classList.remove('open');
+        trigger.setAttribute('aria-expanded', 'false');
+        currentFocusIndex = -1;
+      };
+
+      const focusMenuItem = (index) => {
+        if (index < 0) index = menuItems.length - 1;
+        if (index >= menuItems.length) index = 0;
+        currentFocusIndex = index;
+        menuItems[index].focus();
+      };
+
+      trigger.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const navDropdown = document.querySelector('.nav-dropdown.open');
+        if (navDropdown) navDropdown.classList.remove('open');
+
+        if (movedMenu.style.display === 'block') {
+          closeMenu();
         } else {
-          movedMenu.style.cssText = 'display: none !important;';
-          wrapper.classList.remove('open');
-          trigger.setAttribute('aria-expanded', 'false');
+          openMenu();
         }
       });
-      
-      // Close on outside click
+
+      // Keyboard navigation
+      trigger.addEventListener('keydown', function(e) {
+        if (e.key === 'ArrowDown' || e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          if (movedMenu.style.display !== 'block') {
+            openMenu();
+          }
+          focusMenuItem(0);
+        }
+      });
+
+      movedMenu.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+          closeMenu();
+          trigger.focus();
+        } else if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          focusMenuItem(currentFocusIndex + 1);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          focusMenuItem(currentFocusIndex - 1);
+        } else if (e.key === 'Tab') {
+          closeMenu();
+        }
+      });
+
       document.addEventListener('click', function(e) {
-        if (movedMenu.style.display === 'block' && 
-            !trigger.contains(e.target) && 
+        if (movedMenu.style.display === 'block' &&
+            !trigger.contains(e.target) &&
             !movedMenu.contains(e.target)) {
-          movedMenu.style.cssText = 'display: none !important;';
-          wrapper.classList.remove('open');
-          trigger.setAttribute('aria-expanded', 'false');
+          closeMenu();
         }
       });
     }
@@ -1614,11 +1842,15 @@ function initializeAuthLinks() {
       });
     }
 
-    // Manage subscription button (if pro)
-    const manageSubBtn = document.getElementById('manageSubscriptionBtn');
-    if (manageSubBtn) {
-      manageSubBtn.addEventListener('click', async () => {
-        await proMgr.openCustomerPortal();
+    // Manage plan button - opens portal for Pro, upgrade page for Free
+    const managePlanBtn = document.getElementById('managePlanBtn');
+    if (managePlanBtn) {
+      managePlanBtn.addEventListener('click', async () => {
+        if (isPro) {
+          await proMgr.openCustomerPortal();
+        } else {
+          window.location.href = '/upgrade.html';
+        }
       });
     }
 
@@ -1626,7 +1858,7 @@ function initializeAuthLinks() {
     // Not authenticated - show login link only
     container.innerHTML = `
       <div class="auth-actions">
-        <a href="/auth.html" class="auth-link auth-login">Login</a>
+        <a href="/auth.html" class="auth-link auth-login">${navT('userMenu.login', 'Login')}</a>
       </div>
     `;
   }
@@ -1643,6 +1875,29 @@ function ensureGlobalFooter() {
     document.body.appendChild(footerBar);
   }
 
+  if (!footerBar.dataset.i18nBound) {
+    footerBar.dataset.i18nBound = 'true';
+    window.addEventListener('languageChanged', () => ensureGlobalFooter());
+  }
+
+  const footerT = (key, fallback, params = {}) => {
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const result = window.i18n.t(key, params);
+      if (result && result !== key) return result;
+    }
+    return fallback;
+  };
+
+  const year = new Date().getFullYear();
+  const copyrightText = footerT('footerBar.copyright', `© ${year} Site Mechanic by Peter Freedman`, { year });
+  const faqLabel = footerT('footerBar.faq', 'FAQ');
+  const privacyLabel = footerT('footerBar.privacy', 'Privacy');
+  const termsLabel = footerT('footerBar.terms', 'Terms');
+  const refundsLabel = footerT('footerBar.refunds', 'Refunds');
+  const themeToggleLabel = footerT('footerBar.themeToggleLabel', 'Toggle dark/light theme');
+  const themeToggleTitle = footerT('footerBar.themeToggleTitle', 'Toggle theme');
+  const cookieSettingsLabel = footerT('footerBar.cookieSettings', 'Cookie Settings');
+
   // Fetch version info
   fetch('/api/version')
     .then(res => res.json())
@@ -1650,18 +1905,21 @@ function ensureGlobalFooter() {
       const footerContent = `
         <div class="footer-content">
           <span class="footer-text">
-            &copy; 2026 Site Mechanic by <strong>Peter Freedman</strong> |
+            ${copyrightText.replace('Peter Freedman', '<strong>Peter Freedman</strong>')} |
             <span style="opacity: 0.7;">v${data.build}</span> |
-            Web optimization & development services |
-            <a href="/faq.html" class="site-footer-link">FAQ</a> |
-            <a href="mailto:peter@sitemechanic.io" class="site-footer-link">peter@sitemechanic.io</a>
+            <a href="/faq.html" class="site-footer-link">${faqLabel}</a> |
+            <a href="/privacy.html" class="site-footer-link">${privacyLabel}</a> |
+            <a href="/terms.html" class="site-footer-link">${termsLabel}</a> |
+            <a href="/refunds.html" class="site-footer-link">${refundsLabel}</a> |
+            <a href="#" class="site-footer-link" onclick="event.preventDefault();window.CookieConsent&&window.CookieConsent.showBanner()">${cookieSettingsLabel}</a> |
+            <a href="mailto:support@sitemechanic.io" class="site-footer-link">support@sitemechanic.io</a>
           </span>
           <button
             id="themeToggle"
             class="footer-theme-toggle"
-            aria-label="Toggle dark/light theme"
+            aria-label="${themeToggleLabel}"
             aria-pressed="false"
-            title="Toggle theme"
+            title="${themeToggleTitle}"
           >
             <svg class="theme-icon" width="20" height="20" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4"/>
@@ -1677,17 +1935,20 @@ function ensureGlobalFooter() {
       const footerContent = `
         <div class="footer-content">
           <span class="footer-text">
-            &copy; 2026 Site Mechanic by <strong>Peter Freedman</strong> |
-            Web optimization & development services |
-            <a href="/faq.html" class="site-footer-link">FAQ</a> |
-            <a href="mailto:peter@sitemechanic.io" class="site-footer-link">peter@sitemechanic.io</a>
+            ${copyrightText.replace('Peter Freedman', '<strong>Peter Freedman</strong>')} |
+            <a href="/faq.html" class="site-footer-link">${faqLabel}</a> |
+            <a href="/privacy.html" class="site-footer-link">${privacyLabel}</a> |
+            <a href="/terms.html" class="site-footer-link">${termsLabel}</a> |
+            <a href="/refunds.html" class="site-footer-link">${refundsLabel}</a> |
+            <a href="#" class="site-footer-link" onclick="event.preventDefault();window.CookieConsent&&window.CookieConsent.showBanner()">${cookieSettingsLabel}</a> |
+            <a href="mailto:support@sitemechanic.io" class="site-footer-link">support@sitemechanic.io</a>
           </span>
           <button
             id="themeToggle"
             class="footer-theme-toggle"
-            aria-label="Toggle dark/light theme"
+            aria-label="${themeToggleLabel}"
             aria-pressed="false"
-            title="Toggle theme"
+            title="${themeToggleTitle}"
           >
             <svg class="theme-icon" width="20" height="20" viewBox="0 0 100 100">
               <circle cx="50" cy="50" r="45" fill="none" stroke="currentColor" stroke-width="4"/>
@@ -1823,18 +2084,35 @@ function initializeThemeControls() {
   const footerThemeToggle = document.getElementById('themeToggle');
   const mobileThemeToggle = document.getElementById('mobileThemeToggle');
   const body = document.body;
-  const currentTheme = localStorage.getItem('theme') || 'dark';
-  // Apply theme on load
-  if (currentTheme === 'light') {
+  const html = document.documentElement;
+  // Print mode: force print theme for PDF export
+  const isPrintMode = new URLSearchParams(window.location.search).get('print') === '1';
+  if (isPrintMode) {
+    html.setAttribute('data-theme', 'print');
     body.classList.add('white-theme');
-    // FORCE background with inline styles
+    html.classList.add('white-theme');
     body.style.backgroundColor = '#ffffff';
-    body.style.color = '#000000';
+    body.style.color = '#111827';
+    html.style.backgroundColor = '#ffffff';
+    // Skip normal theme init — print locks to light
   } else {
-    // Dark mode - explicitly set dark colors
-    body.classList.remove('white-theme');
-    body.style.backgroundColor = '#000000';
-    body.style.color = '#ffffff';
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    // Apply theme on load
+    if (currentTheme === 'light') {
+      body.classList.add('white-theme');
+      html.classList.add('white-theme');
+      html.setAttribute('data-theme', 'light');
+      body.style.backgroundColor = '#ffffff';
+      body.style.color = '#000000';
+      html.style.backgroundColor = '#ffffff';
+    } else {
+      body.classList.remove('white-theme');
+      html.classList.remove('white-theme');
+      html.setAttribute('data-theme', 'dark');
+      body.style.backgroundColor = '#000000';
+      body.style.color = '#ffffff';
+      html.style.backgroundColor = '#000000';
+    }
   }
   
   const updateThemeButtons = () => {
@@ -1864,20 +2142,26 @@ function initializeThemeControls() {
   };
   
   const toggleTheme = () => {
+    // Don't allow toggle in print mode
+    if (isPrintMode) return;
+
     body.classList.toggle('white-theme');
+    html.classList.toggle('white-theme');
     const newTheme = body.classList.contains('white-theme') ? 'light' : 'dark';
     localStorage.setItem('theme', newTheme);
-    
+    html.setAttribute('data-theme', newTheme);
+
     // FORCE background change with inline styles as fallback
     if (newTheme === 'light') {
       body.style.backgroundColor = '#ffffff';
       body.style.color = '#000000';
+      html.style.backgroundColor = '#ffffff';
     } else {
-      // Dark mode - explicitly set dark colors
       body.style.backgroundColor = '#000000';
       body.style.color = '#ffffff';
+      html.style.backgroundColor = '#000000';
     }
-    
+
     updateThemeButtons();
   };
   

@@ -5,6 +5,7 @@
 
 const cheerio = require('cheerio');
 const browserPool = require('../utils/browserPool');
+const { dismissPageOverlays } = require('../utils/browserHelpers');
 const { roundTo, formatNumber } = require('../utils/formatHelpers');
 
 class TagAnalyzer {
@@ -489,6 +490,8 @@ class TagAnalyzer {
         try {
           await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36');
           await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
+
+          await dismissPageOverlays(page, { timeout: 4000 });
           
           // Wait a bit for scripts to load
           await new Promise(resolve => setTimeout(resolve, 2000));

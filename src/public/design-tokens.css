@@ -346,53 +346,67 @@
 }
 
 /* ========================================
+   DARK MODE EXPLICIT OVERRIDES
+   Ensure cyan #5bf4e7 is used (matching logo)
+   ======================================== */
+
+body:not(.white-theme) {
+  --color-primary: #5bf4e7;
+  --color-primary-hover: #4dd8cc;
+  --color-primary-dim: rgba(91, 244, 231, 0.1);
+  --color-accent: #5bf4e7;
+  --color-accent-hover: #4dd8cc;
+}
+
+/* ========================================
    LIGHT MODE OVERRIDES
    Using brand red #dd3838 from light mode logo
    ======================================== */
 
-body.white-theme {
+body.white-theme,
+html[data-theme="light"] {
   /* Primary Brand Colors - Light Mode (red from logo) */
   --color-primary: #dd3838;
   --color-primary-hover: #c52f2f;
   --color-primary-dim: rgba(221, 56, 56, 0.1);
-  
+
   --color-secondary: #ff5252;
   --color-secondary-hover: #e04545;
   --color-secondary-dim: rgba(255, 82, 82, 0.1);
-  
+
   /* Semantic State Colors - adjusted for light mode */
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
   --color-info: #3b82f6;
-  
+
   /* Backgrounds - Light mode */
   --bg-base: #ffffff;
   --bg-elevated: #f9fafb;
   --bg-card: #ffffff;
   --bg-input: #f3f4f6;
   --bg-overlay: rgba(255, 255, 255, 0.95);
-  
+
   /* Borders - Light mode */
   --border-color: rgba(0, 0, 0, 0.1);
   --border-color-strong: rgba(0, 0, 0, 0.2);
   --border-color-subtle: rgba(0, 0, 0, 0.05);
-  
+
   /* Text colors - Light mode */
   --color-text: #111827;
   --color-text-secondary: #4b5563;
   --color-text-muted: #6b7280;
-  
+
   /* Gradient Backgrounds - Light mode */
   --bg-gradient-primary: linear-gradient(135deg, rgba(221, 56, 56, 0.1), rgba(255, 82, 82, 0.05));
   --bg-gradient-success: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05));
   --bg-gradient-warning: linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(245, 158, 11, 0.1));
   --bg-gradient-error: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.1));
-  
+
   /* Effects - Light mode */
   --focus-ring: 0 0 0 3px rgba(221, 56, 56, 0.3);
   --pro-block-glow: 0 4px 20px rgba(221, 56, 56, 0.2);
-  
+
   /* Update aliases */
   --color-accent: var(--color-primary);
   --color-accent-hover: var(--color-primary-hover);
@@ -409,6 +423,165 @@ body.white-theme {
     --color-primary-hover: #c52f2f;
     --color-primary-dim: rgba(221, 56, 56, 0.1);
   }
+}
+
+/* ========================================
+   REPORT THEME TOKENS (data-theme system)
+   Single source of truth for report surfaces,
+   text, severity accents, dials, and gradients.
+   ======================================== */
+
+/* --- Dark theme (default) --- */
+html[data-theme="dark"],
+:root {
+  /* Core Surfaces */
+  --r-bg: #0B0D10;
+  --r-surface-1: #161A1F;
+  --r-surface-2: #1C2128;
+  --r-border: rgba(255, 255, 255, 0.10);
+  --r-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+
+  /* Text */
+  --r-text: #F1F5F9;
+  --r-text-muted: #94A3B8;
+  --r-text-faint: #64748B;
+
+  /* Severity Accents */
+  --r-good: #22C55E;
+  --r-warn: #F59E0B;
+  --r-bad: #EF4444;
+  --r-info: #3B82F6;
+
+  /* Dial / Ring */
+  --r-dial-track: rgba(255, 255, 255, 0.14);
+  --r-dial-glow: none;
+
+  /* Gradient ramps (same colors, different presentation) */
+  --r-g-traffic:  #EF4444, #F59E0B, #EAB308, #22C55E;
+  --r-g-teal:     #10B981, #06B6D4, #3B82F6;
+  --r-g-cool:     #06B6D4, #3B82F6, #8B5CF6;
+  --r-g-warmrisk: #F97316, #EF4444, #B91C1C;
+
+  /* Table */
+  --r-table-row-alt: rgba(255, 255, 255, 0.03);
+  --r-table-divider: rgba(255, 255, 255, 0.08);
+
+  /* Code blocks */
+  --r-code-bg: #111418;
+  --r-code-border: rgba(255, 255, 255, 0.08);
+
+  /* Accordion header hover */
+  --r-accordion-hover: rgba(255, 255, 255, 0.04);
+
+  /* Card accent border (severity) */
+  --r-card-accent-width: 3px;
+}
+
+/* --- Light theme --- */
+html[data-theme="light"] {
+  /* Core Surfaces */
+  --r-bg: #FFFFFF;
+  --r-surface-1: #FFFFFF;
+  --r-surface-2: #F8FAFC;
+  --r-border: rgba(0, 0, 0, 0.10);
+  --r-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+
+  /* Text */
+  --r-text: #111827;
+  --r-text-muted: #6B7280;
+  --r-text-faint: #9CA3AF;
+
+  /* Severity Accents */
+  --r-good: #16A34A;
+  --r-warn: #D97706;
+  --r-bad: #DC2626;
+  --r-info: #2563EB;
+
+  /* Dial / Ring */
+  --r-dial-track: rgba(0, 0, 0, 0.10);
+  --r-dial-glow: none;
+
+  /* Table */
+  --r-table-row-alt: rgba(0, 0, 0, 0.02);
+  --r-table-divider: rgba(0, 0, 0, 0.06);
+
+  /* Code blocks */
+  --r-code-bg: #F3F4F6;
+  --r-code-border: rgba(0, 0, 0, 0.08);
+
+  /* Accordion header hover */
+  --r-accordion-hover: rgba(0, 0, 0, 0.03);
+}
+
+/* --- Print theme (always light, for PDF export) --- */
+html[data-theme="print"] {
+  /* Core Surfaces */
+  --r-bg: #FFFFFF;
+  --r-surface-1: #FFFFFF;
+  --r-surface-2: #F9FAFB;
+  --r-border: rgba(0, 0, 0, 0.12);
+  --r-shadow: none;
+
+  /* Text */
+  --r-text: #111827;
+  --r-text-muted: #4B5563;
+  --r-text-faint: #6B7280;
+
+  /* Severity Accents */
+  --r-good: #16A34A;
+  --r-warn: #D97706;
+  --r-bad: #DC2626;
+  --r-info: #2563EB;
+
+  /* Dial / Ring */
+  --r-dial-track: #E5E7EB;
+  --r-dial-glow: none;
+
+  /* Table */
+  --r-table-row-alt: #F9FAFB;
+  --r-table-divider: #E5E7EB;
+
+  /* Code blocks */
+  --r-code-bg: #F3F4F6;
+  --r-code-border: #E5E7EB;
+
+  /* Accordion header hover */
+  --r-accordion-hover: transparent;
+
+  /* Force light-mode legacy tokens for print */
+  --bg-base: #ffffff;
+  --bg-elevated: #f9fafb;
+  --bg-card: #ffffff;
+  --bg-input: #f3f4f6;
+  --color-primary: #dd3838;
+  --color-text: #111827;
+  --color-text-secondary: #4b5563;
+  --color-text-muted: #6b7280;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-color-strong: rgba(0, 0, 0, 0.2);
+}
+
+/* Backward compat: .white-theme without data-theme still gets light report tokens */
+body.white-theme {
+  --r-bg: #FFFFFF;
+  --r-surface-1: #FFFFFF;
+  --r-surface-2: #F8FAFC;
+  --r-border: rgba(0, 0, 0, 0.10);
+  --r-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  --r-text: #111827;
+  --r-text-muted: #6B7280;
+  --r-text-faint: #9CA3AF;
+  --r-good: #16A34A;
+  --r-warn: #D97706;
+  --r-bad: #DC2626;
+  --r-info: #2563EB;
+  --r-dial-track: rgba(0, 0, 0, 0.10);
+  --r-dial-glow: none;
+  --r-table-row-alt: rgba(0, 0, 0, 0.02);
+  --r-table-divider: rgba(0, 0, 0, 0.06);
+  --r-code-bg: #F3F4F6;
+  --r-code-border: rgba(0, 0, 0, 0.08);
+  --r-accordion-hover: rgba(0, 0, 0, 0.03);
 }
 
 /* ========================================
@@ -451,7 +624,7 @@ body.white-theme {
 
 /* Card Base */
 .card {
-  background: var(--bg-card);
+  background: transparent;
   border: var(--card-border);
   border-radius: var(--card-radius);
   padding: var(--card-padding);

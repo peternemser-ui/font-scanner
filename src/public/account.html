@@ -3,468 +3,1827 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="Manage your Site Mechanic account, subscription, and billing">
+  <meta name="description" content="View and manage your Site Mechanic reports, subscription, and billing">
   <meta name="theme-color" content="#000000" />
   <meta name="robots" content="noindex, nofollow" />
 
-  <title>My Account | Site Mechanic</title>
+  <title>Reports | Site Mechanic</title>
 
-  <!-- Preload critical fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- Design System Foundation -->
   <link rel="stylesheet" href="/design-tokens.css">
   <link rel="stylesheet" href="/components.css">
   <link rel="stylesheet" href="/styles.css">
 
+  <!-- Internationalization (i18n) Support -->
+  <script src="/i18n.js"></script>
+
   <style>
-    .account-container {
-      max-width: 1000px;
-      margin: 1.5rem 0 1.5rem 2rem;
-      padding: 0 2rem 0 0;
+    /* ========================================
+       REPORT LIBRARY V2 - TIGHTER SPACING
+       ======================================== */
+
+    :root {
+      --toolbar-height: 52px;
+      --header-offset: 60px; /* Adjust based on your global nav height */
     }
 
-    .account-breadcrumb {
-      margin-bottom: 1rem;
-      font-size: 0.875rem;
+    .reports-page {
+      display: block;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 20px 20px;
     }
 
-    .account-breadcrumb a {
-      color: var(--accent-primary, #5bf4e7);
+    .reports-main {
+      min-width: 0;
+    }
+
+    /* ========================================
+       ACCOUNT POPOVER (was sidebar)
+       ======================================== */
+
+    .reports-sidebar {
+      display: none;
+      position: fixed;
+      top: 60px;
+      right: 24px;
+      width: 320px;
+      z-index: 10001;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+      border-radius: 10px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
+    }
+
+    .reports-sidebar.popover-open {
+      display: block;
+      animation: popoverIn 0.15s ease-out;
+    }
+
+    @keyframes popoverIn {
+      from { opacity: 0; transform: translateY(-8px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .account-popover-backdrop {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
+    }
+
+    .account-popover-backdrop.open {
+      display: block;
+    }
+
+    /* Trigger button in reports header */
+    .account-trigger {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-card, #161A1F);
+      border: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+      border-radius: 8px;
+      color: var(--color-text, #fff);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+
+    .account-trigger:hover {
+      border-color: var(--border-color-strong, rgba(255, 255, 255, 0.2));
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .account-trigger:focus-visible {
+      outline: 2px solid var(--color-primary, #5bf4e7);
+      outline-offset: 2px;
+    }
+
+    .account-trigger[aria-expanded="true"] {
+      border-color: var(--color-primary, #5bf4e7);
+      background: rgba(91, 244, 231, 0.06);
+    }
+
+    .account-trigger__chevron {
+      width: 12px;
+      height: 12px;
+      color: var(--color-text-muted, #888);
+      transition: transform 0.2s ease;
+    }
+
+    .account-trigger[aria-expanded="true"] .account-trigger__chevron {
+      transform: rotate(180deg);
+    }
+
+    /* ========================================
+       PAGE HEADER - COMPACT
+       ======================================== */
+
+    .reports-breadcrumb {
+      margin-bottom: 4px;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .reports-breadcrumb a {
+      color: var(--color-primary, #5bf4e7);
       text-decoration: none;
     }
 
-    .account-breadcrumb a:hover {
+    .reports-breadcrumb a:hover {
       text-decoration: underline;
     }
 
-    .account-breadcrumb span {
-      color: #888;
+    .reports-breadcrumb span {
+      color: var(--color-text-muted, #888);
     }
 
-    .account-header {
-      margin-bottom: 1.5rem;
-    }
-
-    .account-header h1 {
-      font-size: 2rem;
-      margin: 0 0 0.5rem 0;
-      color: #fff;
-    }
-
-    .account-header p {
-      color: #888;
-      margin: 0;
-    }
-
-    .account-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .account-card {
-      background: #1a1a1a;
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 1.5rem;
-    }
-
-    .account-card h2 {
-      font-size: 1.125rem;
-      margin: 0 0 1rem 0;
-      color: #fff;
+    .reports-header {
       display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .account-card-icon {
-      width: 20px;
-      height: 20px;
-    }
-
-    .account-info-row {
-      display: flex;
+      align-items: flex-start;
       justify-content: space-between;
-      padding: 0.75rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      gap: 16px;
+      margin-bottom: 12px;
     }
 
-    .account-info-row:last-child {
-      border-bottom: none;
-    }
-
-    .account-info-label {
-      color: #888;
-      font-size: 0.875rem;
-    }
-
-    .account-info-value {
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .plan-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      background: linear-gradient(135deg, #ffd700, #ffaa00);
-      color: #000;
-      border-radius: 20px;
-      font-size: 0.875rem;
+    .reports-header__text h1 {
+      font-size: 28px;
       font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
+      margin: 0;
+      color: var(--color-text, #fff);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
     }
 
-    .plan-badge.free {
-      background: rgba(255, 255, 255, 0.1);
-      color: #888;
+    .reports-header__text p {
+      color: var(--color-text-muted, #888);
+      margin: 2px 0 0;
+      font-size: 14px;
+      line-height: 1.3;
     }
 
-    .subscription-status {
-      display: inline-block;
-      padding: 0.25rem 0.75rem;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      text-transform: uppercase;
+    /* ========================================
+       STICKY TOOLBAR
+       ======================================== */
+
+    .toolbar-wrapper {
+      position: relative;
+      z-index: 100;
+      background: var(--bg-base, #0B0D10);
+      margin: 0 -20px;
+      padding: 0 20px;
     }
 
-    .subscription-status.active {
-      background: rgba(34, 197, 94, 0.2);
-      color: #22c55e;
-    }
-
-    .subscription-status.canceled {
-      background: rgba(239, 68, 68, 0.2);
-      color: #ef4444;
-    }
-
-    .subscription-status.trialing {
-      background: rgba(59, 130, 246, 0.2);
-      color: #3b82f6;
-    }
-
-    .subscription-status.free {
-      background: rgba(255, 255, 255, 0.1);
-      color: #888;
-    }
-
-    .account-actions {
+    .toolbar {
       display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-      margin-top: 1.5rem;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg-card, #161A1F);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 10px;
+      margin-bottom: 12px;
     }
 
-    .account-btn {
+    .toolbar-wrapper.scrolled .toolbar {
+      border-radius: 0;
+      margin: 0 -20px;
+      padding: 8px 20px;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+    }
+
+    /* Search */
+    .toolbar__search {
+      position: relative;
+      flex: 1;
+      min-width: 160px;
+      max-width: 280px;
+      transition: max-width 0.25s ease, flex-grow 0.25s ease;
+    }
+
+    .toolbar__search:focus-within,
+    .toolbar__search--expanded {
+      max-width: 520px;
+      flex-grow: 1.2;
+    }
+
+    .toolbar__search-icon {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 14px;
+      height: 14px;
+      color: var(--color-text-muted, #888);
+      stroke: currentColor;
+      fill: none;
+      opacity: 0.85;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .toolbar__search-input {
       width: 100%;
-      padding: 0.75rem 1.25rem;
-      border-radius: 8px;
-      font-size: 0.875rem;
-      font-weight: 600;
+      padding: 6px 8px 6px 28px;
+      background: var(--bg-input, #1A1E23);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 6px;
+      color: var(--color-text, #fff);
+      font-size: 13px;
+      line-height: 1.3;
+      transition: border-color 0.15s ease, box-shadow 0.2s ease;
+    }
+
+    .toolbar__search-input:focus {
+      outline: none;
+      border-color: var(--color-primary, #5bf4e7);
+      box-shadow: 0 0 0 3px rgba(91, 244, 231, 0.12);
+    }
+
+    .toolbar__search-input::placeholder {
+      color: var(--color-text-muted, #888);
+    }
+
+    /* Filter selects with icons */
+    .toolbar__filters {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .filter-group {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .filter-group__icon {
+      position: absolute;
+      left: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      color: var(--color-text-muted, #888);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .filter-select {
+      padding: 6px 24px 6px 26px;
+      background: var(--bg-input, #1A1E23);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 6px;
+      color: var(--color-text, #fff);
+      font-size: 12px;
+      line-height: 1.3;
       cursor: pointer;
-      transition: all 0.2s ease;
-      text-align: center;
-      text-decoration: none;
-      border: none;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 6px center;
+      transition: border-color 0.15s ease;
+      min-width: 90px;
     }
 
-    .account-btn-primary {
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
-      color: #000000 !important;
+    .filter-select:hover {
+      border-color: var(--border-color-strong, rgba(255,255,255,0.15));
     }
 
-    .account-btn-primary:hover {
-      box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.3);
-      transform: translateY(-1px);
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--color-primary, #5bf4e7);
     }
 
-    .account-btn-secondary {
-      background: #2a2a2a;
-      color: #fff;
-      border: 1px solid rgba(255, 255, 255, 0.2);
+    /* Clear filters button */
+    .toolbar__clear {
+      display: none;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 8px;
+      background: transparent;
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 6px;
+      color: var(--color-text-muted, #888);
+      font-size: 11px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
     }
 
-    .account-btn-secondary:hover {
-      background: #333;
-      border-color: rgba(255, 255, 255, 0.3);
+    .toolbar__clear.visible {
+      display: flex;
     }
 
-    .account-btn-danger {
-      background: #3d1f1f;
-      color: #ef4444;
-      border: 1px solid rgba(239, 68, 68, 0.3);
+    .toolbar__clear:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--color-text, #fff);
     }
 
-    .account-btn-danger:hover {
-      background: #4d2424;
-      border-color: rgba(239, 68, 68, 0.4);
+    /* Compare toggle */
+    .toolbar__compare {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 5px 10px;
+      background: transparent;
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 6px;
+      color: var(--color-text-muted, #888);
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
     }
 
-    .account-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
+    .toolbar__compare:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--color-text, #fff);
     }
 
-    .loading-spinner {
-      display: inline-block;
+    .toolbar__compare.active {
+      background: var(--color-primary, #5bf4e7);
+      border-color: var(--color-primary, #5bf4e7);
+      color: #000;
+    }
+
+    .toolbar__compare svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* Report count */
+    .toolbar__count {
+      font-size: 12px;
+      color: var(--color-text-muted, #888);
+      white-space: nowrap;
+      margin-left: auto;
+    }
+
+    /* Actions */
+    .toolbar__actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-left: 8px;
+    }
+
+    .btn-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 32px;
+      height: 32px;
+      background: var(--bg-input, #1A1E23);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 6px;
+      color: var(--color-text-muted, #888);
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .btn-icon svg {
       width: 16px;
       height: 16px;
-      border: 2px solid rgba(255, 255, 255, 0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
+      color: inherit;
+      stroke: currentColor;
+      fill: none;
+      display: block;
+    }
+
+    #refreshBtn {
+      color: #6aa7ff;
+    }
+
+    #refreshBtn svg {
+      stroke: #6aa7ff;
+      fill: none;
+      width: 16px;
+      height: 16px;
+      display: block;
+      overflow: visible;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--color-text, #fff);
+    }
+
+    #refreshBtn:hover {
+      color: #8bbcff;
+    }
+
+    .btn-icon:focus-visible {
+      outline: 2px solid var(--color-primary, #5bf4e7);
+      outline-offset: 2px;
+    }
+
+    .btn-icon.syncing svg {
+      animation: spin 1s linear infinite;
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    .error-message {
-      padding: 1rem;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 8px;
-      color: #ef4444;
-      margin-bottom: 1.5rem;
-    }
-
-    .success-message {
-      padding: 1rem;
-      background: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      border-radius: 8px;
-      color: #22c55e;
-      margin-bottom: 1.5rem;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .skeleton {
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 4px;
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; }
-      50% { opacity: 0.5; }
-    }
-
-    /* Recent Reports Card - Full Width */
-    .account-card--full {
-      grid-column: 1 / -1;
-    }
-
-    .account-card-header {
-      display: flex;
+    .btn-primary-sm {
+      display: inline-flex;
       align-items: center;
-      justify-content: space-between;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-    }
-
-    .account-card-header h2 {
-      margin: 0;
-    }
-
-    .account-card-actions {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .btn-ghost {
-      background: transparent;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #888;
-      padding: 0.4rem 0.75rem;
-      border-radius: 6px;
-      font-size: 0.75rem;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .btn-ghost:hover {
-      background: rgba(255, 255, 255, 0.05);
-      border-color: rgba(255, 255, 255, 0.3);
-      color: #fff;
-    }
-
-    .btn-ghost:focus-visible {
-      outline: 2px solid var(--accent-primary);
-      outline-offset: 2px;
-    }
-
-    .btn-link {
-      background: transparent;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--color-primary, #5bf4e7);
+      color: #000;
       border: none;
-      color: var(--accent-primary, #5bf4e7);
-      padding: 0.4rem 0.75rem;
-      font-size: 0.75rem;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
       cursor: pointer;
+      transition: all 0.15s ease;
       text-decoration: none;
-      transition: opacity 0.2s ease;
-    }
-
-    .btn-link:hover {
-      opacity: 0.8;
-      text-decoration: underline;
-    }
-
-    /* Compact Table */
-    .table--compact {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.8125rem;
-    }
-
-    .table--compact th {
-      text-align: left;
-      padding: 0.5rem 0.75rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-      color: #888;
-      font-weight: 500;
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .table--compact td {
-      padding: 0.625rem 0.75rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      color: #e5e7eb;
-    }
-
-    .table--compact tbody tr:hover {
-      background: rgba(255, 255, 255, 0.02);
-    }
-
-    .table--compact tbody tr:focus-within {
-      background: rgba(var(--accent-primary-rgb), 0.05);
-    }
-
-    .table--compact .site-url {
-      max-width: 200px;
-      overflow: hidden;
-      text-overflow: ellipsis;
       white-space: nowrap;
     }
 
-    /* Status Badges */
-    .badge {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
+    .btn-primary-sm:hover {
+      background: var(--color-primary-hover, #4dd8cc);
+    }
+
+    .btn-primary-sm:focus-visible {
+      outline: 2px solid var(--color-primary, #5bf4e7);
+      outline-offset: 2px;
+    }
+
+    .btn-primary-sm svg {
+      width: 14px;
+      height: 14px;
+      color: inherit;
+      stroke: currentColor;
+    }
+
+    /* Mobile filters toggle */
+    .btn-filters-mobile {
+      display: none;
+    }
+
+    /* ========================================
+       CONTINUE SECTION - COMPACT CARDS
+       ======================================== */
+
+    .continue-section {
+      margin-bottom: 16px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--color-text-muted, #888);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin: 0 0 8px;
+      line-height: 1.3;
+    }
+
+    .continue-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    .continue-card {
+      background: var(--bg-card, #161A1F);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 8px;
+      padding: 10px 12px;
+      transition: border-color 0.15s ease;
+    }
+
+    .continue-card:hover {
+      border-color: var(--color-primary, #5bf4e7);
+    }
+
+    .continue-card__header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .continue-card__favicon {
+      width: 16px;
+      height: 16px;
+      border-radius: 3px;
+      flex-shrink: 0;
+    }
+
+    .continue-card__favicon img {
+      width: 16px;
+      height: 16px;
+      object-fit: contain;
+    }
+
+    .continue-card__site {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text, #fff);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.25;
+    }
+
+    .continue-card__meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+
+    .continue-card__type-pill {
+      display: inline-flex;
+      padding: 2px 6px;
+      background: rgba(255,255,255,0.06);
       border-radius: 4px;
-      font-size: 0.6875rem;
+      font-size: 10px;
+      font-weight: 500;
+      color: var(--color-text-secondary, #ccc);
+      line-height: 1.3;
+    }
+
+    .continue-card__time {
+      font-size: 10px;
+      color: var(--color-text-muted, #888);
+      line-height: 1.3;
+    }
+
+    .continue-card__actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .continue-card__btn {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 5px 8px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      line-height: 1.25;
+    }
+
+    .continue-card__btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .continue-card__btn--primary {
+      background: var(--color-primary, #5bf4e7);
+      color: #000;
+      border: none;
+    }
+
+    .continue-card__btn--primary svg {
+      color: inherit;
+      stroke: currentColor;
+    }
+
+    .continue-card__btn--primary:hover {
+      background: var(--color-primary-hover, #4dd8cc);
+    }
+
+    .continue-card__btn--secondary {
+      background: transparent;
+      color: var(--color-text-secondary, #ccc);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    }
+
+    .continue-card__btn--secondary:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .continue-card__btn:focus-visible {
+      outline: 2px solid var(--color-primary, #5bf4e7);
+      outline-offset: 2px;
+    }
+
+    /* ========================================
+       SITE GROUPS - COMPACT LIST
+       ======================================== */
+
+    .reports-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .reports-list__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .site-group {
+      background: var(--bg-card, #161A1F);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .site-group__header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 8px 12px;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      user-select: none;
+    }
+
+    .site-group__header:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .site-group__header:focus-visible {
+      outline: 2px solid var(--color-primary, #5bf4e7);
+      outline-offset: -2px;
+    }
+
+    /* Compare checkbox */
+    .site-group__checkbox {
+      display: none;
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .compare-mode .site-group__checkbox {
+      display: block;
+    }
+
+    .site-group__checkbox input {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      accent-color: var(--color-primary, #5bf4e7);
+    }
+
+    .site-group__favicon {
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      background: var(--bg-input, #1A1E23);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .site-group__favicon img {
+      width: 14px;
+      height: 14px;
+      object-fit: contain;
+    }
+
+    .site-group__favicon-placeholder {
+      width: 14px;
+      height: 14px;
+      color: var(--color-text-muted, #888);
+    }
+
+    .site-group__info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .site-group__name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--color-text, #fff);
+      margin: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      line-height: 1.25;
+    }
+
+    .site-group__meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 1px;
+    }
+
+    .site-group__last-scan {
+      font-size: 11px;
+      color: var(--color-text-muted, #888);
+      line-height: 1.3;
+    }
+
+    .site-group__count {
+      font-size: 10px;
+      color: var(--color-text-muted, #888);
+      background: rgba(255,255,255,0.05);
+      padding: 1px 5px;
+      border-radius: 10px;
+      line-height: 1.3;
+    }
+
+    .site-group__badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 9px;
       font-weight: 600;
       text-transform: uppercase;
       letter-spacing: 0.03em;
+      line-height: 1.3;
     }
 
-    .badge--ok {
+    .site-group__badge svg {
+      width: 10px;
+      height: 10px;
+    }
+
+    .site-group__badge--purchased {
       background: rgba(34, 197, 94, 0.15);
       color: #22c55e;
     }
 
-    .badge--info {
+    .site-group__badge--pro {
+      background: rgba(255, 215, 0, 0.15);
+      color: #ffd700;
+    }
+
+    .site-group__badge--free {
+      background: rgba(255,255,255,0.06);
+      color: var(--color-text-muted, #888);
+    }
+
+    .site-group__badge--browser {
       background: rgba(59, 130, 246, 0.15);
       color: #3b82f6;
     }
 
-    .badge--muted {
-      background: rgba(255, 255, 255, 0.1);
-      color: #888;
+    .site-group__actions {
+      display: flex;
+      gap: 6px;
+      align-items: center;
     }
 
-    .badge--danger {
-      background: rgba(239, 68, 68, 0.15);
+    .site-group__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      border-radius: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      line-height: 1.25;
+    }
+
+    .site-group__btn svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .site-group__btn--view {
+      background: var(--color-primary, #5bf4e7);
+      color: #000;
+      border: none;
+    }
+
+    .site-group__btn--view svg {
+      color: inherit;
+      stroke: currentColor;
+    }
+
+    .site-group__btn--view:hover {
+      background: var(--color-primary-hover, #4dd8cc);
+    }
+
+    .site-group__btn--secondary {
+      background: transparent;
+      color: var(--color-text-secondary, #ccc);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    }
+
+    .site-group__btn--secondary:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .site-group__btn:focus-visible {
+      outline: 2px solid var(--color-primary, #5bf4e7);
+      outline-offset: 2px;
+    }
+
+    .site-group__expand {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: transparent;
+      border: none;
+      color: var(--color-text-muted, #888);
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .site-group__expand:hover {
+      color: var(--color-text, #fff);
+    }
+
+    .site-group__expand .expand-chevron {
+      font-size: 10px;
+      line-height: 1;
+      color: #5bf4e7;
+      transition: transform 0.2s ease;
+    }
+
+    .site-group[open] .site-group__expand {
+      transform: rotate(180deg);
+    }
+
+    .site-group__content {
+      border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.25s ease;
+    }
+
+    .site-group[open] .site-group__content {
+      max-height: 2000px;
+    }
+
+    /* Report rows */
+    .report-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 12px 6px 40px;
+      border-bottom: 1px solid var(--border-color-subtle, rgba(255,255,255,0.04));
+      transition: background 0.15s ease;
+    }
+
+    .report-row:last-child {
+      border-bottom: none;
+    }
+
+    .report-row:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    /* Compare checkbox in rows */
+    .report-row__checkbox {
+      display: none;
+      width: 14px;
+      height: 14px;
+      flex-shrink: 0;
+    }
+
+    .compare-mode .report-row__checkbox {
+      display: block;
+    }
+
+    .report-row__checkbox input {
+      width: 14px;
+      height: 14px;
+      cursor: pointer;
+      accent-color: var(--color-primary, #5bf4e7);
+    }
+
+    .report-row__type {
+      display: inline-flex;
+      padding: 2px 6px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--color-text-secondary, #ccc);
+      min-width: 80px;
+      line-height: 1.3;
+    }
+
+    .report-row__time {
+      font-size: 11px;
+      color: var(--color-text-muted, #888);
+      flex: 1;
+      line-height: 1.3;
+    }
+
+    .report-row__action {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      padding: 3px 8px;
+      background: transparent;
+      color: var(--color-primary, #5bf4e7);
+      border: 1px solid var(--color-primary, #5bf4e7);
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-decoration: none;
+      line-height: 1.25;
+    }
+
+    .report-row__action svg {
+      width: 10px;
+      height: 10px;
+    }
+
+    .report-row__action:hover {
+      background: var(--color-primary, #5bf4e7);
+      color: #000;
+    }
+
+    .report-row__action:focus-visible {
+      outline: 2px solid var(--color-primary, #5bf4e7);
+      outline-offset: 2px;
+    }
+
+    /* Load More */
+    .load-more {
+      display: flex;
+      justify-content: center;
+      padding: 12px;
+    }
+
+    .load-more__btn {
+      padding: 8px 20px;
+      background: var(--bg-input, #1A1E23);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 6px;
+      color: var(--color-text-secondary, #ccc);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .load-more__btn:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .load-more__btn:focus-visible {
+      outline: 2px solid var(--color-primary, #5bf4e7);
+      outline-offset: 2px;
+    }
+
+    /* Empty states */
+    .reports-empty {
+      text-align: center;
+      padding: 40px 16px;
+      color: var(--color-text-muted, #888);
+    }
+
+    .reports-empty__icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 12px;
+      opacity: 0.5;
+    }
+
+    .reports-empty__title {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--color-text, #fff);
+      margin: 0 0 6px;
+      line-height: 1.3;
+    }
+
+    .reports-empty__text {
+      font-size: 13px;
+      margin: 0 0 12px;
+      line-height: 1.4;
+    }
+
+    .reports-no-results {
+      text-align: center;
+      padding: 24px 16px;
+      color: var(--color-text-muted, #888);
+      font-size: 13px;
+    }
+
+    /* ========================================
+       COMPARE BAR - STICKY BOTTOM
+       ======================================== */
+
+    .compare-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 12px 20px;
+      background: var(--bg-card, #161A1F);
+      border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+      z-index: 200;
+    }
+
+    .compare-bar.visible {
+      display: flex;
+    }
+
+    .compare-bar__text {
+      font-size: 13px;
+      color: var(--color-text-secondary, #ccc);
+    }
+
+    .compare-bar__text strong {
+      color: var(--color-primary, #5bf4e7);
+    }
+
+    .compare-bar__btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: var(--color-primary, #5bf4e7);
+      color: #000;
+      border: none;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .compare-bar__btn:hover {
+      background: var(--color-primary-hover, #4dd8cc);
+    }
+
+    .compare-bar__btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .compare-bar__cancel {
+      padding: 8px 12px;
+      background: transparent;
+      color: var(--color-text-muted, #888);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .compare-bar__cancel:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--color-text, #fff);
+    }
+
+    /* ========================================
+       SIDEBAR - ACCOUNT PANEL
+       ======================================== */
+
+    .account-panel {
+      background: var(--bg-card, #161A1F);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .account-panel__header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    }
+
+    .account-panel__title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--color-text, #fff);
+      margin: 0;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.3;
+    }
+
+    .account-panel__title svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .account-panel__toggle {
+      display: none;
+    }
+
+    .account-panel__body {
+      padding: 12px;
+    }
+
+    .account-panel__section {
+      margin-bottom: 12px;
+    }
+
+    .account-panel__section:last-child {
+      margin-bottom: 0;
+    }
+
+    .account-panel__label {
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--color-text-muted, #888);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 2px;
+      line-height: 1.3;
+    }
+
+    .account-panel__value {
+      font-size: 13px;
+      color: var(--color-text, #fff);
+      word-break: break-word;
+      line-height: 1.35;
+    }
+
+    .plan-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      line-height: 1.3;
+    }
+
+    .plan-badge--pro {
+      background: linear-gradient(135deg, #ffd700, #ffaa00);
+      color: #000;
+    }
+
+    .plan-badge--free {
+      background: rgba(255,255,255,0.1);
+      color: var(--color-text-muted, #888);
+    }
+
+    /* Usage bar */
+    .usage-bar {
+      margin-top: 6px;
+    }
+
+    .usage-bar__track {
+      height: 5px;
+      background: var(--bg-input, #1A1E23);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+
+    .usage-bar__fill {
+      height: 100%;
+      background: var(--color-primary, #5bf4e7);
+      border-radius: 10px;
+      transition: width 0.3s ease;
+    }
+
+    .usage-bar__text {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 3px;
+      font-size: 10px;
+      color: var(--color-text-muted, #888);
+      line-height: 1.3;
+    }
+
+    /* Account actions */
+    .account-panel__actions {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    }
+
+    .account-btn {
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      text-align: center;
+      text-decoration: none;
+      border: none;
+      line-height: 1.3;
+    }
+
+    .account-btn:focus-visible {
+      outline: 2px solid var(--color-primary, #5bf4e7);
+      outline-offset: 2px;
+    }
+
+    .account-btn--primary {
+      background: var(--color-primary, #5bf4e7);
+      color: #000;
+    }
+
+    .account-btn--primary:hover {
+      background: var(--color-primary-hover, #4dd8cc);
+    }
+
+    .account-btn--secondary {
+      background: var(--bg-input, #1A1E23);
+      color: var(--color-text, #fff);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    }
+
+    .account-btn--secondary:hover {
+      background: rgba(255,255,255,0.05);
+    }
+
+    .account-panel__links {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      justify-content: center;
+    }
+
+    .account-link {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text-secondary, #ccc);
+      text-decoration: none;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 6px 12px;
+      transition: all 0.15s ease;
+      line-height: 1.3;
+    }
+
+    .account-link:hover {
+      color: var(--color-text, #fff);
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+
+    /* Logout button - danger styling */
+    .account-link#logoutBtn {
+      color: #f87171;
+      border-color: rgba(248, 113, 113, 0.2);
+      background: rgba(248, 113, 113, 0.08);
+    }
+
+    .account-link#logoutBtn:hover {
+      color: #ef4444;
+      background: rgba(248, 113, 113, 0.15);
+      border-color: rgba(248, 113, 113, 0.3);
+    }
+
+    /* ========================================
+       MESSAGES
+       ======================================== */
+
+    .message {
+      padding: 10px 14px;
+      border-radius: 6px;
+      margin-bottom: 12px;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .message--success {
+      background: rgba(34, 197, 94, 0.1);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #22c55e;
+    }
+
+    .message--error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
       color: #ef4444;
     }
 
-    /* Skeleton Rows */
-    .skeleton-row {
+    .hidden {
+      display: none !important;
+    }
+
+    /* ========================================
+       MODAL
+       ======================================== */
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
       display: flex;
-      gap: 1rem;
-      padding: 0.625rem 0.75rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.2s ease, visibility 0s 0.2s;
     }
 
-    .skeleton-row .skeleton-cell {
-      height: 16px;
-      background: rgba(255, 255, 255, 0.05);
-      border-radius: 4px;
-      animation: pulse 1.5s ease-in-out infinite;
+    .modal-overlay.active {
+      opacity: 1;
+      visibility: visible;
+      transition: opacity 0.2s ease, visibility 0s 0s;
     }
 
-    .skeleton-row .skeleton-cell:nth-child(1) { width: 30%; }
-    .skeleton-row .skeleton-cell:nth-child(2) { width: 20%; }
-    .skeleton-row .skeleton-cell:nth-child(3) { width: 15%; }
-    .skeleton-row .skeleton-cell:nth-child(4) { width: 15%; }
-    .skeleton-row .skeleton-cell:nth-child(5) { width: 10%; }
-
-    /* Empty State */
-    .empty-state {
-      text-align: center;
-      padding: 2rem 1rem;
-      color: #888;
+    .modal {
+      background: var(--bg-card, #161A1F);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 10px;
+      width: 100%;
+      max-width: 380px;
+      margin: 16px;
+      transform: translateY(-20px);
+      transition: transform 0.2s ease;
     }
 
-    .empty-state p {
-      margin: 0 0 1rem 0;
+    .modal-overlay.active .modal {
+      transform: translateY(0);
     }
 
-    /* Usage Block */
-    .usage-block {
+    .modal__header {
       display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      border-bottom: 1px solid var(--border-color, rgba(255,255,255,0.08));
     }
 
-    .usage-main {
-      font-size: 1rem;
+    .modal__title {
+      font-size: 15px;
       font-weight: 600;
+      color: var(--color-text, #fff);
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .modal__close {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: transparent;
+      border: none;
+      color: var(--color-text-muted, #888);
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.15s ease;
+    }
+
+    .modal__close:hover {
+      background: rgba(255,255,255,0.05);
+      color: var(--color-text, #fff);
+    }
+
+    .modal__body {
+      padding: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 12px;
+    }
+
+    .form-group:last-of-type {
+      margin-bottom: 0;
+    }
+
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--color-text-secondary, #ccc);
+      margin-bottom: 4px;
+      line-height: 1.3;
+    }
+
+    .form-input {
+      width: 100%;
+      padding: 8px 10px;
+      background: var(--bg-input, #1A1E23);
+      border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      border-radius: 6px;
+      color: var(--color-text, #fff);
+      font-size: 13px;
+      transition: border-color 0.15s ease;
+      line-height: 1.35;
+    }
+
+    .form-input:focus {
+      outline: none;
+      border-color: var(--color-primary, #5bf4e7);
+    }
+
+    .form-hint {
+      font-size: 10px;
+      color: var(--color-text-muted, #888);
+      margin-top: 3px;
+      line-height: 1.4;
+    }
+
+    .modal__actions {
+      display: flex;
+      gap: 8px;
+      padding: 14px;
+      border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
+    }
+
+    .modal__actions .account-btn {
+      flex: 1;
+    }
+
+    /* ========================================
+       RESPONSIVE - TABLET
+       ======================================== */
+
+    @media (max-width: 1024px) {
+      .reports-sidebar {
+        right: 12px;
+        width: 300px;
+      }
+
+      .continue-cards {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .toolbar__filters {
+        display: none;
+      }
+
+      .btn-filters-mobile {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        padding: 6px 10px;
+        background: var(--bg-input, #1A1E23);
+        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+        border-radius: 6px;
+        color: var(--color-text, #fff);
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .toolbar__filters.active {
+        display: flex;
+        flex-wrap: wrap;
+        width: 100%;
+        order: 10;
+        margin-top: 8px;
+      }
+    }
+
+    /* ========================================
+       RESPONSIVE - MOBILE
+       ======================================== */
+
+    @media (max-width: 640px) {
+      .reports-page {
+        padding: 10px 12px 80px;
+      }
+
+      .reports-sidebar {
+        right: 8px;
+        left: 8px;
+        width: auto;
+        top: 56px;
+      }
+
+      .account-trigger span:not(.plan-badge) {
+        display: none;
+      }
+
+      .toolbar-wrapper {
+        margin: 0 -12px;
+        padding: 0 12px;
+      }
+
+      .toolbar {
+        flex-wrap: wrap;
+        padding: 8px 10px;
+      }
+
+      .toolbar__search {
+        flex: 1 1 100%;
+        max-width: none;
+        margin-bottom: 6px;
+      }
+
+      .toolbar__count {
+        order: 5;
+        flex: 1;
+      }
+
+      .toolbar__actions {
+        margin-left: 0;
+      }
+
+      .continue-cards {
+        grid-template-columns: 1fr;
+        gap: 8px;
+      }
+
+      .site-group__header {
+        flex-wrap: wrap;
+      }
+
+      .site-group__actions {
+        width: 100%;
+        margin-top: 6px;
+        justify-content: flex-end;
+      }
+
+      .report-row {
+        padding-left: 12px;
+        flex-wrap: wrap;
+      }
+
+      .report-row__time {
+        flex: none;
+        width: 100%;
+        order: 3;
+        margin-top: 2px;
+      }
+
+      .compare-bar {
+        padding: 10px 12px;
+        gap: 10px;
+      }
+    }
+
+    /* ========================================
+       LIGHT THEME
+       ======================================== */
+
+    body.white-theme .toolbar,
+    body.white-theme .continue-card,
+    body.white-theme .site-group,
+    body.white-theme .account-panel,
+    body.white-theme .compare-bar {
+      background: #fff;
+      border-color: rgba(0, 0, 0, 0.1);
+    }
+
+    body.white-theme .toolbar-wrapper {
+      background: #fff;
+    }
+
+    body.white-theme .toolbar__search-input,
+    body.white-theme .filter-select,
+    body.white-theme .btn-icon,
+    body.white-theme .account-btn--secondary {
+      background: #f9fafb;
+      border-color: rgba(0, 0, 0, 0.1);
+      color: #111;
+    }
+
+    body.white-theme #refreshBtn {
+      color: #dd3838;
+    }
+
+    body.white-theme #refreshBtn svg {
+      stroke: #dd3838;
+    }
+
+    body.white-theme #refreshBtn:hover {
+      color: #b82c2c;
+    }
+
+    body.white-theme .account-trigger {
+      background: #fff;
+      border-color: #e5e7eb;
+      color: #111;
+    }
+
+    body.white-theme .account-trigger:hover {
+      border-color: #d1d5db;
+      background: #f9fafb;
+    }
+
+    body.white-theme .account-trigger[aria-expanded="true"] {
+      border-color: var(--color-primary, #dd3838);
+      background: rgba(221, 56, 56, 0.04);
+    }
+
+    body.white-theme .reports-sidebar {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.08);
+    }
+
+    body.white-theme .reports-header h1,
+    body.white-theme .reports-header__text h1,
+    body.white-theme .continue-card__site,
+    body.white-theme .site-group__name,
+    body.white-theme .account-panel__title,
+    body.white-theme .account-panel__value {
+      color: #111;
+    }
+
+    body.white-theme .reports-breadcrumb a,
+    body.white-theme .report-row__action {
+      color: var(--color-primary, #dd3838);
+      border-color: var(--color-primary, #dd3838);
+    }
+
+    body.white-theme .report-row__action:hover {
+      background: var(--color-primary, #dd3838);
       color: #fff;
     }
 
-    .usage-hint {
-      font-size: 0.75rem;
-      color: #666;
+    /* Light theme primary buttons - ensure white text and icons */
+    body.white-theme .btn-primary-sm,
+    body.white-theme .continue-card__btn--primary,
+    body.white-theme .site-group__btn--view,
+    body.white-theme .account-btn--primary {
+      background: #dd3838 !important;
+      background-color: #dd3838 !important;
+      color: #ffffff !important;
+      border: none !important;
     }
 
-    /* Disabled Upgrade Button */
-    .account-btn-disabled {
-      background: #1f1f1f !important;
-      color: #666 !important;
-      cursor: not-allowed !important;
-      pointer-events: none;
+    body.white-theme .btn-primary-sm *,
+    body.white-theme .continue-card__btn--primary *,
+    body.white-theme .site-group__btn--view *,
+    body.white-theme .account-btn--primary * {
+      color: #ffffff !important;
     }
 
-    .upgrade-hint {
-      font-size: 0.75rem;
-      color: #666;
-      margin-top: 0.5rem;
-      text-align: center;
+    body.white-theme .btn-primary-sm svg,
+    body.white-theme .btn-primary-sm svg *,
+    body.white-theme .continue-card__btn--primary svg,
+    body.white-theme .continue-card__btn--primary svg *,
+    body.white-theme .site-group__btn--view svg,
+    body.white-theme .site-group__btn--view svg *,
+    body.white-theme .account-btn--primary svg,
+    body.white-theme .account-btn--primary svg * {
+      color: #ffffff !important;
+      stroke: #ffffff !important;
+      fill: none !important;
     }
 
-    .upgrade-hint a {
-      color: var(--accent-primary, #5bf4e7);
-      text-decoration: none;
+    body.white-theme .btn-primary-sm:hover,
+    body.white-theme .continue-card__btn--primary:hover,
+    body.white-theme .site-group__btn--view:hover,
+    body.white-theme .account-btn--primary:hover {
+      background: #c52f2f !important;
+      background-color: #c52f2f !important;
     }
 
-    .upgrade-hint a:hover {
-      text-decoration: underline;
+    /* Light theme search box improvements */
+    body.white-theme .toolbar__search-input {
+      background: #fff;
+      border: 1px solid #d1d5db;
+      color: #111;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    body.white-theme .toolbar__search-input:focus {
+      border-color: var(--color-primary, #dd3838);
+      box-shadow: 0 0 0 3px rgba(221, 56, 56, 0.1);
+    }
+
+    body.white-theme .toolbar__search-input::placeholder {
+      color: #9ca3af;
+    }
+
+    body.white-theme .toolbar__search-icon {
+      color: #6b7280;
+    }
+
+    /* Light theme secondary buttons */
+    body.white-theme .site-group__btn--secondary,
+    body.white-theme .continue-card__btn--secondary {
+      background: #ffffff !important;
+      color: #374151 !important;
+      border: 1px solid #d1d5db !important;
+    }
+
+    body.white-theme .site-group__btn--secondary svg,
+    body.white-theme .continue-card__btn--secondary svg {
+      color: #6b7280 !important;
+      stroke: #6b7280 !important;
+    }
+
+    body.white-theme .site-group__btn--secondary:hover,
+    body.white-theme .continue-card__btn--secondary:hover {
+      background: #f3f4f6 !important;
+      border-color: #9ca3af !important;
+    }
+
+    /* Light theme badges */
+    body.white-theme .site-group__badge--purchased {
+      background: rgba(22, 163, 74, 0.1);
+      color: #16a34a;
+    }
+
+    body.white-theme .site-group__badge--purchased svg {
+      stroke: #16a34a !important;
+    }
+
+    body.white-theme .site-group__badge--pro {
+      background: rgba(234, 179, 8, 0.15);
+      color: #ca8a04;
+    }
+
+    body.white-theme .site-group__badge--free {
+      background: #f3f4f6;
+      color: #6b7280;
+    }
+
+    body.white-theme .site-group__badge--browser {
+      background: rgba(59, 130, 246, 0.1);
+      color: #2563eb;
+    }
+
+    /* Light theme account link buttons (Change Password, Logout) */
+    body.white-theme .account-link {
+      color: #6b7280;
+    }
+
+    body.white-theme .account-link:hover {
+      color: #111;
+    }
+
+    body.white-theme .account-panel__links {
+      gap: 8px;
+    }
+
+    body.white-theme .account-panel__links .account-link {
+      padding: 6px 12px;
+      background: #f3f4f6;
+      border: 1px solid #e5e7eb;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    body.white-theme .account-panel__links .account-link:hover {
+      background: #e5e7eb;
+      border-color: #d1d5db;
+    }
+
+    /* Logout button - subtle danger styling */
+    body.white-theme .account-panel__links .account-link#logoutBtn {
+      color: #dc2626 !important;
+      border-color: rgba(220, 38, 38, 0.2);
+      background: rgba(220, 38, 38, 0.05);
+    }
+
+    body.white-theme .account-panel__links .account-link#logoutBtn:hover {
+      background: rgba(220, 38, 38, 0.1);
+      border-color: rgba(220, 38, 38, 0.3);
+    }
+
+    /* Light theme expand button */
+    body.white-theme .site-group__expand {
+      color: #dd3838 !important;
+      background: #fff !important;
+      border: 1px solid #e5e7eb !important;
+      border-radius: 4px !important;
+    }
+
+    body.white-theme .site-group__expand:hover {
+      color: #c52f2f !important;
+      background: #fef2f2 !important;
+    }
+
+    body.white-theme .site-group__expand .expand-chevron {
+      color: #dd3838 !important;
+    }
+
+    body.white-theme .site-group__expand:hover .expand-chevron {
+      color: #c52f2f !important;
     }
   </style>
 </head>
@@ -472,218 +1831,312 @@
   <div id="nav-placeholder"></div>
 
   <main class="page-shell">
-    <div class="account-container">
-      <!-- Breadcrumb -->
-      <nav class="account-breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Dashboard</a>
-        <span> / </span>
-        <span>My Account</span>
-      </nav>
+    <div id="success-message" class="message message--success hidden"></div>
+    <div id="error-message" class="message message--error hidden"></div>
 
-      <!-- Success/Error Messages -->
-      <div id="success-message" class="success-message hidden"></div>
-      <div id="error-message" class="error-message hidden"></div>
+    <div class="reports-page" id="reportsPage">
+      <!-- Main Content -->
+      <div class="reports-main">
+        <nav class="reports-breadcrumb" aria-label="Breadcrumb">
+          <a href="/dashboard.html" data-i18n="reportsPage.breadcrumb.home">Dashboard</a>
+          <span> / </span>
+          <span data-i18n="reportsPage.breadcrumb.reports">Reports</span>
+        </nav>
 
-      <!-- Header -->
-      <div class="account-header">
-        <h1>My Account</h1>
-        <p>Manage your subscription, billing, and account settings</p>
-      </div>
-
-      <!-- Account Grid -->
-      <div class="account-grid">
-        <!-- Account Info Card -->
-        <div class="account-card">
-          <h2>
-            <svg class="account-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        <div class="reports-header">
+          <div class="reports-header__text">
+            <h1 data-i18n="reportsPage.title">Reports</h1>
+            <p data-i18n="reportsPage.subtitle">Search, reopen, rerun, and compare your past scans.</p>
+          </div>
+          <button class="account-trigger" id="accountTrigger"
+                  type="button"
+                  aria-expanded="false"
+                  aria-controls="accountPanel"
+                  aria-label="Open account and billing panel">
+            <span id="accountTriggerBadge" class="plan-badge plan-badge--free">Free</span>
+            <span data-i18n="account.accountShort">Account</span>
+            <svg class="account-trigger__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+              <path d="M6 9l6 6 6-6"/>
             </svg>
-            Account Information
-          </h2>
+          </button>
+        </div>
 
-          <div class="account-info-row">
-            <span class="account-info-label">Email</span>
-            <span class="account-info-value" id="userEmail">Loading...</span>
-          </div>
+        <!-- Sticky Toolbar -->
+        <div class="toolbar-wrapper" id="toolbarWrapper">
+          <div class="toolbar">
+            <div class="toolbar__search">
+              <svg class="toolbar__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+              </svg>
+              <input type="search" class="toolbar__search-input" id="reportSearch" data-i18n-placeholder="reportsPage.search.placeholder" placeholder="Search sites or report types..." aria-label="Search reports">
+            </div>
 
-          <div class="account-info-row">
-            <span class="account-info-label">Plan</span>
-            <span class="account-info-value" id="userPlan">
-              <span class="skeleton" style="width: 80px; height: 20px; display: inline-block;"></span>
-            </span>
-          </div>
+            <button class="btn-filters-mobile" id="filtersToggle" aria-expanded="false">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
+              </svg>
+              <span data-i18n="reportsPage.filters.filters">Filters</span>
+            </button>
 
-          <div class="account-info-row">
-            <span class="account-info-label">Member Since</span>
-            <span class="account-info-value" id="userCreatedAt">Loading...</span>
+            <div class="toolbar__filters" id="filtersPanel">
+              <div class="filter-group">
+                <svg class="filter-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+                </svg>
+                <select class="filter-select" id="filterType" aria-label="Filter by type">
+                  <option value="" data-i18n="reportsPage.filters.allTypes">All Types</option>
+                  <option value="seo" data-i18n="reportsPage.filters.seo">SEO</option>
+                  <option value="security" data-i18n="reportsPage.filters.security">Security</option>
+                  <option value="accessibility" data-i18n="reportsPage.filters.accessibility">Accessibility</option>
+                  <option value="performance" data-i18n="reportsPage.filters.performance">Performance</option>
+                  <option value="fonts" data-i18n="reportsPage.filters.fonts">Fonts</option>
+                  <option value="brand" data-i18n="reportsPage.filters.brand">Brand</option>
+                  <option value="cro" data-i18n="reportsPage.filters.cro">CRO</option>
+                  <option value="mobile" data-i18n="reportsPage.filters.mobile">Mobile</option>
+                  <option value="gdpr" data-i18n="reportsPage.filters.privacy">Privacy</option>
+                  <option value="hosting" data-i18n="reportsPage.filters.hosting">Hosting</option>
+                  <option value="competitive" data-i18n="reportsPage.filters.competitive">Competitive</option>
+                  <option value="local-seo" data-i18n="reportsPage.filters.localSeo">Local SEO</option>
+                  <option value="broken-links" data-i18n="reportsPage.filters.brokenLinks">Broken Links</option>
+                  <option value="ip-reputation" data-i18n="reportsPage.filters.ipReputation">IP Reputation</option>
+                  <option value="tag-intelligence" data-i18n="reportsPage.filters.tags">Tags</option>
+                  <option value="cwv" data-i18n="reportsPage.filters.cwv">CWV</option>
+                  <option value="site-crawler" data-i18n="reportsPage.filters.crawler">Crawler</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <svg class="filter-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+                <select class="filter-select" id="filterAccess" aria-label="Filter by access">
+                  <option value="" data-i18n="reportsPage.filters.allAccess">All Access</option>
+                  <option value="purchased" data-i18n="reportsPage.filters.purchased">Purchased</option>
+                  <option value="pro" data-i18n="reportsPage.filters.pro">Pro</option>
+                  <option value="free" data-i18n="reportsPage.filters.free">Free</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <svg class="filter-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                <select class="filter-select" id="filterDate" aria-label="Filter by date">
+                  <option value="" data-i18n="reportsPage.filters.allTime">All Time</option>
+                  <option value="7" data-i18n="reportsPage.filters.last7Days">Last 7 days</option>
+                  <option value="30" data-i18n="reportsPage.filters.last30Days">Last 30 days</option>
+                  <option value="90" data-i18n="reportsPage.filters.last90Days">Last 90 days</option>
+                </select>
+              </div>
+
+              <div class="filter-group">
+                <svg class="filter-group__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="4" y1="6" x2="16" y2="6"/><line x1="8" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="16" y2="18"/><circle cx="18" cy="6" r="2"/><circle cx="6" cy="12" r="2"/><circle cx="18" cy="18" r="2"/>
+                </svg>
+                <select class="filter-select" id="sortBy" aria-label="Sort reports">
+                  <option value="newest" data-i18n="reportsPage.sort.newest">Newest</option>
+                  <option value="oldest" data-i18n="reportsPage.sort.oldest">Oldest</option>
+                  <option value="site-az" data-i18n="reportsPage.sort.aToZ">Site A-Z</option>
+                  <option value="site-za" data-i18n="reportsPage.sort.zToA">Site Z-A</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="toolbar__clear" id="clearFiltersBtn" aria-label="Clear filters">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+              </svg>
+              <span data-i18n="reportsPage.actions.clear">Clear</span>
+            </button>
+
+            <button class="toolbar__compare" id="compareModeBtn" aria-pressed="false">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/>
+              </svg>
+              <span data-i18n="reportsPage.actions.compare">Compare</span>
+            </button>
+
+            <span class="toolbar__count" id="reportsCount"></span>
+
+            <div class="toolbar__actions">
+              <button class="btn-icon" id="refreshBtn" title="Refresh and sync reports" aria-label="Refresh">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polyline points="23 4 23 10 17 10"></polyline>
+                  <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                </svg>
+              </button>
+              <a href="/dashboard.html" class="btn-primary-sm">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 5v14M5 12h14"/>
+                </svg>
+                <span data-i18n="reportsPage.actions.newReport">New Report</span>
+              </a>
+            </div>
           </div>
         </div>
 
-        <!-- Subscription Card -->
-        <div class="account-card" id="subscriptionCard">
-          <h2>
-            <svg class="account-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <rect x="2" y="5" width="20" height="14" rx="2"/><path d="M2 10h20"/>
-            </svg>
-            Subscription
-          </h2>
+        <!-- Continue Section -->
+        <section class="continue-section" id="continueSection" aria-labelledby="continueTitle">
+          <h2 class="section-label" id="continueTitle" data-i18n="reportsPage.sections.continue">Continue</h2>
+          <div class="continue-cards" id="continueCards"></div>
+        </section>
 
-          <div id="subscriptionDetails">
-            <div class="account-info-row">
-              <span class="account-info-label">Status</span>
-              <span class="account-info-value">
-                <span class="skeleton" style="width: 60px; height: 18px; display: inline-block;"></span>
-              </span>
-            </div>
+        <!-- Reports List -->
+        <section class="reports-list" id="reportsList" aria-label="Report history">
+          <div class="reports-list__header">
+            <h2 class="section-label" data-i18n="reportsPage.sections.allReports">All Reports</h2>
+          </div>
 
-            <div class="account-info-row">
-              <span class="account-info-label">Renews</span>
-              <span class="account-info-value">
-                <span class="skeleton" style="width: 100px; height: 18px; display: inline-block;"></span>
-              </span>
+          <div id="reportsLoading">
+            <div class="site-group" style="opacity: 0.5;">
+              <div class="site-group__header">
+                <div class="site-group__favicon" style="background: var(--bg-input);"></div>
+                <div class="site-group__info">
+                  <div style="height: 14px; width: 140px; background: var(--bg-input); border-radius: 4px;"></div>
+                  <div style="height: 10px; width: 90px; background: var(--bg-input); border-radius: 4px; margin-top: 3px;"></div>
+                </div>
+              </div>
             </div>
           </div>
 
-          <div class="account-actions">
-            <a href="/dashboard.html" class="account-btn account-btn-primary">
-              Run New Report
+          <div id="siteGroups"></div>
+
+          <div class="reports-empty hidden" id="reportsEmpty">
+            <svg class="reports-empty__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+              <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+            </svg>
+            <h3 class="reports-empty__title" data-i18n="reportsPage.empty.title">No reports yet</h3>
+            <p class="reports-empty__text" data-i18n="reportsPage.empty.message">Run your first scan to start building your report history.</p>
+            <a href="/dashboard.html" class="btn-primary-sm">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12h14"/>
+              </svg>
+              <span data-i18n="reportsPage.empty.runNewReport">Run New Report</span>
             </a>
-            <button class="account-btn account-btn-secondary" id="manageSubBtn">
-              <span id="manageSubBtnText">Manage Billing</span>
-            </button>
-            <button class="account-btn account-btn-primary" id="upgradeBtn">
-              Upgrade to Pro
-            </button>
           </div>
 
-          <!-- How It Works -->
-          <div class="how-it-works" style="margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.8125rem; color: #888;">
-            <strong style="color: #fff;">How it works:</strong>
-            Pro unlocks all paid features across all reports. Cancel anytime via Manage Billing.
-            Single report purchases ($10) unlock only that specific scan permanently.
+          <div class="reports-no-results hidden" id="reportsNoResults">
+            <p data-i18n="reportsPage.noResults.message">No reports match your search or filters.</p>
+            <button class="account-link" id="clearFiltersBtn2" data-i18n="reportsPage.noResults.clearFilters">Clear all filters</button>
           </div>
-        </div>
+
+          <div class="load-more hidden" id="loadMore">
+            <button class="load-more__btn" id="loadMoreBtn" data-i18n="reportsPage.loadMore">Load more</button>
+          </div>
+        </section>
       </div>
 
-      <!-- Purchased Reports Card (Full Width) -->
-      <div class="account-card account-card--full" id="purchasedReportsCard" aria-label="Purchased reports">
-        <div class="account-card-header">
-          <h2>
-            <svg class="account-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8z"/><path d="M12 6v6l4 2"/>
-            </svg>
-            Purchased Reports
-          </h2>
-          <div class="account-card-actions">
-            <button class="btn-ghost" id="refreshPurchasedBtn" aria-label="Refresh purchased reports">
-              ↻ Refresh
-            </button>
-          </div>
-        </div>
-
-        <p style="margin-bottom: 1rem; color: #888; font-size: 0.875rem;" id="purchasedReportsDesc">
-          These reports have been permanently unlocked with your single purchase.
-        </p>
-
-        <!-- Loading Skeleton -->
-        <div id="purchasedReportsLoading">
-          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
-          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
-          <div class="skeleton-row"><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div><div class="skeleton-cell"></div></div>
-        </div>
-
-        <!-- Purchased Reports Table -->
-        <table class="table--compact hidden" id="purchasedReportsTable">
-          <thead>
-            <tr>
-              <th>Site</th>
-              <th>Report Type</th>
-              <th>Purchased</th>
-              <th>Action</th>
-            </tr>
-          </thead>
-          <tbody id="purchasedReportsTbody">
-            <!-- Populated via JavaScript -->
-          </tbody>
-        </table>
-
-        <!-- Empty State -->
-        <div class="empty-state hidden" id="purchasedReportsEmpty">
-          <p>You haven't purchased any individual reports yet.</p>
-          <p style="font-size: 0.875rem; color: #666; margin-top: 0.5rem;">
-            Individual report purchases ($10) permanently unlock Pro features for a specific scan.
-          </p>
-        </div>
-      </div>
-
-      <!-- Quick Actions Card -->
-      <div class="account-card">
-        <h2>
-          <svg class="account-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
-          </svg>
-          Quick Actions
-        </h2>
-
-        <div class="account-actions">
-          <a href="/dashboard.html" class="account-btn account-btn-secondary">
-            Go to Dashboard
-          </a>
-          <button class="account-btn account-btn-secondary" id="changePasswordBtn">
-            Change Password
-          </button>
-          <button class="account-btn account-btn-danger" id="logoutBtn">
-            Logout
-          </button>
-        </div>
-      </div>
-
-      <!-- Change Password Card (hidden by default) -->
-      <div class="account-card hidden" id="changePasswordCard">
-        <h2>
-          <svg class="account-card-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-          </svg>
-          Change Password
-        </h2>
-
-        <form id="changePasswordForm" style="display: flex; flex-direction: column; gap: 1rem;">
-          <div>
-            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: var(--text-secondary, #888);">Current Password</label>
-            <input type="password" id="currentPassword" required
-              style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-primary, #fff); font-size: 1rem;">
-          </div>
-
-          <div>
-            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: var(--text-secondary, #888);">New Password</label>
-            <input type="password" id="newPassword" required
-              style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-primary, #fff); font-size: 1rem;">
-            <p style="margin-top: 0.5rem; font-size: 0.75rem; color: var(--text-muted, #666);">
-              Must be 8+ characters with uppercase, lowercase, and number
-            </p>
-          </div>
-
-          <div>
-            <label style="display: block; margin-bottom: 0.5rem; font-size: 0.875rem; color: var(--text-secondary, #888);">Confirm New Password</label>
-            <input type="password" id="confirmPassword" required
-              style="width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: var(--text-primary, #fff); font-size: 1rem;">
-          </div>
-
-          <div class="account-actions" style="margin-top: 0.5rem;">
-            <button type="submit" class="account-btn account-btn-primary">
-              Update Password
-            </button>
-            <button type="button" class="account-btn account-btn-secondary" id="cancelPasswordBtn">
-              Cancel
-            </button>
-          </div>
-        </form>
-      </div>
     </div>
   </main>
 
+  <!-- Account Popover Backdrop (outside page-shell to escape stacking context) -->
+  <div class="account-popover-backdrop" id="accountBackdrop"></div>
+
+  <!-- Account Popover (outside page-shell so z-index is not trapped) -->
+  <aside class="reports-sidebar" role="dialog" aria-label="Account and billing">
+    <div class="account-panel" id="accountPanel">
+      <div class="account-panel__header" id="accountPanelHeader">
+        <h2 class="account-panel__title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+          </svg>
+          <span data-i18n="account.accountAndBilling">Account & Billing</span>
+        </h2>
+        <svg class="account-panel__toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M6 9l6 6 6-6"/>
+        </svg>
+      </div>
+
+      <div class="account-panel__body" id="accountPanelBody">
+        <div class="account-panel__section">
+          <div class="account-panel__label" data-i18n="account.email">Email</div>
+          <div class="account-panel__value" id="userEmail" data-i18n="account.loading">Loading...</div>
+        </div>
+
+        <div class="account-panel__section">
+          <div class="account-panel__label" data-i18n="account.plan">Plan</div>
+          <div class="account-panel__value">
+            <span id="userPlan"><span class="plan-badge plan-badge--free" data-i18n="account.loading">Loading...</span></span>
+          </div>
+        </div>
+
+        <div class="account-panel__section" id="usageSection">
+          <div class="account-panel__label" data-i18n="account.usageToday">Usage Today</div>
+          <div class="usage-bar">
+            <div class="usage-bar__track">
+              <div class="usage-bar__fill" id="usageFill" style="width: 0%"></div>
+            </div>
+            <div class="usage-bar__text">
+              <span id="usageCount">0 / 25 scans</span>
+              <span id="usageReset" data-i18n="account.resetsIn" data-i18n-params='{"hours": "--"}'>Resets in --h</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="account-panel__actions">
+          <button class="account-btn account-btn--secondary" id="manageSubBtn" data-i18n="account.manageBilling">Manage Billing</button>
+          <button class="account-btn account-btn--primary" id="upgradeBtn" data-i18n="account.upgradeToPro">Upgrade to Pro</button>
+        </div>
+
+        <div class="account-panel__links">
+          <button class="account-link" id="changePasswordBtn" data-i18n="account.changePassword">Change Password</button>
+          <button class="account-link" id="logoutBtn" data-i18n="account.logout">Logout</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Compare Bar -->
+  <div class="compare-bar" id="compareBar">
+    <span class="compare-bar__text"><strong id="compareCount">0</strong> <span data-i18n="reportsPage.compareBar.selectedMax">selected (max 2)</span></span>
+    <button class="compare-bar__btn" id="compareBtn" disabled>
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/>
+      </svg>
+      <span data-i18n="reportsPage.compareBar.compareReports">Compare Reports</span>
+    </button>
+    <button class="compare-bar__cancel" id="compareCancelBtn" data-i18n="reportsPage.compareBar.cancel">Cancel</button>
+  </div>
+
+  <!-- Password Modal -->
+  <div class="modal-overlay" id="passwordModal" role="dialog" aria-labelledby="passwordModalTitle" aria-modal="true">
+    <div class="modal">
+      <div class="modal__header">
+        <h3 class="modal__title" id="passwordModalTitle" data-i18n="reportsPage.passwordModal.title">Change Password</h3>
+        <button class="modal__close" id="passwordModalClose" aria-label="Close">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 6L6 18M6 6l12 12"/>
+          </svg>
+        </button>
+      </div>
+      <form id="changePasswordForm">
+        <div class="modal__body">
+          <div class="form-group">
+            <label class="form-label" for="currentPassword" data-i18n="reportsPage.passwordModal.currentPassword">Current Password</label>
+            <input type="password" class="form-input" id="currentPassword" required>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="newPassword" data-i18n="reportsPage.passwordModal.newPassword">New Password</label>
+            <input type="password" class="form-input" id="newPassword" required>
+            <p class="form-hint" data-i18n="reportsPage.passwordModal.hint">8+ chars with uppercase, lowercase, and number</p>
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="confirmPassword" data-i18n="reportsPage.passwordModal.confirmPassword">Confirm Password</label>
+            <input type="password" class="form-input" id="confirmPassword" required>
+          </div>
+        </div>
+        <div class="modal__actions">
+          <button type="button" class="account-btn account-btn--secondary" id="passwordModalCancel" data-i18n="reportsPage.passwordModal.cancel">Cancel</button>
+          <button type="submit" class="account-btn account-btn--primary" data-i18n="reportsPage.passwordModal.save">Update</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="/pro-utils.js"></script>
   <script src="/nav-template.js"></script>
-  <script src="/account-script.js?v=20260128a"></script>
+  <!-- Language Switcher (after nav-template so container exists) -->
+  <script src="/language-switcher.js"></script>
+  <script src="/account-script.js?v=20260202b"></script>
 </body>
 </html>

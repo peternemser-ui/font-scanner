@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/security-analyzer.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/security-analyzer.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/security-analyzer.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/security-analyzer.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/security-analyzer.html" />
 
     <!-- Open Graph -->
@@ -74,7 +75,8 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
+    <link rel="stylesheet" href="/css/components/page-shell.css" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -151,67 +153,15 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
-    
-    <main class="page-shell">
-      <!-- Breadcrumb -->
-      <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
-        <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">Security</span>
-      </nav>
-      
-      <!-- Page Header -->
-      <header class="page-header">
-        <h1 class="page-header__title">Security</h1>
-        <p class="page-header__subtitle">SSL/TLS validation, security headers audit, and vulnerability checks.</p>
-      </header>
 
-      <!-- Input Card -->
-      <section class="card">
-        <div class="card__body">
-          <div class="form-row">
-            <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
-            <input 
-              type="url" 
-              id="urlInput" 
-              class="input"
-              placeholder="https://example.com" 
-              aria-label="Enter website URL for security analysis"
-              required
-              aria-required="true"
-            />
-            <button id="analyzeButton" class="btn btn-primary" aria-label="Run security scan">
-              <span id="buttonText">Analyze</span>
-            </button>
-          </div>
-          <p class="helper-text">Tests SSL/TLS, security headers (CSP, HSTS, X-Frame-Options), and OWASP-aligned checks.</p>
-        </div>
-      </section>
-
-      <!-- Results Container -->
-      <div id="results" class="results-container hidden" role="region" aria-live="polite">
-        <!-- Loading State -->
-        <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
-          <h2><span class="heartbeat" aria-hidden="true">🔒</span> Analyzing Security...</h2>
-          <p class="animate-pulse">Running SSL validation and vulnerability checks...</p>
-          <div class="progress-container" role="progressbar" aria-label="Analysis progress">
-            <div class="progress-bar" id="progressBar"></div>
-          </div>
-          <div id="progressText" class="progress-text" aria-live="polite">Initializing security audit...</div>
-        </div>
-
-        <!-- Results Content (populated by JavaScript) -->
-        <div id="resultsContent"></div>
-      </div>
-
-      <!-- Error Display -->
-      <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
+    <!-- Page Shell Container (rendered by PageShell.js) -->
+    <main id="page-container" class="page-shell">
+      <!-- PageShell renders: breadcrumb, header, input card, results container -->
     </main>
 
     <!-- Scripts -->
@@ -219,6 +169,8 @@
     <script src="/pro-utils.js"></script>
     <script src="/scan-context.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- ASCII Background Animation -->
@@ -229,14 +181,20 @@
     <script src="/pdf-export-utility.js?v=2"></script>
     <script src="/pdf-export-integration.js?v=2"></script>
 
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/reportShell.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
+    <script src="/js/components/reportAccordion.js"></script>
+    <script src="/js/components/PageShell.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/reportStorage.js"></script>
     <script src="/js/components/PricingModal.js"></script>
+    <script src="/js/components/UsagePill.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="security-fixes-renderer.js"></script>
     <script src="security-script.js"></script>

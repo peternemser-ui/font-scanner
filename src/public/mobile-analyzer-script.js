@@ -6,6 +6,24 @@
 // Deterministic analyzer key (stable forever)
 window.SM_ANALYZER_KEY = 'mobile-analyzer';
 
+// Translation helper - evaluates at runtime to ensure i18n is loaded
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   
@@ -37,20 +55,20 @@ document.addEventListener('DOMContentLoaded', () => {
   // Build dynamic analysis steps based on selected devices
   function buildAnalysisSteps(devices) {
     const steps = [
-      { label: 'Connecting to website', detail: 'Loading page on multiple devices...' }
+      { label: t('loader.connectingToWebsite', 'Connecting to website'), detail: t('loader.loadingMultipleDevices', 'Loading page on multiple devices...') }
     ];
-    
+
     devices.forEach((deviceId, index) => {
       const name = deviceNames[deviceId] || deviceId;
       steps.push({
-        label: `Testing ${name}`,
-        detail: index === 0 ? 'Analyzing performance and layout...' : 
-                index === devices.length - 1 ? 'Final device checks...' :
-                'Checking touch targets and readability...'
+        label: t('loader.testingDevice', 'Testing {{device}}', { device: name }),
+        detail: index === 0 ? t('loader.analyzingPerformanceLayout', 'Analyzing performance and layout...') :
+                index === devices.length - 1 ? t('loader.finalDeviceChecks', 'Final device checks...') :
+                t('loader.checkingTouchTargets', 'Checking touch targets and readability...')
       });
     });
     
-    steps.push({ label: 'Compiling results', detail: 'Generating device comparison report...' });
+    steps.push({ label: t('loader.compilingResults', 'Compiling results'), detail: t('loader.generatingDeviceComparison', 'Generating device comparison report...') });
     return steps;
   }
 
@@ -77,6 +95,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // If returning from billing, wait for billing return processing to complete
     if (billingSuccess && !window.__smBillingReturnComplete) {
       console.log('[Mobile] Waiting for billing return processing...');
+
+      // CRITICAL: Clear fresh scan flag - user paid for this report
+      console.log('[Mobile] Billing return detected - clearing fresh scan flag');
+      window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+
       await new Promise((resolve) => {
         if (window.__smBillingReturnComplete) {
           resolve();
@@ -132,7 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.addEventListener('sm:restoreScanResults', (e) => {
     const { results: restoredResults, url, analyzer } = e.detail || {};
     if (restoredResults && analyzer?.includes('mobile')) {
-      console.log('[Mobile] Restoring scan results after payment');
+      console.log('[Mobile] Restoring scan results after payment - clearing fresh scan flag');
+      // Clear fresh scan flag since user paid for this report
+      window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
       if (url && urlInput) {
         urlInput.value = url;
       }
@@ -148,9 +173,22 @@ document.addEventListener('DOMContentLoaded', () => {
     let { preserveReportId = false } = options;
     const url = urlInput.value.trim();
     if (!url) {
-      showError('Please enter a valid URL');
+      showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
       return;
     }
+
+    // CRITICAL: Mark this as a FRESH SCAN that requires payment
+    // VERSION: 20260201h - This flag ensures new scans are LOCKED until paid
+    console.log('[Mobile] NEW SCAN v20260201h: Marking as fresh unpaid scan');
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = true;
+    window.__SM_CURRENT_SCAN_URL__ = url;
+
+    // Clear any stale billing cache and session markers from previous scans
+    if (window.ProReportBlock?.clearBillingCache) {
+      window.ProReportBlock.clearBillingCache();
+    }
+    sessionStorage.removeItem('sm_payment_completed_session');
+    sessionStorage.removeItem('sm_purchased_report_id');
 
     // Auto-detect if we should preserve report_id: if there's an existing one and user has paid access
     const existingReportId = document.body.getAttribute('data-report-id');
@@ -183,7 +221,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     if (devices.length === 0) {
-      showError('Please select at least one device to test');
+      showError(t('reports.common.selectDevice', 'Please select at least one device to test'));
       return;
     }
 
@@ -195,13 +233,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Update button text
     const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-    buttonText.textContent = 'Analyzing...';
+    buttonText.textContent = t('reports.common.analyzing', 'Analyzing...');
 
     // Build dynamic steps based on selected devices
     const analysisSteps = buildAnalysisSteps(devices);
     
     if (loader) {
-      loader.start(analysisSteps, '📱 TESTING MOBILE', 45);
+      loader.start(analysisSteps, '📱 ' + t('loader.testingMobile', 'TESTING MOBILE'), 45);
       
       // Add ASCII art patience message
       addPatienceMessage(loadingContainer);
@@ -228,9 +266,13 @@ document.addEventListener('DOMContentLoaded', () => {
       window.SM_SCAN_STARTED_AT = scanStartedAt;
       document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
 
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/mobile-analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ 
           url, 
           scanStartedAt,
@@ -250,7 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Analysis failed');
+        if (error.code === 'SCAN_QUOTA_EXCEEDED') {
+          const limit = error.scansLimit || 10;
+          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        }
+        throw new Error(error.message || error.error || t('reports.common.analysisFailed', 'Analysis failed'));
       }
 
       const data = await response.json();
@@ -274,14 +320,31 @@ document.addEventListener('DOMContentLoaded', () => {
         document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
       }
       
+      // Re-fetch billing status before displaying results so Pro/Day Pass sections unlock
+      if (window.ProReportBlock?.fetchBillingStatus) {
+        try {
+          await window.ProReportBlock.fetchBillingStatus(true);
+          if (window.ProReportBlock.isProSubscriber?.()) {
+            console.log('[Mobile] Pro/Day Pass user - clearing fresh scan payment flag');
+            window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+          }
+        } catch (e) {
+          console.warn('[Mobile] Failed to fetch billing status:', e);
+        }
+      }
+
       if (loader) {
         loader.complete();
         setTimeout(() => {
           loadingContainer.style.display = 'none';
           displayResults(data.results, { reportId });
+          window.__REPORT_READY__ = true;
+          window.dispatchEvent(new CustomEvent('report:ready'));
         }, 800);
       } else {
         displayResults(data.results, { reportId });
+        window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('report:ready'));
       }
 
     } catch (error) {
@@ -292,7 +355,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } finally {
       analyzeButton.disabled = false;
       const buttonText = analyzeButton.querySelector('#buttonText') || analyzeButton;
-      buttonText.textContent = 'Analyze';
+      buttonText.textContent = t('reports.common.analyze', 'Analyze');
     }
   }
 
@@ -308,13 +371,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const url = document.getElementById('urlInput').value;
-    const timestamp = new Date().toLocaleString();
+    const timestamp = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
     const reportId = (meta && meta.reportId) ? String(meta.reportId) : (document.body.getAttribute('data-report-id') || '');
     
     // Check if shared components are loaded
     if (typeof ReportShell === 'undefined' || typeof ReportAccordion === 'undefined') {
       console.error('Shared report components not loaded');
-      resultsContent.innerHTML = '<div style="color: red; padding: 2rem;">Error: Report components failed to load. Please refresh the page.</div>';
+      resultsContent.innerHTML = `<div style="color: red; padding: 2rem;">${t('reports.common.reportComponentsError', 'Error: Report components failed to load. Please refresh the page.')}</div>`;
       return;
     }
     
@@ -323,10 +386,10 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Summary donuts
     const summaryDonuts = ReportShell.renderSummaryDonuts([
-      { label: 'Mobile Score', score: data.mobileScore },
-      { label: 'Performance', score: data.performanceSummary.average },
-      { label: 'Readability', score: data.readabilitySummary.average },
-      { label: 'Accessibility', score: data.accessibilitySummary.average }
+      { label: t('reports.mobile.mobileScore', 'Mobile Score'), score: data.mobileScore },
+      { label: t('reports.mobile.performance', 'Performance'), score: data.performanceSummary.average },
+      { label: t('reports.mobile.readability', 'Readability'), score: data.readabilitySummary.average },
+      { label: t('reports.mobile.accessibility', 'Accessibility'), score: data.accessibilitySummary.average }
     ]);
     
     // Device Screenshots Section
@@ -338,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="margin-bottom: 2rem; padding-bottom: 2rem; border-bottom: 1px solid var(--border-primary, rgba(255,255,255,0.1));">
                 <h4 style="margin-bottom: 1rem;">${device.device || key}</h4>
                 <div style="color: #ff6b6b; padding: 1rem; background: rgba(255,107,107,0.1); border-radius: 8px;">
-                  ⚠️ Error capturing this device: ${device.error}
+                  ${t('reports.mobile.errorCapturingDevice', 'Error capturing this device')}: ${device.error}
                 </div>
               </div>
             `;
@@ -353,21 +416,21 @@ document.addEventListener('DOMContentLoaded', () => {
               <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                 ${portraitSrc ? `
                   <div style="text-align: center;">
-                    <img src="${portraitSrc}" alt="${device.device} portrait" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" onclick="window.open(this.src)">
+                    <img src="${portraitSrc}" alt="${device.device} portrait" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" data-action="open-image">
                     <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">📱 ${deviceWidth}x${deviceHeight}</div>
-                    <a href="${portraitSrc}" download="${device.device}-portrait.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">🔽 Click to enlarge</a>
+                    <a href="${portraitSrc}" download="${device.device}-portrait.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</a>
                   </div>
                 ` : ''}
                 ${landscapeSrc ? `
                   <div style="text-align: center;">
-                    <img src="${landscapeSrc}" alt="${device.device} landscape" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" onclick="window.open(this.src)">
+                    <img src="${landscapeSrc}" alt="${device.device} landscape" class="device-screenshot" style="max-width: 100%; border-radius: 8px; border: 1px solid var(--border-primary, rgba(255,255,255,0.1)); cursor: pointer;" data-action="open-image">
                     <div style="margin-top: 0.5rem; color: var(--text-muted, #888); font-size: 0.85rem;">🖥️ ${deviceHeight}x${deviceWidth}</div>
-                    <a href="${landscapeSrc}" download="${device.device}-landscape.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">🔽 Click to enlarge</a>
+                    <a href="${landscapeSrc}" download="${device.device}-landscape.png" style="color: #60a5fa; font-size: 0.85rem; text-decoration: none;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</a>
                   </div>
                 ` : ''}
                 ${!portraitSrc && !landscapeSrc ? `
                   <div style="padding: 1rem; border: 1px dashed var(--border-primary, rgba(255,255,255,0.1)); border-radius: 8px; color: var(--text-muted, #888);">
-                    Screenshot not available for this device.
+                    ${t('reports.mobile.screenshotNotAvailable', 'Screenshot not available for this device.')}
                   </div>
                 ` : ''}
               </div>
@@ -386,6 +449,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const isReportUnlocked = (id) => {
       const reportId = String(id || '').trim();
 
+      // PRIMARY CHECK: Use ProReportBlock.hasAccess() - this is the main access check
+      // It handles: Pro subscriptions, purchased reports, session purchases, demo domains
+      if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+        const hasAccess = window.ProReportBlock.hasAccess(reportId || null);
+        console.log('[Mobile] isReportUnlocked via hasAccess:', hasAccess, 'reportId:', reportId);
+        return hasAccess;
+      }
+
+      // FALLBACK: Legacy checks
       // Subscription-style Pro (or ProReportBlock helper)
       if (window.ProReportBlock && typeof window.ProReportBlock.isPro === 'function') {
         if (window.ProReportBlock.isPro(reportId || null)) return true;
@@ -405,43 +477,43 @@ document.addEventListener('DOMContentLoaded', () => {
     const majorScoreSections = [
       ReportAccordion.createSection({
         id: 'mobile-performance-summary',
-        title: 'Performance',
+        title: t('reports.mobile.performance', 'Performance'),
         scoreTextRight: `${data.performanceSummary?.average || 0}/100`,
         contentHTML: renderScoreSectionContent(
           data.devices,
           'performance',
           'score',
           data.recommendations,
-          'Performance',
-          ['Load time', 'DOM content loaded', 'First paint'],
+          t('reports.mobile.performance', 'Performance'),
+          [t('reports.mobile.loadTime', 'Load time'), t('reports.mobile.domContentLoaded', 'DOM content loaded'), t('reports.mobile.firstPaint', 'First paint')],
           data.performanceSummary?.average || 0
         )
       }),
       ReportAccordion.createSection({
         id: 'mobile-readability-summary',
-        title: 'Readability',
+        title: t('reports.mobile.readability', 'Readability'),
         scoreTextRight: `${data.readabilitySummary?.average || 0}/100`,
         contentHTML: renderScoreSectionContent(
           data.devices,
           'readability',
           'readabilityScore',
           data.recommendations,
-          'Readability',
-          ['Body font size', 'Line height', 'Text contrast'],
+          t('reports.mobile.readability', 'Readability'),
+          [t('reports.mobile.bodyFontSize', 'Body font size'), t('reports.mobile.lineHeight', 'Line height'), t('reports.mobile.textContrast', 'Text contrast')],
           data.readabilitySummary?.average || 0
         )
       }),
       ReportAccordion.createSection({
         id: 'mobile-accessibility-summary',
-        title: 'Accessibility',
+        title: t('reports.mobile.accessibility', 'Accessibility'),
         scoreTextRight: `${data.accessibilitySummary?.average || 0}/100`,
         contentHTML: renderScoreSectionContent(
           data.devices,
           'accessibility',
           'a11yScore',
           data.recommendations,
-          'Accessibility',
-          ['Alt text coverage', 'Heading hierarchy', 'Contrast checks'],
+          t('reports.mobile.accessibility', 'Accessibility'),
+          [t('reports.mobile.altTextCoverage', 'Alt text coverage'), t('reports.mobile.headingHierarchy', 'Heading hierarchy'), t('reports.mobile.contrastChecks', 'Contrast checks')],
           data.accessibilitySummary?.average || 0
         )
       })
@@ -449,12 +521,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Build accordions
     const accordions = [
-      ReportAccordion.createSection({ id: 'mobile-screenshots', title: 'Device Screenshots', scoreTextRight: `${Object.keys(data.devices).length} Devices`, contentHTML: screenshotsContent }),
+      ReportAccordion.createSection({ id: 'mobile-screenshots', title: t('reports.mobile.deviceScreenshots', 'Device Screenshots'), scoreTextRight: `${Object.keys(data.devices).length} ${t('reports.mobile.devices', 'Devices')}`, contentHTML: screenshotsContent }),
       ...majorScoreSections,
       ...diagnosticsContent,
       ReportAccordion.createSection({
         id: 'report-recommendations',
-        title: 'Report and Recommendations',
+        title: t('reports.common.reportRecommendations', 'Report and Recommendations'),
         scoreTextRight: null,
         isPro: true,
         locked: proLocked,
@@ -473,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const html = `
-      ${ReportShell.renderReportHeader({ title: 'Mobile Testing Report', url, timestamp, badgeText: 'Mobile', mode: 'mobile' })}
+      ${ReportShell.renderReportHeader({ title: t('reports.mobile.title', 'Mobile Testing Report'), url, timestamp, badgeText: t('reports.mobile.badge', 'Mobile'), mode: 'mobile' })}
       ${summaryDonuts}
       ${accordions}
       ${renderMobileSummarySection(summaryStats)}
@@ -512,7 +584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const items = Object.entries(devices)
       .filter(([, device]) => device?.[metricKey]?.[scoreKey] !== undefined)
       .map(([, device]) => ({
-        name: device.device || 'Device',
+        name: device.device || t('reports.mobile.device', 'Device'),
         score: device[metricKey][scoreKey]
       }));
 
@@ -525,7 +597,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <div class="report-shell__card">
           <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-            No per-device scores available. Using overall average for this category: <strong>${formatScore(averageScore)}/100</strong>.
+            ${t('reports.mobile.noPerDeviceScores', 'No per-device scores available. Using overall average for this category:')} <strong>${formatScore(averageScore)}/100</strong>.
           </div>
         </div>
       `;
@@ -535,9 +607,9 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="report-shell__card">
         <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px; display: grid; gap: 0.75rem;">
           <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; font-size: 0.85rem; color: var(--text-tertiary);">
-            <div>Avg: <strong style="color: var(--text-primary);">${formatScore(avg)}/100</strong></div>
-            <div>Best: <strong style="color: var(--text-primary);">${formatScore(max)}/100</strong></div>
-            <div>Lowest: <strong style="color: var(--text-primary);">${formatScore(min)}/100</strong></div>
+            <div>${t('reports.mobile.avg', 'Avg')}: <strong style="color: var(--text-primary);">${formatScore(avg)}/100</strong></div>
+            <div>${t('reports.mobile.best', 'Best')}: <strong style="color: var(--text-primary);">${formatScore(max)}/100</strong></div>
+            <div>${t('reports.mobile.lowest', 'Lowest')}: <strong style="color: var(--text-primary);">${formatScore(min)}/100</strong></div>
           </div>
           ${items.map(item => {
             const safeScore = Math.max(0, Math.min(100, Number(item.score) || 0));
@@ -562,7 +634,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const items = deviceEntries
       .filter(([, device]) => device?.[metricKey]?.[scoreKey] !== undefined)
       .map(([, device]) => ({
-        name: device.device || 'Device',
+        name: device.device || t('reports.mobile.device', 'Device'),
         score: device[metricKey][scoreKey]
       }));
     const scores = items.map(item => Number(item.score) || 0);
@@ -598,13 +670,13 @@ document.addEventListener('DOMContentLoaded', () => {
              </div>
            `).join('')}
          </div>`
-      : '<div style="color: var(--text-tertiary); font-size: 0.85rem;">No major issues flagged for this category.</div>';
+      : `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${t('reports.mobile.noMajorIssues', 'No major issues flagged for this category.')}</div>`;
 
     let extraInsights = '';
     if (metricKey === 'readability') {
       const readabilityItems = deviceEntries
         .map(([, device]) => ({
-          name: device.device || 'Device',
+          name: device.device || t('reports.mobile.device', 'Device'),
           data: device.readability
         }))
         .filter(item => item.data && !item.data.error && item.data.totalElements);
@@ -612,7 +684,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!readabilityItems.length) {
         extraInsights = `
           <div style="margin-top: 0.75rem; color: var(--text-tertiary); font-size: 0.85rem;">
-            Readability details were not available for this scan. We will retry on the next run.
+            ${t('reports.mobile.readabilityNotAvailable', 'Readability details were not available for this scan. We will retry on the next run.')}
           </div>
         `;
       } else {
@@ -624,11 +696,11 @@ document.addEventListener('DOMContentLoaded', () => {
         extraInsights = `
           <div style="margin-top: 0.75rem; display: grid; gap: 0.5rem;">
             <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; font-size: 0.85rem; color: var(--text-tertiary);">
-              <div>Small text: <strong style="color: var(--text-primary);">${avgSmallFont}%</strong></div>
-              <div>Good line height: <strong style="color: var(--text-primary);">${avgLineHeight}%</strong></div>
-              <div>Elements checked: <strong style="color: var(--text-primary);">${totalElements}</strong></div>
+              <div>${t('reports.mobile.smallText', 'Small text')}: <strong style="color: var(--text-primary);">${avgSmallFont}%</strong></div>
+              <div>${t('reports.mobile.goodLineHeight', 'Good line height')}: <strong style="color: var(--text-primary);">${avgLineHeight}%</strong></div>
+              <div>${t('reports.mobile.elementsChecked', 'Elements checked')}: <strong style="color: var(--text-primary);">${totalElements}</strong></div>
             </div>
-            ${worst ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Most small text on: <strong style="color: var(--text-primary);">${worst.name}</strong> (${Math.round(worst.data.smallFontPercentage || 0)}%).</div>` : ''}
+            ${worst ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${t('reports.mobile.mostSmallTextOn', 'Most small text on')}: <strong style="color: var(--text-primary);">${worst.name}</strong> (${Math.round(worst.data.smallFontPercentage || 0)}%).</div>` : ''}
           </div>
         `;
       }
@@ -637,7 +709,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (metricKey === 'performance') {
       const perfItems = deviceEntries
         .map(([, device]) => ({
-          name: device.device || 'Device',
+          name: device.device || t('reports.mobile.device', 'Device'),
           data: device.performance
         }))
         .filter(item => item.data && !item.data.error);
@@ -645,7 +717,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!perfItems.length) {
         extraInsights = `
           <div style="margin-top: 0.75rem; color: var(--text-tertiary); font-size: 0.85rem;">
-            Performance timing metrics were not captured. Using score-only analysis.
+            ${t('reports.mobile.performanceNotCaptured', 'Performance timing metrics were not captured. Using score-only analysis.')}
           </div>
         `;
       } else {
@@ -657,11 +729,11 @@ document.addEventListener('DOMContentLoaded', () => {
         extraInsights = `
           <div style="margin-top: 0.75rem; display: grid; gap: 0.5rem;">
             <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; font-size: 0.85rem; color: var(--text-tertiary);">
-              <div>Avg DOM ready: <strong style="color: var(--text-primary);">${avgDom}ms</strong></div>
-              <div>Avg load: <strong style="color: var(--text-primary);">${avgLoad}ms</strong></div>
-              <div>Avg FCP: <strong style="color: var(--text-primary);">${avgFcp}ms</strong></div>
+              <div>${t('reports.mobile.avgDomReady', 'Avg DOM ready')}: <strong style="color: var(--text-primary);">${avgDom}ms</strong></div>
+              <div>${t('reports.mobile.avgLoad', 'Avg load')}: <strong style="color: var(--text-primary);">${avgLoad}ms</strong></div>
+              <div>${t('reports.mobile.avgFcp', 'Avg FCP')}: <strong style="color: var(--text-primary);">${avgFcp}ms</strong></div>
             </div>
-            ${slowest ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Slowest load: <strong style="color: var(--text-primary);">${slowest.name}</strong> (${Math.round(slowest.data.loadComplete || 0)}ms).</div>` : ''}
+            ${slowest ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${t('reports.mobile.slowestLoad', 'Slowest load')}: <strong style="color: var(--text-primary);">${slowest.name}</strong> (${Math.round(slowest.data.loadComplete || 0)}ms).</div>` : ''}
           </div>
         `;
       }
@@ -670,7 +742,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (metricKey === 'accessibility') {
       const a11yItems = deviceEntries
         .map(([, device]) => ({
-          name: device.device || 'Device',
+          name: device.device || t('reports.mobile.device', 'Device'),
           data: device.accessibility
         }))
         .filter(item => item.data && !item.data.error);
@@ -678,7 +750,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!a11yItems.length) {
         extraInsights = `
           <div style="margin-top: 0.75rem; color: var(--text-tertiary); font-size: 0.85rem;">
-            Accessibility detail checks were not captured. Using score-only analysis.
+            ${t('reports.mobile.accessibilityNotCaptured', 'Accessibility detail checks were not captured. Using score-only analysis.')}
           </div>
         `;
       } else {
@@ -690,9 +762,9 @@ document.addEventListener('DOMContentLoaded', () => {
         extraInsights = `
           <div style="margin-top: 0.75rem; display: grid; gap: 0.5rem;">
             <div style="display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0.75rem; font-size: 0.85rem; color: var(--text-tertiary);">
-              <div>Alt coverage: <strong style="color: var(--text-primary);">${altCoverage}%</strong></div>
-              <div>Images missing alt: <strong style="color: var(--text-primary);">${missingAlt}</strong></div>
-              <div>Heading issues: <strong style="color: var(--text-primary);">${headingIssues}</strong></div>
+              <div>${t('reports.mobile.altCoverage', 'Alt coverage')}: <strong style="color: var(--text-primary);">${altCoverage}%</strong></div>
+              <div>${t('reports.mobile.imagesMissingAlt', 'Images missing alt')}: <strong style="color: var(--text-primary);">${missingAlt}</strong></div>
+              <div>${t('reports.mobile.headingIssues', 'Heading issues')}: <strong style="color: var(--text-primary);">${headingIssues}</strong></div>
             </div>
           </div>
         `;
@@ -700,21 +772,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const coverageLine = deviceEntries.length
-      ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Coverage: ${items.length}/${deviceEntries.length} devices scored${missingCount ? ` (missing ${missingCount})` : ''}.</div>`
+      ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${t('reports.mobile.coverage', 'Coverage')}: ${items.length}/${deviceEntries.length} ${t('reports.mobile.devicesScored', 'devices scored')}${missingCount ? ` (${t('reports.mobile.missing', 'missing')} ${missingCount})` : ''}.</div>`
       : '';
 
     const varianceLine = scores.length
-      ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Score spread: ${formatScore(spread)} points (best ${formatScore(max)}/100, lowest ${formatScore(min)}/100).</div>`
-      : `<div style="color: var(--text-tertiary); font-size: 0.85rem;">Score spread not available. Using summary average ${formatScore(avg)}/100.</div>`;
+      ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${t('reports.mobile.scoreSpread', 'Score spread')}: ${formatScore(spread)} ${t('reports.mobile.points', 'points')} (${t('reports.mobile.best', 'best')} ${formatScore(max)}/100, ${t('reports.mobile.lowest', 'lowest')} ${formatScore(min)}/100).</div>`
+      : `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${t('reports.mobile.scoreSpreadNotAvailable', 'Score spread not available. Using summary average')} ${formatScore(avg)}/100.</div>`;
 
     const deviceHighlights = scores.length
       ? `<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.5rem; margin-top: 0.5rem;">
           <div>
-            <div style="font-weight: 600; margin-bottom: 0.25rem;">Lowest scoring</div>
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">${t('reports.mobile.lowestScoring', 'Lowest scoring')}</div>
             ${lowestDevices.map(item => `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${item.name}: ${formatScore(item.score || 0)}/100</div>`).join('')}
           </div>
           <div>
-            <div style="font-weight: 600; margin-bottom: 0.25rem;">Highest scoring</div>
+            <div style="font-weight: 600; margin-bottom: 0.25rem;">${t('reports.mobile.highestScoring', 'Highest scoring')}</div>
             ${highestDevices.map(item => `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${item.name}: ${formatScore(item.score || 0)}/100</div>`).join('')}
           </div>
         </div>`
@@ -725,14 +797,14 @@ document.addEventListener('DOMContentLoaded', () => {
         ${breakdown}
         <div class="report-shell__card">
           <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-            <div style="font-weight: 600; margin-bottom: 0.35rem;">Why this score?</div>
-            <div style="color: var(--text-tertiary); font-size: 0.9rem;">Measured on-device using the selected viewport(s).</div>
+            <div style="font-weight: 600; margin-bottom: 0.35rem;">${t('reports.mobile.whyThisScore', 'Why this score?')}</div>
+            <div style="color: var(--text-tertiary); font-size: 0.9rem;">${t('reports.mobile.measuredOnDevice', 'Measured on-device using the selected viewport(s).')}</div>
             ${coverageLine}
             ${varianceLine}
             ${deviceHighlights}
             ${extraInsights}
             ${criteriaList}
-            <div style="font-weight: 600; margin: 0.75rem 0 0.35rem;">Top factors</div>
+            <div style="font-weight: 600; margin: 0.75rem 0 0.35rem;">${t('reports.mobile.topFactors', 'Top factors')}</div>
             ${recList}
           </div>
         </div>
@@ -746,13 +818,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // Viewport Meta Tag
     sections.push(ReportAccordion.createSection({
       id: 'mobile-viewport',
-      title: 'Viewport Meta Tag',
+      title: t('reports.mobile.viewportMetaTag', 'Viewport Meta Tag'),
       scoreTextRight: `${firstDevice.viewportMetaTag?.score || 0}/100`,
       contentHTML: `
         <div class="report-shell__card">
           <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-            <strong>Status:</strong> ${firstDevice.viewportMetaTag?.present ? '✅ Present' : '❌ Missing'}<br>
-            ${firstDevice.viewportMetaTag?.content ? `<strong>Content:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 4px;">${firstDevice.viewportMetaTag.content}</code>` : ''}
+            <strong>${t('reports.mobile.status', 'Status')}:</strong> ${firstDevice.viewportMetaTag?.present ? `✅ ${t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}<br>
+            ${firstDevice.viewportMetaTag?.content ? `<strong>${t('reports.mobile.content', 'Content')}:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 4px;">${firstDevice.viewportMetaTag.content}</code>` : ''}
           </div>
         </div>
       `
@@ -761,13 +833,13 @@ document.addEventListener('DOMContentLoaded', () => {
     // PWA Readiness
     sections.push(ReportAccordion.createSection({
       id: 'mobile-pwa',
-      title: 'PWA Readiness',
+      title: t('reports.mobile.pwaReadiness', 'PWA Readiness'),
       scoreTextRight: `${firstDevice.pwaReadiness?.score || 0}/100`,
       contentHTML: `
         <div class="report-shell__card">
           <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-            ${firstDevice.pwaReadiness?.manifest ? '✅' : '❌'} Manifest: ${firstDevice.pwaReadiness?.manifest || 'Missing'}<br>
-            ${firstDevice.pwaReadiness?.serviceWorker ? '✅' : '❌'} Service Worker: ${firstDevice.pwaReadiness?.serviceWorker || 'Not registered'}
+            ${firstDevice.pwaReadiness?.manifest ? '✅' : '❌'} ${t('reports.mobile.manifest', 'Manifest')}: ${firstDevice.pwaReadiness?.manifest || t('reports.mobile.missingStatus', 'Missing')}<br>
+            ${firstDevice.pwaReadiness?.serviceWorker ? '✅' : '❌'} ${t('reports.mobile.serviceWorker', 'Service Worker')}: ${firstDevice.pwaReadiness?.serviceWorker || t('reports.mobile.notRegistered', 'Not registered')}
           </div>
         </div>
       `
@@ -776,12 +848,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Dark Mode Support
     sections.push(ReportAccordion.createSection({
       id: 'mobile-darkmode',
-      title: 'Dark Mode Support',
+      title: t('reports.mobile.darkModeSupport', 'Dark Mode Support'),
       scoreTextRight: `${firstDevice.darkModeSupport?.score || 0}/100`,
       contentHTML: `
         <div class="report-shell__card">
           <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-            <strong>Support:</strong> ${firstDevice.darkModeSupport?.supported ? '✅ Supported' : '❌ Not detected'}
+            <strong>${t('reports.mobile.support', 'Support')}:</strong> ${firstDevice.darkModeSupport?.supported ? `✅ ${t('reports.mobile.supported', 'Supported')}` : `❌ ${t('reports.mobile.notDetected', 'Not detected')}`}
           </div>
         </div>
       `
@@ -791,14 +863,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (firstDevice.aboveTheFoldContent) {
       sections.push(ReportAccordion.createSection({
         id: 'mobile-fold',
-        title: 'Above the Fold',
+        title: t('reports.mobile.aboveTheFold', 'Above the Fold'),
         scoreTextRight: `${firstDevice.aboveTheFoldContent.score || 0}/100`,
         contentHTML: `
           <div class="report-shell__card">
             <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <strong>Visible Content:</strong> ${firstDevice.aboveTheFoldContent.visibleElements || 0} elements<br>
-              <strong>Images:</strong> ${firstDevice.aboveTheFoldContent.images || 0}<br>
-              <strong>Text Elements:</strong> ${firstDevice.aboveTheFoldContent.textElements || 0}
+              <strong>${t('reports.mobile.visibleContent', 'Visible Content')}:</strong> ${firstDevice.aboveTheFoldContent.visibleElements || 0} ${t('reports.mobile.elements', 'elements')}<br>
+              <strong>${t('reports.mobile.images', 'Images')}:</strong> ${firstDevice.aboveTheFoldContent.images || 0}<br>
+              <strong>${t('reports.mobile.textElements', 'Text Elements')}:</strong> ${firstDevice.aboveTheFoldContent.textElements || 0}
             </div>
           </div>
         `
@@ -809,14 +881,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (firstDevice.mobileSeo) {
       sections.push(ReportAccordion.createSection({
         id: 'mobile-seo',
-        title: 'Mobile SEO',
+        title: t('reports.mobile.mobileSeo', 'Mobile SEO'),
         scoreTextRight: `${firstDevice.mobileSeo.score || 0}/100`,
         contentHTML: `
           <div class="report-shell__card">
             <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              ${firstDevice.mobileSeo.canonical ? '✅' : '❌'} Canonical URL<br>
-              ${firstDevice.mobileSeo.robotsMeta ? '✅' : '❌'} Robots Meta<br>
-              ${firstDevice.mobileSeo.structuredData ? '✅' : '❌'} Structured Data
+              ${firstDevice.mobileSeo.canonical ? '✅' : '❌'} ${t('reports.mobile.canonicalUrl', 'Canonical URL')}<br>
+              ${firstDevice.mobileSeo.robotsMeta ? '✅' : '❌'} ${t('reports.mobile.robotsMeta', 'Robots Meta')}<br>
+              ${firstDevice.mobileSeo.structuredData ? '✅' : '❌'} ${t('reports.mobile.structuredData', 'Structured Data')}
             </div>
           </div>
         `
@@ -827,14 +899,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (firstDevice.inputFields) {
       sections.push(ReportAccordion.createSection({
         id: 'mobile-inputs',
-        title: 'Input Fields',
+        title: t('reports.mobile.inputFields', 'Input Fields'),
         scoreTextRight: `${firstDevice.inputFields.score || 0}/100`,
         contentHTML: `
           <div class="report-shell__card">
             <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <strong>Total:</strong> ${firstDevice.inputFields.total || 0}<br>
-              <strong>With autocomplete:</strong> ${firstDevice.inputFields.withAutocomplete || 0}<br>
-              <strong>With labels:</strong> ${firstDevice.inputFields.withLabels || 0}
+              <strong>${t('reports.mobile.total', 'Total')}:</strong> ${firstDevice.inputFields.total || 0}<br>
+              <strong>${t('reports.mobile.withAutocomplete', 'With autocomplete')}:</strong> ${firstDevice.inputFields.withAutocomplete || 0}<br>
+              <strong>${t('reports.mobile.withLabels', 'With labels')}:</strong> ${firstDevice.inputFields.withLabels || 0}
             </div>
           </div>
         `
@@ -845,14 +917,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (firstDevice.touchTargets) {
       sections.push(ReportAccordion.createSection({
         id: 'mobile-touch',
-        title: 'Touch Targets',
+        title: t('reports.mobile.touchTargets', 'Touch Targets'),
         scoreTextRight: `${Math.round((firstDevice.touchTargets.compliant || 0) / (firstDevice.touchTargets.total || 1) * 100)}%`,
         contentHTML: `
           <div class="report-shell__card">
             <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <strong>Total elements:</strong> ${firstDevice.touchTargets.total || 0}<br>
-              <strong>Compliant (≥48px):</strong> ${firstDevice.touchTargets.compliant || 0}<br>
-              <strong>Non-compliant:</strong> ${firstDevice.touchTargets.nonCompliant || 0}
+              <strong>${t('reports.mobile.totalElements', 'Total elements')}:</strong> ${firstDevice.touchTargets.total || 0}<br>
+              <strong>${t('reports.mobile.compliant', 'Compliant')} (≥48px):</strong> ${firstDevice.touchTargets.compliant || 0}<br>
+              <strong>${t('reports.mobile.nonCompliant', 'Non-compliant')}:</strong> ${firstDevice.touchTargets.nonCompliant || 0}
             </div>
           </div>
         `
@@ -863,14 +935,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if (firstDevice.performanceMetrics) {
       sections.push(ReportAccordion.createSection({
         id: 'mobile-performance',
-        title: 'Performance Metrics',
+        title: t('reports.mobile.performanceMetrics', 'Performance Metrics'),
         scoreTextRight: `${firstDevice.performanceMetrics.score || 0}/100`,
         contentHTML: `
           <div class="report-shell__card">
             <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <strong>Load Time:</strong> ${firstDevice.performanceMetrics.loadTime || 'N/A'}<br>
-              <strong>DOM Content Loaded:</strong> ${firstDevice.performanceMetrics.domContentLoaded || 'N/A'}<br>
-              <strong>First Paint:</strong> ${firstDevice.performanceMetrics.firstPaint || 'N/A'}
+              <strong>${t('reports.mobile.loadTimeLabel', 'Load Time')}:</strong> ${firstDevice.performanceMetrics.loadTime || 'N/A'}<br>
+              <strong>${t('reports.mobile.domContentLoadedLabel', 'DOM Content Loaded')}:</strong> ${firstDevice.performanceMetrics.domContentLoaded || 'N/A'}<br>
+              <strong>${t('reports.mobile.firstPaintLabel', 'First Paint')}:</strong> ${firstDevice.performanceMetrics.firstPaint || 'N/A'}
             </div>
           </div>
         `
@@ -883,20 +955,20 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderMobileSummarySection(stats) {
     return `
       <div class="section">
-        <h2>Summary</h2>
+        <h2>${t('reports.common.summary', 'Summary')}</h2>
         <div class="seo-summary">
           <div class="summary-stats">
             <div class="stat-item">
               <span class="stat-value">${stats.issues}</span>
-              <span class="stat-label">Issues Found</span>
+              <span class="stat-label">${t('reports.common.issuesFound', 'Issues Found')}</span>
             </div>
             <div class="stat-item">
               <span class="stat-value">${stats.recommendations}</span>
-              <span class="stat-label">Recommendations</span>
+              <span class="stat-label">${t('reports.common.recommendations', 'Recommendations')}</span>
             </div>
             <div class="stat-item">
               <span class="stat-value">${stats.checks}</span>
-              <span class="stat-label">Checks Passed</span>
+              <span class="stat-label">${t('reports.common.checksPassed', 'Checks Passed')}</span>
             </div>
           </div>
         </div>
@@ -912,8 +984,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ${window.ProReportBlock.render({
             context: 'mobile',
             features: ['pdf', 'csv', 'share'],
-            title: 'Purchase Report',
-            subtitle: 'Client-ready exports (PDF/share/data) for this scan.',
+            title: t('reports.common.purchaseReport', 'Purchase Report'),
+            subtitle: t('reports.common.purchaseReportSubtitle', 'Client-ready exports (PDF/share/data) for this scan.'),
             reportId: reportId || null
           })}
         </div>
@@ -924,21 +996,21 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="section">
           <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
             <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span style="color: var(--accent-primary); font-weight: 600;">Take Action</span>
-              <span style="color: #666; font-size: 0.9rem;">Export or share this Mobile Testing report</span>
+              <span style="color: var(--accent-primary); font-weight: 600;">${t('reports.common.takeAction', 'Take Action')}</span>
+              <span style="color: #666; font-size: 0.9rem;">${t('reports.mobile.exportOrShare', 'Export or share this Mobile Testing report')}</span>
             </div>
             <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <button onclick="exportMobilePDF()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
+              <button data-action="export-pdf" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-                PDF Report
+                ${t('reports.common.pdfReport', 'PDF Report')}
               </button>
-              <button onclick="copyMobileShareLink()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+              <button data-action="copy-share-link" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                Share Link
+                ${t('reports.common.shareLink', 'Share Link')}
               </button>
-              <button onclick="downloadMobileCSV()" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
+              <button data-action="download-csv" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
-                Export Data
+                ${t('reports.common.exportData', 'Export Data')}
               </button>
             </div>
           </div>
@@ -958,11 +1030,11 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } else {
       console.error('PDF export utility not loaded');
-      alert('PDF export is not available. Please refresh the page.');
+      alert(t('reports.common.pdfNotAvailable', 'PDF export is not available. Please refresh the page.'));
     }
   };
-  window.copyMobileShareLink = function() { alert('Share link coming soon'); };
-  window.downloadMobileCSV = function() { alert('CSV export coming soon'); };
+  window.copyMobileShareLink = function() { alert(t('reports.common.shareLinkComingSoon', 'Share link coming soon')); };
+  window.downloadMobileCSV = function() { alert(t('reports.common.csvExportComingSoon', 'CSV export coming soon')); };
 
   function getScoreClass(score) {
     if (score >= 80) return 'excellent';
@@ -990,9 +1062,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                  style="width: 120px; height: auto; border-radius: 12px; cursor: zoom-in;"
                                  class="device-screenshot" />
                           </div>
-                          <div class="orientation-label">Portrait<br>${device.viewport.width}×${device.viewport.height}</div>
-                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: #888; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" onclick="this.previousElementSibling.previousElementSibling.querySelector('img').click()">
-                            🔍 <span style="text-decoration: underline;">Click to enlarge</span>
+                          <div class="orientation-label">${t('reports.mobile.portrait', 'Portrait')}<br>${device.viewport.width}×${device.viewport.height}</div>
+                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: #888; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" data-action="click-screenshot">
+                            🔍 <span style="text-decoration: underline;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</span>
                           </div>
                         </div>
                       ` : ''}
@@ -1003,9 +1075,9 @@ document.addEventListener('DOMContentLoaded', () => {
                                  style="width: 180px; height: auto; border-radius: 12px; cursor: zoom-in;"
                                  class="device-screenshot" />
                           </div>
-                          <div class="orientation-label">Landscape<br>${device.viewport.height}×${device.viewport.width}</div>
-                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: #888; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" onclick="this.previousElementSibling.previousElementSibling.querySelector('img').click()">
-                            🔍 <span style="text-decoration: underline;">Click to enlarge</span>
+                          <div class="orientation-label">${t('reports.mobile.landscape', 'Landscape')}<br>${device.viewport.height}×${device.viewport.width}</div>
+                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: #888; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" data-action="click-screenshot">
+                            🔍 <span style="text-decoration: underline;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</span>
                           </div>
                         </div>
                       ` : ''}
@@ -1023,7 +1095,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-header">
             <div class="accordion-header-left">
               <span class="accordion-icon">📐</span>
-              <span class="accordion-title">Viewport Meta Tag</span>
+              <span class="accordion-title">${t('reports.mobile.viewportMetaTag', 'Viewport Meta Tag')}</span>
             </div>
             <div class="accordion-header-right">
               <span class="accordion-score ${getScoreClass(firstDevice.viewportMeta.score)}">${firstDevice.viewportMeta.score}/100</span>
@@ -1033,8 +1105,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-content">
             <div class="accordion-body">
               <div class="metric-row">
-                <span class="metric-label">Meta Tag Present:</span>
-                <span class="metric-value">${firstDevice.viewportMeta.exists ? '✅ Yes' : '❌ No'}</span>
+                <span class="metric-label">${t('reports.mobile.metaTagPresent', 'Meta Tag Present')}:</span>
+                <span class="metric-value">${firstDevice.viewportMeta.exists ? `✅ ${t('reports.common.yes', 'Yes')}` : `❌ ${t('reports.common.no', 'No')}`}</span>
               </div>
               ${firstDevice.viewportMeta.content ? `
                 <div style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 4px; margin: 0.5rem 0; font-family: monospace; font-size: 0.85rem;">
@@ -1042,11 +1114,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
               ` : ''}
               ${firstDevice.viewportMeta.issues?.length > 0 ? `
-                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">Issues Found:</h5>
+                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.common.issuesFound', 'Issues Found')}:</h5>
                 ${firstDevice.viewportMeta.issues.map(issue => `
                   <div class="issue-item issue-${issue.severity}">${issue.message}</div>
                 `).join('')}
-              ` : '<p style="color: #10b981;">✅ No viewport issues detected</p>'}
+              ` : `<p style="color: #10b981;">✅ ${t('reports.mobile.noViewportIssues', 'No viewport issues detected')}</p>`}
             </div>
           </div>
         </div>
@@ -1058,7 +1130,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-header">
             <div class="accordion-header-left">
               <span class="accordion-icon">📲</span>
-              <span class="accordion-title">PWA Readiness</span>
+              <span class="accordion-title">${t('reports.mobile.pwaReadiness', 'PWA Readiness')}</span>
             </div>
             <div class="accordion-header-right">
               <span class="accordion-score ${getScoreClass(firstDevice.pwaReadiness.score)}">${firstDevice.pwaReadiness.score}/100</span>
@@ -1068,10 +1140,10 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-content">
             <div class="accordion-body">
               <div class="metric-row">
-                <span class="metric-label">Installable:</span>
-                <span class="metric-value">${firstDevice.pwaReadiness.installable ? '✅ Yes' : '❌ No'}</span>
+                <span class="metric-label">${t('reports.mobile.installable', 'Installable')}:</span>
+                <span class="metric-value">${firstDevice.pwaReadiness.installable ? `✅ ${t('reports.common.yes', 'Yes')}` : `❌ ${t('reports.common.no', 'No')}`}</span>
               </div>
-              <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">PWA Checklist:</h5>
+              <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.mobile.pwaChecklist', 'PWA Checklist')}:</h5>
               ${firstDevice.pwaReadiness.checklist?.map(item => `
                 <div class="checklist-item">
                   <span class="${item.status === 'pass' ? 'checklist-pass' : 'checklist-fail'}">
@@ -1091,7 +1163,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-header">
             <div class="accordion-header-left">
               <span class="accordion-icon">🌙</span>
-              <span class="accordion-title">Dark Mode Support</span>
+              <span class="accordion-title">${t('reports.mobile.darkModeSupport', 'Dark Mode Support')}</span>
             </div>
             <div class="accordion-header-right">
               <span class="accordion-score ${getScoreClass(firstDevice.darkModeSupport.score)}">${firstDevice.darkModeSupport.score}/100</span>
@@ -1101,24 +1173,24 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-content">
             <div class="accordion-body">
               <div class="metric-row">
-                <span class="metric-label">Dark Mode Supported:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.supported ? '✅ Yes' : '❌ No'}</span>
+                <span class="metric-label">${t('reports.mobile.darkModeSupported', 'Dark Mode Supported')}:</span>
+                <span class="metric-value">${firstDevice.darkModeSupport.supported ? `✅ ${t('reports.common.yes', 'Yes')}` : `❌ ${t('reports.common.no', 'No')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">prefers-color-scheme:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.hasMediaQuery ? '✅ Detected' : '❌ Not found'}</span>
+                <span class="metric-label">${t('reports.mobile.prefersColorScheme', 'prefers-color-scheme')}:</span>
+                <span class="metric-value">${firstDevice.darkModeSupport.hasMediaQuery ? `✅ ${t('reports.mobile.detected', 'Detected')}` : `❌ ${t('reports.mobile.notFound', 'Not found')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">color-scheme meta:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.hasColorSchemeMeta ? '✅ ' + (firstDevice.darkModeSupport.colorSchemeValue || 'Present') : '❌ Missing'}</span>
+                <span class="metric-label">${t('reports.mobile.colorSchemeMeta', 'color-scheme meta')}:</span>
+                <span class="metric-value">${firstDevice.darkModeSupport.hasColorSchemeMeta ? `✅ ${firstDevice.darkModeSupport.colorSchemeValue || t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Theme Toggle:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.hasThemeToggle ? '✅ Found' : '❌ Not found'}</span>
+                <span class="metric-label">${t('reports.mobile.themeToggle', 'Theme Toggle')}:</span>
+                <span class="metric-value">${firstDevice.darkModeSupport.hasThemeToggle ? `✅ ${t('reports.mobile.found', 'Found')}` : `❌ ${t('reports.mobile.notFound', 'Not found')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">CSS Variables:</span>
-                <span class="metric-value">${firstDevice.darkModeSupport.cssVariablesCount || 0} defined</span>
+                <span class="metric-label">${t('reports.mobile.cssVariables', 'CSS Variables')}:</span>
+                <span class="metric-value">${firstDevice.darkModeSupport.cssVariablesCount || 0} ${t('reports.mobile.defined', 'defined')}</span>
               </div>
             </div>
           </div>
@@ -1131,7 +1203,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-header">
             <div class="accordion-header-left">
               <span class="accordion-icon">👁️</span>
-              <span class="accordion-title">Above the Fold</span>
+              <span class="accordion-title">${t('reports.mobile.aboveTheFold', 'Above the Fold')}</span>
             </div>
             <div class="accordion-header-right">
               <span class="accordion-score ${getScoreClass(firstDevice.aboveTheFold.criticalContentScore)}">${firstDevice.aboveTheFold.criticalContentScore}/100</span>
@@ -1141,23 +1213,23 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-content">
             <div class="accordion-body">
               <div class="metric-row">
-                <span class="metric-label">Headline (H1/H2):</span>
-                <span class="metric-value">${firstDevice.aboveTheFold.hasHeadline ? '✅ Present' : '❌ Missing'}</span>
+                <span class="metric-label">${t('reports.mobile.headlineH1H2', 'Headline (H1/H2)')}:</span>
+                <span class="metric-value">${firstDevice.aboveTheFold.hasHeadline ? `✅ ${t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Hero Image:</span>
-                <span class="metric-value">${firstDevice.aboveTheFold.hasHeroImage ? '✅ Present' : '❌ Missing'}</span>
+                <span class="metric-label">${t('reports.mobile.heroImage', 'Hero Image')}:</span>
+                <span class="metric-value">${firstDevice.aboveTheFold.hasHeroImage ? `✅ ${t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Call-to-Action:</span>
-                <span class="metric-value">${firstDevice.aboveTheFold.hasCTA ? '✅ Found' : '⚠️ Not detected'}</span>
+                <span class="metric-label">${t('reports.mobile.callToAction', 'Call-to-Action')}:</span>
+                <span class="metric-value">${firstDevice.aboveTheFold.hasCTA ? `✅ ${t('reports.mobile.found', 'Found')}` : `⚠️ ${t('reports.mobile.notDetected', 'Not detected')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Images Above Fold:</span>
+                <span class="metric-label">${t('reports.mobile.imagesAboveFold', 'Images Above Fold')}:</span>
                 <span class="metric-value">${firstDevice.aboveTheFold.imageCount || 0}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Render-blocking Scripts:</span>
+                <span class="metric-label">${t('reports.mobile.renderBlockingScripts', 'Render-blocking Scripts')}:</span>
                 <span class="metric-value ${firstDevice.aboveTheFold.renderBlockingScripts > 3 ? 'color: #ef4444' : ''}">${firstDevice.aboveTheFold.renderBlockingScripts || 0}</span>
               </div>
             </div>
@@ -1171,7 +1243,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-header">
             <div class="accordion-header-left">
               <span class="accordion-icon">🔍</span>
-              <span class="accordion-title">Mobile SEO</span>
+              <span class="accordion-title">${t('reports.mobile.mobileSeo', 'Mobile SEO')}</span>
             </div>
             <div class="accordion-header-right">
               <span class="accordion-score ${getScoreClass(firstDevice.mobileSEO.score)}">${firstDevice.mobileSEO.score}/100</span>
@@ -1181,35 +1253,35 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-content">
             <div class="accordion-body">
               <div class="metric-row">
-                <span class="metric-label">Title Tag:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.hasTitle ? '✅ ' + firstDevice.mobileSEO.titleLength + ' chars' : '❌ Missing'}</span>
+                <span class="metric-label">${t('reports.mobile.titleTag', 'Title Tag')}:</span>
+                <span class="metric-value">${firstDevice.mobileSEO.hasTitle ? `✅ ${firstDevice.mobileSEO.titleLength} ${t('reports.mobile.chars', 'chars')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Meta Description:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.hasMetaDescription ? '✅ ' + firstDevice.mobileSEO.descriptionLength + ' chars' : '❌ Missing'}</span>
+                <span class="metric-label">${t('reports.mobile.metaDescription', 'Meta Description')}:</span>
+                <span class="metric-value">${firstDevice.mobileSEO.hasMetaDescription ? `✅ ${firstDevice.mobileSEO.descriptionLength} ${t('reports.mobile.chars', 'chars')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Viewport Meta:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.hasViewport ? '✅ Present' : '❌ Missing'}</span>
+                <span class="metric-label">${t('reports.mobile.viewportMeta', 'Viewport Meta')}:</span>
+                <span class="metric-value">${firstDevice.mobileSEO.hasViewport ? `✅ ${t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Canonical URL:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.hasCanonical ? '✅ Set' : '⚠️ Missing'}</span>
+                <span class="metric-label">${t('reports.mobile.canonicalUrl', 'Canonical URL')}:</span>
+                <span class="metric-value">${firstDevice.mobileSEO.hasCanonical ? `✅ ${t('reports.mobile.set', 'Set')}` : `⚠️ ${t('reports.mobile.missingStatus', 'Missing')}`}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Structured Data:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.structuredDataCount || 0} schemas</span>
+                <span class="metric-label">${t('reports.mobile.structuredData', 'Structured Data')}:</span>
+                <span class="metric-value">${firstDevice.mobileSEO.structuredDataCount || 0} ${t('reports.mobile.schemas', 'schemas')}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Click-to-Call Links:</span>
+                <span class="metric-label">${t('reports.mobile.clickToCallLinks', 'Click-to-Call Links')}:</span>
                 <span class="metric-value">${firstDevice.mobileSEO.clickToCallLinks || 0}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">H1 Tags:</span>
-                <span class="metric-value">${firstDevice.mobileSEO.h1Count === 1 ? '✅ 1 (good)' : (firstDevice.mobileSEO.h1Count || 0) + ' (should be 1)'}</span>
+                <span class="metric-label">${t('reports.mobile.h1Tags', 'H1 Tags')}:</span>
+                <span class="metric-value">${firstDevice.mobileSEO.h1Count === 1 ? `✅ 1 (${t('reports.mobile.good', 'good')})` : `${firstDevice.mobileSEO.h1Count || 0} (${t('reports.mobile.shouldBeOne', 'should be 1')})`}</span>
               </div>
               ${firstDevice.mobileSEO.issues?.length > 0 ? `
-                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">Issues:</h5>
+                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.common.issues', 'Issues')}:</h5>
                 ${firstDevice.mobileSEO.issues.map(issue => `
                   <div class="issue-item issue-${issue.type}">${issue.item}</div>
                 `).join('')}
@@ -1225,7 +1297,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-header">
             <div class="accordion-header-left">
               <span class="accordion-icon">⌨️</span>
-              <span class="accordion-title">Input Fields</span>
+              <span class="accordion-title">${t('reports.mobile.inputFields', 'Input Fields')}</span>
             </div>
             <div class="accordion-header-right">
               <span class="accordion-score ${getScoreClass(firstDevice.inputAnalysis.score)}">${firstDevice.inputAnalysis.score}/100</span>
@@ -1235,31 +1307,31 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-content">
             <div class="accordion-body">
               <div class="metric-row">
-                <span class="metric-label">Total Inputs:</span>
+                <span class="metric-label">${t('reports.mobile.totalInputs', 'Total Inputs')}:</span>
                 <span class="metric-value">${firstDevice.inputAnalysis.total || 0}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Email Inputs (type=email):</span>
+                <span class="metric-label">${t('reports.mobile.emailInputs', 'Email Inputs (type=email)')}:</span>
                 <span class="metric-value">${firstDevice.inputAnalysis.emailInputs || 0}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Phone Inputs (type=tel):</span>
+                <span class="metric-label">${t('reports.mobile.phoneInputs', 'Phone Inputs (type=tel)')}:</span>
                 <span class="metric-value">${firstDevice.inputAnalysis.telInputs || 0}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Autocomplete Enabled:</span>
+                <span class="metric-label">${t('reports.mobile.autocompleteEnabled', 'Autocomplete Enabled')}:</span>
                 <span class="metric-value">${firstDevice.inputAnalysis.autocompleteEnabled || 0}</span>
               </div>
               <div class="metric-row">
-                <span class="metric-label">Missing Labels:</span>
+                <span class="metric-label">${t('reports.mobile.missingLabels', 'Missing Labels')}:</span>
                 <span class="metric-value ${firstDevice.inputAnalysis.missingLabels > 0 ? 'color: #ef4444' : ''}">${firstDevice.inputAnalysis.missingLabels || 0}</span>
               </div>
               ${firstDevice.inputAnalysis.issues?.length > 0 ? `
-                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">Optimization Suggestions:</h5>
+                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.mobile.optimizationSuggestions', 'Optimization Suggestions')}:</h5>
                 ${firstDevice.inputAnalysis.issues.map(issue => `
                   <div class="issue-item issue-warning">${issue.field}: ${issue.issue}</div>
                 `).join('')}
-              ` : '<p style="color: #10b981; margin-top: 1rem;">✅ Input fields are well-optimized for mobile</p>'}
+              ` : `<p style="color: #10b981; margin-top: 1rem;">✅ ${t('reports.mobile.inputFieldsWellOptimized', 'Input fields are well-optimized for mobile')}</p>`}
             </div>
           </div>
         </div>
@@ -1270,7 +1342,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-header">
             <div class="accordion-header-left">
               <span class="accordion-icon">👆</span>
-              <span class="accordion-title">Touch Targets</span>
+              <span class="accordion-title">${t('reports.mobile.touchTargets', 'Touch Targets')}</span>
             </div>
             <div class="accordion-header-right">
               <span class="accordion-score ${getScoreClass(data.touchTargetsSummary.average)}">${data.touchTargetsSummary.average}%</span>
@@ -1279,13 +1351,13 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="accordion-content">
             <div class="accordion-body">
-              <p style="color: #888; margin-bottom: 1rem;">WCAG AAA requires touch targets to be at least 44×44 pixels.</p>
+              <p style="color: #888; margin-bottom: 1rem;">${t('reports.mobile.wcagTouchTargetRequirement', 'WCAG AAA requires touch targets to be at least 44x44 pixels.')}</p>
               ${Object.entries(data.devices).map(([key, device]) => {
                 if (device.error || !device.touchTargets) return '';
                 return `
                   <div style="margin-bottom: 1rem;">
-                    <strong>${device.device}</strong>: ${device.touchTargets.compliancePercentage}% compliant
-                    ${device.touchTargets.issues > 0 ? `<span style="color: #ef4444;"> (${device.touchTargets.issues} undersized)</span>` : ''}
+                    <strong>${device.device}</strong>: ${device.touchTargets.compliancePercentage}% ${t('reports.mobile.compliant', 'compliant')}
+                    ${device.touchTargets.issues > 0 ? `<span style="color: #ef4444;"> (${device.touchTargets.issues} ${t('reports.mobile.undersized', 'undersized')})</span>` : ''}
                   </div>
                 `;
               }).join('')}
@@ -1298,7 +1370,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="accordion-header">
             <div class="accordion-header-left">
               <span class="accordion-icon">⚡</span>
-              <span class="accordion-title">Performance Metrics</span>
+              <span class="accordion-title">${t('reports.mobile.performanceMetrics', 'Performance Metrics')}</span>
             </div>
             <div class="accordion-header-right">
               <span class="accordion-score ${getScoreClass(data.performanceSummary.average)}">${data.performanceSummary.average}/100</span>
@@ -1313,19 +1385,19 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
                     <strong style="color: #00ff41;">${device.device}</strong>
                     <div class="metric-row">
-                      <span class="metric-label">First Paint:</span>
+                      <span class="metric-label">${t('reports.mobile.firstPaintLabel', 'First Paint')}:</span>
                       <span class="metric-value">${device.performance.firstPaint}ms</span>
                     </div>
                     <div class="metric-row">
-                      <span class="metric-label">First Contentful Paint:</span>
+                      <span class="metric-label">${t('reports.mobile.firstContentfulPaint', 'First Contentful Paint')}:</span>
                       <span class="metric-value">${device.performance.firstContentfulPaint}ms</span>
                     </div>
                     <div class="metric-row">
-                      <span class="metric-label">DOM Content Loaded:</span>
+                      <span class="metric-label">${t('reports.mobile.domContentLoadedLabel', 'DOM Content Loaded')}:</span>
                       <span class="metric-value">${device.performance.domContentLoaded}ms</span>
                     </div>
                     <div class="metric-row">
-                      <span class="metric-label">Page Load Complete:</span>
+                      <span class="metric-label">${t('reports.mobile.pageLoadComplete', 'Page Load Complete')}:</span>
                       <span class="metric-value">${device.performance.loadComplete}ms</span>
                     </div>
                   </div>
@@ -1339,7 +1411,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <!-- Recommendations -->
       ${data.recommendations.length > 0 ? `
-        <h3 style="margin-top: 2rem; margin-bottom: 1rem;">💡 Recommendations</h3>
+        <h3 style="margin-top: 2rem; margin-bottom: 1rem;">💡 ${t('reports.common.recommendations', 'Recommendations')}</h3>
         ${data.recommendations.map(rec => `
           <div class="recommendation-card ${rec.severity}">
             <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
@@ -1351,7 +1423,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="font-size: 0.9rem; color: #aaa;">${rec.suggestion}</div>
           </div>
         `).join('')}
-      ` : '<p style="color: #888;">✅ No significant issues detected!</p>'}
+      ` : `<p style="color: #888;">✅ ${t('reports.mobile.noSignificantIssues', 'No significant issues detected!')}</p>`}
     `;
 
     resultsContent.innerHTML = html;
@@ -1394,7 +1466,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const openModal = (imgEl) => {
         previousFocus.el = document.activeElement;
         modalImage.src = imgEl.src;
-        modalImage.alt = imgEl.alt || 'Full size screenshot';
+        modalImage.alt = imgEl.alt || t('reports.mobile.fullSizeScreenshot', 'Full size screenshot');
         modal.classList.add('active');
         modal.setAttribute('aria-hidden', 'false');
         window.requestAnimationFrame(() => {
@@ -1499,8 +1571,8 @@ document.addEventListener('DOMContentLoaded', () => {
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
       <div style="margin-top: 0.75rem; font-size: 0.85rem; color: var(--accent-primary);">
-        📱 Emulating multiple mobile devices...<br>
-        <span style="font-size: 0.75rem; color: rgba(var(--accent-primary-rgb), 0.8);">This may take 45-90 seconds</span>
+        📱 ${t('reports.mobile.emulatingDevices', 'Emulating multiple mobile devices...')}<br>
+        <span style="font-size: 0.75rem; color: rgba(var(--accent-primary-rgb), 0.8);">${t('reports.mobile.mayTake45to90', 'This may take 45-90 seconds')}</span>
       </div>
     `;
     
@@ -1548,9 +1620,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
           <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
-            <span style="font-size: 1.5rem;">✓</span> Excellent Mobile Experience!
+            <span style="font-size: 1.5rem;">✓</span> ${t('reports.mobile.excellentMobileExperience', 'Excellent Mobile Experience!')}
           </h3>
-          <p style="color: #86efac; margin: 0;">Your site follows mobile best practices. Keep monitoring for continued success.</p>
+          <p style="color: #86efac; margin: 0;">${t('reports.mobile.followsBestPractices', 'Your site follows mobile best practices. Keep monitoring for continued success.')}</p>
         </div>
       `;
     }
@@ -1571,8 +1643,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let html = `
       <div class="mobile-fixes-container" style="margin-top: 1rem;">
         <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
-          <span style="font-size: 1.75rem;">📱</span> Mobile Fixes
-          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${recommendations.length} improvements found)</span>
+          <span style="font-size: 1.75rem;">📱</span> ${t('reports.mobile.mobileFixes', 'Mobile Fixes')}
+          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${recommendations.length} ${t('reports.mobile.improvementsFound', 'improvements found')})</span>
         </h3>
         <div class="mobile-fixes-list">
     `;
@@ -1604,7 +1676,7 @@ document.addEventListener('DOMContentLoaded', () => {
         overflow: hidden;
         background: ${style.bg};
       ">
-        <div class="mobile-fix-header" onclick="toggleMobileFixAccordion('${accordionId}')" style="
+        <div class="mobile-fix-header" data-action="toggle-accordion" data-accordion-id="${accordionId}" style="
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -1616,7 +1688,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span style="font-size: 1.25rem;">${style.icon}</span>
             <div>
               <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
-              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || 'Mobile Optimization'}</p>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || t('reports.mobile.mobileOptimization', 'Mobile Optimization')}</p>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -1628,7 +1700,7 @@ document.addEventListener('DOMContentLoaded', () => {
               background: ${style.color}20;
               color: ${style.color};
               border: 1px solid ${style.color}40;
-            ">${fix.severity.toUpperCase()}</span>
+            ">${t('reports.common.severity.' + fix.severity.toLowerCase(), fix.severity.toUpperCase())}</span>
             <span class="mobile-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
           </div>
         </div>
@@ -1647,7 +1719,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     return `
       <div class="mobile-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
-        <button class="mobile-fix-tab active" onclick="switchMobileFixTab('${accordionId}', 'summary')" style="
+        <button class="mobile-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
           padding: 0.5rem 1rem;
           border: 1px solid rgba(255,255,255,0.2);
           border-radius: 6px;
@@ -1655,8 +1727,8 @@ document.addEventListener('DOMContentLoaded', () => {
           color: #fff;
           cursor: pointer;
           font-size: 0.85rem;
-        ">📋 Summary</button>
-        <button class="mobile-fix-tab" onclick="switchMobileFixTab('${accordionId}', 'code')" style="
+        ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
+        <button class="mobile-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
           padding: 0.5rem 1rem;
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 6px;
@@ -1664,8 +1736,8 @@ document.addEventListener('DOMContentLoaded', () => {
           color: #aaa;
           cursor: pointer;
           font-size: 0.85rem;
-        ">💻 Code</button>
-        <button class="mobile-fix-tab" onclick="switchMobileFixTab('${accordionId}', 'guide')" style="
+        ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
+        <button class="mobile-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
           padding: 0.5rem 1rem;
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 6px;
@@ -1673,16 +1745,16 @@ document.addEventListener('DOMContentLoaded', () => {
           color: #aaa;
           cursor: pointer;
           font-size: 0.85rem;
-        ">🔧 Fix Guide</button>
+        ">🔧 ${t('reports.common.tabs.fixGuide', 'Fix Guide')}</button>
       </div>
 
       <!-- Summary Tab -->
       <div class="mobile-fix-tab-content active" id="${accordionId}-summary">
         <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
-          ${fix.suggestion || fix.description || 'Review and address this mobile optimization issue.'}
+          ${fix.suggestion || fix.description || t('reports.mobile.reviewAndAddress', 'Review and address this mobile optimization issue.')}
         </p>
         <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
           <div style="color: #c0c0c0; font-size: 0.9rem;">${getMobileFixImpact(fix)}</div>
         </div>
       </div>
@@ -1693,8 +1765,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- Current Issue -->
           <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
-              <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
-              <button onclick="copyMobileCode('${accordionId}-problem')" style="
+              <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.common.fix.currentIssue', 'Current Issue')}</span>
+              <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
                 padding: 0.25rem 0.75rem;
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
@@ -1702,7 +1774,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 color: #fff;
                 cursor: pointer;
                 font-size: 0.75rem;
-              ">📋 Copy</button>
+              ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
             <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlForMobile(codeExamples.problem)}</pre>
           </div>
@@ -1710,8 +1782,8 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- Fixed Code -->
           <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-              <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
-              <button onclick="copyMobileCode('${accordionId}-solution')" style="
+              <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
+              <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
                 padding: 0.25rem 0.75rem;
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
@@ -1719,7 +1791,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 color: #fff;
                 cursor: pointer;
                 font-size: 0.75rem;
-              ">📋 Copy</button>
+              ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
             <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlForMobile(codeExamples.solution)}</pre>
           </div>
@@ -1728,7 +1800,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <!-- Fix Guide Tab -->
       <div class="mobile-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-        <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+        <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
         <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
           ${getMobileFixSteps(fix).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
         </ol>
@@ -1874,45 +1946,45 @@ p, span {
 
   function getMobileFixImpact(fix) {
     const impactMap = {
-      'Performance': 'Faster page load and improved Core Web Vitals scores',
-      'Readability': 'Better user experience with improved text legibility',
-      'Touch Targets': 'Easier tap interactions for mobile users',
-      'Accessibility': 'Better support for users with disabilities and assistive tech',
-      'Viewport': 'Proper scaling and layout on all device sizes',
-      'PWA': 'Enhanced mobile experience with app-like features'
+      'Performance': t('reports.mobile.impact.performance', 'Faster page load and improved Core Web Vitals scores'),
+      'Readability': t('reports.mobile.impact.readability', 'Better user experience with improved text legibility'),
+      'Touch Targets': t('reports.mobile.impact.touchTargets', 'Easier tap interactions for mobile users'),
+      'Accessibility': t('reports.mobile.impact.accessibility', 'Better support for users with disabilities and assistive tech'),
+      'Viewport': t('reports.mobile.impact.viewport', 'Proper scaling and layout on all device sizes'),
+      'PWA': t('reports.mobile.impact.pwa', 'Enhanced mobile experience with app-like features')
     };
-    return impactMap[fix.category] || 'Improved mobile user experience and engagement';
+    return impactMap[fix.category] || t('reports.mobile.impact.default', 'Improved mobile user experience and engagement');
   }
 
   function getMobileFixSteps(fix) {
     const stepsMap = {
       'Mobile performance is below recommended': [
-        'Audit images and use modern formats (WebP, AVIF)',
-        'Minimize and defer non-critical JavaScript',
-        'Enable compression and browser caching',
-        'Use a Content Delivery Network (CDN)'
+        t('reports.mobile.steps.auditImages', 'Audit images and use modern formats (WebP, AVIF)'),
+        t('reports.mobile.steps.minimizeJs', 'Minimize and defer non-critical JavaScript'),
+        t('reports.mobile.steps.enableCompression', 'Enable compression and browser caching'),
+        t('reports.mobile.steps.useCdn', 'Use a Content Delivery Network (CDN)')
       ],
       'Some text is too small on mobile': [
-        'Set body font-size to at least 16px',
-        'Use relative units (rem/em) instead of fixed pixels',
-        'Test on actual devices at arm\'s length viewing distance'
+        t('reports.mobile.steps.setFontSize', 'Set body font-size to at least 16px'),
+        t('reports.mobile.steps.useRelativeUnits', 'Use relative units (rem/em) instead of fixed pixels'),
+        t('reports.mobile.steps.testOnDevices', 'Test on actual devices at arm\'s length viewing distance')
       ],
       'Touch targets below WCAG minimum': [
-        'Increase button/link size to at least 44×44 pixels',
-        'Add padding around interactive elements',
-        'Ensure adequate spacing between tap targets'
+        t('reports.mobile.steps.increaseButtonSize', 'Increase button/link size to at least 44x44 pixels'),
+        t('reports.mobile.steps.addPadding', 'Add padding around interactive elements'),
+        t('reports.mobile.steps.ensureSpacing', 'Ensure adequate spacing between tap targets')
       ],
       'Accessibility issues detected': [
-        'Add descriptive alt text to all images',
-        'Ensure proper heading hierarchy (h1 → h2 → h3)',
-        'Check color contrast meets WCAG AA standards (4.5:1)'
+        t('reports.mobile.steps.addAltText', 'Add descriptive alt text to all images'),
+        t('reports.mobile.steps.ensureHeadingHierarchy', 'Ensure proper heading hierarchy (h1, h2, h3)'),
+        t('reports.mobile.steps.checkContrast', 'Check color contrast meets WCAG AA standards (4.5:1)')
       ]
     };
     return stepsMap[fix.title] || [
-      'Review current implementation',
-      'Apply the recommended changes',
-      'Test on multiple mobile devices',
-      'Verify the improvement'
+      t('reports.mobile.steps.reviewImplementation', 'Review current implementation'),
+      t('reports.mobile.steps.applyChanges', 'Apply the recommended changes'),
+      t('reports.mobile.steps.testMultipleDevices', 'Test on multiple mobile devices'),
+      t('reports.mobile.steps.verifyImprovement', 'Verify the improvement')
     ];
   }
 
@@ -1957,7 +2029,7 @@ p, span {
       content.classList.remove('active');
     });
 
-    const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+    const activeTab = Array.from(tabs).find(tab => tab.getAttribute('data-tab') === tabName);
     const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
     if (activeTab) {
@@ -1991,7 +2063,7 @@ p, span {
       const btn = codeElement.parentElement.querySelector('button');
       if (btn) {
         const originalText = btn.textContent;
-        btn.textContent = '✓ Copied!';
+        btn.textContent = '✓ ' + t('common.copied', 'Copied!');
         setTimeout(() => { btn.textContent = originalText; }, 2000);
       }
     });
@@ -2006,11 +2078,7 @@ p, span {
       const accordion = tab.closest('.mobile-fix-accordion');
       if (accordion) {
         const fixId = accordion.getAttribute('data-fix-id');
-        const tabText = tab.textContent.toLowerCase();
-        let tabName = 'summary';
-        if (tabText.includes('code')) tabName = 'code';
-        else if (tabText.includes('guide')) tabName = 'guide';
-
+        const tabName = tab.getAttribute('data-tab') || 'summary';
         if (fixId && typeof window.switchMobileFixTab === 'function') {
           e.preventDefault();
           e.stopPropagation();

@@ -7,6 +7,7 @@
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { roundTo, formatDuration } = require('../utils/formatHelpers');
+const { dismissPageOverlays } = require('../utils/browserHelpers');
 
 const logger = createLogger('CompetitiveAccessibilityAnalyzer');
 
@@ -48,6 +49,8 @@ class CompetitiveAccessibilityAnalyzer {
       
       try {
         await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 });
+
+        await dismissPageOverlays(page, { timeout: 4000 });
 
         const metrics = await page.evaluate(() => {
           const results = {

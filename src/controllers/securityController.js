@@ -66,11 +66,32 @@ exports.analyzeSecurity = asyncHandler(async (req, res) => {
       url: normalizedUrl,
       requestId: req.id,
       error: error.message,
+      stack: error.stack,
     });
+
+    // Categorize error for better client-side handling
+    let errorType = 'unknown';
+    let userMessage = error.message;
+
+    if (error.message.includes('timeout') || error.message.includes('TIMEOUT')) {
+      errorType = 'timeout';
+      userMessage = 'The security scan timed out. The website may be slow or unresponsive.';
+    } else if (error.message.includes('ENOTFOUND') || error.message.includes('getaddrinfo')) {
+      errorType = 'dns';
+      userMessage = 'Could not resolve the website address. Please check the URL.';
+    } else if (error.message.includes('ECONNREFUSED')) {
+      errorType = 'connection';
+      userMessage = 'Connection refused. The website may be down.';
+    } else if (error.message.includes('Browser pool')) {
+      errorType = 'browser';
+      userMessage = 'Server is busy. Please try again in a moment.';
+    }
 
     res.status(500).json({
       error: 'Security analysis failed',
-      details: error.message,
+      errorType,
+      details: userMessage,
+      technicalDetails: process.env.NODE_ENV === 'development' ? error.message : undefined,
     });
   }
 });

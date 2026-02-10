@@ -3,6 +3,15 @@
  * Shared across all analyzers for managing pro features and authentication
  */
 
+// i18n helper for pro utils
+function _proT(key, fallback) {
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const val = window.i18n.t(key);
+    return (val === key && fallback) ? fallback : val;
+  }
+  return fallback || key;
+}
+
 class ProManager {
   constructor() {
     this.user = this.loadUser();
@@ -286,7 +295,7 @@ class ProManager {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create portal session');
+        throw new Error(_proT('errors.portalSessionFailed', 'Failed to create portal session'));
       }
 
       const data = await response.json();
@@ -296,7 +305,7 @@ class ProManager {
       }
     } catch (error) {
       console.error('Failed to open customer portal:', error);
-      alert('Failed to open billing portal. Please try again.');
+      alert(_proT('errors.billingPortalFailed', 'Failed to open billing portal. Please try again.'));
     }
   }
 
@@ -306,7 +315,20 @@ class ProManager {
   formatDate(dateString) {
     if (!dateString) return '';
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
+    // Use centralized i18n formatting if available
+    if (window.i18n?.formatDateTime) {
+      return window.i18n.formatDateTime(date, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: undefined,
+        minute: undefined,
+        timeZoneName: undefined
+      });
+    }
+    // Fallback with locale detection
+    const locale = window.i18n?.currentLanguage || navigator.language || 'en-US';
+    return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',
       day: 'numeric'

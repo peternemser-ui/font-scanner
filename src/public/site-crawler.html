@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/site-crawler.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/site-crawler.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/site-crawler.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/site-crawler.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/site-crawler.html" />
 
     <!-- Open Graph -->
@@ -67,7 +68,8 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
+    <link rel="stylesheet" href="/css/components/visual-sitemap.css" />
 
     <!-- Page-specific styles -->
     <link rel="stylesheet" href="styles.css" />
@@ -216,7 +218,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
   </head>
   <body>
@@ -226,15 +227,15 @@
     <main class="page-shell">
       <!-- Breadcrumb Navigation -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
+        <a href="/dashboard.html" data-i18n="dashboard.breadcrumb.home">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">Site Crawler</span>
+        <span aria-current="page" data-i18n="analyzerPages.siteCrawler.breadcrumb">Site Crawler</span>
       </nav>
       
       <!-- Page Header -->
       <header class="page-header">
-        <h1 class="page-header__title">Site Crawler <span class="badge badge-pro">PRO</span></h1>
-        <p class="page-header__subtitle">Discover all pages on a website with intelligent link extraction and sitemap generation.</p>
+        <h1 class="page-header__title"><span data-i18n="analyzerPages.siteCrawler.title">Site Crawler</span> <span class="badge badge-pro">PRO</span></h1>
+        <p class="page-header__subtitle" data-i18n="analyzerPages.siteCrawler.subtitle">Discover all pages on a website with intelligent link extraction and sitemap generation.</p>
       </header>
 
       <!-- Input Card -->
@@ -242,44 +243,49 @@
         <div class="card__body">
           <!-- URL Input Form -->
           <div class="form-row">
-            <label for="urlInput" class="visually-hidden">Website URL to crawl</label>
+            <label for="urlInput" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
             <input 
               type="url" 
               id="urlInput"
               class="input"
               placeholder="https://example.com" 
+              data-i18n-placeholder="common.enterUrl"
               aria-label="Enter website URL to crawl"
+              data-i18n="analyzerPages.siteCrawler.ariaInput"
+              data-i18n-attr="aria-label"
               required
               aria-required="true"
             />
             
-            <button id="crawlButton" class="btn btn-primary" aria-label="Start site crawl">CRAWL SITE</button>
+            <button id="crawlButton" class="btn btn-primary" aria-label="Start site crawl" data-i18n="analyzerPages.siteCrawler.ariaAnalyze" data-i18n-attr="aria-label">
+              <span data-i18n="analyzerPages.siteCrawler.crawlButton">CRAWL SITE</span>
+            </button>
           </div>
         
           <!-- Options Panel -->
           <div class="options-panel" style="margin-top: 1.5rem;">
             <label>
-              Max pages to discover: 
+              <span data-i18n="analyzerPages.siteCrawler.maxPagesLabel">Max pages to discover:</span> 
               <input type="number" id="maxPages" value="20" min="1" max="50" />
             </label>
             <label>
-              Max crawl depth: 
+              <span data-i18n="analyzerPages.siteCrawler.maxDepthLabel">Max crawl depth:</span> 
               <input type="number" id="maxDepth" value="3" min="1" max="5" />
             </label>
             <label>
               <input type="checkbox" id="includeSitemap" checked />
-              Parse sitemap.xml (faster discovery)
+              <span data-i18n="analyzerPages.siteCrawler.parseSitemapLabel">Parse sitemap.xml (faster discovery)</span>
           </label>
           <label>
             <input type="checkbox" id="respectRobots" checked />
-            Respect robots.txt rules
+            <span data-i18n="analyzerPages.siteCrawler.respectRobotsLabel">Respect robots.txt rules</span>
           </label>
         </div>
         
         <!-- Info Banner -->
         <p class="helper-text" style="margin-top: 1rem;">
-          <strong>Site Crawler:</strong> Discovers pages on your website by parsing sitemaps, following links, and respecting robots.txt. 
-          Use discovered pages for multi-page font, performance, or tag analysis.
+          <strong data-i18n="analyzerPages.siteCrawler.helperLabel">Site Crawler:</strong>
+          <span data-i18n="analyzerPages.siteCrawler.helperText">Discovers pages on your website by parsing sitemaps, following links, and respecting robots.txt. Use discovered pages for multi-page font, performance, or tag analysis.</span>
         </p>
         </div>
       </section>
@@ -301,6 +307,8 @@
     <script src="theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- Shared Report Components -->
@@ -320,12 +328,16 @@
     <!-- ASCII Background Animation -->
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/components/PricingModal.js"></script>
+    <script src="/js/components/VisualSitemap.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="site-crawler-script.js?v=FRESH-JAN8-2026"></script>
   </body>

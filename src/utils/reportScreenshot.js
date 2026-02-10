@@ -62,11 +62,12 @@ async function ensureReportScreenshot({ url, reportId, requestId }) {
       try {
         await page.setViewport({ width: 1280, height: 720 });
 
-        // Keep screenshot capture lightweight: don't wait on long-lived network activity.
-        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 15000 });
+        // Wait for network to be mostly idle for better screenshots
+        // Use 'networkidle2' which waits until there are no more than 2 network connections for 500ms
+        await page.goto(url, { waitUntil: 'networkidle2', timeout: 20000 });
 
-        // Small settle for late styles/layout
-        await page.waitForTimeout(250);
+        // Additional settle time for late styles/layout/images
+        await page.waitForTimeout(500);
 
         await page.screenshot({
           path: screenshotPath,

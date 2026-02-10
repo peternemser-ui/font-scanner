@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/dashboard.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/dashboard.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/dashboard.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/dashboard.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/dashboard.html" />
 
     <!-- Open Graph / Facebook -->
@@ -393,11 +394,19 @@
           width: 100%;
         }
       }
+
+      /* Hide promotional sections after scan completes */
+      body.scan-complete .hero-right,
+      body.scan-complete .feature-strip,
+      body.scan-complete .pro-upsell,
+      body.scan-complete .homepage-footer-bar,
+      body.scan-complete .whats-included-link {
+        display: none !important;
+      }
     </style>
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -653,6 +662,8 @@ Get prioritized fixes — and shareable reports.</h1>
     <script src="/pro-utils.js"></script>
     <script src="/scan-context.js"></script>
     <script src="/nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="/analyzer-loader.js"></script>
 
     <!-- ASCII Background Animation -->

@@ -10,6 +10,10 @@ const { getDatabase } = require('../db');
 const { getQueue } = require('../queue/scanQueue');
 const stripeService = require('../services/stripeService');
 const { optionalAuth } = require('../middleware/requireAuth');
+const { checkScanQuota, recordScanUsage } = require('../middleware/scanQuota');
+const { enforcePageLimit } = require('../middleware/entitlementGuard');
+const usageService = require('../services/usageService');
+const { PRICING } = require('../config/pricing');
 
 // ============================================================
 // VALIDATION SCHEMAS
@@ -49,39 +53,8 @@ function validate(schema) {
   };
 }
 
-/**
- * Check scan entitlement
- * Uses IP-based rate limiting for anonymous users
- * Authenticated users with Pro plans get unlimited scans
- */
-async function checkEntitlement(req, res, next) {
-  const db = getDatabase();
-  const ip = req.ip || req.connection.remoteAddress;
-
-  try {
-    // Check usage in last 24 hours
-    const usage = await db.get(
-      `SELECT COUNT(*) as count FROM scan_usage
-       WHERE ip_address = ? AND created_at > DATETIME('now', '-24 hours')`,
-      [ip]
-    );
-
-    const freeLimit = 3; // 3 scans per day for anonymous users
-
-    if (usage && usage.count >= freeLimit) {
-      return res.status(429).json({
-        error: 'Rate limit exceeded',
-        message: `Free tier allows ${freeLimit} scans per 24 hours. Please upgrade or try again later.`,
-        resetAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
-      });
-    }
-
-    next();
-  } catch (error) {
-    console.error('Entitlement check error:', error);
-    next(error);
-  }
-}
+// Note: checkScanQuota middleware is imported from '../middleware/scanQuota'
+// It provides better quota tracking with user-based and anonymous ID support
 
 // ============================================================
 // ROUTES
@@ -90,39 +63,58 @@ async function checkEntitlement(req, res, next) {
 /**
  * POST /api/scans
  * Create a new scan job
+ * Uses optionalAuth to identify user, checkScanQuota to enforce limits
  */
-router.post('/', validate(createScanSchema), checkEntitlement, async (req, res) => {
+router.post('/', optionalAuth, checkScanQuota, validate(createScanSchema), enforcePageLimit, async (req, res) => {
   const db = getDatabase();
   const queue = getQueue();
 
   try {
     const { url, options } = req.validatedData;
     const scanId = uuidv4();
+    const userId = req.user?.id || null;
+    const anonId = req.anonId || null;
     const ip = req.ip || req.connection.remoteAddress;
 
-    // Create scan record
+    // Create scan record with user_id if authenticated
     await db.run(
       `INSERT INTO scans (id, target_url, status, options_json, user_id)
-       VALUES (?, ?, 'queued', ?, NULL)`,
-      [scanId, url, JSON.stringify(options)]
+       VALUES (?, ?, 'queued', ?, ?)`,
+      [scanId, url, JSON.stringify(options), userId]
     );
 
-    // Track usage for rate limiting
+    // Track usage for legacy rate limiting (IP-based backup)
     await db.run(
-      `INSERT INTO scan_usage (scan_id, ip_address)
-       VALUES (?, ?)`,
-      [scanId, ip]
+      `INSERT INTO scan_usage (scan_id, ip_address, user_id)
+       VALUES (?, ?, ?)`,
+      [scanId, ip, userId]
     );
+
+    // Increment usage in the new tracking system
+    await usageService.incrementScanUsage(userId, anonId);
 
     // Enqueue scan job
     await queue.enqueue(scanId, { url, options });
 
-    res.status(202).json({
+    // Build response with usage info
+    const response = {
       scanId,
       status: 'queued',
       message: 'Scan created successfully',
       pollUrl: `/api/scans/${scanId}`
-    });
+    };
+
+    // Include usage info if quota check was successful
+    if (req.scanQuota) {
+      response.usage = {
+        scansRemaining: req.scanQuota.isUnlimited ? -1 : Math.max(0, req.scanQuota.remaining - 1),
+        scansLimit: req.scanQuota.limit,
+        scansResetAt: req.scanQuota.resetAt,
+        isUnlimited: req.scanQuota.isUnlimited
+      };
+    }
+
+    res.status(202).json(response);
 
   } catch (error) {
     console.error('Error creating scan:', error);
@@ -360,6 +352,44 @@ router.get('/:scanId/pdf', optionalAuth, async (req, res) => {
 router.get('/queue/status', (req, res) => {
   const queue = getQueue();
   res.json(queue.getStatus());
+});
+
+// ============================================================
+// LANGUAGE AUDIT ROUTES
+// ============================================================
+
+const languageAuditService = require('../services/languageAuditService');
+
+const languageAuditSchema = z.object({
+  url: z.string().url('Invalid URL format')
+});
+
+/**
+ * POST /api/scans/language-audit
+ * Audit a URL for language/i18n configuration
+ * Returns score, issues, and recommendations for SEO language signals
+ */
+router.post('/language-audit', validate(languageAuditSchema), optionalAuth, async (req, res) => {
+  try {
+    const { url } = req.validatedData;
+
+    const result = await languageAuditService.audit(url);
+
+    // Add locale info from request if available
+    const acceptLanguage = req.headers['accept-language'];
+    if (acceptLanguage) {
+      result.requestLocale = acceptLanguage.split(',')[0].trim();
+    }
+
+    res.json(result);
+
+  } catch (error) {
+    console.error('Language audit error:', error);
+    res.status(500).json({
+      error: 'Language audit failed',
+      message: error.message
+    });
+  }
 });
 
 module.exports = router;

@@ -15,12 +15,18 @@ class LanguageSwitcher {
   async init(targetSelector = 'nav') {
     if (this.initialized) return;
 
-    // Wait for i18n to be ready
+    // Wait for i18n to be ready (with timeout)
     if (!window.i18n || !window.i18n.initialized) {
       await new Promise(resolve => {
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds max
         const checkI18n = setInterval(() => {
-          if (window.i18n && window.i18n.initialized) {
+          attempts++;
+          if ((window.i18n && window.i18n.initialized) || attempts >= maxAttempts) {
             clearInterval(checkI18n);
+            if (attempts >= maxAttempts) {
+              console.warn('[LanguageSwitcher] i18n initialization timeout, proceeding with defaults');
+            }
             resolve();
           }
         }, 100);
@@ -30,7 +36,7 @@ class LanguageSwitcher {
     // Find target location
     const target = document.querySelector(targetSelector);
     if (!target) {
-      console.error(`Language switcher target not found: ${targetSelector}`);
+      console.error(`[LanguageSwitcher] Target not found: ${targetSelector}`);
       return;
     }
 
@@ -42,6 +48,7 @@ class LanguageSwitcher {
     this.setupEventListeners();
 
     this.initialized = true;
+    console.log('[LanguageSwitcher] Initialized successfully');
   }
 
   /**
@@ -58,9 +65,33 @@ class LanguageSwitcher {
    * Get switcher HTML structure
    */
   getSwitcherHTML() {
-    const languages = window.i18n.getSupportedLanguages();
-    const currentLang = window.i18n.currentLanguage;
-    const currentFlag = window.i18n.getLanguageFlag(currentLang);
+    // Fallback language data if i18n isn't ready
+    const flagImg = (code) => `<img src="https://flagcdn.com/w40/${code}.png" srcset="https://flagcdn.com/w80/${code}.png 2x" alt="${code.toUpperCase()}" class="flag-img" width="20" height="15">`;
+    const defaultLanguages = [
+      { code: 'en', name: 'English', flag: flagImg('gb'), active: true },
+      { code: 'ja', name: '日本語', flag: flagImg('jp'), active: false },
+      { code: 'de', name: 'Deutsch', flag: flagImg('de'), active: false },
+      { code: 'es', name: 'Español', flag: flagImg('es'), active: false },
+      { code: 'fr', name: 'Français', flag: flagImg('fr'), active: false },
+      { code: 'pt', name: 'Português', flag: flagImg('br'), active: false },
+      { code: 'zh', name: '中文', flag: flagImg('cn'), active: false }
+    ];
+
+    let languages, currentLang, currentFlag;
+
+    if (window.i18n && typeof window.i18n.getSupportedLanguages === 'function') {
+      languages = window.i18n.getSupportedLanguages();
+      currentLang = window.i18n.currentLanguage || 'en';
+      currentFlag = window.i18n.getLanguageFlag ? window.i18n.getLanguageFlag(currentLang) : flagImg('gb');
+    } else {
+      // Use fallbacks
+      currentLang = localStorage.getItem('sm_language') || 'en';
+      languages = defaultLanguages.map(l => ({
+        ...l,
+        active: l.code === currentLang
+      }));
+      currentFlag = defaultLanguages.find(l => l.code === currentLang)?.flag || flagImg('gb');
+    }
 
     return `
       <div class="language-switcher-trigger" id="languageSwitcherTrigger">
@@ -89,22 +120,103 @@ class LanguageSwitcher {
   setupEventListeners() {
     const trigger = this.container.querySelector('#languageSwitcherTrigger');
     const dropdown = this.container.querySelector('#languageDropdown');
-    const options = this.container.querySelectorAll('.language-option');
+
+    // Move dropdown to body for proper z-index layering
+    document.body.appendChild(dropdown);
+    this.dropdown = dropdown;
+    this.trigger = trigger;
+
+    let isOpen = false;
+
+    const showDropdown = () => {
+      const rect = trigger.getBoundingClientRect();
+      const isLightTheme = document.body.classList.contains('white-theme');
+      const textColor = isLightTheme ? '#333' : '#fff';
+      const hoverBg = isLightTheme ? 'rgba(0,122,255,0.1)' : 'rgba(0,255,65,0.1)';
+      const activeBg = isLightTheme ? 'rgba(0,122,255,0.15)' : 'rgba(0,255,65,0.15)';
+      const checkColor = isLightTheme ? '#007aff' : '#00ff41';
+
+      dropdown.style.cssText = `
+        position: fixed !important;
+        top: ${rect.bottom + 8}px !important;
+        right: ${window.innerWidth - rect.right}px !important;
+        left: auto !important;
+        min-width: 180px !important;
+        max-width: 220px !important;
+        background: ${isLightTheme ? '#ffffff' : '#1a1a1a'} !important;
+        border: 1px solid ${isLightTheme ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.2)'} !important;
+        border-radius: 8px !important;
+        box-shadow: 0 8px 32px ${isLightTheme ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.5)'} !important;
+        z-index: 2147483647 !important;
+        display: block !important;
+        opacity: 1 !important;
+        visibility: visible !important;
+        transform: none !important;
+        overflow: hidden !important;
+        padding: 0.25rem 0 !important;
+      `;
+
+      // Style the options
+      dropdown.querySelectorAll('.language-option').forEach(opt => {
+        const isActive = opt.classList.contains('active');
+        opt.style.cssText = `
+          display: flex !important;
+          align-items: center !important;
+          gap: 0.75rem !important;
+          padding: 0.65rem 1rem !important;
+          cursor: pointer !important;
+          color: ${textColor} !important;
+          background: ${isActive ? activeBg : 'transparent'} !important;
+          border-left: ${isActive ? `3px solid ${checkColor}` : '3px solid transparent'} !important;
+          transition: background 0.15s ease !important;
+        `;
+
+        // Style children
+        const nameEl = opt.querySelector('.language-name');
+        if (nameEl) nameEl.style.cssText = `flex: 1; font-size: 0.9rem; color: ${textColor};`;
+
+        const checkEl = opt.querySelector('.check-mark');
+        if (checkEl) checkEl.style.cssText = `color: ${checkColor}; font-weight: bold;`;
+
+        // Hover effects
+        opt.onmouseenter = () => { if (!opt.classList.contains('active')) opt.style.background = hoverBg; };
+        opt.onmouseleave = () => { if (!opt.classList.contains('active')) opt.style.background = 'transparent'; };
+      });
+
+      isOpen = true;
+    };
+
+    const hideDropdown = () => {
+      dropdown.style.cssText = 'display: none !important; visibility: hidden !important;';
+      isOpen = false;
+    };
+
+    // Start hidden
+    hideDropdown();
 
     // Toggle dropdown
     trigger.addEventListener('click', (e) => {
       e.stopPropagation();
-      dropdown.classList.toggle('show');
+      if (isOpen) {
+        hideDropdown();
+      } else {
+        showDropdown();
+      }
     });
 
     // Close dropdown when clicking outside
     document.addEventListener('click', (e) => {
-      if (!this.container.contains(e.target)) {
-        dropdown.classList.remove('show');
+      if (isOpen && !this.container.contains(e.target) && !dropdown.contains(e.target)) {
+        hideDropdown();
       }
     });
 
+    // Reposition on scroll/resize
+    window.addEventListener('scroll', () => { if (isOpen) showDropdown(); }, { passive: true });
+    window.addEventListener('resize', () => { if (isOpen) showDropdown(); }, { passive: true });
+
     // Handle language selection
+    const options = dropdown.querySelectorAll('.language-option');
     options.forEach(option => {
       option.addEventListener('click', async (e) => {
         const lang = option.getAttribute('data-lang');
@@ -112,10 +224,12 @@ class LanguageSwitcher {
         // Update UI immediately
         options.forEach(opt => opt.classList.remove('active'));
         option.classList.add('active');
-        dropdown.classList.remove('show');
+        hideDropdown();
 
         // Switch language
-        await window.i18n.switchLanguage(lang);
+        if (window.i18n && window.i18n.switchLanguage) {
+          await window.i18n.switchLanguage(lang);
+        }
 
         // Update switcher UI
         this.updateUI();
@@ -129,35 +243,38 @@ class LanguageSwitcher {
   updateUI() {
     if (!this.container) return;
 
-    const currentLang = window.i18n.currentLanguage;
+    const currentLang = window.i18n?.currentLanguage || 'en';
     const flagElement = this.container.querySelector('#currentLanguageFlag');
     const codeElement = this.container.querySelector('.language-code');
 
-    if (flagElement) {
-      flagElement.textContent = window.i18n.getLanguageFlag(currentLang);
+    if (flagElement && window.i18n?.getLanguageFlag) {
+      flagElement.innerHTML = window.i18n.getLanguageFlag(currentLang);
     }
     if (codeElement) {
       codeElement.textContent = currentLang.toUpperCase();
     }
 
-    // Update active state in dropdown
-    this.container.querySelectorAll('.language-option').forEach(option => {
-      const lang = option.getAttribute('data-lang');
-      if (lang === currentLang) {
-        option.classList.add('active');
-        option.innerHTML = `
-          <span class="language-flag">${window.i18n.getLanguageFlag(lang)}</span>
-          <span class="language-name">${window.i18n.getLanguageName(lang)}</span>
-          <span class="check-mark">✓</span>
-        `;
-      } else {
-        option.classList.remove('active');
-        option.innerHTML = `
-          <span class="language-flag">${window.i18n.getLanguageFlag(lang)}</span>
-          <span class="language-name">${window.i18n.getLanguageName(lang)}</span>
-        `;
-      }
-    });
+    // Update active state in dropdown (which is now in body)
+    const dropdown = this.dropdown || document.getElementById('languageDropdown');
+    if (dropdown) {
+      dropdown.querySelectorAll('.language-option').forEach(option => {
+        const lang = option.getAttribute('data-lang');
+        if (lang === currentLang) {
+          option.classList.add('active');
+          option.innerHTML = `
+            <span class="language-flag">${window.i18n?.getLanguageFlag?.(lang) || ''}</span>
+            <span class="language-name">${window.i18n?.getLanguageName?.(lang) || lang}</span>
+            <span class="check-mark">✓</span>
+          `;
+        } else {
+          option.classList.remove('active');
+          option.innerHTML = `
+            <span class="language-flag">${window.i18n?.getLanguageFlag?.(lang) || ''}</span>
+            <span class="language-name">${window.i18n?.getLanguageName?.(lang) || lang}</span>
+          `;
+        }
+      });
+    }
   }
 
   /**
@@ -170,7 +287,8 @@ class LanguageSwitcher {
         position: relative;
         display: inline-flex;
         align-items: center;
-        z-index: 99999 !important;
+        z-index: 2147483646 !important; /* Very high z-index to ensure it's above other elements */
+        isolation: isolate; /* Create new stacking context */
       }
       
       /* When in header container, no auto margin */
@@ -204,8 +322,17 @@ class LanguageSwitcher {
       }
 
       .language-flag {
-        font-size: 1rem;
+        display: inline-flex;
+        align-items: center;
         line-height: 1;
+      }
+
+      .flag-img {
+        width: 20px;
+        height: 15px;
+        object-fit: cover;
+        border-radius: 2px;
+        vertical-align: middle;
       }
 
       .language-code {
@@ -239,7 +366,7 @@ class LanguageSwitcher {
         transform: translateY(-10px);
         transition: all 0.2s ease;
         overflow: hidden;
-        z-index: 100000 !important;
+        z-index: 2147483647 !important; /* Maximum z-index value */
       }
 
       .language-dropdown.show {
@@ -339,6 +466,7 @@ class LanguageSwitcher {
 
         .language-flag {
           font-size: 0.95rem;
+          /* flag images used instead of emoji */
         }
 
         .language-code {
@@ -366,6 +494,7 @@ class LanguageSwitcher {
 
         .language-flag {
           font-size: 0.9rem;
+          /* flag images used instead of emoji */
         }
 
         .language-code {
@@ -395,6 +524,7 @@ class LanguageSwitcher {
 
         .language-option .language-flag {
           font-size: 1rem;
+          /* flag images used instead of emoji */
         }
       }
 
@@ -406,6 +536,7 @@ class LanguageSwitcher {
 
         .language-flag {
           font-size: 0.95rem;
+          /* flag images used instead of emoji */
         }
 
         .language-dropdown {

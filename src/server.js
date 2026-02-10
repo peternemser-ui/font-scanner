@@ -6,6 +6,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const compression = require('compression');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const http = require('http');
 const { Server: SocketIO } = require('socket.io');
@@ -37,7 +38,10 @@ const {
   stopScheduledCleanup,
   getCleanupStats
 } = require('./utils/reportCleanup');
-const { optionalAuth } = require('./middleware/requireAuth');
+const { optionalAuth, requireAuth } = require('./middleware/requireAuth');
+const stripeService = require('./services/stripeService');
+const { checkScanQuota } = require('./middleware/scanQuota');
+const usageService = require('./services/usageService');
 
 const logger = createLogger('Server');
 
@@ -128,7 +132,10 @@ let memoryMonitorInterval = setInterval(() => {
   }
 }, MEMORY_CHECK_INTERVAL);
 
-// Security middleware
+// Security middleware - Content Security Policy
+// Note: 'unsafe-inline' is still required for some page-specific initialization scripts.
+// Inline onclick handlers have been migrated to data-action attributes with event delegation.
+// Critical billing/redirect scripts have been moved to external files.
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -138,13 +145,23 @@ app.use(
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         scriptSrc: [
           "'self'",
-          "'unsafe-inline'",
+          "'unsafe-inline'", // TODO: Remove when all inline scripts are externalized
           'https://cdn.socket.io',
           'https://cdn.jsdelivr.net',
-          'https://js.stripe.com'
+          'https://cdnjs.cloudflare.com',
+          'https://js.stripe.com',
+          'https://www.googletagmanager.com',
+          'https://www.google-analytics.com'
         ],
         imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", 'https://api.stripe.com', 'wss:', 'ws:'],
+        connectSrc: [
+          "'self'",
+          'https://api.stripe.com',
+          'https://www.google-analytics.com',
+          'https://analytics.google.com',
+          'wss:',
+          'ws:'
+        ],
         frameSrc: ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
       },
     },
@@ -171,6 +188,9 @@ app.use(
 // Compression
 app.use(compression());
 
+// Cookie parsing (required for anon_id usage tracking)
+app.use(cookieParser());
+
 // Logging
 app.use(morgan('combined'));
 
@@ -187,6 +207,105 @@ app.use('/api/webhooks', webhookRoutes);
 // Body parsing
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Locale resolution middleware
+// Extracts locale from Accept-Language header and attaches to request
+app.use((req, res, next) => {
+  const acceptLanguage = req.headers['accept-language'] || 'en';
+  const supportedLocales = ['en', 'es', 'fr', 'de', 'pt', 'zh', 'ja', 'ru'];
+
+  // Parse Accept-Language header (format: "en-US,en;q=0.9,es;q=0.8")
+  const parsedLocales = acceptLanguage.split(',').map(lang => {
+    const [code, qValue] = lang.trim().split(';q=');
+    return {
+      code: code.split('-')[0].toLowerCase(),
+      quality: qValue ? parseFloat(qValue) : 1.0
+    };
+  }).sort((a, b) => b.quality - a.quality);
+
+  // Find first supported locale
+  const matchedLocale = parsedLocales.find(l => supportedLocales.includes(l.code));
+  req.locale = matchedLocale ? matchedLocale.code : 'en';
+  req.rawAcceptLanguage = acceptLanguage;
+
+  next();
+});
+
+// Language prefix routing middleware
+// Handles URLs like /ja/seo-analyzer.html, /en/dashboard.html, etc.
+const SUPPORTED_LANG_PREFIXES = ['en', 'es', 'fr', 'de', 'pt', 'zh', 'ja', 'ru'];
+
+app.use((req, res, next) => {
+  // Check if URL starts with a language prefix
+  const pathParts = req.path.split('/').filter(Boolean);
+  const firstPart = pathParts[0];
+
+  if (firstPart && SUPPORTED_LANG_PREFIXES.includes(firstPart)) {
+    // Extract language from URL
+    const urlLang = firstPart;
+
+    // Rewrite URL to remove language prefix for static file serving
+    const newPath = '/' + pathParts.slice(1).join('/') || '/';
+    req.url = newPath + (req.url.includes('?') ? '?' + req.url.split('?')[1] : '');
+
+    // Set language cookie for client-side detection
+    res.cookie('sm_url_lang', urlLang, {
+      maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
+      httpOnly: false, // Allow JS to read it
+      sameSite: 'lax'
+    });
+
+    // Also set on request for API routes
+    req.urlLang = urlLang;
+    req.locale = urlLang;
+  }
+
+  next();
+});
+
+// Root redirect - redirect / to /:lang/ based on Accept-Language
+app.get('/', (req, res, next) => {
+  // If URL was already language-prefixed (e.g., /ja/ -> /), serve index.html
+  if (req.urlLang) return next();
+
+  // If already handled by static middleware or has a file extension, skip
+  if (req.path !== '/') return next();
+
+  // Detect preferred language from Accept-Language header
+  const acceptLang = req.headers['accept-language'] || '';
+  const preferredLang = detectPreferredLanguage(acceptLang, SUPPORTED_LANG_PREFIXES) || 'en';
+
+  // Redirect to language-prefixed URL
+  res.redirect(302, `/${preferredLang}/`);
+});
+
+/**
+ * Detect preferred language from Accept-Language header
+ */
+function detectPreferredLanguage(acceptLanguage, supportedLangs) {
+  if (!acceptLanguage) return null;
+
+  // Parse Accept-Language header (e.g., "ja,en-US;q=0.9,en;q=0.8")
+  const languages = acceptLanguage
+    .split(',')
+    .map(lang => {
+      const [code, qValue] = lang.trim().split(';q=');
+      return {
+        code: code.split('-')[0].toLowerCase(), // 'en-US' -> 'en'
+        q: qValue ? parseFloat(qValue) : 1.0
+      };
+    })
+    .sort((a, b) => b.q - a.q);
+
+  // Find first supported language
+  for (const { code } of languages) {
+    if (supportedLangs.includes(code)) {
+      return code;
+    }
+  }
+
+  return null;
+}
 
 // Static files
 app.use(express.static(path.join(__dirname, 'public')));
@@ -356,6 +475,19 @@ app.get('/api/reports/stats', async (req, res) => {
 const authRoutes = require('./routes/auth');
 app.use('/api/auth', authRoutes);
 
+// Canonical entitlements endpoint at /api/me/entitlements
+// Delegates to the canonical resolver in utils/entitlements.js
+app.get('/api/me/entitlements', requireAuth, async (req, res) => {
+  try {
+    const { getFullEntitlements } = require('./utils/entitlements');
+    const entitlements = await getFullEntitlements(req.user.id);
+    res.json(entitlements);
+  } catch (error) {
+    logger.error('Failed to fetch entitlements', { error: error.message, userId: req.user?.id });
+    res.status(500).json({ error: 'Failed to fetch entitlements' });
+  }
+});
+
 // Payment API (Stripe Checkout & Customer Portal)
 const paymentRoutes = require('./routes/payment');
 app.use('/api/payment', paymentRoutes);
@@ -384,47 +516,99 @@ app.use('/api/pro-report', proReportRoutes);
 const scanRoutes = require('./routes/scan.routes');
 app.use('/api/scans', scanRoutes);
 
+/**
+ * Helper to wrap analyzer handlers with scan usage tracking
+ * Increments usage count and records scan in database after successful response
+ */
+function withUsageTracking(handler) {
+  return async (req, res, next) => {
+    // Track original json method
+    const originalJson = res.json.bind(res);
+    res.json = function(data) {
+      // Increment usage on successful response (non-error)
+      if (!data?.error) {
+        const userId = req.user?.id || null;
+        const anonId = req.anonId || req.cookies?.anon_id || null;
+        if (userId || anonId) {
+          usageService.incrementScanUsage(userId, anonId).catch(err => {
+            logger.error('Failed to increment scan usage', { error: err.message });
+          });
+        }
+
+        // Record scan in scans table so it appears in the reports dashboard
+        if (userId) {
+          const targetUrl = req.body?.url || req.body?.site_url || 'unknown';
+          // Derive analyzer type from the route path (e.g. /api/core-web-vitals -> core-web-vitals)
+          const routePath = (req.route?.path || req.originalUrl || '').split('?')[0];
+          const analyzerType = routePath.replace(/^\/api\//, '').replace(/\/$/, '') || 'unknown';
+          const crypto = require('crypto');
+          const scanId = crypto.randomUUID();
+          // Extract reportId from response data (set by controllers via buildReportMetadata)
+          const reportId = data?.reportId || data?.results?.reportId || null;
+          // Capture the user's active locale so PDFs render in the scan's original language
+          const scanLocale = req.body?.lang || req.locale || 'en';
+          const db = getDatabase();
+          db.run(
+            `INSERT INTO scans (id, target_url, status, options_json, user_id, report_id, result_json, locale, started_at, finished_at)
+             VALUES (?, ?, 'completed', ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+            [scanId, targetUrl, JSON.stringify({ analyzerType }), userId, reportId, JSON.stringify(data), scanLocale]
+          ).catch(err => {
+            logger.error('Failed to record scan in database', { error: err.message });
+          });
+        }
+      }
+      return originalJson(data);
+    };
+
+    try {
+      await handler(req, res, next);
+    } catch (err) {
+      next(err);
+    }
+  };
+}
+
 // Legacy scan endpoints (keep for backwards compatibility)
-app.post('/api/scan', scanLimiter, scanController.scanWebsite);
-app.post('/api/scan/best-in-class', scanLimiter, scanController.performBestInClassScan);
-app.post('/api/seo', scanLimiter, scanController.performSEOScan);
+app.post('/api/scan', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(scanController.scanWebsite));
+app.post('/api/scan/best-in-class', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(scanController.performBestInClassScan));
+app.post('/api/seo', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(scanController.performSEOScan));
 
 // Performance Analyzer
 const performanceController = require('./controllers/performanceController');
-app.post('/api/performance', scanLimiter, performanceController.analyzePerformance);
-app.post('/api/performance/cross-browser', scanLimiter, performanceController.analyzeCrossBrowser);
+app.post('/api/performance', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(performanceController.analyzePerformance));
+app.post('/api/performance/cross-browser', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(performanceController.analyzeCrossBrowser));
 
 // Core Web Vitals Analyzer (Google Ranking Factor)
 const coreWebVitalsController = require('./controllers/coreWebVitalsController');
-app.post('/api/core-web-vitals', scanLimiter, coreWebVitalsController.analyzeCoreWebVitals);
+app.post('/api/core-web-vitals', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(coreWebVitalsController.analyzeCoreWebVitals));
 
 // Competitive Analysis Tool (VERY resource-intensive - strict rate limiting)
 const competitiveAnalysisController = require('./controllers/competitiveAnalysisController');
 competitiveAnalysisController.setSocketIO(io); // Inject Socket.IO for real-time progress
-app.post('/api/competitive-analysis', competitiveAnalysisLimiter, competitiveAnalysisController.analyzeCompetitors);
+app.post('/api/competitive-analysis', optionalAuth, checkScanQuota, competitiveAnalysisLimiter, withUsageTracking(competitiveAnalysisController.analyzeCompetitors));
 
 // Broken Link Checker
 const brokenLinkController = require('./controllers/brokenLinkController');
-app.post('/api/broken-links', scanLimiter, brokenLinkController.checkBrokenLinks);
+app.post('/api/broken-links', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(brokenLinkController.checkBrokenLinks));
 
 // Advanced Analyzers (CRO, Brand, Local SEO, GDPR)
 const advancedAnalyzersController = require('./controllers/advancedAnalyzersController');
-app.post('/api/cro-analysis', scanLimiter, advancedAnalyzersController.analyzeCRO);
-app.post('/api/brand-consistency', scanLimiter, advancedAnalyzersController.analyzeBrand);
-app.post('/api/local-seo', scanLimiter, advancedAnalyzersController.analyzeLocalSEO);
-app.post('/api/gdpr-compliance', scanLimiter, advancedAnalyzersController.analyzeGDPR);
+app.post('/api/cro-analysis', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(advancedAnalyzersController.analyzeCRO));
+app.post('/api/brand-consistency', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(advancedAnalyzersController.analyzeBrand));
+app.post('/api/local-seo', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(advancedAnalyzersController.analyzeLocalSEO));
+app.post('/api/gdpr-compliance', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(advancedAnalyzersController.analyzeGDPR));
 
 // Accessibility Analyzer
 const accessibilityController = require('./controllers/accessibilityController');
-app.post('/api/accessibility', scanLimiter, accessibilityController.analyzeAccessibility);
+app.post('/api/accessibility', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(accessibilityController.analyzeAccessibility));
 
 // Security Scanner
 const securityController = require('./controllers/securityController');
-app.post('/api/security', scanLimiter, securityController.analyzeSecurity);
+app.post('/api/security', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(securityController.analyzeSecurity));
 
 // IP/Domain Reputation Analyzer
 const ipReputationController = require('./controllers/ipReputationController');
-app.post('/api/ip-reputation', scanLimiter, ipReputationController.analyzeIPReputation);
+app.post('/api/ip-reputation', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(ipReputationController.analyzeIPReputation));
 
 // Contact form
 const contactController = require('./controllers/contactController');
@@ -432,20 +616,20 @@ app.post('/api/contact', contactLimiter, contactController.submitContact);
 
 // Hosting Pricing Analyzer
 const hostingController = require('./controllers/hostingController');
-app.post('/api/hosting/analyze', scanLimiter, hostingController.analyzeHosting);
+app.post('/api/hosting/analyze', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(hostingController.analyzeHosting));
 app.get('/api/hosting/providers', hostingController.getProviders);
 app.get('/api/hosting/providers/:cmsType', hostingController.getProvidersByCMS);
 
 // Tag Intelligence, Enhanced Fonts, Performance Snapshot, Crawler (monetization features)
 const tagIntelligenceController = require('./controllers/tagIntelligenceController');
-app.post('/api/tag-intelligence', scanLimiter, tagIntelligenceController.analyzeTagIntelligence);
-app.post('/api/enhanced-fonts', scanLimiter, tagIntelligenceController.analyzeEnhancedFonts);
-app.post('/api/performance-snapshot', scanLimiter, tagIntelligenceController.analyzePerformanceSnapshot);
-app.post('/api/crawl', scanLimiter, tagIntelligenceController.crawlSite);
+app.post('/api/tag-intelligence', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(tagIntelligenceController.analyzeTagIntelligence));
+app.post('/api/enhanced-fonts', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(tagIntelligenceController.analyzeEnhancedFonts));
+app.post('/api/performance-snapshot', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(tagIntelligenceController.analyzePerformanceSnapshot));
+app.post('/api/crawl', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(tagIntelligenceController.crawlSite));
 
 // Mobile Testing Suite
 const mobileAnalyzerController = require('./controllers/mobileAnalyzerController');
-app.post('/api/mobile-analyze', scanLimiter, mobileAnalyzerController.analyzeMobile);
+app.post('/api/mobile-analyze', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(mobileAnalyzerController.analyzeMobile));
 
 // Download PDF report (legacy - for font scanner)
 app.get('/api/reports/:filename', downloadLimiter, scanController.downloadReport);
@@ -455,8 +639,9 @@ const pdfController = require('./controllers/pdfController');
 app.get('/api/pdf/pricing', pdfController.getPricing);
 app.post('/api/pdf/purchase', scanLimiter, pdfController.purchasePDFReport);
 app.get('/api/pdf/download/:token', downloadLimiter, pdfController.downloadPDFReport);
-app.post('/api/pdf/generate', scanLimiter, optionalAuth, pdfController.generatePDF);
-app.post('/api/pdf/render', scanLimiter, optionalAuth, pdfController.renderPDF);
+const { requirePdfExport, enforcePageLimit } = require('./middleware/entitlementGuard');
+app.post('/api/pdf/generate', scanLimiter, requireAuth, requirePdfExport, pdfController.generatePDF);
+app.post('/api/pdf/render', scanLimiter, requireAuth, requirePdfExport, pdfController.renderPDF);
 
 // Test endpoint for debugging
 app.get('/api/test', (req, res) => {

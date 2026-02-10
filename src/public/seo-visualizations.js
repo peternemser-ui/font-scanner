@@ -4,6 +4,15 @@
  * No external libraries required - maintains terminal aesthetic
  */
 
+/** Thin i18n helper – delegates to the global i18n singleton */
+function _vizT(key, fallback, params) {
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const result = window.i18n.t(key, params || {});
+    if (result && result !== key) return result;
+  }
+  return fallback;
+}
+
 /**
  * Create a terminal-style data table
  * @param {Array} headers - Table column headers
@@ -14,7 +23,7 @@ function createDataTable(headers, rows, options = {}) {
   const { sortable = false, maxRows = 10, striped = true, compact = false } = options;
   
   if (!rows || rows.length === 0) {
-    return '<p style="color: #808080;">>>> no data available</p>';
+    return `<p style="color: #808080;">>>> ${_vizT('seo.viz.noData', 'no data available')}</p>`;
   }
 
   const displayRows = rows.slice(0, maxRows);
@@ -61,7 +70,7 @@ function createDataTable(headers, rows, options = {}) {
       </table>
       ${hasMore ? `
         <p style="color: #808080; font-size: 0.85rem; margin-top: 0.5rem; text-align: center;">
-          >>> showing ${displayRows.length} of ${rows.length} rows
+          >>> ${_vizT('seo.viz.showingRows', `showing ${displayRows.length} of ${rows.length} rows`, { shown: displayRows.length, total: rows.length })}
         </p>
       ` : ''}
     </div>
@@ -367,7 +376,7 @@ function createComparisonDiagram(comparison) {
       border-radius: 8px;
     ">
       <div style="text-align: center;">
-        <div style="color: #ff4444; font-weight: bold; margin-bottom: 0.5rem;">✗ CURRENT</div>
+        <div style="color: #ff4444; font-weight: bold; margin-bottom: 0.5rem;">✗ ${_vizT('seo.viz.current', 'CURRENT')}</div>
         <div style="
           padding: 1rem;
           background: rgba(255,68,68,0.1);
@@ -379,7 +388,7 @@ function createComparisonDiagram(comparison) {
         </div>
       </div>
       <div style="text-align: center;">
-        <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">✓ RECOMMENDED</div>
+        <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">✓ ${_vizT('seo.viz.recommended', 'RECOMMENDED')}</div>
         <div style="
           padding: 1rem;
           background: rgba(0,255,65,0.1);
@@ -443,8 +452,7 @@ function createHeatmap(metrics) {
             transition: all 0.3s ease;
             min-height: 120px;
             cursor: pointer;
-          " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 20px ${borderColor}50';" 
-             onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+          " class="seo-heatmap-card">
             <div style="font-weight: bold; font-size: 2.5rem; color: ${textColor}; margin-bottom: 0.5rem; text-shadow: 0 2px 4px ${borderColor}60;">${value}</div>
             <div style="font-size: 0.85rem; color: #e0e0e0; text-align: center; line-height: 1.3; font-weight: 600;">${key}</div>
           </div>
@@ -478,11 +486,10 @@ function createLinkDiagram(linkData) {
           text-align: center;
           transition: all 0.3s ease;
           cursor: pointer;
-        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 20px rgba(0,150,255,0.3)';" 
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+        " class="seo-link-card seo-link-card-internal">
           <div style="font-size: 2.5rem; color: #0096ff; font-weight: bold; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(0,150,255,0.4);">${internal}</div>
-          <div style="font-size: 1rem; color: #e0e0e0; font-weight: 600; margin-bottom: 0.25rem;">Internal Links</div>
-          <div style="font-size: 0.85rem; color: #909090;">${internalPercent}% of total</div>
+          <div style="font-size: 1rem; color: #e0e0e0; font-weight: 600; margin-bottom: 0.25rem;">${_vizT('seo.viz.internalLinks', 'Internal Links')}</div>
+          <div style="font-size: 0.85rem; color: #909090;">${internalPercent}% ${_vizT('seo.viz.ofTotal', 'of total')}</div>
         </div>
         
         <!-- External Links -->
@@ -494,11 +501,10 @@ function createLinkDiagram(linkData) {
           text-align: center;
           transition: all 0.3s ease;
           cursor: pointer;
-        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 20px rgba(150,0,255,0.3)';" 
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+        " class="seo-link-card seo-link-card-external">
           <div style="font-size: 2.5rem; color: #9600ff; font-weight: bold; margin-bottom: 0.5rem; text-shadow: 0 2px 4px rgba(150,0,255,0.4);">${external}</div>
-          <div style="font-size: 1rem; color: #e0e0e0; font-weight: 600; margin-bottom: 0.25rem;">External Links</div>
-          <div style="font-size: 0.85rem; color: #909090;">${externalPercent}% of total</div>
+          <div style="font-size: 1rem; color: #e0e0e0; font-weight: 600; margin-bottom: 0.25rem;">${_vizT('seo.viz.externalLinks', 'External Links')}</div>
+          <div style="font-size: 0.85rem; color: #909090;">${externalPercent}% ${_vizT('seo.viz.ofTotal', 'of total')}</div>
         </div>
         
         <!-- Broken Links (Warning) -->
@@ -510,11 +516,10 @@ function createLinkDiagram(linkData) {
           text-align: center;
           transition: all 0.3s ease;
           cursor: pointer;
-        " onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 6px 20px ${broken > 0 ? 'rgba(255,68,68,0.3)' : 'rgba(0,255,65,0.3)'}'; " 
-           onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
+        " class="seo-link-card ${broken > 0 ? 'seo-link-card-broken' : 'seo-link-card-ok'}">
           <div style="font-size: 2.5rem; color: ${broken > 0 ? '#ff4444' : '#00ff41'}; font-weight: bold; margin-bottom: 0.5rem; text-shadow: 0 2px 4px ${broken > 0 ? 'rgba(255,68,68,0.4)' : 'rgba(0,255,65,0.4)'};">${broken}</div>
-          <div style="font-size: 1rem; color: #e0e0e0; font-weight: 600; margin-bottom: 0.25rem;">Broken Links</div>
-          <div style="font-size: 0.85rem; color: #909090;">${broken > 0 ? '~ Needs attention' : '✓ All working'}</div>
+          <div style="font-size: 1rem; color: #e0e0e0; font-weight: 600; margin-bottom: 0.25rem;">${_vizT('seo.viz.brokenLinks', 'Broken Links')}</div>
+          <div style="font-size: 0.85rem; color: #909090;">${broken > 0 ? '~ ' + _vizT('seo.viz.needsAttention', 'Needs attention') : '✓ ' + _vizT('seo.viz.allWorking', 'All working')}</div>
         </div>
       </div>
       
@@ -527,8 +532,8 @@ function createLinkDiagram(linkData) {
         border-radius: 8px;
         text-align: center;
       ">
-        <span style="color: #ffaa00; font-weight: 600;">ⓘ ${nofollow} No-Follow Links</span>
-        <span style="color: #909090; margin-left: 0.5rem;">These links don't pass SEO value</span>
+        <span style="color: #ffaa00; font-weight: 600;">ⓘ ${nofollow} ${_vizT('seo.viz.noFollowLinks', 'No-Follow Links')}</span>
+        <span style="color: #909090; margin-left: 0.5rem;">${_vizT('seo.viz.noFollowExplain', "These links don't pass SEO value")}</span>
       </div>
       ` : ''}
     </div>
@@ -620,14 +625,43 @@ if (!document.getElementById('seo-viz-styles')) {
       0% { transform: translateX(-100%); }
       100% { transform: translateX(100%); }
     }
-    
+
     .seo-table tbody tr:hover {
       background: rgba(0,255,65,0.08) !important;
     }
-    
+
     .seo-table th:hover {
       color: #00ff41 !important;
       text-shadow: 0 0 8px rgba(0,255,65,0.5);
+    }
+
+    /* Heatmap card hover effects */
+    .seo-heatmap-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+    }
+    .seo-heatmap-card:hover {
+      transform: translateY(-4px) !important;
+      box-shadow: 0 6px 20px rgba(255,255,255,0.2) !important;
+    }
+
+    /* Link diagram card hover effects */
+    .seo-link-card {
+      transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+    }
+    .seo-link-card:hover {
+      transform: translateY(-4px) !important;
+    }
+    .seo-link-card-internal:hover {
+      box-shadow: 0 6px 20px rgba(0,150,255,0.3) !important;
+    }
+    .seo-link-card-external:hover {
+      box-shadow: 0 6px 20px rgba(150,0,255,0.3) !important;
+    }
+    .seo-link-card-broken:hover {
+      box-shadow: 0 6px 20px rgba(255,68,68,0.3) !important;
+    }
+    .seo-link-card-ok:hover {
+      box-shadow: 0 6px 20px rgba(0,255,65,0.3) !important;
     }
   `;
   document.head.appendChild(style);

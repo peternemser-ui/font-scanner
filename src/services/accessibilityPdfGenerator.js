@@ -15,7 +15,8 @@ const {
   getGrade,
   drawScoreSummaryCard,
   drawMetricGrid,
-  drawCard
+  drawCard,
+  trackSection
 } = require('../utils/pdfHelpers');
 
 const {
@@ -56,31 +57,129 @@ class AccessibilityPdfGenerator {
       { reportsDir: this.reportsDir }
     );
 
+    const reportTitle = 'Accessibility Analysis Report';
+
     try {
-      // Material Design header
+      // Material Design header (Title Page)
       addPdfHeader(
         doc,
-        'Accessibility Analysis Report',
+        reportTitle,
         accessibilityResults.url,
         'Comprehensive accessibility and WCAG compliance analysis',
         { accentColor: COLORS.secondary } // Teal accent for accessibility
       );
 
+      // Add Table of Contents page
+      doc.addPage();
+      this.addTableOfContents(doc, accessibilityResults);
+
       // Generate report sections with Material Design and charts
+      // Each section is tracked for TOC
+      trackSection(doc, 'Executive Summary', accessibilityResults.overallScore || accessibilityResults.accessibilityScore);
       this.addExecutiveSummary(doc, accessibilityResults);
+
+      trackSection(doc, 'WCAG 2.1 Compliance');
       this.addWCAGCompliance(doc, accessibilityResults);
+
+      trackSection(doc, 'Violations by Severity');
       this.addViolationsBySeverity(doc, accessibilityResults);
+
+      trackSection(doc, 'Color Contrast Analysis');
       this.addColorContrastIssues(doc, accessibilityResults);
+
+      trackSection(doc, 'ARIA Analysis');
       this.addARIAAnalysis(doc, accessibilityResults);
+
+      trackSection(doc, 'Desktop vs Mobile');
       this.addDesktopMobileComparison(doc, accessibilityResults);
+
+      trackSection(doc, 'Recommendations');
       this.addRecommendations(doc, accessibilityResults);
 
       // Use helper to finalize PDF generation
-      return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+      return finalizePdfGeneration(doc, stream, filename, filepath, reportId, { reportTitle });
     } catch (error) {
       logger.error('Error creating Accessibility PDF:', error);
       throw error;
     }
+  }
+
+  /**
+   * Add Table of Contents
+   */
+  addTableOfContents(doc, results) {
+    doc.fontSize(18)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.textPrimary)
+       .text('TABLE OF CONTENTS', 50, 50);
+
+    // Teal accent bar (for accessibility theme)
+    doc.rect(50, 78, 50, 3)
+       .fillColor(COLORS.secondary)
+       .fill();
+
+    let currentY = 100;
+
+    const overallScore = results.overallScore || results.accessibilityScore || 0;
+
+    const sections = [
+      { title: 'Executive Summary', score: overallScore, page: 3 },
+      { title: 'WCAG 2.1 Compliance', page: 4 },
+      { title: 'Violations by Severity', page: 5 },
+      { title: 'Color Contrast Analysis', page: 6 },
+      { title: 'ARIA Analysis', page: 7 },
+      { title: 'Desktop vs Mobile Comparison', page: 8 },
+      { title: 'Recommendations', page: 9 }
+    ];
+
+    sections.forEach((section, index) => {
+      const num = String(index + 1).padStart(2, '0');
+
+      // Number in teal
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.secondary)
+         .text(`${num}.`, 50, currentY, { continued: false });
+
+      // Title
+      doc.fontSize(11)
+         .font('Helvetica')
+         .fillColor(COLORS.textPrimary)
+         .text(section.title, 75, currentY, { continued: false });
+
+      // Dotted line
+      const titleWidth = doc.widthOfString(section.title);
+      const dotsStartX = 75 + titleWidth + 10;
+      const dotsEndX = 480;
+      const dotsCount = Math.floor((dotsEndX - dotsStartX) / 5);
+
+      doc.fontSize(11)
+         .fillColor('#cccccc')
+         .text('.'.repeat(dotsCount), dotsStartX, currentY, { continued: false });
+
+      // Page number
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text(`${section.page}`, 490, currentY, { continued: false });
+
+      // Score badge if available
+      if (section.score !== undefined && section.score !== null) {
+        const scoreColor = getScoreColor(section.score);
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor(scoreColor)
+           .text(`[${Math.round(section.score)}/100]`, 515, currentY, { continued: false });
+      }
+
+      currentY += 28;
+    });
+
+    // Note about page numbers
+    doc.fontSize(8)
+       .font('Helvetica-Oblique')
+       .fillColor('#888888')
+       .text('Page numbers are approximate. See footer for exact page reference.', 50, currentY + 30);
   }
 
   /**

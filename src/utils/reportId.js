@@ -34,14 +34,32 @@ function normalizeUrlForReportId(inputUrl) {
     const hostname = (u.hostname || '').toLowerCase();
     if (!hostname) return '';
 
-    const port = u.port ? `:${u.port}` : '';
+    // Strip default ports (80 for http, 443 for https)
+    let port = '';
+    if (u.port) {
+      const isDefaultPort = (protocol === 'https:' && u.port === '443') ||
+                            (protocol === 'http:' && u.port === '80');
+      if (!isDefaultPort) {
+        port = `:${u.port}`;
+      }
+    }
+
     let path = u.pathname || '';
 
     // Remove trailing slash; represent root as empty path.
     if (path === '/') path = '';
     else path = path.replace(/\/$/, '');
 
-    const search = u.search || '';
+    // Sort query parameters for consistent ordering
+    let search = '';
+    if (u.search) {
+      const params = new URLSearchParams(u.search);
+      const sorted = new URLSearchParams([...params.entries()].sort());
+      const sortedSearch = sorted.toString();
+      if (sortedSearch) {
+        search = '?' + sortedSearch;
+      }
+    }
     // Drop hash fragments
 
     return `${protocol}//${hostname}${port}${path}${search}`;
@@ -49,6 +67,20 @@ function normalizeUrlForReportId(inputUrl) {
     // Best-effort fallback: trim + remove trailing slash
     return raw.replace(/\/$/, '');
   }
+}
+
+/**
+ * Simple hash for storage keys (not cryptographic).
+ * Returns a short alphanumeric string suitable for localStorage/sessionStorage keys.
+ */
+function hashForStorageKey(str) {
+  let hash = 0;
+  const s = String(str || '');
+  for (let i = 0; i < s.length; i++) {
+    hash = ((hash << 5) - hash) + s.charCodeAt(i);
+    hash = hash & hash; // Convert to 32bit integer
+  }
+  return Math.abs(hash).toString(36);
 }
 
 /**
@@ -84,4 +116,5 @@ module.exports = {
   normalizeUrlForReportId,
   roundTimestampToMinute,
   isSafeReportId,
+  hashForStorageKey,
 };

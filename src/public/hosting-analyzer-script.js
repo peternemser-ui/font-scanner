@@ -3,183 +3,308 @@
 
 // Deterministic analyzer key (stable forever)
 window.SM_ANALYZER_KEY = 'hosting-analyzer';
+
+// Translation helper - evaluates at runtime to ensure i18n is loaded
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
+// Function to get analysis steps with current translations
+// Called at runtime to ensure i18n is loaded
+function getAnalysisSteps() {
+  return [
+    {
+      label: t('loader.connectingToWebsite', 'Connecting to website'),
+      detail: t('loader.establishingConnection', 'Establishing secure connection...')
+    },
+    {
+      label: t('loader.detectingCms', 'Detecting CMS platform'),
+      detail: t('loader.identifyingPlatforms', 'Identifying WordPress, Shopify, Wix, and 10+ more...')
+    },
+    {
+      label: t('loader.detectingHost', 'Detecting current host'),
+      detail: t('loader.analyzingDns', 'Analyzing DNS records and headers...')
+    },
+    {
+      label: t('loader.matchingProviders', 'Matching hosting providers'),
+      detail: t('loader.findingOptions', 'Finding best options for your platform...')
+    },
+    {
+      label: t('loader.calculatingPricing', 'Calculating pricing'),
+      detail: t('loader.comparingProviders', 'Comparing 25+ hosting providers...')
+    },
+    {
+      label: t('loader.findingSavings', 'Finding savings opportunities'),
+      detail: t('loader.analyzingCosts', 'Analyzing cost optimization options...')
+    },
+    {
+      label: t('loader.generatingRecommendations', 'Generating recommendations'),
+      detail: t('loader.compilingHostingReport', 'Compiling personalized hosting report...')
+    }
+  ];
+}
 document.addEventListener('DOMContentLoaded', () => {
   document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
+
+  // Inject CSS for CSP-compliant hover effects
+  if (!document.getElementById('hosting-hover-styles')) {
+    const style = document.createElement('style');
+    style.id = 'hosting-hover-styles';
+    style.textContent = `
+      .hosting-provider-link:hover {
+        transform: scale(1.02) !important;
+        box-shadow: 0 4px 12px rgba(0, 217, 255, 0.4) !important;
+      }
+      .hosting-table-link:hover {
+        background: rgba(0, 217, 255, 0.3) !important;
+      }
+    `;
+    document.head.appendChild(style);
+  }
 });
 
 let currentResults = null;
 let currentFilter = 'all';
 
 // Popular hosting providers data for quick browse
-const POPULAR_PROVIDERS = [
-  {
-    name: 'WP Engine',
-    logo: '🚀',
-    category: 'Managed WordPress',
-    tags: ['wordpress'],
-    url: 'https://wpengine.com',
-    startingPrice: 20,
-    rating: 4.5,
-    highlights: ['Best WordPress performance', 'Free migrations', '24/7 support'],
-    bestFor: ['WordPress', 'WooCommerce', 'Enterprise']
-  },
-  {
-    name: 'Kinsta',
-    logo: '⚡',
-    category: 'Managed WordPress',
-    tags: ['wordpress'],
-    url: 'https://kinsta.com',
-    startingPrice: 35,
-    rating: 4.7,
-    highlights: ['Google Cloud Platform', 'Fastest WordPress host', '35+ data centers'],
-    bestFor: ['WordPress', 'High-traffic sites']
-  },
-  {
-    name: 'Vercel',
-    logo: '▲',
-    category: 'JAMstack/Edge',
-    tags: ['vps'],
-    url: 'https://vercel.com',
-    startingPrice: 0,
-    rating: 4.8,
-    highlights: ['Best for Next.js', 'Edge functions', 'Instant deployments'],
-    bestFor: ['Next.js', 'React', 'JAMstack']
-  },
-  {
-    name: 'Netlify',
-    logo: '🔷',
-    category: 'JAMstack/Edge',
-    tags: ['vps', 'budget'],
-    url: 'https://www.netlify.com',
-    startingPrice: 0,
-    rating: 4.7,
-    highlights: ['Pioneer of JAMstack', 'Great DX', 'Built-in CI/CD'],
-    bestFor: ['Gatsby', 'Hugo', 'Static sites']
-  },
-  {
-    name: 'DigitalOcean',
-    logo: '🌊',
-    category: 'Cloud VPS',
-    tags: ['vps', 'budget'],
-    url: 'https://www.digitalocean.com',
-    startingPrice: 4,
-    rating: 4.6,
-    highlights: ['Developer-friendly', 'Simple pricing', 'Kubernetes support'],
-    bestFor: ['WordPress', 'Node.js', 'Docker']
-  },
-  {
-    name: 'Vultr',
-    logo: '🔥',
-    category: 'Cloud VPS',
-    tags: ['vps', 'budget'],
-    url: 'https://www.vultr.com',
-    startingPrice: 2.5,
-    rating: 4.5,
-    highlights: ['Cheapest cloud VPS', '32 locations', 'High performance NVMe'],
-    bestFor: ['WordPress', 'Game servers', 'VPS']
-  },
-  {
-    name: 'Hetzner',
-    logo: '🇩🇪',
-    category: 'Cloud VPS',
-    tags: ['vps', 'budget'],
-    url: 'https://www.hetzner.com',
-    startingPrice: 3.79,
-    rating: 4.7,
-    highlights: ['Best value in Europe', 'Carbon neutral', 'German data protection'],
-    bestFor: ['WordPress', 'Enterprise', 'Europe-focused']
-  },
-  {
-    name: 'Shopify',
-    logo: '🛒',
-    category: 'E-commerce Platform',
-    tags: ['ecommerce'],
-    url: 'https://www.shopify.com',
-    startingPrice: 29,
-    rating: 4.5,
-    highlights: ['Best for dropshipping', 'App ecosystem', 'POS integration'],
-    bestFor: ['E-commerce', 'Dropshipping', 'Retail']
-  },
-  {
-    name: 'Cloudflare Pages',
-    logo: '☁️',
-    category: 'JAMstack/Edge',
-    tags: ['vps', 'budget'],
-    url: 'https://pages.cloudflare.com',
-    startingPrice: 0,
-    rating: 4.6,
-    highlights: ['Unlimited bandwidth free', 'Fastest edge network', 'Workers integration'],
-    bestFor: ['Static sites', 'JAMstack', 'Global delivery']
-  },
-  {
-    name: 'SiteGround',
-    logo: '🟠',
-    category: 'Shared Hosting',
-    tags: ['wordpress', 'budget'],
-    url: 'https://www.siteground.com',
-    startingPrice: 2.99,
-    rating: 4.4,
-    highlights: ['Excellent support', 'Google Cloud', 'Free CDN & Email'],
-    bestFor: ['WordPress', 'Small business', 'Beginners']
-  },
-  {
-    name: 'Hostinger',
-    logo: '💜',
-    category: 'Shared Hosting',
-    tags: ['wordpress', 'budget'],
-    url: 'https://www.hostinger.com',
-    startingPrice: 1.99,
-    rating: 4.3,
-    highlights: ['Best budget option', 'Fast LiteSpeed servers', 'hPanel control panel'],
-    bestFor: ['Beginners', 'Budget sites', 'WordPress']
-  },
-  {
-    name: 'Cloudways',
-    logo: '☁️',
-    category: 'Managed Cloud',
-    tags: ['wordpress', 'vps'],
-    url: 'https://www.cloudways.com',
-    startingPrice: 11,
-    rating: 4.5,
-    highlights: ['Choose your cloud', 'Pay as you go', 'Free migrations'],
-    bestFor: ['WordPress', 'Magento', 'Agencies']
-  },
-  {
-    name: 'BigCommerce',
-    logo: '🛍️',
-    category: 'E-commerce Platform',
-    tags: ['ecommerce'],
-    url: 'https://www.bigcommerce.com',
-    startingPrice: 29,
-    rating: 4.4,
-    highlights: ['No transaction fees', 'Built-in SEO', 'Multi-channel selling'],
-    bestFor: ['E-commerce', 'Growing stores', 'B2B']
-  },
-  {
-    name: 'WooCommerce + Bluehost',
-    logo: '🔵',
-    category: 'E-commerce WordPress',
-    tags: ['ecommerce', 'wordpress', 'budget'],
-    url: 'https://www.bluehost.com/wordpress/woocommerce-hosting',
-    startingPrice: 9.95,
-    rating: 4.2,
-    highlights: ['WooCommerce pre-installed', 'Free domain', 'SSL included'],
-    bestFor: ['WooCommerce', 'Small stores', 'WordPress users']
-  }
-];
+// Note: Provider names, categories, highlights, and bestFor are translated at render time
+function getPopularProviders() {
+  return [
+    {
+      name: 'WP Engine',
+      logo: '🚀',
+      category: t('reports.hosting.categories.managedWordPress', 'Managed WordPress'),
+      tags: ['wordpress'],
+      url: 'https://wpengine.com',
+      startingPrice: 20,
+      rating: 4.5,
+      highlights: [
+        t('reports.hosting.highlights.bestWpPerformance', 'Best WordPress performance'),
+        t('reports.hosting.highlights.freeMigrations', 'Free migrations'),
+        t('reports.hosting.highlights.support247', '24/7 support')
+      ],
+      bestFor: ['WordPress', 'WooCommerce', t('reports.hosting.bestFor.enterprise', 'Enterprise')]
+    },
+    {
+      name: 'Kinsta',
+      logo: '⚡',
+      category: t('reports.hosting.categories.managedWordPress', 'Managed WordPress'),
+      tags: ['wordpress'],
+      url: 'https://kinsta.com',
+      startingPrice: 35,
+      rating: 4.7,
+      highlights: [
+        t('reports.hosting.highlights.googleCloud', 'Google Cloud Platform'),
+        t('reports.hosting.highlights.fastestWpHost', 'Fastest WordPress host'),
+        t('reports.hosting.highlights.dataCenters35', '35+ data centers')
+      ],
+      bestFor: ['WordPress', t('reports.hosting.bestFor.highTraffic', 'High-traffic sites')]
+    },
+    {
+      name: 'Vercel',
+      logo: '▲',
+      category: t('reports.hosting.categories.jamstackEdge', 'JAMstack/Edge'),
+      tags: ['vps'],
+      url: 'https://vercel.com',
+      startingPrice: 0,
+      rating: 4.8,
+      highlights: [
+        t('reports.hosting.highlights.bestNextjs', 'Best for Next.js'),
+        t('reports.hosting.highlights.edgeFunctions', 'Edge functions'),
+        t('reports.hosting.highlights.instantDeploy', 'Instant deployments')
+      ],
+      bestFor: ['Next.js', 'React', 'JAMstack']
+    },
+    {
+      name: 'Netlify',
+      logo: '🔷',
+      category: t('reports.hosting.categories.jamstackEdge', 'JAMstack/Edge'),
+      tags: ['vps', 'budget'],
+      url: 'https://www.netlify.com',
+      startingPrice: 0,
+      rating: 4.7,
+      highlights: [
+        t('reports.hosting.highlights.jamstackPioneer', 'Pioneer of JAMstack'),
+        t('reports.hosting.highlights.greatDx', 'Great DX'),
+        t('reports.hosting.highlights.builtInCiCd', 'Built-in CI/CD')
+      ],
+      bestFor: ['Gatsby', 'Hugo', t('reports.hosting.bestFor.staticSites', 'Static sites')]
+    },
+    {
+      name: 'DigitalOcean',
+      logo: '🌊',
+      category: t('reports.hosting.categories.cloudVps', 'Cloud VPS'),
+      tags: ['vps', 'budget'],
+      url: 'https://www.digitalocean.com',
+      startingPrice: 4,
+      rating: 4.6,
+      highlights: [
+        t('reports.hosting.highlights.developerFriendly', 'Developer-friendly'),
+        t('reports.hosting.highlights.simplePricing', 'Simple pricing'),
+        t('reports.hosting.highlights.kubernetesSupport', 'Kubernetes support')
+      ],
+      bestFor: ['WordPress', 'Node.js', 'Docker']
+    },
+    {
+      name: 'Vultr',
+      logo: '🔥',
+      category: t('reports.hosting.categories.cloudVps', 'Cloud VPS'),
+      tags: ['vps', 'budget'],
+      url: 'https://www.vultr.com',
+      startingPrice: 2.5,
+      rating: 4.5,
+      highlights: [
+        t('reports.hosting.highlights.cheapestCloudVps', 'Cheapest cloud VPS'),
+        t('reports.hosting.highlights.locations32', '32 locations'),
+        t('reports.hosting.highlights.highPerfNvme', 'High performance NVMe')
+      ],
+      bestFor: ['WordPress', t('reports.hosting.bestFor.gameServers', 'Game servers'), 'VPS']
+    },
+    {
+      name: 'Hetzner',
+      logo: '🇩🇪',
+      category: t('reports.hosting.categories.cloudVps', 'Cloud VPS'),
+      tags: ['vps', 'budget'],
+      url: 'https://www.hetzner.com',
+      startingPrice: 3.79,
+      rating: 4.7,
+      highlights: [
+        t('reports.hosting.highlights.bestValueEurope', 'Best value in Europe'),
+        t('reports.hosting.highlights.carbonNeutral', 'Carbon neutral'),
+        t('reports.hosting.highlights.germanDataProtection', 'German data protection')
+      ],
+      bestFor: ['WordPress', t('reports.hosting.bestFor.enterprise', 'Enterprise'), t('reports.hosting.bestFor.europeFocused', 'Europe-focused')]
+    },
+    {
+      name: 'Shopify',
+      logo: '🛒',
+      category: t('reports.hosting.categories.ecommercePlatform', 'E-commerce Platform'),
+      tags: ['ecommerce'],
+      url: 'https://www.shopify.com',
+      startingPrice: 29,
+      rating: 4.5,
+      highlights: [
+        t('reports.hosting.highlights.bestDropshipping', 'Best for dropshipping'),
+        t('reports.hosting.highlights.appEcosystem', 'App ecosystem'),
+        t('reports.hosting.highlights.posIntegration', 'POS integration')
+      ],
+      bestFor: [t('reports.hosting.bestFor.ecommerce', 'E-commerce'), t('reports.hosting.bestFor.dropshipping', 'Dropshipping'), t('reports.hosting.bestFor.retail', 'Retail')]
+    },
+    {
+      name: 'Cloudflare Pages',
+      logo: '☁️',
+      category: t('reports.hosting.categories.jamstackEdge', 'JAMstack/Edge'),
+      tags: ['vps', 'budget'],
+      url: 'https://pages.cloudflare.com',
+      startingPrice: 0,
+      rating: 4.6,
+      highlights: [
+        t('reports.hosting.highlights.unlimitedBandwidthFree', 'Unlimited bandwidth free'),
+        t('reports.hosting.highlights.fastestEdgeNetwork', 'Fastest edge network'),
+        t('reports.hosting.highlights.workersIntegration', 'Workers integration')
+      ],
+      bestFor: [t('reports.hosting.bestFor.staticSites', 'Static sites'), 'JAMstack', t('reports.hosting.bestFor.globalDelivery', 'Global delivery')]
+    },
+    {
+      name: 'SiteGround',
+      logo: '🟠',
+      category: t('reports.hosting.categories.sharedHosting', 'Shared Hosting'),
+      tags: ['wordpress', 'budget'],
+      url: 'https://www.siteground.com',
+      startingPrice: 2.99,
+      rating: 4.4,
+      highlights: [
+        t('reports.hosting.highlights.excellentSupport', 'Excellent support'),
+        t('reports.hosting.highlights.googleCloud', 'Google Cloud'),
+        t('reports.hosting.highlights.freeCdnEmail', 'Free CDN & Email')
+      ],
+      bestFor: ['WordPress', t('reports.hosting.bestFor.smallBusiness', 'Small business'), t('reports.hosting.bestFor.beginners', 'Beginners')]
+    },
+    {
+      name: 'Hostinger',
+      logo: '💜',
+      category: t('reports.hosting.categories.sharedHosting', 'Shared Hosting'),
+      tags: ['wordpress', 'budget'],
+      url: 'https://www.hostinger.com',
+      startingPrice: 1.99,
+      rating: 4.3,
+      highlights: [
+        t('reports.hosting.highlights.bestBudgetOption', 'Best budget option'),
+        t('reports.hosting.highlights.fastLiteSpeed', 'Fast LiteSpeed servers'),
+        t('reports.hosting.highlights.hPanelControl', 'hPanel control panel')
+      ],
+      bestFor: [t('reports.hosting.bestFor.beginners', 'Beginners'), t('reports.hosting.bestFor.budgetSites', 'Budget sites'), 'WordPress']
+    },
+    {
+      name: 'Cloudways',
+      logo: '☁️',
+      category: t('reports.hosting.categories.managedCloud', 'Managed Cloud'),
+      tags: ['wordpress', 'vps'],
+      url: 'https://www.cloudways.com',
+      startingPrice: 11,
+      rating: 4.5,
+      highlights: [
+        t('reports.hosting.highlights.chooseYourCloud', 'Choose your cloud'),
+        t('reports.hosting.highlights.payAsYouGo', 'Pay as you go'),
+        t('reports.hosting.highlights.freeMigrations', 'Free migrations')
+      ],
+      bestFor: ['WordPress', 'Magento', t('reports.hosting.bestFor.agencies', 'Agencies')]
+    },
+    {
+      name: 'BigCommerce',
+      logo: '🛍️',
+      category: t('reports.hosting.categories.ecommercePlatform', 'E-commerce Platform'),
+      tags: ['ecommerce'],
+      url: 'https://www.bigcommerce.com',
+      startingPrice: 29,
+      rating: 4.4,
+      highlights: [
+        t('reports.hosting.highlights.noTransactionFees', 'No transaction fees'),
+        t('reports.hosting.highlights.builtInSeo', 'Built-in SEO'),
+        t('reports.hosting.highlights.multiChannelSelling', 'Multi-channel selling')
+      ],
+      bestFor: [t('reports.hosting.bestFor.ecommerce', 'E-commerce'), t('reports.hosting.bestFor.growingStores', 'Growing stores'), 'B2B']
+    },
+    {
+      name: 'WooCommerce + Bluehost',
+      logo: '🔵',
+      category: t('reports.hosting.categories.ecommerceWordPress', 'E-commerce WordPress'),
+      tags: ['ecommerce', 'wordpress', 'budget'],
+      url: 'https://www.bluehost.com/wordpress/woocommerce-hosting',
+      startingPrice: 9.95,
+      rating: 4.2,
+      highlights: [
+        t('reports.hosting.highlights.wooPreInstalled', 'WooCommerce pre-installed'),
+        t('reports.hosting.highlights.freeDomain', 'Free domain'),
+        t('reports.hosting.highlights.sslIncluded', 'SSL included')
+      ],
+      bestFor: ['WooCommerce', t('reports.hosting.bestFor.smallStores', 'Small stores'), t('reports.hosting.bestFor.wordPressUsers', 'WordPress users')]
+    }
+  ];
+}
 
 // Filter providers function
 function filterProviders(filter) {
   currentFilter = filter;
-  
-  // Update button styles
+
+  // Update button styles based on data-filter attribute
   document.querySelectorAll('.filter-pill').forEach(btn => {
-    if (btn.textContent.toLowerCase().includes(filter) || 
-        (filter === 'all' && btn.textContent === 'All') ||
-        (filter === 'wordpress' && btn.textContent.includes('WordPress')) ||
-        (filter === 'ecommerce' && btn.textContent.includes('E-commerce')) ||
-        (filter === 'vps' && btn.textContent.includes('Cloud')) ||
-        (filter === 'budget' && btn.textContent.includes('Budget'))) {
+    const btnFilter = btn.getAttribute('data-filter') || btn.textContent.toLowerCase();
+    if (btnFilter === filter ||
+        (filter === 'all' && (btnFilter === 'all' || btn.textContent === t('reports.hosting.filters.all', 'All')))) {
       btn.style.background = 'rgba(0, 255, 65, 0.2)';
       btn.style.borderColor = 'rgba(0, 255, 65, 0.4)';
       btn.style.color = '#00ff41';
@@ -189,7 +314,7 @@ function filterProviders(filter) {
       btn.style.color = '#808080';
     }
   });
-  
+
   renderPopularProviders();
 }
 
@@ -210,6 +335,7 @@ function initializeCharts() {
   Chart.defaults.borderColor = 'rgba(255, 255, 255, 0.1)';
 
   // Get top 8 providers for charts
+  const POPULAR_PROVIDERS = getPopularProviders();
   const chartProviders = POPULAR_PROVIDERS.slice(0, 8);
   const labels = chartProviders.map(p => p.name);
   const prices = chartProviders.map(p => p.startingPrice);
@@ -229,7 +355,7 @@ function initializeCharts() {
       data: {
         labels: labels,
         datasets: [{
-          label: 'Starting Price ($/mo)',
+          label: t('reports.hosting.charts.startingPrice', 'Starting Price ($/mo)'),
           data: prices,
           backgroundColor: colors.map(c => c + '80'),
           borderColor: colors,
@@ -244,7 +370,7 @@ function initializeCharts() {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (ctx) => ctx.raw === 0 ? 'FREE' : `$${ctx.raw}/mo`
+              label: (ctx) => ctx.raw === 0 ? t('reports.hosting.pricing.free', 'FREE') : `$${ctx.raw}/${t('reports.hosting.pricing.mo', 'mo')}`
             }
           }
         },
@@ -252,8 +378,8 @@ function initializeCharts() {
           y: {
             beginAtZero: true,
             grid: { color: 'rgba(255, 255, 255, 0.05)' },
-            ticks: { 
-              callback: (value) => value === 0 ? 'FREE' : '$' + value 
+            ticks: {
+              callback: (value) => value === 0 ? t('reports.hosting.pricing.free', 'FREE') : '$' + value
             }
           },
           x: {
@@ -276,7 +402,7 @@ function initializeCharts() {
       data: {
         labels: labels,
         datasets: [{
-          label: 'User Rating',
+          label: t('reports.hosting.charts.userRating', 'User Rating'),
           data: ratings,
           backgroundColor: ratings.map(r => {
             if (r >= 4.7) return 'rgba(0, 255, 65, 0.6)';
@@ -302,7 +428,7 @@ function initializeCharts() {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (ctx) => `⭐ ${ctx.raw} / 5.0`
+              label: (ctx) => `⭐ ${ctx.raw} / 5.0`  // Rating format is universal
             }
           }
         },
@@ -379,7 +505,7 @@ function initializeCharts() {
       data: {
         labels: labels,
         datasets: [{
-          label: 'Value Score',
+          label: t('reports.hosting.charts.valueScore', 'Value Score'),
           data: valueScores,
           backgroundColor: 'rgba(0, 255, 65, 0.3)',
           borderColor: '#00ff41',
@@ -394,7 +520,7 @@ function initializeCharts() {
           legend: { display: false },
           tooltip: {
             callbacks: {
-              label: (ctx) => `Value Score: ${ctx.raw}`
+              label: (ctx) => `${t('reports.hosting.charts.valueScore', 'Value Score')}: ${ctx.raw}`
             }
           }
         },
@@ -404,7 +530,7 @@ function initializeCharts() {
             grid: { color: 'rgba(255, 255, 255, 0.05)' },
             title: {
               display: true,
-              text: 'Higher = Better Value',
+              text: t('reports.hosting.charts.higherBetterValue', 'Higher = Better Value'),
               color: '#808080',
               font: { size: 10 }
             }
@@ -458,21 +584,24 @@ function renderPopularProviders() {
   const container = document.getElementById('popularProviders');
   if (!container) return;
 
+  // Get providers with translations applied at render time
+  const POPULAR_PROVIDERS = getPopularProviders();
+
   // Filter providers based on current filter
-  const filteredProviders = currentFilter === 'all' 
-    ? POPULAR_PROVIDERS 
+  const filteredProviders = currentFilter === 'all'
+    ? POPULAR_PROVIDERS
     : POPULAR_PROVIDERS.filter(p => p.tags && p.tags.includes(currentFilter));
 
   if (filteredProviders.length === 0) {
-    container.innerHTML = '<p style="color: #808080; text-align: center; padding: 2rem;">No providers match this filter. Try another category.</p>';
+    container.innerHTML = `<p style="color: #808080; text-align: center; padding: 2rem;">${t('reports.hosting.noProvidersMatch', 'No providers match this filter. Try another category.')}</p>`;
     return;
   }
 
   container.innerHTML = filteredProviders.map((provider, index) => `
     <div class="provider-card ${index < 2 && currentFilter === 'all' ? 'top-pick' : ''}" style="animation: fadeIn 0.3s ease ${index * 0.05}s both;">
-      ${index === 0 && currentFilter === 'all' ? '<div class="provider-badge">👑 TOP PICK</div>' : ''}
-      ${index === 1 && currentFilter === 'all' ? '<div class="provider-badge" style="background: linear-gradient(135deg, #c0c0c0, #808080);">🥈 RUNNER UP</div>' : ''}
-      
+      ${index === 0 && currentFilter === 'all' ? `<div class="provider-badge">👑 ${t('reports.hosting.badges.topPick', 'TOP PICK')}</div>` : ''}
+      ${index === 1 && currentFilter === 'all' ? `<div class="provider-badge" style="background: linear-gradient(135deg, #c0c0c0, #808080);">🥈 ${t('reports.hosting.badges.runnerUp', 'RUNNER UP')}</div>` : ''}
+
       <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
         <div style="font-size: 2.5rem;">${provider.logo}</div>
         <div style="flex: 1;">
@@ -488,8 +617,8 @@ function renderPopularProviders() {
 
       <div style="background: rgba(0, 217, 255, 0.1); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: #808080; font-size: 0.85rem;">Starting at</span>
-          <span style="font-size: 1.5rem; font-weight: bold; color: #00d9ff;">${provider.startingPrice === 0 ? '<span style="color: #00ff41;">FREE</span>' : `$${provider.startingPrice}/mo`}</span>
+          <span style="color: #808080; font-size: 0.85rem;">${t('reports.hosting.pricing.startingAt', 'Starting at')}</span>
+          <span style="font-size: 1.5rem; font-weight: bold; color: #00d9ff;">${provider.startingPrice === 0 ? `<span style="color: #00ff41;">${t('reports.hosting.pricing.free', 'FREE')}</span>` : `$${provider.startingPrice}/${t('reports.hosting.pricing.mo', 'mo')}`}</span>
         </div>
       </div>
 
@@ -500,15 +629,14 @@ function renderPopularProviders() {
       </div>
 
       <div style="font-size: 0.8rem; color: #808080; margin-bottom: 0.75rem;">
-        <strong>Best for:</strong> ${provider.bestFor.join(', ')}
+        <strong>${t('reports.hosting.bestForLabel', 'Best for')}:</strong> ${provider.bestFor.join(', ')}
       </div>
 
       ${provider.url ? `
-        <a href="${provider.url}" target="_blank" rel="noopener noreferrer" 
+        <a href="${provider.url}" target="_blank" rel="noopener noreferrer"
            style="display: block; background: linear-gradient(135deg, #00d9ff, #0099cc); color: #000; text-decoration: none; padding: 0.65rem; border-radius: 6px; text-align: center; font-weight: 600; font-size: 0.85rem; transition: all 0.2s ease;"
-           onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 12px rgba(0, 217, 255, 0.4)';"
-           onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-          Visit ${provider.name} →
+           class="hosting-provider-link">
+          ${t('reports.hosting.visitProvider', 'Visit {{name}}', { name: provider.name })} →
         </a>
       ` : ''}
     </div>
@@ -556,7 +684,7 @@ async function analyzeHosting() {
   };
 
   if (!input) {
-    showError('Please enter a valid website URL or domain name');
+    showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid website URL or domain name'));
     return;
   }
 
@@ -585,38 +713,8 @@ async function analyzeHosting() {
   // Initialize the analyzer loader
   const loader = new window.AnalyzerLoaderClass('loadingContainer');
 
-  const analysisSteps = [
-    {
-      label: 'Connecting to website',
-      detail: 'Establishing secure connection...'
-    },
-    {
-      label: 'Detecting CMS platform',
-      detail: 'Identifying WordPress, Shopify, Wix, and 10+ more...'
-    },
-    {
-      label: 'Detecting current host',
-      detail: 'Analyzing DNS records and headers...'
-    },
-    {
-      label: 'Matching hosting providers',
-      detail: 'Finding best options for your platform...'
-    },
-    {
-      label: 'Calculating pricing',
-      detail: 'Comparing 25+ hosting providers...'
-    },
-    {
-      label: 'Finding savings opportunities',
-      detail: 'Analyzing cost optimization options...'
-    },
-    {
-      label: 'Generating recommendations',
-      detail: 'Compiling personalized hosting report...'
-    }
-  ];
-
-  loader.start(analysisSteps, '[HOSTING ANALYZER]', 20);
+  // Use getAnalysisSteps() to get translated steps at runtime
+  loader.start(getAnalysisSteps(), '🏠 ' + t('loader.analyzingHosting', 'HOSTING ANALYZER'), 20);
 
   try {
     const scanStartedAt = new Date().toISOString();
@@ -624,10 +722,12 @@ async function analyzeHosting() {
     document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
 
     // Call hosting API with manual inputs
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
     const response = await fetch('/api/hosting/analyze', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...(token && { 'Authorization': `Bearer ${token}` })
       },
       body: JSON.stringify({ 
         url: input,
@@ -638,7 +738,11 @@ async function analyzeHosting() {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.error || 'Hosting analysis failed');
+      if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
+        const limit = errorData.scansLimit || 10;
+        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+      }
+      throw new Error(errorData.message || errorData.error || t('reports.hosting.analysisFailedSimple', 'Hosting analysis failed'));
     }
 
     const results = await response.json();
@@ -665,11 +769,13 @@ async function analyzeHosting() {
     setTimeout(() => {
       displayHostingResults(results);
       resultsDiv.classList.remove('hidden');
+      window.__REPORT_READY__ = true;
+      window.dispatchEvent(new CustomEvent('report:ready'));
     }, 1000);
 
   } catch (error) {
     console.error('Hosting analysis error:', error);
-    loader.showError(`Hosting analysis failed: ${error.message}`);
+    loader.showError(t('reports.hosting.analysisFailed', 'Hosting analysis failed: {{message}}', { message: error.message }));
     if (quickBrowse) quickBrowse.classList.remove('hidden');
   }
 }
@@ -678,6 +784,10 @@ async function analyzeHosting() {
 function displayHostingResults(data) {
   const resultsContent = document.getElementById('resultsContent');
   resultsContent.innerHTML = '';
+
+  // Build screenshot URL for report display
+  const reportId = document.body.getAttribute('data-report-id') || '';
+  const screenshotUrl = data.screenshotUrl || document.body.getAttribute('data-sm-screenshot-url') || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
 
   const cms = data.cms;
   const currentHost = data.currentHost;
@@ -705,37 +815,70 @@ function displayHostingResults(data) {
 
   // Build applied filters display - Feather Style icons
   const filterLabels = {
-    priority: { label: 'Priority', icon: '⭐' },
-    region: { label: 'Region', icon: '🌍' },
-    ecommerceLevel: { label: 'E-commerce', icon: '🛒' },
-    requiredFeatures: { label: 'Required Features', icon: '✅' },
-    storageNeeds: { label: 'Storage', icon: '💾' },
-    billingPreference: { label: 'Billing', icon: '💳' }
+    priority: { label: t('reports.hosting.filterLabels.priority', 'Priority'), icon: '⭐' },
+    region: { label: t('reports.hosting.filterLabels.region', 'Region'), icon: '🌍' },
+    ecommerceLevel: { label: t('reports.hosting.filterLabels.ecommerce', 'E-commerce'), icon: '🛒' },
+    requiredFeatures: { label: t('reports.hosting.filterLabels.requiredFeatures', 'Required Features'), icon: '✅' },
+    storageNeeds: { label: t('reports.hosting.filterLabels.storage', 'Storage'), icon: '💾' },
+    billingPreference: { label: t('reports.hosting.filterLabels.billing', 'Billing'), icon: '💳' }
   };
 
   const formatFilterValue = (key, value) => {
     if (!value || value === 'none' || value === 'global' || value === 'balanced' || (Array.isArray(value) && value.length === 0)) return null;
     if (key === 'region') {
-      const regionMap = { us: 'United States', eu: 'Europe', uk: 'United Kingdom', asia: 'Asia Pacific', au: 'Australia', latam: 'Latin America' };
+      const regionMap = {
+        us: t('reports.hosting.regions.us', 'United States'),
+        eu: t('reports.hosting.regions.eu', 'Europe'),
+        uk: t('reports.hosting.regions.uk', 'United Kingdom'),
+        asia: t('reports.hosting.regions.asia', 'Asia Pacific'),
+        au: t('reports.hosting.regions.au', 'Australia'),
+        latam: t('reports.hosting.regions.latam', 'Latin America')
+      };
       return regionMap[value] || value;
     }
     if (key === 'ecommerceLevel') {
-      const ecomMap = { basic: 'Basic (<100 products)', medium: 'Medium (100-1K)', large: 'Large (1K+)', enterprise: 'Enterprise' };
+      const ecomMap = {
+        basic: t('reports.hosting.ecomLevels.basic', 'Basic (<100 products)'),
+        medium: t('reports.hosting.ecomLevels.medium', 'Medium (100-1K)'),
+        large: t('reports.hosting.ecomLevels.large', 'Large (1K+)'),
+        enterprise: t('reports.hosting.ecomLevels.enterprise', 'Enterprise')
+      };
       return ecomMap[value] || value;
     }
     if (key === 'requiredFeatures' && Array.isArray(value)) {
-      const featureMap = { ssl: 'SSL', cdn: 'CDN', backup: 'Backups', staging: 'Staging', email: 'Email', migration: 'Migration', support247: '24/7 Support', uptime99: '99.9%+ Uptime' };
+      const featureMap = {
+        ssl: 'SSL',
+        cdn: 'CDN',
+        backup: t('reports.hosting.features.backups', 'Backups'),
+        staging: t('reports.hosting.features.staging', 'Staging'),
+        email: t('reports.hosting.features.email', 'Email'),
+        migration: t('reports.hosting.features.migration', 'Migration'),
+        support247: t('reports.hosting.features.support247', '24/7 Support'),
+        uptime99: t('reports.hosting.features.uptime99', '99.9%+ Uptime')
+      };
       return value.map(f => featureMap[f] || f).join(', ');
     }
     if (key === 'storageNeeds' && value) {
       return value >= 1000 ? `${value/1000}TB+` : `${value}GB+`;
     }
     if (key === 'billingPreference') {
-      const billingMap = { annual: 'Annual', monthly: 'Monthly', 'multi-year': 'Multi-year' };
+      const billingMap = {
+        annual: t('reports.hosting.billing.annual', 'Annual'),
+        monthly: t('reports.hosting.billing.monthly', 'Monthly'),
+        'multi-year': t('reports.hosting.billing.multiYear', 'Multi-year')
+      };
       return billingMap[value] || value;
     }
     if (key === 'priority') {
-      const priorityMap = { speed: 'Speed', budget: 'Budget', support: 'Support', uptime: 'Uptime', scalability: 'Scalability', security: 'Security', ecommerce: 'E-commerce Ready' };
+      const priorityMap = {
+        speed: t('reports.hosting.priorities.speed', 'Speed'),
+        budget: t('reports.hosting.priorities.budget', 'Budget'),
+        support: t('reports.hosting.priorities.support', 'Support'),
+        uptime: t('reports.hosting.priorities.uptime', 'Uptime'),
+        scalability: t('reports.hosting.priorities.scalability', 'Scalability'),
+        security: t('reports.hosting.priorities.security', 'Security'),
+        ecommerce: t('reports.hosting.priorities.ecommerceReady', 'E-commerce Ready')
+      };
       return priorityMap[value] || value;
     }
     return value;
@@ -750,17 +893,39 @@ function displayHostingResults(data) {
     })
     .filter(Boolean);
 
+  // Screenshot Section
+  const screenshotHTML = screenshotUrl ? `
+    <div class="screenshot-section" style="margin-bottom: 1.5rem;">
+      <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+        ${t('reports.common.pageScreenshot', 'Page Screenshot')}
+      </h3>
+      <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+        <img
+          src="${screenshotUrl}"
+          alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: data.hostname || data.url || '' })}"
+          class="screenshot-item__img"
+          style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
+          data-action="open-lightbox"
+          data-screenshot-url="${screenshotUrl}"
+          data-screenshot-title="${t('reports.common.pageScreenshot', 'Page Screenshot')}"
+          onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${t('reports.common.screenshotUnavailable', 'Screenshot unavailable')}</div>'"
+        />
+      </div>
+    </div>
+  ` : '';
+
   // Summary Section with Traffic Tier
   let html = `
+    ${screenshotHTML}
     <div class="section" style="margin-bottom: 2rem;">
-      <h2 style="color: #00ff41; margin-bottom: 1.5rem;">📊 Hosting Analysis Results</h2>
-      
+      <h2 style="color: #00ff41; margin-bottom: 1.5rem;">📊 ${t('reports.hosting.analysisResults', 'Hosting Analysis Results')}</h2>
+
       <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
         <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
-          <span style="color: #00ff41;">Analyzed:</span>
+          <span style="color: #00ff41;">${t('reports.common.analyzed', 'Analyzed')}:</span>
           <span style="color: #ffffff;">${data.hostname || data.url || 'N/A'}</span>
-          <span style="color: #00ff41;">Timestamp:</span>
-          <span style="color: #ffffff;">${new Date().toLocaleString()}</span>
+          <span style="color: #00ff41;">${t('reports.common.timestamp', 'Timestamp')}:</span>
+          <span style="color: #ffffff;">${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString()}</span>
         </div>
       </div>
 
@@ -768,7 +933,7 @@ function displayHostingResults(data) {
         <div style="background: rgba(153, 51, 255, 0.08); border: 1px solid rgba(153, 51, 255, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
             <span style="font-size: 1.1rem;">🔧</span>
-            <span style="color: #bb77ff; font-weight: 600; font-size: 0.9rem;">Applied Filters</span>
+            <span style="color: #bb77ff; font-weight: 600; font-size: 0.9rem;">${t('reports.hosting.appliedFilters', 'Applied Filters')}</span>
           </div>
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
             ${activeFilters.map(filter => `
@@ -789,20 +954,20 @@ function displayHostingResults(data) {
             <div style="display: flex; align-items: center; gap: 1rem;">
               <div style="font-size: 3rem;">${trafficTier.icon || '◈'}</div>
               <div>
-                <div style="font-size: 0.85rem; color: #808080;">Estimated Website Tier</div>
+                <div style="font-size: 0.85rem; color: #808080;">${t('reports.hosting.estimatedWebsiteTier', 'Estimated Website Tier')}</div>
                 <div style="font-size: 1.75rem; font-weight: bold; color: ${tierColor};">${trafficTier.name}</div>
                 <div style="font-size: 0.9rem; color: #808080; margin-top: 0.25rem;">${trafficTier.description}</div>
               </div>
             </div>
             <div style="background: rgba(0, 0, 0, 0.3); padding: 1rem 1.5rem; border-radius: 8px; text-align: center;">
-              <div style="font-size: 0.75rem; color: #808080;">Confidence</div>
+              <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.confidence', 'Confidence')}</div>
               <div style="font-size: 1.5rem; font-weight: bold; color: ${tierColor};">${data.tierConfidence || 70}%</div>
             </div>
           </div>
-          
+
           ${trafficIndicators.length > 0 ? `
             <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid ${tierColor}30;">
-              <div style="font-size: 0.8rem; color: #808080; margin-bottom: 0.75rem;">Detection Signals:</div>
+              <div style="font-size: 0.8rem; color: #808080; margin-bottom: 0.75rem;">${t('reports.hosting.detectionSignals', 'Detection Signals')}:</div>
               <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                 ${trafficIndicators.slice(0, 6).map(ind => `
                   <div style="background: rgba(0, 0, 0, 0.3); padding: 0.4rem 0.75rem; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem;">
@@ -816,9 +981,9 @@ function displayHostingResults(data) {
           
           <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 6px;">
             <div style="font-size: 0.8rem; color: #808080;">
-              <strong>Recommended hosting budget:</strong> 
-              <span style="color: ${tierColor}; font-weight: 600;">$${trafficTier.minMonthly || 0}+/month</span>
-              ${trafficTier.characteristics ? ` • Typical for: ${trafficTier.characteristics.slice(0, 2).join(', ')}` : ''}
+              <strong>${t('reports.hosting.recommendedBudget', 'Recommended hosting budget')}:</strong>
+              <span style="color: ${tierColor}; font-weight: 600;">$${trafficTier.minMonthly || 0}+/${t('reports.hosting.pricing.month', 'month')}</span>
+              ${trafficTier.characteristics ? ` • ${t('reports.hosting.typicalFor', 'Typical for')}: ${trafficTier.characteristics.slice(0, 2).join(', ')}` : ''}
             </div>
           </div>
         </div>
@@ -830,7 +995,7 @@ function displayHostingResults(data) {
           <div style="display: flex; align-items: flex-start; gap: 0.75rem;">
             <span style="font-size: 1.25rem;">◉</span>
             <div>
-              <div style="color: #ffa500; font-weight: 600; margin-bottom: 0.25rem;">Traffic-Appropriate Recommendations</div>
+              <div style="color: #ffa500; font-weight: 600; margin-bottom: 0.25rem;">${t('reports.hosting.trafficAppropriateRecommendations', 'Traffic-Appropriate Recommendations')}</div>
               <div style="color: #808080; font-size: 0.9rem;">${tierWarning.message}</div>
               ${tierWarning.hiddenCount ? `<div style="color: #808080; font-size: 0.8rem; margin-top: 0.5rem;">(${tierWarning.hiddenCount} budget options hidden as inadequate for this tier)</div>` : ''}
             </div>
@@ -845,24 +1010,24 @@ function displayHostingResults(data) {
           <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
             <div style="font-size: 3rem;">${cms?.icon || '🔍'}</div>
             <div>
-              <div style="font-size: 0.85rem; color: #808080;">Detected CMS</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">${cms?.name || 'Unknown / Custom'}</div>
+              <div style="font-size: 0.85rem; color: #808080;">${t('reports.hosting.detectedCms', 'Detected CMS')}</div>
+              <div style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">${cms?.name || t('reports.hosting.unknownCustom', 'Unknown / Custom')}</div>
             </div>
           </div>
           ${cms ? `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem;">
               <div style="background: rgba(0, 0, 0, 0.3); padding: 0.75rem; border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080;">Market Share</div>
+                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.marketShare', 'Market Share')}</div>
                 <div style="font-size: 1.25rem; font-weight: bold; color: #00d9ff;">${cms.marketShare || 'N/A'}</div>
               </div>
               <div style="background: rgba(0, 0, 0, 0.3); padding: 0.75rem; border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080;">Confidence</div>
+                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.confidence', 'Confidence')}</div>
                 <div style="font-size: 1.25rem; font-weight: bold; color: #9933ff;">${cms.confidence || 0}%</div>
               </div>
             </div>
             ${cms.matchedPatterns?.length > 0 ? `
               <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080; margin-bottom: 0.5rem;">Detection Signals</div>
+                <div style="font-size: 0.75rem; color: #808080; margin-bottom: 0.5rem;">${t('reports.hosting.detectionSignals', 'Detection Signals')}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                   ${cms.matchedPatterns.slice(0, 5).map(p => `
                     <span style="background: rgba(153, 51, 255, 0.2); color: #9933ff; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-family: monospace;">${p}</span>
@@ -872,7 +1037,7 @@ function displayHostingResults(data) {
             ` : ''}
           ` : `
             <div style="color: #808080; font-size: 0.9rem; margin-top: 0.5rem;">
-              Could not detect a known CMS. This site may be using a custom-built platform or a CMS not in our database.
+              ${t('reports.hosting.noCmsDetected', 'Could not detect a known CMS. This site may be using a custom-built platform or a CMS not in our database.')}
             </div>
           `}
         </div>
@@ -882,24 +1047,24 @@ function displayHostingResults(data) {
           <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
             <div style="font-size: 3rem;">${currentHost ? '🏢' : '❓'}</div>
             <div>
-              <div style="font-size: 0.85rem; color: #808080;">Current Host</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">${currentHost?.name || 'Not Detected'}</div>
+              <div style="font-size: 0.85rem; color: #808080;">${t('reports.hosting.currentHost', 'Current Host')}</div>
+              <div style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">${currentHost?.name || t('reports.hosting.notDetected', 'Not Detected')}</div>
             </div>
           </div>
           ${currentHost ? `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem;">
               <div style="background: rgba(0, 0, 0, 0.3); padding: 0.75rem; border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080;">Category</div>
+                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.category', 'Category')}</div>
                 <div style="font-size: 1rem; font-weight: 600; color: #00ff41;">${currentHost.category}</div>
               </div>
               <div style="background: rgba(0, 0, 0, 0.3); padding: 0.75rem; border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080;">Detected Via</div>
+                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.detectedVia', 'Detected Via')}</div>
                 <div style="font-size: 1rem; font-weight: 600; color: #00d9ff;">${currentHost.detectedVia}</div>
               </div>
             </div>
           ` : `
             <div style="color: #808080; font-size: 0.9rem; margin-top: 0.5rem;">
-              Unable to determine current hosting provider from DNS records. The site may be behind a CDN or using custom infrastructure.
+              ${t('reports.hosting.noHostDetected', 'Unable to determine current hosting provider from DNS records. The site may be behind a CDN or using custom infrastructure.')}
             </div>
           `}
         </div>
@@ -909,31 +1074,31 @@ function displayHostingResults(data) {
 
   // Price Comparison Summary - Updated to show tier-appropriate pricing
   if (priceComparison) {
-    const tierMinLabel = priceComparison.tierMinimum > 0 ? `(${priceComparison.tierName} tier minimum: $${priceComparison.tierMinimum}/mo)` : '';
+    const tierMinLabel = priceComparison.tierMinimum > 0 ? `(${priceComparison.tierName} ${t('reports.hosting.tierMinimum', 'tier minimum')}: $${priceComparison.tierMinimum}/${t('reports.hosting.pricing.mo', 'mo')})` : '';
     html += `
       <div class="section" style="background: rgba(255, 165, 0, 0.08); border: 1px solid rgba(255, 165, 0, 0.3); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
-        <h3 style="color: #ffa500; margin: 0 0 0.5rem 0;">💰 Pricing Overview ${cms ? `for ${cms.name} Hosting` : ''}</h3>
+        <h3 style="color: #ffa500; margin: 0 0 0.5rem 0;">💰 ${t('reports.hosting.pricingOverview', 'Pricing Overview')} ${cms ? t('reports.hosting.forHosting', 'for {{name}} Hosting', { name: cms.name }) : ''}</h3>
         ${tierMinLabel ? `<div style="font-size: 0.85rem; color: #808080; margin-bottom: 1rem;">${tierMinLabel}</div>` : ''}
         <div class="price-stats">
           <div class="price-stat-card">
-            <div style="font-size: 0.8rem; color: #808080;">${priceComparison.tierMinimum > 0 ? 'Tier Minimum' : 'Lowest Price'}</div>
+            <div style="font-size: 0.8rem; color: #808080;">${priceComparison.tierMinimum > 0 ? t('reports.hosting.tierMinimumLabel', 'Tier Minimum') : t('reports.hosting.lowestPrice', 'Lowest Price')}</div>
             <div style="font-size: 1.75rem; font-weight: bold; color: #00ff41;">$${priceComparison.lowestPrice}</div>
-            <div style="font-size: 0.75rem; color: #808080;">/month</div>
+            <div style="font-size: 0.75rem; color: #808080;">/${t('reports.hosting.pricing.month', 'month')}</div>
           </div>
           <div class="price-stat-card">
-            <div style="font-size: 0.8rem; color: #808080;">Average Price</div>
+            <div style="font-size: 0.8rem; color: #808080;">${t('reports.hosting.averagePrice', 'Average Price')}</div>
             <div style="font-size: 1.75rem; font-weight: bold; color: #ffa500;">$${priceComparison.averagePrice}</div>
-            <div style="font-size: 0.75rem; color: #808080;">/month</div>
+            <div style="font-size: 0.75rem; color: #808080;">/${t('reports.hosting.pricing.month', 'month')}</div>
           </div>
           <div class="price-stat-card">
-            <div style="font-size: 0.8rem; color: #808080;">Premium Price</div>
+            <div style="font-size: 0.8rem; color: #808080;">${t('reports.hosting.premiumPrice', 'Premium Price')}</div>
             <div style="font-size: 1.75rem; font-weight: bold; color: #9933ff;">$${priceComparison.highestPrice}</div>
-            <div style="font-size: 0.75rem; color: #808080;">/month</div>
+            <div style="font-size: 0.75rem; color: #808080;">/${t('reports.hosting.pricing.month', 'month')}</div>
           </div>
           <div class="price-stat-card">
-            <div style="font-size: 0.8rem; color: #808080;">Budget Options</div>
+            <div style="font-size: 0.8rem; color: #808080;">${t('reports.hosting.budgetOptions', 'Budget Options')}</div>
             <div style="font-size: 1.75rem; font-weight: bold; color: #00d9ff;">${priceComparison.budgetOptions}</div>
-            <div style="font-size: 0.75rem; color: #808080;">under $5/mo</div>
+            <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.under5mo', 'under $5/mo')}</div>
           </div>
         </div>
       </div>
@@ -944,8 +1109,8 @@ function displayHostingResults(data) {
   if (savingsOpportunities.length > 0) {
     html += `
       <div class="savings-card" style="margin-bottom: 2rem;">
-        <h3 style="color: #00ff41; margin: 0 0 1rem 0;">💸 Potential Savings Opportunities</h3>
-        <p style="color: #808080; font-size: 0.9rem; margin-bottom: 1rem;">Based on your current hosting, here are alternatives that could save you money:</p>
+        <h3 style="color: #00ff41; margin: 0 0 1rem 0;">💸 ${t('reports.hosting.potentialSavings', 'Potential Savings Opportunities')}</h3>
+        <p style="color: #808080; font-size: 0.9rem; margin-bottom: 1rem;">${t('reports.hosting.savingsDescription', 'Based on your current hosting, here are alternatives that could save you money')}:</p>
         <div style="display: grid; gap: 1rem;">
           ${savingsOpportunities.map(opp => `
             <div style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
@@ -954,7 +1119,7 @@ function displayHostingResults(data) {
                 <div style="font-size: 0.85rem; color: #808080;">${opp.category} • ★ ${opp.rating}</div>
               </div>
               <div style="text-align: center;">
-                <div style="font-size: 0.75rem; color: #808080;">Current → New</div>
+                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.currentToNew', 'Current → New')}</div>
                 <div style="font-size: 1rem;">
                   <span style="color: #ff4444; text-decoration: line-through;">$${opp.currentPrice}</span>
                   <span style="color: #808080;"> → </span>
@@ -963,7 +1128,7 @@ function displayHostingResults(data) {
               </div>
               <div style="background: rgba(0, 255, 65, 0.2); padding: 0.5rem 1rem; border-radius: 6px; text-align: center;">
                 <div style="font-size: 1.25rem; font-weight: bold; color: #00ff41;">-${opp.savingsPercent}%</div>
-                <div style="font-size: 0.75rem; color: #00ff41;">$${opp.annualSavings}/year</div>
+                <div style="font-size: 0.75rem; color: #00ff41;">$${opp.annualSavings}/${t('reports.hosting.pricing.year', 'year')}</div>
               </div>
             </div>
           `).join('')}
@@ -976,12 +1141,12 @@ function displayHostingResults(data) {
   if (recommendedHosts.length > 0) {
     html += `
       <div class="section" style="margin-bottom: 2rem;">
-        <h3 style="color: #ffffff; margin: 0 0 1rem 0;">🏆 Top Recommended Hosts ${cms ? `for ${cms.name}` : ''}</h3>
+        <h3 style="color: #ffffff; margin: 0 0 1rem 0;">🏆 ${t('reports.hosting.topRecommendedHosts', 'Top Recommended Hosts')} ${cms ? t('reports.hosting.forPlatform', 'for {{name}}', { name: cms.name }) : ''}</h3>
         <div class="providers-grid">
           ${recommendedHosts.slice(0, 6).map((host, index) => `
             <div class="provider-card ${index === 0 ? 'top-pick' : ''}">
-              ${index === 0 ? '<div class="provider-badge">◆ TOP PICK</div>' : ''}
-              ${index === 1 ? '<div class="provider-badge" style="background: linear-gradient(135deg, #c0c0c0, #808080);">RUNNER UP</div>' : ''}
+              ${index === 0 ? `<div class="provider-badge">◆ ${t('reports.hosting.badges.topPick', 'TOP PICK')}</div>` : ''}
+              ${index === 1 ? `<div class="provider-badge" style="background: linear-gradient(135deg, #c0c0c0, #808080);">${t('reports.hosting.badges.runnerUp', 'RUNNER UP')}</div>` : ''}
 
               <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div style="font-size: 2rem;">${getCategoryIcon(host.category)}</div>
@@ -991,7 +1156,7 @@ function displayHostingResults(data) {
                 </div>
                 ${host.matchScore ? `
                   <div style="background: rgba(0, 255, 65, 0.15); border: 1px solid rgba(0, 255, 65, 0.3); padding: 0.4rem 0.6rem; border-radius: 6px;">
-                    <div style="font-size: 0.7rem; color: #808080; text-align: center;">Match</div>
+                    <div style="font-size: 0.7rem; color: #808080; text-align: center;">${t('reports.hosting.match', 'Match')}</div>
                     <div style="font-size: 1rem; font-weight: bold; color: #00ff41;">${Math.round(host.matchScore)}%</div>
                   </div>
                 ` : ''}
@@ -1000,12 +1165,12 @@ function displayHostingResults(data) {
               <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
                 <span style="color: #ffd700; font-size: 1rem;">${getRatingStars(host.rating)}</span>
                 <span style="color: #ffffff; font-weight: 600;">${host.rating}</span>
-                <span style="color: #808080; font-size: 0.85rem;">• ${host.uptime} uptime</span>
+                <span style="color: #808080; font-size: 0.85rem;">• ${host.uptime} ${t('reports.hosting.uptime', 'uptime')}</span>
               </div>
 
               ${host.matchReasons && host.matchReasons.length > 0 ? `
                 <div style="background: rgba(153, 51, 255, 0.1); border: 1px solid rgba(153, 51, 255, 0.3); border-radius: 6px; padding: 0.6rem; margin-bottom: 1rem;">
-                  <div style="font-size: 0.7rem; color: #808080; margin-bottom: 0.4rem;">Why this provider:</div>
+                  <div style="font-size: 0.7rem; color: #808080; margin-bottom: 0.4rem;">${t('reports.hosting.whyThisProvider', 'Why this provider')}:</div>
                   <div style="display: flex; flex-wrap: wrap; gap: 0.3rem;">
                     ${host.matchReasons.slice(0, 3).map(reason => `
                       <span style="background: rgba(153, 51, 255, 0.2); color: #bb77ff; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem;">▸ ${reason}</span>
@@ -1016,11 +1181,11 @@ function displayHostingResults(data) {
 
               <div style="background: rgba(0, 217, 255, 0.1); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                  <span style="color: #808080; font-size: 0.85rem;">Starting at</span>
+                  <span style="color: #808080; font-size: 0.85rem;">${t('reports.hosting.pricing.startingAt', 'Starting at')}</span>
                   <span style="font-size: 1.5rem; font-weight: bold; color: #00d9ff;">${formatPrice(host.cheapestPlan?.price)}</span>
                 </div>
                 <div style="font-size: 0.8rem; color: #808080;">
-                  ${host.cheapestPlan?.name}: ${host.cheapestPlan?.storage} storage
+                  ${host.cheapestPlan?.name}: ${host.cheapestPlan?.storage} ${t('reports.hosting.storage', 'storage')}
                 </div>
               </div>
 
@@ -1047,12 +1212,12 @@ function displayHostingResults(data) {
               <div style="display: flex; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
                 ${host.migrationDifficulty ? `
                   <span style="background: ${host.migrationDifficulty === 'easy' ? 'rgba(0, 255, 65, 0.1)' : host.migrationDifficulty === 'medium' ? 'rgba(255, 165, 0, 0.1)' : 'rgba(255, 68, 68, 0.1)'}; color: ${host.migrationDifficulty === 'easy' ? '#00ff41' : host.migrationDifficulty === 'medium' ? '#ffa500' : '#ff4444'}; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.65rem;">
-                    ▹ ${host.migrationDifficulty === 'easy' ? 'Easy Migration' : host.migrationDifficulty === 'medium' ? 'Moderate Migration' : 'Complex Migration'}
+                    ▹ ${host.migrationDifficulty === 'easy' ? t('reports.hosting.migration.easy', 'Easy Migration') : host.migrationDifficulty === 'medium' ? t('reports.hosting.migration.moderate', 'Moderate Migration') : t('reports.hosting.migration.complex', 'Complex Migration')}
                   </span>
                 ` : ''}
                 ${host.availableRegions && host.availableRegions.length > 0 ? `
                   <span style="background: rgba(0, 217, 255, 0.1); color: #00d9ff; padding: 0.2rem 0.4rem; border-radius: 4px; font-size: 0.65rem;">
-                    ○ ${host.availableRegions.length} region${host.availableRegions.length > 1 ? 's' : ''}
+                    ○ ${host.availableRegions.length} ${host.availableRegions.length > 1 ? t('reports.hosting.regions.plural', 'regions') : t('reports.hosting.regions.singular', 'region')}
                   </span>
                 ` : ''}
               </div>
@@ -1062,11 +1227,10 @@ function displayHostingResults(data) {
               ` : ''}
               
               ${host.url ? `
-                <a href="${host.url}" target="_blank" rel="noopener noreferrer" 
+                <a href="${host.url}" target="_blank" rel="noopener noreferrer"
                    style="display: block; background: linear-gradient(135deg, #00d9ff, #0099cc); color: #000; text-decoration: none; padding: 0.75rem; border-radius: 6px; text-align: center; font-weight: 600; font-size: 0.9rem; transition: all 0.2s ease;"
-                   onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 12px rgba(0, 217, 255, 0.4)';"
-                   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
-                  Visit ${host.name} →
+                   class="hosting-provider-link">
+                  ${t('reports.hosting.visitProvider', 'Visit {{name}}', { name: host.name })} →
                 </a>
               ` : ''}
             </div>
@@ -1080,19 +1244,19 @@ function displayHostingResults(data) {
   if (allProviders.length > 0) {
     html += `
       <div class="section">
-        <h3 style="color: #ffffff; margin: 0 0 1rem 0;">📝 Complete Provider Comparison (${allProviders.length} matching providers)</h3>
+        <h3 style="color: #ffffff; margin: 0 0 1rem 0;">📝 ${t('reports.hosting.completeProviderComparison', 'Complete Provider Comparison')} (${allProviders.length} ${t('reports.hosting.matchingProviders', 'matching providers')})</h3>
         <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
           <table class="comparison-table">
             <thead>
               <tr>
-                <th>Provider</th>
-                <th>Category</th>
-                <th style="text-align: center;">Match</th>
-                <th style="text-align: center;">Rating</th>
-                <th style="text-align: center;">Uptime</th>
-                <th style="text-align: center;">Price Range</th>
-                <th style="text-align: center;">Migration</th>
-                <th style="text-align: center;">Link</th>
+                <th>${t('reports.hosting.table.provider', 'Provider')}</th>
+                <th>${t('reports.hosting.table.category', 'Category')}</th>
+                <th style="text-align: center;">${t('reports.hosting.table.match', 'Match')}</th>
+                <th style="text-align: center;">${t('reports.hosting.table.rating', 'Rating')}</th>
+                <th style="text-align: center;">${t('reports.hosting.table.uptime', 'Uptime')}</th>
+                <th style="text-align: center;">${t('reports.hosting.table.priceRange', 'Price Range')}</th>
+                <th style="text-align: center;">${t('reports.hosting.table.migration', 'Migration')}</th>
+                <th style="text-align: center;">${t('reports.hosting.table.link', 'Link')}</th>
               </tr>
             </thead>
             <tbody>
@@ -1120,17 +1284,16 @@ function displayHostingResults(data) {
                   <td style="text-align: center;">
                     ${provider.migrationDifficulty ? `
                       <span style="background: ${provider.migrationDifficulty === 'easy' ? 'rgba(0, 255, 65, 0.15)' : provider.migrationDifficulty === 'medium' ? 'rgba(255, 165, 0, 0.15)' : 'rgba(255, 68, 68, 0.15)'}; color: ${provider.migrationDifficulty === 'easy' ? '#00ff41' : provider.migrationDifficulty === 'medium' ? '#ffa500' : '#ff4444'}; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem;">
-                        ${provider.migrationDifficulty === 'easy' ? '▸ Easy' : provider.migrationDifficulty === 'medium' ? '○ Medium' : '◉ Hard'}
+                        ${provider.migrationDifficulty === 'easy' ? `▸ ${t('reports.hosting.migrationTable.easy', 'Easy')}` : provider.migrationDifficulty === 'medium' ? `○ ${t('reports.hosting.migrationTable.medium', 'Medium')}` : `◉ ${t('reports.hosting.migrationTable.hard', 'Hard')}`}
                       </span>
                     ` : '<span style="color: #555;">-</span>'}
                   </td>
                   <td style="text-align: center;">
                     ${provider.url ? `
-                      <a href="${provider.url}" target="_blank" rel="noopener noreferrer" 
+                      <a href="${provider.url}" target="_blank" rel="noopener noreferrer"
                          style="display: inline-block; background: rgba(0, 217, 255, 0.2); color: #00d9ff; text-decoration: none; padding: 0.4rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-weight: 500; border: 1px solid rgba(0, 217, 255, 0.4); transition: all 0.2s ease;"
-                         onmouseover="this.style.background='rgba(0, 217, 255, 0.3)'"
-                         onmouseout="this.style.background='rgba(0, 217, 255, 0.2)'">
-                        Visit →
+                         class="hosting-table-link">
+                        ${t('reports.hosting.visit', 'Visit')} →
                       </a>
                     ` : '<span style="color: #555;">-</span>'}
                   </td>
@@ -1140,7 +1303,7 @@ function displayHostingResults(data) {
           </table>
         </div>
         <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-radius: 8px; font-size: 0.85rem; color: #808080;">
-          <strong>◎ Pro Tip:</strong> Prices shown are starting prices with annual billing. Monthly billing is typically 20-30% higher. Match % indicates how well the provider fits your requirements. Consider your traffic needs, support requirements, and scaling plans when choosing a host.
+          <strong>◎ ${t('reports.hosting.proTip', 'Pro Tip')}:</strong> ${t('reports.hosting.proTipText', 'Prices shown are starting prices with annual billing. Monthly billing is typically 20-30% higher. Match % indicates how well the provider fits your requirements. Consider your traffic needs, support requirements, and scaling plans when choosing a host.')}
         </div>
       </div>
     `;
@@ -1148,13 +1311,25 @@ function displayHostingResults(data) {
 
   resultsContent.innerHTML = html;
 
+  // Add click handler for screenshot lightbox
+  if (screenshotUrl) {
+    const screenshotImg = resultsContent.querySelector('[data-action="open-lightbox"]');
+    if (screenshotImg) {
+      screenshotImg.addEventListener('click', () => {
+        if (window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+          window.ScreenshotLightbox.open(screenshotUrl, t('reports.common.pageScreenshot', 'Page Screenshot'));
+        }
+      });
+    }
+  }
+
   // Pro Report Block
   if (window.ProReportBlock && window.ProReportBlock.render) {
     const proBlockHtml = window.ProReportBlock.render({
       context: 'hosting-analysis',
       features: ['pdf', 'csv', 'share'],
-      title: 'Unlock Report',
-      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+      title: t('reports.common.unlockReport', 'Unlock Report'),
+      subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.')
     });
     resultsContent.insertAdjacentHTML('beforeend', proBlockHtml);
   }
@@ -1179,10 +1354,10 @@ function getCategoryIcon(category) {
 
 // Format price
 function formatPrice(price) {
-  if (price === 0) return '<span style="color: #00ff41;">FREE</span>';
+  if (price === 0) return `<span style="color: #00ff41;">${t('reports.hosting.pricing.free', 'FREE')}</span>`;
   if (typeof price === 'string') return price;
   if (typeof price !== 'number') return 'N/A';
-  return `$${price}/mo`;
+  return `$${price}/${t('reports.hosting.pricing.mo', 'mo')}`;
 }
 
 function showError(message) {
@@ -1203,7 +1378,7 @@ function initHostingPDFExport() {
     initPDFExport({
       contentSelector: '#results, #resultsContent, .results-container',
       buttonSelector: '#exportPdfBtn, .export-pdf-btn, #downloadPdfButton',
-      reportSubtitle: 'Hosting Performance & Infrastructure Analysis',
+      reportSubtitle: t('reports.hosting.pdfSubtitle', 'Hosting Performance & Infrastructure Analysis'),
       urlInputSelector: '#urlInput, input[type="url"], input[type="text"]',
       filename: `hosting-analysis-${new Date().toISOString().split('T')[0]}.pdf`
     });

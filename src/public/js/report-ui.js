@@ -11,6 +11,15 @@
  */
 
 (function(window) {
+  // Translation helper
+  function t(key, fallback) {
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const translated = window.i18n.t(key);
+      if (translated !== key) return translated;
+    }
+    return fallback;
+  }
+
   // Feature flag for gradual rollout
   const FEATURE_FLAG_KEY = 'use_new_report_ui';
 
@@ -102,7 +111,9 @@
     if (existing) existing.remove();
 
     const isSubscription = purchaseType === 'subscription';
-    const title = isSubscription ? 'Pro Subscription Activated!' : 'Report Unlocked!';
+    const title = isSubscription
+      ? t('billingPages.success.proSubscriptionActivated', 'Pro Subscription Activated!')
+      : t('billingPages.success.reportUnlocked', 'Report Unlocked!');
 
     const banner = document.createElement('div');
     banner.id = 'sm-payment-success-banner';
@@ -448,12 +459,12 @@
     shell.setAttribute('data-sm-page-screenshot-card', 'true');
     shell.innerHTML = `
       <div class="report-shell__header">
-        <div class="report-shell__title">Page Screenshot</div>
-        <a class="report-shell__badge" href="${screenshotUrl}" target="_blank" rel="noopener">Open full size</a>
+        <div class="report-shell__title">${t('reports.common.pageScreenshot', 'Page Screenshot')}</div>
+        <a class="report-shell__badge" href="${screenshotUrl}" target="_blank" rel="noopener">${t('reports.common.openFullSize', 'Open full size')}</a>
       </div>
       <div class="report-shell__card" data-screenshot-gallery>
         <a class="report-shell__screenshot-link" href="${screenshotUrl}" target="_blank" rel="noopener">
-          <img class="report-shell__screenshot" src="${screenshotUrl}" alt="Page screenshot" data-screenshot="0" loading="lazy" />
+          <img class="report-shell__screenshot" src="${screenshotUrl}" alt="${t('reports.common.pageScreenshot', 'Page screenshot')}" data-screenshot="0" loading="lazy" />
         </a>
       </div>
     `;
@@ -503,6 +514,15 @@
 
   // Track scan cycles: when results are cleared, the next render should generate a new reportId.
   let waitingForResults = true;
+
+  /**
+   * Reset the waiting state - call this at the start of a new scan.
+   * This ensures the screenshot card will be created for the new results.
+   */
+  function resetWaitingState() {
+    waitingForResults = true;
+    console.log('[ReportUI] Reset waiting state for new scan');
+  }
 
   async function ensureReportIdOnceResultsExist() {
     const resultsContent = document.getElementById('resultsContent');
@@ -707,6 +727,24 @@
           showToast('Report unlocked!');
         }
       }
+
+      // CRITICAL: Set session marker and purchased reportId
+      // This allows isReportTypePurchasedLocally() to grant access during same session
+      sessionStorage.setItem('sm_payment_completed_session', Date.now().toString());
+      // CRITICAL: Store the purchased reportId for reportId-based access verification
+      if (reportId) {
+        sessionStorage.setItem('sm_purchased_report_id', reportId);
+        console.log('[BillingReturn] Stored purchased reportId in session:', reportId);
+      }
+      // Save checkout session ID for server-side fallback verification
+      if (checkoutSessionId) {
+        sessionStorage.setItem('sm_last_checkout_session_id', checkoutSessionId);
+      }
+      console.log('[BillingReturn] Set session payment marker', { checkoutSessionId, reportId });
+
+      // NOTE: Removed URL-based localStorage purchase keys - these were causing security issues
+      // by granting access to ALL scans of a URL if any one scan was purchased.
+      // Now using reportId-based verification only (sm_purchased_report_id in sessionStorage).
 
       // Mark as processed
       sessionStorage.setItem(receiptKey, 'true');
@@ -1001,6 +1039,37 @@
       window.dispatchEvent(new CustomEvent('sm:billingReturnComplete', {
         detail: { reportId: reportId, billingStatus }
       }));
+
+      // If results weren't successfully displayed, reload the page to re-render with unlocked state
+      // This ensures the user sees unlocked content after payment
+      if (!displayedFromCache && !loadedFromStorage) {
+        console.log('[BillingReturn] Results not displayed, reloading page to show unlocked content');
+        // Show banner first, then reload after delay
+        showPaymentSuccessBanner('single_report');
+        setTimeout(() => {
+          // Check if an analyzer script has already handled the restore via event listener
+          // This prevents unnecessary reload when results were displayed by the event handler
+          if (window.__smResultsRestoredByAnalyzer) {
+            console.log('[BillingReturn] Results were restored by analyzer event listener, skipping reload');
+            return;
+          }
+
+          // Build reload URL with auto_scan to trigger automatic scan
+          const reloadParams = new URLSearchParams(window.location.search);
+          reloadParams.delete('billing_success');
+          reloadParams.delete('billing_canceled');
+          reloadParams.delete('session_id');
+          // Add auto_scan to trigger scan after reload if URL is present
+          if (reloadParams.has('url') || cachedUrl) {
+            reloadParams.set('auto_scan', 'true');
+            if (cachedUrl && !reloadParams.has('url')) {
+              reloadParams.set('url', cachedUrl);
+            }
+          }
+          const reloadUrl = `${window.location.pathname}${reloadParams.toString() ? `?${reloadParams.toString()}` : ''}`;
+          window.location.href = reloadUrl;
+        }, 1500);
+      }
 
       return; // Exit early - don't process legacy flow
     }
@@ -1351,15 +1420,15 @@
     const pageAttr = document.body.getAttribute('data-page');
     if (pageAttr) {
       const pretty = pageAttr.replace(/[-_]+/g, ' ').trim();
-      return pretty ? `${pretty.charAt(0).toUpperCase()}${pretty.slice(1)} Report` : 'Web Analysis Report';
+      return pretty ? `${pretty.charAt(0).toUpperCase()}${pretty.slice(1)} Report` : t('reports.ui.webAnalysisReport', 'Web Analysis Report');
     }
 
-    return 'Web Analysis Report';
+    return t('reports.ui.webAnalysisReport', 'Web Analysis Report');
   }
 
   async function exportPdfFromCurrentReport(buttonEl) {
     if (typeof window.PDFExportUtility === 'undefined') {
-      alert('PDF export is not available on this page.');
+      alert(t('reports.ui.pdfNotAvailable', 'PDF export is not available on this page.'));
       return;
     }
 
@@ -1370,7 +1439,7 @@
     const today = new Date().toISOString().split('T')[0];
     const exporter = new window.PDFExportUtility({
       filename: `site-mechanic-report-${today}.pdf`,
-      reportTitle: 'Site Mechanic',
+      reportTitle: t('common.siteMechanic', 'Site Mechanic'),
       reportSubtitle: detectReportSubtitle(),
       url,
       scale: 2,
@@ -1392,7 +1461,7 @@
       // Check if user has access before sharing
       const reportId = getCurrentReportId();
       if (!window.ProReportBlock?.hasAccess?.(reportId)) {
-        showToast('Purchase report to get shareable link');
+        showToast(t('reports.ui.purchaseToShare', 'Purchase report to get shareable link'));
         return;
       }
 
@@ -1403,7 +1472,7 @@
       // Generic share link implementation
       const url = getReportUrl();
       if (!reportId) {
-        showToast('Run a scan first to share');
+        showToast(t('reports.ui.runScanToShare', 'Run a scan first to share'));
         return;
       }
 
@@ -1417,9 +1486,9 @@
       shareUrl.searchParams.delete('auto_scan');
 
       navigator.clipboard.writeText(shareUrl.toString()).then(() => {
-        showToast('Share link copied to clipboard!');
+        showToast(t('reports.ui.linkCopied', 'Share link copied to clipboard!'));
       }).catch(() => {
-        showToast('Failed to copy link');
+        showToast(t('reports.ui.copyFailed', 'Failed to copy link'));
       });
     };
   }
@@ -1429,7 +1498,7 @@
       // Check if user has access
       const reportId = getCurrentReportId();
       if (!window.ProReportBlock?.hasAccess?.(reportId)) {
-        showToast('Purchase report to export CSV');
+        showToast(t('reports.ui.purchaseToExportCSV', 'Purchase report to export CSV'));
         return;
       }
 
@@ -1444,7 +1513,7 @@
         return window.exportSecurityCSV();
       }
 
-      showToast('CSV export not available for this report type');
+      showToast(t('reports.ui.csvNotAvailable', 'CSV export not available for this report type'));
     };
   }
 
@@ -1454,7 +1523,7 @@
       // Check if user has access
       const reportId = getCurrentReportId();
       if (!window.ProReportBlock?.hasAccess?.(reportId)) {
-        showToast('Purchase report to export Excel');
+        showToast(t('reports.ui.purchaseToExportExcel', 'Purchase report to export Excel'));
         return;
       }
 
@@ -1471,11 +1540,11 @@
 
       // Fallback to CSV if Excel not available
       if (typeof window.exportCSV === 'function') {
-        showToast('Excel not available, exporting CSV instead');
+        showToast(t('reports.ui.excelNotAvailableFallback', 'Excel not available, exporting CSV instead'));
         return window.exportCSV();
       }
 
-      showToast('Excel export not available for this report type');
+      showToast(t('reports.ui.excelNotAvailable', 'Excel export not available for this report type'));
     };
   }
 
@@ -1484,14 +1553,14 @@
       // Check if user has access
       const reportId = getCurrentReportId();
       if (!window.ProReportBlock?.hasAccess?.(reportId)) {
-        showToast('Purchase report to export JSON');
+        showToast(t('reports.ui.purchaseToExportJSON', 'Purchase report to export JSON'));
         return;
       }
 
       // Generic JSON export - use current results
       const results = window.currentSeoResults || window.currentPerformanceResults || window.currentSecurityResults;
       if (!results) {
-        showToast('No results to export');
+        showToast(t('reports.ui.noResults', 'No results to export'));
         return;
       }
 
@@ -1502,7 +1571,7 @@
       link.download = `report-${reportId || 'export'}.json`;
       link.click();
       URL.revokeObjectURL(url);
-      showToast('JSON exported');
+      showToast(t('reports.ui.jsonExported', 'JSON exported'));
     };
   }
 
@@ -1536,6 +1605,12 @@
     setCurrentReportId,
     normalizeUrlForReportId,
     hashForStorageKey,
+
+    // Screenshot card helper - ensures screenshot is shown in results
+    ensurePageScreenshotCard,
+
+    // Reset waiting state - call at start of new scan to ensure screenshot card is created
+    resetWaitingState,
 
     // Accordion management (delegates to ReportAccordion)
     accordions: {
@@ -1578,18 +1653,18 @@
               <div class="pro-report-block__unlock-prompt" data-locked-overlay>
                 <div class="pro-report-block__unlock-header">
                   <span class="pro-report-block__unlock-icon">🔒</span>
-                  <span class="pro-report-block__unlock-text">Unlock this report</span>
+                  <span class="pro-report-block__unlock-text">${t('reports.common.unlockThisReport', 'Unlock this report')}</span>
                 </div>
                 <div class="pro-report-block__unlock-buttons">
                   <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="${context || 'feature'}" ${reportId ? `data-report-id="${reportId}"` : ''}>
-                    Unlock for $5
+                    ${t('reports.common.unlockFor5', 'Unlock for $5')}
                   </button>
                   <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="${context || 'feature'}">
-                    Go Pro — $30/mo
+                    ${t('reports.common.goPro30', 'Go Pro — $30/mo')}
                   </button>
                 </div>
                 <p class="pro-report-block__unlock-hint">
-                  Pro unlocks all reports. Single purchase unlocks only this scan.
+                  ${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}
                 </p>
               </div>
             `;

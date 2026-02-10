@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tag Intelligence Report — Site Mechanic</title>
+
+  <!-- PDF template styles -->
+  <link rel="stylesheet" href="/pdf-templates/_pdf-report.css">
+
+  <!-- Google Fonts: Inter for body, DM Serif Text for headings -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Serif+Text&display=swap" rel="stylesheet">
+</head>
+<body class="pdf-report white-theme pdf-export-mode">
+
+  <!-- Page 1: Cover -->
+  <section class="pdf-cover" id="cover-page"></section>
+
+  <!-- Page 2: Table of Contents -->
+  <section class="pdf-toc" id="toc-page"></section>
+
+  <!-- Page 3: Executive Summary -->
+  <section class="pdf-exec" id="exec-summary"></section>
+
+  <!-- Section 1: Tags Overview -->
+  <section class="pdf-section" id="section-overview">
+    <div class="pdf-section__content"></div>
+  </section>
+
+  <!-- Section 2: Issues Detected -->
+  <section class="pdf-section" id="section-issues">
+    <div class="pdf-section__content"></div>
+  </section>
+
+  <!-- Section 3: Tags by Category -->
+  <section class="pdf-section" id="section-categories">
+    <div class="pdf-section__content"></div>
+  </section>
+
+  <!-- Section 4: Script Performance -->
+  <section class="pdf-section" id="section-performance">
+    <div class="pdf-section__content"></div>
+  </section>
+
+  <!-- Section 5: Third-Party Scripts -->
+  <section class="pdf-section" id="section-thirdparty">
+    <div class="pdf-section__content"></div>
+  </section>
+
+  <!-- Section 6: DataLayer Analysis -->
+  <section class="pdf-section" id="section-datalayer">
+    <div class="pdf-section__content"></div>
+  </section>
+
+  <!-- Section 7: Cookie Audit -->
+  <section class="pdf-section" id="section-cookies">
+    <div class="pdf-section__content"></div>
+  </section>
+
+  <!-- Section 8: Recommendations -->
+  <section class="pdf-section" id="section-recommendations">
+    <div class="pdf-section__content"></div>
+  </section>
+
+  <!-- Scripts -->
+  <script src="/i18n.js"></script>
+  <script src="/js/report-i18n.js"></script>
+  <script src="/js/reportStorage.js"></script>
+  <script src="/pdf-templates/_pdf-report.js"></script>
+  <script src="/pdf-templates/tag-intelligence-report-render.js"></script>
+
+  <script>
+    (function () {
+      function boot() {
+        if (window.PdfReport) {
+          window.PdfReport.init();
+        } else {
+          console.error('[tag-intelligence-report] PdfReport not loaded');
+          window.__PDF_READY__ = true;
+        }
+      }
+      function waitForI18n() {
+        if (window.i18n && window.i18n.initialized) {
+          boot();
+        } else {
+          var attempts = 0;
+          var interval = setInterval(function () {
+            attempts++;
+            if ((window.i18n && window.i18n.initialized) || attempts > 100) {
+              clearInterval(interval);
+              boot();
+            }
+          }, 50);
+        }
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', waitForI18n);
+      } else {
+        waitForI18n();
+      }
+    })();
+  </script>
+</body>
+</html>

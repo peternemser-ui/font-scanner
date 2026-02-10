@@ -17,11 +17,15 @@ class Cache {
 
   /**
    * Generate cache key from URL and options
+   * Include analyzerType explicitly at the front of the key to prevent
+   * collisions between different analyzers accessing the same URL.
    * @private
    */
   _generateKey(url, options = {}) {
-    const optionsStr = JSON.stringify(options);
-    return `${url}:${optionsStr}`;
+    const { analyzerType, ...rest } = options;
+    const optionsStr = JSON.stringify(rest);
+    const analyzer = analyzerType || 'default';
+    return `${analyzer}:${url}:${optionsStr}`;
   }
 
   /**

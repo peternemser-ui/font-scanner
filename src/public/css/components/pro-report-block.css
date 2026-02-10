@@ -33,8 +33,20 @@
 }
 
 .pro-report-block__icon {
-  font-size: 2rem;
-  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: var(--radius-lg, 12px);
+  background: var(--bg-elevated, rgba(255, 255, 255, 0.05));
+  color: var(--color-primary, #5bf4e7);
+  flex-shrink: 0;
+}
+
+.pro-report-block__icon svg {
+  width: 24px;
+  height: 24px;
 }
 
 .pro-report-block__text {
@@ -273,26 +285,50 @@ a.pro-report-block__action--link {
   line-height: 1.4;
 }
 
+/* Stripe Payment Badge */
+.pro-report-block__stripe-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.08));
+  font-size: 0.75rem;
+  color: var(--text-secondary, #9ca3af);
+  opacity: 0.7;
+}
+
+.pro-report-block__stripe-logo {
+  height: 14px;
+  width: auto;
+  color: var(--text-secondary, #9ca3af);
+}
+
 /* Badge Variants */
 .pro-report-block__badge {
   display: inline-flex;
   align-items: center;
-  padding: 0.25rem 0.75rem;
-  font-size: 0.6875rem;
+  padding: 0.375rem 0.875rem;
+  font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
   border-radius: var(--radius-sm, 6px);
+  margin-left: 0.75rem;
+  vertical-align: middle;
 }
 
 .pro-report-block__badge--pro {
-  background: var(--color-primary, #5bf4e7);
+  background: linear-gradient(135deg, var(--color-primary, #5bf4e7), #4dd8cb);
   color: var(--color-black, #000);
+  box-shadow: 0 2px 8px rgba(91, 244, 231, 0.3);
 }
 
 .pro-report-block__badge--purchased {
-  background: var(--color-success, #00E68A);
+  background: linear-gradient(135deg, var(--color-success, #00E68A), #00c978);
   color: var(--color-black, #000);
+  box-shadow: 0 2px 8px rgba(0, 230, 138, 0.3);
 }
 
 /* Helper text (generic) */
@@ -525,11 +561,11 @@ a.pro-report-block__action--link {
   background: rgba(255, 184, 77, 0.1);
 }
 
-/* Report Header Styles (for ReportContainer) */
+/* Report Header Styles (for ReportContainer) — uses --r-* tokens */
 .report-header {
   margin-bottom: 2rem;
   padding-bottom: 1.5rem;
-  border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-bottom: 1px solid var(--r-border, rgba(255, 255, 255, 0.1));
   text-align: left;
 }
 
@@ -550,7 +586,7 @@ a.pro-report-block__action--link {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--text-primary, #fff);
+  color: var(--r-text, #fff);
   line-height: 1.2;
   text-align: left;
 }
@@ -558,7 +594,7 @@ a.pro-report-block__action--link {
 .report-header__subtitle {
   margin: 0 0 1rem 0;
   font-size: 1.125rem;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--r-text-muted, #9ca3af);
   line-height: 1.5;
   text-align: left;
 }
@@ -575,7 +611,7 @@ a.pro-report-block__action--link {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: var(--text-secondary, #9ca3af);
+  color: var(--r-text-muted, #9ca3af);
 }
 
 .meta-icon {
@@ -589,8 +625,8 @@ a.pro-report-block__action--link {
 
 .meta-item--mode {
   padding: 0.25rem 0.75rem;
-  background: var(--bg-elevated, #111418);
-  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  background: var(--r-surface-2, #111418);
+  border: 1px solid var(--r-border, rgba(255, 255, 255, 0.1));
   border-radius: var(--radius-md, 8px);
   font-weight: 600;
 }

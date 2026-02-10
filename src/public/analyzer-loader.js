@@ -4,6 +4,31 @@
  * Now uses modal overlay format
  */
 
+// i18n helper for analyzer loader
+const _t = (key, fallback, params) => {
+  // Try window.i18n first (global i18n system)
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      let value = translated;
+      if (params && typeof value === 'string') {
+        Object.keys(params).forEach(param => {
+          value = value.replace(new RegExp(`\\{\\{?${param}\\}?\\}`, 'g'), params[param]);
+        });
+      }
+      return value;
+    }
+  }
+  // Fallback with interpolation
+  let value = fallback || key;
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      value = value.replace(new RegExp(`\\{\\{?${param}\\}?\\}`, 'g'), params[param]);
+    });
+  }
+  return value;
+};
+
 class AnalyzerLoader {
   constructor(containerId = 'loadingContainer') {
     this.container = document.getElementById(containerId);
@@ -79,9 +104,9 @@ class AnalyzerLoader {
           <div class="progress-bar-fill" id="progressBarFill" style="width: 0%"></div>
         </div>
 
-        <div class="loading-meta" aria-label="Scan timing">
-          <div class="loading-meta__item" id="scanStartedAt">Started: ${this.formatDateTime(this.startedAtIso)}</div>
-          <div class="loading-meta__item" id="scanDuration">Duration: 0s</div>
+        <div class="loading-meta" aria-label="${_t('loader.scanTiming', 'Scan timing')}">
+          <div class="loading-meta__item" id="scanStartedAt">${_t('loader.started', 'Started:')} ${this.formatDateTime(this.startedAtIso)}</div>
+          <div class="loading-meta__item" id="scanDuration">${_t('loader.duration', 'Duration:')} 0s</div>
         </div>
 
         <div class="progress-steps" id="progressSteps">
@@ -99,13 +124,13 @@ class AnalyzerLoader {
         <div class="loading-long-scan" id="longScanContainer" hidden>
           <span class="loading-spinner" aria-hidden="true"></span>
           <div class="loading-long-scan__text">
-            <div class="loading-long-scan__title">Still working…</div>
-            <div class="loading-long-scan__message" id="longScanMessage">Some sites take longer to analyze.</div>
+            <div class="loading-long-scan__title">${_t('loader.stillWorking', 'Still working…')}</div>
+            <div class="loading-long-scan__message" id="longScanMessage">${_t('loader.longScan1', 'Some sites take longer to analyze.')}</div>
           </div>
         </div>
 
         <div class="estimated-time">
-          <p class="time-label" id="timeLabel">Time remaining:</p>
+          <p class="time-label" id="timeLabel">${_t('loader.timeRemaining', 'Time remaining:')}</p>
           <p class="time-value" id="timeRemaining">${this.formatTime(this.estimatedSeconds)}</p>
         </div>
       </div>
@@ -138,6 +163,7 @@ class AnalyzerLoader {
   getCurrentScanUrl() {
     try {
       const candidateInputIds = [
+        'dashboardUrlInput',
         'urlInput',
         'url',
         'seoUrlInput',
@@ -198,15 +224,16 @@ class AnalyzerLoader {
   nextStep(stepIndex) {
     const index = stepIndex !== undefined ? stepIndex : this.currentStep + 1;
     const container = this.overlay || document;
-    
+
     if (index > this.steps.length) return;
 
-    // Mark previous step as complete
-    if (this.currentStep < this.steps.length) {
-      const prevStep = container.querySelector(`.progress-step[data-step="${this.currentStep}"]`);
-      if (prevStep) {
-        prevStep.classList.remove('active');
-        prevStep.classList.add('complete');
+    // Mark ALL steps from currentStep up to (but not including) index as complete
+    // This prevents steps from being skipped and left in pending state
+    for (let i = this.currentStep; i < index && i < this.steps.length; i++) {
+      const stepEl = container.querySelector(`.progress-step[data-step="${i}"]`);
+      if (stepEl) {
+        stepEl.classList.remove('active', 'pending');
+        stepEl.classList.add('complete');
       }
     }
 
@@ -251,7 +278,7 @@ class AnalyzerLoader {
       
       const detail = step.querySelector('.step-detail');
       if (detail) {
-        detail.textContent = errorMessage || 'Analysis failed';
+        detail.textContent = errorMessage || _t('loader.analysisFailed', 'Analysis failed');
       }
     }
   }
@@ -351,7 +378,7 @@ class AnalyzerLoader {
 
     const timeElement = container.querySelector('#timeRemaining');
     if (timeElement) {
-      timeElement.textContent = 'Complete!';
+      timeElement.textContent = _t('loader.complete', 'Complete!');
       timeElement.style.color = 'var(--accent-primary)';
     }
 
@@ -430,11 +457,11 @@ class AnalyzerLoader {
 
       loader.innerHTML = `
         <div class="loading-header">
-          <h2 class="loading-title" style="color: #ff4444;">✗ Analysis Failed</h2>
+          <h2 class="loading-title" style="color: #ff4444;">✗ ${_t('loader.analysisFailed', 'Analysis Failed')}</h2>
           <p class="loading-subtitle" style="color: var(--text-primary); margin-top: 1rem; max-width: 500px; margin-left: auto; margin-right: auto;">${sanitizedMessage}</p>
         </div>
         <div style="text-align: center; margin-top: 2rem;">
-          <button class="analyze-button" id="retry-button">Try Again</button>
+          <button class="analyze-button" id="retry-button">${_t('loader.tryAgain', 'Try Again')}</button>
         </div>
       `;
 
@@ -477,9 +504,9 @@ class AnalyzerLoader {
     }
 
     const messages = [
-      'Some sites take longer to analyze.',
-      'Still collecting metrics and validating results.',
-      'Almost there — finishing up the final checks.'
+      _t('loader.longScan1', 'Some sites take longer to analyze.'),
+      _t('loader.longScan2', 'Still collecting metrics and validating results.'),
+      _t('loader.longScan3', 'Almost there — finishing up the final checks.')
     ];
 
     const messageEl = container.querySelector('#longScanMessage');
@@ -493,7 +520,7 @@ class AnalyzerLoader {
 
     const label = container.querySelector('#timeLabel');
     if (label) {
-      label.textContent = 'Additional time:';
+      label.textContent = _t('loader.additionalTime', 'Additional time:');
       label.classList.add('overrun');
     }
     const value = container.querySelector('#timeRemaining');
@@ -505,7 +532,13 @@ class AnalyzerLoader {
   formatDateTime(isoString) {
     if (!isoString) return '-';
     try {
-      return new Date(isoString).toLocaleString();
+      // Use i18n locale if available for proper internationalization
+      if (window.i18n?.formatDateTime) {
+        return window.i18n.formatDateTime(new Date(isoString));
+      }
+      // Fallback to browser locale
+      const locale = window.i18n?.currentLanguage || navigator.language || 'en-US';
+      return new Date(isoString).toLocaleString(locale);
     } catch {
       return String(isoString);
     }
@@ -515,7 +548,7 @@ class AnalyzerLoader {
     const container = this.overlay || document;
     const durationEl = container.querySelector('#scanDuration');
     if (durationEl) {
-      durationEl.textContent = `Duration: ${displayText}`;
+      durationEl.textContent = `${_t('loader.duration', 'Duration:')} ${displayText}`;
     }
   }
 
@@ -530,39 +563,47 @@ if (typeof module !== 'undefined' && module.exports) {
   module.exports = AnalyzerLoader;
 }
 
-// Also expose to browser window for CSP-compliant usage
+// Expose to browser window
 if (typeof window !== 'undefined') {
-  // Expose the class
+  // IMPORTANT: Expose the class directly as window.AnalyzerLoader
+  // This maintains backward compatibility with `new AnalyzerLoader()` usage
+  window.AnalyzerLoader = AnalyzerLoader;
   window.AnalyzerLoaderClass = AnalyzerLoader;
-  
-  // Create singleton instance with static-like methods for dashboard compatibility
-  const loaderInstance = new AnalyzerLoader('loadingContainer');
-  
-  // Track step IDs to indices mapping
+
+  // Also provide a singleton instance API for dashboard compatibility
+  // Lazily created on first use
+  let _singletonInstance = null;
   const stepMap = new Map();
-  
-  window.AnalyzerLoader = {
-    // Dashboard-compatible API (adapted from different method names)
+
+  function getSingleton() {
+    if (!_singletonInstance) {
+      _singletonInstance = new AnalyzerLoader('loadingContainer');
+    }
+    return _singletonInstance;
+  }
+
+  // Attach static methods to the class for alternative API usage
+  window.AnalyzerLoader.api = {
     show: (steps, title, estimatedSeconds) => {
-      // Map step IDs to indices
+      const loaderInstance = getSingleton();
       stepMap.clear();
       steps.forEach((step, index) => {
         stepMap.set(step.id, index);
       });
-      
-      // Convert dashboard step format to loader format
+
       const loaderSteps = steps.map(s => ({
         label: s.label,
         detail: s.detail || ''
       }));
-      
+
       return loaderInstance.start(loaderSteps, title, estimatedSeconds);
     },
-    
+
     updateStep: (stepId, status) => {
       const stepIndex = stepMap.get(stepId);
       if (stepIndex === undefined) return;
-      
+      const loaderInstance = getSingleton();
+
       if (status === 'active') {
         loaderInstance.nextStep(stepIndex);
       } else if (status === 'complete') {
@@ -571,9 +612,9 @@ if (typeof window !== 'undefined') {
         loaderInstance.errorStep(stepIndex, 'Failed');
       }
     },
-    
+
     updateProgress: (percent) => {
-      // The loader auto-calculates progress, but we can override if needed
+      const loaderInstance = getSingleton();
       const container = loaderInstance.overlay || document;
       const progressBar = container.querySelector('#progressBarFill');
       if (progressBar) {
@@ -584,12 +625,18 @@ if (typeof window !== 'undefined') {
         percentageDisplay.textContent = `${Math.round(percent)}%`;
       }
     },
-    
-    complete: (message) => loaderInstance.complete(message),
-    error: (message) => loaderInstance.error(message),
-    hide: () => loaderInstance.hide(),
-    
-    // Also expose the class for `new AnalyzerLoader()` usage
-    Class: AnalyzerLoader
+
+    complete: (message) => getSingleton().complete(message),
+    error: (message) => getSingleton().error(message),
+    hide: () => getSingleton().hide()
   };
+
+  // Expose direct aliases on window.AnalyzerLoader for backward compatibility
+  // This allows calling window.AnalyzerLoader.show() instead of window.AnalyzerLoader.api.show()
+  window.AnalyzerLoader.show = window.AnalyzerLoader.api.show;
+  window.AnalyzerLoader.updateStep = window.AnalyzerLoader.api.updateStep;
+  window.AnalyzerLoader.updateProgress = window.AnalyzerLoader.api.updateProgress;
+  window.AnalyzerLoader.complete = window.AnalyzerLoader.api.complete;
+  window.AnalyzerLoader.error = window.AnalyzerLoader.api.error;
+  window.AnalyzerLoader.hide = window.AnalyzerLoader.api.hide;
 }

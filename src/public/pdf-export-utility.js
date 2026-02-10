@@ -64,7 +64,8 @@
         if (window.PricingModal && typeof window.PricingModal.open === 'function') {
           window.PricingModal.open({ reportId });
         } else {
-          alert('Pro access required for PDF export.');
+          const _t0 = typeof t === 'function' ? t : (k, fb) => fb;
+          alert(_t0('common.pdf.proRequired', 'Pro access required for PDF export.'));
         }
         return;
       }
@@ -72,8 +73,17 @@
       // CRITICAL: Save the current report to storage before PDF export
       // This ensures Puppeteer can load the same results when it renders the page
       const currentResults = window.currentSeoResults ||
+                             window.currentSecurityResults ||
                              window.currentPerformanceResults ||
                              window.currentPerformanceHubResults?.data ||
+                             window.currentAccessibilityResults ||
+                             window.currentFontsResults ||
+                             window.currentMobileResults ||
+                             window.currentBrokenLinksResults ||
+                             window.currentBrandResults ||
+                             window.currentCompetitiveResults ||
+                             window.currentCrawlerResults ||
+                             window.currentTagResults ||
                              window.currentResults;
 
       if (currentResults && window.ReportStorage?.saveReport) {
@@ -98,38 +108,75 @@
         }
       }
 
-      // Build URL with report_id param so Puppeteer can load the stored report
-      const currentUrl = new URL(window.location.href);
-      if (reportId && !currentUrl.searchParams.has('report_id')) {
-        currentUrl.searchParams.set('report_id', reportId);
-      }
-      const pdfUrl = currentUrl.toString();
+      // Detect current locale for i18n-aware PDF export
+      const currentLang = (window.i18n && typeof window.i18n.getActiveLocale === 'function')
+        ? window.i18n.getActiveLocale()
+        : localStorage.getItem('sm_lang') || 'en';
 
-      // Call server-side Puppeteer PDF renderer
-      // IMPORTANT: Send the report data directly so Puppeteer can inject it
+      // Build URL for Puppeteer to render (with report_id, print mode, and lang prefix)
+      const SUPPORTED_LANGS = ['en', 'es', 'fr', 'de', 'pt', 'zh', 'ja', 'ru'];
+      const pageUrl = new URL(window.location.href);
+      pageUrl.searchParams.set('report_id', reportId);
+      pageUrl.searchParams.set('print', '1');
+      // Ensure language prefix in path (e.g., /ja/security-analyzer.html)
+      const pathParts = pageUrl.pathname.split('/').filter(Boolean);
+      if (!SUPPORTED_LANGS.includes(pathParts[0])) {
+        pageUrl.pathname = `/${currentLang}${pageUrl.pathname}`;
+      }
+
       const analyzedUrlValue = getAnalyzedUrl();
       console.log('[PDF Export] Sending to server:', {
-        url: pdfUrl,
         reportType: reportType,
         reportId: reportId,
+        pageUrl: pageUrl.pathname + pageUrl.search,
         hasReportData: !!currentResults,
         reportDataKeys: currentResults ? Object.keys(currentResults).slice(0, 5) : [],
         analyzedUrl: analyzedUrlValue
       });
 
-      const response = await fetch('/api/pdf/render', {
+      // Prepare report data with all necessary fields for PDF generation
+      const pdfReportData = {
+        ...currentResults,
+        reportId: reportId,
+        url: analyzedUrlValue,
+        normalizedUrl: analyzedUrlValue,
+        scanStartedAt: document.body.getAttribute('data-sm-scan-started-at') ||
+                       window.SM_SCAN_STARTED_AT ||
+                       currentResults?.scanStartedAt ||
+                       currentResults?.timestamp ||
+                       new Date().toISOString()
+      };
+
+      // Check if we have session-verified access (from recent payment)
+      const sessionPaymentMarker = sessionStorage.getItem('sm_payment_completed_session');
+      const hasSessionVerifiedAccess = sessionPaymentMarker &&
+        (Date.now() - parseInt(sessionPaymentMarker, 10) < 30 * 60 * 1000); // Within 30 min
+
+      // Get the checkout session ID if available (for fallback verification)
+      const checkoutSessionId = sessionStorage.getItem('sm_last_checkout_session_id') || '';
+
+      const headers = {
+        'Content-Type': 'application/json',
+        'Authorization': token ? `Bearer ${token}` : ''
+      };
+
+      // Pass session verification info to server for fallback access check
+      if (hasSessionVerifiedAccess) {
+        headers['X-Session-Verified'] = 'true';
+        if (checkoutSessionId) {
+          headers['X-Checkout-Session-Id'] = checkoutSessionId;
+        }
+        console.log('[PDF Export] Including session verification headers');
+      }
+
+      const response = await fetch('/api/pdf/generate', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': token ? `Bearer ${token}` : ''
-        },
+        headers,
         body: JSON.stringify({
-          url: pdfUrl,
           reportType: reportType,
-          reportId: reportId,
-          // Send report data directly so Puppeteer can inject it
-          reportData: currentResults,
-          analyzedUrl: analyzedUrlValue
+          reportData: pdfReportData,
+          pageUrl: pageUrl.pathname + pageUrl.search,
+          preferBrowser: true
         })
       });
 
@@ -144,12 +191,14 @@
           if (window.PricingModal && typeof window.PricingModal.open === 'function') {
             window.PricingModal.open({ reportId });
           } else {
-            alert(errorData.message || 'Pro access required for PDF export.');
+            const _t1 = typeof t === 'function' ? t : (k, fb) => fb;
+            alert(errorData.message || _t1('common.pdf.proRequired', 'Pro access required for PDF export.'));
           }
           return;
         }
 
-        throw new Error(errorData.error || errorData.message || 'Failed to generate PDF');
+        const _t2b = typeof t === 'function' ? t : (k, fb) => fb;
+        throw new Error(errorData.error || errorData.message || _t2b('common.pdf.generateFailed', 'Failed to generate PDF'));
       }
 
       // Download the PDF
@@ -157,18 +206,29 @@
       const url = getAnalyzedUrl();
       const hostname = url ? new URL(url).hostname : 'report';
       const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `${reportType}-report-${hostname}-${timestamp}.pdf`;
+      // Use correct casing for acronym report types
+      const REPORT_TYPE_LABELS = {
+        seo: 'SEO', cro: 'CRO', gdpr: 'GDPR', cwv: 'CWV',
+        'tag-intelligence': 'Tag-Intelligence', 'local-seo': 'Local-SEO',
+        'broken-links': 'Broken-Links', 'ip-reputation': 'IP-Reputation'
+      };
+      const typeLabel = REPORT_TYPE_LABELS[reportType] ||
+        reportType.charAt(0).toUpperCase() + reportType.slice(1);
+      const filename = `${typeLabel}-report-${hostname}-${timestamp}.pdf`;
 
       downloadBlob(blob, filename);
 
       // Show success message
       if (window.ReportUI?.toast) {
-        window.ReportUI.toast('PDF downloaded successfully!');
+        const _t2 = typeof t === 'function' ? t : (k, fb) => fb;
+        window.ReportUI.toast(_t2('common.pdf.downloadSuccess', 'PDF downloaded successfully!'));
       }
 
     } catch (error) {
       console.error('PDF export error:', error);
-      alert('Failed to generate PDF: ' + (error.message || 'Unknown error. Please try again.'));
+      const _t3 = typeof t === 'function' ? t : (k, fb) => fb;
+      const errMsg = error.message || _t3('common.pdf.exportFailedGeneric', 'Unknown error. Please try again.');
+      alert(_t3('common.pdf.exportFailed', 'Failed to generate PDF: {{error}}').replace('{{error}}', errMsg));
     } finally {
       setButtonLoading(buttonElement, false, originalButtonState);
       activeExportPromise = null;
@@ -180,50 +240,93 @@
 
   /**
    * Check if user has access to export (Pro subscription or purchased report)
-   * Only trusts server-side billing status via ProReportBlock
+   * Uses server verification for critical export decisions
    */
   async function checkExportAccess(reportId) {
-    // Check ProReportBlock access (this checks server-side billing status)
-    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
-      if (window.ProReportBlock.hasAccess(reportId)) return true;
+    console.log('[PDF Export] checkExportAccess called with reportId:', reportId);
+    console.log('[PDF Export] data-report-id attr:', document.body.getAttribute('data-report-id'));
+    console.log('[PDF Export] URL report_id param:', new URLSearchParams(window.location.search).get('report_id'));
+
+    // Check demo domains first (quick check, no server call needed)
+    if (window.ProAccess?.isDemoDomain?.()) {
+      console.log('[PDF Export] Access granted: demo domain');
+      return true;
     }
 
-    // Check demo domains (only vail.com)
-    if (window.ProAccess?.isDemoDomain?.()) return true;
+    // First try local hasAccess check (includes session-verified purchases)
+    // This handles the case right after payment return when server may not have synced yet
+    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+      const localAccess = window.ProReportBlock.hasAccess(reportId);
+      console.log('[PDF Export] Local hasAccess check:', { reportId, localAccess });
+      if (localAccess) {
+        console.log('[PDF Export] Access granted via local check');
+        return true;
+      }
+    }
 
-    // Note: Removed legacy localStorage checks (proManager, ProGate, CreditsManager)
-    // for security. Subscription status must come from server.
+    // Use server-verified access check for critical export operations
+    // This ensures we have the most up-to-date entitlement status
+    if (window.ProReportBlock && typeof window.ProReportBlock.verifyAccessViaServer === 'function') {
+      try {
+        // Force refresh to get latest server state
+        const serverResult = await window.ProReportBlock.verifyAccessViaServer(reportId, true);
+        console.log('[PDF Export] Server-verified access check:', { reportId, serverResult });
+        if (serverResult.canExport) {
+          console.log('[PDF Export] Access granted via server check');
+          return true;
+        }
+      } catch (error) {
+        console.warn('[PDF Export] Server access check failed:', error);
+      }
+    }
 
+    console.log('[PDF Export] Access denied - no valid access found');
     return false;
   }
 
   /**
    * Detect report type from current page
+   * Valid types for PDF generation: seo, performance, accessibility, security, fonts, tag-intelligence
    */
   function detectReportType() {
     const path = window.location.pathname.toLowerCase();
     const pageAttr = document.body.getAttribute('data-page');
 
-    if (pageAttr) return pageAttr;
+    // Map of page names/paths to valid PDF report types
+    const reportTypeMap = {
+      'performance-hub': 'performance',
+      'performance': 'performance',
+      'speed-ux': 'performance',
+      'cwv': 'performance',
+      'seo': 'seo',
+      'seo-analyzer': 'seo',
+      'security': 'security',
+      'security-analyzer': 'security',
+      'accessibility': 'accessibility',
+      'accessibility-analyzer': 'accessibility',
+      'fonts': 'fonts',
+      'font-scanner': 'fonts',
+      'enhanced-fonts': 'fonts',
+      'tag-intelligence': 'tag-intelligence'
+    };
 
+    // Check page attribute first
+    if (pageAttr) {
+      const normalizedType = reportTypeMap[pageAttr.toLowerCase()];
+      if (normalizedType) return normalizedType;
+    }
+
+    // Fallback to path-based detection
     if (path.includes('seo')) return 'seo';
     if (path.includes('performance') || path.includes('speed') || path.includes('cwv')) return 'performance';
     if (path.includes('security')) return 'security';
     if (path.includes('accessibility') || path.includes('a11y')) return 'accessibility';
-    if (path.includes('mobile')) return 'mobile';
     if (path.includes('font')) return 'fonts';
-    if (path.includes('broken-link')) return 'broken-links';
-    if (path.includes('brand')) return 'brand-consistency';
-    if (path.includes('competitive')) return 'competitive-analysis';
-    if (path.includes('cro')) return 'cro';
-    if (path.includes('local-seo')) return 'local-seo';
-    if (path.includes('ip-reputation')) return 'ip-reputation';
-    if (path.includes('gdpr')) return 'gdpr-compliance';
     if (path.includes('tag-intelligence')) return 'tag-intelligence';
-    if (path.includes('hosting')) return 'hosting';
-    if (path.includes('dashboard')) return 'dashboard';
 
-    return 'report';
+    // Default to performance (most common)
+    console.warn('[PDF Export] Could not detect report type, defaulting to performance');
+    return 'performance';
   }
 
   /**
@@ -443,11 +546,12 @@
 
         const overlay = document.createElement('div');
         overlay.className = 'pdf-generating-overlay';
+        const _t = typeof t === 'function' ? t : (k, fb) => fb;
         overlay.innerHTML = `
           <div class="pdf-generating-spinner"></div>
           <div class="pdf-generating-text">
-            Generating PDF
-            <div class="pdf-generating-subtext">Creating client-ready report...</div>
+            ${_t('common.pdf.generating', 'Generating PDF')}
+            <div class="pdf-generating-subtext">${_t('common.pdf.creatingReport', 'Creating client-ready report...')}</div>
           </div>
           <div class="pdf-generating-progress">
             <div class="pdf-generating-progress-bar"></div>
@@ -458,9 +562,10 @@
         // Simple inline spinner for smaller buttons
         const inlineLoader = document.createElement('span');
         inlineLoader.className = 'pdf-inline-loading';
+        const _tInline = typeof t === 'function' ? t : (k, fb) => fb;
         inlineLoader.innerHTML = `
           <span class="pdf-inline-spinner"></span>
-          <span>Generating...</span>
+          <span>${_tInline('common.pdf.generatingShort', 'Generating...')}</span>
         `;
         button.innerHTML = '';
         button.appendChild(inlineLoader);

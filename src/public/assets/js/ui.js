@@ -14,6 +14,15 @@
 (function(window) {
   'use strict';
 
+  // i18n helper
+  function _t(key, fallback) {
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const val = window.i18n.t(key);
+      return (val === key && fallback) ? fallback : val;
+    }
+    return fallback || key;
+  }
+
   const STORAGE_KEYS = {
     CREDITS: 'sm_credits_balance',
     UNLOCKED: 'sm_unlocked_reports',
@@ -96,7 +105,7 @@
   function consumeCredit() {
     const current = getCredits();
     if (current < 1) {
-      throw new Error('No credits available');
+      throw new Error(_t('credits.noCreditsAvailable', 'No credits available'));
     }
     setCredits(current - 1);
     return true;
@@ -163,8 +172,8 @@
 
   function formatUnlockMethod(entry) {
     if (!entry || typeof entry !== 'object') return '';
-    if (entry.method === 'credit') return 'Unlocked via credit';
-    if (entry.method === 'single') return 'Unlocked via $10 single';
+    if (entry.method === 'credit') return _t('credits.unlockedViaCredit', 'Unlocked via credit');
+    if (entry.method === 'single') return _t('credits.unlockedViaSingle', 'Unlocked via $5 single');
     return '';
   }
 

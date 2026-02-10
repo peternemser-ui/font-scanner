@@ -5,6 +5,221 @@
  */
 
 /* ===================================
+   CJK Font Support for PDF Export
+   Noto Sans JP for Japanese, SC for Chinese
+   =================================== */
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;600;700&display=swap');
+
+/* When in PDF mode with CJK locale, use Noto Sans JP for readable output */
+html[lang="ja"] .pdf-export-mode,
+html[lang="ja"] .pdf-export-mode * {
+  font-family: 'Noto Sans JP', 'Hiragino Kaku Gothic ProN', 'Yu Gothic', system-ui, sans-serif !important;
+}
+
+html[lang="zh"] .pdf-export-mode,
+html[lang="zh"] .pdf-export-mode * {
+  font-family: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif !important;
+}
+
+/* ===================================
+   Print Mode (sm-print-mode)
+   Applied when ?print=1 is in URL
+   Hides interactive chrome for Puppeteer PDF capture
+   =================================== */
+.sm-print-mode .breadcrumb,
+.sm-print-mode .breadcrumb-bar,
+.sm-print-mode .page-header,
+.sm-print-mode .scan-card-enhanced,
+/* Navigation: actual DOM selectors (nav-template.js renders into #nav-placeholder) */
+.sm-print-mode #nav-placeholder,
+.sm-print-mode .nav-template,
+.sm-print-mode .unified-header,
+.sm-print-mode .nav-wrapper,
+.sm-print-mode .top-nav,
+.sm-print-mode .mobile-nav,
+.sm-print-mode .mobile-nav-overlay,
+/* Footer: actual class is .site-footer-bar (created by ensureGlobalFooter) */
+.sm-print-mode .site-footer-bar,
+.sm-print-mode .footer-template,
+.sm-print-mode [data-export="pdf"],
+.sm-print-mode [data-export="csv"],
+.sm-print-mode [data-export="json"],
+.sm-print-mode [data-export="excel"],
+.sm-print-mode .pro-report-block__unlock-prompt,
+.sm-print-mode .pro-report-block__unlock-buttons,
+.sm-print-mode [data-paid-unlock-card],
+.sm-print-mode [data-locked-overlay],
+.sm-print-mode .report-shell__lock-overlay,
+.sm-print-mode .faq-group,
+.sm-print-mode .take-action-section,
+.sm-print-mode .stored-report-banner,
+.sm-print-mode #stored-report-banner,
+.sm-print-mode #report-unavailable-banner,
+.sm-print-mode #report-unavailable-overlay,
+.sm-print-mode #urlInput,
+.sm-print-mode .analyze-button,
+.sm-print-mode .run-scan-section,
+.sm-print-mode .export-buttons,
+.sm-print-mode .tabs__nav,
+.sm-print-mode #paymentGateModal,
+.sm-print-mode .payment-modal,
+.sm-print-mode .pricing-modal,
+.sm-print-mode .language-switcher,
+.sm-print-mode .usage-pill,
+.sm-print-mode .scan-counter {
+  display: none !important;
+}
+
+/* Force light mode in print mode (PDF should always render light regardless of user theme) */
+.sm-print-mode,
+html[data-theme="print"] body {
+  overflow: visible !important;
+  background-color: #ffffff !important;
+  color: #111827 !important;
+  --bg-base: #ffffff;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --bg-card: #ffffff;
+  --bg-input: #f3f4f6;
+  --bg-elevated: #f9fafb;
+  --color-primary: #dd3838;
+  --color-text: #111827;
+  --color-text-secondary: #4b5563;
+  --text-primary: #262626;
+  --text-secondary: #404040;
+  --accent-primary: #dd3838;
+  --border-color: rgba(0, 0, 0, 0.1);
+}
+
+html:has(.sm-print-mode),
+html[data-theme="print"] {
+  --bg-base: #ffffff;
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8f9fa;
+  --color-primary: #dd3838;
+  --color-text: #111827;
+  --text-primary: #262626;
+  --accent-primary: #dd3838;
+  /* Print report tokens */
+  --r-bg: #FFFFFF;
+  --r-surface-1: #FFFFFF;
+  --r-surface-2: #F9FAFB;
+  --r-border: rgba(0, 0, 0, 0.12);
+  --r-shadow: none;
+  --r-text: #111827;
+  --r-text-muted: #4B5563;
+  --r-text-faint: #6B7280;
+  --r-good: #16A34A;
+  --r-warn: #D97706;
+  --r-bad: #DC2626;
+  --r-info: #2563EB;
+  --r-dial-track: #E5E7EB;
+  --r-dial-glow: none;
+  --r-table-row-alt: #F9FAFB;
+  --r-table-divider: #E5E7EB;
+  --r-code-bg: #F3F4F6;
+  --r-code-border: #E5E7EB;
+  --r-accordion-hover: transparent;
+}
+
+.sm-print-mode .report-accordion__body,
+.sm-print-mode [data-accordion-body] {
+  display: block !important;
+  max-height: none !important;
+  overflow: visible !important;
+  visibility: visible !important;
+  height: auto !important;
+}
+
+/* Remove scroll containers that clip content */
+.sm-print-mode [style*="max-height"],
+.sm-print-mode [style*="overflow: hidden"],
+.sm-print-mode [style*="overflow:hidden"],
+.sm-print-mode [style*="overflow: auto"],
+.sm-print-mode [style*="overflow:auto"],
+.sm-print-mode [style*="overflow-y: auto"],
+.sm-print-mode [style*="overflow-y:auto"] {
+  max-height: none !important;
+  overflow: visible !important;
+}
+
+/* Improved pagination for Puppeteer PDF */
+/* Remove all overflow clipping in print mode */
+.sm-print-mode * {
+  overflow: visible !important;
+  max-height: none !important;
+}
+
+/* Remove fixed/sticky positioning that breaks PDF pagination */
+/* Only target fixed/sticky — leave static/relative/absolute intact for layout */
+.sm-print-mode [style*="position: fixed"],
+.sm-print-mode [style*="position:fixed"],
+.sm-print-mode [style*="position: sticky"],
+.sm-print-mode [style*="position:sticky"] {
+  position: static !important;
+}
+.sm-print-mode .unified-header,
+.sm-print-mode .top-nav,
+.sm-print-mode .nav-wrapper,
+.sm-print-mode .mobile-nav,
+.sm-print-mode .site-footer-bar,
+.sm-print-mode .breadcrumb-bar,
+.sm-print-mode .toast-container,
+.sm-print-mode .language-switcher,
+.sm-print-mode .usage-pill,
+.sm-print-mode .scan-counter {
+  position: static !important;
+}
+/* Ensure injected PDF pages use relative positioning */
+.sm-print-mode .pdf-cover-page,
+.sm-print-mode .pdf-toc-page,
+.sm-print-mode .pdf-exec-summary {
+  position: relative !important;
+}
+
+/* Color preservation for PDF */
+.sm-print-mode {
+  print-color-adjust: exact !important;
+  -webkit-print-color-adjust: exact !important;
+}
+
+/* Page break rules */
+.sm-print-mode .report-accordion {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.sm-print-mode .report-accordion__body {
+  page-break-inside: auto;
+}
+
+.sm-print-mode .report-shell__summary-card,
+.sm-print-mode .metric-card,
+.sm-print-mode .score-card,
+.sm-print-mode .metric,
+.sm-print-mode table,
+.sm-print-mode pre,
+.sm-print-mode .card,
+.sm-print-mode .fix-accordion,
+.sm-print-mode .issue-card {
+  page-break-inside: avoid;
+  break-inside: avoid;
+}
+
+.sm-print-mode h2,
+.sm-print-mode h3,
+.sm-print-mode .report-accordion__header {
+  break-after: avoid;
+  page-break-after: avoid;
+}
+
+/* URL wrapping on cover page */
+.sm-print-mode .pdf-cover-page .site-url {
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+
+/* ===================================
    PDF Export Mode Styles
    Professional, clean design
    =================================== */
@@ -772,12 +987,51 @@
 }
 
 @media print {
+  /* Global overrides: remove overflow clipping and force light theme */
+  * {
+    overflow: visible !important;
+    max-height: none !important;
+  }
+
   html,
   body {
     margin: 0 !important;
     padding: 0 !important;
     width: 100% !important;
     max-width: 100% !important;
+    /* Force light-theme CSS variables for Ctrl+P */
+    --bg-base: #ffffff;
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-card: #ffffff;
+    --bg-input: #f3f4f6;
+    --bg-elevated: #f9fafb;
+    --color-primary: #dd3838;
+    --color-text: #111827;
+    --color-text-secondary: #4b5563;
+    --text-primary: #262626;
+    --text-secondary: #404040;
+    --accent-primary: #dd3838;
+    --border-color: rgba(0, 0, 0, 0.1);
+    /* Report tokens — always light for print */
+    --r-bg: #FFFFFF;
+    --r-surface-1: #FFFFFF;
+    --r-surface-2: #F9FAFB;
+    --r-border: rgba(0, 0, 0, 0.12);
+    --r-shadow: none;
+    --r-text: #111827;
+    --r-text-muted: #4B5563;
+    --r-text-faint: #6B7280;
+    --r-good: #16A34A;
+    --r-warn: #D97706;
+    --r-bad: #DC2626;
+    --r-info: #2563EB;
+    --r-dial-track: #E5E7EB;
+    --r-table-row-alt: #F9FAFB;
+    --r-table-divider: #E5E7EB;
+    --r-code-bg: #F3F4F6;
+    --r-code-border: #E5E7EB;
+    --r-accordion-hover: transparent;
   }
   /* Show custom print header */
   .print-header {
@@ -1500,6 +1754,7 @@
   .print-pro-tier .report-shell__lock-paywall,
   .print-pro-tier [data-paid-unlock-card],
   .print-pro-tier [data-hide-when-unlocked],
+  .print-pro-tier [data-locked-overlay],
   .print-pro-tier .pro-report-block__unlock-prompt,
   .print-pro-tier .pro-report-block__unlock-buttons {
     display: none !important;

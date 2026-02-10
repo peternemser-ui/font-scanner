@@ -34,7 +34,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function analyzeUrl() {
     const url = urlInput.value.trim();
     if (!url) {
-      showError('Please enter a valid URL');
+      showError(t('reports.common.enterValidUrl', 'Please enter a valid URL'));
       return;
     }
 
@@ -50,23 +50,31 @@ document.addEventListener('DOMContentLoaded', () => {
     analyzeButton.disabled = true;
 
     try {
-      updateProgress(10, 'Connecting to website...');
+      updateProgress(10, t('reports.common.connectingToWebsite', 'Connecting to website...'));
+
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
 
       const response = await fetch('/api/performance-snapshot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ url, scanStartedAt })
       });
 
-      updateProgress(50, 'Analyzing performance...');
+      updateProgress(50, t('reports.performance.analyzingPerformance', 'Analyzing performance...'));
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Analysis failed');
+        if (error.code === 'SCAN_QUOTA_EXCEEDED') {
+          const limit = error.scansLimit || 10;
+          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        }
+        throw new Error(error.message || error.error || t('reports.common.analysisFailed', 'Analysis failed'));
       }
 
       const data = await response.json();
-      updateProgress(100, 'Complete!');
+      updateProgress(100, t('reports.common.complete', 'Complete!'));
 
       setTimeout(() => {
         loadingMessage.classList.add('hidden');
@@ -100,7 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const html = `
       <!-- Score Overview -->
       <div class="score-section" style="text-align: center; margin-bottom: 2rem;">
-        <h2 style="margin-bottom: 1rem;">Performance Score</h2>
+        <h2 style="margin-bottom: 1rem;">${t('reports.performance.performanceScore', 'Performance Score')}</h2>
         <div class="score-circle" style="
           width: 120px; height: 120px; border-radius: 50%;
           display: flex; align-items: center; justify-content: center;
@@ -111,7 +119,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${data.performanceScore || 0}
         </div>
         <p style="margin-top: 1rem; color: #808080;">
-          ${data.pagesScanned || 1} page(s) analyzed
+          ${data.pagesScanned || 1} ${t('reports.performance.pagesAnalyzed', 'page(s) analyzed')}
         </p>
       </div>
 
@@ -119,26 +127,26 @@ document.addEventListener('DOMContentLoaded', () => {
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
         <div class="metric-card">
           <div class="metric-value" style="color: ${getMetricColor(summary.totalRequests, 50, 100)}">${summary.totalRequests || 0}</div>
-          <div class="metric-label">Total Requests</div>
+          <div class="metric-label">${t('reports.performance.totalRequests', 'Total Requests')}</div>
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color: ${getMetricColor(summary.estimatedPageWeightKB, 1000, 3000)}">${formatKB(summary.estimatedPageWeightKB)}</div>
-          <div class="metric-label">Page Weight</div>
+          <div class="metric-label">${t('reports.performance.pageWeight', 'Page Weight')}</div>
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color: ${getMetricColor(summary.renderBlockingCount, 3, 5)}">${summary.renderBlockingCount || 0}</div>
-          <div class="metric-label">Render Blocking</div>
+          <div class="metric-label">${t('reports.performance.renderBlocking', 'Render Blocking')}</div>
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color: ${getMetricColor(summary.serverResponseTime, 500, 1000)}">${summary.serverResponseTime || 0}ms</div>
-          <div class="metric-label">Server Response</div>
+          <div class="metric-label">${t('reports.performance.serverResponse', 'Server Response')}</div>
         </div>
       </div>
 
       <!-- Likely Causes -->
       ${recommendations.likelyCauses && recommendations.likelyCauses.length > 0 ? `
         <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 2rem;">
-          <h3 style="color: #ef4444; margin: 0 0 0.5rem 0;">🔍 Likely Performance Issues</h3>
+          <h3 style="color: #ef4444; margin: 0 0 0.5rem 0;">🔍 ${t('reports.performance.likelyPerformanceIssues', 'Likely Performance Issues')}</h3>
           <ul style="margin: 0; padding-left: 1.5rem;">
             ${recommendations.likelyCauses.map(cause => `<li style="color: #f87171;">${cause}</li>`).join('')}
           </ul>
@@ -147,7 +155,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <!-- Resource Breakdown -->
       <div style="margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1rem;">📊 Resource Breakdown</h3>
+        <h3 style="margin-bottom: 1rem;">📊 ${t('reports.performance.resourceBreakdown', 'Resource Breakdown')}</h3>
         <div style="display: grid; gap: 0.5rem;">
           
           <!-- CSS -->
@@ -155,20 +163,20 @@ document.addEventListener('DOMContentLoaded', () => {
             <details class="resource-details">
               <summary class="resource-summary">
                 <span class="resource-badge resource-css">CSS</span>
-                <span style="font-weight: bold;">${resources.css.totalFiles || 0} external, ${resources.css.totalInline || 0} inline</span>
-                <span style="font-size: 0.85rem; color: #888;">Estimated: ${formatKB(resources.css.estimatedSizeKB)}</span>
+                <span style="font-weight: bold;">${resources.css.totalFiles || 0} ${t('reports.performance.external', 'external')}, ${resources.css.totalInline || 0} ${t('reports.performance.inline', 'inline')}</span>
+                <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.estimated', 'Estimated')}: ${formatKB(resources.css.estimatedSizeKB)}</span>
               </summary>
               <div class="resource-details-content">
                 ${(resources.css.files || []).length > 0 ? `
                   <table class="resource-table">
-                    <thead><tr><th>URL</th><th>Media</th></tr></thead>
+                    <thead><tr><th>${t('reports.performance.url', 'URL')}</th><th>${t('reports.performance.media', 'Media')}</th></tr></thead>
                     <tbody>
                       ${(resources.css.files || []).map(f => `
                         <tr><td class="url-cell">${truncateUrl(f.url)}</td><td>${f.media || 'all'}</td></tr>
                       `).join('')}
                     </tbody>
                   </table>
-                ` : '<p style="color: #888; padding: 0.5rem;">No external CSS files</p>'}
+                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noExternalCssFiles', 'No external CSS files') + '</p>'}
               </div>
             </details>
           ` : ''}
@@ -178,13 +186,13 @@ document.addEventListener('DOMContentLoaded', () => {
             <details class="resource-details">
               <summary class="resource-summary">
                 <span class="resource-badge resource-js">JavaScript</span>
-                <span style="font-weight: bold;">${resources.js.totalFiles || 0} external, ${resources.js.totalInline || 0} inline</span>
-                <span style="font-size: 0.85rem; color: #888;">Async: ${(resources.js.async || []).length} | Defer: ${(resources.js.defer || []).length}</span>
+                <span style="font-weight: bold;">${resources.js.totalFiles || 0} ${t('reports.performance.external', 'external')}, ${resources.js.totalInline || 0} ${t('reports.performance.inline', 'inline')}</span>
+                <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.async', 'Async')}: ${(resources.js.async || []).length} | ${t('reports.performance.defer', 'Defer')}: ${(resources.js.defer || []).length}</span>
               </summary>
               <div class="resource-details-content">
                 ${(resources.js.files || []).length > 0 ? `
                   <table class="resource-table">
-                    <thead><tr><th>URL</th><th>Async</th><th>Defer</th><th>Location</th></tr></thead>
+                    <thead><tr><th>${t('reports.performance.url', 'URL')}</th><th>${t('reports.performance.async', 'Async')}</th><th>${t('reports.performance.defer', 'Defer')}</th><th>${t('reports.performance.location', 'Location')}</th></tr></thead>
                     <tbody>
                       ${(resources.js.files || []).map(f => `
                         <tr>
@@ -196,7 +204,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       `).join('')}
                     </tbody>
                   </table>
-                ` : '<p style="color: #888; padding: 0.5rem;">No external JavaScript files</p>'}
+                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noExternalJsFiles', 'No external JavaScript files') + '</p>'}
               </div>
             </details>
           ` : ''}
@@ -205,14 +213,14 @@ document.addEventListener('DOMContentLoaded', () => {
           ${resources.images ? `
             <details class="resource-details">
               <summary class="resource-summary">
-                <span class="resource-badge resource-image">Images</span>
-                <span style="font-weight: bold;">${resources.images.total || 0} images</span>
-                <span style="font-size: 0.85rem; color: #888;">Missing alt: ${resources.images.withoutAlt || 0} | Lazy: ${resources.images.lazyLoaded || 0}</span>
+                <span class="resource-badge resource-image">${t('reports.performance.imagesLabel', 'Images')}</span>
+                <span style="font-weight: bold;">${resources.images.total || 0} ${t('reports.performance.images', 'images')}</span>
+                <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.missingAlt', 'Missing alt')}: ${resources.images.withoutAlt || 0} | ${t('reports.performance.lazy', 'Lazy')}: ${resources.images.lazyLoaded || 0}</span>
               </summary>
               <div class="resource-details-content">
                 ${resources.images.formats && Object.keys(resources.images.formats).length > 0 ? `
                   <table class="resource-table">
-                    <thead><tr><th>Format</th><th>Count</th><th>% of Total</th></tr></thead>
+                    <thead><tr><th>${t('reports.performance.format', 'Format')}</th><th>${t('reports.performance.count', 'Count')}</th><th>${t('reports.performance.percentOfTotal', '% of Total')}</th></tr></thead>
                     <tbody>
                       ${Object.entries(resources.images.formats)
                         .filter(([format]) => ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'avif', 'ico', 'bmp', 'tiff', 'dynamic'].includes(format.toLowerCase()))
@@ -226,7 +234,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         `).join('')}
                     </tbody>
                   </table>
-                ` : '<p style="color: #888; padding: 0.5rem;">No image format data</p>'}
+                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noImageFormatData', 'No image format data') + '</p>'}
               </div>
             </details>
           ` : ''}
@@ -235,13 +243,13 @@ document.addEventListener('DOMContentLoaded', () => {
           ${resources.thirdParty ? `
             <details class="resource-details">
               <summary class="resource-summary">
-                <span class="resource-badge resource-third-party">Third-Party</span>
-                <span style="font-weight: bold;">${resources.thirdParty.count || 0} resources</span>
+                <span class="resource-badge resource-third-party">${t('reports.performance.thirdParty', 'Third-Party')}</span>
+                <span style="font-weight: bold;">${resources.thirdParty.count || 0} ${t('reports.performance.resources', 'resources')}</span>
               </summary>
               <div class="resource-details-content">
                 ${resources.thirdParty.categories && Object.keys(resources.thirdParty.categories).length > 0 ? `
                   <table class="resource-table">
-                    <thead><tr><th>Category</th><th>Count</th></tr></thead>
+                    <thead><tr><th>${t('reports.performance.category', 'Category')}</th><th>${t('reports.performance.count', 'Count')}</th></tr></thead>
                     <tbody>
                       ${Object.entries(resources.thirdParty.categories)
                         .sort((a, b) => b[1] - a[1])
@@ -252,16 +260,16 @@ document.addEventListener('DOMContentLoaded', () => {
                   </table>
                   ${(resources.thirdParty.domains || []).length > 0 ? `
                     <div style="margin-top: 1rem;">
-                      <strong style="font-size: 0.85rem;">Domains:</strong>
+                      <strong style="font-size: 0.85rem;">${t('reports.performance.domains', 'Domains')}:</strong>
                       <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
                         ${(resources.thirdParty.domains || []).slice(0, 20).map(d => `
                           <span style="background: rgba(236, 72, 153, 0.15); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${d}</span>
                         `).join('')}
-                        ${(resources.thirdParty.domains || []).length > 20 ? `<span style="color: #888; font-size: 0.75rem;">+${resources.thirdParty.domains.length - 20} more</span>` : ''}
+                        ${(resources.thirdParty.domains || []).length > 20 ? `<span style="color: #888; font-size: 0.75rem;">+${resources.thirdParty.domains.length - 20} ${t('reports.common.more', 'more')}</span>` : ''}
                       </div>
                     </div>
                   ` : ''}
-                ` : '<p style="color: #888; padding: 0.5rem;">No third-party resources detected</p>'}
+                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noThirdPartyResources', 'No third-party resources detected') + '</p>'}
               </div>
             </details>
           ` : ''}
@@ -270,22 +278,22 @@ document.addEventListener('DOMContentLoaded', () => {
           ${resources.fonts ? `
             <details class="resource-details">
               <summary class="resource-summary">
-                <span class="resource-badge resource-font">Fonts</span>
-                <span style="font-weight: bold;">${resources.fonts.preloaded || 0} preloaded</span>
-                <span style="font-size: 0.85rem; color: #888;">Missing font-display: ${resources.fonts.withoutDisplay || 0}</span>
+                <span class="resource-badge resource-font">${t('reports.performance.fonts', 'Fonts')}</span>
+                <span style="font-weight: bold;">${resources.fonts.preloaded || 0} ${t('reports.performance.preloaded', 'preloaded')}</span>
+                <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.missingFontDisplay', 'Missing font-display')}: ${resources.fonts.withoutDisplay || 0}</span>
               </summary>
               <div class="resource-details-content">
                 ${(resources.fonts.providers || []).length > 0 ? `
                   <table class="resource-table">
-                    <thead><tr><th>Provider</th></tr></thead>
+                    <thead><tr><th>${t('reports.performance.provider', 'Provider')}</th></tr></thead>
                     <tbody>
                       ${(resources.fonts.providers || []).map(p => `<tr><td>${p}</td></tr>`).join('')}
                     </tbody>
                   </table>
-                ` : '<p style="color: #888; padding: 0.5rem;">No font providers detected</p>'}
+                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noFontProviders', 'No font providers detected') + '</p>'}
                 ${(resources.fonts.issues || []).length > 0 ? `
                   <div style="margin-top: 1rem;">
-                    <strong style="font-size: 0.85rem; color: #f59e0b;">Issues:</strong>
+                    <strong style="font-size: 0.85rem; color: #f59e0b;">${t('reports.common.issues', 'Issues')}:</strong>
                     <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
                       ${resources.fonts.issues.map(i => `<li style="font-size: 0.85rem;">${i.message}</li>`).join('')}
                     </ul>
@@ -300,11 +308,11 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Issues -->
       ${issues.length > 0 ? `
         <div style="margin-bottom: 2rem;">
-          <h3 style="margin-bottom: 1rem;">⚠️ Issues Detected (${issues.length})</h3>
+          <h3 style="margin-bottom: 1rem;">⚠️ ${t('reports.common.issuesDetected', 'Issues Detected')} (${issues.length})</h3>
           ${issues.map(issue => `
             <div class="issue-card ${issue.severity === 'warning' ? 'warning' : issue.severity === 'info' ? 'info' : ''}">
               <div style="font-weight: bold; color: ${issue.severity === 'high' ? '#ef4444' : issue.severity === 'warning' ? '#f59e0b' : '#3b82f6'};">
-                ${issue.title || issue.type || 'Issue'}
+                ${issue.title || issue.type || t('reports.common.issue', 'Issue')}
               </div>
               <p style="margin: 0.5rem 0 0 0; color: #ccc; font-size: 0.9rem;">${issue.message || issue.description || ''}</p>
             </div>
@@ -312,19 +320,19 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       ` : `
         <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 2rem;">
-          <h3 style="color: #10b981; margin: 0;">✅ No Major Performance Issues</h3>
+          <h3 style="color: #10b981; margin: 0;">✅ ${t('reports.performance.noMajorIssues', 'No Major Performance Issues')}</h3>
         </div>
       `}
 
       <!-- Recommendations -->
       ${recommendations.recommendations && recommendations.recommendations.length > 0 ? `
         <div style="margin-bottom: 2rem;">
-          <h3 style="margin-bottom: 1rem;">💡 Recommendations</h3>
+          <h3 style="margin-bottom: 1rem;">💡 ${t('reports.common.recommendations', 'Recommendations')}</h3>
           ${recommendations.recommendations.map(rec => `
             <div style="background: rgba(16, 185, 129, 0.05); border-left: 3px solid ${rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#f59e0b' : '#10b981'}; padding: 1rem; margin-bottom: 0.5rem; border-radius: 0 4px 4px 0;">
               <div style="font-weight: bold; color: ${rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#f59e0b' : '#10b981'};">${rec.title}</div>
               <p style="margin: 0.5rem 0; color: #ccc;">${rec.description}</p>
-              ${rec.impact ? `<p style="margin: 0; font-size: 0.85rem; color: #888;">📈 Impact: ${rec.impact}</p>` : ''}
+              ${rec.impact ? `<p style="margin: 0; font-size: 0.85rem; color: #888;">📈 ${t('reports.common.impact', 'Impact')}: ${rec.impact}</p>` : ''}
             </div>
           `).join('')}
         </div>
@@ -332,11 +340,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <!-- Quick Wins -->
       <div style="margin-bottom: 2rem;">
-        <h3 style="margin-bottom: 1rem;">⚡ Quick Performance Wins</h3>
+        <h3 style="margin-bottom: 1rem;">⚡ ${t('reports.performance.quickWins', 'Quick Performance Wins')}</h3>
         <div style="display: grid; gap: 0.5rem;">
           ${summary.renderBlockingCount > 0 ? `
             <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 4px;">
-              <div style="font-weight: bold; margin-bottom: 0.5rem;">1. Eliminate Render-Blocking Resources</div>
+              <div style="font-weight: bold; margin-bottom: 0.5rem;">1. ${t('reports.performance.eliminateRenderBlocking', 'Eliminate Render-Blocking Resources')}</div>
               <code style="display: block; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;">
 &lt;script src="app.js" defer&gt;&lt;/script&gt;
 &lt;link rel="preload" href="styles.css" as="style" onload="this.rel='stylesheet'"&gt;
@@ -345,16 +353,16 @@ document.addEventListener('DOMContentLoaded', () => {
           ` : ''}
           ${resources.images && resources.images.missingAlt > 0 ? `
             <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 4px;">
-              <div style="font-weight: bold; margin-bottom: 0.5rem;">2. Add Lazy Loading to Images</div>
+              <div style="font-weight: bold; margin-bottom: 0.5rem;">2. ${t('reports.performance.addLazyLoading', 'Add Lazy Loading to Images')}</div>
               <code style="display: block; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px; font-size: 0.8rem;">
 &lt;img src="image.jpg" loading="lazy" alt="Description"&gt;
               </code>
             </div>
           ` : ''}
           <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 4px;">
-            <div style="font-weight: bold; margin-bottom: 0.5rem;">3. Enable Compression</div>
+            <div style="font-weight: bold; margin-bottom: 0.5rem;">3. ${t('reports.performance.enableCompression', 'Enable Compression')}</div>
             <p style="margin: 0; font-size: 0.85rem; color: #888;">
-              Enable Gzip/Brotli compression on your server to reduce file sizes by 70-90%.
+              ${t('reports.performance.enableCompressionDesc', 'Enable Gzip/Brotli compression on your server to reduce file sizes by 70-90%.')}
             </p>
           </div>
         </div>
@@ -379,8 +387,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function formatKB(kb) {
     if (!kb) return '0';
-    if (kb >= 1024) return (kb / 1024).toFixed(1) + ' MB';
-    return Math.round(kb) + ' KB';
+    if (kb >= 1024) return (kb / 1024).toFixed(1) + ' ' + t('reports.common.mb', 'MB');
+    return Math.round(kb) + ' ' + t('reports.common.kb', 'KB');
   }
 
   function truncateUrl(url) {

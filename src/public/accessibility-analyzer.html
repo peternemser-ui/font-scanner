@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/accessibility-analyzer.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/accessibility-analyzer.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/accessibility-analyzer.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/accessibility-analyzer.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/accessibility-analyzer.html" />
 
     <!-- Open Graph / Facebook -->
@@ -68,7 +69,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
     <link rel="stylesheet" href="/css/components/reportAccordion.css" />
     <link rel="stylesheet" href="/css/components/reportShell.css" />
 
@@ -88,7 +89,6 @@
     
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -194,36 +194,41 @@
     <main class="page-shell">
       <!-- Breadcrumb -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
+        <a href="/dashboard.html" data-i18n="dashboard.breadcrumb.home">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">Accessibility</span>
+        <span aria-current="page" data-i18n="analyzerPages.accessibility.breadcrumb">Accessibility</span>
       </nav>
       
       <!-- Page Header -->
       <header class="page-header">
-        <h1 class="page-header__title">Accessibility</h1>
-        <p class="page-header__subtitle">WCAG 2.1 compliance testing, color contrast, and keyboard navigation audits.</p>
+        <h1 class="page-header__title" data-i18n="analyzerPages.accessibility.title">Accessibility</h1>
+        <p class="page-header__subtitle" data-i18n="analyzerPages.accessibility.subtitle">WCAG 2.1 compliance testing, color contrast, and keyboard navigation audits.</p>
       </header>
 
       <!-- Input Card -->
       <section class="card">
         <div class="card__body">
           <div class="form-row">
-            <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
+            <label for="urlInput" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
             <input 
               type="url" 
               id="urlInput" 
               class="input"
               placeholder="https://example.com" 
+              data-i18n-placeholder="common.enterUrl"
               aria-label="Enter website URL for accessibility analysis"
+              data-i18n="analyzerPages.accessibility.ariaInput"
+              data-i18n-attr="aria-label"
               required
               aria-required="true"
             />
-            <button id="analyzeButton" class="btn btn-primary" aria-label="Run accessibility scan">
-              <span id="buttonText">Analyze</span>
+            <button id="analyzeButton" class="btn btn-primary" aria-label="Run accessibility scan" data-i18n="analyzerPages.accessibility.ariaAnalyze" data-i18n-attr="aria-label">
+              <span id="buttonText" data-i18n="common.analyze">Analyze</span>
             </button>
           </div>
-          <p class="helper-text">Tests WCAG 2.1 compliance, color contrast, keyboard navigation, and screen reader compatibility.</p>
+          <p class="helper-text" data-i18n="analyzerPages.accessibility.helperText">Tests WCAG 2.1 compliance, color contrast, keyboard navigation, and screen reader compatibility.</p>
+          <!-- Usage Status Indicator -->
+          <div id="usagePillContainer" class="page-shell-usage-pill"></div>
         </div>
       </section>
 
@@ -231,12 +236,12 @@
       <div id="results" class="results-container hidden" role="region" aria-live="polite">
         <!-- Loading State -->
         <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
-          <h2><span class="heartbeat" aria-hidden="true">A</span> Analyzing Accessibility...</h2>
-          <p class="animate-pulse">Running WCAG compliance checks and usability tests...</p>
-          <div class="progress-container" role="progressbar" aria-label="Analysis progress">
+          <h2><span class="heartbeat" aria-hidden="true">A</span> <span data-i18n="analyzerPages.accessibility.loadingTitle">Analyzing Accessibility...</span></h2>
+          <p class="animate-pulse" data-i18n="analyzerPages.accessibility.loadingSubtitle">Running WCAG compliance checks and usability tests...</p>
+          <div class="progress-container" role="progressbar" aria-label="Analysis progress" data-i18n="analyzerPages.accessibility.progressLabel" data-i18n-attr="aria-label">
             <div class="progress-bar" id="progressBar"></div>
           </div>
-          <div id="progressText" class="progress-text" aria-live="polite">Initializing accessibility audit...</div>
+          <div id="progressText" class="progress-text" aria-live="polite" data-i18n="analyzerPages.accessibility.loadingProgress">Initializing accessibility audit...</div>
         </div>
 
         <!-- Results Content (populated by JavaScript) -->
@@ -252,6 +257,8 @@
     <script src="/pro-utils.js"></script>
     <script src="/scan-context.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- PDF Export Libraries -->
@@ -260,14 +267,18 @@
     <script src="/pdf-export-utility.js?v=2"></script>
     <script src="/pdf-export-integration.js?v=2"></script>
 
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js?v=20260128a"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/reportStorage.js?v=20260128a"></script>
     <script src="/js/components/PricingModal.js"></script>
+    <script src="/js/components/UsagePill.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="accessibility-script.js?v=20260128a"></script>
   </body>

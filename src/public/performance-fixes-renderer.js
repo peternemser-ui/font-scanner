@@ -3,16 +3,251 @@
  * Generates detailed, actionable performance fixes with code examples
  */
 
-function renderFixesToMake(desktop, mobile) {
+/**
+ * Get translated performance fix title
+ */
+function translatePerfFixTitle(englishTitle) {
+  const titleMap = {
+    'Reduce Largest Contentful Paint (LCP)': 'reports.performance.fixTitles.reduceLcp',
+    'Reduce JavaScript Execution Time': 'reports.performance.fixTitles.reduceJsExecution',
+    'Fix Cumulative Layout Shift (CLS)': 'reports.performance.fixTitles.fixCls',
+    'Optimize Images': 'reports.performance.fixTitles.optimizeImages',
+    'Improve Accessibility': 'reports.performance.fixTitles.improveAccessibility'
+  };
+
+  const key = titleMap[englishTitle];
+  if (key) {
+    return t(key, englishTitle);
+  }
+  return englishTitle;
+}
+
+/**
+ * Get translated category label
+ */
+function translatePerfCategory(englishCategory) {
+  const categoryMap = {
+    'Core Web Vitals': 'reports.performance.categories.coreWebVitals',
+    'Performance': 'reports.performance.categories.performance',
+    'Accessibility': 'reports.performance.categories.accessibility'
+  };
+
+  const key = categoryMap[englishCategory];
+  if (key) {
+    return t(key, englishCategory);
+  }
+  return englishCategory;
+}
+
+/**
+ * Get translated severity label
+ */
+function translateSeverity(severity) {
+  const severityMap = {
+    'critical': 'reports.common.severity.critical',
+    'medium': 'reports.common.severity.medium',
+    'low': 'reports.common.severity.low'
+  };
+
+  const key = severityMap[severity];
+  if (key) {
+    return t(key, severity.charAt(0).toUpperCase() + severity.slice(1));
+  }
+  return severity;
+}
+
+/**
+ * Get translated fix summary
+ */
+function translatePerfFixSummary(fixId, englishSummary, params = {}) {
+  const summaryMap = {
+    'lcp-optimization': 'reports.performance.fixSummaries.lcpOptimization',
+    'javascript-optimization': 'reports.performance.fixSummaries.javascriptOptimization',
+    'cls-layout-shift': 'reports.performance.fixSummaries.clsOptimization',
+    'image-optimization': 'reports.performance.fixSummaries.imageOptimization',
+    'accessibility-improvements': 'reports.performance.fixSummaries.accessibilityImprovements'
+  };
+
+  const key = summaryMap[fixId];
+  if (key && typeof t === 'function') {
+    const translated = t(key, englishSummary);
+    // Handle parameter interpolation
+    if (params && typeof translated === 'string') {
+      let result = translated;
+      Object.keys(params).forEach(param => {
+        const regex = new RegExp(`\\{\\{${param}\\}\\}`, 'g');
+        result = result.replace(regex, params[param]);
+      });
+      return result;
+    }
+    return translated;
+  }
+  return englishSummary;
+}
+
+/**
+ * Get translated fix impact
+ */
+function translatePerfFixImpact(fixId, englishImpact) {
+  const impactMap = {
+    'lcp-optimization': 'reports.performance.fixImpacts.lcpOptimization',
+    'javascript-optimization': 'reports.performance.fixImpacts.javascriptOptimization',
+    'cls-layout-shift': 'reports.performance.fixImpacts.clsOptimization',
+    'image-optimization': 'reports.performance.fixImpacts.imageOptimization',
+    'accessibility-improvements': 'reports.performance.fixImpacts.accessibilityImprovements'
+  };
+
+  const key = impactMap[fixId];
+  if (key && typeof t === 'function') {
+    return t(key, englishImpact);
+  }
+  return englishImpact;
+}
+
+/**
+ * Get translated fix subtitle (contains dynamic metrics)
+ */
+function translatePerfFixSubtitle(fixId, englishSubtitle, params = {}) {
+  const subtitleMap = {
+    'lcp-optimization': 'reports.performance.fixSubtitles.lcpOptimization',
+    'javascript-optimization': 'reports.performance.fixSubtitles.javascriptOptimization',
+    'cls-layout-shift': 'reports.performance.fixSubtitles.clsOptimization',
+    'image-optimization': 'reports.performance.fixSubtitles.imageOptimization',
+    'accessibility-improvements': 'reports.performance.fixSubtitles.accessibilityImprovements'
+  };
+
+  const key = subtitleMap[fixId];
+  if (key && typeof t === 'function') {
+    const translated = t(key, englishSubtitle);
+    if (params && typeof translated === 'string') {
+      let result = translated;
+      Object.keys(params).forEach(param => {
+        const regex = new RegExp(`\\{\\{${param}\\}\\}`, 'g');
+        result = result.replace(regex, params[param]);
+      });
+      return result;
+    }
+    return translated;
+  }
+  return englishSubtitle;
+}
+
+/**
+ * Get translated fix steps
+ */
+function translatePerfFixSteps(fixId, englishSteps) {
+  const stepsKeyMap = {
+    'lcp-optimization': 'reports.performance.fixSteps.lcpOptimization',
+    'javascript-optimization': 'reports.performance.fixSteps.javascriptOptimization',
+    'cls-layout-shift': 'reports.performance.fixSteps.clsOptimization',
+    'image-optimization': 'reports.performance.fixSteps.imageOptimization',
+    'accessibility-improvements': 'reports.performance.fixSteps.accessibilityImprovements'
+  };
+
+  const baseKey = stepsKeyMap[fixId];
+  if (!baseKey || typeof t !== 'function') return englishSteps;
+
+  return englishSteps.map((step, i) => {
+    const translated = t(`${baseKey}.step${i + 1}`, step);
+    return translated;
+  });
+}
+
+/**
+ * Get translated resource issue text
+ */
+function translatePerfResourceIssue(issueText) {
+  const issueMap = {
+    'Unoptimized, blocks LCP': 'reports.performance.fixResourceIssues.unoptimizedBlocksLcp',
+    'Could use WebP format': 'reports.performance.fixResourceIssues.couldUseWebp',
+    'Contains unused libraries': 'reports.performance.fixResourceIssues.containsUnusedLibraries',
+    'Not minified or tree-shaken': 'reports.performance.fixResourceIssues.notMinified',
+    'Causes layout shifts': 'reports.performance.fixResourceIssues.causesLayoutShifts',
+    'No font-display strategy': 'reports.performance.fixResourceIssues.noFontDisplay',
+    'Could be 180KB as WebP': 'reports.performance.fixResourceIssues.couldBeSmallerWebp',
+    '12 unoptimized images': 'reports.performance.fixResourceIssues.unoptimizedImages'
+  };
+
+  const key = issueMap[issueText];
+  if (key && typeof t === 'function') {
+    return t(key, issueText);
+  }
+  return issueText;
+}
+
+function renderFixesToMake(desktop, mobile, hasProAccess = null) {
   const fixes = generateFixesData(desktop, mobile);
+
+  // VERSION: 20260201g - Check Pro access with fresh scan flag
+  if (hasProAccess === null) {
+    // If fresh scan flag is set, lock content for free users but allow Pro/Day Pass
+    if (window.__SM_FRESH_SCAN_PENDING_PAYMENT__) {
+      const isProSub = window.ProReportBlock?.isProSubscriber?.();
+      if (!isProSub) {
+        console.log('[PerformanceFixes] v20260205 - FRESH SCAN FLAG SET (free user) - forcing locked');
+        hasProAccess = false;
+      } else {
+        console.log('[PerformanceFixes] v20260205 - Pro/Day Pass user - ignoring fresh scan flag');
+        const reportId = document.body?.getAttribute('data-report-id') || '';
+        hasProAccess = window.ProReportBlock?.hasAccess?.(reportId) || false;
+      }
+    } else {
+      const reportId = document.body?.getAttribute('data-report-id') || '';
+      hasProAccess = window.ProReportBlock?.hasAccess?.(reportId) || false;
+      console.log('[PerformanceFixes] v20260201g - Access check:', { reportId, hasProAccess });
+    }
+  }
 
   if (fixes.length === 0) {
     return `
       <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
-          <span style="font-size: 1.5rem;">🎉</span> Excellent! No Critical Fixes Needed
+          <span style="font-size: 1.5rem;">🎉</span> ${t('reports.performance.fixes.excellent', 'Excellent! No Critical Fixes Needed')}
         </h3>
-        <p style="color: #86efac; margin: 0;">Your site is performing well across all metrics. Continue monitoring and consider A/B testing for further optimizations.</p>
+        <p style="color: #86efac; margin: 0;">${t('reports.performance.fixes.excellentDescription', 'Your site is performing well across all metrics. Continue monitoring and consider A/B testing for further optimizations.')}</p>
+      </div>
+    `;
+  }
+
+  // If user doesn't have Pro access, show locked teaser
+  if (!hasProAccess) {
+    const reportId = document.body?.getAttribute('data-report-id') || '';
+    const fixesAvailableText = t('reports.performance.fixes.fixesAvailable', '{{count}} Performance Fix(es) Available').replace('{{count}}', fixes.length);
+    return `
+      <div style="margin-top: 2rem;">
+        <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
+          <span style="font-size: 1.75rem;">🎯</span> ${t('reports.performance.fixes.title', 'Performance Fixes')}
+          <span class="pro-pill" style="margin-left: 0.5rem;">PRO</span>
+          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('reports.performance.fixes.issuesFound', '{{count}} issues found').replace('{{count}}', fixes.length)})</span>
+        </h3>
+        <div style="position: relative; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; overflow: hidden;">
+          <!-- Blurred teaser content -->
+          <div style="filter: blur(4px); opacity: 0.4; pointer-events: none; padding: 1rem;">
+            <div style="background: rgba(255, 68, 68, 0.1); border-left: 4px solid #ff4444; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+              <h4 style="color: #ff4444; margin: 0 0 0.5rem 0;">${t('reports.performance.fixes.teaserCritical', 'Critical: Reduce Largest Contentful Paint')}</h4>
+              <p style="color: #888; margin: 0; font-size: 0.9rem;">${t('reports.performance.fixes.teaserCriticalDesc', 'Current: 3.2s → Target: <2.5s')}</p>
+            </div>
+            <div style="background: rgba(255, 140, 0, 0.1); border-left: 4px solid #ff8c00; padding: 1rem; border-radius: 8px; margin-bottom: 0.75rem;">
+              <h4 style="color: #ff8c00; margin: 0 0 0.5rem 0;">${t('reports.performance.fixes.teaserMedium', 'Medium: Optimize JavaScript Execution')}</h4>
+              <p style="color: #888; margin: 0; font-size: 0.9rem;">${t('reports.performance.fixes.teaserMediumDesc', 'Total Blocking Time: 450ms → Target: <200ms')}</p>
+            </div>
+            <div style="background: rgba(255, 215, 0, 0.1); border-left: 4px solid #ffd700; padding: 1rem; border-radius: 8px;">
+              <h4 style="color: #ffd700; margin: 0 0 0.5rem 0;">${t('reports.performance.fixes.teaserLow', 'Low: Image Optimization Opportunities')}</h4>
+              <p style="color: #888; margin: 0; font-size: 0.9rem;">${t('reports.performance.fixes.teaserLowDesc', 'Potential savings: 1.2MB')}</p>
+            </div>
+          </div>
+          <!-- Lock overlay -->
+          <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background: rgba(0, 0, 0, 0.6);">
+            <div style="background: var(--bg-primary, #1a1a2e); padding: 2rem; border-radius: 12px; border: 2px solid var(--color-accent, #00ff41); box-shadow: 0 4px 20px rgba(0, 255, 65, 0.3); text-align: center; max-width: 320px;">
+              <div style="font-size: 2.5rem; margin-bottom: 0.75rem;">🔒</div>
+              <p style="color: var(--color-text-primary, #e0e0e0); margin: 0 0 0.5rem 0; font-weight: 600; font-size: 1.1rem;">${fixesAvailableText}</p>
+              <p style="color: var(--color-text-muted, #888); margin: 0 0 1.25rem 0; font-size: 0.9rem;">${t('reports.performance.fixes.unlockDescription', 'Get detailed code examples, step-by-step guides, and optimization recommendations.')}</p>
+              <button onclick="window.ProReportBlock?.showPurchaseOptions?.('${reportId}', 'performance')" style="background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%); color: #000; border: none; padding: 0.875rem 1.75rem; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 1rem; width: 100%;">
+                ${t('reports.performance.fixes.unlockButton', 'Unlock Pro Report - $5')}
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     `;
   }
@@ -25,8 +260,8 @@ function renderFixesToMake(desktop, mobile) {
   let html = `
     <div style="margin-top: 2rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
-        <span style="font-size: 1.75rem;">🎯</span> Performance Fixes
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} issues found)</span>
+        <span style="font-size: 1.75rem;">🎯</span> ${t('reports.performance.fixes.title', 'Performance Fixes')}
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('reports.performance.fixes.issuesFound', '{{count}} issues found').replace('{{count}}', fixes.length)})</span>
       </h3>
       <div class="fixes-container">
   `;
@@ -454,16 +689,19 @@ function generateFixesData(desktop, mobile) {
   // LCP Fix - Most Critical
   if (mobileLCP > 2500) {
     const severity = mobileLCP > 4000 ? 'critical' : 'medium';
+    const lcpValue = mobCWV.lcp || (mobileLCP/1000).toFixed(2) + 's';
     fixes.push({
       id: 'lcp-optimization',
       severity: severity,
       icon: '🔴',
       title: `Reduce Largest Contentful Paint (LCP)`,
-      subtitle: `Current: ${mobCWV.lcp || (mobileLCP/1000).toFixed(2) + 's'} → Target: <2.5s`,
+      subtitle: `Current: ${lcpValue} → Target: <2.5s`,
+      subtitleParams: { value: lcpValue },
       category: 'Core Web Vitals',
       categoryKey: 'vitals-lcp',
       impact: mobileLCP > 4000 ? '+25 Performance Score' : '+15 Performance Score',
-      summary: `Your LCP is ${mobCWV.lcp || (mobileLCP/1000).toFixed(2) + 's'}, which is ${mobileLCP > 4000 ? 'critically slow' : 'slower than recommended'}. LCP measures how long it takes for the largest content element (usually hero image or heading) to become visible. Google considers LCP a direct ranking factor.`,
+      summary: `Your LCP is ${lcpValue}, which is ${mobileLCP > 4000 ? 'critically slow' : 'slower than recommended'}. LCP measures how long it takes for the largest content element (usually hero image or heading) to become visible. Google considers LCP a direct ranking factor.`,
+      summaryParams: { value: lcpValue, target: '2.5s' },
       problematicCode: `<!-- Typical problematic pattern -->
 <img src="/images/hero-original.jpg"
      class="hero-banner"
@@ -516,10 +754,12 @@ function generateFixesData(desktop, mobile) {
       icon: '🟡',
       title: 'Reduce JavaScript Execution Time',
       subtitle: `Total Blocking Time: ${mobileTBT}ms → Target: <200ms`,
+      subtitleParams: { value: `${mobileTBT}ms` },
       category: 'Performance',
       categoryKey: 'javascript',
       impact: '+20 Performance Score',
       summary: `Your site has ${mobileTBT}ms of Total Blocking Time, meaning the main thread is blocked and can't respond to user input. This causes delays in interactivity and poor user experience.`,
+      summaryParams: { value: `${mobileTBT}ms` },
       problematicCode: `<!-- Render-blocking scripts in <head> -->
 <script src="/js/jquery-3.6.0.min.js"></script>
 <script src="/js/bootstrap.bundle.js"></script>
@@ -572,6 +812,7 @@ function generateFixesData(desktop, mobile) {
       icon: mobileCLS > 0.25 ? '🔴' : '🟡',
       title: 'Fix Cumulative Layout Shift (CLS)',
       subtitle: `Current: ${mobileCLS.toFixed(3)} → Target: <0.1`,
+      subtitleParams: { value: mobileCLS.toFixed(3) },
       category: 'Core Web Vitals',
       categoryKey: 'vitals-cls',
       impact: '+10 Performance Score',
@@ -707,6 +948,7 @@ function generateFixesData(desktop, mobile) {
       icon: '🔵',
       title: 'Improve Accessibility',
       subtitle: `Score: ${accessScore}/100 → Target: >90`,
+      subtitleParams: { value: `${accessScore}` },
       category: 'Accessibility',
       categoryKey: 'accessibility',
       impact: 'Legal compliance + SEO boost',
@@ -813,20 +1055,24 @@ function generateFixesData(desktop, mobile) {
 function renderFixAccordion(fix, index) {
   const accordionId = `fix-${fix.id}-${index}`;
   const severityClass = `severity-${fix.severity}`;
+  const translatedTitle = translatePerfFixTitle(fix.title);
+  const translatedCategory = translatePerfCategory(fix.category);
+  const translatedSeverity = translateSeverity(fix.severity);
+  const translatedSubtitle = translatePerfFixSubtitle(fix.id, fix.subtitle, fix.subtitleParams || {});
 
   return `
     <div class="fix-accordion ${severityClass}" data-fix-id="${accordionId}">
-      <div class="fix-header" onclick="toggleFixAccordion('${accordionId}')">
+      <div class="fix-header" data-action="toggle-fix-accordion" data-accordion-id="${accordionId}">
         <div class="fix-header-left">
           <span class="fix-icon">${fix.icon}</span>
           <div class="fix-title-group">
-            <h4 class="fix-title">${fix.title}</h4>
-            <p class="fix-subtitle">${fix.subtitle}</p>
+            <h4 class="fix-title">${translatedTitle}</h4>
+            <p class="fix-subtitle">${translatedSubtitle}</p>
           </div>
         </div>
         <div class="fix-badges">
-          <span class="fix-badge priority-${fix.severity}">${fix.severity}</span>
-          <span class="fix-badge category">${fix.category}</span>
+          <span class="fix-badge priority-${fix.severity}">${translatedSeverity.toUpperCase()}</span>
+          <span class="fix-badge category">${translatedCategory}</span>
           <span class="fix-expand-icon">▼</span>
         </div>
       </div>
@@ -841,29 +1087,34 @@ function renderFixAccordion(fix, index) {
 }
 
 function renderFixTabs(fix, accordionId) {
+  // Translate summary, impact, and steps
+  const translatedSummary = translatePerfFixSummary(fix.id, fix.summary, fix.summaryParams || {});
+  const translatedImpact = translatePerfFixImpact(fix.id, fix.impact);
+  const translatedSteps = translatePerfFixSteps(fix.id, fix.steps);
+
   return `
     <div class="fix-tabs">
-      <button class="fix-tab active" onclick="switchFixTab('${accordionId}', 'summary')">
-        📋 Summary
+      <button class="fix-tab active" data-action="switch-fix-tab" data-accordion-id="${accordionId}" data-tab="summary">
+        📋 ${t('reports.common.tabs.summary', 'Summary')}
       </button>
-      <button class="fix-tab" onclick="switchFixTab('${accordionId}', 'code')">
-        💻 Code
+      <button class="fix-tab" data-action="switch-fix-tab" data-accordion-id="${accordionId}" data-tab="code">
+        💻 ${t('reports.common.tabs.code', 'Code')}
       </button>
-      ${fix.resources.length > 0 ? `<button class="fix-tab" onclick="switchFixTab('${accordionId}', 'resources')">📦 Resources</button>` : ''}
-      <button class="fix-tab" onclick="switchFixTab('${accordionId}', 'guide')">
-        🔧 Fix Guide
+      ${fix.resources.length > 0 ? `<button class="fix-tab" data-action="switch-fix-tab" data-accordion-id="${accordionId}" data-tab="resources">📦 ${t('reports.common.tabs.resources', 'Resources')}</button>` : ''}
+      <button class="fix-tab" data-action="switch-fix-tab" data-accordion-id="${accordionId}" data-tab="guide">
+        🔧 ${t('reports.common.tabs.fixGuide', 'Fix Guide')}
       </button>
     </div>
 
     <!-- Summary Tab -->
     <div class="fix-tab-content active" id="${accordionId}-summary">
       <p style="color: #ccc; line-height: 1.7; margin-bottom: 1rem;">
-        ${fix.summary}
+        ${translatedSummary}
       </p>
       <div class="impact-indicator">
         <div>
-          <div class="impact-value">${fix.impact}</div>
-          <div class="impact-label">Estimated Improvement</div>
+          <div class="impact-value">${translatedImpact}</div>
+          <div class="impact-label">${t('reports.common.estimatedImprovement', 'Estimated Improvement')}</div>
         </div>
       </div>
     </div>
@@ -874,10 +1125,10 @@ function renderFixTabs(fix, accordionId) {
         <div class="code-block">
           <div class="code-block-header">
             <span class="code-block-title error">
-              ❌ Problematic Code
+              ❌ ${t('reports.common.problematicCode', 'Problematic Code')}
             </span>
-            <button class="fix-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" onclick="copyCode('${accordionId}-problem')">
-              📋 Copy
+            <button class="fix-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" data-action="copy-code" data-code-id="${accordionId}-problem">
+              📋 ${t('reports.common.copy', 'Copy')}
             </button>
           </div>
           <div class="code-block-body">
@@ -888,10 +1139,10 @@ function renderFixTabs(fix, accordionId) {
         <div class="code-block" style="position: relative;">
           <div class="code-block-header">
             <span class="code-block-title success">
-              ✅ Optimized Solution
+              ✅ ${t('reports.common.optimizedSolution', 'Optimized Solution')}
             </span>
-            <button class="fix-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" onclick="copyCode('${accordionId}-solution')">
-              📋 Copy
+            <button class="fix-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" data-action="copy-code" data-code-id="${accordionId}-solution">
+              📋 ${t('reports.common.copy', 'Copy')}
             </button>
           </div>
           <div class="code-block-body">
@@ -904,13 +1155,13 @@ function renderFixTabs(fix, accordionId) {
     ${fix.resources.length > 0 ? `
     <!-- Resources Tab -->
     <div class="fix-tab-content" id="${accordionId}-resources">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">Affected Resources:</h5>
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.affectedResources', 'Affected Resources')}:</h5>
       <ul class="resources-list">
         ${fix.resources.map(r => `
           <li class="resource-item">
             <code>${r.file}</code>
             ${r.size !== 'N/A' ? `<span class="resource-size">${r.size}</span>` : ''}
-            <div style="color: #888; font-size: 0.8rem; margin-top: 0.25rem;">${r.issue}</div>
+            <div style="color: #888; font-size: 0.8rem; margin-top: 0.25rem;">${translatePerfResourceIssue(r.issue)}</div>
           </li>
         `).join('')}
       </ul>
@@ -919,20 +1170,20 @@ function renderFixTabs(fix, accordionId) {
 
     <!-- Fix Guide Tab -->
     <div class="fix-tab-content" id="${accordionId}-guide">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.stepByStepFix', 'Step-by-Step Fix')}:</h5>
       <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
-        ${[...fix.steps, ...(fix.proSteps || [])].map(step => `<li style="margin-bottom: 0.75rem;">${step}</li>`).join('')}
+        ${[...translatedSteps, ...(fix.proSteps || [])].map(step => `<li style="margin-bottom: 0.75rem;">${step}</li>`).join('')}
       </ol>
 
       <div class="fix-actions">
         <button class="fix-btn fix-btn-primary" data-action="apply-fix" data-fix-id="${fix.id}">
-          ✨ Apply Fix
+          ✨ ${t('reports.common.applyFix', 'Apply Fix')}
         </button>
         <button class="fix-btn fix-btn-secondary" data-action="test-fix" data-fix-id="${fix.id}">
-          🧪 Test Fix
+          🧪 ${t('reports.common.testFix', 'Test Fix')}
         </button>
         <button class="fix-btn fix-btn-secondary" data-action="learn-more" data-fix-id="${fix.id}" data-learn-url="https://web.dev/articles/${fix.id}">
-          📚 Learn More
+          📚 ${t('reports.common.learnMore', 'Learn More')}
         </button>
       </div>
     </div>
@@ -982,7 +1233,7 @@ function switchFixTab(accordionId, tabName) {
   tabs.forEach(tab => tab.classList.remove('active'));
   contents.forEach(content => content.classList.remove('active'));
 
-  const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+  const activeTab = Array.from(tabs).find(tab => tab.getAttribute('data-tab') === tabName);
   const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
   if (activeTab) activeTab.classList.add('active');
@@ -1008,7 +1259,7 @@ function copyCode(elementId) {
     // Show success feedback
     const button = event.target;
     const originalText = button.textContent;
-    button.textContent = '✓ Copied!';
+    button.textContent = '✓ ' + (typeof t === 'function' ? t('common.copied', 'Copied!') : 'Copied!');
     button.style.background = 'rgba(34, 197, 94, 0.2)';
     button.style.borderColor = '#22c55e';
     button.style.color = '#22c55e';
@@ -1054,11 +1305,8 @@ document.addEventListener('click', function(e) {
     const accordion = tabButton.closest('.fix-accordion');
     if (accordion) {
       const accordionId = accordion.getAttribute('data-fix-id');
-      const tabText = tabButton.textContent.toLowerCase();
-      let tabName = 'summary';
-      if (tabText.includes('code')) tabName = 'code';
-      else if (tabText.includes('resources') || tabText.includes('docs')) tabName = 'resources';
-      else if (tabText.includes('guide') || tabText.includes('implement')) tabName = 'guide';
+      // Use data-tab attribute instead of text content (text is translated)
+      const tabName = tabButton.getAttribute('data-tab') || 'summary';
       e.preventDefault();
       e.stopPropagation();
       switchFixTab(accordionId, tabName);
@@ -1067,16 +1315,13 @@ document.addEventListener('click', function(e) {
   }
 
   // Handle copy button clicks
-  const copyBtn = e.target.closest('.copy-btn, [onclick*="copyCode"]');
+  const copyBtn = e.target.closest('[data-action="copy-code"]');
   if (copyBtn) {
-    const codeBlock = copyBtn.closest('.code-block');
-    if (codeBlock) {
-      const codeEl = codeBlock.querySelector('code');
-      if (codeEl) {
-        e.preventDefault();
-        e.stopPropagation();
-        copyCode(copyBtn, codeEl.textContent);
-      }
+    e.preventDefault();
+    e.stopPropagation();
+    const codeId = copyBtn.getAttribute('data-code-id');
+    if (codeId) {
+      copyCode(codeId);
     }
     return;
   }

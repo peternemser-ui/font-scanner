@@ -18,6 +18,7 @@
   <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/upgrade.html" />
   <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/upgrade.html" />
   <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/upgrade.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/upgrade.html" />
   <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/upgrade.html" />
 
   <!-- Preload critical fonts -->
@@ -28,6 +29,9 @@
   <!-- Design System Foundation -->
   <link rel="stylesheet" href="/design-tokens.css">
   <link rel="stylesheet" href="/components.css">
+
+  <!-- Internationalization (i18n) Support -->
+  <script src="/i18n.js"></script>
   <link rel="stylesheet" href="/styles.css">
 
   <style>
@@ -179,7 +183,7 @@
     }
 
     .pricing-card ul li {
-      padding: 0.75rem 0;
+      padding: 0.25rem 0;
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       color: #ccc;
       display: flex;
@@ -310,14 +314,6 @@
         <h1>Upgrade to Site Mechanic Pro</h1>
         <p>Unlock unlimited scans, advanced recommendations, and expert-level optimization tools</p>
 
-        <!-- Billing Toggle -->
-        <div class="pricing-toggle">
-          <label for="billing-toggle">Monthly</label>
-          <div class="toggle-switch" id="billing-toggle">
-            <div class="toggle-switch-slider"></div>
-          </div>
-          <label>Annual <span class="save-badge">Save 17%</span></label>
-        </div>
       </div>
 
       <!-- Pricing Cards -->
@@ -330,39 +326,59 @@
             <span class="period">/month</span>
           </div>
           <ul>
-            <li>3 scans per month</li>
-            <li>Full fix recommendations</li>
+            <li>10 scans per day</li>
+            <li>Basic scan results</li>
             <li>1 page per scan</li>
-            <li class="disabled">Advanced recommendations</li>
-            <li class="disabled">Unlimited scans</li>
+            <li class="disabled">Pro sections locked</li>
+            <li class="disabled">Report unlocks</li>
             <li class="disabled">PDF export</li>
             <li class="disabled">Priority support</li>
           </ul>
           <button class="pricing-btn secondary" disabled>Current Plan</button>
         </div>
 
+        <!-- Day Pass -->
+        <div class="pricing-card" id="day-pass">
+          <h3>8 Hour Day Pass</h3>
+          <div class="price">
+            <span class="currency">$</span>20
+            <span class="period">/8 hours</span>
+          </div>
+          <div style="color: #888; font-size: 0.875rem; margin-top: -0.5rem; margin-bottom: 1rem;">
+            One-time purchase, no auto-renewal
+          </div>
+          <ul>
+            <li>Unlimited scans for 8 hours</li>
+            <li class="highlight">30 report unlocks included</li>
+            <li>Full Pro section access</li>
+            <li>Up to 250 pages per scan</li>
+            <li>PDF export</li>
+            <li>No auto-renewal</li>
+          </ul>
+          <button class="pricing-btn" id="upgrade-daypass-btn">Get 8 Hour Day Pass</button>
+        </div>
+
         <!-- Pro Plan (Monthly) -->
-        <div class="pricing-card featured" id="pro-monthly">
-          <span class="pricing-badge">Most Popular</span>
-          <h3>Pro</h3>
+        <div class="pricing-card" id="pro-monthly">
+          <h3>Pro Monthly</h3>
           <div class="price">
             <span class="currency">$</span>29
             <span class="period">/month</span>
           </div>
           <ul>
             <li>Unlimited scans</li>
-            <li>4 advanced recommendations per analyzer</li>
+            <li class="highlight">250 report unlocks/month</li>
+            <li>Full Pro section access</li>
             <li>Up to 250 pages per scan</li>
-            <li>Expert-level optimization tips</li>
-            <li>PDF export without watermark</li>
+            <li>PDF export</li>
             <li>Priority email support</li>
-            <li>API access (coming soon)</li>
+            <li>Cancel anytime</li>
           </ul>
           <button class="pricing-btn" id="upgrade-monthly-btn">Upgrade to Pro</button>
         </div>
 
         <!-- Pro Plan (Annual) -->
-        <div class="pricing-card featured hidden" id="pro-annual">
+        <div class="pricing-card featured" id="pro-annual">
           <span class="pricing-badge">Best Value</span>
           <h3>Pro Annual</h3>
           <div class="price">
@@ -375,12 +391,12 @@
           </div>
           <ul>
             <li>Unlimited scans</li>
-            <li>4 advanced recommendations per analyzer</li>
+            <li class="highlight">Unlimited report unlocks</li>
+            <li>Full Pro section access</li>
             <li>Up to 250 pages per scan</li>
-            <li>Expert-level optimization tips</li>
-            <li>PDF export without watermark</li>
+            <li>PDF export</li>
             <li>Priority email support</li>
-            <li>API access (coming soon)</li>
+            <li>Best value - save $60/year</li>
           </ul>
           <button class="pricing-btn" id="upgrade-annual-btn">Upgrade to Pro Annual</button>
         </div>
@@ -423,6 +439,8 @@
 
   <script src="/pro-utils.js"></script>
   <script src="/nav-template.js"></script>
+  <!-- Language Switcher (after nav-template so container exists) -->
+  <script src="/language-switcher.js"></script>
   <script src="/upgrade-script.js"></script>
 </body>
 </html>

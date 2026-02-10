@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/enhanced-fonts.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/enhanced-fonts.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/enhanced-fonts.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/enhanced-fonts.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/enhanced-fonts.html" />
 
     <!-- Open Graph -->
@@ -77,7 +78,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
     <link rel="stylesheet" href="/css/components/reportShell.css" />
     <link rel="stylesheet" href="/css/components/reportAccordion.css" />
 
@@ -350,6 +351,68 @@
       .severity-warning { background: #f59e0b; color: black; }
       .severity-info { background: #3b82f6; color: white; }
       .severity-good { background: #10b981; color: white; }
+
+      /* Usability: Improved section headings */
+      .report-accordion__title {
+        font-size: 1rem !important;
+        letter-spacing: 0.02em;
+      }
+
+      /* Usability: Reduce max height on accordion content to prevent excessive scrolling */
+      .report-accordion__body {
+        max-height: 600px;
+        overflow-y: auto;
+      }
+
+      /* Usability: Clearer CTA buttons */
+      .btn-primary, .btn-cta {
+        font-weight: 600 !important;
+        letter-spacing: 0.02em;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+      }
+
+      /* Usability: Badge for new tabs */
+      .tab-badge-new {
+        display: inline-block;
+        padding: 2px 6px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        color: white;
+        font-size: 0.65rem;
+        font-weight: 700;
+        border-radius: 3px;
+        margin-left: 6px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      /* Usability: Improve font card readability */
+      .font-card {
+        padding: 1rem 1.25rem;
+        border-radius: 8px;
+        margin-bottom: 0.75rem;
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
+      }
+      .font-card:hover {
+        transform: translateX(2px);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      }
+
+      /* Usability: Smooth scroll for accordion content */
+      .report-accordion__body::-webkit-scrollbar {
+        width: 6px;
+      }
+      .report-accordion__body::-webkit-scrollbar-track {
+        background: rgba(255,255,255,0.05);
+        border-radius: 3px;
+      }
+      .report-accordion__body::-webkit-scrollbar-thumb {
+        background: rgba(255,255,255,0.2);
+        border-radius: 3px;
+      }
+      .report-accordion__body::-webkit-scrollbar-thumb:hover {
+        background: rgba(255,255,255,0.3);
+      }
     </style>
     
     <!-- Schema.org Structured Data -->
@@ -414,7 +477,7 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
+    <script src="/js/report-i18n.js"></script>
     <script src="/seo-i18n.js"></script>
   </head>
   <body>
@@ -424,7 +487,7 @@
     <main class="page-shell">
       <!-- Breadcrumb Navigation -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html" data-i18n="nav.dashboard">Home</a>
+        <a href="/dashboard.html" data-i18n="dashboard.breadcrumb.home">Home</a>
         <span class="breadcrumb-sep">›</span>
         <span aria-current="page" data-i18n="fontScanner.title">Fonts & Typography</span>
       </nav>
@@ -440,7 +503,7 @@
         <div class="card__body">
           <!-- URL Input Form -->
           <div class="form-row">
-            <label for="urlInput" class="visually-hidden" data-i18n="fontScanner.enterUrl">Website URL to analyze</label>
+            <label for="urlInput" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
             <input 
               type="url" 
               id="urlInput"
@@ -448,18 +511,22 @@
               placeholder="https://example.com" 
               data-i18n-placeholder="fontScanner.enterUrl"
               aria-label="Enter website URL for font analysis"
+              data-i18n="fontScanner.enterUrl"
+              data-i18n-attr="aria-label"
               required
               aria-required="true"
             />
             
-            <button id="analyzeButton" class="btn btn-primary" aria-label="Analyze fonts">Analyze</button>
+            <button id="analyzeButton" class="btn btn-primary" aria-label="Analyze fonts" data-i18n="fontScanner.analyzeFonts" data-i18n-attr="aria-label">
+              <span data-i18n="fontScanner.analyzeFonts">ANALYZE FONTS</span>
+            </button>
           </div>
         
           <!-- Options Panel -->
           <div class="options-panel" style="margin-top: 1rem;">
             <label>
               <input type="checkbox" id="multiPageOption" />
-              <span>Multi-page scan (analyze fonts across multiple pages)</span>
+              <span data-i18n="fontScanner.multiPageScan">Multi-page scan (analyze fonts across multiple pages)</span>
             </label>
             <div id="multiPageOptions" style="display: none; margin-left: 24px; margin-top: 8px;">
               <label>
@@ -495,23 +562,31 @@
     <script src="theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/reportStorage.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/components/PricingModal.js"></script>
+
+    <!-- PDF Export Utility -->
+    <script src="/pdf-export-utility.js"></script>
 
     <!-- Shell + Entitlements (SEO pattern) -->
     <script src="/assets/js/ui.js"></script>
     <script src="/assets/js/report-shell.js"></script>
     <script src="/assets/js/billing.js"></script>
     <script src="/assets/js/entitlements.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="enhanced-fonts-script.js"></script>
   </body>

@@ -207,11 +207,120 @@ This is intentional duplication for backwards compatibility. Consolidation defer
 - [x] i18n supports URL ?lang= parameter override
 - [x] PricingModal has proper overflow handling
 - [x] 9 unused files removed (2695 lines)
+- [x] Hreflang tags on 24 key pages (all 7 languages + x-default)
+- [x] Sitemap includes all public pages with hreflang annotations
+- [x] robots.txt properly configured
 
 ---
 
-**Session End:** 2026-01-31T16:35:00Z
-**Total Commits:** 3
+## Phase 7 - SEO Optimization (Multilingual)
+
+### Status: COMPLETE
+
+**Hreflang Tags Added:**
+- Added hreflang tags to 9 key pages that were missing them:
+  - seo-analyzer.html, index.html, dashboard.html
+  - accessibility-analyzer.html, faq.html
+  - privacy.html, terms.html, refunds.html (new legal pages)
+  - upgrade.html
+- Total: 24 of 44 HTML files now have hreflang tags
+- All supported languages: en, es, fr, de, pt, zh, ja + x-default
+
+**Sitemap Updated:**
+- Added upgrade, privacy, terms, refunds pages
+- Added missing hreflang links to accessibility-analyzer and performance-analyzer entries
+- All sitemap entries now have proper multilingual hreflang annotations
+
+**Verified Present:**
+- sitemap.xml - Comprehensive with hreflang
+- robots.txt - Proper configuration with sitemap reference
+- Canonical URLs on all indexed pages
+- Open Graph / Twitter meta tags on key pages
+- JSON-LD structured data on analyzer pages
+
+**Commits:**
+- `f814904` - feat(seo): add hreflang tags for multilingual SEO support
+- `0772e03` - feat(seo): update sitemap with hreflang and legal pages
+
+---
+
+**Session End:** 2026-01-31T17:00:00Z
+**Total Commits:** 5
 **Lines Deleted:** ~2700
-**Lines Added:** ~180
+**Lines Added:** ~900
+
+---
+
+## Phase 8 - Error Handling Fix (Stale "Route not found")
+
+### Status: COMPLETE
+
+**Issue:** User reported "Analysis Failed - Route not found" error appearing on CWV page after paying for a report. The error persisted even though the API endpoint exists and returns 200.
+
+**Root Cause Analysis:**
+- The "Route not found" error comes from server.js line 538 (404 catch-all)
+- Cached/stale error data from previous failed API calls was being displayed
+- displayResults functions didn't validate for error data before rendering
+
+**Fixes Applied:**
+
+| File | Changes |
+|------|---------|
+| `performance-hub-script.js` | Added error data validation in displayResults, improved CWV analysis error handling with better logging |
+| `cwv-script.js` | Added error data validation in displayResults, better API error parsing |
+| `report-ui.js` | Added validation in billing return flow to prevent restoring error data, clears corrupted cache |
+| `security-script.js` | Added error data validation in displaySecurityResults |
+| `accessibility-script.js` | Added error data validation in displayAccessibilityResults |
+| `seo-script.js` | Added error data validation in displaySEOResults |
+
+**Key Changes:**
+1. All display functions now check `if (!data || data.error || typeof data === 'string')` before rendering
+2. Cached error data is logged and ignored instead of displayed
+3. Corrupted cache entries are automatically cleared
+4. Better API error parsing with fallback messages
+
+**Commit:** `97a1ac1` - fix: add error data validation to prevent stale "Route not found" errors
+
+---
+
+## Phase 9 - Results Container Visibility Fix
+
+### Status: COMPLETE
+
+**Issue:** CWV scan completes successfully (API returns 200 with valid data), but results don't display in the UI.
+
+**Root Cause Analysis:**
+- PageShell.js creates results container with HTML `hidden` attribute: `<div id="results" hidden>`
+- Analyzer scripts were only toggling CSS class: `results.classList.remove('hidden')`
+- The HTML `hidden` attribute is independent of CSS classes - removing the class doesn't remove the attribute
+- Result: Container stays invisible even though content is rendered
+
+**Fix Applied:**
+When showing results, now remove both:
+```javascript
+results.classList.remove('hidden');
+results.removeAttribute('hidden');
+```
+
+When hiding results, now set both:
+```javascript
+results.classList.add('hidden');
+results.setAttribute('hidden', '');
+```
+
+**Files Modified:**
+
+| File | Changes |
+|------|---------|
+| `performance-hub-script.js` | Fixed 3 occurrences (2 show, 1 hide) |
+| `security-script.js` | Fixed 4 occurrences (2 show, 2 hide) |
+
+**Note:** seo-script.js already uses `container.hidden = false` which is correct.
+
+**Commit:** `c43452e` - fix: properly show/hide results container by managing both CSS class and HTML hidden attribute
+
+---
+
+**Session Update:** 2026-01-31T19:00:00Z
+**Total Commits:** 7
 

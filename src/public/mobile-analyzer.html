@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/mobile-analyzer.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/mobile-analyzer.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/mobile-analyzer.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/mobile-analyzer.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/mobile-analyzer.html" />
 
     <!-- Open Graph -->
@@ -73,7 +74,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -389,7 +390,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
   </head>
   <body>
@@ -399,39 +399,44 @@
     <main class="page-shell">
       <!-- Breadcrumb -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
+        <a href="/dashboard.html" data-i18n="dashboard.breadcrumb.home">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">Mobile Testing</span>
+        <span aria-current="page" data-i18n="analyzerPages.mobile.breadcrumb">Mobile Testing</span>
       </nav>
       
       <!-- Page Header -->
       <header class="page-header">
-        <h1 class="page-header__title">Mobile Testing</h1>
-        <p class="page-header__subtitle">Multi-device analysis for performance, accessibility, and touch targets.</p>
+        <h1 class="page-header__title" data-i18n="analyzerPages.mobile.title">Mobile Testing</h1>
+        <p class="page-header__subtitle" data-i18n="analyzerPages.mobile.subtitle">Multi-device analysis for performance, accessibility, and touch targets.</p>
       </header>
 
       <!-- Input Card -->
       <section class="card">
         <div class="card__body">
           <div class="form-row">
-            <label for="urlInput" class="visually-hidden">Website URL to test</label>
+            <label for="urlInput" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
             <input 
               type="url" 
               id="urlInput" 
               class="input"
               placeholder="https://example.com" 
+              data-i18n-placeholder="common.enterUrl"
               aria-label="Enter website URL to test"
+              data-i18n="analyzerPages.mobile.ariaInput"
+              data-i18n-attr="aria-label"
               required
               aria-required="true"
             />
-            <button id="analyzeButton" class="btn btn-primary" aria-label="Run mobile test">
-              <span id="buttonText">Analyze</span>
+            <button id="analyzeButton" class="btn btn-primary" aria-label="Run mobile test" data-i18n="analyzerPages.mobile.ariaAnalyze" data-i18n-attr="aria-label">
+              <span id="buttonText" data-i18n="common.analyze">Analyze</span>
             </button>
           </div>
-          
+          <!-- Usage Status Indicator -->
+          <div id="usagePillContainer" class="page-shell-usage-pill"></div>
+
           <!-- Device Selection -->
           <div style="margin-top: 1rem;">
-            <p class="helper-text" style="margin-bottom: 0.5rem;">Select devices to test:</p>
+            <p class="helper-text" style="margin-bottom: 0.5rem;" data-i18n="analyzerPages.mobile.selectDevices">Select devices to test:</p>
             <div class="device-selector">
               <label>
                 <input type="checkbox" id="device-iphone-14" checked />
@@ -497,6 +502,8 @@
     <script src="theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- ASCII Background Animation -->
@@ -510,13 +517,17 @@
     <!-- Shared Report Components -->
     <script src="/js/components/reportShell.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/reportStorage.js"></script>
     <script src="/js/components/PricingModal.js"></script>
+    <script src="/js/components/UsagePill.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="mobile-analyzer-script.js"></script>
     

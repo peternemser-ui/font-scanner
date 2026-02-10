@@ -4,6 +4,16 @@
 
 const { TestDatabase, MockStripe } = require('../helpers/testSetup');
 
+// Mock db reference - must be prefixed with 'mock' for Jest
+let mockDbInstance = null;
+
+// Mock database module BEFORE requiring stripeService
+jest.mock('../../src/db', () => ({
+  getDatabase: () => mockDbInstance,
+  Database: jest.requireActual('../../src/db').Database,
+  initializeDatabase: jest.fn()
+}));
+
 // Mock Stripe before requiring the service
 const mockStripe = new MockStripe();
 jest.mock('stripe', () => {
@@ -14,20 +24,15 @@ const stripeService = require('../../src/services/stripeService');
 
 describe('StripeService', () => {
   let testDb;
-  let db;
 
   beforeAll(async () => {
     testDb = new TestDatabase();
-    db = await testDb.setup();
-
-    // Mock getDatabase
-    jest.doMock('../../src/db', () => ({
-      getDatabase: () => db
-    }));
+    mockDbInstance = await testDb.setup();
   });
 
   afterAll(async () => {
     await testDb.teardown();
+    mockDbInstance = null;
   });
 
   beforeEach(async () => {
@@ -51,7 +56,7 @@ describe('StripeService', () => {
       });
 
       // Verify customer ID was saved
-      const user = await db.get('SELECT stripe_customer_id FROM users WHERE id = ?', [testUser.id]);
+      const user = await mockDbInstance.get('SELECT stripe_customer_id FROM users WHERE id = ?', [testUser.id]);
       expect(user.stripe_customer_id).toBe('cus_test_123');
     });
 
@@ -152,17 +157,21 @@ describe('StripeService', () => {
       });
 
       // Create entitlement
-      await db.run(
+      await mockDbInstance.run(
         'INSERT INTO entitlements (user_id, plan, stripe_subscription_id, status, current_period_end) VALUES (?, ?, ?, ?, ?)',
         [testUser.id, 'pro', 'sub_test_123', 'active', new Date(Date.now() + 86400000).toISOString()]
       );
 
-      const subscription = await stripeService.getSubscription(testUser.id);
+      const subscription = await stripeService.getUserSubscription(testUser.id);
 
       expect(subscription).toBeDefined();
       expect(subscription.id).toBe('sub_test_123');
       expect(subscription.status).toBe('active');
-      expect(mockStripe.subscriptions.retrieve).toHaveBeenCalledWith('sub_test_123');
+      expect(mockStripe.subscriptions.list).toHaveBeenCalledWith({
+        customer: 'cus_sub_123',
+        status: 'all',
+        limit: 1
+      });
     });
 
     it('should return null if no subscription exists', async () => {
@@ -171,7 +180,7 @@ describe('StripeService', () => {
         plan: 'free'
       });
 
-      const subscription = await stripeService.getSubscription(testUser.id);
+      const subscription = await stripeService.getUserSubscription(testUser.id);
       expect(subscription).toBeNull();
     });
   });
@@ -185,15 +194,15 @@ describe('StripeService', () => {
       });
 
       // Create entitlement
-      await db.run(
+      await mockDbInstance.run(
         'INSERT INTO entitlements (user_id, plan, stripe_subscription_id, status, current_period_end) VALUES (?, ?, ?, ?, ?)',
         [testUser.id, 'pro', 'sub_test_123', 'active', new Date(Date.now() + 86400000).toISOString()]
       );
 
       const result = await stripeService.cancelSubscription(testUser.id);
 
-      expect(result).toHaveProperty('subscription');
-      expect(result.subscription.cancel_at_period_end).toBe(true);
+      // cancelSubscription returns the updated subscription directly
+      expect(result.cancel_at_period_end).toBe(true);
       expect(mockStripe.subscriptions.update).toHaveBeenCalledWith('sub_test_123', {
         cancel_at_period_end: true
       });
@@ -202,8 +211,12 @@ describe('StripeService', () => {
     it('should throw error if no active subscription', async () => {
       const testUser = await testDb.createTestUser({
         email: 'nocancel@example.com',
-        plan: 'free'
+        plan: 'free',
+        stripe_customer_id: 'cus_nocancel_123'
       });
+
+      // Mock empty subscription list
+      mockStripe.subscriptions.list.mockResolvedValueOnce({ data: [] });
 
       await expect(
         stripeService.cancelSubscription(testUser.id)
@@ -238,17 +251,17 @@ describe('StripeService', () => {
       expect(result.processed).toBe(true);
 
       // Verify user upgraded to pro
-      const user = await db.get('SELECT plan FROM users WHERE id = ?', [testUser.id]);
+      const user = await mockDbInstance.get('SELECT plan FROM users WHERE id = ?', [testUser.id]);
       expect(user.plan).toBe('pro');
 
       // Verify entitlement created
-      const entitlement = await db.get('SELECT * FROM entitlements WHERE user_id = ?', [testUser.id]);
+      const entitlement = await mockDbInstance.get('SELECT * FROM entitlements WHERE user_id = ?', [testUser.id]);
       expect(entitlement).toBeDefined();
       expect(entitlement.stripe_subscription_id).toBe('sub_webhook_123');
       expect(entitlement.status).toBe('active');
 
       // Verify event marked as processed
-      const eventRecord = await db.get('SELECT * FROM stripe_events WHERE id = ?', ['evt_webhook_123']);
+      const eventRecord = await mockDbInstance.get('SELECT * FROM stripe_events WHERE id = ?', ['evt_webhook_123']);
       expect(eventRecord.processed).toBe(1);
     });
   });
@@ -278,7 +291,7 @@ describe('StripeService', () => {
       await stripeService.handleWebhook(event);
 
       // Verify user downgraded to free (past_due is not active)
-      const user = await db.get('SELECT plan FROM users WHERE id = ?', [testUser.id]);
+      const user = await mockDbInstance.get('SELECT plan FROM users WHERE id = ?', [testUser.id]);
       expect(user.plan).toBe('free');
     });
   });
@@ -297,16 +310,18 @@ describe('StripeService', () => {
         data: {
           object: {
             id: 'sub_delete_123',
-            customer: 'cus_delete_123'
+            customer: 'cus_delete_123',
+            current_period_end: Math.floor(Date.now() / 1000) + 86400 * 7
           }
         }
       };
 
       await stripeService.handleWebhook(event);
 
-      // Verify user downgraded to free
-      const user = await db.get('SELECT plan FROM users WHERE id = ?', [testUser.id]);
-      expect(user.plan).toBe('free');
+      // Verify subscription status is 'canceled' but user keeps access during grace period
+      // The plan remains 'pro' but stripe_subscription_status is 'canceled'
+      const user = await mockDbInstance.get('SELECT plan, stripe_subscription_status FROM users WHERE id = ?', [testUser.id]);
+      expect(user.stripe_subscription_status).toBe('canceled');
     });
   });
 
@@ -337,7 +352,7 @@ describe('StripeService', () => {
       // Process same event again
       const result2 = await stripeService.handleWebhook(event);
       expect(result2.processed).toBe(false);
-      expect(result2.reason).toContain('already processed');
+      expect(result2.reason).toBe('duplicate');
     });
   });
 
@@ -360,7 +375,7 @@ describe('StripeService', () => {
       expect(result.processed).toBe(true);
 
       // Verify event was logged
-      const eventRecord = await db.get('SELECT * FROM stripe_events WHERE id = ?', ['evt_invoice_123']);
+      const eventRecord = await mockDbInstance.get('SELECT * FROM stripe_events WHERE id = ?', ['evt_invoice_123']);
       expect(eventRecord).toBeDefined();
     });
   });
@@ -381,6 +396,104 @@ describe('StripeService', () => {
 
       const result = await stripeService.handleWebhook(event);
       expect(result.processed).toBe(true);
+    });
+  });
+
+  describe('getEntitlements', () => {
+    it('should delegate to canonical resolver and return correct shape', async () => {
+      const testUser = await testDb.createTestUser({
+        email: 'shape@example.com',
+        plan: 'free'
+      });
+
+      const entitlements = await stripeService.getEntitlements(testUser.id);
+
+      // Verify canonical shape is preserved
+      expect(entitlements).toHaveProperty('plan');
+      expect(entitlements).toHaveProperty('subscriptionStatus');
+      expect(entitlements).toHaveProperty('subscriptionInterval');
+      expect(entitlements).toHaveProperty('currentPeriodEnd');
+      expect(entitlements).toHaveProperty('dayPassExpiresAt');
+      expect(entitlements).toHaveProperty('cancelAtPeriodEnd');
+      expect(entitlements).toHaveProperty('purchasedReports');
+      expect(entitlements).toHaveProperty('permissions');
+      expect(entitlements.plan).toBe('free');
+    });
+
+    it('should return default free entitlements for non-existent user', async () => {
+      const entitlements = await stripeService.getEntitlements(99999);
+      expect(entitlements.plan).toBe('free');
+      expect(entitlements.permissions.accessProTools).toBe(false);
+    });
+
+    it('should return pro entitlements for active subscriber', async () => {
+      const futureDate = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+      const testUser = await testDb.createTestUser({
+        email: 'prouser@example.com',
+        plan: 'pro',
+        stripe_customer_id: 'cus_pro_123',
+        stripe_subscription_id: 'sub_pro_123',
+        stripe_subscription_status: 'active',
+        stripe_current_period_end: futureDate,
+        stripe_subscription_interval: 'month'
+      });
+
+      const entitlements = await stripeService.getEntitlements(testUser.id);
+
+      expect(entitlements.plan).toBe('pro');
+      expect(entitlements.subscriptionStatus).toBe('active');
+      expect(entitlements.permissions.accessProTools).toBe(true);
+    });
+
+    it('should return day_pass for active day pass', async () => {
+      const futureDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+      const testUser = await testDb.createTestUser({
+        email: 'daypass@example.com',
+        plan: 'pro',
+        stripe_customer_id: 'cus_day_123',
+        stripe_subscription_id: 'sub_day_123',
+        stripe_subscription_status: 'active',
+        stripe_current_period_end: futureDate,
+        stripe_subscription_interval: 'day'
+      });
+
+      const entitlements = await stripeService.getEntitlements(testUser.id);
+
+      expect(entitlements.plan).toBe('day_pass');
+      expect(entitlements.dayPassExpiresAt).toBe(futureDate);
+    });
+
+    it('should return canceled pro in grace period', async () => {
+      const futureDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      const testUser = await testDb.createTestUser({
+        email: 'canceled@example.com',
+        plan: 'pro',
+        stripe_customer_id: 'cus_canceled_123',
+        stripe_subscription_id: 'sub_canceled_123',
+        stripe_subscription_status: 'canceled',
+        stripe_current_period_end: futureDate,
+        stripe_subscription_interval: 'month'
+      });
+
+      const entitlements = await stripeService.getEntitlements(testUser.id);
+
+      expect(entitlements.plan).toBe('pro');
+      expect(entitlements.cancelAtPeriodEnd).toBe(true);
+    });
+
+    it('should include purchased reports', async () => {
+      const testUser = await testDb.createTestUser({
+        email: 'purchaser@example.com',
+        plan: 'free'
+      });
+
+      await mockDbInstance.run(
+        'INSERT INTO report_purchases (user_id, report_id, purchased_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
+        [testUser.id, 'r_report_001']
+      );
+
+      const entitlements = await stripeService.getEntitlements(testUser.id);
+      expect(entitlements.purchasedReports).toContain('r_report_001');
     });
   });
 });

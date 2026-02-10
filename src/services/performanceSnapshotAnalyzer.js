@@ -559,7 +559,7 @@ class PerformanceSnapshotAnalyzer {
     const likelyCauses = [];
 
     if (analysis.resources.images.total > 20) {
-      likelyCauses.push('Image bloat');
+      likelyCauses.push('image_bloat');
       recommendations.push({
         priority: 'high',
         category: 'images',
@@ -575,7 +575,7 @@ class PerformanceSnapshotAnalyzer {
     }
 
     if (analysis.resources.js.estimatedSizeKB > 500) {
-      likelyCauses.push('Heavy JavaScript');
+      likelyCauses.push('heavy_javascript');
       recommendations.push({
         priority: 'high',
         category: 'javascript',
@@ -591,7 +591,7 @@ class PerformanceSnapshotAnalyzer {
     }
 
     if (analysis.resources.thirdParty.count > 10) {
-      likelyCauses.push('Third-party scripts');
+      likelyCauses.push('third_party_scripts');
       recommendations.push({
         priority: 'medium',
         category: 'third-party',

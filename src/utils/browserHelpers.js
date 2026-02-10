@@ -438,6 +438,141 @@ async function waitForPageReady(page, options = {}) {
 }
 
 /**
+ * Dismiss common overlays/modals (cookie banners, newsletter popups, consent dialogs)
+ * to avoid affecting DOM-based analysis and screenshots.
+ *
+ * @param {Object} page - Puppeteer page object
+ * @param {Object} options - Options
+ * @param {number} options.timeout - Max time to wait for dismissal (default: 5000)
+ * @returns {Promise<Object>} Summary of dismissal attempts
+ */
+async function dismissPageOverlays(page, options = {}) {
+  const { timeout = 5000 } = options;
+
+  const start = Date.now();
+  const result = {
+    closedByClick: 0,
+    hiddenBySelector: 0,
+    hiddenByRole: 0,
+    durationMs: 0
+  };
+
+  try {
+    await page.evaluate(() => {
+      const selectors = [
+        '[id*="cookie" i]',
+        '[class*="cookie" i]',
+        '[id*="consent" i]',
+        '[class*="consent" i]',
+        '[id*="modal" i]',
+        '[class*="modal" i]',
+        '[id*="popup" i]',
+        '[class*="popup" i]',
+        '[id*="overlay" i]',
+        '[class*="overlay" i]',
+        '[id*="newsletter" i]',
+        '[class*="newsletter" i]',
+        '[id*="subscribe" i]',
+        '[class*="subscribe" i]',
+        '[aria-modal="true"]',
+        '[role="dialog"]',
+        '[role="alertdialog"]'
+      ];
+
+      const textMatches = [
+        /close/i,
+        /accept/i,
+        /agree/i,
+        /got it/i,
+        /dismiss/i,
+        /allow/i,
+        /ok/i,
+        /no thanks/i,
+        /閉じる/, /同意/, /許可/, /拒否/,
+        /aceptar/i,
+        /accepter/i,
+        /akzeptieren/i,
+        /принять/i
+      ];
+
+      const isVisible = (el) => {
+        const style = window.getComputedStyle(el);
+        return style && style.display !== 'none' && style.visibility !== 'hidden' && style.opacity !== '0';
+      };
+
+      const clickCloseButtons = () => {
+        const buttons = Array.from(document.querySelectorAll('button, [role="button"], input[type="button"], input[type="submit"], a'));
+        let clicked = 0;
+        buttons.forEach((btn) => {
+          const label = (btn.getAttribute('aria-label') || btn.getAttribute('title') || btn.textContent || '').trim();
+          if (!label) return;
+          if (!isVisible(btn)) return;
+          if (textMatches.some((re) => re.test(label))) {
+            try {
+              btn.click();
+              clicked += 1;
+            } catch (e) {
+              // ignore
+            }
+          }
+        });
+        return clicked;
+      };
+
+      const hideElements = (elements) => {
+        let hidden = 0;
+        elements.forEach((el) => {
+          if (!el || !isVisible(el)) return;
+          try {
+            el.style.setProperty('display', 'none', 'important');
+            el.style.setProperty('visibility', 'hidden', 'important');
+            el.style.setProperty('pointer-events', 'none', 'important');
+            hidden += 1;
+          } catch (e) {
+            // ignore
+          }
+        });
+        return hidden;
+      };
+
+      const selectorMatches = selectors.flatMap((selector) => Array.from(document.querySelectorAll(selector)));
+      const roleMatches = Array.from(document.querySelectorAll('[aria-modal="true"], [role="dialog"], [role="alertdialog"]'));
+
+      const clicked = clickCloseButtons();
+      const hiddenBySelector = hideElements(selectorMatches);
+      const hiddenByRole = hideElements(roleMatches);
+
+      // Restore scrolling in case a modal locked it
+      document.body.style.setProperty('overflow', 'auto', 'important');
+      document.documentElement.style.setProperty('overflow', 'auto', 'important');
+
+      return { clicked, hiddenBySelector, hiddenByRole };
+    }).then((res) => {
+      if (res && typeof res === 'object') {
+        result.closedByClick = res.clicked || 0;
+        result.hiddenBySelector = res.hiddenBySelector || 0;
+        result.hiddenByRole = res.hiddenByRole || 0;
+      }
+    });
+  } catch (error) {
+    logger.debug('Overlay dismissal encountered an error', { error: error.message });
+  } finally {
+    result.durationMs = Date.now() - start;
+  }
+
+  if (result.closedByClick || result.hiddenBySelector || result.hiddenByRole) {
+    logger.info('Overlay dismissal applied', result);
+  }
+
+  // Respect overall timeout (best-effort)
+  if (Date.now() - start > timeout) {
+    logger.debug('Overlay dismissal exceeded timeout', { timeout, durationMs: result.durationMs });
+  }
+
+  return result;
+}
+
+/**
  * Get available device profiles
  *
  * @returns {Object} Map of device profile keys to profiles
@@ -464,6 +599,7 @@ module.exports = {
   setDeviceProfile,
   navigateToPage,
   waitForPageReady,
+  dismissPageOverlays,
 
   // Device profiles
   getDeviceProfiles,

@@ -10,6 +10,7 @@ const { requireAdmin, logAdminAction } = require('../middleware/requireAdmin');
 const { getDatabase } = require('../db');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
+const { PRICING } = require('../config/pricing');
 
 // All admin routes require authentication AND admin privileges
 router.use(requireAuth);
@@ -66,7 +67,7 @@ router.get('/dashboard-stats', async (req, res) => {
         },
         subscriptions: {
           active: activeSubscriptions.count,
-          mrr: activeSubscriptions.count * 29 // $29/month per pro user
+          mrr: activeSubscriptions.count * PRICING.plans.pro_monthly.price // per pro user
         }
       },
       recentActivity: {

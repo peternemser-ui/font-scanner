@@ -517,7 +517,7 @@ window.CreditsManager = (function() {
         if (buyBtn) buyBtn.style.display = 'none';
         if (unlockedBadge) unlockedBadge.style.display = 'flex';
         if (unlockedMethod) {
-          unlockedMethod.textContent = unlockEntry && unlockEntry.method === 'credit' ? 'Unlocked via credit' : 'Unlocked via $10 single';
+          unlockedMethod.textContent = unlockEntry && unlockEntry.method === 'credit' ? 'Unlocked via credit' : 'Unlocked via $5 single';
           unlockedMethod.style.display = 'block';
         }
         return;
@@ -567,7 +567,7 @@ window.CreditsManager = (function() {
     }
 
     if (unlockedMethod && unlockEntry) {
-      unlockedMethod.textContent = unlockEntry.method === 'credit' ? 'Unlocked via credit' : 'Unlocked via $10 single';
+      unlockedMethod.textContent = unlockEntry.method === 'credit' ? 'Unlocked via credit' : 'Unlocked via $5 single';
     }
 
     if (isUnlocked) {

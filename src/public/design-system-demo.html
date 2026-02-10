@@ -4,18 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Design System Demo - All Components Showcase</title>
-    
+
+    <!-- Inter Font (Swiss typography) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
     <!-- Design System Foundation -->
     <link rel="stylesheet" href="design-tokens.css" />
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
+    <link rel="stylesheet" href="ui-components.css" />
     <!-- Existing Styles for compatibility -->
     <link rel="stylesheet" href="styles.css" />
 </head>
 <body class="page-wrapper">
     <main class="page-main">
         <div class="container">
-            
+
+            <!-- Breadcrumb Navigation -->
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+                <ol class="breadcrumb-list">
+                    <li class="breadcrumb-item">
+                        <a href="/" class="breadcrumb-link">Dashboard</a>
+                        <span class="breadcrumb-separator" aria-hidden="true">/</span>
+                    </li>
+                    <li class="breadcrumb-item">
+                        <span class="breadcrumb-current" aria-current="page">Design System</span>
+                    </li>
+                </ol>
+            </nav>
+
             <!-- Hero Bar Component -->
             <div class="hero-bar">
                 <div class="hero-bar__header">
@@ -137,13 +156,83 @@
                 </div>
             </section>
             
+            <!-- Section: Breadcrumb -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Breadcrumb Navigation</h2>
+                    <p class="section-header__subtitle">Accessible semantic navigation with aria labels</p>
+                </div>
+
+                <div class="card p-6">
+                    <p class="text-sm text-gray-400 mb-4">Example: Dashboard / Performance Hub / Core Web Vitals</p>
+                    <nav class="breadcrumb" aria-label="Breadcrumb">
+                        <ol class="breadcrumb-list">
+                            <li class="breadcrumb-item">
+                                <a href="#" class="breadcrumb-link">Dashboard</a>
+                                <span class="breadcrumb-separator" aria-hidden="true">/</span>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <a href="#" class="breadcrumb-link">Performance Hub</a>
+                                <span class="breadcrumb-separator" aria-hidden="true">/</span>
+                            </li>
+                            <li class="breadcrumb-item">
+                                <span class="breadcrumb-current" aria-current="page">Core Web Vitals</span>
+                            </li>
+                        </ol>
+                    </nav>
+                </div>
+            </section>
+
+            <!-- Section: Typography -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Typography (Swiss / Inter)</h2>
+                    <p class="section-header__subtitle">Tighter line heights, modern weights, Inter font family</p>
+                </div>
+
+                <div class="card p-6">
+                    <h1>Heading 1 - Page Title</h1>
+                    <h2>Heading 2 - Section Title</h2>
+                    <h3>Heading 3 - Subsection</h3>
+                    <h4>Heading 4 - Card Title</h4>
+                    <h5>Heading 5 - Label</h5>
+                    <h6>HEADING 6 - OVERLINE</h6>
+                    <p>Body text uses Inter with tighter line-height (1.35) for a modern Swiss feel. This paragraph demonstrates the base text styling with proper contrast and readability.</p>
+                    <p class="text-sm text-gray-400">Secondary text for metadata and descriptions.</p>
+                </div>
+            </section>
+
+            <!-- Section: Buttons -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Buttons & Controls</h2>
+                    <p class="section-header__subtitle">Primary, secondary, and ghost button variants</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex gap-4 items-center mb-6" style="flex-wrap: wrap;">
+                        <button class="btn-primary">Primary Action</button>
+                        <button class="btn-secondary">Secondary</button>
+                        <button>Default Button</button>
+                        <button disabled>Disabled</button>
+                    </div>
+                    <div class="flex gap-4 items-center" style="flex-wrap: wrap;">
+                        <input type="text" placeholder="Text input..." style="width: auto;">
+                        <select style="width: auto;">
+                            <option>Select option</option>
+                            <option>Option 2</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
             <!-- Section: Badges -->
             <section class="section">
                 <div class="section-header">
                     <h2 class="section-header__title">Badges (Status Indicators)</h2>
                     <p class="section-header__subtitle">Small status labels with color coding</p>
                 </div>
-                
+
                 <div class="flex gap-4 items-center">
                     <span class="badge badge--success">Excellent</span>
                     <span class="badge badge--warning">Fair</span>
@@ -151,7 +240,34 @@
                     <span class="badge badge--info">N/A</span>
                 </div>
             </section>
-            
+
+            <!-- Section: Spacing Scale -->
+            <section class="section">
+                <div class="section-header">
+                    <h2 class="section-header__title">Spacing Scale</h2>
+                    <p class="section-header__subtitle">Swiss grid: 4px / 8px / 12px / 16px / 24px / 32px</p>
+                </div>
+
+                <div class="card p-6">
+                    <div class="flex gap-4 items-end">
+                        <div style="width: 4px; height: 40px; background: var(--accent-primary);"></div>
+                        <div style="width: 8px; height: 40px; background: var(--accent-primary);"></div>
+                        <div style="width: 12px; height: 40px; background: var(--accent-primary);"></div>
+                        <div style="width: 16px; height: 40px; background: var(--accent-primary);"></div>
+                        <div style="width: 24px; height: 40px; background: var(--accent-primary);"></div>
+                        <div style="width: 32px; height: 40px; background: var(--accent-primary);"></div>
+                    </div>
+                    <div class="flex gap-4 mt-2 text-xs text-gray-400">
+                        <span style="width: 4px; text-align: center;">4</span>
+                        <span style="width: 8px; text-align: center;">8</span>
+                        <span style="width: 12px; text-align: center;">12</span>
+                        <span style="width: 16px; text-align: center;">16</span>
+                        <span style="width: 24px; text-align: center;">24</span>
+                        <span style="width: 32px; text-align: center;">32</span>
+                    </div>
+                </div>
+            </section>
+
             <!-- Section: Progress Bars -->
             <section class="section">
                 <div class="section-header">
@@ -198,7 +314,7 @@
                 </div>
                 
                 <div class="accordion accordion--open">
-                    <div class="accordion__header" onclick="this.parentElement.classList.toggle('accordion--open')">
+                    <div class="accordion__header" data-action="accordion-toggle">
                         <h3 class="accordion__title">Font Details</h3>
                         <svg class="accordion__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -216,7 +332,7 @@
                 </div>
                 
                 <div class="accordion mt-4">
-                    <div class="accordion__header" onclick="this.parentElement.classList.toggle('accordion--open')">
+                    <div class="accordion__header" data-action="accordion-toggle">
                         <h3 class="accordion__title">Performance Metrics</h3>
                         <svg class="accordion__icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
                             <path d="M6 9l6 6 6-6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -313,11 +429,15 @@
             
             <!-- Footer -->
             <footer class="page-footer">
-                <p>Design System v2.0 - Business-Ready Streamline</p>
-                <p class="text-xs mt-2">Built with 450+ design tokens, 10 components, 100+ utilities</p>
+                <p>Design System v2.1 - Swiss Typography (Inter)</p>
+                <p class="text-xs mt-2">Unified tokens, typography, breadcrumb, buttons, cards, and spacing</p>
             </footer>
-            
+
         </div>
     </main>
+
+    <!-- Breadcrumb Component (for dynamic rendering) -->
+    <script src="/js/app-events.js"></script>
+    <script src="/js/components/Breadcrumb.js"></script>
 </body>
 </html>

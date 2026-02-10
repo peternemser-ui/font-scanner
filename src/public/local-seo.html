@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/local-seo.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/local-seo.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/local-seo.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/local-seo.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/local-seo.html" />
 
     <!-- Open Graph -->
@@ -62,7 +63,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
     <link rel="stylesheet" href="/css/components/reportAccordion.css" />
 
     <!-- Shared UI System -->
@@ -146,7 +147,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
 </head>
 <body>
@@ -156,24 +156,24 @@
     <main class="page-shell">
         <!-- Breadcrumb Navigation -->
         <nav class="breadcrumb" aria-label="Breadcrumb">
-            <a href="/dashboard.html">Home</a>
+          <a href="/dashboard.html" data-i18n="dashboard.breadcrumb.home">Home</a>
             <span class="breadcrumb-sep">›</span>
-            <span aria-current="page">Local SEO Analyzer</span>
+          <span aria-current="page" data-i18n="analyzerPages.localSeo.breadcrumb">Local SEO</span>
         </nav>
         
         <!-- Page Header -->
         <header class="page-header">
-            <h1 class="page-header__title">Local SEO Inspection</h1>
-            <p class="page-header__subtitle">Check NAP consistency, LocalBusiness schema, and Google Business Profile integration.</p>
+          <h1 class="page-header__title" data-i18n="analyzerPages.localSeo.title">Local SEO Inspection</h1>
+          <p class="page-header__subtitle" data-i18n="analyzerPages.localSeo.subtitle">Check NAP consistency, LocalBusiness schema, and Google Business Profile integration.</p>
         </header>
         
         <!-- Input Card -->
         <section class="card">
             <div class="card__body">
                 <div class="form-row">
-                    <label for="url" class="visually-hidden">Website URL</label>
-                    <input type="text" id="url" class="input" placeholder="https://yourlocalbusiness.com">
-                    <button id="analyzeBtn" class="btn btn-primary">INSPECT</button>
+                    <label for="url" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
+                    <input type="text" id="url" class="input" placeholder="https://yourlocalbusiness.com" data-i18n-placeholder="common.enterUrl">
+                    <button id="analyzeBtn" class="btn btn-primary" data-i18n="analyzerPages.localSeo.inspectButton">INSPECT</button>
                 </div>
             </div>
         </section>
@@ -186,9 +186,10 @@
 
     <script src="i18n.js"></script>
     <script src="theme-controls.js"></script>
-    <script src="language-switcher.js"></script>
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- PDF Export Libraries -->
@@ -198,7 +199,7 @@
     <script src="/pdf-export-integration.js?v=2"></script>
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
 
@@ -212,8 +213,11 @@
     <script src="/js/reportStorage.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/components/PricingModal.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="local-seo-script.js"></script>
 </body>

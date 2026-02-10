@@ -15,29 +15,53 @@ document.addEventListener('DOMContentLoaded', () => {
   // Legacy support for pages without nav-template
   const themeToggle = document.getElementById('themeToggle');
   const body = document.body;
-  
+  const html = document.documentElement;
+
+  // Print mode: lock to print theme
+  const isPrintMode = new URLSearchParams(window.location.search).get('print') === '1';
+  if (isPrintMode) {
+    html.setAttribute('data-theme', 'print');
+    body.classList.add('white-theme');
+    html.classList.add('white-theme');
+    return;
+  }
+
   if (themeToggle) {
     const currentTheme = localStorage.getItem('theme') || 'dark';
-    
+
     // Apply theme on load
     if (currentTheme === 'light') {
       body.classList.add('white-theme');
+      html.classList.add('white-theme');
+      html.setAttribute('data-theme', 'light');
+    } else {
+      html.setAttribute('data-theme', 'dark');
     }
-    
+
     const updateThemeButton = () => {
       const isLight = body.classList.contains('white-theme');
       themeToggle.setAttribute('aria-pressed', isLight);
-      themeToggle.textContent = isLight ? '� Dark' : '🌓 Light';
+      themeToggle.textContent = isLight ? '☀ Dark' : '🌓 Light';
     };
-    
+
     updateThemeButton();
-    
+
     themeToggle.addEventListener('click', () => {
       body.classList.toggle('white-theme');
+      html.classList.toggle('white-theme');
       const newTheme = body.classList.contains('white-theme') ? 'light' : 'dark';
       localStorage.setItem('theme', newTheme);
+      html.setAttribute('data-theme', newTheme);
       updateThemeButton();
     });
+  } else {
+    // No toggle button: still set data-theme for token system
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    html.setAttribute('data-theme', currentTheme);
+    if (currentTheme === 'light') {
+      body.classList.add('white-theme');
+      html.classList.add('white-theme');
+    }
   }
 
   // Legacy font size controls

@@ -18,6 +18,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/privacy.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/privacy.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/privacy.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/privacy.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/privacy.html" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -28,6 +29,9 @@
     <link rel="stylesheet" href="components.css" />
     <link rel="stylesheet" href="layout.css" />
     <link rel="stylesheet" href="ui.css" />
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="ui-components.css" />
     <link rel="stylesheet" href="spacing-fixes.css" />
@@ -83,89 +87,115 @@
 
     <main class="page-shell">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
+        <a href="/dashboard.html" data-i18n="nav.home">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">Privacy Policy</span>
+        <span aria-current="page" data-i18n="privacyPage.breadcrumb">Privacy Policy</span>
       </nav>
 
       <header class="page-header">
-        <h1 class="page-header__title">Privacy Policy</h1>
-        <p class="page-header__subtitle">How we collect, use, and protect your information.</p>
+        <h1 class="page-header__title" data-i18n="privacyPage.title">Privacy Policy</h1>
+        <p class="page-header__subtitle" data-i18n="privacyPage.subtitle">How we collect, use, and protect your information.</p>
       </header>
 
       <section class="card">
         <div class="card__body legal-content">
-          <p class="effective-date">Effective Date: January 30, 2026</p>
+          <p class="effective-date" data-i18n="privacyPage.effectiveDate">Effective Date: January 30, 2026</p>
 
-          <h2>Information We Collect</h2>
-          <p>When you use Site Mechanic, we collect:</p>
+          <h2 data-i18n="privacyPage.infoCollectTitle">Information We Collect</h2>
+          <p data-i18n="privacyPage.infoCollectIntro">When you use Site Mechanic, we collect:</p>
           <ul>
-            <li><strong>Account Information:</strong> Your email address when you create an account.</li>
-            <li><strong>URLs You Scan:</strong> The website URLs you submit for analysis.</li>
-            <li><strong>Scan Results:</strong> The diagnostic data generated from your scans.</li>
-            <li><strong>Usage Data:</strong> Basic analytics about how you use the service (pages visited, features used).</li>
+            <li><strong data-i18n="privacyPage.accountInfoLabel">Account Information:</strong> <span data-i18n="privacyPage.accountInfoDesc">Your email address when you create an account.</span></li>
+            <li><strong data-i18n="privacyPage.urlsScanLabel">URLs You Scan:</strong> <span data-i18n="privacyPage.urlsScanDesc">The website URLs you submit for analysis.</span></li>
+            <li><strong data-i18n="privacyPage.scanResultsLabel">Scan Results:</strong> <span data-i18n="privacyPage.scanResultsDesc">The diagnostic data generated from your scans.</span></li>
+            <li><strong data-i18n="privacyPage.usageDataLabel">Usage Data:</strong> <span data-i18n="privacyPage.usageDataDesc">Basic analytics about how you use the service (pages visited, features used).</span></li>
           </ul>
 
-          <h2>Payment Processing</h2>
-          <p>All payment processing is handled by <strong>Stripe</strong>. We do not store your credit card numbers, bank account details, or other sensitive payment information on our servers. Stripe's privacy policy governs how they handle your payment data.</p>
+          <h2 data-i18n="privacyPage.paymentTitle">Payment Processing</h2>
+          <p data-i18n="privacyPage.paymentDesc">All payment processing is handled by Stripe. We do not store your credit card numbers, bank account details, or other sensitive payment information on our servers. Stripe's privacy policy governs how they handle your payment data.</p>
 
-          <h2>How We Use Your Information</h2>
-          <p>We use the information we collect to:</p>
+          <h2 data-i18n="privacyPage.howWeUseTitle">How We Use Your Information</h2>
+          <p data-i18n="privacyPage.howWeUseIntro">We use the information we collect to:</p>
           <ul>
-            <li>Provide and improve our website analysis services.</li>
-            <li>Process your purchases and manage your account.</li>
-            <li>Send transactional emails (account confirmations, purchase receipts).</li>
-            <li>Respond to your support requests.</li>
+            <li data-i18n="privacyPage.useProvide">Provide and improve our website analysis services.</li>
+            <li data-i18n="privacyPage.useProcess">Process your purchases and manage your account.</li>
+            <li data-i18n="privacyPage.useSend">Send transactional emails (account confirmations, purchase receipts).</li>
+            <li data-i18n="privacyPage.useRespond">Respond to your support requests.</li>
           </ul>
 
-          <h2>We Do Not Sell Your Data</h2>
-          <p>We do not sell, rent, or share your personal information with third parties for their marketing purposes. Your data is used solely to provide our services to you.</p>
+          <h2 data-i18n="privacyPage.noSellTitle">We Do Not Sell Your Data</h2>
+          <p data-i18n="privacyPage.noSellDesc">We do not sell, rent, or share your personal information with third parties for their marketing purposes. Your data is used solely to provide our services to you.</p>
 
-          <h2>Data Retention</h2>
-          <p>We retain your data as follows:</p>
+          <h2 data-i18n="privacyPage.retentionTitle">Data Retention</h2>
+          <p data-i18n="privacyPage.retentionIntro">We retain your data as follows:</p>
           <ul>
-            <li><strong>Account Data:</strong> Kept for as long as your account is active. You may request deletion at any time.</li>
-            <li><strong>Scan Results:</strong> Stored for up to 90 days to allow you to access your reports. After this period, results may be automatically deleted.</li>
-            <li><strong>Usage Analytics:</strong> Aggregated and anonymized data may be retained indefinitely for service improvement.</li>
+            <li><strong data-i18n="privacyPage.retentionAccountLabel">Account Data:</strong> <span data-i18n="privacyPage.retentionAccountDesc">Kept for as long as your account is active. You may request deletion at any time.</span></li>
+            <li><strong data-i18n="privacyPage.retentionScansLabel">Scan Results:</strong> <span data-i18n="privacyPage.retentionScansDesc">Stored for up to 90 days to allow you to access your reports. After this period, results may be automatically deleted.</span></li>
+            <li><strong data-i18n="privacyPage.retentionAnalyticsLabel">Usage Analytics:</strong> <span data-i18n="privacyPage.retentionAnalyticsDesc">Aggregated and anonymized data may be retained indefinitely for service improvement.</span></li>
           </ul>
 
-          <h2>Data Security</h2>
-          <p>We use industry-standard security measures to protect your data, including:</p>
+          <h2 data-i18n="privacyPage.securityTitle">Data Security</h2>
+          <p data-i18n="privacyPage.securityIntro">We use industry-standard security measures to protect your data, including:</p>
           <ul>
-            <li>HTTPS encryption for all data in transit.</li>
-            <li>Secure password hashing.</li>
-            <li>Access controls limiting who can view your data.</li>
+            <li data-i18n="privacyPage.securityHttps">HTTPS encryption for all data in transit.</li>
+            <li data-i18n="privacyPage.securityHash">Secure password hashing.</li>
+            <li data-i18n="privacyPage.securityAccess">Access controls limiting who can view your data.</li>
           </ul>
 
-          <h2>Your Rights</h2>
-          <p>You have the right to:</p>
+          <h2 data-i18n="privacyPage.rightsTitle">Your Rights</h2>
+          <p data-i18n="privacyPage.rightsIntro">You have the right to:</p>
           <ul>
-            <li>Access the personal data we hold about you.</li>
-            <li>Request correction of inaccurate data.</li>
-            <li>Request deletion of your account and associated data.</li>
+            <li data-i18n="privacyPage.rightsAccess">Access the personal data we hold about you.</li>
+            <li data-i18n="privacyPage.rightsCorrect">Request correction of inaccurate data.</li>
+            <li data-i18n="privacyPage.rightsDelete">Request deletion of your account and associated data.</li>
           </ul>
 
-          <h2>Cookies</h2>
-          <p>We use cookies for essential functionality (session management, preferences) and analytics. We use Google Analytics to understand how visitors use our site. You can control cookie settings in your browser.</p>
+          <h2 id="cookies" data-i18n="privacyPage.cookiesTitle">Cookies</h2>
+          <p data-i18n="privacyPage.cookiesIntro">We use cookies and similar technologies on this site. When you first visit, a consent banner lets you choose which categories to allow. Analytics cookies are only set after you opt in.</p>
 
-          <h2>Third-Party Services</h2>
-          <p>We use the following third-party services:</p>
+          <table style="width:100%; border-collapse:collapse; margin:1rem 0; font-size:0.9rem;">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border-color-strong, rgba(255,255,255,0.15)); text-align:left;">
+                <th style="padding:0.5rem;" data-i18n="privacyPage.cookieColCategory">Category</th>
+                <th style="padding:0.5rem;" data-i18n="privacyPage.cookieColCookies">Cookies</th>
+                <th style="padding:0.5rem;" data-i18n="privacyPage.cookieColPurpose">Purpose</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom:1px solid var(--border-color, rgba(255,255,255,0.08));">
+                <td style="padding:0.5rem;" data-i18n="privacyPage.cookieEssential">Essential</td>
+                <td style="padding:0.5rem;"><code>anon_id</code>, <code>sm_url_lang</code>, session</td>
+                <td style="padding:0.5rem;" data-i18n="privacyPage.cookieEssentialPurpose">Site functionality, language preference, authentication</td>
+              </tr>
+              <tr>
+                <td style="padding:0.5rem;" data-i18n="privacyPage.cookieAnalytics">Analytics</td>
+                <td style="padding:0.5rem;"><code>_ga</code>, <code>_ga_*</code></td>
+                <td style="padding:0.5rem;" data-i18n="privacyPage.cookieAnalyticsPurpose">Understand how visitors use the site (Google Analytics)</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p><span data-i18n="privacyPage.cookieManageBefore">You can change your cookie preferences at any time using the </span><a href="#" onclick="event.preventDefault();window.CookieConsent&&window.CookieConsent.showBanner()" data-i18n="privacyPage.cookieManageLink">Manage Cookie Settings</a><span data-i18n="privacyPage.cookieManageAfter"> link or via the "Cookie Settings" link in the site footer.</span></p>
+
+          <h2 data-i18n="privacyPage.thirdPartyTitle">Third-Party Services</h2>
+          <p data-i18n="privacyPage.thirdPartyIntro">We use the following third-party services:</p>
           <ul>
-            <li><strong>Stripe:</strong> Payment processing</li>
-            <li><strong>Google Analytics:</strong> Usage analytics</li>
+            <li><strong data-i18n="privacyPage.thirdPartyStripeLabel">Stripe:</strong> <span data-i18n="privacyPage.thirdPartyStripeDesc">Payment processing</span></li>
+            <li><strong data-i18n="privacyPage.thirdPartyGaLabel">Google Analytics:</strong> <span data-i18n="privacyPage.thirdPartyGaDesc">Usage analytics</span></li>
           </ul>
 
-          <h2>Changes to This Policy</h2>
-          <p>We may update this privacy policy from time to time. We will notify you of significant changes by posting a notice on our website or sending you an email.</p>
+          <h2 data-i18n="privacyPage.changesTitle">Changes to This Policy</h2>
+          <p data-i18n="privacyPage.changesDesc">We may update this privacy policy from time to time. We will notify you of significant changes by posting a notice on our website or sending you an email.</p>
 
-          <h2>Contact Us</h2>
-          <p>If you have questions about this privacy policy or your data, please contact us at <a href="mailto:support@sitemechanic.io">support@sitemechanic.io</a>.</p>
+          <h2 data-i18n="privacyPage.contactTitle">Contact Us</h2>
+          <p><span data-i18n="privacyPage.contactBefore">If you have questions about this privacy policy or your data, please contact us at </span><a href="mailto:support@sitemechanic.io">support@sitemechanic.io</a><span data-i18n="privacyPage.contactAfter">.</span></p>
         </div>
       </section>
     </main>
 
     <script src="/pro-utils.js"></script>
     <script src="/nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="/theme-controls.js"></script>
   </body>
 </html>

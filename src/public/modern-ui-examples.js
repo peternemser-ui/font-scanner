@@ -98,7 +98,7 @@ function renderCoreWebVitals(data) {
       <p>Critical user experience metrics</p>
     </div>
     <div class="module-actions">
-      <button class="module-action-btn" onclick="exportCWVReport()">
+      <button class="module-action-btn" data-action="export-cwv-report">
         📊 Client Report
       </button>
     </div>

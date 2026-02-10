@@ -7,30 +7,43 @@
  */
 
 (function(window) {
+  // Translation helper - evaluates at runtime to ensure i18n is loaded
+  function t(key, fallback) {
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const translated = window.i18n.t(key);
+      if (translated !== key) {
+        return translated;
+      }
+    }
+    return fallback;
+  }
+
   /**
-   * Mode display labels (user-friendly, not debug labels)
+   * Mode display labels - now uses translation function for i18n support
    */
-  const MODE_LABELS = {
-    full: 'Lighthouse Audit',
-    cwv: 'Core Web Vitals',
-    quick: 'Quick Scan',
-    performance: 'Performance Analysis',
-    seo: 'SEO Analysis',
-    accessibility: 'Accessibility Audit',
-    security: 'Security Analysis',
-    mobile: 'Mobile Testing',
-    cro: 'Conversion Optimization',
-    fonts: 'Font Analysis',
-    brand: 'Brand Consistency',
-    competitive: 'Competitive Analysis',
-    hosting: 'Hosting Analysis',
-    crawler: 'Site Crawler',
-    'broken-links': 'Broken Links',
-    gdpr: 'GDPR Compliance',
-    'local-seo': 'Local SEO',
-    'tag-intelligence': 'Tag Intelligence',
-    'ip-reputation': 'IP Reputation'
-  };
+  function getModeLabels() {
+    return {
+      full: t('reports.modeLabels.full', 'Lighthouse Audit'),
+      cwv: t('reports.modeLabels.cwv', 'Core Web Vitals'),
+      quick: t('reports.modeLabels.quick', 'Quick Scan'),
+      performance: t('reports.modeLabels.performance', 'Performance Analysis'),
+      seo: t('reports.modeLabels.seo', 'SEO Analysis'),
+      accessibility: t('reports.modeLabels.accessibility', 'Accessibility Audit'),
+      security: t('reports.modeLabels.security', 'Security Analysis'),
+      mobile: t('reports.modeLabels.mobile', 'Mobile Testing'),
+      cro: t('reports.modeLabels.cro', 'Conversion Optimization'),
+      fonts: t('reports.modeLabels.fonts', 'Font Analysis'),
+      brand: t('reports.modeLabels.brand', 'Brand Consistency'),
+      competitive: t('reports.modeLabels.competitive', 'Competitive Analysis'),
+      hosting: t('reports.modeLabels.hosting', 'Hosting Analysis'),
+      crawler: t('reports.modeLabels.crawler', 'Site Crawler'),
+      'broken-links': t('reports.modeLabels.brokenLinks', 'Broken Links'),
+      gdpr: t('reports.modeLabels.gdpr', 'GDPR Compliance'),
+      'local-seo': t('reports.modeLabels.localSeo', 'Local SEO'),
+      'tag-intelligence': t('reports.modeLabels.tagIntelligence', 'Tag Intelligence'),
+      'ip-reputation': t('reports.modeLabels.ipReputation', 'IP Reputation')
+    };
+  }
 
   /**
    * Format timestamp in user's local timezone
@@ -42,13 +55,16 @@
       const date = new Date(timestamp);
       if (isNaN(date.getTime())) return timestamp;
 
-      return date.toLocaleString('en-US', {
+      // Use i18n locale if available, otherwise fallback to browser default
+      const locale = window.i18n?.currentLanguage || navigator.language || 'en-US';
+
+      return date.toLocaleString(locale, {
         month: 'short',
         day: 'numeric',
         year: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
-        hour12: true,
+        hour12: locale.startsWith('en'), // 12-hour format for English, 24-hour for others
         timeZoneName: 'short'
       });
     } catch (e) {
@@ -84,8 +100,9 @@
       showModeMeta = true
     } = options;
 
-    const modeLabel = MODE_LABELS[mode] || MODE_LABELS.performance;
-    const displayTitle = title || 'Analysis Results';
+    const modeLabels = getModeLabels();
+    const modeLabel = modeLabels[mode] || modeLabels.performance;
+    const displayTitle = title || t('reports.common.analysisResults', 'Analysis Results');
     const formattedTimestamp = formatTimestamp(timestamp);
     const displayUrl = formatUrlForDisplay(url);
 
@@ -106,7 +123,7 @@
         <span class="print-header__right">${displayUrl || ''} | ${formattedTimestamp || ''}</span>
       </div>
       <div class="report-header">
-        <h1 class="report-header__title">${displayTitle}</h1>
+        <h1 class="report-header__title" data-results-heading>${displayTitle}</h1>
         ${effectiveShowModeBadge && modeLabel ? `<div class="report-header__badge">${modeLabel}</div>` : ''}
         ${effectiveSubtitle ? `<p class="report-header__subtitle">${effectiveSubtitle}</p>` : ''}
         <div class="report-header__meta">
@@ -239,7 +256,7 @@
 
     // Screenshots (keep near the top, consistent with other reports)
     if (screenshots && screenshots.length > 0) {
-      html += renderScreenshots(screenshots, { title: 'Page Screenshot', showDeviceLabels: true });
+      html += renderScreenshots(screenshots, { title: t('reports.common.pageScreenshot', 'Page Screenshot'), showDeviceLabels: true });
     }
 
     // Summary metrics
@@ -332,7 +349,7 @@
 
     // Utility
     formatTimestamp,
-    MODE_LABELS
+    getModeLabels
   };
 
 })(window);

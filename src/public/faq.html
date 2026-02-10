@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-i18n-title="faqPage.seoTitle">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
 
-    <title>FAQ | Site Mechanic</title>
-    <meta name="description" content="Frequently asked questions about Site Mechanic scans, paid reports, exports, credits, data retention, and troubleshooting." />
+    <title data-i18n="faqPage.seoTitle">FAQ | Site Mechanic</title>
+    <meta name="description" content="Frequently asked questions about Site Mechanic scans, paid reports, exports, credits, data retention, and troubleshooting." data-i18n="faqPage.seoDescription" data-i18n-attr="content" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://sitemechanic.io/faq.html" />
 
@@ -18,6 +18,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/faq.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/faq.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/faq.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/faq.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/faq.html" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -45,7 +46,6 @@
     </style>
 
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
 
     <script type="application/ld+json" id="faqJsonLd">{}</script>
   </head>
@@ -54,41 +54,48 @@
 
     <main class="page-shell">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
+        <a href="/dashboard.html" data-i18n="faqPage.breadcrumb.home">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">FAQ</span>
+        <span aria-current="page" data-i18n="faqPage.breadcrumb.current">FAQ</span>
       </nav>
 
       <header class="page-header">
-        <h1 class="page-header__title">FAQ</h1>
-        <p class="page-header__subtitle">Answers about scans, paid reports, exports, and troubleshooting.</p>
+        <h1 class="page-header__title" data-i18n="faqPage.title">FAQ</h1>
+        <p class="page-header__subtitle" data-i18n="faqPage.subtitle">Answers about scans, paid reports, exports, and troubleshooting.</p>
       </header>
 
       <section class="card">
         <div class="card__body">
           <div class="faq-search">
-            <label for="faqSearch" class="visually-hidden">Search FAQs</label>
-            <input id="faqSearch" class="input" type="search" placeholder="Search (e.g., credits, PDF, refund, timeout)" />
-            <button type="button" class="btn" id="faqExpandAll">Expand all</button>
-            <button type="button" class="btn" id="faqCollapseAll">Collapse all</button>
+            <label for="faqSearch" class="visually-hidden" data-i18n="faqPage.search.label">Search FAQs</label>
+            <input id="faqSearch" class="input" type="search" data-i18n-placeholder="faqPage.search.placeholder" placeholder="Search (e.g., credits, PDF, refund, timeout)" />
+            <button type="button" class="btn" id="faqExpandAll" data-i18n="faqPage.search.expandAll">Expand all</button>
+            <button type="button" class="btn" id="faqCollapseAll" data-i18n="faqPage.search.collapseAll">Collapse all</button>
           </div>
-          <p class="faq-meta">If you can’t find what you need, email <a href="mailto:peter@sitemechanic.io">peter@sitemechanic.io</a> with the URL and module name.</p>
+          <p class="faq-meta">
+            <span data-i18n="faqPage.meta.prefix">If you can’t find what you need, email</span>
+            <a href="mailto:peter@sitemechanic.io">peter@sitemechanic.io</a>
+            <span data-i18n="faqPage.meta.suffix">with the URL and module name.</span>
+          </p>
         </div>
       </section>
 
       <section class="card">
         <div class="card__body">
           <div id="faqRoot"></div>
-          <div id="faqEmpty" class="faq-empty" style="display:none;">No results. Try a different search.</div>
+          <div id="faqEmpty" class="faq-empty" style="display:none;" data-i18n="faqPage.empty">No results. Try a different search.</div>
         </div>
       </section>
 
       <section class="card">
         <div class="card__body">
-          <h2 style="margin:0 0 0.5rem;">Next steps</h2>
+          <h2 style="margin:0 0 0.5rem;" data-i18n="faqPage.nextSteps.title">Next steps</h2>
           <p style="margin:0; color: var(--text-secondary, #9ca3af);">
-            Want a report you can share? Run a scan, then use the report block to unlock exports or buy credits.
-            For subscriptions and account management, see <a href="/upgrade.html">Upgrade</a> and <a href="/account.html">Account</a>.
+            <span data-i18n="faqPage.nextSteps.prefix">Want a report you can share? Run a scan, then use the report block to unlock exports or buy credits.</span>
+            <span data-i18n="faqPage.nextSteps.middle">For subscriptions and account management, see</span>
+            <a href="/upgrade.html" data-i18n="faqPage.nextSteps.upgrade">Upgrade</a>
+            <span data-i18n="faqPage.nextSteps.and">and</span>
+            <a href="/account.html" data-i18n="faqPage.nextSteps.account">Account</a>.
           </p>
         </div>
       </section>
@@ -97,6 +104,8 @@
     <script src="/theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
     <script src="/nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="/faq.js"></script>
   </body>
 </html>

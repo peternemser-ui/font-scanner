@@ -9,6 +9,21 @@
 (function(window) {
   'use strict';
 
+  // i18n helper
+  function _t(key, fallback, params) {
+    let value = fallback || key;
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const translated = window.i18n.t(key);
+      if (translated !== key) value = translated;
+    }
+    if (params && typeof value === 'string') {
+      Object.keys(params).forEach(p => {
+        value = value.replace(new RegExp('\\{\\{' + p + '\\}\\}', 'g'), params[p]);
+      });
+    }
+    return value;
+  }
+
   // Store instances by pageId
   const instances = new Map();
 
@@ -29,18 +44,18 @@
    */
   function validateUrl(url) {
     if (!url || !url.trim()) {
-      return { valid: false, error: 'Please enter a URL' };
+      return { valid: false, error: _t('shell.pleaseEnterUrl', 'Please enter a URL') };
     }
 
     const normalized = normalizeUrl(url);
     try {
       const parsed = new URL(normalized);
       if (!parsed.hostname || !parsed.hostname.includes('.')) {
-        return { valid: false, error: 'Please enter a valid domain' };
+        return { valid: false, error: _t('shell.pleaseEnterValidDomain', 'Please enter a valid domain') };
       }
       return { valid: true, url: normalized };
     } catch (e) {
-      return { valid: false, error: 'Please enter a valid URL' };
+      return { valid: false, error: _t('shell.pleaseEnterValidUrl', 'Please enter a valid URL') };
     }
   }
 
@@ -51,7 +66,7 @@
     const { pageTitle, breadcrumb } = config;
     const crumbs = breadcrumb || [
       { label: 'Dashboard', href: '/dashboard.html', i18nKey: 'nav.dashboard' },
-      { label: pageTitle, current: true }
+      { label: pageTitle, current: true, i18nKey: config?.i18n?.title }
     ];
 
     const items = crumbs.map((crumb, index) => {
@@ -96,9 +111,12 @@
     const tabItems = tabs.map((tab, index) => {
       const isActive = index === 0;
       const proLabel = tab.isPro ? '<span class="tabs__pro-badge">PRO</span>' : '';
+      const freeLabel = tab.isFree ? '<span class="tabs__free-badge">FREE</span>' : '';
 
       // Rich tab format (for Performance Hub style)
       if (richTabs || tab.description) {
+        const labelI18n = tab.i18nLabel ? ` data-i18n="${tab.i18nLabel}"` : '';
+        const descI18n = tab.i18nDesc ? ` data-i18n="${tab.i18nDesc}"` : '';
         return `
           <button
             type="button"
@@ -108,10 +126,10 @@
             aria-selected="${isActive}"
             role="tab"
           >
-            <span class="tabs__label">${tab.label}</span>
-            ${tab.description ? `<span class="tabs__desc">${tab.description}</span>` : ''}
+            <span class="tabs__label"${labelI18n}>${tab.label}</span>
+            ${tab.description ? `<span class="tabs__desc"${descI18n}>${tab.description}</span>` : ''}
             ${tab.timeEstimate ? `<span class="tabs__time">${tab.timeEstimate}</span>` : ''}
-            ${proLabel}
+            ${freeLabel}${proLabel}
           </button>
         `;
       }
@@ -133,14 +151,17 @@
     // Mode indicator below tabs (shown for rich tabs)
     const firstTab = tabs[0];
     const showModeIndicator = richTabs || tabs.some(t => t.description);
+    const firstTabLabelI18n = firstTab?.i18nLabel ? ` data-i18n="${firstTab.i18nLabel}"` : '';
+    const firstTabDescI18n = firstTab?.i18nDesc ? ` data-i18n="${firstTab.i18nDesc}"` : '';
+
     const modeDescHtml = showModeIndicator ? `
       <p class="helper-text">
         <span class="mode-indicator">
-          <span class="mode-indicator__label">Mode:</span>
-          <span class="mode-indicator__value" id="selectedMode">${firstTab.label}</span>
+          <span class="mode-indicator__label" data-i18n="reports.common.mode">Mode:</span>
+          <span class="mode-indicator__value" id="selectedMode"${firstTabLabelI18n}>${firstTab.label}</span>
         </span>
       </p>
-      <p class="helper-text" id="modeDescription" style="margin-top: 0.25rem;">${firstTab.description || ''}</p>
+      <p class="helper-text" id="modeDescription" style="margin-top: 0.25rem;"${firstTabDescI18n}>${firstTab.description || ''}</p>
     ` : '';
 
     return `
@@ -161,11 +182,12 @@
     const placeholder = urlInput?.placeholder || 'https://yoursite.com';
     const helperText = urlInput?.helperText || '';
     const buttonText = scanButton?.text || 'Analyze';
-    const labelText = urlInput?.label || 'Website URL';
+    const labelText = urlInput?.label || _t('shell.websiteUrl', 'Website URL');
 
     const placeholderI18n = urlInput?.i18nPlaceholder ? ` data-i18n-placeholder="${urlInput.i18nPlaceholder}"` : '';
     const labelI18n = urlInput?.i18nLabel ? ` data-i18n="${urlInput.i18nLabel}"` : '';
     const helperI18n = urlInput?.i18nHelper ? ` data-i18n="${urlInput.i18nHelper}"` : '';
+    const buttonI18n = scanButton?.i18nText ? ` data-i18n="${scanButton.i18nText}"` : '';
 
     return `
       <section class="card">
@@ -184,10 +206,12 @@
               aria-label="${labelText}"
             />
             <button id="${ids.scanButton}" class="btn btn-primary" aria-label="${buttonText}">
-              <span id="buttonText">${buttonText}</span>
+              <span id="buttonText"${buttonI18n}>${buttonText}</span>
             </button>
           </div>
           ${helperText ? `<p class="helper-text"${helperI18n}>${helperText}</p>` : ''}
+          <!-- Usage Status Indicator (rendered by UsagePill.js) -->
+          <div id="usagePillContainer" class="page-shell-usage-pill"></div>
         </div>
       </section>
     `;
@@ -195,6 +219,7 @@
 
   /**
    * Render results container HTML
+   * Wraps in <section id="report-results"> for standardized scroll-to behavior
    */
   function renderResultsContainer(config) {
     const ids = getElementIds(config);
@@ -202,10 +227,12 @@
     return `
       <div id="loadingContainer"></div>
       <div id="errorMessage" class="error-message hidden" role="alert" aria-live="assertive"></div>
-      <div id="${ids.results}" class="results-container" hidden>
-        <div id="resultsContent"></div>
-        <!-- Results will be dynamically inserted by analyzer script -->
-      </div>
+      <section id="report-results">
+        <div id="${ids.results}" class="results-container" hidden>
+          <div id="resultsContent"></div>
+          <!-- Results will be dynamically inserted by analyzer script -->
+        </div>
+      </section>
     `;
   }
 
@@ -254,6 +281,11 @@
     // Render the shell HTML
     container.innerHTML = render(config);
 
+    // Ensure freshly-rendered content is translated
+    if (window.i18n && typeof window.i18n.translatePage === 'function') {
+      window.i18n.translatePage();
+    }
+
     // Get element references
     const ids = getElementIds(config);
     const elements = {
@@ -273,6 +305,22 @@
     if (config.analyzerType) {
       window.SM_ANALYZER_KEY = config.analyzerType;
       document.body.setAttribute('data-sm-analyzer-key', config.analyzerType);
+    }
+
+    // Print mode: when ?print=1 is in URL (used by Puppeteer PDF export),
+    // add styling classes to hide interactive chrome and expand content
+    const searchParams = new URLSearchParams(window.location.search);
+    const isPrintMode = searchParams.get('print') === '1';
+    if (isPrintMode) {
+      document.body.classList.add('pdf-export-mode', 'print-pro-tier', 'sm-print-mode');
+
+      // Lock i18n to the locale specified in the URL (set by the PDF server from the DB)
+      const forceLocale = searchParams.get('locale');
+      if (forceLocale && window.i18n && typeof window.i18n.forceLocale === 'function') {
+        window.i18n.forceLocale(forceLocale).catch(e => {
+          console.warn('[PageShell] Failed to force locale for print mode:', e);
+        });
+      }
     }
 
     /**
@@ -340,8 +388,10 @@
     function showLoading(steps) {
       if (elements.results) elements.results.hidden = true;
 
-      const loadingSteps = steps || config.loadingSteps || [
-        { label: 'Starting analysis', detail: 'Initializing scan engine...' }
+      // Support loadingSteps as a function (thunk) for lazy i18n evaluation
+      const configSteps = typeof config.loadingSteps === 'function' ? config.loadingSteps() : config.loadingSteps;
+      const loadingSteps = steps || configSteps || [
+        { label: _t('shell.startingAnalysis', 'Starting analysis'), detail: _t('shell.initializingScan', 'Initializing scan engine...') }
       ];
 
       // Use AnalyzerLoader class (or AnalyzerLoaderClass as fallback)
@@ -426,8 +476,26 @@
       isScanning = true;
       window.SM_IS_SCANNING = true;
 
+      // CRITICAL: Mark this as a FRESH SCAN that requires payment
+      // VERSION: 20260201h - This flag ensures new scans are LOCKED until paid
+      console.log('[PageShell] NEW SCAN v20260201h: Marking as fresh unpaid scan');
+      window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = true;
+      window.__SM_CURRENT_SCAN_URL__ = normalizedUrl;
+
+      // Clear any stale billing cache and session markers from previous scans
+      if (window.ProReportBlock?.clearBillingCache) {
+        window.ProReportBlock.clearBillingCache();
+      }
+      sessionStorage.removeItem('sm_payment_completed_session');
+      sessionStorage.removeItem('sm_purchased_report_id');
+
       // Cleanup previous data
       cleanup();
+
+      // Reset ReportUI waiting state to ensure screenshot card is created
+      if (window.ReportUI?.resetWaitingState) {
+        window.ReportUI.resetWaitingState();
+      }
 
       // Disable inputs
       if (elements.scanButton) {
@@ -461,9 +529,14 @@
           ...(activeTab && { mode: activeTab })
         };
 
+        // Build headers with authentication if available
+        const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         const response = await fetch(endpoint, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: headers,
           body: JSON.stringify(requestBody),
           signal: controller.signal
         });
@@ -478,7 +551,12 @@
         }
 
         if (!response.ok || data.success === false) {
-          throw new Error(data.message || data.error || 'Analysis failed');
+          // Translate known server error codes
+          if (data.code === 'SCAN_QUOTA_EXCEEDED') {
+            const limit = data.scansLimit || 10;
+            throw new Error(_t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.', { limit }));
+          }
+          throw new Error(data.message || data.error || _t('errors.analysisFailed', 'Analysis failed'));
         }
 
         if (data.success) {
@@ -499,27 +577,76 @@
             document.body.setAttribute('data-report-id', results.reportId);
           }
 
+          // CRITICAL FIX: Update URL in browser address bar to reflect the scanned URL
+          // This prevents URL collision where old URL stays in address bar after new scan
+          const newParams = new URLSearchParams();
+          newParams.set('url', normalizedUrl);
+          if (results.reportId) {
+            newParams.set('report_id', results.reportId);
+          }
+          const newBrowserUrl = `${window.location.pathname}?${newParams.toString()}`;
+          window.history.replaceState({}, '', newBrowserUrl);
+          console.log('[PageShell] Updated browser URL to:', newBrowserUrl);
+
+          // Set screenshot URL from API response
+          if (results.screenshotUrl) {
+            document.body.setAttribute('data-sm-screenshot-url', results.screenshotUrl);
+          }
+
+          // CRITICAL FIX: Ensure screenshot card is shown
+          if (results.reportId && typeof window.ReportUI?.ensurePageScreenshotCard === 'function') {
+            setTimeout(() => {
+              window.ReportUI.ensurePageScreenshotCard(results.reportId);
+              console.log('[PageShell] Called ensurePageScreenshotCard for:', results.reportId);
+            }, 100);
+          }
+
           // Call success callback with delay for loader animation
-          setTimeout(() => {
+          setTimeout(async () => {
+            // CRITICAL: Fetch billing status before displaying results
+            // This ensures Pro/Day Pass users see unlocked sections immediately
+            if (window.ProReportBlock?.fetchBillingStatus) {
+              console.log('[PageShell] Fetching billing status before displaying results...');
+              try {
+                await window.ProReportBlock.fetchBillingStatus(true);
+                const isPro = window.ProReportBlock?.isProSubscriber?.();
+                console.log('[PageShell] Billing status fetched, plan:', isPro ? 'Pro/DayPass' : 'Free');
+                // Clear fresh scan flag for Pro/Day Pass users - they have global access
+                if (isPro) {
+                  console.log('[PageShell] Pro/Day Pass user detected - clearing fresh scan payment flag');
+                  window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+                }
+              } catch (e) {
+                console.warn('[PageShell] Failed to fetch billing status:', e);
+              }
+            }
             if (typeof config.onScanComplete === 'function') {
               config.onScanComplete(results);
             }
+            // Dispatch report:ready event for auto-scroll to results
+            // Small delay to ensure DOM is updated after onScanComplete
+            setTimeout(() => {
+              window.__REPORT_READY__ = true;
+              window.dispatchEvent(new CustomEvent('report:ready', {
+                detail: { reportId: results.reportId, url: normalizedUrl }
+              }));
+            }, 100);
           }, 1000);
         } else {
-          showError(data.message || data.error || 'Analysis failed');
+          showError(data.message || data.error || _t('errors.analysisFailed', 'Analysis failed'));
         }
 
       } catch (error) {
         console.error('[PageShell] Scan error:', error);
 
-        let errorMessage = 'Failed to analyze website. Please try again.';
+        let errorMessage = _t('errors.analysisFailedRetry', 'Failed to analyze website. Please try again.');
 
         if (error.name === 'AbortError' || error.message.includes('aborted')) {
-          errorMessage = 'Analysis timed out. The website may be too slow or complex. Please try again.';
+          errorMessage = _t('errors.analysisTimedOut', 'Analysis timed out. The website may be too slow or complex. Please try again.');
         } else if (error.message.includes('bot protection') || error.message.includes('cloudflare')) {
-          errorMessage = 'This website blocks automated analysis. Try a different website.';
+          errorMessage = _t('errors.botProtection', 'This website blocks automated analysis. Try a different website.');
         } else if (error.message.includes('not accessible') || error.message.includes('unreachable')) {
-          errorMessage = 'Website is not accessible. Please check the URL and ensure the website is online.';
+          errorMessage = _t('errors.websiteNotAccessible', 'Website is not accessible. Please check the URL and ensure the website is online.');
         } else if (error.message) {
           errorMessage = error.message;
         }
@@ -588,6 +715,34 @@
      * Handle URL parameters (auto-scan, report loading)
      */
     async function handleUrlParams() {
+      // In print mode, wait for i18n to finish loading translations before rendering
+      // the report. Without this gate, the report renders immediately (data is in
+      // localStorage) while ja.json/zh.json is still being fetched, causing all
+      // t() calls to return English fallbacks.
+      if (isPrintMode && window.i18n) {
+        const targetLocale = searchParams.get('locale') || window.i18n.currentLanguage;
+        const i18nReady = () =>
+          window.i18n.initialized &&
+          Object.keys(window.i18n.translations || {}).length > 0 &&
+          window.i18n.currentLanguage === targetLocale;
+
+        if (!i18nReady()) {
+          console.log(`[PageShell] Print mode: waiting for i18n (target: ${targetLocale})...`);
+          await new Promise((resolve) => {
+            const check = setInterval(() => {
+              if (i18nReady()) { clearInterval(check); resolve(); }
+            }, 50);
+            // Safety timeout — don't block PDF rendering forever
+            setTimeout(() => {
+              clearInterval(check);
+              console.warn(`[PageShell] i18n wait timed out (current: ${window.i18n.currentLanguage}, target: ${targetLocale})`);
+              resolve();
+            }, 10000);
+          });
+          console.log(`[PageShell] i18n ready: ${window.i18n.currentLanguage}, translations: ${Object.keys(window.i18n.translations).length} keys`);
+        }
+      }
+
       const params = new URLSearchParams(window.location.search);
       const reportId = params.get('report_id') || '';
       const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
@@ -601,6 +756,10 @@
 
       // Handle billing return
       if (billingSuccess && !window.__smBillingReturnComplete) {
+        // CRITICAL: Clear fresh scan flag - user paid for this report
+        console.log('[PageShell] Billing return detected - clearing fresh scan flag');
+        window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+
         await new Promise((resolve) => {
           if (window.__smBillingReturnComplete) {
             resolve();
@@ -620,20 +779,79 @@
       }
 
       // Try to load stored report
-      if (reportId && window.ReportStorage && typeof config.onScanComplete === 'function') {
+      if (reportId && typeof config.onScanComplete === 'function') {
         // Fetch billing status first
         if (window.ProReportBlock?.fetchBillingStatus) {
           await window.ProReportBlock.fetchBillingStatus(true);
         }
 
-        const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, config.onScanComplete);
+        // 1. Try browser storage first (fastest)
+        let loaded = false;
+        if (window.ReportStorage) {
+          loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, config.onScanComplete);
+        }
+
+        // 2. If not in browser, try fetching from server database
+        if (!loaded) {
+          console.log(`[PageShell:${config.pageId}] Browser storage miss, trying server for report:`, reportId);
+          try {
+            const token = localStorage.getItem('sm_token');
+            const headers = token ? { 'Authorization': `Bearer ${token}` } : {};
+            const resp = await fetch(`/api/reports/${encodeURIComponent(reportId)}`, { headers });
+            if (resp.ok) {
+              const serverReport = await resp.json();
+              if (serverReport.success && serverReport.data) {
+                // Build results object from server data (same normalization as scan response)
+                const serverData = serverReport.data;
+                const results = {
+                  ...(serverData.results || {}),
+                  reportId: serverData.reportId || serverData.results?.reportId || reportId,
+                  startedAt: serverData.startedAt || serverData.results?.startedAt || serverData.timestamp,
+                  screenshotUrl: serverData.screenshotUrl || serverData.results?.screenshotUrl,
+                  url: serverData.url || autoUrl
+                };
+                if (results.reportId) {
+                  document.body.setAttribute('data-report-id', results.reportId);
+                }
+                if (results.screenshotUrl) {
+                  document.body.setAttribute('data-sm-screenshot-url', results.screenshotUrl);
+                }
+                config.onScanComplete(results);
+                loaded = true;
+                window.__REPORT_READY__ = true;
+                console.log(`[PageShell:${config.pageId}] Report loaded from server successfully`);
+              }
+            }
+          } catch (serverErr) {
+            console.warn(`[PageShell:${config.pageId}] Server report fetch failed:`, serverErr.message);
+          }
+        }
+
         if (loaded) {
           if (autoUrl) setUrl(autoUrl);
+          // Signal for Puppeteer PDF export that report content is rendered
+          window.__REPORT_READY__ = true;
           return;
         }
+
+        // Report data not found in browser or server - show unavailable banner
+        // Pre-fill URL first so the re-scan button works
+        if (autoUrl) setUrl(autoUrl);
+
+        console.log(`[PageShell:${config.pageId}] Report data unavailable, showing banner:`, { reportId, autoUrl });
+        if (window.ReportStorage && window.ReportStorage.showReportUnavailableBanner) {
+          window.ReportStorage.showReportUnavailableBanner({
+            url: autoUrl || '',
+            analyzerType: config.pageId || config.analyzerKey || 'report',
+            onRescan: () => {
+              startScan();
+            }
+          });
+        }
+        return; // Don't continue - user should click re-scan
       }
 
-      // Pre-fill URL if provided
+      // No report_id - just pre-fill URL if available
       if (autoUrl) {
         setUrl(autoUrl);
       }
@@ -654,6 +872,30 @@
 
     // Set up event listeners (skip if manual handling)
     setupEventListeners();
+
+    // Initialize UsagePill if available
+    function initUsagePill() {
+      if (window.UsagePill) {
+        window.UsagePill.create('#usagePillContainer', {
+          mode: 'inline',
+          showReports: false,
+          showUpgradeLink: true
+        });
+      }
+    }
+
+    // Try to initialize UsagePill now, or wait for it to load
+    if (window.UsagePill) {
+      initUsagePill();
+    } else {
+      // UsagePill may not be loaded yet, wait for DOMContentLoaded
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initUsagePill);
+      } else {
+        // DOM is ready, wait a bit for scripts to load
+        setTimeout(initUsagePill, 100);
+      }
+    }
 
     // Handle URL parameters (skip if manual handling - page script handles this)
     if (!config.manualEventHandling) {

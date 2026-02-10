@@ -22,6 +22,24 @@
 // Deterministic analyzer key (stable forever)
 window.SM_ANALYZER_KEY = 'dashboard';
 
+// Translation helper - evaluates at runtime to ensure i18n is loaded
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
 // Dashboard state
 let dashboardResults = null;
 
@@ -46,16 +64,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const urlInput = document.getElementById('dashboardUrlInput');
   const submitButton = document.getElementById('dashboardAnalyzeButton');
+  const heroForm = document.getElementById('dashboardHeroForm');
+
+  // Prevent form submission (CSP-compliant)
+  if (heroForm) {
+    heroForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      runComprehensiveAnalysis();
+    });
+  }
 
   // Handle button click
-  submitButton.addEventListener('click', () => runComprehensiveAnalysis());
+  if (submitButton) {
+    submitButton.addEventListener('click', () => runComprehensiveAnalysis());
+  } else {
+    console.error('[Dashboard] Submit button not found: #dashboardAnalyzeButton');
+  }
 
   // Handle Enter key
-  urlInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-      runComprehensiveAnalysis();
-    }
-  });
+  if (urlInput) {
+    urlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        runComprehensiveAnalysis();
+      }
+    });
+  } else {
+    console.error('[Dashboard] URL input not found: #dashboardUrlInput');
+  }
 
   // Example chip handlers (Swiss-minimal homepage)
   document.querySelectorAll('.example-chip').forEach(chip => {
@@ -70,8 +105,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // Pricing modal trigger (Swiss-minimal homepage)
   const pricingModalTrigger = document.getElementById('openPricingModal');
   if (pricingModalTrigger) {
-    pricingModalTrigger.addEventListener('click', () => {
-      window.dispatchEvent(new CustomEvent('openPricingModal'));
+    pricingModalTrigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+        window.PricingModal.open();
+      } else {
+        window.location.href = '/upgrade.html';
+      }
     });
   }
 
@@ -190,13 +230,13 @@ async function runComprehensiveAnalysis() {
   
   // Show unified loading with steps
   window.AnalyzerLoader.show([
-    { id: 'init', label: 'Connecting to target...' },
-    { id: 'fonts', label: 'Analyzing typography & fonts...' },
-    { id: 'seo', label: 'Scanning SEO metrics...' },
-    { id: 'performance', label: 'Running performance tests...' },
-    { id: 'accessibility', label: 'Checking accessibility compliance...' },
-    { id: 'security', label: 'Auditing security headers...' },
-    { id: 'compile', label: 'Compiling unified report...' }
+    { id: 'init', label: t('dashboard.loading.connectingToTarget', 'Connecting to target...') },
+    { id: 'fonts', label: t('dashboard.loading.analyzingTypography', 'Analyzing typography & fonts...') },
+    { id: 'seo', label: t('dashboard.loading.scanningSeoMetrics', 'Scanning SEO metrics...') },
+    { id: 'performance', label: t('dashboard.loading.runningPerformanceTests', 'Running performance tests...') },
+    { id: 'accessibility', label: t('dashboard.loading.checkingAccessibility', 'Checking accessibility compliance...') },
+    { id: 'security', label: t('dashboard.loading.auditingSecurityHeaders', 'Auditing security headers...') },
+    { id: 'compile', label: t('dashboard.loading.compilingReport', 'Compiling unified report...') }
   ]);
   
   // Add ASCII art patience message
@@ -286,41 +326,46 @@ async function runComprehensiveAnalysis() {
     window.AnalyzerLoader.updateStep('performance', 'active');
     window.AnalyzerLoader.updateStep('accessibility', 'active');
     window.AnalyzerLoader.updateStep('security', 'active');
-    
+
+    // Set up authentication headers for API calls
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    const authHeaders = { 'Content-Type': 'application/json' };
+    if (token) authHeaders['Authorization'] = `Bearer ${token}`;
+
     // Parallel fetch - all requests start at the same time
     const [fontResults, seoResults, perfResults, a11yResults, securityResults] = await Promise.allSettled([
       // Font scan - lightweight basic mode
       fetch('/api/scan', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ url, mode: 'basic', scanStartedAt })
       }).then(r => r.json()),
-      
+
       // SEO - lightweight mode
       fetch('/api/seo', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ url, forceLightweight: true, source: 'dashboard', skipLighthouse: true, scanStartedAt })
       }).then(r => r.json()),
-      
+
       // Performance - skip Lighthouse for speed
       fetch('/api/performance-snapshot', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ url, scanStartedAt })
       }).then(r => r.json()),
-      
+
       // Accessibility - lightweight
       fetch('/api/accessibility', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ url, lightweight: true, scanStartedAt })
       }).then(r => r.json()),
-      
+
       // Security - lightweight
       fetch('/api/security', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: authHeaders,
         body: JSON.stringify({ url, lightweight: true, scanStartedAt })
       }).then(r => r.json())
     ]);
@@ -397,6 +442,9 @@ function displayDashboard(data) {
   container.style.display = 'block';
   container.innerHTML = '';
 
+  // Hide promotional sections after scan completes
+  document.body.classList.add('scan-complete');
+
   // Extract desktop and mobile scores
   const scores = {
     font: extractScores(data.font, 'fonts'),
@@ -437,7 +485,7 @@ function displayDashboard(data) {
   const summaryHTML = `
     <div class="section dashboard-animate-in" style="border-left: 4px solid ${getScoreColor(overallScore)};">
       <div style="display: flex; justify-content: space-between; align-items: center; margin: 0 0 1.25rem 0;">
-        <h2 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600; margin: 0;">Results for ${displayDomain}</h2>
+        <h2 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 600; margin: 0;">${t('dashboard.results.resultsFor', 'Results for {domain}', { domain: displayDomain })}</h2>
       </div>
 
       <!-- ROW 1: Site Health Score + Summary Text -->
@@ -454,7 +502,7 @@ function displayDashboard(data) {
       ">
         <!-- Large Overall Health Circle -->
         <div style="text-align: center; flex-shrink: 0;">
-          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Site health score</div>
+          <div style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 0.75rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">${t('dashboard.results.siteHealthScore', 'SITE HEALTH SCORE')}</div>
           <svg width="140" height="140" viewBox="0 0 140 140" style="filter: drop-shadow(0 4px 12px ${getScoreColor(overallScore)}40);">
             <circle class="score-ring-bg" cx="70" cy="70" r="58" fill="var(--score-ring-fill, rgba(0,0,0,0.3))" stroke="var(--score-ring-stroke, rgba(255,255,255,0.1))" stroke-width="10" />
             <circle
@@ -479,7 +527,7 @@ function displayDashboard(data) {
             ${summary}
           </p>
           <p style="font-size: 0.85rem; color: var(--text-secondary); margin: 0;">
-            Analyzed: ${data.url} • Started: ${new Date(data.startedAt || data.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true, timeZoneName: 'short' })} • Duration: ${data.duration}s
+            ${t('dashboard.analyzed', 'Analyzed')}: ${data.url} • ${t('dashboard.started', 'Started')}: ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date(data.startedAt || data.timestamp)) : new Date(data.startedAt || data.timestamp).toLocaleString()} • ${t('dashboard.duration', 'Duration')}: ${data.duration}s
           </p>
         </div>
       </div>
@@ -495,13 +543,13 @@ function displayDashboard(data) {
         border-radius: 12px;
         margin-bottom: 1rem;
       ">
-        ${createMiniScore('Performance', scores.performance, 0)}
-        ${createMiniScore('SEO', scores.seo, 1)}
-        ${createMiniScore('Accessibility', scores.accessibility, 2)}
-        ${createMiniScore('Security', scores.security, 3)}
-        ${createMiniScore('Fonts', scores.font, 4)}
+        ${createMiniScore(t('dashboard.results.scores.performance', 'Performance'), scores.performance, 0)}
+        ${createMiniScore(t('dashboard.results.scores.seo', 'SEO'), scores.seo, 1)}
+        ${createMiniScore(t('dashboard.results.scores.accessibility', 'Accessibility'), scores.accessibility, 2)}
+        ${createMiniScore(t('dashboard.results.scores.security', 'Security'), scores.security, 3)}
+        ${createMiniScore(t('dashboard.results.scores.fonts', 'Fonts'), scores.font, 4)}
       </div>
-      
+
       <!-- ROW 3: Insights -->
       <div class="dashboard-animate-in dashboard-animate-in-delay-3" style="
         padding: 1rem 1.25rem;
@@ -510,7 +558,7 @@ function displayDashboard(data) {
         border-radius: 12px;
         margin-bottom: 1.5rem;
       ">
-        <h3 style="color: var(--text-primary); margin: 0 0 0.75rem 0; font-size: 1rem; font-weight: 700;">Insights</h3>
+        <h3 style="color: var(--text-primary); margin: 0 0 0.75rem 0; font-size: 1rem; font-weight: 700;">${t('dashboard.results.insights', 'Insights')}</h3>
         <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.8;">
           ${generateInsights(scores, data)}
         </ul>
@@ -518,7 +566,7 @@ function displayDashboard(data) {
       
       <!-- 4. TOP 3 ISSUES (ranked by impact) -->
       <div style="margin-bottom: 1.5rem;">
-        <h3 style="color: var(--text-primary); margin: 0 0 0.75rem 0; font-size: 1rem; font-weight: 600;">Top fixes</h3>
+        <h3 style="color: var(--text-primary); margin: 0 0 0.75rem 0; font-size: 1rem; font-weight: 600;">${t('dashboard.results.topFixes', 'Top fixes')}</h3>
         ${topIssues.length > 0 ? `
           <div style="display: flex; flex-direction: column; gap: 0.5rem;">
             ${topIssues.slice(0, 3).map((issue, idx) => `
@@ -541,13 +589,13 @@ function displayDashboard(data) {
                   <div style="font-weight: 600; color: var(--text-primary); font-size: 0.9rem;">${issue.title}</div>
                   <div style="font-size: 0.8rem; color: var(--text-secondary);">${issue.impact}</div>
                 </div>
-                <a href="${issue.link}" style="color: ${issue.severity === 'critical' ? '#ff4444' : '#ffa500'}; font-size: 0.8rem; text-decoration: none; font-weight: 600;">View fix</a>
+                <a href="${issue.link}" style="color: ${issue.severity === 'critical' ? '#ff4444' : '#ffa500'}; font-size: 0.8rem; text-decoration: none; font-weight: 600;">${t('dashboard.results.viewFix', 'View fix')}</a>
               </div>
             `).join('')}
           </div>
         ` : `
           <div style="padding: 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border-radius: 6px; text-align: center;">
-            <span style="color: var(--accent-primary); font-weight: 600;">No critical issues found. Your site is in good shape!</span>
+            <span style="color: var(--accent-primary); font-weight: 600;">${t('dashboard.results.noIssuesFound', 'No critical issues found. Your site is in good shape!')}</span>
           </div>
         `}
       </div>
@@ -565,13 +613,13 @@ function displayDashboard(data) {
             <circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/>
           </svg>
           <div>
-            <div style="font-weight: 600; color: var(--accent-primary); font-size: 0.85rem; margin-bottom: 0.25rem;">Recommended next fix</div>
+            <div style="font-weight: 600; color: var(--accent-primary); font-size: 0.85rem; margin-bottom: 0.25rem;">${t('dashboard.results.recommendedNextFix', 'Recommended next fix')}</div>
             <div style="color: var(--text-primary); font-size: 0.95rem;">${nextStep.text}</div>
           </div>
-          ${nextStep.link ? `<a href="${nextStep.link}" style="margin-left: auto; padding: 0.5rem 1rem; background: var(--accent-primary); color: var(--accent-primary-contrast); font-weight: 600; font-size: 0.85rem; border-radius: 4px; text-decoration: none;">Start</a>` : ''}
+          ${nextStep.link ? `<a href="${nextStep.link}" style="margin-left: auto; padding: 0.5rem 1rem; background: var(--accent-primary); color: var(--accent-primary-contrast); font-weight: 600; font-size: 0.85rem; border-radius: 4px; text-decoration: none;">${t('dashboard.results.start', 'Start')}</a>` : ''}
         </div>
       </div>
-      
+
       <!-- 5. VIEW DETAILS (optional - collapsed by default) -->
       <details class="accordion" style="margin-bottom: 1rem;">
         <summary class="accordion__header" style="
@@ -588,7 +636,7 @@ function displayDashboard(data) {
           list-style: none;
           transition: background 0.2s ease;
         ">
-          <span style="font-size: 1rem;">Details & export</span>
+          <span style="font-size: 1rem;">${t('dashboard.results.detailsExport', 'Details & export')}</span>
           <svg class="accordion__icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s ease;"><path d="M6 9l6 6 6-6"/></svg>
         </summary>
         <div class="accordion__body" style="padding: 1.25rem; border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-top: none; border-radius: 0 0 8px 8px; background: var(--bg-card, rgba(255,255,255,0.02));">
@@ -624,7 +672,7 @@ function displayDashboard(data) {
     fixesSidebar.style.display = 'block';
     fixesSidebar.innerHTML = `
       <div class="dashboard-card">
-        <h2 class="card-heading">Top fixes</h2>
+        <h2 class="card-heading">${t('dashboard.results.topFixes', 'Top fixes')}</h2>
         ${topIssues.length > 0 ? `
           <div style="display: flex; flex-direction: column; gap: 0.75rem;">
             ${topIssues.slice(0, 5).map((issue, idx) => `
@@ -907,27 +955,56 @@ function createMiniScore(name, scores, index = 0) {
  */
 function generatePlainEnglishSummary(overallScore, scores, data) {
   const status = getStatus(overallScore);
-  
+
+  // Area labels with i18n
+  const areaLabels = {
+    performance: t('dashboard.results.areaLabels.pageSpeed', 'page speed'),
+    seo: t('dashboard.results.areaLabels.searchVisibility', 'search visibility'),
+    accessibility: t('dashboard.results.areaLabels.accessibility', 'accessibility'),
+    security: t('dashboard.results.areaLabels.security', 'security'),
+    font: t('dashboard.results.areaLabels.typography', 'typography')
+  };
+
   // Find the weakest area
   const areas = [
-    { name: 'performance', score: getAvgScore(scores.performance), label: 'page speed' },
-    { name: 'seo', score: getAvgScore(scores.seo), label: 'search visibility' },
-    { name: 'accessibility', score: getAvgScore(scores.accessibility), label: 'accessibility' },
-    { name: 'security', score: getAvgScore(scores.security), label: 'security' },
-    { name: 'font', score: getAvgScore(scores.font), label: 'typography' }
+    { name: 'performance', score: getAvgScore(scores.performance), label: areaLabels.performance },
+    { name: 'seo', score: getAvgScore(scores.seo), label: areaLabels.seo },
+    { name: 'accessibility', score: getAvgScore(scores.accessibility), label: areaLabels.accessibility },
+    { name: 'security', score: getAvgScore(scores.security), label: areaLabels.security },
+    { name: 'font', score: getAvgScore(scores.font), label: areaLabels.font }
   ].filter(a => a.score !== null).sort((a, b) => a.score - b.score);
-  
+
   const weakest = areas[0];
   const strongest = areas[areas.length - 1];
-  
+
   if (overallScore >= 90) {
-    return `Your website is in excellent shape with strong scores across all areas. ${strongest ? `${strongest.label.charAt(0).toUpperCase() + strongest.label.slice(1)} is your strongest area at ${strongest.score}.` : ''}`;
+    const base = t('dashboard.results.summaries.excellent', 'Your website is in excellent shape with strong scores across all areas.');
+    if (strongest) {
+      const capitalizedArea = strongest.label.charAt(0).toUpperCase() + strongest.label.slice(1);
+      const strongestText = t('dashboard.results.summaries.excellentStrongest', '{area} is your strongest area at {score}.', { area: capitalizedArea, score: strongest.score });
+      return `${base} ${strongestText}`;
+    }
+    return base;
   } else if (overallScore >= 75) {
-    return `Your website is performing well overall, but ${weakest ? `${weakest.label} (${weakest.score}) could use some attention` : 'there are a few areas to improve'}.`;
+    if (weakest) {
+      return t('dashboard.results.summaries.good', 'Your website is performing well overall, but {area} ({score}) could use some attention.', { area: weakest.label, score: weakest.score });
+    }
+    return t('dashboard.results.summaries.goodNoWeakest', 'Your website is performing well overall, but there are a few areas to improve.');
   } else if (overallScore >= 50) {
-    return `Your website needs work in several areas. ${weakest ? `Priority: Fix ${weakest.label} issues (currently scoring ${weakest.score}).` : 'Review the issues below to improve.'}`;
+    const base = t('dashboard.results.summaries.needsWork', 'Your website needs work in several areas.');
+    if (weakest) {
+      const priority = t('dashboard.results.summaries.needsWorkPriority', 'Priority: Fix {area} issues (currently scoring {score}).', { area: weakest.label, score: weakest.score });
+      return `${base} ${priority}`;
+    }
+    return `${base} ${t('dashboard.results.summaries.needsWorkNoPriority', 'Review the issues below to improve.')}`;
   } else {
-    return `Your website has critical issues that need immediate attention. ${weakest ? `${weakest.label.charAt(0).toUpperCase() + weakest.label.slice(1)} is the most urgent problem at ${weakest.score}.` : 'Start with the critical issues listed below.'}`;
+    const base = t('dashboard.results.summaries.critical', 'Your website has critical issues that need immediate attention.');
+    if (weakest) {
+      const capitalizedArea = weakest.label.charAt(0).toUpperCase() + weakest.label.slice(1);
+      const urgent = t('dashboard.results.summaries.criticalUrgent', '{area} is the most urgent problem at {score}.', { area: capitalizedArea, score: weakest.score });
+      return `${base} ${urgent}`;
+    }
+    return `${base} ${t('dashboard.results.summaries.criticalNoPriority', 'Start with the critical issues listed below.')}`;
   }
 }
 
@@ -936,80 +1013,85 @@ function generatePlainEnglishSummary(overallScore, scores, data) {
  */
 function generateInsights(scores, data) {
   const insights = [];
-  
+
   const perfScore = getAvgScore(scores.performance);
   const seoScore = getAvgScore(scores.seo);
   const a11yScore = getAvgScore(scores.accessibility);
   const secScore = getAvgScore(scores.security);
   const fontScore = getAvgScore(scores.font);
-  
+
   // Performance insights
   if (perfScore !== null) {
     if (perfScore >= 90) {
-      insights.push('⚡ <strong>Excellent performance</strong> — Your site loads fast, providing a great user experience.');
+      insights.push(`⚡ <strong>${t('dashboard.results.insights.performanceExcellent', 'Performance is excellent — Your site loads quickly.')}</strong>`);
     } else if (perfScore >= 75) {
-      insights.push('⚡ <strong>Good performance</strong> — Page speed is acceptable but has room for optimization.');
+      insights.push(`⚡ <strong>${t('dashboard.results.insights.performanceGood', 'Performance is good — Minor optimizations could help.')}</strong>`);
     } else if (perfScore >= 50) {
-      insights.push('⚠️ <strong>Performance needs work</strong> — Slow loading times may be causing visitors to leave.');
-    } else if (perfScore < 50) {
-      insights.push('🔴 <strong>Critical performance issue</strong> — Page speed is severely impacting user experience and SEO rankings.');
+      insights.push(`⚠️ <strong>${t('dashboard.results.insights.performanceNeedsWork', 'Performance needs work — Slow loading times may be causing visitors to leave.')}</strong>`);
+    } else {
+      insights.push(`🔴 <strong>${t('dashboard.results.insights.performanceCritical', 'Performance is critical — Significant speed improvements needed.')}</strong>`);
     }
   } else {
-    insights.push('⚡ <strong>Performance not scanned yet</strong> — <a href="/performance-hub.html" style="color: var(--accent-primary);">Run performance scan</a> for detailed analysis.');
+    const runPerfScan = t('dashboard.results.insights.runPerformanceScan', 'Run performance scan');
+    insights.push(`⚡ <strong>${t('dashboard.results.insights.performanceNotScanned', 'Performance not scanned yet')}</strong> — <a href="/performance-hub.html" style="color: var(--accent-primary);">${runPerfScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
-  
+
   // SEO insights
   if (seoScore !== null) {
     if (seoScore >= 90) {
-      insights.push('🔍 <strong>SEO is excellent</strong> — Your site is well-optimized for search engines.');
+      insights.push(`🔍 <strong>${t('dashboard.results.insights.seoExcellent', 'SEO is excellent — Well-optimized for search engines.')}</strong>`);
     } else if (seoScore >= 75) {
-      insights.push('🔍 <strong>SEO is good</strong> — Most SEO best practices are in place.');
-    } else if (seoScore < 75) {
-      insights.push('🔍 <strong>SEO improvements needed</strong> — Missing meta tags or structure issues may affect rankings.');
+      insights.push(`🔍 <strong>${t('dashboard.results.insights.seoGood', 'SEO is good — A few improvements possible.')}</strong>`);
+    } else {
+      insights.push(`🔍 <strong>${t('dashboard.results.insights.seoNeedsWork', 'SEO needs attention — Several optimization opportunities exist.')}</strong>`);
     }
   } else {
-    insights.push('🔍 <strong>SEO not scanned yet</strong> — <a href="/seo-analyzer.html" style="color: var(--accent-primary);">Run SEO scan</a> for detailed analysis.');
+    const runSeoScan = t('dashboard.results.insights.runSeoScan', 'Run SEO scan');
+    insights.push(`🔍 <strong>${t('dashboard.results.insights.seoNotScanned', 'SEO not scanned yet')}</strong> — <a href="/seo-analyzer.html" style="color: var(--accent-primary);">${runSeoScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
-  
+
   // Accessibility insights
   if (a11yScore !== null) {
     if (a11yScore >= 90) {
-      insights.push('♿ <strong>Accessibility is excellent</strong> — Your site is usable by people with disabilities.');
+      insights.push(`♿ <strong>${t('dashboard.results.insights.accessibilityExcellent', 'Accessibility is excellent — Great inclusive design.')}</strong>`);
     } else if (a11yScore >= 75) {
-      insights.push('♿ <strong>Accessibility is good</strong> — Most WCAG guidelines are followed.');
-    } else if (a11yScore < 75) {
-      insights.push('♿ <strong>Accessibility issues found</strong> — Some users may have difficulty using your site.');
+      insights.push(`♿ <strong>${t('dashboard.results.insights.accessibilityGood', 'Accessibility is good — Most WCAG guidelines are followed.')}</strong>`);
+    } else {
+      insights.push(`♿ <strong>${t('dashboard.results.insights.accessibilityNeedsWork', 'Accessibility needs improvement — Some users may have difficulty.')}</strong>`);
     }
   } else {
-    insights.push('♿ <strong>Accessibility not scanned yet</strong> — <a href="/accessibility-analyzer.html" style="color: var(--accent-primary);">Run accessibility scan</a> for detailed analysis.');
+    const runA11yScan = t('dashboard.results.insights.runAccessibilityScan', 'Run accessibility scan');
+    insights.push(`♿ <strong>${t('dashboard.results.insights.accessibilityNotScanned', 'Accessibility not scanned yet')}</strong> — <a href="/accessibility-analyzer.html" style="color: var(--accent-primary);">${runA11yScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
-  
+
   // Security insights
   if (secScore !== null) {
     if (secScore >= 90) {
-      insights.push('🔒 <strong>Security is strong</strong> — SSL and security headers are properly configured.');
+      insights.push(`🔒 <strong>${t('dashboard.results.insights.securityExcellent', 'Security is excellent — Strong protection in place.')}</strong>`);
     } else if (secScore >= 75) {
-      insights.push('🔒 <strong>Security is adequate</strong> — Basic protections are in place but could be stronger.');
-    } else if (secScore < 75) {
-      insights.push('🔒 <strong>Security vulnerabilities detected</strong> — Missing headers or SSL issues need attention.');
+      insights.push(`🔒 <strong>${t('dashboard.results.insights.securityGood', 'Security is good — Minor hardening recommended.')}</strong>`);
+    } else {
+      insights.push(`🔒 <strong>${t('dashboard.results.insights.securityNeedsWork', 'Security vulnerabilities detected — Missing headers or SSL issues need attention.')}</strong>`);
     }
   } else {
-    insights.push('🔒 <strong>Security not scanned yet</strong> — <a href="/security-analyzer.html" style="color: var(--accent-primary);">Run security scan</a> for detailed analysis.');
+    const runSecScan = t('dashboard.results.insights.runSecurityScan', 'Run security scan');
+    insights.push(`🔒 <strong>${t('dashboard.results.insights.securityNotScanned', 'Security not scanned yet')}</strong> — <a href="/security-analyzer.html" style="color: var(--accent-primary);">${runSecScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
-  
+
   // Font insights
   if (fontScore !== null) {
     if (fontScore >= 90) {
-      insights.push('🔤 <strong>Fonts optimized</strong> — Fonts are loading efficiently.');
+      insights.push(`🔤 <strong>${t('dashboard.results.insights.fontsExcellent', 'Fonts are excellent — Optimized typography.')}</strong>`);
     } else if (fontScore >= 75) {
-      insights.push('🔤 <strong>Fonts are good</strong> — Font usage is reasonable.');
-    } else if (fontScore < 75) {
-      insights.push('🔤 <strong>Font optimization needed</strong> — Too many fonts or poor loading strategy detected.');
+      insights.push(`🔤 <strong>${t('dashboard.results.insights.fontsGood', 'Fonts are good — Font usage is reasonable.')}</strong>`);
+    } else {
+      insights.push(`🔤 <strong>${t('dashboard.results.insights.fontsNeedsWork', 'Fonts need optimization — Too many font files or poor loading strategy.')}</strong>`);
     }
   } else {
-    insights.push('🔤 <strong>Fonts not scanned yet</strong> — <a href="/enhanced-fonts.html" style="color: var(--accent-primary);">Run font scan</a> for detailed analysis.');
+    const runFontScan = t('dashboard.results.insights.runFontScan', 'Run font scan');
+    insights.push(`🔤 <strong>${t('dashboard.results.insights.fontsNotScanned', 'Fonts not scanned yet')}</strong> — <a href="/enhanced-fonts.html" style="color: var(--accent-primary);">${runFontScan}</a> ${t('dashboard.results.insights.forDetailedAnalysis', 'for detailed analysis.')}`);
   }
-  
+
   // Limit to 5 insights
   return insights.slice(0, 5).map(insight => `<li>${insight}</li>`).join('');
 }
@@ -1030,67 +1112,75 @@ function getAvgScore(scores) {
  */
 function getTop3Issues(data, scores) {
   const issues = [];
-  
+
   // Performance issues
   const perfScore = getAvgScore(scores.performance);
   if (perfScore !== null && perfScore < 75) {
     issues.push({
-      title: 'Slow page load speed',
-      impact: perfScore < 50 ? 'Users leave slow sites. Each second of delay costs 7% conversions.' : 'Page could load faster, impacting user experience.',
+      title: t('dashboard.results.fixes.slowPageLoad', 'Slow page load speed'),
+      impact: perfScore < 50
+        ? t('dashboard.results.fixes.slowPageLoadCritical', 'Users leave slow sites. Each second of delay costs 7% conversions.')
+        : t('dashboard.results.fixes.slowPageLoadDesc', 'Page could load faster, impacting user experience.'),
       severity: perfScore < 50 ? 'critical' : 'warning',
       score: perfScore,
       link: '/performance-hub.html'
     });
   }
-  
+
   // SEO issues
   const seoScore = getAvgScore(scores.seo);
   if (seoScore !== null && seoScore < 75) {
     issues.push({
-      title: 'SEO issues affecting search rankings',
-      impact: seoScore < 50 ? 'Your site may not appear in search results. Fix meta tags and structure.' : 'Improve metadata to rank higher in search results.',
+      title: t('dashboard.results.fixes.seoIssues', 'SEO issues affecting search rankings'),
+      impact: seoScore < 50
+        ? t('dashboard.results.fixes.seoIssuesCritical', 'Your site may not appear in search results. Fix meta tags and structure.')
+        : t('dashboard.results.fixes.seoIssuesDesc', 'Improve metadata to rank higher in search results.'),
       severity: seoScore < 50 ? 'critical' : 'warning',
       score: seoScore,
       link: '/seo-analyzer.html'
     });
   }
-  
+
   // Accessibility issues
   const a11yScore = getAvgScore(scores.accessibility);
   if (a11yScore !== null && a11yScore < 75) {
     issues.push({
-      title: 'Accessibility barriers detected',
-      impact: a11yScore < 50 ? 'Site excludes users with disabilities. May violate ADA/WCAG laws.' : 'Some users may have difficulty using your site.',
+      title: t('dashboard.results.fixes.accessibilityIssues', 'Accessibility barriers detected'),
+      impact: a11yScore < 50
+        ? t('dashboard.results.fixes.accessibilityIssuesCritical', 'Site excludes users with disabilities. May violate ADA/WCAG laws.')
+        : t('dashboard.results.fixes.accessibilityIssuesDesc', 'Some users may have difficulty using your site.'),
       severity: a11yScore < 50 ? 'critical' : 'warning',
       score: a11yScore,
       link: '/accessibility-analyzer.html'
     });
   }
-  
+
   // Security issues
   const secScore = getAvgScore(scores.security);
   if (secScore !== null && secScore < 75) {
     issues.push({
-      title: 'Security vulnerabilities found',
-      impact: secScore < 50 ? 'Site is at risk of attacks. Missing critical security headers.' : 'Security headers could be strengthened.',
+      title: t('dashboard.results.fixes.securityVulnerabilities', 'Security vulnerabilities found'),
+      impact: secScore < 50
+        ? t('dashboard.results.fixes.securityVulnerabilitiesCritical', 'Site is at risk of attacks. Missing critical security headers.')
+        : t('dashboard.results.fixes.securityVulnerabilitiesDesc', 'Security headers could be strengthened.'),
       severity: secScore < 50 ? 'critical' : 'warning',
       score: secScore,
       link: '/security-analyzer.html'
     });
   }
-  
+
   // Typography issues
   const fontScore = getAvgScore(scores.font);
   if (fontScore !== null && fontScore < 75) {
     issues.push({
-      title: 'Font loading issues',
-      impact: 'Fonts may cause layout shifts or slow rendering.',
+      title: t('dashboard.results.fixes.fontOptimization', 'Font loading issues'),
+      impact: t('dashboard.results.fixes.fontOptimizationDesc', 'Fonts may cause layout shifts or slow rendering.'),
       severity: 'warning',
       score: fontScore,
       link: '/enhanced-fonts.html'
     });
   }
-  
+
   // Sort by severity (critical first), then by score (lowest first)
   return issues.sort((a, b) => {
     if (a.severity === 'critical' && b.severity !== 'critical') return -1;
@@ -1105,22 +1195,22 @@ function getTop3Issues(data, scores) {
 function getNextStep(topIssues, scores) {
   if (topIssues.length === 0) {
     return {
-      text: 'Your site is in great shape! Consider running a competitive analysis to find optimization opportunities.',
+      text: t('dashboard.results.nextStep.siteGreatShape', 'Your site is in great shape! Consider running a competitive analysis to find optimization opportunities.'),
       link: '/competitive-analysis.html'
     };
   }
-  
+
   const topIssue = topIssues[0];
-  
+
   if (topIssue.severity === 'critical') {
     return {
-      text: `Fix ${topIssue.title.toLowerCase()} first — this is your highest-impact improvement.`,
+      text: t('dashboard.results.nextStep.fixFirst', 'Fix {issue} first — this is your highest-impact improvement.', { issue: topIssue.title.toLowerCase() }),
       link: topIssue.link
     };
   }
-  
+
   return {
-    text: `Review and improve ${topIssue.title.toLowerCase()} to boost your overall score.`,
+    text: t('dashboard.results.nextStep.reviewAndImprove', 'Review and improve {issue} to boost your overall score.', { issue: topIssue.title.toLowerCase() }),
     link: topIssue.link
   };
 }
@@ -1666,10 +1756,10 @@ function getScoreColor(score) {
  * Answers: "What does this score mean?"
  */
 function getStatus(score) {
-  if (score >= 90) return 'Excellent';
-  if (score >= 75) return 'Good';
-  if (score >= 50) return 'Needs Work';
-  return 'Critical';
+  if (score >= 90) return t('dashboard.results.status.excellent', 'Excellent');
+  if (score >= 75) return t('dashboard.results.status.good', 'Good');
+  if (score >= 50) return t('dashboard.results.status.needsWork', 'Needs Work');
+  return t('dashboard.results.status.critical', 'Critical');
 }
 
 /**

@@ -1,0 +1,412 @@
+/**
+ * Hosting Report — PDF Renderer
+ * Renders all hosting analysis sections into the PDF template.
+ */
+(function (window) {
+  'use strict';
+
+  if (!window.PdfReport) {
+    console.error('[hosting-report-render] PdfReport not loaded');
+    return;
+  }
+
+  var PR = window.PdfReport;
+
+  PdfReport.register('hosting', function renderHosting(data, utils) {
+    var t = utils.t;
+    var esc = utils.esc;
+    var truncate = utils.truncate;
+    var scoreClass = utils.scoreClass;
+
+    var sectionIndex = 1;
+
+    // Resolve data sources
+    var hosting = data.hosting || {};
+    var cmsDetected = data.cmsDetected || {};
+    var recommendations = data.recommendations || [];
+
+    function _htmlToNode(htmlStr) {
+      var tpl = document.createElement('template');
+      tpl.innerHTML = htmlStr.trim();
+      return tpl.content.firstChild;
+    }
+
+    /* -----------------------------------------------------------------------
+       1. Hosting Provider
+       ----------------------------------------------------------------------- */
+    (function () {
+      var sec = document.querySelector('#section-provider .pdf-section__content');
+      var score = data.score;
+
+      sec.parentElement.insertBefore(
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.provider', 'Hosting Provider'), score)),
+        sec
+      );
+
+      var html = '';
+
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.provider', 'This section identifies your hosting provider, service tier, and included features. Understanding your current hosting setup is the first step toward optimizing performance, reliability, and cost. The detected provider information is determined through DNS records, HTTP headers, and IP address analysis.')) + '</p>';
+
+      // Provider overview table
+      html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.provider.overviewHeading', 'Provider Details')) + '</h3>';
+
+      var rows = [];
+      rows.push([
+        esc(t('reports.hosting.report.provider.rows.name', 'Provider')),
+        '<strong>' + esc(hosting.detectedProvider || '-') + '</strong>'
+      ]);
+      rows.push([
+        esc(t('reports.hosting.report.provider.rows.category', 'Category')),
+        esc(hosting.category || '-')
+      ]);
+      rows.push([
+        esc(t('reports.hosting.report.provider.rows.tier', 'Tier')),
+        esc(hosting.tier || '-')
+      ]);
+
+      html += PR.renderTable(
+        [
+          { label: t('seo.report.table.property', 'Property'), width: '35%' },
+          { label: t('seo.report.table.value', 'Value'), width: '65%' }
+        ],
+        rows,
+        { striped: true }
+      );
+
+      // Metrics
+      html += PR.renderMetrics([
+        { value: hosting.detectedProvider || '-', label: t('reports.hosting.report.provider.rows.name', 'Provider') },
+        { value: hosting.category || '-', label: t('reports.hosting.report.provider.rows.category', 'Category') },
+        { value: hosting.tier || '-', label: t('reports.hosting.report.provider.rows.tier', 'Tier') }
+      ]);
+
+      // Features table
+      var features = hosting.features || [];
+      if (features.length > 0) {
+        html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.provider.featuresHeading', 'Included Features')) + '</h3>';
+        var featureRows = features.map(function (f) {
+          return [
+            esc(f),
+            PR.renderStatus('pass', t('seo.report.status.yes', 'Yes'))
+          ];
+        });
+
+        html += PR.renderTable(
+          [
+            { label: t('reports.hosting.report.provider.table.feature', 'Feature'), width: '70%' },
+            { label: t('seo.report.table.status', 'Status'), width: '30%' }
+          ],
+          featureRows,
+          { striped: true }
+        );
+      }
+
+      sec.innerHTML = html;
+    })();
+
+    /* -----------------------------------------------------------------------
+       2. Server Infrastructure
+       ----------------------------------------------------------------------- */
+    (function () {
+      var sec = document.querySelector('#section-infrastructure .pdf-section__content');
+
+      sec.parentElement.insertBefore(
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.infrastructure', 'Server Infrastructure'))),
+        sec
+      );
+
+      var html = '';
+
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.infrastructure', 'Server infrastructure details reveal how your hosting environment is configured. This includes IP address information, server software, and HTTP response headers. Properly configured server headers improve security, caching efficiency, and overall reliability. This section provides a comprehensive view of your server\'s technical configuration.')) + '</p>';
+
+      // Server info table
+      html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.infrastructure.serverHeading', 'Server Information')) + '</h3>';
+
+      var serverRows = [];
+      if (hosting.ipAddress) {
+        serverRows.push([
+          esc(t('reports.hosting.report.infrastructure.rows.ip', 'IP Address')),
+          esc(hosting.ipAddress)
+        ]);
+      }
+      if (hosting.detectedProvider) {
+        serverRows.push([
+          esc(t('reports.hosting.report.infrastructure.rows.provider', 'Provider')),
+          esc(hosting.detectedProvider)
+        ]);
+      }
+
+      if (serverRows.length > 0) {
+        html += PR.renderTable(
+          [
+            { label: t('seo.report.table.property', 'Property'), width: '35%' },
+            { label: t('seo.report.table.value', 'Value'), width: '65%' }
+          ],
+          serverRows,
+          { striped: true }
+        );
+      }
+
+      // Response headers table
+      var responseHeaders = hosting.responseHeaders || {};
+      var headerKeys = Object.keys(responseHeaders);
+      if (headerKeys.length > 0) {
+        html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.infrastructure.headersHeading', 'Response Headers')) + '</h3>';
+        var headerRows = headerKeys.slice(0, 20).map(function (key) {
+          return [
+            '<strong>' + esc(key) + '</strong>',
+            '<span class="pdf-table__truncate">' + esc(truncate(String(responseHeaders[key]), 80)) + '</span>'
+          ];
+        });
+
+        html += PR.renderTable(
+          [
+            { label: t('reports.hosting.report.infrastructure.table.header', 'Header'), width: '30%' },
+            { label: t('seo.report.table.value', 'Value'), width: '70%' }
+          ],
+          headerRows,
+          { striped: true }
+        );
+
+        if (headerKeys.length > 20) {
+          html += '<p class="pdf-text-muted pdf-text-small">' + t('seo.report.common.moreCount', '... {{count}} more', { count: headerKeys.length - 20 }) + '</p>';
+        }
+      }
+
+      sec.innerHTML = html;
+    })();
+
+    /* -----------------------------------------------------------------------
+       3. CMS & Technology
+       ----------------------------------------------------------------------- */
+    (function () {
+      var sec = document.querySelector('#section-cms .pdf-section__content');
+
+      sec.parentElement.insertBefore(
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.cms', 'CMS & Technology'))),
+        sec
+      );
+
+      var html = '';
+
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.cms', 'Content Management System and technology detection identifies the software stack powering your website. Knowing your CMS version and detected technologies helps assess compatibility with hosting providers and identify potential security or performance implications. Keeping your CMS and plugins up to date is critical for security and performance.')) + '</p>';
+
+      // CMS detection results
+      if (cmsDetected.name) {
+        html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.cms.detectionHeading', 'CMS Detection')) + '</h3>';
+
+        var cmsRows = [];
+        cmsRows.push([
+          esc(t('reports.hosting.report.cms.rows.platform', 'Platform')),
+          '<strong>' + esc(cmsDetected.name) + '</strong>'
+        ]);
+        if (cmsDetected.version) {
+          cmsRows.push([
+            esc(t('reports.hosting.report.cms.rows.version', 'Version')),
+            esc(cmsDetected.version)
+          ]);
+        }
+        if (cmsDetected.confidence !== undefined && cmsDetected.confidence !== null) {
+          cmsRows.push([
+            esc(t('reports.hosting.report.cms.rows.confidence', 'Confidence')),
+            '<span style="font-weight:600;">' + esc(String(cmsDetected.confidence)) + '%</span>'
+          ]);
+        }
+
+        html += PR.renderTable(
+          [
+            { label: t('seo.report.table.property', 'Property'), width: '35%' },
+            { label: t('seo.report.table.value', 'Value'), width: '65%' }
+          ],
+          cmsRows,
+          { striped: true }
+        );
+
+        // CMS metrics
+        html += PR.renderMetrics([
+          { value: cmsDetected.name || '-', label: t('reports.hosting.report.cms.rows.platform', 'Platform') },
+          { value: cmsDetected.version || '-', label: t('reports.hosting.report.cms.rows.version', 'Version') },
+          { value: cmsDetected.confidence !== undefined && cmsDetected.confidence !== null ? cmsDetected.confidence + '%' : '-', label: t('reports.hosting.report.cms.rows.confidence', 'Confidence') }
+        ]);
+      } else {
+        html += PR.renderCallout(
+          t('reports.hosting.report.cms.noneTitle', 'No CMS Detected'),
+          t('reports.hosting.report.cms.noneBody', 'No content management system was detected. The site may use a custom-built solution or a static site generator.'),
+          'info'
+        );
+      }
+
+      // Technologies list
+      var technologies = hosting.technologies || [];
+      if (technologies.length > 0) {
+        html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.cms.technologiesHeading', 'Detected Technologies')) + '</h3>';
+        var techRows = technologies.slice(0, 25).map(function (tech) {
+          var techName = typeof tech === 'string' ? tech : (tech.name || '-');
+          var techCategory = typeof tech === 'object' && tech.category ? tech.category : '-';
+          return [
+            '<strong>' + esc(techName) + '</strong>',
+            esc(techCategory),
+            PR.renderStatus('found', t('seo.report.status.detected', 'Detected'))
+          ];
+        });
+
+        html += PR.renderTable(
+          [
+            { label: t('reports.hosting.report.cms.table.technology', 'Technology'), width: '40%' },
+            { label: t('reports.hosting.report.cms.table.category', 'Category'), width: '30%' },
+            { label: t('seo.report.table.status', 'Status'), width: '20%' }
+          ],
+          techRows,
+          { striped: true }
+        );
+
+        if (technologies.length > 25) {
+          html += '<p class="pdf-text-muted pdf-text-small">' + t('seo.report.common.moreCount', '... {{count}} more', { count: technologies.length - 25 }) + '</p>';
+        }
+      }
+
+      sec.innerHTML = html;
+    })();
+
+    /* -----------------------------------------------------------------------
+       4. Hosting Performance
+       ----------------------------------------------------------------------- */
+    (function () {
+      var sec = document.querySelector('#section-performance .pdf-section__content');
+
+      sec.parentElement.insertBefore(
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.performance', 'Hosting Performance'))),
+        sec
+      );
+
+      var html = '';
+
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.performance', 'Hosting performance directly impacts user experience and search engine rankings. Response time measures how quickly your server delivers content, while Time To First Byte (TTFB) indicates server processing speed. Fast hosting with low TTFB ensures visitors see content quickly and reduces bounce rates. This section evaluates your hosting performance against industry benchmarks.')) + '</p>';
+
+      // Performance metrics
+      var perfMetrics = [];
+      if (hosting.responseTime !== undefined && hosting.responseTime !== null) {
+        var rtColor = hosting.responseTime <= 200 ? '#10b981' : hosting.responseTime <= 500 ? '#f59e0b' : '#ef4444';
+        perfMetrics.push({ value: hosting.responseTime + 'ms', label: t('reports.hosting.report.performance.responseTime', 'Response Time'), color: rtColor });
+      }
+      if (hosting.ttfb !== undefined && hosting.ttfb !== null) {
+        var ttfbColor = hosting.ttfb <= 200 ? '#10b981' : hosting.ttfb <= 600 ? '#f59e0b' : '#ef4444';
+        perfMetrics.push({ value: hosting.ttfb + 'ms', label: t('reports.hosting.report.performance.ttfb', 'TTFB'), color: ttfbColor });
+      }
+      if (perfMetrics.length > 0) {
+        html += PR.renderMetrics(perfMetrics);
+      }
+
+      // Performance details table
+      var perfRows = [];
+      if (hosting.responseTime !== undefined && hosting.responseTime !== null) {
+        perfRows.push([
+          esc(t('reports.hosting.report.performance.responseTime', 'Response Time')),
+          '<strong>' + esc(hosting.responseTime + 'ms') + '</strong>',
+          hosting.responseTime <= 200
+            ? PR.renderStatus('pass', t('performance.report.cwv.good', 'Good'))
+            : hosting.responseTime <= 500
+              ? PR.renderStatus('warning', t('performance.report.cwv.needsImprovement', 'Needs Improvement'))
+              : PR.renderStatus('fail', t('performance.report.cwv.poor', 'Poor'))
+        ]);
+      }
+      if (hosting.ttfb !== undefined && hosting.ttfb !== null) {
+        perfRows.push([
+          esc(t('reports.hosting.report.performance.ttfb', 'TTFB')),
+          '<strong>' + esc(hosting.ttfb + 'ms') + '</strong>',
+          hosting.ttfb <= 200
+            ? PR.renderStatus('pass', t('performance.report.cwv.good', 'Good'))
+            : hosting.ttfb <= 600
+              ? PR.renderStatus('warning', t('performance.report.cwv.needsImprovement', 'Needs Improvement'))
+              : PR.renderStatus('fail', t('performance.report.cwv.poor', 'Poor'))
+        ]);
+      }
+
+      if (perfRows.length > 0) {
+        html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.performance.detailsHeading', 'Performance Details')) + '</h3>';
+        html += PR.renderTable(
+          [
+            { label: t('seo.report.table.metric', 'Metric'), width: '30%' },
+            { label: t('seo.report.table.value', 'Value'), width: '30%' },
+            { label: t('seo.report.table.status', 'Status'), width: '30%' }
+          ],
+          perfRows,
+          { striped: true }
+        );
+      }
+
+      // Grade display
+      if (data.grade) {
+        html += '<div style="margin:8px 0;">' +
+          PR.renderStatus(data.grade === 'A' || data.grade === 'B' ? 'pass' : 'warning',
+            t('common.grade', 'Grade') + ': ' + data.grade) +
+        '</div>';
+      }
+
+      sec.innerHTML = html;
+    })();
+
+    /* -----------------------------------------------------------------------
+       5. Recommendations
+       ----------------------------------------------------------------------- */
+    (function () {
+      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+
+      sec.parentElement.insertBefore(
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.recommendations', 'Recommendations'))),
+        sec
+      );
+
+      var html = '';
+
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.recommendations', 'Based on the hosting analysis, this section provides prioritized recommendations to improve your hosting setup. Each recommendation includes the priority level and a description of the suggested change. Addressing high-priority items first will yield the greatest improvements to performance, reliability, and cost efficiency.')) + '</p>';
+
+      if (recommendations.length > 0) {
+        var critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
+        var high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
+        var medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
+        var low = recommendations.filter(function (r) {
+          var p = r.priority || r.severity;
+          return !p || p === 'low';
+        });
+        var groups = [
+          { items: critical, label: t('common.pdf.execSummary.highPriority', 'Critical'), color: '#ef4444' },
+          { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
+          { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
+          { items: low, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6' }
+        ];
+
+        groups.forEach(function (group) {
+          if (group.items.length === 0) return;
+          html += '<div class="pdf-recs-group">';
+          html += '<div class="pdf-recs-group__title" style="color:' + group.color + ';">&#9679; ' + group.label + ' (' + group.items.length + ')</div>';
+          group.items.forEach(function (r) {
+            html += '<div class="pdf-rec" style="border-left-color:' + group.color + ';">' +
+              '<div class="pdf-rec__text"><strong>' + esc(r.title || '') + '</strong>' +
+              (r.description ? '<br>' + esc(r.description) : '') +
+              '</div>' +
+            '</div>';
+          });
+          html += '</div>';
+        });
+      } else {
+        html += PR.renderCallout(
+          t('reports.hosting.report.recommendations.noneTitle', 'Solid Hosting Setup'),
+          t('reports.hosting.report.recommendations.noneBody', 'Your hosting configuration follows best practices. Continue monitoring for performance changes.'),
+          'tip'
+        );
+      }
+
+      sec.innerHTML = html;
+    })();
+
+    // Hide empty sections
+    document.querySelectorAll('.pdf-section').forEach(function (sec) {
+      var content = sec.querySelector('.pdf-section__content');
+      if (content && !content.innerHTML.trim()) {
+        sec.style.display = 'none';
+      }
+    });
+  });
+
+})(window);

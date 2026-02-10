@@ -104,6 +104,7 @@
 
     <script src="ui-components.js"></script>
     <script src="interactive-recommendations.js"></script>
+    <script src="/js/app-events.js"></script>
     <script>
         // Demo 1: Module Headers
         function demoModuleHeaders() {
@@ -130,7 +131,7 @@
                         <p>${m.desc}</p>
                     </div>
                     <div class="module-actions">
-                        <button class="module-action-btn" onclick="alert('Export clicked!')">📄 Export</button>
+                        <button class="module-action-btn" data-action="alert" data-message="Export clicked!">📄 Export</button>
                     </div>
                 `;
                 

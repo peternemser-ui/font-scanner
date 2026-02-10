@@ -7,6 +7,8 @@ const express = require('express');
 const router = express.Router();
 const { requireAuth } = require('../middleware/requireAuth');
 const { getDatabase } = require('../db');
+const { PRICING, getPlanLimits } = require('../config/pricing');
+const { getFullEntitlements } = require('../utils/entitlements');
 
 /**
  * GET /api/usage/stats
@@ -17,20 +19,9 @@ router.get('/stats', requireAuth, async (req, res) => {
     const db = getDatabase();
     const userId = req.user.id;
 
-    // Get today's date range
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayISO = today.toISOString();
-
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowISO = tomorrow.toISOString();
-
-    // Count scans today
-    const scansToday = await db.get(
-      'SELECT COUNT(*) as count FROM scans WHERE user_id = ? AND created_at >= ? AND created_at < ?',
-      [userId, todayISO, tomorrowISO]
-    );
+    // Use canonical resolver for plan detection
+    const full = await getFullEntitlements(userId);
+    const isPro = full.plan === 'pro' || full.plan === 'day_pass';
 
     // Count total scans ever
     const totalScans = await db.get(
@@ -38,33 +29,22 @@ router.get('/stats', requireAuth, async (req, res) => {
       [userId]
     );
 
-    // Get entitlements (credits, limits)
-    const entitlement = await db.get(
-      'SELECT * FROM entitlements WHERE user_id = ? AND (valid_until IS NULL OR valid_until > datetime("now")) ORDER BY created_at DESC LIMIT 1',
-      [userId]
-    );
+    const limits = getPlanLimits(full.planCode);
 
-    // Calculate remaining scans
-    const plan = req.user.plan || 'free';
-    const isPro = plan === 'pro';
-    const dailyLimit = isPro ? -1 : 25; // -1 = unlimited
-    const scansRemainingToday = isPro ? -1 : Math.max(0, dailyLimit - (scansToday?.count || 0));
-
-    // Response
     res.json({
       success: true,
-      plan: plan,
-      isPro: isPro,
-      scansToday: scansToday?.count || 0,
+      plan: full.plan,
+      isPro,
+      scansToday: full.usage.scansUsedToday,
       totalScans: totalScans?.count || 0,
-      dailyLimit: dailyLimit,
-      scansRemaining: scansRemainingToday,
-      entitlement: entitlement ? {
-        scansRemaining: entitlement.scans_remaining,
-        maxPagesPerScan: entitlement.max_pages_per_scan,
-        pdfExportEnabled: entitlement.pdf_export_enabled === 1,
-        validUntil: entitlement.valid_until
-      } : null
+      dailyLimit: full.usage.scanLimitDaily,
+      scansRemaining: full.usage.scansRemainingToday,
+      entitlement: {
+        scansRemaining: full.usage.scansRemainingToday,
+        maxPagesPerScan: limits.pagesPerCrawl,
+        pdfExportEnabled: limits.pdfExport,
+        validUntil: full.currentPeriodEnd
+      }
     });
   } catch (error) {
     console.error('Error fetching usage stats:', error);
@@ -77,17 +57,17 @@ router.get('/stats', requireAuth, async (req, res) => {
 
 /**
  * GET /api/usage/recent-scans
- * Get user's recent scans for account page
+ * Get user's recent scans for account/reports page
  */
 router.get('/recent-scans', requireAuth, async (req, res) => {
   try {
     const db = getDatabase();
     const userId = req.user.id;
-    const limit = Math.min(parseInt(req.query.limit) || 8, 25);
+    const limit = Math.min(parseInt(req.query.limit) || 50, 200);
 
     // Get recent scans for this user
     const scans = await db.all(
-      `SELECT id, target_url, status, created_at, finished_at
+      `SELECT id, target_url, status, options_json, created_at, finished_at
        FROM scans
        WHERE user_id = ?
        ORDER BY created_at DESC
@@ -95,16 +75,40 @@ router.get('/recent-scans', requireAuth, async (req, res) => {
       [userId, limit]
     );
 
+    // Check which scans have been individually purchased
+    const purchasedIds = new Set();
+    try {
+      const rows = await db.all(
+        'SELECT report_id FROM report_purchases WHERE user_id = ?',
+        [userId]
+      );
+      rows.forEach(r => purchasedIds.add(r.report_id));
+    } catch (e) {
+      // report_purchases table may not exist yet
+    }
+
     res.json({
       success: true,
-      scans: scans.map(scan => ({
-        id: scan.id,
-        siteUrl: scan.target_url,
-        analyzerType: 'full',
-        status: scan.status || 'completed',
-        createdAt: scan.created_at,
-        finishedAt: scan.finished_at
-      }))
+      scans: scans.map(scan => {
+        // Try to extract analyzer type from options_json
+        let analyzerType = 'full';
+        if (scan.options_json) {
+          try {
+            const opts = JSON.parse(scan.options_json);
+            analyzerType = opts.analyzerType || opts.analyzer || opts.type || 'full';
+          } catch (e) { /* ignore parse errors */ }
+        }
+
+        return {
+          id: scan.id,
+          siteUrl: scan.target_url,
+          analyzerType,
+          status: scan.status || 'completed',
+          isPurchased: purchasedIds.has(scan.id),
+          createdAt: scan.created_at,
+          finishedAt: scan.finished_at
+        };
+      })
     });
   } catch (error) {
     console.error('Error fetching recent scans:', error);
@@ -125,30 +129,17 @@ router.post('/track-scan', requireAuth, async (req, res) => {
     const userId = req.user.id;
     const { url } = req.body;
 
-    // Get today's date range
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayISO = today.toISOString();
+    // Use canonical resolver for plan detection
+    const full = await getFullEntitlements(userId);
+    const isPro = full.plan === 'pro' || full.plan === 'day_pass';
+    const scanLimit = full.usage.scanLimitDaily;
 
-    const tomorrow = new Date(today);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    const tomorrowISO = tomorrow.toISOString();
-
-    // Check daily limit (free tier only)
-    const isPro = req.user.plan === 'pro';
-    if (!isPro) {
-      const scansToday = await db.get(
-        'SELECT COUNT(*) as count FROM scans WHERE user_id = ? AND created_at >= ? AND created_at < ?',
-        [userId, todayISO, tomorrowISO]
-      );
-
-      if (scansToday && scansToday.count >= 25) {
-        return res.status(429).json({
-          success: false,
-          error: 'Daily scan limit reached (25 scans). Upgrade to Pro for unlimited scans.',
-          upgradeUrl: '/upgrade.html'
-        });
-      }
+    if (!isPro && full.usage.scansRemainingToday <= 0) {
+      return res.status(429).json({
+        success: false,
+        error: `Daily scan limit reached (${scanLimit} scans). Upgrade to Pro for unlimited scans.`,
+        upgradeUrl: '/upgrade.html'
+      });
     }
 
     // Record the scan in the database
@@ -159,17 +150,14 @@ router.post('/track-scan', requireAuth, async (req, res) => {
       [scanId, userId, url || 'unknown']
     );
 
-    // Get updated count
-    const updatedCount = await db.get(
-      'SELECT COUNT(*) as count FROM scans WHERE user_id = ? AND created_at >= ? AND created_at < ?',
-      [userId, todayISO, tomorrowISO]
-    );
+    const usageService = require('../services/usageService');
+    const updated = await usageService.incrementScanUsage(userId, null);
 
     res.json({
       success: true,
       message: 'Scan tracked successfully',
-      scansToday: updatedCount?.count || 1,
-      scansRemaining: isPro ? -1 : Math.max(0, 25 - (updatedCount?.count || 1))
+      scansToday: updated.scansUsedToday,
+      scansRemaining: isPro ? -1 : Math.max(0, scanLimit - updated.scansUsedToday)
     });
   } catch (error) {
     console.error('Error tracking scan:', error);

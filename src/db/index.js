@@ -188,6 +188,18 @@ class Database {
           }
         }
       }
+
+      // Record that migration was applied
+      try {
+        await this.run(
+          'INSERT OR IGNORE INTO migrations (name) VALUES (?)',
+          [migrationName]
+        );
+        console.log(`Applied migration: ${migrationName}`);
+      } catch (error) {
+        // Ignore errors recording migration - it may already exist
+        console.warn(`Could not record migration ${migrationName}:`, error.message);
+      }
     }
   }
 

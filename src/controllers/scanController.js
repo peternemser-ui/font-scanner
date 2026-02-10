@@ -69,13 +69,17 @@ const scanWebsite = asyncHandler(async (req, res) => {
     throw new ValidationError('Invalid scan type. Must be "basic" or "comprehensive".');
   }
 
+  // Get analyzer key early (needed for cache key and reportId)
+  const analyzerKey = getAnalyzerKeyOverride(req, 'enhanced-fonts');
+
   // Check cache for basic scans (comprehensive scans always run fresh)
+  // Include analyzerType in cache key to prevent collision between different analyzers
   const useCache = scanType === 'basic';
 
   if (useCache) {
-    const cachedResult = defaultCache.get(url, { scanType });
+    const cachedResult = defaultCache.get(url, { scanType, analyzerType: analyzerKey });
     if (cachedResult) {
-      logger.info('Returning cached scan result', { url, scanType, requestId });
+      logger.info('Returning cached scan result', { url, scanType, analyzerKey, requestId });
       return res.json({
         success: true,
         scanType: 'basic',
@@ -87,12 +91,11 @@ const scanWebsite = asyncHandler(async (req, res) => {
     }
   }
 
-  logger.info(`Starting ${scanType} scan`, { url, scanType, requestId });
+  logger.info(`Starting ${scanType} scan`, { url, scanType, analyzerKey, requestId });
 
   let scanResult;
 
   const startedAt = getRequestScanStartedAt(req) || new Date().toISOString();
-  const analyzerKey = getAnalyzerKeyOverride(req, 'enhanced-fonts');
   const reportId = makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt });
   const screenshotUrl = reportId ? await ensureReportScreenshot({ url, reportId, requestId }) : null;
 
@@ -424,10 +427,11 @@ const scanWebsite = asyncHandler(async (req, res) => {
       };
 
       // Cache the result for 1 hour
+      // Include analyzerType in cache key to prevent collision between different analyzers
       defaultCache.set(
         url,
         { scannedAt: response.scannedAt, results: scanResult },
-        { scanType, ttl: 3600000 }
+        { scanType, analyzerType: analyzerKey, ttl: 3600000 }
       );
 
       res.json(attachToResponse(response, startedAt));
@@ -790,6 +794,30 @@ const performSEOScan = asyncHandler(async (req, res) => {
     const lightweightResults = await lightweightSeoAnalyzer.analyzeSEO(url);
     const duration = Date.now() - startTime;
     logger.info('Lightweight SEO analysis completed', { url, score: lightweightResults.score.overall, duration, requestId });
+
+    // Normalize lightweight metaTags to match the flat format expected by the frontend
+    const lm = lightweightResults.metaTags || {};
+    lightweightResults.metaTags = {
+      title: lm.title?.content || lm.title || null,
+      titleLength: lm.title?.length || (typeof lm.title === 'string' ? lm.title.length : 0),
+      description: lm.description?.content || lm.description || null,
+      descriptionLength: lm.description?.length || (typeof lm.description === 'string' ? lm.description.length : 0),
+      keywords: lm.keywords || null,
+      robots: lm.robots || null,
+      canonical: lm.canonical || null,
+      viewport: lm.viewport || null,
+      ogTitle: lm.openGraph?.title || lm.ogTitle || null,
+      ogDescription: lm.openGraph?.description || lm.ogDescription || null,
+      ogImage: lm.openGraph?.image || lm.ogImage || null,
+      ogUrl: lm.openGraph?.url || lm.ogUrl || null,
+      ogType: lm.openGraph?.type || lm.ogType || null,
+      twitterCard: lm.twitter?.card || lm.twitterCard || null,
+      twitterTitle: lm.twitter?.title || lm.twitterTitle || null,
+      twitterDescription: lm.twitter?.description || lm.twitterDescription || null,
+      twitterImage: lm.twitter?.image || lm.twitterImage || null,
+      language: lm.language || null,
+      charset: lm.charset || null,
+    };
 
     const startedAt = getRequestScanStartedAt(req) || lightweightResults?.startedAt || lightweightResults?.timestamp || new Date().toISOString();
     const analyzerKey = getAnalyzerKeyOverride(req, 'seo');

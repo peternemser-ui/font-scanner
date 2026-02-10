@@ -252,7 +252,7 @@ document.getElementById('forgotPasswordForm')?.addEventListener('submit', async 
         <a href="${resetUrl}" class="reset-link-btn" style="display: inline-block; margin: 0.75rem 0; padding: 0.625rem 1.25rem; background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark)); color: var(--accent-primary-contrast); text-decoration: none; border-radius: 6px; font-weight: 600; font-family: Inter, sans-serif;">Reset Password Now →</a>
         <p style="margin: 0.5rem 0 0 0; color: #666; font-size: 0.75rem;">Or copy the link:</p>
         <code style="display: block; margin-top: 0.5rem; padding: 0.5rem; background: rgba(0,0,0,0.3); border-radius: 4px; font-size: 0.7rem; word-break: break-all;">${resetUrl}</code>
-        <button type="button" class="copy-btn" onclick="navigator.clipboard.writeText('${resetUrl}'); this.textContent = '✓ Copied!';">Copy Link</button>
+        <button type="button" class="copy-btn" data-action="copy-reset-url" data-url="${resetUrl}">Copy Link</button>
       `;
       
       const successEl = document.getElementById('forgotSuccess');

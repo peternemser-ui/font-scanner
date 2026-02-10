@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/competitive-analysis.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/competitive-analysis.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/competitive-analysis.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/competitive-analysis.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/competitive-analysis.html" />
 
     <!-- Open Graph -->
@@ -69,7 +70,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
     <link rel="stylesheet" href="/css/components/reportAccordion.css" />
     <link rel="stylesheet" href="/css/components/reportShell.css" />
 
@@ -498,7 +499,7 @@
             font-size: 0.9rem;
         }
 
-        /* Pac-Man Modal Styles - Premium Design */
+        /* Pac-Man Modal Styles - Using Design System Tokens */
         .pacman-modal {
             display: none;
             position: fixed;
@@ -506,7 +507,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.85);
+            background: var(--modal-backdrop, rgba(0, 0, 0, 0.85));
             backdrop-filter: blur(10px);
             z-index: 10000;
             justify-content: center;
@@ -524,70 +525,48 @@
         }
 
         .pacman-modal-content {
-            background: rgba(15, 15, 15, 0.98);
+            background: var(--bg-elevated, #111418);
             backdrop-filter: blur(10px);
-            border: 3px solid #00ff41;
-            border-radius: 24px;
-            padding: 3rem 2.5rem;
-            max-width: 700px;
+            border: 2px solid var(--color-primary, #00ff9d);
+            border-radius: 16px;
+            padding: 2rem 2rem;
+            max-width: 600px;
             width: 90%;
             max-height: 90vh;
             overflow-y: auto;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 60px rgba(0, 255, 65, 0.4), inset 0 0 80px rgba(0, 255, 65, 0.05);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 40px var(--color-primary-dim, rgba(0, 255, 157, 0.15));
             text-align: center;
             position: relative;
         }
 
-        body.white-theme .pacman-modal-content {
-            background: rgba(255, 255, 255, 0.98);
-            backdrop-filter: blur(10px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 50px rgba(0, 255, 65, 0.2);
-        }
-
         .pacman-modal-title {
-            color: #00ff41;
-            font-size: 2rem;
+            color: var(--color-primary, #00ff9d);
+            font-size: 1.5rem;
             margin: 0 0 0.5rem 0;
-            font-weight: 900;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 3px;
-            text-shadow: 0 0 30px rgba(0, 255, 65, 0.8), 0 0 10px rgba(0, 255, 65, 1);
-        }
-
-        body.white-theme .pacman-modal-title {
-            text-shadow: 0 0 20px rgba(0, 255, 65, 0.4), 0 2px 4px rgba(0, 0, 0, 0.1);
+            letter-spacing: 2px;
         }
 
         .pacman-modal-subtitle {
-            color: #e0e0e0;
-            font-size: 1rem;
-            margin: 0 0 2.5rem 0;
+            color: var(--color-text-secondary, #9ca3af);
+            font-size: 0.95rem;
+            margin: 0 0 1.5rem 0;
             font-weight: 500;
         }
 
-        body.white-theme .pacman-modal-subtitle {
-            color: #444444;
-        }
-
-        /* Pac-Man Animation - Premium Design */
+        /* Pac-Man Animation - Using Design Tokens */
         .pacman-container {
             position: relative;
-            height: 80px;
-            margin: 2rem 0;
+            height: 70px;
+            margin: 1.5rem 0;
             overflow: hidden;
-            background: linear-gradient(135deg, rgba(0, 255, 65, 0.08) 0%, rgba(255, 215, 0, 0.08) 100%);
+            background: var(--bg-card, #161A1F);
             border-radius: 12px;
             padding: 1rem 0;
-            border: 2px solid rgba(0, 255, 65, 0.3);
+            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
             display: flex;
             align-items: center;
-            box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3), 0 4px 20px rgba(0, 255, 65, 0.1);
-        }
-
-        body.white-theme .pacman-container {
-            background: linear-gradient(135deg, rgba(0, 0, 0, 0.04) 0%, rgba(255, 215, 0, 0.1) 100%);
-            border-color: rgba(255, 215, 0, 0.4);
-            box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.1), 0 4px 15px rgba(255, 215, 0, 0.15);
         }
 
         /* Pac-Man wrapper for smooth movement */
@@ -768,29 +747,24 @@
             }
         }
 
-        /* Progress Steps - Modern Cards */
+        /* Progress Steps - Using Design Tokens */
         .modal-progress-steps {
             text-align: left;
-            margin: 2.5rem 0;
+            margin: 1.5rem 0;
             display: grid;
-            gap: 0.75rem;
+            gap: 0.5rem;
         }
 
         .modal-step {
             display: flex;
             align-items: center;
-            padding: 1rem 1.25rem;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 12px;
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 0.75rem 1rem;
+            background: var(--bg-card, #161A1F);
+            border-radius: 8px;
+            border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+            transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
-        }
-
-        body.white-theme .modal-step {
-            background: rgba(0, 0, 0, 0.03);
-            border-color: rgba(0, 0, 0, 0.12);
         }
 
         .modal-step::before {
@@ -799,61 +773,55 @@
             left: 0;
             top: 0;
             bottom: 0;
-            width: 4px;
+            width: 3px;
             background: transparent;
             transition: all 0.3s ease;
         }
 
         .modal-step.pending {
-            opacity: 0.4;
+            opacity: 0.5;
         }
 
         .modal-step.pending::before {
-            background: #666;
+            background: var(--color-text-muted, #6b7280);
         }
 
         .modal-step.active {
-            background: rgba(255, 215, 0, 0.08);
-            border-color: rgba(255, 215, 0, 0.3);
-            transform: translateX(4px);
-            box-shadow: 0 4px 20px rgba(255, 215, 0, 0.15);
-        }
-
-        body.white-theme .modal-step.active {
-            background: rgba(255, 215, 0, 0.12);
-            border-color: rgba(255, 215, 0, 0.4);
+            opacity: 1;
+            background: var(--bg-gradient-warning, linear-gradient(135deg, rgba(255, 184, 77, 0.15), rgba(255, 104, 68, 0.1)));
+            border-color: var(--color-warning, #f59e0b);
         }
 
         .modal-step.active::before {
-            background: linear-gradient(180deg, #ffd700 0%, #ffed4e 100%);
-            width: 5px;
+            background: var(--color-warning, #f59e0b);
+            width: 3px;
         }
 
         .modal-step.complete {
-            background: rgba(0, 255, 65, 0.05);
-            border-color: rgba(0, 255, 65, 0.2);
-        }
-
-        body.white-theme .modal-step.complete {
-            background: rgba(0, 255, 65, 0.08);
-            border-color: rgba(0, 255, 65, 0.3);
+            opacity: 0.7;
+            background: var(--bg-gradient-success, linear-gradient(135deg, rgba(15, 255, 115, 0.1), rgba(0, 255, 157, 0.05)));
+            border-color: var(--color-success, #10b981);
         }
 
         .modal-step.complete::before {
-            background: linear-gradient(180deg, #00ff41 0%, #00cc33 100%);
-            width: 5px;
+            background: var(--color-success, #10b981);
+            width: 3px;
         }
 
         .modal-step-icon {
-            font-size: 1.75rem;
-            margin-right: 1.25rem;
-            min-width: 35px;
+            font-size: 1.25rem;
+            margin-right: 1rem;
+            min-width: 28px;
             text-align: center;
-            transition: transform 0.3s ease;
+            color: var(--color-text-muted, #6b7280);
         }
 
         .modal-step.active .modal-step-icon {
-            transform: scale(1.2);
+            color: var(--color-warning, #f59e0b);
+        }
+
+        .modal-step.complete .modal-step-icon {
+            color: var(--color-success, #10b981);
         }
 
         .modal-step-content {
@@ -861,57 +829,36 @@
         }
 
         .modal-step-label {
-            color: #ffffff;
-            font-weight: 700;
-            font-size: 1rem;
-            margin-bottom: 0.25rem;
-            letter-spacing: 0.5px;
-        }
-
-        body.white-theme .modal-step-label {
-            color: #1a1a1a;
+            color: var(--color-text, #e5e7eb);
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 0.15rem;
         }
 
         .modal-step-detail {
-            color: #b0b0b0;
-            font-size: 0.875rem;
-            line-height: 1.4;
+            color: var(--color-text-muted, #6b7280);
+            font-size: 0.8rem;
+            line-height: 1.3;
         }
 
-        body.white-theme .modal-step-detail {
-            color: #666666;
-        }
-
-        /* Progress Bar - Modern Design */
+        /* Progress Bar - Using Design Tokens */
         .modal-progress-bar {
             width: 100%;
-            height: 10px;
-            background: rgba(255, 255, 255, 0.08);
+            height: 8px;
+            background: var(--bg-input, #1A1E23);
             border-radius: 100px;
             overflow: hidden;
-            margin: 0.75rem 0 1.5rem 0;
+            margin: 0.5rem 0 1rem 0;
             position: relative;
-            border: 1px solid rgba(0, 255, 65, 0.15);
-        }
-
-        body.white-theme .modal-progress-bar {
-            background: rgba(0, 0, 0, 0.06);
-            border-color: rgba(0, 204, 51, 0.2);
         }
 
         .modal-progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #00ff41 0%, #00cc33 50%, #ffd700 100%);
+            background: linear-gradient(90deg, var(--color-primary, #00ff9d), var(--color-success, #10b981));
             border-radius: 100px;
-            transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.5);
+            transition: width 0.5s ease;
             position: relative;
             overflow: hidden;
-        }
-
-        body.white-theme .modal-progress-fill {
-            background: linear-gradient(90deg, #00cc33 0%, #00aa28 50%, #f5c000 100%);
-            box-shadow: 0 0 15px rgba(0, 204, 51, 0.4);
         }
 
         .modal-progress-fill::after {
@@ -921,7 +868,7 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
             animation: shimmer 2s infinite;
         }
 
@@ -933,20 +880,18 @@
         /* Time Remaining Badge */
         .modal-time-remaining {
             display: inline-block;
-            background: linear-gradient(135deg, rgba(0, 255, 65, 0.15) 0%, rgba(0, 255, 65, 0.05) 100%);
-            border: 2px solid rgba(0, 255, 65, 0.3);
-            color: #00ff41;
-            font-size: 1.1rem;
-            margin-top: 1rem;
-            font-weight: 700;
-            padding: 0.75rem 1.5rem;
+            background: var(--color-primary-dim, rgba(0, 255, 157, 0.1));
+            border: 1px solid var(--color-primary, #00ff9d);
+            color: var(--color-primary, #00ff9d);
+            font-size: 0.95rem;
+            margin-top: 0.75rem;
+            font-weight: 600;
+            padding: 0.5rem 1.25rem;
             border-radius: 100px;
-            letter-spacing: 1px;
-            box-shadow: 0 4px 15px rgba(0, 255, 65, 0.2);
         }
 
         body.white-theme .modal-time-remaining {
-            background: linear-gradient(135deg, rgba(0, 255, 65, 0.2) 0%, rgba(0, 255, 65, 0.08) 100%);
+            background: var(--color-primary-dim, rgba(221, 56, 56, 0.1));
             border-color: rgba(0, 255, 65, 0.4);
         }
     </style>
@@ -1013,7 +958,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
 </head>
 <body>
@@ -1043,7 +987,7 @@
                     Compare your website against up to <strong>5 competitors</strong> across SEO, Performance, Core Web Vitals, Accessibility, and Security. Get actionable insights to outrank them.
                 </p>
                 <p style="color: #ff8c00; margin: 0; font-size: 0.85rem; font-style: italic;">
-                    ⓘ Note: Analysis takes 5-15 minutes and is limited to 2 requests per 15 minutes due to high resource usage.
+                    ⓘ Note: Analysis takes 2-3 minutes and is limited to 2 requests per 15 minutes due to high resource usage.
                 </p>
             </div>
             
@@ -1098,7 +1042,7 @@
     <div id="pacmanModal" class="pacman-modal" role="dialog" aria-modal="true" aria-labelledby="pacmanModalTitle" tabindex="-1" aria-hidden="true">
         <div class="pacman-modal-content">
             <h2 class="pacman-modal-title" id="pacmanModalTitle">[COMPETITIVE_ANALYSIS]</h2>
-            <p class="pacman-modal-subtitle">Analyzing your competition... This may take 5-15 minutes</p>
+            <p class="pacman-modal-subtitle">Analyzing your competition... This may take 2-3 minutes</p>
             
             <!-- Pac-Man Animation -->
             <div class="pacman-container">
@@ -1154,10 +1098,10 @@
 
             <!-- Progress Bar -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <div style="color: var(--text-secondary); font-size: 0.9rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                <div style="color: var(--color-text-secondary, #9ca3af); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
                     Progress
                 </div>
-                <div style="color: #00ff41; font-size: 1.1rem; font-weight: 700;" id="modalProgressPercent">
+                <div style="color: var(--color-primary, #00ff9d); font-size: 1rem; font-weight: 700;" id="modalProgressPercent">
                     0%
                 </div>
             </div>
@@ -1167,7 +1111,7 @@
 
             <!-- Time Remaining -->
             <div class="modal-time-remaining" id="modalTimeRemaining">
-                Time remaining: 13m 20s
+                Time remaining: 3m 0s
             </div>
         </div>
     </div>
@@ -1175,6 +1119,8 @@
     <script src="theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- ASCII Background Animation -->
@@ -1184,17 +1130,20 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/assets/js/report-shell.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/reportStorage.js"></script>
     <script src="/js/components/PricingModal.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
     <script src="/assets/js/billing.js"></script>
     <script src="/assets/js/entitlements.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="competitive-script.js"></script>
 </body>

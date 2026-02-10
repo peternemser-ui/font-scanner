@@ -15,7 +15,8 @@ const {
   getGrade,
   drawScoreSummaryCard,
   drawMetricGrid,
-  drawCard
+  drawCard,
+  trackSection
 } = require('../utils/pdfHelpers');
 
 const {
@@ -59,30 +60,125 @@ class PerformancePdfGenerator {
       { reportsDir: this.reportsDir }
     );
 
+    const reportTitle = 'Performance Analysis Report';
+
     try {
-      // Material Design header
+      // Material Design header (Title Page)
       addPdfHeader(
         doc,
-        'Performance Analysis Report',
+        reportTitle,
         performanceResults.url,
         'Comprehensive performance and speed analysis',
         { accentColor: COLORS.info } // Blue accent for performance
       );
 
+      // Add Table of Contents page
+      doc.addPage();
+      this.addTableOfContents(doc, performanceResults);
+
       // Generate report sections with Material Design and charts
+      // Each section is tracked for TOC
+      trackSection(doc, 'Executive Summary', performanceResults.overallScore || performanceResults.performanceScore);
       this.addExecutiveSummary(doc, performanceResults);
+
+      trackSection(doc, 'Core Web Vitals');
       this.addCoreWebVitals(doc, performanceResults);
+
+      trackSection(doc, 'Performance Metrics');
       this.addPerformanceMetrics(doc, performanceResults);
+
+      trackSection(doc, 'Resource Analysis');
       this.addResourceAnalysis(doc, performanceResults);
+
+      trackSection(doc, 'Desktop vs Mobile Comparison');
       this.addDesktopMobileComparison(doc, performanceResults);
+
+      trackSection(doc, 'Recommendations');
       this.addRecommendations(doc, performanceResults);
 
       // Use helper to finalize PDF generation
-      return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+      return finalizePdfGeneration(doc, stream, filename, filepath, reportId, { reportTitle });
     } catch (error) {
       logger.error('Error creating Performance PDF:', error);
       throw error;
     }
+  }
+
+  /**
+   * Add Table of Contents
+   */
+  addTableOfContents(doc, results) {
+    doc.fontSize(18)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.textPrimary)
+       .text('TABLE OF CONTENTS', 50, 50);
+
+    // Blue accent bar (for performance theme)
+    doc.rect(50, 78, 50, 3)
+       .fillColor(COLORS.info)
+       .fill();
+
+    let currentY = 100;
+
+    const overallScore = results.overallScore || results.performanceScore || 0;
+
+    const sections = [
+      { title: 'Executive Summary', score: overallScore, page: 3 },
+      { title: 'Core Web Vitals', page: 4 },
+      { title: 'Performance Metrics', page: 5 },
+      { title: 'Resource Analysis', page: 6 },
+      { title: 'Desktop vs Mobile Comparison', page: 7 },
+      { title: 'Recommendations', page: 8 }
+    ];
+
+    sections.forEach((section, index) => {
+      const num = String(index + 1).padStart(2, '0');
+
+      // Number in blue
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.info)
+         .text(`${num}.`, 50, currentY, { continued: false });
+
+      // Title
+      doc.fontSize(11)
+         .font('Helvetica')
+         .fillColor(COLORS.textPrimary)
+         .text(section.title, 75, currentY, { continued: false });
+
+      // Dotted line
+      const titleWidth = doc.widthOfString(section.title);
+      const dotsStartX = 75 + titleWidth + 10;
+      const dotsEndX = 480;
+      const dotsCount = Math.floor((dotsEndX - dotsStartX) / 5);
+
+      doc.fontSize(11)
+         .fillColor('#cccccc')
+         .text('.'.repeat(dotsCount), dotsStartX, currentY, { continued: false });
+
+      // Page number
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text(`${section.page}`, 490, currentY, { continued: false });
+
+      // Score badge if available
+      if (section.score !== undefined && section.score !== null) {
+        const scoreColor = getScoreColor(section.score);
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor(scoreColor)
+           .text(`[${Math.round(section.score)}/100]`, 515, currentY, { continued: false });
+      }
+
+      currentY += 28;
+    });
+
+    // Note about page numbers
+    doc.fontSize(8)
+       .font('Helvetica-Oblique')
+       .fillColor('#888888')
+       .text('Page numbers are approximate. See footer for exact page reference.', 50, currentY + 30);
   }
 
   /**

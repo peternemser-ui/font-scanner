@@ -11,7 +11,7 @@
 
     <!-- Redirect to Speed & UX - consolidated performance tools -->
     <meta http-equiv="refresh" content="0; url=/performance-hub.html" />
-    <script>window.location.href = '/performance-hub.html' + window.location.search;</script>
+    <script src="/js/redirect.js" data-redirect="/performance-hub.html" data-preserve-search="true"></script>
 
     <meta name="description" content="Redirecting to Speed & UX - consolidated performance analysis tools." />
     <title>Performance Snapshot - Redirecting to Speed & UX | Site Mechanic</title>
@@ -186,7 +186,6 @@
     
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
@@ -221,8 +220,10 @@
           />
           
           <button id="analyzeButton" aria-label="Start performance snapshot">ANALYZE PERFORMANCE</button>
+          <!-- Usage Status Indicator -->
+          <div id="usagePillContainer" class="page-shell-usage-pill"></div>
         </div>
-        
+
         <!-- Info Banner -->
         <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 4px;">
           <p style="color: #34d399; margin: 0; font-size: 0.9rem;">
@@ -276,7 +277,10 @@
     <script src="theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
+    <script src="/js/components/UsagePill.js"></script>
 
     <!-- ASCII Background Animation -->
 

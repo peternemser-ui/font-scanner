@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/ip-reputation-analyzer.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/ip-reputation-analyzer.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/ip-reputation-analyzer.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/ip-reputation-analyzer.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/ip-reputation-analyzer.html" />
 
     <!-- Open Graph -->
@@ -73,7 +74,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -172,7 +173,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
   </head>
   <body>
@@ -182,36 +182,41 @@
     <main class="page-shell">
       <!-- Breadcrumb -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
+        <a href="/dashboard.html" data-i18n="dashboard.breadcrumb.home">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">IP Reputation</span>
+        <span aria-current="page" data-i18n="analyzerPages.ipReputation.breadcrumb">IP Reputation</span>
       </nav>
       
       <!-- Page Header -->
       <header class="page-header">
-        <h1 class="page-header__title">IP Reputation</h1>
-        <p class="page-header__subtitle">DNS blacklist checks, email deliverability, and threat intelligence analysis.</p>
+        <h1 class="page-header__title" data-i18n="analyzerPages.ipReputation.title">IP Reputation</h1>
+        <p class="page-header__subtitle" data-i18n="analyzerPages.ipReputation.subtitle">DNS blacklist checks, email deliverability, and threat intelligence analysis.</p>
       </header>
 
       <!-- Input Card -->
       <section class="card">
         <div class="card__body">
           <div class="form-row">
-            <label for="urlInput" class="visually-hidden">IP address or domain to analyze</label>
+            <label for="urlInput" class="visually-hidden" data-i18n="analyzerPages.ipReputation.urlLabel">IP address or domain to analyze</label>
             <input
               type="text"
               id="urlInput"
               class="input"
               placeholder="example.com or 8.8.8.8"
+              data-i18n-placeholder="analyzerPages.ipReputation.placeholder"
               aria-label="Enter IP address or domain for reputation analysis"
+              data-i18n="analyzerPages.ipReputation.ariaInput"
+              data-i18n-attr="aria-label"
               required
               aria-required="true"
             />
-            <button id="analyzeButton" class="btn btn-primary" aria-label="Run reputation scan">
-              <span id="buttonText">Analyze</span>
+            <button id="analyzeButton" class="btn btn-primary" aria-label="Run reputation scan" data-i18n="analyzerPages.ipReputation.ariaAnalyze" data-i18n-attr="aria-label">
+              <span id="buttonText" data-i18n="common.analyze">Analyze</span>
             </button>
           </div>
-          <p class="helper-text">Scans DNS blacklists, checks email deliverability, and verifies threat intelligence databases.</p>
+          <p class="helper-text" data-i18n="analyzerPages.ipReputation.helperText">Scans DNS blacklists, checks email deliverability, and verifies threat intelligence databases.</p>
+          <!-- Usage Status Indicator -->
+          <div id="usagePillContainer" class="page-shell-usage-pill"></div>
         </div>
       </section>
 
@@ -219,12 +224,12 @@
       <div id="results" class="results-container hidden" role="region" aria-live="polite">
         <!-- Loading State -->
         <div id="loadingMessage" class="hidden" role="status" aria-live="polite">
-          <h2><span class="heartbeat" aria-hidden="true">🔍</span> Analyzing Reputation...</h2>
-          <p class="animate-pulse">Checking blacklists and reputation databases...</p>
-          <div class="progress-container" role="progressbar" aria-label="Analysis progress">
+          <h2><span class="heartbeat" aria-hidden="true">🔍</span> <span data-i18n="analyzerPages.ipReputation.loadingTitle">Analyzing Reputation...</span></h2>
+          <p class="animate-pulse" data-i18n="analyzerPages.ipReputation.loadingSubtitle">Checking blacklists and reputation databases...</p>
+          <div class="progress-container" role="progressbar" aria-label="Analysis progress" data-i18n="analyzerPages.ipReputation.progressLabel" data-i18n-attr="aria-label">
             <div class="progress-bar" id="progressBar"></div>
           </div>
-          <div id="progressText" class="progress-text" aria-live="polite">Initializing reputation check...</div>
+          <div id="progressText" class="progress-text" aria-live="polite" data-i18n="analyzerPages.ipReputation.loadingProgress">Initializing reputation check...</div>
         </div>
 
         <!-- Results Content (populated by JavaScript) -->
@@ -239,6 +244,8 @@
     <script src="theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- PDF Export Libraries -->
@@ -250,7 +257,7 @@
     <!-- Report UI Components -->
     <link rel="stylesheet" href="/css/components/reportShell.css" />
     <link rel="stylesheet" href="/css/components/reportAccordion.css" />
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
 
@@ -263,9 +270,13 @@
     <script src="/assets/js/entitlements.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/reportStorage.js"></script>
     <script src="/js/components/PricingModal.js"></script>
+    <script src="/js/components/UsagePill.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="ip-reputation-script.js"></script>
   </body>

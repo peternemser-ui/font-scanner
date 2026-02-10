@@ -171,10 +171,11 @@ const ProGate = {
         apiAccess: true
       };
     }
-    // Free tier: generous for single-page analysis
+    // Free tier: use centralized config values
+    const freeLimits = window.PRICING?.plans?.free?.limits || { scansPerDay: 3, pagesPerCrawl: 1 };
     return {
-      scansPerDay: 25,           // Generous daily limit
-      pagesPerCrawl: 1,          // Single-page only (multi-page is paid)
+      scansPerDay: freeLimits.scansPerDay,  // From centralized config
+      pagesPerCrawl: freeLimits.pagesPerCrawl, // Single-page only (multi-page is paid)
       competitorsPerAnalysis: 0, // Competitive analysis is paid
       exportFormats: [],         // On-screen viewing only (exports are paid)
       historicalData: false,     // Current scan only
@@ -332,7 +333,7 @@ const ProGate = {
     return `
       <div class="pro-gate-overlay" id="proGateOverlay" role="presentation">
         <div class="pro-gate-modal" role="dialog" aria-modal="true" aria-labelledby="proGateTitle" tabindex="-1">
-          ${dismissable ? '<button type="button" class="pro-gate-close" aria-label="Close" onclick="ProGate.hideUpgradePrompt()">✕</button>' : ''}
+          ${dismissable ? '<button type="button" class="pro-gate-close" aria-label="Close" data-action="close-pro-gate">✕</button>' : ''}
           <div class="pro-gate-icon">⏱️</div>
           <h3 class="pro-gate-title" id="proGateTitle">${featureName}</h3>
           <p class="pro-gate-description">
@@ -360,7 +361,7 @@ const ProGate = {
             <a href="/pricing.html" class="pro-gate-btn pro-gate-btn--primary">
               View Plans
             </a>
-            ${dismissable ? '<button class="pro-gate-btn pro-gate-btn--secondary" onclick="ProGate.hideUpgradePrompt()">Continue Free</button>' : ''}
+            ${dismissable ? '<button class="pro-gate-btn pro-gate-btn--secondary" data-action="continue-free">Continue Free</button>' : ''}
           </div>
           <p class="pro-gate-footer">
             Free tier includes single-page scans, summary scores, and on-screen viewing.
@@ -387,6 +388,17 @@ const ProGate = {
     overlay.innerHTML = this.renderUpgradePrompt(options);
     const element = overlay.firstElementChild;
     document.body.appendChild(element);
+
+    // Wire up close/dismiss button handlers
+    const closeBtn = element.querySelector('[data-action="close-pro-gate"]');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => this.hideUpgradePrompt());
+    }
+
+    const continueFreeBtn = element.querySelector('[data-action="continue-free"]');
+    if (continueFreeBtn) {
+      continueFreeBtn.addEventListener('click', () => this.hideUpgradePrompt());
+    }
 
     this._wireA11y(element, { dismissable: options.dismissable !== false });
   },

@@ -4,7 +4,7 @@ const FontAnalyzer = require('./fontAnalyzer');
 const performanceAnalyzer = require('./performanceAnalyzer');
 const bestPracticesAnalyzer = require('./bestPracticesAnalyzer');
 const simpleAnalyzer = require('./simpleAnalyzer');
-const { waitForCloudflareChallenge, detectBotProtection } = require('../utils/browserHelpers');
+const { waitForCloudflareChallenge, detectBotProtection, dismissPageOverlays } = require('../utils/browserHelpers');
 
 const logger = createLogger('FontScannerService');
 
@@ -130,6 +130,9 @@ class FontScannerService {
         logger.info('Bot protection detected, waiting for challenge to resolve...');
         await waitForCloudflareChallenge(page, 8000);
       }
+
+      // Dismiss common overlays (cookie banners, modals) that can affect analysis/screenshots
+      await dismissPageOverlays(page, { timeout: 5000 });
 
       // Wait for fonts to load (reduced wait time)
       try {

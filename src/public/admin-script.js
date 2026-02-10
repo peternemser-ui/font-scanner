@@ -133,11 +133,11 @@ function displayUsers(users) {
         ${formatDate(user.created_at)}
       </td>
       <td>
-        <button class="btn btn-secondary" onclick="viewUser('${user.id}')">View</button>
-        <button class="btn btn-secondary" onclick="toggleUserPlan('${user.id}', '${user.plan}')">
+        <button class="btn btn-secondary" data-action="view-user" data-user-id="${user.id}">View</button>
+        <button class="btn btn-secondary" data-action="toggle-user-plan" data-user-id="${user.id}" data-current-plan="${user.plan}">
           ${user.plan === 'free' ? 'Make Pro' : 'Make Free'}
         </button>
-        ${!user.is_admin ? `<button class="btn btn-danger" onclick="deleteUser('${user.id}', '${user.email}')">Delete</button>` : ''}
+        ${!user.is_admin ? `<button class="btn btn-danger" data-action="delete-user" data-user-id="${user.id}" data-user-email="${user.email}">Delete</button>` : ''}
       </td>
     </tr>
   `).join('');
@@ -428,12 +428,25 @@ function showError(message) {
 function formatDate(dateString) {
   if (!dateString) return 'Never';
   const date = new Date(dateString);
-  return date.toLocaleDateString('en-US', {
+  // Use centralized i18n formatting if available
+  if (window.i18n?.formatDateTime) {
+    return window.i18n.formatDateTime(date, {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+  // Fallback with locale detection
+  const locale = window.i18n?.currentLanguage || navigator.language || 'en-US';
+  return date.toLocaleDateString(locale, {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
-    minute: '2-digit'
+    minute: '2-digit',
+    hour12: locale.startsWith('en')
   });
 }
 
@@ -527,7 +540,7 @@ function renderTestSuites() {
     }
 
     return `
-      <div class="test-suite-card ${statusClass}" data-suite-id="${suite.id}" onclick="runSingleSuite('${suite.id}')">
+      <div class="test-suite-card ${statusClass}" data-suite-id="${suite.id}" data-action="run-test-suite">
         <div class="test-suite-header">
           <span class="test-suite-name">${suite.name}</span>
           <span class="test-suite-category ${suite.category}">${suite.category}</span>
@@ -824,4 +837,53 @@ function escapeHtml(text) {
 document.addEventListener('DOMContentLoaded', () => {
   // Load test suites after a short delay to avoid blocking initial load
   setTimeout(initializeTestRunner, 500);
+});
+
+// Event delegation for admin actions (CSP compliant)
+document.addEventListener('click', function(e) {
+  // Handle view user action
+  const viewUserBtn = e.target.closest('[data-action="view-user"]');
+  if (viewUserBtn) {
+    const userId = viewUserBtn.getAttribute('data-user-id');
+    if (userId) {
+      e.preventDefault();
+      viewUser(userId);
+    }
+    return;
+  }
+
+  // Handle toggle user plan action
+  const togglePlanBtn = e.target.closest('[data-action="toggle-user-plan"]');
+  if (togglePlanBtn) {
+    const userId = togglePlanBtn.getAttribute('data-user-id');
+    const currentPlan = togglePlanBtn.getAttribute('data-current-plan');
+    if (userId && currentPlan) {
+      e.preventDefault();
+      toggleUserPlan(userId, currentPlan);
+    }
+    return;
+  }
+
+  // Handle delete user action
+  const deleteUserBtn = e.target.closest('[data-action="delete-user"]');
+  if (deleteUserBtn) {
+    const userId = deleteUserBtn.getAttribute('data-user-id');
+    const userEmail = deleteUserBtn.getAttribute('data-user-email');
+    if (userId && userEmail) {
+      e.preventDefault();
+      deleteUser(userId, userEmail);
+    }
+    return;
+  }
+
+  // Handle run test suite action
+  const testSuiteCard = e.target.closest('[data-action="run-test-suite"]');
+  if (testSuiteCard) {
+    const suiteId = testSuiteCard.getAttribute('data-suite-id');
+    if (suiteId) {
+      e.preventDefault();
+      runSingleSuite(suiteId);
+    }
+    return;
+  }
 });

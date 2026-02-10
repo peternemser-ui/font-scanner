@@ -13,6 +13,7 @@ const {
   getGrade,
   drawScoreSummaryCard,
   drawMetricGrid,
+  trackSection,
   COLORS
 } = require('../utils/pdfHelpers');
 
@@ -50,29 +51,125 @@ class TagIntelligencePdfGenerator {
       { reportsDir: this.reportsDir }
     );
 
+    const reportTitle = 'Tracking & Analytics Report';
+
     try {
-      // Material Design header
+      // Material Design header (Title Page)
       addPdfHeader(
         doc,
-        'Tracking & Analytics Report',
+        reportTitle,
         tagResults.url,
         'Comprehensive tag detection and compliance analysis'
       );
 
+      // Add Table of Contents page
+      doc.addPage();
+      this.addTableOfContents(doc, tagResults);
+
       // Generate report sections with Material Design
+      // Each section is tracked for TOC
+      trackSection(doc, 'Executive Summary', tagResults.healthScore);
       this.addExecutiveSummary(doc, tagResults);
+
+      trackSection(doc, 'Tags by Category');
       this.addTagsByCategory(doc, tagResults);
+
+      trackSection(doc, 'Detected Tags');
       this.addTagsDetailed(doc, tagResults.tags);
+
+      trackSection(doc, 'Issues & Duplicates');
       this.addIssuesAndDuplicates(doc, tagResults);
+
+      trackSection(doc, 'Performance Impact');
       this.addPerformanceImpact(doc, tagResults);
+
+      trackSection(doc, 'Privacy & Consent');
       this.addConsentCompliance(doc, tagResults);
+
+      trackSection(doc, 'Recommendations');
       this.addRecommendations(doc, tagResults.recommendations);
 
-      return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+      return finalizePdfGeneration(doc, stream, filename, filepath, reportId, { reportTitle });
     } catch (error) {
       logger.error('Error creating Tag Intelligence PDF:', error);
       throw error;
     }
+  }
+
+  /**
+   * Add Table of Contents
+   */
+  addTableOfContents(doc, results) {
+    doc.fontSize(18)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.textPrimary)
+       .text('TABLE OF CONTENTS', 50, 50);
+
+    // Primary accent bar
+    doc.rect(50, 78, 50, 3)
+       .fillColor(COLORS.primary)
+       .fill();
+
+    let currentY = 100;
+
+    const sections = [
+      { title: 'Executive Summary', score: results.healthScore, page: 3 },
+      { title: 'Tags by Category', page: 4 },
+      { title: 'Detected Tags', page: 5 },
+      { title: 'Issues & Duplicates', page: 6 },
+      { title: 'Performance Impact', page: 7 },
+      { title: 'Privacy & Consent', page: 8 },
+      { title: 'Recommendations', page: 9 }
+    ];
+
+    sections.forEach((section, index) => {
+      const num = String(index + 1).padStart(2, '0');
+
+      // Number in primary color
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.primary)
+         .text(`${num}.`, 50, currentY, { continued: false });
+
+      // Title
+      doc.fontSize(11)
+         .font('Helvetica')
+         .fillColor(COLORS.textPrimary)
+         .text(section.title, 75, currentY, { continued: false });
+
+      // Dotted line
+      const titleWidth = doc.widthOfString(section.title);
+      const dotsStartX = 75 + titleWidth + 10;
+      const dotsEndX = 480;
+      const dotsCount = Math.floor((dotsEndX - dotsStartX) / 5);
+
+      doc.fontSize(11)
+         .fillColor('#cccccc')
+         .text('.'.repeat(dotsCount), dotsStartX, currentY, { continued: false });
+
+      // Page number
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text(`${section.page}`, 490, currentY, { continued: false });
+
+      // Score badge if available
+      if (section.score !== undefined && section.score !== null) {
+        const scoreColor = getScoreColor(section.score);
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor(scoreColor)
+           .text(`[${Math.round(section.score)}/100]`, 515, currentY, { continued: false });
+      }
+
+      currentY += 28;
+    });
+
+    // Note about page numbers
+    doc.fontSize(8)
+       .font('Helvetica-Oblique')
+       .fillColor('#888888')
+       .text('Page numbers are approximate. See footer for exact page reference.', 50, currentY + 30);
   }
 
   /**

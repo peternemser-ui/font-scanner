@@ -1,0 +1,90 @@
+/**
+ * Site Mechanic - Report Jump Styles
+ * Scroll offset and highlight animation for auto-scroll to results
+ */
+
+/* Scroll margin to account for sticky header */
+#report-results,
+.results-container {
+  scroll-margin-top: 80px; /* Header height + breathing room */
+}
+
+/* For pages with taller headers, use CSS custom property */
+@supports (scroll-margin-top: var(--header-height, 80px)) {
+  #report-results,
+  .results-container {
+    scroll-margin-top: var(--sm-header-height, 80px);
+  }
+}
+
+/* Results flash animation for visual confirmation */
+@keyframes results-flash {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+  }
+  25% {
+    box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(0, 255, 136, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0, 255, 136, 0);
+  }
+}
+
+.results-flash {
+  animation: results-flash 0.6s ease-out;
+}
+
+/* Light theme variant */
+body.white-theme .results-flash {
+  animation-name: results-flash-light;
+}
+
+@keyframes results-flash-light {
+  0% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+  25% {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+  }
+}
+
+/* Respect reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .results-flash {
+    animation: none;
+  }
+
+  #report-results,
+  .results-container {
+    /* Instant scroll positioning */
+    scroll-behavior: auto;
+  }
+}
+
+/* Focus styles for results heading (for accessibility) */
+#report-results [data-results-heading]:focus,
+.results-container .report-header__title:focus {
+  outline: 2px solid var(--accent-primary, #00ff88);
+  outline-offset: 4px;
+  border-radius: 2px;
+}
+
+body.white-theme #report-results [data-results-heading]:focus,
+body.white-theme .results-container .report-header__title:focus {
+  outline-color: var(--accent-primary, #10b981);
+}
+
+/* Remove outline after brief delay (visual feedback only) */
+#report-results [data-results-heading]:focus:not(:focus-visible),
+.results-container .report-header__title:focus:not(:focus-visible) {
+  outline: none;
+}

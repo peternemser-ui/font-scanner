@@ -2,6 +2,7 @@ const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { roundTo } = require('../utils/formatHelpers');
 const { calculateWeightedScore, scoreSecurityHeaders } = require('../utils/scoringHelpers');
+const { dismissPageOverlays } = require('../utils/browserHelpers');
 
 const logger = createLogger('SecurityAnalyzerService');
 
@@ -56,13 +57,16 @@ class SecurityAnalyzerService {
         thirdParty: thirdPartyData,
       });
 
-      // Generate OWASP compliance percentage
-      const owaspCompliance = this.calculateOwaspCompliance({
+      // Generate OWASP compliance with detailed breakdown
+      const owaspResult = this.calculateOwaspCompliance({
         ssl: sslData,
         headers: headersData,
         vulnerabilities: vulnerabilitiesData,
         cookies: cookiesData,
+        thirdParty: thirdPartyData,
       });
+      const owaspCompliance = owaspResult.score;
+      const owaspDetails = owaspResult.details;
 
       // Generate prioritized recommendations
       const recommendations = this.generateRecommendations({
@@ -84,6 +88,7 @@ class SecurityAnalyzerService {
         timestamp: new Date().toISOString(),
         overallScore,
         owaspCompliance,
+        owaspDetails,
         desktop: desktopResults,
         mobile: mobileResults,
         ssl: sslData,
@@ -102,13 +107,14 @@ class SecurityAnalyzerService {
         timestamp: new Date().toISOString(),
         overallScore: 0,
         owaspCompliance: 0,
-        desktop: { device: 'desktop', securityScore: 0, error: error.message },
-        mobile: { device: 'mobile', securityScore: 0, error: error.message },
-        ssl: { score: 0, issues: ['Analysis failed'], error: true },
-        headers: { score: 0, implemented: 0, total: 6, error: true },
-        vulnerabilities: { issues: [], score: 0, error: true },
-        cookies: { cookies: [], secureCount: 0, insecureCount: 0, score: 0, error: true },
-        thirdPartyScripts: { scripts: [], withSRI: 0, withoutSRI: 0, score: 0, error: true },
+        owaspDetails: {},
+        desktop: { device: 'desktop', securityScore: 0, https: false, csp: false, hsts: false, mixedContent: 0, error: error.message },
+        mobile: { device: 'mobile', securityScore: 0, https: false, csp: false, hsts: false, mixedContent: 0, error: error.message },
+        ssl: { score: 0, valid: false, issues: ['Analysis failed'], error: true },
+        headers: { score: 0, implemented: 0, total: 6, details: {}, error: true },
+        vulnerabilities: { issues: [], score: 0, critical: 0, high: 0, medium: 0, low: 0, error: true },
+        cookies: { cookies: [], total: 0, secure: 0, score: 0, error: true },
+        thirdPartyScripts: { scripts: [], total: 0, withSRI: 0, score: 0, error: true },
         recommendations: ['Security analysis failed: ' + error.message],
         error: true,
         errorMessage: error.message
@@ -139,6 +145,10 @@ class SecurityAnalyzerService {
           waitUntil: 'load',
           timeout: 30000
         });
+
+        await dismissPageOverlays(page, { timeout: 4000 });
+
+        await dismissPageOverlays(page, { timeout: 4000 });
 
         // Collect security metrics
         const securityInfo = await page.evaluate(() => {
@@ -186,6 +196,10 @@ class SecurityAnalyzerService {
           waitUntil: 'domcontentloaded', 
           timeout: 30000 
         });
+
+        await dismissPageOverlays(page, { timeout: 4000 });
+
+        await dismissPageOverlays(page, { timeout: 4000 });
 
         const securityDetails = await page.evaluate(() => {
           return {
@@ -344,6 +358,10 @@ class SecurityAnalyzerService {
           waitUntil: 'load',
           timeout: 30000
         });
+
+        await dismissPageOverlays(page, { timeout: 4000 });
+
+        await dismissPageOverlays(page, { timeout: 4000 });
 
         const vulnerabilities = await page.evaluate(() => {
           const issues = [];
@@ -592,44 +610,145 @@ class SecurityAnalyzerService {
   }
 
   /**
-   * Calculate OWASP Top 10 compliance percentage
+   * Calculate OWASP Top 10 (2021) compliance
+   * Returns both percentage and detailed breakdown for each control
+   * @see https://owasp.org/Top10/
    */
-  calculateOwaspCompliance({ ssl, headers, vulnerabilities, cookies }) {
-    let compliantControls = 0;
+  calculateOwaspCompliance({ ssl, headers, vulnerabilities, cookies, thirdParty }) {
+    const details = {};
+    let passCount = 0;
+    let partialCount = 0;
     const totalControls = 10;
 
-    // 1. Injection - CSP present
-    if (headers.details['Content-Security-Policy'].present) compliantControls++;
+    // A01:2021 - Broken Access Control
+    // Check: X-Frame-Options prevents clickjacking, proper CORS
+    const hasXFrameOptions = headers.details['X-Frame-Options']?.present;
+    const hasPermissionsPolicy = headers.details['Permissions-Policy']?.present;
+    if (hasXFrameOptions && hasPermissionsPolicy) {
+      details.a01 = 'pass';
+      passCount++;
+    } else if (hasXFrameOptions || hasPermissionsPolicy) {
+      details.a01 = 'partial';
+      partialCount++;
+    } else {
+      details.a01 = 'fail';
+    }
 
-    // 2. Broken Authentication - Secure cookies
-    if (cookies.score >= 80) compliantControls++;
+    // A02:2021 - Cryptographic Failures
+    // Check: Valid HTTPS with strong TLS
+    if (ssl.valid && ssl.score >= 80) {
+      details.a02 = 'pass';
+      passCount++;
+    } else if (ssl.valid) {
+      details.a02 = 'partial';
+      partialCount++;
+    } else {
+      details.a02 = 'fail';
+    }
 
-    // 3. Sensitive Data Exposure - HTTPS
-    if (ssl.valid) compliantControls++;
+    // A03:2021 - Injection
+    // Check: CSP header prevents script injection
+    const hasCSP = headers.details['Content-Security-Policy']?.present;
+    const hasXContentType = headers.details['X-Content-Type-Options']?.present;
+    if (hasCSP && hasXContentType) {
+      details.a03 = 'pass';
+      passCount++;
+    } else if (hasCSP || hasXContentType) {
+      details.a03 = 'partial';
+      partialCount++;
+    } else {
+      details.a03 = 'fail';
+    }
 
-    // 4. XXE - CSP (partial)
-    if (headers.details['Content-Security-Policy'].present) compliantControls++;
+    // A04:2021 - Insecure Design
+    // Check: Multiple security headers indicate security-conscious design
+    if (headers.score >= 70) {
+      details.a04 = 'pass';
+      passCount++;
+    } else if (headers.score >= 50) {
+      details.a04 = 'partial';
+      partialCount++;
+    } else {
+      details.a04 = 'fail';
+    }
 
-    // 5. Broken Access Control - CORS headers (simplified check)
-    compliantControls++; // Placeholder
+    // A05:2021 - Security Misconfiguration
+    // Check: Comprehensive security header implementation
+    if (headers.implemented >= 5) {
+      details.a05 = 'pass';
+      passCount++;
+    } else if (headers.implemented >= 3) {
+      details.a05 = 'partial';
+      partialCount++;
+    } else {
+      details.a05 = 'fail';
+    }
 
-    // 6. Security Misconfiguration - Multiple headers present
-    if (headers.score >= 70) compliantControls++;
+    // A06:2021 - Vulnerable and Outdated Components
+    // Check: No critical/high vulnerabilities, third-party scripts secured
+    const noCritical = (vulnerabilities.critical || 0) === 0;
+    const noHigh = (vulnerabilities.high || 0) === 0;
+    const scriptsSecured = !thirdParty || thirdParty.total === 0 || thirdParty.score >= 50;
+    if (noCritical && noHigh && scriptsSecured) {
+      details.a06 = 'pass';
+      passCount++;
+    } else if (noCritical && scriptsSecured) {
+      details.a06 = 'partial';
+      partialCount++;
+    } else {
+      details.a06 = 'fail';
+    }
 
-    // 7. XSS - CSP and X-Content-Type-Options
-    if (headers.details['Content-Security-Policy'].present && 
-        headers.details['X-Content-Type-Options'].present) compliantControls++;
+    // A07:2021 - Identification and Authentication Failures
+    // Check: Secure cookie configuration
+    const cookiesSecured = cookies.total === 0 || cookies.score >= 70;
+    const hasHSTS = headers.details['Strict-Transport-Security']?.present;
+    if (cookiesSecured && hasHSTS) {
+      details.a07 = 'pass';
+      passCount++;
+    } else if (cookiesSecured || hasHSTS) {
+      details.a07 = 'partial';
+      partialCount++;
+    } else {
+      details.a07 = 'fail';
+    }
 
-    // 8. Insecure Deserialization - No direct check (placeholder)
-    compliantControls++; // Placeholder
+    // A08:2021 - Software and Data Integrity Failures
+    // Check: Third-party scripts use SRI
+    const sriScore = thirdParty?.score || 0;
+    const hasThirdParty = thirdParty?.total > 0;
+    if (!hasThirdParty || sriScore >= 70) {
+      details.a08 = 'pass';
+      passCount++;
+    } else if (sriScore >= 40) {
+      details.a08 = 'partial';
+      partialCount++;
+    } else {
+      details.a08 = 'fail';
+    }
 
-    // 9. Using Components with Known Vulnerabilities
-    if (vulnerabilities.critical === 0) compliantControls++;
+    // A09:2021 - Security Logging and Monitoring Failures
+    // Cannot fully verify client-side; mark as partial if basic security present
+    if (headers.score >= 70 && ssl.valid) {
+      details.a09 = 'partial'; // Best we can determine client-side
+      partialCount++;
+    } else {
+      details.a09 = 'fail';
+    }
 
-    // 10. Insufficient Logging & Monitoring - No direct check (placeholder)
-    compliantControls++; // Placeholder
+    // A10:2021 - Server-Side Request Forgery (SSRF)
+    // Cannot verify client-side; mark based on overall security posture
+    if (hasCSP && headers.score >= 70) {
+      details.a10 = 'partial'; // CSP can mitigate some SSRF vectors
+      partialCount++;
+    } else {
+      details.a10 = 'fail';
+    }
 
-    return roundTo((compliantControls / totalControls) * 100, 0);
+    // Calculate compliance: pass = 1.0, partial = 0.5, fail = 0
+    const score = roundTo(((passCount + partialCount * 0.5) / totalControls) * 100, 0);
+
+    return { score, details, passCount, partialCount, failCount: totalControls - passCount - partialCount };
   }
 
   /**

@@ -25,6 +25,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/index.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/" />
 
     <!-- Open Graph / Facebook -->
@@ -66,6 +67,8 @@
     <link rel="stylesheet" href="analyzer-loading.css" />
     <link rel="stylesheet" href="ui-components.css" />
     <link rel="stylesheet" href="spacing-fixes.css" />
+    <!-- Usage Pill Styles -->
+    <link rel="stylesheet" href="/css/components/usage-pill.css" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -79,11 +82,19 @@
         background: linear-gradient(180deg, #ffffff 0%, #f0fff4 100%) !important;
         color: #1a1a1a !important;
       }
+
+      /* Hide promotional sections after scan completes */
+      body.scan-complete .hero-right,
+      body.scan-complete .feature-strip,
+      body.scan-complete .pro-upsell,
+      body.scan-complete .homepage-footer-bar,
+      body.scan-complete .whats-included-link {
+        display: none !important;
+      }
     </style>
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
 
     <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
@@ -225,9 +236,6 @@
     }
     </script>
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-TZ2S73Q6BK"></script>
-    <script src="/js/gtag-init.js"></script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
@@ -253,7 +261,7 @@ Get prioritized fixes.</h1>
                   id="urlInput"
                   class="hero-form__input"
                   data-i18n-placeholder="homepage.hero.placeholder"
-                  placeholder="https://example.com"
+                  placeholder="yourwebsite.com"
                   aria-label="Enter website URL to analyze"
                   required
                   aria-required="true"
@@ -263,6 +271,9 @@ Get prioritized fixes.</h1>
             </form>
 
             <p class="hero-helper-text" data-i18n="homepage.hero.helperText">Most scans finish in ~30 seconds</p>
+
+            <!-- Usage Status Indicator -->
+            <div id="usagePillContainer" class="hero-usage-pill"></div>
 
             <!-- Example URL Chips -->
             <div class="example-chips">
@@ -499,6 +510,23 @@ Get prioritized fixes.</h1>
     <!-- Shared Navigation Template -->
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
+
+    <!-- Usage Pill Component -->
+    <script src="/js/components/UsagePill.js"></script>
+    <script>
+      // Initialize Usage Pill on homepage
+      document.addEventListener('DOMContentLoaded', function() {
+        if (window.UsagePill) {
+          window.UsagePill.create('#usagePillContainer', {
+            mode: 'inline',
+            showReports: false,
+            showUpgradeLink: true
+          });
+        }
+      });
+    </script>
 
     <!-- Analyzer Loader -->
     <script src="analyzer-loader.js"></script>

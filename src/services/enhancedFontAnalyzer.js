@@ -9,12 +9,36 @@ const browserPool = require('../utils/browserPool');
 
 class EnhancedFontAnalyzer {
   constructor() {
+    // Enhanced provider detection with more CDNs
     this.providers = {
       googleFonts: /fonts\.googleapis\.com|fonts\.gstatic\.com/i,
-      adobeFonts: /use\.typekit\.net|typekit\.com/i,
-      fontAwesome: /fontawesome\.com|font-awesome/i,
+      adobeFonts: /use\.typekit\.net|typekit\.com|use\.typekit\.adobe\.com/i,
+      fontAwesome: /fontawesome\.com|font-awesome|kit\.fontawesome\.com|use\.fontawesome\.com/i,
       bunny: /fonts\.bunny\.net/i,
-      cdnFonts: /cdn\.fonts\.net/i
+      cdnFonts: /cdn\.fonts\.net/i,
+      cloudflare: /cdnjs\.cloudflare\.com.*font|fonts\.cloudflare\.com/i,
+      jsdelivr: /cdn\.jsdelivr\.net.*font/i,
+      unpkg: /unpkg\.com.*font/i,
+      bootstrapCdn: /stackpath\.bootstrapcdn\.com|maxcdn\.bootstrapcdn\.com/i,
+      fontSource: /fontsource\.org|fonts\.fontsource\.dev/i,
+      lineAwesome: /line-awesome|maxcdn.*line-awesome/i,
+      materialIcons: /fonts\.googleapis\.com\/icon|fonts\.googleapis\.com\/css.*Material/i
+    };
+
+    // Provider display names for better UI
+    this.providerNames = {
+      googleFonts: 'Google Fonts',
+      adobeFonts: 'Adobe Fonts (Typekit)',
+      fontAwesome: 'Font Awesome',
+      bunny: 'Bunny Fonts',
+      cdnFonts: 'CDN Fonts',
+      cloudflare: 'Cloudflare CDN',
+      jsdelivr: 'jsDelivr CDN',
+      unpkg: 'unpkg CDN',
+      bootstrapCdn: 'Bootstrap CDN',
+      fontSource: 'Fontsource',
+      lineAwesome: 'Line Awesome',
+      materialIcons: 'Material Icons'
     };
 
     // Font file extensions for network detection
@@ -45,7 +69,12 @@ class EnhancedFontAnalyzer {
                  resourceUrl.includes('fonts.googleapis.com') ||
                  resourceUrl.includes('use.typekit.net') ||
                  resourceUrl.includes('fonts.bunny.net') ||
-                 resourceUrl.includes('kit.fontawesome.com');
+                 resourceUrl.includes('kit.fontawesome.com') ||
+                 resourceUrl.includes('use.fontawesome.com') ||
+                 resourceUrl.includes('cdnjs.cloudflare.com') ||
+                 resourceUrl.includes('cdn.jsdelivr.net') ||
+                 resourceUrl.includes('unpkg.com') ||
+                 resourceUrl.includes('fontsource');
         };
 
         // Enable request interception for font tracking
@@ -311,17 +340,26 @@ class EnhancedFontAnalyzer {
       }
     });
 
-    // Check script sources (Adobe Fonts)
+    // Check script sources (Adobe Fonts, Font Awesome, etc.)
     $('script[src]').each((i, elem) => {
       const src = $(elem).attr('src');
 
       if (this.providers.adobeFonts.test(src)) {
         const kitId = src.match(/\/([a-z0-9]+)\.js/)?.[1];
         detected.push({
-          name: 'Adobe Fonts',
+          name: 'Adobe Fonts (Typekit)',
           type: 'script',
           url: src,
           kitId
+        });
+      }
+
+      if (this.providers.fontAwesome.test(src)) {
+        detected.push({
+          name: 'Font Awesome',
+          type: 'script',
+          url: src,
+          families: ['Font Awesome Icons']
         });
       }
     });
@@ -368,14 +406,7 @@ class EnhancedFontAnalyzer {
    * Get friendly provider name
    */
   getProviderName(key) {
-    const names = {
-      googleFonts: 'Google Fonts',
-      adobeFonts: 'Adobe Fonts',
-      fontAwesome: 'Font Awesome',
-      bunny: 'Bunny Fonts',
-      cdnFonts: 'Fonts.com'
-    };
-    return names[key] || key;
+    return this.providerNames[key] || key;
   }
 
   /**

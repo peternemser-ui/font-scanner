@@ -1,0 +1,217 @@
+/**
+ * UpgradeGate Component Styles
+ * Shows when daily scan limit is exhausted with upgrade CTAs
+ */
+
+.upgrade-gate {
+  background: var(--bg-secondary, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  max-width: 600px;
+  margin: 2rem auto;
+}
+
+.upgrade-gate__icon {
+  color: var(--accent-primary, #00ff41);
+  margin-bottom: 1rem;
+  opacity: 0.8;
+}
+
+.upgrade-gate__icon svg {
+  width: 48px;
+  height: 48px;
+}
+
+.upgrade-gate__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+  margin: 0 0 0.5rem 0;
+}
+
+.upgrade-gate__subtitle {
+  font-size: 0.9375rem;
+  color: var(--text-muted, #888);
+  margin: 0 0 1.5rem 0;
+}
+
+.upgrade-gate__single-report-note {
+  font-size: 0.875rem;
+  color: var(--text-secondary, #ccc);
+  margin: 0 0 1.5rem 0;
+  padding: 0.75rem 1rem;
+  background: rgba(var(--accent-primary-rgb, 0, 255, 65), 0.05);
+  border-left: 2px solid var(--accent-primary, #00ff41);
+  border-radius: 4px;
+  text-align: left;
+}
+
+/* Options Grid */
+.upgrade-gate__options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.upgrade-gate__option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 1.25rem 1rem;
+  background: var(--bg-tertiary, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+}
+
+.upgrade-gate__option:hover {
+  border-color: var(--accent-primary, #00ff41);
+  background: rgba(var(--accent-primary-rgb, 0, 255, 65), 0.05);
+  transform: translateY(-2px);
+}
+
+.upgrade-gate__option--featured {
+  border-color: var(--accent-primary, #00ff41);
+  background: rgba(var(--accent-primary-rgb, 0, 255, 65), 0.08);
+}
+
+.upgrade-gate__option-badge {
+  position: absolute;
+  top: -10px;
+  right: 10px;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-tertiary, rgba(255, 255, 255, 0.1));
+  color: var(--text-muted, #888);
+  font-size: 0.625rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 4px;
+}
+
+.upgrade-gate__option-badge--savings {
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  color: #fff;
+}
+
+.upgrade-gate__option-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary, #fff);
+}
+
+.upgrade-gate__option-price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-primary, #00ff41);
+}
+
+.upgrade-gate__option-period {
+  font-size: 0.875rem;
+  font-weight: 400;
+  color: var(--text-muted, #888);
+}
+
+.upgrade-gate__option-desc {
+  font-size: 0.75rem;
+  color: var(--text-muted, #888);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* Login Section */
+.upgrade-gate__login {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color, rgba(255, 255, 255, 0.05));
+}
+
+.upgrade-gate__login-text {
+  font-size: 0.875rem;
+  color: var(--text-muted, #888);
+  margin: 0;
+}
+
+.upgrade-gate__login-link {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--accent-primary, #00ff41);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+.upgrade-gate__login-link:hover {
+  opacity: 0.8;
+  text-decoration: underline;
+}
+
+/* Footer */
+.upgrade-gate__footer {
+  font-size: 0.75rem;
+  color: var(--text-muted, #666);
+  margin: 0;
+}
+
+/* Light Theme */
+body.white-theme .upgrade-gate {
+  background: #fff;
+  border-color: #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+body.white-theme .upgrade-gate__title {
+  color: #1f2937;
+}
+
+body.white-theme .upgrade-gate__option {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+}
+
+body.white-theme .upgrade-gate__option:hover {
+  background: #f0fdf4;
+}
+
+body.white-theme .upgrade-gate__option--featured {
+  background: #f0fdf4;
+}
+
+body.white-theme .upgrade-gate__option-name {
+  color: #1f2937;
+}
+
+body.white-theme .upgrade-gate__login {
+  border-top-color: #e5e7eb;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .upgrade-gate {
+    padding: 1.5rem 1rem;
+    margin: 1rem auto;
+  }
+
+  .upgrade-gate__options {
+    grid-template-columns: 1fr;
+  }
+
+  .upgrade-gate__title {
+    font-size: 1.25rem;
+  }
+}
+
+/* Hidden State */
+.upgrade-gate.hidden,
+.upgrade-gate-container.hidden {
+  display: none;
+}

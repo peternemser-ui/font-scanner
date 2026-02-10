@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/brand-consistency.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/brand-consistency.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/brand-consistency.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/brand-consistency.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/brand-consistency.html" />
 
     <!-- Open Graph -->
@@ -69,7 +70,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
     <link rel="stylesheet" href="/css/components/reportShell.css" />
     <link rel="stylesheet" href="/css/components/reportAccordion.css" />
 
@@ -135,7 +136,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
 </head>
 <body>
@@ -145,7 +145,7 @@
     <main class="page-shell">
         <!-- Breadcrumb Navigation -->
         <nav class="breadcrumb" aria-label="Breadcrumb">
-            <a href="/dashboard.html" data-i18n="nav.dashboard">Home</a>
+          <a href="/dashboard.html" data-i18n="dashboard.breadcrumb.home">Home</a>
             <span class="breadcrumb-sep">›</span>
             <span aria-current="page" data-i18n="brandConsistency.breadcrumb">Brand Consistency</span>
         </nav>
@@ -161,19 +161,19 @@
             <div class="card__body">
                 <div class="form-row">
                     <label for="url" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
-                    <input type="url" id="url" class="input" data-i18n-placeholder="common.enterUrl" placeholder="https://example.com" aria-label="Enter website URL for brand analysis" required aria-required="true">
-                    <button id="analyzeBtn" class="btn btn-primary" aria-label="Analyze brand consistency">
-                        <span id="buttonText">Analyze</span>
+                    <input type="url" id="url" class="input" data-i18n-placeholder="common.enterUrl" placeholder="https://example.com" aria-label="Enter website URL for brand analysis" data-i18n="brandConsistency.ariaInput" data-i18n-attr="aria-label" required aria-required="true">
+                    <button id="analyzeBtn" class="btn btn-primary" aria-label="Analyze brand consistency" data-i18n="brandConsistency.ariaAnalyze" data-i18n-attr="aria-label">
+                      <span id="buttonText" data-i18n="brandConsistency.inspect">INSPECT</span>
                     </button>
                 </div>
                 <div class="form-row" style="margin-top: 1rem; justify-content: flex-start; gap: 1rem; flex-wrap: wrap;">
                     <label class="toggle-switch" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                         <input type="checkbox" id="multiPageToggle" style="width: 18px; height: 18px; accent-color: var(--primary);">
-                        <span style="font-size: 0.9rem; color: var(--text-primary);">Multi-page analysis</span>
+                      <span style="font-size: 0.9rem; color: var(--text-primary);" data-i18n="brandConsistency.multiPageLabel">Multi-page analysis</span>
                         <span class="pro-badge" style="background: linear-gradient(135deg, #00ff41, #00cc33); color: #000; font-size: 0.65rem; padding: 2px 6px; border-radius: 3px; font-weight: 700;">PRO</span>
                     </label>
                     <div id="maxPagesContainer" style="display: none; align-items: center; gap: 0.5rem;">
-                        <label for="maxPages" style="font-size: 0.85rem; color: var(--text-secondary);">Max pages:</label>
+                      <label for="maxPages" style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="brandConsistency.maxPagesLabel">Max pages:</label>
                         <select id="maxPages" style="padding: 0.35rem 0.5rem; border-radius: 4px; background: var(--surface); color: var(--text-primary); border: 1px solid var(--border);">
                             <option value="3">3</option>
                             <option value="5" selected>5</option>
@@ -204,7 +204,9 @@
     <script src="/pro-utils.js"></script>
     <script src="/scan-context.js"></script>
     <script src="/nav-template.js"></script>
-    
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
+
     <!-- Analyzer Loading System -->
     <script src="/analyzer-loader.js"></script>
     
@@ -215,11 +217,11 @@
     <script src="/pdf-export-integration.js?v=2"></script>
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/components/PricingModal.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
     
@@ -228,6 +230,9 @@
     <script src="/assets/js/entitlements.js"></script>
     <script src="/js/reportStorage.js"></script>
     <script src="/assets/js/report-shell.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <!-- Brand Consistency Script -->
     <script src="/brand-consistency-script.js"></script>

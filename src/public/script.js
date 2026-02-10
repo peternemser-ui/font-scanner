@@ -267,7 +267,7 @@
     } else {
       console.error('✗ Analyze button not found!');
     }
-    
+
     if (this.urlInput) {
       this.urlInput.addEventListener('keypress', (e) => {
         if (e.key === 'Enter') {
@@ -276,6 +276,29 @@
       });
     } else {
       console.error('✗ URL input not found!');
+    }
+
+    // Example chip handlers (homepage)
+    document.querySelectorAll('.example-chip').forEach(chip => {
+      chip.addEventListener('click', () => {
+        if (this.urlInput) {
+          this.urlInput.value = chip.dataset.url;
+          this.urlInput.focus();
+        }
+      });
+    });
+
+    // Pricing modal trigger (homepage)
+    const pricingModalTrigger = document.getElementById('openPricingModal');
+    if (pricingModalTrigger) {
+      pricingModalTrigger.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+          window.PricingModal.open();
+        } else {
+          window.location.href = '/upgrade.html';
+        }
+      });
     }
   }
 
@@ -436,11 +459,14 @@
       this.scanStartedAt = scanStartedAt;
       window.SM_SCAN_STARTED_AT = scanStartedAt;
       document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
+
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/scan/best-in-class', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ 
           url: normalizedUrl,
           scanId: this.scanId,
@@ -968,9 +994,12 @@
 
     // Clear existing content and build results
     this.resultsContainer.innerHTML = '';
-    
+
     // Make sure results container is visible
     this.resultsContainer.classList.remove('hidden');
+
+    // Hide promotional sections after scan completes
+    document.body.classList.add('scan-complete');
     // Executive Summary (not in accordion)
     this.createExecutiveSummary(results, url, scannedAt);
     
@@ -1015,13 +1044,6 @@
   createExecutiveSummary(results, url, scannedAt) {
     const section = document.createElement('div');
     section.className = 'section executive-summary';
-
-    // Debug lighthouse data structure
-     : 'none',
-      desktop: results.lighthouse?.desktop,
-      mobile: results.lighthouse?.mobile,
-      performance: results.performance
-    });
 
     // Enhanced debugging for performance scores
     // Check if Lighthouse failed for desktop or mobile
@@ -1083,14 +1105,6 @@
     const seo = Math.round(results.lighthouse?.desktop?.seo || results.lighthouse?.mobile?.seo || 88);
     // Improved best practices score calculation with better debugging
     let compliance = 0;
-     : 'none',
-      bestPracticesScore: results.bestPractices?.score,
-      bestPracticesFull: results.bestPractices,
-      lighthouseDesktopBP: results.lighthouse?.desktop?.bestPractices,
-      lighthouseMobileBP: results.lighthouse?.mobile?.bestPractices,
-      lighthouseDesktop: results.lighthouse?.desktop,
-      lighthouseMobile: results.lighthouse?.mobile
-    });
 
     // Try multiple paths to get the best practices score
     if (results.bestPractices?.score !== undefined && results.bestPractices.score !== null) {
@@ -3008,12 +3022,10 @@
     section.className = 'section';
     
     // Handle missing or invalid data - be more aggressive about fallback
-    if (!bestPractices || 
-        typeof bestPractices !== 'object' || 
+    if (!bestPractices ||
+        typeof bestPractices !== 'object' ||
         !bestPractices.score && !bestPractices.overall ||
         (bestPractices.score === 0 && Object.keys(bestPractices.categories || {}).length === 0)) {
-      .length
-      });
       bestPractices = this.generateFallbackBestPracticesData();
     }
     
@@ -4413,7 +4425,7 @@
                 <input type="text" id="bgColorInput" placeholder="#FFFFFF"
                        style="background: #111; border: 1px solid #444; color: #fff; padding: 0.5rem; width: 120px;">
               </div>
-              <button onclick="window.fontScannerApp.calculateCustomContrast()"
+              <button data-action="calculate-contrast"
                       style="background: #333; color: #fff; border: 1px solid #666; padding: 0.5rem 1rem; margin-top: 1.5rem; cursor: pointer;">
                 Calculate
               </button>
@@ -5483,9 +5495,17 @@ body {
 document.addEventListener('DOMContentLoaded', () => {
   // NOTE: Theme toggle is now handled by nav-template.js
   // Removed duplicate theme toggle code to prevent conflicts
-  
+
   // Initialize the app
   new FontScannerApp();
+
+  // Event delegation for CSP-compliant contrast calculator handler
+  document.addEventListener('click', function(e) {
+    const calcContrast = e.target.closest('[data-action="calculate-contrast"]');
+    if (calcContrast && window.fontScannerApp && typeof window.fontScannerApp.calculateCustomContrast === 'function') {
+      window.fontScannerApp.calculateCustomContrast();
+    }
+  });
 });
 
 // NOTE: Theme toggle functionality moved to nav-template.js to prevent conflicts

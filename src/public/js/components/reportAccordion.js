@@ -1,4 +1,7 @@
 (function(window) {
+  // Translation helper
+  const t = (key, fallback) => (window.t ? window.t(key, fallback) : (window.i18n && window.i18n.t ? window.i18n.t(key) || fallback : fallback));
+
   function safeDomId(input) {
     const raw = String(input || '').trim();
     const sanitized = raw.replace(/[^a-zA-Z0-9_-]/g, '-').replace(/-+/g, '-');
@@ -46,12 +49,28 @@
     return 'report-accordion__score-badge--poor';
   }
 
+  function getSeverity(scoreTextRight) {
+    if (scoreTextRight === null || scoreTextRight === undefined) return '';
+    let n = null;
+    if (typeof scoreTextRight === 'number' && !Number.isNaN(scoreTextRight)) {
+      n = scoreTextRight;
+    } else {
+      const m = String(scoreTextRight).trim().match(/^(\d{1,3})(?:\/\d+)?$/);
+      if (m) n = parseInt(m[1], 10);
+    }
+    if (n === null) return '';
+    if (n >= 80) return 'good';
+    if (n >= 50) return 'warn';
+    return 'bad';
+  }
+
   function createSection({ id, title, scoreTextRight = '—', isPro = false, locked = false, contentHTML = '', context = 'report', reportId = null }) {
     const safeId = safeDomId(id);
     const headerId = `report-accordion-header-${safeId}`;
     const bodyId = `report-accordion-body-${safeId}`;
     const formattedScore = formatScoreText(scoreTextRight);
     const scoreColorClass = getScoreColorClass(scoreTextRight);
+    const severity = getSeverity(scoreTextRight);
     const cardHTML = (function() {
       if (!locked) return '';
 
@@ -65,25 +84,25 @@
         <div class="pro-report-block__unlock-prompt" data-locked-overlay>
           <div class="pro-report-block__unlock-header">
             <span class="pro-report-block__unlock-icon">🔒</span>
-            <span class="pro-report-block__unlock-text">Unlock this report</span>
+            <span class="pro-report-block__unlock-text">${t('reports.common.unlockThisReport', 'Unlock this report')}</span>
           </div>
           <div class="pro-report-block__unlock-buttons">
             <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="${context}" ${reportId ? `data-report-id="${reportId}"` : ''}>
-              Unlock for $5
+              ${t('reports.common.unlockFor5', 'Unlock for $5')}
             </button>
             <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="${context}">
-              Go Pro — $30/mo
+              ${t('reports.common.goPro30', 'Go Pro — $30/mo')}
             </button>
           </div>
           <p class="pro-report-block__unlock-hint">
-            Pro unlocks all reports. Single purchase unlocks only this scan.
+            ${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}
           </p>
         </div>
       `;
     })();
 
     return `
-      <div class="report-accordion" data-accordion-id="${safeId}">
+      <div class="report-accordion" data-accordion-id="${safeId}"${severity ? ` data-severity="${severity}"` : ''}>
         <button
           class="report-accordion__header"
           id="${headerId}"
@@ -130,6 +149,20 @@
       if (chevron) chevron.classList.toggle('report-accordion__chevron--open', !isOpen);
     });
 
+    // Print mode: auto-expand all accordions for PDF capture
+    if (new URLSearchParams(window.location.search).get('print') === '1') {
+      document.querySelectorAll('[data-accordion-body]').forEach(body => {
+        body.classList.add('report-accordion__body--open');
+        body.removeAttribute('hidden');
+        const id = body.getAttribute('data-accordion-body');
+        const header = document.querySelector(`[data-accordion-toggle="${id}"]`);
+        if (header) {
+          header.setAttribute('aria-expanded', 'true');
+          const chevron = header.querySelector('.report-accordion__chevron');
+          if (chevron) chevron.classList.add('report-accordion__chevron--open');
+        }
+      });
+    }
   }
 
   window.ReportAccordion = {

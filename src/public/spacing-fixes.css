@@ -379,7 +379,7 @@ body.white-theme .page-header {
 body.white-theme .metric-card,
 body.white-theme .card:not(.accordion-item),
 body.white-theme [class*="card"]:not(.accordion-item):not(.accordion-score):not(.recommendation-card) {
-  background: #ffffff !important;
+  background: transparent !important;
   border-color: #e2e8f0 !important;
 }
 

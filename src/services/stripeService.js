@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { getDatabase } = require('../db');
 const { createLogger } = require('../utils/logger');
+const { isSafeReportId } = require('../utils/reportId');
 
 const logger = createLogger('StripeService');
 
@@ -432,18 +433,49 @@ class StripeService {
    * @param {string} params.successUrl - URL after successful payment
    * @param {string} params.cancelUrl - URL if payment is canceled
    */
-  async createSubscriptionCheckout({ userId, email, interval, successUrl, cancelUrl }) {
+  async createSubscriptionCheckout({ userId, email, interval, successUrl, cancelUrl, locale = 'auto' }) {
     const customerId = await this.getOrCreateCustomer(userId, email);
     const priceId = this.getSubscriptionPriceId(interval);
 
-    logger.info('Creating subscription checkout session', {
+    logger.info('Creating checkout session', {
       userId,
       customerId,
       interval,
-      priceId
+      priceId,
+      locale
     });
 
-    // Build session options
+    // Day Pass uses payment mode (one-time purchase), not subscription mode
+    if (interval === 'day') {
+      const sessionOptions = {
+        customer: customerId,
+        line_items: [{
+          price: priceId,
+          quantity: 1,
+        }],
+        mode: 'payment',
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        locale: locale,
+        metadata: {
+          userId,
+          purchaseType: 'day_pass',
+          interval: 'day'
+        },
+        allow_promotion_codes: true
+      };
+
+      const session = await stripe.checkout.sessions.create(sessionOptions);
+
+      logger.info('Day Pass checkout session created', {
+        sessionId: session.id,
+        interval
+      });
+
+      return session;
+    }
+
+    // Monthly/Annual subscriptions use subscription mode
     const sessionOptions = {
       customer: customerId,
       line_items: [{
@@ -453,6 +485,7 @@ class StripeService {
       mode: 'subscription',
       success_url: successUrl,
       cancel_url: cancelUrl,
+      locale: locale,
       metadata: {
         userId,
         purchaseType: 'subscription',
@@ -464,19 +497,6 @@ class StripeService {
         address: 'auto'
       }
     };
-
-    // Day pass: set to cancel at period end so it doesn't auto-renew
-    if (interval === 'day') {
-      sessionOptions.subscription_data = {
-        metadata: {
-          userId,
-          purchaseType: 'subscription',
-          interval: 'day'
-        }
-      };
-      // Note: cancel_at_period_end must be set after subscription is created via webhook
-      // Stripe Checkout doesn't support setting this directly
-    }
 
     const session = await stripe.checkout.sessions.create(sessionOptions);
 
@@ -497,7 +517,7 @@ class StripeService {
    * @param {string} params.successUrl - URL after successful payment
    * @param {string} params.cancelUrl - URL if payment is canceled
    */
-  async createSingleReportCheckout({ userId, email, reportId, successUrl, cancelUrl, siteUrl, analyzerType }) {
+  async createSingleReportCheckout({ userId, email, reportId, successUrl, cancelUrl, siteUrl, analyzerType, locale = 'auto' }) {
     const customerId = await this.getOrCreateCustomer(userId, email);
     const priceId = this.getSingleReportPriceId();
 
@@ -507,7 +527,8 @@ class StripeService {
       reportId,
       priceId,
       siteUrl,
-      analyzerType
+      analyzerType,
+      locale
     });
 
     const session = await stripe.checkout.sessions.create({
@@ -519,6 +540,7 @@ class StripeService {
       mode: 'payment',
       success_url: successUrl,
       cancel_url: cancelUrl,
+      locale: locale, // Display Stripe checkout in user's preferred language
       metadata: {
         userId,
         purchaseType: 'single_report',
@@ -538,20 +560,22 @@ class StripeService {
   }
 
   /**
-   * Get normalized billing status for a user
+   * Get normalized billing status for a user.
+   * Uses canonical resolver for base data, adds purchasedReportDetails.
+   *
    * @param {string} userId
    * @returns {Object} Billing status object
    */
   async getBillingStatus(userId) {
     const db = getDatabase();
+    const { resolveEntitlements } = require('../utils/entitlements');
 
-    // Get user data with subscription fields
+    // Get base entitlements from canonical resolver
+    const entitlements = await resolveEntitlements({ userId });
+
+    // Check if user has a Stripe customer
     const user = await db.get(
-      `SELECT
-        id, email, plan, stripe_customer_id,
-        stripe_subscription_id, stripe_subscription_status,
-        stripe_current_period_end, stripe_subscription_interval
-      FROM users WHERE id = ?`,
+      'SELECT stripe_customer_id, stripe_subscription_id FROM users WHERE id = ?',
       [userId]
     );
 
@@ -559,78 +583,47 @@ class StripeService {
       throw new Error('User not found');
     }
 
-    // Get purchased reports with full details
-    let purchasedReports = [];
+    // Get purchased reports with full details (extra query not in canonical resolver)
     let purchasedReportDetails = [];
     try {
       const rows = await db.all(
         'SELECT report_id, site_url, analyzer_type, purchased_at FROM report_purchases WHERE user_id = ? ORDER BY purchased_at DESC',
         [userId]
       );
-      logger.info('Fetched purchased reports from database', {
-        userId,
-        count: rows?.length || 0,
-        reports: rows?.map(r => ({ reportId: r.report_id, siteUrl: r.site_url, analyzerType: r.analyzer_type }))
-      });
-      purchasedReports = rows.map(r => r.report_id);
       purchasedReportDetails = rows.map(r => ({
         reportId: r.report_id,
         siteUrl: r.site_url || '',
         analyzerType: r.analyzer_type || '',
-        // SQLite CURRENT_TIMESTAMP returns UTC but without 'Z' suffix
-        // Append 'Z' so JavaScript Date() correctly interprets as UTC
         purchasedAt: r.purchased_at ? r.purchased_at.replace(' ', 'T') + 'Z' : null
       }));
     } catch (e) {
-      // Table may not exist yet or columns missing
-      logger.warn('Could not fetch purchased reports', { error: e.message, stack: e.stack });
-    }
-
-    // Determine if subscription is active
-    const activeStatuses = ['active', 'trialing'];
-    const isPro = activeStatuses.includes(user.stripe_subscription_status);
-
-    // Check if subscription should still have access (grace period)
-    let effectivePlan = user.plan || 'free';
-    if (user.stripe_subscription_status === 'canceled' && user.stripe_current_period_end) {
-      const periodEnd = new Date(user.stripe_current_period_end);
-      if (periodEnd > new Date()) {
-        // Still within paid period
-        effectivePlan = 'pro';
-      }
-    } else if (isPro) {
-      effectivePlan = 'pro';
-    }
-
-    // If we have a Stripe customer but no local subscription data, try to fetch from Stripe
-    let cancelAtPeriodEnd = false;
-    if (user.stripe_customer_id && !user.stripe_subscription_id) {
-      try {
-        const subscriptions = await stripe.subscriptions.list({
-          customer: user.stripe_customer_id,
-          status: 'all',
-          limit: 1
-        });
-
-        if (subscriptions.data.length > 0) {
-          const sub = subscriptions.data[0];
-          cancelAtPeriodEnd = sub.cancel_at_period_end || false;
-        }
-      } catch (e) {
-        logger.warn('Failed to fetch subscription from Stripe', { error: e.message });
-      }
+      logger.warn('Could not fetch purchased report details', { error: e.message });
     }
 
     return {
-      plan: effectivePlan,
-      subscriptionStatus: user.stripe_subscription_status || null,
-      subscriptionInterval: user.stripe_subscription_interval || null,
-      currentPeriodEnd: user.stripe_current_period_end || null,
-      cancelAtPeriodEnd,
+      plan: entitlements.plan,
+      subscriptionStatus: entitlements.subscriptionStatus,
+      subscriptionInterval: entitlements.subscriptionInterval,
+      currentPeriodEnd: entitlements.currentPeriodEnd,
+      dayPassExpiresAt: entitlements.dayPassExpiresAt,
+      cancelAtPeriodEnd: entitlements.cancelAtPeriodEnd,
       hasStripeCustomer: !!user.stripe_customer_id,
-      purchasedReports,
-      purchasedReportDetails
+      purchasedReports: entitlements.purchasedReports,
+      purchasedReportDetails,
+      permissions: entitlements.permissions
     };
+  }
+
+  /**
+   * Get canonical entitlements object for a user.
+   * Delegates to the canonical resolver in utils/entitlements.js.
+   *
+   * @param {string} userId - User ID
+   * @returns {Promise<Object>} Canonical entitlements object
+   */
+  async getEntitlements(userId) {
+    const { resolveEntitlements } = require('../utils/entitlements');
+    return resolveEntitlements({ userId });
   }
 
   // ============================================
@@ -647,22 +640,29 @@ class StripeService {
 
     const status = user.stripe_subscription_status;
     const activeStatuses = ['active', 'trialing'];
+    const now = new Date();
 
-    // Direct active subscription
+    // Check if the subscription period has expired (covers day passes and all intervals)
+    if (user.stripe_current_period_end) {
+      const periodEnd = new Date(user.stripe_current_period_end);
+      if (periodEnd < now) {
+        // Period has ended — not Pro regardless of status or plan field
+        return false;
+      }
+    }
+
+    // Direct active subscription (period still valid or no period set)
     if (activeStatuses.includes(status)) {
       return true;
     }
 
-    // Canceled but still within grace period
+    // Canceled but still within grace period (periodEnd > now already checked above)
     if (status === 'canceled' && user.stripe_current_period_end) {
-      const periodEnd = new Date(user.stripe_current_period_end);
-      if (periodEnd > new Date()) {
-        return true;
-      }
+      return true;
     }
 
-    // Legacy plan check
-    if (user.plan === 'pro') {
+    // Legacy plan check — only if there's no subscription evidence at all
+    if (user.plan === 'pro' && !status && !user.stripe_current_period_end) {
       return true;
     }
 
@@ -767,7 +767,23 @@ class StripeService {
 
       // Handle single report purchase
       if (purchaseType === 'single_report' && reportId) {
-        // Check if already recorded
+        // First, record in billing_sessions for tracking
+        try {
+          await db.run(
+            `INSERT INTO billing_sessions (session_id, purchase_type, report_id, payment_status, mode, amount_total, currency, stripe_customer_id, completed_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+             ON CONFLICT(session_id) DO UPDATE SET
+               payment_status = excluded.payment_status,
+               completed_at = COALESCE(billing_sessions.completed_at, CURRENT_TIMESTAMP),
+               updated_at = CURRENT_TIMESTAMP`,
+            [sessionId, 'single_report', reportId, 'paid', session.mode, session.amount_total, session.currency, session.customer]
+          );
+          logger.info('Billing session recorded', { sessionId, reportId });
+        } catch (e) {
+          logger.warn('Could not record billing session (may already exist)', { error: e.message });
+        }
+
+        // Check if already recorded in report_purchases
         const existing = await db.get(
           'SELECT 1 FROM report_purchases WHERE user_id = ? AND report_id = ?',
           [userId, reportId]
@@ -776,13 +792,14 @@ class StripeService {
         if (!existing) {
           // Record the purchase
           await db.run(
-            `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at, site_url, analyzer_type)
-             VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
+            `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at, site_url, analyzer_type, status)
+             VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, 'paid')
              ON CONFLICT(user_id, report_id) DO UPDATE SET
                stripe_checkout_session_id = excluded.stripe_checkout_session_id,
                purchased_at = CURRENT_TIMESTAMP,
                site_url = COALESCE(excluded.site_url, site_url),
-               analyzer_type = COALESCE(excluded.analyzer_type, analyzer_type)`,
+               analyzer_type = COALESCE(excluded.analyzer_type, analyzer_type),
+               status = 'paid'`,
             [userId, reportId, sessionId, siteUrl, analyzerType]
           );
 
@@ -793,6 +810,8 @@ class StripeService {
             siteUrl,
             analyzerType
           });
+        } else {
+          logger.info('Purchase already recorded', { userId, reportId });
         }
 
         return {
@@ -801,6 +820,35 @@ class StripeService {
           reportId,
           siteUrl,
           analyzerType
+        };
+      }
+
+      // Handle Day Pass one-time purchase
+      if (purchaseType === 'day_pass') {
+        // Calculate expiration (8 hours from now)
+        const dayPassExpiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
+
+        // Update user with day pass access
+        await db.run(
+          `UPDATE users SET
+             plan = 'pro',
+             stripe_subscription_status = 'active',
+             stripe_current_period_end = ?,
+             stripe_subscription_interval = 'day'
+           WHERE id = ?`,
+          [dayPassExpiresAt, userId]
+        );
+
+        logger.info('Day Pass recorded via session verification', {
+          userId,
+          sessionId,
+          expiresAt: dayPassExpiresAt
+        });
+
+        return {
+          success: true,
+          purchaseType: 'day_pass',
+          expiresAt: dayPassExpiresAt
         };
       }
 
@@ -956,41 +1004,111 @@ class StripeService {
             }
           }
 
-          // Handle single report payment purchases (linked to user)
+          // Handle payment mode purchases (single report or day pass)
           if (session && session.mode === 'payment' && isPaid) {
             const purchaseType = session.metadata?.purchaseType;
             const userId = session.metadata?.userId;
             const reportId = session.metadata?.reportId;
+
+            // Log detailed payment processing info for debugging
+            logger.info('[ENTITLEMENT_DEBUG] Processing payment webhook', {
+              eventId: event.id,
+              sessionId: session.id,
+              purchaseType,
+              userId: userId ? userId.substring(0, 8) + '...' : null,
+              reportId,
+              reportIdValid: reportId ? isSafeReportId(reportId) : 'n/a'
+            });
+
+            // Handle Day Pass one-time purchase
+            if (purchaseType === 'day_pass' && userId) {
+              try {
+                // Calculate expiration (8 hours from now)
+                const dayPassExpiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
+
+                // Update user with day pass access
+                await db.run(
+                  `UPDATE users SET
+                    plan = 'pro',
+                    stripe_subscription_status = 'active',
+                    stripe_current_period_end = ?,
+                    stripe_subscription_interval = 'day'
+                  WHERE id = ?`,
+                  [dayPassExpiresAt, userId]
+                );
+
+                logger.info('Day Pass purchase recorded successfully', {
+                  userId: userId.substring(0, 8) + '...',
+                  sessionId: session.id,
+                  expiresAt: dayPassExpiresAt
+                });
+
+                // Update entitlements table
+                await db.run(`
+                  INSERT INTO entitlements (user_id, plan, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
+                  VALUES (?, 'pro', 'active', ?, -1, 250, 1)
+                  ON CONFLICT(user_id) DO UPDATE SET
+                    plan = 'pro',
+                    status = 'active',
+                    current_period_end = excluded.current_period_end,
+                    scans_remaining = -1,
+                    max_pages_per_scan = 250,
+                    pdf_export_enabled = 1,
+                    updated_at = CURRENT_TIMESTAMP
+                `, [userId, dayPassExpiresAt]);
+
+              } catch (e) {
+                logger.error('Failed to record Day Pass purchase', {
+                  sessionId: session.id,
+                  userId: userId.substring(0, 8) + '...',
+                  error: e.message,
+                  stack: e.stack
+                });
+              }
+            }
+
             const siteUrl = session.metadata?.siteUrl || '';
             const analyzerType = session.metadata?.analyzerType || '';
 
             if (purchaseType === 'single_report' && userId && reportId) {
-              try {
-                await db.run(
-                  `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at, site_url, analyzer_type)
-                   VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?)
-                   ON CONFLICT(user_id, report_id) DO UPDATE SET
-                     stripe_checkout_session_id = excluded.stripe_checkout_session_id,
-                     purchased_at = CURRENT_TIMESTAMP,
-                     site_url = COALESCE(excluded.site_url, site_url),
-                     analyzer_type = COALESCE(excluded.analyzer_type, analyzer_type)`,
-                  [userId, reportId, session.id, siteUrl, analyzerType]
-                );
+              // Validate reportId format before recording
+              if (!isSafeReportId(reportId)) {
+                logger.error('[ENTITLEMENT_DEBUG] Invalid reportId format in webhook, rejecting', {
+                  sessionId: session.id,
+                  reportId,
+                  expectedFormat: 'r_<16-hex-chars>'
+                });
+                // Don't record invalid reportId - this is a critical security check
+              } else {
+                try {
+                  await db.run(
+                    `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at, site_url, analyzer_type, status)
+                     VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, 'paid')
+                     ON CONFLICT(user_id, report_id) DO UPDATE SET
+                       stripe_checkout_session_id = excluded.stripe_checkout_session_id,
+                       purchased_at = CURRENT_TIMESTAMP,
+                       site_url = COALESCE(excluded.site_url, site_url),
+                       analyzer_type = COALESCE(excluded.analyzer_type, analyzer_type),
+                       status = 'paid'`,
+                    [userId, reportId, session.id, siteUrl, analyzerType]
+                  );
 
-                logger.info('Single report purchase recorded', {
-                  userId,
-                  reportId,
-                  sessionId: session.id,
-                  siteUrl,
-                  analyzerType
-                });
-              } catch (e) {
-                logger.error('Failed to record report purchase', {
-                  sessionId: session.id,
-                  userId,
-                  reportId,
-                  error: e.message
-                });
+                  logger.info('[ENTITLEMENT_DEBUG] Single report purchase recorded successfully', {
+                    userId: userId.substring(0, 8) + '...',
+                    reportId,
+                    sessionId: session.id,
+                    siteUrl,
+                    analyzerType
+                  });
+                } catch (e) {
+                  logger.error('[ENTITLEMENT_DEBUG] Failed to record report purchase', {
+                    sessionId: session.id,
+                    userId: userId.substring(0, 8) + '...',
+                    reportId,
+                    error: e.message,
+                    stack: e.stack
+                  });
+                }
               }
             }
 
@@ -1162,11 +1280,92 @@ class StripeService {
 
         case 'invoice.payment_succeeded': {
           const invoice = event.data.object;
+          const customerId = invoice.customer;
+          const subscriptionId = invoice.subscription;
+
           logger.info('Payment succeeded', {
             invoiceId: invoice.id,
-            customerId: invoice.customer,
-            amount: invoice.amount_paid / 100
+            customerId,
+            subscriptionId,
+            amount: invoice.amount_paid / 100,
+            billingReason: invoice.billing_reason
           });
+
+          // Handle subscription renewal payments
+          // billing_reason: 'subscription_cycle' indicates a renewal
+          if (subscriptionId && (invoice.billing_reason === 'subscription_cycle' || invoice.billing_reason === 'subscription_create')) {
+            try {
+              // Fetch the subscription to get updated period end
+              const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+              const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
+              const interval = subscription.items?.data?.[0]?.price?.recurring?.interval || 'month';
+              const plan = ['active', 'trialing'].includes(subscription.status) ? 'pro' : 'free';
+
+              // Update user's subscription details
+              const result = await db.run(
+                `UPDATE users SET
+                  plan = ?,
+                  stripe_subscription_id = ?,
+                  stripe_subscription_status = ?,
+                  stripe_current_period_end = ?,
+                  stripe_subscription_interval = ?
+                WHERE stripe_customer_id = ?`,
+                [plan, subscriptionId, subscription.status, currentPeriodEnd, interval, customerId]
+              );
+
+              if (result.changes > 0) {
+                logger.info('User subscription renewed via invoice.payment_succeeded', {
+                  customerId,
+                  subscriptionId,
+                  status: subscription.status,
+                  currentPeriodEnd
+                });
+
+                // Update entitlements
+                const user = await db.get(
+                  'SELECT id FROM users WHERE stripe_customer_id = ?',
+                  [customerId]
+                );
+
+                if (user) {
+                  await db.run(`
+                    INSERT INTO entitlements (user_id, plan, stripe_subscription_id, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                      plan = excluded.plan,
+                      stripe_subscription_id = excluded.stripe_subscription_id,
+                      status = excluded.status,
+                      current_period_end = excluded.current_period_end,
+                      scans_remaining = excluded.scans_remaining,
+                      max_pages_per_scan = excluded.max_pages_per_scan,
+                      pdf_export_enabled = excluded.pdf_export_enabled,
+                      updated_at = CURRENT_TIMESTAMP
+                  `, [
+                    user.id,
+                    plan,
+                    subscriptionId,
+                    subscription.status,
+                    currentPeriodEnd,
+                    plan === 'pro' ? -1 : 3,
+                    plan === 'pro' ? 250 : 10,
+                    plan === 'pro' ? 1 : 0
+                  ]);
+
+                  logger.info('Entitlements updated on renewal', {
+                    userId: user.id,
+                    plan,
+                    currentPeriodEnd
+                  });
+                }
+              }
+            } catch (e) {
+              logger.error('Failed to update subscription on invoice.payment_succeeded', {
+                invoiceId: invoice.id,
+                subscriptionId,
+                error: e.message
+              });
+            }
+          }
           break;
         }
 

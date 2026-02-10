@@ -7,6 +7,35 @@
 // Deterministic analyzer key (stable forever)
 window.SM_ANALYZER_KEY = 'tag-intelligence';
 
+// Translation helper - evaluates at runtime to ensure i18n is loaded
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
+// Function to get analysis steps with current translations
+// Called at runtime to ensure i18n is loaded
+function getAnalysisSteps() {
+  return [
+    { label: t('loader.connectingToWebsite', 'Connecting to website'), detail: t('loader.loadingPage', 'Loading page and resources...') },
+    { label: t('loader.detectingTagManagers', 'Detecting tag managers'), detail: t('loader.scanningTagManagers', 'Scanning for GTM, Adobe Launch, Tealium...') },
+    { label: t('loader.analyzingTrackingTags', 'Analyzing tracking tags'), detail: t('loader.checkingAnalytics', 'Checking analytics and advertising tags...') },
+    { label: t('loader.generatingReport', 'Generating report'), detail: t('loader.compilingResults', 'Compiling results and recommendations...') }
+  ];
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
   const urlInput = document.getElementById('urlInput');
@@ -22,13 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loader = new AnalyzerLoader('loadingContainer');
   }
 
-  // Define analysis steps
-  const analysisSteps = [
-    { label: 'Connecting to website', detail: 'Loading page and resources...' },
-    { label: 'Detecting tag managers', detail: 'Scanning for GTM, Adobe Launch, Tealium...' },
-    { label: 'Analyzing tracking tags', detail: 'Checking analytics and advertising tags...' },
-    { label: 'Generating report', detail: 'Compiling results and recommendations...' }
-  ];
+  // Analysis steps are now defined by getAnalysisSteps() function above
 
   // Handle analysis
   analyzeButton.addEventListener('click', analyzeUrl);
@@ -47,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function analyzeUrl() {
     const url = urlInput.value.trim();
     if (!url) {
-      showError('Please enter a valid URL');
+      showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
       return;
     }
 
@@ -58,7 +81,7 @@ document.addEventListener('DOMContentLoaded', () => {
     analyzeButton.disabled = true;
 
     if (loader) {
-      loader.start(analysisSteps, '🏷️ ANALYZING TAGS', 30);
+      loader.start(getAnalysisSteps(), '🏷️ ' + t('loader.analyzingTags', 'ANALYZING TAGS'), 30);
       
       // Add ASCII art patience message
       addPatienceMessage(loadingContainer);
@@ -80,9 +103,13 @@ document.addEventListener('DOMContentLoaded', () => {
       window.SM_SCAN_STARTED_AT = scanStartedAt;
       document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
 
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/tag-intelligence', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ url, options, scanStartedAt })
       });
 
@@ -90,7 +117,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Analysis failed');
+        if (error.code === 'SCAN_QUOTA_EXCEEDED') {
+          const limit = error.scansLimit || 10;
+          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        }
+        throw new Error(error.message || error.error || t('reports.common.analysisFailed', 'Analysis failed'));
       }
 
       const data = await response.json();
@@ -117,16 +148,20 @@ document.addEventListener('DOMContentLoaded', () => {
             displayResults(data);
           } catch (err) {
             console.error('[Tag Intelligence] Error in displayResults:', err);
-            showError('Error displaying results: ' + err.message);
+            showError(t('reports.common.errorDisplayingResults', 'Error displaying results') + ': ' + err.message);
           }
+          window.__REPORT_READY__ = true;
+          window.dispatchEvent(new CustomEvent('report:ready'));
         }, 800);
       } else {
         try {
           displayResults(data);
         } catch (err) {
           console.error('[Tag Intelligence] Error in displayResults:', err);
-          showError('Error displaying results: ' + err.message);
+          showError(t('reports.common.errorDisplayingResults', 'Error displaying results') + ': ' + err.message);
         }
+        window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('report:ready'));
       }
 
     } catch (error) {
@@ -257,7 +292,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const previewItems = recommendations && recommendations.length > 0
       ? recommendations.slice(0, 2).map(r => r.title || r.description?.substring(0, 50) + '...')
-      : ['Actionable optimization recommendations', 'Priority-based remediation steps'];
+      : [t('reports.tagIntelligence.actionableRecommendations', 'Actionable optimization recommendations'), t('reports.tagIntelligence.prioritySteps', 'Priority-based remediation steps')];
 
     const recCount = recommendations?.length || 0;
 
@@ -265,19 +300,19 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="pro-locked" style="padding: 1rem;">
         <div class="pro-locked__header">
           <span class="pro-pill">PRO</span>
-          <span>Report and Recommendations (${recCount} items)</span>
+          <span>${t('reports.common.reportRecommendations', 'Report and Recommendations')} (${recCount} ${t('reports.common.items', 'items')})</span>
         </div>
         <p style="color: #888; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">
-          Unlock actionable insights and priority-based recommendations to optimize your tag implementation.
+          ${t('reports.tagIntelligence.unlockInsights', 'Unlock actionable insights and priority-based recommendations to optimize your tag implementation.')}
         </p>
         <ul class="pro-locked__list">
           ${previewItems.map(item => `<li>${item}</li>`).join('')}
-          ${recCount > 2 ? `<li style="color: #666;">...and ${recCount - 2} more recommendations</li>` : ''}
+          ${recCount > 2 ? `<li style="color: #666;">...${t('reports.common.andMore', 'and')} ${recCount - 2} ${t('reports.common.moreRecommendations', 'more recommendations')}</li>` : ''}
         </ul>
         <div class="pro-locked__blur"></div>
         <div class="pro-locked__buttons">
-          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="tag-intelligence">Unlock for $10</button>
-          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="tag-intelligence">Go Pro — $20/mo</button>
+          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="tag-intelligence">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
+          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="tag-intelligence">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
         </div>
       </div>
     `;
@@ -287,12 +322,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check required components
     if (typeof ReportAccordion === 'undefined') {
       console.error('[Tag Intelligence] ReportAccordion is not defined');
-      resultsContent.innerHTML = '<div style="color: red; padding: 2rem;">Error: Report components not loaded. Please refresh the page.</div>';
+      resultsContent.innerHTML = `<div style="color: red; padding: 2rem;">${t('reports.common.errorComponentsNotLoaded', 'Error: Report components not loaded. Please refresh the page.')}</div>`;
       return;
     }
     
     const url = document.getElementById('url') ? document.getElementById('url').value : (document.getElementById('urlInput') ? document.getElementById('urlInput').value : '');
-    const timestamp = new Date().toLocaleString();
+    const timestamp = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
 
     const scanStartedAt = data.scanStartedAt || window.SM_SCAN_STARTED_AT || new Date().toISOString();
     const analyzerKey = window.SM_ANALYZER_KEY || 'tag-intelligence';
@@ -312,10 +347,17 @@ document.addEventListener('DOMContentLoaded', () => {
       document.body.setAttribute('data-report-id', reportId);
       resultsContent.setAttribute('data-sm-report-id', reportId);
     }
-    
+
+    // Build screenshot URL for report display
+    const screenshotUrl = data.screenshotUrl || (data.pageResults?.[0]?.screenshotUrl) || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
+    const screenshots = screenshotUrl ? [{ src: screenshotUrl, alt: `Screenshot of ${url}`, device: '' }] : [];
+
     // Build summary array for ReportContainer (score donuts)
     const summary = [
-      { label: 'Overall', score: data.healthScore }
+      { label: t('reports.common.overall', 'Overall'), score: data.healthScore }
     ];
     
     // Add category breakdown as summary items
@@ -328,31 +370,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Build sections array for ReportContainer
     const sections = [];
-    
+
     // Charts Section (rendered as a static section, not accordion)
     sections.push({
       id: 'charts-section',
-      title: '📊 Analytics Overview',
+      title: '📊 ' + t('reports.tagIntelligence.analyticsOverview', 'Analytics Overview'),
       contentHTML: `
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1rem;">
           <!-- Tags by Category Chart -->
           <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 8px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">Tags by Category</h4>
+            <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">${t('reports.tagIntelligence.tagsByCategory', 'Tags by Category')}</h4>
             <canvas id="tagsCategoryChart" style="max-height: 220px;"></canvas>
           </div>
-          
+
           <!-- Script Loading Strategy Chart -->
           ${data.pageResults && data.pageResults[0]?.performanceImpact ? `
             <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 8px;">
-              <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">Script Loading Strategy</h4>
+              <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">${t('reports.tagIntelligence.scriptLoadingStrategy', 'Script Loading Strategy')}</h4>
               <canvas id="scriptLoadingChart" style="max-height: 220px;"></canvas>
             </div>
           ` : ''}
-          
+
           <!-- Third-Party Scripts Chart -->
           ${data.pageResults && data.pageResults[0]?.thirdPartyScripts?.total > 0 ? `
             <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 8px;">
-              <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">Third-Party Scripts</h4>
+              <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">${t('reports.tagIntelligence.thirdPartyScripts', 'Third-Party Scripts')}</h4>
               <canvas id="thirdPartyChart" style="max-height: 220px;"></canvas>
             </div>
           ` : ''}
@@ -364,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (data.issues.length > 0 || data.duplicates.length > 0) {
       sections.push({
         id: 'issues-detected',
-        title: `⚠️ Issues Detected (${data.issues.length + data.duplicates.length})`,
+        title: `⚠️ ${t('reports.tagIntelligence.issuesDetected', 'Issues Detected')} (${data.issues.length + data.duplicates.length})`,
         contentHTML: `
           <ul style="margin: 0; padding-left: 1.5rem;">
             ${data.duplicates.map(d => `<li class="severity-warning">${d.message}</li>`).join('')}
@@ -377,10 +419,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tags Detected Section
     sections.push({
       id: 'tags-detected',
-      title: `🏷️ Tags Detected (${data.tags.length})`,
+      title: `🏷️ ${t('reports.tagIntelligence.tagsDetected', 'Tags Detected')} (${data.tags.length})`,
       contentHTML: `
         <div style="padding: 1rem 0;">
-          ${data.tags.length === 0 ? '<p style="color: #666;">No analytics or tracking tags detected.</p>' : ''}
+          ${data.tags.length === 0 ? `<p style="color: #666;">${t('reports.tagIntelligence.noTagsDetected', 'No analytics or tracking tags detected.')}</p>` : ''}
           ${data.tags.map(tag => `
             <div class="tag-card" style="margin-bottom: 1rem; padding: 1rem; background: rgba(255,255,255,0.05); border-radius: 8px;">
               <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
@@ -389,17 +431,17 @@ document.addEventListener('DOMContentLoaded', () => {
                   <strong>${tag.name}</strong>
                 </div>
                 <div style="color: #808080; font-size: 0.85rem;">
-                  ${tag.instances} instance(s) • ${tag.pagesFound ? tag.pagesFound.length : 1} page(s)
+                  ${tag.instances} ${t('reports.tagIntelligence.instances', 'instance(s)')} • ${tag.pagesFound ? tag.pagesFound.length : 1} ${t('reports.tagIntelligence.pages', 'page(s)')}
                 </div>
               </div>
               ${tag.ids && tag.ids.length > 0 ? `
                 <div style="margin-top: 0.5rem; font-family: monospace; font-size: 0.85rem; color: #a78bfa;">
-                  ID(s): ${tag.ids.join(', ')}
+                  ${t('reports.tagIntelligence.ids', 'ID(s)')}: ${tag.ids.join(', ')}
                 </div>
               ` : ''}
               <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
-                ${tag.foundInline ? '📝 Found inline' : ''}
-                ${tag.foundScript ? '📜 Found in script src' : ''}
+                ${tag.foundInline ? '📝 ' + t('reports.tagIntelligence.foundInline', 'Found inline') : ''}
+                ${tag.foundScript ? '📜 ' + t('reports.tagIntelligence.foundInScriptSrc', 'Found in script src') : ''}
               </div>
             </div>
           `).join('')}
@@ -410,20 +452,20 @@ document.addEventListener('DOMContentLoaded', () => {
     // Tags by Category Section
     sections.push({
       id: 'tags-by-category',
-      title: '📊 Tags by Category',
+      title: '📊 ' + t('reports.tagIntelligence.tagsByCategory', 'Tags by Category'),
       contentHTML: `
         <div style="padding: 1rem 0;">
           ${Object.entries(data.tagsByCategory).map(([category, tags]) => `
             <div style="margin-bottom: 2rem;">
               <h4 style="margin-bottom: 1rem;">
                 <span class="tag-badge tag-${category}">${formatCategory(category)}</span>
-                ${tags.length} Tag(s)
+                ${tags.length} ${t('reports.tagIntelligence.tags', 'Tag(s)')}
               </h4>
               <div style="display: grid; gap: 0.5rem;">
-                ${tags.map(t => `
+                ${tags.map(tagItem => `
                   <div style="display: flex; justify-content: space-between; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 4px;">
-                    <span>${t.name}</span>
-                    <span style="color: #666;">${t.ids?.join(', ') || 'N/A'}</span>
+                    <span>${tagItem.name}</span>
+                    <span style="color: #666;">${tagItem.ids?.join(', ') || t('reports.common.notAvailable', 'N/A')}</span>
                   </div>
                 `).join('')}
               </div>
@@ -437,7 +479,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (data.pageResults && data.pageResults[0]?.performanceImpact) {
       sections.push({
         id: 'performance-impact',
-        title: '⚡ Script Performance Impact',
+        title: '⚡ ' + t('reports.tagIntelligence.scriptPerformanceImpact', 'Script Performance Impact'),
         scoreTextRight: `${data.pageResults[0].performanceImpact.score}/100`,
         contentHTML: `
           <div style="padding: 1rem 0;">
@@ -446,25 +488,25 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="font-size: 2rem; font-weight: bold; color: ${data.pageResults[0].performanceImpact.score >= 80 ? '#10b981' : data.pageResults[0].performanceImpact.score >= 60 ? '#f59e0b' : '#ef4444'};">
                   ${data.pageResults[0].performanceImpact.grade}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">Performance Grade</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.performanceGrade', 'Performance Grade')}</div>
               </div>
               <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">
                   ${data.pageResults[0].performanceImpact.stats?.syncScripts || 0}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">Blocking Scripts</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.blockingScripts', 'Blocking Scripts')}</div>
               </div>
               <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">
                   ${data.pageResults[0].performanceImpact.stats?.asyncScripts || 0}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">Async Scripts</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.asyncScripts', 'Async Scripts')}</div>
               </div>
               <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #a78bfa;">
                   ${data.pageResults[0].performanceImpact.stats?.deferScripts || 0}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">Deferred Scripts</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.deferredScripts', 'Deferred Scripts')}</div>
               </div>
             </div>
             ${data.pageResults[0].performanceImpact.issues?.length > 0 ? `
@@ -486,7 +528,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (data.pageResults && data.pageResults[0]?.thirdPartyScripts?.total > 0) {
       sections.push({
         id: 'third-party-scripts',
-        title: `🌐 Third-Party Scripts (${data.pageResults[0].thirdPartyScripts.total})`,
+        title: `🌐 ${t('reports.tagIntelligence.thirdPartyScripts', 'Third-Party Scripts')} (${data.pageResults[0].thirdPartyScripts.total})`,
         contentHTML: `
           <div style="padding: 1rem 0;">
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
@@ -521,7 +563,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (data.pageResults && data.pageResults[0]?.dataLayer?.found) {
       sections.push({
         id: 'datalayer-analysis',
-        title: '📊 DataLayer Analysis',
+        title: '📊 ' + t('reports.tagIntelligence.dataLayerAnalysis', 'DataLayer Analysis'),
         contentHTML: `
           <div style="padding: 1rem 0;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
@@ -529,18 +571,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="font-size: 1.5rem; font-weight: bold; color: #a78bfa;">
                   ${data.pageResults[0].dataLayer.eventCount || 0}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">Events Detected</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.eventsDetected', 'Events Detected')}</div>
               </div>
               <div style="text-align: center; padding: 1rem; background: rgba(${data.pageResults[0].dataLayer.ecommerce ? '16, 185, 129' : '100, 100, 100'}, 0.1); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: ${data.pageResults[0].dataLayer.ecommerce ? '#10b981' : '#666'};">
                   ${data.pageResults[0].dataLayer.ecommerce ? '✓' : '✗'}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">Ecommerce Tracking</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.ecommerceTracking', 'Ecommerce Tracking')}</div>
               </div>
             </div>
             ${data.pageResults[0].dataLayer.events?.length > 0 ? `
               <div style="margin-top: 1rem;">
-                <div style="font-size: 0.85rem; color: #888; margin-bottom: 0.5rem;">Events Found:</div>
+                <div style="font-size: 0.85rem; color: #888; margin-bottom: 0.5rem;">${t('reports.tagIntelligence.eventsFound', 'Events Found')}:</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                   ${data.pageResults[0].dataLayer.events.map(event => `
                     <code style="background: rgba(167, 139, 250, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${event}</code>
@@ -550,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
             ` : ''}
             ${data.pageResults[0].dataLayer.ecommerce ? `
               <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(16, 185, 129, 0.1); border-radius: 4px; font-size: 0.85rem;">
-                🛒 <strong>${data.pageResults[0].dataLayer.ecommerce.type}</strong> detected
+                🛒 <strong>${data.pageResults[0].dataLayer.ecommerce.type}</strong> ${t('reports.tagIntelligence.detected', 'detected')}
               </div>
             ` : ''}
           </div>
@@ -562,7 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (data.pageResults && data.pageResults[0]?.consentMode) {
       sections.push({
         id: 'consent-mode',
-        title: '🍪 Consent Mode',
+        title: '🍪 ' + t('reports.tagIntelligence.consentMode', 'Consent Mode'),
         contentHTML: `
           <div style="padding: 1rem 0;">
             <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
@@ -571,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
               </div>
               <div>
                 <div style="font-weight: bold; color: ${data.pageResults[0].consentMode.implemented ? '#10b981' : '#ef4444'};">
-                  ${data.pageResults[0].consentMode.implemented ? 'Consent Mode Detected' : 'Consent Mode Not Detected'}
+                  ${data.pageResults[0].consentMode.implemented ? t('reports.tagIntelligence.consentModeDetected', 'Consent Mode Detected') : t('reports.tagIntelligence.consentModeNotDetected', 'Consent Mode Not Detected')}
                 </div>
                 <div style="font-size: 0.85rem; color: #888;">${data.pageResults[0].consentMode.recommendation}</div>
               </div>
@@ -585,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (data.pageResults && data.pageResults[0]?.cookies?.count > 0) {
       sections.push({
         id: 'cookie-audit',
-        title: `🍪 Cookie Audit (${data.pageResults[0].cookies.count})`,
+        title: `🍪 ${t('reports.tagIntelligence.cookieAudit', 'Cookie Audit')} (${data.pageResults[0].cookies.count})`,
         scoreTextRight: `${data.pageResults[0].cookies.complianceScore}/100`,
         contentHTML: `
           <div style="padding: 1rem 0;">
@@ -595,7 +637,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.pageResults[0].cookies.complianceScore || 100)};">
                   ${data.pageResults[0].cookies.complianceScore || 100}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">Compliance Score</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.complianceScore', 'Compliance Score')}</div>
               </div>
               <div style="flex: 1;">
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -625,11 +667,11 @@ document.addEventListener('DOMContentLoaded', () => {
               <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
                 <thead style="position: sticky; top: 0; background: #1a1a1a;">
                   <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <th style="text-align: left; padding: 0.5rem; color: #888;">Name</th>
-                    <th style="text-align: left; padding: 0.5rem; color: #888;">Type</th>
-                    <th style="text-align: left; padding: 0.5rem; color: #888;">Vendor</th>
-                    <th style="text-align: left; padding: 0.5rem; color: #888;">Purpose</th>
-                    <th style="text-align: center; padding: 0.5rem; color: #888;">Secure</th>
+                    <th style="text-align: left; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookieName', 'Name')}</th>
+                    <th style="text-align: left; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookieType', 'Type')}</th>
+                    <th style="text-align: left; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookieVendor', 'Vendor')}</th>
+                    <th style="text-align: left; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookiePurpose', 'Purpose')}</th>
+                    <th style="text-align: center; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookieSecure', 'Secure')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -637,14 +679,14 @@ document.addEventListener('DOMContentLoaded', () => {
                     <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
                       <td style="padding: 0.5rem; font-family: monospace; color: #a78bfa;">${cookie.name.substring(0, 25)}${cookie.name.length > 25 ? '...' : ''}</td>
                       <td style="padding: 0.5rem;"><span style="background: ${getCookieTypeColor(cookie.type)}; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem;">${cookie.type}</span></td>
-                      <td style="padding: 0.5rem; color: #ccc;">${cookie.vendor || 'Unknown'}</td>
+                      <td style="padding: 0.5rem; color: #ccc;">${cookie.vendor || t('reports.tagIntelligence.unknown', 'Unknown')}</td>
                       <td style="padding: 0.5rem; color: #888; font-size: 0.75rem;">${cookie.purpose || '-'}</td>
                       <td style="padding: 0.5rem; text-align: center;">${cookie.hasSecure ? '✓' : '✗'}</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
-              ${data.pageResults[0].cookies.cookies.length > 30 ? `<p style="color: #888; font-size: 0.8rem; margin-top: 0.5rem;">... and ${data.pageResults[0].cookies.cookies.length - 30} more cookies</p>` : ''}
+              ${data.pageResults[0].cookies.cookies.length > 30 ? `<p style="color: #888; font-size: 0.8rem; margin-top: 0.5rem;">... ${t('reports.common.andMore', 'and')} ${data.pageResults[0].cookies.cookies.length - 30} ${t('reports.tagIntelligence.moreCookies', 'more cookies')}</p>` : ''}
             </div>
           </div>
         `
@@ -655,22 +697,22 @@ document.addEventListener('DOMContentLoaded', () => {
     if (data.pageResults && data.pageResults[0]?.tagLoadWaterfall?.scripts?.length > 0) {
       sections.push({
         id: 'tag-waterfall',
-        title: `⏱️ Tag Load Waterfall (${data.pageResults[0].tagLoadWaterfall.totalScripts} scripts)`,
+        title: `⏱️ ${t('reports.tagIntelligence.tagLoadWaterfall', 'Tag Load Waterfall')} (${data.pageResults[0].tagLoadWaterfall.totalScripts} ${t('reports.tagIntelligence.scripts', 'scripts')})`,
         contentHTML: `
           <div style="padding: 1rem 0;">
             <!-- Waterfall Stats -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
               <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">${data.pageResults[0].tagLoadWaterfall.totalLoadTime}ms</div>
-                <div style="font-size: 0.75rem; color: #888;">Total Load Time</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.totalLoadTime', 'Total Load Time')}</div>
               </div>
               <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">${data.pageResults[0].tagLoadWaterfall.totalSizeFormatted}</div>
-                <div style="font-size: 0.75rem; color: #888;">Total Size</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.totalSize', 'Total Size')}</div>
               </div>
               <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: ${data.pageResults[0].tagLoadWaterfall.blockingCount > 5 ? '#ef4444' : '#10b981'};">${data.pageResults[0].tagLoadWaterfall.blockingCount}</div>
-                <div style="font-size: 0.75rem; color: #888;">Blocking Scripts</div>
+                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.blockingScripts', 'Blocking Scripts')}</div>
               </div>
             </div>
 
@@ -710,11 +752,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
               <!-- Legend -->
               <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #3b82f6; border-radius: 2px; margin-right: 4px;"></span>Analytics</span>
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #f59e0b; border-radius: 2px; margin-right: 4px;"></span>Advertising</span>
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #ec4899; border-radius: 2px; margin-right: 4px;"></span>Session Recording</span>
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #8b5cf6; border-radius: 2px; margin-right: 4px;"></span>A/B Testing</span>
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #6b7280; border-radius: 2px; margin-right: 4px;"></span>Other</span>
+                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #3b82f6; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.analytics', 'Analytics')}</span>
+                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #f59e0b; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.advertising', 'Advertising')}</span>
+                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #ec4899; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.sessionRecording', 'Session Recording')}</span>
+                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #8b5cf6; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.abTesting', 'A/B Testing')}</span>
+                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #6b7280; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.other', 'Other')}</span>
               </div>
             </div>
           </div>
@@ -725,7 +767,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Report and Recommendations Section (Free)
     sections.push({
       id: 'report-recommendations',
-      title: '📋 Report and Recommendations',
+      title: '📋 ' + t('reports.common.reportAndRecommendations', 'Report and Recommendations'),
       isPro: false,
       locked: false,
       context: 'tag-intelligence',
@@ -739,14 +781,14 @@ document.addEventListener('DOMContentLoaded', () => {
           url: url,
           timestamp: scanStartedAt,
           mode: 'tag-intelligence',
-          title: 'Tracking & Analytics: Tag Intelligence',
-          subtitle: `Scanned ${data.pagesScanned} page(s) • ${data.summary.totalTags} tag(s) detected`,
-          summary: [{ label: 'Overall', score: data.healthScore }],
+          title: t('reports.tagIntelligence.title', 'Tracking & Analytics: Tag Intelligence'),
+          subtitle: t('reports.tagIntelligence.scannedPagesAndTags', 'Scanned {{pages}} page(s) • {{tags}} tag(s) detected', { pages: data.pagesScanned, tags: data.summary.totalTags }),
+          summary: [{ label: t('reports.common.overall', 'Overall'), score: data.healthScore }],
           sections,
-          screenshots: [],
+          screenshots,
           proBlock: false
         })
-      : `<h2>Tag Analysis Results</h2><p>ReportContainer not available</p>`;
+      : `<h2>${t('reports.tagIntelligence.results', 'Tag Analysis Results')}</h2><p>${t('reports.common.reportContainerNotAvailable', 'ReportContainer not available')}</p>`;
 
     resultsContent.innerHTML = '<div class="report-scope">' + reportHTML + '</div>';
 
@@ -770,7 +812,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!recommendations || recommendations.length === 0) {
       return `
         <div style="padding: 1rem; background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 8px;">
-          <p style="margin: 0; color: #22c55e;">✓ No issues found. Your tag setup looks good!</p>
+          <p style="margin: 0; color: #22c55e;">✓ ${t('reports.tagIntelligence.noIssuesFound', 'No issues found. Your tag setup looks good!')}</p>
         </div>
       `;
     }
@@ -781,7 +823,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
               <span style="font-size: 1.2rem;">${rec.priority === 'high' ? '🔴' : rec.priority === 'medium' ? '🟡' : '🟢'}</span>
-              <strong>${rec.title || rec.message || 'Recommendation'}</strong>
+              <strong>${rec.title || rec.message || t('reports.common.recommendation', 'Recommendation')}</strong>
             </div>
             <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">${rec.description || rec.details || ''}</p>
           </div>
@@ -847,7 +889,7 @@ document.addEventListener('DOMContentLoaded', () => {
       new Chart(scriptCanvas, {
         type: 'pie',
         data: {
-          labels: ['Async', 'Deferred', 'Blocking', 'Inline'],
+          labels: [t('reports.tagIntelligence.scriptTypes.async', 'Async'), t('reports.tagIntelligence.scriptTypes.deferred', 'Deferred'), t('reports.tagIntelligence.scriptTypes.blocking', 'Blocking'), t('reports.tagIntelligence.scriptTypes.inline', 'Inline')],
           datasets: [{
             data: [stats.asyncScripts, stats.deferScripts, stats.syncScripts, stats.inlineScripts],
             backgroundColor: ['#10b981', '#3b82f6', '#ef4444', '#f59e0b'],
@@ -934,28 +976,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function formatCategory(category) {
     const labels = {
-      analytics: 'Analytics',
-      advertising: 'Advertising',
-      tag_manager: 'Tag Manager',
-      consent: 'Consent',
-      customer_support: 'Support',
-      marketing: 'Marketing',
-      ab_testing: 'A/B Testing',
-      session_recording: 'Session Recording',
-      error_monitoring: 'Error Monitoring',
-      cdp: 'CDP',
-      other: 'Other'
+      analytics: t('reports.tagIntelligence.categories.analytics', 'Analytics'),
+      advertising: t('reports.tagIntelligence.categories.advertising', 'Advertising'),
+      tag_manager: t('reports.tagIntelligence.categories.tagManager', 'Tag Manager'),
+      consent: t('reports.tagIntelligence.categories.consent', 'Consent'),
+      customer_support: t('reports.tagIntelligence.categories.support', 'Support'),
+      marketing: t('reports.tagIntelligence.categories.marketing', 'Marketing'),
+      ab_testing: t('reports.tagIntelligence.categories.abTesting', 'A/B Testing'),
+      session_recording: t('reports.tagIntelligence.categories.sessionRecording', 'Session Recording'),
+      error_monitoring: t('reports.tagIntelligence.categories.errorMonitoring', 'Error Monitoring'),
+      cdp: t('reports.tagIntelligence.categories.cdp', 'CDP'),
+      other: t('reports.tagIntelligence.categories.other', 'Other')
     };
     return labels[category] || category;
   }
 
   function formatScriptCategory(category) {
     const labels = {
-      analytics: '📊 Analytics',
-      advertising: '📢 Advertising',
-      cdn: '🌐 CDN',
-      library: '📚 Library',
-      unknown: '❓ Other'
+      analytics: '📊 ' + t('reports.tagIntelligence.categories.analytics', 'Analytics'),
+      advertising: '📢 ' + t('reports.tagIntelligence.categories.advertising', 'Advertising'),
+      cdn: '🌐 ' + t('reports.tagIntelligence.categories.cdn', 'CDN'),
+      library: '📚 ' + t('reports.tagIntelligence.categories.library', 'Library'),
+      unknown: '❓ ' + t('reports.tagIntelligence.categories.other', 'Other')
     };
     return labels[category] || category;
   }
@@ -991,12 +1033,12 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function formatCookieType(type) {
     const labels = {
-      necessary: 'Essential',
-      analytics: 'Analytics',
-      advertising: 'Advertising',
-      functional: 'Functional',
-      marketing: 'Marketing',
-      unknown: 'Unknown'
+      necessary: t('reports.tagIntelligence.cookieTypes.essential', 'Essential'),
+      analytics: t('reports.tagIntelligence.cookieTypes.analytics', 'Analytics'),
+      advertising: t('reports.tagIntelligence.cookieTypes.advertising', 'Advertising'),
+      functional: t('reports.tagIntelligence.cookieTypes.functional', 'Functional'),
+      marketing: t('reports.tagIntelligence.cookieTypes.marketing', 'Marketing'),
+      unknown: t('reports.tagIntelligence.cookieTypes.unknown', 'Unknown')
     };
     return labels[type] || type;
   }
@@ -1069,17 +1111,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
     return ReportAccordion.createSection({
       id: 'ab-session-tools',
-      title: `🧪 A/B Testing & Session Recording (${totalCount})`,
+      title: `🧪 ${t('reports.tagIntelligence.abTestingAndSessionRecording', 'A/B Testing & Session Recording')} (${totalCount})`,
       contentHTML: `
       <div style="padding: 1rem 0;">
         <!-- Screenshot Preview (if available) -->
         ${screenshotUrl ? `
           <div style="margin-bottom: 1.5rem;">
-            <h4 style="margin: 0 0 0.75rem 0; color: #888; font-size: 0.85rem;">📸 Page Preview</h4>
+            <h4 style="margin: 0 0 0.75rem 0; color: #888; font-size: 0.85rem;">📸 ${t('reports.tagIntelligence.pagePreview', 'Page Preview')}</h4>
             <div style="position: relative; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-              <img src="${screenshotUrl}" alt="Page screenshot" style="width: 100%; max-height: 200px; object-fit: cover; object-position: top; cursor: pointer;" onclick="window.ScreenshotLightbox?.open('${screenshotUrl}', 'Page Screenshot')" />
+              <img src="${screenshotUrl}" alt="${t('reports.tagIntelligence.pageScreenshot', 'Page screenshot')}" style="width: 100%; max-height: 200px; object-fit: cover; object-position: top; cursor: pointer;" data-action="open-lightbox" data-screenshot-url="${screenshotUrl}" data-screenshot-title="${t('reports.tagIntelligence.pageScreenshot', 'Page Screenshot')}" />
               <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 0.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8)); font-size: 0.75rem; color: #888;">
-                Click to enlarge • Tools run on this page
+                ${t('reports.tagIntelligence.clickToEnlarge', 'Click to enlarge')} • ${t('reports.tagIntelligence.toolsRunOnThisPage', 'Tools run on this page')}
               </div>
             </div>
           </div>
@@ -1089,19 +1131,19 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
           <div style="text-align: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.2);">
             <div style="font-size: 1.75rem; font-weight: bold; color: #8b5cf6;">${abTags.length}</div>
-            <div style="font-size: 0.75rem; color: #888;">A/B Testing</div>
+            <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.categories.abTesting', 'A/B Testing')}</div>
           </div>
           <div style="text-align: center; padding: 1rem; background: rgba(236, 72, 153, 0.1); border-radius: 8px; border: 1px solid rgba(236, 72, 153, 0.2);">
             <div style="font-size: 1.75rem; font-weight: bold; color: #ec4899;">${sessionTags.length}</div>
-            <div style="font-size: 0.75rem; color: #888;">Session Recording</div>
+            <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.categories.sessionRecording', 'Session Recording')}</div>
           </div>
           <div style="text-align: center; padding: 1rem; background: rgba(249, 115, 22, 0.1); border-radius: 8px; border: 1px solid rgba(249, 115, 22, 0.2);">
             <div style="font-size: 1.75rem; font-weight: bold; color: #f97316;">${errorTags.length}</div>
-            <div style="font-size: 0.75rem; color: #888;">Error Monitoring</div>
+            <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.categories.errorMonitoring', 'Error Monitoring')}</div>
           </div>
           <div style="text-align: center; padding: 1rem; background: rgba(20, 184, 166, 0.1); border-radius: 8px; border: 1px solid rgba(20, 184, 166, 0.2);">
             <div style="font-size: 1.75rem; font-weight: bold; color: #14b8a6;">${cdpTags.length}</div>
-            <div style="font-size: 0.75rem; color: #888;">Data Platforms</div>
+            <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.categories.dataPlatforms', 'Data Platforms')}</div>
           </div>
         </div>
 
@@ -1109,7 +1151,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${abTags.length > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <h4 style="margin: 0 0 0.75rem 0; color: #8b5cf6; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
-              🧪 A/B Testing Tools
+              🧪 ${t('reports.tagIntelligence.abTestingTools', 'A/B Testing Tools')}
               <span style="background: rgba(139, 92, 246, 0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem;">${abTags.length}</span>
             </h4>
             <div style="display: grid; gap: 0.75rem;">
@@ -1124,7 +1166,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       ${tag.ids?.length ? `<code style="background: rgba(139, 92, 246, 0.3); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; color: #a78bfa;">${tag.ids[0]}</code>` : ''}
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                      <span style="background: #10b981; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">ACTIVE</span>
+                      <span style="background: #10b981; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.active', 'ACTIVE')}</span>
                       <span style="color: #888; font-size: 0.8rem;">${tag.instances}×</span>
                     </div>
                   </div>
@@ -1133,7 +1175,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       ${details.features.map(f => `<span style="background: rgba(139, 92, 246, 0.15); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; color: #c4b5fd;">${f}</span>`).join('')}
                     </div>
                   ` : ''}
-                  ${tag.foundIn ? `<div style="margin-top: 0.5rem; font-size: 0.75rem; color: #666;">Found: ${tag.foundIn.join(', ')}</div>` : ''}
+                  ${tag.foundIn ? `<div style="margin-top: 0.5rem; font-size: 0.75rem; color: #666;">${t('reports.tagIntelligence.found', 'Found')}: ${tag.foundIn.join(', ')}</div>` : ''}
                 </div>
               `}).join('')}
             </div>
@@ -1144,7 +1186,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${sessionTags.length > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <h4 style="margin: 0 0 0.75rem 0; color: #ec4899; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
-              🎥 Session Recording & Heatmaps
+              🎥 ${t('reports.tagIntelligence.sessionRecordingAndHeatmaps', 'Session Recording & Heatmaps')}
               <span style="background: rgba(236, 72, 153, 0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem;">${sessionTags.length}</span>
             </h4>
             <div style="display: grid; gap: 0.75rem;">
@@ -1158,7 +1200,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       <strong style="color: #fff;">${tag.name}</strong>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                      <span style="background: #10b981; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">RECORDING</span>
+                      <span style="background: #10b981; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.recording', 'RECORDING')}</span>
                       <span style="color: #888; font-size: 0.8rem;">${tag.instances}×</span>
                     </div>
                   </div>
@@ -1177,7 +1219,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${errorTags.length > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <h4 style="margin: 0 0 0.75rem 0; color: #f97316; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
-              🐛 Error Monitoring
+              🐛 ${t('reports.tagIntelligence.categories.errorMonitoring', 'Error Monitoring')}
               <span style="background: rgba(249, 115, 22, 0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem;">${errorTags.length}</span>
             </h4>
             <div style="display: grid; gap: 0.75rem;">
@@ -1191,7 +1233,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       <strong style="color: #fff;">${tag.name}</strong>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                      <span style="background: #3b82f6; color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">MONITORING</span>
+                      <span style="background: #3b82f6; color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.monitoring', 'MONITORING')}</span>
                       <span style="color: #888; font-size: 0.8rem;">${tag.instances}×</span>
                     </div>
                   </div>
@@ -1210,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${cdpTags.length > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <h4 style="margin: 0 0 0.75rem 0; color: #14b8a6; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
-              🔄 Customer Data Platforms
+              🔄 ${t('reports.tagIntelligence.customerDataPlatforms', 'Customer Data Platforms')}
               <span style="background: rgba(20, 184, 166, 0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem;">${cdpTags.length}</span>
             </h4>
             <div style="display: grid; gap: 0.75rem;">
@@ -1224,7 +1266,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       <strong style="color: #fff;">${tag.name}</strong>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                      <span style="background: #14b8a6; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">COLLECTING</span>
+                      <span style="background: #14b8a6; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.collecting', 'COLLECTING')}</span>
                       <span style="color: #888; font-size: 0.8rem;">${tag.instances}×</span>
                     </div>
                   </div>
@@ -1241,48 +1283,48 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <!-- Integration & Performance Tips -->
         <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
-          <h4 style="margin: 0 0 0.75rem 0; color: #3b82f6; font-size: 0.9rem;">💡 Optimization Insights</h4>
+          <h4 style="margin: 0 0 0.75rem 0; color: #3b82f6; font-size: 0.9rem;">💡 ${t('reports.tagIntelligence.optimizationInsights', 'Optimization Insights')}</h4>
           <div style="display: grid; gap: 0.5rem; font-size: 0.85rem; color: #ccc;">
             ${abTags.length > 1 ? `
               <div style="display: flex; align-items: start; gap: 0.5rem;">
                 <span style="color: #f59e0b;">⚠️</span>
-                <span><strong>Multiple A/B tools detected:</strong> Consider consolidating to ${abTags[0]?.name || 'one platform'} to reduce page weight and avoid test conflicts.</span>
+                <span><strong>${t('reports.tagIntelligence.insights.multipleAbTools', 'Multiple A/B tools detected')}:</strong> ${t('reports.tagIntelligence.insights.consolidateTools', 'Consider consolidating to {{tool}} to reduce page weight and avoid test conflicts.', { tool: abTags[0]?.name || t('reports.tagIntelligence.insights.onePlatform', 'one platform') })}</span>
               </div>
             ` : ''}
             ${sessionTags.length > 0 && abTags.length > 0 ? `
               <div style="display: flex; align-items: start; gap: 0.5rem;">
                 <span style="color: #10b981;">✓</span>
-                <span><strong>Great combo:</strong> Session recordings + A/B testing allows you to see exactly how users interact with test variants.</span>
+                <span><strong>${t('reports.tagIntelligence.insights.greatCombo', 'Great combo')}:</strong> ${t('reports.tagIntelligence.insights.sessionPlusAb', 'Session recordings + A/B testing allows you to see exactly how users interact with test variants.')}</span>
               </div>
             ` : ''}
             ${sessionTags.length > 0 && abTags.length === 0 ? `
               <div style="display: flex; align-items: start; gap: 0.5rem;">
                 <span style="color: #3b82f6;">💡</span>
-                <span><strong>Opportunity:</strong> You have session recordings but no A/B testing. Consider adding experimentation to optimize based on behavioral insights.</span>
+                <span><strong>${t('reports.tagIntelligence.insights.opportunity', 'Opportunity')}:</strong> ${t('reports.tagIntelligence.insights.addAbTesting', 'You have session recordings but no A/B testing. Consider adding experimentation to optimize based on behavioral insights.')}</span>
               </div>
             ` : ''}
             ${sessionTags.length === 0 && abTags.length > 0 ? `
               <div style="display: flex; align-items: start; gap: 0.5rem;">
                 <span style="color: #3b82f6;">💡</span>
-                <span><strong>Opportunity:</strong> Add session recording to see how users interact with your A/B test variants.</span>
+                <span><strong>${t('reports.tagIntelligence.insights.opportunity', 'Opportunity')}:</strong> ${t('reports.tagIntelligence.insights.addSessionRecording', 'Add session recording to see how users interact with your A/B test variants.')}</span>
               </div>
             ` : ''}
             ${errorTags.length > 0 ? `
               <div style="display: flex; align-items: start; gap: 0.5rem;">
                 <span style="color: #10b981;">✓</span>
-                <span><strong>Error tracking active:</strong> JavaScript errors are being monitored - essential for catching issues with experiments.</span>
+                <span><strong>${t('reports.tagIntelligence.insights.errorTrackingActive', 'Error tracking active')}:</strong> ${t('reports.tagIntelligence.insights.errorTrackingDesc', 'JavaScript errors are being monitored - essential for catching issues with experiments.')}</span>
               </div>
             ` : ''}
             ${cdpTags.length > 0 ? `
               <div style="display: flex; align-items: start; gap: 0.5rem;">
                 <span style="color: #10b981;">✓</span>
-                <span><strong>CDP integration:</strong> Customer data is being unified - enables better targeting for experiments.</span>
+                <span><strong>${t('reports.tagIntelligence.insights.cdpIntegration', 'CDP integration')}:</strong> ${t('reports.tagIntelligence.insights.cdpIntegrationDesc', 'Customer data is being unified - enables better targeting for experiments.')}</span>
               </div>
             ` : ''}
             ${totalCount <= 2 ? `
               <div style="display: flex; align-items: start; gap: 0.5rem;">
                 <span style="color: #10b981;">✓</span>
-                <span><strong>Lean stack:</strong> Minimal tool overhead helps maintain good page performance.</span>
+                <span><strong>${t('reports.tagIntelligence.insights.leanStack', 'Lean stack')}:</strong> ${t('reports.tagIntelligence.insights.leanStackDesc', 'Minimal tool overhead helps maintain good page performance.')}</span>
               </div>
             ` : ''}
           </div>
@@ -1319,8 +1361,8 @@ document.addEventListener('DOMContentLoaded', () => {
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
       <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41;">
-        🏷️ Detecting analytics and tracking tags...<br>
-        <span style="font-size: 0.75rem; color: #00ffaa;">This may take 20-45 seconds</span>
+        🏷️ ${t('loader.detectingAnalyticsAndTracking', 'Detecting analytics and tracking tags...')}<br>
+        <span style="font-size: 0.75rem; color: #00ffaa;">${t('loader.mayTake20To45Seconds', 'This may take 20-45 seconds')}</span>
       </div>
     `;
     
@@ -1359,6 +1401,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Event delegation for CSP-compliant lightbox handler
+  document.addEventListener('click', function(e) {
+    const openLightbox = e.target.closest('[data-action="open-lightbox"]');
+    if (openLightbox) {
+      const screenshotUrl = openLightbox.getAttribute('data-screenshot-url');
+      const screenshotTitle = openLightbox.getAttribute('data-screenshot-title');
+      if (screenshotUrl && window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+        window.ScreenshotLightbox.open(screenshotUrl, screenshotTitle || t('reports.common.screenshot', 'Screenshot'));
+      }
+    }
+  });
+
 });
 
 /**
@@ -1370,9 +1424,9 @@ window.exportPDF = async function exportTagIntelligencePDF(format, buttonEl) {
 
   if (!results) {
     if (window.ReportUI?.toast) {
-      window.ReportUI.toast('Run a scan first to export PDF.');
+      window.ReportUI.toast(t('reports.common.noResultsToExport', 'Run a scan first to export PDF.'));
     } else {
-      alert('Run a scan first to export PDF.');
+      alert(t('reports.common.noResultsToExport', 'Run a scan first to export PDF.'));
     }
     return;
   }
@@ -1385,6 +1439,6 @@ window.exportPDF = async function exportTagIntelligencePDF(format, buttonEl) {
     });
   } else {
     console.error('PDF export utility not loaded');
-    alert('PDF export is not available. Please refresh the page.');
+    alert(t('reports.common.pdfNotAvailable', 'PDF export is not available. Please refresh the page.'));
   }
 };

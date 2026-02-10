@@ -22,6 +22,7 @@
   <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/performance-hub.html" />
   <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/performance-hub.html" />
   <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/performance-hub.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/performance-hub.html" />
   <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/performance-hub.html" />
 
   <!-- Open Graph -->
@@ -66,8 +67,11 @@
   <link rel="stylesheet" href="/css/components/modal.css">
   <link rel="stylesheet" href="/css/components/screenshot-lightbox.css">
   <link rel="stylesheet" href="/css/components/pro-report-block.css">
-  <link rel="stylesheet" href="/css/components/pricing-modal.css">
+  <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j">
+  <link rel="stylesheet" href="/css/components/usage-pill.css">
   <link rel="stylesheet" href="/spacing-fixes.css">
+  <link rel="stylesheet" href="/css/components/page-shell.css?v=20260131a">
+  <link rel="stylesheet" href="/css/components/ui-states.css">
   <link rel="icon" type="image/x-icon" href="/favicon.ico">
   
   <style>
@@ -887,7 +891,6 @@
 
   <!-- Scripts -->
   <script src="/i18n.js"></script>
-  <script src="/language-switcher.js"></script>
   <script src="/seo-i18n.js"></script>
 
   <!-- PDF Export Styles -->
@@ -896,74 +899,10 @@
 <body data-page="performance-hub">
   <!-- Navigation Bar -->
   <div id="nav-placeholder"></div>
-  
-  <main class="page-shell">
-    <!-- Breadcrumb -->
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="/dashboard.html">Home</a>
-      <span class="breadcrumb-sep">›</span>
-      <span aria-current="page">Speed & UX</span>
-    </nav>
-    
-    <!-- Page Header -->
-    <header class="page-header">
-      <h1 class="page-header__title">Speed & UX</h1>
-      <p class="page-header__subtitle">Analyze page load speed, Core Web Vitals, and Lighthouse performance metrics.</p>
-    </header>
 
-    <!-- Scan Card -->
-    <section class="card">
-      <h2 class="card__title mb-2">Run a scan</h2>
-      
-      <!-- Mode Selector Tabs -->
-      <div class="tabs" id="modeTabs">
-        <button type="button" class="tabs__item tabs__item--active" data-mode="quick" id="tab-quick" onclick="setPerformanceMode('quick')">
-          <span class="tabs__label">Quick scan</span>
-          <span class="tabs__desc">Resource analysis</span>
-          <span class="tabs__time">~5-10s</span>
-        </button>
-        <button type="button" class="tabs__item" data-mode="cwv" id="tab-cwv" onclick="setPerformanceMode('cwv')">
-          <span class="tabs__label">Core Web Vitals</span>
-          <span class="tabs__desc">Google ranking metrics</span>
-          <span class="tabs__time">~15-30s</span>
-        </button>
-        <button type="button" class="tabs__item" data-mode="full" id="tab-full" onclick="setPerformanceMode('full')">
-          <span class="tabs__label">Lighthouse Audit</span>
-          <span class="tabs__desc">Complete performance audit</span>
-          <span class="tabs__time">~2-3 min</span>
-        </button>
-      </div>
-      
-      <!-- URL Input Form -->
-      <div class="form-row">
-        <label for="urlInput" class="form-row__label">Website URL</label>
-        <div class="form-row__group">
-          <input type="url" id="urlInput" class="input" placeholder="https://example.com" aria-label="Enter website URL" required>
-          <button id="analyzeButton" class="btn btn-primary">
-            <span id="buttonText">Analyze</span>
-          </button>
-        </div>
-        <p class="helper-text">
-          <span class="mode-indicator">
-            <span class="mode-indicator__label">Mode:</span>
-            <span class="mode-indicator__value" id="selectedMode">Quick scan</span>
-          </span>
-        </p>
-        <p class="helper-text" id="modeDescription" style="margin-top: 0.25rem;">Resource analysis focusing on requests, page weight, blocking assets, and server response time.</p>
-      </div>
-    </section>
-    
-    <!-- Results Container -->
-    <div id="results" class="results-container hidden">
-      <!-- Loading State (will be populated by AnalyzerLoader) -->
-      <div id="loadingContainer"></div>
-      
-      <!-- Error State -->
-      <div id="errorMessage" class="error-message hidden"></div>
-      
-      <!-- Results Content -->
-      <div id="resultsContent"></div>
-    </div>
+  <!-- Page Shell Container (rendered by PageShell.js) -->
+  <main id="page-container" class="page-shell">
+    <!-- PageShell renders: breadcrumb, header, input card with tabs, results container -->
   </main>
   
   <!-- PDF Libraries -->
@@ -971,38 +910,46 @@
   <script src="/lib/jspdf.umd.min.js"></script>
 
   <!-- PDF Export Utility -->
-  <script src="/pdf-export-utility.js?v=2"></script>
+  <script src="/pdf-export-utility.js?v=20260201c"></script>
   <script src="/pdf-export-integration.js?v=2"></script>
 
   <!-- Footer Scripts -->
   <script src="/theme-controls.js"></script>
   <script src="/pro-utils.js"></script>
     <script src="/nav-template.js"></script>
+  <!-- Language Switcher (after nav-template so container exists) -->
+  <script src="/language-switcher.js"></script>
   <script src="/analyzer-loader.js"></script>
 
   <script src="/performance-fixes-renderer.js"></script>
 
   <!-- Report UI Components -->
   <script src="/js/credits.js"></script>
-  <script src="/js/report-ui.js"></script>
+  <script src="/js/report-ui.js?v=20260201a"></script>
   <script src="/js/components/reportShell.js?v=20260106a"></script>
   <script src="/js/components/reportAccordion.js?v=20260106a"></script>
   <script src="/js/components/ReportContainer.js?v=20260128a"></script>
+  <script src="/js/components/PageShell.js?v=20260201a"></script>
 
   <!-- Shared report shell + billing/entitlements (new canonical paths) -->
   <script src="/assets/js/report-shell.js"></script>
   <script src="/assets/js/billing.js"></script>
   <script src="/assets/js/entitlements.js"></script>
+  <script src="/scan-context.js?v=20260201c"></script>
   <script src="/js/components/Modal.js"></script>
   <script src="/js/components/ScreenshotLightbox.js"></script>
-  <script src="/js/components/ProReportBlock.js"></script>
+  <script src="/js/components/ProReportBlock.js?v=20260201e"></script>
   <script src="/js/components/PricingModal.js"></script>
+  <script src="/js/components/UsagePill.js"></script>
 
   <!-- Report Storage (for saving/loading report snapshots) -->
   <script src="/js/reportStorage.js?v=20260128a"></script>
 
+  <!-- Report Jump (auto-scroll to results) -->
+  <script src="/js/report-jump.js"></script>
+
   <!-- Analyzer Script -->
-  <script src="/performance-hub-script.js?v=20260128a"></script>
+  <script src="/performance-hub-script.js?v=20260201f"></script>
   
   <script>
     // PDF Export Function using improved utility
@@ -1034,9 +981,37 @@
       tab.addEventListener('click', function() {
         document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
         this.classList.add('tabs__item--active');
+
         const mode = this.dataset.mode;
-        const modeLabels = { quick: 'Quick scan', cwv: 'Core Web Vitals', full: 'Lighthouse Audit' };
-        document.getElementById('selectedMode').textContent = modeLabels[mode] || mode;
+        if (window.setPerformanceMode) {
+          window.setPerformanceMode(mode);
+          return;
+        }
+
+        const translate = (key, fallback) => {
+          if (window.i18n && typeof window.i18n.t === 'function') {
+            const result = window.i18n.t(key);
+            if (result !== key) return result;
+          }
+          return fallback;
+        };
+
+        const modeLabels = {
+          quick: translate('reports.modeLabels.quick', 'Quick scan'),
+          cwv: translate('reports.modeLabels.cwv', 'Core Web Vitals'),
+          full: translate('reports.modeLabels.full', 'Lighthouse Audit')
+        };
+
+        const modeDescriptions = {
+          quick: translate('performanceHub.modes.quickDesc', 'Resource analysis focusing on requests, page weight, blocking assets, and server response time.'),
+          cwv: translate('performanceHub.modes.cwvDescLong', 'Core Web Vitals deep dive: LCP, CLS, INP/TBT with risk flags and pass/fail indicators.'),
+          full: translate('performanceHub.modes.fullDescLong', 'Complete Lighthouse Audit across Performance, Accessibility, Best Practices, and SEO (desktop + mobile).')
+        };
+
+        const selectedMode = document.getElementById('selectedMode');
+        if (selectedMode) selectedMode.textContent = modeLabels[mode] || mode;
+        const modeDescription = document.getElementById('modeDescription');
+        if (modeDescription) modeDescription.textContent = modeDescriptions[mode] || modeDescriptions.quick;
       });
     });
     

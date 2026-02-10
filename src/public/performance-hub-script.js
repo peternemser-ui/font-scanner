@@ -6,22 +6,47 @@
  * - Core Web Vitals: Google ranking metrics focus
  */
 
+// Translation helper - evaluates at runtime to ensure i18n is loaded
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize PageShell for unified page structure
   const shell = window.PageShell.init('#page-container', {
     pageId: 'performance-hub',
-    pageTitle: 'Speed & UX',
-    pageDescription: 'Analyze page load speed, Core Web Vitals, and Lighthouse performance metrics.',
+    pageTitle: t('performanceHub.title', 'Speed & UX'),
+    pageDescription: t('performanceHub.subtitle', 'Analyze page load speed, Core Web Vitals, and Lighthouse performance metrics.'),
     analyzerType: 'speed-ux-quick',
+
+    i18n: {
+      title: 'performanceHub.title',
+      subtitle: 'performanceHub.subtitle'
+    },
 
     urlInput: {
       placeholder: 'https://example.com',
-      label: 'Website URL'
+      label: t('common.websiteUrl', 'Website URL'),
+      i18nLabel: 'common.websiteUrl'
     },
 
     scanButton: {
-      text: 'Analyze',
-      loadingText: 'Analyzing...'
+      text: t('common.analyze', 'Analyze'),
+      loadingText: t('common.analyzing', 'Analyzing...'),
+      i18nText: 'common.analyze'
     },
 
     // Rich tabs for Performance Hub
@@ -29,22 +54,29 @@ document.addEventListener('DOMContentLoaded', () => {
     tabs: [
       {
         id: 'quick',
-        label: 'Quick scan',
-        description: 'Resource analysis focusing on requests, page weight, blocking assets, and server response time.',
+        label: t('reports.modeLabels.quick', 'Quick scan'),
+        description: t('performanceHub.scan.quickDesc', 'Resource analysis focusing on requests, page weight, blocking assets, and server response time.'),
+        i18nLabel: 'reports.modeLabels.quick',
+        i18nDesc: 'performanceHub.scan.quickDesc',
         timeEstimate: '~5-10s',
-        isPro: false
+        isPro: false,
+        isFree: true
       },
       {
         id: 'cwv',
-        label: 'Core Web Vitals',
-        description: 'Google ranking metrics including LCP, FID, CLS, and INP.',
+        label: t('reports.modeLabels.cwv', 'Core Web Vitals'),
+        description: t('performanceHub.scan.cwvDesc', 'Google ranking metrics including LCP, FID, CLS, and INP.'),
+        i18nLabel: 'reports.modeLabels.cwv',
+        i18nDesc: 'performanceHub.scan.cwvDesc',
         timeEstimate: '~15-30s',
         isPro: false
       },
       {
         id: 'full',
-        label: 'Lighthouse Audit',
-        description: 'Complete performance audit with detailed desktop and mobile Lighthouse scores.',
+        label: t('reports.modeLabels.full', 'Lighthouse Audit'),
+        description: t('performanceHub.scan.fullDesc', 'Complete performance audit with detailed desktop and mobile Lighthouse scores.'),
+        i18nLabel: 'reports.modeLabels.full',
+        i18nDesc: 'performanceHub.scan.fullDesc',
         timeEstimate: '~2-3 min',
         isPro: false
       }
@@ -77,6 +109,76 @@ document.addEventListener('DOMContentLoaded', () => {
   const modeTabs = Array.from(document.querySelectorAll('.tabs__item'));
   const modeIndicator = document.getElementById('selectedMode');
   const modeDescription = document.getElementById('modeDescription');
+
+  // Tab translation data - used for language switching
+  const tabI18nData = {
+    quick: { label: 'reports.modeLabels.quick', desc: 'performanceHub.scan.quickDesc' },
+    cwv: { label: 'reports.modeLabels.cwv', desc: 'performanceHub.scan.cwvDesc' },
+    full: { label: 'reports.modeLabels.full', desc: 'performanceHub.scan.fullDesc' }
+  };
+
+  const modeDescriptionI18n = {
+    quick: 'performanceHub.modes.quickDesc',
+    cwv: 'performanceHub.modes.cwvDescLong',
+    full: 'performanceHub.modes.fullDescLong'
+  };
+
+  // Update tabs when language changes
+  function updateTabsLanguage() {
+    modeTabs.forEach(tab => {
+      const mode = tab.dataset.mode;
+      const i18nData = tabI18nData[mode];
+      if (!i18nData) return;
+
+      const labelEl = tab.querySelector('.tabs__label');
+      const descEl = tab.querySelector('.tabs__desc');
+
+      if (labelEl && i18nData.label) {
+        labelEl.textContent = t(i18nData.label, labelEl.textContent);
+      }
+      if (descEl && i18nData.desc) {
+        descEl.textContent = t(i18nData.desc, descEl.textContent);
+      }
+    });
+
+    // Update mode indicator if visible
+    const activeTab = document.querySelector('.tabs__item--active');
+    if (activeTab && modeIndicator) {
+      const mode = activeTab.dataset.mode;
+      const i18nData = tabI18nData[mode];
+      if (i18nData) {
+        modeIndicator.textContent = t(i18nData.label, modeIndicator.textContent);
+      }
+      if (modeDescription) {
+        const descKey = modeDescriptionI18n[mode];
+        if (descKey) {
+          modeDescription.textContent = t(descKey, modeDescription.textContent);
+        }
+      }
+    }
+  }
+
+  // Listen for language changes and update tabs
+  window.addEventListener('languageChanged', updateTabsLanguage);
+
+  // Also update immediately in case i18n is already loaded
+  if (window.i18n && window.i18n.initialized) {
+    updateTabsLanguage();
+  }
+
+  // Re-render when entitlements arrive/change (handles race conditions
+  // where sections rendered before billing status was available)
+  window.addEventListener('entitlements:updated', () => {
+    if (window.SM_IS_SCANNING) return;
+    if (window.currentPerformanceResults) {
+      try {
+        console.log('[PerformanceHub] Entitlements updated, re-rendering results');
+        displayResults(window.currentPerformanceResults);
+      } catch (e) {
+        // ignore
+      }
+    }
+  });
 
   async function ensureCreditsManagerLoaded() {
     if (window.CreditsManager) return;
@@ -205,16 +307,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
     }
-    // Fallback to legacy key (no URL) for backwards compatibility
-    const legacyPurchaseKey = `sm_report_purchased_${reportType}`;
-    const legacyPurchaseTimestamp = localStorage.getItem(legacyPurchaseKey);
-    if (legacyPurchaseTimestamp) {
-      const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
-      if (parseInt(legacyPurchaseTimestamp, 10) > oneDayAgo) {
-        console.log('[PerformanceHub] Recent purchase found for:', reportType, '(legacy key)');
-        return true;
-      }
-    }
+    // SECURITY: Removed legacy key fallback - was causing access leakage across URLs
+    // Only URL-specific keys are trusted
 
     console.log('[PerformanceHub] No access found for mode:', mode);
     return false;
@@ -233,10 +327,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const urlHash = window.ReportUI?.hashForStorageKey?.(normalizedUrl) || url.replace(/[^a-z0-9]/gi, '').slice(0, 16);
       const purchaseKey = `sm_report_purchased_${reportType}_${urlHash}`;
       localStorage.setItem(purchaseKey, Date.now().toString());
+      console.log('[PerformanceHub] Set URL-specific purchase key in onPaymentSuccess:', purchaseKey);
     }
-    // Also set legacy key for backwards compatibility
-    const legacyPurchaseKey = `sm_report_purchased_${reportType}`;
-    localStorage.setItem(legacyPurchaseKey, Date.now().toString());
+    // SECURITY: Removed legacy key - was causing access leakage across URLs
 
     // Clear billing cache to refresh status
     if (window.ProReportBlock?.clearBillingCache) {
@@ -286,17 +379,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateModeIndicator() {
     const modeLabels = {
-      'quick': 'Quick scan',
-      'cwv': 'Core Web Vitals',
-      'full': 'Lighthouse Audit'
+      'quick': t('reports.modeLabels.quick', 'Quick scan'),
+      'cwv': t('reports.modeLabels.cwv', 'Core Web Vitals'),
+      'full': t('reports.modeLabels.full', 'Lighthouse Audit')
     };
     const modeDescriptions = {
-      'quick': 'Resource analysis focusing on requests, page weight, blocking assets, and server response time.',
-      'cwv': 'Core Web Vitals deep dive: LCP, CLS, INP/TBT with risk flags and pass/fail indicators.',
-      'full': 'Complete Lighthouse Audit across Performance, Accessibility, Best Practices, and SEO (desktop + mobile).'
+      'quick': t('performanceHub.modes.quickDesc', 'Resource analysis focusing on requests, page weight, blocking assets, and server response time.'),
+      'cwv': t('performanceHub.modes.cwvDescLong', 'Core Web Vitals deep dive: LCP, CLS, INP/TBT with risk flags and pass/fail indicators.'),
+      'full': t('performanceHub.modes.fullDescLong', 'Complete Lighthouse Audit across Performance, Accessibility, Best Practices, and SEO (desktop + mobile).')
     };
     if (modeIndicator) {
-      modeIndicator.textContent = modeLabels[currentMode] || 'Quick scan';
+      modeIndicator.textContent = modeLabels[currentMode] || t('reports.modeLabels.quick', 'Quick scan');
     }
     if (modeDescription) {
       modeDescription.textContent = modeDescriptions[currentMode] || modeDescriptions.quick;
@@ -330,22 +423,38 @@ document.addEventListener('DOMContentLoaded', () => {
   const paymentSuccessParam = params.get('payment') === 'success'; // Stripe single-report purchase return
   const sessionIdParam = params.get('session_id') || params.get('sessionId');
 
-  // If returning from successful payment, mark the report type as purchased
+  // SECURITY: If NOT returning from billing, clear any stale session markers
+  // This prevents old session markers from granting access to new scans
+  const isReturningFromBilling = (billingSuccessParam || paymentSuccessParam) && sessionIdParam;
+  if (!isReturningFromBilling) {
+    const existingMarker = sessionStorage.getItem('sm_payment_completed_session');
+    if (existingMarker) {
+      console.log('[PerformanceHub] SECURITY: Clearing stale session markers (not returning from billing)');
+      sessionStorage.removeItem('sm_payment_completed_session');
+      sessionStorage.removeItem('sm_purchased_report_id');
+    }
+  }
+
+  // If returning from successful payment, set up session-verified purchase
   // This must happen BEFORE mode initialization so checkCanRunReport passes
   if ((billingSuccessParam || sessionIdParam || paymentSuccessParam) && reportTypeParam) {
-    console.log('[PerformanceHub] Marking report type as purchased after billing return:', reportTypeParam);
-    // Use URL-specific purchase key to prevent collision between different URLs
-    if (urlParam) {
-      const normalizedUrl = window.ReportUI?.normalizeUrlForReportId?.(urlParam) || urlParam;
-      const urlHash = window.ReportUI?.hashForStorageKey?.(normalizedUrl) || urlParam.replace(/[^a-z0-9]/gi, '').slice(0, 16);
-      const purchaseKey = `sm_report_purchased_${reportTypeParam}_${urlHash}`;
-      localStorage.setItem(purchaseKey, Date.now().toString());
-    }
-    // Also set legacy key for backwards compatibility
-    const legacyPurchaseKey = `sm_report_purchased_${reportTypeParam}`;
-    localStorage.setItem(legacyPurchaseKey, Date.now().toString());
+    console.log('[PerformanceHub] Processing billing return:', reportTypeParam);
+
+    // CRITICAL: Clear the fresh scan flag - this is a PAID report
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+    console.log('[PerformanceHub] Cleared fresh scan flag for paid report');
+
+    // NOTE: Removed URL-based localStorage purchase keys - these were causing security issues
+    // by granting access to ALL scans of a URL if any one scan was purchased.
+    // Now using reportId-based verification only.
+
     // Set session marker so ProReportBlock knows this is a valid same-session payment
     sessionStorage.setItem('sm_payment_completed_session', Date.now().toString());
+    // CRITICAL: Store the purchased reportId for reportId-based access verification
+    if (reportIdParam) {
+      sessionStorage.setItem('sm_purchased_report_id', reportIdParam);
+      console.log('[PerformanceHub] Stored purchased reportId in session:', reportIdParam);
+    }
     // Also clear billing cache to get fresh status
     if (window.ProReportBlock?.clearBillingCache) {
       window.ProReportBlock.clearBillingCache();
@@ -465,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (renderError) {
       console.error('[PerformanceHub] Error rendering results:', renderError);
-      displayError('Failed to render report. The data may be corrupted.', { error: renderError.message });
+      displayError(t('reports.common.failedToRender', 'Failed to render report. The data may be corrupted.'), { error: renderError.message });
     }
   }
 
@@ -493,6 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Display the results immediately
       try {
         displayResults(injectedData);
+        window.__REPORT_READY__ = true;
         console.log('[PerformanceHub] Puppeteer-injected data displayed successfully');
         return; // Don't continue with normal init flow
       } catch (e) {
@@ -656,11 +766,16 @@ document.addEventListener('DOMContentLoaded', () => {
             displayResults(stored.data);
             console.log('[PerformanceHub] displayResults completed successfully');
             window.ReportStorage.showStoredReportBanner?.(stored.metadata);
+            // Signal for Puppeteer PDF export that report content is rendered
+            window.__REPORT_READY__ = true;
             // Clean URL after successful display so refresh doesn't reload stored report
-            const cleanParams = new URLSearchParams(window.location.search);
-            cleanParams.delete('report_id');
-            const cleanedUrl = `${window.location.pathname}${cleanParams.toString() ? `?${cleanParams.toString()}` : ''}`;
-            window.history.replaceState({}, '', cleanedUrl);
+            // (Skip URL cleanup in print mode since Puppeteer needs the report_id param)
+            if (new URLSearchParams(window.location.search).get('print') !== '1') {
+              const cleanParams = new URLSearchParams(window.location.search);
+              cleanParams.delete('report_id');
+              const cleanedUrl = `${window.location.pathname}${cleanParams.toString() ? `?${cleanParams.toString()}` : ''}`;
+              window.history.replaceState({}, '', cleanedUrl);
+            }
             console.log('[PerformanceHub] Report displayed successfully, returning');
             return; // Don't auto-scan - successful display
           } catch (displayError) {
@@ -713,28 +828,28 @@ document.addEventListener('DOMContentLoaded', () => {
     switch (mode) {
       case 'quick':
         return [
-          { label: 'Connecting to website', detail: 'Establishing connection...' },
-          { label: 'Analyzing resources', detail: 'Scanning CSS, JS, images...' },
-          { label: 'Calculating metrics', detail: 'Computing performance score...' }
+          { label: t('loader.connectingToWebsite', 'Connecting to website'), detail: t('loader.establishingConnection', 'Establishing connection...') },
+          { label: t('loader.analyzingResources', 'Analyzing resources'), detail: t('loader.scanningResources', 'Scanning CSS, JS, images...') },
+          { label: t('loader.calculatingMetrics', 'Calculating metrics'), detail: t('loader.computingScore', 'Computing performance score...') }
         ];
       case 'full':
         return [
-          { label: 'Initializing Lighthouse', detail: 'Preparing analysis engine...' },
-          { label: 'Desktop analysis', detail: 'Running desktop performance audit...' },
-          { label: 'Mobile analysis', detail: 'Running mobile performance audit...' },
-          { label: 'Calculating scores', detail: 'Computing Lighthouse scores...' },
-          { label: 'Generating report', detail: 'Compiling comprehensive results...' }
+          { label: t('loader.initializingLighthouse', 'Initializing Lighthouse'), detail: t('loader.preparingEngine', 'Preparing analysis engine...') },
+          { label: t('loader.desktopAnalysis', 'Desktop analysis'), detail: t('loader.runningDesktopAudit', 'Running desktop performance audit...') },
+          { label: t('loader.mobileAnalysis', 'Mobile analysis'), detail: t('loader.runningMobileAudit', 'Running mobile performance audit...') },
+          { label: t('loader.calculatingScores', 'Calculating scores'), detail: t('loader.computingLighthouseScores', 'Computing Lighthouse scores...') },
+          { label: t('loader.generatingReport', 'Generating report'), detail: t('loader.compilingResults', 'Compiling comprehensive results...') }
         ];
       case 'cwv':
         return [
-          { label: 'Loading page', detail: 'Navigating to website...' },
-          { label: 'Measuring LCP', detail: 'Largest Contentful Paint...' },
-          { label: 'Measuring CLS', detail: 'Cumulative Layout Shift...' },
-          { label: 'Measuring INP', detail: 'Interaction to Next Paint...' },
-          { label: 'Calculating score', detail: 'Computing overall CWV grade...' }
+          { label: t('loader.loadingPage', 'Loading page'), detail: t('loader.navigatingToWebsite', 'Navigating to website...') },
+          { label: t('loader.measuringLcp', 'Measuring LCP'), detail: t('reports.cwv.lcpName', 'Largest Contentful Paint') + '...' },
+          { label: t('loader.measuringCls', 'Measuring CLS'), detail: t('reports.cwv.clsName', 'Cumulative Layout Shift') + '...' },
+          { label: t('loader.measuringInp', 'Measuring INP'), detail: t('reports.cwv.inpName', 'Interaction to Next Paint') + '...' },
+          { label: t('loader.calculatingScore', 'Calculating score'), detail: t('loader.computingCwvGrade', 'Computing overall CWV grade...') }
         ];
       default:
-        return [{ label: 'Analyzing', detail: 'Please wait...' }];
+        return [{ label: t('common.analyzing', 'Analyzing'), detail: t('common.pleaseWait', 'Please wait...') }];
     }
   }
 
@@ -751,19 +866,42 @@ document.addEventListener('DOMContentLoaded', () => {
   // Get title for each mode
   function getLoaderTitle(mode) {
     switch (mode) {
-      case 'quick': return 'Quick Scan';
-      case 'full': return 'Full Lighthouse Analysis';
-      case 'cwv': return 'Core Web Vitals';
-      default: return 'Analyzing';
+      case 'quick': return t('reports.performance.quickScan', 'Quick Scan');
+      case 'full': return t('reports.performance.fullLighthouseAnalysis', 'Full Lighthouse Analysis');
+      case 'cwv': return t('reports.cwv.title', 'Core Web Vitals');
+      default: return t('common.analyzing', 'Analyzing');
     }
   }
 
   async function runAnalysis() {
     const url = urlInput.value.trim();
     if (!url) {
-      showError('Please enter a valid URL');
+      showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
       return;
     }
+
+    // CRITICAL: Mark this as a FRESH SCAN that requires payment
+    // VERSION: 20260201g - This flag ensures new scans are LOCKED until paid
+    console.log('[PerformanceHub] NEW SCAN v20260201g: Marking as fresh unpaid scan');
+
+    // Set the fresh scan flag - this BLOCKS access until cleared by payment
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = true;
+    window.__SM_CURRENT_SCAN_URL__ = url;
+
+    // Clear old reportId from body
+    document.body.removeAttribute('data-report-id');
+    document.body.removeAttribute('data-scan-domain');
+
+    // Clear ProReportBlock billing cache
+    if (window.ProReportBlock?.clearBillingCache) {
+      window.ProReportBlock.clearBillingCache();
+    }
+
+    // FORCE clear ALL session markers
+    sessionStorage.removeItem('sm_payment_completed_session');
+    sessionStorage.removeItem('sm_purchased_report_id');
+
+    console.log('[PerformanceHub] Fresh scan flag set, session markers cleared');
 
     // ALWAYS read mode from the active tab to ensure we have the correct mode
     const activeTab = document.querySelector('.tabs__item.tabs__item--active');
@@ -773,21 +911,10 @@ document.addEventListener('DOMContentLoaded', () => {
       updateModeIndicator();
     }
 
-    // ==================== PAYMENT GATE CHECK ====================
-    // Check if user can run this report (subscription or purchase required for non-free modes)
-    const canRun = await checkCanRunReport(currentMode);
-    if (!canRun) {
-      console.log('[PerformanceHub] Payment required for mode:', currentMode);
-      // Store URL for resuming after payment
-      pendingAnalysisUrl = url;
-      // Get report type for payment gate
-      const reportType = currentMode === 'full' ? 'lighthouse' : currentMode;
-      // Show payment gate modal
-      showPaymentGate(reportType, url);
-      return;
-    }
-    console.log('[PerformanceHub] Access granted, proceeding with analysis');
-    // ==================== END PAYMENT GATE ====================
+    // NOTE: Payment gate removed - all scans are FREE to run
+    // Pro sections are locked in the results, not before the scan
+    // This matches the UX of other analyzers (SEO, Accessibility, etc.)
+    console.log('[PerformanceHub] Running scan (all scans are free):', currentMode);
 
     // Show loading with AnalyzerLoader (remove both CSS class and HTML attribute)
     results.classList.remove('hidden');
@@ -795,7 +922,12 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContent.innerHTML = '';
     errorMessage.classList.add('hidden');
     analyzeButton.disabled = true;
-    buttonText.textContent = 'Analyzing...';
+    buttonText.textContent = t('common.analyzing', 'Analyzing') + '...';
+
+    // Reset ReportUI waiting state to ensure screenshot card is created for new scan
+    if (window.ReportUI?.resetWaitingState) {
+      window.ReportUI.resetWaitingState();
+    }
 
     // Remove any stored report banner from previous session
     const storedReportBanner = document.getElementById('sm-stored-report-banner');
@@ -831,10 +963,10 @@ document.addEventListener('DOMContentLoaded', () => {
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
       <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
-        ${currentMode === 'full' ? 'Full Lighthouse analysis in progress...' : 'Performance analysis in progress...'}
+        ${currentMode === 'full' ? t('loader.fullLighthouseInProgress', 'Full Lighthouse analysis in progress...') : t('loader.performanceInProgress', 'Performance analysis in progress...')}
       </p>
       <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(var(--accent-primary-rgb), 0.7); padding: 0 0.5rem;">
-        ${currentMode === 'full' ? 'This may take 60-90 seconds' : 'This may take 15-30 seconds'}
+        ${currentMode === 'full' ? t('loader.mayTake60to90', 'This may take 60-90 seconds') : t('loader.mayTake15to30', 'This may take 15-30 seconds')}
       </p>
     `;
 
@@ -928,6 +1060,31 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('[PerformanceHub] Updated report ID from API:', apiReportId);
       }
 
+      // CRITICAL FIX: Update URL in browser address bar to reflect the scanned URL
+      // This prevents URL collision where old URL stays in address bar after new scan
+      const finalReportId = apiReportId || reportId;
+      const newParams = new URLSearchParams();
+      newParams.set('url', url);
+      if (currentMode !== 'quick') {
+        newParams.set('mode', currentMode);
+      }
+      if (finalReportId) {
+        newParams.set('report_id', finalReportId);
+      }
+      const newUrl = `${window.location.pathname}?${newParams.toString()}`;
+      window.history.replaceState({}, '', newUrl);
+      console.log('[PerformanceHub] Updated browser URL to:', newUrl);
+
+      // CRITICAL FIX: Ensure screenshot card is shown
+      // The MutationObserver may miss this if waitingForResults flag is not set correctly
+      if (finalReportId && typeof window.ReportUI?.ensurePageScreenshotCard === 'function') {
+        // Small delay to ensure DOM is updated
+        setTimeout(() => {
+          window.ReportUI.ensurePageScreenshotCard(finalReportId);
+          console.log('[PerformanceHub] Called ensurePageScreenshotCard for:', finalReportId);
+        }, 100);
+      }
+
       // Store the results globally for potential auto-save
       // Include URL for PDF export and other utilities
       window.currentPerformanceResults = { ...data, url };
@@ -959,10 +1116,10 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
     } catch (error) {
-      showError(error.message);
+      showError(error);
     } finally {
       analyzeButton.disabled = false;
-      buttonText.textContent = 'Analyze';
+      buttonText.textContent = t('common.analyze', 'Analyze');
       if (loader) {
         loader.complete();
       }
@@ -973,22 +1130,34 @@ document.addEventListener('DOMContentLoaded', () => {
   async function runQuickScan(url, scanStartedAt) {
     if (loader) loader.nextStep(0);
 
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const response = await fetch('/api/performance-snapshot', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY })
     });
 
     if (loader) loader.nextStep(1);
 
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Quick scan failed');
+      const errorData = await response.json();
+      if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
+        const limit = errorData.scansLimit || 10;
+        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+      }
+      const err = new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Quick scan failed'));
+      err.errorName = errorData.error;
+      err.errorMessage = errorData.message;
+      err.errorTimestamp = errorData.timestamp;
+      throw err;
     }
 
     const data = await response.json();
     if (loader) loader.nextStep(2);
-    
+
     return data;
   }
 
@@ -1001,9 +1170,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minutes
 
     try {
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/performance', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY }),
         signal: controller.signal
       });
@@ -1013,8 +1186,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (loader) loader.nextStep(3);
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || 'Full analysis failed');
+        const errorData = await response.json();
+        if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
+          const limit = errorData.scansLimit || 10;
+          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        }
+        const err = new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Full analysis failed'));
+        err.errorName = errorData.error;
+        err.errorMessage = errorData.message;
+        err.errorTimestamp = errorData.timestamp;
+        throw err;
       }
 
       const data = await response.json();
@@ -1046,12 +1227,17 @@ document.addEventListener('DOMContentLoaded', () => {
       if (loader) loader.nextStep(3);
 
       if (!response.ok) {
-        let errorMessage = 'CWV analysis failed';
+        let errorMessage = t('reports.common.analysisFailed', 'CWV analysis failed');
         try {
           const errorData = await response.json();
-          errorMessage = errorData.error || errorData.message || errorMessage;
+          if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
+            const limit = errorData.scansLimit || 10;
+            throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          }
+          errorMessage = errorData.message || errorData.error || errorMessage;
           console.error('[PerformanceHub] CWV API error:', { status: response.status, error: errorData });
         } catch (parseErr) {
+          if (parseErr.message && parseErr.message.includes('scan limit')) throw parseErr;
           console.error('[PerformanceHub] CWV API error (non-JSON):', response.status, response.statusText);
           errorMessage = `Server error (${response.status}): ${response.statusText}`;
         }
@@ -1129,14 +1315,7 @@ document.addEventListener('DOMContentLoaded', () => {
               font-size: 0.85rem;
               color: rgba(255,255,255,0.9);
             ">
-              <strong style="color: ${config.color};">Generated:</strong> ${new Date().toLocaleString('en-US', {
-                month: 'short',
-                day: 'numeric',
-                year: 'numeric',
-                hour: 'numeric',
-                minute: '2-digit',
-                hour12: true
-              })}
+              <strong style="color: ${config.color};">${t('reports.common.generated', 'Generated')}:</strong> ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString()}
             </div>
           </div>
         </div>
@@ -1233,7 +1412,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function displayQuickResults(data) {
     // Check if data has errors
     if (!data || data.error) {
-      displayError(data?.error || 'Failed to analyze performance', data?.details);
+      displayError(data?.error || t('reports.common.failedToAnalyze', 'Failed to analyze performance'), data?.details);
       return;
     }
 
@@ -1251,7 +1430,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const blockingRating = summary.renderBlockingCount <= 3 ? 'good' : summary.renderBlockingCount <= 5 ? 'average' : 'poor';
     const responseRating = summary.serverResponseTime <= 500 ? 'good' : summary.serverResponseTime <= 1000 ? 'average' : 'poor';
 
-    const generatedAt = new Date().toLocaleString();
+    const generatedAt = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
     const ratingColor = (rating) => {
       if (rating === 'good') return '#22c55e';
       if (rating === 'average') return '#f59e0b';
@@ -1260,14 +1439,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const quickScore = normalizeScore(data.performanceScore) ?? computeQuickScoreFromSummary(summary, issues);
     const summaryDonuts = ReportShell.renderSummaryDonuts([
-      { label: 'Quick Score', score: quickScore }
+      { label: t('reports.performance.quickScore', 'Quick Score'), score: quickScore }
     ]);
 
     const metrics = [
-      { label: 'Requests', value: summary.totalRequests ?? '—', color: ratingColor(requestsRating) },
-      { label: 'Page Weight', value: formatKB(summary.estimatedPageWeightKB), color: ratingColor(weightRating) },
-      { label: 'Blocking', value: summary.renderBlockingCount ?? 0, color: ratingColor(blockingRating) },
-      { label: 'Response', value: `${summary.serverResponseTime || 0}ms`, color: ratingColor(responseRating) }
+      { label: t('reports.performance.requests', 'Requests'), value: summary.totalRequests ?? '—', color: ratingColor(requestsRating) },
+      { label: t('reports.performance.pageWeight', 'Page Weight'), value: formatKB(summary.estimatedPageWeightKB), color: ratingColor(weightRating) },
+      { label: t('reports.performance.renderBlocking', 'Blocking'), value: summary.renderBlockingCount ?? 0, color: ratingColor(blockingRating) },
+      { label: t('reports.performance.serverResponse', 'Response'), value: `${summary.serverResponseTime || 0}ms`, color: ratingColor(responseRating) }
     ];
 
     const metricsSection = `
@@ -1283,19 +1462,24 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     `;
 
+    const causeKeyMap = {
+      'image_bloat': t('reports.performance.causeImageBloat', 'Image bloat'),
+      'heavy_javascript': t('reports.performance.causeHeavyJavascript', 'Heavy JavaScript'),
+      'third_party_scripts': t('reports.performance.causeThirdPartyScripts', 'Third-party scripts')
+    };
     const issuesContent = recommendations.likelyCauses && recommendations.likelyCauses.length > 0
       ? `
         <div class="report-shell__card">
-          ${createInfoBox('error', 'Likely Performance Issues', `
+          ${createInfoBox('error', t('reports.performance.likelyPerformanceIssues', 'Likely Performance Issues'), `
             <ul style="margin: 0; padding-left: 1.5rem; display: grid; gap: 0.5rem;">
-              ${recommendations.likelyCauses.map(cause => `<li>${cause}</li>`).join('')}
+              ${recommendations.likelyCauses.map(cause => `<li>${causeKeyMap[cause] || cause}</li>`).join('')}
             </ul>
           `, '🔍')}
         </div>
       `
       : `
         <div class="report-shell__card">
-          ${createInfoBox('success', 'No Major Issues Detected', 'Your page resources appear to be well-optimized.', '✓')}
+          ${createInfoBox('success', t('reports.performance.noMajorIssues', 'No Major Performance Issues'), t('reports.performance.noMajorIssuesDesc', 'Your page resources appear to be well-optimized.'), '✓')}
         </div>
       `;
 
@@ -1306,17 +1490,17 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     const scoreNote = quickScore === null
-      ? `<div class="report-shell__card">${createInfoBox('info', 'Score unavailable', 'We couldn\'t compute a score from this scan, but the metrics and issues below are still actionable.', 'ℹ️')}</div>`
+      ? `<div class="report-shell__card">${createInfoBox('info', t('reports.performance.scoreUnavailable', 'Score unavailable'), t('reports.performance.scoreUnavailableDesc', "We couldn't compute a score from this scan, but the metrics and issues below are still actionable."), 'ℹ️')}</div>`
       : '';
 
     const accordions = [
-      ReportAccordion.createSection({ id: 'quick-metrics', title: 'Key Performance Metrics', scoreTextRight: formatScoreText(quickScore), contentHTML: metricsSection }),
-      ReportAccordion.createSection({ id: 'quick-issues', title: 'Likely Performance Issues', scoreTextRight: null, contentHTML: issuesContent }),
-      ReportAccordion.createSection({ id: 'quick-resources', title: 'Resource Breakdown', scoreTextRight: null, contentHTML: resourcesContent })
+      ReportAccordion.createSection({ id: 'quick-metrics', title: t('reports.performance.keyMetrics', 'Key Performance Metrics'), scoreTextRight: formatScoreText(quickScore), contentHTML: metricsSection }),
+      ReportAccordion.createSection({ id: 'quick-issues', title: t('reports.performance.likelyIssues', 'Likely Performance Issues'), scoreTextRight: null, contentHTML: issuesContent }),
+      ReportAccordion.createSection({ id: 'quick-resources', title: t('reports.performance.resourceBreakdown', 'Resource Breakdown'), scoreTextRight: null, contentHTML: resourcesContent })
     ].join('');
 
     const html = `
-      ${ReportShell.renderReportHeader({ title: 'Speed & UX Report: Quick Scan', url, timestamp: generatedAt, badgeText: 'Quick Scan', mode: 'quick' })}
+      ${ReportShell.renderReportHeader({ title: t('reports.performanceHub.quickScanTitle', 'Speed & UX Report: Quick Scan'), url, timestamp: generatedAt, badgeText: t('reports.performanceHub.quickScanBadge', 'Quick Scan'), mode: 'quick' })}
       ${summaryDonuts}
       ${scoreNote}
       ${accordions}
@@ -1351,12 +1535,19 @@ document.addEventListener('DOMContentLoaded', () => {
       const reportId = document.body.getAttribute('data-report-id') || '';
       if (reportId) window.CreditsManager.renderPaywallState(reportId);
     }
+
+    // Notify UsagePill to refresh
+    window.dispatchEvent(new CustomEvent('scan:completed'));
   }
 
   // Display Full Lighthouse Results
   function displayFullResults(data) {
     // API returns { success, results, requestId } - extract results
     const results = data.results || data;
+
+    // Build screenshot URL for report display
+    const reportId = document.body.getAttribute('data-report-id') || '';
+    const screenshotUrl = data.screenshotUrl || results.screenshotUrl || document.body.getAttribute('data-sm-screenshot-url') || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
     const desktopRaw = results.desktop || {};
     const mobileRaw = results.mobile || {};
     // Normalize CWV data for consistent rendering
@@ -1369,12 +1560,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const mobilePerf = normalizeScore(mobile?.lighthouse?.performance ?? mobile.performanceScore);
     const perfValues = [desktopPerf, mobilePerf].filter(v => typeof v === 'number' && v > 0);
     const overallPerf = perfValues.length ? Math.round(perfValues.reduce((a, b) => a + b, 0) / perfValues.length) : null;
-    const generatedAt = new Date().toLocaleString();
+    const generatedAt = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
     const summaryDonuts = ReportShell.renderSummaryDonuts([
-      { label: 'Performance', score: averageScore(desktopPerf, mobilePerf) },
-      { label: 'Accessibility', score: averageScore(desktop?.lighthouse?.accessibility, mobile?.lighthouse?.accessibility) },
-      { label: 'Best Practices', score: averageScore(desktop?.lighthouse?.bestPractices, mobile?.lighthouse?.bestPractices) },
-      { label: 'SEO', score: averageScore(desktop?.lighthouse?.seo, mobile?.lighthouse?.seo) }
+      { label: t('reports.performance.performance', 'Performance'), score: averageScore(desktopPerf, mobilePerf) },
+      { label: t('reports.accessibility.title', 'Accessibility'), score: averageScore(desktop?.lighthouse?.accessibility, mobile?.lighthouse?.accessibility) },
+      { label: t('reports.performance.bestPractices', 'Best Practices'), score: averageScore(desktop?.lighthouse?.bestPractices, mobile?.lighthouse?.bestPractices) },
+      { label: t('reports.seo.title', 'SEO'), score: averageScore(desktop?.lighthouse?.seo, mobile?.lighthouse?.seo) }
     ]);
 
     const performanceMetricsContent = renderPerformanceMetricsSection(desktop, mobile, network);
@@ -1416,7 +1607,26 @@ document.addEventListener('DOMContentLoaded', () => {
     // These all represent actionable items that need attention
     const issuesCount = opportunitiesCount + recommendationsCount + diagnosticsCount + categoryIssuesCount;
 
-    const proLocked = !userHasPro();
+    // Check access - supports both logged-in users AND guest purchases
+    // VERSION: 20260201f - verify this version in console
+    const currentReportId = document.body.getAttribute('data-report-id') || '';
+    const sessionMarker = sessionStorage.getItem('sm_payment_completed_session');
+    const purchasedReportId = sessionStorage.getItem('sm_purchased_report_id');
+
+    console.log('[Full Lighthouse Debug] v20260201f - reportId:', currentReportId, 'purchasedReportId:', purchasedReportId);
+
+    // SECURITY: If session marker exists but reportId doesn't match, clear the stale markers
+    if (sessionMarker && purchasedReportId && purchasedReportId !== currentReportId) {
+      console.log('[Full Lighthouse Debug] SECURITY: Clearing mismatched session markers');
+      sessionStorage.removeItem('sm_payment_completed_session');
+      sessionStorage.removeItem('sm_purchased_report_id');
+    }
+
+    const userHasProResultFull = userHasPro();
+    // Guest purchases work via session marker + localStorage purchase keys
+    const proLocked = !userHasProResultFull;
+    console.log('[Full Lighthouse Debug] proLocked:', proLocked, 'userHasPro:', userHasProResultFull);
+
     const topLevelRecs = Array.isArray(results.recommendations) ? results.recommendations : [];
     const topLevelOpps = Array.isArray(results.opportunities) ? results.opportunities : [];
     const desktopForFixes = topLevelRecs.length || topLevelOpps.length
@@ -1443,11 +1653,11 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
     const accordions = [
-      ReportAccordion.createSection({ id: 'lh-category-scores', title: 'Category Scores', scoreTextRight: formatScoreText(overallPerf), contentHTML: categoryScoresContent }),
-      ReportAccordion.createSection({ id: 'lh-performance-metrics', title: 'Performance Metrics', scoreTextRight: formatScoreText(overallPerf), contentHTML: performanceMetricsContent }),
-      ReportAccordion.createSection({ id: 'lh-cwv', title: 'Core Web Vitals', scoreTextRight: formatScoreText(overallPerf), contentHTML: cwvContent }),
-      ReportAccordion.createSection({ id: 'lh-resources', title: 'Resource Breakdown', scoreTextRight: null, contentHTML: resourcesContent }),
-      ReportAccordion.createSection({ id: 'lh-fixes', title: 'Fix Code + Recommendations', scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
+      ReportAccordion.createSection({ id: 'lh-category-scores', title: t('reports.performance.categoryScores', 'Category Scores'), scoreTextRight: formatScoreText(overallPerf), contentHTML: categoryScoresContent }),
+      ReportAccordion.createSection({ id: 'lh-performance-metrics', title: t('reports.performance.performanceMetrics', 'Performance Metrics'), scoreTextRight: formatScoreText(overallPerf), contentHTML: performanceMetricsContent }),
+      ReportAccordion.createSection({ id: 'lh-cwv', title: t('reports.performance.coreWebVitals', 'Core Web Vitals'), scoreTextRight: formatScoreText(overallPerf), contentHTML: cwvContent }),
+      ReportAccordion.createSection({ id: 'lh-resources', title: t('reports.performance.resourceBreakdown', 'Resource Breakdown'), scoreTextRight: null, contentHTML: resourcesContent }),
+      ReportAccordion.createSection({ id: 'lh-fixes', title: t('reports.common.fixCodeRecommendations', 'Fix Code + Recommendations'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
     ].join('');
 
     const summaryStats = calculatePerformanceSummary({
@@ -1457,8 +1667,27 @@ document.addEventListener('DOMContentLoaded', () => {
       checks: countLighthouseChecks(desktop, mobile)
     });
 
+    // Build screenshot HTML
+    const screenshotHTML = screenshotUrl ? `
+      <div class="screenshot-section" style="margin-bottom: 1.5rem;">
+        <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+          Page Screenshot
+        </h3>
+        <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+          <img
+            src="${screenshotUrl}"
+            alt="Screenshot of ${url}"
+            class="screenshot-item__img perf-hub-screenshot"
+            style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
+            onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>Screenshot unavailable</div>'"
+          />
+        </div>
+      </div>
+    ` : '';
+
     const html = `
-      ${ReportShell.renderReportHeader({ title: 'Speed & UX Report: Lighthouse Audit', url, timestamp: generatedAt, badgeText: 'Lighthouse', mode: 'full' })}
+      ${ReportShell.renderReportHeader({ title: t('reports.performanceHub.lighthouseTitle', 'Speed & UX Report: Lighthouse Audit'), url, timestamp: generatedAt, badgeText: t('reports.performanceHub.lighthouseBadge', 'Lighthouse'), mode: 'full' })}
+      ${screenshotHTML}
       ${summaryDonuts}
       ${accordions}
       ${renderPerformanceSummarySection(summaryStats)}
@@ -1466,6 +1695,18 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;
+
+    // Add click handler for screenshot lightbox
+    if (screenshotUrl) {
+      const screenshotImg = resultsContent.querySelector('.perf-hub-screenshot');
+      if (screenshotImg) {
+        screenshotImg.addEventListener('click', () => {
+          if (window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+            window.ScreenshotLightbox.open(screenshotUrl, 'Page Screenshot');
+          }
+        });
+      }
+    }
     window.currentPerformanceHubResults = { mode: 'full', url, data: results };
     ReportAccordion.initInteractions();
     showPdfExportButton();
@@ -1476,6 +1717,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const reportId = document.body.getAttribute('data-report-id') || '';
       if (reportId) window.CreditsManager.renderPaywallState(reportId);
     }
+
+    // Notify UsagePill to refresh
+    window.dispatchEvent(new CustomEvent('scan:completed'));
   }
 
   // NOTE: renderFixesToMake() is now defined in performance-fixes-renderer.js
@@ -1489,7 +1733,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!fallback.length) {
       return `
         <div style="margin-bottom: 1rem; color: var(--text-muted, #9ca3af); font-size: 0.95rem;">
-          No specific fixes detected. Keep monitoring for changes after code deployments.
+          ${t('reports.performanceHub.noFixesDetected', 'No specific fixes detected. Keep monitoring for changes after code deployments.')}
         </div>
       `;
     }
@@ -1497,7 +1741,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const top = fallback.slice(0, 3);
     return `
       <div style="margin-bottom: 1rem;">
-        <div style="color: var(--text-primary, #fff); font-weight: 700; margin-bottom: 0.5rem;">Quick fixes you can start now:</div>
+        <div style="color: var(--text-primary, #fff); font-weight: 700; margin-bottom: 0.5rem;">${t('reports.performanceHub.quickFixesTitle', 'Quick fixes you can start now:')}</div>
         <ul style="margin: 0; padding-left: 1.1rem; color: var(--text-secondary, #e5e7eb); line-height: 1.6;">
           ${top.map(item => `<li>${item.title || item.recommendation || item.name || item}</li>`).join('')}
         </ul>
@@ -1686,10 +1930,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const d = desktop.lighthouse || {};
     const m = mobile.lighthouse || {};
     const entries = [
-      { label: 'Performance', d: d.performance, m: m.performance },
-      { label: 'Accessibility', d: d.accessibility, m: m.accessibility },
-      { label: 'Best Practices', d: d.bestPractices, m: m.bestPractices },
-      { label: 'SEO', d: d.seo, m: m.seo }
+      { label: t('reports.performance.performance', 'Performance'), d: d.performance, m: m.performance },
+      { label: t('reports.accessibility.title', 'Accessibility'), d: d.accessibility, m: m.accessibility },
+      { label: t('reports.performance.bestPractices', 'Best Practices'), d: d.bestPractices, m: m.bestPractices },
+      { label: t('reports.seo.title', 'SEO'), d: d.seo, m: m.seo }
     ];
     
     // Build bar chart
@@ -1985,40 +2229,40 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="report-shell__card">
         <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:1rem; margin-bottom:1rem;">
           <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
-            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">LCP (Largest Contentful Paint)</div>
+            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">${t('reports.cwv.lcp', 'LCP')} (${t('reports.cwv.lcpName', 'Largest Contentful Paint')})</div>
             <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
-              <span>Desktop: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.lcpMs)}</strong></span>
-              <span>Mobile: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.lcpMs)}</strong></span>
+              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.lcpMs)}</strong></span>
+              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.lcpMs)}</strong></span>
             </div>
-            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">Target: ${CWV_THRESHOLDS.lcp.target}</div>
+            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.lcp.target}</div>
           </div>
           <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
-            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">CLS (Cumulative Layout Shift)</div>
+            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">${t('reports.cwv.cls', 'CLS')} (${t('reports.cwv.clsName', 'Cumulative Layout Shift')})</div>
             <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
-              <span>Desktop: <strong style="color:var(--text-primary, #fff);">${formatCls(d.clsNum)}</strong></span>
-              <span>Mobile: <strong style="color:var(--text-primary, #fff);">${formatCls(m.clsNum)}</strong></span>
+              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatCls(d.clsNum)}</strong></span>
+              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatCls(m.clsNum)}</strong></span>
             </div>
-            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">Target: ${CWV_THRESHOLDS.cls.target}</div>
+            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.cls.target}</div>
           </div>
           <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
-            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">INP/TBT (Interaction to Next Paint)</div>
+            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">${t('reports.cwv.inp', 'INP/TBT')} (${t('reports.cwv.inpName', 'Interaction to Next Paint')})</div>
             <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
-              <span>Desktop: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.inpMs || d.fidMs)}</strong></span>
-              <span>Mobile: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.inpMs || m.fidMs)}</strong></span>
+              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.inpMs || d.fidMs)}</strong></span>
+              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.inpMs || m.fidMs)}</strong></span>
             </div>
-            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">Target: ${CWV_THRESHOLDS.inp.target}</div>
+            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ${CWV_THRESHOLDS.inp.target}</div>
           </div>
           <div style="background:var(--bg-tertiary, #111b16); border:1px solid var(--border-primary, rgba(255,255,255,0.12)); border-radius:10px; padding:1rem;">
-            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">FCP (First Contentful Paint)</div>
+            <div style="font-weight:700; color:#00ff41; margin-bottom:0.5rem;">${t('reports.cwv.fcp', 'FCP')} (${t('reports.cwv.fcpName', 'First Contentful Paint')})</div>
             <div style="display:flex; justify-content:space-between; color:var(--text-secondary, #e5e7eb);">
-              <span>Desktop: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.fcpMs)}</strong></span>
-              <span>Mobile: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.fcpMs)}</strong></span>
+              <span>${t('reports.performance.desktop', 'Desktop')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(d.fcpMs)}</strong></span>
+              <span>${t('reports.performance.mobile', 'Mobile')}: <strong style="color:var(--text-primary, #fff);">${formatMsCompact(m.fcpMs)}</strong></span>
             </div>
-            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">Target: ≤ 1.8s</div>
+            <div style="margin-top:0.35rem; font-size:0.85rem; color:var(--text-muted, #9ca3af);">${t('reports.cwv.target', 'Target')}: ≤ 1.8s</div>
           </div>
         </div>
         <div style="margin-top:1rem;">
-          <div style="font-weight:700; color:#00ff41; margin-bottom:0.75rem;">Performance Overview</div>
+          <div style="font-weight:700; color:#00ff41; margin-bottom:0.75rem;">${t('reports.performance.performanceOverview', 'Performance Overview')}</div>
           ${chartHtml}
         </div>
       </div>
@@ -2051,20 +2295,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const dDisplay = metric === 'CLS' ? formatCls(dVal) : formatMsCompact(dVal);
     const mDisplay = metric === 'CLS' ? formatCls(mVal) : formatMsCompact(mVal);
     const tips = {
-      LCP: 'Optimize images (WebP/AVIF, lazy-load below fold), preload hero images, reduce server response time, minimize render-blocking CSS/JS.',
-      CLS: 'Set explicit width/height on images and embeds, avoid inserting content above existing content, reserve space for ads/dynamic content.',
-      INP: 'Break up long JavaScript tasks, use web workers for heavy computation, optimize event handlers, reduce main thread work.'
+      LCP: t('reports.cwv.tips.lcp', 'Optimize images (WebP/AVIF, lazy-load below fold), preload hero images, reduce server response time, minimize render-blocking CSS/JS.'),
+      CLS: t('reports.cwv.tips.cls', 'Set explicit width/height on images and embeds, avoid inserting content above existing content, reserve space for ads/dynamic content.'),
+      INP: t('reports.cwv.tips.inp', 'Break up long JavaScript tasks, use web workers for heavy computation, optimize event handlers, reduce main thread work.')
     };
     return `
       <div class="report-shell__card">
         <div style="display:flex; align-items:center; gap:0.5rem; margin-bottom:0.75rem;">
-          <span style="font-weight:700; color:#e5e7eb;">Target:</span>
+          <span style="font-weight:700; color:#e5e7eb;">${t('reports.cwv.target', 'Target')}:</span>
           <span style="color:#00ff41; font-weight:600;">${entry.target || '—'}</span>
         </div>
         <div style="display:grid; gap:1rem; margin-bottom:1rem;">
           <div style="background:#111b16; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:1rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-              <span style="font-weight:700; color:#e5e7eb;">Desktop</span>
+              <span style="font-weight:700; color:#e5e7eb;">${t('reports.performance.desktop', 'Desktop')}</span>
               <span style="font-weight:800; font-size:1.1rem; color:${dColor};">${dDisplay}</span>
             </div>
             <div style="height:12px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden;">
@@ -2073,7 +2317,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div style="background:#111b16; border:1px solid rgba(255,255,255,0.12); border-radius:10px; padding:1rem;">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.5rem;">
-              <span style="font-weight:700; color:#e5e7eb;">Mobile</span>
+              <span style="font-weight:700; color:#e5e7eb;">${t('reports.performance.mobile', 'Mobile')}</span>
               <span style="font-weight:800; font-size:1.1rem; color:${mColor};">${mDisplay}</span>
             </div>
             <div style="height:12px; background:rgba(255,255,255,0.08); border-radius:999px; overflow:hidden;">
@@ -2082,7 +2326,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
         </div>
         <div style="background:rgba(0,255,65,0.06); border:1px solid rgba(0,255,65,0.2); border-radius:8px; padding:0.75rem; color:#c7f5d9; font-size:0.9rem;">
-          <strong style="color:#00ff41;">💡 How to improve:</strong> ${tips[metric] || 'Optimize render-blocking resources, compress images, and reduce JS long tasks.'}
+          <strong style="color:#00ff41;">💡 ${t('reports.common.howToImprove', 'How to improve')}:</strong> ${tips[metric] || t('reports.cwv.tips.default', 'Optimize render-blocking resources, compress images, and reduce JS long tasks.')}
         </div>
       </div>
     `;
@@ -2091,13 +2335,13 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCWVNotesSection(data) {
     const notes = data.recommendations || [];
     if (!notes.length) {
-      return '<div style="color:#9ca3af;">No diagnostics available.</div>';
+      return `<div style="color:#9ca3af;">${t('reports.common.noDiagnostics', 'No diagnostics available.')}</div>`;
     }
     return `
       <ul style="margin:0; padding-left:1.1rem; display:grid; gap:0.4rem;">
         ${notes.slice(0, 8).map(n => {
           if (typeof n === 'string') return `<li>${n}</li>`;
-          const title = n.title || n.metric || 'Issue';
+          const title = n.title || n.metric || t('reports.common.issue', 'Issue');
           const desc = n.description || n.issue || n.detail || '';
           return `<li><strong>${title}</strong>${desc ? ` — <span style="color:#9ca3af;">${desc}</span>` : ''}</li>`;
         }).join('')}
@@ -2106,20 +2350,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderLighthouseSummaryCard(url, overallPerf, generatedAt) {
-    const statusText = overallPerf >= 90 ? 'Excellent performance' : overallPerf >= 50 ? 'Moderate performance' : 'Needs work';
+    const statusText = overallPerf >= 90 ? t('reports.performance.excellentPerformance', 'Excellent performance') : overallPerf >= 50 ? t('reports.performance.moderatePerformance', 'Moderate performance') : t('reports.performance.needsWork', 'Needs work');
     return `
       <div class="lh-report-card">
         <div class="lh-report-header">
           <div>
-            <div class="lh-report-title">Speed & UX Report: Lighthouse Audit</div>
-            <div class="lh-report-meta">URL: ${url}</div>
+            <div class="lh-report-title">${t('reports.performance.lighthouseTitle', 'Speed & UX Report: Lighthouse Audit')}</div>
+            <div class="lh-report-meta">${t('reports.common.url', 'URL')}: ${url}</div>
           </div>
-          <div class="lh-report-meta">Generated: ${generatedAt}</div>
+          <div class="lh-report-meta">${t('reports.common.generated', 'Generated')}: ${generatedAt}</div>
         </div>
         <div class="lh-report-score">
           <div class="lh-score-ring">${renderScoreRing(overallPerf, overallPerf, 150)}</div>
           <div class="lh-score-caption">
-            <div class="lh-score-subtitle">Combined Desktop & Mobile</div>
+            <div class="lh-score-subtitle">${t('reports.performance.combinedDesktopMobile', 'Combined Desktop & Mobile')}</div>
             <div class="lh-score-status">${statusText}</div>
           </div>
         </div>
@@ -2160,16 +2404,16 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="lh-device-card">
         <div class="lh-device-header">${icon} ${label}</div>
         <div class="lh-metric-grid">
-          ${createMetricCard(scores.performance ?? '—', 'Performance', typeof scores.performance === 'number' ? (scores.performance >= 90 ? 'good' : scores.performance >= 50 ? 'average' : 'poor') : 'unknown', '⚡')}
-          ${createMetricCard(scores.accessibility ?? '—', 'Accessibility', typeof scores.accessibility === 'number' ? (scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor') : 'unknown', '♿')}
-          ${createMetricCard(scores.bestPractices ?? '—', 'Best Practices', typeof scores.bestPractices === 'number' ? (scores.bestPractices >= 90 ? 'good' : scores.bestPractices >= 50 ? 'average' : 'poor') : 'unknown', '✓')}
-          ${createMetricCard(scores.seo ?? '—', 'SEO', typeof scores.seo === 'number' ? (scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor') : 'unknown', '🔍')}
+          ${createMetricCard(scores.performance ?? '—', t('reports.performance.performance', 'Performance'), typeof scores.performance === 'number' ? (scores.performance >= 90 ? 'good' : scores.performance >= 50 ? 'average' : 'poor') : 'unknown', '⚡')}
+          ${createMetricCard(scores.accessibility ?? '—', t('reports.accessibility.title', 'Accessibility'), typeof scores.accessibility === 'number' ? (scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor') : 'unknown', '♿')}
+          ${createMetricCard(scores.bestPractices ?? '—', t('reports.performance.bestPractices', 'Best Practices'), typeof scores.bestPractices === 'number' ? (scores.bestPractices >= 90 ? 'good' : scores.bestPractices >= 50 ? 'average' : 'poor') : 'unknown', '✓')}
+          ${createMetricCard(scores.seo ?? '—', t('reports.seo.title', 'SEO'), typeof scores.seo === 'number' ? (scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor') : 'unknown', '🔍')}
         </div>
         <div class="lh-metric-grid lh-metric-grid--cwv">
-          ${createMetricCard(metrics.lcpDisplay, 'LCP', lcpRating, '🎯')}
-          ${createMetricCard(metrics.clsDisplay, 'CLS', clsRating, '📐')}
-          ${createMetricCard(metrics.tbtDisplay, 'TBT', tbtRating, '⏱️')}
-          ${createMetricCard(metrics.fcpDisplay, 'FCP', fcpRating, '🎨')}
+          ${createMetricCard(metrics.lcpDisplay, t('reports.cwv.lcp', 'LCP'), lcpRating, '🎯')}
+          ${createMetricCard(metrics.clsDisplay, t('reports.cwv.cls', 'CLS'), clsRating, '📐')}
+          ${createMetricCard(metrics.tbtDisplay, t('reports.cwv.tbt', 'TBT'), tbtRating, '⏱️')}
+          ${createMetricCard(metrics.fcpDisplay, t('reports.cwv.fcp', 'FCP'), fcpRating, '🎨')}
         </div>
       </div>
     `;
@@ -2208,24 +2452,24 @@ document.addEventListener('DOMContentLoaded', () => {
     const fcpRating = metrics.fcp <= 1800 ? 'good' : metrics.fcp <= 3000 ? 'average' : 'poor';
 
     return `
-      ${createSectionHeader('Lighthouse Scores', '📊')}
+      ${createSectionHeader(t('reports.performance.lighthouseScores', 'Lighthouse Scores'), '📊')}
       <div class="score-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        ${createMetricCard(scores.performance, 'Performance', scores.performance >= 90 ? 'good' : scores.performance >= 50 ? 'average' : 'poor', '⚡')}
-        ${createMetricCard(scores.accessibility, 'Accessibility', scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor', '♿')}
-        ${createMetricCard(scores.bestPractices, 'Best Practices', scores.bestPractices >= 90 ? 'good' : scores.bestPractices >= 50 ? 'average' : 'poor', '✓')}
-        ${createMetricCard(scores.seo, 'SEO', scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor', '🔍')}
+        ${createMetricCard(scores.performance, t('reports.performance.performance', 'Performance'), scores.performance >= 90 ? 'good' : scores.performance >= 50 ? 'average' : 'poor', '⚡')}
+        ${createMetricCard(scores.accessibility, t('reports.accessibility.title', 'Accessibility'), scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor', '♿')}
+        ${createMetricCard(scores.bestPractices, t('reports.performance.bestPractices', 'Best Practices'), scores.bestPractices >= 90 ? 'good' : scores.bestPractices >= 50 ? 'average' : 'poor', '✓')}
+        ${createMetricCard(scores.seo, t('reports.seo.title', 'SEO'), scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor', '🔍')}
       </div>
 
-      ${createSectionHeader('Core Web Vitals', '⚡')}
+      ${createSectionHeader(t('reports.cwv.title', 'Core Web Vitals'), '⚡')}
       <div class="score-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
-        ${createMetricCard(metrics.lcpDisplay, 'LCP', lcpRating, '🎯')}
-        ${createMetricCard(metrics.clsDisplay, 'CLS', clsRating, '📐')}
-        ${createMetricCard(metrics.tbtDisplay, 'TBT', tbtRating, '⏱️')}
-        ${createMetricCard(metrics.fcpDisplay, 'FCP', fcpRating, '🎨')}
+        ${createMetricCard(metrics.lcpDisplay, t('reports.cwv.lcp', 'LCP'), lcpRating, '🎯')}
+        ${createMetricCard(metrics.clsDisplay, t('reports.cwv.cls', 'CLS'), clsRating, '📐')}
+        ${createMetricCard(metrics.tbtDisplay, t('reports.cwv.tbt', 'TBT'), tbtRating, '⏱️')}
+        ${createMetricCard(metrics.fcpDisplay, t('reports.cwv.fcp', 'FCP'), fcpRating, '🎨')}
       </div>
 
       ${data.recommendations && data.recommendations.length > 0
-        ? createInfoBox('info', `💡 Top ${Math.min(5, data.recommendations.length)} Recommendations`, `
+        ? createInfoBox('info', `💡 ${t('reports.common.topRecommendations', 'Top Recommendations')} (${Math.min(5, data.recommendations.length)})`, `
             <ul style="margin: 0; padding-left: 1.5rem; display: grid; gap: 0.5rem;">
               ${data.recommendations.slice(0, 5).map(rec => `
                 <li>
@@ -2251,7 +2495,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[CWV Debug] Normalized desktop:', desktop);
     console.log('[CWV Debug] Normalized mobile:', mobile);
     const url = urlInput.value;
-    const timestamp = new Date().toLocaleString();
+    const timestamp = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
     const lcpScore = scoreFromCwvValue(desktop.coreWebVitals?.lcpMs || desktop.coreWebVitals?.lcp, mobile.coreWebVitals?.lcpMs || mobile.coreWebVitals?.lcp, 'lcp');
     const clsScore = scoreFromCwvValue(desktop.coreWebVitals?.cls || desktop.coreWebVitals?.clsNum, mobile.coreWebVitals?.cls || mobile.coreWebVitals?.clsNum, 'cls');
     const inpScore = scoreFromCwvValue(desktop.coreWebVitals?.inpMs || desktop.coreWebVitals?.tbtMs || desktop.coreWebVitals?.fidMs, mobile.coreWebVitals?.inpMs || mobile.coreWebVitals?.tbtMs || mobile.coreWebVitals?.fidMs, 'inp');
@@ -2276,8 +2520,36 @@ document.addEventListener('DOMContentLoaded', () => {
       { label: 'Overall', score: overallScore }
     ]);
 
-    const proLocked = !userHasPro();
-    console.log('[CWV Debug] proLocked status:', proLocked);
+    // Check access - supports both logged-in users AND guest purchases
+    // VERSION: 20260201f - verify this version in console to confirm new code
+    const currentReportId = document.body.getAttribute('data-report-id') || '';
+    const authToken = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    const sessionMarker = sessionStorage.getItem('sm_payment_completed_session');
+    const purchasedReportId = sessionStorage.getItem('sm_purchased_report_id');
+
+    console.log('=== PRO GATING CHECK v20260201f ===');
+    console.log('[CWV Debug] Current reportId:', currentReportId);
+    console.log('[CWV Debug] Auth token:', !!authToken);
+    console.log('[CWV Debug] Session marker:', sessionMarker);
+    console.log('[CWV Debug] Purchased reportId:', purchasedReportId);
+    console.log('[CWV Debug] ReportId match:', purchasedReportId === currentReportId);
+
+    // SECURITY: If session marker exists but reportId doesn't match, clear the stale markers
+    // This handles the case where user paid for one report but is now viewing a different one
+    if (sessionMarker && purchasedReportId && purchasedReportId !== currentReportId) {
+      console.log('[CWV Debug] SECURITY: Clearing mismatched session markers');
+      sessionStorage.removeItem('sm_payment_completed_session');
+      sessionStorage.removeItem('sm_purchased_report_id');
+    }
+
+    const userHasProResult = userHasPro();
+    console.log('[CWV Debug] userHasPro() returned:', userHasProResult);
+
+    // Access is granted if userHasPro returns true
+    // userHasPro() checks: Pro subscription, session-verified purchase, demo domains
+    // Guest purchases work via session marker + localStorage purchase keys
+    const proLocked = !userHasProResult;
+    console.log('[CWV Debug] proLocked (final):', proLocked);
 
     // CRITICAL: Only render pro content if user has access, otherwise show lock preview
     const proContent = proLocked
@@ -2288,49 +2560,48 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
 
     const accordions = [
-      ReportAccordion.createSection({ id: 'cwv-overview', title: 'CWV Overview', scoreTextRight: formatScoreText(overallScore), contentHTML: renderCWVOverviewSection(desktop, mobile) }),
+      ReportAccordion.createSection({ id: 'cwv-overview', title: t('reports.cwv.overview', 'CWV Overview'), scoreTextRight: formatScoreText(overallScore), contentHTML: renderCWVOverviewSection(desktop, mobile) }),
       ReportAccordion.createSection({
         id: 'cwv-lcp',
-        title: buildMetricHeader({ label: 'LCP Details', desktopValue: desktop.coreWebVitals?.lcpMs, mobileValue: mobile.coreWebVitals?.lcpMs, metric: 'lcp' }),
+        title: buildMetricHeader({ label: t('reports.cwv.lcpDetails', 'LCP Details'), desktopValue: desktop.coreWebVitals?.lcpMs, mobileValue: mobile.coreWebVitals?.lcpMs, metric: 'lcp' }),
         scoreTextRight: formatScoreText(lcpScore),
         contentHTML: renderCWVDetailSection('LCP', desktop, mobile)
       }),
       ReportAccordion.createSection({
         id: 'cwv-cls',
-        title: buildMetricHeader({ label: 'CLS Details', desktopValue: desktop.coreWebVitals?.clsNum, mobileValue: mobile.coreWebVitals?.clsNum, metric: 'cls' }),
+        title: buildMetricHeader({ label: t('reports.cwv.clsDetails', 'CLS Details'), desktopValue: desktop.coreWebVitals?.clsNum, mobileValue: mobile.coreWebVitals?.clsNum, metric: 'cls' }),
         scoreTextRight: formatScoreText(clsScore),
         contentHTML: renderCWVDetailSection('CLS', desktop, mobile)
       }),
       ReportAccordion.createSection({
         id: 'cwv-inp',
-        title: buildMetricHeader({ label: 'INP/TBT Details', desktopValue: desktop.coreWebVitals?.inpMs || desktop.coreWebVitals?.tbtMs, mobileValue: mobile.coreWebVitals?.inpMs || mobile.coreWebVitals?.tbtMs, metric: 'inp' }),
+        title: buildMetricHeader({ label: t('reports.cwv.inpDetails', 'INP/TBT Details'), desktopValue: desktop.coreWebVitals?.inpMs || desktop.coreWebVitals?.tbtMs, mobileValue: mobile.coreWebVitals?.inpMs || mobile.coreWebVitals?.tbtMs, metric: 'inp' }),
         scoreTextRight: formatScoreText(inpScore),
         contentHTML: renderCWVDetailSection('INP', desktop, mobile)
       }),
-      ReportAccordion.createSection({ id: 'cwv-fixes', title: 'Fix Code + Recommendations', scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
+      ReportAccordion.createSection({ id: 'cwv-fixes', title: t('reports.common.fixCodeRecommendations', 'Fix Code + Recommendations'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
     ].join('');
 
-    // Count CWV issues: failed metrics + recommendations + opportunities
-    const cwvIssuesCount =
-      (desktop.recommendations?.length || 0) +
-      (mobile.recommendations?.length || 0) +
-      (desktop.opportunities?.length || 0) +
-      (mobile.opportunities?.length || 0) +
-      (data.recommendations?.length || 0) +
-      (Array.isArray(data.opportunities) ? data.opportunities.length : 0);
+    // Count CWV issues: metrics below 90 (needs improvement or poor)
+    const countIssues = (score) => (score !== null && score < 90) ? 1 : 0;
+    const cwvIssuesCount = countIssues(lcpScore) + countIssues(clsScore) + countIssues(inpScore);
 
-    // Count failed CWV metrics (scores below 90 are issues)
-    const failedMetrics = [lcpScore, clsScore, inpScore].filter(s => s !== null && s < 90).length;
+    // Count recommendations: each metric below 100 gets a recommendation
+    const countRecs = (score) => (score !== null && score < 100) ? 1 : 0;
+    const cwvRecsCount = countRecs(lcpScore) + countRecs(clsScore) + countRecs(inpScore);
+
+    // Count checks: metrics that were successfully measured
+    const checksCount = countCWVChecks(desktop, mobile);
 
     const summaryStats = calculatePerformanceSummary({
       mode: 'cwv',
-      issues: cwvIssuesCount + failedMetrics,
-      recommendations: data.recommendations?.length || 0,
-      checks: countCWVChecks(desktop, mobile)
+      issues: cwvIssuesCount,
+      recommendations: cwvRecsCount,
+      checks: checksCount
     });
 
     const html = `
-      ${ReportShell.renderReportHeader({ title: 'Speed & UX Report: Core Web Vitals', url, timestamp, badgeText: 'Core Web Vitals', mode: 'cwv' })}
+      ${ReportShell.renderReportHeader({ title: t('reports.performanceHub.cwvTitle', 'Speed & UX Report: Core Web Vitals'), url, timestamp, badgeText: t('reports.performanceHub.cwvBadge', 'Core Web Vitals'), mode: 'cwv' })}
       ${riskBanner}
       ${summaryDonuts}
       ${accordions}
@@ -2360,6 +2631,9 @@ document.addEventListener('DOMContentLoaded', () => {
     animateScoreRings();
     scrollToResults();
     console.log('[CWV Debug] displayCWVResults completed');
+
+    // Notify UsagePill to refresh
+    window.dispatchEvent(new CustomEvent('scan:completed'));
   }
 
   function renderCWVMetrics(data) {
@@ -2544,20 +2818,20 @@ document.addEventListener('DOMContentLoaded', () => {
         <details class="resource-details">
           <summary class="resource-summary">
             <span class="resource-badge resource-css">CSS</span>
-            <span style="font-weight: bold;">${resources.css.totalFiles || 0} external, ${resources.css.totalInline || 0} inline</span>
-            <span style="font-size: 0.85rem; color: #888;">Estimated: ${formatKB(resources.css.estimatedSizeKB)}</span>
+            <span style="font-weight: bold;">${t('reports.performance.externalInlineCount', '{{external}} external, {{inline}} inline', {external: resources.css.totalFiles || 0, inline: resources.css.totalInline || 0})}</span>
+            <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.estimatedSize', 'Estimated: {{size}}', {size: formatKB(resources.css.estimatedSizeKB)})}</span>
           </summary>
           <div class="resource-details-content">
             ${(resources.css.files || []).length > 0 ? `
               <table class="resource-table">
-                <thead><tr><th>URL</th><th>Media</th></tr></thead>
+                <thead><tr><th>${t('reports.performance.url', 'URL')}</th><th>${t('reports.performance.media', 'Media')}</th></tr></thead>
                 <tbody>
                   ${(resources.css.files || []).map(f => `
                     <tr><td class="url-cell">${truncateUrl(f.url)}</td><td>${f.media || 'all'}</td></tr>
                   `).join('')}
                 </tbody>
               </table>
-            ` : '<p style="color: #888;">No external CSS files</p>'}
+            ` : '<p style="color: #888;">' + t('reports.performance.noExternalCssFiles', 'No external CSS files') + '</p>'}
           </div>
         </details>
       `;
@@ -2569,13 +2843,13 @@ document.addEventListener('DOMContentLoaded', () => {
         <details class="resource-details">
           <summary class="resource-summary">
             <span class="resource-badge resource-js">JavaScript</span>
-            <span style="font-weight: bold;">${resources.js.totalFiles || 0} external, ${resources.js.totalInline || 0} inline</span>
-            <span style="font-size: 0.85rem; color: #888;">Async: ${(resources.js.async || []).length} | Defer: ${(resources.js.defer || []).length}</span>
+            <span style="font-weight: bold;">${t('reports.performance.externalInlineCount', '{{external}} external, {{inline}} inline', {external: resources.js.totalFiles || 0, inline: resources.js.totalInline || 0})}</span>
+            <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.asyncDeferCount', 'Async: {{async}} | Defer: {{defer}}', {async: (resources.js.async || []).length, defer: (resources.js.defer || []).length})}</span>
           </summary>
           <div class="resource-details-content">
             ${(resources.js.files || []).length > 0 ? `
               <table class="resource-table">
-                <thead><tr><th>URL</th><th>Async</th><th>Defer</th><th>Location</th></tr></thead>
+                <thead><tr><th>${t('reports.performance.url', 'URL')}</th><th>${t('reports.performance.async', 'Async')}</th><th>${t('reports.performance.defer', 'Defer')}</th><th>${t('reports.performance.location', 'Location')}</th></tr></thead>
                 <tbody>
                   ${(resources.js.files || []).map(f => `
                     <tr>
@@ -2587,7 +2861,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   `).join('')}
                 </tbody>
               </table>
-            ` : '<p style="color: #888;">No external JavaScript files</p>'}
+            ` : '<p style="color: #888;">' + t('reports.performance.noExternalJsFiles', 'No external JavaScript files') + '</p>'}
           </div>
         </details>
       `;
@@ -2598,14 +2872,14 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `
         <details class="resource-details">
           <summary class="resource-summary">
-            <span class="resource-badge resource-image">Images</span>
-            <span style="font-weight: bold;">${resources.images.total || 0} images</span>
-            <span style="font-size: 0.85rem; color: #888;">Missing alt: ${resources.images.withoutAlt || 0} | Lazy: ${resources.images.lazyLoaded || 0}</span>
+            <span class="resource-badge resource-image">${t('reports.performance.imagesLabel', 'Images')}</span>
+            <span style="font-weight: bold;">${t('reports.performance.imageCount', '{{count}} images', {count: resources.images.total || 0})}</span>
+            <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.missingAltLazy', 'Missing alt: {{alt}} | Lazy: {{lazy}}', {alt: resources.images.withoutAlt || 0, lazy: resources.images.lazyLoaded || 0})}</span>
           </summary>
           <div class="resource-details-content">
             ${resources.images.formats && Object.keys(resources.images.formats).length > 0 ? `
               <table class="resource-table">
-                <thead><tr><th>Format</th><th>Count</th><th>% of Total</th></tr></thead>
+                <thead><tr><th>${t('reports.performance.format', 'Format')}</th><th>${t('reports.performance.count', 'Count')}</th><th>${t('reports.performance.percentOfTotal', '% of Total')}</th></tr></thead>
                 <tbody>
                   ${Object.entries(resources.images.formats)
                     .filter(([format]) => ['jpg', 'jpeg', 'png', 'gif', 'svg', 'webp', 'avif', 'ico', 'dynamic'].includes(format.toLowerCase()))
@@ -2619,7 +2893,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     `).join('')}
                 </tbody>
               </table>
-            ` : '<p style="color: #888;">No image format data</p>'}
+            ` : '<p style="color: #888;">' + t('reports.performance.noImageFormatData', 'No image format data') + '</p>'}
           </div>
         </details>
       `;
@@ -2630,13 +2904,13 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `
         <details class="resource-details">
           <summary class="resource-summary">
-            <span class="resource-badge resource-third-party">Third-Party</span>
-            <span style="font-weight: bold;">${resources.thirdParty.count || 0} resources</span>
+            <span class="resource-badge resource-third-party">${t('reports.performance.thirdParty', 'Third-Party')}</span>
+            <span style="font-weight: bold;">${t('reports.performance.resourceCount', '{{count}} resources', {count: resources.thirdParty.count || 0})}</span>
           </summary>
           <div class="resource-details-content">
             ${resources.thirdParty.categories && Object.keys(resources.thirdParty.categories).length > 0 ? `
               <table class="resource-table">
-                <thead><tr><th>Category</th><th>Count</th></tr></thead>
+                <thead><tr><th>${t('reports.performance.category', 'Category')}</th><th>${t('reports.performance.count', 'Count')}</th></tr></thead>
                 <tbody>
                   ${Object.entries(resources.thirdParty.categories)
                     .sort((a, b) => b[1] - a[1])
@@ -2645,16 +2919,16 @@ document.addEventListener('DOMContentLoaded', () => {
               </table>
               ${(resources.thirdParty.domains || []).length > 0 ? `
                 <div style="margin-top: 1rem;">
-                  <strong style="font-size: 0.85rem;">Domains:</strong>
+                  <strong style="font-size: 0.85rem;">${t('reports.performance.domains', 'Domains')}:</strong>
                   <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem;">
                     ${(resources.thirdParty.domains || []).slice(0, 20).map(d => `
                       <span style="background: rgba(236, 72, 153, 0.15); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${d}</span>
                     `).join('')}
-                    ${(resources.thirdParty.domains || []).length > 20 ? `<span style="color: #888; font-size: 0.75rem;">+${resources.thirdParty.domains.length - 20} more</span>` : ''}
+                    ${(resources.thirdParty.domains || []).length > 20 ? `<span style="color: #888; font-size: 0.75rem;">${t('reports.common.plusMore', '+{{count}} more', {count: resources.thirdParty.domains.length - 20})}</span>` : ''}
                   </div>
                 </div>
               ` : ''}
-            ` : '<p style="color: #888;">No third-party resources detected</p>'}
+            ` : '<p style="color: #888;">' + t('reports.performance.noThirdPartyResources', 'No third-party resources detected') + '</p>'}
           </div>
         </details>
       `;
@@ -2665,19 +2939,19 @@ document.addEventListener('DOMContentLoaded', () => {
       html += `
         <details class="resource-details">
           <summary class="resource-summary">
-            <span class="resource-badge resource-font">Fonts</span>
-            <span style="font-weight: bold;">${resources.fonts.preloaded || 0} preloaded</span>
-            <span style="font-size: 0.85rem; color: #888;">Missing font-display: ${resources.fonts.withoutDisplay || 0}</span>
+            <span class="resource-badge resource-font">${t('reports.performance.fonts', 'Fonts')}</span>
+            <span style="font-weight: bold;">${t('reports.performance.preloadedCount', '{{count}} preloaded', {count: resources.fonts.preloaded || 0})}</span>
+            <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.missingFontDisplayCount', 'Missing font-display: {{count}}', {count: resources.fonts.withoutDisplay || 0})}</span>
           </summary>
           <div class="resource-details-content">
             ${(resources.fonts.providers || []).length > 0 ? `
               <table class="resource-table">
-                <thead><tr><th>Provider</th></tr></thead>
+                <thead><tr><th>${t('reports.performance.provider', 'Provider')}</th></tr></thead>
                 <tbody>
                   ${(resources.fonts.providers || []).map(p => `<tr><td>${p}</td></tr>`).join('')}
                 </tbody>
               </table>
-            ` : '<p style="color: #888;">No font providers detected</p>'}
+            ` : '<p style="color: #888;">' + t('reports.performance.noFontProviders', 'No font providers detected') + '</p>'}
           </div>
         </details>
       `;
@@ -2687,9 +2961,197 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Utility functions
-  function showError(message) {
-    errorMessage.textContent = message;
+  function showError(errorOrMessage) {
+    // Accept either a string or an Error object
+    const message = typeof errorOrMessage === 'string' ? errorOrMessage : (errorOrMessage && errorOrMessage.message) || '';
+    const errorName = (typeof errorOrMessage === 'object' && errorOrMessage !== null) ? (errorOrMessage.errorName || '') : '';
+    const errorTimestamp = (typeof errorOrMessage === 'object' && errorOrMessage !== null) ? (errorOrMessage.errorTimestamp || '') : '';
+
+    const errorLower = (message + ' ' + errorName).toLowerCase();
+
+    // Extract domain from the URL input
+    let domain = '';
+    let attemptedUrl = '';
+    try {
+      const raw = urlInput.value.trim();
+      attemptedUrl = raw;
+      const parsed = new URL(raw.startsWith('http') ? raw : 'https://' + raw);
+      domain = parsed.hostname;
+    } catch (_) {
+      domain = urlInput.value.trim() || 'unknown';
+      attemptedUrl = urlInput.value.trim();
+    }
+
+    // Classify the error
+    let category = 'generic';
+    let titleKey = 'analysisFailed';
+    let subtitleKey = 'analysisFailedSubtitle';
+    let failedStep = 'unknown';
+    let chips = null; // null means don't show chips
+
+    if (errorLower.includes('notfound') || errorLower.includes('enotfound') ||
+        errorLower.includes('dns') || errorLower.includes('getaddrinfo') ||
+        errorLower.includes('err_name_not_resolved')) {
+      category = 'dns';
+      titleKey = 'cantReach';
+      subtitleKey = 'subtitle';
+      failedStep = 'dns';
+      chips = { dns: 'fail', tls: 'unknown', http: 'unknown' };
+    } else if (errorLower.includes('network') || errorLower.includes('connection') ||
+               errorLower.includes('econnrefused') || errorLower.includes('econnreset')) {
+      category = 'connection';
+      titleKey = 'connectionFailed';
+      subtitleKey = 'connectionSubtitle';
+      failedStep = 'tcp';
+      chips = { dns: 'ok', tls: 'unknown', http: 'fail' };
+    } else if (errorLower.includes('timeout') || errorLower.includes('timed out') ||
+               errorLower.includes('too long')) {
+      category = 'timeout';
+      titleKey = 'timedOut';
+      subtitleKey = 'timedOutSubtitle';
+      failedStep = 'http';
+      chips = { dns: 'ok', tls: 'ok', http: 'fail' };
+    } else if (errorLower.includes('bot') || errorLower.includes('cloudflare') ||
+               errorLower.includes('captcha') || errorLower.includes('blocked')) {
+      category = 'blocked';
+      titleKey = 'accessBlocked';
+      subtitleKey = 'accessBlockedSubtitle';
+      failedStep = 'http';
+      chips = { dns: 'ok', tls: 'ok', http: 'fail' };
+    } else if (errorLower.includes('ssl') || errorLower.includes('certificate') ||
+               errorLower.includes('cert')) {
+      category = 'ssl';
+      titleKey = 'certIssue';
+      subtitleKey = 'certIssueSubtitle';
+      failedStep = 'tls';
+      chips = { dns: 'ok', tls: 'fail', http: 'unknown' };
+    }
+
+    const title = t(`scanError.${titleKey}`, titleKey, { domain });
+    const subtitle = t(`scanError.${subtitleKey}`, subtitleKey);
+
+    // Reason text (raw error message, if it adds value beyond the subtitle)
+    const reasonText = (errorName || message || '').slice(0, 120);
+
+    // Timestamp for technical details
+    const ts = errorTimestamp || new Date().toISOString();
+
+    // SVG icons (inline, 24x24, stroke-based, currentColor)
+    const globeXIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/><line x1="17" y1="7" x2="7" y2="17"/><line x1="7" y1="7" x2="17" y2="17"/></svg>`;
+    const chevronIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+    const arrowUpRightIcon = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>`;
+
+    // Build status chips HTML
+    let chipsHtml = '';
+    if (chips) {
+      const chipEntries = [
+        { key: 'dns', label: t('scanError.statusDns', 'DNS'), status: chips.dns },
+        { key: 'tls', label: t('scanError.statusTls', 'TLS'), status: chips.tls },
+        { key: 'http', label: t('scanError.statusHttp', 'HTTP'), status: chips.http }
+      ];
+      chipsHtml = `<div class="scan-error-state__chips">
+        ${chipEntries.map(c => {
+          const statusLabel = t(`scanError.status${c.status.charAt(0).toUpperCase() + c.status.slice(1)}`, c.status);
+          return `<span class="scan-error-state__chip scan-error-state__chip--${c.status}">
+            <span class="scan-error-state__chip-label">${c.label}</span> ${statusLabel}
+          </span>`;
+        }).join('')}
+      </div>`;
+    }
+
+    // Reason pill HTML
+    const reasonHtml = reasonText ? `<span class="scan-error-state__reason">${t('scanError.reason', 'Reason: {{reason}}', { reason: reasonText })}</span>` : '';
+
+    // Quick checks list
+    const checks = [
+      t('scanError.checkSpelling', 'Check spelling (common: .con vs .com)'),
+      t('scanError.tryWww', "Try adding or removing 'www'"),
+      t('scanError.verifyDns', 'Verify DNS exists (A / AAAA records)'),
+      t('scanError.allowlistScanner', "If it's private / staging, allowlist our scanner IP"),
+      t('scanError.runLocally', 'If it requires login, run Lighthouse from your browser')
+    ];
+
+    const html = `
+      <div class="scan-error-state" role="alert" aria-live="polite">
+        <div class="scan-error-state__main">
+          <div class="scan-error-state__icon-badge">${globeXIcon}</div>
+          <h3 class="scan-error-state__title">${title}</h3>
+          <p class="scan-error-state__subtitle">${subtitle}</p>
+          ${reasonHtml}
+          ${chipsHtml}
+          <div class="scan-error-state__actions">
+            <button type="button" class="scan-error-state__btn-primary" data-action="edit-url">
+              ${t('scanError.editUrl', 'Edit URL')}
+            </button>
+            <button type="button" class="scan-error-state__btn-secondary" data-action="try-again">
+              ${t('scanError.tryAgain', 'Try again')}
+            </button>
+            <a class="scan-error-state__btn-tertiary" href="https://${domain}" target="_blank" rel="noopener noreferrer">
+              ${t('scanError.openInBrowser', 'Open in browser')} ${arrowUpRightIcon}
+            </a>
+          </div>
+        </div>
+        <div class="scan-error-state__sidebar">
+          <div>
+            <h4 class="scan-error-state__checks-title">${t('scanError.quickChecks', 'Quick checks')}</h4>
+            <ul class="scan-error-state__checks">
+              ${checks.map(c => `<li class="scan-error-state__check-item"><span class="scan-error-state__check-icon">${chevronIcon}</span><span>${c}</span></li>`).join('')}
+            </ul>
+          </div>
+          <details class="scan-error-state__details">
+            <summary>${t('scanError.technicalDetails', 'Technical details')}</summary>
+            <div class="scan-error-state__details-body">
+              <div class="scan-error-state__details-row">
+                <span class="scan-error-state__details-label">${t('scanError.errorCode', 'Error code')}</span>
+                <span class="scan-error-state__details-value">${errorName || category}</span>
+              </div>
+              <div class="scan-error-state__details-row">
+                <span class="scan-error-state__details-label">${t('scanError.timestamp', 'Timestamp')}</span>
+                <span class="scan-error-state__details-value">${ts}</span>
+              </div>
+              <div class="scan-error-state__details-row">
+                <span class="scan-error-state__details-label">${t('scanError.attemptedUrl', 'Attempted URL')}</span>
+                <span class="scan-error-state__details-value">${attemptedUrl}</span>
+              </div>
+              <div class="scan-error-state__details-row">
+                <span class="scan-error-state__details-label">${t('scanError.failedStep', 'Failed step')}</span>
+                <span class="scan-error-state__details-value">${failedStep}</span>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    `;
+
+    errorMessage.innerHTML = html;
     errorMessage.classList.remove('hidden');
+
+    // Also hide any loading states
+    if (resultsContent) {
+      resultsContent.innerHTML = '';
+    }
+
+    // Wire up action buttons
+    const editBtn = errorMessage.querySelector('[data-action="edit-url"]');
+    const retryBtn = errorMessage.querySelector('[data-action="try-again"]');
+
+    if (editBtn) {
+      editBtn.addEventListener('click', () => {
+        urlInput.focus();
+        urlInput.select();
+      });
+    }
+
+    if (retryBtn) {
+      retryBtn.addEventListener('click', () => {
+        runAnalysis();
+      });
+    }
+
+    // Focus the Edit URL button for accessibility
+    if (editBtn) {
+      editBtn.focus();
+    }
   }
 
   // SVG Score Ring Renderer - Creates animated circular progress indicator
@@ -2759,9 +3221,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function getCWVLabel(value, goodThreshold, poorThreshold) {
-    if (value <= goodThreshold) return 'Good';
-    if (value <= poorThreshold) return 'Needs Work';
-    return 'Poor';
+    if (value <= goodThreshold) return t('reports.common.good', 'Good');
+    if (value <= poorThreshold) return t('reports.common.needsWork', 'Needs Work');
+    return t('reports.common.poor', 'Poor');
   }
 
   function getCWVColor(value, goodThreshold, poorThreshold) {
@@ -2806,7 +3268,7 @@ document.addEventListener('DOMContentLoaded', () => {
         t.classList.add('tabs__item--active');
       }
     });
-    buttonText.textContent = 'Analyze';
+    buttonText.textContent = t('common.analyze', 'Analyze');
     runAnalysis();
   };
 
@@ -2951,24 +3413,24 @@ document.addEventListener('DOMContentLoaded', () => {
   function createNextStepsSection(currentMode) {
     const steps = {
       quick: {
-        title: 'Want More Detailed Analysis?',
+        title: t('reports.performanceHub.wantMoreAnalysis', 'Want More Detailed Analysis?'),
         buttons: [
-          { mode: 'full', label: 'Run Full Lighthouse Audit', style: 'primary', icon: '🔍' },
-          { mode: 'cwv', label: 'Check Core Web Vitals', style: 'secondary', icon: '📊' }
+          { mode: 'full', label: t('reports.performanceHub.runLighthouseAudit', 'Run Full Lighthouse Audit'), style: 'primary', icon: '🔍' },
+          { mode: 'cwv', label: t('reports.performanceHub.checkCwv', 'Check Core Web Vitals'), style: 'secondary', icon: '📊' }
         ]
       },
       full: {
-        title: 'Additional Analysis Options',
+        title: t('reports.performanceHub.additionalOptions', 'Additional Analysis Options'),
         buttons: [
-          { mode: 'quick', label: 'Quick Resource Scan', style: 'secondary', icon: '⚡' },
-          { mode: 'cwv', label: 'Check Core Web Vitals', style: 'secondary', icon: '📊' }
+          { mode: 'quick', label: t('reports.performanceHub.quickResourceScan', 'Quick Resource Scan'), style: 'secondary', icon: '⚡' },
+          { mode: 'cwv', label: t('reports.performanceHub.checkCwv', 'Check Core Web Vitals'), style: 'secondary', icon: '📊' }
         ]
       },
       cwv: {
-        title: 'Additional Analysis Options',
+        title: t('reports.performanceHub.additionalOptions', 'Additional Analysis Options'),
         buttons: [
-          { mode: 'quick', label: 'Quick Resource Scan', style: 'secondary', icon: '⚡' },
-          { mode: 'full', label: 'Run Full Lighthouse Audit', style: 'secondary', icon: '🔍' }
+          { mode: 'quick', label: t('reports.performanceHub.quickResourceScan', 'Quick Resource Scan'), style: 'secondary', icon: '⚡' },
+          { mode: 'full', label: t('reports.performanceHub.runLighthouseAudit', 'Run Full Lighthouse Audit'), style: 'secondary', icon: '🔍' }
         ]
       }
     };
@@ -3015,7 +3477,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return false;
     }
     // Fallback if paywall script is not present
-    alert('Exports and sharing are Pro features. Please sign in with Pro.');
+    alert(t('reports.common.proFeatureRequired', 'Exports and sharing are Pro features. Please sign in with Pro.'));
     return false;
   }
 
@@ -3030,7 +3492,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     } else {
       console.error('PDF export utility not loaded');
-      alert('PDF export is not available. Please refresh the page.');
+      alert(t('reports.common.pdfNotAvailable', 'PDF export is not available. Please refresh the page.'));
     }
   }
 
@@ -3041,7 +3503,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeParam = current.mode ? `&mode=${current.mode}` : '';
     const shareUrl = `${window.location.origin}/performance-hub.html?url=${encodeURIComponent(targetUrl)}${modeParam}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
-      alert('Share link copied to clipboard');
+      alert(t('reports.common.shareLinkCopied', 'Share link copied to clipboard'));
     });
   }
 
@@ -3096,8 +3558,23 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function countCWVChecks(desktop, mobile) {
-    const metrics = ['lcp', 'cls', 'inp', 'fid', 'tti'];
-    const countMetrics = (node) => metrics.filter(key => node && (node[key] !== undefined || node[key.toUpperCase()] !== undefined)).length;
+    // Count CWV metrics that were checked (non-null values in coreWebVitals)
+    const countMetrics = (device) => {
+      if (!device?.coreWebVitals) return 0;
+      const cwv = device.coreWebVitals;
+      let count = 0;
+      // LCP
+      if (cwv.lcpMs !== null && cwv.lcpMs !== undefined) count++;
+      // CLS
+      if (cwv.clsNum !== null && cwv.clsNum !== undefined) count++;
+      // INP/TBT/FID
+      if ((cwv.inpMs !== null && cwv.inpMs !== undefined) ||
+          (cwv.tbtMs !== null && cwv.tbtMs !== undefined) ||
+          (cwv.fidMs !== null && cwv.fidMs !== undefined)) count++;
+      // FCP
+      if (cwv.fcpMs !== null && cwv.fcpMs !== undefined) count++;
+      return count;
+    };
     return countMetrics(desktop) + countMetrics(mobile);
   }
 
@@ -3119,20 +3596,20 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderPerformanceSummarySection(stats) {
     return `
       <div class="section">
-        <h2>Summary</h2>
+        <h2>${t('reports.common.summary', 'Summary')}</h2>
         <div class="seo-summary">
           <div class="summary-stats">
             <div class="stat-item">
               <span class="stat-value">${stats.issues}</span>
-              <span class="stat-label">Issues Found</span>
+              <span class="stat-label">${t('reports.common.issuesFound', 'Issues Found')}</span>
             </div>
             <div class="stat-item">
               <span class="stat-value">${stats.recommendations}</span>
-              <span class="stat-label">Recommendations</span>
+              <span class="stat-label">${t('reports.common.recommendations', 'Recommendations')}</span>
             </div>
             <div class="stat-item">
               <span class="stat-value">${stats.checks}</span>
-              <span class="stat-label">Checks Passed</span>
+              <span class="stat-label">${t('reports.common.checksPassed', 'Checks Passed')}</span>
             </div>
           </div>
         </div>
@@ -3184,23 +3661,23 @@ document.addEventListener('DOMContentLoaded', () => {
         {
           href: `/performance-hub.html?url=${encodedUrl}&mode=cwv`,
           icon: '📊',
-          title: 'Core Web Vitals Analyzer',
-          description: 'Google ranking metrics: LCP, FID, CLS (~15–30s)',
-          note: 'Includes optional paid report export inside this tool'
+          title: t('reports.performanceHub.tools.cwvAnalyzer', 'Core Web Vitals Analyzer'),
+          description: t('reports.performanceHub.tools.cwvDesc', 'Google ranking metrics: LCP, FID, CLS (~15–30s)'),
+          note: t('reports.performanceHub.tools.paidNote', 'Includes optional paid report export inside this tool')
         },
         {
           href: `/performance-hub.html?url=${encodedUrl}&mode=full`,
           icon: '🔍',
-          title: 'Lighthouse Audit',
-          description: 'Full Lighthouse run with diagnostics (~2–3 min)',
-          note: 'Includes optional paid report export inside this tool'
+          title: t('reports.performanceHub.tools.lighthouseAudit', 'Lighthouse Audit'),
+          description: t('reports.performanceHub.tools.lighthouseDesc', 'Full Lighthouse run with diagnostics (~2–3 min)'),
+          note: t('reports.performanceHub.tools.paidNote', 'Includes optional paid report export inside this tool')
         },
         {
           href: `/mobile-analyzer.html?url=${encodedUrl}`,
           icon: '📱',
-          title: 'Mobile UX Analyzer',
-          description: 'Mobile responsiveness and usability testing',
-          note: 'Includes optional paid report export inside this tool'
+          title: t('reports.performanceHub.tools.mobileAnalyzer', 'Mobile UX Analyzer'),
+          description: t('reports.performanceHub.tools.mobileDesc', 'Mobile responsiveness and usability testing'),
+          note: t('reports.performanceHub.tools.paidNote', 'Includes optional paid report export inside this tool')
         }
       ];
 
@@ -3210,8 +3687,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="pro-report-block__header">
               <div class="pro-report-block__icon">🧰</div>
               <div class="pro-report-block__text">
-                <div class="pro-report-block__title">Explore More Performance Tools</div>
-                <p class="pro-report-block__subtitle">Run additional performance and UX analysis with specialized tools (scans are free; report exports are paid)</p>
+                <div class="pro-report-block__title">${t('reports.performanceHub.exploreTools', 'Explore More Performance Tools')}</div>
+                <p class="pro-report-block__subtitle">${t('reports.performanceHub.exploreToolsSubtitle', 'Run additional performance and UX analysis with specialized tools (scans are free; report exports are paid)')}</p>
               </div>
             </div>
 
@@ -3246,26 +3723,26 @@ document.addEventListener('DOMContentLoaded', () => {
         {
           href: `/seo-analyzer.html?url=${encodedUrl}`,
           icon: '🔍',
-          title: 'SEO Analysis',
-          description: 'Meta tags, headings, structured data, and search optimization'
+          title: t('reports.performanceHub.scans.seo', 'SEO Analysis'),
+          description: t('reports.performanceHub.scans.seoDesc', 'Meta tags, headings, structured data, and search optimization')
         },
         {
           href: `/security-analyzer.html?url=${encodedUrl}`,
           icon: '🔒',
-          title: 'Security Scan',
-          description: 'SSL, security headers, vulnerabilities, and OWASP compliance'
+          title: t('reports.performanceHub.scans.security', 'Security Scan'),
+          description: t('reports.performanceHub.scans.securityDesc', 'SSL, security headers, vulnerabilities, and OWASP compliance')
         },
         {
           href: `/accessibility-analyzer.html?url=${encodedUrl}`,
           icon: '♿',
-          title: 'Accessibility Audit',
-          description: 'WCAG compliance, screen reader compatibility, color contrast'
+          title: t('reports.performanceHub.scans.accessibility', 'Accessibility Audit'),
+          description: t('reports.performanceHub.scans.accessibilityDesc', 'WCAG compliance, screen reader compatibility, color contrast')
         },
         {
           href: `/enhanced-fonts.html?url=${encodedUrl}`,
           icon: '🔤',
-          title: 'Font Analysis',
-          description: 'Font loading performance, web font optimization, typography'
+          title: t('reports.performanceHub.scans.fonts', 'Font Analysis'),
+          description: t('reports.performanceHub.scans.fontsDesc', 'Font loading performance, web font optimization, typography')
         }
       ];
 
@@ -3275,8 +3752,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
               <span style="font-size: 1.5rem;">🚀</span>
               <div>
-                <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary);">Continue Analyzing</div>
-                <div style="font-size: 0.9rem; color: var(--text-secondary);">Get a complete picture of your site's health with these free scans</div>
+                <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary);">${t('reports.performanceHub.continueAnalyzing', 'Continue Analyzing')}</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary);">${t('reports.performanceHub.continueAnalyzingSubtitle', 'Get a complete picture of your site\'s health with these free scans')}</div>
               </div>
             </div>
 
@@ -3294,7 +3771,7 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
 
             <p style="margin: 1rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary); text-align: center;">
-              All scans are <strong style="color: var(--accent-primary);">free</strong> to run. Get comprehensive insights across all areas of your site.
+              ${t('reports.performanceHub.allScansFree', 'All scans are <strong style="color: var(--accent-primary);">free</strong> to run. Get comprehensive insights across all areas of your site.')}
             </p>
           </div>
         </div>
@@ -3311,8 +3788,8 @@ document.addEventListener('DOMContentLoaded', () => {
         return window.ProReportBlock.render({
           context: mode === 'cwv' ? 'speed-ux-cwv' : 'speed-ux-full',
           features: ['pdf', 'excel', 'csv', 'share'],
-          title: 'Unlock Report',
-          subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+          title: t('reports.common.unlockReport', 'Unlock Report'),
+          subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
           reportId
         });
       }
@@ -3372,8 +3849,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </ul>
         <div class="pro-locked__blur"></div>
         <div class="pro-locked__buttons">
-          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="performance">Unlock for $5</button>
-          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="performance">Go Pro — $30/mo</button>
+          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="performance">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
+          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="performance">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
         </div>
       </div>
     `;
@@ -3658,26 +4135,55 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function userHasPro() {
-    // Check new billing model first (ProReportBlock)
-    const reportId = document.body?.getAttribute('data-report-id') || '';
-    console.log('[userHasPro] Checking access for reportId:', reportId);
+    // Version marker for debugging cache issues
+    const VERSION = '20260201g-fresh-scan-flag';
 
-    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
-      const hasAccess = window.ProReportBlock.hasAccess(reportId);
-      console.log('[userHasPro] ProReportBlock.hasAccess result:', hasAccess);
-      if (hasAccess) return true;
+    // Check fresh scan flag - block free users on new scans, but allow Pro/Day Pass
+    if (window.__SM_FRESH_SCAN_PENDING_PAYMENT__) {
+      const isProSub = window.ProReportBlock?.isProSubscriber?.();
+      if (!isProSub) {
+        const currentUrl = urlInput?.value || '';
+        const scanUrl = window.__SM_CURRENT_SCAN_URL__ || '';
+        console.log('[userHasPro] v' + VERSION + ' FRESH SCAN DETECTED (free user) - returning FALSE', { currentUrl, scanUrl });
+        return false;
+      }
+      console.log('[userHasPro] v' + VERSION + ' Pro/Day Pass user - ignoring fresh scan flag');
     }
-    if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
-      const hasProAccess = window.ProAccess.hasProAccess(getCurrentDomain());
-      console.log('[userHasPro] ProAccess.hasProAccess result:', hasProAccess);
-      return hasProAccess;
+
+    // SECURITY: Default to locked (false) unless we have explicit proof of access
+    // Check access using ProReportBlock which handles all verification
+    try {
+      const reportId = document.body?.getAttribute('data-report-id') || '';
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      const sessionMarker = sessionStorage.getItem('sm_payment_completed_session');
+
+      console.log('[userHasPro] v' + VERSION + ' DEBUG STATE:', {
+        reportId,
+        hasAuthToken: !!token,
+        hasSessionMarker: !!sessionMarker,
+        sessionMarkerAge: sessionMarker ? Math.round((Date.now() - parseInt(sessionMarker, 10)) / 60000) + ' mins' : 'none'
+      });
+
+      // Use ProReportBlock.hasAccess which checks:
+      // 1. Pro subscription (server-verified, requires auth token)
+      // 2. Session-verified purchase (just returned from Stripe, requires session marker)
+      // 3. Demo domains (only vail.com)
+      // 4. Server-verified report purchase
+      if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+        const hasAccess = window.ProReportBlock.hasAccess(reportId);
+        // SECURITY: Strict boolean coercion - anything other than explicit true = false
+        const result = hasAccess === true;
+        console.log('[userHasPro] ProReportBlock.hasAccess result:', hasAccess, '-> coerced:', result);
+        return result;
+      }
+
+      console.log('[userHasPro] ProReportBlock not available, returning FALSE');
+      return false;
+    } catch (err) {
+      // SECURITY: Any error = locked
+      console.error('[userHasPro] Error checking access, returning FALSE:', err);
+      return false;
     }
-    if (window.ExportGate && window.ExportGate.isPro()) {
-      console.log('[userHasPro] ExportGate.isPro: true');
-      return true;
-    }
-    console.log('[userHasPro] No pro access found, returning false');
-    return false;
   }
 
   // Export to Excel (XLSX format simulation using CSV with Excel-compatible formatting)
@@ -3695,12 +4201,12 @@ document.addEventListener('DOMContentLoaded', () => {
     rows.push(['Site Mechanic - Performance Report']);
     rows.push(['Generated', new Date().toISOString()]);
     rows.push(['URL', url]);
-    rows.push(['Mode', mode.toUpperCase()]);
+    rows.push([t('reports.common.mode', 'Mode'), mode.toUpperCase()]);
     rows.push([]);
 
     // Core metrics
-    rows.push(['CORE METRICS']);
-    rows.push(['Metric', 'Value', 'Target', 'Status']);
+    rows.push([t('reports.common.coreMetrics', 'CORE METRICS')]);
+    rows.push([t('reports.common.metric', 'Metric'), t('reports.common.value', 'Value'), t('reports.cwv.target', 'Target'), t('reports.common.status', 'Status')]);
 
     if (mode === 'cwv') {
       const desktop = data.desktop || {};
@@ -3708,27 +4214,27 @@ document.addEventListener('DOMContentLoaded', () => {
       const cwvDesktop = desktop.coreWebVitals || {};
       const cwvMobile = mobile.coreWebVitals || {};
 
-      rows.push(['LCP (Desktop)', cwvDesktop.lcpMs || cwvDesktop.lcp || 'N/A', '<2.5s', cwvDesktop.lcpMs < 2500 ? 'Pass' : 'Needs Improvement']);
-      rows.push(['LCP (Mobile)', cwvMobile.lcpMs || cwvMobile.lcp || 'N/A', '<2.5s', cwvMobile.lcpMs < 2500 ? 'Pass' : 'Needs Improvement']);
-      rows.push(['CLS (Desktop)', cwvDesktop.cls || cwvDesktop.clsNum || 'N/A', '<0.1', cwvDesktop.clsNum < 0.1 ? 'Pass' : 'Needs Improvement']);
-      rows.push(['CLS (Mobile)', cwvMobile.cls || cwvMobile.clsNum || 'N/A', '<0.1', cwvMobile.clsNum < 0.1 ? 'Pass' : 'Needs Improvement']);
-      rows.push(['INP/TBT (Desktop)', cwvDesktop.inpMs || cwvDesktop.tbtMs || 'N/A', '<200ms', (cwvDesktop.inpMs || cwvDesktop.tbtMs) < 200 ? 'Pass' : 'Needs Improvement']);
-      rows.push(['INP/TBT (Mobile)', cwvMobile.inpMs || cwvMobile.tbtMs || 'N/A', '<200ms', (cwvMobile.inpMs || cwvMobile.tbtMs) < 200 ? 'Pass' : 'Needs Improvement']);
+      rows.push([`${t('reports.cwv.lcp', 'LCP')} (${t('reports.performance.desktop', 'Desktop')})`, cwvDesktop.lcpMs || cwvDesktop.lcp || 'N/A', '<2.5s', cwvDesktop.lcpMs < 2500 ? t('reports.common.pass', 'Pass') : t('reports.common.needsImprovement', 'Needs Improvement')]);
+      rows.push([`${t('reports.cwv.lcp', 'LCP')} (${t('reports.performance.mobile', 'Mobile')})`, cwvMobile.lcpMs || cwvMobile.lcp || 'N/A', '<2.5s', cwvMobile.lcpMs < 2500 ? t('reports.common.pass', 'Pass') : t('reports.common.needsImprovement', 'Needs Improvement')]);
+      rows.push([`${t('reports.cwv.cls', 'CLS')} (${t('reports.performance.desktop', 'Desktop')})`, cwvDesktop.cls || cwvDesktop.clsNum || 'N/A', '<0.1', cwvDesktop.clsNum < 0.1 ? t('reports.common.pass', 'Pass') : t('reports.common.needsImprovement', 'Needs Improvement')]);
+      rows.push([`${t('reports.cwv.cls', 'CLS')} (${t('reports.performance.mobile', 'Mobile')})`, cwvMobile.cls || cwvMobile.clsNum || 'N/A', '<0.1', cwvMobile.clsNum < 0.1 ? t('reports.common.pass', 'Pass') : t('reports.common.needsImprovement', 'Needs Improvement')]);
+      rows.push([`${t('reports.cwv.inp', 'INP/TBT')} (${t('reports.performance.desktop', 'Desktop')})`, cwvDesktop.inpMs || cwvDesktop.tbtMs || 'N/A', '<200ms', (cwvDesktop.inpMs || cwvDesktop.tbtMs) < 200 ? t('reports.common.pass', 'Pass') : t('reports.common.needsImprovement', 'Needs Improvement')]);
+      rows.push([`${t('reports.cwv.inp', 'INP/TBT')} (${t('reports.performance.mobile', 'Mobile')})`, cwvMobile.inpMs || cwvMobile.tbtMs || 'N/A', '<200ms', (cwvMobile.inpMs || cwvMobile.tbtMs) < 200 ? t('reports.common.pass', 'Pass') : t('reports.common.needsImprovement', 'Needs Improvement')]);
     } else {
-      rows.push(['Performance Score', data?.performanceScore || data?.score || data?.overallScore || 'N/A', '>90', '']);
-      rows.push(['Total Requests', data?.summary?.totalRequests || 'N/A', '', '']);
-      rows.push(['Page Weight (KB)', data?.summary?.estimatedPageWeightKB || 'N/A', '', '']);
+      rows.push([t('reports.performance.performanceScore', 'Performance Score'), data?.performanceScore || data?.score || data?.overallScore || 'N/A', '>90', '']);
+      rows.push([t('reports.performance.totalRequests', 'Total Requests'), data?.summary?.totalRequests || 'N/A', '', '']);
+      rows.push([t('reports.performance.pageWeight', 'Page Weight (KB)'), data?.summary?.estimatedPageWeightKB || 'N/A', '', '']);
     }
 
     rows.push([]);
-    rows.push(['RECOMMENDATIONS']);
+    rows.push([t('reports.common.recommendations', 'RECOMMENDATIONS')]);
     const recs = data?.recommendations || [];
     if (Array.isArray(recs) && recs.length > 0) {
       recs.forEach((rec, i) => {
         rows.push([`${i + 1}`, typeof rec === 'string' ? rec : (rec.title || rec.description || JSON.stringify(rec))]);
       });
     } else {
-      rows.push(['No specific recommendations']);
+      rows.push([t('reports.common.noRecommendations', 'No specific recommendations')]);
     }
 
     // Generate CSV content
@@ -3808,28 +4314,28 @@ document.addEventListener('DOMContentLoaded', () => {
   function showPaymentGate(reportType, url) {
     const config = {
       cwv: {
-        title: 'Core Web Vitals Report',
+        title: t('reports.cwv.reportTitle', 'Core Web Vitals Report'),
         icon: '📊',
-        description: 'Get detailed Core Web Vitals analysis including LCP, INP, and CLS metrics for both mobile and desktop.',
+        description: t('reports.cwv.reportDescription', 'Get detailed Core Web Vitals analysis including LCP, INP, and CLS metrics for both mobile and desktop.'),
         features: [
-          'Mobile & Desktop CWV metrics',
-          'Google ranking impact analysis',
-          'Detailed metric breakdowns',
-          'Actionable recommendations',
-          'Professional PDF export'
+          t('reports.cwv.featureMobileDesktop', 'Mobile & Desktop CWV metrics'),
+          t('reports.cwv.featureRankingImpact', 'Google ranking impact analysis'),
+          t('reports.cwv.featureBreakdowns', 'Detailed metric breakdowns'),
+          t('reports.common.featureRecommendations', 'Actionable recommendations'),
+          t('reports.common.featurePdfExport', 'Professional PDF export')
         ],
         color: '#10b981'
       },
       lighthouse: {
-        title: 'Lighthouse Full Audit',
+        title: t('reports.performance.lighthouseFullAudit', 'Lighthouse Full Audit'),
         icon: '🔍',
-        description: 'Complete Lighthouse performance audit with detailed scores and optimization recommendations.',
+        description: t('reports.performance.lighthouseDescription', 'Complete Lighthouse performance audit with detailed scores and optimization recommendations.'),
         features: [
-          'Performance, Accessibility, Best Practices scores',
-          'Mobile & Desktop analysis',
-          'Detailed performance metrics',
-          'Specific optimization opportunities',
-          'Professional PDF export'
+          t('reports.performance.featureScores', 'Performance, Accessibility, Best Practices scores'),
+          t('reports.performance.featureMobileDesktop', 'Mobile & Desktop analysis'),
+          t('reports.performance.featureMetrics', 'Detailed performance metrics'),
+          t('reports.performance.featureOpportunities', 'Specific optimization opportunities'),
+          t('reports.common.featurePdfExport', 'Professional PDF export')
         ],
         color: '#8b5cf6'
       }
@@ -3908,7 +4414,7 @@ document.addEventListener('DOMContentLoaded', () => {
               transition: all 0.2s;
               box-shadow: 0 4px 12px ${info.color}40;
             " class="perf-payment-btn perf-payment-btn--primary">
-              Unlock for $5
+              ${t('reports.common.unlockFor5', 'Unlock for $5')}
             </button>
             <button id="goProBtn" class="perf-payment-btn perf-payment-btn--outline" style="
               background: transparent;
@@ -3921,7 +4427,7 @@ document.addEventListener('DOMContentLoaded', () => {
               font-size: 1rem;
               transition: all 0.2s;
             ">
-              Go Pro — $30/mo
+              ${t('reports.common.goPro30', 'Go Pro — $30/mo')}
             </button>
             <button id="cancelPaymentBtn" style="
               background: transparent;
@@ -3931,17 +4437,16 @@ document.addEventListener('DOMContentLoaded', () => {
               cursor: pointer;
               font-size: 0.875rem;
             ">
-              Cancel
-            </button>
+              ${t('nav.cancel', 'Cancel')}
           </div>
 
           <!-- Trust badges -->
           <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
             <div style="color: var(--color-text-muted, #6b7280); font-size: 0.8rem; margin-bottom: 0.5rem;">
-              🔒 Secure payment powered by Stripe
+              🔒 ${t('reports.common.securePayments', 'Secure payments by Stripe')}
             </div>
             <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">
-              Pro unlocks all reports • Single purchase unlocks this scan only
+              ${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}
             </div>
           </div>
         </div>
@@ -3968,7 +4473,7 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('cancelPaymentBtn').addEventListener('click', () => {
       document.getElementById('paymentGateModal').remove();
       analyzeButton.disabled = false;
-      buttonText.textContent = 'Analyze';
+      buttonText.textContent = t('common.analyze', 'Analyze');
       if (loader) loader.complete();
     });
 
@@ -4066,7 +4571,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (error) {
       console.error('[Performance Hub Payment] Exception:', error);
       proceedBtn.disabled = false;
-      proceedBtn.textContent = 'Unlock for $5';
+      proceedBtn.textContent = t('reports.common.unlockFor5', 'Unlock for $5');
       alert(`Payment error: ${error.message}`);
     }
   }

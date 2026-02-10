@@ -5,24 +5,99 @@
 window.SM_ANALYZER_KEY = 'local-seo';
 document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
 
+// Translation helper - evaluates at runtime to ensure i18n is loaded
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
+// Translation mapping for API strings to translation keys
+function translateLocalSeoApi(englishText, type = 'title') {
+  const titleMap = {
+    'Add Google Maps Embed': 'reports.localSeo.api.addGoogleMaps',
+    'Add LocalBusiness Schema': 'reports.localSeo.api.addSchema',
+    'Display Phone Number': 'reports.localSeo.api.displayPhone',
+    'Add Social Profile Links': 'reports.localSeo.api.addSocialLinks',
+    'Add phone number': 'reports.localSeo.api.addPhoneNumber',
+    'Add business address': 'reports.localSeo.api.addBusinessAddress'
+  };
+  
+  const impactMap = {
+    '+10% local visibility': 'reports.localSeo.api.impact.localVisibility',
+    '+15% search visibility': 'reports.localSeo.api.impact.searchVisibility',
+    '+20% customer inquiries': 'reports.localSeo.api.impact.customerInquiries',
+    '+10% trust signals': 'reports.localSeo.api.impact.trustSignals'
+  };
+  
+  const difficultyMap = {
+    'Easy': 'reports.common.difficulty.easy',
+    'Medium': 'reports.common.difficulty.medium',
+    'Hard': 'reports.common.difficulty.hard'
+  };
+  
+  const stepsMap = {
+    'Go to Google Maps and search your business address': 'reports.localSeo.api.steps.goToGoogleMaps',
+    'Click "Share" → "Embed a map"': 'reports.localSeo.api.steps.clickShareEmbed',
+    'Copy the iframe code and paste into your contact page': 'reports.localSeo.api.steps.copyIframe',
+    'Use Google\'s Structured Data Markup Helper': 'reports.localSeo.api.steps.useMarkupHelper',
+    'Select "Local Business" and enter your details': 'reports.localSeo.api.steps.selectLocalBusiness',
+    'Add the generated JSON-LD to your homepage': 'reports.localSeo.api.steps.addJsonLd',
+    'Add phone number to your header or footer': 'reports.localSeo.api.steps.addPhoneToHeader',
+    'Use tel: link for click-to-call on mobile': 'reports.localSeo.api.steps.useTelLink',
+    'Format consistently across all pages': 'reports.localSeo.api.steps.formatConsistently',
+    'Add links to your Google Business Profile': 'reports.localSeo.api.steps.addGbpLinks',
+    'Include Facebook, Instagram, or LinkedIn': 'reports.localSeo.api.steps.includeSocial',
+    'Place icons in footer for visibility': 'reports.localSeo.api.steps.placeIconsFooter'
+  };
+
+  let map;
+  switch(type) {
+    case 'impact': map = impactMap; break;
+    case 'difficulty': map = difficultyMap; break;
+    case 'step': map = stepsMap; break;
+    default: map = titleMap;
+  }
+  
+  const key = map[englishText];
+  if (key) {
+    return t(key, englishText);
+  }
+  return englishText;
+}
+
+// Function to get analysis steps with current translations
+// Called at runtime to ensure i18n is loaded
+function getAnalysisSteps() {
+  return [
+    { label: t('loader.initializingAnalysis', 'Initializing analysis'), detail: t('loader.connectingTarget', 'Connecting to target website...') },
+    { label: t('loader.extractingNap', 'Extracting NAP data'), detail: t('loader.findingNap', 'Finding Name, Address, Phone information...') },
+    { label: t('loader.checkingLocalSchema', 'Checking structured data'), detail: t('loader.scanningLocalBusiness', 'Scanning for LocalBusiness schema...') },
+    { label: t('loader.analyzingLocalSignals', 'Analyzing local signals'), detail: t('loader.checkingMaps', 'Checking maps, social profiles, hours...') },
+    { label: t('loader.generatingRecommendations', 'Generating recommendations'), detail: t('loader.compilingLocalSeo', 'Compiling local SEO insights...') }
+  ];
+}
+
 document.getElementById('analyzeBtn').addEventListener('click', analyze);
 document.getElementById('url').addEventListener('keypress', (e) => {
   if (e.key === 'Enter') analyze();
 });
 
-// Analysis steps for the loader
-const analysisSteps = [
-  { label: 'Initializing analysis', detail: 'Connecting to target website...' },
-  { label: 'Extracting NAP data', detail: 'Finding Name, Address, Phone information...' },
-  { label: 'Checking structured data', detail: 'Scanning for LocalBusiness schema...' },
-  { label: 'Analyzing local signals', detail: 'Checking maps, social profiles, hours...' },
-  { label: 'Generating recommendations', detail: 'Compiling local SEO insights...' }
-];
-
 async function analyze() {
   const url = document.getElementById('url').value.trim();
   if (!url) { 
-    alert('Please enter a URL'); 
+    alert(t('reports.common.pleaseEnterUrl', 'Please enter a URL')); 
     return; 
   }
   
@@ -56,10 +131,10 @@ async function analyze() {
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
     </div>
     <p style="margin: 0.75rem 0 0 0; font-size: clamp(0.75rem, 2.5vw, 0.9rem); color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em; padding: 0 0.5rem;">
-      Local SEO analysis in progress...
+      ${t('reports.localSeo.analysisInProgress', 'Local SEO analysis in progress...')}
     </p>
     <p style="margin: 0.35rem 0 0 0; font-size: clamp(0.7rem, 2vw, 0.8rem); color: rgba(var(--accent-primary-rgb), 0.7); padding: 0 0.5rem;">
-      This may take 30-60 seconds for complex sites
+      ${t('loader.mayTakeTime', 'This may take 30-60 seconds for complex sites')}
     </p>
   `;
 
@@ -85,7 +160,7 @@ async function analyze() {
     document.head.appendChild(style);
   }
   
-  loader.start(analysisSteps, '[LOCAL SEO ANALYZER]', 20);
+  loader.start(getAnalysisSteps(), '📍 ' + t('loader.analyzingLocalSeo', 'LOCAL SEO ANALYZER'), 20);
   
   // Insert patience message after loader content
   const loadingContainer = document.getElementById('loadingContainer');
@@ -104,10 +179,14 @@ async function analyze() {
     // Set up AbortController with 90 second timeout
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 90000);
-    
+
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const response = await fetch('/api/local-seo', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ url, scanStartedAt }),
       signal: controller.signal
     });
@@ -118,7 +197,11 @@ async function analyze() {
     
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const errorMsg = errorData.message || errorData.error || 'Analysis failed - please try again';
+      if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
+        const limit = errorData.scansLimit || 10;
+        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+      }
+      const errorMsg = errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed - please try again');
       throw new Error(errorMsg);
     }
     
@@ -141,13 +224,15 @@ async function analyze() {
 
     displayResults(data);
     results.style.display = 'block';
-    
+    window.__REPORT_READY__ = true;
+    window.dispatchEvent(new CustomEvent('report:ready'));
+
   } catch (error) {
-    const message = error.message || 'Unknown error occurred';
+    const message = error.message || t('reports.common.unknownError', 'Unknown error occurred');
     if (message.includes('timeout') || message.includes('Timeout')) {
-      alert('The website took too long to respond. Please try a different site or try again later.');
+      alert(t('reports.common.timeoutError', 'The website took too long to respond. Please try a different site or try again later.'));
     } else {
-      alert(`Error: ${message}`);
+      alert(t('reports.common.error', 'Error: {{message}}', { message }));
     }
     loader.complete();
   } finally {
@@ -199,18 +284,25 @@ function displayResults(data) {
     resultsContainer.setAttribute('data-sm-report-id', reportId);
   }
 
+  // Build screenshot URL for report display
+  const screenshotUrl = data.screenshotUrl || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+  if (screenshotUrl) {
+    document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+  }
+  const screenshots = screenshotUrl ? [{ src: screenshotUrl, alt: t('reports.common.screenshotOf', 'Screenshot of') + ' ' + reportUrl, device: '' }] : [];
+
   if (window.ReportContainer && typeof window.ReportContainer.create === 'function') {
     const summary = [
-      { label: 'Overall Score', score: Math.round(data.overallScore || 0) },
-      { label: 'NAP', score: Math.round(data.scores?.nap || 0) },
-      { label: 'Schema', score: Math.round(data.scores?.schema || 0) },
-      { label: 'Presence', score: Math.round(data.scores?.presence || 0) }
+      { label: t('reports.common.overallScore', 'Overall Score'), score: Math.round(data.overallScore || 0) },
+      { label: t('reports.localSeo.nap', 'NAP'), score: Math.round(data.scores?.nap || 0) },
+      { label: t('reports.localSeo.schema', 'Schema'), score: Math.round(data.scores?.schema || 0) },
+      { label: t('reports.localSeo.presence', 'Presence'), score: Math.round(data.scores?.presence || 0) }
     ];
 
     const sections = [
       {
         id: 'local-seo-overview',
-        title: 'Local SEO Overview',
+        title: t('reports.localSeo.overview', 'Local SEO Overview'),
         scoreTextRight: `${Math.round(data.overallScore || 0)}/100`,
         contentHTML: createOverviewSection(data),
         context: 'local-seo',
@@ -221,8 +313,8 @@ function displayResults(data) {
     if (data.quickWins && data.quickWins.length > 0) {
       sections.push({
         id: 'quick-wins',
-        title: 'Quick Wins',
-        scoreTextRight: 'High impact',
+        title: t('reports.common.quickWins', 'Quick Wins'),
+        scoreTextRight: t('reports.common.highImpact', 'High impact'),
         contentHTML: createQuickWinsSection(data.quickWins),
         context: 'local-seo',
         reportId
@@ -232,15 +324,15 @@ function displayResults(data) {
     sections.push(
       {
         id: 'score-breakdown',
-        title: 'Score Breakdown',
-        scoreTextRight: 'By category',
+        title: t('reports.common.scoreBreakdown', 'Score Breakdown'),
+        scoreTextRight: t('reports.common.byCategory', 'By category'),
         contentHTML: createScoreBreakdownCards(data.scores),
         context: 'local-seo',
         reportId
       },
       {
         id: 'nap-analysis',
-        title: 'NAP Analysis (Name, Address, Phone)',
+        title: t('reports.localSeo.napAnalysis', 'NAP Analysis (Name, Address, Phone)'),
         scoreTextRight: Math.round(data.scores?.nap || 0),
         contentHTML: renderNAPContent(data.analysis),
         context: 'local-seo',
@@ -248,7 +340,7 @@ function displayResults(data) {
       },
       {
         id: 'local-presence',
-        title: 'Local Presence Signals',
+        title: t('reports.localSeo.localPresence', 'Local Presence Signals'),
         scoreTextRight: Math.round(data.scores?.presence || 0),
         contentHTML: renderLocalPresenceContent(data.analysis.localPresence),
         context: 'local-seo',
@@ -256,7 +348,7 @@ function displayResults(data) {
       },
       {
         id: 'schema-analysis',
-        title: 'Structured Data & Schema',
+        title: t('reports.localSeo.schemaAnalysis', 'Structured Data & Schema'),
         scoreTextRight: Math.round(data.scores?.schema || 0),
         contentHTML: (window.ReportUI && window.ReportUI.pro && typeof window.ReportUI.pro.lockContent === 'function' && !isUnlocked)
           ? window.ReportUI.pro.lockContent(renderSchemaContent(data.analysis.schema), 'local-seo')
@@ -268,7 +360,7 @@ function displayResults(data) {
       },
       {
         id: 'report-recommendations',
-        title: 'Report and Recommendations',
+        title: t('reports.common.reportAndRecommendations', 'Report and Recommendations'),
         scoreTextRight: null,
         contentHTML: (window.ReportUI && window.ReportUI.pro && typeof window.ReportUI.pro.lockContent === 'function' && !isUnlocked)
           ? window.ReportUI.pro.lockContent(renderRecommendationsContent(data.recommendations), 'local-seo')
@@ -284,16 +376,17 @@ function displayResults(data) {
       url: reportUrl,
       timestamp: scanStartedAt,
       mode: 'local-seo',
-      title: 'Local SEO Report',
-      subtitle: 'Local SEO Inspection',
+      title: t('reports.localSeo.title', 'Local SEO Report'),
+      subtitle: t('reports.localSeo.subtitle', 'Local SEO Inspection'),
       summary,
       sections,
+      screenshots,
       proBlock: true,
       proBlockOptions: {
         context: 'local-seo',
         features: ['pdf', 'csv', 'share'],
-        title: 'Unlock Report',
-        subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+        title: t('reports.common.unlockReport', 'Unlock Report'),
+        subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
         reportId
       }
     });
@@ -325,19 +418,19 @@ function displayResults(data) {
     const accordionHTML = [
       ReportAccordion.createSection({
         id: 'nap-analysis',
-        title: 'NAP Analysis (Name, Address, Phone)',
+        title: t('reports.localSeo.napAnalysis', 'NAP Analysis (Name, Address, Phone)'),
         scoreTextRight: `${data.scores.nap}/100`,
         contentHTML: renderNAPContent(data.analysis)
       }),
       ReportAccordion.createSection({
         id: 'local-presence',
-        title: 'Local Presence Signals',
+        title: t('reports.localSeo.localPresence', 'Local Presence Signals'),
         scoreTextRight: `${data.scores.presence}/100`,
         contentHTML: renderLocalPresenceContent(data.analysis.localPresence)
       }),
       ReportAccordion.createSection({
         id: 'schema-analysis',
-        title: 'Structured Data & Schema',
+        title: t('reports.localSeo.schemaAnalysis', 'Structured Data & Schema'),
         scoreTextRight: `${data.scores.schema}/100`,
         isPro: true,
         locked: !isUnlocked,
@@ -347,7 +440,7 @@ function displayResults(data) {
       }),
       ReportAccordion.createSection({
         id: 'report-recommendations',
-        title: 'Report and Recommendations',
+        title: t('reports.common.reportRecommendations', 'Report and Recommendations'),
         isPro: true,
         locked: !isUnlocked,
         context: 'local-seo',
@@ -362,19 +455,8 @@ function displayResults(data) {
     // Initialize ReportAccordion interactions
     ReportAccordion.initInteractions();
 
-    if (window.ProReportBlock && window.ProReportBlock.render) {
-      const proSection = document.createElement('div');
-      proSection.className = 'section';
-      proSection.style.marginTop = '2rem';
-      proSection.innerHTML = window.ProReportBlock.render({
-        context: 'local-seo',
-        features: ['pdf', 'csv', 'share'],
-        title: 'Unlock Report',
-        subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
-        reportId
-      });
-      resultsContainer.appendChild(proSection);
-    }
+    // Note: ReportContainer.create() with proBlock: true already adds Export & Share block
+    // Don't manually add ProReportBlock to avoid duplicate
   }
 
   if (window.ReportUI && reportId) {
@@ -453,27 +535,27 @@ function createOverviewSection(data) {
         
         <!-- Right: Quick Stats -->
         <div>
-          <h3 style="color: ${gradeColor}; margin: 0 0 1rem 0; font-size: 1.3rem;">Quick Stats</h3>
+          <h3 style="color: ${gradeColor}; margin: 0 0 1rem 0; font-size: 1.3rem;">${t('reports.localSeo.quickStats', 'Quick Stats')}</h3>
           <div style="display: grid; gap: 0.75rem;">
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">Overall Grade</span>
+              <span style="color: #c0c0c0;">${t('reports.localSeo.overallGrade', 'Overall Grade')}</span>
               <span style="color: ${gradeColor}; font-weight: bold;">${data.grade}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">Phone Numbers Found</span>
+              <span style="color: #c0c0c0;">${t('reports.localSeo.phoneNumbersFound', 'Phone Numbers Found')}</span>
               <span style="color: ${nap.phoneCount > 0 ? '#00ff41' : '#ff4444'}; font-weight: bold;">${nap.phoneCount}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">Business Address</span>
-              <span style="color: ${nap.hasAddress ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${nap.hasAddress ? 'Detected' : 'Not Found'}</span>
+              <span style="color: #c0c0c0;">${t('reports.localSeo.businessAddress', 'Business Address')}</span>
+              <span style="color: ${nap.hasAddress ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${nap.hasAddress ? t('reports.common.detected', 'Detected') : t('reports.common.notFound', 'Not Found')}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">LocalBusiness Schema</span>
-              <span style="color: ${data.analysis.schema.hasLocalBusinessSchema ? '#00ff41' : '#ff4444'}; font-weight: bold;">${data.analysis.schema.hasLocalBusinessSchema ? 'Present' : 'Missing'}</span>
+              <span style="color: #c0c0c0;">${t('reports.localSeo.localBusinessSchema', 'LocalBusiness Schema')}</span>
+              <span style="color: ${data.analysis.schema.hasLocalBusinessSchema ? '#00ff41' : '#ff4444'}; font-weight: bold;">${data.analysis.schema.hasLocalBusinessSchema ? t('reports.common.present', 'Present') : t('reports.common.missing', 'Missing')}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-              <span style="color: #c0c0c0;">Google Maps Embed</span>
-              <span style="color: ${presence.hasGoogleMap ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${presence.hasGoogleMap ? 'Found' : 'Not Found'}</span>
+              <span style="color: #c0c0c0;">${t('reports.localSeo.googleMapsEmbed', 'Google Maps Embed')}</span>
+              <span style="color: ${presence.hasGoogleMap ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${presence.hasGoogleMap ? t('reports.common.found', 'Found') : t('reports.common.notFound', 'Not Found')}</span>
             </div>
           </div>
         </div>
@@ -483,6 +565,15 @@ function createOverviewSection(data) {
 }
 
 function createQuickWinsSection(quickWins) {
+  // Translate quick win data from API
+  const translatedWins = quickWins.map(win => ({
+    ...win,
+    title: translateLocalSeoApi(win.title, 'title'),
+    impact: translateLocalSeoApi(win.impact, 'impact'),
+    difficulty: translateLocalSeoApi(win.difficulty, 'difficulty'),
+    steps: win.steps.map(step => translateLocalSeoApi(step, 'step'))
+  }));
+
   return `
     <div style="
       background: linear-gradient(135deg, rgba(255, 215, 0, 0.15) 0%, rgba(255, 215, 0, 0.05) 100%);
@@ -493,14 +584,14 @@ function createQuickWinsSection(quickWins) {
     ">
       <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
         <span style="font-size: 1.75rem;">⚡</span>
-        <div style="margin: 0; color: #ffd700; font-size: 1.15rem; font-weight: 700;">High Impact • Low Effort</div>
+        <div style="margin: 0; color: #ffd700; font-size: 1.15rem; font-weight: 700;">${t('reports.common.highImpactLowEffort', 'High Impact • Low Effort')}</div>
       </div>
       <p style="color: #c0c0c0; margin: 0 0 1.5rem 0; font-size: 0.95rem;">
-        These quick fixes can boost your local search visibility fast.
+        ${t('reports.localSeo.quickFixesDescription', 'These quick fixes can boost your local search visibility fast.')}
       </p>
       
       <div style="display: grid; gap: 1rem;">
-        ${quickWins.map((win, index) => `
+        ${translatedWins.map((win, index) => `
           <div style="
             background: rgba(0, 0, 0, 0.3);
             border: 1px solid rgba(255, 215, 0, 0.3);
@@ -565,7 +656,7 @@ function createQuickWinsSection(quickWins) {
                 border-radius: 6px;
                 padding: 0.75rem 1rem;
               ">
-                <div style="color: #808080; font-size: 0.75rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">How to fix:</div>
+                <div style="color: #808080; font-size: 0.75rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('reports.common.howToFix', 'How to fix:')}</div>
                 <ol style="margin: 0; padding-left: 1.25rem; color: #b0b0b0; font-size: 0.85rem; line-height: 1.6;">
                   ${win.steps.map(step => `<li>${step}</li>`).join('')}
                 </ol>
@@ -588,9 +679,9 @@ function createQuickWinsSection(quickWins) {
 
 function createScoreBreakdownCards(scores) {
   const categories = [
-    { key: 'nap', label: 'NAP Info', description: 'Name, Address, Phone' },
-    { key: 'schema', label: 'Schema', description: 'Structured Data' },
-    { key: 'presence', label: 'Presence', description: 'Local Signals' }
+    { key: 'nap', label: t('reports.localSeo.napInfo', 'NAP Info'), description: t('reports.localSeo.nameAddressPhone', 'Name, Address, Phone') },
+    { key: 'schema', label: t('reports.localSeo.schema', 'Schema'), description: t('reports.localSeo.structuredData', 'Structured Data') },
+    { key: 'presence', label: t('reports.localSeo.presence', 'Presence'), description: t('reports.localSeo.localSignals', 'Local Signals') }
   ];
   const circumference = 2 * Math.PI * 60; // 376.99
 
@@ -655,12 +746,12 @@ function createScoreBreakdownCards(scores) {
 
 function renderNAPContent(analysis) {
   const nap = analysis.nap;
-  
+
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> Contact Information Analysis</h3>
+      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.localSeo.contactInfoAnalysis', 'Contact Information Analysis')}</h3>
       <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
-        NAP (Name, Address, Phone) consistency is crucial for local SEO. Ensure this information matches across all platforms.
+        ${t('reports.localSeo.napConsistencyDesc', 'NAP (Name, Address, Phone) consistency is crucial for local SEO. Ensure this information matches across all platforms.')}
       </p>
       
       <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.5rem; margin-bottom: 1.5rem;">
@@ -673,10 +764,10 @@ function renderNAPContent(analysis) {
         ">
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
             <span style="font-size: 1.5rem;">📞</span>
-            <span style="color: #00ff41; font-weight: bold;">Phone Numbers</span>
+            <span style="color: #00ff41; font-weight: bold;">${t('reports.localSeo.phoneNumbers', 'Phone Numbers')}</span>
           </div>
           <div style="font-size: 2rem; font-weight: 900; color: #ffffff; margin-bottom: 0.5rem;">${nap.phoneCount}</div>
-          <div style="color: #808080; font-size: 0.85rem;">detected on page</div>
+          <div style="color: #808080; font-size: 0.85rem;">${t('reports.localSeo.detectedOnPage', 'detected on page')}</div>
           ${nap.phones.length > 0 ? `
             <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
               ${nap.phones.map(phone => `
@@ -702,14 +793,14 @@ function renderNAPContent(analysis) {
         ">
           <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
             <span style="font-size: 1.5rem;">📍</span>
-            <span style="color: ${nap.hasAddress ? '#00ff41' : '#ff8c00'}; font-weight: bold;">Business Address</span>
+            <span style="color: ${nap.hasAddress ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${t('reports.localSeo.businessAddress', 'Business Address')}</span>
           </div>
           <div style="font-size: 1.5rem; font-weight: 900; color: ${nap.hasAddress ? '#00ff41' : '#ff8c00'}; margin-bottom: 0.5rem;">
-            ${nap.hasAddress ? '✅ Detected' : '⚠️ Not Found'}
+            ${nap.hasAddress ? '✅ ' + t('reports.common.detected', 'Detected') : '⚠️ ' + t('reports.common.notFound', 'Not Found')}
           </div>
           ${nap.zipCodes.length > 0 ? `
             <div style="margin-top: 0.5rem; color: #c0c0c0; font-size: 0.85rem;">
-              ZIP Codes: ${nap.zipCodes.join(', ')}
+              ${t('reports.localSeo.zipCodes', 'ZIP Codes')}: ${nap.zipCodes.join(', ')}
             </div>
           ` : ''}
         </div>
@@ -723,7 +814,7 @@ function renderNAPContent(analysis) {
       ">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
           <span style="font-size: 1.2rem;">✉️</span>
-          <span style="color: #c0c0c0; font-weight: bold;">Email Addresses</span>
+          <span style="color: #c0c0c0; font-weight: bold;">${t('reports.localSeo.emailAddresses', 'Email Addresses')}</span>
         </div>
         ${nap.emails.length > 0 ? `
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -738,7 +829,7 @@ function renderNAPContent(analysis) {
             `).join('')}
           </div>
         ` : `
-          <span style="color: #808080; font-size: 0.9rem;">No email addresses detected on page</span>
+          <span style="color: #808080; font-size: 0.9rem;">${t('reports.localSeo.noEmailsDetected', 'No email addresses detected on page')}</span>
         `}
       </div>
     </div>
@@ -747,18 +838,18 @@ function renderNAPContent(analysis) {
 
 function renderSchemaContent(schema) {
   const items = [
-    { label: 'LocalBusiness Schema', value: schema.hasLocalBusinessSchema, critical: true },
-    { label: 'Organization Schema', value: schema.hasOrganizationSchema },
-    { label: 'Contact Point', value: schema.hasContactPoint },
-    { label: 'Geo Coordinates', value: schema.hasGeoCoordinates },
-    { label: 'Opening Hours', value: schema.hasOpeningHours }
+    { label: t('reports.localSeo.localBusinessSchema', 'LocalBusiness Schema'), value: schema.hasLocalBusinessSchema, critical: true },
+    { label: t('reports.localSeo.organizationSchema', 'Organization Schema'), value: schema.hasOrganizationSchema },
+    { label: t('reports.localSeo.contactPoint', 'Contact Point'), value: schema.hasContactPoint },
+    { label: t('reports.localSeo.geoCoordinates', 'Geo Coordinates'), value: schema.hasGeoCoordinates },
+    { label: t('reports.localSeo.openingHours', 'Opening Hours'), value: schema.hasOpeningHours }
   ];
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> Structured Data Analysis</h3>
+      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.localSeo.structuredDataAnalysis', 'Structured Data Analysis')}</h3>
       <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
-        Schema markup helps search engines understand your business. LocalBusiness schema is essential for local pack results.
+        ${t('reports.localSeo.schemaDescription', 'Schema markup helps search engines understand your business. LocalBusiness schema is essential for local pack results.')}
       </p>
       
       ${schema.businessName ? `
@@ -769,7 +860,7 @@ function renderSchemaContent(schema) {
           padding: 1rem;
           margin-bottom: 1rem;
         ">
-          <span style="color: #808080; font-size: 0.85rem;">Business Name in Schema:</span>
+          <span style="color: #808080; font-size: 0.85rem;">${t('reports.localSeo.businessNameInSchema', 'Business Name in Schema')}:</span>
           <div style="color: #00ff41; font-size: 1.1rem; font-weight: bold; margin-top: 0.25rem;">${schema.businessName}</div>
         </div>
       ` : ''}
@@ -793,7 +884,7 @@ function renderSchemaContent(schema) {
               align-items: center;
               gap: 0.35rem;
             ">
-              ${item.value ? '✅ Present' : '❌ Missing'}
+              ${item.value ? '✅ ' + t('reports.common.present', 'Present') : '❌ ' + t('reports.common.missing', 'Missing')}
             </span>
           </div>
         `).join('')}
@@ -808,11 +899,10 @@ function renderSchemaContent(schema) {
           border-radius: 8px;
         ">
           <div style="display: flex; align-items: center; gap: 0.5rem; color: #ff4444; font-weight: bold; margin-bottom: 0.5rem;">
-            <span>⚠️</span> Critical: LocalBusiness Schema Missing
+            <span>⚠️</span> ${t('reports.localSeo.criticalSchemaMissing', 'Critical: LocalBusiness Schema Missing')}
           </div>
           <p style="color: #c0c0c0; margin: 0; font-size: 0.9rem;">
-            Without LocalBusiness schema, Google may not fully understand your business type and location, 
-            reducing your chances of appearing in local pack results.
+            ${t('reports.localSeo.schemaMissingDesc', 'Without LocalBusiness schema, Google may not fully understand your business type and location, reducing your chances of appearing in local pack results.')}
           </p>
         </div>
       ` : ''}
@@ -822,17 +912,17 @@ function renderSchemaContent(schema) {
 
 function renderLocalPresenceContent(presence) {
   const signals = [
-    { icon: '🗺️', label: 'Google Maps Embed', value: presence.hasGoogleMap, impact: 'High' },
-    { icon: '⏰', label: 'Hours of Operation', value: presence.hasHoursInfo, impact: 'Medium' },
-    { icon: '📞', label: 'Contact Page Link', value: presence.hasContactPage, impact: 'Medium' },
-    { icon: '⭐', label: 'Reviews/Testimonials', value: presence.hasReviews, impact: 'High' }
+    { icon: '🗺️', label: t('reports.localSeo.googleMapsEmbed', 'Google Maps Embed'), value: presence.hasGoogleMap, impact: 'High' },
+    { icon: '⏰', label: t('reports.localSeo.hoursOfOperation', 'Hours of Operation'), value: presence.hasHoursInfo, impact: 'Medium' },
+    { icon: '📞', label: t('reports.localSeo.contactPageLink', 'Contact Page Link'), value: presence.hasContactPage, impact: 'Medium' },
+    { icon: '⭐', label: t('reports.localSeo.reviewsTestimonials', 'Reviews/Testimonials'), value: presence.hasReviews, impact: 'High' }
   ];
 
   return `
     <div>
-      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> Local Presence Signals</h3>
+      <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.localSeo.localPresenceSignals', 'Local Presence Signals')}</h3>
       <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
-        These signals help establish your local presence and build trust with potential customers.
+        ${t('reports.localSeo.presenceSignalsDesc', 'These signals help establish your local presence and build trust with potential customers.')}
       </p>
       
       <!-- Signal Cards -->
@@ -851,7 +941,7 @@ function renderLocalPresenceContent(presence) {
             <div style="flex: 1;">
               <div style="color: #ffffff; font-weight: 600;">${signal.label}</div>
               <div style="color: ${signal.value ? '#00ff41' : '#ff8c00'}; font-size: 0.85rem;">
-                ${signal.value ? '✅ Found' : '⚠️ Not Found'}
+                ${signal.value ? '✅ ' + t('reports.common.found', 'Found') : '⚠️ ' + t('reports.common.notFound', 'Not Found')}
               </div>
             </div>
             <span style="
@@ -861,7 +951,7 @@ function renderLocalPresenceContent(presence) {
               border-radius: 4px;
               font-size: 0.7rem;
               font-weight: 600;
-            ">${signal.impact} Impact</span>
+            ">${signal.impact === 'High' ? t('reports.common.highImpact', 'High Impact') : t('reports.common.mediumImpact', 'Medium Impact')}</span>
           </div>
         `).join('')}
       </div>
@@ -874,7 +964,7 @@ function renderLocalPresenceContent(presence) {
       ">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
           <span style="font-size: 1.2rem;">📱</span>
-          <span style="color: #c0c0c0; font-weight: bold;">Social Profiles Linked</span>
+          <span style="color: #c0c0c0; font-weight: bold;">${t('reports.localSeo.socialProfilesLinked', 'Social Profiles Linked')}</span>
           <span style="
             background: rgba(0, 217, 255, 0.15);
             color: #00d9ff;
@@ -882,7 +972,7 @@ function renderLocalPresenceContent(presence) {
             border-radius: 4px;
             font-size: 0.75rem;
             font-weight: 600;
-          ">${presence.socialProfiles.length} found</span>
+          ">${presence.socialProfiles.length} ${t('reports.common.found', 'found')}</span>
         </div>
         ${presence.socialProfiles.length > 0 ? `
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -899,8 +989,7 @@ function renderLocalPresenceContent(presence) {
           </div>
         ` : `
           <p style="color: #808080; margin: 0; font-size: 0.9rem;">
-            No social media profile links detected. Consider adding links to your business profiles on 
-            Facebook, Instagram, LinkedIn, or Yelp to improve local trust signals.
+            ${t('reports.localSeo.noSocialProfilesDesc', 'No social media profile links detected. Consider adding links to your business profiles on Facebook, Instagram, LinkedIn, or Yelp to improve local trust signals.')}
           </p>
         `}
       </div>
@@ -916,9 +1005,9 @@ function renderRecommendationsContent(recommendations) {
     return `
       <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
-          <span style="font-size: 1.5rem;">✓</span> Excellent Local SEO!
+          <span style="font-size: 1.5rem;">✓</span> ${t('reports.localSeo.excellentLocalSeo', 'Excellent Local SEO!')}
         </h3>
-        <p style="color: #86efac; margin: 0;">Your site follows local SEO best practices. Keep monitoring for continued success.</p>
+        <p style="color: #86efac; margin: 0;">${t('reports.localSeo.excellentLocalSeoDesc', 'Your site follows local SEO best practices. Keep monitoring for continued success.')}</p>
       </div>
     `;
   }
@@ -933,8 +1022,8 @@ function renderRecommendationsContent(recommendations) {
   let html = `
     <div class="local-seo-fixes-container" style="margin-top: 1rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
-        <span style="font-size: 1.75rem;">🔍</span> Local SEO Fixes
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${allRecs.length} improvements found)</span>
+        <span style="font-size: 1.75rem;">🔍</span> ${t('reports.localSeo.localSeoFixes', 'Local SEO Fixes')}
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('reports.common.improvementsFound', '{{count}} improvements found', { count: allRecs.length })})</span>
       </h3>
       <div class="local-seo-fixes-list">
   `;
@@ -995,7 +1084,7 @@ function ensureLocalSeoFixFunctions() {
         content.classList.remove('active');
       });
 
-      const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+      const activeTab = Array.from(tabs).find(tab => tab.getAttribute('data-tab') === tabName);
       const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
       if (activeTab) {
@@ -1030,30 +1119,108 @@ function ensureLocalSeoFixFunctions() {
         const btn = codeElement.parentElement.querySelector('button');
         if (btn) {
           const originalText = btn.textContent;
-          btn.textContent = '✓ Copied!';
+          btn.textContent = '✓ ' + t('common.copied', 'Copied!');
           setTimeout(() => { btn.textContent = originalText; }, 2000);
         }
       });
     };
   }
+
+  // Event delegation for Local SEO fix accordions (CSP compliant)
+  if (!window.__localSeoFixEventDelegationInitialized) {
+    window.__localSeoFixEventDelegationInitialized = true;
+
+    document.addEventListener('click', function(e) {
+      // Handle accordion header clicks
+      const toggleAccordion = e.target.closest('[data-action="toggle-local-seo-accordion"]');
+      if (toggleAccordion) {
+        const accordionId = toggleAccordion.getAttribute('data-accordion-id');
+        if (accordionId) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.toggleLocalSeoFixAccordion(accordionId);
+        }
+        return;
+      }
+
+      // Handle tab button clicks
+      const switchTab = e.target.closest('[data-action="switch-local-seo-tab"]');
+      if (switchTab) {
+        const accordionId = switchTab.getAttribute('data-accordion-id');
+        const tabName = switchTab.getAttribute('data-tab');
+        if (accordionId && tabName) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.switchLocalSeoFixTab(accordionId, tabName);
+        }
+        return;
+      }
+
+      // Handle copy button clicks
+      const copyBtn = e.target.closest('[data-action="copy-local-seo-code"]');
+      if (copyBtn) {
+        const codeId = copyBtn.getAttribute('data-code-id');
+        if (codeId) {
+          e.preventDefault();
+          e.stopPropagation();
+          window.copyLocalSeoCode(codeId);
+        }
+        return;
+      }
+    });
+  }
+}
+
+// Map backend fix messages to translation keys
+function getLocalSeoFixKey(message) {
+  const msg = message.toLowerCase();
+  if (msg.includes('localbusiness') && msg.includes('schema')) return 'addLocalBusinessSchema';
+  if (msg.includes('embed') && msg.includes('map')) return 'embedGoogleMaps';
+  if (msg.includes('google map')) return 'embedGoogleMaps';
+  if (msg.includes('opening hours') || msg.includes('hours to schema')) return 'addOpeningHours';
+  if (msg.includes('social media') || msg.includes('social profile')) return 'addSocialMediaLinks';
+  if (msg.includes('review') && (msg.includes('display') || msg.includes('customer') || msg.includes('show'))) return 'displayCustomerReviews';
+  if (msg.includes('email') && (msg.includes('add') || msg.includes('contact'))) return 'addContactEmail';
+  if (msg.includes('geo') && msg.includes('coord')) return 'addGeoCoordinates';
+  if (msg.includes('contact') && msg.includes('point')) return 'addContactPoint';
+  if (msg.includes('organization') && msg.includes('schema')) return 'addOrganizationSchema';
+  if (msg.includes('address') && msg.includes('schema')) return 'addAddressToSchema';
+  if (msg.includes('phone') && msg.includes('schema')) return 'addPhoneToSchema';
+  return 'default';
+}
+
+// Get translated fix title and description
+function getTranslatedFix(rec) {
+  const fixKey = getLocalSeoFixKey(rec.message);
+  const titleKey = `reports.localSeo.fixes.${fixKey}.title`;
+  const descKey = `reports.localSeo.fixes.${fixKey}.description`;
+
+  return {
+    title: t(titleKey, rec.message),
+    description: t(descKey, rec.detail || rec.message)
+  };
 }
 
 function renderLocalSeoFixAccordion(rec, index) {
   const accordionId = `localseofix-${index}`;
-  const severity = rec.priority === 'critical' ? 'High' : 
-                   rec.priority === 'high' ? 'High' : 
-                   rec.priority === 'medium' ? 'Medium' : 'Low';
-  
+  const severityKey = rec.priority === 'critical' ? 'high' :
+                   rec.priority === 'high' ? 'high' :
+                   rec.priority === 'medium' ? 'medium' : 'low';
+  const severityLabel = t(`reports.common.severity.${severityKey}`, severityKey.charAt(0).toUpperCase() + severityKey.slice(1));
+
   const severityColors = {
-    High: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
-    Medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
-    Low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
+    low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
   };
-  const style = severityColors[severity] || severityColors.Medium;
+  const style = severityColors[severityKey] || severityColors.medium;
 
   // Generate code snippet based on recommendation type
   const codeSnippet = getLocalSeoCodeSnippet(rec);
   const steps = getLocalSeoSteps(rec);
+
+  // Get translated title and description
+  const translatedFix = getTranslatedFix(rec);
 
   return `
     <div class="local-seo-fix-accordion" data-fix-id="${accordionId}" style="
@@ -1063,7 +1230,7 @@ function renderLocalSeoFixAccordion(rec, index) {
       overflow: hidden;
       background: ${style.bg};
     ">
-      <div class="local-seo-fix-header" onclick="toggleLocalSeoFixAccordion('${accordionId}')" style="
+      <div class="local-seo-fix-header" data-action="toggle-local-seo-accordion" data-accordion-id="${accordionId}" style="
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -1074,8 +1241,8 @@ function renderLocalSeoFixAccordion(rec, index) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${rec.message}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">Local SEO Optimization</p>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${translatedFix.title}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${t('reports.localSeo.localSeoOptimization', 'Local SEO Optimization')}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -1087,7 +1254,7 @@ function renderLocalSeoFixAccordion(rec, index) {
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
-          ">${severity.toUpperCase()}</span>
+          ">${severityLabel.toUpperCase()}</span>
           <span class="local-seo-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
         </div>
       </div>
@@ -1102,9 +1269,12 @@ function renderLocalSeoFixAccordion(rec, index) {
 }
 
 function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
+  // Get translated description for this fix
+  const translatedFix = getTranslatedFix(rec);
+
   return `
     <div class="local-seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
-      <button class="local-seo-fix-tab active" onclick="switchLocalSeoFixTab('${accordionId}', 'summary')" style="
+      <button class="local-seo-fix-tab active" data-action="switch-local-seo-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
@@ -1112,8 +1282,8 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
         color: #fff;
         cursor: pointer;
         font-size: 0.85rem;
-      ">📋 Summary</button>
-      <button class="local-seo-fix-tab" onclick="switchLocalSeoFixTab('${accordionId}', 'code')" style="
+      ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
+      <button class="local-seo-fix-tab" data-action="switch-local-seo-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -1121,8 +1291,8 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
         color: #aaa;
         cursor: pointer;
         font-size: 0.85rem;
-      ">💻 Code</button>
-      <button class="local-seo-fix-tab" onclick="switchLocalSeoFixTab('${accordionId}', 'guide')" style="
+      ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
+      <button class="local-seo-fix-tab" data-action="switch-local-seo-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -1130,17 +1300,17 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
         color: #aaa;
         cursor: pointer;
         font-size: 0.85rem;
-      ">📖 Guide</button>
+      ">📖 ${t('reports.common.tabs.guide', 'Guide')}</button>
     </div>
 
     <!-- Summary Tab -->
     <div class="local-seo-fix-tab-content active" id="${accordionId}-summary" style="display: block;">
       <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem;">
-        <h5 style="margin: 0 0 0.75rem 0; color: #00ff41; font-size: 0.95rem;">What's the issue?</h5>
-        <p style="margin: 0 0 1rem 0; color: #c0c0c0; font-size: 0.9rem; line-height: 1.6;">${rec.detail}</p>
+        <h5 style="margin: 0 0 0.75rem 0; color: #00ff41; font-size: 0.95rem;">${t('reports.common.whatsTheIssue', "What's the issue?")}</h5>
+        <p style="margin: 0 0 1rem 0; color: #c0c0c0; font-size: 0.9rem; line-height: 1.6;">${translatedFix.description}</p>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <span style="background: rgba(0,255,65,0.1); color: #00ff41; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">Impact: ${rec.priority === 'critical' || rec.priority === 'high' ? 'High' : 'Medium'}</span>
-          <span style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">Category: Local SEO</span>
+          <span style="background: rgba(0,255,65,0.1); color: #00ff41; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">${t('reports.common.impact', 'Impact')}: ${rec.priority === 'critical' || rec.priority === 'high' ? t('reports.common.high', 'High') : t('reports.common.medium', 'Medium')}</span>
+          <span style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">${t('reports.common.category', 'Category')}: ${t('reports.localSeo.localSeo', 'Local SEO')}</span>
         </div>
       </div>
     </div>
@@ -1151,8 +1321,8 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
         <!-- Recommended Fix -->
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Implementation</span>
-            <button onclick="copyLocalSeoCode('${accordionId}-solution')" style="
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.recommendedImplementation', 'Recommended Implementation')}</span>
+            <button data-action="copy-local-seo-code" data-code-id="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
@@ -1160,7 +1330,7 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
               color: #fff;
               cursor: pointer;
               font-size: 0.75rem;
-            ">📋 Copy</button>
+            ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
           <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeLocalSeoHtml(codeSnippet)}</pre>
         </div>
@@ -1169,7 +1339,7 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
 
     <!-- Guide Tab -->
     <div class="local-seo-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.stepByStepFix', 'Step-by-Step Fix')}:</h5>
       <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
         ${steps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
       </ol>
@@ -1265,47 +1435,29 @@ function getLocalSeoCodeSnippet(rec) {
 }
 
 function getLocalSeoSteps(rec) {
-  const stepsMap = {
-    'Add LocalBusiness schema': [
-      'Create a JSON-LD script block in your page head or body',
-      'Add your business name, address, phone number, and hours',
-      'Include geo-coordinates for better local search visibility',
-      'Test with Google Rich Results Test tool',
-      'Submit updated sitemap to Google Search Console'
-    ],
-    'Add contact email': [
-      'Add a visible email address on your contact page',
-      'Include email in your LocalBusiness schema markup',
-      'Consider using a professional domain email (not Gmail/Yahoo)',
-      'Add email to your Google Business Profile'
-    ],
-    'Add opening hours to schema': [
-      'Add openingHoursSpecification to your LocalBusiness schema',
-      'Include hours for each day of the week',
-      'Mark special holiday hours if applicable',
-      'Keep hours consistent with Google Business Profile'
-    ],
-    'Display customer reviews': [
-      'Add aggregateRating to your schema with average rating and count',
-      'Include individual review snippets if available',
-      'Consider adding a reviews widget to your site',
-      'Encourage customers to leave Google reviews',
-      'Respond to reviews to show engagement'
-    ]
-  };
+  // Use the same fix key mapping as getLocalSeoFixKey
+  const fixType = getLocalSeoFixKey(rec.message);
 
-  for (const [key, steps] of Object.entries(stepsMap)) {
-    if (rec.message.toLowerCase().includes(key.toLowerCase())) {
-      return steps;
+  // Get translated steps - try up to 5 steps
+  const steps = [];
+  for (let i = 1; i <= 5; i++) {
+    const step = t(`reports.localSeo.fixSteps.${fixType}.step${i}`, null);
+    if (step) {
+      steps.push(step);
     }
   }
 
-  return [
-    'Review the current implementation on your site',
-    'Apply the recommended code changes',
-    'Test with Google Rich Results Test',
-    'Monitor Search Console for improvements'
-  ];
+  // Fallback to default if no translations found
+  if (steps.length === 0) {
+    return [
+      t('reports.localSeo.fixSteps.default.step1', 'Review the current implementation on your site'),
+      t('reports.localSeo.fixSteps.default.step2', 'Apply the recommended code changes'),
+      t('reports.localSeo.fixSteps.default.step3', 'Test with Google Rich Results Test'),
+      t('reports.localSeo.fixSteps.default.step4', 'Monitor Search Console for improvements')
+    ];
+  }
+
+  return steps;
 }
 
 // Helper functions
@@ -1322,13 +1474,13 @@ function getGradeColor(grade) {
 
 function getGradeName(grade) {
   const names = {
-    'A': 'Excellent',
-    'B': 'Good',
-    'C': 'Fair',
-    'D': 'Poor',
-    'F': 'Critical'
+    'A': t('reports.common.grades.excellent', 'Excellent'),
+    'B': t('reports.common.grades.good', 'Good'),
+    'C': t('reports.common.grades.fair', 'Fair'),
+    'D': t('reports.common.grades.poor', 'Poor'),
+    'F': t('reports.common.grades.critical', 'Critical')
   };
-  return names[grade] || 'Unknown';
+  return names[grade] || t('reports.common.grades.unknown', 'Unknown');
 }
 
 function getScoreColor(score) {

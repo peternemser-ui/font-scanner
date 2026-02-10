@@ -5,6 +5,7 @@
  */
 
 const browserPool = require('../utils/browserPool');
+const { dismissPageOverlays } = require('../utils/browserHelpers');
 const lighthouseAnalyzer = require('./lighthouseAnalyzer');
 const { createLogger } = require('../utils/logger');
 const { roundTo, formatDuration } = require('../utils/formatHelpers');
@@ -136,6 +137,8 @@ class AccessibilityAnalyzerService {
       
       try {
         await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+
+        await dismissPageOverlays(page, { timeout: 4000 });
 
         // Extract accessibility metrics
         const metrics = await page.evaluate(() => {

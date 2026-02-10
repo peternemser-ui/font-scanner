@@ -13,6 +13,15 @@
 (function(window) {
   let currentGallery = [];
   let currentIndex = 0;
+
+  // i18n helper
+  function _t(key, fallback) {
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const val = window.i18n.t(key);
+      return (val === key && fallback) ? fallback : val;
+    }
+    return fallback || key;
+  }
   let lightboxElement = null;
   let previousFocus = null;
   let keydownHandler = null;
@@ -35,11 +44,11 @@
    */
   function createLightboxHTML() {
     return `
-      <div class="screenshot-lightbox" id="screenshot-lightbox" role="dialog" aria-modal="true" aria-label="Screenshot viewer" tabindex="-1">
+      <div class="screenshot-lightbox" id="screenshot-lightbox" role="dialog" aria-modal="true" aria-label="${_t('common.lightbox.screenshotViewer', 'Screenshot viewer')}" tabindex="-1">
         <div class="screenshot-lightbox__overlay"></div>
         <div class="screenshot-lightbox__content">
           <!-- Close button -->
-          <button type="button" class="screenshot-lightbox__close" aria-label="Close lightbox">
+          <button type="button" class="screenshot-lightbox__close" aria-label="${_t('common.lightbox.closeLightbox', 'Close lightbox')}">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
@@ -47,12 +56,12 @@
           </button>
 
           <!-- Navigation arrows -->
-          <button type="button" class="screenshot-lightbox__nav screenshot-lightbox__nav--prev" aria-label="Previous image">
+          <button type="button" class="screenshot-lightbox__nav screenshot-lightbox__nav--prev" aria-label="${_t('common.lightbox.previousImage', 'Previous image')}">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="15 18 9 12 15 6"></polyline>
             </svg>
           </button>
-          <button type="button" class="screenshot-lightbox__nav screenshot-lightbox__nav--next" aria-label="Next image">
+          <button type="button" class="screenshot-lightbox__nav screenshot-lightbox__nav--next" aria-label="${_t('common.lightbox.nextImage', 'Next image')}">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <polyline points="9 18 15 12 9 6"></polyline>
             </svg>
@@ -122,7 +131,7 @@
 
     // Update counter
     if (currentGallery.length > 1) {
-      counterElement.textContent = `${currentIndex + 1} of ${currentGallery.length}`;
+      counterElement.textContent = _t('common.lightbox.counter', '{{current}} of {{total}}').replace('{{current}}', currentIndex + 1).replace('{{total}}', currentGallery.length);
       counterElement.style.display = '';
     } else {
       counterElement.style.display = 'none';

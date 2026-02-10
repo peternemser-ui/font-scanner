@@ -22,7 +22,8 @@ const {
 const {
   setDeviceProfile,
   detectBotProtection,
-  navigateToPage
+  navigateToPage,
+  dismissPageOverlays
 } = require('../utils/browserHelpers');
 const {
   extractMetaTags,
@@ -63,6 +64,8 @@ class SEOAnalyzer {
           checkBotProtection: true,
           retries: 0
         });
+
+        await dismissPageOverlays(page, { timeout: 4000 });
 
         // Run analysis functions that can safely run in parallel
         const [

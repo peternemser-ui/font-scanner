@@ -6,6 +6,53 @@
 // Deterministic analyzer key (stable forever)
 window.SM_ANALYZER_KEY = 'performance';
 
+// Translation helper - evaluates at runtime to ensure i18n is loaded
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+// Make t() available globally for inline handlers
+window.t = t;
+
+// Function to get analysis steps with current translations
+// Called at runtime to ensure i18n is loaded
+function getAnalysisSteps() {
+  return [
+    {
+      label: t('loader.runningLighthouse', 'Running Lighthouse analysis'),
+      detail: t('loader.testingPerformance', 'Testing desktop and mobile performance...')
+    },
+    {
+      label: t('loader.analyzingResources', 'Analyzing resource loading'),
+      detail: t('loader.trackingAssets', 'Tracking scripts, styles, images, fonts...')
+    },
+    {
+      label: t('loader.testingNetwork', 'Testing network efficiency'),
+      detail: t('loader.measuringBandwidth', 'Measuring request counts and bandwidth...')
+    },
+    {
+      label: t('loader.checkingCache', 'Checking caching strategy'),
+      detail: t('loader.evaluatingCache', 'Evaluating cache headers and optimization...')
+    },
+    {
+      label: t('loader.generatingReport', 'Generating report'),
+      detail: t('loader.compilingInsights', 'Compiling performance insights...')
+    }
+  ];
+}
+
 /**
  * MEMORY MANAGEMENT: Clean up previous scan data to prevent memory leaks
  */
@@ -56,7 +103,7 @@ document.addEventListener('DOMContentLoaded', () => {
   submitButton.addEventListener('click', async () => {
     const url = urlInput.value.trim();
     if (!url) {
-      showError('Please enter a URL');
+      showError(t('reports.common.pleaseEnterUrl', 'Please enter a URL'));
       return;
     }
 
@@ -65,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Disable button during scan
     submitButton.disabled = true;
-    submitButton.textContent = 'ANALYZING...';
+    submitButton.textContent = t('reports.performance.analyzing', 'ANALYZING...');
     submitButton.style.opacity = '0.6';
     urlInput.disabled = true;
 
@@ -101,10 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
       <p style="margin: 0.75rem 0 0 0; font-size: 0.9rem; color: var(--accent-primary); font-weight: 600; letter-spacing: 0.05em;">
-        Comprehensive analysis in progress...
+        ${t('reports.performance.comprehensiveAnalysisInProgress', 'Comprehensive analysis in progress...')}
       </p>
       <p style="margin: 0.35rem 0 0 0; font-size: 0.8rem; color: rgba(var(--accent-primary-rgb), 0.7);">
-        This may take 30-60 seconds
+        ${t('reports.performance.mayTake30to60Seconds', 'This may take 30-60 seconds')}
       </p>
     `;
 
@@ -136,30 +183,8 @@ document.addEventListener('DOMContentLoaded', () => {
       document.head.appendChild(style);
     }
     
-    const analysisSteps = [
-      {
-        label: 'Running Lighthouse analysis',
-        detail: 'Testing desktop and mobile performance...'
-      },
-      {
-        label: 'Analyzing resource loading',
-        detail: 'Tracking scripts, styles, images, fonts...'
-      },
-      {
-        label: 'Testing network efficiency',
-        detail: 'Measuring request counts and bandwidth...'
-      },
-      {
-        label: 'Checking caching strategy',
-        detail: 'Evaluating cache headers and optimization...'
-      },
-      {
-        label: 'Generating report',
-        detail: 'Compiling performance insights...'
-      }
-    ];
-
-    loader.start(analysisSteps, '[PERFORMANCE ANALYZER]', 60);
+    // Use getAnalysisSteps() to get translated steps at runtime
+    loader.start(getAnalysisSteps(), '⚡ ' + t('loader.analyzingPerformance', 'PERFORMANCE ANALYZER'), 60);
     
     // Insert ASCII art message after loader starts
     setTimeout(() => {
@@ -176,18 +201,24 @@ document.addEventListener('DOMContentLoaded', () => {
       window.SM_SCAN_STARTED_AT = scanStartedAt;
       document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
 
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/performance', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers,
         body: JSON.stringify({ url, scanStartedAt }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || data.error || 'Performance analysis failed');
+        if (data.code === 'SCAN_QUOTA_EXCEEDED') {
+          const limit = data.scansLimit || 10;
+          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        }
+        throw new Error(data.message || data.error || t('reports.performance.analysisFailed', 'Performance analysis failed'));
       }
 
       // Set report metadata from API response
@@ -211,18 +242,20 @@ document.addEventListener('DOMContentLoaded', () => {
         // Show results after animation completes
         setTimeout(() => {
           displayPerformanceResults(data.results);
+          window.__REPORT_READY__ = true;
+          window.dispatchEvent(new CustomEvent('report:ready'));
         }, 1000);
       } else {
-        loader.showError(data.message || data.error || 'Performance analysis failed');
+        loader.showError(data.message || data.error || t('reports.performance.analysisFailed', 'Performance analysis failed'));
       }
 
     } catch (error) {
       console.error('Performance scan error:', error);
-      loader.showError(error.message || 'Failed to analyze website. Please try again.');
+      loader.showError(error.message || t('reports.performance.failedToAnalyze', 'Failed to analyze website. Please try again.'));
     } finally {
       // Re-enable button
       submitButton.disabled = false;
-      submitButton.textContent = 'ANALYZE PERFORMANCE';
+      submitButton.textContent = t('reports.performance.analyzePerformance', 'ANALYZE PERFORMANCE');
       submitButton.style.opacity = '1';
       urlInput.disabled = false;
     }
@@ -252,11 +285,51 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function displayPerformanceResults(results) {
   const container = document.getElementById('perfResults');
-  
+
   // Clear container
   container.innerHTML = '';
   container.style.display = 'block';
-  
+
+  // Build screenshot URL for report display
+  const reportId = document.body.getAttribute('data-report-id') || '';
+  const screenshotUrl = results.screenshotUrl || document.body.getAttribute('data-sm-screenshot-url') || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+
+  // Add screenshot section first if available
+  if (screenshotUrl) {
+    const screenshotSection = document.createElement('div');
+    screenshotSection.className = 'section screenshot-section';
+    screenshotSection.innerHTML = `
+      <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+        ${t('reports.performance.pageScreenshot', 'Page Screenshot')}
+      </h3>
+      <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+        <img
+          src="${screenshotUrl}"
+          alt="Screenshot of ${results.url || ''}"
+          class="screenshot-item__img"
+          style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
+          data-action="open-lightbox"
+          data-screenshot-url="${screenshotUrl}"
+          data-screenshot-title="${t('reports.performance.pageScreenshot', 'Page Screenshot')}"
+          onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>'+window.t?.('reports.performance.screenshotUnavailable', 'Screenshot unavailable')+'</div>'"
+        />
+      </div>
+    `;
+    container.appendChild(screenshotSection);
+
+    // Add click handler for screenshot lightbox
+    screenshotSection.addEventListener('click', (e) => {
+      const openLightbox = e.target.closest('[data-action="open-lightbox"]');
+      if (openLightbox) {
+        const url = openLightbox.getAttribute('data-screenshot-url');
+        const title = openLightbox.getAttribute('data-screenshot-title');
+        if (url && window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+          window.ScreenshotLightbox.open(url, title || t('reports.performance.screenshot', 'Screenshot'));
+        }
+      }
+    });
+  }
+
   // Check if this is cross-browser results (has browsers.desktop/mobile) or single device
   const isCrossBrowser = results.browsers && (results.browsers.desktop || results.browsers.mobile);
   
@@ -269,11 +342,11 @@ function displayPerformanceResults(results) {
   const summarySection = document.createElement('div');
   summarySection.className = 'section';
   summarySection.innerHTML = `
-    <h2>Performance Analysis Results</h2>
-    <p>>> url: ${results.url}</p>
-    <p>>> timestamp: ${new Date(results.timestamp).toLocaleString()}</p>
-    <p>>> analysis_duration: ${results.analysisDuration || 'N/A'}</p>
-    ${isCrossBrowser ? '<p>>> devices_tested: 2</p>' : ''}
+    <h2>${t('reports.performance.title', 'Performance Analysis Results')}</h2>
+    <p>>> ${t('reports.performance.url', 'url')}: ${results.url}</p>
+    <p>>> ${t('reports.performance.timestamp', 'timestamp')}: ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date(results.timestamp)) : new Date(results.timestamp).toLocaleString()}</p>
+    <p>>> ${t('reports.performance.analysisDuration', 'analysis_duration')}: ${results.analysisDuration || t('reports.performance.notAvailable', 'N/A')}</p>
+    ${isCrossBrowser ? '<p>>> ' + t('reports.performance.devicesTested', 'devices_tested') + ': 2</p>' : ''}
     
     <!-- Performance Score Overview -->
     <div style="
@@ -324,7 +397,7 @@ function displayPerformanceResults(results) {
               color: ${getPerformanceColor(avgScore)};
               text-shadow: 0 0 10px ${getPerformanceColor(avgScore)}80;
             ">${getPerformanceGrade(avgScore)}</div>
-            <div style="font-size: 0.85rem; color: #808080; margin-top: 0.25rem;">Load Speed</div>
+            <div style="font-size: 0.85rem; color: #808080; margin-top: 0.25rem;">${t('reports.performance.loadSpeed', 'Load Speed')}</div>
           </div>
 
           ${results.siteHealthScore ? `
@@ -365,14 +438,14 @@ function displayPerformanceResults(results) {
                 color: ${getPerformanceColor(results.siteHealthScore)};
                 text-shadow: 0 0 8px ${getPerformanceColor(results.siteHealthScore)}80;
               ">${getPerformanceGrade(results.siteHealthScore)}</div>
-              <div style="font-size: 0.85rem; color: #00ff41; margin-top: 0.25rem; font-weight: 600;">Site Health</div>
+              <div style="font-size: 0.85rem; color: #00ff41; margin-top: 0.25rem; font-weight: 600;">${t('reports.performance.siteHealth', 'Site Health')}</div>
             </div>
           ` : ''}
         </div>
 
         <!-- Right: Performance Score Details -->
         <div style="padding: 0 1rem; flex: 1;">
-          <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.3rem;">P Performance Score</h3>
+          <h3 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.3rem;">P ${t('reports.performance.performanceScore', 'Performance Score')}</h3>
           
           <!-- Quick Stats Grid -->
           <div style="
@@ -389,13 +462,13 @@ function displayPerformanceResults(results) {
               text-align: center;
             ">
               <div style="font-size: 0.75rem; color: #808080; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
-                Load Time
+                ${t('reports.performance.loadTime', 'Load Time')}
               </div>
               <div style="font-size: 1.3rem; font-weight: bold; color: #00ff41;">
-                ${results.loadTime || 'N/A'}
+                ${results.loadTime || t('reports.performance.notAvailable', 'N/A')}
               </div>
             </div>
-            
+
             <div style="
               background: rgba(0, 255, 65, 0.05);
               border: 1px solid rgba(0, 255, 65, 0.2);
@@ -404,13 +477,13 @@ function displayPerformanceResults(results) {
               text-align: center;
             ">
               <div style="font-size: 0.75rem; color: #808080; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
-                Page Size
+                ${t('reports.performance.pageSize', 'Page Size')}
               </div>
               <div style="font-size: 1.3rem; font-weight: bold; color: #00ff41;">
-                ${results.pageSize || 'N/A'}
+                ${results.pageSize || t('reports.performance.notAvailable', 'N/A')}
               </div>
             </div>
-            
+
             <div style="
               background: rgba(0, 255, 65, 0.05);
               border: 1px solid rgba(0, 255, 65, 0.2);
@@ -419,10 +492,10 @@ function displayPerformanceResults(results) {
               text-align: center;
             ">
               <div style="font-size: 0.75rem; color: #808080; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
-                Requests
+                ${t('reports.performance.requests', 'Requests')}
               </div>
               <div style="font-size: 1.3rem; font-weight: bold; color: #00ff41;">
-                ${results.totalRequests || 'N/A'}
+                ${results.totalRequests || t('reports.performance.notAvailable', 'N/A')}
               </div>
             </div>
           </div>
@@ -435,35 +508,35 @@ function displayPerformanceResults(results) {
             margin-bottom: 0.75rem;
           ">
             <div style="font-size: 0.85rem; font-weight: bold; color: #00ff41; margin-bottom: 0.75rem; text-transform: uppercase; letter-spacing: 1px;">
-              Core Metrics
+              ${t('reports.performance.coreMetrics', 'Core Metrics')}
             </div>
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.5rem; font-size: 0.85rem;">
               ${results.coreWebVitals ? `
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
                   <span style="color: #a0a0a0;">LCP:</span>
                   <span style="color: ${results.coreWebVitals.lcp && parseInt(results.coreWebVitals.lcp) < 2500 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
-                    ${results.coreWebVitals.lcp || 'N/A'}
+                    ${results.coreWebVitals.lcp || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
                   <span style="color: #a0a0a0;">FID:</span>
                   <span style="color: ${results.coreWebVitals.fid && parseInt(results.coreWebVitals.fid) < 100 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
-                    ${results.coreWebVitals.fid || 'N/A'}
+                    ${results.coreWebVitals.fid || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
                   <span style="color: #a0a0a0;">CLS:</span>
                   <span style="color: ${results.coreWebVitals.cls && parseFloat(results.coreWebVitals.cls) < 0.1 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
-                    ${results.coreWebVitals.cls || 'N/A'}
+                    ${results.coreWebVitals.cls || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between; padding: 0.25rem 0;">
                   <span style="color: #a0a0a0;">TTI:</span>
                   <span style="color: ${results.coreWebVitals.tti && parseInt(results.coreWebVitals.tti) < 3800 ? '#00ff41' : '#ff8c00'}; font-weight: 600;">
-                    ${results.coreWebVitals.tti || 'N/A'}
+                    ${results.coreWebVitals.tti || t('reports.performance.notAvailable', 'N/A')}
                   </span>
                 </div>
-              ` : '<div style="color: #808080; grid-column: 1 / -1; text-align: center;">Metrics not available</div>'}
+              ` : '<div style="color: #808080; grid-column: 1 / -1; text-align: center;">' + t('reports.performance.metricsNotAvailable', 'Metrics not available') + '</div>'}
             </div>
           </div>
 
@@ -474,9 +547,9 @@ function displayPerformanceResults(results) {
             padding: 0.6rem 0.75rem;
             border-radius: 4px;
           ">
-            <strong style="color: #ff9800; font-size: 0.85rem;">ⓘ Note:</strong>
+            <strong style="color: #ff9800; font-size: 0.85rem;">ⓘ ${t('reports.performance.note', 'Note')}:</strong>
             <span style="color: #d0d0d0; font-size: 0.8rem;">
-              100/100 performance ≠ perfect website. Check Site Health Score for overall quality.
+              ${t('reports.performance.scoreNote', '100/100 performance ≠ perfect website. Check Site Health Score for overall quality.')}
             </span>
           </div>
         </div>
@@ -489,7 +562,7 @@ function displayPerformanceResults(results) {
           padding-top: 2rem;
           border-top: 1px solid rgba(0, 255, 65, 0.2);
         ">
-          <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.1rem;">◉ Multi-Dimensional Analysis</h4>
+          <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1.1rem;">◉ ${t('reports.performance.multiDimensionalAnalysis', 'Multi-Dimensional Analysis')}</h4>
           <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem;">
             ${Object.entries(results.dimensionalGrades).map(([dimension, grade]) => {
               const icons = {
@@ -500,11 +573,11 @@ function displayPerformanceResults(results) {
                 webVitals: 'W'
               };
               const labels = {
-                performance: 'Performance',
-                resources: 'Resources',
-                caching: 'Caching',
-                network: 'Network',
-                webVitals: 'Web Vitals'
+                performance: t('reports.performance.performance', 'Performance'),
+                resources: t('reports.performance.resources', 'Resources'),
+                caching: t('reports.performance.caching', 'Caching'),
+                network: t('reports.performance.network', 'Network'),
+                webVitals: t('reports.performance.webVitals', 'Web Vitals')
               };
               const gradeColor = getGradeColor(grade);
               return `
@@ -545,9 +618,9 @@ function displayPerformanceResults(results) {
     const comparisonSection = document.createElement('div');
     comparisonSection.className = 'section';
     comparisonSection.innerHTML = `
-      <h2>Desktop vs Mobile Comparison</h2>
+      <h2>${t('reports.performance.desktopVsMobileComparison', 'Desktop vs Mobile Comparison')}</h2>
       <div style="padding-left: 1rem;">
-        <p style="color: #00ff41; margin-bottom: 1.5rem;">>> Comprehensive analysis across both platforms</p>
+        <p style="color: #00ff41; margin-bottom: 1.5rem;">>> ${t('reports.performance.comprehensiveAnalysis', 'Comprehensive analysis across both platforms')}</p>
         
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 2rem;">
           <!-- Desktop Column -->
@@ -558,7 +631,7 @@ function displayPerformanceResults(results) {
             padding: 1.5rem;
           ">
             <div style="text-align: center; margin-bottom: 1rem;">
-              <div style="font-size: 1.5rem; color: #00ccff; margin-bottom: 0.5rem;">D DESKTOP</div>
+              <div style="font-size: 1.5rem; color: #00ccff; margin-bottom: 0.5rem;">D ${t('reports.performance.desktop', 'DESKTOP')}</div>
               <div style="
                 width: 120px;
                 height: 120px;
@@ -589,47 +662,47 @@ function displayPerformanceResults(results) {
             </div>
             
             <div style="border-top: 1px solid rgba(0,204,255,0.3); padding-top: 1rem;">
-              <h4 style="color: #00ccff; margin: 0 0 0.75rem 0; font-size: 1rem;">Lighthouse Scores</h4>
+              <h4 style="color: #00ccff; margin: 0 0 0.75rem 0; font-size: 1rem;">${t('reports.performance.lighthouseScores', 'Lighthouse Scores')}</h4>
               <div style="display: grid; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">P Performance</span>
+                  <span style="color: #c0c0c0;">P ${t('reports.performance.performance', 'Performance')}</span>
                   <span style="color: ${getPerformanceColor(results.browsers.desktop.performanceScore)}; font-weight: bold;">
                     ${results.browsers.desktop.performanceScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">A Accessibility</span>
+                  <span style="color: #c0c0c0;">A ${t('reports.performance.accessibility', 'Accessibility')}</span>
                   <span style="color: ${getPerformanceColor(results.browsers.desktop.accessibilityScore)}; font-weight: bold;">
                     ${results.browsers.desktop.accessibilityScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">B Best Practices</span>
+                  <span style="color: #c0c0c0;">B ${t('reports.performance.bestPractices', 'Best Practices')}</span>
                   <span style="color: ${getPerformanceColor(results.browsers.desktop.bestPracticesScore)}; font-weight: bold;">
                     ${results.browsers.desktop.bestPracticesScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">S SEO</span>
+                  <span style="color: #c0c0c0;">S ${t('reports.performance.seo', 'SEO')}</span>
                   <span style="color: ${getPerformanceColor(results.browsers.desktop.seoScore)}; font-weight: bold;">
                     ${results.browsers.desktop.seoScore}
                   </span>
                 </div>
               </div>
-              
-              <h4 style="color: #00ccff; margin: 1rem 0 0.75rem 0; font-size: 1rem;">Core Web Vitals</h4>
+
+              <h4 style="color: #00ccff; margin: 1rem 0 0.75rem 0; font-size: 1rem;">${t('reports.performance.coreWebVitals', 'Core Web Vitals')}</h4>
               <div style="display: grid; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #c0c0c0;">LCP</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.lcp || 'N/A'}</span>
+                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.lcp || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #c0c0c0;">FID</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.fid || 'N/A'}</span>
+                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.fid || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #c0c0c0;">CLS</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.cls || 'N/A'}</span>
+                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.desktop.metrics?.coreWebVitals?.cls || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
               </div>
             </div>
@@ -643,7 +716,7 @@ function displayPerformanceResults(results) {
             padding: 1.5rem;
           ">
             <div style="text-align: center; margin-bottom: 1rem;">
-              <div style="font-size: 1.5rem; color: #ff6600; margin-bottom: 0.5rem;">M MOBILE</div>
+              <div style="font-size: 1.5rem; color: #ff6600; margin-bottom: 0.5rem;">M ${t('reports.performance.mobile', 'MOBILE')}</div>
               <div style="
                 width: 120px;
                 height: 120px;
@@ -674,47 +747,47 @@ function displayPerformanceResults(results) {
             </div>
             
             <div style="border-top: 1px solid rgba(255,102,0,0.3); padding-top: 1rem;">
-              <h4 style="color: #ff6600; margin: 0 0 0.75rem 0; font-size: 1rem;">Lighthouse Scores</h4>
+              <h4 style="color: #ff6600; margin: 0 0 0.75rem 0; font-size: 1rem;">${t('reports.performance.lighthouseScores', 'Lighthouse Scores')}</h4>
               <div style="display: grid; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">P Performance</span>
+                  <span style="color: #c0c0c0;">P ${t('reports.performance.performance', 'Performance')}</span>
                   <span style="color: ${getPerformanceColor(results.browsers.mobile.performanceScore)}; font-weight: bold;">
                     ${results.browsers.mobile.performanceScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">A Accessibility</span>
+                  <span style="color: #c0c0c0;">A ${t('reports.performance.accessibility', 'Accessibility')}</span>
                   <span style="color: ${getPerformanceColor(results.browsers.mobile.accessibilityScore)}; font-weight: bold;">
                     ${results.browsers.mobile.accessibilityScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">B Best Practices</span>
+                  <span style="color: #c0c0c0;">B ${t('reports.performance.bestPractices', 'Best Practices')}</span>
                   <span style="color: ${getPerformanceColor(results.browsers.mobile.bestPracticesScore)}; font-weight: bold;">
                     ${results.browsers.mobile.bestPracticesScore}
                   </span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
-                  <span style="color: #c0c0c0;">S SEO</span>
+                  <span style="color: #c0c0c0;">S ${t('reports.performance.seo', 'SEO')}</span>
                   <span style="color: ${getPerformanceColor(results.browsers.mobile.seoScore)}; font-weight: bold;">
                     ${results.browsers.mobile.seoScore}
                   </span>
                 </div>
               </div>
-              
-              <h4 style="color: #ff6600; margin: 1rem 0 0.75rem 0; font-size: 1rem;">Core Web Vitals</h4>
+
+              <h4 style="color: #ff6600; margin: 1rem 0 0.75rem 0; font-size: 1rem;">${t('reports.performance.coreWebVitals', 'Core Web Vitals')}</h4>
               <div style="display: grid; gap: 0.5rem;">
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #c0c0c0;">LCP</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.lcp || 'N/A'}</span>
+                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.lcp || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #c0c0c0;">FID</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.fid || 'N/A'}</span>
+                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.fid || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
                 <div style="display: flex; justify-content: space-between;">
                   <span style="color: #c0c0c0;">CLS</span>
-                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.cls || 'N/A'}</span>
+                  <span style="color: #00ff41; font-weight: bold;">${results.browsers.mobile.metrics?.coreWebVitals?.cls || t('reports.performance.notAvailable', 'N/A')}</span>
                 </div>
               </div>
             </div>
@@ -731,13 +804,13 @@ function displayPerformanceResults(results) {
           margin-top: 1rem;
         ">
           <div style="color: #ffa500; font-weight: bold; margin-bottom: 0.5rem;">
-            ~ PERFORMANCE GAP DETECTED
+            ~ ${t('reports.performance.performanceGapDetected', 'PERFORMANCE GAP DETECTED')}
           </div>
           <p style="color: #c0c0c0; margin: 0;">
-            There is a ${Math.abs(results.browsers.desktop.performanceScore - results.browsers.mobile.performanceScore)}-point difference between desktop (${results.browsers.desktop.performanceScore}) and mobile (${results.browsers.mobile.performanceScore}) performance. 
-            ${results.browsers.mobile.performanceScore < results.browsers.desktop.performanceScore ? 
-              'Mobile users may experience significantly slower load times.' : 
-              'This is unusual - mobile typically performs worse than desktop.'}
+            ${t('reports.performance.performanceGapMessage', 'There is a {{gap}}-point difference between desktop ({{desktop}}) and mobile ({{mobile}}) performance.', { gap: Math.abs(results.browsers.desktop.performanceScore - results.browsers.mobile.performanceScore), desktop: results.browsers.desktop.performanceScore, mobile: results.browsers.mobile.performanceScore })}
+            ${results.browsers.mobile.performanceScore < results.browsers.desktop.performanceScore ?
+              t('reports.performance.mobileSlower', 'Mobile users may experience significantly slower load times.') :
+              t('reports.performance.mobileUnusual', 'This is unusual - mobile typically performs worse than desktop.')}
           </p>
         </div>
         ` : `
@@ -749,10 +822,10 @@ function displayPerformanceResults(results) {
           margin-top: 1rem;
         ">
           <div style="color: #00ff41; font-weight: bold; margin-bottom: 0.5rem;">
-            ✓ CONSISTENT PERFORMANCE
+            ✓ ${t('reports.performance.consistentPerformance', 'CONSISTENT PERFORMANCE')}
           </div>
           <p style="color: #c0c0c0; margin: 0;">
-            Desktop and mobile performance scores are within 10 points of each other, indicating consistent user experience across platforms.
+            ${t('reports.performance.consistentPerformanceMessage', 'Desktop and mobile performance scores are within 10 points of each other, indicating consistent user experience across platforms.')}
           </p>
         </div>
         `}
@@ -768,19 +841,19 @@ function displayPerformanceResults(results) {
     : (results.desktop?.coreWebVitals?.score || results.mobile?.coreWebVitals?.score || results.coreWebVitals?.score || 0);
   
   // Debug logging
-  createAccordionSection(container, 'core-web-vitals', 'Core Web Vitals', () => renderCoreWebVitalsContent(results.desktop?.coreWebVitals, results.mobile?.coreWebVitals), avgVitalsScore);
-  createAccordionSection(container, 'resource-analysis', 'Resource Analysis', () => renderResourceAnalysisContent(results.resources), results.resources?.score || 0);
-  createAccordionSection(container, 'network-performance', 'Network Performance', () => renderNetworkPerformanceContent(results.network), results.network?.score || 0);
-  createAccordionSection(container, 'caching-optimization', 'Caching & Optimization', () => renderCachingOptimizationContent(results.caching), results.caching?.score || 0);
-  createAccordionSection(container, 'report-recommendations', 'Report and Recommendations', () => renderRecommendationsContent(results.recommendations), null, { isPro: true }); // Pro gated
+  createAccordionSection(container, 'core-web-vitals', t('reports.performance.coreWebVitals', 'Core Web Vitals'), () => renderCoreWebVitalsContent(results.desktop?.coreWebVitals, results.mobile?.coreWebVitals), avgVitalsScore);
+  createAccordionSection(container, 'resource-analysis', t('reports.performance.resourceAnalysis', 'Resource Analysis'), () => renderResourceAnalysisContent(results.resources), results.resources?.score || 0);
+  createAccordionSection(container, 'network-performance', t('reports.performance.networkPerformance', 'Network Performance'), () => renderNetworkPerformanceContent(results.network), results.network?.score || 0);
+  createAccordionSection(container, 'caching-optimization', t('reports.performance.cachingOptimization', 'Caching & Optimization'), () => renderCachingOptimizationContent(results.caching), results.caching?.score || 0);
+  createAccordionSection(container, 'report-recommendations', t('reports.common.reportRecommendations', 'Report and Recommendations'), () => renderRecommendationsContent(results.recommendations), null, { isPro: true }); // Pro gated
 
   // Pro Report Block
   if (window.ProReportBlock && window.ProReportBlock.render) {
     const proBlockHtml = window.ProReportBlock.render({
       context: 'performance-analysis',
       features: ['pdf', 'csv', 'share'],
-      title: 'Unlock Report',
-      subtitle: 'PDF export, share link, export data, and fix packs for this scan.'
+      title: t('reports.common.unlockReport', 'Unlock Report'),
+      subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.')
     });
     container.insertAdjacentHTML('beforeend', proBlockHtml);
   }
@@ -845,41 +918,41 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
  */
 function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
   if (!desktopVitals && !mobileVitals) {
-    return '<p style="color: #ff6600;">>>> Core Web Vitals data not available</p>';
+    return '<p style="color: #ff6600;">>>> ' + t('reports.performance.coreWebVitalsNotAvailable', 'Core Web Vitals data not available') + '</p>';
   }
 
   // Helper to get metric status
   const getMetricStatus = (value, type) => {
-    if (!value || value === 'N/A') return { color: '#808080', status: 'N/A' };
-    
+    if (!value || value === 'N/A') return { color: '#808080', status: t('reports.performance.notAvailable', 'N/A') };
+
     let numValue;
     if (type === 'LCP' || type === 'FID' || type === 'TTFB' || type === 'FCP') {
       numValue = parseFloat(value.replace(/[ms]/g, '')) || 0;
     } else {
       numValue = parseFloat(value) || 0;
     }
-    
+
     switch(type) {
       case 'LCP':
-        if (numValue <= 2500) return { color: '#00ff41', status: 'Good' };
-        if (numValue <= 4000) return { color: '#ffa500', status: 'Needs Improvement' };
-        return { color: '#ff4444', status: 'Poor' };
+        if (numValue <= 2500) return { color: '#00ff41', status: t('reports.performance.good', 'Good') };
+        if (numValue <= 4000) return { color: '#ffa500', status: t('reports.performance.needsImprovement', 'Needs Improvement') };
+        return { color: '#ff4444', status: t('reports.performance.poor', 'Poor') };
       case 'FID':
-        if (numValue <= 100) return { color: '#00ff41', status: 'Good' };
-        if (numValue <= 300) return { color: '#ffa500', status: 'Needs Improvement' };
-        return { color: '#ff4444', status: 'Poor' };
+        if (numValue <= 100) return { color: '#00ff41', status: t('reports.performance.good', 'Good') };
+        if (numValue <= 300) return { color: '#ffa500', status: t('reports.performance.needsImprovement', 'Needs Improvement') };
+        return { color: '#ff4444', status: t('reports.performance.poor', 'Poor') };
       case 'CLS':
-        if (numValue <= 0.1) return { color: '#00ff41', status: 'Good' };
-        if (numValue <= 0.25) return { color: '#ffa500', status: 'Needs Improvement' };
-        return { color: '#ff4444', status: 'Poor' };
+        if (numValue <= 0.1) return { color: '#00ff41', status: t('reports.performance.good', 'Good') };
+        if (numValue <= 0.25) return { color: '#ffa500', status: t('reports.performance.needsImprovement', 'Needs Improvement') };
+        return { color: '#ff4444', status: t('reports.performance.poor', 'Poor') };
       case 'TTFB':
-        if (numValue < 600) return { color: '#00ff41', status: 'Info' };
-        return { color: '#ffa500', status: 'Info' };
+        if (numValue < 600) return { color: '#00ff41', status: t('reports.performance.info', 'Info') };
+        return { color: '#ffa500', status: t('reports.performance.info', 'Info') };
       case 'FCP':
-        if (numValue < 1800) return { color: '#00ff41', status: 'Info' };
-        return { color: '#ffa500', status: 'Info' };
+        if (numValue < 1800) return { color: '#00ff41', status: t('reports.performance.info', 'Info') };
+        return { color: '#ffa500', status: t('reports.performance.info', 'Info') };
       default:
-        return { color: '#808080', status: 'Info' };
+        return { color: '#808080', status: t('reports.performance.info', 'Info') };
     }
   };
 
@@ -894,11 +967,11 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
         </td>
         <td style="color: #808080;">${description}</td>
         <td style="text-align: center;">
-          <span style="color: ${desktopStatus.color}; font-weight: bold;">${desktopValue || 'N/A'}</span>
+          <span style="color: ${desktopStatus.color}; font-weight: bold;">${desktopValue || t('reports.performance.notAvailable', 'N/A')}</span>
         </td>
         <td style="text-align: center;">
           <span style="
-            color: ${desktopStatus.color}; 
+            color: ${desktopStatus.color};
             font-size: 0.85rem;
             padding: 0.25rem 0.5rem;
             border-radius: 3px;
@@ -906,7 +979,7 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
           ">${desktopStatus.status}</span>
         </td>
         <td style="text-align: center;">
-          <span style="color: ${mobileStatus.color}; font-weight: bold;">${mobileValue || 'N/A'}</span>
+          <span style="color: ${mobileStatus.color}; font-weight: bold;">${mobileValue || t('reports.performance.notAvailable', 'N/A')}</span>
         </td>
         <td style="text-align: center;">
           <span style="
@@ -923,85 +996,84 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
 
   return `
     <div style="padding-left: 1rem;">
-      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> What are Core Web Vitals?</h3>
+      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.whatAreCoreWebVitals', 'What are Core Web Vitals?')}</h3>
       <p style="color: #c0c0c0; margin-bottom: 1.5rem;">
-        Core Web Vitals are Google's metrics for measuring user experience. They directly impact SEO rankings and user satisfaction.
+        ${t('reports.performance.coreWebVitalsDescription', 'Core Web Vitals are Google\'s metrics for measuring user experience. They directly impact SEO rankings and user satisfaction.')}
       </p>
-      
+
       <table class="seo-table" style="width: 100%; margin-bottom: 1.5rem;">
         <thead>
           <tr>
-            <th style="text-align: left; width: 25%;">Metric</th>
-            <th style="text-align: left; width: 25%;">Description</th>
+            <th style="text-align: left; width: 25%;">${t('reports.performance.metric', 'Metric')}</th>
+            <th style="text-align: left; width: 25%;">${t('reports.performance.description', 'Description')}</th>
             <th colspan="2" style="text-align: center; background: rgba(0,204,255,0.1); border-left: 2px solid #00ccff;">
-              <span style="color: #00ccff;">D Desktop</span>
+              <span style="color: #00ccff;">D ${t('reports.performance.desktop', 'Desktop')}</span>
             </th>
             <th colspan="2" style="text-align: center; background: rgba(255,102,0,0.1); border-left: 2px solid #ff6600;">
-              <span style="color: #ff6600;">M Mobile</span>
+              <span style="color: #ff6600;">M ${t('reports.performance.mobile', 'Mobile')}</span>
             </th>
           </tr>
           <tr style="font-size: 0.85rem;">
             <th style="border-top: 1px solid #333;"></th>
             <th style="border-top: 1px solid #333;"></th>
-            <th style="text-align: center; width: 10%; border-top: 1px solid #333; background: rgba(0,204,255,0.05);">Value</th>
-            <th style="text-align: center; width: 10%; border-top: 1px solid #333; background: rgba(0,204,255,0.05);">Status</th>
-            <th style="text-align: center; width: 10%; border-top: 1px solid #333; background: rgba(255,102,0,0.05);">Value</th>
-            <th style="text-align: center; width: 10%; border-top: 1px solid #333; background: rgba(255,102,0,0.05);">Status</th>
+            <th style="text-align: center; width: 10%; border-top: 1px solid #333; background: rgba(0,204,255,0.05);">${t('reports.performance.value', 'Value')}</th>
+            <th style="text-align: center; width: 10%; border-top: 1px solid #333; background: rgba(0,204,255,0.05);">${t('reports.performance.status', 'Status')}</th>
+            <th style="text-align: center; width: 10%; border-top: 1px solid #333; background: rgba(255,102,0,0.05);">${t('reports.performance.value', 'Value')}</th>
+            <th style="text-align: center; width: 10%; border-top: 1px solid #333; background: rgba(255,102,0,0.05);">${t('reports.performance.status', 'Status')}</th>
           </tr>
         </thead>
         <tbody>
           ${renderMetricRow(
             'L',
-            'Largest Contentful Paint (LCP)',
-            'Measures loading performance. Good LCP is ≤ 2.5s',
+            t('reports.performance.largestContentfulPaint', 'Largest Contentful Paint (LCP)'),
+            t('reports.performance.lcpDescription', 'Measures loading performance. Good LCP is ≤ 2.5s'),
             desktopVitals?.lcp,
             mobileVitals?.lcp,
             'LCP'
           )}
-          
+
           ${renderMetricRow(
             'P',
-            'First Input Delay (FID)',
-            'Measures interactivity. Good FID is ≤ 100ms',
+            t('reports.performance.firstInputDelay', 'First Input Delay (FID)'),
+            t('reports.performance.fidDescription', 'Measures interactivity. Good FID is ≤ 100ms'),
             desktopVitals?.fid,
             mobileVitals?.fid,
             'FID'
           )}
-          
+
           ${renderMetricRow(
             'T',
-            'Cumulative Layout Shift (CLS)',
-            'Measures visual stability. Good CLS is ≤ 0.1',
+            t('reports.performance.cumulativeLayoutShift', 'Cumulative Layout Shift (CLS)'),
+            t('reports.performance.clsDescription', 'Measures visual stability. Good CLS is ≤ 0.1'),
             desktopVitals?.cls || '0.000',
             mobileVitals?.cls || '0.000',
             'CLS'
           )}
-          
+
           ${desktopVitals?.ttfb || mobileVitals?.ttfb ? renderMetricRow(
             '⧗',
-            'Time to First Byte (TTFB)',
-            'Server response time. Good TTFB is < 600ms',
-            desktopVitals?.ttfb || 'N/A',
-            mobileVitals?.ttfb || 'N/A',
+            t('reports.performance.timeToFirstByte', 'Time to First Byte (TTFB)'),
+            t('reports.performance.ttfbDescription', 'Server response time. Good TTFB is < 600ms'),
+            desktopVitals?.ttfb || t('reports.performance.notAvailable', 'N/A'),
+            mobileVitals?.ttfb || t('reports.performance.notAvailable', 'N/A'),
             'TTFB'
           ) : ''}
-          
+
           ${desktopVitals?.fcp || mobileVitals?.fcp ? renderMetricRow(
             'Y',
-            'First Contentful Paint (FCP)',
-            'First text/image render. Good FCP is < 1.8s',
-            desktopVitals?.fcp || 'N/A',
-            mobileVitals?.fcp || 'N/A',
+            t('reports.performance.firstContentfulPaint', 'First Contentful Paint (FCP)'),
+            t('reports.performance.fcpDescription', 'First text/image render. Good FCP is < 1.8s'),
+            desktopVitals?.fcp || t('reports.performance.notAvailable', 'N/A'),
+            mobileVitals?.fcp || t('reports.performance.notAvailable', 'N/A'),
             'FCP'
           ) : ''}
         </tbody>
       </table>
-      
+
       <div style="margin-top: 1rem; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px;">
-        <h4 style="color: #00ff41; margin: 0 0 0.5rem 0; font-size: 1rem;">📚 Learn More</h4>
+        <h4 style="color: #00ff41; margin: 0 0 0.5rem 0; font-size: 1rem;">📚 ${t('reports.performance.learnMore', 'Learn More')}</h4>
         <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-          Core Web Vitals are part of Google's Page Experience signals used for ranking. 
-          Improving these metrics can lead to better search rankings and user engagement.
+          ${t('reports.performance.learnMoreDescription', 'Core Web Vitals are part of Google\'s Page Experience signals used for ranking. Improving these metrics can lead to better search rankings and user engagement.')}
         </p>
       </div>
     </div>
@@ -1013,22 +1085,22 @@ function renderCoreWebVitalsContent(desktopVitals, mobileVitals) {
  */
 function renderResourceAnalysisContent(resources) {
   if (!resources) {
-    return '<p style="color: #ff6600;">>>> Resource analysis data not available</p>';
+    return '<p style="color: #ff6600;">>>> ' + t('reports.performance.resourceAnalysisNotAvailable', 'Resource analysis data not available') + '</p>';
   }
 
   // Calculate total size and percentages
-  const totalSize = (resources.javascript?.size || 0) + 
-                    (resources.css?.size || 0) + 
-                    (resources.images?.size || 0) + 
-                    (resources.fonts?.size || 0) + 
+  const totalSize = (resources.javascript?.size || 0) +
+                    (resources.css?.size || 0) +
+                    (resources.images?.size || 0) +
+                    (resources.fonts?.size || 0) +
                     (resources.other?.size || 0);
 
   const resourceTypes = [
-    { name: 'JavaScript', data: resources.javascript, color: '#f7df1e', icon: '📜' },
-    { name: 'CSS', data: resources.css, color: '#264de4', icon: 'Y' },
-    { name: 'Images', data: resources.images, color: '#00ccff', icon: 'I' },
-    { name: 'Fonts', data: resources.fonts, color: '#ff6600', icon: '🔤' },
-    { name: 'Other', data: resources.other, color: '#808080', icon: 'R' }
+    { name: t('reports.performance.javascript', 'JavaScript'), data: resources.javascript, color: '#f7df1e', icon: '📜' },
+    { name: t('reports.performance.css', 'CSS'), data: resources.css, color: '#264de4', icon: 'Y' },
+    { name: t('reports.performance.images', 'Images'), data: resources.images, color: '#00ccff', icon: 'I' },
+    { name: t('reports.performance.fonts', 'Fonts'), data: resources.fonts, color: '#ff6600', icon: '🔤' },
+    { name: t('reports.performance.other', 'Other'), data: resources.other, color: '#808080', icon: 'R' }
   ].filter(r => r.data && r.data.count > 0);
 
   // Calculate percentages
@@ -1040,18 +1112,18 @@ function renderResourceAnalysisContent(resources) {
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
         <p style="color: #00ccff; font-size: 0.9rem; margin: 0;">
-          ⓘ <strong>Platform-Agnostic Metrics:</strong> Resource data is collected during page analysis and applies universally to both desktop and mobile experiences.
+          ⓘ <strong>${t('reports.performance.platformAgnosticMetrics', 'Platform-Agnostic Metrics')}:</strong> ${t('reports.performance.resourceDataDescription', 'Resource data is collected during page analysis and applies universally to both desktop and mobile experiences.')}
         </p>
       </div>
-      
-      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> Resource Breakdown</h3>
+
+      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.resourceBreakdown', 'Resource Breakdown')}</h3>
       <p style="color: #c0c0c0; margin-bottom: 1.5rem;">
-        Total page weight: <strong style="color: #00ff41;">${formatBytes(totalSize)}</strong> across <strong style="color: #00ff41;">${resources.javascript?.count + resources.css?.count + resources.images?.count + resources.fonts?.count + resources.other?.count || 0}</strong> resources
+        ${t('reports.performance.totalPageWeight', 'Total page weight')}: <strong style="color: #00ff41;">${formatBytes(totalSize)}</strong> ${t('reports.performance.across', 'across')} <strong style="color: #00ff41;">${resources.javascript?.count + resources.css?.count + resources.images?.count + resources.fonts?.count + resources.other?.count || 0}</strong> ${t('reports.performance.resources', 'resources')}
       </p>
-      
+
       <!-- Resource Size Chart -->
       <div style="margin-bottom: 2rem;">
-        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">C Size Distribution</h4>
+        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">C ${t('reports.performance.sizeDistribution', 'Size Distribution')}</h4>
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; height: 40px; display: flex; margin-bottom: 1rem;">
           ${resourceTypes.map(r => `
             <div style="
@@ -1085,15 +1157,15 @@ function renderResourceAnalysisContent(resources) {
       </div>
       
       <!-- Resource Details Table -->
-      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">📋 Detailed Breakdown</h4>
+      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">📋 ${t('reports.performance.detailedBreakdown', 'Detailed Breakdown')}</h4>
       <table class="seo-table" style="width: 100%;">
         <thead>
           <tr>
-            <th style="text-align: left; width: 25%;">Resource Type</th>
-            <th style="text-align: center; width: 15%;">Count</th>
-            <th style="text-align: center; width: 20%;">Total Size</th>
-            <th style="text-align: center; width: 20%;">Avg Size</th>
-            <th style="text-align: center; width: 20%;">% of Total</th>
+            <th style="text-align: left; width: 25%;">${t('reports.performance.resourceType', 'Resource Type')}</th>
+            <th style="text-align: center; width: 15%;">${t('reports.performance.count', 'Count')}</th>
+            <th style="text-align: center; width: 20%;">${t('reports.performance.totalSize', 'Total Size')}</th>
+            <th style="text-align: center; width: 20%;">${t('reports.performance.avgSize', 'Avg Size')}</th>
+            <th style="text-align: center; width: 20%;">${t('reports.performance.percentOfTotal', '% of Total')}</th>
           </tr>
         </thead>
         <tbody>
@@ -1145,39 +1217,39 @@ function renderResourceAnalysisContent(resources) {
  */
 function generateResourceRecommendations(resources) {
   const recommendations = [];
-  
+
   if (resources.javascript?.size > 300000) {
     recommendations.push({
       type: 'warning',
-      text: `JavaScript bundle is large (${resources.javascript.sizeFormatted}). Consider code splitting and lazy loading.`
+      text: t('reports.performance.jsBundleLarge', 'JavaScript bundle is large ({{size}}). Consider code splitting and lazy loading.', { size: resources.javascript.sizeFormatted })
     });
   }
-  
+
   if (resources.images?.size > 1000000) {
     recommendations.push({
       type: 'warning',
-      text: `Images are ${resources.images.sizeFormatted}. Use WebP format and implement lazy loading.`
+      text: t('reports.performance.imagesLarge', 'Images are {{size}}. Use WebP format and implement lazy loading.', { size: resources.images.sizeFormatted })
     });
   }
-  
+
   if (resources.css?.size > 100000) {
     recommendations.push({
       type: 'info',
-      text: `CSS files total ${resources.css.sizeFormatted}. Consider removing unused styles and minification.`
+      text: t('reports.performance.cssLarge', 'CSS files total {{size}}. Consider removing unused styles and minification.', { size: resources.css.sizeFormatted })
     });
   }
-  
+
   if (recommendations.length === 0) {
     return `
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px; border-left: 4px solid #00ff41;">
-        <span style="color: #00ff41;">✓ Resource sizes are well optimized!</span>
+        <span style="color: #00ff41;">✓ ${t('reports.performance.resourcesOptimized', 'Resource sizes are well optimized!')}</span>
       </div>
     `;
   }
-  
+
   return `
     <div style="margin-top: 1.5rem;">
-      <h4 style="color: #ffa500; margin: 0 0 0.75rem 0; font-size: 1rem;">~ Optimization Opportunities</h4>
+      <h4 style="color: #ffa500; margin: 0 0 0.75rem 0; font-size: 1rem;">~ ${t('reports.performance.optimizationOpportunities', 'Optimization Opportunities')}</h4>
       ${recommendations.map(rec => `
         <div style="
           padding: 0.75rem;
@@ -1198,7 +1270,7 @@ function generateResourceRecommendations(resources) {
  */
 function renderNetworkPerformanceContent(network) {
   if (!network) {
-    return '<p style="color: #ff6600;">>>> Network performance data not available</p>';
+    return '<p style="color: #ff6600;">>>> ' + t('reports.performance.networkPerformanceNotAvailable', 'Network performance data not available') + '</p>';
   }
 
   // Parse timing values
@@ -1211,10 +1283,10 @@ function renderNetworkPerformanceContent(network) {
 
   // Get status colors
   const getTTFBStatus = (ms) => {
-    if (ms < 200) return { color: '#00ff41', label: 'Excellent' };
-    if (ms < 400) return { color: '#00ff41', label: 'Good' };
-    if (ms < 600) return { color: '#ffa500', label: 'Fair' };
-    return { color: '#ff4444', label: 'Poor' };
+    if (ms < 200) return { color: '#00ff41', label: t('reports.performance.excellent', 'Excellent') };
+    if (ms < 400) return { color: '#00ff41', label: t('reports.performance.good', 'Good') };
+    if (ms < 600) return { color: '#ffa500', label: t('reports.performance.fair', 'Fair') };
+    return { color: '#ff4444', label: t('reports.performance.poor', 'Poor') };
   };
 
   const ttfbStatus = getTTFBStatus(ttfb);
@@ -1223,24 +1295,24 @@ function renderNetworkPerformanceContent(network) {
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
         <p style="color: #00ccff; font-size: 0.9rem; margin: 0;">
-          ⓘ <strong>Platform-Agnostic Metrics:</strong> Network timing data reflects server infrastructure and applies to all devices accessing the site.
+          ⓘ <strong>${t('reports.performance.platformAgnosticMetrics', 'Platform-Agnostic Metrics')}:</strong> ${t('reports.performance.networkDataDescription', 'Network timing data reflects server infrastructure and applies to all devices accessing the site.')}
         </p>
       </div>
-      
-      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> Network Analysis</h3>
+
+      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.networkAnalysis', 'Network Analysis')}</h3>
       <p style="color: #c0c0c0; margin-bottom: 1.5rem;">
-        Network performance breakdown showing connection establishment, server response, and content delivery timing.
+        ${t('reports.performance.networkAnalysisDescription', 'Network performance breakdown showing connection establishment, server response, and content delivery timing.')}
       </p>
-      
+
       <!-- Network Timing Waterfall -->
       <div style="margin-bottom: 2rem;">
-        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">🌊 Connection Timeline</h4>
-        
+        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">🌊 ${t('reports.performance.connectionTimeline', 'Connection Timeline')}</h4>
+
         <div style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 8px;">
           ${dns > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="color: #00ccff; font-size: 0.95rem; font-weight: 600;">S DNS Lookup</span>
+              <span style="color: #00ccff; font-size: 0.95rem; font-weight: 600;">S ${t('reports.performance.dnsLookup', 'DNS Lookup')}</span>
               <span style="color: #00ccff; font-weight: bold; font-size: 1rem;">${network.dns}</span>
             </div>
             <div style="background: rgba(255,255,255,0.1); height: 28px; border-radius: 4px; overflow: hidden;">
@@ -1253,11 +1325,11 @@ function renderNetworkPerformanceContent(network) {
             </div>
           </div>
           ` : ''}
-          
+
           ${tcp > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="color: #00ff41; font-size: 0.95rem; font-weight: 600;">🔌 TCP Connection</span>
+              <span style="color: #00ff41; font-size: 0.95rem; font-weight: 600;">🔌 ${t('reports.performance.tcpConnection', 'TCP Connection')}</span>
               <span style="color: #00ff41; font-weight: bold; font-size: 1rem;">${network.connectionTime}</span>
             </div>
             <div style="background: rgba(255,255,255,0.1); height: 28px; border-radius: 4px; overflow: hidden;">
@@ -1270,11 +1342,11 @@ function renderNetworkPerformanceContent(network) {
             </div>
           </div>
           ` : ''}
-          
+
           ${ssl > 0 ? `
           <div style="margin-bottom: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="color: #ffa500; font-size: 0.95rem; font-weight: 600;">◈ SSL Handshake</span>
+              <span style="color: #ffa500; font-size: 0.95rem; font-weight: 600;">◈ ${t('reports.performance.sslHandshake', 'SSL Handshake')}</span>
               <span style="color: #ffa500; font-weight: bold; font-size: 1rem;">${network.ssl}</span>
             </div>
             <div style="background: rgba(255,255,255,0.1); height: 28px; border-radius: 4px; overflow: hidden;">
@@ -1287,10 +1359,10 @@ function renderNetworkPerformanceContent(network) {
             </div>
           </div>
           ` : ''}
-          
+
           <div style="margin-bottom: 0;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-              <span style="color: ${ttfbStatus.color}; font-size: 0.95rem; font-weight: 600;">⧗ Time to First Byte</span>
+              <span style="color: ${ttfbStatus.color}; font-size: 0.95rem; font-weight: 600;">⧗ ${t('reports.performance.timeToFirstByte', 'Time to First Byte')}</span>
               <span style="color: ${ttfbStatus.color}; font-weight: bold; font-size: 1rem;">${network.ttfb} <span style="font-size: 0.85rem; opacity: 0.8;">(${ttfbStatus.label})</span></span>
             </div>
             <div style="background: rgba(255,255,255,0.1); height: 28px; border-radius: 4px; overflow: hidden;">
@@ -1304,71 +1376,71 @@ function renderNetworkPerformanceContent(network) {
           </div>
         </div>
       </div>
-      
+
       <!-- Network Metrics Table -->
-      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">C Network Metrics</h4>
+      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">C ${t('reports.performance.networkMetrics', 'Network Metrics')}</h4>
       <table class="seo-table" style="width: 100%;">
         <thead>
           <tr>
-            <th style="text-align: left; width: 40%;">Metric</th>
-            <th style="text-align: left; width: 35%;">Description</th>
-            <th style="text-align: center; width: 25%;">Value</th>
+            <th style="text-align: left; width: 40%;">${t('reports.performance.metric', 'Metric')}</th>
+            <th style="text-align: left; width: 35%;">${t('reports.performance.description', 'Description')}</th>
+            <th style="text-align: center; width: 25%;">${t('reports.performance.value', 'Value')}</th>
           </tr>
         </thead>
         <tbody>
           <tr>
-            <td><span style="color: #00ccff;">S DNS Lookup</span></td>
-            <td style="color: #808080;">Domain name resolution time</td>
-            <td style="text-align: center;"><strong style="color: #00ccff;">${network.dns || 'N/A'}</strong></td>
+            <td><span style="color: #00ccff;">S ${t('reports.performance.dnsLookup', 'DNS Lookup')}</span></td>
+            <td style="color: #808080;">${t('reports.performance.dnsLookupDesc', 'Domain name resolution time')}</td>
+            <td style="text-align: center;"><strong style="color: #00ccff;">${network.dns || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">🔌 TCP Connection</span></td>
-            <td style="color: #808080;">Time to establish connection</td>
-            <td style="text-align: center;"><strong style="color: #00ff41;">${network.connectionTime || 'N/A'}</strong></td>
+            <td><span style="color: #00ff41;">🔌 ${t('reports.performance.tcpConnection', 'TCP Connection')}</span></td>
+            <td style="color: #808080;">${t('reports.performance.tcpConnectionDesc', 'Time to establish connection')}</td>
+            <td style="text-align: center;"><strong style="color: #00ff41;">${network.connectionTime || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
           ${ssl > 0 ? `
           <tr>
-            <td><span style="color: #ffa500;">◈ SSL Handshake</span></td>
-            <td style="color: #808080;">Secure connection setup time</td>
+            <td><span style="color: #ffa500;">◈ ${t('reports.performance.sslHandshake', 'SSL Handshake')}</span></td>
+            <td style="color: #808080;">${t('reports.performance.sslHandshakeDesc', 'Secure connection setup time')}</td>
             <td style="text-align: center;"><strong style="color: #ffa500;">${network.ssl}</strong></td>
           </tr>
           ` : ''}
           <tr>
-            <td><span style="color: ${ttfbStatus.color};">⧗ Time to First Byte</span></td>
-            <td style="color: #808080;">Server response time</td>
+            <td><span style="color: ${ttfbStatus.color};">⧗ ${t('reports.performance.timeToFirstByte', 'Time to First Byte')}</span></td>
+            <td style="color: #808080;">${t('reports.performance.ttfbTableDesc', 'Server response time')}</td>
             <td style="text-align: center;"><strong style="color: ${ttfbStatus.color};">${network.ttfb}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">P DOM Interactive</span></td>
-            <td style="color: #808080;">Time until DOM is ready</td>
-            <td style="text-align: center;"><strong style="color: #00ff41;">${network.domInteractive || 'N/A'}</strong></td>
+            <td><span style="color: #00ff41;">P ${t('reports.performance.domInteractive', 'DOM Interactive')}</span></td>
+            <td style="color: #808080;">${t('reports.performance.domInteractiveDesc', 'Time until DOM is ready')}</td>
+            <td style="text-align: center;"><strong style="color: #00ff41;">${network.domInteractive || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">D DOM Content Loaded</span></td>
-            <td style="color: #808080;">Initial HTML parsed and ready</td>
-            <td style="text-align: center;"><strong style="color: #00ff41;">${network.domContentLoaded || 'N/A'}</strong></td>
+            <td><span style="color: #00ff41;">D ${t('reports.performance.domContentLoaded', 'DOM Content Loaded')}</span></td>
+            <td style="color: #808080;">${t('reports.performance.domContentLoadedDesc', 'Initial HTML parsed and ready')}</td>
+            <td style="text-align: center;"><strong style="color: #00ff41;">${network.domContentLoaded || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
           <tr>
-            <td><span style="color: #00ff41;">W Total Requests</span></td>
-            <td style="color: #808080;">Number of HTTP requests</td>
-            <td style="text-align: center;"><strong style="color: #00ff41;">${network.requests || 'N/A'}</strong></td>
+            <td><span style="color: #00ff41;">W ${t('reports.performance.totalRequests', 'Total Requests')}</span></td>
+            <td style="color: #808080;">${t('reports.performance.totalRequestsDesc', 'Number of HTTP requests')}</td>
+            <td style="text-align: center;"><strong style="color: #00ff41;">${network.requests || t('reports.performance.notAvailable', 'N/A')}</strong></td>
           </tr>
         </tbody>
       </table>
-      
+
       <!-- Network Performance Insights -->
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0,204,255,0.05); border-radius: 4px; border-left: 4px solid #00ccff;">
-        <h4 style="color: #00ccff; margin: 0 0 0.5rem 0; font-size: 1rem;">ⓘ Network Insights</h4>
+        <h4 style="color: #00ccff; margin: 0 0 0.5rem 0; font-size: 1rem;">ⓘ ${t('reports.performance.networkInsights', 'Network Insights')}</h4>
         <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-          ${ttfb < 200 ? 
-            '✓ Excellent server response time! Your backend is highly optimized.' : 
-            ttfb < 600 ? 
-            '~ Server response time is acceptable but could be improved with better caching or a CDN.' :
-            'H Slow server response time. Consider upgrading hosting, implementing Redis caching, or using a CDN.'}
+          ${ttfb < 200 ?
+            t('reports.performance.ttfbExcellent', 'Excellent server response time! Your backend is highly optimized.') :
+            ttfb < 600 ?
+            t('reports.performance.ttfbAcceptable', 'Server response time is acceptable but could be improved with better caching or a CDN.') :
+            t('reports.performance.ttfbSlow', 'Slow server response time. Consider upgrading hosting, implementing Redis caching, or using a CDN.')}
         </p>
         ${network.requests > 50 ? `
         <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0.5rem 0 0 0;">
-          ~ High number of requests (${network.requests}). Consider bundling assets and reducing third-party scripts.
+          ~ ${t('reports.performance.highRequests', 'High number of requests ({{count}}). Consider bundling assets and reducing third-party scripts.', { count: network.requests })}
         </p>
         ` : ''}
       </div>
@@ -1381,15 +1453,15 @@ function renderNetworkPerformanceContent(network) {
  */
 function renderCachingOptimizationContent(caching) {
   if (!caching) {
-    return '<p style="color: #ff6600;">>>> Caching optimization data not available</p>';
+    return '<p style="color: #ff6600;">>>> ' + t('reports.performance.cachingNotAvailable', 'Caching optimization data not available') + '</p>';
   }
 
   const cacheRate = parseFloat(caching.cacheHitRateNum) || 0;
   const getCacheStatus = (rate) => {
-    if (rate >= 80) return { color: '#00ff41', label: 'Excellent', icon: '✓' };
-    if (rate >= 60) return { color: '#00ff41', label: 'Good', icon: '+' };
-    if (rate >= 40) return { color: '#ffa500', label: 'Fair', icon: '~' };
-    return { color: '#ff4444', label: 'Poor', icon: '✗' };
+    if (rate >= 80) return { color: '#00ff41', label: t('reports.performance.excellent', 'Excellent'), icon: '✓' };
+    if (rate >= 60) return { color: '#00ff41', label: t('reports.performance.good', 'Good'), icon: '+' };
+    if (rate >= 40) return { color: '#ffa500', label: t('reports.performance.fair', 'Fair'), icon: '~' };
+    return { color: '#ff4444', label: t('reports.performance.poor', 'Poor'), icon: '✗' };
   };
 
   const status = getCacheStatus(cacheRate);
@@ -1398,18 +1470,18 @@ function renderCachingOptimizationContent(caching) {
     <div style="padding-left: 1rem;">
       <div style="padding: 0.75rem 1rem; background: rgba(0,204,255,0.1); border-left: 3px solid #00ccff; border-radius: 4px; margin-bottom: 1.5rem;">
         <p style="color: #00ccff; font-size: 0.9rem; margin: 0;">
-          ⓘ <strong>Platform-Agnostic Metrics:</strong> Caching policies are defined by HTTP headers and benefit all users equally regardless of device.
+          ⓘ <strong>${t('reports.performance.platformAgnosticMetrics', 'Platform-Agnostic Metrics')}:</strong> ${t('reports.performance.cachingDataDescription', 'Caching policies are defined by HTTP headers and benefit all users equally regardless of device.')}
         </p>
       </div>
-      
-      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> Caching Strategy</h3>
+
+      <h3 style="color: #00ff41; margin: 1rem 0 0.5rem 0;">>> ${t('reports.performance.cachingStrategy', 'Caching Strategy')}</h3>
       <p style="color: #c0c0c0; margin-bottom: 1.5rem;">
-        Cache effectiveness determines how many resources can be loaded from browser cache on repeat visits.
+        ${t('reports.performance.cacheEffectivenessDescription', 'Cache effectiveness determines how many resources can be loaded from browser cache on repeat visits.')}
       </p>
-      
+
       <!-- Cache Hit Rate Visual -->
       <div style="margin-bottom: 2rem;">
-        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">U Cache Hit Rate</h4>
+        <h4 style="color: #00ff41; margin: 0 0 1rem 0; font-size: 1rem;">U ${t('reports.performance.cacheHitRate', 'Cache Hit Rate')}</h4>
         
         <div style="text-align: center; margin-bottom: 1.5rem;">
           <div style="
@@ -1456,39 +1528,39 @@ function renderCachingOptimizationContent(caching) {
               ${caching.cached || 0}
             </div>
             <div style="color: #808080; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
-              Cacheable
+              ${t('reports.performance.cacheable', 'Cacheable')}
             </div>
           </div>
-          
+
           <div style="background: rgba(255,68,68,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 2px solid rgba(255,68,68,0.3);">
             <div style="font-size: 1.8rem; color: #ff4444; font-weight: bold; margin-bottom: 0.25rem;">
               ${caching.notCached || 0}
             </div>
             <div style="color: #808080; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
-              Not Cached
+              ${t('reports.performance.notCached', 'Not Cached')}
             </div>
           </div>
-          
+
           <div style="background: rgba(0,204,255,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 2px solid rgba(0,204,255,0.3);">
             <div style="font-size: 1.8rem; color: #00ccff; font-weight: bold; margin-bottom: 0.25rem;">
               ${caching.total || 0}
             </div>
             <div style="color: #808080; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px;">
-              Total Resources
+              ${t('reports.performance.totalResources', 'Total Resources')}
             </div>
           </div>
         </div>
       </div>
-      
+
       <!-- Cache Strategies Table -->
       ${caching.strategies && Object.keys(caching.strategies).length > 0 ? `
-      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">🔧 Cache Strategies Detected</h4>
+      <h4 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1rem;">🔧 ${t('reports.performance.cacheStrategiesDetected', 'Cache Strategies Detected')}</h4>
       <table class="seo-table" style="width: 100%;">
         <thead>
           <tr>
-            <th style="text-align: left; width: 50%;">Cache Strategy</th>
-            <th style="text-align: center; width: 25%;">Resources</th>
-            <th style="text-align: center; width: 25%;">Percentage</th>
+            <th style="text-align: left; width: 50%;">${t('reports.performance.cacheStrategy', 'Cache Strategy')}</th>
+            <th style="text-align: center; width: 25%;">${t('reports.performance.resources', 'Resources')}</th>
+            <th style="text-align: center; width: 25%;">${t('reports.performance.percentage', 'Percentage')}</th>
           </tr>
         </thead>
         <tbody>
@@ -1529,41 +1601,41 @@ function renderCachingOptimizationContent(caching) {
       
       <!-- Caching Recommendations -->
       <div style="margin-top: 1.5rem; padding: 1rem; background: ${status.color}10; border-radius: 4px; border-left: 4px solid ${status.color};">
-        <h4 style="color: ${status.color}; margin: 0 0 0.5rem 0; font-size: 1rem;">${status.icon} Cache Performance</h4>
+        <h4 style="color: ${status.color}; margin: 0 0 0.5rem 0; font-size: 1rem;">${status.icon} ${t('reports.performance.cachePerformance', 'Cache Performance')}</h4>
         ${cacheRate >= 80 ? `
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            Excellent caching strategy! ${cacheRate}% of resources are cacheable, which significantly improves repeat visit performance.
+            ${t('reports.performance.cacheExcellent', 'Excellent caching strategy! {{rate}}% of resources are cacheable, which significantly improves repeat visit performance.', { rate: cacheRate })}
           </p>
         ` : cacheRate >= 60 ? `
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            Good caching implementation with ${cacheRate}% cache hit rate. Consider increasing cache TTL for static assets to reach 80%+ cacheability.
+            ${t('reports.performance.cacheGood', 'Good caching implementation with {{rate}}% cache hit rate. Consider increasing cache TTL for static assets to reach 80%+ cacheability.', { rate: cacheRate })}
           </p>
         ` : cacheRate >= 40 ? `
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            ~ Fair caching with ${cacheRate}% hit rate. Implement proper Cache-Control headers for static assets (CSS, JS, images, fonts) with long TTL values (1 year for versioned files).
+            ~ ${t('reports.performance.cacheFair', 'Fair caching with {{rate}}% hit rate. Implement proper Cache-Control headers for static assets (CSS, JS, images, fonts) with long TTL values (1 year for versioned files).', { rate: cacheRate })}
           </p>
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0.5rem 0 0 0;">
-            ⓘ Recommended: <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px; color: #00ff41;">Cache-Control: public, max-age=31536000, immutable</code>
+            ⓘ ${t('reports.performance.recommended', 'Recommended')}: <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px; color: #00ff41;">Cache-Control: public, max-age=31536000, immutable</code>
           </p>
         ` : `
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            H Poor caching performance (${cacheRate}%). Most resources are not cacheable, forcing full re-downloads on every visit. This significantly impacts repeat visitor performance.
+            H ${t('reports.performance.cachePoor', 'Poor caching performance ({{rate}}%). Most resources are not cacheable, forcing full re-downloads on every visit. This significantly impacts repeat visitor performance.', { rate: cacheRate })}
           </p>
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0.5rem 0 0 0;">
-            ⓘ Urgent: Add <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px; color: #ff4444;">Cache-Control</code> headers to static assets with appropriate TTL values.
+            ⓘ ${t('reports.performance.urgent', 'Urgent')}: ${t('reports.performance.addCacheControl', 'Add Cache-Control headers to static assets with appropriate TTL values.')}
           </p>
         `}
       </div>
-      
+
       <!-- Best Practices -->
       <div style="margin-top: 1rem; padding: 1rem; background: rgba(0,204,255,0.05); border-radius: 4px;">
-        <h4 style="color: #00ccff; margin: 0 0 0.5rem 0; font-size: 1rem;">📚 Caching Best Practices</h4>
+        <h4 style="color: #00ccff; margin: 0 0 0.5rem 0; font-size: 1rem;">📚 ${t('reports.performance.cachingBestPractices', 'Caching Best Practices')}</h4>
         <ul style="color: #c0c0c0; font-size: 0.9rem; margin: 0.5rem 0; padding-left: 1.5rem;">
-          <li style="margin-bottom: 0.5rem;">Use versioning/hashing for filenames and set long cache times (1 year)</li>
-          <li style="margin-bottom: 0.5rem;">Add <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px;">immutable</code> directive for fingerprinted assets</li>
-          <li style="margin-bottom: 0.5rem;">Implement ETags for dynamic content validation</li>
-          <li style="margin-bottom: 0.5rem;">Use CDN for static asset distribution and edge caching</li>
-          <li>Set appropriate cache headers: <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px;">public</code> for static, <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 3px;">private</code> for user-specific</li>
+          <li style="margin-bottom: 0.5rem;">${t('reports.performance.cacheTip1', 'Use versioning/hashing for filenames and set long cache times (1 year)')}</li>
+          <li style="margin-bottom: 0.5rem;">${t('reports.performance.cacheTip2', 'Add immutable directive for fingerprinted assets')}</li>
+          <li style="margin-bottom: 0.5rem;">${t('reports.performance.cacheTip3', 'Implement ETags for dynamic content validation')}</li>
+          <li style="margin-bottom: 0.5rem;">${t('reports.performance.cacheTip4', 'Use CDN for static asset distribution and edge caching')}</li>
+          <li>${t('reports.performance.cacheTip5', 'Set appropriate cache headers: public for static, private for user-specific')}</li>
         </ul>
       </div>
     </div>
@@ -1578,9 +1650,9 @@ function renderRecommendationsContent(recommendations) {
     return `
       <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
-          <span style="font-size: 1.5rem;">⚡</span> Excellent Performance!
+          <span style="font-size: 1.5rem;">⚡</span> ${t('reports.performance.excellentPerformance', 'Excellent Performance!')}
         </h3>
-        <p style="color: #86efac; margin: 0;">No critical optimization recommendations. Your site is performing well!</p>
+        <p style="color: #86efac; margin: 0;">${t('reports.performance.noCriticalRecommendations', 'No critical optimization recommendations. Your site is performing well!')}</p>
       </div>
     `;
   }
@@ -1592,8 +1664,8 @@ function renderRecommendationsContent(recommendations) {
   let html = `
     <div class="perf-fixes-container" style="margin-top: 1rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
-        <span style="font-size: 1.75rem;">⚡</span> Performance Fixes
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${recommendations.length} improvements found)</span>
+        <span style="font-size: 1.75rem;">⚡</span> ${t('reports.performance.performanceFixes', 'Performance Fixes')}
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('reports.performance.improvementsFound', '{{count}} improvements found', { count: recommendations.length })})</span>
       </h3>
       <div class="perf-fixes-list">
   `;
@@ -1624,7 +1696,7 @@ function renderPerfFixAccordion(rec, index) {
       overflow: hidden;
       background: ${style.bg};
     ">
-      <div class="perf-fix-header" onclick="togglePerfFixAccordion('${accordionId}')" style="
+      <div class="perf-fix-header" data-action="toggle-accordion" data-accordion-id="${accordionId}" style="
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -1636,7 +1708,7 @@ function renderPerfFixAccordion(rec, index) {
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
             <h4 style="margin: 0; font-size: 1rem; color: #fff;">${rec.title}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${rec.category || 'Performance'}</p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${rec.category || t('reports.performance.performance', 'Performance')}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -1665,10 +1737,10 @@ function renderPerfFixAccordion(rec, index) {
 function renderPerfFixTabs(rec, accordionId) {
   const codeData = getPerfCodeExample(rec.category, rec.title);
   const steps = getPerfActionItems(rec.category, rec.title);
-  
+
   return `
     <div class="perf-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
-      <button class="perf-fix-tab active" onclick="switchPerfFixTab('${accordionId}', 'summary')" style="
+      <button class="perf-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
@@ -1676,8 +1748,8 @@ function renderPerfFixTabs(rec, accordionId) {
         color: #fff;
         cursor: pointer;
         font-size: 0.85rem;
-      ">📋 Summary</button>
-      <button class="perf-fix-tab" onclick="switchPerfFixTab('${accordionId}', 'code')" style="
+      ">📋 ${t('reports.performance.summary', 'Summary')}</button>
+      <button class="perf-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -1685,8 +1757,8 @@ function renderPerfFixTabs(rec, accordionId) {
         color: #aaa;
         cursor: pointer;
         font-size: 0.85rem;
-      ">💻 Code</button>
-      <button class="perf-fix-tab" onclick="switchPerfFixTab('${accordionId}', 'guide')" style="
+      ">💻 ${t('reports.performance.code', 'Code')}</button>
+      <button class="perf-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -1694,17 +1766,17 @@ function renderPerfFixTabs(rec, accordionId) {
         color: #aaa;
         cursor: pointer;
         font-size: 0.85rem;
-      ">🔧 Fix Guide</button>
+      ">🔧 ${t('reports.performance.fixGuide', 'Fix Guide')}</button>
     </div>
 
     <!-- Summary Tab -->
     <div class="perf-fix-tab-content active" id="${accordionId}-summary">
       <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
-        ${rec.description || 'Optimize this area to improve performance.'}
+        ${rec.description || t('reports.performance.optimizeArea', 'Optimize this area to improve performance.')}
       </p>
       ${rec.impact ? `
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.performance.expectedImpact', 'Expected Impact')}</div>
         <div style="color: #c0c0c0; font-size: 0.9rem;">${rec.impact}</div>
       </div>
       ` : ''}
@@ -1716,8 +1788,8 @@ function renderPerfFixTabs(rec, accordionId) {
         <!-- Current Issue -->
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
-            <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
-            <button onclick="copyPerfCode('${accordionId}-problem')" style="
+            <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.performance.currentIssue', 'Current Issue')}</span>
+            <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
@@ -1725,7 +1797,7 @@ function renderPerfFixTabs(rec, accordionId) {
               color: #fff;
               cursor: pointer;
               font-size: 0.75rem;
-            ">📋 Copy</button>
+            ">📋 ${t('reports.performance.copy', 'Copy')}</button>
           </div>
           <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${codeData.problem}</pre>
         </div>
@@ -1733,8 +1805,8 @@ function renderPerfFixTabs(rec, accordionId) {
         <!-- Fixed Code -->
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
-            <button onclick="copyPerfCode('${accordionId}-solution')" style="
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.performance.recommendedFix', 'Recommended Fix')}</span>
+            <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
@@ -1742,7 +1814,7 @@ function renderPerfFixTabs(rec, accordionId) {
               color: #fff;
               cursor: pointer;
               font-size: 0.75rem;
-            ">📋 Copy</button>
+            ">📋 ${t('reports.performance.copy', 'Copy')}</button>
           </div>
           <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${codeData.solution}</pre>
         </div>
@@ -1751,7 +1823,7 @@ function renderPerfFixTabs(rec, accordionId) {
 
     <!-- Fix Guide Tab -->
     <div class="perf-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.performance.stepByStepFix', 'Step-by-Step Fix')}:</h5>
       <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
         ${steps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
       </ol>
@@ -1799,7 +1871,7 @@ function switchPerfFixTab(accordionId, tabName) {
     content.classList.remove('active');
   });
 
-  const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+  const activeTab = Array.from(tabs).find(tab => tab.getAttribute('data-tab') === tabName);
   const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
   if (activeTab) {
@@ -1833,10 +1905,7 @@ document.addEventListener('click', function(e) {
     const accordion = tab.closest('.perf-fix-accordion');
     if (accordion) {
       const fixId = accordion.getAttribute('data-fix-id');
-      const tabText = tab.textContent.toLowerCase();
-      let tabName = 'summary';
-      if (tabText.includes('code')) tabName = 'code';
-      else if (tabText.includes('guide')) tabName = 'guide';
+      const tabName = tab.getAttribute('data-tab') || 'summary';
       if (fixId && typeof window.switchPerfFixTab === 'function') {
         e.preventDefault();
         e.stopPropagation();
@@ -1868,7 +1937,7 @@ function copyPerfCode(elementId) {
     const btn = codeElement.parentElement.querySelector('button');
     if (btn) {
       const originalText = btn.textContent;
-      btn.textContent = '✓ Copied!';
+      btn.textContent = '✓ ' + t('reports.performance.copied', 'Copied!');
       setTimeout(() => { btn.textContent = originalText; }, 2000);
     }
   });
@@ -1880,12 +1949,12 @@ function copyPerfCode(elementId) {
 function getPerfCodeExample(category, title) {
   const examples = {
     'Minimize JavaScript': {
-      problem: `<!-- Current: Large unoptimized bundle -->
+      problem: `<!-- ${t('reports.performance.codeComments.currentLargeBundle', 'Current: Large unoptimized bundle')} -->
 <script src="/bundle.js"></script>
-<!-- 500KB+ JavaScript blocking render -->
-<!-- ✗ No code splitting -->
-<!-- ✗ No tree shaking -->
-<!-- ✗ Vendor code bundled with app -->`,
+<!-- ${t('reports.performance.codeComments.jsBlockingRender', '500KB+ JavaScript blocking render')} -->
+<!-- ✗ ${t('reports.performance.codeComments.noCodeSplitting', 'No code splitting')} -->
+<!-- ✗ ${t('reports.performance.codeComments.noTreeShaking', 'No tree shaking')} -->
+<!-- ✗ ${t('reports.performance.codeComments.vendorBundled', 'Vendor code bundled with app')} -->`,
       solution: `// webpack.config.js
 optimization: {
   splitChunks: {
@@ -1898,22 +1967,22 @@ optimization: {
       }
     }
   },
-  usedExports: true, // Tree shaking
+  usedExports: true, // ${t('reports.performance.codeComments.treeShaking', 'Tree shaking')}
   minimize: true
 }
 
-<!-- Result: Smaller, split bundles -->
+<!-- ${t('reports.performance.codeComments.resultSmallerBundles', 'Result: Smaller, split bundles')} -->
 <script src="/vendors.js" defer></script>
 <script src="/app.js" defer></script>`
     },
     'Optimize Images': {
-      problem: `<!-- Current: Unoptimized images -->
+      problem: `<!-- ${t('reports.performance.codeComments.currentUnoptimizedImages', 'Current: Unoptimized images')} -->
 <img src="hero.png" alt="Hero">
-<!-- ✗ PNG instead of WebP/AVIF -->
-<!-- ✗ No srcset for responsive -->
-<!-- ✗ No lazy loading -->
-<!-- ✗ 2MB image file -->`,
-      solution: `<!-- Optimized with modern formats -->
+<!-- ✗ ${t('reports.performance.codeComments.pngInsteadOfWebp', 'PNG instead of WebP/AVIF')} -->
+<!-- ✗ ${t('reports.performance.codeComments.noSrcset', 'No srcset for responsive')} -->
+<!-- ✗ ${t('reports.performance.codeComments.noLazyLoading', 'No lazy loading')} -->
+<!-- ✗ ${t('reports.performance.codeComments.largeImageFile', '2MB image file')} -->`,
+      solution: `<!-- ${t('reports.performance.codeComments.optimizedModernFormats', 'Optimized with modern formats')} -->
 <picture>
   <source srcset="hero.avif" type="image/avif">
   <source srcset="hero.webp" type="image/webp">
@@ -1921,34 +1990,34 @@ optimization: {
        srcset="hero-400.jpg 400w, hero-800.jpg 800w"
        sizes="(max-width: 600px) 400px, 800px">
 </picture>
-<!-- ✓ Modern formats (90% smaller) -->
-<!-- ✓ Responsive images -->
-<!-- ✓ Lazy loading -->`
+<!-- ✓ ${t('reports.performance.codeComments.modernFormatsSmaller', 'Modern formats (90% smaller)')} -->
+<!-- ✓ ${t('reports.performance.codeComments.responsiveImages', 'Responsive images')} -->
+<!-- ✓ ${t('reports.performance.codeComments.lazyLoading', 'Lazy loading')} -->`
     },
     'Reduce CSS Size': {
-      problem: `<!-- Current: Large CSS file -->
+      problem: `<!-- ${t('reports.performance.codeComments.currentLargeCss', 'Current: Large CSS file')} -->
 <link rel="stylesheet" href="styles.css">
-<!-- ✗ 200KB+ CSS file -->
-<!-- ✗ Unused styles included -->
-<!-- ✗ Render-blocking -->`,
-      solution: `<!-- Critical CSS inline -->
+<!-- ✗ ${t('reports.performance.codeComments.largeCssFile', '200KB+ CSS file')} -->
+<!-- ✗ ${t('reports.performance.codeComments.unusedStyles', 'Unused styles included')} -->
+<!-- ✗ ${t('reports.performance.codeComments.renderBlocking', 'Render-blocking')} -->`,
+      solution: `<!-- ${t('reports.performance.codeComments.criticalCssInline', 'Critical CSS inline')} -->
 <style>
-  /* Above-the-fold styles only */
+  /* ${t('reports.performance.codeComments.aboveTheFold', 'Above-the-fold styles only')} */
   .hero { ... }
   .nav { ... }
 </style>
-<!-- Non-critical CSS async -->
-<link rel="preload" href="styles.css" as="style" 
+<!-- ${t('reports.performance.codeComments.nonCriticalAsync', 'Non-critical CSS async')} -->
+<link rel="preload" href="styles.css" as="style"
       onload="this.onload=null;this.rel='stylesheet'">
-<!-- ✓ Critical CSS inlined -->
-<!-- ✓ Non-blocking load -->`
+<!-- ✓ ${t('reports.performance.codeComments.criticalInlined', 'Critical CSS inlined')} -->
+<!-- ✓ ${t('reports.performance.codeComments.nonBlockingLoad', 'Non-blocking load')} -->`
     },
     'Improve Caching Strategy': {
-      problem: `<!-- Current: No caching headers -->
+      problem: `<!-- ${t('reports.performance.codeComments.currentNoCaching', 'Current: No caching headers')} -->
 Cache-Control: no-cache
-<!-- ✗ Assets re-downloaded every visit -->
-<!-- ✗ Slow repeat visits -->`,
-      solution: `# Nginx configuration
+<!-- ✗ ${t('reports.performance.codeComments.assetsRedownloaded', 'Assets re-downloaded every visit')} -->
+<!-- ✗ ${t('reports.performance.codeComments.slowRepeatVisits', 'Slow repeat visits')} -->`,
+      solution: `# ${t('reports.performance.codeComments.nginxConfig', 'Nginx configuration')}
 location ~* \\.(js|css|png|jpg|woff2)$ {
   expires 1y;
   add_header Cache-Control "public, immutable";
@@ -1958,38 +2027,38 @@ location ~* \\.html$ {
   expires 1h;
   add_header Cache-Control "public, must-revalidate";
 }
-<!-- ✓ Static assets cached 1 year -->
-<!-- ✓ HTML revalidated hourly -->`
+<!-- ✓ ${t('reports.performance.codeComments.staticCached1Year', 'Static assets cached 1 year')} -->
+<!-- ✓ ${t('reports.performance.codeComments.htmlRevalidated', 'HTML revalidated hourly')} -->`
     },
     'Enable Text Compression': {
-      problem: `<!-- Current: No compression -->
+      problem: `<!-- ${t('reports.performance.codeComments.currentNoCompression', 'Current: No compression')} -->
 Content-Encoding: identity
-<!-- ✗ 500KB transferred -->
-<!-- ✗ Slow on mobile networks -->`,
-      solution: `# Enable Gzip in Nginx
+<!-- ✗ ${t('reports.performance.codeComments.largeTransfer', '500KB transferred')} -->
+<!-- ✗ ${t('reports.performance.codeComments.slowMobile', 'Slow on mobile networks')} -->`,
+      solution: `# ${t('reports.performance.codeComments.enableGzip', 'Enable Gzip in Nginx')}
 gzip on;
 gzip_vary on;
-gzip_types text/plain text/css application/javascript 
+gzip_types text/plain text/css application/javascript
            application/json;
 gzip_min_length 1000;
 gzip_comp_level 6;
 
-# Result:
+# ${t('reports.performance.codeComments.result', 'Result')}:
 Content-Encoding: gzip
-<!-- ✓ 100KB transferred (80% smaller) -->`
+<!-- ✓ ${t('reports.performance.codeComments.smallerTransfer', '100KB transferred (80% smaller)')} -->`
     }
   };
-  
+
   const defaultExample = {
-    problem: `<!-- Common performance issue -->
-<!-- ✗ Unoptimized resource loading -->
-<!-- ✗ Blocking render -->`,
-    solution: `<!-- Optimized implementation -->
-<!-- ✓ Async/defer loading -->
-<!-- ✓ Proper caching -->
-<!-- ✓ Compression enabled -->`
+    problem: `<!-- ${t('reports.performance.codeComments.commonIssue', 'Common performance issue')} -->
+<!-- ✗ ${t('reports.performance.codeComments.unoptimizedLoading', 'Unoptimized resource loading')} -->
+<!-- ✗ ${t('reports.performance.codeComments.blockingRender', 'Blocking render')} -->`,
+    solution: `<!-- ${t('reports.performance.codeComments.optimizedImpl', 'Optimized implementation')} -->
+<!-- ✓ ${t('reports.performance.codeComments.asyncDefer', 'Async/defer loading')} -->
+<!-- ✓ ${t('reports.performance.codeComments.properCaching', 'Proper caching')} -->
+<!-- ✓ ${t('reports.performance.codeComments.compressionEnabled', 'Compression enabled')} -->`
   };
-  
+
   return examples[title] || defaultExample;
 }
 
@@ -1999,38 +2068,38 @@ Content-Encoding: gzip
 function getPerfActionItems(category, title) {
   const items = {
     'Minimize JavaScript': [
-      'Enable code splitting in your bundler (webpack/vite)',
-      'Use tree shaking to remove unused code',
-      'Split vendor code from application code',
-      'Add defer attribute to non-critical scripts'
+      t('reports.performance.actionItems.enableCodeSplitting', 'Enable code splitting in your bundler (webpack/vite)'),
+      t('reports.performance.actionItems.useTreeShaking', 'Use tree shaking to remove unused code'),
+      t('reports.performance.actionItems.splitVendorCode', 'Split vendor code from application code'),
+      t('reports.performance.actionItems.addDeferAttribute', 'Add defer attribute to non-critical scripts')
     ],
     'Optimize Images': [
-      'Convert images to WebP or AVIF format',
-      'Implement responsive images with srcset',
-      'Add loading="lazy" to below-fold images',
-      'Use an image CDN for automatic optimization'
+      t('reports.performance.actionItems.convertToWebp', 'Convert images to WebP or AVIF format'),
+      t('reports.performance.actionItems.implementSrcset', 'Implement responsive images with srcset'),
+      t('reports.performance.actionItems.addLazyLoading', 'Add loading="lazy" to below-fold images'),
+      t('reports.performance.actionItems.useImageCdn', 'Use an image CDN for automatic optimization')
     ],
     'Reduce CSS Size': [
-      'Extract and inline critical CSS',
-      'Remove unused CSS with PurgeCSS',
-      'Load non-critical CSS asynchronously'
+      t('reports.performance.actionItems.extractCriticalCss', 'Extract and inline critical CSS'),
+      t('reports.performance.actionItems.removeUnusedCss', 'Remove unused CSS with PurgeCSS'),
+      t('reports.performance.actionItems.loadCssAsync', 'Load non-critical CSS asynchronously')
     ],
     'Improve Caching Strategy': [
-      'Set Cache-Control headers for static assets',
-      'Use content-based hashing in filenames',
-      'Configure 1-year cache for immutable assets'
+      t('reports.performance.actionItems.setCacheHeaders', 'Set Cache-Control headers for static assets'),
+      t('reports.performance.actionItems.useContentHashing', 'Use content-based hashing in filenames'),
+      t('reports.performance.actionItems.configure1YearCache', 'Configure 1-year cache for immutable assets')
     ],
     'Enable Text Compression': [
-      'Enable Gzip or Brotli compression on server',
-      'Verify compression with browser DevTools',
-      'Set minimum size threshold (1KB)'
+      t('reports.performance.actionItems.enableGzipBrotli', 'Enable Gzip or Brotli compression on server'),
+      t('reports.performance.actionItems.verifyCompression', 'Verify compression with browser DevTools'),
+      t('reports.performance.actionItems.setMinSizeThreshold', 'Set minimum size threshold (1KB)')
     ]
   };
-  
+
   return items[title] || [
-    'Analyze current implementation',
-    'Apply recommended optimizations', 
-    'Test and measure improvements'
+    t('reports.performance.actionItems.analyzeImplementation', 'Analyze current implementation'),
+    t('reports.performance.actionItems.applyOptimizations', 'Apply recommended optimizations'),
+    t('reports.performance.actionItems.testAndMeasure', 'Test and measure improvements')
   ];
 }
 
@@ -2043,10 +2112,10 @@ function getPerformanceColor(score) {
 }
 
 function getPerformanceGrade(score) {
-  if (score >= 90) return 'Excellent';
-  if (score >= 70) return 'Good';
-  if (score >= 50) return 'Needs Improvement';
-  return 'Poor';
+  if (score >= 90) return t('reports.performance.excellent', 'Excellent');
+  if (score >= 70) return t('reports.performance.good', 'Good');
+  if (score >= 50) return t('reports.performance.needsImprovement', 'Needs Improvement');
+  return t('reports.performance.poor', 'Poor');
 }
 
 /**
@@ -2064,10 +2133,10 @@ function getGradeColor(grade) {
  * Format bytes to human readable format
  */
 function formatBytes(bytes, decimals = 2) {
-  if (bytes === 0) return '0 Bytes';
+  if (bytes === 0) return '0 ' + t('reports.performance.bytes', 'Bytes');
   const k = 1024;
   const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+  const sizes = [t('reports.performance.bytes', 'Bytes'), 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
 }
@@ -2075,13 +2144,13 @@ function formatBytes(bytes, decimals = 2) {
 function getLoadingHTML() {
   return `
     <div class="section">
-      <h2>Analyzing...</h2>
+      <h2>${t('reports.performance.analyzing', 'Analyzing...')}</h2>
       <div style="padding-left: 1rem;">
-        <p>>> running comprehensive performance analysis...</p>
-        <p>>> measuring core web vitals...</p>
-        <p>>> analyzing resource loading...</p>
-        <p>>> evaluating network performance...</p>
-        <p>>> checking caching strategies...</p>
+        <p>>> ${t('reports.performance.runningAnalysis', 'running comprehensive performance analysis...')}</p>
+        <p>>> ${t('reports.performance.measuringVitals', 'measuring core web vitals...')}</p>
+        <p>>> ${t('reports.performance.analyzingResources', 'analyzing resource loading...')}</p>
+        <p>>> ${t('reports.performance.evaluatingNetwork', 'evaluating network performance...')}</p>
+        <p>>> ${t('reports.performance.checkingCaching', 'checking caching strategies...')}</p>
         <div class="loading-bar" style="margin-top: 1rem;"></div>
       </div>
     </div>
@@ -2092,11 +2161,11 @@ function showError(message) {
   const container = document.getElementById('perfResults');
   container.innerHTML = `
     <div class="section">
-      <h2 style="color: #ff0000;">Error</h2>
+      <h2 style="color: #ff0000;">${t('reports.performance.error', 'Error')}</h2>
       <div style="padding-left: 1rem;">
-        <p>>> analysis_failed</p>
+        <p>>> ${t('reports.performance.analysisFailed', 'analysis_failed')}</p>
         <p style="color: #ff6600;">>> ${message}</p>
-        <button onclick="location.reload()" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ff6600; color: #000; border: none; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold;">RETRY</button>
+        <button data-action="reload-page" style="margin-top: 1rem; padding: 0.5rem 1rem; background: #ff6600; color: #000; border: none; cursor: pointer; font-family: 'Courier New', monospace; font-weight: bold;">${t('reports.performance.retry', 'RETRY')}</button>
       </div>
     </div>
   `;
@@ -2109,13 +2178,13 @@ function showError(message) {
 function getCrossBrowserLoadingHTML() {
   return `
     <div class="section">
-      <h2>Cross-Browser Analysis</h2>
+      <h2>${t('reports.performance.crossBrowserAnalysis', 'Cross-Browser Analysis')}</h2>
       <div style="padding-left: 1rem;">
-        <p>>> running desktop analysis (Lighthouse)...</p>
-        <p>>> running mobile analysis (Lighthouse)...</p>
-        <p>>> comparing Core Web Vitals across devices...</p>
-        <p>>> generating performance comparison...</p>
-        <p style="color: #ff6600; font-style: italic;">>>> estimated time: 30-60 seconds</p>
+        <p>>> ${t('reports.performance.runningDesktopAnalysis', 'running desktop analysis (Lighthouse)...')}</p>
+        <p>>> ${t('reports.performance.runningMobileAnalysis', 'running mobile analysis (Lighthouse)...')}</p>
+        <p>>> ${t('reports.performance.comparingCoreWebVitals', 'comparing Core Web Vitals across devices...')}</p>
+        <p>>> ${t('reports.performance.generatingComparison', 'generating performance comparison...')}</p>
+        <p style="color: #ff6600; font-style: italic;">>>> ${t('reports.performance.estimatedTime', 'estimated time: 30-60 seconds')}</p>
         <div class="loading-bar" style="margin-top: 1rem;"></div>
       </div>
     </div>
@@ -2136,12 +2205,12 @@ function displayCrossBrowserResults(results) {
   const summarySection = document.createElement('div');
   summarySection.className = 'section';
   summarySection.innerHTML = `
-    <h2>Cross-Browser Comparison Results</h2>
-    <p>>> url: ${results.url}</p>
-    <p>>> timestamp: ${new Date(results.timestamp).toLocaleString()}</p>
-    <p>>> analysis_duration: ${results.duration ? `${(results.duration / 1000).toFixed(1)}s` : 'N/A'}</p>
-    <p>>> devices_tested: ${Object.keys(results.browsers).length}</p>
-    
+    <h2>${t('reports.performance.crossBrowserComparisonResults', 'Cross-Browser Comparison Results')}</h2>
+    <p>>> ${t('reports.performance.url', 'url')}: ${results.url}</p>
+    <p>>> ${t('reports.performance.timestamp', 'timestamp')}: ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date(results.timestamp)) : new Date(results.timestamp).toLocaleString()}</p>
+    <p>>> ${t('reports.performance.analysisDuration', 'analysis_duration')}: ${results.duration ? `${(results.duration / 1000).toFixed(1)}s` : t('reports.performance.notAvailable', 'N/A')}</p>
+    <p>>> ${t('reports.performance.devicesTested', 'devices_tested')}: ${Object.keys(results.browsers).length}</p>
+
     <!-- Overall Comparison Score -->
     <div style="
       background: linear-gradient(135deg, rgba(187,134,252,0.05) 0%, rgba(187,134,252,0.02) 100%);
@@ -2151,29 +2220,29 @@ function displayCrossBrowserResults(results) {
       margin: 2rem 0;
       box-shadow: 0 4px 20px rgba(187,134,252,0.15);
     ">
-      <h3 style="margin: 0 0 1.5rem 0; color: #bb86fc;">Overall Performance Comparison</h3>
-      
+      <h3 style="margin: 0 0 1.5rem 0; color: #bb86fc;">${t('reports.performance.overallPerformanceComparison', 'Overall Performance Comparison')}</h3>
+
       <!-- Circular Dials for Each Browser -->
       <div style="display: flex; justify-content: center; gap: 3rem; flex-wrap: wrap; margin: 2rem 0;">
         ${renderBrowserDials(results.browsers)}
       </div>
-      
+
       <!-- Performance Gap Warning -->
       ${results.comparison.performanceGap > 20 ? `
         <div style="background: rgba(255, 102, 0, 0.1); border-left: 4px solid #ff6600; padding: 1rem; margin-top: 1.5rem; border-radius: 4px;">
-          <p style="margin: 0; color: #ff6600; font-weight: bold;">~ Significant Performance Gap Detected</p>
+          <p style="margin: 0; color: #ff6600; font-weight: bold;">~ ${t('reports.performance.significantPerformanceGap', 'Significant Performance Gap Detected')}</p>
           <p style="margin: 0.5rem 0 0 0; font-size: 0.9rem;">
-            ${results.comparison.performanceGap} point difference between desktop and mobile performance
+            ${t('reports.performance.performanceGapPoints', '{{gap}} point difference between desktop and mobile performance', { gap: results.comparison.performanceGap })}
           </p>
         </div>
       ` : ''}
-      
+
       <!-- Overall Score -->
       <div style="text-align: center; margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid rgba(187,134,252,0.3);">
         <div style="font-size: 2.5rem; font-weight: bold; color: ${getPerformanceColor(results.overallScore)}; margin-bottom: 0.5rem;">
           ${results.overallScore}
         </div>
-        <div style="font-size: 1rem; color: #808080;">Average Performance Score</div>
+        <div style="font-size: 1rem; color: #808080;">${t('reports.performance.averagePerformanceScore', 'Average Performance Score')}</div>
       </div>
     </div>
   `;
@@ -2181,13 +2250,13 @@ function displayCrossBrowserResults(results) {
   container.appendChild(summarySection);
   
   // Accordion Sections
-  createAccordionSection(container, 'browser-comparison', 'Device-by-Device Analysis', 
+  createAccordionSection(container, 'browser-comparison', t('reports.performance.deviceByDeviceAnalysis', 'Device-by-Device Analysis'),
     () => renderDeviceComparisonContent(results.browsers), null);
-  
-  createAccordionSection(container, 'cwv-comparison', 'Core Web Vitals Comparison', 
+
+  createAccordionSection(container, 'cwv-comparison', t('reports.performance.coreWebVitalsComparison', 'Core Web Vitals Comparison'),
     () => renderCWVComparisonContent(results.browsers), null);
-  
-  createAccordionSection(container, 'cross-browser-recommendations', 'Cross-Device Recommendations', 
+
+  createAccordionSection(container, 'cross-browser-recommendations', t('reports.performance.crossDeviceRecommendations', 'Cross-Device Recommendations'),
     () => renderCrossBrowserRecommendationsContent(results.recommendations, results.comparison), null);
 }
 
@@ -2260,44 +2329,44 @@ function renderDeviceComparisonContent(browsers) {
         <h3 style="margin: 0 0 1rem 0; color: #bb86fc;">
           ${data.icon} ${data.browser} - ${data.description}
         </h3>
-        
+
         ${!data.success ? `
-          <p style="color: #ff4444;">✗ Analysis failed: ${data.error || 'Unknown error'}</p>
+          <p style="color: #ff4444;">✗ ${t('reports.performance.analysisFailed', 'Analysis failed')}: ${data.error || t('reports.performance.unknownError', 'Unknown error')}</p>
         ` : `
           <!-- Lighthouse Category Scores -->
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
             <div style="text-align: center; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px;">
               <div style="font-size: 1.5rem; font-weight: bold; color: ${perfColor};">${data.performanceScore}</div>
-              <div style="font-size: 0.9rem; color: #808080;">Performance</div>
+              <div style="font-size: 0.9rem; color: #808080;">${t('reports.performance.performance', 'Performance')}</div>
             </div>
             <div style="text-align: center; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px;">
               <div style="font-size: 1.5rem; font-weight: bold; color: ${a11yColor};">${data.accessibilityScore}</div>
-              <div style="font-size: 0.9rem; color: #808080;">Accessibility</div>
+              <div style="font-size: 0.9rem; color: #808080;">${t('reports.performance.accessibility', 'Accessibility')}</div>
             </div>
             <div style="text-align: center; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px;">
               <div style="font-size: 1.5rem; font-weight: bold; color: ${bpColor};">${data.bestPracticesScore}</div>
-              <div style="font-size: 0.9rem; color: #808080;">Best Practices</div>
+              <div style="font-size: 0.9rem; color: #808080;">${t('reports.performance.bestPractices', 'Best Practices')}</div>
             </div>
             <div style="text-align: center; padding: 1rem; background: rgba(0,255,65,0.05); border-radius: 4px;">
               <div style="font-size: 1.5rem; font-weight: bold; color: ${seoColor};">${data.seoScore}</div>
-              <div style="font-size: 0.9rem; color: #808080;">SEO</div>
+              <div style="font-size: 0.9rem; color: #808080;">${t('reports.performance.seo', 'SEO')}</div>
             </div>
           </div>
-          
+
           <!-- Core Web Vitals -->
-          <h4 style="margin: 1rem 0 0.5rem 0; color: #00ff41;">Core Web Vitals</h4>
+          <h4 style="margin: 1rem 0 0.5rem 0; color: #00ff41;">${t('reports.performance.coreWebVitals', 'Core Web Vitals')}</h4>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
             ${renderMetricBox('LCP', data.metrics.metrics.coreWebVitals.lcp, 'ms', 'lcp')}
             ${renderMetricBox('FID', data.metrics.metrics.coreWebVitals.fid, 'ms', 'fid')}
             ${renderMetricBox('CLS', data.metrics.metrics.coreWebVitals.cls, '', 'cls')}
           </div>
-          
+
           <!-- Additional Metrics -->
-          <h4 style="margin: 1rem 0 0.5rem 0; color: #00ff41;">Additional Metrics</h4>
+          <h4 style="margin: 1rem 0 0.5rem 0; color: #00ff41;">${t('reports.performance.additionalMetrics', 'Additional Metrics')}</h4>
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;">
             ${renderMetricBox('FCP', data.metrics.firstContentfulPaint, 'ms', 'fcp')}
             ${renderMetricBox('TBT', data.metrics.totalBlockingTime, 'ms', 'tbt')}
-            ${renderMetricBox('Speed Index', data.metrics.speedIndex, 'ms', 'si')}
+            ${renderMetricBox(t('reports.performance.speedIndex', 'Speed Index'), data.metrics.speedIndex, 'ms', 'si')}
           </div>
         `}
       </div>
@@ -2315,21 +2384,21 @@ function renderCWVComparisonContent(browsers) {
   const browserKeys = Object.keys(browsers);
   const desktopData = browsers.desktop;
   const mobileData = browsers.mobile;
-  
+
   if (!desktopData || !mobileData) {
-    return '<p style="color: #ff6600;">>>> Comparison requires both desktop and mobile data</p>';
+    return '<p style="color: #ff6600;">>>> ' + t('reports.performance.comparisonRequiresBothDevices', 'Comparison requires both desktop and mobile data') + '</p>';
   }
-  
+
   return `
     <div style="overflow-x: auto;">
       <table style="width: 100%; border-collapse: collapse; font-family: 'Courier New', monospace;">
         <thead>
           <tr style="border-bottom: 2px solid rgba(187,134,252,0.3);">
-            <th style="text-align: left; padding: 1rem; color: #bb86fc;">Metric</th>
-            <th style="text-align: center; padding: 1rem; color: #bb86fc;">D Desktop</th>
-            <th style="text-align: center; padding: 1rem; color: #bb86fc;">M Mobile</th>
-            <th style="text-align: center; padding: 1rem; color: #bb86fc;">Difference</th>
-            <th style="text-align: center; padding: 1rem; color: #bb86fc;">Status</th>
+            <th style="text-align: left; padding: 1rem; color: #bb86fc;">${t('reports.performance.metric', 'Metric')}</th>
+            <th style="text-align: center; padding: 1rem; color: #bb86fc;">D ${t('reports.performance.desktop', 'Desktop')}</th>
+            <th style="text-align: center; padding: 1rem; color: #bb86fc;">M ${t('reports.performance.mobile', 'Mobile')}</th>
+            <th style="text-align: center; padding: 1rem; color: #bb86fc;">${t('reports.performance.difference', 'Difference')}</th>
+            <th style="text-align: center; padding: 1rem; color: #bb86fc;">${t('reports.performance.status', 'Status')}</th>
           </tr>
         </thead>
         <tbody>
@@ -2338,24 +2407,24 @@ function renderCWVComparisonContent(browsers) {
           ${renderComparisonRow('CLS', desktopData.metrics.metrics.coreWebVitals.cls, mobileData.metrics.metrics.coreWebVitals.cls, '', 0.1, 0.25)}
           ${renderComparisonRow('FCP', desktopData.metrics.firstContentfulPaint, mobileData.metrics.firstContentfulPaint, 'ms', 1800, 3000)}
           ${renderComparisonRow('TBT', desktopData.metrics.totalBlockingTime, mobileData.metrics.totalBlockingTime, 'ms', 200, 600)}
-          ${renderComparisonRow('Speed Index', desktopData.metrics.speedIndex, mobileData.metrics.speedIndex, 'ms', 3400, 5800)}
+          ${renderComparisonRow(t('reports.performance.speedIndex', 'Speed Index'), desktopData.metrics.speedIndex, mobileData.metrics.speedIndex, 'ms', 3400, 5800)}
         </tbody>
       </table>
     </div>
-    
+
     <!-- Performance Score Comparison -->
     <div style="margin-top: 2rem; padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-      <h4 style="margin: 0 0 1rem 0; color: #bb86fc;">Lighthouse Category Scores</h4>
+      <h4 style="margin: 0 0 1rem 0; color: #bb86fc;">${t('reports.performance.lighthouseCategoryScores', 'Lighthouse Category Scores')}</h4>
       <div style="display: grid; grid-template-columns: auto 1fr 1fr 1fr; gap: 0.5rem; align-items: center;">
-        <div style="font-weight: bold;">Category</div>
-        <div style="text-align: center; font-weight: bold;">D Desktop</div>
-        <div style="text-align: center; font-weight: bold;">M Mobile</div>
-        <div style="text-align: center; font-weight: bold;">Gap</div>
-        
-        ${renderScoreComparisonRow('Performance', desktopData.performanceScore, mobileData.performanceScore)}
-        ${renderScoreComparisonRow('Accessibility', desktopData.accessibilityScore, mobileData.accessibilityScore)}
-        ${renderScoreComparisonRow('Best Practices', desktopData.bestPracticesScore, mobileData.bestPracticesScore)}
-        ${renderScoreComparisonRow('SEO', desktopData.seoScore, mobileData.seoScore)}
+        <div style="font-weight: bold;">${t('reports.performance.category', 'Category')}</div>
+        <div style="text-align: center; font-weight: bold;">D ${t('reports.performance.desktop', 'Desktop')}</div>
+        <div style="text-align: center; font-weight: bold;">M ${t('reports.performance.mobile', 'Mobile')}</div>
+        <div style="text-align: center; font-weight: bold;">${t('reports.performance.gap', 'Gap')}</div>
+
+        ${renderScoreComparisonRow(t('reports.performance.performance', 'Performance'), desktopData.performanceScore, mobileData.performanceScore)}
+        ${renderScoreComparisonRow(t('reports.performance.accessibility', 'Accessibility'), desktopData.accessibilityScore, mobileData.accessibilityScore)}
+        ${renderScoreComparisonRow(t('reports.performance.bestPractices', 'Best Practices'), desktopData.bestPracticesScore, mobileData.bestPracticesScore)}
+        ${renderScoreComparisonRow(t('reports.performance.seo', 'SEO'), desktopData.seoScore, mobileData.seoScore)}
       </div>
     </div>
   `;
@@ -2367,30 +2436,30 @@ function renderCWVComparisonContent(browsers) {
 function renderComparisonRow(metric, desktopValue, mobileValue, unit, goodThreshold, needsImprovementThreshold) {
   const diff = Math.abs(mobileValue - desktopValue);
   const diffPercent = desktopValue > 0 ? ((diff / desktopValue) * 100).toFixed(0) : 0;
-  
+
   let status, statusColor;
   const avgValue = (desktopValue + mobileValue) / 2;
-  
+
   if (metric === 'CLS') {
     if (avgValue <= goodThreshold) {
-      status = '✓ Good';
+      status = '✓ ' + t('reports.performance.good', 'Good');
       statusColor = '#00ff41';
     } else if (avgValue <= needsImprovementThreshold) {
-      status = '~ Needs Work';
+      status = '~ ' + t('reports.performance.needsWork', 'Needs Work');
       statusColor = '#ffa500';
     } else {
-      status = '✗ Poor';
+      status = '✗ ' + t('reports.performance.poor', 'Poor');
       statusColor = '#ff4444';
     }
   } else {
     if (avgValue <= goodThreshold) {
-      status = '✓ Good';
+      status = '✓ ' + t('reports.performance.good', 'Good');
       statusColor = '#00ff41';
     } else if (avgValue <= needsImprovementThreshold) {
-      status = '~ Needs Work';
+      status = '~ ' + t('reports.performance.needsWork', 'Needs Work');
       statusColor = '#ffa500';
     } else {
-      status = '✗ Poor';
+      status = '✗ ' + t('reports.performance.poor', 'Poor');
       statusColor = '#ff4444';
     }
   }
@@ -2437,42 +2506,42 @@ function renderScoreComparisonRow(category, desktopScore, mobileScore) {
 function renderMetricBox(label, value, unit, metricType) {
   let color, status;
   const numValue = parseFloat(value) || 0;
-  
+
   // Determine color and status based on metric type
   switch(metricType) {
     case 'lcp':
-      if (numValue <= 2500) { color = '#00ff41'; status = 'Good'; }
-      else if (numValue <= 4000) { color = '#ffa500'; status = 'Needs Work'; }
-      else { color = '#ff4444'; status = 'Poor'; }
+      if (numValue <= 2500) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      else if (numValue <= 4000) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs Work'); }
+      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'fid':
-      if (numValue <= 100) { color = '#00ff41'; status = 'Good'; }
-      else if (numValue <= 300) { color = '#ffa500'; status = 'Needs Work'; }
-      else { color = '#ff4444'; status = 'Poor'; }
+      if (numValue <= 100) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      else if (numValue <= 300) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs Work'); }
+      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'cls':
-      if (numValue <= 0.1) { color = '#00ff41'; status = 'Good'; }
-      else if (numValue <= 0.25) { color = '#ffa500'; status = 'Needs Work'; }
-      else { color = '#ff4444'; status = 'Poor'; }
+      if (numValue <= 0.1) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      else if (numValue <= 0.25) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs Work'); }
+      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'fcp':
-      if (numValue <= 1800) { color = '#00ff41'; status = 'Good'; }
-      else if (numValue <= 3000) { color = '#ffa500'; status = 'Needs Work'; }
-      else { color = '#ff4444'; status = 'Poor'; }
+      if (numValue <= 1800) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      else if (numValue <= 3000) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs Work'); }
+      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'tbt':
-      if (numValue <= 200) { color = '#00ff41'; status = 'Good'; }
-      else if (numValue <= 600) { color = '#ffa500'; status = 'Needs Work'; }
-      else { color = '#ff4444'; status = 'Poor'; }
+      if (numValue <= 200) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      else if (numValue <= 600) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs Work'); }
+      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     case 'si':
-      if (numValue <= 3400) { color = '#00ff41'; status = 'Good'; }
-      else if (numValue <= 5800) { color = '#ffa500'; status = 'Needs Work'; }
-      else { color = '#ff4444'; status = 'Poor'; }
+      if (numValue <= 3400) { color = '#00ff41'; status = t('reports.performance.good', 'Good'); }
+      else if (numValue <= 5800) { color = '#ffa500'; status = t('reports.performance.needsWork', 'Needs Work'); }
+      else { color = '#ff4444'; status = t('reports.performance.poor', 'Poor'); }
       break;
     default:
       color = '#808080';
-      status = 'Info';
+      status = t('reports.performance.info', 'Info');
   }
   
   return `
@@ -2491,15 +2560,15 @@ function renderMetricBox(label, value, unit, metricType) {
  */
 function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
   if (!recommendations || recommendations.length === 0) {
-    return '<p style="color: #00ff41;">>>> No major cross-device issues detected!</p>';
+    return '<p style="color: #00ff41;">>>> ' + t('reports.performance.noMajorCrossDeviceIssues', 'No major cross-device issues detected!') + '</p>';
   }
-  
+
   let html = '<div>';
-  
+
   recommendations.forEach((rec, index) => {
     const priorityColor = rec.priority === 'high' ? '#ff4444' : rec.priority === 'medium' ? '#ffa500' : '#00ff41';
     const priorityIcon = rec.priority === 'high' ? '!' : rec.priority === 'medium' ? '~' : 'ⓘ';
-    
+
     html += `
       <div style="margin-bottom: 1.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-left: 4px solid ${priorityColor}; border-radius: 4px;">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
@@ -2509,12 +2578,12 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
             ${rec.priority.toUpperCase()}
           </span>
         </div>
-        
+
         <p style="margin: 0.5rem 0; color: #c0c0c0;">${rec.description}</p>
-        
+
         ${rec.actions && rec.actions.length > 0 ? `
           <div style="margin-top: 1rem;">
-            <strong style="color: #bb86fc;">Recommended Actions:</strong>
+            <strong style="color: #bb86fc;">${t('reports.performance.recommendedActions', 'Recommended Actions')}:</strong>
             <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem;">
               ${rec.actions.map(action => `<li style="margin: 0.25rem 0; color: #c0c0c0;">${action}</li>`).join('')}
             </ul>
@@ -2523,12 +2592,12 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
       </div>
     `;
   });
-  
+
   // Add metrics differences if present
   if (comparison && comparison.metricsDifferences && comparison.metricsDifferences.length > 0) {
     html += `
       <div style="margin-top: 2rem; padding: 1.5rem; background: rgba(255,165,0,0.05); border: 1px solid rgba(255,165,0,0.3); border-radius: 8px;">
-        <h4 style="margin: 0 0 1rem 0; color: #ffa500;">C Detected Metric Discrepancies</h4>
+        <h4 style="margin: 0 0 1rem 0; color: #ffa500;">C ${t('reports.performance.detectedMetricDiscrepancies', 'Detected Metric Discrepancies')}</h4>
         ${comparison.metricsDifferences.map(diff => `
           <div style="padding: 0.75rem; margin: 0.5rem 0; background: rgba(0,0,0,0.3); border-radius: 4px;">
             <div style="font-weight: bold; color: ${diff.severity === 'high' ? '#ff4444' : '#ffa500'};">
@@ -2538,15 +2607,15 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
               ${diff.message}
             </div>
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-top: 0.5rem; font-size: 0.85rem;">
-              <div>D Desktop: <span style="color: #00ff41;">${typeof diff.desktop === 'number' ? diff.desktop.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.desktop}</span></div>
-              <div>M Mobile: <span style="color: #ffa500;">${typeof diff.mobile === 'number' ? diff.mobile.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.mobile}</span></div>
+              <div>D ${t('reports.performance.desktop', 'Desktop')}: <span style="color: #00ff41;">${typeof diff.desktop === 'number' ? diff.desktop.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.desktop}</span></div>
+              <div>M ${t('reports.performance.mobile', 'Mobile')}: <span style="color: #ffa500;">${typeof diff.mobile === 'number' ? diff.mobile.toFixed(diff.metric.includes('CLS') ? 3 : 0) : diff.mobile}</span></div>
             </div>
           </div>
         `).join('')}
       </div>
     `;
   }
-  
+
   html += '</div>';
   return html;
 }
@@ -2569,71 +2638,71 @@ function exportPerformanceCSV() {
   const rows = [];
 
   // Header
-  rows.push(['Metric', 'Value', 'Unit', 'Status']);
+  rows.push([t('reports.performance.csv.metric', 'Metric'), t('reports.performance.csv.value', 'Value'), t('reports.performance.csv.unit', 'Unit'), t('reports.performance.csv.status', 'Status')]);
 
   // URL info
   rows.push(['URL', results.url || '', '', '']);
-  rows.push(['Scan Date', new Date().toISOString(), '', '']);
+  rows.push([t('reports.performance.csv.scanDate', 'Scan Date'), new Date().toISOString(), '', '']);
   rows.push(['', '', '', '']);
 
   // Performance Score
   const score = results.score || results.performanceScore || 0;
-  rows.push(['Performance Score', score, 'points', score >= 90 ? 'Good' : score >= 50 ? 'Needs Improvement' : 'Poor']);
+  rows.push([t('reports.performance.csv.performanceScore', 'Performance Score'), score, t('reports.performance.csv.points', 'points'), score >= 90 ? t('reports.performance.good', 'Good') : score >= 50 ? t('reports.performance.needsImprovement', 'Needs Improvement') : t('reports.performance.poor', 'Poor')]);
   rows.push(['', '', '', '']);
 
   // Core Web Vitals
-  rows.push(['--- Core Web Vitals ---', '', '', '']);
+  rows.push(['--- ' + t('reports.performance.coreWebVitals', 'Core Web Vitals') + ' ---', '', '', '']);
 
   const vitals = results.coreWebVitals || results.vitals || {};
   if (vitals.LCP !== undefined) {
     const lcpMs = typeof vitals.LCP === 'number' ? vitals.LCP : 0;
-    rows.push(['Largest Contentful Paint (LCP)', lcpMs, 'ms', lcpMs <= 2500 ? 'Good' : lcpMs <= 4000 ? 'Needs Improvement' : 'Poor']);
+    rows.push([t('reports.performance.largestContentfulPaint', 'Largest Contentful Paint (LCP)'), lcpMs, 'ms', lcpMs <= 2500 ? t('reports.performance.good', 'Good') : lcpMs <= 4000 ? t('reports.performance.needsImprovement', 'Needs Improvement') : t('reports.performance.poor', 'Poor')]);
   }
   if (vitals.FID !== undefined) {
     const fidMs = typeof vitals.FID === 'number' ? vitals.FID : 0;
-    rows.push(['First Input Delay (FID)', fidMs, 'ms', fidMs <= 100 ? 'Good' : fidMs <= 300 ? 'Needs Improvement' : 'Poor']);
+    rows.push([t('reports.performance.firstInputDelay', 'First Input Delay (FID)'), fidMs, 'ms', fidMs <= 100 ? t('reports.performance.good', 'Good') : fidMs <= 300 ? t('reports.performance.needsImprovement', 'Needs Improvement') : t('reports.performance.poor', 'Poor')]);
   }
   if (vitals.CLS !== undefined) {
     const cls = typeof vitals.CLS === 'number' ? vitals.CLS : 0;
-    rows.push(['Cumulative Layout Shift (CLS)', cls.toFixed(3), '', cls <= 0.1 ? 'Good' : cls <= 0.25 ? 'Needs Improvement' : 'Poor']);
+    rows.push([t('reports.performance.cumulativeLayoutShift', 'Cumulative Layout Shift (CLS)'), cls.toFixed(3), '', cls <= 0.1 ? t('reports.performance.good', 'Good') : cls <= 0.25 ? t('reports.performance.needsImprovement', 'Needs Improvement') : t('reports.performance.poor', 'Poor')]);
   }
   if (vitals.FCP !== undefined) {
     const fcpMs = typeof vitals.FCP === 'number' ? vitals.FCP : 0;
-    rows.push(['First Contentful Paint (FCP)', fcpMs, 'ms', fcpMs <= 1800 ? 'Good' : fcpMs <= 3000 ? 'Needs Improvement' : 'Poor']);
+    rows.push([t('reports.performance.firstContentfulPaint', 'First Contentful Paint (FCP)'), fcpMs, 'ms', fcpMs <= 1800 ? t('reports.performance.good', 'Good') : fcpMs <= 3000 ? t('reports.performance.needsImprovement', 'Needs Improvement') : t('reports.performance.poor', 'Poor')]);
   }
   if (vitals.TTFB !== undefined) {
     const ttfbMs = typeof vitals.TTFB === 'number' ? vitals.TTFB : 0;
-    rows.push(['Time to First Byte (TTFB)', ttfbMs, 'ms', ttfbMs <= 800 ? 'Good' : ttfbMs <= 1800 ? 'Needs Improvement' : 'Poor']);
+    rows.push([t('reports.performance.timeToFirstByte', 'Time to First Byte (TTFB)'), ttfbMs, 'ms', ttfbMs <= 800 ? t('reports.performance.good', 'Good') : ttfbMs <= 1800 ? t('reports.performance.needsImprovement', 'Needs Improvement') : t('reports.performance.poor', 'Poor')]);
   }
   if (vitals.SI !== undefined) {
     const siMs = typeof vitals.SI === 'number' ? vitals.SI : 0;
-    rows.push(['Speed Index (SI)', siMs, 'ms', siMs <= 3400 ? 'Good' : siMs <= 5800 ? 'Needs Improvement' : 'Poor']);
+    rows.push([t('reports.performance.speedIndex', 'Speed Index (SI)'), siMs, 'ms', siMs <= 3400 ? t('reports.performance.good', 'Good') : siMs <= 5800 ? t('reports.performance.needsImprovement', 'Needs Improvement') : t('reports.performance.poor', 'Poor')]);
   }
   if (vitals.TBT !== undefined) {
     const tbtMs = typeof vitals.TBT === 'number' ? vitals.TBT : 0;
-    rows.push(['Total Blocking Time (TBT)', tbtMs, 'ms', tbtMs <= 200 ? 'Good' : tbtMs <= 600 ? 'Needs Improvement' : 'Poor']);
+    rows.push([t('reports.performance.csv.totalBlockingTime', 'Total Blocking Time (TBT)'), tbtMs, 'ms', tbtMs <= 200 ? t('reports.performance.good', 'Good') : tbtMs <= 600 ? t('reports.performance.needsImprovement', 'Needs Improvement') : t('reports.performance.poor', 'Poor')]);
   }
 
   rows.push(['', '', '', '']);
 
   // Resource breakdown if available
   if (results.resources) {
-    rows.push(['--- Resource Analysis ---', '', '', '']);
+    rows.push(['--- ' + t('reports.performance.resourceAnalysis', 'Resource Analysis') + ' ---', '', '', '']);
     const resources = results.resources;
-    if (resources.totalSize !== undefined) rows.push(['Total Size', resources.totalSize, 'bytes', '']);
-    if (resources.totalRequests !== undefined) rows.push(['Total Requests', resources.totalRequests, '', '']);
-    if (resources.scripts !== undefined) rows.push(['Scripts', typeof resources.scripts === 'object' ? resources.scripts.count || 0 : resources.scripts, '', '']);
-    if (resources.stylesheets !== undefined) rows.push(['Stylesheets', typeof resources.stylesheets === 'object' ? resources.stylesheets.count || 0 : resources.stylesheets, '', '']);
-    if (resources.images !== undefined) rows.push(['Images', typeof resources.images === 'object' ? resources.images.count || 0 : resources.images, '', '']);
-    if (resources.fonts !== undefined) rows.push(['Fonts', typeof resources.fonts === 'object' ? resources.fonts.count || 0 : resources.fonts, '', '']);
+    if (resources.totalSize !== undefined) rows.push([t('reports.performance.totalSize', 'Total Size'), resources.totalSize, t('reports.performance.csv.bytes', 'bytes'), '']);
+    if (resources.totalRequests !== undefined) rows.push([t('reports.performance.totalRequests', 'Total Requests'), resources.totalRequests, '', '']);
+    if (resources.scripts !== undefined) rows.push([t('reports.performance.csv.scripts', 'Scripts'), typeof resources.scripts === 'object' ? resources.scripts.count || 0 : resources.scripts, '', '']);
+    if (resources.stylesheets !== undefined) rows.push([t('reports.performance.csv.stylesheets', 'Stylesheets'), typeof resources.stylesheets === 'object' ? resources.stylesheets.count || 0 : resources.stylesheets, '', '']);
+    if (resources.images !== undefined) rows.push([t('reports.performance.images', 'Images'), typeof resources.images === 'object' ? resources.images.count || 0 : resources.images, '', '']);
+    if (resources.fonts !== undefined) rows.push([t('reports.performance.fonts', 'Fonts'), typeof resources.fonts === 'object' ? resources.fonts.count || 0 : resources.fonts, '', '']);
     rows.push(['', '', '', '']);
   }
 
   // Recommendations if available
   if (results.recommendations && results.recommendations.length > 0) {
-    rows.push(['--- Recommendations ---', '', '', '']);
+    rows.push(['--- ' + t('reports.common.reportRecommendations', 'Recommendations') + ' ---', '', '', '']);
     results.recommendations.forEach((rec, index) => {
-      const title = rec.title || rec.name || `Recommendation ${index + 1}`;
+      const title = rec.title || rec.name || t('reports.performance.csv.recommendation', 'Recommendation') + ` ${index + 1}`;
       const impact = rec.impact || rec.priority || '';
       const savings = rec.savings || rec.estimatedSavings || '';
       rows.push([title, impact, savings, rec.category || '']);

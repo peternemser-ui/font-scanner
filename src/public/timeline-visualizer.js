@@ -447,7 +447,7 @@ class TimelineVisualizer {
     container.innerHTML = `
       <div class="timeline-header">
         <h3>🕒 Recent Scans</h3>
-        <button class="btn-view-all" onclick="healthTimeline.showFullHistory()">
+        <button class="btn-view-all" data-action="view-full-history" data-history-count="${history.length}">
           View All (${history.length})
         </button>
       </div>
@@ -533,12 +533,25 @@ class TimelineVisualizer {
    */
   formatDate(timestamp) {
     const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
-      day: 'numeric', 
+    // Use centralized i18n formatting if available
+    if (window.i18n?.formatDateTime) {
+      return window.i18n.formatDateTime(date, {
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+    // Fallback with locale detection
+    const locale = window.i18n?.currentLanguage || navigator.language || 'en-US';
+    return date.toLocaleDateString(locale, {
+      month: 'short',
+      day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit'
+      minute: '2-digit',
+      hour12: locale.startsWith('en')
     });
   }
 
@@ -547,8 +560,20 @@ class TimelineVisualizer {
    */
   formatDateShort(timestamp) {
     const date = new Date(timestamp);
-    return date.toLocaleDateString('en-US', { 
-      month: 'short', 
+    // Use centralized i18n formatting if available
+    if (window.i18n?.formatDateTime) {
+      return window.i18n.formatDateTime(date, {
+        month: 'short',
+        day: 'numeric',
+        hour: undefined,
+        minute: undefined,
+        timeZoneName: undefined
+      });
+    }
+    // Fallback with locale detection
+    const locale = window.i18n?.currentLanguage || navigator.language || 'en-US';
+    return date.toLocaleDateString(locale, {
+      month: 'short',
       day: 'numeric'
     });
   }
@@ -604,4 +629,17 @@ if (typeof window !== 'undefined') {
 
 if (typeof module !== 'undefined' && module.exports) {
   module.exports = { TimelineVisualizer, timelineVisualizer };
+}
+
+// Event delegation for timeline actions (CSP compliant)
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', function(e) {
+    const viewHistoryBtn = e.target.closest('[data-action="view-full-history"]');
+    if (viewHistoryBtn) {
+      e.preventDefault();
+      if (window.healthTimeline && typeof window.healthTimeline.showFullHistory === 'function') {
+        window.healthTimeline.showFullHistory();
+      }
+    }
+  });
 }

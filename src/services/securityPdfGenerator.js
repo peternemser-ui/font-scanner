@@ -15,7 +15,8 @@ const {
   getGrade,
   drawScoreSummaryCard,
   drawMetricGrid,
-  drawCard
+  drawCard,
+  trackSection
 } = require('../utils/pdfHelpers');
 
 const {
@@ -56,31 +57,131 @@ class SecurityPdfGenerator {
       { reportsDir: this.reportsDir }
     );
 
+    const reportTitle = 'Security Analysis Report';
+
     try {
-      // Material Design header
+      // Material Design header (Title Page)
       addPdfHeader(
         doc,
-        'Security Analysis Report',
+        reportTitle,
         securityResults.url,
         'Comprehensive security and vulnerability analysis',
         { accentColor: COLORS.error } // Red accent for security
       );
 
+      // Add Table of Contents page
+      doc.addPage();
+      this.addTableOfContents(doc, securityResults);
+
       // Generate report sections with Material Design and charts
+      // Each section is tracked for TOC
+      trackSection(doc, 'Executive Summary', securityResults.overallScore);
       this.addExecutiveSummary(doc, securityResults);
+
+      trackSection(doc, 'SSL/TLS Analysis', securityResults.ssl?.score);
       this.addSSLAnalysis(doc, securityResults.ssl);
+
+      trackSection(doc, 'Security Headers', securityResults.headers?.score);
       this.addSecurityHeaders(doc, securityResults.headers);
+
+      trackSection(doc, 'Vulnerabilities', securityResults.vulnerabilities?.score);
       this.addVulnerabilities(doc, securityResults.vulnerabilities);
-      this.addOWASPCompliance(doc, securityResults.owasp);
+
+      // OWASP compliance is returned as owaspCompliance (percentage) and owaspDetails (breakdown)
+      trackSection(doc, 'OWASP Compliance', securityResults.owaspCompliance);
+      this.addOWASPCompliance(doc, {
+        score: securityResults.owaspCompliance,
+        details: securityResults.owaspDetails
+      }, securityResults);
+
+      trackSection(doc, 'Desktop vs Mobile');
       this.addDesktopMobileComparison(doc, securityResults);
+
+      trackSection(doc, 'Recommendations');
       this.addRecommendations(doc, securityResults.recommendations);
 
       // Use helper to finalize PDF generation
-      return finalizePdfGeneration(doc, stream, filename, filepath, reportId);
+      return finalizePdfGeneration(doc, stream, filename, filepath, reportId, { reportTitle });
     } catch (error) {
       logger.error('Error creating Security PDF:', error);
       throw error;
     }
+  }
+
+  /**
+   * Add Table of Contents
+   */
+  addTableOfContents(doc, results) {
+    doc.fontSize(18)
+       .font('Helvetica-Bold')
+       .fillColor(COLORS.textPrimary)
+       .text('TABLE OF CONTENTS', 50, 50);
+
+    // Red accent bar (for security theme)
+    doc.rect(50, 78, 50, 3)
+       .fillColor(COLORS.error)
+       .fill();
+
+    let currentY = 100;
+
+    const sections = [
+      { title: 'Executive Summary', score: results.overallScore, page: 3 },
+      { title: 'SSL/TLS Analysis', score: results.ssl?.score, page: 4 },
+      { title: 'Security Headers', score: results.headers?.score, page: 5 },
+      { title: 'Vulnerabilities', score: results.vulnerabilities?.score, page: 6 },
+      { title: 'OWASP Compliance', score: results.owaspCompliance, page: 7 },
+      { title: 'Desktop vs Mobile Comparison', page: 8 },
+      { title: 'Recommendations', page: 9 }
+    ];
+
+    sections.forEach((section, index) => {
+      const num = String(index + 1).padStart(2, '0');
+
+      // Number in red
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.error)
+         .text(`${num}.`, 50, currentY, { continued: false });
+
+      // Title
+      doc.fontSize(11)
+         .font('Helvetica')
+         .fillColor(COLORS.textPrimary)
+         .text(section.title, 75, currentY, { continued: false });
+
+      // Dotted line
+      const titleWidth = doc.widthOfString(section.title);
+      const dotsStartX = 75 + titleWidth + 10;
+      const dotsEndX = 480;
+      const dotsCount = Math.floor((dotsEndX - dotsStartX) / 5);
+
+      doc.fontSize(11)
+         .fillColor('#cccccc')
+         .text('.'.repeat(dotsCount), dotsStartX, currentY, { continued: false });
+
+      // Page number
+      doc.fontSize(11)
+         .font('Helvetica-Bold')
+         .fillColor(COLORS.textPrimary)
+         .text(`${section.page}`, 490, currentY, { continued: false });
+
+      // Score badge if available
+      if (section.score !== undefined && section.score !== null) {
+        const scoreColor = getScoreColor(section.score);
+        doc.fontSize(9)
+           .font('Helvetica')
+           .fillColor(scoreColor)
+           .text(`[${Math.round(section.score)}/100]`, 515, currentY, { continued: false });
+      }
+
+      currentY += 28;
+    });
+
+    // Note about page numbers
+    doc.fontSize(8)
+       .font('Helvetica-Oblique')
+       .fillColor('#888888')
+       .text('Page numbers are approximate. See footer for exact page reference.', 50, currentY + 30);
   }
 
   /**
@@ -99,7 +200,7 @@ class SecurityPdfGenerator {
       'SSL/TLS': results.ssl?.score || 0,
       'Headers': results.headers?.score || 0,
       'Vulnerabilities': results.vulnerabilities?.score || 0,
-      'OWASP': results.owasp?.score || 0
+      'OWASP': results.owaspCompliance || 0
     };
 
     // Score summary card with gauge chart
@@ -690,31 +791,92 @@ class SecurityPdfGenerator {
 
   /**
    * OWASP Compliance with Bar Chart
+   * @param {Object} owasp - Object with score (percentage) and optional details
+   * @param {Object} fullResults - Full security results for deriving OWASP status
    */
-  addOWASPCompliance(doc, owasp) {
-    if (!owasp) return;
+  addOWASPCompliance(doc, owasp, fullResults = {}) {
+    // Support both old format (owasp.a01-a10) and new format (owasp.score + owasp.details)
+    const complianceScore = owasp?.score ?? owasp?.complianceScore ?? 0;
+    const details = owasp?.details || {};
 
     checkPageBreakNeeded(doc, 450, { sectionType: 'chart' });
     addMaterialSectionHeader(doc, 'OWASP Top 10 Compliance', {
       description: 'Assessment against OWASP Top 10 security risks'
     });
 
+    // Build OWASP items from details or derive from fullResults
     const owaspTop10 = [
-      { id: 'A01', name: 'Broken Access Control', status: owasp.a01 },
-      { id: 'A02', name: 'Cryptographic Failures', status: owasp.a02 },
-      { id: 'A03', name: 'Injection', status: owasp.a03 },
-      { id: 'A04', name: 'Insecure Design', status: owasp.a04 },
-      { id: 'A05', name: 'Security Misconfiguration', status: owasp.a05 },
-      { id: 'A06', name: 'Vulnerable Components', status: owasp.a06 },
-      { id: 'A07', name: 'Authentication Failures', status: owasp.a07 },
-      { id: 'A08', name: 'Data Integrity Failures', status: owasp.a08 },
-      { id: 'A09', name: 'Logging Failures', status: owasp.a09 },
-      { id: 'A10', name: 'Server-Side Request Forgery', status: owasp.a10 }
+      {
+        id: 'A01',
+        name: 'Broken Access Control',
+        status: details.a01 ?? (fullResults.headers?.details?.['X-Frame-Options']?.present ? 'pass' : 'fail'),
+        check: 'X-Frame-Options header prevents clickjacking'
+      },
+      {
+        id: 'A02',
+        name: 'Cryptographic Failures',
+        status: details.a02 ?? (fullResults.ssl?.valid && fullResults.ssl?.score >= 80 ? 'pass' : 'fail'),
+        check: 'Valid SSL/TLS with strong encryption'
+      },
+      {
+        id: 'A03',
+        name: 'Injection',
+        status: details.a03 ?? (fullResults.headers?.details?.['Content-Security-Policy']?.present ? 'pass' : 'fail'),
+        check: 'Content Security Policy prevents XSS injection'
+      },
+      {
+        id: 'A04',
+        name: 'Insecure Design',
+        status: details.a04 ?? (fullResults.headers?.score >= 50 ? 'pass' : 'fail'),
+        check: 'Security headers demonstrate secure design practices'
+      },
+      {
+        id: 'A05',
+        name: 'Security Misconfiguration',
+        status: details.a05 ?? (fullResults.headers?.score >= 70 ? 'pass' : 'fail'),
+        check: 'Properly configured security headers'
+      },
+      {
+        id: 'A06',
+        name: 'Vulnerable Components',
+        status: details.a06 ?? ((fullResults.vulnerabilities?.critical || 0) === 0 ? 'pass' : 'fail'),
+        check: 'No critical vulnerabilities detected'
+      },
+      {
+        id: 'A07',
+        name: 'Authentication Failures',
+        status: details.a07 ?? (fullResults.cookies?.score >= 70 || fullResults.cookies?.total === 0 ? 'pass' : 'fail'),
+        check: 'Cookies secured with HttpOnly, Secure, SameSite'
+      },
+      {
+        id: 'A08',
+        name: 'Data Integrity Failures',
+        status: details.a08 ?? (fullResults.thirdPartyScripts?.score >= 50 || fullResults.thirdPartyScripts?.total === 0 ? 'pass' : 'fail'),
+        check: 'Third-party scripts use SRI for integrity'
+      },
+      {
+        id: 'A09',
+        name: 'Logging Failures',
+        status: details.a09 ?? 'partial', // Cannot verify server-side logging
+        check: 'Server-side logging (cannot verify client-side)'
+      },
+      {
+        id: 'A10',
+        name: 'Server-Side Request Forgery',
+        status: details.a10 ?? 'partial', // Cannot verify SSRF protection client-side
+        check: 'SSRF protection (cannot verify client-side)'
+      }
     ];
 
-    // Calculate pass rate
+    // Calculate pass rate from items
     const passCount = owaspTop10.filter(item => item.status === 'pass').length;
-    const passRate = (passCount / owaspTop10.length) * 100;
+    const partialCount = owaspTop10.filter(item => item.status === 'partial').length;
+    const failCount = owaspTop10.filter(item => item.status === 'fail').length;
+
+    // Use provided score or calculate from items
+    const displayScore = complianceScore > 0
+      ? complianceScore
+      : Math.round(((passCount + partialCount * 0.5) / owaspTop10.length) * 100);
 
     // Pass rate card
     drawCard(doc, 50, doc.y, 512, 60);
@@ -724,16 +886,16 @@ class SecurityPdfGenerator {
        .fillColor(COLORS.textPrimary)
        .text('OWASP Compliance Rate', 70, doc.y + 15);
 
-    const rateColor = getScoreColor(passRate);
+    const rateColor = getScoreColor(displayScore);
     doc.fontSize(24)
        .font('Helvetica-Bold')
        .fillColor(rateColor)
-       .text(`${Math.round(passRate)}%`, 350, doc.y - 8);
+       .text(`${Math.round(displayScore)}%`, 350, doc.y - 8);
 
     doc.fontSize(10)
        .font('Helvetica')
        .fillColor(COLORS.textSecondary)
-       .text(`${passCount}/${owaspTop10.length} checks passed`, 350, doc.y + 2);
+       .text(`${passCount} pass, ${partialCount} partial, ${failCount} fail`, 350, doc.y + 2);
 
     doc.y += 70;
     doc.moveDown(0.5);
@@ -784,9 +946,9 @@ class SecurityPdfGenerator {
       description: 'Comparison of security metrics across device types'
     });
 
-    // Dual gauge charts
-    const desktopScore = results.desktop.overallScore || 0;
-    const mobileScore = results.mobile.overallScore || 0;
+    // Dual gauge charts - use securityScore (device-specific score from Lighthouse analysis)
+    const desktopScore = results.desktop?.securityScore || 0;
+    const mobileScore = results.mobile?.securityScore || 0;
 
     // Desktop gauge
     drawGaugeChart(doc, desktopScore, 'Desktop', 150, doc.y + 80, {
@@ -808,26 +970,28 @@ class SecurityPdfGenerator {
     doc.moveDown(1);
 
     // Comparison chart for detailed metrics
+    // Note: SSL, headers, vulnerabilities are analyzed once (at top-level), not per-device
+    // Desktop/mobile only differ in securityScore (HTTPS + CSP + HSTS + mixed content)
     const metrics = [
       {
-        label: 'Overall Score',
+        label: 'Device Security Score',
         value1: desktopScore,
         value2: mobileScore
       },
       {
-        label: 'SSL/TLS Score',
-        value1: results.desktop.ssl?.score || 0,
-        value2: results.mobile.ssl?.score || 0
+        label: 'HTTPS Enabled',
+        value1: results.desktop?.https ? 100 : 0,
+        value2: results.mobile?.https ? 100 : 0
       },
       {
-        label: 'Headers Score',
-        value1: results.desktop.headers?.score || 0,
-        value2: results.mobile.headers?.score || 0
+        label: 'CSP Header',
+        value1: results.desktop?.csp ? 100 : 0,
+        value2: results.mobile?.csp ? 100 : 0
       },
       {
-        label: 'Vulnerability Score',
-        value1: results.desktop.vulnerabilities?.score || 0,
-        value2: results.mobile.vulnerabilities?.score || 0
+        label: 'HSTS Header',
+        value1: results.desktop?.hsts ? 100 : 0,
+        value2: results.mobile?.hsts ? 100 : 0
       }
     ];
 
@@ -848,22 +1012,22 @@ class SecurityPdfGenerator {
 
     doc.y += comparisonHeight + 10;
 
-    // Critical issues comparison
-    const desktopCritical = results.desktop.vulnerabilities?.critical || 0;
-    const mobileCritical = results.mobile.vulnerabilities?.critical || 0;
+    // Mixed content comparison (per-device metric)
+    const desktopMixed = results.desktop?.mixedContent || 0;
+    const mobileMixed = results.mobile?.mixedContent || 0;
 
-    if (desktopCritical > 0 || mobileCritical > 0) {
+    if (desktopMixed > 0 || mobileMixed > 0) {
       doc.moveDown(0.5);
 
       doc.fontSize(10)
          .font('Helvetica-Bold')
          .fillColor(COLORS.textPrimary)
-         .text('Critical Issues:', 50, doc.y);
+         .text('Mixed Content Issues:', 50, doc.y);
 
       doc.fontSize(10)
          .font('Helvetica')
-         .fillColor(COLORS.error)
-         .text(`Desktop: ${desktopCritical} | Mobile: ${mobileCritical}`, 160, doc.y - 1);
+         .fillColor(COLORS.warning)
+         .text(`Desktop: ${desktopMixed} | Mobile: ${mobileMixed}`, 180, doc.y - 1);
     }
 
     doc.moveDown(1);

@@ -54,7 +54,11 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
   }
 
   // Validate report type
-  const validReportTypes = ['seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence'];
+  const validReportTypes = [
+    'seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence',
+    'hosting', 'core-web-vitals', 'ip-reputation', 'broken-links', 'local-seo',
+    'gdpr', 'mobile', 'cro', 'site-crawler', 'brand-consistency', 'competitive'
+  ];
   if (!validReportTypes.includes(reportType)) {
     return res.status(400).json({
       success: false,
@@ -71,6 +75,17 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
     security: 'security',
     fonts: reportData?.analyzerKey || 'enhanced-fonts',
     'tag-intelligence': 'tag-intelligence',
+    hosting: 'hosting-analyzer',
+    'core-web-vitals': 'core-web-vitals',
+    'ip-reputation': 'ip-reputation',
+    'broken-links': 'broken-links',
+    'local-seo': 'local-seo',
+    gdpr: 'gdpr-compliance',
+    mobile: 'mobile-analyzer',
+    cro: 'cro-analyzer',
+    'site-crawler': 'site-crawler',
+    'brand-consistency': 'brand-consistency',
+    competitive: 'competitive-analysis',
   };
 
   const resolvedReportId = resolveReportId({
@@ -252,7 +267,11 @@ const generatePDF = asyncHandler(async (req, res) => {
     });
   }
 
-  const validReportTypes = ['seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence'];
+  const validReportTypes = [
+    'seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence',
+    'hosting', 'core-web-vitals', 'ip-reputation', 'broken-links', 'local-seo',
+    'gdpr', 'mobile', 'cro', 'site-crawler', 'brand-consistency', 'competitive'
+  ];
   if (!validReportTypes.includes(reportType)) {
     return res.status(400).json({
       success: false,
@@ -269,6 +288,17 @@ const generatePDF = asyncHandler(async (req, res) => {
     security: 'security',
     fonts: reportData?.analyzerKey || 'enhanced-fonts',
     'tag-intelligence': 'tag-intelligence',
+    hosting: 'hosting-analyzer',
+    'core-web-vitals': 'core-web-vitals',
+    'ip-reputation': 'ip-reputation',
+    'broken-links': 'broken-links',
+    'local-seo': 'local-seo',
+    gdpr: 'gdpr-compliance',
+    mobile: 'mobile-analyzer',
+    cro: 'cro-analyzer',
+    'site-crawler': 'site-crawler',
+    'brand-consistency': 'brand-consistency',
+    competitive: 'competitive-analysis',
   };
 
   const resolvedReportId = resolveReportId({
@@ -279,8 +309,70 @@ const generatePDF = asyncHandler(async (req, res) => {
   });
 
   // Check entitlement - user must have paid access
+  // In development mode, allow access for testing
+  const isDev = process.env.NODE_ENV !== 'production';
   const user = req.user; // Attached by optionalAuth middleware
-  const canAccess = await stripeService.canAccessPaid(user, resolvedReportId);
+  let canAccess = isDev || await stripeService.canAccessPaid(user, resolvedReportId);
+
+  // If standard check fails, check if client has session-verified purchase
+  // This handles the case where webhook didn't fire (local dev) but user did pay
+  if (!canAccess && user) {
+    // Check if client is claiming session-verified access
+    const sessionVerified = req.headers['x-session-verified'] === 'true';
+    const sessionCheckoutId = req.headers['x-checkout-session-id'];
+
+    if (sessionVerified && sessionCheckoutId) {
+      logger.info('Attempting session-verified purchase fallback', {
+        reportId: resolvedReportId,
+        userId: user.id,
+        sessionId: sessionCheckoutId
+      });
+
+      // Try to verify and record the purchase
+      try {
+        const verifyResult = await stripeService.verifyAndRecordPurchase(sessionCheckoutId, user.id);
+        if (verifyResult.success) {
+          logger.info('Session-verified purchase recorded successfully', {
+            reportId: resolvedReportId,
+            userId: user.id
+          });
+          canAccess = true;
+        }
+      } catch (e) {
+        logger.warn('Session-verified purchase fallback failed', { error: e.message });
+      }
+    }
+
+    // Also check if a recent billing session exists for this user/report
+    // This handles the case where session markers exist but record wasn't persisted
+    if (!canAccess) {
+      try {
+        const { getDatabase } = require('../db');
+        const db = getDatabase();
+        // Check billing_sessions table for a recent paid session for this report
+        const recentSession = await db.get(
+          `SELECT session_id FROM billing_sessions
+           WHERE report_id = ? AND payment_status = 'paid'
+           AND purchase_type = 'single_report'
+           ORDER BY completed_at DESC LIMIT 1`,
+          [resolvedReportId]
+        );
+
+        if (recentSession) {
+          logger.info('Found paid billing session, attempting to record purchase', {
+            reportId: resolvedReportId,
+            sessionId: recentSession.session_id
+          });
+          const verifyResult = await stripeService.verifyAndRecordPurchase(recentSession.session_id, user.id);
+          if (verifyResult.success) {
+            canAccess = true;
+          }
+        }
+      } catch (e) {
+        logger.warn('Billing session lookup failed', { error: e.message });
+      }
+    }
+  }
 
   if (!canAccess) {
     logger.info('PDF generation blocked - paid access required', {
@@ -304,51 +396,141 @@ const generatePDF = asyncHandler(async (req, res) => {
     analyzerKey: analyzerKeyByType[reportType]
   };
 
+  // --- Resolve locale from DB (authoritative), not from client ---
+  const { getDatabase } = require('../db');
+  const db = getDatabase();
+  let locale = 'en';
   try {
-    let pdfResult;
+    const scanRow = await db.get(
+      'SELECT locale FROM scans WHERE report_id = ? ORDER BY created_at DESC LIMIT 1',
+      [resolvedReportId]
+    );
+    if (scanRow?.locale) {
+      locale = scanRow.locale;
+    }
+  } catch (e) {
+    logger.warn('Could not look up scan locale, using fallback', { error: e.message });
+  }
+  // Fall back to locale from pageUrl path (e.g., /ja/seo-analyzer.html) or client lang hint
+  if (locale === 'en') {
+    const SUPPORTED_LOCALES = ['en', 'es', 'fr', 'de', 'pt', 'ja', 'zh', 'ru'];
+    const pageUrl = req.body.pageUrl || '';
+    const pathParts = pageUrl.split('/').filter(Boolean);
+    const urlLocale = pathParts[0];
+    if (urlLocale && SUPPORTED_LOCALES.includes(urlLocale) && urlLocale !== 'en') {
+      locale = urlLocale;
+    } else if (req.body.lang && req.body.lang !== 'en') {
+      locale = req.body.lang;
+    }
+  }
 
-    switch (reportType) {
-      case 'seo':
-        pdfResult = await seoPdfGenerator.generateReport(reportDataWithId);
-        break;
-      case 'performance':
-        pdfResult = await performancePdfGenerator.generateReport(reportDataWithId);
-        break;
-      case 'accessibility':
-        pdfResult = await accessibilityPdfGenerator.generateReport(reportDataWithId);
-        break;
-      case 'security':
-        pdfResult = await securityPdfGenerator.generateReport(reportDataWithId);
-        break;
-      case 'fonts':
-        pdfResult = await pdfReportGenerator.generateComprehensiveReport(reportDataWithId);
-        break;
-      case 'tag-intelligence':
-        pdfResult = await tagIntelligencePdfGenerator.generateReport(reportDataWithId);
-        break;
-      default:
-        throw new Error(`Unknown report type: ${reportType}`);
+  logger.info('PDF locale resolved', { locale, reportId: resolvedReportId });
+
+  // --- Map reportType to PDF template (new system) or analyzer page (legacy) ---
+  const PDF_TEMPLATE_MAP = {
+    seo: 'pdf-templates/seo-report.html',
+    security: 'pdf-templates/security-report.html',
+    accessibility: 'pdf-templates/accessibility-report.html',
+    performance: 'pdf-templates/performance-report.html',
+    fonts: 'pdf-templates/fonts-report.html',
+    'tag-intelligence': 'pdf-templates/tag-intelligence-report.html',
+    hosting: 'pdf-templates/hosting-report.html',
+    'core-web-vitals': 'pdf-templates/core-web-vitals-report.html',
+    'ip-reputation': 'pdf-templates/ip-reputation-report.html',
+    'broken-links': 'pdf-templates/broken-links-report.html',
+    'local-seo': 'pdf-templates/local-seo-report.html',
+    gdpr: 'pdf-templates/gdpr-report.html',
+    mobile: 'pdf-templates/mobile-report.html',
+    cro: 'pdf-templates/cro-report.html',
+    'site-crawler': 'pdf-templates/site-crawler-report.html',
+    'brand-consistency': 'pdf-templates/brand-consistency-report.html',
+    competitive: 'pdf-templates/competitive-report.html',
+  };
+
+  const analyzerPageMap = {
+    seo: 'seo-analyzer.html',
+    performance: 'performance-hub.html',
+    accessibility: 'accessibility-analyzer.html',
+    security: 'security-analyzer.html',
+    fonts: 'enhanced-fonts.html',
+    'tag-intelligence': 'tag-intelligence.html',
+    hosting: 'hosting-analyzer.html',
+    'core-web-vitals': 'core-web-vitals.html',
+    'ip-reputation': 'ip-reputation-analyzer.html',
+    'broken-links': 'broken-links.html',
+    'local-seo': 'local-seo.html',
+    gdpr: 'gdpr-compliance.html',
+    mobile: 'mobile-analyzer.html',
+    cro: 'cro-analyzer.html',
+    'site-crawler': 'site-crawler.html',
+    'brand-consistency': 'brand-consistency.html',
+    competitive: 'competitive-analysis.html',
+  };
+
+  const port = process.env.PORT || 3000;
+  const puppeteerPdfService = require('../services/puppeteerPdfService');
+  const fs = require('fs');
+
+  // Get auth token from request to pass to Puppeteer
+  const authToken = req.headers.authorization?.replace('Bearer ', '') || '';
+  const cookies = authToken ? [{
+    name: 'sm_auth_token',
+    value: authToken,
+    domain: 'localhost'
+  }] : [];
+
+  const templatePage = PDF_TEMPLATE_MAP[reportType];
+  const usePdfTemplate = !!templatePage;
+
+  try {
+    let result;
+
+    if (usePdfTemplate) {
+      // --- NEW: Render dedicated PDF template ---
+      const templateUrl = `http://localhost:${port}/${locale}/${templatePage}?report_id=${resolvedReportId}&locale=${locale}`;
+      logger.info('Using PDF template', { reportType, templateUrl });
+
+      result = await puppeteerPdfService.generatePdfFromTemplate({
+        templateUrl,
+        reportId: resolvedReportId || `gen-${Date.now()}`,
+        reportType,
+        cookies,
+        lang: locale,
+        reportData: reportDataWithId,
+        analyzedUrl: reportData?.url || reportData?.normalizedUrl
+      });
+    } else {
+      // --- LEGACY: Render the actual report page via Puppeteer ---
+      const analyzerPage = analyzerPageMap[reportType] || `${reportType}.html`;
+      const printUrl = `http://localhost:${port}/${locale}/${analyzerPage}?report_id=${resolvedReportId}&print=1&locale=${locale}`;
+      logger.info('Using legacy Puppeteer path', { reportType, printUrl });
+
+      result = await puppeteerPdfService.generatePdfFromUrl({
+        url: printUrl,
+        reportId: resolvedReportId || `gen-${Date.now()}`,
+        reportType,
+        cookies,
+        lang: locale,
+        expandAccordions: true,
+        isPaid: true,
+        reportData: reportDataWithId,
+        analyzedUrl: reportData?.url || reportData?.normalizedUrl
+      });
     }
 
-    logger.info(`PDF generated successfully`, { filename: pdfResult.filename, reportType });
-
-    const fs = require('fs');
-
-    // Stream the PDF file
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${pdfResult.filename}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
 
-    const fileStream = fs.createReadStream(pdfResult.filepath);
+    const fileStream = fs.createReadStream(result.filepath);
     fileStream.pipe(res);
-
     fileStream.on('error', (err) => {
       logger.error('Error streaming PDF:', err);
       if (!res.headersSent) {
-        res.status(500).json({
-          success: false,
-          error: 'Error streaming PDF report'
-        });
+        res.status(500).json({ success: false, error: 'Error streaming PDF report' });
       }
+    });
+    fileStream.on('end', () => {
+      setTimeout(() => { fs.unlink(result.filepath, () => {}); }, 5000);
     });
 
   } catch (error) {

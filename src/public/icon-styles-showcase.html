@@ -229,10 +229,9 @@
                     <h2 style="color: #00ff41; margin: 0 0 0.5rem 0;">Preview Your Choice</h2>
                     <p style="color: #808080; margin: 0;">Pick a style below, then see it live in the hosting analyzer</p>
                 </div>
-                <a href="http://localhost:3000/hosting-analyzer.html?url=https%3A%2F%2Fvail.com" 
+                <a href="http://localhost:3000/hosting-analyzer.html?url=https%3A%2F%2Fvail.com"
                    style="background: linear-gradient(135deg, #00d9ff, #0099cc); color: #000; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; transition: all 0.2s ease; display: inline-block;"
-                   onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(0, 217, 255, 0.4)';"
-                   onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+                   data-action="hover-scale">
                     → Open Live Analyzer (vail.com)
                 </a>
             </div>
@@ -607,13 +606,13 @@
         <footer>
             <p>💡 Each style has unique strengths. Choose based on your brand identity and audience.</p>
             <p style="margin-top: 1rem; font-size: 0.85rem;">Would you like me to implement any of these styles across the hosting analyzer?</p>
-            <a href="http://localhost:3000/hosting-analyzer.html?url=https%3A%2F%2Fvail.com" 
+            <a href="http://localhost:3000/hosting-analyzer.html?url=https%3A%2F%2Fvail.com"
                style="display: inline-block; margin-top: 1.5rem; background: linear-gradient(135deg, #00d9ff, #0099cc); color: #000; text-decoration: none; padding: 0.75rem 1.5rem; border-radius: 6px; font-weight: 600; transition: all 0.2s ease;"
-               onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 4px 15px rgba(0, 217, 255, 0.4)';"
-               onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none';">
+               data-action="hover-scale">
                 → View Live on Hosting Analyzer (vail.com)
             </a>
         </footer>
     </div>
+    <script src="/js/app-events.js"></script>
 </body>
 </html>

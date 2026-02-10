@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/seo-analyzer.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/seo-analyzer.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/seo-analyzer.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/seo-analyzer.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/seo-analyzer.html" />
 
     <!-- Open Graph / Facebook -->
@@ -80,7 +81,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
 
     <!-- JSON-LD Structured Data -->
@@ -179,7 +179,9 @@
     <script src="/pro-utils.js"></script>
     <script src="/scan-context.js"></script>
     <script src="/nav-template.js"></script>
-    
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
+
     <!-- Analyzer Loading System -->
     <script src="/analyzer-loader.js"></script>
     
@@ -191,12 +193,12 @@
     <!-- PDF Export Libraries (local copies for reliability) -->
     <script src="/lib/html2canvas.min.js"></script>
     <script src="/lib/jspdf.umd.min.js"></script>
-    <script src="/lib/exceljs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js" crossorigin="anonymous"></script>
     <script src="/pdf-export-utility.js?v=2"></script>
     <script src="/pdf-export-integration.js?v=2"></script>
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/reportAccordion.js"></script>
     <script src="/js/components/PageShell.js"></script>
@@ -211,11 +213,15 @@
 
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/components/PricingModal.js"></script>
+    <script src="/js/components/UsagePill.js"></script>
 
     <!-- Report Storage (for saving/loading report snapshots) -->
     <script src="/js/reportStorage.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <!-- SEO Analyzer Script -->
     <script src="/seo-script.js"></script>

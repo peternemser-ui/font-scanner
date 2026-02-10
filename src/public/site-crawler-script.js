@@ -6,6 +6,34 @@
 // Deterministic analyzer key (stable forever)
 window.SM_ANALYZER_KEY = 'site-crawler';
 
+// Translation helper - evaluates at runtime to ensure i18n is loaded
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
+// Returns crawl steps with translations evaluated at runtime
+function getCrawlSteps() {
+  return [
+    { label: t('loader.connectingToWebsite', 'Connecting to website'), detail: t('loader.loadingPageAccess', 'Loading page and checking access...') },
+    { label: t('loader.checkingSitemap', 'Checking sitemap'), detail: t('loader.parsingSitemap', 'Parsing sitemap.xml for page discovery...') },
+    { label: t('loader.discoveringPages', 'Discovering pages'), detail: t('loader.discoveringPagesDetail', 'Following links and crawling pages...') },
+    { label: t('loader.processingResults', 'Processing results'), detail: t('loader.compilingDiscoveredPages', 'Compiling discovered pages...') }
+  ];
+}
+
 // ============================================================
 // PRE-DOMCONTENTLOADED SETUP
 // These must run BEFORE DOMContentLoaded to handle billing return
@@ -63,13 +91,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loader = new AnalyzerLoader('loadingContainer');
   }
 
-  // Define crawl steps
-  const crawlSteps = [
-    { label: 'Connecting to website', detail: 'Loading page and checking access...' },
-    { label: 'Checking sitemap', detail: 'Parsing sitemap.xml for page discovery...' },
-    { label: 'Discovering pages', detail: 'Following links and crawling pages...' },
-    { label: 'Processing results', detail: 'Compiling discovered pages...' }
-  ];
+  // NOTE: crawlSteps evaluated lazily in startCrawl() so i18n translations are loaded
 
   // Handle crawl
   crawlButton.addEventListener('click', startCrawl);
@@ -148,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function startCrawl() {
     const url = urlInput.value.trim();
     if (!url) {
-      showError('Please enter a valid URL');
+      showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
       return;
     }
 
@@ -159,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     crawlButton.disabled = true;
 
     if (loader) {
-      loader.start(crawlSteps, '🕷️ CRAWLING SITE', 60);
+      loader.start(getCrawlSteps(), '🕷️ ' + t('loader.crawlingSite', 'SITE CRAWLER'), 60);
       
       // Add ASCII art patience message
       addPatienceMessage(loadingContainer);
@@ -180,9 +202,13 @@ document.addEventListener('DOMContentLoaded', () => {
       window.SM_SCAN_STARTED_AT = scanStartedAt;
       document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
 
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
       const response = await fetch('/api/crawl', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify({ url, options, scanStartedAt })
       });
 
@@ -190,7 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Crawl failed');
+        if (error.code === 'SCAN_QUOTA_EXCEEDED') {
+          const limit = error.scansLimit || 10;
+          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        }
+        throw new Error(error.message || error.error || t('reports.crawler.crawlFailed', 'Crawl failed'));
       }
 
       const data = await response.json();
@@ -211,9 +241,13 @@ document.addEventListener('DOMContentLoaded', () => {
         setTimeout(() => {
           loadingContainer.style.display = 'none';
           displayResults(data);
+          window.__REPORT_READY__ = true;
+          window.dispatchEvent(new CustomEvent('report:ready'));
         }, 800);
       } else {
         displayResults(data);
+        window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('report:ready'));
       }
 
     } catch (error) {
@@ -275,7 +309,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Check if shared components are loaded
     if (typeof ReportShell === 'undefined' || typeof ReportAccordion === 'undefined') {
       console.error('Shared report components not loaded');
-      resultsContent.innerHTML = '<div style="color: red; padding: 2rem;">Error: Report components failed to load. Please refresh the page.</div>';
+      resultsContent.innerHTML = `<div style="color: red; padding: 2rem;">${t('reports.crawler.errorComponentsFailedToLoad', 'Error: Report components failed to load. Please refresh the page.')}</div>`;
       return;
     }
 
@@ -328,26 +362,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const sections = [
       {
         id: 'crawl-config',
-        title: 'Crawl Configuration',
+        title: t('reports.crawler.crawlConfiguration', 'Crawl Configuration'),
         scoreTextRight: null,
         contentHTML: renderCrawlConfigContent(data)
       },
       {
         id: 'site-structure',
-        title: 'Site Structure',
-        scoreTextRight: `${Object.keys(siteStructure.children).length} sections`,
+        title: t('reports.crawler.siteStructure', 'Site Structure'),
+        scoreTextRight: t('reports.crawler.sectionsCount', '{{count}} sections', { count: Object.keys(siteStructure.children).length }),
         contentHTML: renderSiteStructureContent(siteStructure)
       },
       {
         id: 'tech-hosting',
-        title: 'Technology & Infrastructure',
+        title: t('reports.crawler.techInfrastructure', 'Technology & Infrastructure'),
         scoreTextRight: null,
         contentHTML: renderTechHostingContent(techStack, hostingInfo, siteStructure, pages)
       },
       // PRO sections below
       {
         id: 'visual-sitemap',
-        title: 'Visual Sitemap',
+        title: t('reports.crawler.visualSitemap', 'Visual Sitemap'),
         scoreTextRight: null,
         isPro: true,
         locked: !isUnlocked,
@@ -357,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         id: 'discovered-pages',
-        title: `Discovered Pages & Export (${pages.length})`,
+        title: t('reports.crawler.discoveredPagesExport', 'Discovered Pages & Export ({{count}})', { count: pages.length }),
         scoreTextRight: pages.length,
         isPro: true,
         locked: !isUnlocked,
@@ -367,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         id: 'report-recommendations',
-        title: 'Fix Code + Recommendations',
+        title: t('reports.crawler.fixCodeRecommendations', 'Fix Code + Recommendations'),
         scoreTextRight: data.results?.pagesDiscovered || pages.length,
         isPro: true,
         locked: !isUnlocked,
@@ -389,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
           url: data.url,
           timestamp: scanStartedAt,
           mode: 'crawler',
-          title: 'Site Crawler Report',
+          title: t('reports.crawler.title', 'Site Crawler Report'),
           subtitle: '',
           summary,
           sections,
@@ -398,8 +432,8 @@ document.addEventListener('DOMContentLoaded', () => {
           proBlockOptions: {
             context: 'crawler',
             features: ['pdf', 'csv', 'share'],
-            title: 'Unlock Report',
-            subtitle: 'PDF export, share link, export data, and fix packs for this scan.',
+            title: t('reports.common.unlockReport', 'Unlock Report'),
+            subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
             reportId
           }
         })
@@ -417,9 +451,16 @@ document.addEventListener('DOMContentLoaded', () => {
       window.CreditsManager.renderPaywallState(reportId);
     }
 
-    // If already unlocked, reveal PRO content
+    // If already unlocked, reveal PRO content and initialize VisualSitemap
     if (isUnlocked) {
       revealCrawlerProContent();
+
+      // Initialize interactive VisualSitemap (after DOM settles)
+      if (window.VisualSitemap && typeof window.VisualSitemap.init === 'function') {
+        setTimeout(() => {
+          window.VisualSitemap.init('main', { siteStructure, hostname, pages });
+        }, 100);
+      }
     }
 
     // When the report is unlocked, reveal the Fix Code section content
@@ -455,6 +496,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         revealCrawlerProContent();
+
+        // Initialize interactive VisualSitemap after unlock
+        if (window.VisualSitemap && typeof window.VisualSitemap.init === 'function') {
+          setTimeout(() => {
+            window.VisualSitemap.init('main', {
+              siteStructure: crawlStructure,
+              hostname: crawlHostname,
+              pages: crawlPages
+            });
+          }, 100);
+        }
 
         if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
           window.CreditsManager.renderPaywallState(unlockedId);
@@ -504,35 +556,40 @@ document.addEventListener('DOMContentLoaded', () => {
     return `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem;">
         <div>
-          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">Max Pages</div>
-          <div style="font-weight: 600;">${data.options?.maxPages || 'N/A'}</div>
+          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">${t('reports.crawler.maxPages', 'Max Pages')}</div>
+          <div style="font-weight: 600;">${data.options?.maxPages || t('reports.common.notAvailable', 'N/A')}</div>
         </div>
         <div>
-          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">Max Depth</div>
-          <div style="font-weight: 600;">${data.options?.maxDepth || 'N/A'}</div>
+          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">${t('reports.crawler.maxDepth', 'Max Depth')}</div>
+          <div style="font-weight: 600;">${data.options?.maxDepth || t('reports.common.notAvailable', 'N/A')}</div>
         </div>
         <div>
-          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">Sitemap</div>
-          <div style="font-weight: 600;">${data.options?.includeSitemap ? '✓ Enabled' : '✗ Disabled'}</div>
+          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">${t('reports.crawler.sitemap', 'Sitemap')}</div>
+          <div style="font-weight: 600;">${data.options?.includeSitemap ? t('reports.crawler.enabled', '✓ Enabled') : t('reports.crawler.disabled', '✗ Disabled')}</div>
         </div>
         <div>
-          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">Robots.txt</div>
-          <div style="font-weight: 600;">${data.options?.respectRobotsTxt ? '✓ Respected' : '✗ Ignored'}</div>
+          <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">${t('reports.crawler.robotsTxt', 'Robots.txt')}</div>
+          <div style="font-weight: 600;">${data.options?.respectRobotsTxt ? t('reports.crawler.respected', '✓ Respected') : t('reports.crawler.ignored', '✗ Ignored')}</div>
         </div>
       </div>
     `;
   }
 
   function renderVisualSitemapContent(siteStructure, hostname) {
+    // Use new interactive VisualSitemap component if available
+    if (window.VisualSitemap && typeof window.VisualSitemap.renderPlaceholder === 'function') {
+      return window.VisualSitemap.renderPlaceholder('main');
+    }
+    // Fallback to legacy static SVG diagram
     return `
       <div style="margin-bottom: 1rem; display: flex; gap: 1rem; flex-wrap: wrap; align-items: center;">
-        <button onclick="downloadSitemapImage()" class="text-btn" title="Save Image">
+        <button data-action="download-sitemap-image" class="text-btn" title="${t('reports.crawler.saveImage', 'Save Image')}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
             <polyline points="7 10 12 15 17 10"/>
             <line x1="12" y1="15" x2="12" y2="3"/>
           </svg>
-          Save
+          ${t('reports.crawler.save', 'Save')}
         </button>
       </div>
       <div id="sitemapDiagram" style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: var(--radius-lg); padding: 2rem; overflow-x: auto;">
@@ -554,7 +611,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;">
         <div class="card">
           <div class="card__header">
-            <h3 class="card__title">Technology Stack</h3>
+            <h3 class="card__title">${t('reports.crawler.technologyStack', 'Technology Stack')}</h3>
           </div>
           <div class="card__body">
             ${renderTechStack(techStack)}
@@ -562,7 +619,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="card">
           <div class="card__header">
-            <h3 class="card__title">Hosting & Infrastructure</h3>
+            <h3 class="card__title">${t('reports.crawler.hostingInfrastructure', 'Hosting & Infrastructure')}</h3>
           </div>
           <div class="card__body">
             ${renderHostingInfo(hostingInfo)}
@@ -570,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="card">
           <div class="card__header">
-            <h3 class="card__title">Page Statistics</h3>
+            <h3 class="card__title">${t('reports.crawler.pageStatistics', 'Page Statistics')}</h3>
           </div>
           <div class="card__body">
             ${renderPageStats(siteStructure, pages)}
@@ -583,15 +640,15 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderDiscoveredPagesContent(pages, siteStructure) {
     return `
       <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <input type="text" id="pageSearch" placeholder="🔍 Filter pages..." 
-          oninput="filterPages(this.value)"
+        <input type="text" id="pageSearch" placeholder="${t('reports.crawler.filterPages', '🔍 Filter pages...')}"
+          data-action="filter-pages"
           class="input input-sm" style="min-width: 200px;">
-        <select id="sectionFilter" onchange="filterBySection(this.value)" class="input input-sm">
-          <option value="">All Sections</option>
+        <select id="sectionFilter" data-action="filter-by-section" class="input input-sm">
+          <option value="">${t('reports.crawler.allSections', 'All Sections')}</option>
           ${Object.keys(siteStructure.children).map(section => `<option value="${section}">/${section}/</option>`).join('')}
         </select>
-        <button onclick="toggleViewMode()" id="viewModeBtn" class="btn btn-secondary btn-sm">
-          📁 Group View
+        <button data-action="toggle-view-mode" id="viewModeBtn" class="btn btn-secondary btn-sm">
+          ${t('reports.crawler.groupView', '📁 Group View')}
         </button>
       </div>
       
@@ -609,14 +666,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <a href="${page}" target="_blank" rel="noopener" style="flex: 1; word-break: break-all;">${formatPageUrl(page)}</a>
             <span style="background: ${pageType.color}; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; white-space: nowrap;">${pageType.label}</span>
             <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-sm" onclick="window.open('/tag-intelligence.html?url=${encodeURIComponent(page)}', '_blank')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Tags</button>
-              <button class="btn btn-sm" onclick="window.open('/enhanced-fonts.html?url=${encodeURIComponent(page)}', '_blank')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Fonts</button>
+              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="tag-intelligence" data-url="${page}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.tags', 'Tags')}</button>
+              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="enhanced-fonts" data-url="${page}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.fonts', 'Fonts')}</button>
             </div>
           </div>
         `}).join('')}
       </div>
       <div id="noResults" style="display: none; text-align: center; padding: 2rem; color: var(--text-tertiary);">
-        No pages match your filter
+        ${t('reports.crawler.noPagesMatchFilter', 'No pages match your filter')}
       </div>
     `;
   }
@@ -624,14 +681,14 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderExportOptionsContent() {
     return `
       <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-        <button onclick="downloadJSON()" class="btn btn-secondary">
-          💾 Download JSON
+        <button data-action="download-json" class="btn btn-secondary">
+          ${t('reports.crawler.downloadJson', '💾 Download JSON')}
         </button>
-        <button onclick="downloadCSV()" class="btn btn-secondary">
-          📊 Download CSV
+        <button data-action="download-csv" class="btn btn-secondary">
+          ${t('reports.crawler.downloadCsv', '📊 Download CSV')}
         </button>
-        <button onclick="downloadSitemap()" class="btn btn-primary">
-          🗺️ Download Sitemap XML
+        <button data-action="download-sitemap" class="btn btn-primary">
+          ${t('reports.crawler.downloadSitemapXml', '🗺️ Download Sitemap XML')}
         </button>
       </div>
     `;
@@ -642,32 +699,32 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Export Options -->
       <div style="margin-bottom: 1.5rem; padding: 1rem; background: var(--bg-tertiary); border-radius: var(--radius-md); border: 1px solid var(--border-primary);">
         <div style="font-weight: 600; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;">
-          <span>📤</span> Export Data
+          <span>📤</span> ${t('reports.crawler.exportData', 'Export Data')}
         </div>
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
-          <button onclick="downloadJSON()" class="btn btn-secondary">
-            💾 Download JSON
+          <button data-action="download-json" class="btn btn-secondary">
+            ${t('reports.crawler.downloadJson', '💾 Download JSON')}
           </button>
-          <button onclick="downloadCSV()" class="btn btn-secondary">
-            📊 Download CSV
+          <button data-action="download-csv" class="btn btn-secondary">
+            ${t('reports.crawler.downloadCsv', '📊 Download CSV')}
           </button>
-          <button onclick="downloadSitemap()" class="btn btn-primary">
-            🗺️ Download Sitemap XML
+          <button data-action="download-sitemap" class="btn btn-primary">
+            ${t('reports.crawler.downloadSitemapXml', '🗺️ Download Sitemap XML')}
           </button>
         </div>
       </div>
       
       <!-- Page List -->
       <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <input type="text" id="pageSearch" placeholder="🔍 Filter pages..." 
-          oninput="filterPages(this.value)"
+        <input type="text" id="pageSearch" placeholder="${t('reports.crawler.filterPages', '🔍 Filter pages...')}"
+          data-action="filter-pages"
           class="input input-sm" style="min-width: 200px;">
-        <select id="sectionFilter" onchange="filterBySection(this.value)" class="input input-sm">
-          <option value="">All Sections</option>
+        <select id="sectionFilter" data-action="filter-by-section" class="input input-sm">
+          <option value="">${t('reports.crawler.allSections', 'All Sections')}</option>
           ${Object.keys(siteStructure.children).map(section => `<option value="${section}">/${section}/</option>`).join('')}
         </select>
-        <button onclick="toggleViewMode()" id="viewModeBtn" class="btn btn-secondary btn-sm">
-          📁 Group View
+        <button data-action="toggle-view-mode" id="viewModeBtn" class="btn btn-secondary btn-sm">
+          ${t('reports.crawler.groupView', '📁 Group View')}
         </button>
       </div>
       
@@ -685,14 +742,14 @@ document.addEventListener('DOMContentLoaded', () => {
             <a href="${page}" target="_blank" rel="noopener" style="flex: 1; word-break: break-all;">${formatPageUrl(page)}</a>
             <span style="background: ${pageType.color}; color: white; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.7rem; margin-right: 0.5rem; white-space: nowrap;">${pageType.label}</span>
             <div style="display: flex; gap: 0.5rem;">
-              <button class="btn btn-sm" onclick="window.open('/tag-intelligence.html?url=${encodeURIComponent(page)}', '_blank')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Tags</button>
-              <button class="btn btn-sm" onclick="window.open('/enhanced-fonts.html?url=${encodeURIComponent(page)}', '_blank')" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">Fonts</button>
+              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="tag-intelligence" data-url="${page}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.tags', 'Tags')}</button>
+              <button class="btn btn-sm" data-action="open-analyzer" data-analyzer="enhanced-fonts" data-url="${page}" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;">${t('reports.crawler.fonts', 'Fonts')}</button>
             </div>
           </div>
         `}).join('')}
       </div>
       <div id="noResults" style="display: none; text-align: center; padding: 2rem; color: var(--text-tertiary);">
-        No pages match your filter
+        ${t('reports.crawler.noPagesMatchFilter', 'No pages match your filter')}
       </div>
     `;
   }
@@ -705,12 +762,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return `
       <div>
         <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
-          Preview of fix packs:
+          ${t('reports.crawler.previewOfFixPacks', 'Preview of fix packs:')}
         </p>
         <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
-          <li>Orphaned page detection and fixes</li>
-          <li>Sitemap coverage improvements</li>
-          <li>Internal linking structure optimization</li>
+          <li>${t('reports.crawler.orphanedPageDetection', 'Orphaned page detection and fixes')}</li>
+          <li>${t('reports.crawler.sitemapCoverageImprovements', 'Sitemap coverage improvements')}</li>
+          <li>${t('reports.crawler.internalLinkingOptimization', 'Internal linking structure optimization')}</li>
         </ul>
       </div>
     `;
@@ -720,12 +777,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return `
       <div>
         <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
-          Unlock to view:
+          ${t('reports.crawler.unlockToView', 'Unlock to view:')}
         </p>
         <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
-          <li>Interactive visual sitemap diagram</li>
-          <li>Hierarchical page relationships</li>
-          <li>Export and print options</li>
+          <li>${t('reports.crawler.interactiveSitemapDiagram', 'Interactive visual sitemap diagram')}</li>
+          <li>${t('reports.crawler.hierarchicalPageRelationships', 'Hierarchical page relationships')}</li>
+          <li>${t('reports.crawler.exportAndPrintOptions', 'Export and print options')}</li>
         </ul>
       </div>
     `;
@@ -736,13 +793,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return `
       <div>
         <p style="margin: 0 0 0.75rem 0; color: var(--text-secondary);">
-          ${count} pages discovered. Unlock to access:
+          ${t('reports.crawler.pagesDiscoveredUnlock', '{{count}} pages discovered. Unlock to access:', { count })}
         </p>
         <ul style="margin: 0; padding-left: 1.25rem; color: var(--text-secondary);">
-          <li>Full page list with filtering</li>
-          <li>Page type categorization</li>
-          <li>Quick access to analyze individual pages</li>
-          <li>Export as JSON, CSV, or Sitemap XML</li>
+          <li>${t('reports.crawler.fullPageListFiltering', 'Full page list with filtering')}</li>
+          <li>${t('reports.crawler.pageTypeCategorization', 'Page type categorization')}</li>
+          <li>${t('reports.crawler.quickAccessAnalyze', 'Quick access to analyze individual pages')}</li>
+          <li>${t('reports.crawler.exportAsFormats', 'Export as JSON, CSV, or Sitemap XML')}</li>
         </ul>
       </div>
     `;
@@ -756,9 +813,9 @@ document.addEventListener('DOMContentLoaded', () => {
       return `
         <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
           <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
-            <span style="font-size: 1.5rem;">✓</span> Excellent Site Structure!
+            <span style="font-size: 1.5rem;">✓</span> ${t('reports.crawler.excellentSiteStructure', 'Excellent Site Structure!')}
           </h3>
-          <p style="color: #86efac; margin: 0;">Your site has good crawlability and structure. Keep monitoring for continued success.</p>
+          <p style="color: #86efac; margin: 0;">${t('reports.crawler.goodCrawlabilityMessage', 'Your site has good crawlability and structure. Keep monitoring for continued success.')}</p>
         </div>
       `;
     }
@@ -770,8 +827,8 @@ document.addEventListener('DOMContentLoaded', () => {
     let html = `
       <div class="crawler-fixes-container" style="margin-top: 1rem;">
         <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
-          <span style="font-size: 1.75rem;">🕷️</span> Crawler Fixes
-          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} improvements found)</span>
+          <span style="font-size: 1.75rem;">🕷️</span> ${t('reports.crawler.crawlerFixes', 'Crawler Fixes')}
+          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('reports.crawler.improvementsFound', '{{count}} improvements found', { count: fixes.length })})</span>
         </h3>
         <div class="crawler-fixes-list">
     `;
@@ -802,7 +859,7 @@ document.addEventListener('DOMContentLoaded', () => {
         overflow: hidden;
         background: ${style.bg};
       ">
-        <div class="crawler-fix-header" onclick="toggleCrawlerFixAccordion('${accordionId}')" style="
+        <div class="crawler-fix-header" data-action="toggle-accordion" data-accordion-id="${accordionId}" style="
           display: flex;
           justify-content: space-between;
           align-items: center;
@@ -814,7 +871,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <span style="font-size: 1.25rem;">${style.icon}</span>
             <div>
               <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
-              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || 'Site Structure'}</p>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || t('reports.crawler.siteStructure', 'Site Structure')}</p>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -843,7 +900,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCrawlerFixTabs(fix, accordionId) {
     return `
       <div class="crawler-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
-        <button class="crawler-fix-tab active" onclick="switchCrawlerFixTab('${accordionId}', 'summary')" style="
+        <button class="crawler-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
           padding: 0.5rem 1rem;
           border: 1px solid rgba(255,255,255,0.2);
           border-radius: 6px;
@@ -851,8 +908,8 @@ document.addEventListener('DOMContentLoaded', () => {
           color: #fff;
           cursor: pointer;
           font-size: 0.85rem;
-        ">📋 Summary</button>
-        <button class="crawler-fix-tab" onclick="switchCrawlerFixTab('${accordionId}', 'code')" style="
+        ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
+        <button class="crawler-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
           padding: 0.5rem 1rem;
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 6px;
@@ -860,8 +917,8 @@ document.addEventListener('DOMContentLoaded', () => {
           color: #aaa;
           cursor: pointer;
           font-size: 0.85rem;
-        ">💻 Code</button>
-        <button class="crawler-fix-tab" onclick="switchCrawlerFixTab('${accordionId}', 'guide')" style="
+        ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
+        <button class="crawler-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
           padding: 0.5rem 1rem;
           border: 1px solid rgba(255,255,255,0.1);
           border-radius: 6px;
@@ -869,7 +926,7 @@ document.addEventListener('DOMContentLoaded', () => {
           color: #aaa;
           cursor: pointer;
           font-size: 0.85rem;
-        ">🔧 Fix Guide</button>
+        ">🔧 ${t('reports.common.tabs.fixGuide', 'Fix Guide')}</button>
       </div>
 
       <div class="crawler-fix-tab-content active" id="${accordionId}-summary">
@@ -877,7 +934,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${fix.description}
         </p>
         <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ Expected Impact</div>
+          <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
           <div style="color: #c0c0c0; font-size: 0.9rem;">${fix.impact}</div>
         </div>
       </div>
@@ -886,8 +943,8 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="display: grid; gap: 1rem;">
           <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
-              <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ Current Issue</span>
-              <button onclick="copyCrawlerCode('${accordionId}-problem')" style="
+              <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.common.fix.currentIssue', 'Current Issue')}</span>
+              <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
                 padding: 0.25rem 0.75rem;
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
@@ -895,15 +952,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 color: #fff;
                 cursor: pointer;
                 font-size: 0.75rem;
-              ">📋 Copy</button>
+              ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
             <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeCrawlerHtml(fix.problematicCode)}</pre>
           </div>
 
           <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-              <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ Recommended Fix</span>
-              <button onclick="copyCrawlerCode('${accordionId}-solution')" style="
+              <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
+              <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
                 padding: 0.25rem 0.75rem;
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
@@ -911,7 +968,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 color: #fff;
                 cursor: pointer;
                 font-size: 0.75rem;
-              ">📋 Copy</button>
+              ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
             <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeCrawlerHtml(fix.snippet)}</pre>
           </div>
@@ -919,7 +976,7 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
 
       <div class="crawler-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-        <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+        <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
         <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
           ${fix.steps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
         </ol>
@@ -940,11 +997,11 @@ document.addEventListener('DOMContentLoaded', () => {
       if (orphanedCount > 0) {
         cards.push({
           id: 'orphaned-pages',
-          title: `Fix ${orphanedCount} orphaned pages`,
+          title: t('reports.crawler.fixes.fixOrphanedPages', 'Fix {{count}} orphaned pages', { count: orphanedCount }),
           severity: 'High',
-          category: 'Internal Linking',
-          impact: 'Improve crawlability and page authority distribution',
-          description: `Found ${orphanedCount} pages in sitemap.xml that have no internal links pointing to them. These pages may be hard for search engines to discover.`,
+          category: t('reports.crawler.fixes.internalLinking', 'Internal Linking'),
+          impact: t('reports.crawler.fixes.improveCrawlability', 'Improve crawlability and page authority distribution'),
+          description: t('reports.crawler.fixes.orphanedPagesDesc', 'Found {{count}} pages in sitemap.xml that have no internal links pointing to them. These pages may be hard for search engines to discover.', { count: orphanedCount }),
           problematicCode: `<!-- Orphaned pages (no internal links) -->
 <!-- These pages exist but have no links from other pages: -->
 
@@ -965,11 +1022,11 @@ ${orphanedCount > 5 ? `\n<!-- ...and ${orphanedCount - 5} more -->` : ''}`,
   </ul>
 </section>`,
           steps: [
-            'Identify orphaned pages from the list above',
-            'Add links from relevant parent or sibling pages',
-            'Update main navigation if pages are important',
-            'Consider adding a "Related Content" section',
-            'Re-crawl to verify pages are now linked'
+            t('reports.crawler.fixes.steps.identifyOrphanedPages', 'Identify orphaned pages from the list above'),
+            t('reports.crawler.fixes.steps.addLinksFromRelevant', 'Add links from relevant parent or sibling pages'),
+            t('reports.crawler.fixes.steps.updateMainNavigation', 'Update main navigation if pages are important'),
+            t('reports.crawler.fixes.steps.addRelatedContentSection', 'Consider adding a "Related Content" section'),
+            t('reports.crawler.fixes.steps.reCrawlToVerify', 'Re-crawl to verify pages are now linked')
           ]
         });
       }
@@ -980,13 +1037,13 @@ ${orphanedCount > 5 ? `\n<!-- ...and ${orphanedCount - 5} more -->` : ''}`,
       const missingSitemapCount = hasSitemap ? crawledPages - sitemapPages.length : crawledPages;
       cards.push({
         id: 'sitemap-coverage',
-        title: 'Improve sitemap coverage',
+        title: t('reports.crawler.fixes.improveSitemapCoverage', 'Improve sitemap coverage'),
         severity: 'Medium',
-        category: 'Sitemap',
-        impact: 'Better search engine discovery of all pages',
-        description: hasSitemap 
-          ? `Your sitemap.xml has ${sitemapPages.length} pages but ${crawledPages} were discovered by crawling. ${missingSitemapCount} pages may be missing from sitemap.`
-          : 'No sitemap.xml was found or it could not be parsed. Adding a sitemap helps search engines discover your pages.',
+        category: t('reports.crawler.fixes.sitemap', 'Sitemap'),
+        impact: t('reports.crawler.fixes.betterSearchEngineDiscovery', 'Better search engine discovery of all pages'),
+        description: hasSitemap
+          ? t('reports.crawler.fixes.sitemapMissingPagesDesc', 'Your sitemap.xml has {{sitemapCount}} pages but {{crawledCount}} were discovered by crawling. {{missingCount}} pages may be missing from sitemap.', { sitemapCount: sitemapPages.length, crawledCount: crawledPages, missingCount: missingSitemapCount })
+          : t('reports.crawler.fixes.noSitemapFoundDesc', 'No sitemap.xml was found or it could not be parsed. Adding a sitemap helps search engines discover your pages.'),
         problematicCode: hasSitemap 
           ? `<!-- Current sitemap.xml -->
 <!-- Contains ${sitemapPages.length} URLs -->
@@ -1005,11 +1062,11 @@ ${pages.slice(0, 5).map(p => `  <url>
 ${crawledPages > 5 ? `  <!-- Add all ${crawledPages} discovered pages -->` : ''}
 </urlset>`,
         steps: [
-          'Export the full page list using "Download Sitemap XML" button',
-          'Review and add any additional important pages',
-          'Upload sitemap.xml to your website root',
-          'Submit sitemap URL in Google Search Console',
-          'Add sitemap reference to robots.txt'
+          t('reports.crawler.fixes.steps.exportFullPageList', 'Export the full page list using "Download Sitemap XML" button'),
+          t('reports.crawler.fixes.steps.reviewAddPages', 'Review and add any additional important pages'),
+          t('reports.crawler.fixes.steps.uploadSitemap', 'Upload sitemap.xml to your website root'),
+          t('reports.crawler.fixes.steps.submitSitemapGsc', 'Submit sitemap URL in Google Search Console'),
+          t('reports.crawler.fixes.steps.addSitemapRobots', 'Add sitemap reference to robots.txt')
         ]
       });
     }
@@ -1025,11 +1082,11 @@ ${crawledPages > 5 ? `  <!-- Add all ${crawledPages} discovered pages -->` : ''}
     if (deepPages.length > 0) {
       cards.push({
         id: 'deep-pages',
-        title: `Reduce depth for ${deepPages.length} pages`,
+        title: t('reports.crawler.fixes.reduceDepthForPages', 'Reduce depth for {{count}} pages', { count: deepPages.length }),
         severity: 'Low',
-        category: 'Site Structure',
-        impact: 'Improve crawl efficiency and user navigation',
-        description: `Found ${deepPages.length} pages that are more than 3 levels deep. Deep pages may be harder for search engines to crawl and users to find.`,
+        category: t('reports.crawler.fixes.siteStructure', 'Site Structure'),
+        impact: t('reports.crawler.fixes.improveCrawlEfficiency', 'Improve crawl efficiency and user navigation'),
+        description: t('reports.crawler.fixes.deepPagesDesc', 'Found {{count}} pages that are more than 3 levels deep. Deep pages may be harder for search engines to crawl and users to find.', { count: deepPages.length }),
         problematicCode: `<!-- Deep page structure -->
 ${deepPages.slice(0, 5).map(p => {
   const path = new URL(p).pathname;
@@ -1049,11 +1106,11 @@ ${deepPages.length > 5 ? `\n<!-- ...and ${deepPages.length - 5} more deep pages 
   </ol>
 </nav>`,
         steps: [
-          'Identify which deep pages are most important',
-          'Consider flattening URL structure for key pages',
-          'Add breadcrumb navigation for deep pages',
-          'Link to deep pages from higher-level pages',
-          'Update internal links to use shorter paths'
+          t('reports.crawler.fixes.steps.identifyDeepPages', 'Identify which deep pages are most important'),
+          t('reports.crawler.fixes.steps.flattenUrlStructure', 'Consider flattening URL structure for key pages'),
+          t('reports.crawler.fixes.steps.addBreadcrumbNavigation', 'Add breadcrumb navigation for deep pages'),
+          t('reports.crawler.fixes.steps.linkToDeepPages', 'Link to deep pages from higher-level pages'),
+          t('reports.crawler.fixes.steps.updateInternalLinks', 'Update internal links to use shorter paths')
         ]
       });
     }
@@ -1070,11 +1127,11 @@ ${deepPages.length > 5 ? `\n<!-- ...and ${deepPages.length - 5} more deep pages 
       if (largest.count > smallest.count * 3) {
         cards.push({
           id: 'section-balance',
-          title: 'Balance site sections',
+          title: t('reports.crawler.fixes.balanceSiteSections', 'Balance site sections'),
           severity: 'Low',
-          category: 'Content Strategy',
-          impact: 'Improve site architecture and topical authority',
-          description: `The /${largest.name}/ section has ${largest.count} pages while /${smallest.name}/ only has ${smallest.count}. Very unbalanced sections may indicate content gaps.`,
+          category: t('reports.crawler.fixes.contentStrategy', 'Content Strategy'),
+          impact: t('reports.crawler.fixes.improveSiteArchitecture', 'Improve site architecture and topical authority'),
+          description: t('reports.crawler.fixes.sectionBalanceDesc', 'The /{{largest}}/ section has {{largestCount}} pages while /{{smallest}}/ only has {{smallestCount}}. Very unbalanced sections may indicate content gaps.', { largest: largest.name, largestCount: largest.count, smallest: smallest.name, smallestCount: smallest.count }),
           problematicCode: `<!-- Section size imbalance -->
 ${sectionCounts.slice(0, 5).map(s => `<!-- /${s.name}/: ${s.count} pages -->`).join('\n')}`,
           snippet: `<!-- Expand smaller sections with quality content -->
@@ -1092,11 +1149,11 @@ ${sectionCounts.slice(0, 5).map(s => `<!-- /${s.name}/: ${s.count} pages -->`).j
   ├── topic-2/
   └── topic-3/`,
           steps: [
-            `Review the /${smallest.name}/ section for content opportunities`,
-            'Identify topics that could expand the section',
-            'Create pillar content for main topics',
-            'Add supporting content that links to pillars',
-            'Ensure proper internal linking within sections'
+            t('reports.crawler.fixes.steps.reviewSectionForOpportunities', 'Review the /{{section}}/ section for content opportunities', { section: smallest.name }),
+            t('reports.crawler.fixes.steps.identifyTopicsExpand', 'Identify topics that could expand the section'),
+            t('reports.crawler.fixes.steps.createPillarContent', 'Create pillar content for main topics'),
+            t('reports.crawler.fixes.steps.addSupportingContent', 'Add supporting content that links to pillars'),
+            t('reports.crawler.fixes.steps.ensureInternalLinking', 'Ensure proper internal linking within sections')
           ]
         });
       }
@@ -1106,11 +1163,11 @@ ${sectionCounts.slice(0, 5).map(s => `<!-- /${s.name}/: ${s.count} pages -->`).j
     if (!data.options?.respectRobotsTxt) {
       cards.push({
         id: 'robots-respect',
-        title: 'Consider robots.txt directives',
+        title: t('reports.crawler.fixes.considerRobotsTxt', 'Consider robots.txt directives'),
         severity: 'Low',
-        category: 'Technical SEO',
-        impact: 'Align with intended crawl behavior',
-        description: 'This crawl ignored robots.txt. Some discovered pages may be intentionally blocked from search engines.',
+        category: t('reports.crawler.fixes.technicalSeo', 'Technical SEO'),
+        impact: t('reports.crawler.fixes.alignWithCrawlBehavior', 'Align with intended crawl behavior'),
+        description: t('reports.crawler.fixes.robotsTxtIgnoredDesc', 'This crawl ignored robots.txt. Some discovered pages may be intentionally blocked from search engines.'),
         problematicCode: `# robots.txt was not respected
 # Some pages may be blocked intentionally
 
@@ -1127,11 +1184,11 @@ Allow: /
 
 Sitemap: https://example.com/sitemap.xml`,
         steps: [
-          'Re-run crawl with "Respect robots.txt" enabled',
-          'Compare results to identify blocked pages',
-          'Review which pages should be blocked',
-          'Update robots.txt if needed',
-          'Submit updated robots.txt to Search Console'
+          t('reports.crawler.fixes.steps.reRunWithRobots', 'Re-run crawl with "Respect robots.txt" enabled'),
+          t('reports.crawler.fixes.steps.compareResultsBlocked', 'Compare results to identify blocked pages'),
+          t('reports.crawler.fixes.steps.reviewBlockedPages', 'Review which pages should be blocked'),
+          t('reports.crawler.fixes.steps.updateRobotsTxt', 'Update robots.txt if needed'),
+          t('reports.crawler.fixes.steps.submitRobotsTxt', 'Submit updated robots.txt to Search Console')
         ]
       });
     }
@@ -1180,7 +1237,7 @@ Sitemap: https://example.com/sitemap.xml`,
       content.classList.remove('active');
     });
 
-    const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+    const activeTab = Array.from(tabs).find(tab => tab.getAttribute('data-tab') === tabName);
     const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
     if (activeTab) {
@@ -1211,10 +1268,7 @@ Sitemap: https://example.com/sitemap.xml`,
       const accordion = tab.closest('.crawler-fix-accordion');
       if (accordion) {
         const fixId = accordion.getAttribute('data-fix-id');
-        const tabText = tab.textContent.toLowerCase();
-        let tabName = 'summary';
-        if (tabText.includes('code')) tabName = 'code';
-        else if (tabText.includes('guide')) tabName = 'guide';
+        const tabName = tab.getAttribute('data-tab') || 'summary';
         if (fixId && typeof window.switchCrawlerFixTab === 'function') {
           e.preventDefault();
           e.stopPropagation();
@@ -1246,7 +1300,7 @@ Sitemap: https://example.com/sitemap.xml`,
       const btn = codeElement.parentElement.querySelector('button');
       if (btn) {
         const originalText = btn.textContent;
-        btn.textContent = '✓ Copied!';
+        btn.textContent = t('reports.common.copied', '✓ Copied!');
         setTimeout(() => { btn.textContent = originalText; }, 2000);
       }
     });
@@ -1307,7 +1361,7 @@ Sitemap: https://example.com/sitemap.xml`,
 
       const msg = document.createElement('div');
       msg.setAttribute('data-sm-screenshot-fallback', 'true');
-      msg.textContent = 'Screenshot unavailable';
+      msg.textContent = t('reports.crawler.screenshotUnavailable', 'Screenshot unavailable');
       msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 10px; color: var(--text-secondary); text-align: center;';
       wrapper.appendChild(msg);
     };
@@ -1341,18 +1395,18 @@ Sitemap: https://example.com/sitemap.xml`,
       <div class="report-shell">
         <div class="report-shell__header">
           <div>
-            <h2 class="report-shell__title">Site Crawler Results</h2>
+            <h2 class="report-shell__title">${t('reports.crawler.siteCrawlerResults', 'Site Crawler Results')}</h2>
             <p class="report-shell__meta">>> url: ${data.url}</p>
-            <p class="report-shell__meta">>> timestamp: ${new Date().toLocaleString()}</p>
+            <p class="report-shell__meta">>> ${t('reports.common.timestamp', 'timestamp')}: ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString()}</p>
           </div>
         </div>
         <div class="report-shell__summary">
           <div class="report-shell__summary-card">
-            <div class="report-shell__summary-label">Pages Discovered</div>
+            <div class="report-shell__summary-label">${t('reports.crawler.pagesDiscovered', 'Pages Discovered')}</div>
             <div style="font-size: 2.5rem; font-weight: bold; color: var(--accent-primary);">${data.results?.pagesDiscovered || 0}</div>
           </div>
           <div class="report-shell__summary-card">
-            <div class="report-shell__summary-label">Crawl Time</div>
+            <div class="report-shell__summary-label">${t('reports.crawler.crawlTime', 'Crawl Time')}</div>
             <div style="font-size: 2.5rem; font-weight: bold; color: #00d9ff;">${data.duration || 'N/A'}</div>
           </div>
         </div>
@@ -1490,7 +1544,7 @@ Sitemap: https://example.com/sitemap.xml`,
     const topLevelSections = Object.keys(structure.children);
     
     if (topLevelSections.length === 0) {
-      return '<div style="text-align: center; color: #666; padding: 2rem;">No directory structure detected (flat site)</div>';
+      return `<div style="text-align: center; color: #666; padding: 2rem;">${t('reports.crawler.noDirectoryStructure', 'No directory structure detected (flat site)')}</div>`;
     }
     
     const isDark = !document.body.classList.contains('white-theme');
@@ -1537,10 +1591,10 @@ Sitemap: https://example.com/sitemap.xml`,
               fill="${textColor}" font-weight="bold" font-size="20">
           ${hostname || 'Home'}
         </text>
-        <text x="${rootX}" y="${rootY + 18}" 
-              text-anchor="middle" dominant-baseline="middle" 
+        <text x="${rootX}" y="${rootY + 18}"
+              text-anchor="middle" dominant-baseline="middle"
               fill="${isDark ? '#888' : '#666'}" font-size="12">
-          Homepage
+          ${t('reports.crawler.homepage', 'Homepage')}
         </text>
       </g>
     `;
@@ -1590,7 +1644,7 @@ Sitemap: https://example.com/sitemap.xml`,
           <text x="${sectionX}" y="${sectionY + 26}" 
                 text-anchor="middle" dominant-baseline="middle" 
                 fill="${isDark ? '#999' : '#777'}" font-size="10">
-            ${sectionData.count} page${sectionData.count !== 1 ? 's' : ''}
+            ${sectionData.count} ${sectionData.count !== 1 ? t('reports.crawler.pages', 'pages') : t('reports.crawler.page', 'page')}
           </text>
         </g>
       `;
@@ -1649,7 +1703,7 @@ Sitemap: https://example.com/sitemap.xml`,
                 <text x="${pageX}" y="${pageY + 22}" 
                       text-anchor="middle" dominant-baseline="middle" 
                       fill="${isDark ? '#888' : '#666'}" font-size="8">
-                  +${subcount} sub
+                  ${t('reports.crawler.subPages', '+{{count}} sub', { count: subcount })}
                 </text>
               ` : ''}
             </g>
@@ -1663,7 +1717,7 @@ Sitemap: https://example.com/sitemap.xml`,
             <text x="${sectionX}" y="${pageY + 45}" 
                   text-anchor="middle" 
                   fill="${isDark ? '#666' : '#999'}" font-size="11" font-style="italic">
-              +${remainingPages} more...
+              ${t('reports.crawler.morePages', '+{{count}} more...', { count: remainingPages })}
             </text>
           `;
         }
@@ -1691,7 +1745,7 @@ Sitemap: https://example.com/sitemap.xml`,
   function renderSiteTree(structure) {
     const sections = Object.entries(structure.children);
     if (sections.length === 0) {
-      return '<div style="color: var(--text-tertiary);">Flat site structure (no directories)</div>';
+      return `<div style="color: var(--text-tertiary);">${t('reports.crawler.flatSiteStructure', 'Flat site structure (no directories)')}</div>`;
     }
     
     return sections.slice(0, 6).map(([name, data], index) => {
@@ -1703,7 +1757,7 @@ Sitemap: https://example.com/sitemap.xml`,
         <details ${isOpen} style="background: var(--bg-tertiary); border-left: 3px solid ${color}; padding: 1rem; border-radius: 0 var(--radius-md) var(--radius-md) 0; transition: all 0.2s ease;">
           <summary style="display: flex; justify-content: space-between; align-items: center; cursor: pointer; list-style: none;">
             <span style="color: ${color}; font-weight: 600; font-size: 0.95rem;">/${name}/</span>
-            <span style="background: ${color}20; color: ${color}; padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${data.count} ${data.count === 1 ? 'page' : 'pages'}</span>
+            <span style="background: ${color}20; color: ${color}; padding: 0.25rem 0.65rem; border-radius: 12px; font-size: 0.75rem; font-weight: 600;">${data.count} ${data.count === 1 ? t('reports.crawler.page', 'page') : t('reports.crawler.pages', 'pages')}</span>
           </summary>
           ${pagePaths.length > 0 ? `
             <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; margin-top: 0.75rem;">
@@ -1711,7 +1765,7 @@ Sitemap: https://example.com/sitemap.xml`,
                 <span style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: var(--text-tertiary);">${pagePath}</span>
               `).join('')}
             </div>
-          ` : '<div style="color: var(--text-tertiary); font-size: 0.8rem; font-style: italic; margin-top: 0.5rem;">No pages found</div>'}
+          ` : `<div style="color: var(--text-tertiary); font-size: 0.8rem; font-style: italic; margin-top: 0.5rem;">${t('reports.crawler.noPagesFound', 'No pages found')}</div>`}
         </details>
       `;
     }).join('');
@@ -1733,7 +1787,7 @@ Sitemap: https://example.com/sitemap.xml`,
           <span style="font-size: 1.8rem;">${stack.cms.icon}</span>
           <div>
             <div style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">${stack.cms.name}</div>
-            <div style="color: var(--text-tertiary); font-size: 0.8rem;">${stack.cms.confidence}% confidence</div>
+            <div style="color: var(--text-tertiary); font-size: 0.8rem;">${t('reports.crawler.confidencePercent', '{{percent}}% confidence', { percent: stack.cms.confidence })}</div>
           </div>
         </div>
       `;
@@ -1745,7 +1799,7 @@ Sitemap: https://example.com/sitemap.xml`,
           <span style="font-size: 1.8rem;">${stack.framework.icon}</span>
           <div>
             <div style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">${stack.framework.name}</div>
-            <div style="color: var(--text-tertiary); font-size: 0.8rem;">Framework detected</div>
+            <div style="color: var(--text-tertiary); font-size: 0.8rem;">${t('reports.crawler.frameworkDetected', 'Framework detected')}</div>
           </div>
         </div>
       `;
@@ -1757,14 +1811,14 @@ Sitemap: https://example.com/sitemap.xml`,
           <span style="font-size: 1.8rem;">${stack.server.icon}</span>
           <div>
             <div style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">${stack.server.name}</div>
-            <div style="color: var(--text-tertiary); font-size: 0.8rem;">Server technology</div>
+            <div style="color: var(--text-tertiary); font-size: 0.8rem;">${t('reports.crawler.serverTechnology', 'Server technology')}</div>
           </div>
         </div>
       `;
     }
     
     if (!stack.cms && !stack.framework && !stack.server) {
-      html += '<div style="color: var(--text-tertiary);">Could not detect specific technologies. Run full scan for detailed analysis.</div>';
+      html += `<div style="color: var(--text-tertiary);">${t('reports.crawler.couldNotDetectTech', 'Could not detect specific technologies. Run full scan for detailed analysis.')}</div>`;
     }
     
     html += '</div>';
@@ -1780,7 +1834,7 @@ Sitemap: https://example.com/sitemap.xml`,
         <span style="font-size: 1.5rem;">🌐</span>
         <div>
           <div style="color: var(--text-primary); font-family: var(--font-mono); font-size: 0.9rem;">${info.domain}</div>
-          <div style="color: var(--text-tertiary); font-size: 0.8rem;">Domain</div>
+          <div style="color: var(--text-tertiary); font-size: 0.8rem;">${t('reports.crawler.domain', 'Domain')}</div>
         </div>
       </div>
     `;
@@ -1800,8 +1854,8 @@ Sitemap: https://example.com/sitemap.xml`,
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.5rem;">☁️</span>
           <div>
-            <div style="color: var(--text-primary); font-size: 0.95rem;">Custom/Unknown Hosting</div>
-            <div style="color: var(--text-tertiary); font-size: 0.8rem;">Use IP Reputation tool for details</div>
+            <div style="color: var(--text-primary); font-size: 0.95rem;">${t('reports.crawler.customUnknownHosting', 'Custom/Unknown Hosting')}</div>
+            <div style="color: var(--text-tertiary); font-size: 0.8rem;">${t('reports.crawler.useIpReputationTool', 'Use IP Reputation tool for details')}</div>
           </div>
         </div>
       `;
@@ -1811,8 +1865,8 @@ Sitemap: https://example.com/sitemap.xml`,
       <div style="display: flex; align-items: center; gap: 0.75rem;">
         <span style="font-size: 1.5rem;">🔒</span>
         <div>
-          <div style="color: #00ff41; font-weight: 600;">SSL/HTTPS Active</div>
-          <div style="color: var(--text-tertiary); font-size: 0.8rem;">Secure connection</div>
+          <div style="color: #00ff41; font-weight: 600;">${t('reports.crawler.sslHttpsActive', 'SSL/HTTPS Active')}</div>
+          <div style="color: var(--text-tertiary); font-size: 0.8rem;">${t('reports.crawler.secureConnection', 'Secure connection')}</div>
         </div>
       </div>
     `;
@@ -1841,20 +1895,20 @@ Sitemap: https://example.com/sitemap.xml`,
     return `
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: #888;">Total Pages</span>
+          <span style="color: #888;">${t('reports.crawler.totalPages', 'Total Pages')}</span>
           <span style="color: #00ff41; font-weight: bold; font-size: 1.25rem;">${pages.length}</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: #888;">Top-level Sections</span>
+          <span style="color: #888;">${t('reports.crawler.topLevelSections', 'Top-level Sections')}</span>
           <span style="color: #00d9ff; font-weight: bold;">${sections}</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: #888;">Avg Path Depth</span>
-          <span style="color: #bb77ff; font-weight: bold;">${avgDepth.toFixed(1)} levels</span>
+          <span style="color: #888;">${t('reports.crawler.avgPathDepth', 'Avg Path Depth')}</span>
+          <span style="color: #bb77ff; font-weight: bold;">${t('reports.crawler.levels', '{{count}} levels', { count: avgDepth.toFixed(1) })}</span>
         </div>
         ${Object.keys(extensions).length > 0 ? `
           <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.5rem;">File Types:</div>
+            <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.5rem;">${t('reports.crawler.fileTypes', 'File Types:')}</div>
             <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
               ${Object.entries(extensions).map(([ext, count]) => `
                 <span style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #ffd700;">.${ext}: ${count}</span>
@@ -1870,39 +1924,39 @@ Sitemap: https://example.com/sitemap.xml`,
   function getPageType(url) {
     const path = url.toLowerCase();
     if (path.includes('/blog') || path.includes('/article') || path.includes('/news') || path.includes('/post')) {
-      return { icon: '📝', label: 'Blog', color: '#8b5cf6' };
+      return { icon: '📝', label: t('reports.crawler.pageType.blog', 'Blog'), color: '#8b5cf6' };
     }
     if (path.includes('/product') || path.includes('/shop') || path.includes('/store') || path.includes('/item')) {
-      return { icon: '🛒', label: 'Product', color: '#10b981' };
+      return { icon: '🛒', label: t('reports.crawler.pageType.product', 'Product'), color: '#10b981' };
     }
     if (path.includes('/about') || path.includes('/team') || path.includes('/company')) {
-      return { icon: '👥', label: 'About', color: '#6366f1' };
+      return { icon: '👥', label: t('reports.crawler.pageType.about', 'About'), color: '#6366f1' };
     }
     if (path.includes('/contact') || path.includes('/support') || path.includes('/help')) {
-      return { icon: '📞', label: 'Contact', color: '#ec4899' };
+      return { icon: '📞', label: t('reports.crawler.pageType.contact', 'Contact'), color: '#ec4899' };
     }
     if (path.includes('/event') || path.includes('/calendar') || path.includes('/schedule')) {
-      return { icon: '📅', label: 'Event', color: '#f59e0b' };
+      return { icon: '📅', label: t('reports.crawler.pageType.event', 'Event'), color: '#f59e0b' };
     }
     if (path.includes('/gallery') || path.includes('/photo') || path.includes('/image') || path.includes('/media')) {
-      return { icon: '🖼️', label: 'Media', color: '#14b8a6' };
+      return { icon: '🖼️', label: t('reports.crawler.pageType.media', 'Media'), color: '#14b8a6' };
     }
     if (path.includes('/faq') || path.includes('/question')) {
-      return { icon: '❓', label: 'FAQ', color: '#f97316' };
+      return { icon: '❓', label: t('reports.crawler.pageType.faq', 'FAQ'), color: '#f97316' };
     }
     if (path.includes('/login') || path.includes('/signin') || path.includes('/account') || path.includes('/register')) {
-      return { icon: '🔐', label: 'Auth', color: '#ef4444' };
+      return { icon: '🔐', label: t('reports.crawler.pageType.auth', 'Auth'), color: '#ef4444' };
     }
     if (path.includes('/search') || path.includes('/find')) {
-      return { icon: '🔍', label: 'Search', color: '#3b82f6' };
+      return { icon: '🔍', label: t('reports.crawler.pageType.search', 'Search'), color: '#3b82f6' };
     }
     if (path.match(/\.(pdf|doc|docx|xls|xlsx)$/i)) {
-      return { icon: '📄', label: 'Document', color: '#dc2626' };
+      return { icon: '📄', label: t('reports.crawler.pageType.document', 'Document'), color: '#dc2626' };
     }
     if (path.match(/\/$/) || path.split('/').filter(p => p).length <= 1) {
-      return { icon: '🏠', label: 'Main', color: '#22c55e' };
+      return { icon: '🏠', label: t('reports.crawler.pageType.main', 'Main'), color: '#22c55e' };
     }
-    return { icon: '📃', label: 'Page', color: '#64748b' };
+    return { icon: '📃', label: t('reports.crawler.pageType.page', 'Page'), color: '#64748b' };
   }
 
   // Get page section for filtering
@@ -1933,15 +1987,15 @@ Sitemap: https://example.com/sitemap.xml`,
     // URL length analysis
     const longUrls = pages.filter(url => url.length > 100);
     if (longUrls.length > 0) {
-      insights.push({ icon: '⚠️', text: `${longUrls.length} URLs exceed 100 characters (may affect SEO)`, type: 'warning' });
+      insights.push({ icon: '⚠️', text: t('reports.crawler.insights.urlsTooLong', '{{count}} URLs exceed 100 characters (may affect SEO)', { count: longUrls.length }), type: 'warning' });
     } else {
-      insights.push({ icon: '✅', text: 'All URLs are reasonably short', type: 'success' });
+      insights.push({ icon: '✅', text: t('reports.crawler.insights.urlsReasonablyShort', 'All URLs are reasonably short'), type: 'success' });
     }
     
     // Query parameter detection
     const queryUrls = pages.filter(url => url.includes('?'));
     if (queryUrls.length > 0) {
-      insights.push({ icon: '📊', text: `${queryUrls.length} pages use query parameters`, type: 'info' });
+      insights.push({ icon: '📊', text: t('reports.crawler.insights.pagesUseQueryParams', '{{count}} pages use query parameters', { count: queryUrls.length }), type: 'info' });
     }
     
     // Deep nesting detection
@@ -1951,13 +2005,13 @@ Sitemap: https://example.com/sitemap.xml`,
       } catch (e) { return false; }
     });
     if (deepPages.length > 0) {
-      insights.push({ icon: '📁', text: `${deepPages.length} pages are deeply nested (5+ levels)`, type: 'warning' });
+      insights.push({ icon: '📁', text: t('reports.crawler.insights.pagesDeeplyNested', '{{count}} pages are deeply nested (5+ levels)', { count: deepPages.length }), type: 'warning' });
     }
     
     // Orphan sections (only 1 page)
     const orphanSections = Object.entries(structure.children).filter(([, data]) => data.count === 1);
     if (orphanSections.length > 0) {
-      insights.push({ icon: '🔗', text: `${orphanSections.length} sections have only 1 page`, type: 'info' });
+      insights.push({ icon: '🔗', text: t('reports.crawler.insights.sectionsOnlyOnePage', '{{count}} sections have only 1 page', { count: orphanSections.length }), type: 'info' });
     }
     
     // File extension diversity
@@ -1966,13 +2020,13 @@ Sitemap: https://example.com/sitemap.xml`,
       return ['html', 'htm', 'php', 'aspx', 'asp', 'jsp'].includes(ext) ? ext : 'clean';
     }));
     if (extensions.size > 2) {
-      insights.push({ icon: '🔀', text: `Multiple URL formats detected (${extensions.size} types)`, type: 'info' });
+      insights.push({ icon: '🔀', text: t('reports.crawler.insights.multipleUrlFormats', 'Multiple URL formats detected ({{count}} types)', { count: extensions.size }), type: 'info' });
     }
     
     // Good structure check
     const avgPagesPerSection = pages.length / Math.max(Object.keys(structure.children).length, 1);
     if (avgPagesPerSection > 2 && avgPagesPerSection < 20) {
-      insights.push({ icon: '✅', text: 'Well-organized site structure', type: 'success' });
+      insights.push({ icon: '✅', text: t('reports.crawler.insights.wellOrganizedStructure', 'Well-organized site structure'), type: 'success' });
     }
     
     const typeColors = { success: '#00ff41', warning: '#ffc107', info: '#00d9ff' };
@@ -2006,7 +2060,7 @@ Sitemap: https://example.com/sitemap.xml`,
             <strong>/${section}/</strong>
           </span>
           <span style="background: rgba(0, 217, 255, 0.2); color: #00d9ff; padding: 0.25rem 0.75rem; border-radius: 12px; font-size: 0.85rem;">
-            ${sectionPages.length} page${sectionPages.length !== 1 ? 's' : ''}
+            ${sectionPages.length} ${sectionPages.length !== 1 ? t('reports.crawler.pages', 'pages') : t('reports.crawler.page', 'page')}
           </span>
         </summary>
         <div style="padding: 0 1rem 1rem 1rem;">
@@ -2017,8 +2071,8 @@ Sitemap: https://example.com/sitemap.xml`,
                 <span style="font-size: 1rem; margin-right: 0.3rem;">${pageType.icon}</span>
                 <a href="${page}" target="_blank" rel="noopener" style="flex: 1; font-size: 0.9rem;">${formatPageUrl(page)}</a>
                 <div style="display: flex; gap: 0.5rem;">
-                  <button class="action-btn analyze" onclick="window.open('/tag-intelligence.html?url=${encodeURIComponent(page)}', '_blank')">Tags</button>
-                  <button class="action-btn analyze" onclick="window.open('/enhanced-fonts.html?url=${encodeURIComponent(page)}', '_blank')">Fonts</button>
+                  <button class="action-btn analyze" data-action="open-analyzer" data-analyzer="tag-intelligence" data-url="${page}">${t('reports.crawler.tags', 'Tags')}</button>
+                  <button class="action-btn analyze" data-action="open-analyzer" data-analyzer="enhanced-fonts" data-url="${page}">${t('reports.crawler.fonts', 'Fonts')}</button>
                 </div>
               </div>
             `;
@@ -2072,11 +2126,11 @@ Sitemap: https://example.com/sitemap.xml`,
     if (listView.style.display === 'none') {
       listView.style.display = '';
       groupedView.style.display = 'none';
-      btn.textContent = '📁 Group View';
+      btn.textContent = t('reports.crawler.groupView', '📁 Group View');
     } else {
       listView.style.display = 'none';
       groupedView.style.display = '';
-      btn.textContent = '📋 List View';
+      btn.textContent = t('reports.crawler.listView', '📋 List View');
     }
   };
 
@@ -2099,7 +2153,7 @@ Sitemap: https://example.com/sitemap.xml`,
     const pages = window.crawlData?.results?.pages || [];
     const text = pages.join('\n');
     navigator.clipboard.writeText(text).then(() => {
-      alert(`Copied ${pages.length} URLs to clipboard!`);
+      alert(t('reports.crawler.copiedUrlsToClipboard', 'Copied {{count}} URLs to clipboard!', { count: pages.length }));
     }).catch(err => {
       console.error('Failed to copy:', err);
     });
@@ -2169,7 +2223,7 @@ Sitemap: https://example.com/sitemap.xml`,
   window.printSitemap = function() {
     const sitemapDiagram = document.getElementById('sitemapDiagram');
     if (!sitemapDiagram) {
-      alert('No sitemap to print');
+      alert(t('reports.crawler.noSitemapToPrint', 'No sitemap to print'));
       return;
     }
 
@@ -2192,13 +2246,13 @@ Sitemap: https://example.com/sitemap.xml`,
     if (pages.length > 0) {
       pageTableHTML = `
         <div class="page-table">
-          <h2>Page Index</h2>
+          <h2>${t('reports.crawler.pageIndex', 'Page Index')}</h2>
           <table>
             <thead>
               <tr>
                 <th style="width: 40px; text-align: center;">#</th>
-                <th style="width: 40%; text-align: left;">Page Name</th>
-                <th style="width: 60%; text-align: left;">URL</th>
+                <th style="width: 40%; text-align: left;">${t('reports.crawler.pageName', 'Page Name')}</th>
+                <th style="width: 60%; text-align: left;">${t('reports.crawler.url', 'URL')}</th>
               </tr>
             </thead>
             <tbody>
@@ -2208,11 +2262,11 @@ Sitemap: https://example.com/sitemap.xml`,
                 const segments = pathname.split('/').filter(s => s);
                 const pageName = segments.length > 0 
                   ? segments[segments.length - 1].replace(/-/g, ' ').replace(/\.(html|htm|php)$/i, '')
-                  : 'Home';
+                  : t('reports.crawler.home', 'Home');
                 return `
                   <tr>
                     <td style="text-align: center; color: #666;">${index + 1}</td>
-                    <td style="text-transform: capitalize;">${pageName || 'Home'}</td>
+                    <td style="text-transform: capitalize;">${pageName || t('reports.crawler.home', 'Home')}</td>
                     <td style="font-family: monospace; font-size: 11px; color: #333;">${url}</td>
                   </tr>
                 `;
@@ -2225,7 +2279,7 @@ Sitemap: https://example.com/sitemap.xml`,
     
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
-      alert('Please allow popups to print the sitemap');
+      alert(t('reports.crawler.allowPopupsToPrint', 'Please allow popups to print the sitemap'));
       return;
     }
     
@@ -2233,7 +2287,7 @@ Sitemap: https://example.com/sitemap.xml`,
       <!DOCTYPE html>
       <html>
       <head>
-        <title>Visual Sitemap - ${hostname}</title>
+        <title>${t('reports.crawler.visualSitemapTitle', 'Visual Sitemap')} - ${hostname}</title>
         <style>
           @page { 
             size: landscape;
@@ -2358,23 +2412,23 @@ Sitemap: https://example.com/sitemap.xml`,
           </div>
           <div class="header-content">
             <div class="header-title">
-              <h1>🗺️ Visual Sitemap</h1>
+              <h1>🗺️ ${t('reports.crawler.visualSitemap', 'Visual Sitemap')}</h1>
             </div>
             <div class="header-info">
               <div class="meta">
                 <strong>${hostname}</strong><br>
-                ${pageCount} pages discovered<br>
-                Generated ${new Date().toLocaleDateString()}
+                ${t('reports.crawler.pagesDiscoveredCount', '{{count}} pages discovered', { count: pageCount })}<br>
+                ${t('reports.crawler.generated', 'Generated')} ${new Date().toLocaleDateString()}
               </div>
             </div>
           </div>
         </div>
         <div class="sitemap-container">
-          ${document.getElementById('sitemapDiagram')?.innerHTML || '<p>No sitemap data available</p>'}
+          ${document.getElementById('sitemapDiagram')?.innerHTML || `<p>${t('reports.crawler.noSitemapDataAvailable', 'No sitemap data available')}</p>`}
         </div>
         ${pageTableHTML}
         <div class="footer">
-          Generated by Site Mechanic | sitemechanic.io | ${new Date().toLocaleString()}
+          ${t('reports.crawler.generatedBy', 'Generated by Site Mechanic')} | sitemechanic.io | ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString()}
         </div>
       </body>
       </html>
@@ -2395,13 +2449,13 @@ Sitemap: https://example.com/sitemap.xml`,
   window.downloadSitemapImage = async function() {
     const sitemapDiagram = document.getElementById('sitemapDiagram');
     if (!sitemapDiagram) {
-      alert('No sitemap to download');
+      alert(t('reports.crawler.noSitemapToDownload', 'No sitemap to download'));
       return;
     }
 
     const svgElement = sitemapDiagram.querySelector('svg');
     if (!svgElement) {
-      alert('No sitemap diagram found');
+      alert(t('reports.crawler.noSitemapDiagramFound', 'No sitemap diagram found'));
       return;
     }
 
@@ -2428,7 +2482,7 @@ Sitemap: https://example.com/sitemap.xml`,
       const button = event?.target;
       if (button) {
         const originalText = button.innerHTML;
-        button.innerHTML = '✓ Downloaded!';
+        button.innerHTML = t('reports.crawler.downloaded', '✓ Downloaded!');
         button.style.background = 'rgba(0, 255, 65, 0.2)';
         setTimeout(() => {
           button.innerHTML = originalText;
@@ -2437,7 +2491,7 @@ Sitemap: https://example.com/sitemap.xml`,
       }
     } catch (error) {
       console.error('Error downloading sitemap:', error);
-      alert('Failed to download sitemap. Please try again.');
+      alert(t('reports.crawler.downloadFailed', 'Failed to download sitemap. Please try again.'));
     }
   };
 
@@ -2479,8 +2533,8 @@ Sitemap: https://example.com/sitemap.xml`,
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
       <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41;">
-        🕷️ Crawling pages with Puppeteer...<br>
-        <span style="font-size: 0.75rem; color: #00ffaa;">This may take 30-60 seconds for large sites</span>
+        ${t('reports.crawler.crawlingPagesWithPuppeteer', '🕷️ Crawling pages with Puppeteer...')}<br>
+        <span style="font-size: 0.75rem; color: #00ffaa;">${t('reports.crawler.thisMayTakeTime', 'This may take 30-60 seconds for large sites')}</span>
       </div>
     `;
     
@@ -2518,4 +2572,19 @@ Sitemap: https://example.com/sitemap.xml`,
       container.insertBefore(patienceEl, container.firstChild);
     }
   }
+
+  // Event delegation for CSP-compliant filter handlers
+  document.addEventListener('input', function(e) {
+    const filterPages = e.target.closest('[data-action="filter-pages"]');
+    if (filterPages && typeof window.filterPages === 'function') {
+      window.filterPages(filterPages.value);
+    }
+  });
+
+  document.addEventListener('change', function(e) {
+    const filterBySection = e.target.closest('[data-action="filter-by-section"]');
+    if (filterBySection && typeof window.filterBySection === 'function') {
+      window.filterBySection(filterBySection.value);
+    }
+  });
 });

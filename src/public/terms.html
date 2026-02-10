@@ -18,6 +18,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/terms.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/terms.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/terms.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/terms.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/terms.html" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -31,6 +32,9 @@
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="ui-components.css" />
     <link rel="stylesheet" href="spacing-fixes.css" />
+
+    <!-- Internationalization (i18n) Support -->
+    <script src="/i18n.js"></script>
 
     <style>
       body:not(.white-theme) {
@@ -83,93 +87,95 @@
 
     <main class="page-shell">
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
+        <a href="/dashboard.html" data-i18n="nav.home">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">Terms of Service</span>
+        <span aria-current="page" data-i18n="termsPage.breadcrumb">Terms of Service</span>
       </nav>
 
       <header class="page-header">
-        <h1 class="page-header__title">Terms of Service</h1>
-        <p class="page-header__subtitle">The rules and conditions for using Site Mechanic.</p>
+        <h1 class="page-header__title" data-i18n="termsPage.title">Terms of Service</h1>
+        <p class="page-header__subtitle" data-i18n="termsPage.subtitle">The rules and conditions for using Site Mechanic.</p>
       </header>
 
       <section class="card">
         <div class="card__body legal-content">
-          <p class="effective-date">Effective Date: January 30, 2026</p>
+          <p class="effective-date" data-i18n="termsPage.effectiveDate">Effective Date: January 30, 2026</p>
 
-          <h2>Acceptance of Terms</h2>
-          <p>By accessing or using Site Mechanic ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.</p>
+          <h2 data-i18n="termsPage.acceptanceTitle">Acceptance of Terms</h2>
+          <p data-i18n="termsPage.acceptanceDesc">By accessing or using Site Mechanic ("the Service"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use the Service.</p>
 
-          <h2>Description of Service</h2>
-          <p>Site Mechanic is a website analysis platform that provides:</p>
+          <h2 data-i18n="termsPage.descriptionTitle">Description of Service</h2>
+          <p data-i18n="termsPage.descriptionIntro">Site Mechanic is a website analysis platform that provides:</p>
           <ul>
-            <li>SEO, performance, accessibility, and security scans for websites.</li>
-            <li>Diagnostic reports with actionable recommendations.</li>
-            <li>Exportable PDF reports (some features require payment).</li>
+            <li data-i18n="termsPage.descSeo">SEO, performance, accessibility, and security scans for websites.</li>
+            <li data-i18n="termsPage.descReports">Diagnostic reports with actionable recommendations.</li>
+            <li data-i18n="termsPage.descPdf">Exportable PDF reports (some features require payment).</li>
           </ul>
 
-          <h2>Account Registration</h2>
-          <p>To access certain features, you may need to create an account. You agree to:</p>
+          <h2 data-i18n="termsPage.accountTitle">Account Registration</h2>
+          <p data-i18n="termsPage.accountIntro">To access certain features, you may need to create an account. You agree to:</p>
           <ul>
-            <li>Provide accurate and complete information.</li>
-            <li>Keep your login credentials secure.</li>
-            <li>Notify us immediately of any unauthorized access to your account.</li>
+            <li data-i18n="termsPage.accountAccurate">Provide accurate and complete information.</li>
+            <li data-i18n="termsPage.accountSecure">Keep your login credentials secure.</li>
+            <li data-i18n="termsPage.accountNotify">Notify us immediately of any unauthorized access to your account.</li>
           </ul>
-          <p>You are responsible for all activity that occurs under your account.</p>
+          <p data-i18n="termsPage.accountResponsible">You are responsible for all activity that occurs under your account.</p>
 
-          <h2>Acceptable Use</h2>
-          <p>You agree NOT to use the Service to:</p>
+          <h2 data-i18n="termsPage.acceptableUseTitle">Acceptable Use</h2>
+          <p data-i18n="termsPage.acceptableUseIntro">You agree NOT to use the Service to:</p>
           <ul>
-            <li>Scan websites you do not own or have permission to analyze.</li>
-            <li>Attempt to overload, disrupt, or exploit our systems.</li>
-            <li>Violate any applicable laws or regulations.</li>
-            <li>Resell or redistribute our services without permission.</li>
-            <li>Use automated tools to scrape or abuse the Service beyond normal usage.</li>
+            <li data-i18n="termsPage.useScanOthers">Scan websites you do not own or have permission to analyze.</li>
+            <li data-i18n="termsPage.useOverload">Attempt to overload, disrupt, or exploit our systems.</li>
+            <li data-i18n="termsPage.useViolate">Violate any applicable laws or regulations.</li>
+            <li data-i18n="termsPage.useResell">Resell or redistribute our services without permission.</li>
+            <li data-i18n="termsPage.useAutomate">Use automated tools to scrape or abuse the Service beyond normal usage.</li>
           </ul>
-          <p>We reserve the right to suspend or terminate accounts that violate these terms.</p>
+          <p data-i18n="termsPage.acceptableUseWarning">We reserve the right to suspend or terminate accounts that violate these terms.</p>
 
-          <h2>Payments and Billing</h2>
-          <p>Some features require payment:</p>
+          <h2 data-i18n="termsPage.paymentsTitle">Payments and Billing</h2>
+          <p data-i18n="termsPage.paymentsIntro">Some features require payment:</p>
           <ul>
-            <li>Payments are processed securely through <strong>Stripe</strong>.</li>
-            <li>Prices are displayed before purchase. All fees are in USD unless otherwise stated.</li>
-            <li>Subscriptions renew automatically unless cancelled.</li>
-            <li>Credits and single-report purchases do not expire unless otherwise noted.</li>
+            <li data-i18n="termsPage.payStripe">Payments are processed securely through Stripe.</li>
+            <li data-i18n="termsPage.payPrices">Prices are displayed before purchase. All fees are in USD unless otherwise stated.</li>
+            <li data-i18n="termsPage.paySubs">Subscriptions renew automatically unless cancelled.</li>
+            <li data-i18n="termsPage.payCredits">Credits and single-report purchases do not expire unless otherwise noted.</li>
           </ul>
 
-          <h2>Intellectual Property</h2>
-          <p>The Service, including its design, code, and content, is owned by Site Mechanic. You may not copy, modify, or distribute our intellectual property without permission.</p>
-          <p>Reports you generate are yours to use for your business purposes. However, you may not claim the underlying analysis technology as your own.</p>
+          <h2 data-i18n="termsPage.ipTitle">Intellectual Property</h2>
+          <p data-i18n="termsPage.ipOwnership">The Service, including its design, code, and content, is owned by Site Mechanic. You may not copy, modify, or distribute our intellectual property without permission.</p>
+          <p data-i18n="termsPage.ipReports">Reports you generate are yours to use for your business purposes. However, you may not claim the underlying analysis technology as your own.</p>
 
-          <h2>Limitation of Liability</h2>
-          <p>Site Mechanic is provided "as is" without warranties of any kind. We do not guarantee:</p>
+          <h2 data-i18n="termsPage.liabilityTitle">Limitation of Liability</h2>
+          <p data-i18n="termsPage.liabilityIntro">Site Mechanic is provided "as is" without warranties of any kind. We do not guarantee:</p>
           <ul>
-            <li>That the Service will be error-free or uninterrupted.</li>
-            <li>The accuracy or completeness of scan results.</li>
-            <li>Specific outcomes from implementing our recommendations.</li>
+            <li data-i18n="termsPage.liabilityErrorFree">That the Service will be error-free or uninterrupted.</li>
+            <li data-i18n="termsPage.liabilityAccuracy">The accuracy or completeness of scan results.</li>
+            <li data-i18n="termsPage.liabilityOutcomes">Specific outcomes from implementing our recommendations.</li>
           </ul>
-          <p>To the maximum extent permitted by law, Site Mechanic shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service.</p>
+          <p data-i18n="termsPage.liabilityMax">To the maximum extent permitted by law, Site Mechanic shall not be liable for any indirect, incidental, special, or consequential damages arising from your use of the Service.</p>
 
-          <h2>Indemnification</h2>
-          <p>You agree to indemnify and hold harmless Site Mechanic and its operators from any claims, damages, or expenses arising from your use of the Service or violation of these terms.</p>
+          <h2 data-i18n="termsPage.indemnTitle">Indemnification</h2>
+          <p data-i18n="termsPage.indemnDesc">You agree to indemnify and hold harmless Site Mechanic and its operators from any claims, damages, or expenses arising from your use of the Service or violation of these terms.</p>
 
-          <h2>Modifications to Service</h2>
-          <p>We may modify, suspend, or discontinue any part of the Service at any time. We will try to provide notice of significant changes, but are not obligated to do so.</p>
+          <h2 data-i18n="termsPage.modifyTitle">Modifications to Service</h2>
+          <p data-i18n="termsPage.modifyDesc">We may modify, suspend, or discontinue any part of the Service at any time. We will try to provide notice of significant changes, but are not obligated to do so.</p>
 
-          <h2>Changes to Terms</h2>
-          <p>We may update these Terms of Service from time to time. Continued use of the Service after changes are posted constitutes acceptance of the new terms.</p>
+          <h2 data-i18n="termsPage.changesToTermsTitle">Changes to Terms</h2>
+          <p data-i18n="termsPage.changesToTermsDesc">We may update these Terms of Service from time to time. Continued use of the Service after changes are posted constitutes acceptance of the new terms.</p>
 
-          <h2>Governing Law</h2>
-          <p>These terms are governed by the laws of the jurisdiction in which Site Mechanic operates, without regard to conflict of law provisions.</p>
+          <h2 data-i18n="termsPage.governingLawTitle">Governing Law</h2>
+          <p data-i18n="termsPage.governingLawDesc">These terms are governed by the laws of the jurisdiction in which Site Mechanic operates, without regard to conflict of law provisions.</p>
 
-          <h2>Contact Us</h2>
-          <p>If you have questions about these terms, please contact us at <a href="mailto:support@sitemechanic.io">support@sitemechanic.io</a>.</p>
+          <h2 data-i18n="termsPage.contactTitle">Contact Us</h2>
+          <p><span data-i18n="termsPage.contactBefore">If you have questions about these terms, please contact us at </span><a href="mailto:support@sitemechanic.io">support@sitemechanic.io</a><span data-i18n="termsPage.contactAfter">.</span></p>
         </div>
       </section>
     </main>
 
     <script src="/pro-utils.js"></script>
     <script src="/nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="/theme-controls.js"></script>
   </body>
 </html>

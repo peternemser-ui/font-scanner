@@ -52,10 +52,12 @@ summary:focus-visible,
   --font-serif: 'DM Serif Text', Georgia, serif;
 }
 
-h1, h2, h3, h4, h5, h6,
-.h1, .h2, .h3, .h4, .h5, .h6 {
+/* Only page-header__title uses DM Serif Text */
+.page-header__title {
   font-family: var(--font-serif) !important;
   font-weight: 400 !important;
+  padding-top: 1.5rem;
+  padding-bottom: 1.5rem;
 }
 
 /* ===================================================================
@@ -253,6 +255,42 @@ body.white-theme {
 }
 
 /* ============================================
+   DARK MODE PRIMARY BUTTON OVERRIDES
+   Ensure cyan (#5bf4e7) is used for all primary actions
+   ============================================ */
+
+body:not(.white-theme) {
+  --color-primary: #5bf4e7 !important;
+  --color-primary-hover: #4dd8cc !important;
+}
+
+/* Primary buttons in dark mode - cyan background with black text */
+body:not(.white-theme) .btn-primary-sm,
+body:not(.white-theme) .continue-card__btn--primary,
+body:not(.white-theme) .site-group__btn--view,
+body:not(.white-theme) .account-btn--primary,
+body:not(.white-theme) [class*="btn--primary"],
+body:not(.white-theme) [class*="btn--featured"],
+body:not(.white-theme) .hero-form__submit {
+  background: #5bf4e7 !important;
+  background-color: #5bf4e7 !important;
+  color: #000000 !important;
+  border-color: #5bf4e7 !important;
+}
+
+body:not(.white-theme) .btn-primary-sm:hover,
+body:not(.white-theme) .continue-card__btn--primary:hover,
+body:not(.white-theme) .site-group__btn--view:hover,
+body:not(.white-theme) .account-btn--primary:hover,
+body:not(.white-theme) [class*="btn--primary"]:hover,
+body:not(.white-theme) [class*="btn--featured"]:hover,
+body:not(.white-theme) .hero-form__submit:hover {
+  background: #4dd8cc !important;
+  background-color: #4dd8cc !important;
+  color: #000000 !important;
+}
+
+/* ============================================
    PROGRESS BAR PROTECTION - LIGHT THEME
    Prevent progress bars from being overridden
    ============================================ */
@@ -391,6 +429,14 @@ body.white-theme [style*="color: #e0e0e0"] {
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&display=swap');
 
 /* Base body styling - Swiss typography (Inter) */
+html {
+  background-color: #000000;
+}
+
+html.white-theme {
+  background-color: #ffffff;
+}
+
 body {
   font-family: var(--font-sans, 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Arial, sans-serif);
   color: var(--text-body, var(--text-primary));
@@ -477,14 +523,24 @@ body::after {
 }
 
 /* Ensure content paints above the background layer */
-#nav-placeholder,
 .container,
 main,
-header,
 footer,
 .site-footer-bar {
   position: relative;
   z-index: 1;
+}
+
+/* Nav placeholder needs high z-index so dropdowns appear above page content */
+#nav-placeholder {
+  position: relative;
+  z-index: 10000;
+}
+
+/* Header needs higher z-index so dropdowns appear above page content */
+header {
+  position: relative;
+  z-index: 9999;
 }
 
 /* Dark mode background (when white-theme class is NOT present) */
@@ -760,7 +816,7 @@ p {
   height: var(--unified-header-height);
   background: var(--bg-primary);
   border-bottom: 1px solid var(--border-primary);
-  z-index: 5000;
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: flex-start;
@@ -1641,7 +1697,7 @@ input[type="search"],
 textarea,
 select {
   width: 100%;
-  max-width: 500px;
+  max-width: 600px;
   padding: var(--space-12, 0.75rem) var(--space-16, 1rem);
   margin-right: 1rem;
   background-color: var(--bg-input);
@@ -2618,7 +2674,7 @@ body.white-theme #analyzeBtn:focus {
    NOTE: UI kit buttons use `.btn` + variants (e.g. `.btn-primary`) and manage
    their own colors. Avoid overriding them here.
 */
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle) {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip) {
   background-color: #f8f9fa !important; /* Light neutral background */
   color: #1a1a1a !important; /* Dark text */
   border: 2px solid #dee2e6 !important; /* Subtle border */
@@ -2629,12 +2685,12 @@ body.white-theme button[style*="color"] {
   color: inherit !important; /* Respect inline color for special buttons */
 }
 
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):hover {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):hover {
   background-color: #e9ecef !important; /* Slightly darker on hover */
   border-color: #adb5bd !important;
 }
 
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):disabled {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):disabled {
   background-color: #e9ecef !important; /* Subtle disabled state */
   color: #6c757d !important; /* Muted but readable text */
   border-color: #dee2e6 !important;
@@ -7068,8 +7124,7 @@ body.white-theme .breakdown-note svg {
 
 /* Quick Navigation Panel */
 .quick-nav {
-  position: sticky;
-  top: 20px;
+  position: relative;
   background: var(--bg-secondary);
   border: 1px solid var(--border-primary);
   border-radius: var(--radius-xl);
@@ -7414,11 +7469,13 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
 
 /* Homepage Hero Section */
 .homepage-hero {
-  max-width: var(--container-hero, 1120px);
+  max-width: 1400px;
   margin: 0 auto;
-  padding: var(--swiss-section-gap, 20px);
+  padding: var(--swiss-section-gap, 20px) 40px;
   padding-top: 6px;
   padding-bottom: 16px;
+  position: relative;
+  z-index: 10;
 }
 
 /* Hero Grid - Single column layout */
@@ -7443,7 +7500,7 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
   font-family: var(--font-serif, 'DM Serif Text', Georgia, serif);
   font-size: 2.75rem;
   font-weight: 400;
-  line-height: 2.75rem;
+  line-height: 3.75rem;
   color: var(--text-primary);
   margin: 0 0 4px 0;
   letter-spacing: -0.01em;
@@ -7465,17 +7522,20 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
 /* Hero Form - Primary action container */
 .hero-form {
   margin-bottom: 4px;
+  width: 100%;
+  min-width: min(100%, 800px);
 }
 
 /* Hero Form Row - Fused pill container */
 .hero-form__row {
   display: flex;
-  gap: 0;
+  gap: 8px;
   align-items: stretch;
+  width: 100%;
   background: var(--bg-card, var(--bg-secondary));
   border: 2px solid var(--border-primary, rgba(255, 255, 255, 0.1));
   border-radius: 14px;
-  padding: 4px;
+  padding: 6px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
   transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
@@ -7491,10 +7551,10 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
   padding: 0 20px;
   font-size: 1.125rem;
   border: none;
-  border-radius: 10px 0 0 10px;
+  border-radius: 10px;
   background: transparent;
   color: var(--text-primary);
-  min-width: 0;
+  min-width: 500px;
   max-width: none;
   margin: 0;
 }
@@ -7508,18 +7568,23 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
 }
 
 .hero-form__button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   height: 52px;
-  padding: 0 32px;
+  padding: 0 40px;
   font-size: 1.125rem;
   font-weight: 600;
   border: none;
-  border-radius: 0 10px 10px 0;
+  border-radius: 10px;
   background: var(--accent-primary);
   color: var(--accent-primary-contrast, #000);
   cursor: pointer;
   white-space: nowrap;
   transition: background-color 0.2s ease, transform 0.1s ease;
   min-width: auto;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  line-height: 1;
 }
 
 .hero-form__button:hover {
@@ -7534,11 +7599,68 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
   outline: none;
 }
 
+/* Hero Form - Light Theme */
+body.white-theme .hero-form__row {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+body.white-theme .hero-form__row:focus-within {
+  border-color: var(--accent-primary);
+}
+
+body.white-theme .hero-form__input {
+  color: #1a1a1a;
+}
+
+body.white-theme .hero-form__input::placeholder {
+  color: #9ca3af;
+}
+
+body.white-theme .hero-form__button {
+  background: var(--accent-primary) !important;
+  color: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 2px 6px rgba(var(--accent-primary-rgb), 0.3) !important;
+}
+
+body.white-theme .hero-form__button:hover {
+  background: var(--accent-primary-dark) !important;
+  box-shadow: 0 4px 12px rgba(var(--accent-primary-rgb), 0.4) !important;
+}
+
 /* Hero Helper Text */
 .hero-helper-text {
   font-size: 0.875rem;
   color: var(--text-muted);
   margin: 0 0 8px 0;
+}
+
+/* Hero Usage Pill */
+.hero-usage-pill {
+  margin: 8px 0 12px 0;
+  min-height: 1.5rem;
+}
+
+.hero-usage-pill:empty {
+  display: none;
+}
+
+/* Page Shell Usage Pill (for analyzer pages using PageShell) */
+.page-shell-usage-pill {
+  margin: 1rem 0 0 0;
+  display: flex;
+  justify-content: center;
+}
+
+.page-shell-usage-pill:empty {
+  display: none;
+}
+
+/* Hero Usage Pill - center it */
+.hero-usage-pill {
+  display: flex;
+  justify-content: center;
 }
 
 /* Example URL Chips */
@@ -7731,6 +7853,29 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
   text-decoration: underline;
 }
 
+/* Hero Right Panel - Light Theme */
+body.white-theme .hero-right {
+  background: #ffffff;
+  border-color: #e0e0e0;
+}
+
+body.white-theme .hero-right__pro-callout {
+  background: rgba(var(--accent-primary-rgb), 0.06);
+}
+
+/* Example Chips - Light Theme */
+body.white-theme .example-chip {
+  background: #f9fafb;
+  border-color: #e5e7eb;
+  color: #4b5563;
+}
+
+body.white-theme .example-chip:hover {
+  background: #f3f4f6;
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
 /* ============================================
    FEATURE STRIP
    ============================================ */
@@ -7740,6 +7885,8 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
   margin: 0 auto;
   padding: 40px var(--swiss-section-gap, 20px);
   border-top: var(--swiss-border);
+  position: relative;
+  z-index: 10;
 }
 
 .feature-strip__title {
@@ -7785,6 +7932,8 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
   max-width: var(--container-hero, 1120px);
   margin: 0 auto;
   padding: 0 var(--swiss-section-gap, 20px) 40px;
+  position: relative;
+  z-index: 10;
 }
 
 .pro-upsell__card {
@@ -7863,6 +8012,8 @@ body.white-theme #results [style*="border-bottom: 1px solid #333"] {
   padding: 20px var(--swiss-section-gap, 20px);
   text-align: center;
   border-top: var(--swiss-border);
+  position: relative;
+  z-index: 10;
 }
 
 .homepage-footer-bar__text {

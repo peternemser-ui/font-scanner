@@ -1,6 +1,15 @@
 (function (window) {
   'use strict';
 
+  // i18n helper
+  function t(key, fallback) {
+    if (window.i18n && typeof window.i18n.t === 'function') {
+      const val = window.i18n.t(key);
+      return (val === key && fallback) ? fallback : val;
+    }
+    return fallback || key;
+  }
+
   function getScoreColor(score) {
     if (typeof score !== 'number' || Number.isNaN(score)) return '#9ca3af';
     if (score >= 90) return '#22c55e';  // Green - excellent
@@ -22,7 +31,7 @@
       '<div class="report-shell__summary-card" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">' +
         '<div class="report-shell__summary-label">' + (label || '') + '</div>' +
         '<svg class="report-shell__donut" viewBox="0 0 180 180" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">' +
-          '<circle cx="90" cy="90" r="75" fill="none" stroke="#e5e7eb" stroke-width="12"></circle>' +
+          '<circle class="report-shell__donut-track" cx="90" cy="90" r="75" fill="none" stroke-width="12"></circle>' +
           '<circle cx="90" cy="90" r="75" fill="none" stroke="' + color + '" stroke-width="12" stroke-linecap="round" stroke-dasharray="' + dash + ' ' + circumference + '" stroke-dashoffset="' + dashOffset + '" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;"></circle>' +
           '<text x="90" y="90" text-anchor="middle" dominant-baseline="central" fill="' + color + '" font-size="36" font-weight="700" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">' + (typeof score === 'number' && !Number.isNaN(score) ? safeScore : '—') + '</text>' +
         '</svg>' +
@@ -39,7 +48,7 @@
         url: o.url,
         timestamp: o.timestamp,
         mode: o.mode,
-        title: o.title || 'Analysis Results',
+        title: o.title || t('reports.common.analysisResults', 'Analysis Results'),
         subtitle: o.badgeText || o.subtitle
       });
     }

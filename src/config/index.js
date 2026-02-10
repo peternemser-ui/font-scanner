@@ -3,6 +3,8 @@
  * Centralizes all environment variables and default values
  */
 
+const { PRICING, getFreeLimits, getPlanLimits, getStripePriceId, getSingleReportPriceId, isPlanPro } = require('./pricing');
+
 const config = {
   // Server
   port: parseInt(process.env.PORT || '3000', 10),
@@ -128,6 +130,9 @@ const config = {
     appBaseUrl: process.env.APP_BASE_URL || process.env.BASE_URL || 'http://localhost:3000',
   },
 
+  // Centralized Pricing Configuration
+  pricing: PRICING,
+
   // Competitive Analysis (Resource-intensive operations)
   competitiveAnalysis: {
     // Maximum number of competitors to analyze per request
@@ -163,4 +168,11 @@ const config = {
   },
 };
 
+// Export config and pricing helpers
 module.exports = config;
+module.exports.PRICING = PRICING;
+module.exports.getFreeLimits = getFreeLimits;
+module.exports.getPlanLimits = getPlanLimits;
+module.exports.getStripePriceId = getStripePriceId;
+module.exports.getSingleReportPriceId = getSingleReportPriceId;
+module.exports.isPlanPro = isPlanPro;

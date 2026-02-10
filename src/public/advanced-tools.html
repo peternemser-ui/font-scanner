@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/advanced-tools.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/advanced-tools.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/advanced-tools.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/advanced-tools.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/advanced-tools.html" />
 
     <!-- Open Graph -->
@@ -294,7 +295,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
 </head>
 <body>
@@ -326,7 +326,7 @@
 
         <div class="tools-grid">
             <!-- Core Web Vitals -->
-            <div class="tool-card" onclick="window.location.href='/core-web-vitals.html'">
+            <div class="tool-card" data-action="navigate" data-href="/core-web-vitals.html">
                 <div class="tool-icon">⚡</div>
                 <h2>Core Web Vitals <span class="tool-badge badge-hot">🔥 HOT</span></h2>
                 <p>Google ranking factor analysis. LCP, INP, CLS metrics with mobile-first scoring.</p>
@@ -334,7 +334,7 @@
             </div>
 
             <!-- Competitive Analysis -->
-            <div class="tool-card" onclick="window.location.href='/competitive-analysis.html'">
+            <div class="tool-card" data-action="navigate" data-href="/competitive-analysis.html">
                 <div class="tool-icon">🏆</div>
                 <h2>Beat Competition <span class="tool-badge badge-new">NEW</span></h2>
                 <p>Compare against 5 competitors. Side-by-side metrics with action plans.</p>
@@ -342,7 +342,7 @@
             </div>
 
             <!-- CRO Analyzer -->
-            <div class="tool-card" onclick="alert('CRO Analysis API ready at /api/cro-analysis - Frontend coming soon!')">
+            <div class="tool-card" data-action="alert" data-message="CRO Analysis API ready at /api/cro-analysis - Frontend coming soon!">
                 <div class="tool-icon">💰</div>
                 <h2>CRO Analyzer <span class="tool-badge badge-premium">Saves hours</span></h2>
                 <p>Conversion optimization: CTAs, forms, trust signals, mobile UX scoring. Saves manual UX audits and A/B test planning.</p>
@@ -350,7 +350,7 @@
             </div>
 
             <!-- Broken Link Checker -->
-            <div class="tool-card" onclick="alert('Broken Link Checker API ready at /api/broken-links - Frontend coming soon!')">
+            <div class="tool-card" data-action="alert" data-message="Broken Link Checker API ready at /api/broken-links - Frontend coming soon!">
                 <div class="tool-icon">🔗</div>
                 <h2>Broken Link Checker <span class="tool-badge badge-new">NEW</span></h2>
                 <p>Crawl your site for broken links, redirects, and dead external links.</p>
@@ -358,7 +358,7 @@
             </div>
 
             <!-- Brand Consistency -->
-            <div class="tool-card" onclick="alert('Brand Consistency API ready at /api/brand-consistency - Frontend coming soon!')">
+            <div class="tool-card" data-action="alert" data-message="Brand Consistency API ready at /api/brand-consistency - Frontend coming soon!">
                 <div class="tool-icon">🎨</div>
                 <h2>Brand Consistency</h2>
                 <p>Analyze color palette, fonts, and logo usage. Generate brand guide.</p>
@@ -366,7 +366,7 @@
             </div>
 
             <!-- Local SEO -->
-            <div class="tool-card" onclick="alert('Local SEO API ready at /api/local-seo - Frontend coming soon!')">
+            <div class="tool-card" data-action="alert" data-message="Local SEO API ready at /api/local-seo - Frontend coming soon!">
                 <div class="tool-icon">📍</div>
                 <h2>Local SEO Analyzer</h2>
                 <p>Check NAP consistency, LocalBusiness schema, Google Business Profile.</p>
@@ -374,7 +374,7 @@
             </div>
 
             <!-- GDPR Compliance -->
-            <div class="tool-card" onclick="alert('GDPR Compliance API ready at /api/gdpr-compliance - Frontend coming soon!')">
+            <div class="tool-card" data-action="alert" data-message="GDPR Compliance API ready at /api/gdpr-compliance - Frontend coming soon!">
                 <div class="tool-icon">🔒</div>
                 <h2>GDPR Compliance <span class="tool-badge badge-premium">Client-ready</span></h2>
                 <p>Cookie consent, privacy policies, tracker inventory. Saves legal review and compliance research with export-ready evidence.</p>
@@ -382,7 +382,7 @@
             </div>
 
             <!-- SEO Analyzer -->
-            <div class="tool-card" onclick="window.location.href='/seo-analyzer.html'">
+            <div class="tool-card" data-action="navigate" data-href="/seo-analyzer.html">
                 <div class="tool-icon">🔍</div>
                 <h2>SEO Analyzer</h2>
                 <p>Comprehensive SEO audit with 15+ checks. Meta tags, structured data, content.</p>
@@ -390,7 +390,7 @@
             </div>
 
             <!-- Performance Analyzer -->
-            <div class="tool-card" onclick="window.location.href='/performance-analyzer.html'">
+            <div class="tool-card" data-action="navigate" data-href="/performance-analyzer.html">
                 <div class="tool-icon">📈</div>
                 <h2>Performance Analyzer</h2>
                 <p>Lighthouse-powered performance analysis. Mobile and desktop metrics.</p>
@@ -398,7 +398,7 @@
             </div>
 
             <!-- Accessibility Analyzer -->
-            <div class="tool-card" onclick="window.location.href='/accessibility-analyzer.html'">
+            <div class="tool-card" data-action="navigate" data-href="/accessibility-analyzer.html">
                 <div class="tool-icon">♿</div>
                 <h2>Accessibility Analyzer</h2>
                 <p>WCAG 2.1 Level A, AA, AAA compliance checking. Screen reader tests.</p>
@@ -406,7 +406,7 @@
             </div>
 
             <!-- Security Analyzer -->
-            <div class="tool-card" onclick="window.location.href='/security-analyzer.html'">
+            <div class="tool-card" data-action="navigate" data-href="/security-analyzer.html">
                 <div class="tool-icon">🛡️</div>
                 <h2>Security Analyzer</h2>
                 <p>Security headers, SSL/TLS analysis, vulnerability scanning.</p>
@@ -441,6 +441,11 @@
         </div>
     </div>
 
+    <script src="js/app-events.js"></script>
     <script src="theme-controls.js"></script>
+    <!-- Navigation and Language Switcher -->
+    <script src="/nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
 </body>
 </html>

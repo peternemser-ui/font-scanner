@@ -1,28 +1,7 @@
 /**
  * Upgrade Page Script
- * Handles billing toggle and Stripe Checkout
+ * Handles Stripe Checkout for all plans
  */
-
-let isAnnual = false;
-
-// Billing toggle
-const billingToggle = document.getElementById('billing-toggle');
-const monthlyCard = document.getElementById('pro-monthly');
-const annualCard = document.getElementById('pro-annual');
-
-billingToggle.addEventListener('click', () => {
-  isAnnual = !isAnnual;
-  billingToggle.classList.toggle('active', isAnnual);
-
-  // Toggle card visibility
-  if (isAnnual) {
-    monthlyCard.classList.add('hidden');
-    annualCard.classList.remove('hidden');
-  } else {
-    monthlyCard.classList.remove('hidden');
-    annualCard.classList.add('hidden');
-  }
-});
 
 // Show/hide messages
 function showError(message) {
@@ -79,6 +58,11 @@ document.getElementById('upgrade-annual-btn').addEventListener('click', async ()
   await handleUpgrade('annual');
 });
 
+// Get Day Pass
+document.getElementById('upgrade-daypass-btn').addEventListener('click', async () => {
+  await handleUpgrade('day');
+});
+
 async function handleUpgrade(billingPeriod) {
   clearMessages();
 
@@ -91,31 +75,49 @@ async function handleUpgrade(billingPeriod) {
     return;
   }
 
-  const btn = billingPeriod === 'monthly'
-    ? document.getElementById('upgrade-monthly-btn')
-    : document.getElementById('upgrade-annual-btn');
+  // Map billing period to button and interval
+  const btnMap = {
+    'monthly': document.getElementById('upgrade-monthly-btn'),
+    'annual': document.getElementById('upgrade-annual-btn'),
+    'day': document.getElementById('upgrade-daypass-btn')
+  };
+  const intervalMap = {
+    'monthly': 'month',
+    'annual': 'year',
+    'day': 'day'
+  };
+  const labelMap = {
+    'monthly': 'Upgrade to Pro',
+    'annual': 'Upgrade to Pro Annual',
+    'day': 'Get 8 Hour Day Pass'
+  };
+
+  const btn = btnMap[billingPeriod];
+  const interval = intervalMap[billingPeriod];
 
   try {
     btn.disabled = true;
     btn.textContent = 'Redirecting to checkout...';
 
-    // Create Stripe Checkout session
-    const response = await fetch('/api/payment/create-checkout-session', {
+    // Create Stripe Checkout session via unified billing endpoint
+    const response = await fetch('/api/billing/checkout', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${token}`
       },
       body: JSON.stringify({
-        successUrl: `${window.location.origin}/account.html?success=true`,
-        cancelUrl: `${window.location.origin}/account.html?canceled=true`
+        purchaseType: 'subscription',
+        interval: interval,
+        returnUrl: `${window.location.origin}/account.html`
       })
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.error || 'Failed to create checkout session');
+      // Backend returns { error: "ErrorName", message: "..." }
+      throw new Error(data.message || data.error || 'Failed to create checkout session');
     }
 
     // Redirect to Stripe Checkout
@@ -124,12 +126,12 @@ async function handleUpgrade(billingPeriod) {
   } catch (error) {
     showError(error.message);
     btn.disabled = false;
-    btn.textContent = billingPeriod === 'monthly' ? 'Upgrade to Pro' : 'Upgrade to Pro Annual';
+    btn.textContent = labelMap[billingPeriod];
   }
 }
 
 // Check for URL parameters
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const urlParams = new URLSearchParams(window.location.search);
 
   // Check if payment was canceled
@@ -143,30 +145,54 @@ document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
       window.location.href = '/account.html';
     }, 2000);
+    return;
   }
 
-  // Check current user plan
-  const user = getUser();
-  if (user && user.plan === 'pro') {
-    // Already Pro - redirect to account
-    showSuccess('You already have Pro! Redirecting to your account...');
-    setTimeout(() => {
-      window.location.href = '/account.html';
-    }, 2000);
+  // Check current user plan from server (not stale localStorage)
+  const token = getAuthToken();
+  if (token) {
+    try {
+      const resp = await fetch('/api/billing/status', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (resp.ok) {
+        const billing = await resp.json();
+        if (billing.plan === 'pro') {
+          // Only redirect if user has a real Pro subscription (monthly/annual)
+          showSuccess('You already have Pro! Redirecting to your account...');
+          setTimeout(() => {
+            window.location.href = '/account.html';
+          }, 2000);
+        } else if (billing.plan === 'day_pass') {
+          // Day Pass users can still upgrade to Pro — disable the Day Pass button
+          const dayPassBtn = document.getElementById('upgrade-daypass-btn');
+          dayPassBtn.textContent = 'Current Plan';
+          dayPassBtn.disabled = true;
+          dayPassBtn.classList.add('secondary');
+        }
+      }
+    } catch (e) {
+      // Ignore - allow user to stay on upgrade page
+    }
   }
 
   // Update button text if not logged in
   if (!getAuthToken()) {
     const monthlyBtn = document.getElementById('upgrade-monthly-btn');
     const annualBtn = document.getElementById('upgrade-annual-btn');
+    const daypassBtn = document.getElementById('upgrade-daypass-btn');
 
     monthlyBtn.textContent = 'Login to Upgrade';
     annualBtn.textContent = 'Login to Upgrade';
+    daypassBtn.textContent = 'Login to Get 8 Hour Day Pass';
 
     monthlyBtn.onclick = () => {
       window.location.href = '/auth.html';
     };
     annualBtn.onclick = () => {
+      window.location.href = '/auth.html';
+    };
+    daypassBtn.onclick = () => {
       window.location.href = '/auth.html';
     };
   }

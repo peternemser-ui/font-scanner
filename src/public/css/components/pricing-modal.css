@@ -1,73 +1,53 @@
 /**
  * Site Mechanic - Pricing Modal Styles
- * Swiss / International Typographic Style
+ * Swiss Minimal Design - Compact v4
  *
- * Design principles:
- * - Tight hierarchy with disciplined type scale
- * - Left-aligned content blocks
- * - Subtle hairline rules, clean spacing (8/12/16/24/32)
- * - Negative tracking on large type, positive on micro labels
- * - Grid-system cards with consistent internal rhythm
+ * Strict spacing scale: 6 / 10 / 14 / 18 / 24
+ * Typography: Inter, tight vertical rhythm
  */
 
 /* ============================================
-   Typography Tokens (Modal-scoped)
+   Design Tokens (Modal-scoped)
    ============================================ */
 
 .sm-modal__overlay {
-  /* Font stack */
   --sm-font: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  /* Type scale */
-  --sm-text-11: 11px;
-  --sm-text-12: 12px;
-  --sm-text-13: 13px;
-  --sm-text-14: 14px;
-  --sm-text-15: 15px;
-  --sm-text-17: 17px;
-  --sm-text-18: 18px;
-  --sm-text-28: 28px;
-  --sm-text-32: 32px;
+  /* Colors - Light theme default */
+  --sm-border-light: rgba(0, 0, 0, 0.08);
+  --sm-border-medium: rgba(0, 0, 0, 0.12);
+  --sm-border-strong: rgba(0, 0, 0, 0.18);
+  --sm-text-primary: #111111;
+  --sm-text-secondary: #52525b;
+  --sm-text-muted: #71717a;
+  --sm-bg-overlay: rgba(0, 0, 0, 0.5);
+  --sm-bg-panel: #ffffff;
+  --sm-bg-card: #fafafa;
+  --sm-bg-card-hover: #f5f5f5;
+  --sm-bg-featured: rgba(0, 0, 0, 0.02);
+  --sm-accent: #111111;
+  --sm-accent-hover: #333333;
+  --sm-success: #16a34a;
+  --sm-success-bg: rgba(22, 163, 74, 0.08);
 
-  /* Line heights */
-  --sm-leading-tight: 1.15;
-  --sm-leading-snug: 1.25;
-  --sm-leading-normal: 1.35;
+  /* Radius */
+  --sm-radius-sm: 6px;
+  --sm-radius-md: 12px;
+  --sm-radius-lg: 16px;
 
-  /* Tracking */
-  --sm-tracking-tight: -0.02em;
-  --sm-tracking-tighter: -0.03em;
-  --sm-tracking-wide: 0.08em;
+  /* Shadows */
+  --sm-shadow-panel: 0 24px 48px -12px rgba(0, 0, 0, 0.18);
+}
 
-  /* Spacing scale */
-  --sm-space-4: 4px;
-  --sm-space-6: 6px;
-  --sm-space-8: 8px;
-  --sm-space-12: 12px;
-  --sm-space-16: 16px;
-  --sm-space-20: 20px;
-  --sm-space-24: 24px;
-  --sm-space-32: 32px;
+/* ============================================
+   Box Sizing Reset
+   ============================================ */
 
-  /* Colors */
-  --sm-border-light: rgba(255, 255, 255, 0.08);
-  --sm-border-medium: rgba(255, 255, 255, 0.12);
-  --sm-text-primary: #fff;
-  --sm-text-secondary: #a1a1aa;
-  --sm-text-tertiary: #71717a;
-  --sm-bg-panel: #18181b;
-  --sm-bg-card: #1f1f23;
-  --sm-bg-card-hover: #27272a;
-  --sm-accent: #5bf4e7;
-  --sm-accent-hover: #4de3d6;
-  --sm-success: #22c55e;
-  --sm-success-dark: #16a34a;
-
-  /* Card */
-  --sm-card-radius: 12px;
-  --sm-card-padding: 16px;
-  --sm-btn-radius: 10px;
-  --sm-btn-height: 42px;
+.sm-modal__overlay,
+.sm-modal__overlay *,
+.sm-modal__overlay *::before,
+.sm-modal__overlay *::after {
+  box-sizing: border-box;
 }
 
 /* ============================================
@@ -81,37 +61,22 @@ body.sm-modal-open {
 }
 
 /* ============================================
-   Global Box-Sizing
-   ============================================ */
-
-.sm-modal__overlay,
-.sm-modal__overlay *,
-.sm-modal__overlay *::before,
-.sm-modal__overlay *::after {
-  box-sizing: border-box;
-}
-
-/* ============================================
    Overlay
    ============================================ */
 
 .sm-modal__overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0;
   z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  background: rgba(0, 0, 0, 0.88);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  padding: 20px;
+  background: var(--sm-bg-overlay);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   opacity: 0;
   visibility: hidden;
-  overflow: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease;
   font-family: var(--sm-font);
 }
@@ -122,21 +87,21 @@ body.sm-modal-open {
 }
 
 /* ============================================
-   Panel
+   Panel - Compact Shell
    ============================================ */
 
 .sm-modal__panel {
   position: relative;
   display: flex;
   flex-direction: column;
-  width: min(920px, calc(100vw - 32px));
-  max-width: calc(100vw - 32px);
-  max-height: calc(100vh - 32px);
+  width: min(1060px, calc(100vw - 40px));
+  max-height: 86vh;
   background: var(--sm-bg-panel);
   border: 1px solid var(--sm-border-light);
-  border-radius: 14px;
+  border-radius: var(--sm-radius-lg);
+  box-shadow: var(--sm-shadow-panel);
   overflow: hidden;
-  transform: scale(0.96) translateY(6px);
+  transform: scale(0.97) translateY(8px);
   transition: transform 0.2s ease;
 }
 
@@ -145,231 +110,313 @@ body.sm-modal-open {
 }
 
 /* ============================================
-   Header - Stacked Layout
+   Header - Tight & Aligned
    ============================================ */
 
 .sm-modal__header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 2px;
-  padding: 10px 16px 8px;
+  gap: 14px;
+  padding: 14px 18px;
   border-bottom: 1px solid var(--sm-border-light);
   flex-shrink: 0;
-  position: relative;
+}
+
+.sm-modal__header-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
 }
 
 .sm-modal__logo {
-  height: 28px;
+  height: 44px;
   width: auto;
-  opacity: 0.95;
 }
 
-.sm-modal__title-text {
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--sm-text-secondary);
+.sm-modal__title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--sm-text-primary);
   line-height: 1.2;
-  letter-spacing: -0.01em;
+  flex: 1;
+  text-align: center;
 }
 
+/* Close Button - 36x36 */
 .sm-modal__close {
-  position: absolute;
-  top: var(--sm-space-12);
-  right: var(--sm-space-12);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  color: var(--sm-text-tertiary);
+  border: 1px solid var(--sm-border-medium);
+  border-radius: var(--sm-radius-sm);
+  color: var(--sm-text-muted);
   cursor: pointer;
-  transition: color 0.15s ease, border-color 0.15s ease;
   flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 }
 
 .sm-modal__close:hover {
+  background: rgba(0, 0, 0, 0.04);
+  border-color: var(--sm-border-strong);
   color: var(--sm-text-primary);
-  border-color: var(--sm-border-medium);
 }
 
 .sm-modal__close:focus {
-  outline: 2px solid var(--sm-accent);
-  outline-offset: 2px;
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sm-bg-panel), 0 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.sm-modal__close:focus:not(:focus-visible) {
+  box-shadow: none;
+}
+
+.sm-modal__close:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sm-bg-panel), 0 0 0 4px rgba(0, 0, 0, 0.2);
 }
 
 .sm-modal__close svg {
   display: block;
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
 }
 
 /* ============================================
-   Body
+   Font Size Toggle - Accessibility
+   ============================================ */
+
+.sm-modal__font-size {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: auto;
+  margin-right: 10px;
+  padding: 2px;
+  background: var(--sm-bg-card);
+  border: 1px solid var(--sm-border-light);
+  border-radius: var(--sm-radius-sm);
+}
+
+.sm-modal__font-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--sm-text-muted);
+  font-family: var(--sm-font);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.sm-modal__font-btn:hover {
+  background: var(--sm-bg-card-hover);
+  color: var(--sm-text-secondary);
+}
+
+.sm-modal__font-btn--active {
+  background: var(--sm-accent);
+  color: var(--sm-bg-panel);
+}
+
+.sm-modal__font-btn--active:hover {
+  background: var(--sm-accent-hover);
+  color: var(--sm-bg-panel);
+}
+
+.sm-modal__font-btn--large {
+  font-size: 14px;
+}
+
+.sm-modal__font-btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sm-bg-panel), 0 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.sm-modal__font-btn:focus:not(:focus-visible) {
+  box-shadow: none;
+}
+
+.sm-modal__font-btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sm-bg-panel), 0 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================
+   Font Size Modifiers
+   ============================================ */
+
+.sm-modal__panel--font-small {
+  font-size: 13px;
+}
+
+.sm-modal__panel--font-small .sm-modal__title {
+  font-size: 13px;
+}
+
+.sm-modal__panel--font-small .sm-plan-card__name {
+  font-size: 12px;
+}
+
+.sm-modal__panel--font-small .sm-plan-card__amount {
+  font-size: 30px;
+}
+
+.sm-modal__panel--font-small .sm-plan-card__period,
+.sm-modal__panel--font-small .sm-plan-card__unit {
+  font-size: 10px;
+}
+
+.sm-modal__panel--font-small .sm-plan-card__benefit {
+  font-size: 11px;
+}
+
+.sm-modal__panel--font-small .sm-plan-card__btn {
+  font-size: 12px;
+  height: 38px;
+}
+
+.sm-modal__panel--font-large {
+  font-size: 17px;
+}
+
+.sm-modal__panel--font-large .sm-modal__title {
+  font-size: 18px;
+}
+
+.sm-modal__panel--font-large .sm-plan-card__name {
+  font-size: 15px;
+}
+
+.sm-modal__panel--font-large .sm-plan-card__amount {
+  font-size: 42px;
+}
+
+.sm-modal__panel--font-large .sm-plan-card__period,
+.sm-modal__panel--font-large .sm-plan-card__unit {
+  font-size: 13px;
+}
+
+.sm-modal__panel--font-large .sm-plan-card__benefit {
+  font-size: 14px;
+}
+
+.sm-modal__panel--font-large .sm-plan-card__btn {
+  font-size: 15px;
+  height: 50px;
+}
+
+/* ============================================
+   Body - Scrollable Content
    ============================================ */
 
 .sm-modal__body {
   flex: 1 1 auto;
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 12px;
-  min-height: 0;
-  width: 100%;
-  max-width: 100%;
-}
-
-.sm-modal__body::-webkit-scrollbar {
-  width: 5px;
-}
-
-.sm-modal__body::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.sm-modal__body::-webkit-scrollbar-thumb {
-  background: var(--sm-border-medium);
-  border-radius: 3px;
+  padding: 18px;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ============================================
-   Pricing Grid
+   Pricing Grid - 4 Column Desktop
    ============================================ */
 
 .sm-pricing-grid {
   display: grid;
-  gap: 10px;
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-}
-
-.sm-pricing-grid--4 {
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  width: 100%;
+  align-items: stretch; /* Cards stretch to same height so buttons align */
 }
 
-.sm-pricing-grid--3 {
+/* 3 cards centering */
+.sm-pricing-grid:has(.sm-plan-card:nth-child(3):last-child) {
   grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.sm-pricing-grid--2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-@media (max-width: 1024px) {
-  .sm-pricing-grid--4 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .sm-pricing-grid--3 {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .sm-pricing-grid--3 .sm-plan-card:nth-child(3) {
-    grid-column: 1 / -1;
-    max-width: 240px;
-    justify-self: center;
-    width: 100%;
-  }
-}
-
-@media (max-width: 640px) {
-  .sm-pricing-grid--4,
-  .sm-pricing-grid--3,
-  .sm-pricing-grid--2 {
-    grid-template-columns: 1fr;
-    max-width: 100%;
-  }
-
-  .sm-pricing-grid--3 .sm-plan-card:nth-child(3) {
-    max-width: 100%;
-  }
+  max-width: 780px;
+  margin: 0 auto;
 }
 
 /* ============================================
-   Plan Card - Wide & Short
+   Plan Card - COMPACT Structure
    ============================================ */
 
 .sm-plan-card {
   display: flex;
   flex-direction: column;
-  padding: 14px 16px;
+  padding: 18px;
   background: var(--sm-bg-card);
   border: 1px solid var(--sm-border-light);
-  border-radius: 10px;
-  transition: border-color 0.15s ease, background 0.15s ease;
-  min-width: 0;
-  max-width: 100%;
-  overflow: visible;
-  text-align: center;
+  border-radius: var(--sm-radius-md);
+  transition: border-color 0.15s ease;
 }
 
 .sm-plan-card:hover {
   border-color: var(--sm-border-medium);
-  background: var(--sm-bg-card-hover);
 }
 
+/* Featured Card (Yearly) - Subtle recommendation */
 .sm-plan-card--featured {
-  border-color: rgba(91, 244, 231, 0.25);
-  background: linear-gradient(180deg, rgba(91, 244, 231, 0.04) 0%, transparent 100%);
+  border-color: var(--sm-border-strong);
+  background: var(--sm-bg-featured);
 }
 
 .sm-plan-card--featured:hover {
-  border-color: rgba(91, 244, 231, 0.4);
+  border-color: var(--sm-accent);
 }
 
-.sm-plan-card--current {
-  border-color: rgba(34, 197, 94, 0.3);
-}
-
+/* Current/Purchased Card */
+.sm-plan-card--current,
 .sm-plan-card--purchased {
-  border-color: rgba(34, 197, 94, 0.3);
-  opacity: 0.85;
+  border-color: var(--sm-success);
+  background: var(--sm-success-bg);
 }
 
 /* ============================================
-   Card: Title
+   Card Header - Name + Badge Row
    ============================================ */
 
 .sm-plan-card__header {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 4px;
-  margin-bottom: 6px;
-  overflow: visible;
+  justify-content: space-between;
+  gap: 6px;
+  margin-bottom: 10px;
 }
 
-.sm-plan-card__title {
+.sm-plan-card__name {
   margin: 0;
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: var(--sm-text-primary);
   line-height: 1.2;
-  letter-spacing: -0.02em;
+  padding-bottom: 0.5em;
 }
 
-/* ============================================
-   Card: Badge (green pill on its own line)
-   ============================================ */
-
+/* Badge */
 .sm-plan-card__badge {
   display: inline-flex;
   align-items: center;
-  padding: 4px 10px;
-  font-size: 10px;
+  padding: 3px 7px;
+  font-size: 9px;
   font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  border-radius: 12px;
+  letter-spacing: 0.04em;
+  border-radius: 100px;
   line-height: 1;
   white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .sm-plan-card__badge--save {
@@ -377,66 +424,102 @@ body.sm-modal-open {
   color: #fff;
 }
 
-.sm-plan-card__badge--current {
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--sm-success);
-}
-
+.sm-plan-card__badge--current,
 .sm-plan-card__badge--purchased {
-  background: rgba(34, 197, 94, 0.15);
-  color: var(--sm-success);
+  background: var(--sm-success);
+  color: #fff;
 }
 
 /* ============================================
-   Card: Price (compact)
+   Card Price - Tight Unit
    ============================================ */
 
 .sm-plan-card__price {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  margin-bottom: 4px;
-  overflow: visible;
-  min-width: 0;
+  margin-bottom: 6px;
 }
 
 .sm-plan-card__amount {
-  display: inline-block;
-  white-space: nowrap;
-  overflow: visible;
-  font-size: 32px;
+  display: block;
+  font-size: 36px;
   font-weight: 700;
   color: var(--sm-text-primary);
-  line-height: 1;
-  letter-spacing: -0.03em;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
 }
 
 .sm-plan-card__period {
-  display: inline-block;
-  white-space: nowrap;
-  overflow: visible;
+  display: block;
+  margin-top: 2px;
   font-size: 12px;
   font-weight: 500;
-  color: var(--sm-text-tertiary);
-  line-height: 1.4;
+  color: var(--sm-text-muted);
+  line-height: 1.2;
+}
+
+/* Effective rate subline for yearly */
+.sm-plan-card__effective {
+  display: block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--sm-text-secondary);
+  line-height: 1.2;
 }
 
 /* ============================================
-   Card: Description
+   Card Description - Mini Line
    ============================================ */
 
 .sm-plan-card__desc {
-  margin: 0 0 8px 0;
-  font-size: 11px;
-  font-weight: 400;
-  color: var(--sm-text-tertiary);
+  margin: 0 0 10px 0;
+  font-size: 12px;
+  color: var(--sm-text-muted);
   line-height: 1.3;
-  text-align: center;
 }
 
 /* ============================================
-   Card: CTA Button - Swiss Minimal
+   Card Benefits - Compact List
+   ============================================ */
+
+.sm-plan-card__benefits {
+  list-style: none;
+  margin: 0 0 14px 0;
+  padding: 0;
+}
+
+.sm-plan-card__benefit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  color: var(--sm-text-secondary);
+  line-height: 1.35;
+}
+
+.sm-plan-card__benefit + .sm-plan-card__benefit {
+  margin-top: 4px;
+}
+
+.sm-plan-card__benefit::before {
+  content: "";
+  flex-shrink: 0;
+  width: 4px;
+  height: 4px;
+  background: var(--sm-text-muted);
+  border-radius: 50%;
+  opacity: 0.6;
+}
+
+/* ============================================
+   Card Footer - CTA Pinned Bottom
+   ============================================ */
+
+.sm-plan-card__footer {
+  margin-top: auto;
+}
+
+/* ============================================
+   Buttons - Full Width, 44px Height
    ============================================ */
 
 .sm-plan-card__btn {
@@ -444,47 +527,54 @@ body.sm-modal-open {
   align-items: center;
   justify-content: center;
   width: 100%;
-  height: 40px;
-  padding: 0 16px;
-  margin-top: auto;
+  height: 44px;
+  padding: 0 14px;
   font-family: var(--sm-font);
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
   text-align: center;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: var(--sm-radius-md);
   cursor: pointer;
-  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease, transform 0.1s ease;
   white-space: nowrap;
-  letter-spacing: -0.01em;
-}
-
-.sm-plan-card__btn:focus {
-  outline: 2px solid var(--sm-accent);
-  outline-offset: 2px;
 }
 
 .sm-plan-card__btn:active:not(:disabled) {
   transform: scale(0.98);
 }
 
-/* Primary: Light bg, dark text */
+.sm-plan-card__btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sm-bg-panel), 0 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+.sm-plan-card__btn:focus:not(:focus-visible) {
+  box-shadow: none;
+}
+
+.sm-plan-card__btn:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px var(--sm-bg-panel), 0 0 0 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Primary Button */
 .sm-plan-card__btn--primary {
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--sm-border-medium);
-  color: var(--sm-text-primary);
+  background: var(--sm-accent);
+  border: 1px solid var(--sm-accent);
+  color: #fff;
 }
 
 .sm-plan-card__btn--primary:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--sm-accent-hover);
+  border-color: var(--sm-accent-hover);
 }
 
-/* Featured: Accent bg */
+/* Featured Button (Yearly) */
 .sm-plan-card__btn--featured {
   background: var(--sm-accent);
   border: 1px solid var(--sm-accent);
-  color: #0a0a0a;
+  color: #fff;
 }
 
 .sm-plan-card__btn--featured:hover:not(:disabled) {
@@ -492,51 +582,49 @@ body.sm-modal-open {
   border-color: var(--sm-accent-hover);
 }
 
-/* Current: Success outline */
+/* Secondary Button */
+.sm-plan-card__btn--secondary {
+  background: transparent;
+  border: 1px solid var(--sm-border-medium);
+  color: var(--sm-text-primary);
+}
+
+.sm-plan-card__btn--secondary:hover:not(:disabled) {
+  background: var(--sm-bg-card-hover);
+  border-color: var(--sm-border-strong);
+}
+
+/* Current Button */
 .sm-plan-card__btn--current {
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--sm-success-bg);
+  border: 1px solid var(--sm-success);
   color: var(--sm-success);
 }
 
 .sm-plan-card__btn--current:hover:not(:disabled) {
-  background: rgba(34, 197, 94, 0.15);
-  border-color: rgba(34, 197, 94, 0.5);
+  background: rgba(22, 163, 74, 0.12);
 }
 
-/* Switch: Muted */
-.sm-plan-card__btn--switch {
-  background: transparent;
-  border: 1px solid var(--sm-border-light);
-  color: var(--sm-text-secondary);
-}
-
-.sm-plan-card__btn--switch:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: var(--sm-border-medium);
-  color: var(--sm-text-primary);
-}
-
-/* Purchased: Success */
+/* Purchased Button */
 .sm-plan-card__btn--purchased {
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.3);
+  background: var(--sm-success-bg);
+  border: 1px solid var(--sm-success);
   color: var(--sm-success);
   cursor: default;
 }
 
-/* Disabled */
+/* Disabled Button */
 .sm-plan-card__btn--disabled,
 .sm-plan-card__btn:disabled {
   background: transparent;
   border: 1px solid var(--sm-border-light);
-  color: var(--sm-text-tertiary);
+  color: var(--sm-text-muted);
   cursor: not-allowed;
   opacity: 0.6;
 }
 
 /* ============================================
-   Footer - Stripe Powered
+   Footer - Powered by Stripe
    ============================================ */
 
 .sm-modal__footer {
@@ -544,19 +632,28 @@ body.sm-modal-open {
   align-items: center;
   justify-content: center;
   gap: 6px;
-  padding: 6px 12px;
+  padding: 10px 18px;
   border-top: 1px solid var(--sm-border-light);
+  background: var(--sm-bg-panel);
+  flex-shrink: 0;
+}
+
+.sm-modal__footer-text {
   font-size: 11px;
   font-weight: 400;
-  color: var(--sm-text-tertiary);
-  flex-shrink: 0;
-  line-height: 1.2;
+  color: var(--sm-text-muted);
 }
 
 .sm-modal__footer-stripe {
-  height: 16px;
+  height: 36px;
   width: auto;
-  opacity: 0.7;
+  color: var(--sm-text-muted);
+  opacity: 0.8;
+}
+
+.sm-modal__footer-sep {
+  color: var(--sm-text-muted);
+  opacity: 0.5;
 }
 
 .sm-modal__footer-link {
@@ -564,33 +661,36 @@ body.sm-modal-open {
   border: none;
   padding: 0;
   font-family: var(--sm-font);
-  font-size: inherit;
+  font-size: 11px;
   font-weight: 500;
   color: var(--sm-text-secondary);
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 2px;
-  text-decoration-color: var(--sm-border-medium);
-  transition: color 0.15s ease;
 }
 
 .sm-modal__footer-link:hover {
   color: var(--sm-text-primary);
 }
 
+.sm-modal__footer-link:focus {
+  outline: 2px solid var(--sm-accent);
+  outline-offset: 2px;
+}
+
 /* ============================================
-   Error - Compact
+   Error State
    ============================================ */
 
 .sm-pricing-error {
   display: flex;
   align-items: center;
-  gap: var(--sm-space-12);
-  margin-bottom: var(--sm-space-16);
-  padding: var(--sm-space-12);
-  background: rgba(239, 68, 68, 0.08);
-  border: 1px solid rgba(239, 68, 68, 0.2);
-  border-radius: 10px;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background: rgba(220, 38, 38, 0.06);
+  border: 1px solid rgba(220, 38, 38, 0.2);
+  border-radius: var(--sm-radius-sm);
 }
 
 .sm-pricing-error__icon {
@@ -599,7 +699,7 @@ body.sm-modal-open {
   justify-content: center;
   width: 18px;
   height: 18px;
-  background: #ef4444;
+  background: #dc2626;
   border-radius: 50%;
   color: #fff;
   font-size: 11px;
@@ -609,28 +709,26 @@ body.sm-modal-open {
 
 .sm-pricing-error__msg {
   flex: 1;
-  font-size: var(--sm-text-13);
-  color: #fca5a5;
-  line-height: var(--sm-leading-normal);
-  min-width: 0;
+  font-size: 12px;
+  color: #b91c1c;
+  line-height: 1.4;
 }
 
 .sm-pricing-error__retry {
-  padding: var(--sm-space-6) var(--sm-space-12);
+  padding: 6px 12px;
   background: transparent;
-  border: 1px solid rgba(239, 68, 68, 0.4);
-  border-radius: 6px;
-  color: #ef4444;
+  border: 1px solid rgba(220, 38, 38, 0.3);
+  border-radius: var(--sm-radius-sm);
+  color: #dc2626;
   font-family: var(--sm-font);
-  font-size: var(--sm-text-12);
+  font-size: 11px;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.15s ease;
-  flex-shrink: 0;
 }
 
 .sm-pricing-error__retry:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: rgba(220, 38, 38, 0.08);
 }
 
 /* ============================================
@@ -639,55 +737,47 @@ body.sm-modal-open {
 
 .sm-pricing-login {
   text-align: center;
-  padding: var(--sm-space-24) var(--sm-space-16);
+  padding: 24px 18px;
 }
 
 .sm-pricing-login__text {
-  margin: 0 0 var(--sm-space-20) 0;
-  font-size: var(--sm-text-14);
-  font-weight: 400;
+  margin: 0 0 14px 0;
+  font-size: 14px;
   color: var(--sm-text-secondary);
-  line-height: var(--sm-leading-normal);
+  line-height: 1.5;
 }
 
 .sm-pricing-login__actions {
   display: flex;
   justify-content: center;
-  gap: var(--sm-space-12);
+  gap: 10px;
   flex-wrap: wrap;
 }
-
-/* ============================================
-   Generic Buttons
-   ============================================ */
 
 .sm-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  height: 40px;
-  padding: 0 var(--sm-space-20);
+  height: 44px;
+  padding: 0 24px;
   font-family: var(--sm-font);
-  font-size: var(--sm-text-13);
+  font-size: 14px;
   font-weight: 600;
-  text-align: center;
   text-decoration: none;
-  border-radius: 8px;
+  border-radius: var(--sm-radius-md);
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
 }
 
 .sm-btn--primary {
-  background: #00c9b7;
-  border: 1px solid #00c9b7;
-  color: #000;
-  font-weight: 700;
+  background: var(--sm-accent);
+  border: 1px solid var(--sm-accent);
+  color: #fff;
 }
 
 .sm-btn--primary:hover {
-  background: #00b8a7;
-  border-color: #00b8a7;
-  color: #000;
+  background: var(--sm-accent-hover);
+  border-color: var(--sm-accent-hover);
 }
 
 .sm-btn--outline {
@@ -697,15 +787,51 @@ body.sm-modal-open {
 }
 
 .sm-btn--outline:hover {
-  background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.2);
+  background: var(--sm-bg-card-hover);
+  border-color: var(--sm-border-strong);
 }
 
 /* ============================================
-   Mobile Adjustments
+   Responsive - Tablet (max 800px)
    ============================================ */
 
-@media (max-width: 640px) {
+@media (max-width: 800px) {
+  .sm-modal__overlay {
+    padding: 14px;
+  }
+
+  .sm-modal__panel {
+    width: min(100%, calc(100vw - 28px));
+  }
+
+  .sm-modal__body {
+    padding: 14px;
+  }
+
+  .sm-pricing-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .sm-pricing-grid:has(.sm-plan-card:nth-child(3):last-child) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    max-width: none;
+  }
+
+  .sm-plan-card {
+    padding: 14px;
+  }
+
+  .sm-plan-card__amount {
+    font-size: 32px;
+  }
+}
+
+/* ============================================
+   Responsive - Mobile (max 540px)
+   ============================================ */
+
+@media (max-width: 540px) {
   .sm-modal__overlay {
     padding: 0;
     align-items: flex-end;
@@ -715,46 +841,212 @@ body.sm-modal-open {
     width: 100%;
     max-width: 100%;
     max-height: 92vh;
-    border-radius: 14px 14px 0 0;
+    border-radius: var(--sm-radius-lg) var(--sm-radius-lg) 0 0;
   }
 
   .sm-modal__header {
-    padding: 8px 12px 6px;
+    padding: 12px 14px;
   }
 
   .sm-modal__logo {
-    height: 24px;
+    height: 20px;
   }
 
-  .sm-modal__title-text {
+  .sm-modal__title {
+    font-size: 14px;
+  }
+
+  .sm-modal__close {
+    width: 34px;
+    height: 34px;
+  }
+
+  .sm-modal__font-size {
+    margin-right: 8px;
+  }
+
+  .sm-modal__font-btn {
+    width: 24px;
+    height: 24px;
+    font-size: 10px;
+  }
+
+  .sm-modal__font-btn--large {
     font-size: 12px;
   }
 
   .sm-modal__body {
-    padding: 10px;
+    padding: 14px;
+  }
+
+  .sm-pricing-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .sm-pricing-grid:has(.sm-plan-card:nth-child(3):last-child) {
+    grid-template-columns: 1fr;
   }
 
   .sm-plan-card {
-    padding: 10px;
-  }
-
-  .sm-plan-card__title {
-    font-size: 16px;
+    padding: 14px;
   }
 
   .sm-plan-card__amount {
-    font-size: 24px;
+    font-size: 30px;
   }
 
   .sm-plan-card__btn {
-    height: 36px;
-    font-size: 12px;
+    height: 48px;
   }
 
   .sm-modal__footer {
-    padding: 6px 10px;
+    padding: 10px 14px;
   }
 }
+
+/* ============================================
+   Responsive - Extra Small (max 380px)
+   ============================================ */
+
+@media (max-width: 380px) {
+  .sm-modal__title {
+    display: none;
+  }
+
+  .sm-modal__font-size {
+    margin-left: auto;
+  }
+}
+
+/* ============================================
+   Dark Theme
+   ============================================ */
+
+@media (prefers-color-scheme: dark) {
+  .sm-modal__overlay:not(.white-theme *) {
+    --sm-border-light: rgba(255, 255, 255, 0.08);
+    --sm-border-medium: rgba(255, 255, 255, 0.12);
+    --sm-border-strong: rgba(255, 255, 255, 0.18);
+    --sm-text-primary: #fafafa;
+    --sm-text-secondary: #a1a1aa;
+    --sm-text-muted: #71717a;
+    --sm-bg-overlay: rgba(0, 0, 0, 0.8);
+    --sm-bg-panel: #18181b;
+    --sm-bg-card: #1f1f23;
+    --sm-bg-card-hover: #27272a;
+    --sm-bg-featured: rgba(255, 255, 255, 0.02);
+    --sm-accent: #fafafa;
+    --sm-accent-hover: #e4e4e7;
+    --sm-success: #22c55e;
+    --sm-success-bg: rgba(34, 197, 94, 0.1);
+  }
+
+  .sm-modal__overlay:not(.white-theme *) .sm-plan-card__btn--primary,
+  .sm-modal__overlay:not(.white-theme *) .sm-plan-card__btn--featured {
+    color: #18181b;
+  }
+
+  .sm-modal__overlay:not(.white-theme *) .sm-btn--primary {
+    color: #18181b;
+  }
+
+  .sm-modal__overlay:not(.white-theme *) .sm-plan-card__badge--save {
+    background: #22c55e;
+    color: #fff;
+  }
+
+  .sm-modal__overlay:not(.white-theme *) .sm-modal__close:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+}
+
+/* Explicit dark theme class */
+body:not(.white-theme) .sm-modal__overlay {
+  --sm-border-light: rgba(255, 255, 255, 0.08);
+  --sm-border-medium: rgba(255, 255, 255, 0.12);
+  --sm-border-strong: rgba(255, 255, 255, 0.18);
+  --sm-text-primary: #fafafa;
+  --sm-text-secondary: #a1a1aa;
+  --sm-text-muted: #71717a;
+  --sm-bg-overlay: rgba(0, 0, 0, 0.8);
+  --sm-bg-panel: #18181b;
+  --sm-bg-card: #1f1f23;
+  --sm-bg-card-hover: #27272a;
+  --sm-bg-featured: rgba(255, 255, 255, 0.02);
+  --sm-accent: #fafafa;
+  --sm-accent-hover: #e4e4e7;
+  --sm-success: #22c55e;
+  --sm-success-bg: rgba(34, 197, 94, 0.1);
+}
+
+body:not(.white-theme) .sm-modal__overlay .sm-plan-card__btn--primary,
+body:not(.white-theme) .sm-modal__overlay .sm-plan-card__btn--featured {
+  color: #18181b;
+}
+
+body:not(.white-theme) .sm-modal__overlay .sm-btn--primary {
+  color: #18181b;
+}
+
+body:not(.white-theme) .sm-modal__overlay .sm-plan-card__badge--save {
+  background: #22c55e;
+  color: #fff;
+}
+
+body:not(.white-theme) .sm-modal__overlay .sm-modal__close:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body:not(.white-theme) .sm-modal__overlay .sm-modal__font-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body:not(.white-theme) .sm-modal__overlay .sm-modal__font-btn:focus-visible {
+  box-shadow: 0 0 0 2px var(--sm-bg-panel), 0 0 0 4px rgba(255, 255, 255, 0.2);
+}
+
+/* ============================================
+   Light Theme Override
+   ============================================ */
+
+.white-theme .sm-modal__overlay,
+body.white-theme .sm-modal__overlay {
+  --sm-border-light: rgba(0, 0, 0, 0.08);
+  --sm-border-medium: rgba(0, 0, 0, 0.12);
+  --sm-border-strong: rgba(0, 0, 0, 0.18);
+  --sm-text-primary: #111111;
+  --sm-text-secondary: #52525b;
+  --sm-text-muted: #71717a;
+  --sm-bg-overlay: rgba(0, 0, 0, 0.5);
+  --sm-bg-panel: #ffffff;
+  --sm-bg-card: #fafafa;
+  --sm-bg-card-hover: #f5f5f5;
+  --sm-bg-featured: rgba(0, 0, 0, 0.02);
+  --sm-accent: #111111;
+  --sm-accent-hover: #333333;
+  --sm-success: #16a34a;
+  --sm-success-bg: rgba(22, 163, 74, 0.08);
+}
+
+.white-theme .sm-modal__overlay .sm-plan-card__btn--primary,
+.white-theme .sm-modal__overlay .sm-plan-card__btn--featured,
+body.white-theme .sm-modal__overlay .sm-plan-card__btn--primary,
+body.white-theme .sm-modal__overlay .sm-plan-card__btn--featured {
+  color: #fff;
+}
+
+.white-theme .sm-modal__overlay .sm-btn--primary,
+body.white-theme .sm-modal__overlay .sm-btn--primary {
+  color: #fff;
+}
+
+.white-theme .sm-modal__overlay .sm-plan-card__badge--save,
+body.white-theme .sm-modal__overlay .sm-plan-card__badge--save {
+  background: #16a34a;
+  color: #fff;
+}
+
 
 /* ============================================
    Reduce Motion
@@ -764,7 +1056,8 @@ body.sm-modal-open {
   .sm-modal__overlay,
   .sm-modal__panel,
   .sm-plan-card,
-  .sm-plan-card__btn {
+  .sm-plan-card__btn,
+  .sm-modal__close {
     transition: none;
   }
 }

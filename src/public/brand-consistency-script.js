@@ -48,6 +48,9 @@ window.addEventListener('sm:restoreScanResults', (e) => {
   // If returning from billing, wait for billing return processing to complete
   if (billingSuccess && !window.__smBillingReturnComplete) {
     console.log('[Brand] Waiting for billing return processing...');
+    // SECURITY: Clear fresh scan flag - user has completed payment
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+    console.log('[Brand] Cleared __SM_FRESH_SCAN_PENDING_PAYMENT__ (returning from billing)');
     await new Promise((resolve) => {
       if (window.__smBillingReturnComplete) {
         resolve();
@@ -79,17 +82,42 @@ window.addEventListener('sm:restoreScanResults', (e) => {
     console.log('[Brand] Attempting to display results after billing return...');
 
     // First check sessionStorage (set by PricingModal before checkout)
-    try {
-      const cachedResults = sessionStorage.getItem('sm_checkout_results');
-      if (cachedResults) {
-        const data = JSON.parse(cachedResults);
-        console.log('[Brand] Found cached results in sessionStorage, displaying...');
-        displayResults(data);
-        sessionStorage.removeItem('sm_checkout_results');
-        return;
+    // Try new unique key format first
+    let cachedData = null;
+    const checkoutKey = sessionStorage.getItem('sm_checkout_key');
+    if (checkoutKey && checkoutKey.includes('brand')) {
+      try {
+        const raw = sessionStorage.getItem(checkoutKey);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          cachedData = parsed.results;
+          console.log('[Brand] Found cached results in unique key:', checkoutKey);
+        }
+      } catch (e) {
+        console.warn('[Brand] Failed to parse from unique key:', e);
       }
-    } catch (e) {
-      console.warn('[Brand] Failed to parse cached results:', e);
+    }
+    // Fall back to legacy key
+    if (!cachedData) {
+      try {
+        const cachedResults = sessionStorage.getItem('sm_checkout_results');
+        if (cachedResults) {
+          cachedData = JSON.parse(cachedResults);
+          console.log('[Brand] Found cached results in legacy sessionStorage');
+        }
+      } catch (e) {
+        console.warn('[Brand] Failed to parse cached results:', e);
+      }
+    }
+
+    if (cachedData) {
+      displayResults(cachedData);
+      if (checkoutKey) {
+        sessionStorage.removeItem(checkoutKey);
+        sessionStorage.removeItem('sm_checkout_key');
+      }
+      sessionStorage.removeItem('sm_checkout_results');
+      return;
     }
 
     // Fall back to loading from database
@@ -112,6 +140,8 @@ window.addEventListener('sm:restoreScanResults', (e) => {
   // If we have a report_id (e.g., from dashboard), try to load stored report
   if (reportId && window.ReportStorage) {
     console.log('[Brand] Checking for stored report:', reportId);
+    // Clear fresh scan flag - this is a stored report (already paid/accessed)
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
 
     // Fetch billing status first to ensure hasAccess works correctly
     if (window.ProReportBlock?.fetchBillingStatus) {
@@ -270,10 +300,16 @@ function getAnalysisSteps(isMultiPage = false) {
 
 async function analyze() {
   const url = document.getElementById('url').value.trim();
-  if (!url) { 
-    alert(t('common.pleaseEnterUrl', 'Please enter a URL')); 
-    return; 
+  if (!url) {
+    alert(t('common.pleaseEnterUrl', 'Please enter a URL'));
+    return;
   }
+
+  // SECURITY: Set fresh scan flag IMMEDIATELY - this ensures pro content is locked
+  // until the user pays for THIS specific scan. The flag is cleared when returning
+  // from a successful billing flow.
+  window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = true;
+  console.log('[Brand] Set __SM_FRESH_SCAN_PENDING_PAYMENT__ = true (fresh scan starting)');
   
   const multiPageToggle = document.getElementById('multiPageToggle');
   const maxPagesSelect = document.getElementById('maxPages');
@@ -288,7 +324,7 @@ async function analyze() {
   // Disable inputs during scan
   results.style.display = 'none';
   btn.disabled = true;
-  buttonText.textContent = 'Analyzing...';
+  buttonText.textContent = t('common.analyzing', 'Analyzing...');
   btn.style.opacity = '0.6';
   urlInput.disabled = true;
   
@@ -338,10 +374,14 @@ async function analyze() {
     const scanStartedAt = new Date().toISOString();
     window.SM_SCAN_STARTED_AT = scanStartedAt;
     document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
-    
+
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const response = await fetch('/api/brand-consistency', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers,
       body: JSON.stringify({ url, multiPage: isMultiPage, maxPages, scanStartedAt })
     });
     
@@ -349,17 +389,39 @@ async function analyze() {
     loader.nextStep(3);
     loader.nextStep(4);
     
-    if (!response.ok) throw new Error('Analysis failed');
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
+        const limit = errorData.scansLimit || 10;
+        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+      }
+      throw new Error(errorData.message || errorData.error || t('reports.brand.analysisFailed', 'Analysis failed'));
+    }
     const data = await response.json();
     
     loader.nextStep(5);
     loader.nextStep(6);
+    // Re-fetch billing status before displaying results so Pro/Day Pass sections unlock
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      try {
+        await window.ProReportBlock.fetchBillingStatus(true);
+        if (window.ProReportBlock.isProSubscriber?.()) {
+          console.log('[Brand] Pro/Day Pass user - clearing fresh scan payment flag');
+          window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+        }
+      } catch (e) {
+        console.warn('[Brand] Failed to fetch billing status:', e);
+      }
+    }
+
     loader.complete();
-    
+
     setTimeout(() => {
       displayResults(data);
+      window.__REPORT_READY__ = true;
+      window.dispatchEvent(new CustomEvent('report:ready'));
     }, 500);
-    
+
   } catch (error) {
     alert(`${t('common.error', 'Error')}: ${error.message}`);
     loader.complete();
@@ -367,7 +429,7 @@ async function analyze() {
     // Re-enable button
     btn.disabled = false;
     const buttonText = btn.querySelector('#buttonText') || btn;
-    buttonText.textContent = 'Analyze';
+    buttonText.textContent = t('common.analyze', 'Analyze');
     btn.style.opacity = '1';
     urlInput.disabled = false;
   }
@@ -555,7 +617,7 @@ function displayResults(data) {
   
   // Build screenshots array (SEO pattern)
   const screenshots = screenshotUrl
-    ? [{ src: screenshotUrl, alt: 'Page screenshot', device: '' }]
+    ? [{ src: screenshotUrl, alt: t('common.pageScreenshot', 'Page screenshot'), device: '' }]
     : [];
   
   // Use ReportContainer.create() - SEO pattern
@@ -642,7 +704,7 @@ function displayResults(data) {
   }
   } catch (err) {
     console.error('[Brand] displayResults error:', err);
-    alert('Error displaying results: ' + err.message);
+    alert(t('reports.common.errorDisplayingResults', 'Error displaying results: {{message}}', { message: err.message }));
   }
 }
 
@@ -650,7 +712,7 @@ function displayResults(data) {
 function generateBrandFallbackHTML(data, sections) {
   return `
     <h2>${t('brandConsistency.reportTitle', 'Brand Analysis Report')}</h2>
-    <p>URL: ${data.url || 'N/A'}</p>
+    <p>${t('common.url', 'URL')}: ${data.url || t('common.na', 'N/A')}</p>
     <div id="accordions-container"></div>
   `;
 }
@@ -748,23 +810,23 @@ function renderBrandProFixes(data) {
     return `
       <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
-          <span style="font-size: 1.5rem;">✓</span> ${t('brandConsistency.excellentBrand', 'Excellent Brand Consistency!')}
+          <span style="font-size: 1.5rem;">✓</span> ${t('reports.brand.excellentBrand', 'Excellent Brand Consistency!')}
         </h3>
-        <p style="color: #86efac; margin: 0;">${t('brandConsistency.brandOptimized', 'Your brand elements are well-optimized. Keep monitoring for continued consistency.')}</p>
+        <p style="color: #86efac; margin: 0;">${t('reports.brand.brandOptimized', 'Your brand elements are well-optimized. Keep monitoring for continued consistency.')}</p>
       </div>
     `;
   }
-  
+
   // Group by severity
   const high = fixes.filter(f => f.severity === 'High');
   const medium = fixes.filter(f => f.severity === 'Medium');
   const low = fixes.filter(f => f.severity === 'Low');
-  
+
   let html = `
     <div class="brand-fixes-container" style="margin-top: 1rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
-        <span style="font-size: 1.75rem;">🎨</span> ${t('brandConsistency.brandFixes', 'Brand Fixes')}
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} ${t('brandConsistency.improvementsFound', 'improvements found')})</span>
+        <span style="font-size: 1.75rem;">🎨</span> ${t('reports.brand.brandFixes', 'Brand Fixes')}
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} ${t('reports.brand.improvementsFound', 'improvements found')})</span>
       </h3>
       <div class="brand-fixes-list">
   `;
@@ -804,14 +866,14 @@ function buildBrandFixCards(data) {
   fixes.push({
     id: `brand-fix-${fixIndex++}`,
     title: colorCount > 5
-      ? `Optimize color palette (${colorCount} colors detected)`
-      : 'Establish a formal brand color system',
-    category: 'Color Palette',
+      ? t('reports.brand.fixes.optimizeColorPalette', 'Optimize color palette ({{count}} colors detected)').replace('{{count}}', colorCount)
+      : t('reports.brand.fixes.establishColorSystem', 'Establish a formal brand color system'),
+    category: t('reports.brand.categories.colorPalette', 'Color Palette'),
     severity: colorCount > 7 ? 'High' : 'Medium',
     description: colorCount > 5
-      ? `Your site uses ${colorCount} different colors. While variety can be intentional, a focused palette of 5-7 strategic colors creates stronger brand recognition. Each color should serve a specific purpose in your design system.`
-      : `We detected ${colorCount} primary colors. To strengthen brand consistency, formalize these into a documented color system with defined roles for each color.`,
-    impact: 'Stronger visual identity, faster design decisions, consistent brand experience',
+      ? t('reports.brand.fixes.excessiveColorsDesc', 'Your site uses {{count}} different colors. While variety can be intentional, a focused palette of 5-7 strategic colors creates stronger brand recognition. Each color should serve a specific purpose in your design system.').replace('{{count}}', colorCount)
+      : t('reports.brand.fixes.formalizeColorsDesc', 'We detected {{count}} primary colors. To strengthen brand consistency, formalize these into a documented color system with defined roles for each color.').replace('{{count}}', colorCount),
+    impact: t('reports.brand.fixes.colorImpact', 'Stronger visual identity, faster design decisions, consistent brand experience'),
     problematicCode: `/* Current colors detected on your site */
 ${colorList.slice(0, 12).map((c, i) => `color-${i + 1}: ${c};`).join('\n')}
 ${colorCount > 12 ? `\n/* ...and ${colorCount - 12} additional colors */` : ''}
@@ -864,25 +926,25 @@ ${colorCount > 12 ? `\n/* ...and ${colorCount - 12} additional colors */` : ''}
   color: var(--text-primary);
 }`,
     steps: [
-      'Document your brand\'s primary color and its meaning',
-      'Define 2-3 secondary/accent colors with specific use cases',
-      'Create a neutral palette for text and backgrounds',
-      'Add semantic colors for success/error/warning states',
-      'Replace all hardcoded colors with CSS variables',
-      'Create a style guide documenting when to use each color'
+      t('reports.brand.steps.documentPrimaryColor', 'Document your brand\'s primary color and its meaning'),
+      t('reports.brand.steps.defineSecondaryColors', 'Define 2-3 secondary/accent colors with specific use cases'),
+      t('reports.brand.steps.createNeutralPalette', 'Create a neutral palette for text and backgrounds'),
+      t('reports.brand.steps.addSemanticColors', 'Add semantic colors for success/error/warning states'),
+      t('reports.brand.steps.replaceHardcodedColors', 'Replace all hardcoded colors with CSS variables'),
+      t('reports.brand.steps.createStyleGuide', 'Create a style guide documenting when to use each color')
     ]
   });
 
   // Color harmony recommendation
   fixes.push({
     id: `brand-fix-${fixIndex++}`,
-    title: `Improve color harmony${harmonyScore ? ` (Score: ${Math.round(harmonyScore)}%)` : ''}`,
-    category: 'Color Palette',
+    title: harmonyScore ? t('reports.brand.fixes.improveColorHarmony', 'Improve color harmony (Score: {{score}}%)').replace('{{score}}', Math.round(harmonyScore)) : t('reports.brand.fixes.improveColorHarmonyNoScore', 'Improve color harmony'),
+    category: t('reports.brand.categories.colorPalette', 'Color Palette'),
     severity: harmonyScore < 60 ? 'High' : 'Medium',
-    description: `Color harmony ensures your palette creates a cohesive, professional appearance. ${harmonyScore < 60
-      ? `Your harmony score of ${Math.round(harmonyScore)}% indicates colors may clash or lack intentional relationship.`
-      : 'Fine-tuning your color relationships will elevate your brand\'s visual appeal.'}`,
-    impact: 'Professional appearance, improved user trust, better visual hierarchy',
+    description: harmonyScore < 60
+      ? t('reports.brand.fixes.poorHarmonyDesc', 'Color harmony ensures your palette creates a cohesive, professional appearance. Your harmony score of {{score}}% indicates colors may clash or lack intentional relationship.').replace('{{score}}', Math.round(harmonyScore))
+      : t('reports.brand.fixes.goodHarmonyDesc', 'Color harmony ensures your palette creates a cohesive, professional appearance. Fine-tuning your color relationships will elevate your brand\'s visual appeal.'),
+    impact: t('reports.brand.fixes.harmonyImpact', 'Professional appearance, improved user trust, better visual hierarchy'),
     problematicCode: `/* Current color analysis */
 Detected primary colors:
 ${colorList.slice(0, 5).map(c => `  ${c}`).join('\n')}
@@ -919,12 +981,12 @@ Potential issues:
 /* Tool Recommendation: Use coolors.co or Adobe Color
    to generate harmonious palettes from your primary color */`,
     steps: [
-      'Choose your primary brand color as the foundation',
-      'Select a harmony type that matches your brand personality',
-      'Use a tool like coolors.co to generate complementary colors',
-      'Ensure sufficient contrast between text and backgrounds',
-      'Test your palette in different contexts (buttons, cards, alerts)',
-      'Validate with colorblind simulation tools'
+      t('reports.brand.steps.choosePrimaryColor', 'Choose your primary brand color as the foundation'),
+      t('reports.brand.steps.selectHarmonyType', 'Select a harmony type that matches your brand personality'),
+      t('reports.brand.steps.useColorTool', 'Use a tool like coolors.co to generate complementary colors'),
+      t('reports.brand.steps.ensureContrast', 'Ensure sufficient contrast between text and backgrounds'),
+      t('reports.brand.steps.testPalette', 'Test your palette in different contexts (buttons, cards, alerts)'),
+      t('reports.brand.steps.validateColorblind', 'Validate with colorblind simulation tools')
     ]
   });
 
@@ -938,14 +1000,14 @@ Potential issues:
   fixes.push({
     id: `brand-fix-${fixIndex++}`,
     title: fontCount > 2
-      ? `Consolidate typography (${fontCount} fonts detected)`
-      : 'Optimize typography system',
-    category: 'Typography',
+      ? t('reports.brand.fixes.consolidateTypography', 'Consolidate typography ({{count}} fonts detected)').replace('{{count}}', fontCount)
+      : t('reports.brand.fixes.optimizeTypography', 'Optimize typography system'),
+    category: t('reports.brand.categories.typography', 'Typography'),
     severity: fontCount > 3 ? 'High' : 'Medium',
     description: fontCount > 2
-      ? `Your site loads ${fontCount} different fonts, which impacts performance and visual consistency. Industry best practice is 2-3 fonts maximum: one for headings, one for body text, and optionally one for code/special content.`
-      : 'A well-structured typography system ensures readability and reinforces brand identity across all content.',
-    impact: 'Faster page loads, improved readability, stronger brand voice',
+      ? t('reports.brand.fixes.tooManyFontsDesc', 'Your site loads {{count}} different fonts, which impacts performance and visual consistency. Industry best practice is 2-3 fonts maximum: one for headings, one for body text, and optionally one for code/special content.').replace('{{count}}', fontCount)
+      : t('reports.brand.fixes.typographyDesc', 'A well-structured typography system ensures readability and reinforces brand identity across all content.'),
+    impact: t('reports.brand.fixes.typographyImpact', 'Faster page loads, improved readability, stronger brand voice'),
     problematicCode: `/* Fonts detected on your site */
 ${fontList.slice(0, 8).map((f, i) => `Font ${i + 1}: "${f}"`).join('\n')}
 ${fontCount > 8 ? `\n/* ...and ${fontCount - 8} more fonts */` : ''}
@@ -1020,13 +1082,13 @@ code, pre {
   font-size: 0.9em;
 }`,
     steps: [
-      'Select one display/heading font that reflects your brand personality',
-      'Choose a highly readable body font (Inter, Open Sans, or system fonts)',
-      'Define a modular type scale for consistent sizing',
-      'Set appropriate line heights (1.5+ for body text)',
-      'Limit font weights to 3-4 variants',
-      'Use font-display: swap for better performance',
-      'Consider self-hosting fonts for reliability'
+      t('reports.brand.steps.selectHeadingFont', 'Select one display/heading font that reflects your brand personality'),
+      t('reports.brand.steps.chooseBodyFont', 'Choose a highly readable body font (Inter, Open Sans, or system fonts)'),
+      t('reports.brand.steps.defineTypeScale', 'Define a modular type scale for consistent sizing'),
+      t('reports.brand.steps.setLineHeights', 'Set appropriate line heights (1.5+ for body text)'),
+      t('reports.brand.steps.limitFontWeights', 'Limit font weights to 3-4 variants'),
+      t('reports.brand.steps.useFontDisplaySwap', 'Use font-display: swap for better performance'),
+      t('reports.brand.steps.selfHostFonts', 'Consider self-hosting fonts for reliability')
     ]
   });
 
@@ -1040,11 +1102,11 @@ code, pre {
   if (!hasLogo || !hasFavicon) {
     fixes.push({
       id: `brand-fix-${fixIndex++}`,
-      title: 'Complete brand identity essentials',
-      category: 'Brand Identity',
+      title: t('reports.brand.fixes.completeBrandIdentity', 'Complete brand identity essentials'),
+      category: t('reports.brand.categories.brandIdentity', 'Brand Identity'),
       severity: 'High',
-      description: `${!hasLogo ? 'No logo was detected. ' : ''}${!hasFavicon ? 'No favicon was detected. ' : ''}These fundamental brand elements are critical for recognition and professionalism.`,
-      impact: 'Instant brand recognition, professional credibility, memorable user experience',
+      description: `${!hasLogo ? t('reports.brand.fixes.noLogoDetected', 'No logo was detected. ') : ''}${!hasFavicon ? t('reports.brand.fixes.noFaviconDetected', 'No favicon was detected. ') : ''}${t('reports.brand.fixes.brandEssentialsDesc', 'These fundamental brand elements are critical for recognition and professionalism.')}`,
+      impact: t('reports.brand.fixes.brandIdentityImpact', 'Instant brand recognition, professional credibility, memorable user experience'),
       problematicCode: `<!-- Current state -->
 <head>
   <title>Your Website</title>
@@ -1107,13 +1169,13 @@ code, pre {
   }
 }`,
       steps: [
-        'Design or commission a professional logo (SVG format preferred)',
-        'Create light and dark mode versions of your logo',
-        'Generate a complete favicon package at realfavicongenerator.net',
-        'Add Open Graph images for social media sharing',
-        'Ensure logo links to homepage with proper accessibility',
-        'Test logo visibility on various background colors',
-        'Create a brand assets page for consistent usage'
+        t('reports.brand.steps.designLogo', 'Design or commission a professional logo (SVG format preferred)'),
+        t('reports.brand.steps.createLogoVersions', 'Create light and dark mode versions of your logo'),
+        t('reports.brand.steps.generateFaviconPackage', 'Generate a complete favicon package at realfavicongenerator.net'),
+        t('reports.brand.steps.addOgImages', 'Add Open Graph images for social media sharing'),
+        t('reports.brand.steps.ensureLogoAccessibility', 'Ensure logo links to homepage with proper accessibility'),
+        t('reports.brand.steps.testLogoVisibility', 'Test logo visibility on various background colors'),
+        t('reports.brand.steps.createBrandAssetsPage', 'Create a brand assets page for consistent usage')
       ]
     });
   }
@@ -1126,11 +1188,13 @@ code, pre {
 
   fixes.push({
     id: `brand-fix-${fixIndex++}`,
-    title: `Standardize UI components${buttonConsistency !== 'Unknown' ? ` (Buttons: ${buttonConsistency})` : ''}`,
-    category: 'UI Consistency',
+    title: buttonConsistency !== 'Unknown'
+      ? t('reports.brand.fixes.standardizeUIWithStatus', 'Standardize UI components (Buttons: {{status}})').replace('{{status}}', translateStatus(buttonConsistency))
+      : t('reports.brand.fixes.standardizeUI', 'Standardize UI components'),
+    category: t('reports.brand.categories.uiConsistency', 'UI Consistency'),
     severity: buttonConsistency === 'Poor' ? 'High' : 'Medium',
-    description: 'Consistent UI components across your site build user trust and reduce cognitive load. Every button, card, form, and interactive element should follow the same design patterns.',
-    impact: 'Intuitive user experience, faster development, maintainable codebase',
+    description: t('reports.brand.fixes.uiConsistencyDesc', 'Consistent UI components across your site build user trust and reduce cognitive load. Every button, card, form, and interactive element should follow the same design patterns.'),
+    impact: t('reports.brand.fixes.uiConsistencyImpact', 'Intuitive user experience, faster development, maintainable codebase'),
     problematicCode: `/* Common UI inconsistency problems */
 
 /* Inconsistent buttons */
@@ -1233,13 +1297,13 @@ code, pre {
   }
 }`,
     steps: [
-      'Define a spacing scale (4px base unit is common)',
-      'Standardize border-radius values',
-      'Create consistent shadow elevation levels',
-      'Build a button system with variants (primary, secondary, ghost)',
-      'Create a card component with consistent styling',
-      'Document all components in a style guide',
-      'Audit existing code and migrate to the new system'
+      t('reports.brand.steps.defineSpacingScale', 'Define a spacing scale (4px base unit is common)'),
+      t('reports.brand.steps.standardizeBorderRadius', 'Standardize border-radius values'),
+      t('reports.brand.steps.createShadowLevels', 'Create consistent shadow elevation levels'),
+      t('reports.brand.steps.buildButtonSystem', 'Build a button system with variants (primary, secondary, ghost)'),
+      t('reports.brand.steps.createCardComponent', 'Create a card component with consistent styling'),
+      t('reports.brand.steps.documentComponents', 'Document all components in a style guide'),
+      t('reports.brand.steps.auditAndMigrate', 'Audit existing code and migrate to the new system')
     ]
   });
 
@@ -1249,11 +1313,11 @@ code, pre {
 
   fixes.push({
     id: `brand-fix-${fixIndex++}`,
-    title: 'Strengthen visual hierarchy',
-    category: 'Visual Design',
+    title: t('reports.brand.fixes.strengthenVisualHierarchy', 'Strengthen visual hierarchy'),
+    category: t('reports.brand.categories.visualDesign', 'Visual Design'),
     severity: 'Medium',
-    description: 'Visual hierarchy guides users through your content in order of importance. Clear hierarchy improves comprehension, reduces cognitive load, and increases conversion rates.',
-    impact: 'Better content comprehension, improved user engagement, higher conversions',
+    description: t('reports.brand.fixes.visualHierarchyDesc', 'Visual hierarchy guides users through your content in order of importance. Clear hierarchy improves comprehension, reduces cognitive load, and increases conversion rates.'),
+    impact: t('reports.brand.fixes.visualHierarchyImpact', 'Better content comprehension, improved user engagement, higher conversions'),
     problematicCode: `/* Weak visual hierarchy */
 .page-content {
   /* Everything same size - no clear importance */
@@ -1314,13 +1378,13 @@ p + p { margin-top: 1rem; }
   /* Supporting visual right */
 }`,
     steps: [
-      'Create dramatic size contrast between heading levels',
-      'Use font weight to establish importance',
-      'Apply color contrast strategically',
-      'Add generous whitespace around important elements',
-      'Make primary CTAs visually prominent',
-      'Follow F-pattern or Z-pattern layouts for landing pages',
-      'Test hierarchy by squinting at the page - most important elements should stand out'
+      t('reports.brand.steps.createSizeContrast', 'Create dramatic size contrast between heading levels'),
+      t('reports.brand.steps.useFontWeight', 'Use font weight to establish importance'),
+      t('reports.brand.steps.applyColorContrast', 'Apply color contrast strategically'),
+      t('reports.brand.steps.addWhitespace', 'Add generous whitespace around important elements'),
+      t('reports.brand.steps.makeCtasProminent', 'Make primary CTAs visually prominent'),
+      t('reports.brand.steps.followPatterns', 'Follow F-pattern or Z-pattern layouts for landing pages'),
+      t('reports.brand.steps.testHierarchy', 'Test hierarchy by squinting at the page - most important elements should stand out')
     ]
   });
 
@@ -1332,13 +1396,15 @@ p + p { margin-top: 1rem; }
 
   fixes.push({
     id: `brand-fix-${fixIndex++}`,
-    title: `Ensure WCAG-compliant contrast${contrastScore < 80 ? ` (Score: ${Math.round(contrastScore)}%)` : ''}`,
-    category: 'Accessibility',
+    title: contrastScore < 80
+      ? t('reports.brand.fixes.wcagContrastWithScore', 'Ensure WCAG-compliant contrast (Score: {{score}}%)').replace('{{score}}', Math.round(contrastScore))
+      : t('reports.brand.fixes.wcagContrast', 'Ensure WCAG-compliant contrast'),
+    category: t('reports.brand.categories.accessibility', 'Accessibility'),
     severity: contrastScore < 70 ? 'High' : 'Medium',
-    description: `Color contrast affects readability for all users and is required for accessibility compliance. ${contrastScore < 70
-      ? `Your contrast score of ${Math.round(contrastScore)}% indicates potential accessibility issues.`
-      : 'Maintaining strong contrast ensures your content is readable by everyone, including users with visual impairments.'}`,
-    impact: 'Legal compliance (ADA, WCAG), wider audience reach, better readability',
+    description: contrastScore < 70
+      ? t('reports.brand.fixes.poorContrastDesc', 'Color contrast affects readability for all users and is required for accessibility compliance. Your contrast score of {{score}}% indicates potential accessibility issues.').replace('{{score}}', Math.round(contrastScore))
+      : t('reports.brand.fixes.goodContrastDesc', 'Color contrast affects readability for all users and is required for accessibility compliance. Maintaining strong contrast ensures your content is readable by everyone, including users with visual impairments.'),
+    impact: t('reports.brand.fixes.contrastImpact', 'Legal compliance (ADA, WCAG), wider audience reach, better readability'),
     problematicCode: `/* Common contrast failures */
 .hero-text {
   color: #888888;           /* Gray text */
@@ -1407,14 +1473,14 @@ p + p { margin-top: 1rem; }
    - Stark Figma/Sketch plugin
    - axe DevTools browser extension */`,
     steps: [
-      'Audit all text/background combinations with a contrast checker',
-      'Ensure 4.5:1 minimum for normal text (WCAG AA)',
-      'Ensure 3:1 minimum for large text and UI elements',
-      'Don\'t rely solely on color to convey information',
-      'Add underlines to links, icons to buttons',
-      'Test with colorblind simulation tools',
-      'Run automated accessibility audits (Lighthouse, axe)',
-      'Consider offering a high-contrast mode'
+      t('reports.brand.steps.auditContrast', 'Audit all text/background combinations with a contrast checker'),
+      t('reports.brand.steps.ensureNormalTextContrast', 'Ensure 4.5:1 minimum for normal text (WCAG AA)'),
+      t('reports.brand.steps.ensureLargeTextContrast', 'Ensure 3:1 minimum for large text and UI elements'),
+      t('reports.brand.steps.dontRelyOnColor', 'Don\'t rely solely on color to convey information'),
+      t('reports.brand.steps.addUnderlines', 'Add underlines to links, icons to buttons'),
+      t('reports.brand.steps.testColorblind', 'Test with colorblind simulation tools'),
+      t('reports.brand.steps.runAccessibilityAudits', 'Run automated accessibility audits (Lighthouse, axe)'),
+      t('reports.brand.steps.offerHighContrast', 'Consider offering a high-contrast mode')
     ]
   });
 
@@ -1424,11 +1490,11 @@ p + p { margin-top: 1rem; }
 
   fixes.push({
     id: `brand-fix-${fixIndex++}`,
-    title: 'Maintain brand consistency across devices',
-    category: 'Responsive Design',
+    title: t('reports.brand.fixes.maintainResponsive', 'Maintain brand consistency across devices'),
+    category: t('reports.brand.categories.responsiveDesign', 'Responsive Design'),
     severity: 'Medium',
-    description: 'Your brand should feel cohesive whether viewed on a phone, tablet, or desktop. This includes consistent typography scaling, proper logo sizing, and maintaining visual hierarchy at all screen sizes.',
-    impact: 'Consistent brand experience, improved mobile engagement, professional appearance',
+    description: t('reports.brand.fixes.responsiveDesc', 'Your brand should feel cohesive whether viewed on a phone, tablet, or desktop. This includes consistent typography scaling, proper logo sizing, and maintaining visual hierarchy at all screen sizes.'),
+    impact: t('reports.brand.fixes.responsiveImpact', 'Consistent brand experience, improved mobile engagement, professional appearance'),
     problematicCode: `/* Responsive branding issues */
 
 /* Logo too large/small on mobile */
@@ -1500,13 +1566,13 @@ h1 { font-size: 48px; }  /* Too large on mobile */
   }
 }`,
     steps: [
-      'Use clamp() for fluid typography that scales smoothly',
-      'Make logo responsive with clamp() or max-width',
-      'Keep color variables consistent across all breakpoints',
-      'Ensure touch targets are at least 44x44px on mobile',
-      'Test brand appearance at 320px, 768px, 1024px, and 1440px',
-      'Maintain visual hierarchy at all screen sizes',
-      'Use the same components everywhere - don\'t create mobile-only variants'
+      t('reports.brand.steps.useClamp', 'Use clamp() for fluid typography that scales smoothly'),
+      t('reports.brand.steps.makeLogoResponsive', 'Make logo responsive with clamp() or max-width'),
+      t('reports.brand.steps.keepColorsConsistent', 'Keep color variables consistent across all breakpoints'),
+      t('reports.brand.steps.ensureTouchTargets', 'Ensure touch targets are at least 44x44px on mobile'),
+      t('reports.brand.steps.testBreakpoints', 'Test brand appearance at 320px, 768px, 1024px, and 1440px'),
+      t('reports.brand.steps.maintainHierarchy', 'Maintain visual hierarchy at all screen sizes'),
+      t('reports.brand.steps.useSameComponents', 'Use the same components everywhere - don\'t create mobile-only variants')
     ]
   });
 
@@ -1516,11 +1582,11 @@ h1 { font-size: 48px; }  /* Too large on mobile */
 
   fixes.push({
     id: `brand-fix-${fixIndex++}`,
-    title: 'Implement dark mode support',
-    category: 'Brand Experience',
+    title: t('reports.brand.fixes.implementDarkMode', 'Implement dark mode support'),
+    category: t('reports.brand.categories.brandExperience', 'Brand Experience'),
     severity: 'Low',
-    description: 'Dark mode is now expected by users, with 80%+ of people using it regularly. A well-designed dark mode protects your brand\'s appearance while respecting user preferences.',
-    impact: 'Better user experience, reduced eye strain, modern brand perception',
+    description: t('reports.brand.fixes.darkModeDesc', 'Dark mode is now expected by users, with 80%+ of people using it regularly. A well-designed dark mode protects your brand\'s appearance while respecting user preferences.'),
+    impact: t('reports.brand.fixes.darkModeImpact', 'Better user experience, reduced eye strain, modern brand perception'),
     problematicCode: `/* No dark mode consideration */
 body {
   background: white;
@@ -1596,13 +1662,13 @@ body {
   .logo-dark { display: block; }
 }`,
     steps: [
-      'Create semantic color tokens (bg-primary, text-secondary, etc.)',
-      'Design your dark palette - don\'t just invert colors',
-      'Use prefers-color-scheme media query for automatic switching',
-      'Provide light/dark versions of logo and images',
-      'Test all components in dark mode',
-      'Consider offering a manual toggle for user control',
-      'Ensure brand colors remain recognizable in both modes'
+      t('reports.brand.steps.createColorTokens', 'Create semantic color tokens (bg-primary, text-secondary, etc.)'),
+      t('reports.brand.steps.designDarkPalette', 'Design your dark palette - don\'t just invert colors'),
+      t('reports.brand.steps.useColorSchemeQuery', 'Use prefers-color-scheme media query for automatic switching'),
+      t('reports.brand.steps.provideLightDarkVersions', 'Provide light/dark versions of logo and images'),
+      t('reports.brand.steps.testDarkMode', 'Test all components in dark mode'),
+      t('reports.brand.steps.offerManualToggle', 'Consider offering a manual toggle for user control'),
+      t('reports.brand.steps.ensureBrandColors', 'Ensure brand colors remain recognizable in both modes')
     ]
   });
 
@@ -1651,7 +1717,7 @@ function renderBrandFixAccordion(fix, index) {
       overflow: hidden;
       background: ${style.bg};
     ">
-      <div class="brand-fix-header" onclick="toggleBrandFixAccordion('${accordionId}')" style="
+      <div class="brand-fix-header" data-action="toggle-accordion" data-accordion-id="${accordionId}" style="
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -1675,7 +1741,7 @@ function renderBrandFixAccordion(fix, index) {
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
-          ">${fix.severity.toUpperCase()}</span>
+          ">${t(`reports.common.severity.${fix.severity.toLowerCase()}`, fix.severity).toUpperCase()}</span>
           <span class="brand-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
         </div>
       </div>
@@ -1692,7 +1758,7 @@ function renderBrandFixAccordion(fix, index) {
 function renderBrandFixTabs(fix, accordionId) {
   return `
     <div class="brand-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
-      <button class="brand-fix-tab active" onclick="switchBrandFixTab('${accordionId}', 'summary')" style="
+      <button class="brand-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
@@ -1700,8 +1766,8 @@ function renderBrandFixTabs(fix, accordionId) {
         color: #fff;
         cursor: pointer;
         font-size: 0.85rem;
-      ">📋 ${t('common.summary', 'Summary')}</button>
-      <button class="brand-fix-tab" onclick="switchBrandFixTab('${accordionId}', 'code')" style="
+      ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
+      <button class="brand-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -1709,8 +1775,8 @@ function renderBrandFixTabs(fix, accordionId) {
         color: #aaa;
         cursor: pointer;
         font-size: 0.85rem;
-      ">💻 ${t('common.code', 'Code')}</button>
-      <button class="brand-fix-tab" onclick="switchBrandFixTab('${accordionId}', 'guide')" style="
+      ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
+      <button class="brand-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 6px;
@@ -1718,7 +1784,7 @@ function renderBrandFixTabs(fix, accordionId) {
         color: #aaa;
         cursor: pointer;
         font-size: 0.85rem;
-      ">🔧 ${t('common.fixGuide', 'Fix Guide')}</button>
+      ">🔧 ${t('reports.common.tabs.fixGuide', 'Fix Guide')}</button>
     </div>
     
     <!-- Summary Tab -->
@@ -1727,7 +1793,7 @@ function renderBrandFixTabs(fix, accordionId) {
         ${escapeBrandHtml(fix.description)}
       </p>
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('common.expectedImpact', 'Expected Impact')}</div>
+        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
         <div style="color: #c0c0c0; font-size: 0.9rem;">${escapeBrandHtml(fix.impact)}</div>
       </div>
     </div>
@@ -1738,8 +1804,8 @@ function renderBrandFixTabs(fix, accordionId) {
         ${fix.problematicCode ? `
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
-            <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('common.currentIssue', 'Current Issue')}</span>
-            <button onclick="copyBrandCode('${accordionId}-problem')" style="
+            <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.common.fix.currentIssue', 'Current Issue')}</span>
+            <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
@@ -1747,7 +1813,7 @@ function renderBrandFixTabs(fix, accordionId) {
               color: #fff;
               cursor: pointer;
               font-size: 0.75rem;
-            ">📋 ${t('common.copy', 'Copy')}</button>
+            ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
           <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeBrandHtml(fix.problematicCode)}</pre>
         </div>
@@ -1755,8 +1821,8 @@ function renderBrandFixTabs(fix, accordionId) {
         
         <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
-            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('common.recommendedFix', 'Recommended Fix')}</span>
-            <button onclick="copyBrandCode('${accordionId}-solution')" style="
+            <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
+            <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
               padding: 0.25rem 0.75rem;
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
@@ -1764,7 +1830,7 @@ function renderBrandFixTabs(fix, accordionId) {
               color: #fff;
               cursor: pointer;
               font-size: 0.75rem;
-            ">📋 ${t('common.copy', 'Copy')}</button>
+            ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
           <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeBrandHtml(fix.fixedCode)}</pre>
         </div>
@@ -1773,7 +1839,7 @@ function renderBrandFixTabs(fix, accordionId) {
     
     <!-- Fix Guide Tab -->
     <div class="brand-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('common.stepByStepFix', 'Step-by-Step Fix')}:</h5>
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix')}:</h5>
       <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
         ${fix.steps.map(step => `<li style="margin-bottom: 0.5rem;">${escapeBrandHtml(step)}</li>`).join('')}
       </ol>
@@ -1893,7 +1959,7 @@ function renderColorPaletteContent(data) {
       <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.allDetectedColors', 'All Detected Colors')} (${colors.length})</h4>
       <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; max-height: 200px; overflow-y: auto;">
         ${colors.slice(0, 40).map(color => `
-          <div style="background: ${color}; width: 32px; height: 32px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;" title="${formatColor(color)}" onclick="copyToClipboard('${color}', this)"></div>
+          <div class="color-swatch" style="background: ${color}; width: 32px; height: 32px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.15); cursor: pointer;" title="${formatColor(color)}" data-action="copy-color" data-color="${color}"></div>
         `).join('')}
         ${colors.length > 40 ? `<div style="display: flex; align-items: center; color: rgba(255,255,255,0.5); font-size: 0.8rem; padding: 0 0.5rem;">+${colors.length - 40} ${t('common.more', 'more')}</div>` : ''}
       </div>
@@ -1904,15 +1970,15 @@ function renderColorPaletteContent(data) {
     <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
       <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.exportColorPalette', 'Export Color Palette')}</h4>
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <button onclick="copyToClipboard(\`${generateCSSVariables(colorAnalysis.primaryColors || colors.slice(0, 5)).replace(/`/g, '\\`')}\`, this)" 
+        <button data-action="export-palette" data-format="css" data-colors="${encodeURIComponent(JSON.stringify(colorAnalysis.primaryColors || colors.slice(0, 5)))}"
           style="padding: 0.5rem 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary); cursor: pointer; font-size: 0.8rem;">
           ${t('brandConsistency.exportCSS', 'Copy CSS Variables')}
         </button>
-        <button onclick="copyToClipboard(\`${generateTailwindConfig(colorAnalysis.primaryColors || colors.slice(0, 5)).replace(/`/g, '\\`')}\`, this)" 
+        <button data-action="export-palette" data-format="tailwind" data-colors="${encodeURIComponent(JSON.stringify(colorAnalysis.primaryColors || colors.slice(0, 5)))}"
           style="padding: 0.5rem 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary); cursor: pointer; font-size: 0.8rem;">
           ${t('brandConsistency.exportTailwind', 'Copy Tailwind Config')}
         </button>
-        <button onclick="copyToClipboard(\`${generateDesignTokens(colorAnalysis.primaryColors || colors.slice(0, 5)).replace(/`/g, '\\`')}\`, this)" 
+        <button data-action="export-palette" data-format="tokens" data-colors="${encodeURIComponent(JSON.stringify(colorAnalysis.primaryColors || colors.slice(0, 5)))}"
           style="padding: 0.5rem 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary); cursor: pointer; font-size: 0.8rem;">
           ${t('brandConsistency.exportTokens', 'Copy Design Tokens')}
         </button>
@@ -2014,10 +2080,10 @@ function renderBrandIdentityContent(data) {
           ${logos.map((logo, i) => `
             <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; text-align: center;">
               ${logo.type === 'img' && logo.src && logo.src !== 'SVG inline' ? `
-                <img src="${logo.src}" alt="${logo.alt || 'Logo'}" style="max-width: 150px; max-height: 80px; object-fit: contain; background: #fff; padding: 0.5rem; border-radius: 4px;" onerror="this.style.display='none'"/>
+                <img src="${logo.src}" alt="${logo.alt || t('brandConsistency.logoAlt', 'Logo')}" style="max-width: 150px; max-height: 80px; object-fit: contain; background: #fff; padding: 0.5rem; border-radius: 4px;" onerror="this.style.display='none'"/>
               ` : `
                 <div style="width: 80px; height: 80px; background: rgba(255,255,255,0.1); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: rgba(255,255,255,0.5);">
-                  ${logo.type === 'svg' ? 'SVG' : 'IMG'}
+                  ${logo.type === 'svg' ? t('brandConsistency.svgLabel', 'SVG') : t('brandConsistency.imgLabel', 'IMG')}
                 </div>
               `}
               <div style="margin-top: 0.5rem; font-size: 0.75rem; color: rgba(255,255,255,0.5);">
@@ -2288,7 +2354,7 @@ function renderColorContrastContent(contrastAnalysis) {
   const getContrastBadge = (level) => {
     if (level === 'AAA') return `<span style="background: ${getAccentPrimaryHex()}; color: var(--accent-primary-contrast); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">AAA</span>`;
     if (level === 'AA') return '<span style="background: #90EE90; color: #000; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">AA</span>';
-    return '<span style="background: #ff6b6b; color: #fff; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">FAIL</span>';
+    return `<span style="background: #ff6b6b; color: #fff; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">${t('brandConsistency.failBadge', 'FAIL')}</span>`;
   };
   
   return `
@@ -2461,15 +2527,15 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
 // Brand Assets Content
 function renderBrandAssetsContent(brandAssets) {
   const assetItems = [
-    { key: 'ogImage', label: 'Open Graph Image', icon: '📷' },
-    { key: 'ogTitle', label: 'Open Graph Title', icon: '📝' },
-    { key: 'ogDescription', label: 'Open Graph Description', icon: '📄' },
-    { key: 'twitterImage', label: 'Twitter Card Image', icon: '🐦' },
-    { key: 'twitterCard', label: 'Twitter Card Type', icon: '🃏' },
-    { key: 'appleTouchIcon', label: 'Apple Touch Icon', icon: '🍎' },
-    { key: 'themeColor', label: 'Theme Color', icon: '🎨' },
-    { key: 'maskIcon', label: 'Safari Mask Icon', icon: '🦁' },
-    { key: 'msapplicationTileImage', label: 'MS Tile Image', icon: '🪟' }
+    { key: 'ogImage', label: t('reports.brand.assets.ogImage', 'Open Graph Image'), icon: '📷' },
+    { key: 'ogTitle', label: t('reports.brand.assets.ogTitle', 'Open Graph Title'), icon: '📝' },
+    { key: 'ogDescription', label: t('reports.brand.assets.ogDescription', 'Open Graph Description'), icon: '📄' },
+    { key: 'twitterImage', label: t('reports.brand.assets.twitterImage', 'Twitter Card Image'), icon: '🐦' },
+    { key: 'twitterCard', label: t('reports.brand.assets.twitterCard', 'Twitter Card Type'), icon: '🃏' },
+    { key: 'appleTouchIcon', label: t('reports.brand.assets.appleTouchIcon', 'Apple Touch Icon'), icon: '🍎' },
+    { key: 'themeColor', label: t('reports.brand.assets.themeColor', 'Theme Color'), icon: '🎨' },
+    { key: 'maskIcon', label: t('reports.brand.assets.maskIcon', 'Safari Mask Icon'), icon: '🦁' },
+    { key: 'msapplicationTileImage', label: t('reports.brand.assets.msTileImage', 'MS Tile Image'), icon: '🪟' }
   ];
   
   const presentCount = assetItems.filter(item => brandAssets[item.key]).length;
@@ -2566,7 +2632,7 @@ function renderCompetitiveComparisonContent(data) {
 // Cross-Page Consistency Content (Multi-Page Mode)
 function renderCrossPageConsistencyContent(data) {
   const crossPage = data.crossPageConsistency;
-  if (!crossPage) return '<p>No cross-page data available</p>';
+  if (!crossPage) return `<p>${t('reports.brand.noCrossPageData', 'No cross-page data available')}</p>`;
   
   const scoreColor = getScoreColor(crossPage.score);
   const issues = crossPage.issues || [];
@@ -2658,7 +2724,7 @@ function renderCrossPageConsistencyContent(data) {
 
 // Page Breakdown Content (Multi-Page Mode)
 function renderPageBreakdownContent(pageBreakdown) {
-  if (!pageBreakdown || pageBreakdown.length === 0) return '<p>No page data available</p>';
+  if (!pageBreakdown || pageBreakdown.length === 0) return `<p>${t('reports.brand.noPageData', 'No page data available')}</p>`;
   
   return `
     <div>
@@ -2779,17 +2845,18 @@ window.switchBrandFixTab = function(accordionId, tabName) {
   }
 };
 
-window.copyBrandCode = function(elementId) {
+window.copyBrandCode = function(elementId, btn) {
   const el = document.getElementById(elementId);
   if (!el) return;
 
   const text = el.textContent || el.innerText;
   navigator.clipboard.writeText(text).then(() => {
-    const btn = document.querySelector(`button[onclick="copyBrandCode('${elementId}')"]`);
-    if (btn) {
-      const original = btn.innerHTML;
-      btn.innerHTML = '✓ ' + t('common.copied', 'Copied');
-      setTimeout(() => { btn.innerHTML = original; }, 1500);
+    // Find button by data attribute if not passed directly
+    const targetBtn = btn || document.querySelector(`button[data-copy-target="${elementId}"]`);
+    if (targetBtn) {
+      const original = targetBtn.innerHTML;
+      targetBtn.innerHTML = '✓ ' + t('common.copied', 'Copied');
+      setTimeout(() => { targetBtn.innerHTML = original; }, 1500);
     }
   }).catch(err => {
     console.error('Copy failed:', err);
@@ -2801,46 +2868,72 @@ window.copyBrandCode = function(elementId) {
 // (Required because CSP blocks inline onclick handlers)
 // ============================================
 document.addEventListener('click', function(e) {
-  // Handle tab clicks
-  const tab = e.target.closest('.brand-fix-tab');
-  if (tab) {
-    const accordion = tab.closest('.brand-fix-accordion');
-    if (accordion) {
-      const accordionId = accordion.getAttribute('data-fix-id');
-      const tabText = tab.textContent.toLowerCase();
-      let tabName = 'summary';
-      if (tabText.includes('code')) tabName = 'code';
-      else if (tabText.includes('guide')) tabName = 'guide';
-      if (accordionId && typeof window.switchBrandFixTab === 'function') {
+  const target = e.target.closest('[data-action]');
+  if (!target) return;
+
+  const action = target.getAttribute('data-action');
+
+  switch (action) {
+    case 'toggle-accordion': {
+      const accordionId = target.getAttribute('data-accordion-id');
+      if (accordionId && typeof window.toggleBrandFixAccordion === 'function') {
+        window.toggleBrandFixAccordion(accordionId);
+      }
+      break;
+    }
+
+    case 'switch-tab': {
+      const accordionId = target.getAttribute('data-accordion-id');
+      const tabName = target.getAttribute('data-tab');
+      if (accordionId && tabName && typeof window.switchBrandFixTab === 'function') {
         e.preventDefault();
         e.stopPropagation();
         window.switchBrandFixTab(accordionId, tabName);
       }
+      break;
     }
-    return;
-  }
 
-  // Handle accordion header clicks
-  const header = e.target.closest('.brand-fix-header');
-  if (header) {
-    const accordion = header.closest('.brand-fix-accordion');
-    if (accordion) {
-      const accordionId = accordion.getAttribute('data-fix-id');
-      if (accordionId && typeof window.toggleBrandFixAccordion === 'function') {
-        window.toggleBrandFixAccordion(accordionId);
+    case 'copy-code': {
+      const copyTarget = target.getAttribute('data-copy-target');
+      if (copyTarget) {
+        e.preventDefault();
+        window.copyBrandCode(copyTarget, target);
       }
+      break;
     }
-    return;
-  }
 
-  // Handle copy button clicks
-  const copyBtn = e.target.closest('button');
-  if (copyBtn) {
-    const onclickAttr = copyBtn.getAttribute('onclick') || '';
-    const copyMatch = onclickAttr.match(/copyBrandCode\(['"]([^'"]+)['"]\)/);
-    if (copyMatch && copyMatch[1]) {
-      e.preventDefault();
-      window.copyBrandCode(copyMatch[1]);
+    case 'copy-color': {
+      const color = target.getAttribute('data-color');
+      if (color) {
+        e.preventDefault();
+        copyToClipboard(color, target);
+      }
+      break;
+    }
+
+    case 'export-palette': {
+      const format = target.getAttribute('data-format');
+      const colorsJson = target.getAttribute('data-colors');
+      if (format && colorsJson) {
+        e.preventDefault();
+        try {
+          const colors = JSON.parse(decodeURIComponent(colorsJson));
+          let content = '';
+          if (format === 'css') {
+            content = generateCSSVariables(colors);
+          } else if (format === 'tailwind') {
+            content = generateTailwindConfig(colors);
+          } else if (format === 'tokens') {
+            content = generateDesignTokens(colors);
+          }
+          if (content) {
+            copyToClipboard(content, target);
+          }
+        } catch (err) {
+          console.error('Export palette failed:', err);
+        }
+      }
+      break;
     }
   }
 });

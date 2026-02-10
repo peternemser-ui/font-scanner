@@ -7,6 +7,90 @@
 window.SM_ANALYZER_KEY = 'core-web-vitals';
 document.body.setAttribute('data-sm-analyzer-key', window.SM_ANALYZER_KEY);
 
+// Translation helper - evaluates at runtime to ensure i18n is loaded
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
+/**
+ * Translate CWV rating labels (good, needs-improvement, poor)
+ */
+function translateCwvRating(rating) {
+  const ratingMap = {
+    'good': 'reports.cwv.ratings.good',
+    'needs-improvement': 'reports.cwv.ratings.needsImprovement',
+    'poor': 'reports.cwv.ratings.poor',
+    'unknown': 'reports.cwv.ratings.unknown'
+  };
+  const key = ratingMap[rating];
+  const fallback = rating.toUpperCase().replace('-', ' ');
+  if (key) {
+    return t(key, fallback);
+  }
+  return fallback;
+}
+
+/**
+ * Translate CWV metric description from server
+ */
+function translateCwvMetricDescription(description) {
+  const descMap = {
+    'Time until the largest text or image is painted': 'reports.cwv.metricDescriptions.lcp',
+    'Responsiveness to user interactions': 'reports.cwv.metricDescriptions.inp',
+    'Total time the main thread was blocked': 'reports.cwv.metricDescriptions.tbt',
+    'Visual stability - unexpected layout shifts': 'reports.cwv.metricDescriptions.cls',
+    'Time until first text/image appears': 'reports.cwv.metricDescriptions.fcp',
+    'How quickly content is visually displayed': 'reports.cwv.metricDescriptions.si',
+    'Time until page is fully interactive': 'reports.cwv.metricDescriptions.tti',
+    'Metric information': 'reports.cwv.metricDescriptions.default'
+  };
+  const key = descMap[description];
+  if (key) {
+    return t(key, description);
+  }
+  return description;
+}
+
+// Function to get analysis steps with current translations
+// Called at runtime to ensure i18n is loaded
+function getAnalysisSteps() {
+  return [
+    {
+      label: t('loader.initializingCwv', 'Initializing CWV analysis'),
+      detail: t('loader.startingPerformanceMonitor', 'Starting browser performance monitor...')
+    },
+    {
+      label: t('loader.measuringLcp', 'Measuring LCP'),
+      detail: t('loader.trackingLcp', 'Tracking largest contentful paint...')
+    },
+    {
+      label: t('loader.measuringFid', 'Measuring FID/INP'),
+      detail: t('loader.testingInput', 'Testing input responsiveness...')
+    },
+    {
+      label: t('loader.measuringCls', 'Measuring CLS'),
+      detail: t('loader.detectingShifts', 'Detecting layout shifts...')
+    },
+    {
+      label: t('loader.calculatingScores', 'Calculating scores'),
+      detail: t('loader.comparingThresholds', 'Comparing against Google thresholds...')
+    }
+  ];
+}
+
 const urlInput = document.getElementById('cwvUrlInput');
 const analyzeButton = document.getElementById('cwvAnalyzeButton');
 const resultsContainer = document.getElementById('cwvResults');
@@ -36,6 +120,11 @@ urlInput.addEventListener('keypress', (e) => {
   // If returning from billing, wait for billing return processing to complete
   if (billingSuccess && !window.__smBillingReturnComplete) {
     console.log('[CWV] Waiting for billing return processing...');
+
+    // CRITICAL: Clear fresh scan flag - user paid for this report
+    console.log('[CWV] Billing return detected - clearing fresh scan flag');
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+
     await new Promise((resolve) => {
       if (window.__smBillingReturnComplete) {
         resolve();
@@ -270,7 +359,7 @@ function showCWVPaymentGate(url) {
             font-weight: 700;
             font-size: 1rem;
           ">
-            Unlock for $5
+            ${t('reports.common.unlockFor5', 'Unlock for $5')}
           </button>
           <button id="cwvGoProBtn" style="
             background: transparent;
@@ -282,7 +371,7 @@ function showCWVPaymentGate(url) {
             font-weight: 600;
             font-size: 1rem;
           ">
-            Go Pro — $30/mo
+            ${t('reports.common.goPro30', 'Go Pro — $30/mo')}
           </button>
           <button id="cwvCancelPaymentBtn" style="
             background: transparent;
@@ -292,16 +381,16 @@ function showCWVPaymentGate(url) {
             cursor: pointer;
             font-size: 0.875rem;
           ">
-            Cancel
+            ${t('nav.cancel', 'Cancel')}
           </button>
         </div>
 
         <div style="text-align: center; margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
           <div style="color: var(--color-text-muted, #6b7280); font-size: 0.8rem; margin-bottom: 0.5rem;">
-            🔒 Secure payment powered by Stripe
+            🔒 ${t('reports.common.securePayments', 'Secure payments by Stripe')}
           </div>
           <div style="color: var(--color-text-muted, #6b7280); font-size: 0.75rem;">
-            Pro unlocks all reports • Single purchase unlocks this scan only
+            ${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}
           </div>
         </div>
       </div>
@@ -326,7 +415,7 @@ function showCWVPaymentGate(url) {
   document.getElementById('cwvCancelPaymentBtn').addEventListener('click', () => {
     document.getElementById('cwvPaymentGateModal').remove();
     analyzeButton.disabled = false;
-    analyzeButton.textContent = 'ANALYZE CWV';
+    analyzeButton.textContent = t('common.analyzeCwv', 'ANALYZE CWV');
   });
 
   document.getElementById('cwvProceedPaymentBtn').addEventListener('click', () => {
@@ -347,7 +436,7 @@ function showCWVPaymentGate(url) {
 async function createCWVPaymentSession(url) {
   const proceedBtn = document.getElementById('cwvProceedPaymentBtn');
   proceedBtn.disabled = true;
-  proceedBtn.textContent = 'Creating checkout...';
+  proceedBtn.textContent = t('common.creatingCheckout', 'Creating checkout...');
 
   try {
     const startedAt = document.body.getAttribute('data-sm-scan-started-at') || window.SM_SCAN_STARTED_AT || '';
@@ -416,8 +505,8 @@ async function createCWVPaymentSession(url) {
   } catch (error) {
     console.error('[CWV Payment] Exception:', error);
     proceedBtn.disabled = false;
-    proceedBtn.textContent = 'Unlock for $5';
-    alert(`Payment error: ${error.message}`);
+    proceedBtn.textContent = t('reports.common.unlockFor5', 'Unlock for $5');
+    alert(t('reports.common.paymentError', 'Payment error: {{message}}', { message: error.message }));
   }
 }
 
@@ -433,7 +522,11 @@ async function createCWVPaymentSession(url) {
 
   if ((billingSuccess || paymentSuccess || sessionId) && (reportType === 'cwv' || reportType === 'core-web-vitals')) {
     console.log('[CWV] Payment successful - setting up bypass and auto-scan');
-    
+
+    // CRITICAL: Clear fresh scan flag - user paid for this report
+    console.log('[CWV] Payment detected - clearing fresh scan flag');
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+
     // Set a SESSION flag to bypass payment check for this scan
     // This is critical - it allows the immediate scan to proceed
     window.__cwvPaymentBypass = true;
@@ -478,23 +571,30 @@ analyzeButton.addEventListener('click', async () => {
   const url = urlInput.value.trim();
 
   if (!url) {
-    alert('Please enter a URL');
+    alert(t('reports.common.pleaseEnterUrl', 'Please enter a URL'));
     return;
   }
 
-  // ==================== PAYMENT GATE CHECK ====================
-  const canRun = await checkCanRunCWVReport();
-  if (!canRun) {
-    console.log('[CWV] Payment required for CWV report');
-    pendingCWVAnalysisUrl = url;
-    showCWVPaymentGate(url);
-    return;
+  // NOTE: Payment gate removed - all scans are FREE to run
+  // Pro sections are locked in the results, not before the scan
+  // This matches the UX of other analyzers (SEO, Accessibility, etc.)
+  console.log('[CWV] Running scan (all scans are free)');
+
+  // CRITICAL: Mark this as a FRESH SCAN that requires payment
+  // VERSION: 20260201h - This flag ensures new scans are LOCKED until paid
+  console.log('[CWV] NEW SCAN v20260201h: Marking as fresh unpaid scan');
+  window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = true;
+  window.__SM_CURRENT_SCAN_URL__ = url;
+
+  // Clear any stale billing cache and session markers from previous scans
+  if (window.ProReportBlock?.clearBillingCache) {
+    window.ProReportBlock.clearBillingCache();
   }
-  console.log('[CWV] Access granted, proceeding with analysis');
-  // ==================== END PAYMENT GATE ====================
+  sessionStorage.removeItem('sm_payment_completed_session');
+  sessionStorage.removeItem('sm_purchased_report_id');
 
   analyzeButton.disabled = true;
-  analyzeButton.textContent = 'ANALYZING...';
+  analyzeButton.textContent = t('common.analyzing', 'ANALYZING...').toUpperCase();
   resultsContainer.style.display = 'none';
 
   // Create loading container if it doesn't exist
@@ -561,30 +661,8 @@ analyzeButton.addEventListener('click', async () => {
   `;
   document.head.appendChild(style);
   
-  const analysisSteps = [
-    {
-      label: 'Initializing CWV analysis',
-      detail: 'Starting browser performance monitor...'
-    },
-    {
-      label: 'Measuring LCP',
-      detail: 'Tracking largest contentful paint...'
-    },
-    {
-      label: 'Measuring FID/INP',
-      detail: 'Testing input responsiveness...'
-    },
-    {
-      label: 'Measuring CLS',
-      detail: 'Detecting layout shifts...'
-    },
-    {
-      label: 'Calculating scores',
-      detail: 'Comparing against Google thresholds...'
-    }
-  ];
-
-  loader.start(analysisSteps, '[CORE WEB VITALS ANALYZER]', 15);
+  // Use getAnalysisSteps() to get translated steps at runtime
+  loader.start(getAnalysisSteps(), '📊 ' + t('loader.analyzingCwv', 'CORE WEB VITALS ANALYZER'), 15);
   
   // Insert ASCII art after loader starts
   const analyzerLoading = loadingContainer.querySelector('.analyzer-loading');
@@ -597,11 +675,13 @@ analyzeButton.addEventListener('click', async () => {
     window.SM_SCAN_STARTED_AT = scanStartedAt;
     document.body.setAttribute('data-sm-scan-started-at', scanStartedAt);
 
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
     const response = await fetch('/api/core-web-vitals', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({ url, scanStartedAt }),
     });
 
@@ -609,9 +689,14 @@ analyzeButton.addEventListener('click', async () => {
       let errorMessage = `HTTP error! status: ${response.status}`;
       try {
         const errorData = await response.json();
-        errorMessage = errorData.error || errorData.message || errorMessage;
+        if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
+          const limit = errorData.scansLimit || 10;
+          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        }
+        errorMessage = errorData.message || errorData.error || errorMessage;
         console.error('[CWV] API error:', { status: response.status, error: errorData });
       } catch (parseErr) {
+        if (parseErr.message && parseErr.message.includes('scan limit')) throw parseErr;
         console.error('[CWV] API error (non-JSON):', response.status, response.statusText);
       }
       throw new Error(errorMessage);
@@ -637,18 +722,248 @@ analyzeButton.addEventListener('click', async () => {
 
     // Show results after animation completes
     setTimeout(() => {
+      // Show redirect notice if the page redirected
+      if (data.finalUrl) {
+        showRedirectNotice(url, data.finalUrl);
+      }
       displayResults(data);
       resultsContainer.style.display = 'block';
+      window.__REPORT_READY__ = true;
+      window.dispatchEvent(new CustomEvent('report:ready'));
     }, 1000);
 
   } catch (error) {
     console.error('Analysis error:', error);
-    loader.showError(error.message);
+    showCWVError(error, url, loader);
   } finally {
     analyzeButton.disabled = false;
-    analyzeButton.textContent = 'ANALYZE CWV';
+    analyzeButton.textContent = t('common.analyzeCwv', 'ANALYZE CWV');
   }
 });
+
+/**
+ * Show a redirect notice banner above results
+ */
+function showRedirectNotice(originalUrl, finalUrl) {
+  // Remove any existing notice
+  const existing = document.getElementById('cwv-redirect-notice');
+  if (existing) existing.remove();
+
+  const notice = document.createElement('div');
+  notice.id = 'cwv-redirect-notice';
+  notice.style.cssText = `
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #93c5fd;
+    font-size: 0.875rem;
+  `;
+  notice.innerHTML = `
+    <span style="font-size: 1.1rem;">&#x21AA;</span>
+    <span>${t('scanError.redirectNotice', 'This site redirected from {{originalUrl}} to {{finalUrl}}', { originalUrl, finalUrl })}</span>
+  `;
+  resultsContainer.parentNode.insertBefore(notice, resultsContainer);
+}
+
+/**
+ * Rich error state for CWV analysis (matches performance-hub pattern)
+ */
+function showCWVError(errorOrMessage, inputUrl, loader) {
+  const message = typeof errorOrMessage === 'string' ? errorOrMessage : (errorOrMessage && errorOrMessage.message) || '';
+  const errorLower = message.toLowerCase();
+
+  // Extract domain from the URL input
+  let domain = '';
+  let attemptedUrl = '';
+  try {
+    const raw = (inputUrl || urlInput.value).trim();
+    attemptedUrl = raw;
+    const parsed = new URL(raw.startsWith('http') ? raw : 'https://' + raw);
+    domain = parsed.hostname;
+  } catch (_) {
+    domain = (inputUrl || urlInput.value).trim() || 'unknown';
+    attemptedUrl = domain;
+  }
+
+  // Classify the error
+  let titleKey = 'analysisFailed';
+  let subtitleKey = 'analysisFailedSubtitle';
+  let failedStep = 'unknown';
+  let chips = null;
+  let category = 'generic';
+
+  if (errorLower.includes('execution context was destroyed') ||
+      errorLower.includes('navigation') ||
+      errorLower.includes('redirect')) {
+    category = 'redirect';
+    titleKey = 'redirectFailed';
+    subtitleKey = 'redirectFailedSubtitle';
+    failedStep = 'http';
+    chips = { dns: 'ok', tls: 'ok', http: 'fail' };
+  } else if (errorLower.includes('notfound') || errorLower.includes('enotfound') ||
+      errorLower.includes('dns') || errorLower.includes('getaddrinfo') ||
+      errorLower.includes('err_name_not_resolved')) {
+    category = 'dns';
+    titleKey = 'cantReach';
+    subtitleKey = 'subtitle';
+    failedStep = 'dns';
+    chips = { dns: 'fail', tls: 'unknown', http: 'unknown' };
+  } else if (errorLower.includes('network') || errorLower.includes('connection') ||
+      errorLower.includes('econnrefused') || errorLower.includes('econnreset')) {
+    category = 'connection';
+    titleKey = 'connectionFailed';
+    subtitleKey = 'connectionSubtitle';
+    failedStep = 'tcp';
+    chips = { dns: 'ok', tls: 'unknown', http: 'fail' };
+  } else if (errorLower.includes('timeout') || errorLower.includes('timed out') ||
+      errorLower.includes('too long')) {
+    category = 'timeout';
+    titleKey = 'timedOut';
+    subtitleKey = 'timedOutSubtitle';
+    failedStep = 'http';
+    chips = { dns: 'ok', tls: 'ok', http: 'fail' };
+  } else if (errorLower.includes('bot') || errorLower.includes('cloudflare') ||
+      errorLower.includes('captcha') || errorLower.includes('blocked')) {
+    category = 'blocked';
+    titleKey = 'accessBlocked';
+    subtitleKey = 'accessBlockedSubtitle';
+    failedStep = 'http';
+    chips = { dns: 'ok', tls: 'ok', http: 'fail' };
+  } else if (errorLower.includes('ssl') || errorLower.includes('certificate') ||
+      errorLower.includes('cert')) {
+    category = 'ssl';
+    titleKey = 'certIssue';
+    subtitleKey = 'certIssueSubtitle';
+    failedStep = 'tls';
+    chips = { dns: 'ok', tls: 'fail', http: 'unknown' };
+  }
+
+  const title = t(`scanError.${titleKey}`, titleKey, { domain });
+  const subtitle = t(`scanError.${subtitleKey}`, subtitleKey, { domain });
+  const reasonText = message.slice(0, 120);
+  const ts = new Date().toISOString();
+
+  // SVG icons
+  const globeXIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10A15.3 15.3 0 0 1 12 2z"/><line x1="17" y1="7" x2="7" y2="17"/><line x1="7" y1="7" x2="17" y2="17"/></svg>';
+  const chevronIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>';
+  const arrowUpRightIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></svg>';
+
+  // Build status chips HTML
+  let chipsHtml = '';
+  if (chips) {
+    const chipEntries = [
+      { key: 'dns', label: t('scanError.statusDns', 'DNS'), status: chips.dns },
+      { key: 'tls', label: t('scanError.statusTls', 'TLS'), status: chips.tls },
+      { key: 'http', label: t('scanError.statusHttp', 'HTTP'), status: chips.http }
+    ];
+    chipsHtml = '<div class="scan-error-state__chips">' +
+      chipEntries.map(c => {
+        const statusLabel = t('scanError.status' + c.status.charAt(0).toUpperCase() + c.status.slice(1), c.status);
+        return '<span class="scan-error-state__chip scan-error-state__chip--' + c.status + '">' +
+          '<span class="scan-error-state__chip-label">' + c.label + '</span> ' + statusLabel +
+          '</span>';
+      }).join('') +
+      '</div>';
+  }
+
+  const reasonHtml = reasonText ? '<span class="scan-error-state__reason">' + t('scanError.reason', 'Reason: {{reason}}', { reason: reasonText }) + '</span>' : '';
+
+  // Quick checks list
+  const checks = [
+    t('scanError.checkSpelling', 'Check spelling (common: .con vs .com)'),
+    t('scanError.tryWww', "Try adding or removing 'www'"),
+    t('scanError.verifyDns', 'Verify DNS exists (A / AAAA records)'),
+    t('scanError.allowlistScanner', "If it's private / staging, allowlist our scanner IP"),
+    t('scanError.runLocally', 'If it requires login, run Lighthouse from your browser')
+  ];
+
+  const html = `
+    <div class="scan-error-state" role="alert" aria-live="polite">
+      <div class="scan-error-state__main">
+        <div class="scan-error-state__icon-badge">${globeXIcon}</div>
+        <h3 class="scan-error-state__title">${title}</h3>
+        <p class="scan-error-state__subtitle">${subtitle}</p>
+        ${reasonHtml}
+        ${chipsHtml}
+        <div class="scan-error-state__actions">
+          <button type="button" class="scan-error-state__btn-primary" data-action="cwv-edit-url">
+            ${t('scanError.editUrl', 'Edit URL')}
+          </button>
+          <button type="button" class="scan-error-state__btn-secondary" data-action="cwv-try-again">
+            ${t('scanError.tryAgain', 'Try again')}
+          </button>
+          <a class="scan-error-state__btn-tertiary" href="https://${domain}" target="_blank" rel="noopener noreferrer">
+            ${t('scanError.openInBrowser', 'Open in browser')} ${arrowUpRightIcon}
+          </a>
+        </div>
+      </div>
+      <div class="scan-error-state__sidebar">
+        <div>
+          <h4 class="scan-error-state__checks-title">${t('scanError.quickChecks', 'Quick checks')}</h4>
+          <ul class="scan-error-state__checks">
+            ${checks.map(c => '<li class="scan-error-state__check-item"><span class="scan-error-state__check-icon">' + chevronIcon + '</span><span>' + c + '</span></li>').join('')}
+          </ul>
+        </div>
+        <details class="scan-error-state__details">
+          <summary>${t('scanError.technicalDetails', 'Technical details')}</summary>
+          <div class="scan-error-state__details-body">
+            <div class="scan-error-state__details-row">
+              <span class="scan-error-state__details-label">${t('scanError.errorCode', 'Error code')}</span>
+              <span class="scan-error-state__details-value">${category}</span>
+            </div>
+            <div class="scan-error-state__details-row">
+              <span class="scan-error-state__details-label">${t('scanError.timestamp', 'Timestamp')}</span>
+              <span class="scan-error-state__details-value">${ts}</span>
+            </div>
+            <div class="scan-error-state__details-row">
+              <span class="scan-error-state__details-label">${t('scanError.attemptedUrl', 'Attempted URL')}</span>
+              <span class="scan-error-state__details-value">${attemptedUrl}</span>
+            </div>
+            <div class="scan-error-state__details-row">
+              <span class="scan-error-state__details-label">${t('scanError.failedStep', 'Failed step')}</span>
+              <span class="scan-error-state__details-value">${failedStep}</span>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+  `;
+
+  // Use the loader's error container or fall back to resultsContainer
+  if (loader && typeof loader.showError === 'function') {
+    // The loader.showError sets up the container; we override with rich HTML
+    loader.showError(message);
+    // Now replace the loader content with our rich error
+    const loadingContainer = document.getElementById('loadingContainer');
+    if (loadingContainer) {
+      loadingContainer.innerHTML = html;
+    }
+  } else {
+    resultsContainer.innerHTML = html;
+    resultsContainer.style.display = 'block';
+  }
+
+  // Wire up action buttons
+  const editBtn = document.querySelector('[data-action="cwv-edit-url"]');
+  const retryBtn = document.querySelector('[data-action="cwv-try-again"]');
+
+  if (editBtn) {
+    editBtn.addEventListener('click', () => {
+      urlInput.focus();
+      urlInput.select();
+    });
+  }
+  if (retryBtn) {
+    retryBtn.addEventListener('click', () => {
+      analyzeButton.click();
+    });
+  }
+}
 
 function displayResults(data) {
   // Validate data - ignore cached error responses
@@ -666,9 +981,39 @@ function displayResults(data) {
     resultsEl.style.display = 'block';
   }
 
+  // Check Pro access for gating premium content
+  const reportId = document.body.getAttribute('data-report-id') || '';
+  const hasProAccess = window.ProReportBlock?.hasAccess?.(reportId) || false;
+  console.log('[CWV] displayResults - hasProAccess:', hasProAccess, 'reportId:', reportId);
+
+  // Build screenshot URL for report display
+  const screenshotUrl = data.screenshotUrl || document.body.getAttribute('data-sm-screenshot-url') || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+
   const { desktop, mobile, score, grade, recommendations, issues, comparison } = data;
 
+  // Build screenshot HTML
+  const screenshotHTML = screenshotUrl ? `
+    <div class="screenshot-section" style="margin-bottom: 1.5rem;">
+      <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+        ${t('reports.common.pageScreenshot', 'Page Screenshot')}
+      </h3>
+      <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+        <img
+          src="${screenshotUrl}"
+          alt="Screenshot of analyzed page"
+          class="screenshot-item__img"
+          style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
+          data-action="open-lightbox"
+          data-screenshot-url="${screenshotUrl}"
+          data-screenshot-title="Page Screenshot"
+          onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${t('reports.common.screenshotUnavailable', 'Screenshot unavailable')}</div>'"
+        />
+      </div>
+    </div>
+  ` : '';
+
   resultsContainer.innerHTML = `
+    ${screenshotHTML}
     <!-- Overall Score Banner -->
     <div style="
       background: linear-gradient(135deg, ${getGradeColor(grade)}20 0%, ${getGradeColor(grade)}10 100%);
@@ -679,7 +1024,7 @@ function displayResults(data) {
       text-align: center;
     ">
       <div style="font-size: 5rem; font-weight: bold; color: ${getGradeColor(grade)}; margin-bottom: 0.5rem;">${score}</div>
-      <div style="font-size: 1.5rem; color: #e0e0e0; margin-bottom: 0.5rem;">Overall CWV Score</div>
+      <div style="font-size: 1.5rem; color: #e0e0e0; margin-bottom: 0.5rem;">${t('reports.cwv.overallScore', 'Overall CWV Score')}</div>
       <div style="
         display: inline-block;
         padding: 0.5rem 2rem;
@@ -689,9 +1034,9 @@ function displayResults(data) {
         font-weight: bold;
         border-radius: 8px;
         margin-bottom: 1rem;
-      ">GRADE: ${grade}</div>
+      ">${t('reports.cwv.grade', 'GRADE')}: ${grade}</div>
       <div style="color: #c0c0c0; font-size: 1rem; margin-top: 1rem;">
-        ${mobile.passedCWV ? '✓ PASSING Core Web Vitals (Good for Google Rankings)' : '✗ FAILING Core Web Vitals (May hurt Google Rankings)'}
+        ${mobile.passedCWV ? '✓ ' + t('reports.cwv.passingCwv', 'PASSING Core Web Vitals (Good for Google Rankings)') : '✗ ' + t('reports.cwv.failingCwv', 'FAILING Core Web Vitals (May hurt Google Rankings)')}
       </div>
     </div>
 
@@ -704,7 +1049,7 @@ function displayResults(data) {
       margin-bottom: 2rem;
       border-radius: 8px;
     ">
-      <h3 style="color: #ff4444; margin: 0 0 1rem 0;">! Critical Issues</h3>
+      <h3 style="color: #ff4444; margin: 0 0 1rem 0;">! ${t('reports.cwv.criticalIssues', 'Critical Issues')}</h3>
       ${issues.map(issue => `<p style="color: #e0e0e0; margin: 0.5rem 0;">${issue}</p>`).join('')}
     </div>
     ` : ''}
@@ -719,13 +1064,13 @@ function displayResults(data) {
         padding: 1.5rem;
       ">
         <h3 style="color: #9600ff; margin: 0 0 1rem 0; display: flex; align-items: center; justify-content: space-between;">
-          <span>M Mobile (70% weight)</span>
+          <span>M ${t('reports.cwv.mobile', 'Mobile')} (${t('reports.cwv.weight70', '70% weight')})</span>
           <span style="font-size: 2rem;">${mobile.score}/100</span>
         </h3>
         ${renderCWVMetrics(mobile)}
         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(150, 0, 255, 0.3);">
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            ${mobile.passedCWV ? '✓ All Core Web Vitals passed' : '✗ Some metrics need improvement'}
+            ${mobile.passedCWV ? '✓ ' + t('reports.cwv.allVitalsPassed', 'All Core Web Vitals passed') : '✗ ' + t('reports.cwv.someMetricsNeedImprovement', 'Some metrics need improvement')}
           </p>
         </div>
       </div>
@@ -738,39 +1083,40 @@ function displayResults(data) {
         padding: 1.5rem;
       ">
         <h3 style="color: #0096ff; margin: 0 0 1rem 0; display: flex; align-items: center; justify-content: space-between;">
-          <span>D Desktop (30% weight)</span>
+          <span>D ${t('reports.cwv.desktop', 'Desktop')} (${t('reports.cwv.weight30', '30% weight')})</span>
           <span style="font-size: 2rem;">${desktop.score}/100</span>
         </h3>
         ${renderCWVMetrics(desktop)}
         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 150, 255, 0.3);">
           <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
-            ${desktop.passedCWV ? '✓ All Core Web Vitals passed' : '~ Some metrics need improvement'}
+            ${desktop.passedCWV ? '✓ ' + t('reports.cwv.allVitalsPassed', 'All Core Web Vitals passed') : '~ ' + t('reports.cwv.someMetricsNeedImprovement', 'Some metrics need improvement')}
           </p>
         </div>
       </div>
     </div>
 
     <!-- Accordions for detailed analysis -->
-    ${createCWVAccordionSection('best-practices', '📋', 'Best Practices & Optimization Guide', renderBestPracticesTable(mobile, desktop), Math.round((mobile.score + desktop.score) / 2))}
-    
-    ${createCWVAccordionSection('core-vitals', '⚡', 'The Big 3: Google\'s Core Web Vitals', `
+    ${createCWVAccordionSection('best-practices', '📋', t('reports.cwv.bestPracticesTitle', 'Best Practices & Optimization Guide'), renderBestPracticesTable(mobile, desktop), Math.round((mobile.score + desktop.score) / 2))}
+
+    ${createCWVAccordionSection('core-vitals', '⚡', t('reports.cwv.coreVitalsTitle', "The Big 3: Google's Core Web Vitals"), `
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; padding: 1rem 0;">
-        ${renderMetricCard('LCP', 'Largest Contentful Paint', mobile.lcp, desktop.lcp, '⏱️', 'Loading Performance')}
-        ${renderMetricCard('INP', 'Interaction to Next Paint', mobile.inp, desktop.inp, '👆', 'Responsiveness')}
-        ${renderMetricCard('CLS', 'Cumulative Layout Shift', mobile.cls, desktop.cls, '📐', 'Visual Stability')}
+        ${renderMetricCard('LCP', t('reports.cwv.lcpName', 'Largest Contentful Paint'), mobile.lcp, desktop.lcp, '⏱️', t('reports.cwv.loadingPerformance', 'Loading Performance'))}
+        ${renderMetricCard('INP', t('reports.cwv.inpName', 'Interaction to Next Paint'), mobile.inp, desktop.inp, '👆', t('reports.cwv.responsiveness', 'Responsiveness'))}
+        ${renderMetricCard('CLS', t('reports.cwv.clsName', 'Cumulative Layout Shift'), mobile.cls, desktop.cls, '📐', t('reports.cwv.visualStability', 'Visual Stability'))}
       </div>
     `, Math.round((mobile.score + desktop.score) / 2))}
-    
-    ${createCWVAccordionSection('additional-metrics', '📊', 'Additional Performance Metrics', `
+
+    ${createCWVAccordionSection('additional-metrics', '📊', t('reports.cwv.additionalMetricsTitle', 'Additional Performance Metrics'), `
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; padding: 1rem 0;">
-        ${renderAdditionalMetric('FCP', 'First Contentful Paint', mobile.additionalMetrics.fcp, desktop.additionalMetrics.fcp)}
-        ${renderAdditionalMetric('SI', 'Speed Index', mobile.additionalMetrics.si, desktop.additionalMetrics.si)}
-        ${renderAdditionalMetric('TTI', 'Time to Interactive', mobile.additionalMetrics.tti, desktop.additionalMetrics.tti)}
+        ${renderAdditionalMetric('FCP', t('reports.cwv.fcpName', 'First Contentful Paint'), mobile.additionalMetrics.fcp, desktop.additionalMetrics.fcp)}
+        ${renderAdditionalMetric('SI', t('reports.cwv.siName', 'Speed Index'), mobile.additionalMetrics.si, desktop.additionalMetrics.si)}
+        ${renderAdditionalMetric('TTI', t('reports.cwv.ttiName', 'Time to Interactive'), mobile.additionalMetrics.tti, desktop.additionalMetrics.tti)}
       </div>
     `, null)}
 
     <!-- Report and Recommendations (Pro) -->
-    ${recommendations.length > 0 ? createCWVAccordionSection('report-recommendations', '📋', 'Report and Recommendations <span class="pro-pill">PRO</span>', `
+    ${recommendations.length > 0 ? createCWVAccordionSection('report-recommendations', '📋', t('reports.cwv.recommendationsTitle', 'Report and Recommendations') + ' <span class="pro-pill">PRO</span>',
+      hasProAccess ? `
       <div style="display: grid; gap: 1rem; padding: 1rem 0;">
         ${recommendations.map(rec => `
           <div style="
@@ -798,9 +1144,27 @@ function displayResults(data) {
           </div>
         `).join('')}
       </div>
+    ` : `
+      <div style="position: relative; padding: 1.5rem; text-align: center;">
+        <div style="filter: blur(4px); opacity: 0.4; pointer-events: none;">
+          <div style="background: rgba(255, 140, 0, 0.1); border-left: 4px solid #ff8c00; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;">
+            <p style="color: #888; margin: 0;">${t('reports.cwv.detailedRecommendationsBlur', 'Detailed performance recommendations...')}</p>
+          </div>
+          <div style="background: rgba(255, 68, 68, 0.1); border-left: 4px solid #ff4444; padding: 1rem; border-radius: 8px;">
+            <p style="color: #888; margin: 0;">${t('reports.cwv.criticalOptimizationsBlur', 'Critical optimization suggestions...')}</p>
+          </div>
+        </div>
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-primary, #1a1a2e); padding: 1.5rem 2rem; border-radius: 12px; border: 2px solid var(--color-accent, #00ff41); box-shadow: 0 4px 20px rgba(0, 255, 65, 0.3);">
+          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
+          <p style="color: var(--color-text-primary, #e0e0e0); margin: 0 0 1rem 0; font-weight: 600;">${t('reports.cwv.recommendationsAvailable', '{{count}} Recommendation(s) Available', { count: recommendations.length })}</p>
+          <button onclick="window.ProReportBlock?.showPurchaseOptions?.('${reportId}', 'core-web-vitals')" style="background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%); color: #000; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
+            ${t('reports.common.unlockProReport', 'Unlock Pro Report - $5')}
+          </button>
+        </div>
+      </div>
     `, null) : ''}
 
-    ${createCWVAccordionSection('understanding-scores', 'ℹ️', 'Understanding Your Scores', `
+    ${createCWVAccordionSection('understanding-scores', 'ℹ️', t('reports.cwv.understandingScoresTitle', 'Understanding Your Scores'), `
       <div style="padding: 1rem 0;">
         <p style="color: #e0e0e0; margin: 0 0 0.5rem 0;">${comparison.context}</p>
         <p style="color: #c0c0c0; margin: 0; font-size: 0.9rem;">${comparison.note}</p>
@@ -814,10 +1178,22 @@ function displayResults(data) {
     <!-- PDF Download button removed - monetization disabled -->
   `;
 
+  // Add click handler for screenshot lightbox
+  if (screenshotUrl) {
+    const screenshotImg = resultsContainer.querySelector('[data-action="open-lightbox"]');
+    if (screenshotImg) {
+      screenshotImg.addEventListener('click', () => {
+        if (window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+          window.ScreenshotLightbox.open(screenshotUrl, 'Page Screenshot');
+        }
+      });
+    }
+  }
+
   // Auto-save report if user has access (purchased or Pro)
-  const reportId = document.body.getAttribute('data-report-id') || '';
-  if (reportId && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
-    window.ReportStorage.autoSaveIfEligible(reportId, data, {
+  const reportIdForSave = document.body.getAttribute('data-report-id') || '';
+  if (reportIdForSave && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
+    window.ReportStorage.autoSaveIfEligible(reportIdForSave, data, {
       siteUrl: urlInput.value.trim(),
       analyzerType: 'core-web-vitals',
       scannedAt: window.SM_SCAN_STARTED_AT || new Date().toISOString()
@@ -934,10 +1310,10 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
       
       <div style="text-align: center; color: #909090; font-size: 0.8rem; margin-bottom: 0.75rem;">${category}</div>
       <div style="text-align: center; padding: 0.5rem; border: 1px solid ${ratingColor}; border-radius: 6px;">
-        <div style="color: ${ratingColor}; font-weight: 600; font-size: 0.9rem;">${primaryRating.toUpperCase().replace('-', ' ')}</div>
+        <div style="color: ${ratingColor}; font-weight: 600; font-size: 0.9rem;">${translateCwvRating(primaryRating)}</div>
       </div>
       <div style="margin-top: 0.75rem; color: #808080; font-size: 0.75rem; line-height: 1.3; text-align: center;">
-        ${mobileMetric.description || 'Metric information'}
+        ${translateCwvMetricDescription(mobileMetric.description || 'Metric information')}
       </div>
     </div>
   `;
@@ -986,7 +1362,7 @@ function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
       </div>
       
       <div style="color: #909090; font-size: 0.75rem; margin-top: 0.75rem; line-height: 1.3;">
-        ${mobileMetric.description}
+        ${translateCwvMetricDescription(mobileMetric.description)}
       </div>
     </div>
   `;
@@ -1010,25 +1386,25 @@ function renderBestPracticesTable(mobile, desktop) {
       ">
         <thead>
           <tr style="background: rgba(0, 255, 65, 0.1); border-bottom: 2px solid rgba(0, 255, 65, 0.4);">
-            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 12%;">Metric</th>
-            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 15%;">Google Target</th>
-            <th style="padding: 1rem; text-align: center; color: #9600ff; font-weight: bold; width: 10%;">Mobile</th>
-            <th style="padding: 1rem; text-align: center; color: #0096ff; font-weight: bold; width: 10%;">Desktop</th>
-            <th style="padding: 1rem; text-align: center; color: #00ff41; font-weight: bold; width: 8%;">Status</th>
-            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 45%;">Optimization Recommendations</th>
+            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 12%;">${t('reports.common.metric', 'Metric')}</th>
+            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 15%;">${t('reports.cwv.googleTarget', 'Google Target')}</th>
+            <th style="padding: 1rem; text-align: center; color: #9600ff; font-weight: bold; width: 10%;">${t('reports.performance.mobile', 'Mobile')}</th>
+            <th style="padding: 1rem; text-align: center; color: #0096ff; font-weight: bold; width: 10%;">${t('reports.performance.desktop', 'Desktop')}</th>
+            <th style="padding: 1rem; text-align: center; color: #00ff41; font-weight: bold; width: 8%;">${t('reports.common.status', 'Status')}</th>
+            <th style="padding: 1rem; text-align: left; color: #00ff41; font-weight: bold; width: 45%;">${t('reports.cwv.optimizationRecommendations', 'Optimization Recommendations')}</th>
           </tr>
         </thead>
         <tbody>
           <!-- LCP Row -->
           <tr style="border-bottom: 1px solid rgba(0, 255, 65, 0.2);">
             <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
-              LCP<br/>
-              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">Largest Contentful Paint</span>
+              ${t('reports.cwv.lcp', 'LCP')}<br/>
+              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">${t('reports.cwv.lcpName', 'Largest Contentful Paint')}</span>
             </td>
             <td style="padding: 1rem; color: #c0c0c0;">
-              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">Good:</span> ≤ 2.5s</div>
-              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">Needs Work:</span> 2.5s - 4.0s</div>
-              <div><span style="color: #ff4444;">Poor:</span> > 4.0s</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">${t('reports.common.good', 'Good')}:</span> ≤ 2.5s</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">${t('reports.common.needsWork', 'Needs Work')}:</span> 2.5s - 4.0s</div>
+              <div><span style="color: #ff4444;">${t('reports.common.poor', 'Poor')}:</span> > 4.0s</div>
             </td>
             <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #9600ff; font-weight: bold;">
               ${mobile.lcp.displayValue || 'N/A'}
@@ -1037,27 +1413,27 @@ function renderBestPracticesTable(mobile, desktop) {
               ${desktop.lcp.displayValue || 'N/A'}
             </td>
             <td style="padding: 1rem; text-align: center; font-size: 1.5rem;">
-              ${mobile.lcp.rating === 'good' && desktop.lcp.rating === 'good' ? '✓' : 
+              ${mobile.lcp.rating === 'good' && desktop.lcp.rating === 'good' ? '✓' :
                 mobile.lcp.rating === 'good' || desktop.lcp.rating === 'good' ? '~' : '✗'}
             </td>
             <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. Optimize Critical Resources:</strong> Reduce render-blocking JavaScript and CSS. Inline critical CSS and defer non-essential scripts.</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. Image Optimization:</strong> Compress largest image/video, use modern formats (WebP, AVIF), implement responsive images with srcset.</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. Server Performance:</strong> Use CDN, enable HTTP/2, implement server-side caching, reduce server response time (TTFB).</div>
-              <div><strong style="color: #e0e0e0;">4. Resource Hints:</strong> Add preload for critical resources, preconnect to required origins, use priority hints for important images.</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. ${t('reports.cwv.tips.lcpOptimizeCritical', 'Optimize Critical Resources')}:</strong> ${t('reports.cwv.tips.lcpOptimizeCriticalDesc', 'Reduce render-blocking JavaScript and CSS. Inline critical CSS and defer non-essential scripts.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. ${t('reports.cwv.tips.lcpImageOptimization', 'Image Optimization')}:</strong> ${t('reports.cwv.tips.lcpImageOptimizationDesc', 'Compress largest image/video, use modern formats (WebP, AVIF), implement responsive images with srcset.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. ${t('reports.cwv.tips.lcpServerPerformance', 'Server Performance')}:</strong> ${t('reports.cwv.tips.lcpServerPerformanceDesc', 'Use CDN, enable HTTP/2, implement server-side caching, reduce server response time (TTFB).')}</div>
+              <div><strong style="color: #e0e0e0;">4. ${t('reports.cwv.tips.lcpResourceHints', 'Resource Hints')}:</strong> ${t('reports.cwv.tips.lcpResourceHintsDesc', 'Add preload for critical resources, preconnect to required origins, use priority hints for important images.')}</div>
             </td>
           </tr>
           
           <!-- INP/FID Row -->
           <tr style="border-bottom: 1px solid rgba(0, 255, 65, 0.2);">
             <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
-              INP/FID<br/>
-              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">Interaction to Next Paint</span>
+              ${t('reports.cwv.inp', 'INP/FID')}<br/>
+              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">${t('reports.cwv.inpName', 'Interaction to Next Paint')}</span>
             </td>
             <td style="padding: 1rem; color: #c0c0c0;">
-              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">Good:</span> ≤ 200ms</div>
-              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">Needs Work:</span> 200ms - 500ms</div>
-              <div><span style="color: #ff4444;">Poor:</span> > 500ms</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">${t('reports.common.good', 'Good')}:</span> ≤ 200ms</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">${t('reports.common.needsWork', 'Needs Work')}:</span> 200ms - 500ms</div>
+              <div><span style="color: #ff4444;">${t('reports.common.poor', 'Poor')}:</span> > 500ms</div>
             </td>
             <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #9600ff; font-weight: bold;">
               ${mobile.inp.displayValue || 'N/A'}
@@ -1066,27 +1442,27 @@ function renderBestPracticesTable(mobile, desktop) {
               ${desktop.inp.displayValue || 'N/A'}
             </td>
             <td style="padding: 1rem; text-align: center; font-size: 1.5rem;">
-              ${mobile.inp.rating === 'good' && desktop.inp.rating === 'good' ? '✓' : 
+              ${mobile.inp.rating === 'good' && desktop.inp.rating === 'good' ? '✓' :
                 mobile.inp.rating === 'good' || desktop.inp.rating === 'good' ? '~' : '✗'}
             </td>
             <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. Minimize JavaScript:</strong> Remove unused code, split bundles, lazy load non-critical JavaScript. Keep main thread under 50ms per task.</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. Optimize Event Handlers:</strong> Debounce/throttle input handlers, use passive event listeners, avoid synchronous layout calculations.</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. Web Workers:</strong> Move heavy computations to web workers, use requestIdleCallback for non-urgent tasks.</div>
-              <div><strong style="color: #e0e0e0;">4. Third-Party Scripts:</strong> Audit and remove unnecessary third-party scripts, load them asynchronously, use facade patterns for heavy widgets.</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. ${t('reports.cwv.tips.inpMinimizeJs', 'Minimize JavaScript')}:</strong> ${t('reports.cwv.tips.inpMinimizeJsDesc', 'Remove unused code, split bundles, lazy load non-critical JavaScript. Keep main thread under 50ms per task.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. ${t('reports.cwv.tips.inpOptimizeHandlers', 'Optimize Event Handlers')}:</strong> ${t('reports.cwv.tips.inpOptimizeHandlersDesc', 'Debounce/throttle input handlers, use passive event listeners, avoid synchronous layout calculations.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. ${t('reports.cwv.tips.inpWebWorkers', 'Web Workers')}:</strong> ${t('reports.cwv.tips.inpWebWorkersDesc', 'Move heavy computations to web workers, use requestIdleCallback for non-urgent tasks.')}</div>
+              <div><strong style="color: #e0e0e0;">4. ${t('reports.cwv.tips.inpThirdParty', 'Third-Party Scripts')}:</strong> ${t('reports.cwv.tips.inpThirdPartyDesc', 'Audit and remove unnecessary third-party scripts, load them asynchronously, use facade patterns for heavy widgets.')}</div>
             </td>
           </tr>
           
           <!-- CLS Row -->
           <tr>
             <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
-              CLS<br/>
-              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">Cumulative Layout Shift</span>
+              ${t('reports.cwv.cls', 'CLS')}<br/>
+              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">${t('reports.cwv.clsName', 'Cumulative Layout Shift')}</span>
             </td>
             <td style="padding: 1rem; color: #c0c0c0;">
-              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">Good:</span> ≤ 0.1</div>
-              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">Needs Work:</span> 0.1 - 0.25</div>
-              <div><span style="color: #ff4444;">Poor:</span> > 0.25</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">${t('reports.common.good', 'Good')}:</span> ≤ 0.1</div>
+              <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">${t('reports.common.needsWork', 'Needs Work')}:</span> 0.1 - 0.25</div>
+              <div><span style="color: #ff4444;">${t('reports.common.poor', 'Poor')}:</span> > 0.25</div>
             </td>
             <td style="padding: 1rem; text-align: center; font-family: 'Courier New', monospace; color: #9600ff; font-weight: bold;">
               ${mobile.cls.value.toFixed(3)}
@@ -1095,19 +1471,19 @@ function renderBestPracticesTable(mobile, desktop) {
               ${desktop.cls.value.toFixed(3)}
             </td>
             <td style="padding: 1rem; text-align: center; font-size: 1.5rem;">
-              ${mobile.cls.rating === 'good' && desktop.cls.rating === 'good' ? '✓' : 
+              ${mobile.cls.rating === 'good' && desktop.cls.rating === 'good' ? '✓' :
                 mobile.cls.rating === 'good' || desktop.cls.rating === 'good' ? '~' : '✗'}
             </td>
             <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. Reserve Space:</strong> Set explicit width/height on images and videos, use CSS aspect-ratio property, reserve space for ads and embeds.</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. Font Loading:</strong> Use font-display: swap, preload critical fonts, avoid invisible text during font load (FOIT).</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. Dynamic Content:</strong> Never insert content above existing content without user interaction, use transform animations instead of layout-shifting properties.</div>
-              <div><strong style="color: #e0e0e0;">4. CSS Best Practices:</strong> Avoid animations on layout properties (width, height, top, left), use transform and opacity instead.</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. ${t('reports.cwv.tips.clsReserveSpace', 'Reserve Space')}:</strong> ${t('reports.cwv.tips.clsReserveSpaceDesc', 'Set explicit width/height on images and videos, use CSS aspect-ratio property, reserve space for ads and embeds.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. ${t('reports.cwv.tips.clsFontLoading', 'Font Loading')}:</strong> ${t('reports.cwv.tips.clsFontLoadingDesc', 'Use font-display: swap, preload critical fonts, avoid invisible text during font load (FOIT).')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. ${t('reports.cwv.tips.clsDynamicContent', 'Dynamic Content')}:</strong> ${t('reports.cwv.tips.clsDynamicContentDesc', 'Never insert content above existing content without user interaction, use transform animations instead of layout-shifting properties.')}</div>
+              <div><strong style="color: #e0e0e0;">4. ${t('reports.cwv.tips.clsCssBestPractices', 'CSS Best Practices')}:</strong> ${t('reports.cwv.tips.clsCssBestPracticesDesc', 'Avoid animations on layout properties (width, height, top, left), use transform and opacity instead.')}</div>
             </td>
           </tr>
         </tbody>
       </table>
-      
+
       <!-- Additional Context -->
       <div style="
         margin-top: 1.5rem;
@@ -1116,16 +1492,16 @@ function renderBestPracticesTable(mobile, desktop) {
         border: 1px solid rgba(187, 134, 252, 0.3);
         border-radius: 8px;
       ">
-        <h4 style="color: #bb86fc; margin: 0 0 0.75rem 0; font-size: 1rem;">Google's Evaluation Methodology</h4>
+        <h4 style="color: #bb86fc; margin: 0 0 0.75rem 0; font-size: 1rem;">${t('reports.cwv.googleMethodology', "Google's Evaluation Methodology")}</h4>
         <div style="color: #c0c0c0; font-size: 0.85rem; line-height: 1.6;">
-          <p style="margin: 0 0 0.5rem 0;">Google evaluates Core Web Vitals at the 75th percentile of all page loads. This means:</p>
+          <p style="margin: 0 0 0.5rem 0;">${t('reports.cwv.googleMethodologyDesc', 'Google evaluates Core Web Vitals at the 75th percentile of all page loads. This means:')}</p>
           <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
-            <li style="margin: 0.25rem 0;"><strong style="color: #00ff41;">Good (Green):</strong> 75% or more of your users experience the "good" threshold</li>
-            <li style="margin: 0.25rem 0;"><strong style="color: #ffd700;">Needs Improvement (Yellow):</strong> Between "good" and "poor" thresholds</li>
-            <li style="margin: 0.25rem 0;"><strong style="color: #ff4444;">Poor (Red):</strong> 25% or more of your users experience the "poor" threshold</li>
+            <li style="margin: 0.25rem 0;"><strong style="color: #00ff41;">${t('reports.common.good', 'Good')} (${t('reports.cwv.green', 'Green')}):</strong> ${t('reports.cwv.goodThresholdDesc', '75% or more of your users experience the "good" threshold')}</li>
+            <li style="margin: 0.25rem 0;"><strong style="color: #ffd700;">${t('reports.common.needsImprovement', 'Needs Improvement')} (${t('reports.cwv.yellow', 'Yellow')}):</strong> ${t('reports.cwv.needsImprovementDesc', 'Between "good" and "poor" thresholds')}</li>
+            <li style="margin: 0.25rem 0;"><strong style="color: #ff4444;">${t('reports.common.poor', 'Poor')} (${t('reports.cwv.red', 'Red')}):</strong> ${t('reports.cwv.poorThresholdDesc', '25% or more of your users experience the "poor" threshold')}</li>
           </ul>
           <p style="margin: 0.75rem 0 0 0; padding-top: 0.75rem; border-top: 1px solid rgba(187, 134, 252, 0.2);">
-            <strong>Mobile Weighting:</strong> Mobile performance counts for 70% of your overall score because Google uses mobile-first indexing for search rankings.
+            <strong>${t('reports.cwv.mobileWeighting', 'Mobile Weighting')}:</strong> ${t('reports.cwv.mobileWeightingDesc', 'Mobile performance counts for 70% of your overall score because Google uses mobile-first indexing for search rankings.')}
           </p>
         </div>
       </div>

@@ -3,7 +3,7 @@
  * Provides utilities for setting up test database and cleaning up
  */
 
-const Database = require('../../src/db');
+const { Database } = require('../../src/db');
 const fs = require('fs');
 const path = require('path');
 
@@ -37,13 +37,30 @@ class TestDatabase {
    */
   async teardown() {
     if (this.db) {
-      await this.db.close();
+      try {
+        await this.db.close();
+      } catch (err) {
+        console.warn('Error closing test database:', err.message);
+      }
       this.db = null;
     }
 
-    // Remove test database file
-    if (fs.existsSync(this.testDbPath)) {
-      fs.unlinkSync(this.testDbPath);
+    // Remove test database file and WAL/SHM files
+    const filesToRemove = [
+      this.testDbPath,
+      this.testDbPath + '-wal',
+      this.testDbPath + '-shm'
+    ];
+
+    for (const file of filesToRemove) {
+      try {
+        if (fs.existsSync(file)) {
+          fs.unlinkSync(file);
+        }
+      } catch (err) {
+        // On Windows, files may be locked briefly - ignore errors
+        console.warn(`Could not remove ${file}:`, err.message);
+      }
     }
   }
 
@@ -53,10 +70,23 @@ class TestDatabase {
   async clearData() {
     if (!this.db) return;
 
-    await this.db.run('DELETE FROM sessions');
-    await this.db.run('DELETE FROM entitlements');
-    await this.db.run('DELETE FROM stripe_events');
-    await this.db.run('DELETE FROM users');
+    // Clear tables in order respecting foreign key constraints
+    const tables = [
+      'sessions',
+      'entitlements',
+      'stripe_events',
+      'report_purchases',
+      'billing_sessions',
+      'users'
+    ];
+
+    for (const table of tables) {
+      try {
+        await this.db.run(`DELETE FROM ${table}`);
+      } catch (err) {
+        // Table might not exist - ignore
+      }
+    }
   }
 
   /**
@@ -73,8 +103,22 @@ class TestDatabase {
     const passwordHash = await bcrypt.hash(password, 10);
 
     await this.db.run(
-      'INSERT INTO users (id, email, password_hash, plan, stripe_customer_id) VALUES (?, ?, ?, ?, ?)',
-      [userId, email, passwordHash, plan, data.stripe_customer_id || null]
+      `INSERT INTO users (
+        id, email, password_hash, plan, stripe_customer_id,
+        stripe_subscription_id, stripe_subscription_status,
+        stripe_current_period_end, stripe_subscription_interval
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        userId,
+        email,
+        passwordHash,
+        plan,
+        data.stripe_customer_id || null,
+        data.stripe_subscription_id || null,
+        data.stripe_subscription_status || null,
+        data.stripe_current_period_end || null,
+        data.stripe_subscription_interval || null
+      ]
     );
 
     const user = await this.db.get('SELECT * FROM users WHERE id = ?', [userId]);
@@ -149,7 +193,16 @@ class MockStripe {
       }),
       update: jest.fn().mockResolvedValue({
         id: 'sub_test_123',
-        cancel_at_period_end: true
+        cancel_at_period_end: true,
+        current_period_end: Math.floor(Date.now() / 1000) + 86400 * 30
+      }),
+      list: jest.fn().mockResolvedValue({
+        data: [{
+          id: 'sub_test_123',
+          status: 'active',
+          current_period_end: Math.floor(Date.now() / 1000) + 86400 * 30,
+          cancel_at_period_end: false
+        }]
       })
     };
   }
@@ -165,6 +218,7 @@ class MockStripe {
     this.webhooks.constructEvent.mockClear();
     this.subscriptions.retrieve.mockClear();
     this.subscriptions.update.mockClear();
+    this.subscriptions.list.mockClear();
   }
 }
 

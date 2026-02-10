@@ -4,6 +4,57 @@
  * Matches the Performance Fixes style for consistency
  */
 
+/**
+ * Translate security fix titles using i18n
+ * Maps English titles to translation keys
+ */
+function translateSecurityFixTitle(englishTitle) {
+  const titleMap = {
+    'Mixed Content Detected': 'reports.security.fixTitles.mixedContent',
+    'Excessive Inline Scripts': 'reports.security.fixTitles.excessiveInlineScripts',
+    'Insecure Form Submission': 'reports.security.fixTitles.insecureFormSubmission',
+    'Password Field Configuration': 'reports.security.fixTitles.passwordFieldConfig',
+    'Unsandboxed Iframes': 'reports.security.fixTitles.unsandboxedIframes',
+    'Implement HTTPS': 'reports.security.fixTitles.implementHttps',
+    'Fix SSL/TLS Issues': 'reports.security.fixTitles.fixSslTlsIssues',
+    'Implement Content Security Policy': 'reports.security.fixTitles.implementCsp',
+    'Enable HTTP Strict Transport Security': 'reports.security.fixTitles.enableHsts',
+    'Prevent Clickjacking Attacks': 'reports.security.fixTitles.preventClickjacking',
+    'Prevent MIME Sniffing': 'reports.security.fixTitles.preventMimeSniffing',
+    'Improve Cookie Security': 'reports.security.fixTitles.improveCookieSecurity',
+    'Add Subresource Integrity Checks': 'reports.security.fixTitles.addSriChecks'
+  };
+
+  const key = titleMap[englishTitle];
+  if (key) {
+    return t(key, englishTitle);
+  }
+  return englishTitle;
+}
+
+/**
+ * Translate OWASP references using i18n
+ */
+function translateOwaspRef(englishRef) {
+  if (!englishRef) return '';
+
+  const owaspMap = {
+    'A1:2017 - Injection': 'reports.security.owaspRefs.a1Injection',
+    'A2:2017 - Broken Authentication': 'reports.security.owaspRefs.a2BrokenAuth',
+    'A3:2017 - Sensitive Data Exposure': 'reports.security.owaspRefs.a3DataExposure',
+    'A5:2017 - Broken Access Control': 'reports.security.owaspRefs.a5BrokenAccess',
+    'A6:2017 - Security Misconfiguration': 'reports.security.owaspRefs.a6Misconfig',
+    'A7:2017 - Cross-Site Scripting (XSS)': 'reports.security.owaspRefs.a7Xss',
+    'A9:2017 - Using Components with Known Vulnerabilities': 'reports.security.owaspRefs.a9KnownVulns'
+  };
+
+  const key = owaspMap[englishRef];
+  if (key) {
+    return t(key, englishRef);
+  }
+  return englishRef;
+}
+
 function renderSecurityFixes(recommendations, results) {
   const fixes = generateSecurityFixesData(recommendations, results);
 
@@ -11,9 +62,9 @@ function renderSecurityFixes(recommendations, results) {
     return `
       <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
-          <span style="font-size: 1.5rem;">🛡️</span> Excellent! Your Site is Secure
+          <span style="font-size: 1.5rem;">🛡️</span> ${t('reports.security.securityFixes.excellent', 'Excellent! Your Site is Secure')}
         </h3>
-        <p style="color: #86efac; margin: 0;">All security checks passed. Your site follows industry best practices for SSL, headers, and vulnerability prevention.</p>
+        <p style="color: #86efac; margin: 0;">${t('reports.security.securityFixes.excellentDescription', 'All security checks passed. Your site follows industry best practices for SSL, headers, and vulnerability prevention.')}</p>
       </div>
     `;
   }
@@ -27,8 +78,8 @@ function renderSecurityFixes(recommendations, results) {
   let html = `
     <div class="security-fixes-container" style="margin-top: 2rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
-        <span style="font-size: 1.75rem;">🔒</span> Security Fixes
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} issues found)</span>
+        <span style="font-size: 1.75rem;">🔒</span> ${t('reports.security.securityFixes.title', 'Security Fixes')}
+        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('reports.security.securityFixes.issuesFound', '{{count}} issues found').replace('{{count}}', fixes.length)})</span>
       </h3>
       <div class="fixes-container">
   `;
@@ -94,6 +145,17 @@ function generateSecurityFixesData(recommendations, results) {
   return fixes;
 }
 
+// Helper function to get translated steps for security fixes
+function getTranslatedSteps(fixKey, defaultSteps) {
+  // Try to get translated steps from i18n
+  const translatedSteps = t(`reports.security.securityFixes.${fixKey}.steps`, null);
+  if (translatedSteps && Array.isArray(translatedSteps)) {
+    return translatedSteps;
+  }
+  // Return default English steps as fallback
+  return defaultSteps;
+}
+
 // eslint-disable-next-line no-unused-vars
 function createSecurityFix(rec, results) {
   // results parameter reserved for future dynamic content based on scan results
@@ -101,9 +163,9 @@ function createSecurityFix(rec, results) {
   const fixTemplates = {
     'Implement HTTPS': {
       icon: '🔴',
-      category: 'SSL/TLS',
-      impact: '+30 Security Score',
-      summary: 'Your website is not using HTTPS encryption. All data including passwords, personal information, and payment details are transmitted in plain text, making them vulnerable to interception by attackers on the network.',
+      category: t('reports.security.securityFixes.sslTls', 'SSL/TLS'),
+      impact: t('reports.security.securityFixes.implementHttps.impact', '+30 Security Score'),
+      summary: t('reports.security.securityFixes.implementHttps.summary', 'Your website is not using HTTPS encryption. All data including passwords, personal information, and payment details are transmitted in plain text, making them vulnerable to interception by attackers on the network.'),
       problematicCode: `<!-- Current insecure setup -->
 <a href="http://example.com/login">Login</a>
 
@@ -145,17 +207,17 @@ function createSecurityFix(rec, results) {
 <!-- ✓ All traffic encrypted -->
 <!-- ✓ Modern TLS protocols only -->
 <!-- ✓ Automatic HTTP→HTTPS redirect -->`,
-      steps: [
+      steps: getTranslatedSteps('implementHttps', [
         'Get a free SSL certificate from Let\'s Encrypt using certbot',
         'Install the certificate and configure your web server',
         'Set up automatic HTTP → HTTPS redirect'
-      ]
+      ])
     },
     'Implement Content Security Policy': {
       icon: '🔴',
-      category: 'Security Headers',
-      impact: '+15 Security Score',
-      summary: 'Your site lacks a Content Security Policy (CSP) header, leaving it vulnerable to Cross-Site Scripting (XSS) attacks. Attackers can inject malicious scripts that steal user data, hijack sessions, or deface your website.',
+      category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
+      impact: t('reports.security.securityFixes.implementCsp.impact', '+15 Security Score'),
+      summary: t('reports.security.securityFixes.implementCsp.summary', 'Your site lacks a Content Security Policy (CSP) header, leaving it vulnerable to Cross-Site Scripting (XSS) attacks. Attackers can inject malicious scripts that steal user data, hijack sessions, or deface your website.'),
       problematicCode: `<!-- No CSP - Vulnerable to XSS -->
 <script>
   // Attacker can inject:
@@ -198,18 +260,18 @@ Content-Security-Policy:
 <!-- ✓ Only trusted scripts execute -->
 <!-- ✓ Inline scripts require nonce -->
 <!-- ✓ Resource origins controlled -->`,
-      steps: [
+      steps: getTranslatedSteps('implementCsp', [
         'Start with <code>Content-Security-Policy-Report-Only</code> header to find issues',
         'Set <code>default-src \'self\'; script-src \'self\'</code> as your base policy',
         'Replace inline scripts/styles with external files or add nonces',
         'Switch to enforcing <code>Content-Security-Policy</code> header'
-      ]
+      ])
     },
     'Enable HTTP Strict Transport Security': {
       icon: '🟠',
-      category: 'Security Headers',
-      impact: '+10 Security Score',
-      summary: 'HSTS header is not configured. Without HSTS, attackers can perform protocol downgrade attacks, forcing users to connect over insecure HTTP even when HTTPS is available.',
+      category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
+      impact: t('reports.security.securityFixes.enableHsts.impact', '+10 Security Score'),
+      summary: t('reports.security.securityFixes.enableHsts.summary', 'HSTS header is not configured. Without HSTS, attackers can perform protocol downgrade attacks, forcing users to connect over insecure HTTP even when HTTPS is available.'),
       problematicCode: `<!-- Without HSTS -->
 <!-- User types: example.com -->
 <!-- Browser connects via HTTP first -->
@@ -243,17 +305,17 @@ server {
 <!-- ✓ Browser remembers HTTPS requirement -->
 <!-- ✓ Automatic HTTPS for 1 year -->
 <!-- ✓ All subdomains protected -->`,
-      steps: [
+      steps: getTranslatedSteps('enableHsts', [
         'Verify HTTPS works on all pages first',
         'Add <code>Strict-Transport-Security: max-age=300</code> and test',
         'Increase to <code>max-age=31536000; includeSubDomains</code> after testing'
-      ]
+      ])
     },
     'Prevent Clickjacking Attacks': {
       icon: '🟡',
-      category: 'Security Headers',
-      impact: '+5 Security Score',
-      summary: 'X-Frame-Options header is not set. Attackers can embed your site in a hidden iframe and trick users into clicking buttons they didn\'t intend to, potentially changing settings or making purchases.',
+      category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
+      impact: t('reports.security.securityFixes.preventClickjacking.impact', '+5 Security Score'),
+      summary: t('reports.security.securityFixes.preventClickjacking.summary', 'X-Frame-Options header is not set. Attackers can embed your site in a hidden iframe and trick users into clicking buttons they didn\'t intend to, potentially changing settings or making purchases.'),
       problematicCode: `<!-- Without X-Frame-Options -->
 <!-- Attacker's malicious page: -->
 <style>
@@ -291,16 +353,16 @@ Content-Security-Policy: frame-ancestors 'self';
 <!-- ✓ Site cannot be embedded in iframes -->
 <!-- ✓ Clickjacking attacks prevented -->
 <!-- ✓ CSP provides more granular control -->`,
-      steps: [
+      steps: getTranslatedSteps('preventClickjacking', [
         'Add header: <code>X-Frame-Options: DENY</code> to your server config',
         'Also add CSP: <code>frame-ancestors \'none\'</code> for modern browsers'
-      ]
+      ])
     },
     'Prevent MIME Sniffing': {
       icon: '🟡',
-      category: 'Security Headers',
-      impact: '+5 Security Score',
-      summary: 'X-Content-Type-Options header is missing. Browsers may misinterpret file types, potentially executing uploaded files as scripts even if they have a different extension.',
+      category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
+      impact: t('reports.security.securityFixes.preventMimeSniffing.impact', '+5 Security Score'),
+      summary: t('reports.security.securityFixes.preventMimeSniffing.summary', 'X-Content-Type-Options header is missing. Browsers may misinterpret file types, potentially executing uploaded files as scripts even if they have a different extension.'),
       problematicCode: `<!-- Without X-Content-Type-Options -->
 <!-- Attacker uploads malicious.txt containing: -->
 <script>alert('XSS')</script>
@@ -334,17 +396,17 @@ app.use((req, res, next) => {
 <!-- ✓ Browser strictly follows Content-Type -->
 <!-- ✓ No MIME sniffing vulnerabilities -->
 <!-- ✓ Uploaded files stay as declared type -->`,
-      steps: [
+      steps: getTranslatedSteps('preventMimeSniffing', [
         'Add header: <code>X-Content-Type-Options: nosniff</code> to all responses',
         'Ensure your server sends correct Content-Type for all files',
         'Test file downloads and uploads work correctly after implementation'
-      ]
+      ])
     },
     'Improve Cookie Security': {
       icon: '🟠',
-      category: 'Cookies',
-      impact: '+10 Security Score',
-      summary: 'Cookies are not properly secured. Session cookies without HttpOnly, Secure, and SameSite flags are vulnerable to theft via XSS attacks and cross-site request forgery.',
+      category: t('reports.security.securityFixes.cookies', 'Cookies'),
+      impact: t('reports.security.securityFixes.improveCookieSecurity.impact', '+10 Security Score'),
+      summary: t('reports.security.securityFixes.improveCookieSecurity.summary', 'Cookies are not properly secured. Session cookies without HttpOnly, Secure, and SameSite flags are vulnerable to theft via XSS attacks and cross-site request forgery.'),
       problematicCode: `<!-- Insecure cookie settings -->
 Set-Cookie: session=abc123
 
@@ -382,17 +444,17 @@ session.cookie_samesite = Strict
 <!-- ✓ Protected from XSS cookie theft -->
 <!-- ✓ Only sent over HTTPS -->
 <!-- ✓ CSRF attacks prevented -->`,
-      steps: [
+      steps: getTranslatedSteps('improveCookieSecurity', [
         'Add <code>HttpOnly; Secure; SameSite=Lax</code> flags to all session cookies',
         'Update your session library or framework configuration',
         'Test login/logout functionality still works'
-      ]
+      ])
     },
     'Add Subresource Integrity': {
       icon: '🟡',
-      category: 'Third-Party Scripts',
-      impact: '+8 Security Score',
-      summary: 'Third-party scripts are loaded without integrity verification. If the CDN is compromised, malicious code could be injected into your site without detection.',
+      category: t('reports.security.securityFixes.thirdPartyScripts', 'Third-Party Scripts'),
+      impact: t('reports.security.securityFixes.addSri.impact', '+8 Security Score'),
+      summary: t('reports.security.securityFixes.addSri.summary', 'Third-party scripts are loaded without integrity verification. If the CDN is compromised, malicious code could be injected into your site without detection.'),
       problematicCode: `<!-- Loading external scripts without SRI -->
 <script src="https://cdn.example.com/jquery-3.6.0.min.js"></script>
 <link href="https://cdn.example.com/bootstrap.min.css" rel="stylesheet">
@@ -423,11 +485,11 @@ session.cookie_samesite = Strict
 <!-- ✓ Browser verifies file integrity -->
 <!-- ✓ Modified files are blocked -->
 <!-- ✓ Supply chain attacks prevented -->`,
-      steps: [
+      steps: getTranslatedSteps('addSri', [
         'Generate SRI hashes at srihash.org for each external script/stylesheet',
         'Add <code>integrity</code> and <code>crossorigin="anonymous"</code> attributes',
         'Update hashes whenever you upgrade library versions'
-      ]
+      ])
     }
   };
 
@@ -450,10 +512,10 @@ session.cookie_samesite = Strict
     id: `security-${rec.title.toLowerCase().replace(/[^a-z0-9]/g, '-')}`,
     severity: rec.priority || 'medium',
     icon: template.icon || (rec.priority === 'critical' ? '🔴' : rec.priority === 'high' ? '🟠' : '🟡'),
-    title: rec.title,
-    subtitle: rec.owaspRef || 'Security Best Practice',
-    category: template.category || 'Security',
-    impact: template.impact || '+5 Security Score',
+    title: translateSecurityFixTitle(rec.title),
+    subtitle: translateOwaspRef(rec.owaspRef) || t('reports.security.securityFixes.securityBestPractice', 'Security Best Practice'),
+    category: template.category || t('reports.security.securityFixes.securityHeaders', 'Security'),
+    impact: template.impact || '+5 ' + t('reports.security.securityFixes.securityScore', 'Security Score'),
     summary: template.summary || rec.description,
     problematicCode: template.problematicCode || `<!-- Current issue -->\n${rec.description}`,
     fixedCode: template.fixedCode || `<!-- Recommended fix -->\n${rec.solution || 'Implement security best practices'}`,
@@ -464,31 +526,32 @@ session.cookie_samesite = Strict
 }
 
 function createGenericSecurityFix(rec) {
+  const genericSteps = t('reports.security.securityFixes.genericSteps', null);
   return {
     icon: rec.priority === 'critical' ? '🔴' : rec.priority === 'high' ? '🟠' : '🟡',
-    category: 'Security',
-    impact: rec.priority === 'critical' ? '+15 Security Score' : rec.priority === 'high' ? '+10 Security Score' : '+5 Security Score',
-    summary: rec.description || 'A security issue was detected that needs attention.',
-    problematicCode: `<!-- Security Issue Detected -->
+    category: t('reports.security.securityFixes.securityHeaders', 'Security'),
+    impact: rec.priority === 'critical' ? '+15 ' + t('reports.security.securityFixes.securityScore', 'Security Score') : rec.priority === 'high' ? '+10 ' + t('reports.security.securityFixes.securityScore', 'Security Score') : '+5 ' + t('reports.security.securityFixes.securityScore', 'Security Score'),
+    summary: rec.description || t('reports.security.securityFixes.genericIssueDescription', 'A security issue was detected that needs attention.'),
+    problematicCode: `<!-- ${t('reports.security.securityFixes.currentIssue', 'Security Issue Detected')} -->
 <!-- ${rec.title} -->
 
-${rec.description || 'Issue details not available'}
+${rec.description || t('reports.security.securityFixes.issueDetailsNotAvailable', 'Issue details not available')}
 
-<!-- Impact: -->
-<!-- ${rec.impact || 'May affect site security'} -->`,
-    fixedCode: `<!-- Recommended Solution -->
+<!-- ${t('reports.security.securityFixes.impact', 'Impact')}: -->
+<!-- ${rec.impact || t('reports.security.securityFixes.mayAffectSecurity', 'May affect site security')} -->`,
+    fixedCode: `<!-- ${t('reports.security.securityFixes.secureSolution', 'Recommended Solution')} -->
 <!-- ${rec.title} -->
 
-${rec.solution || 'Implement the recommended security measures'}
+${rec.solution || t('reports.security.securityFixes.implementRecommended', 'Implement the recommended security measures')}
 
-<!-- Benefits: -->
-<!-- ✓ Improved security posture -->
-<!-- ✓ Reduced attack surface -->
-<!-- ✓ Industry best practices -->`,
-    steps: [
-      rec.solution || 'Review and implement security recommendations',
-      'Test changes in a staging environment first',
-      'Deploy to production and verify the fix'
+<!-- ${t('reports.security.securityFixes.benefits', 'Benefits')}: -->
+<!-- ✓ ${t('reports.security.securityFixes.improvedPosture', 'Improved security posture')} -->
+<!-- ✓ ${t('reports.security.securityFixes.reducedAttackSurface', 'Reduced attack surface')} -->
+<!-- ✓ ${t('reports.security.securityFixes.industryBestPractices', 'Industry best practices')} -->`,
+    steps: genericSteps && Array.isArray(genericSteps) ? genericSteps : [
+      rec.solution || t('reports.security.securityFixes.reviewAndImplement', 'Review and implement security recommendations'),
+      t('reports.security.securityFixes.testInStaging', 'Test changes in a staging environment first'),
+      t('reports.security.securityFixes.deployAndVerify', 'Deploy to production and verify the fix')
     ]
   };
 }
@@ -499,7 +562,7 @@ function renderSecurityFixAccordion(fix, index) {
 
   return `
     <div class="fix-accordion ${severityClass}" data-fix-id="${accordionId}">
-      <div class="fix-header" onclick="toggleSecurityFixAccordion('${accordionId}')">
+      <div class="fix-header" data-action="toggle-security-accordion" data-accordion-id="${accordionId}">
         <div class="fix-header-left">
           <span class="fix-icon">${fix.icon}</span>
           <div class="fix-title-group">
@@ -526,15 +589,15 @@ function renderSecurityFixAccordion(fix, index) {
 function renderSecurityFixTabs(fix, accordionId) {
   return `
     <div class="fix-tabs">
-      <button class="fix-tab active" onclick="switchSecurityFixTab('${accordionId}', 'summary')">
-        📋 Summary
+      <button class="fix-tab active" data-action="switch-security-tab" data-accordion-id="${accordionId}" data-tab="summary">
+        📋 ${t('reports.security.securityFixes.tabSummary', 'Summary')}
       </button>
-      <button class="fix-tab" onclick="switchSecurityFixTab('${accordionId}', 'code')">
-        💻 Code
+      <button class="fix-tab" data-action="switch-security-tab" data-accordion-id="${accordionId}" data-tab="code">
+        💻 ${t('reports.security.securityFixes.tabCode', 'Code')}
       </button>
-      ${fix.resources && fix.resources.length > 0 ? `<button class="fix-tab" onclick="switchSecurityFixTab('${accordionId}', 'resources')">📚 Resources</button>` : ''}
-      <button class="fix-tab" onclick="switchSecurityFixTab('${accordionId}', 'guide')">
-        🔧 Fix Guide
+      ${fix.resources && fix.resources.length > 0 ? `<button class="fix-tab" data-action="switch-security-tab" data-accordion-id="${accordionId}" data-tab="resources">📚 ${t('reports.security.securityFixes.tabResources', 'Resources')}</button>` : ''}
+      <button class="fix-tab" data-action="switch-security-tab" data-accordion-id="${accordionId}" data-tab="guide">
+        🔧 ${t('reports.security.securityFixes.tabFixGuide', 'Fix Guide')}
       </button>
     </div>
 
@@ -546,7 +609,7 @@ function renderSecurityFixTabs(fix, accordionId) {
       <div class="impact-indicator">
         <div>
           <div class="impact-value">${fix.impact}</div>
-          <div class="impact-label">Estimated Improvement</div>
+          <div class="impact-label">${t('reports.security.securityFixes.estimatedImprovement', 'Estimated Improvement')}</div>
         </div>
       </div>
     </div>
@@ -557,10 +620,10 @@ function renderSecurityFixTabs(fix, accordionId) {
         <div class="code-block">
           <div class="code-block-header">
             <span class="code-block-title error">
-              ❌ Current Issue
+              ❌ ${t('reports.security.securityFixes.currentIssue', 'Current Issue')}
             </span>
-            <button class="fix-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" onclick="copySecurityCode('${accordionId}-problem')">
-              📋 Copy
+            <button class="fix-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" data-action="copy-security-code" data-code-id="${accordionId}-problem">
+              📋 ${t('reports.security.securityFixes.copy', 'Copy')}
             </button>
           </div>
           <div class="code-block-body">
@@ -571,10 +634,10 @@ function renderSecurityFixTabs(fix, accordionId) {
         <div class="code-block" style="position: relative;">
           <div class="code-block-header">
             <span class="code-block-title success">
-              ✅ Secure Solution
+              ✅ ${t('reports.security.securityFixes.secureSolution', 'Secure Solution')}
             </span>
-            <button class="fix-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" onclick="copySecurityCode('${accordionId}-solution')">
-              📋 Copy
+            <button class="fix-btn-secondary" style="padding: 0.375rem 0.75rem; font-size: 0.75rem;" data-action="copy-security-code" data-code-id="${accordionId}-solution">
+              📋 ${t('reports.security.securityFixes.copy', 'Copy')}
             </button>
           </div>
           <div class="code-block-body">
@@ -587,7 +650,7 @@ function renderSecurityFixTabs(fix, accordionId) {
     ${fix.resources && fix.resources.length > 0 ? `
     <!-- Resources Tab -->
     <div class="fix-tab-content" id="${accordionId}-resources">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">Learn More:</h5>
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.security.securityFixes.learnMore', 'Learn More')}:</h5>
       <ul class="resources-list" style="list-style: none; padding: 0; margin: 0;">
         ${fix.resources.map(r => `
           <li style="margin-bottom: 0.75rem;">
@@ -605,17 +668,17 @@ function renderSecurityFixTabs(fix, accordionId) {
 
     <!-- Fix Guide Tab -->
     <div class="fix-tab-content" id="${accordionId}-guide">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">Step-by-Step Fix:</h5>
+      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.security.securityFixes.stepByStepFix', 'Step-by-Step Fix')}:</h5>
       <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
         ${[...fix.steps, ...(fix.proSteps || [])].map(step => `<li style="margin-bottom: 0.75rem;">${step}</li>`).join('')}
       </ol>
 
       <div class="fix-actions" style="margin-top: 1.5rem; display: flex; gap: 0.75rem; flex-wrap: wrap;">
         <a href="${getSecurityDocsUrl(fix.category, fix.title)}" target="_blank" rel="noopener noreferrer" class="fix-btn fix-btn-primary" style="padding: 0.625rem 1.25rem; background: var(--accent-primary); color: #000; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
-          📚 Learn More
+          📚 ${t('reports.security.securityFixes.learnMore', 'Learn More')}
         </a>
         <a href="https://securityheaders.com/" target="_blank" rel="noopener noreferrer" class="fix-btn fix-btn-secondary" style="padding: 0.625rem 1.25rem; background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #ccc; border-radius: 6px; font-weight: 500; cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem;">
-          🧪 Test Your Headers
+          🧪 ${t('reports.security.securityFixes.testYourHeaders', 'Test Your Headers')}
         </a>
       </div>
     </div>
@@ -697,9 +760,21 @@ function toggleSecurityFixAccordion(accordionId) {
 
 // Event delegation for security fix accordions (more reliable than inline onclick)
 document.addEventListener('click', function(e) {
-  // Handle accordion header clicks
+  // Handle accordion header clicks via data-action
+  const toggleAccordion = e.target.closest('[data-action="toggle-security-accordion"]');
+  if (toggleAccordion) {
+    const accordionId = toggleAccordion.getAttribute('data-accordion-id');
+    if (accordionId) {
+      e.preventDefault();
+      e.stopPropagation();
+      toggleSecurityFixAccordion(accordionId);
+    }
+    return;
+  }
+
+  // Fallback: Handle accordion header clicks via class
   const header = e.target.closest('.fix-header');
-  if (header) {
+  if (header && !header.hasAttribute('data-action')) {
     const accordion = header.closest('.fix-accordion');
     if (accordion) {
       const accordionId = accordion.getAttribute('data-fix-id');
@@ -710,31 +785,39 @@ document.addEventListener('click', function(e) {
     return;
   }
 
-  // Handle tab button clicks
-  const tabButton = e.target.closest('.fix-tab');
-  if (tabButton) {
-    const accordion = tabButton.closest('.fix-accordion');
-    if (accordion) {
-      const accordionId = accordion.getAttribute('data-fix-id');
-      // Determine which tab was clicked based on text content
-      const tabText = tabButton.textContent.toLowerCase();
-      let tabName = 'summary';
-      if (tabText.includes('code')) tabName = 'code';
-      else if (tabText.includes('resources')) tabName = 'resources';
-      else if (tabText.includes('guide')) tabName = 'guide';
-
+  // Handle tab button clicks via data-action
+  const switchTab = e.target.closest('[data-action="switch-security-tab"]');
+  if (switchTab) {
+    const accordionId = switchTab.getAttribute('data-accordion-id');
+    const tabName = switchTab.getAttribute('data-tab');
+    if (accordionId && tabName) {
+      e.preventDefault();
+      e.stopPropagation();
       switchSecurityFixTab(accordionId, tabName);
     }
     return;
   }
 
-  // Handle copy button clicks
-  const copyButton = e.target.closest('[onclick*="copySecurityCode"]');
+  // Fallback: Handle tab button clicks via class
+  const tabButton = e.target.closest('.fix-tab');
+  if (tabButton && !tabButton.hasAttribute('data-action')) {
+    const accordion = tabButton.closest('.fix-accordion');
+    if (accordion) {
+      const accordionId = accordion.getAttribute('data-fix-id');
+      const tabName = tabButton.getAttribute('data-tab') || 'summary';
+      switchSecurityFixTab(accordionId, tabName);
+    }
+    return;
+  }
+
+  // Handle copy button clicks via data-action
+  const copyButton = e.target.closest('[data-action="copy-security-code"]');
   if (copyButton) {
-    const onclickAttr = copyButton.getAttribute('onclick');
-    const match = onclickAttr && onclickAttr.match(/copySecurityCode\(['"]([^'"]+)['"]\)/);
-    if (match) {
-      copySecurityCode(match[1]);
+    const codeId = copyButton.getAttribute('data-code-id');
+    if (codeId) {
+      e.preventDefault();
+      e.stopPropagation();
+      copySecurityCode(codeId);
     }
     return;
   }
@@ -763,7 +846,7 @@ function switchSecurityFixTab(accordionId, tabName) {
   tabs.forEach(tab => tab.classList.remove('active'));
   contents.forEach(content => content.classList.remove('active'));
 
-  const activeTab = Array.from(tabs).find(tab => tab.textContent.toLowerCase().includes(tabName));
+  const activeTab = Array.from(tabs).find(tab => tab.getAttribute('data-tab') === tabName);
   const activeContent = document.getElementById(`${accordionId}-${tabName}`);
 
   if (activeTab) activeTab.classList.add('active');
@@ -787,7 +870,7 @@ function copySecurityCode(elementId) {
   navigator.clipboard.writeText(text).then(() => {
     const button = event.target;
     const originalText = button.textContent;
-    button.textContent = '✓ Copied!';
+    button.textContent = '✓ ' + t('reports.security.securityFixes.copied', 'Copied!');
     button.style.background = 'rgba(34, 197, 94, 0.2)';
     button.style.borderColor = '#22c55e';
     button.style.color = '#22c55e';

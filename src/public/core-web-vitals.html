@@ -7,7 +7,7 @@
     
     <!-- Redirect to Speed & UX - consolidated performance tools -->
     <meta http-equiv="refresh" content="0; url=/performance-hub.html" />
-    <script>window.location.href = '/performance-hub.html' + window.location.search;</script>
+    <script src="/js/redirect.js" data-redirect="/performance-hub.html" data-preserve-search="true"></script>
     
     <meta name="description" content="Redirecting to Speed & UX - Core Web Vitals now available in the consolidated Speed & UX page." />
     <title>Core Web Vitals - Redirecting to Speed & UX | Site Mechanic</title>
@@ -33,7 +33,8 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
+    <link rel="stylesheet" href="/css/components/ui-states.css" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -51,7 +52,6 @@
     
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
   </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
@@ -108,7 +108,9 @@
     <!-- Shared Navigation Template -->
     <script src="/pro-utils.js"></script>
     <script src="/nav-template.js"></script>
-    
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
+
     <!-- Analyzer Loader -->
     <script src="/analyzer-loader.js"></script>
 
@@ -116,12 +118,15 @@
 
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/components/PricingModal.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <!-- Core Web Vitals Analyzer Script -->
     <script src="/cwv-script.js"></script>

@@ -17,3 +17,9 @@
 
 /* Screenshot viewer */
 @import url('/css/components/screenshot-lightbox.css');
+
+/* UI State Patterns (loading, empty, error, success) */
+@import url('/css/components/ui-states.css');
+
+/* Report jump (auto-scroll to results) */
+@import url('/css/components/report-jump.css');

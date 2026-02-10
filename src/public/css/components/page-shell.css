@@ -14,12 +14,12 @@
    ======================================== */
 
 .page-shell {
-  padding-top: 0.25rem;
+  padding-top: 0.75rem;
 }
 
 @media (max-width: 768px) {
   .page-shell {
-    padding-top: 0.125rem;
+    padding-top: 0.5rem;
   }
 }
 
@@ -37,12 +37,12 @@
 }
 
 .mode-indicator__label {
-  color: var(--text-muted, #808080);
+  color: var(--r-text-faint, var(--text-muted, #808080));
   font-weight: 400;
 }
 
 .mode-indicator__value {
-  color: var(--accent-primary, #5bf4e7);
+  color: var(--color-primary, var(--accent-primary, #5bf4e7));
   font-weight: 600;
 }
 
@@ -57,7 +57,7 @@
 .mode-description {
   margin: 0.5rem 0 1rem 0;
   font-size: 0.85rem;
-  color: var(--text-secondary, #d0d0d0);
+  color: var(--r-text-muted, var(--text-secondary, #d0d0d0));
   line-height: 1.4;
 }
 
@@ -99,6 +99,11 @@
    RESULTS CONTAINER TRANSITIONS
    Smooth show/hide for results area
    ======================================== */
+
+/* Hide the report-results section when results container is hidden */
+#report-results:has(.results-container[hidden]) {
+  display: none;
+}
 
 .results-container {
   transition: opacity 0.3s ease;

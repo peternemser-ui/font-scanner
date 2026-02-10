@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/hosting-analyzer.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/hosting-analyzer.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/hosting-analyzer.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/hosting-analyzer.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/hosting-analyzer.html" />
 
     <!-- Open Graph -->
@@ -73,7 +74,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
 
     <!-- Chart.js for visualizations -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
@@ -292,7 +293,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
   </head>
   <body>
@@ -485,6 +485,8 @@
                 Find Hosting Options
               </span>
             </button>
+            <!-- Usage Status Indicator -->
+            <div id="usagePillContainer" class="page-shell-usage-pill" style="margin-top: 1rem;"></div>
           </div>
         </div>
       </div>
@@ -857,11 +859,11 @@
         
         <!-- Quick Filter Pills -->
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1.5rem;">
-          <button onclick="filterProviders('all')" class="filter-pill active" style="background: rgba(0, 255, 65, 0.2); border: 1px solid rgba(0, 255, 65, 0.4); color: #00ff41; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">All</button>
-          <button onclick="filterProviders('wordpress')" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">📝 WordPress</button>
-          <button onclick="filterProviders('ecommerce')" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">🛒 E-commerce</button>
-          <button onclick="filterProviders('vps')" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">☁️ Cloud/VPS</button>
-          <button onclick="filterProviders('budget')" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">💰 Budget-Friendly</button>
+          <button data-action="filter-providers" data-filter="all" class="filter-pill active" style="background: rgba(0, 255, 65, 0.2); border: 1px solid rgba(0, 255, 65, 0.4); color: #00ff41; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">All</button>
+          <button data-action="filter-providers" data-filter="wordpress" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">📝 WordPress</button>
+          <button data-action="filter-providers" data-filter="ecommerce" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">🛒 E-commerce</button>
+          <button data-action="filter-providers" data-filter="vps" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">☁️ Cloud/VPS</button>
+          <button data-action="filter-providers" data-filter="budget" class="filter-pill" style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: #808080; padding: 0.5rem 1rem; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all 0.2s;">💰 Budget-Friendly</button>
         </div>
         
         <div id="popularProviders" class="providers-grid">
@@ -882,6 +884,8 @@
     <!-- Scripts -->
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- PDF Export Libraries -->
@@ -891,13 +895,18 @@
     <script src="/pdf-export-integration.js?v=2"></script>
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/reportStorage.js"></script>
     <script src="/js/components/PricingModal.js"></script>
+    <script src="/js/components/UsagePill.js"></script>
+    <script src="/js/app-events.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="hosting-analyzer-script.js"></script>
     <script>

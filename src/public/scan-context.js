@@ -14,6 +14,15 @@
  * }
  */
 
+// i18n helper for scan context
+function _scanT(key, fallback) {
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const val = window.i18n.t(key);
+    return (val === key && fallback) ? fallback : val;
+  }
+  return fallback || key;
+}
+
 const ScanContext = {
   STORAGE_KEY: 'sm_current_scan',
 
@@ -85,6 +94,7 @@ const ScanContext = {
         domain,
         url: scanData.url,
         analyzerType,
+        locale: scanData.locale || (window.i18n && window.i18n.getActiveLocale ? window.i18n.getActiveLocale() : 'en'),
         selectedUrls: scanData.selectedUrls || [scanData.url],
         selectedModules: scanData.selectedModules || ['fonts', 'seo', 'performance', 'accessibility', 'security'],
         finishedAt: new Date().toISOString(),
@@ -168,10 +178,10 @@ const ScanContext = {
     const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
     
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60) return `${diffMins} minute${diffMins > 1 ? 's' : ''} ago`;
-    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    if (diffMins < 1) return _scanT('common.time.justNow', 'Just now');
+    if (diffMins < 60) return _scanT('common.time.minutesAgo', '{{count}} minute(s) ago').replace('{{count}}', diffMins);
+    if (diffHours < 24) return _scanT('common.time.hoursAgo', '{{count}} hour(s) ago').replace('{{count}}', diffHours);
+    return _scanT('common.time.daysAgo', '{{count}} day(s) ago').replace('{{count}}', diffDays);
   },
   
   /**
@@ -482,8 +492,13 @@ const ProAccess = {
       } catch (e) {}
     }
 
+    // SECURITY: Return explicit false if no hostname
     if (!hostname) return false;
-    return this.DEMO_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+
+    // SECURITY: Only return true for exact matches in DEMO_DOMAINS list
+    const isDemo = this.DEMO_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+    console.log('[ProAccess] isDemoDomain check:', { domain, hostname, isDemo, demoDomains: this.DEMO_DOMAINS });
+    return isDemo === true;
   },
 
   getEntitlement() {

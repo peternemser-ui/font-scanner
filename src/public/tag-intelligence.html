@@ -22,6 +22,7 @@
     <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/tag-intelligence.html" />
     <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/tag-intelligence.html" />
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/tag-intelligence.html" />
+    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/tag-intelligence.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/tag-intelligence.html" />
 
     <!-- Open Graph -->
@@ -66,7 +67,7 @@
     <link rel="stylesheet" href="/css/components/modal.css" />
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
-    <link rel="stylesheet" href="/css/components/pricing-modal.css" />
+    <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
 
     <!-- Shared UI System -->
     <link rel="stylesheet" href="ui.css" />
@@ -221,7 +222,6 @@
 
     <!-- Internationalization (i18n) Support -->
     <script src="/i18n.js"></script>
-    <script src="/language-switcher.js"></script>
     <script src="/seo-i18n.js"></script>
   </head>
   <body>
@@ -231,15 +231,15 @@
     <main class="page-shell">
       <!-- Breadcrumb Navigation -->
       <nav class="breadcrumb" aria-label="Breadcrumb">
-        <a href="/dashboard.html">Home</a>
+        <a href="/dashboard.html" data-i18n="dashboard.breadcrumb.home">Home</a>
         <span class="breadcrumb-sep">›</span>
-        <span aria-current="page">Tracking & Analytics</span>
+        <span aria-current="page" data-i18n="analyzerPages.tagIntelligence.breadcrumb">Tracking & Analytics</span>
       </nav>
       
       <!-- Page Header -->
       <header class="page-header">
-        <h1 class="page-header__title">Tracking & Analytics</h1>
-        <p class="page-header__subtitle">Detect GTM, GA4, Meta Pixel, TikTok, LinkedIn, Hotjar and more. Identify duplicate tags and configuration conflicts.</p>
+        <h1 class="page-header__title" data-i18n="analyzerPages.tagIntelligence.title">Tracking & Analytics</h1>
+        <p class="page-header__subtitle" data-i18n="analyzerPages.tagIntelligence.subtitle">Detect GTM, GA4, Meta Pixel, TikTok, LinkedIn, Hotjar and more. Identify duplicate tags and configuration conflicts.</p>
       </header>
 
       <!-- Input Card -->
@@ -247,24 +247,29 @@
         <div class="card__body">
           <!-- URL Input Form -->
           <div class="form-row">
-            <label for="urlInput" class="visually-hidden">Website URL to analyze</label>
+            <label for="urlInput" class="visually-hidden" data-i18n="common.websiteUrl">Website URL</label>
             <input 
               type="url" 
               id="urlInput"
               class="input"
               placeholder="https://example.com" 
+              data-i18n-placeholder="common.enterUrl"
               aria-label="Enter website URL for tag analysis"
+              data-i18n="analyzerPages.tagIntelligence.ariaInput"
+              data-i18n-attr="aria-label"
               required
               aria-required="true"
             />
             
-            <button id="analyzeButton" class="btn btn-primary" aria-label="Start tracking and analytics analysis">ANALYZE TAGS</button>
+            <button id="analyzeButton" class="btn btn-primary" aria-label="Start tracking and analytics analysis" data-i18n="analyzerPages.tagIntelligence.ariaAnalyze" data-i18n-attr="aria-label">
+              <span data-i18n="analyzerPages.tagIntelligence.analyzeButton">ANALYZE TAGS</span>
+            </button>
           </div>
         
           <!-- Info Banner -->
           <p class="helper-text" style="margin-top: 1rem;">
-            <strong>Tracking & Analytics:</strong> Detects GTM, GA4, Universal Analytics, Meta Pixel, TikTok Pixel, LinkedIn Insight, 
-            Hotjar, and more. Identifies duplicate tags, missing consent management, and configuration conflicts.
+            <strong data-i18n="analyzerPages.tagIntelligence.helperLabel">Tracking & Analytics:</strong>
+            <span data-i18n="analyzerPages.tagIntelligence.helperText">Detects GTM, GA4, Universal Analytics, Meta Pixel, TikTok Pixel, LinkedIn Insight, Hotjar, and more. Identifies duplicate tags, missing consent management, and configuration conflicts.</span>
           </p>
         </div>
       </section>
@@ -287,6 +292,8 @@
     <script src="theme-controls.js"></script>
     <script src="/pro-utils.js"></script>
     <script src="nav-template.js"></script>
+    <!-- Language Switcher (after nav-template so container exists) -->
+    <script src="/language-switcher.js"></script>
     <script src="analyzer-loader.js"></script>
 
     <!-- Shared Report Components -->
@@ -296,7 +303,7 @@
     <!-- ASCII Background Animation -->
 
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js"></script>
+    <script src="/js/report-ui.js?v=20260201a"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <!-- Credits + paywall UI (ensures PaidUnlockCard states render) -->
     <script src="/assets/js/ui.js"></script>
@@ -307,8 +314,11 @@
     <script src="/assets/js/entitlements.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260201b"></script>
     <script src="/js/components/PricingModal.js"></script>
+
+    <!-- Report Jump (auto-scroll to results) -->
+    <script src="/js/report-jump.js"></script>
 
     <script src="tag-intelligence-script.js?v=FRESH-JAN8-2026"></script>
   </body>

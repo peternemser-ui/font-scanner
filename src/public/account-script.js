@@ -1,29 +1,226 @@
 /**
- * Account Dashboard Script
- * Manages user account, subscription, and billing
+ * Report Library Script v2
+ * Manages report history with search/filter, compare mode, and account settings
  */
 
-// Store billing status globally for easy access
-let billingStatus = null;
+// ============================================
+// i18n HELPER
+// ============================================
 
-// Check authentication on load
+function t(key, fallback) {
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const result = window.i18n.t(key);
+    // If the result equals the key, the translation wasn't found - use fallback
+    if (result === key || !result) {
+      return fallback;
+    }
+    return result;
+  }
+  return fallback;
+}
+
+// ============================================
+// STATE
+// ============================================
+
+let billingStatus = null;
+let allReports = [];
+let filteredReports = [];
+let currentPage = 1;
+let compareMode = false;
+let selectedForCompare = new Set();
+const REPORTS_PER_PAGE = 20;
+const MAX_COMPARE = 2;
+
+// Report type mappings
+const REPORT_TYPE_MAP = {
+  'full': { label: 'Full Scan', category: 'full' },
+  'seo': { label: 'SEO', category: 'seo' },
+  'seo-analyzer': { label: 'SEO', category: 'seo' },
+  'accessibility': { label: 'Accessibility', category: 'accessibility' },
+  'accessibility-analyzer': { label: 'Accessibility', category: 'accessibility' },
+  'performance': { label: 'Performance', category: 'performance' },
+  'performance-hub': { label: 'Performance', category: 'performance' },
+  'speed-ux-pro': { label: 'Speed & UX', category: 'performance' },
+  'speed-ux-quick': { label: 'Speed & UX', category: 'performance' },
+  'speed-ux-cwv': { label: 'Speed & UX - CWV', category: 'performance' },
+  'speed-ux-full': { label: 'Lighthouse', category: 'performance' },
+  'security': { label: 'Security', category: 'security' },
+  'security-analyzer': { label: 'Security', category: 'security' },
+  'tag-intelligence': { label: 'Tag Intelligence', category: 'tag-intelligence' },
+  'cwv': { label: 'Core Web Vitals', category: 'cwv' },
+  'core-web-vitals': { label: 'Core Web Vitals', category: 'cwv' },
+  'fonts': { label: 'Fonts', category: 'fonts' },
+  'enhanced-fonts': { label: 'Fonts & Typography', category: 'fonts' },
+  'brand': { label: 'Brand', category: 'brand' },
+  'brand-consistency': { label: 'Brand & Design', category: 'brand' },
+  'cro': { label: 'CRO', category: 'cro' },
+  'cro-analyzer': { label: 'CRO', category: 'cro' },
+  'cro-analysis': { label: 'CRO', category: 'cro' },
+  'mobile': { label: 'Mobile', category: 'mobile' },
+  'mobile-analyzer': { label: 'Mobile', category: 'mobile' },
+  'ip-reputation': { label: 'IP Reputation', category: 'ip-reputation' },
+  'ip-reputation-analyzer': { label: 'IP Reputation', category: 'ip-reputation' },
+  'gdpr': { label: 'Privacy', category: 'gdpr' },
+  'gdpr-compliance': { label: 'Privacy Compliance', category: 'gdpr' },
+  'hosting': { label: 'Hosting', category: 'hosting' },
+  'hosting-analyzer': { label: 'Hosting', category: 'hosting' },
+  'competitive': { label: 'Competitive', category: 'competitive' },
+  'competitive-analysis': { label: 'Competitive Analysis', category: 'competitive' },
+  'local-seo': { label: 'Local SEO', category: 'local-seo' },
+  'broken-links': { label: 'Broken Links', category: 'broken-links' },
+  'site-crawler': { label: 'Site Crawler', category: 'site-crawler' }
+};
+
+// Analyzer page mappings
+const ANALYZER_PAGES = {
+  'seo': '/seo-analyzer.html',
+  'seo-analyzer': '/seo-analyzer.html',
+  'security': '/security-analyzer.html',
+  'security-analyzer': '/security-analyzer.html',
+  'accessibility': '/accessibility-analyzer.html',
+  'accessibility-analyzer': '/accessibility-analyzer.html',
+  'performance': '/performance-hub.html',
+  'performance-hub': '/performance-hub.html',
+  'speed-ux-pro': '/performance-hub.html',
+  'speed-ux-quick': '/performance-hub.html',
+  'speed-ux-cwv': '/performance-hub.html',
+  'speed-ux-full': '/performance-hub.html',
+  'tag-intelligence': '/tag-intelligence.html',
+  'cwv': '/core-web-vitals.html',
+  'core-web-vitals': '/core-web-vitals.html',
+  'ip-reputation': '/ip-reputation-analyzer.html',
+  'ip-reputation-analyzer': '/ip-reputation-analyzer.html',
+  'mobile': '/mobile-analyzer.html',
+  'mobile-analyzer': '/mobile-analyzer.html',
+  'cro': '/cro-analyzer.html',
+  'cro-analyzer': '/cro-analyzer.html',
+  'cro-analysis': '/cro-analyzer.html',
+  'gdpr': '/gdpr-compliance.html',
+  'gdpr-compliance': '/gdpr-compliance.html',
+  'fonts': '/enhanced-fonts.html',
+  'enhanced-fonts': '/enhanced-fonts.html',
+  'brand': '/brand-consistency.html',
+  'brand-consistency': '/brand-consistency.html',
+  'hosting': '/hosting-analyzer.html',
+  'hosting-analyzer': '/hosting-analyzer.html',
+  'competitive': '/competitive-analysis.html',
+  'competitive-analysis': '/competitive-analysis.html',
+  'local-seo': '/local-seo.html',
+  'broken-links': '/broken-links.html',
+  'site-crawler': '/site-crawler.html'
+};
+
+// ============================================
+// BROWSER STORAGE HELPERS
+// ============================================
+
+/**
+ * Load recent reports from browser storage (IndexedDB)
+ * These are scans that were saved locally but may not be purchased
+ */
+async function loadBrowserStoredReports() {
+  try {
+    // Use the same IndexedDB that ReportStorage uses
+    const DB_NAME = 'SiteMechanicReports';
+    const DB_VERSION = 1;
+    const STORE_NAME = 'reports';
+
+    return new Promise((resolve) => {
+      const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+      request.onerror = () => {
+        console.warn('[Account] Could not open IndexedDB for browser reports');
+        resolve([]);
+      };
+
+      request.onsuccess = (event) => {
+        const db = event.target.result;
+        if (!db.objectStoreNames.contains(STORE_NAME)) {
+          resolve([]);
+          return;
+        }
+
+        const transaction = db.transaction(STORE_NAME, 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const getAllRequest = store.getAll();
+
+        getAllRequest.onsuccess = () => {
+          const records = getAllRequest.result || [];
+          const reports = records
+            .filter(r => r && r.reportId && r.metadata)
+            .map(r => ({
+              reportId: r.reportId,
+              siteUrl: r.metadata?.siteUrl || '',
+              siteUrlNormalized: normalizeDomain(r.metadata?.siteUrl || ''),
+              analyzerType: r.metadata?.analyzerType || 'unknown',
+              reportTypeLabel: getReportTypeLabel(r.metadata?.analyzerType || 'unknown'),
+              reportTypeCategory: getReportTypeCategory(r.metadata?.analyzerType || 'unknown'),
+              purchasedAt: r.metadata?.scannedAt || r.savedAt,
+              purchasedAtDate: new Date(r.metadata?.scannedAt || r.savedAt),
+              accessLevel: r.metadata?.source === 'pro' ? 'pro' : r.metadata?.source === 'purchased' ? 'purchased' : 'browser',
+              isBrowserStored: true
+            }));
+
+          // Sort by date and limit to recent 50
+          reports.sort((a, b) => b.purchasedAtDate - a.purchasedAtDate);
+          resolve(reports.slice(0, 50));
+        };
+
+        getAllRequest.onerror = () => {
+          console.warn('[Account] Failed to read browser reports');
+          resolve([]);
+        };
+      };
+    });
+  } catch (e) {
+    console.warn('[Account] Error loading browser stored reports:', e);
+    return [];
+  }
+}
+
+// ============================================
+// INITIALIZATION
+// ============================================
+
 document.addEventListener('DOMContentLoaded', async () => {
-  // Redirect if not authenticated
   if (!proManager.isAuthenticated()) {
     window.location.href = '/auth.html';
     return;
   }
 
-  // Check for billing return URLs
+  await handleBillingReturn();
+  initializeUIComponents();
+  initStickyToolbar();
+  initCompareMode();
+
+  await Promise.all([
+    loadUserData(),
+    loadBillingStatus()
+  ]);
+
+  renderReports();
+});
+
+// Re-render reports when language changes
+window.addEventListener('languageChanged', () => {
+  renderReports();
+});
+
+async function handleBillingReturn() {
   const urlParams = new URLSearchParams(window.location.search);
+
   if (urlParams.get('billing_success') === 'true') {
-    // Verify and record the purchase first (essential for local dev where webhooks don't fire)
+    if (window.ProReportBlock?.clearBillingCache) {
+      window.ProReportBlock.clearBillingCache();
+    }
+
     const sessionId = urlParams.get('session_id');
     if (sessionId) {
       const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
       if (token) {
         try {
-          const verifyResp = await fetch('/api/billing/verify-purchase', {
+          await fetch('/api/billing/verify-purchase', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -31,125 +228,319 @@ document.addEventListener('DOMContentLoaded', async () => {
             },
             body: JSON.stringify({ session_id: sessionId })
           });
-          const verifyResult = await verifyResp.json().catch(() => null);
-          console.log('Account page: Purchase verification result:', verifyResult);
         } catch (e) {
-          console.warn('Account page: Failed to verify purchase:', e);
+          console.warn('Failed to verify purchase:', e);
         }
       }
     }
+
     showSuccess('Payment successful! Your plan has been updated.');
-    // Clean URL
-    urlParams.delete('billing_success');
-    urlParams.delete('session_id');
-    const newUrl = urlParams.toString()
-      ? `${window.location.pathname}?${urlParams.toString()}`
-      : window.location.pathname;
-    window.history.replaceState({}, '', newUrl);
+    cleanUrl(['billing_success', 'session_id']);
   } else if (urlParams.get('billing_canceled') === 'true') {
     showError('Checkout was canceled. No charges were made.');
-    // Clean URL
-    urlParams.delete('billing_canceled');
-    const newUrl = urlParams.toString()
-      ? `${window.location.pathname}?${urlParams.toString()}`
-      : window.location.pathname;
-    window.history.replaceState({}, '', newUrl);
+    cleanUrl(['billing_canceled']);
   } else if (urlParams.get('success') === 'true') {
-    // Legacy success param
     showSuccess('Payment successful! Your Pro features are now active.');
+    cleanUrl(['success']);
+  }
+}
+
+function cleanUrl(params) {
+  const urlParams = new URLSearchParams(window.location.search);
+  params.forEach(p => urlParams.delete(p));
+  const newUrl = urlParams.toString()
+    ? `${window.location.pathname}?${urlParams.toString()}`
+    : window.location.pathname;
+  window.history.replaceState({}, '', newUrl);
+}
+
+function initializeUIComponents() {
+  // Search with debounce
+  const searchInput = document.getElementById('reportSearch');
+  if (searchInput) {
+    const searchWrapper = searchInput.closest('.toolbar__search');
+    const updateSearchExpansion = () => {
+      if (!searchWrapper) return;
+      const hasValue = searchInput.value.trim().length > 0;
+      const isFocused = document.activeElement === searchInput;
+      searchWrapper.classList.toggle('toolbar__search--expanded', hasValue || isFocused);
+    };
+
+    let debounceTimer;
+    searchInput.addEventListener('input', () => {
+      updateSearchExpansion();
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(() => {
+        currentPage = 1;
+        applyFilters();
+        updateClearButton();
+      }, 200);
+    });
+
+    searchInput.addEventListener('focus', updateSearchExpansion);
+    searchInput.addEventListener('blur', updateSearchExpansion);
+    updateSearchExpansion();
   }
 
-  // Load user data
-  await loadUserData();
-  await loadBillingStatus();
-  displayPurchasedReports();
+  // Filters
+  ['filterType', 'filterAccess', 'filterDate', 'sortBy'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('change', () => {
+        currentPage = 1;
+        applyFilters();
+        updateClearButton();
+      });
+    }
+  });
 
-  // Wire up refresh purchased reports button
-  const refreshPurchasedBtn = document.getElementById('refreshPurchasedBtn');
-  if (refreshPurchasedBtn) {
-    refreshPurchasedBtn.addEventListener('click', async () => {
-      await loadBillingStatus();
-      displayPurchasedReports();
+  // Mobile filters toggle
+  const filtersToggle = document.getElementById('filtersToggle');
+  const filtersPanel = document.getElementById('filtersPanel');
+  if (filtersToggle && filtersPanel) {
+    filtersToggle.addEventListener('click', () => {
+      const expanded = filtersPanel.classList.toggle('active');
+      filtersToggle.setAttribute('aria-expanded', expanded);
     });
   }
 
-  // Wire up upgrade button
+  // Clear filters
+  const clearBtn = document.getElementById('clearFiltersBtn');
+  const clearBtn2 = document.getElementById('clearFiltersBtn2');
+  if (clearBtn) clearBtn.addEventListener('click', clearFilters);
+  if (clearBtn2) clearBtn2.addEventListener('click', clearFilters);
+
+  // Refresh button
+  const refreshBtn = document.getElementById('refreshBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', handleRefresh);
+  }
+
+  // Load more
+  const loadMoreBtn = document.getElementById('loadMoreBtn');
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', () => {
+      currentPage++;
+      renderSiteGroups(false);
+    });
+  }
+
+  // Account popover (trigger + panel)
+  const accountTrigger = document.getElementById('accountTrigger');
+  const accountSidebar = document.querySelector('.reports-sidebar');
+  const accountBackdrop = document.getElementById('accountBackdrop');
+
+  function openAccountPopover() {
+    if (!accountSidebar || !accountTrigger) return;
+    accountSidebar.classList.add('popover-open');
+    if (accountBackdrop) accountBackdrop.classList.add('open');
+    accountTrigger.setAttribute('aria-expanded', 'true');
+    // Focus first interactive element inside
+    requestAnimationFrame(() => {
+      const first = accountSidebar.querySelector('button, a, input, [tabindex]');
+      if (first) first.focus();
+    });
+  }
+
+  function closeAccountPopover() {
+    if (!accountSidebar || !accountTrigger) return;
+    accountSidebar.classList.remove('popover-open');
+    if (accountBackdrop) accountBackdrop.classList.remove('open');
+    accountTrigger.setAttribute('aria-expanded', 'false');
+    accountTrigger.focus();
+  }
+
+  function isAccountPopoverOpen() {
+    return accountSidebar && accountSidebar.classList.contains('popover-open');
+  }
+
+  if (accountTrigger) {
+    accountTrigger.addEventListener('click', () => {
+      isAccountPopoverOpen() ? closeAccountPopover() : openAccountPopover();
+    });
+  }
+
+  if (accountBackdrop) {
+    accountBackdrop.addEventListener('click', closeAccountPopover);
+  }
+
+  // Esc to close popover
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && isAccountPopoverOpen()) {
+      e.stopPropagation();
+      closeAccountPopover();
+    }
+  });
+
+  // Focus trap within popover
+  if (accountSidebar) {
+    accountSidebar.addEventListener('keydown', (e) => {
+      if (e.key !== 'Tab' || !isAccountPopoverOpen()) return;
+      const focusable = accountSidebar.querySelectorAll('button, a, input, select, [tabindex]:not([tabindex="-1"])');
+      if (!focusable.length) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.shiftKey && document.activeElement === first) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && document.activeElement === last) {
+        e.preventDefault();
+        first.focus();
+      }
+    });
+  }
+
+  // Legacy: keep panel header click as no-op (panel body always visible in popover)
+  const accountPanelHeader = document.getElementById('accountPanelHeader');
+  if (accountPanelHeader) {
+    accountPanelHeader.removeAttribute('role');
+    accountPanelHeader.removeAttribute('tabindex');
+    accountPanelHeader.style.cursor = 'default';
+  }
+
+  // Upgrade button
   const upgradeBtn = document.getElementById('upgradeBtn');
   if (upgradeBtn) {
     upgradeBtn.addEventListener('click', handleUpgradeClick);
   }
-});
 
-/**
- * Show error message
- */
-function showError(message) {
-  const errorEl = document.getElementById('error-message');
-  errorEl.textContent = message;
-  errorEl.classList.remove('hidden');
+  // Manage billing
+  const manageSubBtn = document.getElementById('manageSubBtn');
+  if (manageSubBtn) {
+    manageSubBtn.addEventListener('click', handleManageBilling);
+  }
 
-  // Hide success message
-  document.getElementById('success-message').classList.add('hidden');
+  // Password modal
+  initPasswordModal();
 
-  // Scroll to message
-  errorEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  // Auto-hide after 5 seconds
-  setTimeout(() => {
-    errorEl.classList.add('hidden');
-  }, 5000);
-}
-
-/**
- * Show success message
- */
-function showSuccess(message) {
-  const successEl = document.getElementById('success-message');
-  successEl.textContent = message;
-  successEl.classList.remove('hidden');
-
-  // Hide error message
-  document.getElementById('error-message').classList.add('hidden');
-
-  // Scroll to message
-  successEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  // Auto-hide after 5 seconds
-  setTimeout(() => {
-    successEl.classList.add('hidden');
-  }, 5000);
-}
-
-/**
- * Load user data from API
- */
-async function loadUserData() {
-  try {
-    // Refresh user data from server
-    const user = await proManager.refreshUser();
-
-    if (!user) {
-      // Token invalid
-      window.location.href = '/auth.html';
-      return;
-    }
-
-    // Update UI
-    document.getElementById('userEmail').textContent = user.email || 'N/A';
-
-    // Update created date
-    const createdDate = proManager.formatDate(user.created_at);
-    document.getElementById('userCreatedAt').textContent = createdDate || 'N/A';
-
-  } catch (error) {
-    console.error('Failed to load user data:', error);
-    showError('Failed to load account data. Please try again.');
+  // Logout
+  const logoutBtn = document.getElementById('logoutBtn');
+  if (logoutBtn) {
+    logoutBtn.addEventListener('click', handleLogout);
   }
 }
 
-/**
- * Load billing status from new /api/billing/status endpoint
- */
+// ============================================
+// STICKY TOOLBAR
+// ============================================
+
+function initStickyToolbar() {
+  const toolbarWrapper = document.getElementById('toolbarWrapper');
+  if (!toolbarWrapper) return;
+
+  const observer = new IntersectionObserver(
+    ([entry]) => {
+      toolbarWrapper.classList.toggle('scrolled', !entry.isIntersecting);
+    },
+    { threshold: 1, rootMargin: '-60px 0px 0px 0px' }
+  );
+
+  // Observe a sentinel element at the top of the toolbar area
+  const sentinel = document.createElement('div');
+  sentinel.style.height = '1px';
+  sentinel.style.marginBottom = '-1px';
+  toolbarWrapper.parentNode.insertBefore(sentinel, toolbarWrapper);
+  observer.observe(sentinel);
+}
+
+// ============================================
+// COMPARE MODE
+// ============================================
+
+function initCompareMode() {
+  const compareModeBtn = document.getElementById('compareModeBtn');
+  const compareBar = document.getElementById('compareBar');
+  const compareBtn = document.getElementById('compareBtn');
+  const compareCancelBtn = document.getElementById('compareCancelBtn');
+  const reportsPage = document.getElementById('reportsPage');
+
+  if (!compareModeBtn || !compareBar) return;
+
+  compareModeBtn.addEventListener('click', () => {
+    compareMode = !compareMode;
+    compareModeBtn.classList.toggle('active', compareMode);
+    compareModeBtn.setAttribute('aria-pressed', compareMode);
+    reportsPage?.classList.toggle('compare-mode', compareMode);
+
+    if (compareMode) {
+      compareBar.classList.add('visible');
+    } else {
+      compareBar.classList.remove('visible');
+      selectedForCompare.clear();
+      updateCompareUI();
+      // Uncheck all checkboxes
+      document.querySelectorAll('.compare-checkbox').forEach(cb => cb.checked = false);
+    }
+  });
+
+  compareCancelBtn?.addEventListener('click', () => {
+    compareMode = false;
+    compareModeBtn.classList.remove('active');
+    compareModeBtn.setAttribute('aria-pressed', false);
+    reportsPage?.classList.remove('compare-mode');
+    compareBar.classList.remove('visible');
+    selectedForCompare.clear();
+    updateCompareUI();
+    document.querySelectorAll('.compare-checkbox').forEach(cb => cb.checked = false);
+  });
+
+  compareBtn?.addEventListener('click', () => {
+    if (selectedForCompare.size === 2) {
+      const [id1, id2] = Array.from(selectedForCompare);
+      // Navigate to compare page (placeholder - implement when compare feature exists)
+      console.log('Compare reports:', id1, id2);
+      showSuccess('Compare feature coming soon!');
+    }
+  });
+}
+
+function handleCompareCheckbox(reportId, checked) {
+  if (checked) {
+    if (selectedForCompare.size < MAX_COMPARE) {
+      selectedForCompare.add(reportId);
+    } else {
+      // Uncheck this checkbox - max reached
+      const checkbox = document.querySelector(`input[data-report-id="${reportId}"]`);
+      if (checkbox) checkbox.checked = false;
+      return;
+    }
+  } else {
+    selectedForCompare.delete(reportId);
+  }
+  updateCompareUI();
+}
+
+function updateCompareUI() {
+  const compareCount = document.getElementById('compareCount');
+  const compareBtn = document.getElementById('compareBtn');
+
+  if (compareCount) {
+    compareCount.textContent = selectedForCompare.size;
+  }
+
+  if (compareBtn) {
+    compareBtn.disabled = selectedForCompare.size !== 2;
+  }
+}
+
+// ============================================
+// DATA LOADING
+// ============================================
+
+async function loadUserData() {
+  try {
+    const user = await proManager.refreshUser();
+    if (!user) {
+      window.location.href = '/auth.html';
+      return;
+    }
+    document.getElementById('userEmail').textContent = user.email || 'N/A';
+  } catch (error) {
+    console.error('Failed to load user data:', error);
+    showError('Failed to load account data.');
+  }
+}
+
 async function loadBillingStatus() {
   try {
     const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
@@ -160,242 +551,741 @@ async function loadBillingStatus() {
     });
 
     if (!response.ok) {
-      // Fall back to legacy subscription data
       await loadSubscriptionDataLegacy();
       return;
     }
 
     billingStatus = await response.json();
-    await updateBillingUI(billingStatus);
+    updateBillingUI(billingStatus);
+
+    // Determine user's plan for access level labelling
+    const userPlan = billingStatus.plan || 'free';
+    const isPro = userPlan === 'pro' || userPlan === 'day_pass';
+
+    // Start with purchased reports from server
+    const purchasedReports = (billingStatus.purchasedReportDetails || []).map(report => ({
+      ...report,
+      siteUrlNormalized: normalizeDomain(report.siteUrl),
+      reportTypeLabel: getReportTypeLabel(report.analyzerType),
+      reportTypeCategory: getReportTypeCategory(report.analyzerType),
+      purchasedAtDate: new Date(report.purchasedAt),
+      accessLevel: 'purchased'
+    }));
+    const knownIds = new Set(purchasedReports.map(r => r.reportId));
+
+    // Fetch owned reports from the canonical server endpoint (authoritative for ownership)
+    let serverOwnedReports = [];
+    try {
+      const ownedResponse = await fetch('/api/reports/owned?limit=200', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (ownedResponse.ok) {
+        const ownedData = await ownedResponse.json();
+        serverOwnedReports = (ownedData.reports || [])
+          .filter(r => !knownIds.has(r.reportId))
+          .map(r => {
+            const createdAt = r.createdAt
+              ? (r.createdAt.includes('T') ? r.createdAt : r.createdAt.replace(' ', 'T') + 'Z')
+              : null;
+
+            return {
+              reportId: r.reportId,
+              siteUrl: r.siteUrl || '',
+              siteUrlNormalized: normalizeDomain(r.siteUrl || ''),
+              analyzerType: r.analyzerType || 'full',
+              reportTypeLabel: getReportTypeLabel(r.analyzerType || 'full'),
+              reportTypeCategory: getReportTypeCategory(r.analyzerType || 'full'),
+              purchasedAt: createdAt,
+              purchasedAtDate: new Date(createdAt || 0),
+              accessLevel: r.ownedVia === 'purchased' ? 'purchased' : (isPro ? 'pro' : 'browser'),
+              isServerScan: true
+            };
+          });
+        serverOwnedReports.forEach(s => knownIds.add(s.reportId));
+      }
+    } catch (e) {
+      console.warn('[Account] Failed to fetch owned reports:', e);
+    }
+
+    // Fallback: also fetch recent scans for broader coverage
+    let serverScans = [];
+    try {
+      const scansResponse = await fetch('/api/usage/recent-scans?limit=200', {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      if (scansResponse.ok) {
+        const scansData = await scansResponse.json();
+        serverScans = (scansData.scans || [])
+          .filter(scan => !knownIds.has(scan.id))
+          .map(scan => {
+            let accessLevel = 'browser';
+            if (scan.isPurchased) {
+              accessLevel = 'purchased';
+            } else if (isPro) {
+              accessLevel = 'pro';
+            }
+
+            const createdAt = scan.createdAt
+              ? (scan.createdAt.includes('T') ? scan.createdAt : scan.createdAt.replace(' ', 'T') + 'Z')
+              : null;
+
+            return {
+              reportId: scan.id,
+              siteUrl: scan.siteUrl || '',
+              siteUrlNormalized: normalizeDomain(scan.siteUrl || ''),
+              analyzerType: scan.analyzerType || 'full',
+              reportTypeLabel: getReportTypeLabel(scan.analyzerType || 'full'),
+              reportTypeCategory: getReportTypeCategory(scan.analyzerType || 'full'),
+              purchasedAt: createdAt,
+              purchasedAtDate: new Date(createdAt || 0),
+              accessLevel,
+              isServerScan: true
+            };
+          });
+        serverScans.forEach(s => knownIds.add(s.reportId));
+      }
+    } catch (e) {
+      console.warn('[Account] Failed to fetch server scans:', e);
+    }
+
+    // Also load recent scans from browser storage (for better UX)
+    const browserReports = await loadBrowserStoredReports();
+
+    // Merge: purchased > owned > server scans > browser-only (deduplicate by reportId)
+    const uniqueBrowserReports = browserReports.filter(r => !knownIds.has(r.reportId));
+
+    allReports = [...purchasedReports, ...serverOwnedReports, ...serverScans, ...uniqueBrowserReports];
+    allReports.sort((a, b) => b.purchasedAtDate - a.purchasedAtDate);
+    filteredReports = [...allReports];
 
   } catch (error) {
     console.error('Failed to load billing status:', error);
-    // Fall back to legacy
     await loadSubscriptionDataLegacy();
   }
 }
 
-/**
- * Update billing UI based on billing status
- */
-async function updateBillingUI(status) {
-  const planEl = document.getElementById('userPlan');
-  const detailsEl = document.getElementById('subscriptionDetails');
-  const upgradeBtn = document.getElementById('upgradeBtn');
-  const manageBtn = document.getElementById('manageSubBtn');
-  const waitlistHint = document.querySelector('.upgrade-hint');
-
-  const isPro = status.plan === 'pro';
-  const isActive = status.subscriptionStatus === 'active';
-  const isTrialing = status.subscriptionStatus === 'trialing';
-  const isCanceled = status.subscriptionStatus === 'canceled';
-  const isYearly = status.subscriptionInterval === 'year';
-  const isDay = status.subscriptionInterval === 'day';
-
-  // Update plan badge
-  if (isPro) {
-    const intervalLabel = isDay ? 'DAY PASS' : isYearly ? 'YEARLY' : 'MONTHLY';
-    if (isCanceled) {
-      planEl.innerHTML = `<span class="plan-badge canceled">PRO (${intervalLabel}) - CANCELED</span>`;
-    } else {
-      planEl.innerHTML = `<span class="plan-badge"><span style="font-size: 0.8rem;">&#10024;</span> PRO (${intervalLabel})</span>`;
-    }
-  } else {
-    planEl.innerHTML = '<span class="plan-badge free">FREE PLAN</span>';
-  }
-
-  // Update subscription details
-  if (isPro && status.currentPeriodEnd) {
-    const periodEnd = new Date(status.currentPeriodEnd).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-
-    // Day passes have special display - show time remaining
-    let periodEndDisplay = periodEnd;
-    if (isDay) {
-      const endDate = new Date(status.currentPeriodEnd);
-      const now = new Date();
-      const hoursRemaining = Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60)));
-      periodEndDisplay = hoursRemaining > 0 ? `${hoursRemaining}h remaining` : 'Expired';
-    }
-
-    const statusLabel = isCanceled ? 'Canceled' : isTrialing ? 'Trialing' : isDay ? 'Active (24h)' : 'Active';
-    const statusClass = isCanceled ? 'canceled' : isTrialing ? 'trialing' : 'active';
-
-    // Day passes always show "Expires" since they don't auto-renew
-    const periodLabel = isDay ? 'Expires' : (isCanceled || status.cancelAtPeriodEnd ? 'Access Until' : 'Renews');
-
-    detailsEl.innerHTML = `
-      <div class="account-info-row">
-        <span class="account-info-label">Status</span>
-        <span class="account-info-value">
-          <span class="subscription-status ${statusClass}">${statusLabel}</span>
-        </span>
-      </div>
-      <div class="account-info-row">
-        <span class="account-info-label">${periodLabel}</span>
-        <span class="account-info-value">${periodEndDisplay}</span>
-      </div>
-      ${(isCanceled || status.cancelAtPeriodEnd) && !isDay ? `
-        <div class="account-info-row">
-          <span class="account-info-label">Note</span>
-          <span class="account-info-value" style="color: #ef4444;">Subscription ends on ${periodEnd}</span>
-        </div>
-      ` : ''}
-    `;
-  } else {
-    // Free plan - show usage
-    let scansToday = 0;
-    try {
-      const usageResponse = await fetch('/api/usage/stats', {
-        headers: proManager.getAuthHeaders()
-      });
-      if (usageResponse.ok) {
-        const usageData = await usageResponse.json();
-        scansToday = usageData.scansToday || 0;
-      }
-    } catch (err) {
-      console.error('Error fetching usage:', err);
-    }
-
-    const now = new Date();
-    const midnight = new Date(now);
-    midnight.setHours(24, 0, 0, 0);
-    const hoursUntilReset = Math.ceil((midnight - now) / (1000 * 60 * 60));
-
-    detailsEl.innerHTML = `
-      <div class="account-info-row">
-        <span class="account-info-label">Status</span>
-        <span class="account-info-value">
-          <span class="subscription-status free">Free Plan</span>
-        </span>
-      </div>
-      <div class="account-info-row">
-        <span class="account-info-label">Usage Today</span>
-        <span class="account-info-value">
-          <div class="usage-block">
-            <span class="usage-main">${scansToday} / 25 scans used</span>
-            <span class="usage-hint">Resets in ${hoursUntilReset}h</span>
-          </div>
-        </span>
-      </div>
-    `;
-  }
-
-  // Update buttons
-  if (isPro) {
-    // Pro user - show Manage Billing, hide upgrade
-    upgradeBtn.classList.add('hidden');
-    manageBtn.classList.remove('hidden');
-    if (waitlistHint) waitlistHint.classList.add('hidden');
-  } else {
-    // Free user - show Upgrade, maybe show Manage Billing if has customer
-    upgradeBtn.classList.remove('hidden');
-    upgradeBtn.classList.remove('account-btn-disabled');
-    upgradeBtn.removeAttribute('aria-disabled');
-    upgradeBtn.removeAttribute('tabindex');
-    upgradeBtn.classList.add('account-btn-primary');
-
-    if (status.hasStripeCustomer) {
-      manageBtn.classList.remove('hidden');
-    } else {
-      manageBtn.classList.add('hidden');
-    }
-
-    if (waitlistHint) waitlistHint.classList.add('hidden');
-  }
-}
-
-/**
- * Legacy subscription data loader (fallback)
- */
 async function loadSubscriptionDataLegacy() {
   try {
     const subscription = await proManager.getSubscription();
-    const detailsEl = document.getElementById('subscriptionDetails');
-    const planEl = document.getElementById('userPlan');
-
-    if (!subscription) {
-      // No subscription - show free plan
-      planEl.innerHTML = '<span class="plan-badge free">FREE PLAN</span>';
-
-      let scansToday = 0;
-      try {
-        const usageResponse = await fetch('/api/usage/stats', {
-          headers: proManager.getAuthHeaders()
-        });
-        if (usageResponse.ok) {
-          const usageData = await usageResponse.json();
-          scansToday = usageData.scansToday || 0;
-        }
-      } catch (err) {
-        console.error('Error fetching usage:', err);
-      }
-
-      const now = new Date();
-      const midnight = new Date(now);
-      midnight.setHours(24, 0, 0, 0);
-      const hoursUntilReset = Math.ceil((midnight - now) / (1000 * 60 * 60));
-
-      detailsEl.innerHTML = `
-        <div class="account-info-row">
-          <span class="account-info-label">Status</span>
-          <span class="account-info-value">
-            <span class="subscription-status free">Free Plan</span>
-          </span>
-        </div>
-        <div class="account-info-row">
-          <span class="account-info-label">Usage Today</span>
-          <span class="account-info-value">
-            <div class="usage-block">
-              <span class="usage-main">${scansToday} / 25 scans used</span>
-              <span class="usage-hint">Resets in ${hoursUntilReset}h</span>
-            </div>
-          </span>
-        </div>
-      `;
-      return;
-    }
-
-    // Has subscription - use legacy format
-    planEl.innerHTML = '<span class="plan-badge"><span style="font-size: 0.8rem;">&#10024;</span> PRO</span>';
-
-    const status = subscription.status || 'unknown';
-    const statusClass = status === 'active' ? 'active' :
-                       status === 'canceled' ? 'canceled' : 'trialing';
-    const statusText = status.charAt(0).toUpperCase() + status.slice(1);
-
-    const periodEnd = subscription.currentPeriodEnd
-      ? new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric'
-        })
-      : 'N/A';
-
-    detailsEl.innerHTML = `
-      <div class="account-info-row">
-        <span class="account-info-label">Status</span>
-        <span class="account-info-value">
-          <span class="subscription-status ${statusClass}">${statusText}</span>
-        </span>
-      </div>
-      <div class="account-info-row">
-        <span class="account-info-label">${subscription.cancelAtPeriodEnd ? 'Ends' : 'Renews'}</span>
-        <span class="account-info-value">${periodEnd}</span>
-      </div>
-    `;
-
+    updateBillingUILegacy(subscription);
   } catch (error) {
     console.error('Failed to load subscription data:', error);
   }
 }
 
-/**
- * Handle upgrade button click
- */
+// ============================================
+// BILLING UI
+// ============================================
+
+async function updateBillingUI(status) {
+  const planEl = document.getElementById('userPlan');
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  const manageBtn = document.getElementById('manageSubBtn');
+  const usageSection = document.getElementById('usageSection');
+
+  const isPro = status.plan === 'pro' || status.plan === 'day_pass';
+  const isYearly = status.subscriptionInterval === 'year';
+  const isDay = status.subscriptionInterval === 'day';
+
+  // Update trigger badge in header
+  const triggerBadge = document.getElementById('accountTriggerBadge');
+
+  if (isPro) {
+    const intervalLabel = isDay ? 'Day Pass' : isYearly ? 'Yearly' : 'Monthly';
+    planEl.innerHTML = `<span class="plan-badge plan-badge--pro">${intervalLabel}</span>`;
+    if (triggerBadge) {
+      triggerBadge.className = 'plan-badge plan-badge--pro';
+      triggerBadge.textContent = intervalLabel;
+    }
+
+    if (status.cancelAtPeriodEnd && status.currentPeriodEnd) {
+      const cancelDate = new Date(status.currentPeriodEnd).toLocaleDateString();
+      planEl.innerHTML += ` <span style="font-size: 10px; color: var(--color-text-muted);">Cancels on ${cancelDate}</span>`;
+    } else if (status.currentPeriodEnd && isDay) {
+      const endDate = new Date(status.currentPeriodEnd);
+      const hoursRemaining = Math.max(0, Math.ceil((endDate - new Date()) / (1000 * 60 * 60)));
+      planEl.innerHTML += ` <span style="font-size: 10px; color: var(--color-text-muted);">${hoursRemaining}h left</span>`;
+    }
+  } else {
+    planEl.innerHTML = '<span class="plan-badge plan-badge--free">Pay As You Go</span>';
+    if (triggerBadge) {
+      triggerBadge.className = 'plan-badge plan-badge--free';
+      triggerBadge.textContent = 'Free';
+    }
+  }
+
+  if (!isPro) {
+    let scansUsed = 0;
+    let scanLimit = 10;
+    let resetAt = null;
+    try {
+      // Use canonical usage API for consistent tracking
+      const usageResponse = await fetch('/api/auth/usage', {
+        credentials: 'include',
+        headers: proManager.getAuthHeaders()
+      });
+      if (usageResponse.ok) {
+        const usageData = await usageResponse.json();
+        scansUsed = usageData.scans_used_today || 0;
+        scanLimit = usageData.scan_limit_daily || 10;
+        resetAt = usageData.scans_reset_at;
+      }
+    } catch (err) {
+      console.error('Error fetching usage:', err);
+    }
+
+    const usageFill = document.getElementById('usageFill');
+    const usageCount = document.getElementById('usageCount');
+    const usageReset = document.getElementById('usageReset');
+
+    if (usageFill && usageCount && usageReset) {
+      const percentage = Math.min((scansUsed / scanLimit) * 100, 100);
+      usageFill.style.width = `${percentage}%`;
+      usageCount.textContent = `${scansUsed} / ${scanLimit} scans`;
+
+      // Calculate time until reset
+      if (resetAt) {
+        const resetTime = new Date(resetAt);
+        const now = new Date();
+        const hoursUntilReset = Math.max(0, Math.ceil((resetTime - now) / (1000 * 60 * 60)));
+        usageReset.textContent = `Resets in ${hoursUntilReset}h`;
+      } else {
+        const now = new Date();
+        const midnight = new Date(now);
+        midnight.setHours(24, 0, 0, 0);
+        const hoursUntilReset = Math.ceil((midnight - now) / (1000 * 60 * 60));
+        usageReset.textContent = `Resets in ${hoursUntilReset}h`;
+      }
+    }
+
+    if (usageSection) usageSection.classList.remove('hidden');
+  } else {
+    if (usageSection) usageSection.classList.add('hidden');
+  }
+
+  if (isPro) {
+    upgradeBtn.classList.add('hidden');
+    manageBtn.classList.remove('hidden');
+    manageBtn.textContent = 'Manage Plan';
+  } else {
+    upgradeBtn.classList.remove('hidden');
+    if (status.hasStripeCustomer) {
+      manageBtn.classList.remove('hidden');
+      manageBtn.textContent = 'Manage Billing';
+    } else {
+      manageBtn.classList.add('hidden');
+    }
+  }
+}
+
+function updateBillingUILegacy(subscription) {
+  const planEl = document.getElementById('userPlan');
+  const upgradeBtn = document.getElementById('upgradeBtn');
+  const triggerBadge = document.getElementById('accountTriggerBadge');
+
+  if (subscription) {
+    planEl.innerHTML = '<span class="plan-badge plan-badge--pro">Pro</span>';
+    upgradeBtn.classList.add('hidden');
+    if (triggerBadge) {
+      triggerBadge.className = 'plan-badge plan-badge--pro';
+      triggerBadge.textContent = 'Pro';
+    }
+  } else {
+    planEl.innerHTML = '<span class="plan-badge plan-badge--free">Pay As You Go</span>';
+    upgradeBtn.classList.remove('hidden');
+    if (triggerBadge) {
+      triggerBadge.className = 'plan-badge plan-badge--free';
+      triggerBadge.textContent = 'Free';
+    }
+  }
+}
+
+// ============================================
+// FILTERING
+// ============================================
+
+function applyFilters() {
+  const searchTerm = (document.getElementById('reportSearch')?.value || '').toLowerCase().trim();
+  const typeFilter = document.getElementById('filterType')?.value || '';
+  const accessFilter = document.getElementById('filterAccess')?.value || '';
+  const dateFilter = document.getElementById('filterDate')?.value || '';
+  const sortBy = document.getElementById('sortBy')?.value || 'newest';
+
+  filteredReports = allReports.filter(report => {
+    if (searchTerm) {
+      const searchableText = [
+        report.siteUrlNormalized,
+        report.reportTypeLabel,
+        report.reportTypeCategory
+      ].join(' ').toLowerCase();
+      if (!searchableText.includes(searchTerm)) return false;
+    }
+
+    if (typeFilter && report.reportTypeCategory !== typeFilter) return false;
+    if (accessFilter && report.accessLevel !== accessFilter) return false;
+
+    if (dateFilter) {
+      const daysAgo = parseInt(dateFilter);
+      const cutoffDate = new Date();
+      cutoffDate.setDate(cutoffDate.getDate() - daysAgo);
+      if (report.purchasedAtDate < cutoffDate) return false;
+    }
+
+    return true;
+  });
+
+  filteredReports.sort((a, b) => {
+    switch (sortBy) {
+      case 'oldest': return a.purchasedAtDate - b.purchasedAtDate;
+      case 'site-az': return a.siteUrlNormalized.localeCompare(b.siteUrlNormalized);
+      case 'site-za': return b.siteUrlNormalized.localeCompare(a.siteUrlNormalized);
+      default: return b.purchasedAtDate - a.purchasedAtDate;
+    }
+  });
+
+  renderReports();
+}
+
+function clearFilters() {
+  document.getElementById('reportSearch').value = '';
+  document.getElementById('filterType').value = '';
+  document.getElementById('filterAccess').value = '';
+  document.getElementById('filterDate').value = '';
+  document.getElementById('sortBy').value = 'newest';
+  currentPage = 1;
+  updateClearButton();
+  applyFilters();
+}
+
+function updateClearButton() {
+  const clearBtn = document.getElementById('clearFiltersBtn');
+  if (!clearBtn) return;
+
+  const hasFilters =
+    document.getElementById('reportSearch')?.value ||
+    document.getElementById('filterType')?.value ||
+    document.getElementById('filterAccess')?.value ||
+    document.getElementById('filterDate')?.value ||
+    document.getElementById('sortBy')?.value !== 'newest';
+
+  clearBtn.classList.toggle('visible', hasFilters);
+}
+
+// ============================================
+// RENDERING
+// ============================================
+
+function renderReports() {
+  const loadingEl = document.getElementById('reportsLoading');
+  const emptyEl = document.getElementById('reportsEmpty');
+  const noResultsEl = document.getElementById('reportsNoResults');
+  const continueSection = document.getElementById('continueSection');
+  const reportsCount = document.getElementById('reportsCount');
+
+  if (loadingEl) loadingEl.classList.add('hidden');
+
+  if (allReports.length === 0) {
+    if (emptyEl) emptyEl.classList.remove('hidden');
+    if (noResultsEl) noResultsEl.classList.add('hidden');
+    if (continueSection) continueSection.classList.add('hidden');
+    if (reportsCount) reportsCount.textContent = '';
+    return;
+  }
+
+  if (emptyEl) emptyEl.classList.add('hidden');
+
+  if (filteredReports.length === 0) {
+    if (noResultsEl) noResultsEl.classList.remove('hidden');
+    if (continueSection) continueSection.classList.add('hidden');
+    if (reportsCount) reportsCount.textContent = `0 ${t('reportsPage.labels.reports', 'reports')}`;
+    document.getElementById('siteGroups').innerHTML = '';
+    return;
+  }
+
+  if (noResultsEl) noResultsEl.classList.add('hidden');
+  if (reportsCount) reportsCount.textContent = `${filteredReports.length} ${t('reportsPage.labels.reports', 'reports')}`;
+
+  renderContinueCards();
+  currentPage = 1;
+  renderSiteGroups(true);
+}
+
+function renderContinueCards() {
+  const container = document.getElementById('continueCards');
+  const section = document.getElementById('continueSection');
+
+  if (!container || !section) return;
+
+  const recentReports = filteredReports.slice(0, 3);
+
+  if (recentReports.length === 0) {
+    section.classList.add('hidden');
+    return;
+  }
+
+  section.classList.remove('hidden');
+
+  container.innerHTML = recentReports.map(report => {
+    const viewUrl = buildReportUrl(report);
+    const rerunUrl = buildRerunUrl(report);
+    const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(report.siteUrl)}&sz=32`;
+
+    return `
+      <div class="continue-card">
+        <div class="continue-card__header">
+          <div class="continue-card__favicon">
+            <img src="${faviconUrl}" alt="" onerror="this.style.display='none'">
+          </div>
+          <h3 class="continue-card__site">${escapeHtml(report.siteUrlNormalized)}</h3>
+        </div>
+        <div class="continue-card__meta">
+          <span class="continue-card__type-pill">${escapeHtml(getReportTypeLabel(report.analyzerType))}</span>
+          <span class="continue-card__time">${formatRelativeTime(report.purchasedAtDate)}</span>
+        </div>
+        <div class="continue-card__actions">
+          <a href="${viewUrl}" class="continue-card__btn continue-card__btn--primary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            ${t('reportsPage.buttons.view', 'View')}
+          </a>
+          <a href="${rerunUrl}" class="continue-card__btn continue-card__btn--secondary">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+            ${t('reportsPage.buttons.rerun', 'Rerun')}
+          </a>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderSiteGroups(reset = true) {
+  const container = document.getElementById('siteGroups');
+  const loadMoreEl = document.getElementById('loadMore');
+
+  if (!container) return;
+
+  // Group by site
+  const siteGroups = new Map();
+
+  filteredReports.forEach(report => {
+    const site = report.siteUrlNormalized;
+    if (!siteGroups.has(site)) {
+      siteGroups.set(site, {
+        site,
+        fullUrl: report.siteUrl,
+        reports: [],
+        latestReport: report,
+        hasPurchased: false,
+        hasPro: false,
+        hasBrowserOnly: false
+      });
+    }
+
+    const group = siteGroups.get(site);
+    group.reports.push(report);
+
+    if (report.accessLevel === 'purchased') group.hasPurchased = true;
+    if (report.accessLevel === 'pro') group.hasPro = true;
+    if (report.accessLevel === 'browser') group.hasBrowserOnly = true;
+
+    if (report.purchasedAtDate > group.latestReport.purchasedAtDate) {
+      group.latestReport = report;
+    }
+  });
+
+  let groupsArray = Array.from(siteGroups.values());
+  groupsArray.sort((a, b) => b.latestReport.purchasedAtDate - a.latestReport.purchasedAtDate);
+
+  const totalGroups = groupsArray.length;
+  const displayGroups = groupsArray.slice(0, currentPage * REPORTS_PER_PAGE);
+  const hasMore = displayGroups.length < totalGroups;
+
+  if (reset) {
+    container.innerHTML = '';
+  }
+
+  const startIndex = reset ? 0 : (currentPage - 1) * REPORTS_PER_PAGE;
+  const groupsToRender = reset ? displayGroups : displayGroups.slice(startIndex);
+
+  groupsToRender.forEach((group, index) => {
+    const groupEl = createSiteGroupElement(group, startIndex + index);
+    container.appendChild(groupEl);
+  });
+
+  if (loadMoreEl) {
+    if (hasMore) {
+      loadMoreEl.classList.remove('hidden');
+      const loadMoreBtn = document.getElementById('loadMoreBtn');
+      if (loadMoreBtn) {
+        loadMoreBtn.textContent = t('reportsPage.loadMoreRemaining', 'Load more ({n} remaining)').replace('{n}', totalGroups - displayGroups.length);
+      }
+    } else {
+      loadMoreEl.classList.add('hidden');
+    }
+  }
+}
+
+function createSiteGroupElement(group, index) {
+  const div = document.createElement('div');
+  div.className = 'site-group';
+  div.setAttribute('data-site', group.site);
+
+  const latestViewUrl = buildReportUrl(group.latestReport);
+  const rerunUrl = buildRerunUrl(group.latestReport);
+  const faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(group.fullUrl)}&sz=32`;
+
+  // Badge - only show at site level
+  let badgeHtml = '';
+  if (group.hasPurchased) {
+    badgeHtml = `<span class="site-group__badge site-group__badge--purchased">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+      ${t('reportsPage.badges.purchased', 'Purchased')}
+    </span>`;
+  } else if (group.hasPro) {
+    badgeHtml = `<span class="site-group__badge site-group__badge--pro">${t('reportsPage.badges.pro', 'Pro')}</span>`;
+  } else if (group.hasBrowserOnly) {
+    badgeHtml = `<span class="site-group__badge site-group__badge--browser" title="${t('reportsPage.badges.browserOnlyTooltip', 'Stored locally in this browser only')}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+      ${t('reportsPage.badges.recent', 'Recent')}
+    </span>`;
+  }
+
+  // Report rows
+  const reportsHtml = group.reports.map(report => {
+    const viewUrl = buildReportUrl(report);
+    const checkboxId = `compare-${report.reportId}`;
+    const isChecked = selectedForCompare.has(report.reportId) ? 'checked' : '';
+
+    return `
+      <div class="report-row">
+        <div class="report-row__checkbox">
+          <input type="checkbox" class="compare-checkbox" id="${checkboxId}" data-report-id="${report.reportId}" ${isChecked} onclick="handleCompareCheckbox('${report.reportId}', this.checked)">
+        </div>
+        <span class="report-row__type">${escapeHtml(getReportTypeLabel(report.analyzerType))}</span>
+        <span class="report-row__time">${formatDateTime(report.purchasedAtDate)}</span>
+        <a href="${viewUrl}" class="report-row__action">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          ${t('reportsPage.buttons.view', 'View')}
+        </a>
+      </div>
+    `;
+  }).join('');
+
+  div.innerHTML = `
+    <div class="site-group__header" role="button" tabindex="0" aria-expanded="false" aria-controls="site-group-content-${index}">
+      <div class="site-group__checkbox">
+        <input type="checkbox" class="compare-checkbox" data-site="${group.site}" onclick="event.stopPropagation()">
+      </div>
+      <div class="site-group__favicon">
+        <img src="${faviconUrl}" alt="" onerror="this.style.display='none';this.nextElementSibling.style.display='block';">
+        <svg class="site-group__favicon-placeholder" style="display:none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+        </svg>
+      </div>
+      <div class="site-group__info">
+        <h3 class="site-group__name">${escapeHtml(group.site)}</h3>
+        <div class="site-group__meta">
+          <span class="site-group__last-scan">${t('reportsPage.labels.last', 'Last:')} ${formatRelativeTime(group.latestReport.purchasedAtDate)}</span>
+          <span class="site-group__count">${group.reports.length} ${group.reports.length !== 1 ? t('reportsPage.labels.reports', 'reports') : t('reportsPage.labels.report', 'report')}</span>
+        </div>
+      </div>
+      ${badgeHtml}
+      <div class="site-group__actions">
+        <a href="${latestViewUrl}" class="site-group__btn site-group__btn--view" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          ${t('reportsPage.buttons.viewLatest', 'View Latest')}
+        </a>
+        <a href="${rerunUrl}" class="site-group__btn site-group__btn--secondary" onclick="event.stopPropagation()">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 11-9-9c2.52 0 4.93 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+          ${t('reportsPage.buttons.runAgain', 'Run Again')}
+        </a>
+      </div>
+      <button class="site-group__expand" aria-label="Expand">
+        <span class="expand-chevron">&#9660;</span>
+      </button>
+    </div>
+    <div class="site-group__content" id="site-group-content-${index}">
+      ${reportsHtml}
+    </div>
+  `;
+
+  // Expand/collapse
+  const header = div.querySelector('.site-group__header');
+  header.addEventListener('click', (e) => {
+    if (e.target.closest('a, button:not(.site-group__expand), input')) return;
+
+    const isExpanded = div.hasAttribute('open');
+    if (isExpanded) {
+      div.removeAttribute('open');
+      header.setAttribute('aria-expanded', 'false');
+    } else {
+      div.setAttribute('open', '');
+      header.setAttribute('aria-expanded', 'true');
+    }
+  });
+
+  header.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      header.click();
+    }
+  });
+
+  return div;
+}
+
+// ============================================
+// URL BUILDERS
+// ============================================
+
+function buildReportUrl(report) {
+  const basePage = ANALYZER_PAGES[report.analyzerType] || '/dashboard.html';
+  const params = new URLSearchParams();
+  params.set('report_id', report.reportId);
+  if (report.siteUrl) params.set('url', report.siteUrl);
+  return `${basePage}?${params.toString()}`;
+}
+
+function buildRerunUrl(report) {
+  const basePage = ANALYZER_PAGES[report.analyzerType] || '/dashboard.html';
+  const params = new URLSearchParams();
+  if (report.siteUrl) params.set('url', report.siteUrl);
+  params.set('auto_scan', 'true');
+
+  // Pass mode parameter for performance-hub based reports
+  const modeMap = {
+    'speed-ux-cwv': 'cwv',
+    'speed-ux-full': 'full',
+    'speed-ux-quick': 'quick',
+    'cwv': 'cwv',
+    'core-web-vitals': 'cwv',
+    'performance': 'quick',
+    'lighthouse': 'full'
+  };
+  const mode = modeMap[report.analyzerType];
+  if (mode) {
+    params.set('mode', mode);
+  }
+
+  return `${basePage}?${params.toString()}`;
+}
+
+// ============================================
+// HELPERS
+// ============================================
+
+function normalizeDomain(url) {
+  if (!url) return 'Unknown';
+  try {
+    return url.replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/$/, '').toLowerCase();
+  } catch {
+    return url;
+  }
+}
+
+function getReportTypeLabel(type) {
+  const typeInfo = REPORT_TYPE_MAP[type];
+  if (!typeInfo) return type || t('reportsPage.reportTypes.report', 'Report');
+
+  // Try to get translated label
+  const translationKey = `reportsPage.reportTypes.${typeInfo.category}`;
+  return t(translationKey, typeInfo.label);
+}
+
+function getReportTypeCategory(type) {
+  return REPORT_TYPE_MAP[type]?.category || type || 'other';
+}
+
+function formatRelativeTime(date) {
+  if (!date) return 'N/A';
+  const now = new Date();
+  const diff = now - date;
+  const minutes = Math.floor(diff / 60000);
+  const hours = Math.floor(diff / 3600000);
+  const days = Math.floor(diff / 86400000);
+
+  if (minutes < 1) return t('reportsPage.time.justNow', 'Just now');
+  if (minutes < 60) return t('reportsPage.time.minutesAgo', '{n}m ago').replace('{n}', minutes);
+  if (hours < 24) return t('reportsPage.time.hoursAgo', '{n}h ago').replace('{n}', hours);
+  if (days < 7) return t('reportsPage.time.daysAgo', '{n}d ago').replace('{n}', days);
+
+  // Use user's locale for older dates
+  const locale = window.i18n?.currentLanguage || 'en';
+  return date.toLocaleDateString(locale, { month: 'short', day: 'numeric' });
+}
+
+function formatDateTime(date) {
+  if (!date) return 'N/A';
+  // Use centralized i18n formatting if available
+  if (window.i18n?.formatDateTime) {
+    return window.i18n.formatDateTime(date, {
+      month: 'short',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: '2-digit'
+    });
+  }
+  // Fallback with locale detection
+  const locale = window.i18n?.currentLanguage || navigator.language || 'en-US';
+  return date.toLocaleString(locale, {
+    month: 'short',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+    hour12: locale.startsWith('en')
+  });
+}
+
+function escapeHtml(str) {
+  if (!str) return '';
+  const div = document.createElement('div');
+  div.textContent = str;
+  return div.innerHTML;
+}
+
+// ============================================
+// ACTIONS
+// ============================================
+
+async function handleRefresh() {
+  const btn = document.getElementById('refreshBtn');
+  if (!btn) return;
+
+  btn.classList.add('syncing');
+  btn.disabled = true;
+
+  try {
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    if (!token) {
+      showError('Please log in to refresh');
+      return;
+    }
+
+    const syncResponse = await fetch('/api/billing/sync-purchases', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    const syncResult = await syncResponse.json();
+
+    if (syncResult.synced > 0) {
+      showSuccess(`Synced ${syncResult.synced} new purchase(s)`);
+    }
+
+    await loadBillingStatus();
+    applyFilters();
+
+  } catch (e) {
+    console.error('Refresh error:', e);
+    showError('Failed to refresh: ' + e.message);
+  } finally {
+    btn.classList.remove('syncing');
+    btn.disabled = false;
+  }
+}
+
 function handleUpgradeClick(e) {
   e.preventDefault();
   if (window.PricingModal && typeof window.PricingModal.open === 'function') {
@@ -405,18 +1295,15 @@ function handleUpgradeClick(e) {
   }
 }
 
-/**
- * Manage subscription button
- */
-document.getElementById('manageSubBtn').addEventListener('click', async () => {
+async function handleManageBilling() {
   const btn = document.getElementById('manageSubBtn');
-  const btnText = document.getElementById('manageSubBtnText');
+  if (!btn) return;
+
+  btn.disabled = true;
+  const originalText = btn.textContent;
+  btn.textContent = 'Loading...';
 
   try {
-    btn.disabled = true;
-    btnText.innerHTML = '<span class="loading-spinner"></span> Loading...';
-
-    // Try new billing portal endpoint first (check both token keys)
     const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
     if (token) {
       const response = await fetch('/api/billing/portal', {
@@ -432,425 +1319,149 @@ document.getElementById('manageSubBtn').addEventListener('click', async () => {
       }
     }
 
-    // Fall back to legacy
     await proManager.openCustomerPortal();
-
   } catch (error) {
     showError(error.message || 'Failed to open billing portal');
     btn.disabled = false;
-    btnText.textContent = 'Manage Billing';
+    btn.textContent = originalText;
   }
-});
+}
 
-/**
- * Change Password button - show/hide form
- */
-document.getElementById('changePasswordBtn').addEventListener('click', () => {
-  const card = document.getElementById('changePasswordCard');
-  card.classList.toggle('hidden');
-
-  // Scroll to form if showing
-  if (!card.classList.contains('hidden')) {
-    card.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-});
-
-/**
- * Cancel password change
- */
-document.getElementById('cancelPasswordBtn').addEventListener('click', () => {
-  document.getElementById('changePasswordCard').classList.add('hidden');
-  document.getElementById('changePasswordForm').reset();
-});
-
-/**
- * Change Password form submission
- */
-document.getElementById('changePasswordForm').addEventListener('submit', async (e) => {
-  e.preventDefault();
-
-  const currentPassword = document.getElementById('currentPassword').value;
-  const newPassword = document.getElementById('newPassword').value;
-  const confirmPassword = document.getElementById('confirmPassword').value;
-
-  // Validate passwords match
-  if (newPassword !== confirmPassword) {
-    showError('New passwords do not match');
-    return;
-  }
-
-  // Validate new password strength
-  if (newPassword.length < 8) {
-    showError('Password must be at least 8 characters');
-    return;
-  }
-  if (!/[A-Z]/.test(newPassword)) {
-    showError('Password must contain an uppercase letter');
-    return;
-  }
-  if (!/[a-z]/.test(newPassword)) {
-    showError('Password must contain a lowercase letter');
-    return;
-  }
-  if (!/[0-9]/.test(newPassword)) {
-    showError('Password must contain a number');
-    return;
-  }
-
-  try {
-    const response = await fetch('/api/auth/change-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        ...proManager.getAuthHeaders()
-      },
-      body: JSON.stringify({
-        currentPassword,
-        newPassword
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Failed to change password');
-    }
-
-    showSuccess('Password changed successfully!');
-    document.getElementById('changePasswordCard').classList.add('hidden');
-    document.getElementById('changePasswordForm').reset();
-
-  } catch (error) {
-    showError(error.message || 'Failed to change password');
-  }
-});
-
-/**
- * Logout button
- */
-document.getElementById('logoutBtn').addEventListener('click', async () => {
+async function handleLogout() {
   const btn = document.getElementById('logoutBtn');
+  if (!btn) return;
+
+  btn.disabled = true;
+  btn.textContent = 'Logging out...';
 
   try {
-    btn.disabled = true;
-    btn.textContent = 'Logging out...';
-
     await proManager.logout();
-
   } catch (error) {
     showError('Logout failed. Please try again.');
     btn.disabled = false;
     btn.textContent = 'Logout';
   }
-});
+}
 
+// ============================================
+// PASSWORD MODAL
+// ============================================
 
-/**
- * Truncate URL for display
- */
-function truncateUrl(url) {
-  if (!url) return 'Unknown';
-  // Remove protocol
-  let display = url.replace(/^https?:\/\//, '');
-  // Remove trailing slash
-  display = display.replace(/\/$/, '');
-  // Truncate if too long
-  if (display.length > 30) {
-    display = display.substring(0, 27) + '...';
+function initPasswordModal() {
+  const modal = document.getElementById('passwordModal');
+  const openBtn = document.getElementById('changePasswordBtn');
+  const closeBtn = document.getElementById('passwordModalClose');
+  const cancelBtn = document.getElementById('passwordModalCancel');
+  const form = document.getElementById('changePasswordForm');
+
+  if (!modal || !openBtn) return;
+
+  function openModal() {
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('currentPassword')?.focus();
   }
-  return display;
-}
 
-/**
- * Format report type for display
- */
-function formatReportType(type) {
-  const types = {
-    'full': 'Full Scan',
-    'seo': 'SEO',
-    'seo-analyzer': 'SEO',
-    'accessibility': 'Accessibility',
-    'accessibility-analyzer': 'Accessibility',
-    'performance': 'Performance',
-    'performance-hub': 'Performance',
-    'speed-ux-pro': 'Speed & UX',
-    'speed-ux-quick': 'Speed & UX - Quick',
-    'speed-ux-cwv': 'Speed & UX - CWV',
-    'speed-ux-full': 'Speed & UX - Lighthouse',
-    'security': 'Security',
-    'security-analyzer': 'Security',
-    'tag-intelligence': 'Tag Intelligence',
-    'cwv': 'Core Web Vitals',
-    'core-web-vitals': 'Core Web Vitals',
-    'fonts': 'Fonts',
-    'enhanced-fonts': 'Fonts & Typography',
-    'brand': 'Brand',
-    'brand-consistency': 'Brand & Design',
-    'cro': 'CRO',
-    'cro-analyzer': 'CRO',
-    'mobile': 'Mobile',
-    'mobile-analyzer': 'Mobile',
-    'ip-reputation': 'IP Reputation',
-    'ip-reputation-analyzer': 'IP Reputation',
-    'gdpr': 'Privacy Compliance',
-    'gdpr-compliance': 'Privacy Compliance',
-    'hosting': 'Hosting',
-    'hosting-analyzer': 'Hosting',
-    'competitive': 'Competitive Analysis',
-    'competitive-analysis': 'Competitive Analysis',
-    'local-seo': 'Local SEO',
-    'broken-links': 'Broken Links',
-    'site-crawler': 'Site Crawler'
-  };
-  return types[type] || type || 'Full Scan';
-}
-
-/**
- * Format date for display in user's local timezone
- */
-function formatDate(dateStr) {
-  if (!dateStr) return 'N/A';
-  try {
-    const date = new Date(dateStr);
-    if (isNaN(date.getTime())) return 'N/A';
-
-    // Format in user's local timezone with timezone abbreviation
-    return date.toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true,
-      timeZoneName: 'short'
-    });
-  } catch {
-    return 'N/A';
+  function closeModal() {
+    modal.classList.remove('active');
+    document.body.style.overflow = '';
+    form?.reset();
   }
-}
 
+  openBtn.addEventListener('click', openModal);
+  closeBtn?.addEventListener('click', closeModal);
+  cancelBtn?.addEventListener('click', closeModal);
 
-/**
- * Escape HTML to prevent XSS
- */
-function escapeHtml(str) {
-  if (!str) return '';
-  const div = document.createElement('div');
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-// Pagination state for purchased reports
-let purchasedReportsPage = 1;
-const REPORTS_PER_PAGE = 20;
-
-/**
- * Display purchased reports section with pagination
- */
-function displayPurchasedReports(page = 1) {
-  // Validate page number
-  page = Math.max(1, parseInt(page) || 1);
-  purchasedReportsPage = page;
-
-  const card = document.getElementById('purchasedReportsCard');
-  const tbody = document.getElementById('purchasedReportsTbody');
-  const tableEl = document.getElementById('purchasedReportsTable');
-  const loadingEl = document.getElementById('purchasedReportsLoading');
-  const emptyEl = document.getElementById('purchasedReportsEmpty');
-  const descEl = document.getElementById('purchasedReportsDesc');
-
-  console.log('[Account] displayPurchasedReports called', {
-    hasCard: !!card,
-    hasTbody: !!tbody,
-    billingStatus,
-    purchasedReportDetails: billingStatus?.purchasedReportDetails
+  modal.addEventListener('click', (e) => {
+    if (e.target === modal) closeModal();
   });
 
-  if (!card || !tbody) return;
-
-  // Hide loading
-  if (loadingEl) loadingEl.classList.add('hidden');
-
-  // Get purchased report details from billing status
-  const purchases = billingStatus?.purchasedReportDetails || [];
-
-  console.log('[Account] Purchased reports to display:', purchases);
-
-  if (purchases.length === 0) {
-    // No purchased reports - show empty state
-    if (tableEl) tableEl.classList.add('hidden');
-    if (emptyEl) emptyEl.classList.remove('hidden');
-    if (descEl) descEl.classList.add('hidden');
-    removePaginationControls();
-    return;
-  }
-
-  // Show the table
-  if (tableEl) tableEl.classList.remove('hidden');
-  if (emptyEl) emptyEl.classList.add('hidden');
-  if (descEl) descEl.classList.remove('hidden');
-
-  // Calculate pagination
-  const totalPages = Math.ceil(purchases.length / REPORTS_PER_PAGE);
-  const startIndex = (page - 1) * REPORTS_PER_PAGE;
-  const endIndex = startIndex + REPORTS_PER_PAGE;
-  const paginatedPurchases = purchases.slice(startIndex, endIndex);
-
-  // Render purchased reports for current page
-  tbody.innerHTML = paginatedPurchases.map(purchase => renderPurchasedReportRow(purchase)).join('');
-
-  // Render pagination controls if needed
-  if (purchases.length > REPORTS_PER_PAGE) {
-    renderPaginationControls(page, totalPages, purchases.length);
-  } else {
-    removePaginationControls();
-  }
-}
-
-/**
- * Render pagination controls
- */
-function renderPaginationControls(currentPage, totalPages, totalItems) {
-  let paginationEl = document.getElementById('purchasedReportsPagination');
-
-  if (!paginationEl) {
-    paginationEl = document.createElement('div');
-    paginationEl.id = 'purchasedReportsPagination';
-    paginationEl.style.cssText = 'display: flex; justify-content: space-between; align-items: center; padding: 1rem 0; border-top: 1px solid var(--border-primary, #e5e7eb); margin-top: 1rem;';
-
-    const tableEl = document.getElementById('purchasedReportsTable');
-    if (tableEl && tableEl.parentNode) {
-      tableEl.parentNode.insertBefore(paginationEl, tableEl.nextSibling);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) {
+      closeModal();
     }
-  }
+  });
 
-  const startItem = (currentPage - 1) * REPORTS_PER_PAGE + 1;
-  const endItem = Math.min(currentPage * REPORTS_PER_PAGE, totalItems);
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
 
-  paginationEl.innerHTML = `
-    <span style="color: var(--text-secondary, #6b7280); font-size: 0.875rem;">
-      Showing ${startItem}-${endItem} of ${totalItems} reports
-    </span>
-    <div style="display: flex; gap: 0.5rem;">
-      <button
-        id="paginationPrevBtn"
-        ${currentPage === 1 ? 'disabled' : ''}
-        style="padding: 0.5rem 1rem; border: 1px solid var(--border-primary, #e5e7eb); border-radius: 6px; background: ${currentPage === 1 ? 'var(--bg-secondary, #f3f4f6)' : 'var(--bg-primary, #fff)'}; color: ${currentPage === 1 ? 'var(--text-muted, #9ca3af)' : 'var(--text-primary, #111827)'}; cursor: ${currentPage === 1 ? 'not-allowed' : 'pointer'}; font-size: 0.875rem;"
-      >
-        ← Previous
-      </button>
-      <span style="padding: 0.5rem 1rem; color: var(--text-secondary, #6b7280); font-size: 0.875rem;">
-        Page ${currentPage} of ${totalPages}
-      </span>
-      <button
-        id="paginationNextBtn"
-        ${currentPage === totalPages ? 'disabled' : ''}
-        style="padding: 0.5rem 1rem; border: 1px solid var(--border-primary, #e5e7eb); border-radius: 6px; background: ${currentPage === totalPages ? 'var(--bg-secondary, #f3f4f6)' : 'var(--bg-primary, #fff)'}; color: ${currentPage === totalPages ? 'var(--text-muted, #9ca3af)' : 'var(--text-primary, #111827)'}; cursor: ${currentPage === totalPages ? 'not-allowed' : 'pointer'}; font-size: 0.875rem;"
-      >
-        Next →
-      </button>
-    </div>
-  `;
+    const currentPassword = document.getElementById('currentPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+    const confirmPassword = document.getElementById('confirmPassword').value;
 
-  // Add event listeners (more reliable than inline onclick)
-  const prevBtn = document.getElementById('paginationPrevBtn');
-  const nextBtn = document.getElementById('paginationNextBtn');
+    if (newPassword !== confirmPassword) {
+      showError('New passwords do not match');
+      return;
+    }
 
-  if (prevBtn && currentPage > 1) {
-    prevBtn.addEventListener('click', function() {
-      console.log('[Account] Previous button clicked, going to page', currentPage - 1);
-      displayPurchasedReports(currentPage - 1);
-    });
-  }
+    if (newPassword.length < 8) {
+      showError('Password must be at least 8 characters');
+      return;
+    }
+    if (!/[A-Z]/.test(newPassword)) {
+      showError('Password must contain an uppercase letter');
+      return;
+    }
+    if (!/[a-z]/.test(newPassword)) {
+      showError('Password must contain a lowercase letter');
+      return;
+    }
+    if (!/[0-9]/.test(newPassword)) {
+      showError('Password must contain a number');
+      return;
+    }
 
-  if (nextBtn && currentPage < totalPages) {
-    nextBtn.addEventListener('click', function() {
-      console.log('[Account] Next button clicked, going to page', currentPage + 1);
-      displayPurchasedReports(currentPage + 1);
-    });
-  }
+    try {
+      const response = await fetch('/api/auth/change-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...proManager.getAuthHeaders()
+        },
+        body: JSON.stringify({ currentPassword, newPassword })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to change password');
+      }
+
+      showSuccess('Password changed successfully!');
+      closeModal();
+    } catch (error) {
+      showError(error.message || 'Failed to change password');
+    }
+  });
 }
 
-/**
- * Remove pagination controls
- */
-function removePaginationControls() {
-  const paginationEl = document.getElementById('purchasedReportsPagination');
-  if (paginationEl) {
-    paginationEl.remove();
-  }
+// ============================================
+// MESSAGES
+// ============================================
+
+function showError(message) {
+  const el = document.getElementById('error-message');
+  if (!el) return;
+
+  el.textContent = message;
+  el.classList.remove('hidden');
+  document.getElementById('success-message')?.classList.add('hidden');
+
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  setTimeout(() => el.classList.add('hidden'), 5000);
 }
 
-/**
- * Render a single purchased report row
- */
-function renderPurchasedReportRow(purchase) {
-  const siteUrl = truncateUrl(purchase.siteUrl || 'Unknown');
-  const fullSiteUrl = purchase.siteUrl || '';
-  const reportType = formatReportType(purchase.analyzerType);
-  const purchaseDate = formatDate(purchase.purchasedAt);
-  const reportId = purchase.reportId || '';
+function showSuccess(message) {
+  const el = document.getElementById('success-message');
+  if (!el) return;
 
-  // Determine the link based on analyzer type
-  const analyzerPages = {
-    'seo': '/seo-analyzer.html',
-    'seo-analyzer': '/seo-analyzer.html',
-    'security': '/security-analyzer.html',
-    'security-analyzer': '/security-analyzer.html',
-    'accessibility': '/accessibility-analyzer.html',
-    'accessibility-analyzer': '/accessibility-analyzer.html',
-    'performance': '/performance-hub.html',
-    'performance-hub': '/performance-hub.html',
-    'speed-ux-pro': '/performance-hub.html',
-    'speed-ux-quick': '/performance-hub.html',
-    'speed-ux-cwv': '/performance-hub.html',
-    'speed-ux-full': '/performance-hub.html',
-    'tag-intelligence': '/tag-intelligence.html',
-    'cwv': '/core-web-vitals.html',
-    'core-web-vitals': '/core-web-vitals.html',
-    'ip-reputation': '/ip-reputation-analyzer.html',
-    'ip-reputation-analyzer': '/ip-reputation-analyzer.html',
-    'mobile': '/mobile-analyzer.html',
-    'mobile-analyzer': '/mobile-analyzer.html',
-    'cro': '/cro-analyzer.html',
-    'cro-analyzer': '/cro-analyzer.html',
-    'cro-analysis': '/cro-analyzer.html',
-    'gdpr': '/gdpr-compliance.html',
-    'gdpr-compliance': '/gdpr-compliance.html',
-    'fonts': '/enhanced-fonts.html',
-    'enhanced-fonts': '/enhanced-fonts.html',
-    'brand': '/brand-consistency.html',
-    'brand-consistency': '/brand-consistency.html',
-    'hosting': '/hosting-analyzer.html',
-    'hosting-analyzer': '/hosting-analyzer.html',
-    'competitive': '/competitive-analysis.html',
-    'competitive-analysis': '/competitive-analysis.html',
-    'local-seo': '/local-seo.html',
-    'broken-links': '/broken-links.html',
-    'site-crawler': '/site-crawler.html'
-  };
-  const basePage = analyzerPages[purchase.analyzerType] || '/dashboard.html';
+  el.textContent = message;
+  el.classList.remove('hidden');
+  document.getElementById('error-message')?.classList.add('hidden');
 
-  // Build URL with report_id and url (for auto-fill)
-  // Don't set auto_scan - we want to try loading from database first
-  // If report not in database, user can manually trigger scan
-  const params = new URLSearchParams();
-  params.set('report_id', reportId);
-  if (fullSiteUrl) {
-    params.set('url', fullSiteUrl);
-  }
-  const viewUrl = `${basePage}?${params.toString()}`;
-
-  return `
-    <tr>
-      <td class="site-url" title="${escapeHtml(fullSiteUrl)}">${escapeHtml(siteUrl)}</td>
-      <td>${escapeHtml(reportType)}</td>
-      <td>${escapeHtml(purchaseDate)}</td>
-      <td>
-        <a href="${viewUrl}" class="btn-link" style="padding: 0;">View Report</a>
-      </td>
-    </tr>
-  `;
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  setTimeout(() => el.classList.add('hidden'), 5000);
 }
 
-// Expose pagination function to window for onclick handlers
-window.displayPurchasedReports = displayPurchasedReports;
+// Expose to window for inline handlers
+window.handleCompareCheckbox = handleCompareCheckbox;
