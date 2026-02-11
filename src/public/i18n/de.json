@@ -4176,6 +4176,42 @@
         "a7Xss": "A7:2017 - Cross-Site Scripting (XSS)",
         "a9KnownVulns": "A9:2017 - Nutzung von Komponenten mit bekannten Schwachstellen"
       },
+      "recDescriptions": {
+        "noHttps": "Website verwendet keine HTTPS-Verschlüsselung",
+        "noCsp": "Kein CSP-Header gefunden - Website anfällig für XSS-Angriffe",
+        "noHsts": "HSTS-Header nicht vorhanden",
+        "noXFrameOptions": "X-Frame-Options-Header nicht gesetzt",
+        "noXContentType": "X-Content-Type-Options-Header fehlt",
+        "cookiesNotSecured": "Cookies sind nicht ordnungsgemäß mit HttpOnly-, Secure- und SameSite-Flags gesichert",
+        "mixedContentCount": "{{count}} Ressourcen über HTTP auf HTTPS-Seite geladen",
+        "inlineScriptsCount": "{{count}} Inline-Skripte gefunden - erhöht XSS-Risiko",
+        "insecureFormsCount": "{{count}} Formular(e) senden Daten über HTTP",
+        "passwordFieldsCount": "{{count}} Passwortfeld(er) ohne autocomplete-Attribut",
+        "unsandboxedIframesCount": "{{count}} Iframe(s) ohne sandbox-Attribut",
+        "sriMissingCount": "{{count}} Drittanbieter-Skripte ohne SRI"
+      },
+      "recImpacts": {
+        "plainText": "Alle Daten werden im Klartext übertragen - anfällig für Abfangen",
+        "certIssues": "Zertifikats- oder Protokollprobleme können die Sicherheit gefährden",
+        "xssRisk": "Angreifer können bösartige Skripte einschleusen",
+        "downgradeAttack": "Website anfällig für Protokoll-Downgrade-Angriffe",
+        "clickjacking": "Website kann in bösartige Iframes eingebettet werden",
+        "mimeSniffing": "Browser können Dateitypen falsch interpretieren",
+        "criticalVuln": "Kritische Sicherheitslücke",
+        "highVuln": "Sicherheitsproblem mit hohem Schweregrad",
+        "cookieVuln": "Cookies anfällig für XSS- und CSRF-Angriffe",
+        "sriRisk": "Drittanbieter-Skripte könnten kompromittiert werden"
+      },
+      "recSolutions": {
+        "installSsl": "SSL/TLS-Zertifikat von einer vertrauenswürdigen CA beziehen und installieren",
+        "upgradeTls": "Zertifikat aktualisieren oder TLS-Protokollversion upgraden",
+        "addCsp": "Content-Security-Policy-Header mit restriktiven Direktiven hinzufügen",
+        "addHsts": "Strict-Transport-Security: max-age=31536000; includeSubDomains hinzufügen",
+        "addXFrameOptions": "X-Frame-Options: DENY oder SAMEORIGIN hinzufügen",
+        "addNosniff": "X-Content-Type-Options: nosniff hinzufügen",
+        "secureCookies": "HttpOnly-, Secure- und SameSite=Strict-Flags für alle Cookies setzen",
+        "addSri": "Integrity- und crossorigin-Attribute zu externen Skripten hinzufügen"
+      },
       "securityFixes": {
         "title": "Sicherheitskorrekturen",
         "issuesFound": "{{count}} Probleme gefunden",
@@ -4359,7 +4395,32 @@
         "missingSameSite": "Fehlendes SameSite-Attribut",
         "sameSiteNoneSecure": "SameSite=None erfordert Secure",
         "sessionNoHttpOnly": "Session-Cookie ohne HttpOnly",
-        "insecureSameSite": "Unsicherer SameSite-Wert"
+        "insecureSameSite": "Unsicherer SameSite-Wert",
+        "weakSameSite": "Schwache SameSite-Richtlinie",
+        "noneSecured": "Keine Cookies sind ordnungsgemäß gesichert",
+        "vulnerableXss": "Einige Cookies sind anfällig für XSS (HttpOnly fehlt)",
+        "transmittedHttp": "Einige Cookies können über HTTP übertragen werden (Secure fehlt)"
+      },
+      "vulnTitles": {
+        "mixedContent": "Gemischte Inhalte erkannt",
+        "excessiveInlineScripts": "Übermäßige Inline-Skripte",
+        "insecureFormSubmission": "Unsichere Formularübermittlung",
+        "passwordFieldConfig": "Passwortfeld-Konfiguration",
+        "unsandboxedIframes": "Iframes ohne Sandbox"
+      },
+      "vulnSolutions": {
+        "updateHttps": "Aktualisieren Sie alle Ressourcen auf HTTPS-URLs",
+        "moveScripts": "Verschieben Sie Skripte in externe Dateien und verwenden Sie CSP",
+        "updateForms": "Aktualisieren Sie Formularaktionen auf HTTPS",
+        "addAutocomplete": "Fügen Sie autocomplete=\"current-password\" oder \"new-password\" hinzu",
+        "addSandbox": "Fügen Sie das sandbox-Attribut hinzu, um Iframe-Funktionen einzuschränken"
+      },
+      "sslIssues": {
+        "expiresInDays": "Zertifikat läuft in {{days}} Tagen ab",
+        "expiringCritical": "Zertifikat läuft sehr bald ab - KRITISCH",
+        "outdatedTls": "Veraltetes TLS-Protokoll wird verwendet",
+        "noHttps": "Kein HTTPS - Website ist nicht sicher",
+        "analysisFailed": "SSL-Zertifikatanalyse fehlgeschlagen"
       },
       "implemented": "Implementiert",
       "vulnerabilityStatus": "Schwachstellenstatus",

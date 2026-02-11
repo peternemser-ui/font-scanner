@@ -4240,6 +4240,42 @@
         "a7Xss": "A7:2017 - クロスサイトスクリプティング(XSS)",
         "a9KnownVulns": "A9:2017 - 既知の脆弱性を持つコンポーネントの使用"
       },
+      "recDescriptions": {
+        "noHttps": "ウェブサイトがHTTPS暗号化を使用していません",
+        "noCsp": "CSPヘッダーが見つかりません - XSS攻撃に脆弱です",
+        "noHsts": "HSTSヘッダーが存在しません",
+        "noXFrameOptions": "X-Frame-Optionsヘッダーが設定されていません",
+        "noXContentType": "X-Content-Type-Optionsヘッダーがありません",
+        "cookiesNotSecured": "Cookieが HttpOnly、Secure、SameSiteフラグで適切に保護されていません",
+        "mixedContentCount": "HTTPSページで{{count}}個のリソースがHTTP経由で読み込まれています",
+        "inlineScriptsCount": "{{count}}個のインラインスクリプトが見つかりました - XSSリスクが増加します",
+        "insecureFormsCount": "{{count}}個のフォームがHTTP経由でデータを送信しています",
+        "passwordFieldsCount": "{{count}}個のパスワードフィールドにautocomplete属性がありません",
+        "unsandboxedIframesCount": "{{count}}個のiframeにsandbox属性がありません",
+        "sriMissingCount": "{{count}}個のサードパーティスクリプトにSRIがありません"
+      },
+      "recImpacts": {
+        "plainText": "すべてのデータが平文で送信されます - 傍受に脆弱です",
+        "certIssues": "証明書またはプロトコルの問題がセキュリティを損なう可能性があります",
+        "xssRisk": "攻撃者が悪意のあるスクリプトを注入できます",
+        "downgradeAttack": "プロトコルダウングレード攻撃に脆弱です",
+        "clickjacking": "悪意のあるiframeにサイトが埋め込まれる可能性があります",
+        "mimeSniffing": "ブラウザがファイルタイプを誤って解釈する可能性があります",
+        "criticalVuln": "重大なセキュリティ脆弱性",
+        "highVuln": "高重大度のセキュリティ問題",
+        "cookieVuln": "CookieがXSSおよびCSRF攻撃に脆弱です",
+        "sriRisk": "サードパーティスクリプトが侵害される可能性があります"
+      },
+      "recSolutions": {
+        "installSsl": "信頼できるCAからSSL/TLS証明書を取得してインストールしてください",
+        "upgradeTls": "証明書を更新するか、TLSプロトコルバージョンをアップグレードしてください",
+        "addCsp": "制限的なディレクティブでContent-Security-Policyヘッダーを追加してください",
+        "addHsts": "Strict-Transport-Security: max-age=31536000; includeSubDomainsを追加してください",
+        "addXFrameOptions": "X-Frame-Options: DENYまたはSAMEORIGINを追加してください",
+        "addNosniff": "X-Content-Type-Options: nosniffを追加してください",
+        "secureCookies": "すべてのCookieにHttpOnly、Secure、SameSite=Strictフラグを設定してください",
+        "addSri": "外部スクリプトにintegrityおよびcrossorigin属性を追加してください"
+      },
       "desktopVsMobileAnalysis": "デスクトップ vs モバイルセキュリティ分析",
       "criticalIssues": "件の重大な問題",
       "grade": "グレード",
@@ -4268,7 +4304,11 @@
         "missingSameSite": "SameSite属性がありません",
         "sameSiteNoneSecure": "SameSite=NoneはSecureが必要です",
         "sessionNoHttpOnly": "セッションCookieにHttpOnlyがありません",
-        "insecureSameSite": "安全でないSameSite値"
+        "insecureSameSite": "安全でないSameSite値",
+        "weakSameSite": "弱いSameSiteポリシー",
+        "noneSecured": "適切に保護されているCookieがありません",
+        "vulnerableXss": "一部のCookieがXSSに対して脆弱です（HttpOnlyがありません）",
+        "transmittedHttp": "一部のCookieがHTTP経由で送信される可能性があります（Secureがありません）"
       },
       "headerDescriptions": {
         "csp": "ブラウザが読み込み可能なリソースを制御し、XSS攻撃を防止します。",
@@ -4289,6 +4329,27 @@
         "referrerPolicy": "機密情報がリファラーヘッダーで漏洩する可能性",
         "permissionsPolicy": "悪意のあるスクリプトがカメラやマイクなどの機能にアクセスする可能性",
         "featurePolicy": "機能アクセスの制御がない"
+      },
+      "vulnTitles": {
+        "mixedContent": "混合コンテンツを検出",
+        "excessiveInlineScripts": "過剰なインラインスクリプト",
+        "insecureFormSubmission": "安全でないフォーム送信",
+        "passwordFieldConfig": "パスワードフィールドの設定",
+        "unsandboxedIframes": "サンドボックスなしのIframe"
+      },
+      "vulnSolutions": {
+        "updateHttps": "すべてのリソースをHTTPS URLに更新してください",
+        "moveScripts": "スクリプトを外部ファイルに移動し、CSPを使用してください",
+        "updateForms": "フォームのアクションをHTTPSに更新してください",
+        "addAutocomplete": "autocomplete=\"current-password\"または\"new-password\"を追加してください",
+        "addSandbox": "sandbox属性を追加してiframeの機能を制限してください"
+      },
+      "sslIssues": {
+        "expiresInDays": "証明書の有効期限まで{{days}}日",
+        "expiringCritical": "証明書の有効期限が間もなく切れます - 重大",
+        "outdatedTls": "古いTLSプロトコルを使用しています",
+        "noHttps": "HTTPSなし - ウェブサイトは安全ではありません",
+        "analysisFailed": "SSL証明書の分析に失敗しました"
       },
       "platformSecurityGap": "プラットフォームセキュリティギャップ",
       "pointsDifferenceDetected": "{{count}}ポイントの差が検出されました。プラットフォーム固有の問題を調査してください。",

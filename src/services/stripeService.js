@@ -825,8 +825,8 @@ class StripeService {
 
       // Handle Day Pass one-time purchase
       if (purchaseType === 'day_pass') {
-        // Calculate expiration (8 hours from now)
-        const dayPassExpiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
+        // Calculate expiration (24 hours from now - matches Stripe's interval='day')
+        const dayPassExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
         // Update user with day pass access
         await db.run(
@@ -1023,8 +1023,8 @@ class StripeService {
             // Handle Day Pass one-time purchase
             if (purchaseType === 'day_pass' && userId) {
               try {
-                // Calculate expiration (8 hours from now)
-                const dayPassExpiresAt = new Date(Date.now() + 8 * 60 * 60 * 1000).toISOString();
+                // Calculate expiration (24 hours from now - matches Stripe's interval='day')
+                const dayPassExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
 
                 // Update user with day pass access
                 await db.run(

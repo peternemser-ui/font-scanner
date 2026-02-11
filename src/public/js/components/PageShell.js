@@ -476,16 +476,14 @@
       isScanning = true;
       window.SM_IS_SCANNING = true;
 
-      // CRITICAL: Mark this as a FRESH SCAN that requires payment
-      // VERSION: 20260201h - This flag ensures new scans are LOCKED until paid
-      console.log('[PageShell] NEW SCAN v20260201h: Marking as fresh unpaid scan');
-      window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = true;
+      // Track current scan URL for context
       window.__SM_CURRENT_SCAN_URL__ = normalizedUrl;
 
-      // Clear any stale billing cache and session markers from previous scans
-      if (window.ProReportBlock?.clearBillingCache) {
-        window.ProReportBlock.clearBillingCache();
-      }
+      // Clear stale session purchase markers from previous scans
+      // NOTE: Do NOT clear billing cache here — the user's Pro/Day Pass status
+      // doesn't change between scans, and nuking the cache causes race conditions
+      // where Day Pass users see locked sections if the re-fetch hasn't completed.
+      // fetchBillingStatus(true) after scan completion will refresh the data.
       sessionStorage.removeItem('sm_payment_completed_session');
       sessionStorage.removeItem('sm_purchased_report_id');
 

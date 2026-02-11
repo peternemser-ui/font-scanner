@@ -131,9 +131,9 @@
             <!-- Day Pass Option -->
             <button class="upgrade-gate__option upgrade-gate__option--daypass" data-action="daypass">
               <span class="upgrade-gate__option-badge">${t('pricing.oneTime', 'One-time')}</span>
-              <span class="upgrade-gate__option-name">${t('pricing.dayPass', '8 Hour Day Pass')}</span>
+              <span class="upgrade-gate__option-name">${t('pricing.dayPass', 'Day Pass')}</span>
               <span class="upgrade-gate__option-price">$20</span>
-              <span class="upgrade-gate__option-desc">${t('pricing.dayPassDesc', 'Unlimited scans for 8 hours')}</span>
+              <span class="upgrade-gate__option-desc">${t('pricing.dayPassDesc', 'Unlimited scans for 24 hours')}</span>
             </button>
 
             <!-- Pro Monthly Option -->

@@ -1628,7 +1628,7 @@ async function initializeAuthLinks() {
         planDetailHtml = `<span class="plan-detail plan-detail--expires">${navT('userMenu.expires', 'expires')} ${formatRenewalDate(expiresAt)}</span>`;
       }
     } else if (planCode === 'day_pass') {
-      planBadgeHtml = `<span class="plan-badge plan-badge--daypass">${navT('userMenu.plans.dayPass', '8 Hour Day Pass')}</span>`;
+      planBadgeHtml = `<span class="plan-badge plan-badge--daypass">${navT('userMenu.plans.dayPass', 'Day Pass')}</span>`;
       if (expiresAt) {
         planDetailHtml = `<span class="plan-detail plan-detail--expires">${formatTimeRemaining(expiresAt)}</span>`;
       }
@@ -1654,7 +1654,7 @@ async function initializeAuthLinks() {
     } else if (planCode === 'pro_monthly') {
       planSummaryText = navT('userMenu.planSummary.proMonthly', 'Plan: Pro Monthly ({{remaining}}/{{limit}} reports left)').replace('{{remaining}}', usageData.reports_remaining).replace('{{limit}}', usageData.report_limit);
     } else if (planCode === 'day_pass') {
-      planSummaryText = navT('userMenu.planSummary.dayPass', 'Plan: 8 Hour Day Pass ({{remaining}}/{{limit}} reports left)').replace('{{remaining}}', usageData.reports_remaining).replace('{{limit}}', usageData.report_limit);
+      planSummaryText = navT('userMenu.planSummary.dayPass', 'Plan: Day Pass ({{remaining}}/{{limit}} reports left)').replace('{{remaining}}', usageData.reports_remaining).replace('{{limit}}', usageData.report_limit);
     } else if (planCode === 'single_report') {
       planSummaryText = navT('userMenu.planSummary.singleReport', 'Plan: Single Report ({{count}} unlocked)').replace('{{count}}', usageData.reports_remaining);
     } else {

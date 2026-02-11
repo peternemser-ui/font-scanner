@@ -186,7 +186,7 @@ async function checkReportCredit(req, res, next) {
     const planCode = resolveEffectivePlan(req.user);
     const subscriptionEnd = req.user.stripe_current_period_end;
 
-    // Calculate day pass expiry (8 hours from subscription start)
+    // Calculate day pass expiry (24 hours from subscription start)
     let dayPassExpiry = null;
     if (planCode === 'day_pass' && subscriptionEnd) {
       dayPassExpiry = subscriptionEnd;

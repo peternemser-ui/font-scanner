@@ -731,6 +731,7 @@ function displayResults(data) {
     // Check if already unlocked and reveal Pro content
     const isUnlocked = !!(
       (data && (data.unlocked === true || data.purchased === true)) ||
+      (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
       (reportId && window.ProReportBlock?.hasAccess?.(reportId))
     );
 
@@ -841,7 +842,7 @@ function buildCompetitiveSections(data, reportId) {
   // Default to LOCKED (false) - user must prove they have access
   let isUnlocked = false;
 
-  if (reportId && window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+  if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
     isUnlocked = window.ProReportBlock.hasAccess(reportId);
   }
 
@@ -906,7 +907,7 @@ function buildCompetitiveSections(data, reportId) {
     locked: !isUnlocked,
     context: 'competitive-analysis',
     reportId,
-    contentHTML: isUnlocked ? renderHeadToHeadContent(data) : renderCompetitiveProPreview()
+    contentHTML: renderHeadToHeadContent(data)
   });
 
   // Strengths & Weaknesses (Pro)
@@ -918,7 +919,7 @@ function buildCompetitiveSections(data, reportId) {
     locked: !isUnlocked,
     context: 'competitive-analysis',
     reportId,
-    contentHTML: isUnlocked ? renderStrengthsWeaknessesContent(data) : renderCompetitiveProPreview()
+    contentHTML: renderStrengthsWeaknessesContent(data)
   });
 
   // Report and Recommendations (Pro)
@@ -931,7 +932,7 @@ function buildCompetitiveSections(data, reportId) {
       locked: !isUnlocked,
       context: 'competitive-analysis',
       reportId,
-      contentHTML: isUnlocked ? renderRecommendationsContent(data.recommendations) : renderCompetitiveProPreview()
+      contentHTML: renderRecommendationsContent(data.recommendations)
     });
   }
   

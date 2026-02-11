@@ -22,11 +22,11 @@
       },
       day_pass: {
         price: 20,
-        display: '$20 / 8 hours',
+        display: '$20 / day',
         interval: 'day',
         limits: {
           scansPerDay: -1, // unlimited
-          paidReportsPerWindow: 30,  // 30 reports in 8-hour window
+          paidReportsPerWindow: 30,  // 30 reports in day pass window
           pagesPerCrawl: 250,
           pdfExport: true
         }

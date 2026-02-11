@@ -423,7 +423,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Default to LOCKED (false) - user must prove they have access
     let isUnlocked = false;
 
-    if (reportId && window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
       isUnlocked = window.ProReportBlock.hasAccess(reportId);
     }
 
@@ -542,7 +542,7 @@ document.addEventListener('DOMContentLoaded', () => {
         locked: !isUnlocked,
         context: 'font-analysis',
         reportId,
-        contentHTML: isUnlocked ? renderFontsProFixes(data, bestPractices) : proFixesPreview
+        contentHTML: renderFontsProFixes(data, bestPractices)
       }
     ];
 

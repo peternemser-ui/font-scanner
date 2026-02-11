@@ -472,7 +472,7 @@ function displayResults(data) {
       locked: !isUnlocked,
       context: 'cro',
       reportId,
-      contentHTML: isUnlocked ? renderCROFixes(data) : croFixesPreview
+      contentHTML: renderCROFixes(data)
     }
   ];
 

@@ -720,6 +720,15 @@ analyzeButton.addEventListener('click', async () => {
     // Complete the loader
     loader.complete();
 
+    // Fetch billing status before displaying results so Pro/DayPass users see unlocked sections
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      await window.ProReportBlock.fetchBillingStatus(true);
+      if (window.ProReportBlock?.isProSubscriber?.()) {
+        console.log('[CWV] Pro/Day Pass user - clearing fresh scan payment flag');
+        window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+      }
+    }
+
     // Show results after animation completes
     setTimeout(() => {
       // Show redirect notice if the page redirected

@@ -126,10 +126,27 @@
           data-accordion-body="${safeId}"
           hidden
         >
-          ${locked ? `<div class="report-shell__lock-overlay"><div class="report-shell__lock-paywall" data-paid-unlock-card>${cardHTML}</div></div>` : contentHTML}
+          <div class="report-accordion__content-actual" ${locked ? 'hidden' : ''}>${contentHTML}</div>
+          ${locked ? `<div class="report-shell__lock-overlay" data-locked-overlay data-section-id="${safeId}"><div class="report-shell__lock-paywall" data-paid-unlock-card>${cardHTML}</div></div>` : ''}
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Dynamically unlock a section by removing the lock overlay and showing content
+   */
+  function unlockSection(sectionId) {
+    const safeId = safeDomId(sectionId);
+    const overlay = document.querySelector(`[data-locked-overlay][data-section-id="${safeId}"]`);
+    if (!overlay) return false;
+    const body = overlay.closest('.report-accordion__body');
+    const content = body?.querySelector('.report-accordion__content-actual');
+    if (content) {
+      content.hidden = false;
+    }
+    overlay.remove();
+    return true;
   }
 
   function initInteractions() {
@@ -167,6 +184,7 @@
 
   window.ReportAccordion = {
     createSection,
+    unlockSection,
     initInteractions
   };
 })(window);

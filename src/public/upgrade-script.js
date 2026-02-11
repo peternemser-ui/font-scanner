@@ -89,7 +89,7 @@ async function handleUpgrade(billingPeriod) {
   const labelMap = {
     'monthly': 'Upgrade to Pro',
     'annual': 'Upgrade to Pro Annual',
-    'day': 'Get 8 Hour Day Pass'
+    'day': 'Get Day Pass'
   };
 
   const btn = btnMap[billingPeriod];
@@ -184,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     monthlyBtn.textContent = 'Login to Upgrade';
     annualBtn.textContent = 'Login to Upgrade';
-    daypassBtn.textContent = 'Login to Get 8 Hour Day Pass';
+    daypassBtn.textContent = 'Login to Get Day Pass';
 
     monthlyBtn.onclick = () => {
       window.location.href = '/auth.html';

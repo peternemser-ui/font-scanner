@@ -40,7 +40,7 @@ const {
 } = require('./utils/reportCleanup');
 const { optionalAuth, requireAuth } = require('./middleware/requireAuth');
 const stripeService = require('./services/stripeService');
-const { checkScanQuota } = require('./middleware/scanQuota');
+const { checkScanQuota, resolveEffectivePlan } = require('./middleware/scanQuota');
 const usageService = require('./services/usageService');
 
 const logger = createLogger('Server');
@@ -555,6 +555,16 @@ function withUsageTracking(handler) {
           ).catch(err => {
             logger.error('Failed to record scan in database', { error: err.message });
           });
+
+          // Decrement day_pass report counter
+          if (reportId && req.user) {
+            const effectivePlan = resolveEffectivePlan(req.user);
+            if (effectivePlan === 'day_pass') {
+              usageService.incrementReportUsage(userId, reportId).catch(err => {
+                logger.error('Failed to increment report usage for day_pass', { error: err.message });
+              });
+            }
+          }
         }
       }
       return originalJson(data);

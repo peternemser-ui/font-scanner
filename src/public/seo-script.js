@@ -262,17 +262,18 @@ function displaySEOResults(results) {
   }
 
   // Gated Fix Code + Recommendations (reference implementation)
-  // Check both new billing model (ProReportBlock) and legacy (CreditsManager)
+  // Pro/Day Pass users get global access; single-report purchases need reportId
   const isUnlocked = !!(
-    reportId && (
-      // New billing model: Pro subscription or purchased single report
+    // Pro/Day Pass: global access regardless of reportId
+    (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+    // Report-specific access checks (need reportId)
+    (reportId && (
       (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(reportId)) ||
-      // Legacy CreditsManager
       (window.CreditsManager && (
         (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
         (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
       ))
-    )
+    ))
   );
 
   const proFixesPreview = renderSeoFixesPreview([
@@ -327,8 +328,7 @@ function displaySEOResults(results) {
       locked: !isUnlocked,
       context: 'seo',
       reportId,
-      contentHTML: !isUnlocked ? getProPreviewContent('structuredData')
-        : results.structuredData ? renderStructuredDataContent(results.structuredData)
+      contentHTML: results.structuredData ? renderStructuredDataContent(results.structuredData)
         : renderUnavailableSection(t('seo.report.unavailable.structuredData', 'Structured data analysis unavailable.'))
     },
     {
@@ -339,8 +339,7 @@ function displaySEOResults(results) {
       locked: !isUnlocked,
       context: 'seo',
       reportId,
-      contentHTML: !isUnlocked ? getProPreviewContent('additionalChecks')
-        : results.additionalChecks ? renderAdditionalChecksContent(results.additionalChecks)
+      contentHTML: results.additionalChecks ? renderAdditionalChecksContent(results.additionalChecks)
         : renderUnavailableSection(t('seo.report.unavailable.additional', 'Additional checks require full headless analysis.'))
     },
     {
@@ -351,7 +350,7 @@ function displaySEOResults(results) {
       locked: !isUnlocked,
       context: 'seo',
       reportId,
-      contentHTML: isUnlocked ? renderProFixes(results) : proFixesPreview
+      contentHTML: renderProFixes(results)
     }
   ];
 

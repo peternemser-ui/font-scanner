@@ -4431,6 +4431,42 @@
         "a7Xss": "A7:2017 - Межсайтовый скриптинг (XSS)",
         "a9KnownVulns": "A9:2017 - Использование компонентов с известными уязвимостями"
       },
+      "recDescriptions": {
+        "noHttps": "Веб-сайт не использует шифрование HTTPS",
+        "noCsp": "Заголовок CSP не найден - сайт уязвим для XSS-атак",
+        "noHsts": "Заголовок HSTS отсутствует",
+        "noXFrameOptions": "Заголовок X-Frame-Options не установлен",
+        "noXContentType": "Заголовок X-Content-Type-Options отсутствует",
+        "cookiesNotSecured": "Cookies не защищены должным образом флагами HttpOnly, Secure и SameSite",
+        "mixedContentCount": "{{count}} ресурсов загружено по HTTP на HTTPS-странице",
+        "inlineScriptsCount": "Найдено {{count}} встроенных скриптов - повышает риск XSS",
+        "insecureFormsCount": "{{count}} форм(а) отправляют данные по HTTP",
+        "passwordFieldsCount": "{{count}} поле(й) пароля без атрибута autocomplete",
+        "unsandboxedIframesCount": "{{count}} iframe без атрибута sandbox",
+        "sriMissingCount": "{{count}} сторонних скриптов без SRI"
+      },
+      "recImpacts": {
+        "plainText": "Все данные передаются открытым текстом - уязвимы для перехвата",
+        "certIssues": "Проблемы с сертификатом или протоколом могут нарушить безопасность",
+        "xssRisk": "Злоумышленники могут внедрить вредоносные скрипты",
+        "downgradeAttack": "Сайт уязвим для атак понижения протокола",
+        "clickjacking": "Сайт может быть встроен во вредоносные iframe",
+        "mimeSniffing": "Браузеры могут неправильно интерпретировать типы файлов",
+        "criticalVuln": "Критическая уязвимость безопасности",
+        "highVuln": "Проблема безопасности высокой серьёзности",
+        "cookieVuln": "Cookies уязвимы для атак XSS и CSRF",
+        "sriRisk": "Сторонние скрипты могут быть скомпрометированы"
+      },
+      "recSolutions": {
+        "installSsl": "Получите и установите сертификат SSL/TLS от доверенного ЦС",
+        "upgradeTls": "Обновите сертификат или повысьте версию протокола TLS",
+        "addCsp": "Добавьте заголовок Content-Security-Policy с ограничительными директивами",
+        "addHsts": "Добавьте Strict-Transport-Security: max-age=31536000; includeSubDomains",
+        "addXFrameOptions": "Добавьте X-Frame-Options: DENY или SAMEORIGIN",
+        "addNosniff": "Добавьте X-Content-Type-Options: nosniff",
+        "secureCookies": "Установите флаги HttpOnly, Secure и SameSite=Strict для всех cookies",
+        "addSri": "Добавьте атрибуты integrity и crossorigin к внешним скриптам"
+      },
       "securityFixes": {
         "title": "Исправления безопасности",
         "issuesFound": "Найдено проблем: {{count}}",
@@ -4614,7 +4650,32 @@
         "missingSameSite": "Отсутствует атрибут SameSite",
         "sameSiteNoneSecure": "SameSite=None требует Secure",
         "sessionNoHttpOnly": "Сессионный cookie без HttpOnly",
-        "insecureSameSite": "Небезопасное значение SameSite"
+        "insecureSameSite": "Небезопасное значение SameSite",
+        "weakSameSite": "Слабая политика SameSite",
+        "noneSecured": "Ни один cookie не защищён должным образом",
+        "vulnerableXss": "Некоторые cookies уязвимы для XSS (отсутствует HttpOnly)",
+        "transmittedHttp": "Некоторые cookies могут передаваться по HTTP (отсутствует Secure)"
+      },
+      "vulnTitles": {
+        "mixedContent": "Обнаружен смешанный контент",
+        "excessiveInlineScripts": "Чрезмерное количество встроенных скриптов",
+        "insecureFormSubmission": "Небезопасная отправка формы",
+        "passwordFieldConfig": "Настройка поля пароля",
+        "unsandboxedIframes": "Iframe без песочницы"
+      },
+      "vulnSolutions": {
+        "updateHttps": "Обновите все ресурсы для использования HTTPS URL",
+        "moveScripts": "Переместите скрипты во внешние файлы и используйте CSP",
+        "updateForms": "Обновите действия форм для использования HTTPS",
+        "addAutocomplete": "Добавьте autocomplete=\"current-password\" или \"new-password\"",
+        "addSandbox": "Добавьте атрибут sandbox для ограничения возможностей iframe"
+      },
+      "sslIssues": {
+        "expiresInDays": "Сертификат истекает через {{days}} дней",
+        "expiringCritical": "Сертификат истекает очень скоро - КРИТИЧНО",
+        "outdatedTls": "Используется устаревший протокол TLS",
+        "noHttps": "Нет HTTPS - сайт не защищён",
+        "analysisFailed": "Не удалось проанализировать SSL-сертификат"
       },
       "implemented": "Реализовано",
       "vulnerabilityStatus": "Статус уязвимостей",

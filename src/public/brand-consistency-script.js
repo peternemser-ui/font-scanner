@@ -488,7 +488,7 @@ function displayResults(data) {
   // Default to LOCKED (false) - user must prove they have access
   let isUnlocked = false;
 
-  if (reportId && window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+  if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
     isUnlocked = window.ProReportBlock.hasAccess(reportId);
   }
 

@@ -242,13 +242,13 @@ function displayResults(data) {
     document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
   }
 
-  // Check if report is unlocked (Pro subscription or purchased single report)
-  // Use hasAccess() which checks both Pro subscription and purchased reports
+  // Check if report is unlocked (Pro/Day Pass get global access; single purchase needs reportId)
   const isUnlocked = !!(
-    reportId &&
-    window.ProReportBlock &&
-    typeof window.ProReportBlock.hasAccess === 'function' &&
-    window.ProReportBlock.hasAccess(reportId)
+    (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+    (reportId &&
+      window.ProReportBlock &&
+      typeof window.ProReportBlock.hasAccess === 'function' &&
+      window.ProReportBlock.hasAccess(reportId))
   );
   console.log('[BrokenLinks] isUnlocked:', isUnlocked, 'reportId:', reportId);
 

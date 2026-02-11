@@ -141,7 +141,7 @@ router.get('/me/entitlements', requireAuth, async (req, res) => {
       }
     } else if (entitlements.plan === 'day_pass') {
       planCode = 'day_pass';
-      planLabel = '8 Hour Day Pass';
+      planLabel = 'Day Pass';
       expiresAt = entitlements.dayPassExpiresAt;
     } else if (entitlements.purchasedReports && entitlements.purchasedReports.length > 0) {
       planCode = 'single_report';
@@ -348,7 +348,7 @@ router.get('/usage', optionalAuth, async (req, res) => {
     res.json({
       plan_code: planCode,
       plan_label: planCode === 'free' ? 'Free' :
-                  planCode === 'day_pass' ? '8 Hour Day Pass' :
+                  planCode === 'day_pass' ? 'Day Pass' :
                   planCode === 'pro_monthly' ? 'Pro Monthly' :
                   planCode === 'pro_annual' ? 'Pro Annual' : 'Free',
       scan_limit_daily: usageSummary.scanLimitDaily,

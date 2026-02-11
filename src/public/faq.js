@@ -116,28 +116,28 @@
           qKey: 'faqPage.groups.limits.items.planLimits.q',
           qFallback: 'What are the plan limits?',
           aKey: 'faqPage.groups.limits.items.planLimits.a',
-          aFallback: '<strong>Free:</strong> 10 scans per day, Pro sections are locked.<br><strong>8 Hour Day Pass ($20):</strong> Unlimited scans for 8 hours + 30 report unlocks.<br><strong>Pro Monthly ($29/mo):</strong> Unlimited scans + 250 report unlocks per month.<br><strong>Pro Annual ($290/yr):</strong> Unlimited scans + unlimited report unlocks.',
+          aFallback: '<strong>Free:</strong> 10 scans per day, Pro sections are locked.<br><strong>Day Pass ($20):</strong> Unlimited scans for 24 hours + 30 report unlocks.<br><strong>Pro Monthly ($29/mo):</strong> Unlimited scans + 250 report unlocks per month.<br><strong>Pro Annual ($290/yr):</strong> Unlimited scans + unlimited report unlocks.',
           schema: true
         },
         {
           qKey: 'faqPage.groups.limits.items.dailyLimit.q',
           qFallback: 'What happens when I hit my daily scan limit?',
           aKey: 'faqPage.groups.limits.items.dailyLimit.a',
-          aFallback: 'When you reach 10 scans in a day (Free tier), the scan button is disabled until midnight UTC. You\'ll see upgrade options for 8 Hour Day Pass or Pro subscriptions to continue scanning immediately.',
+          aFallback: 'When you reach 10 scans in a day (Free tier), the scan button is disabled until midnight UTC. You\'ll see upgrade options for Day Pass or Pro subscriptions to continue scanning immediately.',
           schema: true
         },
         {
           qKey: 'faqPage.groups.limits.items.unlocksRunOut.q',
           qFallback: 'What happens when I run out of report unlocks?',
           aKey: 'faqPage.groups.limits.items.unlocksRunOut.a',
-          aFallback: 'For 8 Hour Day Pass users, you can unlock up to 30 reports during your 8-hour window. For Pro Monthly, your 250 reports reset at the start of each billing period. Pro Annual has unlimited unlocks. If you run out, you can purchase a Single Report ($5) or upgrade your plan.',
+          aFallback: 'For Day Pass users, you can unlock up to 30 reports during your 24-hour window. For Pro Monthly, your 250 reports reset at the start of each billing period. Pro Annual has unlimited unlocks. If you run out, you can purchase a Single Report ($5) or upgrade your plan.',
           schema: true
         },
         {
           qKey: 'faqPage.groups.limits.items.dayPass.q',
-          qFallback: 'How does the 8 Hour Day Pass work?',
+          qFallback: 'How does the Day Pass work?',
           aKey: 'faqPage.groups.limits.items.dayPass.a',
-          aFallback: 'The 8 Hour Day Pass ($20) gives you full Pro access for 8 hours from the time of purchase. You get unlimited scans and up to 30 report unlocks during this window. It does not auto-renew—perfect for one-time projects or client presentations.',
+          aFallback: 'The Day Pass ($20) gives you full Pro access for 24 hours from the time of purchase. You get unlimited scans and up to 30 report unlocks during this window. It does not auto-renew—perfect for one-time projects or client presentations.',
           schema: true
         },
         {
@@ -151,7 +151,7 @@
           qKey: 'faqPage.groups.limits.items.resets.q',
           qFallback: 'When do my limits reset?',
           aKey: 'faqPage.groups.limits.items.resets.a',
-          aFallback: 'Daily scan limits reset at midnight UTC. For Pro Monthly subscribers, report unlocks reset at the start of each billing cycle. 8 Hour Day Pass limits expire 8 hours after purchase.',
+          aFallback: 'Daily scan limits reset at midnight UTC. For Pro Monthly subscribers, report unlocks reset at the start of each billing cycle. Day Pass limits expire 24 hours after purchase.',
           schema: true
         }
       ]

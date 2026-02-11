@@ -493,15 +493,17 @@ function displayReputationResults(data) {
 
   // Check if report is unlocked (follows SEO pattern - checks both new and legacy billing)
   const isUnlocked = !!(
-    reportId && (
-      // New billing model: Pro subscription or purchased single report
+    // Pro/Day Pass subscribers have global access (no reportId needed)
+    (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+    (reportId && (
+      // purchased single report
       (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(reportId)) ||
       // Legacy CreditsManager
       (window.CreditsManager && (
         (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
         (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
       ))
-    )
+    ))
   );
   console.log('[IP Reputation] isUnlocked check:', { reportId, isUnlocked, hasProReportBlock: !!window.ProReportBlock });
 
@@ -615,9 +617,7 @@ function displayReputationResults(data) {
       locked: !isUnlocked,
       context: 'ip-reputation',
       reportId: reportId,
-      contentHTML: isUnlocked
-        ? createRecommendationsContent(data.recommendations)
-        : getRecommendationsPreviewContent(data.recommendations)
+      contentHTML: createRecommendationsContent(data.recommendations)
     });
   }
 

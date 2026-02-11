@@ -514,15 +514,17 @@ function displayResults(data) {
 
   // Check if report is unlocked (follows SEO pattern - checks both new and legacy billing)
   const isUnlocked = !!(
-    reportId && (
-      // New billing model: Pro subscription or purchased single report
+    // Pro/Day Pass subscribers have global access (no reportId needed)
+    (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+    (reportId && (
+      // New billing model: purchased single report
       (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(reportId)) ||
       // Legacy CreditsManager
       (window.CreditsManager && (
         (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
         (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
       ))
-    )
+    ))
   );
   console.log('[GDPR] isUnlocked check:', { reportId, isUnlocked, hasProReportBlock: !!window.ProReportBlock });
 
@@ -596,9 +598,7 @@ function displayResults(data) {
       locked: !isUnlocked,
       context: 'gdpr-compliance',
       reportId: reportId,
-      contentHTML: isUnlocked
-        ? renderGdprProFixes(data.recommendations.map(translateRecommendation))
-        : getGdprRecommendationsPreview(data.recommendations.map(translateRecommendation))
+      contentHTML: renderGdprProFixes(data.recommendations.map(translateRecommendation))
     } : null
   ].filter(Boolean);
 

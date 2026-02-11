@@ -387,7 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
         locked: !isUnlocked,
         context: 'crawler',
         reportId,
-        contentHTML: isUnlocked ? renderVisualSitemapContent(siteStructure, hostname) : visualSitemapPreview
+        contentHTML: renderVisualSitemapContent(siteStructure, hostname)
       },
       {
         id: 'discovered-pages',
@@ -397,7 +397,7 @@ document.addEventListener('DOMContentLoaded', () => {
         locked: !isUnlocked,
         context: 'crawler',
         reportId,
-        contentHTML: isUnlocked ? renderDiscoveredPagesWithExport(pages, siteStructure) : discoveredPagesPreview
+        contentHTML: renderDiscoveredPagesWithExport(pages, siteStructure)
       },
       {
         id: 'report-recommendations',
@@ -407,7 +407,7 @@ document.addEventListener('DOMContentLoaded', () => {
         locked: !isUnlocked,
         context: 'crawler',
         reportId,
-        contentHTML: isUnlocked ? renderCrawlerFixes(data, siteStructure, pages) : crawlerFixesPreview
+        contentHTML: renderCrawlerFixes(data, siteStructure, pages)
       }
     ];
 

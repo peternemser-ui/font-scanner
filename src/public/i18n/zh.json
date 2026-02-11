@@ -4665,6 +4665,42 @@
         "a7Xss": "A7:2017 - 跨站脚本攻击(XSS)",
         "a9KnownVulns": "A9:2017 - 使用含有已知漏洞的组件"
       },
+      "recDescriptions": {
+        "noHttps": "网站未使用HTTPS加密",
+        "noCsp": "未找到CSP头 - 网站容易受到XSS攻击",
+        "noHsts": "HSTS头不存在",
+        "noXFrameOptions": "X-Frame-Options头未设置",
+        "noXContentType": "X-Content-Type-Options头缺失",
+        "cookiesNotSecured": "Cookie未使用HttpOnly、Secure和SameSite标志正确保护",
+        "mixedContentCount": "HTTPS页面上有{{count}}个资源通过HTTP加载",
+        "inlineScriptsCount": "发现{{count}}个内联脚本 - 增加XSS风险",
+        "insecureFormsCount": "{{count}}个表单通过HTTP提交数据",
+        "passwordFieldsCount": "{{count}}个密码字段没有autocomplete属性",
+        "unsandboxedIframesCount": "{{count}}个iframe没有sandbox属性",
+        "sriMissingCount": "{{count}}个第三方脚本没有SRI"
+      },
+      "recImpacts": {
+        "plainText": "所有数据以明文传输 - 容易被拦截",
+        "certIssues": "证书或协议问题可能危及安全",
+        "xssRisk": "攻击者可以注入恶意脚本",
+        "downgradeAttack": "网站容易受到协议降级攻击",
+        "clickjacking": "网站可能被嵌入恶意iframe中",
+        "mimeSniffing": "浏览器可能错误解释文件类型",
+        "criticalVuln": "严重安全漏洞",
+        "highVuln": "高严重性安全问题",
+        "cookieVuln": "Cookie容易受到XSS和CSRF攻击",
+        "sriRisk": "第三方脚本可能被篡改"
+      },
+      "recSolutions": {
+        "installSsl": "从受信任的CA获取并安装SSL/TLS证书",
+        "upgradeTls": "更新证书或升级TLS协议版本",
+        "addCsp": "添加带有严格指令的Content-Security-Policy头",
+        "addHsts": "添加Strict-Transport-Security: max-age=31536000; includeSubDomains",
+        "addXFrameOptions": "添加X-Frame-Options: DENY或SAMEORIGIN",
+        "addNosniff": "添加X-Content-Type-Options: nosniff",
+        "secureCookies": "为所有Cookie设置HttpOnly、Secure和SameSite=Strict标志",
+        "addSri": "为外部脚本添加integrity和crossorigin属性"
+      },
       "securityFixes": {
         "title": "安全修复",
         "issuesFound": "发现 {{count}} 个问题",
@@ -4937,7 +4973,32 @@
         "missingSameSite": "缺少SameSite属性",
         "sameSiteNoneSecure": "SameSite=None需要Secure",
         "sessionNoHttpOnly": "会话缺少HttpOnly",
-        "insecureSameSite": "不安全的SameSite值"
+        "insecureSameSite": "不安全的SameSite值",
+        "weakSameSite": "SameSite策略较弱",
+        "noneSecured": "没有Cookie被正确保护",
+        "vulnerableXss": "部分Cookie易受XSS攻击（缺少HttpOnly）",
+        "transmittedHttp": "部分Cookie可能通过HTTP传输（缺少Secure）"
+      },
+      "vulnTitles": {
+        "mixedContent": "检测到混合内容",
+        "excessiveInlineScripts": "过多的内联脚本",
+        "insecureFormSubmission": "不安全的表单提交",
+        "passwordFieldConfig": "密码字段配置",
+        "unsandboxedIframes": "未沙箱化的Iframe"
+      },
+      "vulnSolutions": {
+        "updateHttps": "将所有资源更新为HTTPS URL",
+        "moveScripts": "将脚本移至外部文件并使用CSP",
+        "updateForms": "将表单操作更新为HTTPS",
+        "addAutocomplete": "添加autocomplete=\"current-password\"或\"new-password\"",
+        "addSandbox": "添加sandbox属性以限制iframe功能"
+      },
+      "sslIssues": {
+        "expiresInDays": "证书将在{{days}}天后过期",
+        "expiringCritical": "证书即将过期 - 严重",
+        "outdatedTls": "使用过时的TLS协议",
+        "noHttps": "无HTTPS - 网站不安全",
+        "analysisFailed": "SSL证书分析失败"
       },
       "implemented": "已实施",
       "vulnerabilityStatus": "漏洞状态",

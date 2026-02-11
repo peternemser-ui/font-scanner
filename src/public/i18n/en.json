@@ -111,7 +111,7 @@
     "admin": "Admin",
     "plans": {
       "free": "Free",
-      "dayPass": "8 Hour Day Pass",
+      "dayPass": "Day Pass",
       "singleReport": "Single Report",
       "proMonthly": "Pro Monthly",
       "proAnnual": "Pro Annual"
@@ -126,7 +126,7 @@
     "planSummary": {
       "proAnnual": "Plan: Pro Annual (Unlimited)",
       "proMonthly": "Plan: Pro Monthly ({{remaining}}/{{limit}} reports left)",
-      "dayPass": "Plan: 8 Hour Day Pass ({{remaining}}/{{limit}} reports left)",
+      "dayPass": "Plan: Day Pass ({{remaining}}/{{limit}} reports left)",
       "singleReport": "Plan: Single Report ({{count}} unlocked)",
       "free": "Plan: Free ({{remaining}}/{{limit}} scans left today)"
     }
@@ -2709,19 +2709,19 @@
           },
           "planLimits": {
             "q": "What are the plan limits?",
-            "a": "<strong>Free:</strong> 10 scans per day, Pro sections are locked.<br><strong>8 Hour Day Pass ($20):</strong> Unlimited scans for 8 hours + 30 report unlocks.<br><strong>Pro Monthly ($29/mo):</strong> Unlimited scans + 250 report unlocks per month.<br><strong>Pro Annual ($290/yr):</strong> Unlimited scans + unlimited report unlocks."
+            "a": "<strong>Free:</strong> 10 scans per day, Pro sections are locked.<br><strong>Day Pass ($20):</strong> Unlimited scans for 24 hours + 30 report unlocks.<br><strong>Pro Monthly ($29/mo):</strong> Unlimited scans + 250 report unlocks per month.<br><strong>Pro Annual ($290/yr):</strong> Unlimited scans + unlimited report unlocks."
           },
           "dailyLimit": {
             "q": "What happens when I hit my daily scan limit?",
-            "a": "When you reach 10 scans in a day (Free tier), the scan button is disabled until midnight UTC. You'll see upgrade options for 8 Hour Day Pass or Pro subscriptions to continue scanning immediately."
+            "a": "When you reach 10 scans in a day (Free tier), the scan button is disabled until midnight UTC. You'll see upgrade options for Day Pass or Pro subscriptions to continue scanning immediately."
           },
           "unlocksRunOut": {
             "q": "What happens when I run out of report unlocks?",
-            "a": "For 8 Hour Day Pass users, you can unlock up to 30 reports during your 8-hour window. For Pro Monthly, your 250 reports reset at the start of each billing period. Pro Annual has unlimited unlocks. If you run out, you can purchase a Single Report ($5) or upgrade your plan."
+            "a": "For Day Pass users, you can unlock up to 30 reports during your 24-hour window. For Pro Monthly, your 250 reports reset at the start of each billing period. Pro Annual has unlimited unlocks. If you run out, you can purchase a Single Report ($5) or upgrade your plan."
           },
           "dayPass": {
-            "q": "How does the 8 Hour Day Pass work?",
-            "a": "The 8 Hour Day Pass ($20) gives you full Pro access for 8 hours from the time of purchase. You get unlimited scans and up to 30 report unlocks during this window. It does not auto-renew—perfect for one-time projects or client presentations."
+            "q": "How does the Day Pass work?",
+            "a": "The Day Pass ($20) gives you full Pro access for 24 hours from the time of purchase. You get unlimited scans and up to 30 report unlocks during this window. It does not auto-renew—perfect for one-time projects or client presentations."
           },
           "singleReport": {
             "q": "How does the Single Report option work?",
@@ -2729,7 +2729,7 @@
           },
           "resets": {
             "q": "When do my limits reset?",
-            "a": "Daily scan limits reset at midnight UTC. For Pro Monthly subscribers, report unlocks reset at the start of each billing cycle. 8 Hour Day Pass limits expire 8 hours after purchase."
+            "a": "Daily scan limits reset at midnight UTC. For Pro Monthly subscribers, report unlocks reset at the start of each billing cycle. Day Pass limits expire 24 hours after purchase."
           }
         }
       },
@@ -3290,13 +3290,13 @@
     "plans": {
       "proMonthly": "Pro Monthly",
       "proYearly": "Pro Yearly",
-      "dayPass": "8 Hour Day Pass",
+      "dayPass": "Day Pass",
       "thisReport": "This Report"
     },
     "periods": {
       "perMonth": "per month",
       "perYear": "per year",
-      "hours24": "8 hours",
+      "hours24": "24 hours",
       "oneTime": "one-time",
       "effectiveMonthly": "${{amount}}/mo effective"
     },
@@ -3312,7 +3312,7 @@
       "managePlan": "Manage Plan",
       "switchToMonthly": "Switch to Monthly",
       "switchToYearly": "Switch to Yearly",
-      "getDayPass": "Get 8 Hour Day Pass",
+      "getDayPass": "Get Day Pass",
       "activePass": "Active Pass",
       "youHavePro": "You have Pro",
       "buyReport": "Buy Report",
@@ -3327,20 +3327,20 @@
       "unlimitedReports": "Unlimited reports",
       "reportsPerMonth": "250 reports/month",
       "reportsPerPass": "30 reports included",
-      "unlimitedScans24h": "Unlimited scans for 8h",
+      "unlimitedScans24h": "Unlimited scans for 24h",
       "exportPdfs": "Export PDFs",
       "cancelAnytime": "Cancel anytime",
       "bestValue": "Best value",
       "fullProAccess": "Full Pro access",
-      "expiresIn24h": "Expires in 8h",
+      "expiresIn24h": "Expires in 24h",
       "noAutoRenewal": "No auto-renewal",
       "unlocksThisReport": "Unlocks this report",
       "exportPdf": "Export PDF",
       "permanentAccess": "Permanent access"
     },
     "oneTime": "One-time",
-    "dayPass": "8 Hour Day Pass",
-    "dayPassDesc": "Unlimited scans for 8 hours",
+    "dayPass": "Day Pass",
+    "dayPassDesc": "Unlimited scans for 24 hours",
     "proMonthly": "Pro Monthly",
     "monthlyDesc": "Unlimited scans + 250 reports",
     "proAnnual": "Pro Annual",
@@ -4342,6 +4342,42 @@
         "a7Xss": "A7:2017 - Cross-Site Scripting (XSS)",
         "a9KnownVulns": "A9:2017 - Using Components with Known Vulnerabilities"
       },
+      "recDescriptions": {
+        "noHttps": "Website is not using HTTPS encryption",
+        "noCsp": "No CSP header found - site vulnerable to XSS attacks",
+        "noHsts": "HSTS header not present",
+        "noXFrameOptions": "X-Frame-Options header not set",
+        "noXContentType": "X-Content-Type-Options header missing",
+        "cookiesNotSecured": "Cookies not properly secured with HttpOnly, Secure, and SameSite flags",
+        "mixedContentCount": "{{count}} resources loaded over HTTP on HTTPS page",
+        "inlineScriptsCount": "{{count}} inline scripts found - increases XSS risk",
+        "insecureFormsCount": "{{count}} form(s) submitting data over HTTP",
+        "passwordFieldsCount": "{{count}} password field(s) without autocomplete attribute",
+        "unsandboxedIframesCount": "{{count}} iframe(s) without sandbox attribute",
+        "sriMissingCount": "{{count}} third-party scripts without SRI"
+      },
+      "recImpacts": {
+        "plainText": "All data transmitted in plain text - vulnerable to interception",
+        "certIssues": "Certificate or protocol issues may compromise security",
+        "xssRisk": "Attackers can inject malicious scripts",
+        "downgradeAttack": "Site vulnerable to protocol downgrade attacks",
+        "clickjacking": "Site can be embedded in malicious iframes",
+        "mimeSniffing": "Browsers may misinterpret file types",
+        "criticalVuln": "Critical security vulnerability",
+        "highVuln": "High-severity security issue",
+        "cookieVuln": "Cookies vulnerable to XSS and CSRF attacks",
+        "sriRisk": "Third-party scripts could be compromised"
+      },
+      "recSolutions": {
+        "installSsl": "Obtain and install an SSL/TLS certificate from a trusted CA",
+        "upgradeTls": "Update certificate or upgrade TLS protocol version",
+        "addCsp": "Add Content-Security-Policy header with restrictive directives",
+        "addHsts": "Add Strict-Transport-Security: max-age=31536000; includeSubDomains",
+        "addXFrameOptions": "Add X-Frame-Options: DENY or SAMEORIGIN",
+        "addNosniff": "Add X-Content-Type-Options: nosniff",
+        "secureCookies": "Set HttpOnly, Secure, and SameSite=Strict flags on all cookies",
+        "addSri": "Add integrity and crossorigin attributes to external scripts"
+      },
       "securityFixes": {
         "title": "Security Fixes",
         "issuesFound": "{{count}} issues found",
@@ -4460,7 +4496,32 @@
         "missingSameSite": "Missing SameSite attribute",
         "sameSiteNoneSecure": "SameSite=None requires Secure",
         "sessionNoHttpOnly": "Session cookie without HttpOnly",
-        "insecureSameSite": "Insecure SameSite value"
+        "insecureSameSite": "Insecure SameSite value",
+        "weakSameSite": "Weak SameSite policy",
+        "noneSecured": "No cookies are properly secured",
+        "vulnerableXss": "Some cookies are vulnerable to XSS (missing HttpOnly)",
+        "transmittedHttp": "Some cookies can be transmitted over HTTP (missing Secure)"
+      },
+      "vulnTitles": {
+        "mixedContent": "Mixed Content Detected",
+        "excessiveInlineScripts": "Excessive Inline Scripts",
+        "insecureFormSubmission": "Insecure Form Submission",
+        "passwordFieldConfig": "Password Field Configuration",
+        "unsandboxedIframes": "Unsandboxed Iframes"
+      },
+      "vulnSolutions": {
+        "updateHttps": "Update all resources to use HTTPS URLs",
+        "moveScripts": "Move scripts to external files and use CSP",
+        "updateForms": "Update form actions to use HTTPS",
+        "addAutocomplete": "Add autocomplete=\"current-password\" or \"new-password\"",
+        "addSandbox": "Add sandbox attribute to restrict iframe capabilities"
+      },
+      "sslIssues": {
+        "expiresInDays": "Certificate expires in {{days}} days",
+        "expiringCritical": "Certificate expiring very soon - CRITICAL",
+        "outdatedTls": "Using outdated TLS protocol",
+        "noHttps": "No HTTPS - website is not secure",
+        "analysisFailed": "Failed to analyze SSL certificate"
       },
       "implemented": "Implemented",
       "vulnerabilityStatus": "Vulnerability Status",

@@ -6,7 +6,7 @@
  * - Free: 10 scans/day, Pro sections gated
  * - Pro Monthly: $29/month - 250 reports/month, unlimited scans
  * - Pro Annual: $290/year ($24/mo effective) - unlimited reports & scans
- * - Day Pass: $20 for 8 hours - 30 reports, unlimited scans
+ * - Day Pass: $20 for 24 hours - 30 reports, unlimited scans
  * - Single Report: $5 one-time - unlocks 1 report
  */
 

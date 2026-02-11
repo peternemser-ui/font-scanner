@@ -273,10 +273,12 @@ function displayResults(data) {
   // Check if report is unlocked (Pro subscription or purchased single report)
   // Use hasAccess() which checks both Pro subscription and purchased reports
   const isUnlocked = !!(
-    reportId &&
-    window.ProReportBlock &&
-    typeof window.ProReportBlock.hasAccess === 'function' &&
-    window.ProReportBlock.hasAccess(reportId)
+    // Pro/Day Pass subscribers have global access (no reportId needed)
+    (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+    (reportId &&
+      window.ProReportBlock &&
+      typeof window.ProReportBlock.hasAccess === 'function' &&
+      window.ProReportBlock.hasAccess(reportId))
   );
 
   if (reportId) {
@@ -350,9 +352,7 @@ function displayResults(data) {
         id: 'schema-analysis',
         title: t('reports.localSeo.schemaAnalysis', 'Structured Data & Schema'),
         scoreTextRight: Math.round(data.scores?.schema || 0),
-        contentHTML: (window.ReportUI && window.ReportUI.pro && typeof window.ReportUI.pro.lockContent === 'function' && !isUnlocked)
-          ? window.ReportUI.pro.lockContent(renderSchemaContent(data.analysis.schema), 'local-seo')
-          : renderSchemaContent(data.analysis.schema),
+        contentHTML: renderSchemaContent(data.analysis.schema),
         isPro: true,
         locked: !isUnlocked,
         context: 'local-seo',
@@ -362,9 +362,7 @@ function displayResults(data) {
         id: 'report-recommendations',
         title: t('reports.common.reportAndRecommendations', 'Report and Recommendations'),
         scoreTextRight: null,
-        contentHTML: (window.ReportUI && window.ReportUI.pro && typeof window.ReportUI.pro.lockContent === 'function' && !isUnlocked)
-          ? window.ReportUI.pro.lockContent(renderRecommendationsContent(data.recommendations), 'local-seo')
-          : renderRecommendationsContent(data.recommendations),
+        contentHTML: renderRecommendationsContent(data.recommendations),
         isPro: true,
         locked: !isUnlocked,
         context: 'local-seo',

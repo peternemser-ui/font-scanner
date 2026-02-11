@@ -4,7 +4,7 @@
  *
  * New billing model:
  * - Pro subscription ($30/mo or $240/yr) - unlocks all reports
- * - Day Pass ($20) - unlocks all reports for 8 hours
+ * - Day Pass ($20) - unlocks all reports for 24 hours
  * - Single report purchase ($5) - unlocks specific report
  */
 
@@ -26,6 +26,7 @@
   // Cache billing status to avoid repeated API calls
   let cachedBillingStatus = null;
   let billingStatusPromise = null;
+  let fetchGeneration = 0; // Monotonic counter to prevent stale fetches from overwriting newer data
 
   // Cache for server-verified access checks
   const accessCheckCache = new Map();
@@ -57,6 +58,7 @@
     }
 
     console.log('[ProReportBlock] Fetching billing status from API...');
+    const thisGeneration = ++fetchGeneration;
     billingStatusPromise = fetch('/api/billing/status', {
       headers: { 'Authorization': `Bearer ${token}` }
     })
@@ -68,26 +70,47 @@
         return r.json();
       })
       .then(data => {
-        cachedBillingStatus = data;
+        // Only update cache if this is still the latest fetch (prevents stale
+        // fetches from overwriting newer results in race conditions)
+        if (thisGeneration < fetchGeneration) {
+          console.log('[ProReportBlock] Stale fetch result ignored (gen', thisGeneration, 'vs current', fetchGeneration, ')');
+          return data;
+        }
+
         billingStatusPromise = null;
-        console.log('[ProReportBlock] Billing status fetched:', {
-          plan: data?.plan,
-          isPro: data?.plan === 'pro' || data?.plan === 'day_pass',
-          purchasedReportsCount: data?.purchasedReports?.length || 0,
-          purchasedReports: data?.purchasedReports || []
-        });
 
-        // Dispatch event so other components (like UsagePill) can refresh
-        window.dispatchEvent(new CustomEvent('entitlements:updated', { detail: data }));
+        // CRITICAL: Only overwrite cache with non-null data.
+        // A failed fetch (non-200) should NOT destroy previously valid cached data.
+        // This prevents race conditions where an orphaned fetch from init() returns
+        // an error and overwrites valid data that a later force-refresh already set.
+        if (data) {
+          cachedBillingStatus = data;
+          console.log('[ProReportBlock] Billing status fetched:', {
+            plan: data?.plan,
+            isPro: data?.plan === 'pro' || data?.plan === 'day_pass',
+            purchasedReportsCount: data?.purchasedReports?.length || 0,
+            purchasedReports: data?.purchasedReports || []
+          });
 
-        // Also update global cache for backward compatibility
-        window.__cachedBillingStatus = data;
+          // Dispatch event so other components (like UsagePill) can refresh
+          window.dispatchEvent(new CustomEvent('entitlements:updated', { detail: data }));
+
+          // Also update global cache for backward compatibility
+          window.__cachedBillingStatus = data;
+        } else {
+          console.warn('[ProReportBlock] Billing status returned null, keeping existing cache',
+            { hasCachedData: !!cachedBillingStatus, cachedPlan: cachedBillingStatus?.plan });
+        }
 
         return data;
       })
       .catch((err) => {
         console.error('[ProReportBlock] Billing status fetch error:', err);
-        billingStatusPromise = null;
+        // Only clear billingStatusPromise if this is still the latest fetch
+        if (thisGeneration >= fetchGeneration) {
+          billingStatusPromise = null;
+        }
+        // Don't clear cachedBillingStatus on error - keep stale data for access checks
         return null;
       });
 
@@ -95,10 +118,14 @@
   }
 
   /**
-   * Clear cached billing status (call after purchase)
+   * Clear cached billing status (call after purchase or to force refresh)
+   * NOTE: Does NOT null out cachedBillingStatus — stale data is kept available
+   * for synchronous hasAccess() calls until fresh data arrives via fetchBillingStatus().
+   * This prevents race conditions where clearing the cache causes Day Pass / Pro
+   * users to see locked sections during the brief window before the re-fetch completes.
    */
   function clearBillingCache() {
-    cachedBillingStatus = null;
+    // Keep cachedBillingStatus for synchronous hasAccess() calls
     billingStatusPromise = null;
     accessCheckCache.clear();
   }
@@ -717,6 +744,76 @@
     }
 
     fetchBillingStatus();
+
+    // Shared function to unlock all currently locked sections if user has access
+    function unlockAllLockedSections() {
+      if (!cachedBillingStatus) return; // No billing data yet, nothing to check
+
+      // Re-check all locked sections using ReportAccordion pattern
+      document.querySelectorAll('[data-locked-overlay]').forEach(overlay => {
+        if (hasAccess()) {
+          const body = overlay.closest('.report-accordion__body');
+          const content = body?.querySelector('.report-accordion__content-actual');
+          if (content) {
+            content.hidden = false;
+          }
+          overlay.remove();
+        }
+      });
+
+      // Re-check createAccordionSection pattern (.pro-locked elements)
+      document.querySelectorAll('.pro-section .pro-locked').forEach(lockedEl => {
+        if (hasAccess()) {
+          const contentInner = lockedEl.closest('.accordion-content-inner');
+          if (contentInner) {
+            contentInner.innerHTML = '';
+            contentInner.dispatchEvent(new CustomEvent('pro:unlocked'));
+          }
+        }
+      });
+
+      // Re-render ProReportBlock export/share sections
+      document.querySelectorAll('[data-pro-report-block]').forEach(block => {
+        const reportId = block.dataset.reportId || '';
+        if (hasAccess(reportId)) {
+          block.outerHTML = render({
+            context: block.dataset.context || 'report',
+            reportId
+          });
+        }
+      });
+    }
+
+    // Listen for entitlements updates and dynamically unlock sections
+    window.addEventListener('entitlements:updated', unlockAllLockedSections);
+
+    // MutationObserver: Watch for newly rendered locked sections and unlock them
+    // This handles the race condition where report scripts render sections AFTER
+    // billing status has already been fetched (e.g., loading from stored reports).
+    // Without this, sections render as locked because the entitlements:updated event
+    // has already fired before the sections existed in the DOM.
+    const observer = new MutationObserver((mutations) => {
+      if (!cachedBillingStatus || !hasAccess()) return; // No access, skip
+
+      for (const mutation of mutations) {
+        for (const node of mutation.addedNodes) {
+          if (node.nodeType !== Node.ELEMENT_NODE) continue;
+          // Check if the added node contains locked overlays
+          const overlays = node.matches?.('[data-locked-overlay]')
+            ? [node]
+            : (node.querySelectorAll?.('[data-locked-overlay]') || []);
+          if (overlays.length > 0) {
+            // Debounce: unlock on next microtask to batch multiple additions
+            Promise.resolve().then(unlockAllLockedSections);
+            return; // Only need to trigger once per mutation batch
+          }
+        }
+      }
+    });
+    observer.observe(document.body || document.documentElement, {
+      childList: true,
+      subtree: true
+    });
   }
 
   // Auto-init when DOM is ready
