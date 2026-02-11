@@ -41,9 +41,141 @@ function translateCookieIssue(issue) {
     'Missing SameSite attribute': t('reports.security.cookieIssues.missingSameSite', 'Missing SameSite attribute'),
     'SameSite=None requires Secure': t('reports.security.cookieIssues.sameSiteNoneSecure', 'SameSite=None requires Secure'),
     'Session cookie without HttpOnly': t('reports.security.cookieIssues.sessionNoHttpOnly', 'Session cookie without HttpOnly'),
-    'Insecure SameSite value': t('reports.security.cookieIssues.insecureSameSite', 'Insecure SameSite value')
+    'Insecure SameSite value': t('reports.security.cookieIssues.insecureSameSite', 'Insecure SameSite value'),
+    'Weak SameSite policy': t('reports.security.cookieIssues.weakSameSite', 'Weak SameSite policy'),
+    'No cookies are properly secured': t('reports.security.cookieIssues.noneSecured', 'No cookies are properly secured'),
+    'Some cookies are vulnerable to XSS (missing HttpOnly)': t('reports.security.cookieIssues.vulnerableXss', 'Some cookies are vulnerable to XSS (missing HttpOnly)'),
+    'Some cookies can be transmitted over HTTP (missing Secure)': t('reports.security.cookieIssues.transmittedHttp', 'Some cookies can be transmitted over HTTP (missing Secure)')
   };
   return issueMap[issue] || issue;
+}
+
+// Vulnerability title translations map (server sends English titles)
+function translateVulnTitle(title) {
+  const titleMap = {
+    'Mixed Content Detected': t('reports.security.vulnTitles.mixedContent', 'Mixed Content Detected'),
+    'Excessive Inline Scripts': t('reports.security.vulnTitles.excessiveInlineScripts', 'Excessive Inline Scripts'),
+    'Insecure Form Submission': t('reports.security.vulnTitles.insecureFormSubmission', 'Insecure Form Submission'),
+    'Password Field Configuration': t('reports.security.vulnTitles.passwordFieldConfig', 'Password Field Configuration'),
+    'Unsandboxed Iframes': t('reports.security.vulnTitles.unsandboxedIframes', 'Unsandboxed Iframes')
+  };
+  return titleMap[title] || title;
+}
+
+// Vulnerability description translations map
+function translateVulnDescription(desc) {
+  const descMap = {
+    'Update all resources to use HTTPS URLs': t('reports.security.vulnSolutions.updateHttps', 'Update all resources to use HTTPS URLs'),
+    'Move scripts to external files and use CSP': t('reports.security.vulnSolutions.moveScripts', 'Move scripts to external files and use CSP'),
+    'Update form actions to use HTTPS': t('reports.security.vulnSolutions.updateForms', 'Update form actions to use HTTPS'),
+    'Add autocomplete="current-password" or "new-password"': t('reports.security.vulnSolutions.addAutocomplete', 'Add autocomplete="current-password" or "new-password"'),
+    'Add sandbox attribute to restrict iframe capabilities': t('reports.security.vulnSolutions.addSandbox', 'Add sandbox attribute to restrict iframe capabilities')
+  };
+  return descMap[desc] || desc;
+}
+
+// SSL issue translations map (server sends English issue strings)
+function translateSslIssue(issue) {
+  if (!issue) return issue;
+  const sslMap = {
+    'Certificate expiring very soon - CRITICAL': t('reports.security.sslIssues.expiringCritical', 'Certificate expiring very soon - CRITICAL'),
+    'Using outdated TLS protocol': t('reports.security.sslIssues.outdatedTls', 'Using outdated TLS protocol'),
+    'No HTTPS - website is not secure': t('reports.security.sslIssues.noHttps', 'No HTTPS - website is not secure'),
+    'Failed to analyze SSL certificate': t('reports.security.sslIssues.analysisFailed', 'Failed to analyze SSL certificate')
+  };
+  // Handle dynamic "Certificate expires in X days" pattern
+  const expiresMatch = issue.match(/^Certificate expires in (\d+) days$/);
+  if (expiresMatch) {
+    return t('reports.security.sslIssues.expiresInDays', 'Certificate expires in {{days}} days', { days: expiresMatch[1] });
+  }
+  return sslMap[issue] || issue;
+}
+
+// Recommendation title translations (reuses fixTitles keys from en.json)
+function translateRecTitle(title) {
+  const titleMap = {
+    'Mixed Content Detected': t('reports.security.fixTitles.mixedContent', 'Mixed Content Detected'),
+    'Excessive Inline Scripts': t('reports.security.fixTitles.excessiveInlineScripts', 'Excessive Inline Scripts'),
+    'Insecure Form Submission': t('reports.security.fixTitles.insecureFormSubmission', 'Insecure Form Submission'),
+    'Password Field Configuration': t('reports.security.fixTitles.passwordFieldConfig', 'Password Field Configuration'),
+    'Unsandboxed Iframes': t('reports.security.fixTitles.unsandboxedIframes', 'Unsandboxed Iframes'),
+    'Implement HTTPS': t('reports.security.fixTitles.implementHttps', 'Implement HTTPS'),
+    'Fix SSL/TLS Issues': t('reports.security.fixTitles.fixSslTlsIssues', 'Fix SSL/TLS Issues'),
+    'Implement Content Security Policy': t('reports.security.fixTitles.implementCsp', 'Implement Content Security Policy'),
+    'Enable HTTP Strict Transport Security': t('reports.security.fixTitles.enableHsts', 'Enable HTTP Strict Transport Security'),
+    'Prevent Clickjacking Attacks': t('reports.security.fixTitles.preventClickjacking', 'Prevent Clickjacking Attacks'),
+    'Prevent MIME Sniffing': t('reports.security.fixTitles.preventMimeSniffing', 'Prevent MIME Sniffing'),
+    'Improve Cookie Security': t('reports.security.fixTitles.improveCookieSecurity', 'Improve Cookie Security'),
+    'Add Subresource Integrity Checks': t('reports.security.fixTitles.addSriChecks', 'Add Subresource Integrity Checks')
+  };
+  return titleMap[title] || title;
+}
+
+// Recommendation description translations (server-generated English descriptions)
+function translateRecDescription(desc) {
+  if (!desc) return desc;
+  const descMap = {
+    'Website is not using HTTPS encryption': t('reports.security.recDescriptions.noHttps', 'Website is not using HTTPS encryption'),
+    'No CSP header found - site vulnerable to XSS attacks': t('reports.security.recDescriptions.noCsp', 'No CSP header found - site vulnerable to XSS attacks'),
+    'HSTS header not present': t('reports.security.recDescriptions.noHsts', 'HSTS header not present'),
+    'X-Frame-Options header not set': t('reports.security.recDescriptions.noXFrameOptions', 'X-Frame-Options header not set'),
+    'X-Content-Type-Options header missing': t('reports.security.recDescriptions.noXContentType', 'X-Content-Type-Options header missing'),
+    'Cookies not properly secured with HttpOnly, Secure, and SameSite flags': t('reports.security.recDescriptions.cookiesNotSecured', 'Cookies not properly secured with HttpOnly, Secure, and SameSite flags')
+  };
+  if (descMap[desc]) return descMap[desc];
+  // Dynamic patterns with counts
+  const patterns = [
+    { re: /^(\d+) resources loaded over HTTP on HTTPS page$/, key: 'reports.security.recDescriptions.mixedContentCount', fallback: '{{count}} resources loaded over HTTP on HTTPS page' },
+    { re: /^(\d+) inline scripts found - increases XSS risk$/, key: 'reports.security.recDescriptions.inlineScriptsCount', fallback: '{{count}} inline scripts found - increases XSS risk' },
+    { re: /^(\d+) form\(s\) submitting data over HTTP$/, key: 'reports.security.recDescriptions.insecureFormsCount', fallback: '{{count}} form(s) submitting data over HTTP' },
+    { re: /^(\d+) password field\(s\) without autocomplete attribute$/, key: 'reports.security.recDescriptions.passwordFieldsCount', fallback: '{{count}} password field(s) without autocomplete attribute' },
+    { re: /^(\d+) iframe\(s\) without sandbox attribute$/, key: 'reports.security.recDescriptions.unsandboxedIframesCount', fallback: '{{count}} iframe(s) without sandbox attribute' },
+    { re: /^(\d+) third-party scripts without SRI$/, key: 'reports.security.recDescriptions.sriMissingCount', fallback: '{{count}} third-party scripts without SRI' }
+  ];
+  for (const p of patterns) {
+    const m = desc.match(p.re);
+    if (m) return t(p.key, p.fallback, { count: m[1] });
+  }
+  return desc;
+}
+
+// Recommendation impact translations
+function translateRecImpact(impact) {
+  if (!impact) return '-';
+  const impactMap = {
+    'All data transmitted in plain text - vulnerable to interception': t('reports.security.recImpacts.plainText', 'All data transmitted in plain text - vulnerable to interception'),
+    'Certificate or protocol issues may compromise security': t('reports.security.recImpacts.certIssues', 'Certificate or protocol issues may compromise security'),
+    'Attackers can inject malicious scripts': t('reports.security.recImpacts.xssRisk', 'Attackers can inject malicious scripts'),
+    'Site vulnerable to protocol downgrade attacks': t('reports.security.recImpacts.downgradeAttack', 'Site vulnerable to protocol downgrade attacks'),
+    'Site can be embedded in malicious iframes': t('reports.security.recImpacts.clickjacking', 'Site can be embedded in malicious iframes'),
+    'Browsers may misinterpret file types': t('reports.security.recImpacts.mimeSniffing', 'Browsers may misinterpret file types'),
+    'Critical security vulnerability': t('reports.security.recImpacts.criticalVuln', 'Critical security vulnerability'),
+    'High-severity security issue': t('reports.security.recImpacts.highVuln', 'High-severity security issue'),
+    'Cookies vulnerable to XSS and CSRF attacks': t('reports.security.recImpacts.cookieVuln', 'Cookies vulnerable to XSS and CSRF attacks'),
+    'Third-party scripts could be compromised': t('reports.security.recImpacts.sriRisk', 'Third-party scripts could be compromised')
+  };
+  return impactMap[impact] || impact;
+}
+
+// Recommendation solution translations
+function translateRecSolution(solution) {
+  if (!solution) return '-';
+  const solMap = {
+    'Obtain and install an SSL/TLS certificate from a trusted CA': t('reports.security.recSolutions.installSsl', 'Obtain and install an SSL/TLS certificate from a trusted CA'),
+    'Update certificate or upgrade TLS protocol version': t('reports.security.recSolutions.upgradeTls', 'Update certificate or upgrade TLS protocol version'),
+    'Add Content-Security-Policy header with restrictive directives': t('reports.security.recSolutions.addCsp', 'Add Content-Security-Policy header with restrictive directives'),
+    'Add Strict-Transport-Security: max-age=31536000; includeSubDomains': t('reports.security.recSolutions.addHsts', 'Add Strict-Transport-Security: max-age=31536000; includeSubDomains'),
+    'Add X-Frame-Options: DENY or SAMEORIGIN': t('reports.security.recSolutions.addXFrameOptions', 'Add X-Frame-Options: DENY or SAMEORIGIN'),
+    'Add X-Content-Type-Options: nosniff': t('reports.security.recSolutions.addNosniff', 'Add X-Content-Type-Options: nosniff'),
+    'Update all resources to use HTTPS URLs': t('reports.security.vulnSolutions.updateHttps', 'Update all resources to use HTTPS URLs'),
+    'Move scripts to external files and use CSP': t('reports.security.vulnSolutions.moveScripts', 'Move scripts to external files and use CSP'),
+    'Update form actions to use HTTPS': t('reports.security.vulnSolutions.updateForms', 'Update form actions to use HTTPS'),
+    'Add autocomplete="current-password" or "new-password"': t('reports.security.vulnSolutions.addAutocomplete', 'Add autocomplete="current-password" or "new-password"'),
+    'Add sandbox attribute to restrict iframe capabilities': t('reports.security.vulnSolutions.addSandbox', 'Add sandbox attribute to restrict iframe capabilities'),
+    'Set HttpOnly, Secure, and SameSite=Strict flags on all cookies': t('reports.security.recSolutions.secureCookies', 'Set HttpOnly, Secure, and SameSite=Strict flags on all cookies'),
+    'Add integrity and crossorigin attributes to external scripts': t('reports.security.recSolutions.addSri', 'Add integrity and crossorigin attributes to external scripts')
+  };
+  return solMap[solution] || solution;
 }
 
 // Security header description translations
@@ -576,6 +708,9 @@ async function analyzeSecurity(options = {}) {
       resultsDiv.classList.remove('hidden');
       resultsDiv.removeAttribute('hidden');
       window.__REPORT_READY__ = true;
+      window.dispatchEvent(new CustomEvent('report:ready', {
+        detail: { reportId: apiReportId, url: urlInput.value }
+      }));
     }, 1000);
 
   } catch (error) {
@@ -1322,6 +1457,7 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
 
   const renderContent = () => {
     const hasPro = !isPro || userHasPro();
+    contentInner.innerHTML = ''; // Clear before re-render
     if (isPro && !hasPro) {
       contentInner.innerHTML = previewHtml || renderLockedProPreview(displayTitle, [t('reports.security.securityFixesPreview', 'Security fixes preview'), t('reports.security.owaspRecommendations', 'OWASP-aligned recommendations')]);
       return;
@@ -1333,11 +1469,11 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       contentInner.appendChild(contentHTML);
     }
   };
-  
+
   // Add click handler for accordion
   header.addEventListener('click', () => {
     const isExpanded = content.classList.contains('expanded');
-    
+
     if (isExpanded) {
       // Collapse
       content.classList.remove('expanded');
@@ -1345,19 +1481,25 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       header.querySelector('.accordion-toggle').textContent = '▼';
       header.querySelector('.accordion-toggle').classList.remove('rotated');
     } else {
-      // Expand and create content if not already created
-      // (Shows locked preview inline if user doesn't have Pro, no modal popup)
-      if (!contentInner.hasChildNodes()) {
+      // For pro sections, always re-check access (handles billing fetch race condition)
+      if (isPro || !contentInner.hasChildNodes()) {
         renderContent();
       }
-      
+
       content.classList.add('expanded');
       header.classList.add('active');
       header.querySelector('.accordion-toggle').textContent = '▲';
       header.querySelector('.accordion-toggle').classList.add('rotated');
     }
   });
-  
+
+  // Pro sections: eagerly pre-render so content is ready when billing is cached.
+  // The global entitlements:updated handler (outside this function) re-renders
+  // all results when billing status arrives, so no per-section listener needed.
+  if (isPro) {
+    renderContent();
+  }
+
   accordion.appendChild(header);
   accordion.appendChild(content);
   container.appendChild(accordion);
@@ -1399,7 +1541,7 @@ function renderSSLContent(ssl) {
         <div class="issues-list" style="margin-top: 1rem;">
           <h5 style="color: #ff4444;">~ ${t('reports.security.certificateIssues', 'Certificate Issues')}:</h5>
           <ul>
-            ${ssl.issues.map(issue => `<li style="color: #ff4444;">${issue}</li>`).join('')}
+            ${ssl.issues.map(issue => `<li style="color: #ff4444;">${translateSslIssue(issue)}</li>`).join('')}
           </ul>
         </div>
       ` : '<p style="color: var(--accent-primary); margin-top: 1rem;">✓ ' + t('reports.security.noSslIssues', 'No SSL/TLS issues detected') + '</p>'}
@@ -1506,11 +1648,11 @@ function renderVulnerabilitiesContent(vulnerabilities) {
             <div class="vulnerability-item ${issue.severity}">
               <div class="vuln-header">
                 <span class="vuln-severity-badge ${issue.severity}">${translateRiskLevel(issue.severity).toUpperCase()}</span>
-                <span class="vuln-title">${issue.title}</span>
+                <span class="vuln-title">${translateVulnTitle(issue.title)}</span>
               </div>
               <div class="vuln-description">${issue.description}</div>
               ${issue.cve ? `<div class="vuln-cve">CVE: ${issue.cve}</div>` : ''}
-              ${issue.solution ? `<div class="vuln-solution"><strong>${t('reports.security.solution', 'Solution')}:</strong> ${issue.solution}</div>` : ''}
+              ${issue.solution ? `<div class="vuln-solution"><strong>${t('reports.security.solution', 'Solution')}:</strong> ${translateVulnDescription(issue.solution)}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -1719,17 +1861,17 @@ function renderRecommendationsContent(recommendations, results) {
                     </span>
                   </td>
                   <td style="padding: 0.75rem; font-weight: 600; color: #00ccff; font-size: 0.9rem; line-height: 1.4;">
-                    ${rec.title}
+                    ${translateRecTitle(rec.title)}
                     ${rec.owaspRef ? `<br><span style="font-size: 0.75rem; color: #ffa500; font-weight: normal;">OWASP: ${rec.owaspRef}</span>` : ''}
                   </td>
                   <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #ccc;">
-                    ${rec.description}
+                    ${translateRecDescription(rec.description)}
                   </td>
                   <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #ff6b6b;">
-                    ${rec.impact || '-'}
+                    ${translateRecImpact(rec.impact)}
                   </td>
                   <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: var(--accent-primary);">
-                    ${rec.solution || '-'}
+                    ${translateRecSolution(rec.solution)}
                     ${rec.resources && rec.resources.length > 0 ? `
                       <div style="margin-top: 0.5rem;">
                         ${rec.resources.map(resource => 
@@ -1884,31 +2026,14 @@ function getCurrentDomain() {
 }
 
 function userHasPro() {
-  const VERSION = '20260201h';
-
-  // Check fresh scan flag - block free users on new scans, but allow Pro/Day Pass
-  if (window.__SM_FRESH_SCAN_PENDING_PAYMENT__ === true) {
-    const isProSub = window.ProReportBlock?.isProSubscriber?.();
-    if (!isProSub) {
-      console.log('[userHasPro] v' + VERSION + ' FRESH SCAN DETECTED (free user) - returning FALSE');
-      return false;
-    }
-    console.log('[userHasPro] v' + VERSION + ' Pro/Day Pass user - ignoring fresh scan flag');
-  }
-
-  // Check new billing model (ProReportBlock)
   const reportId = document.body?.getAttribute('data-report-id') || '';
   if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
-    const hasAccess = window.ProReportBlock.hasAccess(reportId);
-    console.log('[userHasPro] v' + VERSION + ' ProReportBlock.hasAccess:', hasAccess, 'reportId:', reportId);
-    if (hasAccess) return true;
+    if (window.ProReportBlock.hasAccess(reportId)) return true;
   }
   if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
     return window.ProAccess.hasProAccess(getCurrentDomain());
   }
-  if (window.ExportGate && window.ExportGate.isPro()) {
-    return true;
-  }
+  if (window.ExportGate && window.ExportGate.isPro()) return true;
   return false;
 }
 

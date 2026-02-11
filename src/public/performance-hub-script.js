@@ -488,8 +488,19 @@ document.addEventListener('DOMContentLoaded', () => {
   // Generic display function for loading stored reports
   // Exposed globally for Puppeteer PDF rendering
   window.displayResults = displayResults;
-  function displayResults(data) {
+  async function displayResults(data) {
     if (!data) return;
+
+    // CRITICAL: Ensure billing status is loaded before rendering locked/unlocked sections.
+    // Without this, ProReportBlock.hasAccess() returns false (no cached billing status yet)
+    // and all Pro sections render as locked even for Day Pass / Pro subscribers.
+    if (window.ProReportBlock?.fetchBillingStatus) {
+      try {
+        await window.ProReportBlock.fetchBillingStatus();
+      } catch (e) {
+        console.warn('[PerformanceHub] Billing status pre-fetch failed:', e);
+      }
+    }
 
     // Validate data structure - check for error responses
     // IMPORTANT: If cached data contains an error (e.g., from previous failed fetch),
@@ -603,6 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
       try {
         displayResults(injectedData);
         window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('report:ready'));
         console.log('[PerformanceHub] Puppeteer-injected data displayed successfully');
         return; // Don't continue with normal init flow
       } catch (e) {
@@ -768,6 +780,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.ReportStorage.showStoredReportBanner?.(stored.metadata);
             // Signal for Puppeteer PDF export that report content is rendered
             window.__REPORT_READY__ = true;
+            window.dispatchEvent(new CustomEvent('report:ready'));
             // Clean URL after successful display so refresh doesn't reload stored report
             // (Skip URL cleanup in print mode since Puppeteer needs the report_id param)
             if (new URLSearchParams(window.location.search).get('print') !== '1') {
@@ -1028,7 +1041,12 @@ document.addEventListener('DOMContentLoaded', () => {
       // This ensures ProReportBlock.hasAccess() returns the correct value
       if (window.ProReportBlock?.fetchBillingStatus) {
         console.log('[PerformanceHub] Fetching billing status before display...');
-        await window.ProReportBlock.fetchBillingStatus(false); // Don't force refresh, use cache if available
+        await window.ProReportBlock.fetchBillingStatus(true); // Force refresh to ensure latest data
+        // Clear fresh scan flag for Pro/Day Pass users - they have global access
+        if (window.ProReportBlock?.isProSubscriber?.()) {
+          console.log('[PerformanceHub] Pro/Day Pass user - clearing fresh scan payment flag');
+          window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+        }
       }
 
       switch (currentMode) {
@@ -1640,12 +1658,12 @@ document.addEventListener('DOMContentLoaded', () => {
       ...mobile,
       opportunities: mobile.opportunities || []
     };
-    // CRITICAL: Only render pro content if user has access, otherwise show lock preview
-    const proContent = proLocked
-      ? renderLockedProPreview('Paid report available', ['Client-ready exports', 'Share link', 'Fix code + recommendations'])
-      : `
+    // Always generate FULL pro content — ReportAccordion handles lock overlay visibility.
+    // Pass hasProAccess=true because the accordion section itself has locked: proLocked
+    // which gates access. The inner content should always be the full unlocked version.
+    const proContent = `
         ${renderFreeFixBullets(desktopForFixes, mobileForFixes)}
-        ${renderFixesToMake(desktopForFixes, mobileForFixes)}
+        ${renderFixesToMake(desktopForFixes, mobileForFixes, true)}
         <div style="margin-top: 1.5rem;">
           <h4 style="margin: 0 0 0.75rem 0;">Opportunities</h4>
           ${opportunitiesContent}
@@ -2551,12 +2569,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const proLocked = !userHasProResult;
     console.log('[CWV Debug] proLocked (final):', proLocked);
 
-    // CRITICAL: Only render pro content if user has access, otherwise show lock preview
-    const proContent = proLocked
-      ? renderLockedProPreview('Paid report available', ['Client-ready exports', 'Share link', 'Fix code + recommendations'])
-      : `
+    // Always generate FULL pro content — ReportAccordion handles lock overlay visibility.
+    // Pass hasProAccess=true because the accordion section itself has locked: proLocked
+    // which gates access. The inner content should always be the full unlocked version.
+    const proContent = `
         ${renderFreeFixBullets(desktop, mobile)}
-        ${renderFixesToMake(desktop, mobile)}
+        ${renderFixesToMake(desktop, mobile, true)}
       `;
 
     const accordions = [
@@ -3368,11 +3386,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const locked = isProLocked && !userHasPro();
     const chevron = defaultOpen ? '▾' : '▸';
     return `
-      <div class="accordion" data-accordion-id="${id}">
+      <div class="accordion${isProLocked ? ' pro-section' : ''}" data-accordion-id="${id}">
         <button class="accordion__header" type="button" data-accordion-toggle="${id}">
           <div class="accordion__title">${title}</div>
           <div class="accordion__meta">
-            ${locked ? '<span class="pro-pill">PRO</span>' : ''}
+            ${isProLocked ? '<span class="pro-pill">PRO</span>' : ''}
             <span class="accordion__chevron">${chevron}</span>
           </div>
         </button>
@@ -4135,55 +4153,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function userHasPro() {
-    // Version marker for debugging cache issues
-    const VERSION = '20260201g-fresh-scan-flag';
-
-    // Check fresh scan flag - block free users on new scans, but allow Pro/Day Pass
-    if (window.__SM_FRESH_SCAN_PENDING_PAYMENT__) {
-      const isProSub = window.ProReportBlock?.isProSubscriber?.();
-      if (!isProSub) {
-        const currentUrl = urlInput?.value || '';
-        const scanUrl = window.__SM_CURRENT_SCAN_URL__ || '';
-        console.log('[userHasPro] v' + VERSION + ' FRESH SCAN DETECTED (free user) - returning FALSE', { currentUrl, scanUrl });
-        return false;
-      }
-      console.log('[userHasPro] v' + VERSION + ' Pro/Day Pass user - ignoring fresh scan flag');
+    const reportId = document.body?.getAttribute('data-report-id') || '';
+    if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+      if (window.ProReportBlock.hasAccess(reportId)) return true;
     }
-
-    // SECURITY: Default to locked (false) unless we have explicit proof of access
-    // Check access using ProReportBlock which handles all verification
-    try {
-      const reportId = document.body?.getAttribute('data-report-id') || '';
-      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
-      const sessionMarker = sessionStorage.getItem('sm_payment_completed_session');
-
-      console.log('[userHasPro] v' + VERSION + ' DEBUG STATE:', {
-        reportId,
-        hasAuthToken: !!token,
-        hasSessionMarker: !!sessionMarker,
-        sessionMarkerAge: sessionMarker ? Math.round((Date.now() - parseInt(sessionMarker, 10)) / 60000) + ' mins' : 'none'
-      });
-
-      // Use ProReportBlock.hasAccess which checks:
-      // 1. Pro subscription (server-verified, requires auth token)
-      // 2. Session-verified purchase (just returned from Stripe, requires session marker)
-      // 3. Demo domains (only vail.com)
-      // 4. Server-verified report purchase
-      if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
-        const hasAccess = window.ProReportBlock.hasAccess(reportId);
-        // SECURITY: Strict boolean coercion - anything other than explicit true = false
-        const result = hasAccess === true;
-        console.log('[userHasPro] ProReportBlock.hasAccess result:', hasAccess, '-> coerced:', result);
-        return result;
-      }
-
-      console.log('[userHasPro] ProReportBlock not available, returning FALSE');
-      return false;
-    } catch (err) {
-      // SECURITY: Any error = locked
-      console.error('[userHasPro] Error checking access, returning FALSE:', err);
-      return false;
+    if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
+      return window.ProAccess.hasProAccess(getCurrentDomain());
     }
+    if (window.ExportGate && window.ExportGate.isPro()) return true;
+    return false;
   }
 
   // Export to Excel (XLSX format simulation using CSV with Excel-compatible formatting)

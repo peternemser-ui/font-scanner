@@ -2744,19 +2744,19 @@
           },
           "planLimits": {
             "q": "¿Cuáles son los límites del plan?",
-            "a": "<strong>Gratis:</strong> 10 escaneos al día, secciones Pro bloqueadas.<br><strong>8-Hour Pass ($20):</strong> escaneos ilimitados durante 8 horas + 30 desbloqueos de informes.<br><strong>Pro Mensual ($29/mes):</strong> escaneos ilimitados + 250 desbloqueos al mes.<br><strong>Pro Anual ($290/año):</strong> escaneos ilimitados + desbloqueos ilimitados."
+            "a": "<strong>Gratis:</strong> 10 escaneos al día, secciones Pro bloqueadas.<br><strong>Day Pass ($20):</strong> escaneos ilimitados durante 24 horas + 30 desbloqueos de informes.<br><strong>Pro Mensual ($29/mes):</strong> escaneos ilimitados + 250 desbloqueos al mes.<br><strong>Pro Anual ($290/año):</strong> escaneos ilimitados + desbloqueos ilimitados."
           },
           "dailyLimit": {
             "q": "¿Qué ocurre cuando alcanzo el límite diario de escaneos?",
-            "a": "Cuando llegas a 10 escaneos en un día (plan gratis), el botón de escaneo se desactiva hasta la medianoche UTC. Verás opciones de mejora para 8-Hour Pass o suscripciones Pro para continuar de inmediato."
+            "a": "Cuando llegas a 10 escaneos en un día (plan gratis), el botón de escaneo se desactiva hasta la medianoche UTC. Verás opciones de mejora para Day Pass o suscripciones Pro para continuar de inmediato."
           },
           "unlocksRunOut": {
             "q": "¿Qué ocurre cuando me quedo sin desbloqueos de informes?",
-            "a": "Con 8-Hour Pass puedes desbloquear hasta 30 informes durante tu ventana de 8 horas. En Pro Mensual, los 250 informes se reinician al inicio del ciclo de facturación. Pro Anual tiene desbloqueos ilimitados. Si te quedas sin desbloqueos, puedes comprar un Informe Único ($5) o mejorar tu plan."
+            "a": "Con Day Pass puedes desbloquear hasta 30 informes durante tu ventana de 24 horas. En Pro Mensual, los 250 informes se reinician al inicio del ciclo de facturación. Pro Anual tiene desbloqueos ilimitados. Si te quedas sin desbloqueos, puedes comprar un Informe Único ($5) o mejorar tu plan."
           },
           "dayPass": {
             "q": "¿Cómo funciona el Day Pass?",
-            "a": "El 8-Hour Pass ($20) te da acceso Pro completo durante 8 horas desde la compra. Incluye escaneos ilimitados y hasta 30 desbloqueos en esa ventana. No se renueva automáticamente: ideal para proyectos puntuales o presentaciones a clientes."
+            "a": "El Day Pass ($20) te da acceso Pro completo durante 24 horas desde la compra. Incluye escaneos ilimitados y hasta 30 desbloqueos en esa ventana. No se renueva automáticamente: ideal para proyectos puntuales o presentaciones a clientes."
           },
           "singleReport": {
             "q": "¿Cómo funciona la opción de Informe Único?",
@@ -2764,7 +2764,7 @@
           },
           "resets": {
             "q": "¿Cuándo se reinician mis límites?",
-            "a": "El límite diario se reinicia a medianoche UTC. En Pro Mensual, los desbloqueos se reinician al inicio de cada ciclo. Los límites de 8-Hour Pass expiran 8 horas después de la compra."
+            "a": "El límite diario se reinicia a medianoche UTC. En Pro Mensual, los desbloqueos se reinician al inicio de cada ciclo. Los límites de Day Pass expiran 24 horas después de la compra."
           }
         }
       },
@@ -3402,7 +3402,10 @@
         "recommendedFix": "Corrección Recomendada",
         "stepByStepFix": "Corrección Paso a Paso:",
         "expectedImpact": "Impacto Esperado",
-        "howToFix": "Cómo corregir:"
+        "howToFix": "Cómo corregir:",
+        "defaultStep1": "Revisar la implementación actual",
+        "defaultStep2": "Aplicar la corrección recomendada",
+        "defaultStep3": "Probar y verificar los cambios"
       },
       "whyThisMatters": "Por qué es importante",
       "technicalDetails": "Detalles técnicos",
@@ -3436,7 +3439,8 @@
         "fair": "Regular",
         "poor": "Pobre",
         "critical": "Crítico",
-        "unknown": "Desconocido"
+        "unknown": "Desconocido",
+        "needsWork": "Necesita Mejoras"
       },
       "selectDevice": "Por favor selecciona al menos un dispositivo para probar",
       "source": "fuente",
@@ -4258,6 +4262,42 @@
         "a7Xss": "A7:2017 - Secuencias de comandos en sitios cruzados (XSS)",
         "a9KnownVulns": "A9:2017 - Uso de componentes con vulnerabilidades conocidas"
       },
+      "recDescriptions": {
+        "noHttps": "El sitio web no utiliza cifrado HTTPS",
+        "noCsp": "No se encontró encabezado CSP - sitio vulnerable a ataques XSS",
+        "noHsts": "Encabezado HSTS no presente",
+        "noXFrameOptions": "Encabezado X-Frame-Options no configurado",
+        "noXContentType": "Encabezado X-Content-Type-Options faltante",
+        "cookiesNotSecured": "Las cookies no están correctamente protegidas con los indicadores HttpOnly, Secure y SameSite",
+        "mixedContentCount": "{{count}} recursos cargados por HTTP en página HTTPS",
+        "inlineScriptsCount": "{{count}} scripts en línea encontrados - aumenta el riesgo de XSS",
+        "insecureFormsCount": "{{count}} formulario(s) enviando datos por HTTP",
+        "passwordFieldsCount": "{{count}} campo(s) de contraseña sin atributo autocomplete",
+        "unsandboxedIframesCount": "{{count}} iframe(s) sin atributo sandbox",
+        "sriMissingCount": "{{count}} scripts de terceros sin SRI"
+      },
+      "recImpacts": {
+        "plainText": "Todos los datos se transmiten en texto plano - vulnerable a interceptación",
+        "certIssues": "Problemas de certificado o protocolo pueden comprometer la seguridad",
+        "xssRisk": "Los atacantes pueden inyectar scripts maliciosos",
+        "downgradeAttack": "Sitio vulnerable a ataques de degradación de protocolo",
+        "clickjacking": "El sitio puede ser incrustado en iframes maliciosos",
+        "mimeSniffing": "Los navegadores pueden malinterpretar los tipos de archivo",
+        "criticalVuln": "Vulnerabilidad de seguridad crítica",
+        "highVuln": "Problema de seguridad de alta gravedad",
+        "cookieVuln": "Cookies vulnerables a ataques XSS y CSRF",
+        "sriRisk": "Los scripts de terceros podrían ser comprometidos"
+      },
+      "recSolutions": {
+        "installSsl": "Obtenga e instale un certificado SSL/TLS de una CA de confianza",
+        "upgradeTls": "Actualice el certificado o mejore la versión del protocolo TLS",
+        "addCsp": "Agregue encabezado Content-Security-Policy con directivas restrictivas",
+        "addHsts": "Agregue Strict-Transport-Security: max-age=31536000; includeSubDomains",
+        "addXFrameOptions": "Agregue X-Frame-Options: DENY o SAMEORIGIN",
+        "addNosniff": "Agregue X-Content-Type-Options: nosniff",
+        "secureCookies": "Configure los indicadores HttpOnly, Secure y SameSite=Strict en todas las cookies",
+        "addSri": "Agregue atributos integrity y crossorigin a los scripts externos"
+      },
       "securityFixes": {
         "title": "Correcciones de Seguridad",
         "issuesFound": "{{count}} problemas encontrados",
@@ -4459,7 +4499,32 @@
         "missingSameSite": "Falta el atributo SameSite",
         "sameSiteNoneSecure": "SameSite=None requiere Secure",
         "sessionNoHttpOnly": "Cookie de sesión sin HttpOnly",
-        "insecureSameSite": "Valor SameSite inseguro"
+        "insecureSameSite": "Valor SameSite inseguro",
+        "weakSameSite": "Política SameSite débil",
+        "noneSecured": "Ninguna cookie está correctamente protegida",
+        "vulnerableXss": "Algunas cookies son vulnerables a XSS (falta HttpOnly)",
+        "transmittedHttp": "Algunas cookies pueden transmitirse por HTTP (falta Secure)"
+      },
+      "vulnTitles": {
+        "mixedContent": "Contenido mixto detectado",
+        "excessiveInlineScripts": "Scripts en línea excesivos",
+        "insecureFormSubmission": "Envío de formulario inseguro",
+        "passwordFieldConfig": "Configuración del campo de contraseña",
+        "unsandboxedIframes": "Iframes sin sandbox"
+      },
+      "vulnSolutions": {
+        "updateHttps": "Actualice todos los recursos para usar URLs HTTPS",
+        "moveScripts": "Mueva los scripts a archivos externos y use CSP",
+        "updateForms": "Actualice las acciones de formulario para usar HTTPS",
+        "addAutocomplete": "Agregue autocomplete=\"current-password\" o \"new-password\"",
+        "addSandbox": "Agregue el atributo sandbox para restringir las capacidades del iframe"
+      },
+      "sslIssues": {
+        "expiresInDays": "El certificado expira en {{days}} días",
+        "expiringCritical": "El certificado expira muy pronto - CRÍTICO",
+        "outdatedTls": "Usando protocolo TLS obsoleto",
+        "noHttps": "Sin HTTPS - el sitio web no es seguro",
+        "analysisFailed": "Error al analizar el certificado SSL"
       },
       "implemented": "Implementado",
       "vulnerabilityStatus": "Estado de vulnerabilidades",

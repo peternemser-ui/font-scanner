@@ -4039,7 +4039,10 @@
         "recommendedFix": "Correction Recommandée",
         "stepByStepFix": "Correction Étape par Étape :",
         "expectedImpact": "Impact Attendu",
-        "howToFix": "Comment corriger :"
+        "howToFix": "Comment corriger :",
+        "defaultStep1": "Vérifier l'implémentation actuelle",
+        "defaultStep2": "Appliquer la correction recommandée",
+        "defaultStep3": "Tester et vérifier les modifications"
       },
       "whyThisMatters": "Pourquoi c'est important",
       "technicalDetails": "Détails techniques",
@@ -4145,7 +4148,8 @@
         "fair": "Passable",
         "poor": "Mauvais",
         "critical": "Critique",
-        "unknown": "Inconnu"
+        "unknown": "Inconnu",
+        "needsWork": "À Améliorer"
       },
       "found": "Trouvé",
       "notFound": "Non trouvé",
@@ -4927,6 +4931,42 @@
         "a7Xss": "A7:2017 - Scripts intersites (XSS)",
         "a9KnownVulns": "A9:2017 - Utilisation de composants avec des vulnérabilités connues"
       },
+      "recDescriptions": {
+        "noHttps": "Le site web n'utilise pas le chiffrement HTTPS",
+        "noCsp": "Aucun en-tête CSP trouvé - site vulnérable aux attaques XSS",
+        "noHsts": "En-tête HSTS non présent",
+        "noXFrameOptions": "En-tête X-Frame-Options non défini",
+        "noXContentType": "En-tête X-Content-Type-Options manquant",
+        "cookiesNotSecured": "Les cookies ne sont pas correctement sécurisés avec les indicateurs HttpOnly, Secure et SameSite",
+        "mixedContentCount": "{{count}} ressources chargées en HTTP sur une page HTTPS",
+        "inlineScriptsCount": "{{count}} scripts en ligne trouvés - augmente le risque XSS",
+        "insecureFormsCount": "{{count}} formulaire(s) soumettant des données en HTTP",
+        "passwordFieldsCount": "{{count}} champ(s) de mot de passe sans attribut autocomplete",
+        "unsandboxedIframesCount": "{{count}} iframe(s) sans attribut sandbox",
+        "sriMissingCount": "{{count}} scripts tiers sans SRI"
+      },
+      "recImpacts": {
+        "plainText": "Toutes les données transmises en texte brut - vulnérable à l'interception",
+        "certIssues": "Des problèmes de certificat ou de protocole peuvent compromettre la sécurité",
+        "xssRisk": "Les attaquants peuvent injecter des scripts malveillants",
+        "downgradeAttack": "Site vulnérable aux attaques de rétrogradation de protocole",
+        "clickjacking": "Le site peut être intégré dans des iframes malveillants",
+        "mimeSniffing": "Les navigateurs peuvent mal interpréter les types de fichiers",
+        "criticalVuln": "Vulnérabilité de sécurité critique",
+        "highVuln": "Problème de sécurité de haute gravité",
+        "cookieVuln": "Cookies vulnérables aux attaques XSS et CSRF",
+        "sriRisk": "Les scripts tiers pourraient être compromis"
+      },
+      "recSolutions": {
+        "installSsl": "Obtenez et installez un certificat SSL/TLS auprès d'une AC de confiance",
+        "upgradeTls": "Mettez à jour le certificat ou améliorez la version du protocole TLS",
+        "addCsp": "Ajoutez un en-tête Content-Security-Policy avec des directives restrictives",
+        "addHsts": "Ajoutez Strict-Transport-Security: max-age=31536000; includeSubDomains",
+        "addXFrameOptions": "Ajoutez X-Frame-Options: DENY ou SAMEORIGIN",
+        "addNosniff": "Ajoutez X-Content-Type-Options: nosniff",
+        "secureCookies": "Définissez les indicateurs HttpOnly, Secure et SameSite=Strict sur tous les cookies",
+        "addSri": "Ajoutez les attributs integrity et crossorigin aux scripts externes"
+      },
       "securityFixes": {
         "title": "Corrections de sécurité",
         "issuesFound": "{{count}} problèmes trouvés",
@@ -5128,7 +5168,32 @@
         "missingSameSite": "Attribut SameSite manquant",
         "sameSiteNoneSecure": "SameSite=None nécessite Secure",
         "sessionNoHttpOnly": "Cookie de session sans HttpOnly",
-        "insecureSameSite": "Valeur SameSite non sécurisée"
+        "insecureSameSite": "Valeur SameSite non sécurisée",
+        "weakSameSite": "Politique SameSite faible",
+        "noneSecured": "Aucun cookie n'est correctement sécurisé",
+        "vulnerableXss": "Certains cookies sont vulnérables aux attaques XSS (HttpOnly manquant)",
+        "transmittedHttp": "Certains cookies peuvent être transmis via HTTP (Secure manquant)"
+      },
+      "vulnTitles": {
+        "mixedContent": "Contenu mixte détecté",
+        "excessiveInlineScripts": "Scripts en ligne excessifs",
+        "insecureFormSubmission": "Soumission de formulaire non sécurisée",
+        "passwordFieldConfig": "Configuration du champ mot de passe",
+        "unsandboxedIframes": "Iframes sans sandbox"
+      },
+      "vulnSolutions": {
+        "updateHttps": "Mettez à jour toutes les ressources pour utiliser des URLs HTTPS",
+        "moveScripts": "Déplacez les scripts vers des fichiers externes et utilisez CSP",
+        "updateForms": "Mettez à jour les actions de formulaire pour utiliser HTTPS",
+        "addAutocomplete": "Ajoutez autocomplete=\"current-password\" ou \"new-password\"",
+        "addSandbox": "Ajoutez l'attribut sandbox pour restreindre les capacités de l'iframe"
+      },
+      "sslIssues": {
+        "expiresInDays": "Le certificat expire dans {{days}} jours",
+        "expiringCritical": "Le certificat expire très bientôt - CRITIQUE",
+        "outdatedTls": "Utilisation d'un protocole TLS obsolète",
+        "noHttps": "Pas de HTTPS - le site web n'est pas sécurisé",
+        "analysisFailed": "Échec de l'analyse du certificat SSL"
       },
       "implemented": "Implémenté",
       "vulnerabilityStatus": "État des vulnérabilités",
