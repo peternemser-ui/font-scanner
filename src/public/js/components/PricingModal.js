@@ -49,7 +49,7 @@
         { key: 'pricing.benefits.bestValue', fallback: 'Best value' }
       ],
       daypass: [
-        { key: 'pricing.benefits.unlimitedScans24h', fallback: 'Unlimited scans for 8h' },
+        { key: 'pricing.benefits.unlimitedScans24h', fallback: 'Unlimited scans for 24h' },
         { key: 'pricing.benefits.reportsPerPass', fallback: `${limits.day_pass?.limits?.paidReportsPerWindow || 30} reports included` },
         { key: 'pricing.benefits.exportPdfs', fallback: 'Export PDFs' },
         { key: 'pricing.benefits.noAutoRenewal', fallback: 'No auto-renewal' }
@@ -556,7 +556,23 @@
     const isYearly = billingStatus?.subscriptionInterval === 'year';
     const isDay = billingStatus?.plan === 'day_pass' || billingStatus?.subscriptionInterval === 'day';
     const purchasedReports = billingStatus?.purchasedReports || [];
-    const reportPurchased = reportId && purchasedReports.includes(reportId);
+    let reportPurchased = reportId && purchasedReports.includes(reportId);
+
+    // Cross-verify: if billing says "purchased" but the page still has locked pro
+    // sections, the user clearly can't access the content. Override to allow purchase.
+    // NOTE: Previously this used ProReportBlock.hasAccess() which could return true
+    // for demo domains even when content was locked, causing false "OWNED" states.
+    if (reportPurchased && !isPro) {
+      const hasLockedContent = document.querySelector('[data-locked-overlay], .pro-locked, .pro-report-block--locked');
+      if (hasLockedContent) {
+        console.warn('[PricingModal] Billing says purchased but page has locked content - overriding to allow purchase', {
+          reportId,
+          purchasedReports,
+          lockedElement: hasLockedContent.className
+        });
+        reportPurchased = false;
+      }
+    }
 
     console.log('[PricingModal] renderBody billing check:', {
       reportId,
@@ -566,14 +582,16 @@
       billingStatus
     });
 
-    // Always show single report card
+    // Hide single-report card when opened from scan-quota context (no report to unlock)
+    const showSingle = !currentState.hideSingleReport;
+
     return `
       ${error ? renderError(error) : ''}
       <div class="sm-pricing-grid">
         ${renderPlanCard('monthly', { isPro, isYearly, isDay, loading })}
         ${renderPlanCard('yearly', { isPro, isYearly, isDay, loading })}
         ${renderPlanCard('daypass', { isPro, isYearly, isDay, loading })}
-        ${renderPlanCard('single', { isPro, reportPurchased, loading, reportId })}
+        ${showSingle ? renderPlanCard('single', { isPro, reportPurchased, loading, reportId }) : ''}
       </div>
     `;
   }
@@ -646,7 +664,8 @@
       loading: false,
       error: null,
       billingStatus: null,
-      reportId
+      reportId,
+      hideSingleReport: !!options.hideSingleReport
     };
 
     // Pre-fetch billing status

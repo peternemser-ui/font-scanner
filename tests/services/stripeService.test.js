@@ -488,7 +488,7 @@ describe('StripeService', () => {
       });
 
       await mockDbInstance.run(
-        'INSERT INTO report_purchases (user_id, report_id, purchased_at) VALUES (?, ?, CURRENT_TIMESTAMP)',
+        "INSERT INTO report_purchases (user_id, report_id, purchased_at, status) VALUES (?, ?, CURRENT_TIMESTAMP, 'paid')",
         [testUser.id, 'r_report_001']
       );
 

@@ -218,7 +218,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const error = await response.json();
         if (error.code === 'SCAN_QUOTA_EXCEEDED') {
           const limit = error.scansLimit || 10;
-          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          if (loader) {
+            loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+          }
+          return;
         }
         throw new Error(error.message || error.error || t('reports.crawler.crawlFailed', 'Crawl failed'));
       }
@@ -401,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         id: 'report-recommendations',
-        title: t('reports.crawler.fixCodeRecommendations', 'Fix Code + Recommendations'),
+        title: t('reports.crawler.fixCodeRecommendations', 'Recommendations'),
         scoreTextRight: data.results?.pagesDiscovered || pages.length,
         isPro: true,
         locked: !isUnlocked,
@@ -431,7 +434,7 @@ document.addEventListener('DOMContentLoaded', () => {
           proBlock: true,
           proBlockOptions: {
             context: 'crawler',
-            features: ['pdf', 'csv', 'share'],
+            features: ['pdf', 'excel', 'csv', 'share'],
             title: t('reports.common.unlockReport', 'Unlock Report'),
             subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
             reportId
@@ -889,7 +892,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <div class="crawler-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-          <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
             ${renderCrawlerFixTabs(fix, accordionId)}
           </div>
         </div>
@@ -1337,6 +1340,12 @@ Sitemap: https://example.com/sitemap.xml`,
 
     const lockedSections = document.querySelectorAll('.report-scope .accordion-section[data-accordion-section="report-recommendations"].locked');
     lockedSections.forEach(section => section.classList.remove('locked'));
+
+    // Remove locked state from Pro Report Blocks (show accent border after unlock)
+    document.querySelectorAll('.pro-report-block--locked, .pro-report-block[data-locked]').forEach((block) => {
+      block.classList.remove('pro-report-block--locked');
+      block.removeAttribute('data-locked');
+    });
   }
 
   // Screenshot retry helper

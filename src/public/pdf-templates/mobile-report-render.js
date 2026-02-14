@@ -17,6 +17,7 @@
     var esc = utils.esc;
     var truncate = utils.truncate;
     var scoreClass = utils.scoreClass;
+    var translateImpact = utils.translateImpact || function(v) { return v; };
 
     var sectionIndex = 1;
 
@@ -144,7 +145,7 @@
           var text = typeof issue === 'string' ? issue : (issue.message || issue.title || issue.element || '');
           var severity = typeof issue === 'object' ? (issue.severity || 'medium') : 'medium';
           return [
-            '<span class="pdf-issue__severity pdf-issue__severity--' + severity.toLowerCase() + '">' + esc(severity.toUpperCase()) + '</span>',
+            '<span class="pdf-issue__severity pdf-issue__severity--' + severity.toLowerCase() + '">' + esc(translateImpact(severity)) + '</span>',
             esc(truncate(text, 80))
           ];
         });
@@ -308,7 +309,7 @@
           var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
           var sev = typeof issue === 'object' ? (issue.severity || 'medium').toLowerCase() : 'medium';
           html += '<div class="pdf-issue pdf-issue--' + sev + '">' +
-            '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc(sev.toUpperCase()) + '</span>' +
+            '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc(translateImpact(sev)) + '</span>' +
             '<span class="pdf-issue__text">' + esc(text) + '</span>' +
           '</div>';
         });
@@ -470,7 +471,7 @@
           var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
           var severity = typeof issue === 'object' ? (issue.severity || 'medium') : 'medium';
           return [
-            '<span class="pdf-issue__severity pdf-issue__severity--' + severity.toLowerCase() + '">' + esc(severity.toUpperCase()) + '</span>',
+            '<span class="pdf-issue__severity pdf-issue__severity--' + severity.toLowerCase() + '">' + esc(translateImpact(severity)) + '</span>',
             esc(truncate(text, 80))
           ];
         });

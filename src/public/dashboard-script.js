@@ -172,7 +172,7 @@ function initializeDashboardContactForm() {
 
     if (submitBtn) {
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Sending...';
+      submitBtn.textContent = t('dashboard.contact.sending', 'Sending...');
     }
 
     try {
@@ -225,7 +225,7 @@ async function runComprehensiveAnalysis() {
 
   // Disable inputs
   submitButton.disabled = true;
-  submitButton.textContent = 'Running audit...';
+  submitButton.textContent = t('dashboard.runningAudit', 'Running audit...');
   urlInput.disabled = true;
   
   // Show unified loading with steps
@@ -332,43 +332,49 @@ async function runComprehensiveAnalysis() {
     const authHeaders = { 'Content-Type': 'application/json' };
     if (token) authHeaders['Authorization'] = `Bearer ${token}`;
 
+    // Helper: fetch + parse JSON. Returns the parsed body and attaches __ok flag.
+    // Quota errors (429 + SCAN_QUOTA_EXCEEDED) are thrown so allSettled rejects them.
+    // Other errors are returned as fulfilled with an error property for partial-result display.
+    async function fetchApi(endpoint, body) {
+      const r = await fetch(endpoint, {
+        method: 'POST',
+        headers: authHeaders,
+        credentials: 'include',
+        body: JSON.stringify(body)
+      });
+      const data = await r.json();
+      if (!r.ok) {
+        // Quota errors must be thrown so the quota check below can detect them
+        if (data.code === 'SCAN_QUOTA_EXCEEDED') {
+          const err = new Error(data.message || 'Scan quota exceeded');
+          err.data = data;
+          err.status = r.status;
+          throw err;
+        }
+        // Other errors: return as data with error flag so dashboard shows partial results
+        return { error: data.message || data.error || 'Request failed', _status: r.status };
+      }
+      return data;
+    }
+
     // Parallel fetch - all requests start at the same time
     const [fontResults, seoResults, perfResults, a11yResults, securityResults] = await Promise.allSettled([
-      // Font scan - lightweight basic mode
-      fetch('/api/scan', {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ url, mode: 'basic', scanStartedAt })
-      }).then(r => r.json()),
-
-      // SEO - lightweight mode
-      fetch('/api/seo', {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ url, forceLightweight: true, source: 'dashboard', skipLighthouse: true, scanStartedAt })
-      }).then(r => r.json()),
-
-      // Performance - skip Lighthouse for speed
-      fetch('/api/performance-snapshot', {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ url, scanStartedAt })
-      }).then(r => r.json()),
-
-      // Accessibility - lightweight
-      fetch('/api/accessibility', {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ url, lightweight: true, scanStartedAt })
-      }).then(r => r.json()),
-
-      // Security - lightweight
-      fetch('/api/security', {
-        method: 'POST',
-        headers: authHeaders,
-        body: JSON.stringify({ url, lightweight: true, scanStartedAt })
-      }).then(r => r.json())
+      fetchApi('/api/scan', { url, mode: 'basic', scanStartedAt }),
+      fetchApi('/api/seo', { url, forceLightweight: true, source: 'dashboard', skipLighthouse: true, scanStartedAt }),
+      fetchApi('/api/performance-snapshot', { url, scanStartedAt }),
+      fetchApi('/api/accessibility', { url, lightweight: true, scanStartedAt }),
+      fetchApi('/api/security', { url, lightweight: true, scanStartedAt })
     ]);
+
+    // Check if any response was a scan quota error — if so, show the quota message and stop
+    const allResults = [fontResults, seoResults, perfResults, a11yResults, securityResults];
+    const quotaResult = allResults.find(r => r.status === 'rejected' && r.reason?.data?.code === 'SCAN_QUOTA_EXCEEDED');
+    if (quotaResult) {
+      const limit = quotaResult.reason.data.scansLimit || 10;
+      const msg = t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit);
+      window.AnalyzerLoader.showError(msg, { isQuotaError: true });
+      return;
+    }
     
     // Update progress as results come in
     window.AnalyzerLoader.updateStep('fonts', fontResults.status === 'fulfilled' ? 'complete' : 'error');
@@ -1551,8 +1557,8 @@ function generateImprovementGuide(data) {
  * Copy shareable link (Stage 4) - GATED BEHIND PAYMENT
  */
 function copyShareLink() {
-  // Check Pro status before sharing
-  if (window.ExportGate && !window.ExportGate.isPro()) {
+  // Check Pro status or report purchase before sharing
+  if (window.ExportGate && !window.ExportGate.isPro() && !window.ExportGate.hasAccess()) {
     window.ExportGate.showPaywall();
     return;
   }
@@ -1745,7 +1751,7 @@ function extractScore(data, type) {
  * Critical (<50): Red
  */
 function getScoreColor(score) {
-  if (score >= 90) return getAccentPrimaryHex(); // Excellent: Theme accent
+  if (score >= 90) return '#22c55e';  // Excellent: Green
   if (score >= 75) return '#00bcd4';  // Good: Teal/Cyan
   if (score >= 50) return '#ffa500';  // Needs Work: Orange
   return '#ff4444';                   // Critical: Red

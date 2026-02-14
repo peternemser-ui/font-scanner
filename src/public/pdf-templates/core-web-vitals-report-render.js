@@ -17,14 +17,15 @@
     var esc = utils.esc;
     var truncate = utils.truncate;
     var scoreClass = utils.scoreClass;
+    var translateImpact = utils.translateImpact || function(v) { return v; };
 
     var sectionIndex = 1;
 
     /** Map a CWV rating string to a renderStatus call */
     function _ratingStatus(rating) {
-      if (rating === 'good') return PR.renderStatus('pass', 'Good');
-      if (rating === 'needs-improvement') return PR.renderStatus('warn', 'Needs Improvement');
-      if (rating === 'poor') return PR.renderStatus('fail', 'Poor');
+      if (rating === 'good') return PR.renderStatus('pass', t('reports.cwv.report.cwv.good', 'Good'));
+      if (rating === 'needs-improvement') return PR.renderStatus('warn', t('reports.cwv.report.cwv.needsImprovement', 'Needs Improvement'));
+      if (rating === 'poor') return PR.renderStatus('fail', t('reports.cwv.report.cwv.poor', 'Poor'));
       return PR.renderStatus('na', rating || '-');
     }
 
@@ -86,11 +87,11 @@
     function _buildVitalsTable(vitals) {
       var rows = [];
       var names = [
-        { key: 'lcp', label: 'Largest Contentful Paint (LCP)' },
-        { key: 'inp', label: 'Interaction to Next Paint (INP)' },
-        { key: 'cls', label: 'Cumulative Layout Shift (CLS)' },
-        { key: 'ttfb', label: 'Time to First Byte (TTFB)' },
-        { key: 'fcp', label: 'First Contentful Paint (FCP)' }
+        { key: 'lcp', label: t('reports.cwv.report.vitals.lcp', 'Largest Contentful Paint (LCP)') },
+        { key: 'inp', label: t('reports.cwv.report.vitals.inp', 'Interaction to Next Paint (INP)') },
+        { key: 'cls', label: t('reports.cwv.report.vitals.cls', 'Cumulative Layout Shift (CLS)') },
+        { key: 'ttfb', label: t('reports.cwv.report.vitals.ttfb', 'Time to First Byte (TTFB)') },
+        { key: 'fcp', label: t('reports.cwv.report.vitals.fcp', 'First Contentful Paint (FCP)') }
       ];
       names.forEach(function (n) {
         var row = _vitalRow(n.label, vitals[n.key]);
@@ -272,11 +273,11 @@
 
       // Build comparison table
       var metricNames = [
-        { key: 'lcp', label: 'Largest Contentful Paint (LCP)' },
-        { key: 'inp', label: 'Interaction to Next Paint (INP)' },
-        { key: 'cls', label: 'Cumulative Layout Shift (CLS)' },
-        { key: 'ttfb', label: 'Time to First Byte (TTFB)' },
-        { key: 'fcp', label: 'First Contentful Paint (FCP)' }
+        { key: 'lcp', label: t('reports.cwv.report.vitals.lcp', 'Largest Contentful Paint (LCP)') },
+        { key: 'inp', label: t('reports.cwv.report.vitals.inp', 'Interaction to Next Paint (INP)') },
+        { key: 'cls', label: t('reports.cwv.report.vitals.cls', 'Cumulative Layout Shift (CLS)') },
+        { key: 'ttfb', label: t('reports.cwv.report.vitals.ttfb', 'Time to First Byte (TTFB)') },
+        { key: 'fcp', label: t('reports.cwv.report.vitals.fcp', 'First Contentful Paint (FCP)') }
       ];
 
       var compRows = [];
@@ -377,7 +378,7 @@
         desktopDiag.slice(0, 15).forEach(function (item) {
           var sev = (item.severity || item.priority || 'medium').toLowerCase();
           html += '<div class="pdf-issue pdf-issue--' + sev + '">' +
-            '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc((item.severity || item.priority || 'INFO').toUpperCase()) + '</span>' +
+            '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc(translateImpact(item.severity || item.priority || 'info')) + '</span>' +
             '<span class="pdf-issue__text"><strong>' + esc(item.title || item.name || '') + '</strong>' +
             (item.description ? ' — ' + esc(truncate(item.description, 200)) : '') +
             (item.displayValue ? ' <em>(' + esc(item.displayValue) + ')</em>' : '') +
@@ -392,7 +393,7 @@
         mobileDiag.slice(0, 15).forEach(function (item) {
           var sev = (item.severity || item.priority || 'medium').toLowerCase();
           html += '<div class="pdf-issue pdf-issue--' + sev + '">' +
-            '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc((item.severity || item.priority || 'INFO').toUpperCase()) + '</span>' +
+            '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc(translateImpact(item.severity || item.priority || 'info')) + '</span>' +
             '<span class="pdf-issue__text"><strong>' + esc(item.title || item.name || '') + '</strong>' +
             (item.description ? ' — ' + esc(truncate(item.description, 200)) : '') +
             (item.displayValue ? ' <em>(' + esc(item.displayValue) + ')</em>' : '') +

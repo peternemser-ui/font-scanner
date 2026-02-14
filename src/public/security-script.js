@@ -381,6 +381,34 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 5000);
       });
       console.log('[Security] Billing return processing complete');
+
+      // Safety net: if report-ui.js didn't display results and no rescan was triggered,
+      // try to load stored report ourselves after a short delay
+      setTimeout(async () => {
+        if (window.currentSecurityResults || window.__smBillingRescanHandled) {
+          return; // Results already displayed or rescan in progress
+        }
+        console.log('[Security] Billing return fallback: trying to load stored report');
+        if (reportId && window.ReportStorage) {
+          // Ensure billing status is fresh
+          if (window.ProReportBlock?.fetchBillingStatus) {
+            await window.ProReportBlock.fetchBillingStatus(true);
+          }
+          const loaded = await window.ReportStorage.tryLoadAndDisplay(reportId, displaySecurityResults);
+          if (loaded) {
+            window.__REPORT_READY__ = true;
+            console.log('[Security] Billing return fallback: loaded stored report successfully');
+            return;
+          }
+        }
+        // Last resort: if we have a URL, trigger a scan
+        if (autoUrl && !window.__smBillingRescanHandled) {
+          const input = document.getElementById('urlInput');
+          if (input) input.value = autoUrl;
+          console.log('[Security] Billing return fallback: triggering re-scan');
+          analyzeSecurity({ preserveReportId: true });
+        }
+      }, 2000);
       return;
     }
 
@@ -476,6 +504,31 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
   });
+
+  // Handle billing re-scan: user returned from Stripe but cached results weren't available.
+  // Re-scan with the purchased reportId preserved so pro sections render unlocked.
+  window.addEventListener('sm:billingRescan', (e) => {
+    const { reportId: purchasedReportId, url: scanUrl } = e.detail || {};
+    console.log('[Security] Billing re-scan requested:', { purchasedReportId, scanUrl });
+    window.__smBillingRescanHandled = true;
+
+    // Clear fresh scan flag - user already paid for this report
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+
+    // Pre-fill URL input
+    if (scanUrl) {
+      const input = document.getElementById('urlInput');
+      if (input) input.value = scanUrl;
+    }
+
+    // Ensure the purchased reportId is set on the body so preserveReportId logic picks it up
+    if (purchasedReportId) {
+      document.body.setAttribute('data-report-id', purchasedReportId);
+    }
+
+    // Trigger re-scan with preserveReportId to keep the purchased reportId
+    analyzeSecurity({ preserveReportId: true });
+  });
 });
 
 // Main analysis function
@@ -494,23 +547,27 @@ async function analyzeSecurity(options = {}) {
   }
 
   // CRITICAL: Mark this as a FRESH SCAN that requires payment
-  // VERSION: 20260201h - This flag ensures new scans are LOCKED until paid
-  console.log('[Security] NEW SCAN v20260201h: Marking as fresh unpaid scan');
+  // VERSION: 20260212a - This flag ensures new scans are LOCKED until paid
+  console.log('[Security] NEW SCAN v20260212a: Marking as fresh unpaid scan');
   window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = true;
   window.__SM_CURRENT_SCAN_URL__ = url;
 
-  // Clear any stale billing cache and session markers from previous scans
+  // NOTE: Auto-preserve is ONLY used when explicitly requested via options.preserveReportId
+  // (e.g., sm:billingRescan handler passes preserveReportId: true).
+  // Previously, auto-detect logic here caused false positives where stale purchased
+  // reportIds from previous scans would grant pro access on fresh unpaid scans.
+  const existingReportId = document.body.getAttribute('data-report-id');
+
+  // Clear billing cache and session markers — but KEEP markers if preserving
+  // a purchased report (the user just paid and is re-scanning)
   if (window.ProReportBlock?.clearBillingCache) {
     window.ProReportBlock.clearBillingCache();
   }
-  sessionStorage.removeItem('sm_payment_completed_session');
-  sessionStorage.removeItem('sm_purchased_report_id');
-
-  // Auto-detect if we should preserve report_id: if there's an existing one and user has paid access
-  const existingReportId = document.body.getAttribute('data-report-id');
-  if (!preserveReportId && existingReportId && window.ProReportBlock?.hasAccess?.(existingReportId)) {
-    console.log('[Security] Auto-preserving purchased report_id:', existingReportId);
-    preserveReportId = true;
+  if (!preserveReportId) {
+    sessionStorage.removeItem('sm_payment_completed_session');
+    sessionStorage.removeItem('sm_purchased_report_id');
+  } else {
+    console.log('[Security] Keeping session markers for post-billing re-scan');
   }
 
   // CRITICAL: Save the existing report_id BEFORE cleanup if we need to preserve it
@@ -634,7 +691,8 @@ async function analyzeSecurity(options = {}) {
       const errorData = await response.json();
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        return;
       }
       // Use the detailed error message from server if available
       const errorMsg = errorData.message || errorData.details || errorData.error || t('errors.securityAnalysisFailed', 'Security analysis failed');
@@ -698,6 +756,11 @@ async function analyzeSecurity(options = {}) {
           await window.ProReportBlock.fetchBillingStatus(true);
           if (window.ProReportBlock.isProSubscriber?.()) {
             console.log('[Security] Pro/Day Pass user - clearing fresh scan payment flag');
+            window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+          }
+          // Also clear if this is a billing re-scan (user already paid for this report)
+          if (preserveReportId && reportId) {
+            console.log('[Security] Billing re-scan - clearing fresh scan payment flag');
             window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
           }
         } catch (e) {
@@ -1170,12 +1233,12 @@ function displaySecurityResults(data) {
   createAccordionSection(
     accordionsContainer,
     'report-recommendations',
-    t('reports.common.reportRecommendations', 'Report and Recommendations'),
+    t('reports.common.reportRecommendations', 'Recommendations'),
     () => renderRecommendationsContent(data.recommendations, data),
     null,
     {
       isPro: true,
-      previewHtml: renderLockedProPreview(t('reports.common.reportRecommendations', 'Report and Recommendations'), [
+      previewHtml: renderLockedProPreview(t('reports.common.reportRecommendations', 'Recommendations'), [
         t('reports.security.criticalRemediationSteps', 'Critical remediation steps'),
         t('reports.security.owaspAlignedFixes', 'OWASP-aligned fixes')
       ])
@@ -1220,35 +1283,15 @@ function displaySecurityResults(data) {
 
     actionsFooter.innerHTML = window.ProReportBlock.render({
       context: 'security',
-      features: ['pdf', 'csv', 'share'],
+      features: ['pdf', 'excel', 'csv', 'share'],
       title: t('reports.common.unlockReport', 'Unlock Report'),
       subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
       reportId: currentReportId
     });
   } else {
-    // Fallback/legacy code
-    actionsFooter.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="color: var(--accent-primary); font-weight: 600;">${t('reports.common.takeAction', 'Take Action')}</span>
-          <span style="color: #666; font-size: 0.9rem;">${t('reports.common.exportShare', 'Export or share this security report')}</span>
-        </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button data-action="export-pdf" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-            ${t('reports.common.exportPdf', 'PDF Report')}
-          </button>
-          <button data-action="copy-share-link" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            ${t('reports.common.shareLink', 'Share Link')}
-          </button>
-          <button data-action="download-csv" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
-            ${t('reports.common.exportCsv', 'Export Data')}
-          </button>
-        </div>
-      </div>
-    `;
+    const opts = { context: 'security', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, share link, export data, and fix packs for this scan.' };
+    const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
+    actionsFooter.innerHTML = '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>';
   }
   resultsContent.appendChild(actionsFooter);
 
@@ -1492,6 +1535,15 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       header.querySelector('.accordion-toggle').classList.add('rotated');
     }
   });
+
+  // Listen for pro:unlocked event dispatched by revealProOnlyContent()
+  // This re-renders the section with actual content when access is granted post-payment
+  if (isPro) {
+    contentInner.addEventListener('pro:unlocked', () => {
+      console.log('[Security] pro:unlocked event received for section:', id);
+      renderContent();
+    });
+  }
 
   // Pro sections: eagerly pre-render so content is ready when billing is cached.
   // The global entitlements:updated handler (outside this function) re-renders
@@ -1915,7 +1967,7 @@ function getStatus(score) {
 // Needs Work (50-74): Orange
 // Critical (<50): Red
 function getScoreColor(score) {
-  if (score >= 90) return 'var(--accent-primary)';
+  if (score >= 90) return '#22c55e';  // Excellent: Green
   if (score >= 75) return '#00bcd4';  // Good: Teal
   if (score >= 50) return '#ffa500';  // Needs Work: Orange
   return '#ff4444';                   // Critical: Red
@@ -1955,7 +2007,8 @@ function ensureSecurityProAccess() {
 }
 
 async function exportSecurityPDF() {
-  if (!ensureSecurityProAccess()) return;
+  // Access check is handled by exportReportPDF() → checkExportAccess() which does
+  // both local and async server-verified checks. No sync gate needed here.
   // Use the unified PDF export utility
   if (typeof window.exportReportPDF === 'function') {
     const button = document.querySelector('[data-export="pdf"]');

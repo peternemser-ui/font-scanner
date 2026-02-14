@@ -967,26 +967,26 @@
     <main class="page-shell">
         <!-- Breadcrumb Navigation -->
         <nav class="breadcrumb" aria-label="Breadcrumb">
-            <a href="/dashboard.html">Home</a>
-            <span class="breadcrumb-sep">›</span>
-            <span aria-current="page">Competitive Analysis</span>
+            <a href="/dashboard.html" data-i18n="dashboard.breadcrumb.home">Home</a>
+            <span class="breadcrumb-sep">ï¿½</span>
+            <span aria-current="page" data-i18n="reports.competitive.title">Competitive Analysis</span>
         </nav>
-        
+
         <!-- Page Header -->
         <header class="page-header">
-            <h1 class="page-header__title">Competitive Analysis</h1>
-            <p class="page-header__subtitle">Compare your website against competitors across SEO, Performance, Accessibility, and Security metrics.</p>
+            <h1 class="page-header__title" data-i18n="reports.competitive.title">Competitive Analysis</h1>
+            <p class="page-header__subtitle" data-i18n="reports.competitive.pageSubtitle">Compare your website against competitors across SEO, Performance, Accessibility, and Security metrics.</p>
         </header>
 
         <!-- Input Card -->
         <section class="card">
             <div class="card__body">
             <div style="margin: 1rem 0; padding: 0.75rem 1rem; background: rgba(255, 107, 107, 0.1); border-left: 4px solid #ff6b6b; border-radius: 4px;">
-                <p style="color: #ff6b6b; font-weight: bold; margin: 0 0 0.35rem 0;">? COMPETITIVE ADVANTAGE</p>
-                <p style="color: #e0e0e0; margin: 0 0 0.35rem 0; line-height: 1.4;">
+                <p style="color: #ff6b6b; font-weight: bold; margin: 0 0 0.35rem 0;" data-i18n="reports.competitive.competitiveAdvantageTitle">? COMPETITIVE ADVANTAGE</p>
+                <p style="color: #e0e0e0; margin: 0 0 0.35rem 0; line-height: 1.4;" data-i18n="reports.competitive.competitiveAdvantageDesc">
                     Compare your website against up to <strong>5 competitors</strong> across SEO, Performance, Core Web Vitals, Accessibility, and Security. Get actionable insights to outrank them.
                 </p>
-                <p style="color: #ff8c00; margin: 0; font-size: 0.85rem; font-style: italic;">
+                <p style="color: #ff8c00; margin: 0; font-size: 0.85rem; font-style: italic;" data-i18n="reports.competitive.analysisNote">
                     ? Note: Analysis takes 2-3 minutes and is limited to 2 requests per 15 minutes due to high resource usage.
                 </p>
             </div>
@@ -995,7 +995,7 @@
             <div style="margin-top: 1.25rem; max-width: 900px;">
                 <!-- Your Website Section -->
                 <div style="margin-bottom: 1.25rem;">
-                    <label for="yourUrl" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--text-primary);">Your Website URL</label>
+                    <label for="yourUrl" style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--text-primary);" data-i18n="reports.competitive.yourWebsiteUrl">Your Website URL</label>
                     <input 
                         type="url" 
                         id="yourUrl"
@@ -1009,7 +1009,7 @@
                 
                 <!-- Competitor URLs Section -->
                 <div style="margin-bottom: 1.25rem;">
-                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--text-primary);">Competitor URLs (Max 5)</label>
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600; font-size: 1rem; color: var(--text-primary);" data-i18n="reports.competitive.competitorUrlsLabel">Competitor URLs (Max 5)</label>
                     <div class="competitor-section">
                         <div class="competitor-inputs" id="competitorInputs">
                             <div class="competitor-input-row">
@@ -1019,15 +1019,15 @@
                                     placeholder="https://competitor1.com"
                                     aria-label="Competitor 1 URL"
                                 />
-                                <button type="button" class="remove-competitor">Remove</button>
+                                <button type="button" class="remove-competitor" data-i18n="reports.common.remove">Remove</button>
                             </div>
                         </div>
-                        <button type="button" class="add-competitor-btn" id="addCompetitorBtn">+ Add Competitor</button>
+                        <button type="button" class="add-competitor-btn" id="addCompetitorBtn" data-i18n="reports.competitive.addCompetitor">+ Add Competitor</button>
                     </div>
                 </div>
                 
                 <!-- Analyze Button -->
-                <button id="analyzeBtn" class="btn btn-primary">INSPECT</button>
+                <button id="analyzeBtn" class="btn btn-primary" data-i18n="reports.competitive.inspectButton">INSPECT</button>
             </div>
             </div>
         </section>
@@ -1041,8 +1041,8 @@
     <!-- Pac-Man Loading Modal -->
     <div id="pacmanModal" class="pacman-modal" role="dialog" aria-modal="true" aria-labelledby="pacmanModalTitle" tabindex="-1" aria-hidden="true">
         <div class="pacman-modal-content">
-            <h2 class="pacman-modal-title" id="pacmanModalTitle">[COMPETITIVE_ANALYSIS]</h2>
-            <p class="pacman-modal-subtitle">Analyzing your competition... This may take 2-3 minutes</p>
+            <h2 class="pacman-modal-title" id="pacmanModalTitle" data-i18n="reports.competitive.modalTitle">[COMPETITIVE_ANALYSIS]</h2>
+            <p class="pacman-modal-subtitle" data-i18n="reports.competitive.modalSubtitle">Analyzing your competition... This may take 2-3 minutes</p>
             
             <!-- Pac-Man Animation -->
             <div class="pacman-container">
@@ -1062,43 +1062,43 @@
                 <div class="modal-step pending" data-step="0">
                     <span class="modal-step-icon">S</span>
                     <div class="modal-step-content">
-                        <div class="modal-step-label">SEO Analysis</div>
-                        <div class="modal-step-detail">Analyzing search engine optimization metrics...</div>
+                        <div class="modal-step-label" data-i18n="loader.seoAnalysis">SEO Analysis</div>
+                        <div class="modal-step-detail" data-i18n="loader.analyzingSeoMetrics">Analyzing search engine optimization metrics...</div>
                     </div>
                 </div>
                 <div class="modal-step pending" data-step="1">
                     <span class="modal-step-icon">?</span>
                     <div class="modal-step-content">
-                        <div class="modal-step-label">Security Scan</div>
-                        <div class="modal-step-detail">Checking security headers and protocols...</div>
+                        <div class="modal-step-label" data-i18n="loader.securityScan">Security Scan</div>
+                        <div class="modal-step-detail" data-i18n="loader.checkingSecurityProtocols">Checking security headers and protocols...</div>
                     </div>
                 </div>
                 <div class="modal-step pending" data-step="2">
                     <span class="modal-step-icon">A</span>
                     <div class="modal-step-content">
-                        <div class="modal-step-label">Accessibility Check</div>
-                        <div class="modal-step-detail">Evaluating accessibility standards...</div>
+                        <div class="modal-step-label" data-i18n="loader.accessibilityCheck">Accessibility Check</div>
+                        <div class="modal-step-detail" data-i18n="loader.evaluatingAccessibility">Evaluating accessibility standards...</div>
                     </div>
                 </div>
                 <div class="modal-step pending" data-step="3">
                     <span class="modal-step-icon">W</span>
                     <div class="modal-step-content">
-                        <div class="modal-step-label">Core Web Vitals</div>
-                        <div class="modal-step-detail">Measuring page speed and user experience...</div>
+                        <div class="modal-step-label" data-i18n="loader.coreWebVitals">Core Web Vitals</div>
+                        <div class="modal-step-detail" data-i18n="loader.measuringPageSpeed">Measuring page speed and user experience...</div>
                     </div>
                 </div>
                 <div class="modal-step pending" data-step="4">
                     <span class="modal-step-icon">P</span>
                     <div class="modal-step-content">
-                        <div class="modal-step-label">Performance Test</div>
-                        <div class="modal-step-detail">Running Lighthouse performance audit...</div>
+                        <div class="modal-step-label" data-i18n="loader.performanceTest">Performance Test</div>
+                        <div class="modal-step-detail" data-i18n="loader.runningLighthouse">Running Lighthouse performance audit...</div>
                     </div>
                 </div>
             </div>
 
             <!-- Progress Bar -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                <div style="color: var(--color-text-secondary, #9ca3af); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">
+                <div style="color: var(--color-text-secondary, #9ca3af); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;" data-i18n="reports.competitive.progress">
                     Progress
                 </div>
                 <div style="color: var(--color-primary, #00ff9d); font-size: 1rem; font-weight: 700;" id="modalProgressPercent">
@@ -1110,7 +1110,7 @@
             </div>
 
             <!-- Time Remaining -->
-            <div class="modal-time-remaining" id="modalTimeRemaining">
+            <div class="modal-time-remaining" id="modalTimeRemaining" data-i18n="reports.common.timeRemainingDefault">
                 Time remaining: 3m 0s
             </div>
         </div>
@@ -1129,13 +1129,19 @@
     <script src="https://cdn.socket.io/4.8.1/socket.io.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
+    <!-- PDF Export -->
+    <script src="/lib/html2canvas.min.js"></script>
+    <script src="/lib/jspdf.umd.min.js"></script>
+    <script src="/pdf-export-utility.js?v=2"></script>
+    <script src="/pdf-export-integration.js?v=2"></script>
+
     <!-- Report UI Components -->
-    <script src="/js/report-ui.js?v=20260201a"></script>
+    <script src="/js/report-ui.js?v=20260212d"></script>
     <script src="/assets/js/report-shell.js"></script>
     <script src="/js/components/ReportContainer.js"></script>
     <script src="/js/components/Modal.js"></script>
     <script src="/js/components/ScreenshotLightbox.js"></script>
-    <script src="/js/components/ProReportBlock.js?v=20260210b"></script>
+    <script src="/js/components/ProReportBlock.js?v=20260212d"></script>
     <script src="/js/reportStorage.js"></script>
     <script src="/js/components/PricingModal.js"></script>
     <script src="/js/components/reportAccordion.js"></script>

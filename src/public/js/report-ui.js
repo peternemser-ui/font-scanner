@@ -376,7 +376,7 @@
   }
 
   function revealProOnlyContent() {
-    // Unwrap overlays used by locked accordions
+    // Unwrap overlays used by locked accordions (ReportContainer pattern)
     const overlays = document.querySelectorAll('.report-shell__lock-overlay');
     overlays.forEach((overlay) => {
       const locked = overlay.querySelector('.is-locked');
@@ -391,6 +391,32 @@
 
     // Remove any code overlays if present
     document.querySelectorAll('.pro-code-overlay').forEach((el) => el.remove());
+
+    // Remove locked overlays used by ProReportBlock and accordion sections
+    document.querySelectorAll('[data-locked-overlay]').forEach((overlay) => {
+      const body = overlay.closest('.report-accordion__body');
+      const content = body?.querySelector('.report-accordion__content-actual');
+      if (content) {
+        content.hidden = false;
+      }
+      overlay.remove();
+    });
+
+    // Remove locked state from Pro Report Blocks (show accent border after unlock)
+    document.querySelectorAll('.pro-report-block--locked, .pro-report-block[data-locked]').forEach((block) => {
+      block.classList.remove('pro-report-block--locked');
+      block.removeAttribute('data-locked');
+    });
+
+    // Re-render pro sections in createAccordionSection pattern
+    // These sections use .pro-locked within .accordion-content-inner
+    document.querySelectorAll('.pro-section .pro-locked').forEach((lockedEl) => {
+      const contentInner = lockedEl.closest('.accordion-content-inner');
+      if (contentInner) {
+        // Dispatch event so the accordion re-renders with unlocked content
+        contentInner.dispatchEvent(new CustomEvent('pro:unlocked'));
+      }
+    });
   }
 
   function getResultsRoot(resultsContent) {
@@ -658,13 +684,30 @@
       // Dedupe using sessionStorage (include session_id to avoid re-processing same session)
       const receiptKey = `sm_billing_success_${checkoutSessionId || reportId || 'subscription'}`;
       if (sessionStorage.getItem(receiptKey)) {
-        // Already processed, but still reveal content and clean URL
+        // Already processed - set verified flag, reveal content, clean URL, and signal completion
+        if (reportId) {
+          window.__smVerifiedPurchaseReportId = reportId;
+          // Ensure localStorage purchase proof exists (may not if page reloaded before first processing)
+          try {
+            if (!localStorage.getItem('sm_purchased_' + reportId)) {
+              localStorage.setItem('sm_purchased_' + reportId, JSON.stringify({ ts: Date.now(), sid: '' }));
+            }
+          } catch (e) { /* ignore */ }
+        }
         revealProOnlyContent();
         params.delete('billing_success');
         params.delete('billing_canceled');
         params.delete('session_id');
         const newUrl = `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`;
         window.history.replaceState({}, document.title, newUrl);
+        // CRITICAL: Signal billing return complete even on dedup so analyzer scripts
+        // don't hang waiting for the event (e.g., security-script waits up to 5 seconds)
+        billingReturnInProgress = false;
+        window.__smBillingReturnInProgress = false;
+        window.__smBillingReturnComplete = true;
+        window.dispatchEvent(new CustomEvent('sm:billingReturnComplete', {
+          detail: { reportId, billingStatus: null }
+        }));
         return;
       }
 
@@ -685,6 +728,12 @@
             const verifyResult = await verifyResp.json().catch(() => null);
             if (verifyResult?.success) {
               console.log('Purchase verified and recorded:', verifyResult);
+              // CRITICAL: Set verified-purchase flag so hasAccess() grants access
+              // immediately, bypassing all session marker / billing cache timing issues.
+              // This flag is window-scoped (not persisted) and only set when the server
+              // confirms the purchase was recorded.
+              window.__smVerifiedPurchaseReportId = reportId;
+              console.log('[BillingReturn] Set verified purchase flag for reportId:', reportId);
             } else {
               console.warn('Purchase verification result:', verifyResult);
             }
@@ -694,16 +743,41 @@
         }
       }
 
+      // Also set verified flag for billing_success without session_id (subscription returns)
+      // and as fallback when verify-purchase wasn't called
+      if (!window.__smVerifiedPurchaseReportId && reportId) {
+        window.__smVerifiedPurchaseReportId = reportId;
+        console.log('[BillingReturn] Set verified purchase flag (billing_success) for reportId:', reportId);
+      }
+
+      // CRITICAL: Persist purchase proof in localStorage (survives page reloads, tab changes)
+      // This is the MOST RELIABLE access check - it doesn't depend on billing cache timing,
+      // window-scoped flags, session markers, or any event chain. It simply records that
+      // billing_success=true was seen for this reportId. The 24-hour TTL matches ReportStorage.
+      if (reportId) {
+        try {
+          localStorage.setItem('sm_purchased_' + reportId, JSON.stringify({
+            ts: Date.now(),
+            sid: params.get('session_id') || ''
+          }));
+          console.log('[BillingReturn] Stored purchase proof in localStorage for:', reportId);
+        } catch (e) {
+          console.warn('[BillingReturn] Could not store purchase proof:', e);
+        }
+      }
+
       // Clear billing cache and fetch fresh status BEFORE displaying results
       // This ensures ProReportBlock.hasAccess() returns true during render
       if (window.ProReportBlock?.clearBillingCache) {
         window.ProReportBlock.clearBillingCache();
       }
 
-      // Fetch and cache billing status - must complete before displaying results
+      // Fetch and cache billing status - MUST force refresh to pick up the
+      // just-verified purchase. Without forceRefresh, this can return stale
+      // cached data that doesn't include the new purchase.
       let billingStatus = null;
       if (window.ProReportBlock?.fetchBillingStatus) {
-        billingStatus = await window.ProReportBlock.fetchBillingStatus();
+        billingStatus = await window.ProReportBlock.fetchBillingStatus(true);
       }
 
       // Debug: Log billing status to verify purchase is included
@@ -902,6 +976,15 @@
             // Explicitly call ensurePageScreenshotCard since MutationObserver might not trigger
             ensurePageScreenshotCard(reportId);
           }, 100);
+
+          // Safety net: Dispatch entitlements:updated AFTER results are displayed
+          // This triggers analyzer scripts to re-render pro sections with current access state.
+          // The earlier entitlements:updated (from fetchBillingStatus) fires before results exist,
+          // so this delayed dispatch catches any timing issues.
+          setTimeout(() => {
+            console.log('[BillingReturn] Dispatching delayed entitlements:updated for safety');
+            window.dispatchEvent(new CustomEvent('entitlements:updated', { detail: billingStatus }));
+          }, 300);
         } catch (e) {
           console.warn('Failed to restore scan results:', e);
           showPaymentSuccessBanner('single_report');
@@ -992,10 +1075,14 @@
                 setTimeout(() => {
                   revealProOnlyContent();
                   showPaymentSuccessBanner('single_report');
-                  // Explicitly call ensurePageScreenshotCard since MutationObserver might not trigger
-                  // due to waitingForResults flag state
                   ensurePageScreenshotCard(reportId);
                 }, 100);
+
+                // Safety net: delayed entitlements:updated after display
+                setTimeout(() => {
+                  console.log('[BillingReturn] Dispatching delayed entitlements:updated (ReportStorage path)');
+                  window.dispatchEvent(new CustomEvent('entitlements:updated', { detail: billingStatus }));
+                }, 300);
               }
             }
           } catch (e) {
@@ -1040,35 +1127,46 @@
         detail: { reportId: reportId, billingStatus }
       }));
 
-      // If results weren't successfully displayed, reload the page to re-render with unlocked state
-      // This ensures the user sees unlocked content after payment
+      // If results weren't successfully displayed, trigger a re-scan instead of reloading
+      // A page reload loses session markers and forces the user through a confusing flow.
+      // Instead, dispatch a re-scan event that analyzer scripts can handle, preserving
+      // the purchased reportId so pro sections render unlocked.
       if (!displayedFromCache && !loadedFromStorage) {
-        console.log('[BillingReturn] Results not displayed, reloading page to show unlocked content');
-        // Show banner first, then reload after delay
+        console.log('[BillingReturn] Results not displayed, triggering re-scan with preserved reportId');
         showPaymentSuccessBanner('single_report');
         setTimeout(() => {
-          // Check if an analyzer script has already handled the restore via event listener
-          // This prevents unnecessary reload when results were displayed by the event handler
+          // Check if an analyzer script already handled the restore via event listener
           if (window.__smResultsRestoredByAnalyzer) {
-            console.log('[BillingReturn] Results were restored by analyzer event listener, skipping reload');
+            console.log('[BillingReturn] Results were restored by analyzer event listener, skipping re-scan');
             return;
           }
 
-          // Build reload URL with auto_scan to trigger automatic scan
-          const reloadParams = new URLSearchParams(window.location.search);
-          reloadParams.delete('billing_success');
-          reloadParams.delete('billing_canceled');
-          reloadParams.delete('session_id');
-          // Add auto_scan to trigger scan after reload if URL is present
-          if (reloadParams.has('url') || cachedUrl) {
-            reloadParams.set('auto_scan', 'true');
-            if (cachedUrl && !reloadParams.has('url')) {
-              reloadParams.set('url', cachedUrl);
+          // Dispatch event for analyzer scripts to re-scan with the purchased reportId
+          // This avoids a full page reload which can lose session markers and billing state
+          window.dispatchEvent(new CustomEvent('sm:billingRescan', {
+            detail: { reportId, url: cachedUrl, billingStatus }
+          }));
+
+          // Fallback: if no analyzer handles the re-scan within 3s, reload as last resort
+          setTimeout(() => {
+            if (window.__smResultsRestoredByAnalyzer || window.__smBillingRescanHandled) {
+              return;
             }
-          }
-          const reloadUrl = `${window.location.pathname}${reloadParams.toString() ? `?${reloadParams.toString()}` : ''}`;
-          window.location.href = reloadUrl;
-        }, 1500);
+            console.log('[BillingReturn] No analyzer handled re-scan, reloading as fallback');
+            const reloadParams = new URLSearchParams(window.location.search);
+            reloadParams.delete('billing_success');
+            reloadParams.delete('billing_canceled');
+            reloadParams.delete('session_id');
+            if (reloadParams.has('url') || cachedUrl) {
+              reloadParams.set('auto_scan', 'true');
+              if (cachedUrl && !reloadParams.has('url')) {
+                reloadParams.set('url', cachedUrl);
+              }
+            }
+            const reloadUrl = `${window.location.pathname}${reloadParams.toString() ? `?${reloadParams.toString()}` : ''}`;
+            window.location.href = reloadUrl;
+          }, 3000);
+        }, 500);
       }
 
       return; // Exit early - don't process legacy flow

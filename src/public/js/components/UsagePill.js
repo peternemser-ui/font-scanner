@@ -219,6 +219,9 @@
         const resetInfo = scans_reset_at
           ? ` <span class="usage-pill__reset-info">(${t('usage.resetsIn', 'resets in {time}', { time: formatResetTime(scans_reset_at) })})</span>`
           : '';
+        const loginHint = !this.usage.is_authenticated
+          ? ` <a href="/auth.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}" class="usage-pill__login-link">${t('usage.loginToRestore', 'Log in to restore your plan')}</a>`
+          : '';
         return `
           <div class="usage-pill usage-pill--exhausted">
             <span class="usage-pill__plan">${plan_label}</span>
@@ -226,18 +229,23 @@
             ${this.showUpgradeLink ? `
               <a href="/upgrade.html" class="usage-pill__upgrade">${t('usage.upgrade', 'Upgrade')}</a>
             ` : ''}
+            ${loginHint}
           </div>
         `;
       }
 
       const statusClass = isLow ? 'usage-pill--low' : '';
       const scansText = t('usage.scansLeftToday', '{count} scans left today', { count: scans_remaining_today });
+      const loginHint = !this.usage.is_authenticated
+        ? ` <a href="/auth.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}" class="usage-pill__login-link">${t('usage.haveAccount', 'Have an account?')}</a>`
+        : '';
 
       return `
         <div class="usage-pill ${statusClass}">
           <span class="usage-pill__plan">${plan_label}</span>
           <span class="usage-pill__separator">:</span>
           <span class="usage-pill__count">${scansText}</span>
+          ${loginHint}
         </div>
       `;
     }

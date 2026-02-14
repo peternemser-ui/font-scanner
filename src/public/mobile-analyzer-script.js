@@ -165,6 +165,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Handle billing re-scan: user returned from Stripe but cached results weren't available
+  window.addEventListener('sm:billingRescan', (e) => {
+    const { reportId: purchasedReportId, url: scanUrl } = e.detail || {};
+    const analyzerKey = window.SM_ANALYZER_KEY || '';
+    if (!analyzerKey.includes('mobile')) return;
+    console.log('[Mobile] Billing re-scan requested:', { purchasedReportId, scanUrl });
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+    window.__smBillingRescanHandled = true;
+    if (scanUrl && urlInput) urlInput.value = scanUrl;
+    if (purchasedReportId) document.body.setAttribute('data-report-id', purchasedReportId);
+    analyzeMobile({ preserveReportId: true });
+  });
+
   /**
    * @param {Object} options - Optional settings
    * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
@@ -183,18 +196,19 @@ document.addEventListener('DOMContentLoaded', () => {
     window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = true;
     window.__SM_CURRENT_SCAN_URL__ = url;
 
-    // Clear any stale billing cache and session markers from previous scans
+    // NOTE: Auto-preserve is ONLY used when explicitly requested via options.preserveReportId
+    // (e.g., sm:billingRescan handler passes preserveReportId: true).
+    const existingReportId = document.body.getAttribute('data-report-id');
+
+    // Clear billing cache and session markers — but KEEP markers if preserving
     if (window.ProReportBlock?.clearBillingCache) {
       window.ProReportBlock.clearBillingCache();
     }
-    sessionStorage.removeItem('sm_payment_completed_session');
-    sessionStorage.removeItem('sm_purchased_report_id');
-
-    // Auto-detect if we should preserve report_id: if there's an existing one and user has paid access
-    const existingReportId = document.body.getAttribute('data-report-id');
-    if (!preserveReportId && existingReportId && window.ProReportBlock?.hasAccess?.(existingReportId)) {
-      console.log('[Mobile] Auto-preserving purchased report_id:', existingReportId);
-      preserveReportId = true;
+    if (!preserveReportId) {
+      sessionStorage.removeItem('sm_payment_completed_session');
+      sessionStorage.removeItem('sm_purchased_report_id');
+    } else {
+      console.log('[Mobile] Keeping session markers for post-billing re-scan');
     }
 
     // CRITICAL: Save the existing report_id BEFORE cleanup if we need to preserve it
@@ -294,7 +308,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const error = await response.json();
         if (error.code === 'SCAN_QUOTA_EXCEEDED') {
           const limit = error.scansLimit || 10;
-          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          if (loader) {
+            loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+          }
+          return;
         }
         throw new Error(error.message || error.error || t('reports.common.analysisFailed', 'Analysis failed'));
       }
@@ -526,7 +543,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ...diagnosticsContent,
       ReportAccordion.createSection({
         id: 'report-recommendations',
-        title: t('reports.common.reportRecommendations', 'Report and Recommendations'),
+        title: t('reports.common.reportRecommendations', 'Recommendations'),
         scoreTextRight: null,
         isPro: true,
         locked: proLocked,
@@ -983,7 +1000,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="section">
           ${window.ProReportBlock.render({
             context: 'mobile',
-            features: ['pdf', 'csv', 'share'],
+            features: ['pdf', 'excel', 'csv', 'share'],
             title: t('reports.common.purchaseReport', 'Purchase Report'),
             subtitle: t('reports.common.purchaseReportSubtitle', 'Client-ready exports (PDF/share/data) for this scan.'),
             reportId: reportId || null
@@ -991,31 +1008,9 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
       `;
     } else {
-      // Fallback/legacy code
-      return `
-        <div class="section">
-          <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
-            <div style="display: flex; align-items: center; gap: 0.5rem;">
-              <span style="color: var(--accent-primary); font-weight: 600;">${t('reports.common.takeAction', 'Take Action')}</span>
-              <span style="color: #666; font-size: 0.9rem;">${t('reports.mobile.exportOrShare', 'Export or share this Mobile Testing report')}</span>
-            </div>
-            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-              <button data-action="export-pdf" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-                ${t('reports.common.pdfReport', 'PDF Report')}
-              </button>
-              <button data-action="copy-share-link" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-                ${t('reports.common.shareLink', 'Share Link')}
-              </button>
-              <button data-action="download-csv" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
-                ${t('reports.common.exportData', 'Export Data')}
-              </button>
-            </div>
-          </div>
-        </div>
-      `;
+      const opts = { context: 'mobile', features: ['pdf', 'excel', 'csv', 'share'], title: 'Purchase Report', subtitle: 'Client-ready exports (PDF/share/data) for this scan.' };
+      const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
+      return '<div class="section"><div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div></div>';
     }
   }
   
@@ -1706,7 +1701,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <div class="mobile-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-          <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
             ${renderMobileFixTabs(fix, accordionId)}
           </div>
         </div>

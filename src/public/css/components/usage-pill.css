@@ -281,6 +281,36 @@ body.white-theme .usage-pill__value {
   margin-top: 0.5rem;
 }
 
+/* Login link for unauthenticated users */
+.usage-pill__login-link {
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent-primary, #00ff41);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  white-space: nowrap;
+}
+
+.usage-pill__login-link:hover {
+  opacity: 0.8;
+}
+
+body.white-theme .usage-pill__login-link {
+  color: var(--accent-primary, #059669);
+}
+
+.usage-pill--exhausted .usage-pill__login-link {
+  color: var(--text-primary, #fff);
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+  padding-left: 0.5rem;
+}
+
+body.white-theme .usage-pill--exhausted .usage-pill__login-link {
+  color: var(--text-primary, #333);
+  border-left-color: rgba(0, 0, 0, 0.1);
+}
+
 /* Header dropdown integration */
 .auth-dropdown-menu .usage-pill--dropdown {
   margin: 0.5rem;

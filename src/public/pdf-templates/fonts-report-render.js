@@ -381,7 +381,7 @@
       var sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
-        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('fonts.report.recommendations', 'Recommendations'))),
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('fonts.report.recommendationsHeading', 'Recommendations'))),
         sec
       );
 
@@ -423,8 +423,8 @@
         });
       } else {
         html += PR.renderCallout(
-          t('fonts.report.recommendations.noneTitle', 'Well-Optimized Typography'),
-          t('fonts.report.recommendations.noneBody', 'Your font stack follows best practices. Continue monitoring for optimization opportunities.'),
+          t('fonts.report.recommendationsNoneTitle', 'Well-Optimized Typography'),
+          t('fonts.report.recommendationsNoneBody', 'Your font stack follows best practices. Continue monitoring for optimization opportunities.'),
           'tip'
         );
       }

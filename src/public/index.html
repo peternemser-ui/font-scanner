@@ -88,8 +88,109 @@
       body.scan-complete .feature-strip,
       body.scan-complete .pro-upsell,
       body.scan-complete .homepage-footer-bar,
-      body.scan-complete .whats-included-link {
+      body.scan-complete .whats-included-link,
+      body.scan-complete .home-hero__collage,
+      body.scan-complete .home-hero__chart,
+      body.scan-complete .home-hero__dial-wrap {
         display: none !important;
+      }
+
+      /* ============================================
+         HOME-HERO: Homepage-only hero layout
+         Scoped entirely under .home-hero
+         ============================================ */
+
+      /* Clip horizontal overflow from right-positioned graphics */
+      .home-hero {
+        overflow-x: clip;
+      }
+
+      /* Constrain left column to ~54% on desktop for two-column effect */
+      .home-hero .hero-left {
+        max-width: 54%;
+      }
+
+      /* Constrain hero-right panel width to match left column */
+      .home-hero .hero-right {
+        max-width: 54%;
+      }
+
+      /* Remove min-width on input so it fits narrower column */
+      .home-hero .hero-form__input {
+        min-width: 0;
+      }
+
+      /* Graphic 01: Hero Collage */
+      .home-hero__collage {
+        position: absolute;
+        right: -40px;
+        top: 0;
+        width: min(720px, 52vw);
+        height: auto;
+        z-index: 1;
+        pointer-events: none;
+      }
+
+      /* Graphic 02: Dial Strip */
+      .home-hero__dial-wrap {
+        max-width: 1100px;
+        margin: 0 auto;
+        position: relative;
+        z-index: 2;
+      }
+
+      .home-hero__dial {
+        display: block;
+        margin: 26px auto 0;
+        width: 100%;
+        height: auto;
+      }
+
+      /* Graphic 03: Mini Chart Module */
+      .home-hero__chart {
+        position: absolute;
+        right: 0;
+        top: 520px;
+        width: min(560px, 44vw);
+        height: auto;
+        z-index: 1;
+        opacity: 0.98;
+        pointer-events: none;
+      }
+
+      /* Mobile: <= 768px */
+      @media (max-width: 768px) {
+        .home-hero .hero-left {
+          max-width: 100%;
+        }
+
+        .home-hero .hero-right {
+          max-width: 100%;
+        }
+
+        .home-hero__collage {
+          position: relative;
+          right: auto;
+          top: auto;
+          margin: 18px auto 0;
+          display: block;
+          width: 92%;
+          max-width: 520px;
+        }
+
+        .home-hero__dial-wrap {
+          overflow-x: auto;
+        }
+
+        .home-hero__chart {
+          position: relative;
+          right: auto;
+          top: auto;
+          margin: 16px auto 0;
+          display: block;
+          width: 92%;
+          max-width: 520px;
+        }
       }
     </style>
 
@@ -243,7 +344,17 @@
 
     <div class="container" style="max-width: none; padding: 0; margin-top: 0 !important; padding-top: 0 !important;">
       <!-- Homepage Hero Section -->
-      <section class="homepage-hero">
+      <section class="homepage-hero home-hero">
+        <!-- Graphic 01: Hero Collage (right-side, absolutely positioned) -->
+        <img class="home-hero__collage"
+             src="/assets/SM_graphic_01_hero_collage.png?v=20260112.2"
+             alt="" aria-hidden="true" loading="eager" />
+
+        <!-- Graphic 03: Mini Chart Module (right-side, absolutely positioned) -->
+        <img class="home-hero__chart"
+             src="/assets/SM_graphic_03_mini_chart_module.png?v=20260112.2"
+             alt="" aria-hidden="true" loading="lazy" />
+
         <div class="hero-grid">
           <!-- Left Column: Headline, Form, Example Chips -->
           <div class="hero-left">
@@ -311,6 +422,13 @@ Get prioritized fixes.</h1>
               <span>→</span>
             </a>
           </aside>
+        </div>
+
+        <!-- Graphic 02: Dial Strip (below hero grid, centered) -->
+        <div class="home-hero__dial-wrap">
+          <img class="home-hero__dial"
+               src="/assets/SM_graphic_02_dial_strip.png?v=20260112.2"
+               alt="" aria-hidden="true" loading="lazy" />
         </div>
       </section>
 

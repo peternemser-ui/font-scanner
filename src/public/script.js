@@ -1,4 +1,21 @@
-﻿class FontScannerApp {
+﻿function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
+class FontScannerApp {
   constructor() {
     // Initialize Socket.IO client
     this.socket = io({
@@ -797,7 +814,7 @@
     this.analyzeButton.disabled = isLoading;
 
     if (isLoading) {
-      this.analyzeButton.textContent = 'ANALYZING...';
+      this.analyzeButton.textContent = t('common.analyzing', 'ANALYZING...');
       this.analyzeButton.style.opacity = '1';
       this.analyzeButton.style.backgroundColor = '#001100';
       this.analyzeButton.style.color = '#00ff41';
@@ -805,7 +822,7 @@
       this.analyzeButton.style.textShadow = '0 0 3px #00ff41, 0 0 6px #00ff41';
       this.analyzeButton.classList.add('animate-pulse');
     } else {
-      this.analyzeButton.textContent = 'ANALYZE';
+      this.analyzeButton.textContent = t('common.analyze', 'ANALYZE');
       this.analyzeButton.style.opacity = '1';
       this.analyzeButton.style.backgroundColor = '#333333';
       this.analyzeButton.style.color = '#ffffff';

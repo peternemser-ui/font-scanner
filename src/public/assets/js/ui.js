@@ -157,8 +157,6 @@
   }
 
   function isUnlocked(reportId) {
-    // Auto-unlock for demo domains (e.g., vail.com)
-    if (isDemoDomain()) return true;
     if (!reportId) return false;
     const map = getUnlockedMap();
     return !!map[reportId];
@@ -349,7 +347,8 @@
       if (lockedOverlay) lockedOverlay.style.display = 'none';
 
       block.classList.add('unlocked');
-      block.classList.remove('locked');
+      block.classList.remove('locked', 'pro-report-block--locked');
+      block.removeAttribute('data-locked');
       return;
     }
 
@@ -371,7 +370,8 @@
       }
     }
 
-    block.classList.add('locked');
+    block.classList.add('locked', 'pro-report-block--locked');
+    block.setAttribute('data-locked', '');
     block.classList.remove('unlocked');
   }
 

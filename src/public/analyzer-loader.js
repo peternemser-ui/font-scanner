@@ -430,8 +430,11 @@ class AnalyzerLoader {
 
   /**
    * Show error state
+   * @param {string} message - Error message to display
+   * @param {object} [options] - Options
+   * @param {boolean} [options.isQuotaError] - If true, show upgrade button instead of retry
    */
-  showError(message) {
+  showError(message, options = {}) {
     this.isComplete = true;
     this.overrunActive = false;
 
@@ -445,6 +448,16 @@ class AnalyzerLoader {
       this.progressInterval = null;
     }
 
+    // Auto-detect quota errors from message content (belt-and-suspenders)
+    if (!options.isQuotaError) {
+      const quotaFallback = 'Daily scan limit reached';
+      const quotaTranslated = _t('errors.scanQuotaExceeded', quotaFallback);
+      const quotaPrefix = (quotaTranslated || quotaFallback).split('(')[0].trim();
+      if (quotaPrefix && String(message).includes(quotaPrefix)) {
+        options = { ...options, isQuotaError: true };
+      }
+    }
+
     const container = this.overlay || this.container;
     const loader = container ? container.querySelector('.analyzer-loading') : null;
     if (loader) {
@@ -455,20 +468,45 @@ class AnalyzerLoader {
         .replace(/"/g, '&quot;')
         .replace(/'/g, '&#x27;');
 
-      loader.innerHTML = `
-        <div class="loading-header">
-          <h2 class="loading-title" style="color: #ff4444;">✗ ${_t('loader.analysisFailed', 'Analysis Failed')}</h2>
-          <p class="loading-subtitle" style="color: var(--text-primary); margin-top: 1rem; max-width: 500px; margin-left: auto; margin-right: auto;">${sanitizedMessage}</p>
-        </div>
-        <div style="text-align: center; margin-top: 2rem;">
-          <button class="analyze-button" id="retry-button">${_t('loader.tryAgain', 'Try Again')}</button>
-        </div>
-      `;
+      if (options.isQuotaError) {
+        // Quota error: show upgrade button instead of retry to prevent infinite loop
+        loader.innerHTML = `
+          <div class="loading-header">
+            <h2 class="loading-title" style="color: #ff4444;">\u2717 ${_t('loader.analysisFailed', 'Analysis Failed')}</h2>
+            <p class="loading-subtitle" style="color: var(--text-primary); margin-top: 1rem; max-width: 500px; margin-left: auto; margin-right: auto;">${sanitizedMessage}</p>
+          </div>
+          <div style="text-align: center; margin-top: 2rem; display: flex; flex-direction: column; align-items: center; gap: 0.75rem;">
+            <button class="analyze-button" id="upgrade-button" style="background: #e63939; color: #fff;">${_t('loader.upgradeToPro', 'Upgrade to Pro')}</button>
+            <a href="/dashboard.html" id="back-to-dashboard" style="color: var(--text-secondary); text-decoration: underline; font-size: 0.9rem; cursor: pointer;">${_t('loader.goToDashboard', 'Go to Dashboard')}</a>
+          </div>
+        `;
 
-      // Add event listener (CSP-compliant)
-      const retryButton = loader.querySelector('#retry-button');
-      if (retryButton) {
-        retryButton.addEventListener('click', () => location.reload());
+        const upgradeButton = loader.querySelector('#upgrade-button');
+        if (upgradeButton) {
+          upgradeButton.addEventListener('click', () => {
+            if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+              window.PricingModal.open({ hideSingleReport: true });
+            } else {
+              window.location.href = '/upgrade.html';
+            }
+          });
+        }
+      } else {
+        loader.innerHTML = `
+          <div class="loading-header">
+            <h2 class="loading-title" style="color: #ff4444;">\u2717 ${_t('loader.analysisFailed', 'Analysis Failed')}</h2>
+            <p class="loading-subtitle" style="color: var(--text-primary); margin-top: 1rem; max-width: 500px; margin-left: auto; margin-right: auto;">${sanitizedMessage}</p>
+          </div>
+          <div style="text-align: center; margin-top: 2rem;">
+            <button class="analyze-button" id="retry-button">${_t('loader.tryAgain', 'Try Again')}</button>
+          </div>
+        `;
+
+        // Add event listener (CSP-compliant)
+        const retryButton = loader.querySelector('#retry-button');
+        if (retryButton) {
+          retryButton.addEventListener('click', () => location.reload());
+        }
       }
     }
   }
@@ -628,6 +666,7 @@ if (typeof window !== 'undefined') {
 
     complete: (message) => getSingleton().complete(message),
     error: (message) => getSingleton().error(message),
+    showError: (message, options) => getSingleton().showError(message, options),
     hide: () => getSingleton().hide()
   };
 
@@ -638,5 +677,6 @@ if (typeof window !== 'undefined') {
   window.AnalyzerLoader.updateProgress = window.AnalyzerLoader.api.updateProgress;
   window.AnalyzerLoader.complete = window.AnalyzerLoader.api.complete;
   window.AnalyzerLoader.error = window.AnalyzerLoader.api.error;
+  window.AnalyzerLoader.showError = window.AnalyzerLoader.api.showError;
   window.AnalyzerLoader.hide = window.AnalyzerLoader.api.hide;
 }

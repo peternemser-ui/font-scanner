@@ -419,7 +419,8 @@ async function analyzeReputation(options = {}) {
       const errorData = await response.json();
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        return;
       }
       throw new Error(errorData.message || errorData.error || t('reports.ipReputation.analysisFailed', 'Reputation analysis failed'));
     }
@@ -612,7 +613,7 @@ function displayReputationResults(data) {
   if (data.recommendations && data.recommendations.length > 0) {
     sections.push({
       id: 'report-recommendations',
-      title: t('reports.common.reportRecommendations', 'Report and Recommendations'),
+      title: t('reports.common.reportRecommendations', 'Recommendations'),
       isPro: true,
       locked: !isUnlocked,
       context: 'ip-reputation',
@@ -635,7 +636,7 @@ function displayReputationResults(data) {
       proBlock: true,
       proBlockOptions: {
         context: 'ip-reputation',
-        features: ['pdf', 'csv', 'share'],
+        features: ['pdf', 'excel', 'csv', 'share'],
         title: t('reports.common.unlockReport', 'Unlock Report'),
         subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
         reportId
@@ -930,7 +931,7 @@ function createRecommendationsSection(recommendations, options = {}) {
 
   return ReportAccordion.createSection({
     id: 'report-recommendations',
-    title: t('reports.common.reportAndRecommendations', 'Report and Recommendations'),
+    title: t('reports.common.reportAndRecommendations', 'Recommendations'),
     isPro: true,
     locked: locked,
     context: context,
@@ -941,10 +942,10 @@ function createRecommendationsSection(recommendations, options = {}) {
 
 // Utility functions
 function getScoreColor(score) {
-  if (score >= 90) return getAccentPrimaryHex(); // Excellent
-  if (score >= 70) return '#00d9ff'; // Good
-  if (score >= 50) return '#ffa500'; // Fair
-  return '#ff4444'; // Poor
+  if (score >= 90) return '#22c55e';  // Excellent: Green
+  if (score >= 70) return '#00d9ff';  // Good: Cyan
+  if (score >= 50) return '#ffa500';  // Fair: Orange
+  return '#ff4444';                   // Poor: Red
 }
 
 function getAccentPrimaryHex() {
@@ -1369,7 +1370,7 @@ function renderIpRepFixAccordion(rec, index) {
       </div>
 
       <div class="iprep-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderIpRepFixTabs(rec, accordionId)}
         </div>
       </div>
@@ -1612,6 +1613,59 @@ function getIpRepSummaryData(rec) {
   return summaryMap[rec.title] || {
     whyItMatters: null,
     technicalDetails: null
+  };
+}
+
+/**
+ * Translate code example metadata (title, subtitle, notes) using i18n
+ */
+function translateCodeExamples(recKey, examples) {
+  if (!recKey) return examples;
+  const basePath = `reports.ipReputation.codeExamples.${recKey}`;
+  const i18nExamples = t(basePath, null);
+
+  if (!Array.isArray(i18nExamples)) return examples;
+
+  return examples.map((example, idx) => {
+    const i18nEx = i18nExamples[idx];
+    if (!i18nEx) return example;
+    return {
+      ...example,
+      title: i18nEx.title || example.title,
+      subtitle: i18nEx.subtitle || example.subtitle,
+      notes: Array.isArray(i18nEx.notes) ? i18nEx.notes : example.notes
+    };
+  });
+}
+
+/**
+ * Translate guide data using i18n
+ */
+function translateGuideData(recKey, guide) {
+  if (!recKey) return guide;
+  const basePath = `reports.ipReputation.guides.${recKey}`;
+  const i18nGuide = t(basePath, null);
+
+  if (!i18nGuide || typeof i18nGuide !== 'object') return guide;
+
+  const translatedSteps = guide.steps.map((step, idx) => {
+    const i18nStep = Array.isArray(i18nGuide.steps) ? i18nGuide.steps[idx] : null;
+    if (!i18nStep) return step;
+    return {
+      ...step,
+      title: i18nStep.title || step.title,
+      description: i18nStep.description || step.description,
+      tip: i18nStep.tip !== undefined ? i18nStep.tip : step.tip
+    };
+  });
+
+  return {
+    ...guide,
+    difficulty: i18nGuide.difficulty || guide.difficulty,
+    timeEstimate: i18nGuide.timeEstimate || guide.timeEstimate,
+    prerequisites: i18nGuide.prerequisites || guide.prerequisites,
+    steps: translatedSteps,
+    verificationSteps: Array.isArray(i18nGuide.verificationSteps) ? i18nGuide.verificationSteps : guide.verificationSteps
   };
 }
 
@@ -1946,11 +2000,13 @@ _dmarc IN TXT "v=DMARC1; p=none; rua=mailto:dmarc@yourdomain.com"
     ]
   };
 
-  return codeMap[rec.title] || [{
+  const examples = codeMap[rec.title] || [{
     type: 'recommended',
     title: 'Recommended Action',
     code: rec.action || rec.description
   }];
+  const recKey = getRecI18nKey(rec.title);
+  return translateCodeExamples(recKey, examples);
 }
 
 /**
@@ -2254,7 +2310,7 @@ function getIpRepGuideData(rec) {
     }
   };
 
-  return guideMap[rec.title] || {
+  const guide = guideMap[rec.title] || {
     difficulty: 'INTERMEDIATE',
     timeEstimate: '15-30 minutes',
     prerequisites: 'Administrator access',
@@ -2264,6 +2320,8 @@ function getIpRepGuideData(rec) {
     })),
     verificationSteps: ['Verify the change was applied correctly', 'Test functionality', 'Monitor for issues']
   };
+  const recKey = getRecI18nKey(rec.title);
+  return translateGuideData(recKey, guide);
 }
 
 function getIpRepDefaultSteps(rec) {

@@ -324,7 +324,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const error = await response.json();
         if (error.code === 'SCAN_QUOTA_EXCEEDED') {
           const limit = error.scansLimit || 10;
-          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          if (loader) {
+            loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+          }
+          return;
         }
         throw new Error(error.message || error.error || t('reports.common.analysisFailed', 'Analysis failed'));
       }
@@ -536,7 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
       },
       {
         id: 'report-recommendations',
-        title: t('reports.common.reportRecommendations', 'Report and Recommendations'),
+        title: t('reports.common.reportRecommendations', 'Recommendations'),
         scoreTextRight: totalIssues > 0 ? `${totalIssues} ${totalIssues > 1 ? t('reports.common.issues', 'issues') : t('reports.common.issue', 'issue')}` : null,
         isPro: true,
         locked: !isUnlocked,
@@ -571,7 +574,7 @@ document.addEventListener('DOMContentLoaded', () => {
           proBlock: true,
           proBlockOptions: {
             context: 'font-analysis',
-            features: ['pdf', 'csv', 'share'],
+            features: ['pdf', 'excel', 'csv', 'share'],
             title: t('reports.common.unlockReport', 'Unlock Report'),
             subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
             reportId
@@ -666,6 +669,12 @@ document.addEventListener('DOMContentLoaded', () => {
         fragment.appendChild(locked.firstChild);
       }
       overlay.replaceWith(fragment);
+    });
+
+    // Remove locked state from Pro Report Blocks (show accent border after unlock)
+    document.querySelectorAll('.pro-report-block--locked, .pro-report-block[data-locked]').forEach((block) => {
+      block.classList.remove('pro-report-block--locked');
+      block.removeAttribute('data-locked');
     });
   }
 
@@ -1639,7 +1648,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
         </div>
 
         <div class="fonts-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-          <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+          <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
             ${renderFontsFixTabs(fix, accordionId)}
           </div>
         </div>
@@ -3520,8 +3529,8 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
   };
 
   window.copyShareLink = function() {
-    // Check Pro status before sharing
-    if (window.ExportGate && !window.ExportGate.isPro()) {
+    // Check Pro status or report purchase before sharing
+    if (window.ExportGate && !window.ExportGate.isPro() && !window.ExportGate.hasAccess()) {
       window.ExportGate.showPaywall();
       return;
     }

@@ -117,7 +117,7 @@
     "admin": "Admin",
     "plans": {
       "free": "Gratuito",
-      "dayPass": "Pase de 8 Horas",
+      "dayPass": "Pase de 24 Horas",
       "singleReport": "Informe Individual",
       "proMonthly": "Pro Mensual",
       "proAnnual": "Pro Anual"
@@ -132,7 +132,7 @@
     "planSummary": {
       "proAnnual": "Plan: Pro Anual (Ilimitado)",
       "proMonthly": "Plan: Pro Mensual ({{remaining}}/{{limit}} informes restantes)",
-      "dayPass": "Plan: Pase de 8 Horas ({{remaining}}/{{limit}} informes restantes)",
+      "dayPass": "Plan: Pase de 24 Horas ({{remaining}}/{{limit}} informes restantes)",
       "singleReport": "Plan: Informe Individual ({{count}} desbloqueados)",
       "free": "Plan: Gratuito ({{remaining}}/{{limit}} escaneos restantes hoy)"
     }
@@ -156,7 +156,9 @@
     "needOneReport": "¿Solo necesitas un informe? Puedes desbloquear este informe individual por $5 después de escanear.",
     "dayPassTimeLeft": "{hours}h {mins}m restantes",
     "dayPassMinutesLeft": "{mins}m restantes",
-    "expired": "expirado"
+    "expired": "expirado",
+    "haveAccount": "¿Ya tienes cuenta?",
+    "loginToRestore": "Inicia sesión para restaurar tu plan"
   },
   "errors": {
     "urlRequired": "Por favor ingrese una URL válida",
@@ -340,7 +342,8 @@
       "urlPlaceholder": "https://ejemplo.com",
       "messageLabel": "Mensaje",
       "messagePlaceholder": "¿En qué podemos ayudarte?",
-      "submitButton": "Enviar mensaje"
+      "submitButton": "Enviar mensaje",
+      "sending": "Enviando..."
     },
     "results": {
       "resultsFor": "Resultados para {domain}",
@@ -425,7 +428,8 @@
       "stillProcessing": "Aún procesando...",
       "someWebsitesTakeLonger": "Algunos sitios web tardan más en analizar.",
       "timeRemaining": "Tiempo restante:"
-    }
+    },
+    "runningAudit": "Ejecutando auditoría..."
   },
   "fontScanner": {
     "title": "Fuentes y Tipografía",
@@ -718,7 +722,7 @@
     "crossPageConsistency": "Consistencia entre paginas",
     "pageBreakdown": "Desglose por pagina",
     "competitiveBrandComparison": "Comparacion competitiva de marca",
-    "reportAndRecommendations": "Informe y recomendaciones",
+    "reportAndRecommendations": "Recomendaciones",
     "overall": "General",
     "type": "Tipo",
     "identity": "Identidad",
@@ -819,7 +823,58 @@
     "fcp": "FCP",
     "ttfb": "TTFB",
     "detailedMetrics": "Métricas de Rendimiento Detalladas",
-    "recommendations": "Recomendaciones de Optimización"
+    "recommendations": "Recomendaciones de Optimización",
+    "resourceAnalysis": "Análisis de Recursos",
+    "networkPerformance": "Rendimiento de Red",
+    "cachingOptimization": "Caché y Optimización",
+    "requests": "Solicitudes",
+    "pageSize": "Tamaño de Página",
+    "loadTime": "Tiempo de Carga",
+    "report": {
+      "recommendations": "Recomendaciones",
+      "cwv": {
+        "good": "Bueno",
+        "needsImprovement": "Necesita Mejora",
+        "poor": "Deficiente"
+      },
+      "lighthouse": {
+        "title": "Puntuaciones por Categoría de Lighthouse",
+        "bestPractices": "Mejores Prácticas"
+      },
+      "sectionIntros": {
+        "cwv": "Los Core Web Vitals son las métricas clave de Google para medir la experiencia real del usuario. Se centran en el rendimiento de carga (LCP), la interactividad (FID/INP) y la estabilidad visual (CLS). Las puntuaciones se comparan con los umbrales de Google para Bueno, Necesita Mejora y Deficiente. Cumplir los umbrales de Bueno para las tres métricas es esencial para un posicionamiento óptimo en buscadores.",
+        "lighthouse": "Lighthouse proporciona auditorías automatizadas en las categorías de Rendimiento, Accesibilidad, Mejores Prácticas y SEO. Cada puntuación de categoría refleja la adherencia a las mejores prácticas de desarrollo web. Esta sección muestra las puntuaciones de cada categoría de auditoría de Lighthouse medidas durante el análisis.",
+        "resources": "El análisis de recursos examina la composición de su página — scripts, hojas de estilo, imágenes, fuentes y otros activos. Comprender el desglose de recursos ayuda a identificar oportunidades de optimización. Reducir el número y tamaño de los recursos mejora directamente los tiempos de carga y las puntuaciones de Core Web Vitals.",
+        "network": "Las métricas de rendimiento de red miden la rapidez con que su servidor responde y entrega contenido. El Tiempo hasta el Primer Byte (TTFB) indica la velocidad de procesamiento del servidor, mientras que los tiempos de búsqueda DNS y negociación SSL revelan la sobrecarga de conexión. Optimizar estas métricas requiere atención tanto a la configuración del servidor como a la infraestructura de red.",
+        "caching": "Un almacenamiento en caché efectivo reduce la carga del servidor y mejora drásticamente el rendimiento en visitas repetidas. Los encabezados de caché correctamente configurados aseguran que los navegadores almacenen y reutilicen recursos estáticos. Esta sección evalúa su estrategia de caché, identificando recursos que podrían beneficiarse de duraciones de caché más largas.",
+        "recommendations": "Basándose en el análisis de rendimiento, estas recomendaciones se dirigen a las mejoras más impactantes. Abordar los elementos de alta prioridad primero proporcionará las mayores ganancias en tiempo de carga y puntuaciones de Core Web Vitals."
+      },
+      "resources": {
+        "breakdownHeading": "Desglose de Recursos",
+        "table": {
+          "type": "Tipo",
+          "count": "Archivos",
+          "size": "Tamaño"
+        }
+      },
+      "network": {
+        "title": "Rendimiento de Red",
+        "ttfb": "Tiempo hasta el Primer Byte",
+        "dns": "Búsqueda DNS",
+        "ssl": "Negociación SSL",
+        "connection": "Tiempo de Conexión",
+        "domInteractive": "DOM Interactivo",
+        "domContentLoaded": "DOM Content Loaded"
+      },
+      "caching": {
+        "title": "Caché y Optimización",
+        "hitRateLabel": "Tasa de Aciertos de Caché",
+        "cachedLabel": "Recursos en Caché",
+        "notCachedLabel": "Sin Caché"
+      },
+      "recommendations.noneTitle": "Excelente Rendimiento",
+      "recommendations.noneBody": "Su sitio funciona bien en todas las métricas. Continúe monitoreando posibles regresiones."
+    }
   },
   "accessibility": {
     "title": "Analizador de Accesibilidad",
@@ -835,7 +890,69 @@
     "colorContrast": "Contraste de Color",
     "keyboardNav": "Navegación por Teclado",
     "ariaLabels": "Etiquetas ARIA",
-    "imageAlt": "Texto Alt de Imágenes"
+    "imageAlt": "Texto Alt de Imágenes",
+    "report": {
+      "recommendations": "Recomendaciones",
+      "sectionIntros": {
+        "wcag": "Las Pautas de Accesibilidad para el Contenido Web (WCAG) 2.1 definen estándares para hacer el contenido web accesible a personas con discapacidades. El cumplimiento se mide en cuatro principios: Perceptible, Operable, Comprensible y Robusto. Esta sección evalúa su página contra los criterios clave de éxito del Nivel AA de WCAG. Cumplir estos estándares garantiza que su sitio sea utilizable por la audiencia más amplia posible y puede ser requerido por ley en muchas jurisdicciones.",
+        "contrast": "Un contraste de color suficiente asegura que el texto y los elementos interactivos sean legibles por personas con baja visión o deficiencias en la visión del color. WCAG 2.1 Nivel AA requiere una relación de contraste mínima de 4.5:1 para texto normal y 3:1 para texto grande. Esta sección identifica elementos que no cumplen estos umbrales. Corregir problemas de contraste es una de las mejoras de accesibilidad más impactantes que puede realizar.",
+        "keyboard": "La accesibilidad por teclado garantiza que todos los elementos interactivos puedan ser alcanzados y operados usando solo un teclado. Esto es esencial para usuarios que no pueden usar un ratón debido a discapacidades motoras, así como para usuarios avanzados que prefieren la navegación por teclado. Esta sección verifica elementos enfocables, trampas de tabulación e indicadores de enfoque visibles. Cada elemento interactivo debe ser alcanzable mediante la tecla Tab y operable mediante Enter o Espacio.",
+        "aria": "Los atributos ARIA (Accessible Rich Internet Applications) y el HTML semántico proporcionan la base para la accesibilidad con lectores de pantalla. El uso adecuado de landmarks, etiquetas, roles y estructura de encabezados permite que la tecnología asistiva navegue y comprenda su página. Esta sección verifica la calidad de la implementación ARIA, regiones landmark, etiquetas de formularios y jerarquía de encabezados. El uso incorrecto de ARIA puede empeorar la accesibilidad, por lo que una implementación correcta es fundamental.",
+        "recommendations": "Basándose en la auditoría de accesibilidad, esta sección proporciona recomendaciones priorizadas para mejorar la inclusividad de su sitio. Cada recomendación hace referencia al criterio de éxito WCAG relevante e incluye pasos prácticos para su implementación. Abordar los elementos de alta prioridad primero producirá la mayor mejora en el cumplimiento de accesibilidad y la experiencia del usuario para personas con discapacidades."
+      },
+      "wcag": {
+        "levelTitle": "Nivel Objetivo: WCAG 2.1 AA",
+        "levelBody": "El Nivel AA de WCAG es el estándar requerido por la mayoría de las regulaciones de accesibilidad en todo el mundo, incluyendo ADA, Sección 508 y la Ley Europea de Accesibilidad.",
+        "criteriaHeading": "Criterios de Éxito",
+        "deviceScoresHeading": "Puntuaciones por Dispositivo",
+        "criteria": {
+          "nonTextContent": "1.1.1 Contenido No Textual",
+          "infoRelationships": "1.3.1 Información y Relaciones",
+          "contrastMinimum": "1.4.3 Contraste (Mínimo)",
+          "keyboard": "2.1.1 Teclado",
+          "bypassBlocks": "2.4.1 Omitir Bloques",
+          "pageTitled": "2.4.2 Título de Página",
+          "focusOrder": "2.4.3 Orden de Enfoque",
+          "languagePage": "3.1.1 Idioma de la Página",
+          "parsing": "4.1.1 Análisis Sintáctico",
+          "nameRoleValue": "4.1.2 Nombre, Rol, Valor"
+        },
+        "table": {
+          "criterion": "Criterio de Éxito"
+        }
+      },
+      "contrast": {
+        "issuesLabel": "Problemas de Contraste",
+        "detailsHeading": "Problemas de Contraste",
+        "allPassTitle": "Todas las Verificaciones de Contraste Aprobadas",
+        "allPassBody": "Todos los elementos de texto cumplen los requisitos mínimos de relación de contraste.",
+        "table": {
+          "element": "Elemento",
+          "ratio": "Proporción",
+          "required": "Requerido"
+        }
+      },
+      "keyboard": {
+        "focusableLabel": "Elementos Enfocables",
+        "tabTrapsLabel": "Trampas de Tabulación",
+        "missingFocusLabel": "Indicadores de Enfoque Faltantes",
+        "issuesHeading": "Problemas de Teclado"
+      },
+      "aria": {
+        "landmarksLabel": "Landmarks",
+        "missingLabelsLabel": "Etiquetas Faltantes",
+        "invalidRolesLabel": "Roles Inválidos",
+        "headingStructureLabel": "Estructura de Encabezados",
+        "issuesHeading": "Problemas de ARIA",
+        "table": {
+          "issue": "Problema",
+          "description": "Descripción",
+          "impact": "Impacto"
+        }
+      },
+      "recommendations.noneTitle": "Excelente Accesibilidad",
+      "recommendations.noneBody": "Su sitio cumple con las mejores prácticas de accesibilidad. Continúe monitoreando el cumplimiento."
+    }
   },
   "security": {
     "title": "Analizador de Seguridad",
@@ -850,7 +967,78 @@
     "vulnerabilities": "Vulnerabilidades",
     "cookieSecurity": "Seguridad de Cookies",
     "thirdPartyScripts": "Scripts de Terceros",
-    "helperText": "Prueba SSL/TLS, encabezados de seguridad (CSP, HSTS, X-Frame-Options) y comprobaciones alineadas con OWASP."
+    "sslTlsSecurity": "Seguridad SSL/TLS",
+    "headers": "Encabezados de Seguridad",
+    "cookies": "Seguridad de Cookies",
+    "thirdParty": "Scripts de Terceros",
+    "validCertificate": "Válido",
+    "invalidCertificate": "Inválido",
+    "helperText": "Prueba SSL/TLS, encabezados de seguridad (CSP, HSTS, X-Frame-Options) y comprobaciones alineadas con OWASP.",
+    "report": {
+      "recommendations": "Recomendaciones",
+      "sectionIntros": {
+        "ssl": "Los certificados SSL/TLS establecen conexiones cifradas entre su servidor y los visitantes, protegiendo los datos en tránsito. Un certificado válido y correctamente configurado es esencial para la confianza del usuario y los rankings en motores de búsqueda. Esta sección evalúa la validez de su certificado, la versión del protocolo, el emisor y el estado de expiración. Los sitios modernos deben usar TLS 1.2 o superior y asegurar que los certificados se renueven con antelación.",
+        "headers": "Los encabezados de seguridad instruyen a los navegadores sobre cómo manejar el contenido de su sitio, proporcionando defensa contra scripting entre sitios, clickjacking y otros ataques comunes. Cada encabezado cumple una función protectora específica. Esta sección evalúa la implementación de encabezados de seguridad críticos e identifica protecciones faltantes que dejan su sitio vulnerable.",
+        "vulnerabilities": "Esta sección identifica posibles vulnerabilidades de seguridad descubiertas durante el análisis. Las vulnerabilidades se categorizan por nivel de gravedad — los problemas críticos requieren atención inmediata, mientras que los hallazgos de menor gravedad representan oportunidades para fortalecer su postura de seguridad. Las evaluaciones regulares de vulnerabilidades son esenciales para mantener una presencia web segura.",
+        "cookies": "Las cookies almacenan datos de sesión y preferencias del usuario, lo que hace que su seguridad sea crítica para proteger la privacidad del usuario. Las cookies correctamente configuradas usan los atributos Secure, HttpOnly y SameSite para prevenir el robo y uso indebido. Esta sección audita todas las cookies detectadas en su sitio y evalúa su configuración de seguridad.",
+        "thirdParty": "Los scripts de terceros amplían la funcionalidad de su sitio pero introducen riesgos de seguridad. Cada script externo es un vector de ataque potencial si se ve comprometido. Los hashes de Integridad de Subrecursos (SRI) verifican que los scripts obtenidos no hayan sido manipulados. Esta sección evalúa todos los scripts externos, sus patrones de carga y la cobertura de SRI.",
+        "recommendations": "Basándose en el análisis de seguridad, estas recomendaciones priorizan las mejoras más impactantes para la postura de seguridad de su sitio. Cada recomendación incluye el problema específico, su impacto potencial y pasos concretos para su remediación."
+      },
+      "ssl": {
+        "overviewHeading": "Detalles del Certificado",
+        "rows": {
+          "status": "Estado del Certificado",
+          "protocol": "Protocolo",
+          "issuer": "Emisor",
+          "validFrom": "Válido Desde",
+          "validUntil": "Válido Hasta",
+          "daysRemaining": "Días Restantes"
+        }
+      },
+      "headers": {
+        "implementedLabel": "Encabezados Implementados",
+        "table": {
+          "header": "Encabezado",
+          "description": "Descripción",
+          "valueOrRisk": "Valor / Riesgo"
+        }
+      },
+      "status": {
+        "present": "Presente",
+        "missing": "Faltante"
+      },
+      "vulnerabilities": {
+        "critical": "Crítico",
+        "high": "Alto",
+        "medium": "Medio",
+        "low": "Bajo",
+        "detectedHeading": "Vulnerabilidades Detectadas",
+        "noneFoundTitle": "No Se Detectaron Vulnerabilidades",
+        "noneFoundBody": "No se identificaron vulnerabilidades significativas durante el análisis."
+      },
+      "cookies": {
+        "totalLabel": "Total de Cookies",
+        "secureLabel": "Correctamente Aseguradas",
+        "securedLabel": "Cookies Aseguradas",
+        "detailsHeading": "Detalles de Cookies",
+        "table": {
+          "name": "Nombre de Cookie"
+        }
+      },
+      "thirdParty": {
+        "totalLabel": "Scripts Externos",
+        "withSriLabel": "Con SRI",
+        "sriCoverageLabel": "Cobertura SRI",
+        "detailsHeading": "Detalles de Scripts",
+        "table": {
+          "scriptUrl": "URL del Script",
+          "protocol": "Protocolo",
+          "risk": "Riesgo"
+        }
+      },
+      "recommendations.noneTitle": "Postura de Seguridad Sólida",
+      "recommendations.noneBody": "Su sitio sigue las mejores prácticas de seguridad. Continúe monitoreando nuevas vulnerabilidades."
+    }
   },
   "seo": {
     "title": "Analizador SEO",
@@ -1103,7 +1291,7 @@
       "links": {
         "title": "Corregir seguridad de enlaces y texto ancla",
         "impact": "Previene vulnerabilidades de seguridad y mejora señales de link equity",
-        "description": "Los enlaces externos que abren en pestaña nueva sin rel=\"noopener noreferrer\" exponen tu sitio a ataques de reverse tabnapping."
+        "description": "Los enlaces externos que se abren en una nueva pestaña sin rel=\"noopener noreferrer\" exponen su sitio a ataques de reverse tabnapping, donde la página abierta puede usar la API window.opener para redirigir su pestaña original a un sitio de phishing. Esta es una vulnerabilidad de seguridad bien documentada que puede engañar a los usuarios para que ingresen credenciales en una versión falsa de su sitio sin darse cuenta de que han sido redirigidos. Además, los enlaces con texto ancla vacío o faltante desperdician valiosa equity de enlaces porque los motores de búsqueda utilizan el texto ancla para entender el contexto y la relevancia de la página vinculada. Los usuarios de lectores de pantalla también dependen del texto ancla para entender a dónde lleva un enlace antes de activarlo, por lo que los anclas vacíos crean una experiencia confusa e inaccesible. Ambos problemas son simples de corregir y deben resolverse en todos los enlaces externos e internos."
       },
       "canonical": {
         "title": "Agregar referencias canónicas + sitemap",
@@ -1280,6 +1468,56 @@
         "descriptiveAnchor": "Texto de anclaje descriptivo",
         "pricingAnchor": "Ver planes de precios",
         "clickHere": "Haz clic aquí"
+      }
+    },
+    "analyzer": {
+      "issues": {
+        "missingTitle": "Falta el título de la página",
+        "missingDescription": "Falta la meta descripción",
+        "missingViewport": "Falta la etiqueta meta viewport (afecta la usabilidad móvil)",
+        "noH1": "No se encontró encabezado H1",
+        "multipleH1": "Se encontraron {{count}} encabezados H1. Use solo uno por página",
+        "noHeadings": "No se encontraron encabezados en la página",
+        "lowWordCount": "Bajo conteo de palabras (< 300). Los motores de búsqueda prefieren páginas con contenido extenso",
+        "missingAlt": "{{count}} imagen(es) sin texto alt (afecta accesibilidad y SEO)",
+        "emptyAnchors": "{{count}} enlace(s) sin texto de ancla",
+        "horizontalScroll": "Se detectó desplazamiento horizontal en viewport móvil",
+        "missingViewportMobile": "Falta la etiqueta meta viewport (crítico para la responsividad móvil)",
+        "slowLoad": "Tiempo de carga lento ({{time}}). Objetivo: < 3s",
+        "largePageSize": "Tamaño de página grande ({{size}}). Optimice imágenes y recursos",
+        "noHttps": "El sitio no usa HTTPS (crítico para seguridad y SEO)",
+        "invalidSchemas": "Se encontraron {{count}} esquema(s) de datos estructurados inválido(s)"
+      },
+      "recs": {
+        "titleTooShort": "El título es demasiado corto (< 30 caracteres). Recomendado: 50-60 caracteres",
+        "titleTooLong": "El título es demasiado largo (> 60 caracteres). Puede truncarse en resultados de búsqueda",
+        "descTooShort": "La meta descripción es demasiado corta (< 120 caracteres). Recomendado: 150-160 caracteres",
+        "descTooLong": "La meta descripción es demasiado larga (> 160 caracteres). Puede truncarse",
+        "addOpenGraph": "Añadir etiquetas Open Graph para mejor compartición en redes sociales",
+        "addTwitterCard": "Añadir etiquetas Twitter Card para mejor visualización en Twitter",
+        "addLangAttr": "Añadir atributo de idioma a la etiqueta <html>",
+        "addHeadings": "Considere añadir más encabezados para mejor estructura de contenido",
+        "headingGaps": "La jerarquía de encabezados tiene saltos (ej. H1 → H3). Use niveles secuenciales",
+        "addContent": "Considere añadir más contenido. Páginas con 600+ palabras tienden a posicionarse mejor",
+        "longSentences": "Se detectaron oraciones largas. Considere oraciones más cortas para mejor legibilidad",
+        "lowTextRatio": "Baja proporción texto-HTML. Demasiado código en relación al contenido",
+        "lazyLoading": "Considere usar carga diferida para imágenes fuera del viewport",
+        "largeImages": "Se detectaron {{count}} imagen(es) grande(s). Considere optimizar el tamaño",
+        "unsafeExternalLinks": "{{count}} enlace(s) externo(s) abren en nueva pestaña sin rel=\"noopener noreferrer\"",
+        "brokenLinks": "{{count}} enlace(s) con formato potencialmente roto (href=\"#\" o javascript:)",
+        "smallFontSize": "El tamaño de fuente puede ser demasiado pequeño en dispositivos móviles",
+        "improveLoadTime": "El tiempo de carga puede mejorarse",
+        "largeDom": "DOM grande ({{count}} nodos). Considere simplificar",
+        "manyResources": "Muchos recursos cargados ({{count}}). Considere agrupar/minificar",
+        "addHsts": "Añadir encabezado Strict-Transport-Security (HSTS)",
+        "addCsp": "Añadir encabezado Content-Security-Policy",
+        "addXFrameOptions": "Añadir encabezado X-Frame-Options (previene clickjacking)",
+        "addXContentType": "Añadir encabezado X-Content-Type-Options",
+        "addStructuredData": "Añadir datos estructurados (Schema.org/JSON-LD) para resultados enriquecidos",
+        "addRobotsTxt": "Añadir archivo robots.txt para mejor control de rastreo",
+        "addSitemap": "Añadir sitemap XML para mejor indexación",
+        "addFavicon": "Añadir favicon para mejor marca",
+        "addAnalytics": "Considere añadir Google Analytics para información de tráfico"
       }
     },
     "report": {
@@ -1517,6 +1755,8 @@
         }
       },
       "structuredData": {
+        "microdataLabel": "Microdata",
+        "totalLabel": "Total",
         "info": {
           "title": "ⓘ ¿Qué es el esquema de datos estructurados?",
           "body": "Los datos estructurados (también llamados marcado schema) son código que ayuda a los motores de búsqueda a entender mejor tu contenido, habilitando <strong style=\"color: #00ff41;\">resultados enriquecidos</strong> como valoraciones con estrellas, precios de producto, fechas de eventos, desplegables de FAQ y más. Usa el vocabulario de <strong style=\"color: #00ccff;\">Schema.org</strong> en formatos JSON-LD, Microdata o RDFa.",
@@ -2331,6 +2571,8 @@
     "complete": "¡Completado!",
     "analysisFailed": "Análisis fallido",
     "tryAgain": "Intentar de nuevo",
+    "upgradeToPro": "Actualizar a Pro",
+    "goToDashboard": "Ir al panel",
     "analyzingFonts": "ANALIZANDO FUENTES",
     "connectingToWebsite": "Conectando al sitio web",
     "loadingPage": "Cargando página y recursos...",
@@ -2514,7 +2756,9 @@
     "mayTake20To45Seconds": "Esto puede tomar entre 20 y 45 segundos",
     "mayTake30To60Seconds": "Esto puede tomar entre 30 y 60 segundos",
     "mayTakeTime": "Esto puede tomar entre 30 y 60 segundos para sitios complejos",
-    "scanTiming": "Tiempo de escaneo"
+    "scanTiming": "Tiempo de escaneo",
+    "upgradeToPro": "Upgrade to Pro",
+    "goToDashboard": "Go to Dashboard"
   },
   "common": {
     "loading": "Cargando...",
@@ -2579,6 +2823,10 @@
       "hoursAgo": "hace {{count}} horas",
       "daysAgo": "hace {{count}} días"
     },
+    "grade": "Calificación",
+    "desktop": "Escritorio",
+    "mobile": "Móvil",
+    "pageScreenshot": "Captura de pantalla de la pagina",
     "pdf": {
       "generating": "Generando PDF",
       "generatingShort": "Generando...",
@@ -2625,11 +2873,48 @@
         "generatedBy": "Generado por Site Mechanic",
         "page": "Página",
         "of": "de"
+      },
+      "impact": {
+        "critical": "Crítico",
+        "serious": "Grave",
+        "moderate": "Moderado",
+        "minor": "Menor"
+      },
+      "status": {
+        "pass": "Aprobado",
+        "fail": "Fallido",
+        "optimal": "Óptimo",
+        "review": "Revisar",
+        "missing": "Faltante",
+        "warning": "Advertencia",
+        "good": "Bueno",
+        "configured": "Configurado",
+        "notConfigured": "No configurado"
+      },
+      "reportLabel": {
+        "seo": "SEO",
+        "cro": "CRO",
+        "gdpr": "GDPR",
+        "cwv": "CWV",
+        "security": "Seguridad",
+        "performance": "Rendimiento",
+        "accessibility": "Accesibilidad",
+        "fonts": "Fuentes",
+        "tag-intelligence": "Inteligencia de Etiquetas",
+        "enhanced-fonts": "Fuentes Avanzadas",
+        "brand-consistency": "Consistencia de Marca",
+        "broken-links": "Enlaces Rotos",
+        "ip-reputation": "Reputación IP",
+        "local-seo": "SEO Local",
+        "mobile-analyzer": "Móvil",
+        "competitive": "Competitivo",
+        "hosting": "Hosting",
+        "site-crawler": "Rastreador del Sitio",
+        "core-web-vitals": "Core Web Vitals"
       }
     },
     "notAvailable": "N/A",
     "copyFailed": "Error al copiar",
-    "pageScreenshot": "Captura de pantalla de la pagina",
     "url": "URL",
     "screenshotUnavailable": "Captura de pantalla no disponible",
     "unique": "unico",
@@ -3104,7 +3389,10 @@
     "cancel": "Cancelar",
     "pleaseLoginToContinue": "Por favor inicia sesión para continuar",
     "pleaseLoginToManageBilling": "Por favor inicia sesión para administrar la facturación",
-    "signIn": "Iniciar sesión"
+    "signIn": "Iniciar sesión",
+    "sending": "Enviando...",
+    "sendResetLink": "Enviar enlace de restablecimiento",
+    "resetting": "Restableciendo..."
   },
   "account": {
     "accountShort": "Cuenta",
@@ -3183,13 +3471,13 @@
     "plans": {
       "proMonthly": "Pro Mensual",
       "proYearly": "Pro Anual",
-      "dayPass": "Pase de 8 Horas",
+      "dayPass": "Pase de 24 Horas",
       "thisReport": "Este Informe"
     },
     "periods": {
       "perMonth": "por mes",
       "perYear": "por año",
-      "hours24": "8 horas",
+      "hours24": "24 horas",
       "oneTime": "único pago",
       "effectiveMonthly": "${{amount}}/mes efectivo"
     },
@@ -3205,14 +3493,17 @@
       "managePlan": "Gestionar Plan",
       "switchToMonthly": "Cambiar a Mensual",
       "switchToYearly": "Cambiar a Anual",
-      "getDayPass": "Obtener Pase de 8 Horas",
+      "getDayPass": "Obtener Pase de 24 Horas",
       "activePass": "Pase Activo",
       "youHavePro": "Ya tienes Pro",
       "buyReport": "Comprar Informe",
       "purchased": "Comprado",
       "includedWithPro": "Incluido con Pro",
       "runScanFirst": "Ejecuta un escaneo primero",
-      "processing": "Procesando..."
+      "processing": "Procesando...",
+      "currentPlan": "Plan Actual",
+      "loginToUpgrade": "Iniciar sesión para mejorar",
+      "redirecting": "Redirigiendo al pago..."
     },
     "benefits": {
       "unlimitedProTools": "Herramientas Pro ilimitadas",
@@ -3220,20 +3511,20 @@
       "unlimitedReports": "Informes ilimitados",
       "reportsPerMonth": "250 informes/mes",
       "reportsPerPass": "30 informes incluidos",
-      "unlimitedScans24h": "Escaneos ilimitados por 8h",
+      "unlimitedScans24h": "Escaneos ilimitados por 24h",
       "noAutoRenewal": "Sin renovación automática",
       "exportPdfs": "Exportar PDFs",
       "cancelAnytime": "Cancela cuando quieras",
       "bestValue": "Mejor valor",
       "fullProAccess": "Acceso Pro completo",
-      "expiresIn24h": "Expira en 8h",
+      "expiresIn24h": "Expira en 24h",
       "unlocksThisReport": "Desbloquea este informe",
       "exportPdf": "Exportar PDF",
       "permanentAccess": "Acceso permanente"
     },
     "oneTime": "Único",
-    "dayPass": "Pase de 8 horas",
-    "dayPassDesc": "Escaneos ilimitados durante 8 horas",
+    "dayPass": "Pase de 24 horas",
+    "dayPassDesc": "Escaneos ilimitados durante 24 horas",
     "proMonthly": "Pro Mensual",
     "monthlyDesc": "Escaneos ilimitados + 250 informes",
     "proAnnual": "Pro Anual",
@@ -3373,9 +3664,9 @@
       "recommendations": "Recomendaciones",
       "issuesFound": "Problemas Encontrados",
       "checksPassed": "Verificaciones Aprobadas",
-      "reportRecommendations": "Informe y Recomendaciones",
-      "fixCode": "Código de Corrección + Recomendaciones",
-      "fixCodeRecommendations": "Código de Corrección + Recomendaciones",
+      "reportRecommendations": "Recomendaciones",
+      "fixCode": "Recomendaciones",
+      "fixCodeRecommendations": "Recomendaciones",
       "takeAction": "Tomar Acción",
       "copy": "Copiar",
       "copied": "¡Copiado!",
@@ -3463,8 +3754,8 @@
       "unlockToSeeMore": "Desbloquear para ver más",
       "remove": "Eliminar",
       "screenshotOf": "Captura de {{url}}",
-      "reportAndRecommendations": "Informe y Recomendaciones",
-      "reportAndRecommendationsCount": "Informe y Recomendaciones ({{count}})",
+      "reportAndRecommendations": "Recomendaciones",
+      "reportAndRecommendationsCount": "Recomendaciones ({{count}})",
       "errorInvalidData": "Error: Estructura de datos de respuesta inválida",
       "errorMissingScores": "Error: Faltan datos de puntuación",
       "errorDisplayingResults": "Error al mostrar resultados: {{message}}",
@@ -3499,7 +3790,7 @@
       "coreMetrics": "Métricas principales",
       "url": "URL",
       "generated": "Generado",
-      "noDiagnostics": "No hay diagnósticos disponibles.",
+      "noDiagnostics": "No se reportaron diagnósticos.",
       "howToImprove": "Cómo mejorar",
       "topRecommendations": "Principales recomendaciones",
       "noRecommendations": "Sin recomendaciones específicas",
@@ -3529,7 +3820,10 @@
       "difficulty": {
         "easy": "Fácil",
         "medium": "Medio",
-        "hard": "Difícil"
+        "hard": "Difícil",
+        "beginner": "Principiante",
+        "intermediate": "Intermedio",
+        "advanced": "Avanzado"
       },
       "notAvailable": "N/A",
       "ok": "OK",
@@ -3613,6 +3907,7 @@
       "stepByStepInstructions": "Instrucciones paso a paso",
       "timeout": "Tiempo agotado",
       "timeRemaining": "Tiempo restante: {{minutes}}m {{seconds}}s",
+      "timeRemainingDefault": "Tiempo restante: 3m 0s",
       "timestamp": "marca de tiempo",
       "unknown": "Desconocido",
       "upgradeToPro": "Actualizar a Pro",
@@ -3625,7 +3920,22 @@
       "showingSavedReport": "Mostrando informe guardado del",
       "refresh": "Actualizar",
       "desktop": "Escritorio",
-      "mobile": "Móvil"
+      "mobile": "Móvil",
+      "cwvStatus": {
+        "pass": "Aprobado",
+        "atRisk": "En riesgo",
+        "fail": "No aprobado",
+        "unknown": "Desconocido"
+      },
+      "riskBanner": {
+        "failing": "Algunas métricas están fallando: ",
+        "atRisk": "Métricas en riesgo: ",
+        "suffix": " — mejore para cumplir los objetivos."
+      },
+      "noOpportunities": "No se reportaron oportunidades.",
+      "opportunity": "Oportunidad",
+      "impactLabel": "Impacto: ",
+      "noResourceBreakdown": "Desglose de recursos no disponible."
     },
     "fonts": {
       "title": "Informe de Fuentes y Tipografía",
@@ -4105,7 +4415,10 @@
         },
         "recommendations": "Recommendations",
         "recommendations.noneTitle": "Well-Optimized Typography",
-        "recommendations.noneBody": "Your font stack follows best practices. Continue monitoring for optimization opportunities."
+        "recommendations.noneBody": "Your font stack follows best practices. Continue monitoring for optimization opportunities.",
+        "recommendationsHeading": "Recomendaciones",
+        "recommendationsNoneTitle": "Tipografía bien optimizada",
+        "recommendationsNoneBody": "Tu pila de fuentes sigue las mejores prácticas. Continúa monitoreando oportunidades de optimización."
       },
       "considerVariableFonts": "Considere usar fuentes variables para una tipografía más flexible con menos archivos.",
       "excellentTypography": "¡Tipografía excelente!",
@@ -4313,7 +4626,7 @@
         "implementHttps": {
           "title": "Implementar HTTPS",
           "impact": "+30 Puntuación de Seguridad",
-          "summary": "Tu sitio web no está usando cifrado HTTPS. Todos los datos, incluidas contraseñas, información personal y datos de pago, se transmiten en texto plano, haciéndolos vulnerables a la interceptación por atacantes en la red.",
+          "summary": "Su sitio web no utiliza cifrado HTTPS, lo que significa que todos los datos transmitidos entre su servidor y los visitantes se envían en texto plano. Esto incluye contraseñas, información personal, datos de pago y tokens de sesión, todos los cuales pueden ser interceptados por atacantes en la misma red mediante ataques man-in-the-middle. Los navegadores modernos muestran una advertencia prominente de \"No seguro\" en la barra de direcciones para sitios HTTP, lo que erosiona la confianza de los visitantes y aumenta la tasa de rebote. Google también utiliza HTTPS como señal de clasificación, por lo que los sitios no cifrados sufren una penalización SEO medible. Los certificados SSL gratuitos están disponibles a través de Let's Encrypt, lo que hace que la implementación de HTTPS sea sencilla para cualquier sitio web.",
           "steps": [
             "Obtén un certificado SSL gratuito usando certbot de Let's Encrypt",
             "Instala el certificado y configura tu servidor web",
@@ -4323,7 +4636,7 @@
         "implementCsp": {
           "title": "Implementar Política de Seguridad de Contenido",
           "impact": "+15 Puntuación de Seguridad",
-          "summary": "Tu sitio carece de un encabezado Content Security Policy (CSP), dejándolo vulnerable a ataques de Cross-Site Scripting (XSS). Los atacantes pueden inyectar scripts maliciosos que roban datos de usuario, secuestran sesiones o desfiguran tu sitio web.",
+          "summary": "Su sitio carece de un encabezado Content Security Policy (CSP), dejándolo vulnerable a ataques de Cross-Site Scripting (XSS). CSP es un encabezado de respuesta HTTP que le indica al navegador exactamente qué fuentes de contenido (scripts, estilos, imágenes, fuentes) están permitidas para cargarse en su página. Sin él, los atacantes que encuentren un punto de inyección pueden ejecutar JavaScript arbitrario que roba cookies de usuario, redirige visitantes a páginas de phishing o registra silenciosamente las pulsaciones de teclas. XSS está consistentemente clasificado entre las principales vulnerabilidades de seguridad web por OWASP y es uno de los vectores de ataque más comúnmente explotados. Implementar incluso una CSP básica reduce drásticamente su superficie de ataque y proporciona una fuerte capa de defensa en profundidad contra la inyección de scripts.",
           "steps": [
             "Comienza con el encabezado <code>Content-Security-Policy-Report-Only</code> para identificar problemas",
             "Establece <code>default-src 'self'; script-src 'self'</code> como política base",
@@ -4334,7 +4647,7 @@
         "enableHsts": {
           "title": "Habilitar HTTP Strict Transport Security",
           "impact": "+10 Puntuación de Seguridad",
-          "summary": "El encabezado HSTS no está configurado. Sin HSTS, los atacantes pueden realizar ataques de degradación de protocolo, forzando a los usuarios a conectarse por HTTP inseguro incluso cuando HTTPS está disponible.",
+          "summary": "El encabezado HSTS no está configurado, dejando su sitio vulnerable a ataques de degradación de protocolo. Cuando un usuario escribe su dominio sin el prefijo \"https://\", el navegador se conecta inicialmente a través de HTTP plano antes de ser redirigido a HTTPS. Durante esa breve solicitud no cifrada, un atacante en la misma red puede interceptar la conexión y prevenir la redirección a HTTPS por completo, una técnica conocida como SSL stripping. El encabezado HSTS indica a los navegadores que siempre utilicen HTTPS para su dominio, eliminando completamente esa solicitud inicial insegura. Una vez establecido, el navegador recuerda esta preferencia durante la duración especificada y se niega a conectarse por HTTP, incluso si el usuario lo escribe explícitamente.",
           "steps": [
             "Primero asegúrate de que HTTPS funcione en todas las páginas",
             "Agrega <code>Strict-Transport-Security: max-age=300</code> para probar",
@@ -4344,7 +4657,7 @@
         "preventClickjacking": {
           "title": "Prevenir Ataques de Clickjacking",
           "impact": "+5 Puntuación de Seguridad",
-          "summary": "El encabezado X-Frame-Options no está configurado. Los atacantes pueden incrustar tu sitio en un iframe oculto y engañar a los usuarios para que hagan clic en botones que no pretendían, pudiendo cambiar configuraciones o realizar compras.",
+          "summary": "El encabezado X-Frame-Options no está configurado, dejando su sitio vulnerable a ataques de clickjacking. En un ataque de clickjacking, un sitio web malicioso carga su página dentro de un iframe invisible y superpone contenido engañoso encima, engañando a los usuarios para que hagan clic en botones de su sitio sin darse cuenta. Esto puede llevar a acciones no autorizadas como cambiar la configuración de la cuenta, realizar compras o otorgar permisos a la aplicación de un atacante. El ataque es particularmente peligroso porque el usuario cree que está interactuando con la página maliciosa mientras en realidad está realizando acciones en su sitio con su sesión autenticada. Agregar el encabezado X-Frame-Options o usar la directiva CSP frame-ancestors previene completamente que sus páginas sean incrustadas en marcos de terceros.",
           "steps": [
             "Agrega el encabezado <code>X-Frame-Options: DENY</code> a la configuración de tu servidor",
             "También agrega CSP: <code>frame-ancestors 'none'</code> para navegadores modernos"
@@ -4353,7 +4666,7 @@
         "preventMimeSniffing": {
           "title": "Prevenir MIME Sniffing",
           "impact": "+5 Puntuación de Seguridad",
-          "summary": "Falta el encabezado X-Content-Type-Options. Los navegadores pueden malinterpretar los tipos de archivo, pudiendo ejecutar archivos subidos como scripts incluso si tienen una extensión diferente.",
+          "summary": "Falta el encabezado X-Content-Type-Options, lo que permite a los navegadores anular el tipo de contenido declarado y adivinar qué contiene realmente un archivo. Este comportamiento, conocido como MIME sniffing, significa que un archivo servido como text/plain podría ser reinterpretado y ejecutado como HTML o JavaScript si el navegador detecta contenido similar a scripts dentro de él. Los atacantes explotan esto subiendo archivos con extensiones inofensivas (como .txt o .jpg) que contienen scripts maliciosos, que el navegador luego ejecuta en el contexto de su dominio. Este encabezado de una sola línea (X-Content-Type-Options: nosniff) obliga al navegador a respetar estrictamente el Content-Type que usted declara, bloqueando cualquier intento de ejecutar archivos mal tipados. Es uno de los encabezados de seguridad más fáciles de implementar y no tiene impacto negativo en la funcionalidad normal del sitio.",
           "steps": [
             "Agrega el encabezado <code>X-Content-Type-Options: nosniff</code> a todas las respuestas",
             "Asegúrate de que tu servidor envíe el Content-Type correcto para todos los archivos",
@@ -4363,7 +4676,7 @@
         "improveCookieSecurity": {
           "title": "Mejorar la Seguridad de Cookies",
           "impact": "+10 Puntuación de Seguridad",
-          "summary": "Las cookies no están debidamente protegidas. Las cookies de sesión sin los flags HttpOnly, Secure y SameSite son vulnerables al robo mediante ataques XSS y falsificación de solicitudes entre sitios.",
+          "summary": "Las cookies no están debidamente aseguradas, poniendo en riesgo las sesiones de usuario y los datos sensibles. Sin la bandera HttpOnly, el código JavaScript que se ejecuta en la página—incluyendo scripts maliciosos inyectados—puede leer las cookies de sesión y enviarlas a un atacante, permitiendo la toma completa de la cuenta. Sin la bandera Secure, las cookies se transmiten a través de conexiones HTTP no cifradas donde pueden ser interceptadas en redes Wi-Fi públicas o redes comprometidas. El atributo SameSite previene ataques de falsificación de solicitud entre sitios (CSRF) controlando si el navegador envía cookies con solicitudes originadas desde otros sitios web. Establecer las tres banderas en sus cookies de sesión cierra los vectores de ataque relacionados con cookies más comunes con un esfuerzo mínimo de implementación.",
           "steps": [
             "Agrega los flags <code>HttpOnly; Secure; SameSite=Lax</code> a todas las cookies de sesión",
             "Actualiza la configuración de tu biblioteca de sesiones o framework",
@@ -4373,7 +4686,7 @@
         "addSri": {
           "title": "Agregar Integridad de Subrecursos",
           "impact": "+8 Puntuación de Seguridad",
-          "summary": "Los scripts de terceros se cargan sin verificación de integridad. Si el CDN es comprometido, se podría inyectar código malicioso en tu sitio sin ser detectado.",
+          "summary": "Los scripts y hojas de estilo de terceros se cargan sin verificación de integridad, creando una vulnerabilidad en la cadena de suministro. Si el CDN o servidor externo que aloja estos archivos se ve comprometido, un atacante podría reemplazar el archivo legítimo con código malicioso que se ejecuta en cada carga de página para todos sus visitantes. Subresource Integrity (SRI) agrega un hash criptográfico a cada etiqueta de recurso externo, y el navegador verifica que el archivo descargado coincida con ese hash antes de ejecutarlo. Si el archivo ha sido manipulado, el navegador lo bloquea por completo, evitando que se ejecute el código comprometido. Esta protección es especialmente crítica para bibliotecas ampliamente utilizadas como jQuery o Bootstrap, que son objetivos de alto valor para ataques a la cadena de suministro.",
           "steps": [
             "Genera hashes SRI para cada script/hoja de estilos externa en srihash.org",
             "Agrega los atributos <code>integrity</code> y <code>crossorigin=\"anonymous\"</code>",
@@ -4886,7 +5199,39 @@
       },
       "violations": "Violaciones",
       "totalViolations": "Total de violaciones",
-      "totalRecommendations": "Total de recomendaciones"
+      "totalRecommendations": "Total de recomendaciones",
+      "fixTitles": {
+        "colorContrast": "Múltiples problemas de contraste de color",
+        "focusIndicators": "Indicadores de enfoque faltantes",
+        "formLabels": "Etiquetas de formulario faltantes",
+        "headingStructure": "Estructura de encabezados incorrecta",
+        "ariaLandmarks": "Puntos de referencia ARIA faltantes",
+        "mobileGap": "Brecha de accesibilidad móvil"
+      },
+      "fixDescriptions": {
+        "colorContrast": "Se encontraron {{count}} elementos con contraste de color insuficiente. WCAG 2.1 Criterio 1.4.3 requiere una relación de contraste mínima de 4.5:1 para texto normal y 3:1 para texto grande.",
+        "focusIndicators": "{{count}} elementos interactivos carecen de indicadores de enfoque visibles. Los indicadores de enfoque son los contornos o resaltados que muestran qué elemento está seleccionado al navegar con el teclado.",
+        "formLabels": "{{count}} elementos de formulario no tienen etiquetas accesibles. Cada entrada de formulario debe tener una etiqueta asociada para que las tecnologías de asistencia puedan anunciar su propósito.",
+        "headingStructure": "La estructura de encabezados es {{structure}}. Los encabezados crean un esquema jerárquico del contenido de la página. Los usuarios de lectores de pantalla navegan saltando entre encabezados.",
+        "ariaLandmarks": "No se encontraron puntos de referencia semánticos en esta página. Los puntos de referencia ARIA definen las regiones principales de una página y permiten a los usuarios de lectores de pantalla saltar directamente a la sección que necesitan.",
+        "mobileGap": "La puntuación de accesibilidad móvil es {{diff}} puntos inferior a la de escritorio, lo que indica que los usuarios móviles enfrentan barreras adicionales significativas."
+      },
+      "fixImpacts": {
+        "colorContrast": "Los usuarios con baja visión o daltonismo pueden tener dificultad para leer el contenido.",
+        "focusIndicators": "Los usuarios de solo teclado no pueden ver qué elemento tiene el enfoque, dificultando la navegación.",
+        "formLabels": "Los usuarios de lectores de pantalla no pueden entender el propósito de los campos de formulario.",
+        "headingStructure": "Los usuarios de lectores de pantalla dependen de la estructura de encabezados para navegar y comprender la jerarquía de la página.",
+        "ariaLandmarks": "Los usuarios de lectores de pantalla no pueden navegar rápidamente a las secciones principales de la página.",
+        "mobileGap": "Los usuarios móviles con discapacidades experimentan una experiencia degradada en comparación con los usuarios de escritorio."
+      },
+      "fixSolutions": {
+        "colorContrast": "Aumenta el contraste entre el texto y los colores de fondo. Usa verificadores de contraste en línea para validar tu esquema de colores.",
+        "focusIndicators": "Agrega estilos de enfoque visibles usando la pseudo-clase CSS :focus. Asegúrate de que los indicadores de enfoque tengan suficiente contraste.",
+        "formLabels": "Agrega atributos aria-label o asocia elementos label con los campos de formulario usando atributos for/id.",
+        "headingStructure": "Asegúrate de que los encabezados sigan una secuencia lógica (h1 > h2 > h3) sin saltar niveles. Incluye un h1 por página.",
+        "ariaLandmarks": "Usa elementos semánticos HTML5 (header, nav, main, aside, footer) o agrega roles de puntos de referencia ARIA apropiados.",
+        "mobileGap": "Revisa los tamaños de los objetivos táctiles, la configuración del viewport y las interacciones específicas para móviles. Asegura un tamaño mínimo de objetivo táctil de 44x44 píxeles."
+      }
     },
     "performance": {
       "title": "Informe de Rendimiento",
@@ -4926,7 +5271,7 @@
       "consistentScoresMessage": "Las puntuaciones de rendimiento de escritorio y móvil están dentro de 10 puntos entre sí.",
       "networkPerformance": "Rendimiento de Red",
       "cachingOptimization": "Caché y Optimización",
-      "reportAndRecommendations": "Informe y Recomendaciones",
+      "reportAndRecommendations": "Recomendaciones",
       "whatAreWebVitals": "¿Qué son los Core Web Vitals?",
       "webVitalsDescription": "Los Core Web Vitals son las métricas de Google para medir la experiencia del usuario.",
       "metric": "Métrica",
@@ -5051,11 +5396,11 @@
         "improveAccessibility": "Mejorar accesibilidad"
       },
       "fixSummaries": {
-        "lcpOptimization": "Su Largest Contentful Paint es {{value}}, que está por encima del objetivo de {{target}}. Esto significa que el contenido principal tarda demasiado en aparecer, haciendo que los usuarios perciban su sitio como lento.",
-        "javascriptOptimization": "Su sitio tiene {{value}} de tiempo de bloqueo total, lo que significa que el hilo principal está bloqueado y no puede responder a las entradas del usuario. Esto causa retrasos en la interactividad y una mala experiencia de usuario.",
-        "clsOptimization": "Se están produciendo cambios de diseño durante la carga de la página, lo que hace que el contenido se mueva inesperadamente. Esto frustra a los usuarios y puede causar clics accidentales en elementos incorrectos.",
-        "imageOptimization": "Las imágenes representan una parte significativa del peso de la página. Optimizar las imágenes puede mejorar drásticamente los tiempos de carga y reducir los costos de ancho de banda.",
-        "accessibilityImprovements": "Las mejoras de accesibilidad ayudan a usuarios con discapacidades y mejoran el SEO. Los problemas comunes incluyen texto alternativo faltante, bajo contraste de colores y etiquetas ARIA faltantes."
+        "lcpOptimization": "Su Largest Contentful Paint es {{value}}, que está por encima del objetivo de {{target}}. LCP mide cuánto tiempo tarda el elemento de contenido visible más grande—típicamente una imagen hero, un encabezado o un gráfico de fondo—en terminar de renderizarse en la pantalla. Esta es la métrica que los usuarios asocian más estrechamente con la velocidad de carga percibida, y Google la utiliza como un factor de clasificación directo de Core Web Vitals. Un LCP lento generalmente indica que los recursos críticos no se están priorizando, las imágenes no están comprimidas o los scripts que bloquean el renderizado están retrasando la pintura de la página. Optimizar el LCP a menudo produce la mejora individual más grande tanto en la experiencia del usuario como en las clasificaciones de búsqueda.",
+        "javascriptOptimization": "Su sitio tiene {{value}} de Total Blocking Time, lo que significa que el hilo principal del navegador está ocupado ejecutando JavaScript y no puede responder a las entradas del usuario como clics, toques o pulsaciones de teclas. Esto crea una experiencia frustrante donde los botones parecen clicables pero no hacen nada, el desplazamiento se siente entrecortado y los formularios parecen no responder. El Total Blocking Time mide directamente los períodos acumulativos durante los cuales el hilo principal está bloqueado por más de 50 milisegundos, y es un componente clave de su puntuación Core Web Vitals. Las causas comunes incluyen paquetes JavaScript grandes sin minificar, scripts de terceros sincrónicos y código de biblioteca no utilizado que se descarga pero nunca se ejecuta. Diferir scripts no críticos, eliminar código no utilizado y dividir paquetes grandes puede reducir drásticamente el tiempo de bloqueo.",
+        "clsOptimization": "Se están produciendo cambios de diseño durante la carga de la página, causando que el contenido se mueva inesperadamente y perturbando la experiencia del usuario. Esto sucede cuando los elementos cambian de posición después de que la página se renderiza inicialmente—por ejemplo, una imagen se carga sin dimensiones reservadas, una fuente web se intercambia con métricas diferentes, o un banner publicitario dinámico empuja el contenido hacia abajo. Estos cambios inesperados son especialmente frustrantes para los usuarios que están a punto de tocar un botón o leer un texto que de repente salta a una ubicación diferente, causando a menudo clics accidentales. El Cumulative Layout Shift es una de las tres métricas Core Web Vitals de Google y afecta directamente sus clasificaciones de búsqueda. Las correcciones más efectivas incluyen agregar atributos explícitos de ancho y alto a las imágenes, usar font-display: swap con fuentes de respaldo ajustadas al tamaño y reservar espacio para contenido dinámico.",
+        "imageOptimization": "Las imágenes típicamente representan la mayor porción del peso total de la página, consumiendo a menudo entre el 50-80% de todos los bytes descargados. Las imágenes no optimizadas—aquellas servidas en formatos antiguos como JPEG o PNG, en resoluciones innecesariamente altas o sin dimensionamiento responsive—obligan a los visitantes a descargar megabytes de datos que pueden no necesitar. Esto aumenta dramáticamente el tiempo de carga, especialmente en redes móviles donde el ancho de banda es limitado y los datos pueden ser medidos. Los formatos de imagen modernos como WebP y AVIF pueden reducir el tamaño de los archivos en un 60-80% en comparación con JPEG sin pérdida de calidad visible. Combinar la optimización de formato con atributos srcset responsivos y lazy loading para imágenes debajo del pliegue típicamente produce la mayor mejora individual de rendimiento para la mayoría de los sitios web.",
+        "accessibilityImprovements": "La puntuación de accesibilidad de su sitio indica que los usuarios con discapacidades pueden encontrar barreras significativas al intentar usar su sitio web. Los problemas comunes incluyen imágenes sin texto alternativo descriptivo (que impide a los usuarios de lectores de pantalla comprender el contenido visual), contraste de color insuficiente (que hace el texto ilegible para usuarios con baja visión) y campos de formulario sin etiquetas asociadas (que hace los formularios inutilizables con tecnología de asistencia). La accesibilidad no es solo una obligación ética sino cada vez más un requisito legal bajo la ADA, la Sección 508 y la Ley Europea de Accesibilidad, donde el incumplimiento lleva a demandas y multas. Los motores de búsqueda también consideran la accesibilidad en las clasificaciones, ya que muchas mejores prácticas de accesibilidad se alinean con los fundamentos de SEO como HTML semántico y estructura de contenido clara. Abordar estos problemas mejora la experiencia para todos los usuarios, no solo para aquellos que utilizan tecnología de asistencia."
       },
       "fixImpacts": {
         "lcpOptimization": "+15 Puntos de rendimiento",
@@ -5118,6 +5463,64 @@
       },
       "notAvailable": "N/A",
       "seo": "SEO",
+      "diagnostics": {
+        "ttfb": "Tiempo hasta el primer byte",
+        "connectionTime": "Tiempo de conexión",
+        "cacheHitRate": "Tasa de aciertos de caché",
+        "uncachedResources": "Recursos sin caché"
+      },
+      "recommendations": {
+        "minimizeJs": {
+          "title": "Minimizar JavaScript",
+          "description": "Su paquete JavaScript es de {{size}}. Considere la división de código, tree shaking y la eliminación de dependencias no utilizadas.",
+          "impact": "Alto - Carga inicial más rápida y mejor Time to Interactive"
+        },
+        "optimizeImages": {
+          "title": "Optimizar imágenes",
+          "description": "Las imágenes representan {{size}}. Use formatos de nueva generación (WebP, AVIF), carga diferida e imágenes responsivas.",
+          "impact": "Alto - Reduce significativamente el peso de la página y mejora el LCP"
+        },
+        "reduceCss": {
+          "title": "Reducir tamaño de CSS",
+          "description": "Los archivos CSS totalizan {{size}}. Elimine CSS no utilizado, minimice hojas de estilo y considere la inserción de CSS crítico.",
+          "impact": "Medio - Carga más rápida de recursos que bloquean el renderizado"
+        },
+        "improveCaching": {
+          "title": "Mejorar estrategia de caché",
+          "description": "Solo {{rate}} de los recursos son cacheables. Implemente cabeceras Cache-Control adecuadas y una estrategia de versionado.",
+          "impact": "Alto - Mejora drásticamente el rendimiento en visitas repetidas"
+        },
+        "optimizeLcp": {
+          "title": "Optimizar Largest Contentful Paint (LCP)",
+          "description": "El LCP es {{value}} en {{platform}}, superando el umbral recomendado de 2.5s. Optimice su elemento más grande visible.",
+          "impact": "Crítico - Core Web Vital afecta los rankings de Google y la experiencia del usuario"
+        },
+        "reduceCls": {
+          "title": "Reducir Cumulative Layout Shift (CLS)",
+          "description": "El CLS es {{value}} en {{platform}}, superando el umbral recomendado de 0.1. Reserve espacio para imágenes/anuncios y use atributos de tamaño.",
+          "impact": "Medio - Core Web Vital afecta la experiencia del usuario y los rankings"
+        },
+        "mobileGap": {
+          "title": "Brecha significativa de rendimiento móvil",
+          "description": "El rendimiento móvil ({{mobileScore}}) es significativamente menor que el de escritorio ({{desktopScore}}). Los usuarios móviles pueden experimentar un rendimiento deficiente.",
+          "impact": "Alto - La mayoría de los usuarios acceden desde dispositivos móviles"
+        },
+        "enableCompression": {
+          "title": "Habilitar compresión de texto",
+          "description": "Habilite la compresión gzip o brotli para recursos basados en texto para reducir el tamaño de transferencia en un 70-90%.",
+          "impact": "Medio - Reduce el ancho de banda y acelera las descargas"
+        },
+        "reduceRequests": {
+          "title": "Reducir solicitudes HTTP",
+          "description": "La página realiza {{count}} solicitudes HTTP. Considere agrupar recursos, usar sprites CSS y consolidar scripts de terceros.",
+          "impact": "Bajo-Medio - Reduce la sobrecarga de conexión"
+        },
+        "optimizeFonts": {
+          "title": "Optimizar fuentes web",
+          "description": "Las fuentes totalizan {{size}}. Use font-display: swap, subconjunte fuentes y precargue fuentes críticas.",
+          "impact": "Bajo-Medio - Previene texto invisible y mejora el rendimiento percibido"
+        }
+      },
       "report": {
         "sectionIntros": {
           "cwv": "Los Core Web Vitals son las métricas clave de Google para medir la experiencia real del usuario. Evalúan la velocidad de carga (LCP), la interactividad (INP/FID) y la estabilidad visual (CLS). Estas métricas influyen directamente en el ranking de búsqueda.",
@@ -5506,6 +5909,34 @@
           "comparison": "This comparison highlights the differences between your desktop and mobile Core Web Vitals scores. Significant gaps between the two may indicate mobile-specific performance issues such as unoptimized images, render-blocking resources, or layout shifts that only occur on smaller viewports.",
           "diagnostics": "Diagnostic information provides detailed technical insights into the factors affecting your Core Web Vitals scores. These diagnostics help identify specific elements, resources, or code patterns that contribute to poor performance metrics.",
           "recommendations": "Based on your Core Web Vitals analysis, these recommendations target the highest-impact improvements for loading speed, interactivity, and visual stability."
+        },
+        "desktop": "Vitales de escritorio",
+        "mobile": "Vitales móviles",
+        "comparison": "Escritorio vs Móvil",
+        "desktop.details": "Detalles de métricas",
+        "mobile.details": "Detalles de métricas",
+        "desktop.additionalMetrics": "Métricas adicionales",
+        "mobile.additionalMetrics": "Métricas adicionales",
+        "diagnostics": "Diagnósticos",
+        "diagnostics.desktop": "Diagnósticos de escritorio",
+        "diagnostics.mobile": "Diagnósticos móviles",
+        "recommendations": "Recomendaciones",
+        "recommendations.noneTitle": "Excelentes Core Web Vitals",
+        "recommendations.noneBody": "Su sitio logra buenas puntuaciones en todos los Core Web Vitals. Siga monitoreando para detectar regresiones.",
+        "comparison.desktopScore": "Puntuación de escritorio",
+        "comparison.mobileScore": "Puntuación móvil",
+        "comparison.summary": "Resumen comparativo",
+        "vitals": {
+          "lcp": "Largest Contentful Paint (LCP)",
+          "inp": "Interaction to Next Paint (INP)",
+          "cls": "Cumulative Layout Shift (CLS)",
+          "ttfb": "Time to First Byte (TTFB)",
+          "fcp": "First Contentful Paint (FCP)"
+        },
+        "cwv": {
+          "good": "Bueno",
+          "needsImprovement": "Necesita mejora",
+          "poor": "Deficiente"
         }
       },
       "overallScore": "Puntuación general CWV",
@@ -5516,7 +5947,7 @@
       "additionalMetricsTitle": "Métricas de rendimiento adicionales",
       "siName": "Speed Index",
       "ttiName": "Time to Interactive",
-      "recommendationsTitle": "Informe y recomendaciones",
+      "recommendationsTitle": "Recomendaciones",
       "detailedRecommendationsBlur": "Recomendaciones detalladas de rendimiento...",
       "criticalOptimizationsBlur": "Sugerencias de optimización críticas...",
       "recommendationsAvailable": "{{count}} recomendación(es) disponible(s)",
@@ -5582,14 +6013,78 @@
       "fontSizes": "Tamaños de Fuente",
       "report": {
         "sectionIntros": {
-          "overview": "Mobile optimization is critical as over 60% of web traffic comes from mobile devices and Google uses mobile-first indexing. This overview presents your aggregate mobile score and key performance indicators across tested device configurations. A strong mobile experience directly impacts search rankings, user engagement, and conversion rates.",
-          "touch": "Touch target sizing ensures interactive elements are easily tappable on touchscreen devices. Google recommends touch targets be at least 48x48 CSS pixels with adequate spacing. This section identifies elements that are too small or too close together, which can frustrate mobile users and increase error rates.",
-          "readability": "Mobile readability encompasses font sizing, line height, contrast, and text layout on small screens. Text that is too small, has poor contrast, or requires horizontal scrolling creates a poor reading experience. This section evaluates your content's readability across mobile viewport sizes.",
-          "responsiveness": "Responsive design ensures your layout adapts properly across different screen sizes and orientations. This section evaluates viewport configuration, media query usage, and layout behavior to identify issues that may cause content to overflow or display incorrectly on mobile devices.",
-          "viewport": "Viewport meta configuration and Progressive Web App (PWA) readiness determine how your site behaves on mobile devices. A properly configured viewport prevents unwanted zooming and scaling. PWA features like a web manifest and service worker enable app-like experiences.",
-          "accessibility": "Mobile accessibility focuses on ensuring your site is usable by people with disabilities on mobile devices. This includes touch target accessibility, screen reader compatibility, and gesture-based navigation support. Mobile-specific accessibility issues can affect a significant portion of your mobile audience.",
-          "recommendations": "Based on the mobile analysis, these recommendations target the most impactful improvements for mobile user experience, performance, and accessibility."
-        }
+          "overview": "La optimización móvil es fundamental ya que más del 60% del tráfico web proviene de dispositivos móviles y Google utiliza la indexación mobile-first. Esta descripción general presenta su puntuación móvil agregada e indicadores clave de rendimiento en todas las configuraciones de dispositivos probados. Una experiencia móvil sólida impacta directamente en los rankings de búsqueda, el compromiso del usuario y las tasas de conversión.",
+          "touch": "El dimensionamiento de los objetivos táctiles asegura que los elementos interactivos sean fácilmente tocables en dispositivos de pantalla táctil. Google recomienda objetivos táctiles de al menos 48x48 píxeles CSS con espaciado adecuado. Esta sección identifica elementos que son demasiado pequeños o están demasiado juntos.",
+          "readability": "La legibilidad móvil abarca el tamaño de fuente, la altura de línea, el contraste y el diseño de texto en pantallas pequeñas. El texto demasiado pequeño, con poco contraste o que requiere desplazamiento horizontal crea una mala experiencia de lectura. Esta sección evalúa la legibilidad de su contenido en diferentes tamaños de viewport móvil.",
+          "responsiveness": "El diseño responsivo asegura que su diseño se adapte correctamente a diferentes tamaños de pantalla y orientaciones. Esta sección evalúa la configuración del viewport, el uso de media queries y el comportamiento del diseño para identificar problemas que puedan causar desbordamiento de contenido o visualización incorrecta en dispositivos móviles.",
+          "viewport": "La configuración del meta viewport y la preparación para Progressive Web App (PWA) determinan cómo se comporta su sitio en dispositivos móviles. Un viewport correctamente configurado evita el zoom y la escala no deseados. Las características PWA como un manifiesto web y un service worker permiten experiencias similares a aplicaciones.",
+          "accessibility": "La accesibilidad móvil se centra en garantizar que su sitio sea utilizable por personas con discapacidades en dispositivos móviles. Esto incluye la accesibilidad de objetivos táctiles, la compatibilidad con lectores de pantalla y el soporte de navegación basada en gestos. Los problemas de accesibilidad específicos del móvil pueden afectar a una parte significativa de su audiencia móvil.",
+          "recommendations": "Basándose en el análisis móvil, estas recomendaciones apuntan a las mejoras más impactantes para la experiencia de usuario móvil, el rendimiento y la accesibilidad."
+        },
+        "overview": "Resumen móvil",
+        "overview.overallScore": "Puntuación general",
+        "overview.devicesTested": "Dispositivos probados",
+        "overview.avgPerformance": "Rendimiento promedio",
+        "overview.deviceSummary": "Resumen de dispositivos",
+        "overview.table": {
+          "device": "Dispositivo",
+          "performance": "Rendimiento",
+          "touchTargets": "Objetivos táctiles",
+          "readability": "Legibilidad"
+        },
+        "touchTargets": "Objetivos táctiles",
+        "touch": {
+          "totalTargets": "Objetivos totales",
+          "tooSmall": "Demasiado pequeño",
+          "tooClose": "Demasiado cerca",
+          "passingTargets": "Objetivos aprobados",
+          "issuesHeading": "Problemas de objetivos táctiles",
+          "table": {
+            "severity": "Gravedad",
+            "issue": "Problema"
+          }
+        },
+        "readability": "Legibilidad",
+        "readability.fontSize": "Tamaño de fuente",
+        "readability.lineHeight": "Altura de línea",
+        "readability.contrast": "Contraste",
+        "readability.tooSmall": "Demasiado pequeño",
+        "readability.issuesHeading": "Problemas de legibilidad",
+        "responsiveness": "Capacidad de respuesta",
+        "responsiveness.viewport": "Viewport configurado",
+        "responsiveness.mediaQueries": "Media Queries",
+        "responsiveness.noMediaQueries": "No detectado",
+        "responsiveness.issuesHeading": "Problemas de responsividad",
+        "responsiveness.allPassTitle": "Totalmente responsivo",
+        "responsiveness.allPassBody": "Su página se adapta correctamente a diferentes tamaños de pantalla sin problemas de responsividad detectados.",
+        "viewportPwa": "Viewport y PWA",
+        "viewport": {
+          "metaHeading": "Configuración del meta viewport",
+          "configured": "Viewport configurado",
+          "width": "Ancho",
+          "initialScale": "Escala inicial",
+          "pwaHeading": "Preparación PWA",
+          "pwaScore": "Puntuación PWA",
+          "manifest": "Manifiesto de aplicación web",
+          "serviceWorker": "Service Worker",
+          "https": "HTTPS",
+          "darkModeTitle": "Modo oscuro soportado",
+          "darkModeBody": "Se detectó modo oscuro a través de {{method}}.",
+          "noDarkModeTitle": "Sin modo oscuro",
+          "noDarkModeBody": "No se detectó soporte de modo oscuro. Considere agregar soporte para la media query prefers-color-scheme."
+        },
+        "accessibility": "Accesibilidad móvil",
+        "accessibility.score": "Puntuación de accesibilidad",
+        "accessibility.issuesHeading": "Problemas de accesibilidad",
+        "accessibility.table": {
+          "severity": "Gravedad",
+          "issue": "Problema"
+        },
+        "accessibility.noneTitle": "Sin problemas de accesibilidad",
+        "accessibility.noneBody": "No se detectaron problemas de accesibilidad específicos del móvil. Continúe siguiendo las mejores prácticas de WCAG.",
+        "recommendations": "Recomendaciones",
+        "recommendations.noneTitle": "Excelente experiencia móvil",
+        "recommendations.noneBody": "Su sitio ofrece una experiencia móvil sólida. Continúe monitoreando regresiones a medida que cambian el contenido y las funciones."
       },
       "mobileScore": "Puntuación móvil",
       "errorCapturingDevice": "Error al capturar este dispositivo",
@@ -6022,6 +6517,87 @@
           "anchors": "Anchor text analysis examines the descriptive text used in your links. Well-crafted anchor text helps both users and search engines understand link destinations. This section evaluates anchor text quality, diversity, and relevance.",
           "attributes": "Link attributes like rel, target, and nofollow influence how search engines interpret and follow your links. This section analyzes the distribution and usage of link attributes to ensure they align with your SEO strategy.",
           "recommendations": "Based on the broken links analysis, these recommendations prioritize fixing the most impactful link issues to improve user experience and search engine crawling."
+        },
+        "sections": {
+          "summary": "Resumen de enlaces",
+          "broken": "Enlaces rotos",
+          "redirects": "Redirecciones",
+          "anchors": "Análisis de anclas",
+          "attributes": "Atributos de enlaces",
+          "recommendations": "Recomendaciones"
+        },
+        "metrics": {
+          "total": "Total de enlaces",
+          "broken": "Rotos",
+          "redirects": "Redirecciones",
+          "working": "Funcionando",
+          "external": "Externos",
+          "linkHealth": "Salud de enlaces"
+        },
+        "summary": {
+          "breakdownHeading": "Desglose de enlaces",
+          "table": {
+            "type": "Tipo",
+            "count": "Cantidad",
+            "percentage": "Porcentaje"
+          },
+          "internal": "Enlaces internos",
+          "external": "Enlaces externos",
+          "broken": "Enlaces rotos",
+          "redirects": "Redirecciones"
+        },
+        "broken": {
+          "totalBroken": "Enlaces rotos encontrados",
+          "table": {
+            "url": "URL",
+            "status": "Estado",
+            "source": "Página fuente",
+            "anchor": "Texto del ancla"
+          },
+          "noneTitle": "No se encontraron enlaces rotos",
+          "noneBody": "Todos los enlaces del sitio respondieron correctamente. Continúa monitoreando para detectar problemas a tiempo."
+        },
+        "redirects": {
+          "totalRedirects": "Redirecciones encontradas",
+          "chainsWarning": "Cadenas de redirección detectadas",
+          "chainsFound": "cadenas encontradas",
+          "table": {
+            "url": "URL original",
+            "status": "Estado",
+            "target": "Destino de redirección"
+          },
+          "noneTitle": "No se encontraron redirecciones",
+          "noneBody": "Todos los enlaces se resuelven directamente sin redirecciones. Esto es óptimo para el rendimiento y SEO."
+        },
+        "anchors": {
+          "totalAnchors": "Total de anclas",
+          "emptyAnchors": "Anclas vacías",
+          "genericAnchors": "Anclas genéricas",
+          "descriptiveAnchors": "Anclas descriptivas",
+          "descriptiveRatio": "Proporción de anclas descriptivas",
+          "commonHeading": "Textos de ancla más comunes",
+          "generic": "Genérica",
+          "descriptive": "Descriptiva",
+          "table": {
+            "text": "Texto del ancla",
+            "count": "Cantidad",
+            "quality": "Calidad"
+          },
+          "noData": "No hay datos de análisis de texto ancla disponibles."
+        },
+        "attributes": {
+          "breakdownHeading": "Desglose de atributos",
+          "table": {
+            "attribute": "Atributo",
+            "count": "Cantidad",
+            "description": "Descripción"
+          },
+          "unsafeBlank": "Se encontraron {{count}} enlaces con target=\"_blank\" sin rel=\"noopener noreferrer\"",
+          "noData": "No hay datos de análisis de atributos de enlaces disponibles."
+        },
+        "recommendations": {
+          "noneTitle": "Perfil de enlaces saludable",
+          "noneBody": "Tu sitio tiene un perfil de enlaces saludable sin problemas significativos. Continúa monitoreando."
         }
       },
       "exportBrokenLinksData": "Exportar datos de enlaces rotos",
@@ -6195,6 +6771,17 @@
     },
     "competitive": {
       "title": "Análisis Competitivo",
+      "pageSubtitle": "Compare su sitio web con los competidores en métricas de SEO, rendimiento, accesibilidad y seguridad.",
+      "competitiveAdvantageTitle": "VENTAJA COMPETITIVA",
+      "competitiveAdvantageDesc": "Compare su sitio web con hasta 5 competidores en SEO, rendimiento, Core Web Vitals, accesibilidad y seguridad. Obtenga información práctica para superarlos.",
+      "analysisNote": "Nota: El análisis tarda 2-3 minutos y está limitado a 2 solicitudes cada 15 minutos debido al alto uso de recursos.",
+      "yourWebsiteUrl": "URL de su sitio web",
+      "competitorUrlsLabel": "URLs de competidores (Máx. 5)",
+      "addCompetitor": "+ Añadir competidor",
+      "inspectButton": "INSPECCIONAR",
+      "modalTitle": "ANÁLISIS COMPETITIVO",
+      "modalSubtitle": "Analizando su competencia... Esto puede tardar 2-3 minutos",
+      "progress": "Progreso",
       "interactiveScoreAnalysis": "Análisis Interactivo de Puntuaciones",
       "detailedMetricsBreakdown": "Desglose Detallado de Métricas",
       "detailedMetrics": "Desglose Detallado de Métricas",
@@ -6223,6 +6810,54 @@
           "competitors": "Competitor profiles provide detailed score breakdowns for each analyzed competitor. Understanding each competitor's strengths and weaknesses helps inform your optimization strategy and identify opportunities to differentiate.",
           "insights": "Strategic insights synthesize the competitive data into actionable intelligence. These insights identify patterns, opportunities, and threats that emerge from the comparative analysis.",
           "recommendations": "Based on the competitive analysis, these recommendations prioritize improvements that will have the greatest impact on your competitive position."
+        },
+        "sections": {
+          "overview": "Vista general competitiva",
+          "rankings": "Clasificación de puntuaciones",
+          "gaps": "Brechas de rendimiento",
+          "competitors": "Perfiles de competidores",
+          "insights": "Perspectivas estratégicas",
+          "recommendations": "Recomendaciones"
+        },
+        "categories": {
+          "overall": "General",
+          "seo": "SEO",
+          "performance": "Rendimiento",
+          "security": "Seguridad",
+          "accessibility": "Accesibilidad"
+        },
+        "overview": {
+          "yourSiteLabel": "Tu sitio",
+          "competitorsAnalyzed": "Competidores analizados",
+          "strengthAreas": "Áreas de fortaleza",
+          "improvementAreas": "Áreas de mejora"
+        },
+        "rankings": {
+          "site": "Sitio",
+          "noData": "No hay datos de clasificación disponibles."
+        },
+        "gaps": {
+          "tableHeading": "Análisis de brechas de puntuación",
+          "category": "Categoría",
+          "yourScore": "Tu puntuación",
+          "bestScore": "Mejor puntuación",
+          "gap": "Brecha",
+          "strengthsHeading": "Áreas de fortaleza",
+          "improvementsHeading": "Áreas de mejora",
+          "noData": "No hay datos de brechas disponibles."
+        },
+        "competitors": {
+          "competitorLabel": "Competidor",
+          "theirScore": "Su puntuación",
+          "difference": "Diferencia",
+          "noData": "No hay datos de competidores disponibles."
+        },
+        "insights": {
+          "noData": "No hay perspectivas estratégicas disponibles."
+        },
+        "recommendations": {
+          "noneTitle": "Posición competitiva fuerte",
+          "noneBody": "Tu sitio tiene un buen rendimiento frente a los competidores analizados. Continúa monitoreando."
         }
       },
       "competitorUrlLabel": "URL del competidor {{num}}",
@@ -6506,7 +7141,7 @@
         "formOptimization": "Optimización de Formularios",
         "trustSignals": "Señales de Confianza",
         "mobileExperience": "Experiencia Móvil",
-        "fixCodeRecommendations": "Código de Corrección + Recomendaciones"
+        "fixCodeRecommendations": "Recomendaciones"
       },
       "summary": {
         "overallCro": "CRO General",
@@ -6734,14 +7369,82 @@
       "forms": "Formularios",
       "navigation": "Navegación",
       "report": {
+        "overviewTitle": "Resumen de CRO",
+        "overview": {
+          "scoresHeading": "Sub-puntuaciones de CRO",
+          "overallScore": "Puntuación general"
+        },
         "sectionIntros": {
-          "overview": "Conversion Rate Optimization (CRO) analyzes how effectively your page converts visitors into customers or leads. This overview presents your aggregate CRO score across four key dimensions: calls to action, forms, trust signals, and mobile user experience. A well-optimized page guides visitors toward desired actions with clear, compelling elements.",
-          "cta": "Calls to action (CTAs) are the primary conversion drivers on your page. Effective CTAs use action-oriented language, stand out visually, and are positioned where users are most likely to engage. This section evaluates your CTAs for visibility, clarity, and placement effectiveness.",
-          "forms": "Form design directly impacts completion rates. Complex, lengthy, or poorly designed forms are a leading cause of conversion abandonment. This section analyzes your forms for field count, label clarity, validation feedback, and mobile usability to identify friction points.",
-          "trust": "Trust signals reassure visitors that your site is legitimate, secure, and reliable. These include security badges, testimonials, reviews, contact information, and social proof. This section evaluates the presence and effectiveness of trust-building elements on your page.",
-          "mobileUx": "Mobile UX optimization ensures conversion elements work effectively on touchscreen devices. This includes tap-friendly buttons, mobile-optimized forms, and responsive layouts that maintain conversion paths. Over 50% of purchases now begin on mobile devices.",
-          "quickWins": "Quick wins are high-impact, low-effort changes that can immediately improve your conversion rate. These prioritized actions offer the best return on investment for optimization efforts.",
-          "recommendations": "Based on the CRO analysis, these recommendations prioritize improvements with the highest potential impact on your conversion rate."
+          "overview": "La Optimización de la Tasa de Conversión (CRO) analiza la eficacia con la que su página convierte visitantes en clientes o leads. Esta descripción general presenta su puntuación CRO agregada en cuatro dimensiones clave: llamadas a la acción, formularios, señales de confianza y experiencia de usuario móvil. Una página bien optimizada guía a los visitantes hacia las acciones deseadas con elementos claros y convincentes.",
+          "cta": "Las llamadas a la acción (CTAs) son los principales impulsores de conversión en su página. Los CTAs efectivos utilizan un lenguaje orientado a la acción, destacan visualmente y se posicionan donde los usuarios tienen más probabilidades de interactuar. Esta sección evalúa sus CTAs en cuanto a visibilidad, claridad y efectividad de ubicación.",
+          "forms": "El diseño de formularios impacta directamente en las tasas de finalización. Los formularios complejos, largos o mal diseñados son una causa principal de abandono de conversión. Esta sección analiza sus formularios en cuanto a cantidad de campos, claridad de etiquetas, retroalimentación de validación y usabilidad móvil para identificar puntos de fricción.",
+          "trust": "Las señales de confianza aseguran a los visitantes que su sitio es legítimo, seguro y confiable. Incluyen insignias de seguridad, testimonios, reseñas, información de contacto y prueba social. Esta sección evalúa la presencia y efectividad de los elementos de construcción de confianza en su página.",
+          "mobileUx": "La optimización de UX móvil garantiza que los elementos de conversión funcionen eficazmente en dispositivos con pantalla táctil. Esto incluye botones fáciles de pulsar, formularios optimizados para móvil y diseños responsivos que mantienen las rutas de conversión. Más del 50% de las compras ahora comienzan en dispositivos móviles.",
+          "quickWins": "Las victorias rápidas son cambios de alto impacto y bajo esfuerzo que pueden mejorar inmediatamente su tasa de conversión. Estas acciones priorizadas ofrecen el mejor retorno de inversión para los esfuerzos de optimización.",
+          "recommendations": "Basándose en el análisis CRO, estas recomendaciones priorizan las mejoras con el mayor impacto potencial en su tasa de conversión."
+        },
+        "sections": {
+          "cta": "Llamadas a la acción",
+          "forms": "Análisis de formularios",
+          "trust": "Señales de confianza",
+          "mobile": "UX móvil",
+          "quickWins": "Victorias rápidas",
+          "recommendations": "Recomendaciones"
+        },
+        "cta": {
+          "totalFound": "CTAs encontrados",
+          "score": "Puntuación CTA",
+          "foundHeading": "CTAs detectados",
+          "table": {
+            "text": "Texto del CTA",
+            "type": "Tipo",
+            "location": "Ubicación"
+          },
+          "noneTitle": "No se detectaron CTAs",
+          "noneBody": "No se encontraron llamadas a la acción claras en esta página. Agregar CTAs prominentes es fundamental para las conversiones."
+        },
+        "forms": {
+          "totalFound": "Formularios encontrados",
+          "score": "Puntuación de formularios",
+          "foundHeading": "Formularios detectados",
+          "table": {
+            "form": "Formulario",
+            "fields": "Campos",
+            "type": "Tipo"
+          },
+          "noneTitle": "No se detectaron formularios",
+          "noneBody": "No se encontraron formularios en esta página. Considere agregar formularios de captura de leads o contacto para mejorar las conversiones."
+        },
+        "trust": {
+          "totalFound": "Señales de confianza encontradas",
+          "score": "Puntuación de confianza",
+          "foundHeading": "Señales de confianza detectadas",
+          "table": {
+            "signal": "Señal de confianza",
+            "type": "Tipo"
+          },
+          "noneTitle": "No se detectaron señales de confianza",
+          "noneBody": "No se encontraron señales de confianza en esta página. Agregar testimonios, insignias de seguridad y prueba social puede mejorar significativamente las conversiones."
+        },
+        "mobileUx": {
+          "score": "Puntuación de UX móvil",
+          "issuesHeading": "Problemas de UX móvil",
+          "noIssuesTitle": "Sin problemas de UX móvil",
+          "noIssuesBody": "No se detectaron problemas significativos de UX móvil. Su página parece estar bien optimizada para conversiones móviles."
+        },
+        "quickWins": {
+          "tableHeading": "Victorias rápidas identificadas",
+          "table": {
+            "item": "Victoria rápida",
+            "impact": "Impacto",
+            "effort": "Esfuerzo"
+          },
+          "noneTitle": "No se identificaron victorias rápidas",
+          "noneBody": "El análisis no identificó victorias rápidas específicas. Revise las recomendaciones detalladas de cada sección para oportunidades de mejora."
+        },
+        "recommendations": {
+          "noneTitle": "Postura CRO sólida",
+          "noneBody": "Su sitio sigue las mejores prácticas de CRO. Continúe monitoreando las métricas de conversión y realizando pruebas A/B para una mayor optimización."
         }
       }
     },
@@ -6762,7 +7465,7 @@
         "legalPages": "Páginas Legales",
         "dataSubjectRights": "Derechos del Interesado",
         "complianceRisks": "Riesgos de Cumplimiento",
-        "fixCodeRecommendations": "Código de Corrección + Recomendaciones"
+        "fixCodeRecommendations": "Recomendaciones"
       },
       "loader": {
         "scanInProgress": "Escaneo de cumplimiento RGPD en progreso...",
@@ -7019,7 +7722,71 @@
           "cookies": "This cookie audit catalogs all cookies and tracking technologies found on your site. Each cookie is classified by purpose, security attributes, and regulatory category. Understanding your cookie landscape is essential for maintaining accurate consent mechanisms and privacy compliance.",
           "risks": "Risk assessment identifies potential compliance gaps and their severity. High-risk issues may expose your organization to regulatory enforcement action. This section prioritizes risks based on their potential impact and likelihood of regulatory scrutiny.",
           "recommendations": "Based on the GDPR compliance analysis, these recommendations prioritize the most critical compliance gaps to reduce regulatory risk and improve user privacy."
-        }
+        },
+        "consent": "Cookie Consent",
+        "privacy": "Privacy Policy",
+        "cookiePolicy": "Cookie Policy",
+        "rights": "Data Subject Rights",
+        "cookies": "Cookie Audit",
+        "risks": "Risk Assessment",
+        "recommendations": "Recomendaciones",
+        "consent.overviewHeading": "Consent Overview",
+        "consent.rows": {
+          "detected": "Consent Banner Detected",
+          "platform": "Consent Platform",
+          "score": "Consent Score"
+        },
+        "privacy.overviewHeading": "Policy Overview",
+        "privacy.rows": {
+          "found": "Privacy Policy Found",
+          "url": "Policy URL",
+          "score": "Policy Score"
+        },
+        "privacy.keywordsHeading": "Keywords Found",
+        "privacy.table": {
+          "keyword": "Keyword"
+        },
+        "cookiePolicy.overviewHeading": "Cookie Policy Overview",
+        "cookiePolicy.rows": {
+          "found": "Cookie Policy Found",
+          "url": "Policy URL",
+          "score": "Policy Score"
+        },
+        "rights.overviewHeading": "Rights Overview",
+        "rights.rows": {
+          "found": "Rights Information Found"
+        },
+        "rights.mechanismsHeading": "Mechanisms Found",
+        "rights.mechanismsLabel": "Rights Mechanisms",
+        "rights.table": {
+          "mechanism": "Mechanism"
+        },
+        "cookies.totalLabel": "Total Cookies",
+        "cookies.secureLabel": "Secure Cookies",
+        "cookies.httpOnlyLabel": "HttpOnly Cookies",
+        "cookies.trackersLabel": "Trackers Detected",
+        "cookies.secureCoverageLabel": "Secure Cookie Coverage",
+        "cookies.detailsHeading": "Cookie Details",
+        "cookies.table": {
+          "name": "Name",
+          "domain": "Domain",
+          "expiry": "Expiry",
+          "trackerName": "Tracker",
+          "trackerType": "Type",
+          "trackerDomain": "Domain"
+        },
+        "cookies.trackersHeading": "Third-Party Trackers",
+        "risks.critical": "Critical",
+        "risks.high": "High",
+        "risks.medium": "Medium",
+        "risks.low": "Low",
+        "risks.detectedHeading": "Detected Risks",
+        "risks.noneFoundTitle": "No Significant Risks Detected",
+        "risks.noneFoundBody": "No major compliance risks were identified during the analysis.",
+        "risks.consentQualityHeading": "Consent Quality",
+        "risks.consentQualityScore": "Consent Quality Score",
+        "recommendations.noneTitle": "Strong Compliance Posture",
+        "recommendations.noneBody": "Your site follows GDPR best practices. Continue monitoring for regulatory changes and maintaining your data protection standards."
       }
     },
     "hosting": {
@@ -7040,7 +7807,49 @@
           "cms": "Content Management Systems and web technologies determine how your site is built and maintained. This section identifies the CMS platform, its version, and additional technologies detected on your site. Keeping your CMS and its dependencies up to date is critical for security and performance.",
           "performance": "Hosting performance directly impacts your site's loading speed and user experience. This section measures server response time and Time to First Byte (TTFB), which indicate how quickly your server processes and begins delivering requests. Fast server response times are essential for good Core Web Vitals scores.",
           "recommendations": "Based on the hosting analysis, these recommendations prioritize the most impactful improvements for your server infrastructure, performance, and configuration."
-        }
+        },
+        "provider": "Hosting Provider",
+        "infrastructure": "Server Infrastructure",
+        "cms": "CMS & Technology",
+        "performance": "Hosting Performance",
+        "recommendations": "Recomendaciones",
+        "provider.overviewHeading": "Provider Details",
+        "provider.rows": {
+          "name": "Provider",
+          "category": "Category",
+          "tier": "Tier"
+        },
+        "provider.featuresHeading": "Included Features",
+        "provider.table": {
+          "feature": "Feature"
+        },
+        "infrastructure.serverHeading": "Server Information",
+        "infrastructure.rows": {
+          "ip": "IP Address",
+          "provider": "Provider"
+        },
+        "infrastructure.headersHeading": "Response Headers",
+        "infrastructure.table": {
+          "header": "Header"
+        },
+        "cms.detectionHeading": "CMS Detection",
+        "cms.rows": {
+          "platform": "Platform",
+          "version": "Version",
+          "confidence": "Confidence"
+        },
+        "cms.noneTitle": "No CMS Detected",
+        "cms.noneBody": "No content management system was detected. The site may use a custom-built solution or a static site generator.",
+        "cms.technologiesHeading": "Detected Technologies",
+        "cms.table": {
+          "technology": "Technology",
+          "category": "Category"
+        },
+        "performance.responseTime": "Response Time",
+        "performance.ttfb": "TTFB",
+        "performance.detailsHeading": "Performance Details",
+        "recommendations.noneTitle": "Solid Hosting Setup",
+        "recommendations.noneBody": "Your hosting configuration follows best practices. Continue monitoring for performance changes."
       },
       "categories": {
         "managedWordPress": "WordPress administrado",
@@ -7307,18 +8116,18 @@
       "overallRiskLevel": "Nivel de Riesgo General",
       "threatsDetected": "Amenazas Detectadas",
       "source": "Fuente",
-      "spf": "SPF (Sender Policy Framework)",
-      "dkim": "DKIM (DomainKeys Identified Mail)",
-      "dmarc": "DMARC (Domain-based Message Authentication)",
+      "spf": "SPF (Marco de Políticas del Remitente)",
+      "dkim": "DKIM (Correo Identificado por Claves de Dominio)",
+      "dmarc": "DMARC (Autenticación de Mensajes Basada en Dominio)",
       "dkimRequiresLookup": "DKIM requiere búsqueda específica de selector",
       "noSpfRecord": "No se encontró registro SPF",
       "noDmarcRecord": "No se encontró registro DMARC",
       "policy": "Política",
       "ipDomainListed": "Esta IP/dominio está listado en esta lista negra",
       "sslCouldNotBeVerified": "No se pudo verificar el certificado SSL",
-      "spfRecord": "SPF (Sender Policy Framework)",
-      "dkimRecord": "DKIM (DomainKeys Identified Mail)",
-      "dmarcRecord": "DMARC (Domain-based Message Authentication)",
+      "spfRecord": "SPF (Marco de Políticas del Remitente)",
+      "dkimRecord": "DKIM (Correo Identificado por Claves de Dominio)",
+      "dmarcRecord": "DMARC (Autenticación de Mensajes Basada en Dominio)",
       "dkimCheckRequired": "DKIM requiere búsqueda específica de selector. Consulte la documentación de su proveedor de email.",
       "policyReject": "Política: reject",
       "valid": "Válido",
@@ -7439,16 +8248,624 @@
             "Monitoree fechas de expiración con alertas",
             "La instalación del certificado requiere acceso al servidor"
           ]
+        },
+        "removeBlacklist": {
+          "title": "Eliminar de listas negras DNS",
+          "description": "Su IP está en una o más listas negras DNS, lo que afecta la entrega de correo electrónico.",
+          "whyItMatters": "Estar en una lista negra afecta gravemente la entrega de correo electrónico: sus correos pueden ser rechazados o marcados como spam. Esto daña la comunicación empresarial y la reputación.",
+          "impact": "Alto - Restaura la entrega de correo y la reputación del remitente",
+          "technicalDetails": [
+            "Las listas negras son mantenidas por organizaciones antispam",
+            "Las IPs son listadas por spam, malware o malas prácticas de correo",
+            "La mayoría de las listas negras eliminan automáticamente después de la limpieza",
+            "Algunas requieren solicitudes de eliminación manuales"
+          ]
+        },
+        "closePorts": {
+          "title": "Cerrar puertos críticos expuestos",
+          "description": "Los puertos administrativos críticos son accesibles públicamente, aumentando su superficie de ataque.",
+          "whyItMatters": "Los puertos administrativos expuestos (SSH, bases de datos, etc.) son objetivos principales de ataques automatizados. Los hackers escanean continuamente en busca de puertos abiertos para explotar.",
+          "impact": "Crítico - Reduce la superficie de ataque y previene accesos no autorizados",
+          "technicalDetails": [
+            "Vectores de ataque comunes: fuerza bruta SSH, exploits de bases de datos",
+            "Los escáneres de puertos buscan vulnerabilidades constantemente",
+            "Los puertos administrativos deben estar detrás de VPN o firewall",
+            "Principio de mínima exposición: solo abrir lo necesario"
+          ]
+        },
+        "monitorReputation": {
+          "title": "Monitorear reputación regularmente",
+          "description": "Configure monitoreo regular para detectar problemas de reputación antes de que afecten la entrega.",
+          "whyItMatters": "La reputación de IP y dominio puede degradarse con el tiempo debido a spam, incidentes de seguridad o compartir con actores maliciosos. El monitoreo regular detecta problemas antes de que afecten la entrega.",
+          "impact": "Medio - Permite gestión proactiva de la reputación",
+          "technicalDetails": [
+            "Los sistemas de reputación rastrean patrones de envío y quejas",
+            "El hosting con IP compartida puede afectar su reputación",
+            "La detección temprana permite una remediación más rápida",
+            "Existen múltiples listas negras y servicios de reputación"
+          ]
         }
       },
       "report": {
         "sectionIntros": {
-          "reputation": "IP reputation reflects how trusted your server's IP address is across the internet. This section evaluates trust scores, spam likelihood, malware association, and blacklist status. A poor IP reputation can cause email deliverability issues, search engine penalties, and may indicate shared hosting with malicious neighbors.",
-          "security": "This security assessment examines your server's SSL/TLS configuration, DNS security, and email authentication setup. Proper security configuration protects your visitors and builds trust with search engines and email providers.",
-          "infrastructure": "Infrastructure analysis reveals details about your server's hosting environment, network configuration, and technical setup. Understanding your infrastructure helps identify potential single points of failure and optimization opportunities.",
-          "dns": "DNS and email configuration are critical for both deliverability and security. This section examines your MX records, DNSSEC status, and email authentication mechanisms (SPF, DKIM, DMARC). Proper configuration prevents email spoofing and improves deliverability.",
-          "ports": "Open port analysis identifies network services exposed on your server. Unnecessary open ports increase your attack surface and may indicate misconfigured services. This section lists detected open ports and their associated services.",
-          "recommendations": "Based on the IP reputation and security analysis, these recommendations prioritize improvements for your server's trustworthiness, security posture, and email deliverability."
+          "reputation": "La reputación IP refleja cuán confiable es la dirección IP de su servidor en Internet. Esta sección evalúa puntuaciones de confianza, probabilidad de spam, asociación con malware y estado de listas negras. Una mala reputación IP puede causar problemas de entrega de correo y penalizaciones en motores de búsqueda.",
+          "security": "Esta evaluación de seguridad examina la configuración SSL/TLS, seguridad DNS y configuración de autenticación de correo de su servidor. Una configuración de seguridad adecuada protege a sus visitantes y genera confianza con motores de búsqueda y proveedores de correo.",
+          "infrastructure": "El análisis de infraestructura revela detalles sobre el entorno de hosting, configuración de red y configuración técnica de su servidor. Comprender su infraestructura ayuda a identificar puntos únicos de fallo y oportunidades de optimización.",
+          "dns": "La configuración DNS y de correo es crítica tanto para la entrega como para la seguridad. Esta sección examina sus registros MX, estado DNSSEC y mecanismos de autenticación de correo (SPF, DKIM, DMARC). La configuración adecuada previene la suplantación de correo y mejora la entrega.",
+          "ports": "El análisis de puertos abiertos identifica servicios de red expuestos en su servidor. Los puertos abiertos innecesarios aumentan su superficie de ataque y pueden indicar servicios mal configurados.",
+          "recommendations": "Basándose en el análisis de reputación IP y seguridad, estas recomendaciones priorizan mejoras para la confiabilidad, postura de seguridad y entrega de correo de su servidor."
+        },
+        "reputation": "IP Reputation",
+        "security": "Security Assessment",
+        "infrastructure": "Infrastructure",
+        "dns": "DNS & Email",
+        "ports": "Open Ports",
+        "recommendations": "Recomendaciones",
+        "reputation.trustScore": "Trust Score",
+        "reputation.spamScore": "Spam Score",
+        "reputation.malwareScore": "Malware Score",
+        "reputation.phishingScore": "Phishing Score",
+        "reputation.blacklistHeading": "Blacklist Status",
+        "reputation.blacklistCleanTitle": "Clean Blacklist Status",
+        "reputation.blacklistCleanBody": "This IP is not listed on any of the checked blacklists.",
+        "reputation.listed": "Listed",
+        "reputation.clean": "Clean",
+        "reputation.table": {
+          "blacklist": "Blacklist"
+        },
+        "security.sslHeading": "SSL/TLS Certificate",
+        "security.rows": {
+          "status": "Certificate Status",
+          "issuer": "Issuer",
+          "protocol": "Protocol",
+          "validFrom": "Valid From",
+          "expiry": "Expiry",
+          "daysRemaining": "Days Remaining",
+          "subject": "Subject"
+        },
+        "security.valid": "Valid",
+        "security.invalid": "Invalid",
+        "security.noSslTitle": "No SSL Certificate",
+        "security.noSslBody": "No SSL/TLS certificate was detected for this target.",
+        "infrastructure.server": "Server",
+        "infrastructure.hosting": "Hosting",
+        "infrastructure.location": "Location",
+        "infrastructure.asn": "ASN",
+        "infrastructure.detailsHeading": "Infrastructure Details",
+        "infrastructure.rows": {
+          "ip": "IP Address",
+          "hostname": "Hostname",
+          "server": "Server Software",
+          "os": "Operating System",
+          "hosting": "Hosting Provider",
+          "provider": "Provider",
+          "country": "Country",
+          "city": "City",
+          "location": "Location",
+          "asn": "ASN",
+          "org": "Organization",
+          "cdn": "CDN",
+          "reverseIp": "Reverse DNS"
+        },
+        "infrastructure.noDataTitle": "No Infrastructure Data",
+        "infrastructure.noDataBody": "Infrastructure information could not be determined for this target.",
+        "dns.dnssecHeading": "DNSSEC",
+        "dns.dnssecEnabled": "DNSSEC Enabled",
+        "dns.dnssecDisabled": "DNSSEC Not Enabled",
+        "dns.mxHeading": "MX Records",
+        "dns.table": {
+          "priority": "Priority",
+          "mailServer": "Mail Server"
+        },
+        "dns.noMxTitle": "No MX Records",
+        "dns.noMxBody": "No MX records were found for this domain. Email delivery may not be configured.",
+        "ports.totalOpen": "Open Ports",
+        "ports.table": {
+          "port": "Port",
+          "service": "Service"
+        },
+        "ports.noneTitle": "No Open Ports Detected",
+        "ports.noneBody": "No open ports were found during the scan, or port scanning was not performed.",
+        "recommendations.noneTitle": "Good Reputation Standing",
+        "recommendations.noneBody": "Your IP has a clean reputation. Continue monitoring for changes and maintain security best practices."
+      },
+      "codeExamples": {
+        "addCaa": [
+          {
+            "title": "Registro CAA para Let's Encrypt",
+            "subtitle": "CA gratuita más común - agregar al archivo de zona DNS",
+            "notes": [
+              "Reemplace yourdomain.com con su dominio real",
+              "Agregue múltiples registros issue si usa múltiples CAs",
+              "Use issuewild para controlar la emisión de certificados comodín",
+              "iodef especifica dónde enviar informes de violación"
+            ]
+          },
+          {
+            "title": "CAA para CAs comerciales",
+            "subtitle": "Autoridades de certificación comerciales comunes"
+          }
+        ],
+        "strengthenDmarc": [
+          {
+            "title": "Política actual (solo monitoreo)",
+            "subtitle": "Su registro DMARC actual - sin aplicación"
+          },
+          {
+            "title": "Recomendado: Política de cuarentena",
+            "subtitle": "Paso 1 - Enviar fallos a carpeta de spam",
+            "notes": [
+              "pct=25 aplica la política solo al 25% de los fallos inicialmente",
+              "Monitoree informes durante 1-2 semanas antes de aumentar el porcentaje",
+              "ruf habilita informes forenses (fallos individuales)",
+              "Pase a política de rechazo cuando la cuarentena sea estable"
+            ]
+          },
+          {
+            "title": "Meta final: Política de rechazo",
+            "subtitle": "Paso 2 - Bloquear todos los correos no autenticados"
+          }
+        ],
+        "implementDmarc": [
+          {
+            "title": "Registro DMARC básico",
+            "subtitle": "Comenzar con modo de monitoreo",
+            "notes": [
+              "Cree un buzón dedicado o use un servicio de informes DMARC",
+              "Los informes son formato XML - use herramientas gratuitas para analizarlos",
+              "Monitoree durante 2-4 semanas antes de habilitar la aplicación",
+              "Servicios como Postmark, dmarcian ofrecen análisis de informes gratuito"
+            ]
+          },
+          {
+            "title": "Usar un servicio de informes DMARC",
+            "subtitle": "Análisis de informes más fácil con herramientas de terceros"
+          }
+        ],
+        "configureSpf": [
+          {
+            "title": "Registro SPF básico",
+            "subtitle": "Proveedores de correo comunes incluidos",
+            "notes": [
+              "Reemplace con los includes SPF de su proveedor de correo real",
+              "Use ~all (fallo suave) inicialmente, luego -all (fallo duro)",
+              "Máximo 10 búsquedas DNS permitidas - aplanar si es necesario",
+              "Probar con: dig TXT yourdomain.com o mxtoolbox.com/spf.aspx"
+            ]
+          },
+          {
+            "title": "Includes SPF de proveedores comunes",
+            "subtitle": "Copie los includes para los servicios que usa"
+          }
+        ],
+        "configureDkim": [
+          {
+            "title": "Resumen de configuración DKIM",
+            "subtitle": "DKIM requiere configuración del servidor de correo",
+            "notes": [
+              "Las claves DKIM son generadas por su proveedor/servidor de correo",
+              "El selector (ej., \"google\", \"selector1\") varía según el proveedor",
+              "Agregue el registro TXT proporcionado por su proveedor al DNS",
+              "Verificar con: dig TXT selector._domainkey.yourdomain.com"
+            ]
+          },
+          {
+            "title": "Habilitar DKIM por proveedor",
+            "subtitle": "Dónde habilitar DKIM en proveedores comunes"
+          }
+        ],
+        "fixSslCertificate": [
+          {
+            "title": "Instalar Let's Encrypt con Certbot",
+            "subtitle": "SSL automatizado gratuito para la mayoría de servidores",
+            "notes": [
+              "Certbot maneja la renovación automáticamente vía cron/systemd",
+              "Certificados gratuitos válidos por 90 días, renovación automática",
+              "Funciona con la mayoría de proveedores de hosting y CDNs",
+              "Para cPanel: usar Let's Encrypt integrado o AutoSSL"
+            ]
+          },
+          {
+            "title": "Verificar configuración SSL",
+            "subtitle": "Compruebe que su configuración SSL sea correcta"
+          }
+        ],
+        "removeBlacklist": [
+          {
+            "title": "Verificar estado de lista negra",
+            "subtitle": "Identifique en qué listas está",
+            "notes": [
+              "La mayoría de listas negras eliminan automáticamente tras 1-4 semanas sin spam",
+              "Corrija la causa raíz PRIMERO antes de solicitar la eliminación",
+              "Verifique su servidor por compromiso, relays abiertos o scripts de spam",
+              "Revise los logs de correo saliente por actividad sospechosa"
+            ]
+          },
+          {
+            "title": "Enlaces comunes de eliminación de listas negras",
+            "subtitle": "Dónde solicitar la eliminación"
+          }
+        ],
+        "closePorts": [
+          {
+            "title": "Configuración de firewall UFW",
+            "subtitle": "Firewall simple para Ubuntu/Debian",
+            "notes": [
+              "Nunca exponga puertos de base de datos (3306, 5432, 27017) públicamente",
+              "Use claves SSH en lugar de contraseñas",
+              "Considere fail2ban para protección adicional contra fuerza bruta",
+              "Use VPN o túnel SSH para acceso administrativo"
+            ]
+          },
+          {
+            "title": "Configuración de iptables",
+            "subtitle": "Para sistemas sin UFW"
+          }
+        ],
+        "monitorReputation": [
+          {
+            "title": "Configurar monitoreo",
+            "subtitle": "Opciones de monitoreo gratuitas y de pago",
+            "notes": [
+              "Configure Google Postmaster Tools para información de Gmail",
+              "Verifique listas negras semanalmente con mxtoolbox.com",
+              "Los informes DMARC muestran fallos de autenticación",
+              "Rastree tasas de rebote en su plataforma de correo"
+            ]
+          }
+        ]
+      },
+      "guides": {
+        "addCaa": {
+          "difficulty": "Principiante",
+          "timeEstimate": "5-10 minutos",
+          "prerequisites": "Acceso a gestión DNS",
+          "steps": [
+            {
+              "title": "Identificar su autoridad de certificación",
+              "description": "Determine qué CA(s) emiten certificados SSL para su dominio. Verifique los detalles de su certificado actual o la documentación de su proveedor de hosting.",
+              "tip": "CAs comunes: letsencrypt.org, digicert.com, comodoca.com, godaddy.com"
+            },
+            {
+              "title": "Acceder a la gestión DNS",
+              "description": "Inicie sesión en su registrador de dominio o proveedor DNS (ej., Cloudflare, GoDaddy, Namecheap, AWS Route 53)."
+            },
+            {
+              "title": "Agregar registro(s) CAA",
+              "description": "Cree un nuevo registro CAA con flag 0, tag \"issue\" y valor del dominio de su CA (ej., \"letsencrypt.org\").",
+              "tip": "Si usa comodines, agregue también un registro \"issuewild\""
+            },
+            {
+              "title": "Verificar el registro",
+              "description": "Use dig o una herramienta en línea para verificar: dig CAA yourdomain.com o revise en dnschecker.org"
+            }
+          ],
+          "verificationSteps": [
+            "Ejecutar: dig CAA yourdomain.com (o usar mxtoolbox.com/CAA.aspx)",
+            "Verificar que su CA aparezca en la salida",
+            "Intentar solicitar un nuevo certificado para confirmar que funciona"
+          ]
+        },
+        "strengthenDmarc": {
+          "difficulty": "Intermedio",
+          "timeEstimate": "2-4 semanas (implementación gradual)",
+          "prerequisites": "SPF y DKIM deben estar configurados primero, monitoreo DMARC activo",
+          "steps": [
+            {
+              "title": "Revisar informes DMARC actuales",
+              "description": "Antes de fortalecer, analice sus informes agregados DMARC para identificar fuentes de correo legítimas que puedan estar fallando la autenticación.",
+              "tip": "Use herramientas gratuitas como dmarcian.com o informes DMARC de Postmark"
+            },
+            {
+              "title": "Corregir fallos de autenticación",
+              "description": "Asegúrese de que todas las fuentes de correo legítimas (herramientas de marketing, CRMs, etc.) estén autenticadas con includes SPF y DKIM."
+            },
+            {
+              "title": "Actualizar a cuarentena (25%)",
+              "description": "Actualice su registro DMARC a: p=quarantine; pct=25 - esto envía el 25% de los correos fallidos a spam.",
+              "tip": "Monitoree durante 1-2 semanas antes de aumentar el porcentaje"
+            },
+            {
+              "title": "Aumentar a cuarentena (100%)",
+              "description": "Después de monitoreo exitoso, elimine la etiqueta pct o establézcala en 100."
+            },
+            {
+              "title": "Actualizar a política de rechazo",
+              "description": "Una vez estable la cuarentena por más de 2 semanas, cambie p=quarantine a p=reject para protección completa."
+            }
+          ],
+          "verificationSteps": [
+            "Verificar registro DMARC: dig TXT _dmarc.yourdomain.com",
+            "Monitorear informes por correos legítimos bloqueados",
+            "Probar enviando correos y verificando headers DMARC pass"
+          ]
+        },
+        "implementDmarc": {
+          "difficulty": "Principiante",
+          "timeEstimate": "15-30 minutos configuración, 2-4 semanas monitoreo",
+          "prerequisites": "Registro SPF configurado (DKIM recomendado)",
+          "steps": [
+            {
+              "title": "Elegir correo o servicio de informes",
+              "description": "Decida dónde se enviarán los informes DMARC. Use un buzón dedicado o un servicio gratuito como dmarcian.com."
+            },
+            {
+              "title": "Crear registro DNS DMARC",
+              "description": "Agregue un registro TXT en _dmarc.yourdomain.com con: \"v=DMARC1; p=none; rua=mailto:su-correo@yourdomain.com\"",
+              "tip": "Comience con p=none para monitorear sin afectar la entrega"
+            },
+            {
+              "title": "Verificar el registro",
+              "description": "Compruebe que el registro esté publicado: dig TXT _dmarc.yourdomain.com"
+            },
+            {
+              "title": "Monitorear informes",
+              "description": "Espere 24-48 horas para que lleguen los informes. Analícelos para entender su estado de autenticación de correo.",
+              "tip": "Los informes son XML - use un analizador en línea o servicio DMARC para leerlos"
+            }
+          ],
+          "verificationSteps": [
+            "Ejecutar: dig TXT _dmarc.yourdomain.com",
+            "Enviar correo de prueba a check-auth@verifier.port25.com",
+            "Verificar que los informes agregados comiencen a llegar en 24-48 horas"
+          ]
+        },
+        "configureSpf": {
+          "difficulty": "Principiante",
+          "timeEstimate": "15-30 minutos",
+          "prerequisites": "Acceso a gestión DNS, lista de servicios de envío de correo",
+          "steps": [
+            {
+              "title": "Inventariar sus remitentes de correo",
+              "description": "Liste todos los servicios que envían correo para su dominio: servidor de correo, herramientas de marketing (Mailchimp, SendGrid), CRM, etc."
+            },
+            {
+              "title": "Reunir includes SPF",
+              "description": "Encuentre la declaración SPF include para cada servicio. Generalmente en su documentación bajo \"Autenticación de correo\" o \"Configuración DNS\".",
+              "tip": "Google Workspace: include:_spf.google.com, Microsoft 365: include:spf.protection.outlook.com"
+            },
+            {
+              "title": "Crear el registro SPF",
+              "description": "Agregue un registro TXT en @ (raíz) con: \"v=spf1 [sus includes] ~all\"",
+              "tip": "Use ~all (fallo suave) inicialmente, luego -all (fallo duro) una vez confirmado"
+            },
+            {
+              "title": "Verificar y probar",
+              "description": "Verifique su registro SPF y envíe correos de prueba para confirmar que pasan las verificaciones SPF."
+            }
+          ],
+          "verificationSteps": [
+            "Verificar registro: dig TXT yourdomain.com | grep spf",
+            "Probar en mxtoolbox.com/spf.aspx",
+            "Enviar correo a check-auth@verifier.port25.com",
+            "Verificar que los headers muestren \"spf=pass\""
+          ]
+        },
+        "configureDkim": {
+          "difficulty": "Intermedio",
+          "timeEstimate": "30-60 minutos",
+          "prerequisites": "Acceso a configuración del servidor de correo Y gestión DNS",
+          "steps": [
+            {
+              "title": "Habilitar DKIM en su servicio de correo",
+              "description": "Vaya al panel de administración de su proveedor de correo y encuentre la configuración DKIM/Autenticación de correo. Habilite la firma DKIM.",
+              "tip": "Para Google Workspace: Consola de Admin → Apps → Gmail → Autenticar correo"
+            },
+            {
+              "title": "Copiar el registro DNS",
+              "description": "Su proveedor de correo generará un registro TXT con su clave pública. Copie el registro completo incluyendo el selector."
+            },
+            {
+              "title": "Agregar registro DNS",
+              "description": "Cree un registro TXT en [selector]._domainkey.yourdomain.com con el valor de clave pública proporcionado.",
+              "tip": "El selector es parte del nombre de host (ej., \"google._domainkey\" o \"selector1._domainkey\")"
+            },
+            {
+              "title": "Verificar en proveedor de correo",
+              "description": "Regrese a su proveedor y haga clic en \"Iniciar autenticación\" o \"Verificar\" para confirmar la detección del registro DNS."
+            },
+            {
+              "title": "Probar firma de correo",
+              "description": "Envíe un correo de prueba y verifique los headers para \"dkim=pass\" o use un validador DKIM en línea."
+            }
+          ],
+          "verificationSteps": [
+            "Verificar DNS: dig TXT selector._domainkey.yourdomain.com",
+            "Enviar correo de prueba y verificar headers \"dkim=pass\"",
+            "Usar mail-tester.com para verificación completa de autenticación"
+          ]
+        },
+        "fixSslCertificate": {
+          "difficulty": "Intermedio",
+          "timeEstimate": "15-60 minutos según hosting",
+          "prerequisites": "Acceso al servidor (SSH o panel de hosting)",
+          "steps": [
+            {
+              "title": "Identificar el problema",
+              "description": "Use SSL Labs (ssllabs.com/ssltest) para identificar el problema específico del certificado: expirado, dominio incorrecto, autofirmado, problema de cadena.",
+              "tip": "Esto le dirá exactamente qué está mal y cómo solucionarlo"
+            },
+            {
+              "title": "Elegir su solución",
+              "description": "En la mayoría de los casos, Let's Encrypt proporciona certificados gratuitos con renovación automática. Para necesidades especiales, compre de DigiCert, Comodo, etc."
+            },
+            {
+              "title": "Instalar/Renovar certificado",
+              "description": "Si usa Let's Encrypt, instale certbot y ejecute: sudo certbot --nginx -d yourdomain.com (reemplace nginx con apache si aplica)."
+            },
+            {
+              "title": "Configurar renovación automática",
+              "description": "Asegúrese de que los certificados se renueven automáticamente: sudo certbot renew --dry-run para probar."
+            },
+            {
+              "title": "Verificar instalación",
+              "description": "Pruebe su sitio en un navegador y ejecute nuevamente el test de SSL Labs para confirmar que se resolvieron todos los problemas."
+            }
+          ],
+          "verificationSteps": [
+            "Visite su sitio en un navegador - debe mostrar candado sin advertencias",
+            "Ejecute test SSL Labs de nuevo - debe mostrar calificación A o A+",
+            "Verificar expiración: echo | openssl s_client -connect yourdomain.com:443 2>/dev/null | openssl x509 -noout -dates"
+          ]
+        },
+        "addNameservers": {
+          "difficulty": "Principiante",
+          "timeEstimate": "15-30 minutos",
+          "prerequisites": "Acceso al registrador de dominio",
+          "steps": [
+            {
+              "title": "Verificar servidores de nombres actuales",
+              "description": "Use dig NS yourdomain.com o un verificador DNS en línea para ver sus servidores de nombres actuales."
+            },
+            {
+              "title": "Contactar proveedor DNS",
+              "description": "La mayoría de proveedores DNS ofrecen múltiples servidores de nombres. Consulte su documentación para direcciones adicionales."
+            },
+            {
+              "title": "Agregar servidores de nombres adicionales",
+              "description": "En el panel de control de su registrador de dominio, agregue las direcciones de servidores de nombres adicionales."
+            },
+            {
+              "title": "Verificar propagación",
+              "description": "Espere la propagación DNS y verifique que todos los servidores de nombres respondan: dig NS yourdomain.com"
+            }
+          ],
+          "verificationSteps": [
+            "Ejecutar: dig NS yourdomain.com y verificar múltiples servidores",
+            "Verificar propagación global en dnschecker.org",
+            "Asegurar que los servidores estén en diferentes redes"
+          ]
+        },
+        "renewCertificate": {
+          "difficulty": "Principiante",
+          "timeEstimate": "15-30 minutos",
+          "prerequisites": "Acceso al servidor o panel de hosting",
+          "steps": [
+            {
+              "title": "Verificar fecha de expiración actual",
+              "description": "Verificar fecha exacta: echo | openssl s_client -connect yourdomain.com:443 2>/dev/null | openssl x509 -noout -dates"
+            },
+            {
+              "title": "Renovar el certificado",
+              "description": "Si usa Let's Encrypt con certbot: sudo certbot renew. Para certificados manuales, compre la renovación a su CA."
+            },
+            {
+              "title": "Instalar nuevo certificado",
+              "description": "Para renovaciones manuales, instale el nuevo certificado en su servidor y reinicie el servidor web."
+            },
+            {
+              "title": "Configurar renovación automática",
+              "description": "Configure renovación automática: sudo certbot renew --dry-run para probar.",
+              "tip": "Configure recordatorio de calendario 30 días antes de la próxima expiración"
+            }
+          ],
+          "verificationSteps": [
+            "Verificar nueva fecha de expiración en detalles del certificado del navegador",
+            "Ejecutar test SSL Labs para confirmar certificado válido",
+            "Verificar que funcione la renovación automática: sudo certbot renew --dry-run"
+          ]
+        },
+        "removeBlacklist": {
+          "difficulty": "Intermedio",
+          "timeEstimate": "Variable - horas a semanas",
+          "prerequisites": "Acceso al servidor para investigar y corregir la causa raíz",
+          "steps": [
+            {
+              "title": "Identificar todas las listas",
+              "description": "Use mxtoolbox.com/blacklists.aspx para verificar todas las listas negras principales.",
+              "tip": "Algunas listas son más impactantes que otras - Spamhaus tiene el mayor efecto"
+            },
+            {
+              "title": "Investigar causa raíz",
+              "description": "Revise logs del servidor, colas de correo y tráfico saliente por señales de spam o compromiso.",
+              "tip": "Busque conexiones salientes inusuales en el puerto 25"
+            },
+            {
+              "title": "Corregir el problema",
+              "description": "Limpie malware, cierre relays abiertos, restablezca contraseñas comprometidas e implemente autenticación de correo (SPF/DKIM/DMARC)."
+            },
+            {
+              "title": "Solicitar eliminación",
+              "description": "Visite la página de eliminación de cada lista negra. Algunas expiran automáticamente, otras requieren solicitud manual.",
+              "tip": "Spamhaus: check.spamhaus.org, Barracuda: barracudacentral.org"
+            },
+            {
+              "title": "Implementar prevención",
+              "description": "Configure monitoreo, limitación de tasa de envío de correo y escaneos de seguridad regulares."
+            }
+          ],
+          "verificationSteps": [
+            "Reverificar listas negras en mxtoolbox.com después de la eliminación",
+            "Enviar correos de prueba a Gmail/Outlook y verificar entrega",
+            "Monitorear tasas de rebote de correo durante la próxima semana"
+          ]
+        },
+        "closePorts": {
+          "difficulty": "Intermedio",
+          "timeEstimate": "30-60 minutos",
+          "prerequisites": "Acceso SSH/root al servidor",
+          "steps": [
+            {
+              "title": "Auditar puertos abiertos",
+              "description": "Use nmap o un escáner de puertos en línea: nmap -Pn yourdomain.com",
+              "tip": "Compare con lo que debería estar expuesto (normalmente solo 80, 443, quizás 22)"
+            },
+            {
+              "title": "Identificar servicios innecesarios",
+              "description": "Para cada puerto abierto, determine si necesita acceso público. Puertos de BD (3306, 5432), paneles admin NO deben ser públicos."
+            },
+            {
+              "title": "Configurar firewall",
+              "description": "Use UFW (Ubuntu/Debian) o firewalld (CentOS/RHEL) para restringir puertos. Permita solo 80/tcp, 443/tcp y acceso SSH controlado."
+            },
+            {
+              "title": "Asegurar acceso SSH",
+              "description": "Use autenticación basada en claves, deshabilite login por contraseña, considere cambiar puerto o usar fail2ban."
+            },
+            {
+              "title": "Configurar VPN para acceso admin",
+              "description": "Para servicios que necesitan acceso remoto (BDs, paneles admin), configure VPN en lugar de exponer puertos directamente."
+            }
+          ],
+          "verificationSteps": [
+            "Re-escanear con nmap para confirmar puertos cerrados",
+            "Verificar que aún puede acceder a servicios necesarios",
+            "Probar que el acceso SSH funcione (¡no se bloquee!)"
+          ]
+        },
+        "monitorReputation": {
+          "difficulty": "Principiante",
+          "timeEstimate": "30 minutos de configuración",
+          "prerequisites": "Propiedad del dominio para verificación",
+          "steps": [
+            {
+              "title": "Configurar Google Postmaster Tools",
+              "description": "Visite postmaster.google.com, agregue su dominio y verifique la propiedad.",
+              "tip": "La verificación generalmente requiere agregar un registro DNS"
+            },
+            {
+              "title": "Configurar Microsoft SNDS",
+              "description": "Regístrese en sendersupport.olc.protection.outlook.com para información de entrega de Outlook/Hotmail."
+            },
+            {
+              "title": "Configurar informes DMARC",
+              "description": "Asegúrese de que su registro DMARC tenga rua= apuntando a un correo o servicio DMARC para recibir informes de autenticación."
+            },
+            {
+              "title": "Configurar monitoreo de listas negras",
+              "description": "Use MXToolbox, HetrixTools o similar para recibir alertas por correo si su IP aparece en listas negras.",
+              "tip": "La mayoría ofrece monitoreo básico gratuito"
+            },
+            {
+              "title": "Crear calendario de monitoreo",
+              "description": "Revise Postmaster/SNDS semanalmente, alertas de listas negras inmediatamente, informes DMARC mensualmente o cuando surjan problemas."
+            }
+          ],
+          "verificationSteps": [
+            "Confirmar que Google Postmaster Tools muestra su dominio como verificado",
+            "Verificar que se reciban informes DMARC",
+            "Probar monitoreo de listas negras verificando configuración de alertas"
+          ]
         }
       }
     },
@@ -7666,7 +9083,58 @@
           "keywords": "Local keywords signal geographic relevance to search engines. This section analyzes your content for location-specific terms, service area keywords, and local intent signals. Proper use of local keywords helps your pages rank for geographically targeted searches.",
           "presence": "Local presence factors include Google Business Profile optimization, local directory citations, and review signals. This section evaluates indicators of your local search presence and identifies opportunities to strengthen your visibility in local search results.",
           "recommendations": "Based on the local SEO analysis, these recommendations target the most impactful improvements for your local search visibility and geographic relevance."
-        }
+        },
+        "nap": "NAP Consistency",
+        "status": {
+          "consistent": "Consistente",
+          "inconsistent": "Inconsistente",
+          "listed": "Listado",
+          "notListed": "No listado"
+        },
+        "schema": "Schema Markup",
+        "keywords": "Local Keywords",
+        "presence": "Local Presence",
+        "recommendations": "Recomendaciones",
+        "nap.detailsHeading": "Business Information",
+        "nap.rows": {
+          "name": "Business Name",
+          "address": "Address",
+          "phone": "Phone",
+          "consistency": "Consistency"
+        },
+        "schema.statusLabel": "Schema Status",
+        "schema.typesCountLabel": "Schema Types Found",
+        "schema.typesHeading": "Detected Schema Types",
+        "schema.table": {
+          "type": "Schema Type"
+        },
+        "schema.noneTitle": "No Schema Markup Found",
+        "schema.noneBody": "Adding LocalBusiness or Organization schema markup can significantly improve your local search visibility and enable rich results.",
+        "schema.markupHeading": "Markup Preview",
+        "keywords.foundLabel": "Local Keywords Found",
+        "keywords.densityLabel": "Local Keyword Density",
+        "keywords.foundHeading": "Local Keywords Detected",
+        "keywords.table": {
+          "keyword": "Keyword",
+          "suggestion": "Suggested Keyword"
+        },
+        "keywords.suggestionsHeading": "Keyword Suggestions",
+        "keywords.suggestionsCalloutTitle": "Expand Your Local Reach",
+        "keywords.suggestionsCalloutBody": "Consider incorporating these additional local keywords into your content to broaden your geographic search visibility.",
+        "presence.claimed": "Claimed",
+        "presence.notFound": "Not Found",
+        "presence.googleBusinessLabel": "Google Business Profile",
+        "presence.citationsLabel": "Citations Found",
+        "presence.gbpCalloutTitle": "Claim Your Google Business Profile",
+        "presence.gbpCalloutBody": "A verified Google Business Profile is essential for appearing in Google Maps and the local pack. Claiming and optimizing your profile should be a top priority.",
+        "presence.gbpFoundTitle": "Google Business Profile Detected",
+        "presence.gbpFoundBody": "Your Google Business Profile was detected. Ensure it is fully optimized with accurate hours, photos, and regular posts for maximum local visibility.",
+        "presence.directoriesHeading": "Directory Listings",
+        "presence.table": {
+          "directory": "Directory"
+        },
+        "recommendations.noneTitle": "Strong Local SEO",
+        "recommendations.noneBody": "Your site follows local SEO best practices. Continue monitoring your local presence and NAP consistency for sustained rankings."
       }
     },
     "crawler": {
@@ -7679,7 +9147,7 @@
       "visualSitemap": "Mapa del Sitio Visual",
       "discoveredPages": "Páginas Descubiertas y Exportación",
       "discoveredPagesExport": "Páginas Descubiertas y Exportación ({{count}})",
-      "fixCodeRecommendations": "Código de Corrección + Recomendaciones",
+      "fixCodeRecommendations": "Recomendaciones",
       "noSitemapToPrint": "No hay mapa del sitio para imprimir",
       "allowPopupsToPrint": "Por favor, permita las ventanas emergentes para imprimir el mapa del sitio",
       "noSitemapToDownload": "No hay mapa del sitio para descargar",
@@ -7882,6 +9350,69 @@
           "issues": "Issues detected during the crawl include broken pages, missing titles, duplicate content, and other technical SEO problems. Each issue is categorized by severity to help you prioritize fixes that will have the greatest impact on search performance.",
           "performance": "Page performance across your site reveals patterns in response times and server behavior. Consistently slow pages may indicate server capacity issues or inefficient code. This section highlights the slowest pages and overall response time distribution.",
           "recommendations": "Based on the site crawl analysis, these recommendations target the most critical structural and technical issues affecting your site's search engine crawlability."
+        },
+        "sections": {
+          "overview": "Crawl Overview",
+          "pages": "Pages Crawled",
+          "structure": "Site Structure",
+          "issues": "Issues Detected",
+          "performance": "Page Performance",
+          "recommendations": "Recomendaciones"
+        },
+        "metrics": {
+          "totalPages": "Total Pages",
+          "discoveredUrls": "Discovered URLs",
+          "maxDepth": "Max Depth",
+          "crawlTime": "Crawl Time",
+          "avgResponseTime": "Avg Response Time"
+        },
+        "overview": {
+          "statusOverview": "Status Code Overview",
+          "ok": "2xx OK",
+          "redirects": "3xx Redirects",
+          "errors": "4xx/5xx Errors"
+        },
+        "pages": {
+          "totalCrawled": "Pages Crawled",
+          "table": {
+            "url": "URL",
+            "title": "Title",
+            "status": "Estado",
+            "responseTime": "Response Time"
+          },
+          "noData": "No page data available."
+        },
+        "structure": {
+          "depthHeading": "Depth Distribution",
+          "depthLevel": "Depth {{level}}",
+          "statusHeading": "Status Code Breakdown",
+          "table": {
+            "depth": "Depth",
+            "pages": "Pages",
+            "percentage": "Porcentaje",
+            "statusCode": "Status Code",
+            "count": "Cantidad"
+          }
+        },
+        "issues": {
+          "totalIssues": "Total Issues",
+          "noneTitle": "No Issues Found",
+          "noneBody": "The crawl did not detect any issues. Continue monitoring your site to catch problems early."
+        },
+        "performance": {
+          "avgResponseTime": "Avg Response Time",
+          "pagesAnalyzed": "Pages Analyzed",
+          "slowestHeading": "Slowest Pages",
+          "table": {
+            "url": "URL",
+            "responseTime": "Response Time",
+            "rating": "Rating"
+          },
+          "noData": "No performance data available."
+        },
+        "recommendations": {
+          "noneTitle": "Healthy Site Structure",
+          "noneBody": "Your site has a healthy structure with no significant crawl issues. Continue monitoring to maintain site health."
         }
       }
     },
@@ -7928,13 +9459,46 @@
         "ga4AndUniversal": "Se detectaron tanto GA4 como Universal Analytics. Universal Analytics está obsoleto (julio 2023).",
         "duplicateTracking": "Google Analytics se carga tanto vía GTM como hardcodeado. Esto puede causar seguimiento duplicado.",
         "noConsentManagement": "Tags de publicidad detectados sin solución de gestión de consentimiento",
-        "advertisingCookiesNoConsent": "Cookie(s) de publicidad configuradas sin consentimiento detectado"
+        "advertisingCookiesNoConsent": "Cookie(s) de publicidad configuradas sin consentimiento detectado",
+        "insecureCookies": "{{count}} cookie(s) sin flag Secure",
+        "sameSiteNoSecure": "{{count}} cookie(s) con SameSite=None pero sin flag Secure",
+        "blockingScripts": "{{count}} scripts síncronos pueden bloquear el renderizado de la página",
+        "headScripts": "{{count}} scripts en <head> - considere mover scripts no críticos al body"
       },
       "recommendations": {
         "migrateToGa4": "Completar la migración a GA4",
         "useGtmExclusively": "Usar GTM exclusivamente para GA o eliminar la implementación hardcodeada",
         "implementConsent": "Implementar gestión de consentimiento (OneTrust, Cookiebot, etc.) para cumplir con GDPR/CCPA",
-        "implementConsentBeforeCookies": "Implementar gestión de consentimiento antes de configurar cookies de publicidad"
+        "implementConsentBeforeCookies": "Implementar gestión de consentimiento antes de configurar cookies de publicidad",
+        "addSecureFlag": "Agregue el flag Secure a las cookies para evitar la transmisión por HTTP",
+        "sameSiteRequiresSecure": "Las cookies con SameSite=None requieren el atributo Secure"
+      },
+      "severity": {
+        "high": "ALTO",
+        "warning": "ADVERTENCIA",
+        "info": "INFO"
+      },
+      "loadingMethod": {
+        "async": "asíncrono",
+        "defer": "diferido",
+        "sync": "síncrono"
+      },
+      "recTitles": {
+        "addConsentManagement": "Agregar gestión de consentimiento",
+        "fixCriticalIssue": "Corregir problema crítico",
+        "removeDuplicateTags": "Eliminar etiquetas duplicadas",
+        "implementConsentManagement": "Implementar gestión de consentimiento",
+        "considerGtm": "Considerar Google Tag Manager"
+      },
+      "recDescriptions": {
+        "duplicateTags": "{{count}} etiqueta(s) duplicada(s) detectada(s). Esto puede causar seguimiento doble.",
+        "analyticsNoConsent": "Etiquetas de análisis detectadas sin gestión de consentimiento. Requerido para cumplimiento GDPR/CCPA.",
+        "considerGtm": "{{count}} etiquetas detectadas. GTM simplifica la gestión de etiquetas y mejora el rendimiento."
+      },
+      "recActions": {
+        "removeDuplicates": "Revisar y eliminar implementaciones duplicadas",
+        "addConsentSolution": "Agregar OneTrust, Cookiebot u otra solución de consentimiento similar",
+        "migrateToGtm": "Migrar etiquetas a Google Tag Manager para una gestión más fácil"
       },
       "fixes": {
         "addConsentManagement": "Agregar gestión de consentimiento",
@@ -7945,80 +9509,81 @@
       "cookieSecure": "Secure",
       "report": {
         "sectionIntros": {
-          "overview": "This section provides an overview of all marketing, analytics, and tracking tags detected on your page. A healthy tag implementation uses a tag management system, avoids duplicates, and loads scripts efficiently. Too many tags can slow page performance and create data quality issues. This analysis identifies each tag, its category, and how many instances were found.",
-          "issues": "This section highlights implementation issues and conflicts found among your tags. Common problems include duplicate tracking pixels, migration gaps between analytics versions, missing consent management, and conflicting scripts. Each issue includes severity level and a specific recommendation for resolution. Addressing these issues improves data accuracy and site performance.",
-          "categories": "Tags are organized by functional category to provide a clear picture of your marketing and analytics stack. This breakdown helps identify redundancies, gaps in coverage, and opportunities for consolidation. A well-organized tag infrastructure typically uses one tool per function with clear data ownership. Review each category to ensure every tag serves a specific, non-overlapping purpose.",
-          "performance": "Marketing tags and tracking scripts can significantly impact page load performance. Synchronous scripts block rendering while they load, and inline scripts add to the initial HTML payload. This section analyzes script loading methods, identifying blocking scripts that should be converted to async or defer loading. Optimizing script loading can reduce Time to Interactive by hundreds of milliseconds.",
-          "thirdParty": "Third-party scripts are loaded from external domains and include analytics libraries, advertising pixels, and CDN-hosted utilities. Each external script introduces a dependency on another server's availability and performance. This section catalogs all third-party scripts by host, category, and loading method. Minimizing third-party dependencies and ensuring proper async loading reduces performance risk.",
-          "dataLayer": "The dataLayer is a JavaScript array used by Google Tag Manager to pass structured data between your website and marketing tags. A well-implemented dataLayer centralizes event tracking and enables consistent measurement across all tags. This section checks for dataLayer presence, event count, and ecommerce implementation. A robust dataLayer is the foundation of accurate marketing analytics.",
-          "cookies": "Cookies set by tags and third-party scripts carry privacy and compliance implications. Under GDPR, CCPA, and similar regulations, users must be informed about cookies and in many cases give consent before non-essential cookies are set. This section audits all detected cookies, their vendors, purposes, and security attributes. Understanding your cookie landscape is essential for privacy compliance.",
-          "recommendations": "Based on the tag intelligence analysis, this section provides prioritized recommendations to optimize your tag implementation. Recommendations cover performance optimization, data quality improvement, privacy compliance, and infrastructure consolidation. Implementing these changes will result in faster page loads, more accurate tracking data, and better compliance with privacy regulations."
+          "overview": "Esta sección proporciona una visión general de todas las etiquetas de marketing, análisis y seguimiento detectadas en su página. Una implementación saludable de etiquetas utiliza un sistema de gestión de etiquetas, evita duplicados y carga scripts de manera eficiente. Demasiadas etiquetas pueden ralentizar el rendimiento de la página y crear problemas de calidad de datos. Este análisis identifica cada etiqueta, su categoría y cuántas instancias se encontraron.",
+          "issues": "Esta sección destaca los problemas de implementación y conflictos encontrados entre sus etiquetas. Los problemas comunes incluyen píxeles de seguimiento duplicados, brechas de migración entre versiones de análisis, falta de gestión de consentimiento y scripts en conflicto. Cada problema incluye un nivel de gravedad y una recomendación específica para su resolución. Abordar estos problemas mejora la precisión de los datos y el rendimiento del sitio.",
+          "categories": "Las etiquetas están organizadas por categoría funcional para proporcionar una imagen clara de su stack de marketing y análisis. Este desglose ayuda a identificar redundancias, brechas en la cobertura y oportunidades de consolidación. Una infraestructura de etiquetas bien organizada generalmente usa una herramienta por función con propiedad clara de datos. Revise cada categoría para asegurarse de que cada etiqueta sirva un propósito específico y no superpuesto.",
+          "performance": "Las etiquetas de marketing y los scripts de seguimiento pueden afectar significativamente el rendimiento de carga de la página. Los scripts síncronos bloquean el renderizado mientras se cargan, y los scripts en línea aumentan la carga útil HTML inicial. Esta sección analiza los métodos de carga de scripts, identificando scripts bloqueantes que deberían convertirse a carga async o defer. Optimizar la carga de scripts puede reducir el Time to Interactive en cientos de milisegundos.",
+          "thirdParty": "Los scripts de terceros se cargan desde dominios externos e incluyen bibliotecas de análisis, píxeles publicitarios y utilidades alojadas en CDN. Cada script externo introduce una dependencia de la disponibilidad y rendimiento de otro servidor. Esta sección cataloga todos los scripts de terceros por host, categoría y método de carga. Minimizar las dependencias de terceros y asegurar una carga asíncrona adecuada reduce el riesgo de rendimiento.",
+          "dataLayer": "El dataLayer es un array de JavaScript utilizado por Google Tag Manager para pasar datos estructurados entre su sitio web y las etiquetas de marketing. Un dataLayer bien implementado centraliza el seguimiento de eventos y permite una medición consistente en todas las etiquetas. Esta sección verifica la presencia del dataLayer, el recuento de eventos y la implementación de comercio electrónico. Un dataLayer robusto es la base de un análisis de marketing preciso.",
+          "cookies": "Las cookies establecidas por etiquetas y scripts de terceros tienen implicaciones de privacidad y cumplimiento. Según el GDPR, CCPA y regulaciones similares, los usuarios deben ser informados sobre las cookies y en muchos casos dar su consentimiento antes de que se establezcan cookies no esenciales. Esta sección audita todas las cookies detectadas, sus proveedores, propósitos y atributos de seguridad. Comprender su panorama de cookies es esencial para el cumplimiento de la privacidad.",
+          "recommendations": "Basándose en el análisis de inteligencia de etiquetas, esta sección proporciona recomendaciones priorizadas para optimizar su implementación de etiquetas. Las recomendaciones cubren la optimización del rendimiento, la mejora de la calidad de datos, el cumplimiento de privacidad y la consolidación de infraestructura. Implementar estos cambios resultará en cargas de página más rápidas, datos de seguimiento más precisos y mejor cumplimiento de las regulaciones de privacidad."
         },
         "overview": {
-          "categoriesLabel": "Categories",
-          "duplicatesLabel": "Duplicates",
-          "detectedHeading": "Detected Tags",
+          "categoriesLabel": "Categorías",
+          "duplicatesLabel": "Duplicados",
+          "detectedHeading": "Etiquetas detectadas",
           "table": {
-            "name": "Tag Name",
-            "category": "Category",
-            "instances": "Instances",
+            "name": "Nombre de etiqueta",
+            "category": "Categoría",
+            "instances": "Instancias",
             "ids": "IDs"
           }
         },
         "issues": {
-          "duplicatesHeading": "Duplicate Tags",
-          "noneTitle": "No Issues Found",
-          "noneBody": "No implementation issues or conflicts were detected in your tag setup."
+          "duplicatesHeading": "Etiquetas duplicadas",
+          "noneTitle": "No se encontraron problemas",
+          "noneBody": "No se detectaron problemas de implementación ni conflictos en su configuración de etiquetas."
         },
         "categories": {
           "table": {
-            "category": "Category",
-            "count": "Count",
-            "tags": "Tags"
+            "category": "Categoría",
+            "count": "Cantidad",
+            "tags": "Etiquetas"
           }
         },
         "performance": {
-          "syncLabel": "Sync (Blocking)",
-          "asyncLabel": "Async",
-          "deferLabel": "Defer",
-          "inlineLabel": "Inline",
-          "issuesHeading": "Performance Issues"
+          "syncLabel": "Síncrono (Bloqueante)",
+          "asyncLabel": "Asíncrono",
+          "deferLabel": "Diferido",
+          "inlineLabel": "En línea",
+          "issuesHeading": "Problemas de rendimiento"
         },
         "thirdParty": {
-          "totalLabel": "Third-Party Scripts",
+          "totalLabel": "Scripts de terceros",
           "table": {
-            "name": "Name",
+            "name": "Nombre",
             "host": "Host",
-            "category": "Category",
-            "loading": "Loading"
+            "category": "Categoría",
+            "loading": "Carga"
           }
         },
         "dataLayer": {
-          "eventsLabel": "Events",
-          "ecommerceTitle": "Ecommerce Tracking Detected",
-          "eventsHeading": "DataLayer Events",
+          "eventsLabel": "Eventos",
+          "ecommerceTitle": "Seguimiento de comercio electrónico detectado",
+          "eventsHeading": "Eventos del DataLayer",
           "table": {
-            "event": "Event Name"
+            "event": "Nombre del evento"
           },
-          "consentImplemented": "Consent Mode Implemented",
-          "consentMissing": "Consent Mode Not Implemented"
+          "consentImplemented": "Modo de consentimiento implementado",
+          "consentMissing": "Modo de consentimiento no implementado"
         },
         "cookies": {
-          "totalLabel": "Total Cookies",
-          "detailsHeading": "Cookie Details",
-          "issuesHeading": "Compliance Issues",
+          "totalLabel": "Total de cookies",
+          "detailsHeading": "Detalles de cookies",
+          "issuesHeading": "Problemas de cumplimiento",
           "table": {
-            "type": "Type",
-            "count": "Count",
-            "name": "Name",
-            "vendor": "Vendor",
-            "domain": "Domain",
-            "expires": "Expires"
+            "type": "Tipo",
+            "count": "Cantidad",
+            "name": "Nombre",
+            "vendor": "Proveedor",
+            "domain": "Dominio",
+            "secure": "Seguro",
+            "expires": "Caducidad"
           }
         },
-        "recommendations": "Recommendations",
-        "recommendations.noneTitle": "Well-Managed Tag Infrastructure",
-        "recommendations.noneBody": "Your tag implementation follows best practices. Continue monitoring for new issues."
+        "recommendationsTitle": "Recomendaciones",
+        "recommendationsNoneTitle": "Infraestructura de etiquetas bien gestionada",
+        "recommendationsNoneBody": "Su implementación de etiquetas sigue las mejores prácticas. Continúe monitoreando para detectar nuevos problemas."
       },
       "actionableRecommendations": "Recomendaciones de optimización accionables",
       "prioritySteps": "Pasos de remediación basados en prioridad",
@@ -8109,6 +9674,85 @@
       "good": "Bueno",
       "poor": "Deficiente",
       "excellent": "Excelente"
+    },
+    "brandConsistency": {
+      "report": {
+        "sectionIntros": {
+          "overview": "Esta sección proporciona una visión general de la consistencia de tu marca en el sitio web.",
+          "colors": "La consistencia del color es una piedra angular de la identidad de marca. Esta sección analiza la paleta de colores utilizada.",
+          "typography": "La tipografía consistente refuerza la identidad de marca y mejora la legibilidad.",
+          "contrast": "Un contraste de color adecuado asegura que tu contenido sea legible para todos los usuarios.",
+          "crossPage": "La consistencia entre páginas mide cuán uniformes permanecen tus elementos de marca mientras los usuarios navegan.",
+          "recommendations": "Recomendaciones priorizadas basadas en el análisis de consistencia de marca."
+        },
+        "overview": "Vista general de consistencia",
+        "colorAnalysis": "Análisis de colores",
+        "colors": {
+          "paletteHeading": "Paleta de colores",
+          "table": {
+            "color": "Color",
+            "name": "Nombre",
+            "usage": "Uso",
+            "percentage": "Porcentaje"
+          },
+          "dominantHeading": "Colores dominantes",
+          "contrastRatio": "Relación de contraste",
+          "issuesHeading": "Problemas de color"
+        },
+        "typographyAnalysis": "Análisis tipográfico",
+        "typography": {
+          "fontsHeading": "Fuentes utilizadas",
+          "table": {
+            "font": "Fuente",
+            "weight": "Peso",
+            "usage": "Uso",
+            "pages": "Páginas",
+            "element": "Elemento",
+            "size": "Tamaño",
+            "lineHeight": "Altura de línea"
+          },
+          "headingStylesHeading": "Estilos de encabezado",
+          "bodyStylesHeading": "Estilos del cuerpo",
+          "issuesHeading": "Problemas tipográficos"
+        },
+        "contrastAnalysis": "Análisis de contraste",
+        "contrast": {
+          "pairsHeading": "Pares de contraste",
+          "table": {
+            "foreground": "Primer plano",
+            "background": "Fondo",
+            "ratio": "Relación"
+          },
+          "pass": "Aprobado",
+          "fail": "Reprobado",
+          "issuesHeading": "Problemas de contraste",
+          "noIssuesTitle": "Buen contraste",
+          "noIssuesBody": "Todos los pares de colores analizados cumplen los requisitos de contraste WCAG."
+        },
+        "crossPageConsistency": "Consistencia entre páginas",
+        "crossPage": {
+          "pagesHeading": "Páginas analizadas",
+          "totalPages": "Total de páginas",
+          "table": {
+            "page": "Página",
+            "score": "Puntuación"
+          },
+          "issuesHeading": "Problemas de consistencia",
+          "noIssuesTitle": "Branding consistente",
+          "noIssuesBody": "No se detectaron problemas de consistencia entre páginas. Tus elementos de marca son uniformes."
+        },
+        "recommendations": "Recomendaciones",
+        "overview.consistency": "Consistency",
+        "overview.colorAnalysis": "Color Analysis",
+        "overview.typographyAnalysis": "Typography Analysis",
+        "overview.elementsHeading": "Brand Elements Detected",
+        "overview.logos": "Logos",
+        "overview.colors": "Colors",
+        "overview.fonts": "Fonts",
+        "overview.patterns": "Patterns",
+        "recommendations.noneTitle": "Strong Brand Consistency",
+        "recommendations.noneBody": "Your site maintains excellent brand consistency. Continue monitoring for visual drift as content evolves."
+      }
     }
   },
   "reportsPage": {
@@ -8265,7 +9909,8 @@
     "essentialDesc": "Necesarias para que el sitio funcione (sesión, preferencias).",
     "analytics": "Analíticas",
     "analyticsDesc": "Nos ayudan a entender cómo los visitantes usan el sitio (Google Analytics).",
-    "alwaysOn": "Siempre activas"
+    "alwaysOn": "Siempre activas",
+    "ariaLabel": "Consentimiento de cookies"
   },
   "privacyPage": {
     "breadcrumb": "Política de Privacidad",
@@ -8425,5 +10070,8 @@
     "questionsTitle": "¿Preguntas?",
     "questionsBefore": "Si tiene preguntas sobre reembolsos o facturación, escríbanos a ",
     "questionsAfter": ". Somos personas reales y estamos aquí para ayudar."
-  }
+  },
+  "auto_scan": "true",
+  "report_type": "cwv",
+  "print": "1"
 }

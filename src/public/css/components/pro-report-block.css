@@ -19,9 +19,23 @@
   transition: all 0.3s ease;
 }
 
+/* When locked (unpaid), use neutral border instead of accent gradient */
+.pro-report-block--locked,
+.pro-report-block[data-locked] {
+  background-image: none;
+  border: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+  box-shadow: none;
+}
+
 .pro-report-block:hover {
   box-shadow: 0 8px 30px rgba(91, 244, 231, 0.3);
   transform: translateY(-2px);
+}
+
+.pro-report-block--locked:hover,
+.pro-report-block[data-locked]:hover {
+  box-shadow: none;
+  transform: none;
 }
 
 /* Header */

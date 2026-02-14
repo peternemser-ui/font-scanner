@@ -341,16 +341,49 @@
    */
   function hasAccess(reportId) {
     // Version marker for debugging cache issues - UPDATE THIS WHEN CHANGING CODE
-    const VERSION = '20260210-remove-flag-gate';
+    const VERSION = '20260212-remove-auto-preserve';
     console.log('[ProReportBlock] hasAccess v' + VERSION + ' called with reportId:', reportId);
 
-    // NOTE: __SM_FRESH_SCAN_PENDING_PAYMENT__ flag is NO LONGER used as an early gate.
-    // It was causing Day Pass / Pro users to see locked sections when the billing
-    // API fetch hadn't completed yet (race condition). The flag is redundant because:
-    // - Free users: isProSubscriber()=false already locks sections
-    // - Pro/DayPass: isProSubscriber()=true already unlocks sections
-    // - Purchased reports: isReportPurchased() checks server data
-    // The flag remains set/cleared elsewhere for backward compat but is not checked here.
+    // Determine the effective reportId once (used by multiple checks)
+    const effectiveId = reportId || document.body?.getAttribute('data-report-id') || '';
+
+    // Check 0a: localStorage purchase proof (MOST RELIABLE - survives page reloads)
+    // Set by report-ui.js when billing_success=true, persisted in localStorage with 24h TTL.
+    // This bypasses ALL timing issues with billing cache, events, and session markers.
+    if (effectiveId) {
+      try {
+        const purchaseProof = localStorage.getItem('sm_purchased_' + effectiveId);
+        if (purchaseProof) {
+          const proof = JSON.parse(purchaseProof);
+          const age = Date.now() - (proof.ts || 0);
+          if (age < 24 * 60 * 60 * 1000) { // 24 hour TTL
+            console.log('[ProReportBlock] hasAccess: TRUE via localStorage purchase proof', {
+              reportId: effectiveId,
+              ageMinutes: Math.round(age / 60000)
+            });
+            return true;
+          } else {
+            // Expired - clean up
+            localStorage.removeItem('sm_purchased_' + effectiveId);
+          }
+        }
+      } catch (e) {
+        // localStorage access failed, continue to other checks
+      }
+    }
+
+    // Check 0b: Verified purchase flag (window-scoped, lost on reload)
+    // Set by report-ui.js after successful verify-purchase API call.
+    // SECURITY: Require matching reportId — empty effectiveId must NOT grant access
+    if (window.__smVerifiedPurchaseReportId && effectiveId) {
+      if (effectiveId === window.__smVerifiedPurchaseReportId) {
+        console.log('[ProReportBlock] hasAccess: TRUE via verified purchase flag', {
+          verifiedReportId: window.__smVerifiedPurchaseReportId,
+          requestedReportId: effectiveId
+        });
+        return true;
+      }
+    }
 
     // Check 1: Is user a Pro subscriber? (server-verified, requires auth token)
     const isProSub = isProSubscriber();
@@ -370,40 +403,10 @@
       return true;
     }
 
-    // Check 3: Demo domains (for testing/demos only)
-    // 1. Body attribute (if explicitly set by page)
-    // 2. URL input field (what user is currently analyzing)
-    // 3. ScanContext (last scan, but could be stale)
-    let currentDomain = document.body?.getAttribute('data-scan-domain') || '';
-
-    // Try URL input field - most reliable for current analysis
-    if (!currentDomain) {
-      try {
-        const urlInput = document.getElementById('url') || document.getElementById('urlInput');
-        if (urlInput && urlInput.value) {
-          const urlValue = urlInput.value.startsWith('http') ? urlInput.value : 'https://' + urlInput.value;
-          currentDomain = new URL(urlValue).hostname.toLowerCase();
-        }
-      } catch (e) {
-        // URL parsing failed, continue to next source
-      }
-    }
-
-    // Fall back to ScanContext (may be stale for returning from billing)
-    if (!currentDomain && window.ScanContext) {
-      currentDomain = window.ScanContext.getDomain() || '';
-    }
-
-    console.log('[ProReportBlock] hasAccess domain check:', { currentDomain, source: document.body?.getAttribute('data-scan-domain') ? 'body' : document.getElementById('url')?.value ? 'urlInput' : 'scanContext' });
-
-    // Check 3: Demo domains (for testing/demos only)
-    // SECURITY: Strictly check for explicit true return, not just truthy
-    const isDemoResult = currentDomain && window.ProAccess?.isDemoDomain?.(currentDomain);
-    console.log('[ProReportBlock] isDemoDomain check:', { currentDomain, isDemoResult, demoDomains: window.ProAccess?.DEMO_DOMAINS });
-    if (isDemoResult === true) {
-      console.log('[ProReportBlock] hasAccess: TRUE via demo domain', { currentDomain });
-      return true;
-    }
+    // Check 3: Demo domains - REMOVED
+    // Previously auto-unlocked pro content for demo domains (vail.com).
+    // This bypassed payment entirely, making it impossible to test the payment flow
+    // on demo domains. Pro content now requires actual payment on ALL domains.
 
     // If no reportId provided, try to get from body attribute or URL
     let effectiveReportId = reportId;
@@ -507,6 +510,12 @@
           ${STRIPE_LOGO_SVG}
           <span>${_t('reports.common.securePayments', 'Secure payments by Stripe')}</span>
         </div>
+        ${!(localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token')) ? `
+          <p class="pro-report-block__login-hint" style="text-align: center; margin-top: 0.75rem; font-size: 0.85rem; color: var(--text-secondary);">
+            ${_t('usage.haveAccount', 'Have an account?')}
+            <a href="/auth.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}" style="color: var(--accent-primary); text-decoration: underline; margin-left: 0.25rem;">${_t('usage.loginToRestore', 'Log in to restore your plan')}</a>
+          </p>
+        ` : ''}
       </div>
     `;
   }
@@ -605,7 +614,7 @@
     const lockIcon = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg>`;
 
     return `
-      <div class="pro-report-block" data-pro-report-block ${reportId ? `data-report-id="${reportId}"` : ''}>
+      <div class="pro-report-block${!userHasAccess ? ' pro-report-block--locked' : ''}" data-pro-report-block ${!userHasAccess ? 'data-locked' : ''} ${reportId ? `data-report-id="${reportId}"` : ''}>
         <div class="pro-report-block__header">
           <div class="pro-report-block__icon">${userHasAccess ? exportIcon : lockIcon}</div>
           <div class="pro-report-block__text">
@@ -727,7 +736,11 @@
     cleanupStalePurchaseKeys();
 
     // SECURITY: Clear stale session markers if NOT returning from billing
-    // This prevents old payment sessions from granting access to new scans
+    // This prevents old payment sessions from granting access to new scans.
+    // However, preserve markers if the current URL has a report_id that matches
+    // the purchased report_id — this handles the post-billing reload scenario
+    // where billing_success/session_id have been stripped from the URL but the
+    // user just paid moments ago. The markers have a 10-minute TTL anyway.
     const params = new URLSearchParams(window.location.search);
     const billingSuccess = params.get('billing_success') === 'true';
     const paymentSuccess = params.get('payment') === 'success';
@@ -737,9 +750,24 @@
     if (!isReturningFromBilling) {
       const existingMarker = sessionStorage.getItem('sm_payment_completed_session');
       if (existingMarker) {
-        console.log('[ProReportBlock] SECURITY: Clearing stale session markers (not returning from billing)');
-        sessionStorage.removeItem('sm_payment_completed_session');
-        sessionStorage.removeItem('sm_purchased_report_id');
+        // Check if the URL has a report_id matching the purchased report
+        // This means we're on a post-billing reload (URL cleaned but markers still valid)
+        const urlReportId = params.get('report_id') || params.get('reportId') || '';
+        const purchasedReportId = sessionStorage.getItem('sm_purchased_report_id') || '';
+        const markerAge = Date.now() - parseInt(existingMarker, 10);
+        const isRecentPurchase = !isNaN(markerAge) && markerAge < 10 * 60 * 1000; // 10 min TTL
+
+        if (urlReportId && urlReportId === purchasedReportId && isRecentPurchase) {
+          console.log('[ProReportBlock] Keeping session markers (post-billing reload, report_id matches)', {
+            urlReportId,
+            purchasedReportId,
+            markerAgeSeconds: Math.round(markerAge / 1000)
+          });
+        } else {
+          console.log('[ProReportBlock] SECURITY: Clearing stale session markers (not returning from billing)');
+          sessionStorage.removeItem('sm_payment_completed_session');
+          sessionStorage.removeItem('sm_purchased_report_id');
+        }
       }
     }
 
@@ -793,19 +821,28 @@
     // Without this, sections render as locked because the entitlements:updated event
     // has already fired before the sections existed in the DOM.
     const observer = new MutationObserver((mutations) => {
-      if (!cachedBillingStatus || !hasAccess()) return; // No access, skip
-
       for (const mutation of mutations) {
         for (const node of mutation.addedNodes) {
           if (node.nodeType !== Node.ELEMENT_NODE) continue;
-          // Check if the added node contains locked overlays
-          const overlays = node.matches?.('[data-locked-overlay]')
+
+          // Check for pending pro block placeholders (rendered before ProReportBlock loaded)
+          const pendingBlocks = node.matches?.('[data-pro-block-pending]')
             ? [node]
-            : (node.querySelectorAll?.('[data-locked-overlay]') || []);
-          if (overlays.length > 0) {
-            // Debounce: unlock on next microtask to batch multiple additions
-            Promise.resolve().then(unlockAllLockedSections);
-            return; // Only need to trigger once per mutation batch
+            : (node.querySelectorAll?.('[data-pro-block-pending]') || []);
+          if (pendingBlocks.length > 0) {
+            Promise.resolve().then(renderPendingProBlocks);
+          }
+
+          // Check if the added node contains locked overlays
+          if (cachedBillingStatus && hasAccess()) {
+            const overlays = node.matches?.('[data-locked-overlay]')
+              ? [node]
+              : (node.querySelectorAll?.('[data-locked-overlay]') || []);
+            if (overlays.length > 0) {
+              // Debounce: unlock on next microtask to batch multiple additions
+              Promise.resolve().then(unlockAllLockedSections);
+              return; // Only need to trigger once per mutation batch
+            }
           }
         }
       }
@@ -813,6 +850,25 @@
     observer.observe(document.body || document.documentElement, {
       childList: true,
       subtree: true
+    });
+
+    // Render any pending pro block placeholders already in the DOM
+    renderPendingProBlocks();
+  }
+
+  /**
+   * Find and render any pending pro block placeholders left by ReportContainer
+   * when ProReportBlock wasn't loaded yet at render time.
+   */
+  function renderPendingProBlocks() {
+    document.querySelectorAll('[data-pro-block-pending]').forEach(el => {
+      try {
+        const options = JSON.parse(el.dataset.proBlockOptions || '{}');
+        el.outerHTML = render(options);
+      } catch (e) {
+        console.warn('[ProReportBlock] Failed to render pending pro block:', e);
+        el.outerHTML = render({});
+      }
     });
   }
 

@@ -6,7 +6,7 @@
   <meta name="description" content="Upgrade to Site Mechanic Pro for unlimited scans and advanced features">
   <meta name="theme-color" content="#000000" />
 
-  <title>Upgrade to Pro | Site Mechanic</title>
+  <title data-i18n="pricing.title">Upgrade to Site Mechanic Pro</title>
   <meta name="robots" content="index, follow" />
   <link rel="canonical" href="https://sitemechanic.io/upgrade.html" />
 
@@ -18,7 +18,7 @@
   <link rel="alternate" hreflang="pt" href="https://sitemechanic.io/pt/upgrade.html" />
   <link rel="alternate" hreflang="zh" href="https://sitemechanic.io/zh/upgrade.html" />
   <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/upgrade.html" />
-    <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/upgrade.html" />
+  <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/upgrade.html" />
   <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/upgrade.html" />
 
   <!-- Preload critical fonts -->
@@ -29,277 +29,193 @@
   <!-- Design System Foundation -->
   <link rel="stylesheet" href="/design-tokens.css">
   <link rel="stylesheet" href="/components.css">
+  <link rel="stylesheet" href="/css/components/pricing-modal.css">
 
   <!-- Internationalization (i18n) Support -->
   <script src="/i18n.js"></script>
   <link rel="stylesheet" href="/styles.css">
 
   <style>
-    .pricing-container {
-      max-width: 1200px;
-      margin: 3rem auto;
-      padding: 0 2rem;
+    /* ============================================
+       Pricing Page - Provides CSS variables for
+       sm-plan-card components outside modal context
+       ============================================ */
+
+    .pricing-page {
+      --sm-font: Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --sm-border-light: rgba(255, 255, 255, 0.08);
+      --sm-border-medium: rgba(255, 255, 255, 0.12);
+      --sm-border-strong: rgba(255, 255, 255, 0.18);
+      --sm-text-primary: #fafafa;
+      --sm-text-secondary: #a1a1aa;
+      --sm-text-muted: #71717a;
+      --sm-bg-panel: #18181b;
+      --sm-bg-card: #1f1f23;
+      --sm-bg-card-hover: #27272a;
+      --sm-bg-featured: rgba(255, 255, 255, 0.02);
+      --sm-accent: #fafafa;
+      --sm-accent-hover: #e4e4e7;
+      --sm-success: #22c55e;
+      --sm-success-bg: rgba(34, 197, 94, 0.1);
+      --sm-radius-sm: 6px;
+      --sm-radius-md: 12px;
+      --sm-radius-lg: 16px;
+      font-family: var(--sm-font);
     }
 
-    .pricing-header {
-      text-align: center;
-      margin-bottom: 3rem;
+    .white-theme .pricing-page,
+    body.white-theme .pricing-page {
+      --sm-border-light: rgba(0, 0, 0, 0.08);
+      --sm-border-medium: rgba(0, 0, 0, 0.12);
+      --sm-border-strong: rgba(0, 0, 0, 0.18);
+      --sm-text-primary: #111111;
+      --sm-text-secondary: #52525b;
+      --sm-text-muted: #71717a;
+      --sm-bg-panel: #ffffff;
+      --sm-bg-card: #fafafa;
+      --sm-bg-card-hover: #f5f5f5;
+      --sm-bg-featured: rgba(0, 0, 0, 0.02);
+      --sm-accent: #111111;
+      --sm-accent-hover: #333333;
+      --sm-success: #16a34a;
+      --sm-success-bg: rgba(22, 163, 74, 0.08);
     }
 
-    .pricing-header h1 {
-      font-size: 2.5rem;
-      margin: 0 0 1rem 0;
+    /* Button text color fix for dark/light themes */
+    .pricing-page .sm-plan-card__btn--primary,
+    .pricing-page .sm-plan-card__btn--featured {
+      color: #18181b;
+    }
+
+    .white-theme .pricing-page .sm-plan-card__btn--primary,
+    .white-theme .pricing-page .sm-plan-card__btn--featured,
+    body.white-theme .pricing-page .sm-plan-card__btn--primary,
+    body.white-theme .pricing-page .sm-plan-card__btn--featured {
       color: #fff;
     }
 
-    .pricing-header p {
-      font-size: 1.125rem;
-      color: #888;
-      max-width: 600px;
+    /* ============================================
+       Page Layout
+       ============================================ */
+
+    .pricing-page__container {
+      max-width: 1060px;
       margin: 0 auto;
+      padding: 3rem 2rem 2rem;
     }
 
-    .pricing-toggle {
+    .pricing-page__header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+    }
+
+    .pricing-page__header h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--sm-text-primary);
+      margin: 0 0 0.75rem 0;
+      line-height: 1.2;
+    }
+
+    .pricing-page__header p {
+      font-size: 1rem;
+      color: var(--sm-text-secondary);
+      max-width: 520px;
+      margin: 0 auto;
+      line-height: 1.5;
+    }
+
+    /* ============================================
+       Stripe Footer
+       ============================================ */
+
+    .pricing-page__stripe-footer {
       display: flex;
+      align-items: center;
       justify-content: center;
-      align-items: center;
-      gap: 1rem;
-      margin: 2rem 0;
-    }
-
-    .pricing-toggle label {
-      color: #ccc;
-      font-weight: 600;
-    }
-
-    .toggle-switch {
-      position: relative;
-      width: 60px;
-      height: 30px;
-      background: rgba(255, 255, 255, 0.1);
-      border-radius: 30px;
-      cursor: pointer;
-      transition: background 0.3s;
-    }
-
-    .toggle-switch.active {
-      background: var(--accent-primary);
-    }
-
-    .toggle-switch-slider {
-      position: absolute;
-      top: 3px;
-      left: 3px;
-      width: 24px;
-      height: 24px;
-      background: #fff;
-      border-radius: 50%;
-      transition: transform 0.3s;
-    }
-
-    .toggle-switch.active .toggle-switch-slider {
-      transform: translateX(30px);
-    }
-
-    .pricing-cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 2rem;
-      margin-top: 3rem;
-    }
-
-    .pricing-card {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 12px;
-      padding: 2rem;
-      position: relative;
-      transition: all 0.3s ease;
-    }
-
-    .pricing-card:hover {
-      transform: translateY(-5px);
-      border-color: rgba(var(--accent-primary-rgb), 0.3);
-      box-shadow: 0 10px 40px rgba(var(--accent-primary-rgb), 0.1);
-    }
-
-    .pricing-card.featured {
-      border: 2px solid var(--accent-primary);
-      background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.08), rgba(var(--accent-primary-rgb), 0.02));
-    }
-
-    .pricing-badge {
-      position: absolute;
-      top: -12px;
-      right: 20px;
-      background: linear-gradient(135deg, #ffd700, #ffaa00);
-      color: #000;
-      padding: 0.375rem 1rem;
-      border-radius: 20px;
-      font-size: 0.75rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .pricing-card h3 {
-      font-size: 1.5rem;
-      margin: 0 0 0.5rem 0;
-      color: #fff;
-    }
-
-    .pricing-card .price {
-      font-size: 3rem;
-      font-weight: 700;
-      color: var(--accent-primary);
-      margin: 1rem 0;
-    }
-
-    .pricing-card .price .currency {
-      font-size: 1.5rem;
-    }
-
-    .pricing-card .period {
-      font-size: 1rem;
-      color: #888;
-      margin-left: 0.5rem;
-    }
-
-    .pricing-card .save-badge {
-      display: inline-block;
-      background: rgba(34, 197, 94, 0.2);
-      color: #22c55e;
-      padding: 0.25rem 0.75rem;
-      border-radius: 12px;
-      font-size: 0.75rem;
-      font-weight: 600;
-      margin-left: 0.5rem;
-    }
-
-    .pricing-card ul {
-      list-style: none;
-      padding: 0;
-      margin: 2rem 0;
-    }
-
-    .pricing-card ul li {
-      padding: 0.25rem 0;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-      color: #ccc;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .pricing-card ul li:last-child {
-      border-bottom: none;
-    }
-
-    .pricing-card ul li::before {
-      content: '✓';
-      color: var(--accent-primary);
-      font-weight: bold;
-      font-size: 1.25rem;
-    }
-
-    .pricing-card ul li.disabled {
-      opacity: 0.4;
-    }
-
-    .pricing-card ul li.disabled::before {
-      content: '✗';
-      color: #ef4444;
-    }
-
-    .pricing-btn {
-      width: 100%;
-      padding: 1rem;
-      background: linear-gradient(135deg, var(--accent-primary), var(--accent-primary-dark));
-      color: var(--accent-primary-contrast);
-      border: none;
-      border-radius: 8px;
-      font-size: 1rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: all 0.3s ease;
-    }
-
-    .pricing-btn:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 6px 20px rgba(var(--accent-primary-rgb), 0.3);
-    }
-
-    .pricing-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .pricing-btn.secondary {
-      background: rgba(255, 255, 255, 0.1);
-      color: #fff;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    .pricing-btn.secondary:hover {
-      background: rgba(255, 255, 255, 0.15);
-      box-shadow: 0 6px 20px rgba(255, 255, 255, 0.1);
-    }
-
-    .error-message {
-      padding: 1rem;
-      background: rgba(239, 68, 68, 0.1);
-      border: 1px solid rgba(239, 68, 68, 0.3);
-      border-radius: 8px;
-      color: #ef4444;
+      gap: 6px;
+      padding: 1.5rem 0;
       margin-top: 1rem;
-      text-align: center;
     }
 
-    .success-message {
-      padding: 1rem;
-      background: rgba(34, 197, 94, 0.1);
-      border: 1px solid rgba(34, 197, 94, 0.3);
-      border-radius: 8px;
-      color: #22c55e;
-      margin-top: 1rem;
+    .pricing-page__stripe-footer span {
+      font-size: 11px;
+      font-weight: 400;
+      color: var(--sm-text-muted);
+    }
+
+    .pricing-page__stripe-footer svg {
+      height: 36px;
+      width: auto;
+      color: var(--sm-text-muted);
+      opacity: 0.8;
+    }
+
+    /* ============================================
+       Messages
+       ============================================ */
+
+    .pricing-page__message {
+      max-width: 600px;
+      margin: 1rem auto;
+      padding: 0.875rem 1.25rem;
+      border-radius: var(--sm-radius-sm);
       text-align: center;
+      font-size: 0.875rem;
+    }
+
+    .pricing-page__message--error {
+      background: rgba(220, 38, 38, 0.06);
+      border: 1px solid rgba(220, 38, 38, 0.2);
+      color: #dc2626;
+    }
+
+    .pricing-page__message--success {
+      background: var(--sm-success-bg);
+      border: 1px solid var(--sm-success);
+      color: var(--sm-success);
     }
 
     .hidden {
       display: none;
     }
 
-    .faq-section {
-      max-width: 800px;
-      margin: 4rem auto 2rem;
-      padding: 0 2rem;
+    /* ============================================
+       FAQ Section
+       ============================================ */
+
+    .pricing-page__faq {
+      max-width: 700px;
+      margin: 3rem auto 2rem;
     }
 
-    .faq-section h2 {
+    .pricing-page__faq h2 {
       text-align: center;
-      font-size: 2rem;
-      margin-bottom: 2rem;
-      color: #fff;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+      color: var(--sm-text-primary);
     }
 
-    .faq-item {
-      background: rgba(255, 255, 255, 0.03);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 8px;
-      margin-bottom: 1rem;
-      padding: 1.5rem;
+    .pricing-page__faq-item {
+      background: var(--sm-bg-card);
+      border: 1px solid var(--sm-border-light);
+      border-radius: var(--sm-radius-md);
+      margin-bottom: 0.75rem;
+      padding: 1.25rem;
     }
 
-    .faq-item h3 {
-      font-size: 1.125rem;
-      margin: 0 0 0.75rem 0;
-      color: var(--accent-primary);
+    .pricing-page__faq-item h3 {
+      font-size: 0.9375rem;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+      color: var(--sm-text-primary);
     }
 
-    .faq-item p {
+    .pricing-page__faq-item p {
       margin: 0;
-      color: #ccc;
+      font-size: 0.875rem;
+      color: var(--sm-text-secondary);
       line-height: 1.6;
     }
   </style>
@@ -308,135 +224,114 @@
   <div id="nav-placeholder"></div>
 
   <main class="page-shell">
-    <div class="pricing-container">
-      <!-- Header -->
-      <div class="pricing-header">
-        <h1>Upgrade to Site Mechanic Pro</h1>
-        <p>Unlock unlimited scans, advanced recommendations, and expert-level optimization tools</p>
+    <div class="pricing-page">
+      <div class="pricing-page__container">
+        <!-- Header -->
+        <div class="pricing-page__header">
+          <h1 data-i18n="pricing.title">Upgrade to Site Mechanic Pro</h1>
+          <p data-i18n="pricing.subtitle">Unlock unlimited scans, advanced recommendations, and expert-level optimization tools</p>
+        </div>
 
-      </div>
+        <!-- Pricing Cards (same structure as PricingModal) -->
+        <div class="sm-pricing-grid">
+          <!-- Pro Monthly -->
+          <article class="sm-plan-card" id="card-monthly">
+            <div class="sm-plan-card__header">
+              <h3 class="sm-plan-card__name" data-i18n="pricing.plans.proMonthly">Pro Monthly</h3>
+            </div>
+            <div class="sm-plan-card__price">
+              <span class="sm-plan-card__amount" id="price-monthly">$29</span>
+              <span class="sm-plan-card__period" data-i18n="pricing.periods.perMonth">per month</span>
+            </div>
+            <ul class="sm-plan-card__benefits">
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.unlimitedScans">Unlimited scans</li>
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.reportsPerMonth">250 reports/month</li>
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.exportPdfs">Export PDFs</li>
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.cancelAnytime">Cancel anytime</li>
+            </ul>
+            <div class="sm-plan-card__footer">
+              <button class="sm-plan-card__btn sm-plan-card__btn--primary" id="upgrade-monthly-btn" data-i18n="pricing.buttons.subscribe">Subscribe</button>
+            </div>
+          </article>
 
-      <!-- Pricing Cards -->
-      <div class="pricing-cards">
-        <!-- Free Plan -->
-        <div class="pricing-card">
-          <h3>Free</h3>
-          <div class="price">
-            <span class="currency">$</span>0
-            <span class="period">/month</span>
+          <!-- Pro Yearly (Featured) -->
+          <article class="sm-plan-card sm-plan-card--featured" id="card-yearly">
+            <div class="sm-plan-card__header">
+              <h3 class="sm-plan-card__name" data-i18n="pricing.plans.proYearly">Pro Yearly</h3>
+              <span class="sm-plan-card__badge sm-plan-card__badge--save" id="save-badge">SAVE $60</span>
+            </div>
+            <div class="sm-plan-card__price">
+              <span class="sm-plan-card__amount" id="price-yearly">$290</span>
+              <span class="sm-plan-card__period" data-i18n="pricing.periods.perYear">per year</span>
+              <span class="sm-plan-card__effective" id="effective-monthly">$24/mo effective</span>
+            </div>
+            <ul class="sm-plan-card__benefits">
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.unlimitedScans">Unlimited scans</li>
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.unlimitedReports">Unlimited reports</li>
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.exportPdfs">Export PDFs</li>
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.bestValue">Best value</li>
+            </ul>
+            <div class="sm-plan-card__footer">
+              <button class="sm-plan-card__btn sm-plan-card__btn--featured" id="upgrade-annual-btn" data-i18n="pricing.buttons.subscribe">Subscribe</button>
+            </div>
+          </article>
+
+          <!-- Day Pass -->
+          <article class="sm-plan-card" id="card-daypass">
+            <div class="sm-plan-card__header">
+              <h3 class="sm-plan-card__name" data-i18n="pricing.plans.dayPass">Day Pass</h3>
+            </div>
+            <div class="sm-plan-card__price">
+              <span class="sm-plan-card__amount" id="price-daypass">$20</span>
+              <span class="sm-plan-card__period" data-i18n="pricing.periods.hours24">24 hours</span>
+            </div>
+            <ul class="sm-plan-card__benefits">
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.unlimitedScans24h">Unlimited scans for 24h</li>
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.reportsPerPass">30 reports included</li>
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.exportPdfs">Export PDFs</li>
+              <li class="sm-plan-card__benefit" data-i18n="pricing.benefits.noAutoRenewal">No auto-renewal</li>
+            </ul>
+            <div class="sm-plan-card__footer">
+              <button class="sm-plan-card__btn sm-plan-card__btn--primary" id="upgrade-daypass-btn" data-i18n="pricing.buttons.getDayPass">Get Day Pass</button>
+            </div>
+          </article>
+        </div>
+
+        <!-- Powered by Stripe -->
+        <div class="pricing-page__stripe-footer">
+          <span data-i18n="pricing.modal.poweredBy">Powered by</span>
+          <svg viewBox="0 0 60 25" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M60 12.8C60 8.55 57.95 5.2 54 5.2C50.05 5.2 47.6 8.55 47.6 12.75C47.6 17.7 50.5 20.35 54.65 20.35C56.7 20.35 58.25 19.85 59.45 19.1V15.85C58.25 16.55 56.85 17 55.1 17C53.4 17 51.9 16.35 51.7 14.25H59.95C59.95 14.05 60 13.15 60 12.8ZM51.65 11.35C51.65 9.35 52.85 8.45 54 8.45C55.1 8.45 56.25 9.35 56.25 11.35H51.65ZM41.2 5.2C39.45 5.2 38.35 6 37.75 6.5L37.55 5.45H33.9V24.55L38 23.7V19.95C38.6 20.35 39.5 20.9 41.15 20.9C44.55 20.9 47.6 18.3 47.6 12.85C47.55 7.85 44.45 5.2 41.2 5.2ZM40.3 17.05C39.15 17.05 38.5 16.65 38.05 16.15L38 9.55C38.5 9 39.2 8.6 40.3 8.6C42.1 8.6 43.35 10.55 43.35 12.85C43.35 15.2 42.1 17.05 40.3 17.05ZM28.05 4.3L32.2 3.45V0L28.05 0.85V4.3ZM32.2 5.45H28.05V20.6H32.2V5.45ZM23.65 6.7L23.4 5.45H19.8V20.6H23.9V10.1C24.85 8.85 26.45 9.1 26.95 9.25V5.45C26.4 5.25 24.6 4.9 23.65 6.7ZM15.4 1.8L11.4 2.65L11.35 16.35C11.35 18.65 13.1 20.4 15.4 20.4C16.65 20.4 17.55 20.2 18.05 19.9V16.55C17.55 16.75 15.35 17.4 15.35 15.1V8.8H18.05V5.45H15.35L15.4 1.8ZM4.15 9.9C4.15 9.2 4.75 8.9 5.7 8.9C7.05 8.9 8.75 9.3 10.1 10.05V6.2C8.65 5.6 7.2 5.35 5.7 5.35C2.3 5.35 0 7.2 0 10.1C0 14.7 6.35 13.95 6.35 15.95C6.35 16.8 5.6 17.1 4.6 17.1C3.1 17.1 1.2 16.5 0.2 15.55V19.5C1.55 20.1 2.95 20.4 4.6 20.4C8.1 20.4 10.55 18.6 10.55 15.65C10.5 10.65 4.15 11.55 4.15 9.9Z" fill="currentColor"/>
+          </svg>
+        </div>
+
+        <div id="error-message" class="pricing-page__message pricing-page__message--error hidden"></div>
+        <div id="success-message" class="pricing-page__message pricing-page__message--success hidden"></div>
+
+        <!-- FAQ Section -->
+        <div class="pricing-page__faq">
+          <h2 data-i18n="pricing.faq">Frequently Asked Questions</h2>
+
+          <div class="pricing-page__faq-item">
+            <h3 data-i18n="pricing.faqQuestion1">Can I cancel anytime?</h3>
+            <p data-i18n="pricing.faqAnswer1">Yes, you can cancel your subscription at any time. No long-term contracts.</p>
           </div>
-          <ul>
-            <li>10 scans per day</li>
-            <li>Basic scan results</li>
-            <li>1 page per scan</li>
-            <li class="disabled">Pro sections locked</li>
-            <li class="disabled">Report unlocks</li>
-            <li class="disabled">PDF export</li>
-            <li class="disabled">Priority support</li>
-          </ul>
-          <button class="pricing-btn secondary" disabled>Current Plan</button>
-        </div>
 
-        <!-- Day Pass -->
-        <div class="pricing-card" id="day-pass">
-          <h3>Day Pass</h3>
-          <div class="price">
-            <span class="currency">$</span>20
-            <span class="period">/day</span>
+          <div class="pricing-page__faq-item">
+            <h3 data-i18n="pricing.faqQuestion2">What payment methods do you accept?</h3>
+            <p data-i18n="pricing.faqAnswer2">We accept all major credit cards via Stripe (Visa, Mastercard, Amex).</p>
           </div>
-          <div style="color: #888; font-size: 0.875rem; margin-top: -0.5rem; margin-bottom: 1rem;">
-            One-time purchase, no auto-renewal
+
+          <div class="pricing-page__faq-item">
+            <h3 data-i18n="pricing.faqQuestion3">Do you offer refunds?</h3>
+            <p data-i18n="pricing.faqAnswer3">Yes, we offer a 14-day money-back guarantee if you're not satisfied.</p>
           </div>
-          <ul>
-            <li>Unlimited scans for 24 hours</li>
-            <li class="highlight">30 report unlocks included</li>
-            <li>Full Pro section access</li>
-            <li>Up to 250 pages per scan</li>
-            <li>PDF export</li>
-            <li>No auto-renewal</li>
-          </ul>
-          <button class="pricing-btn" id="upgrade-daypass-btn">Get Day Pass</button>
-        </div>
-
-        <!-- Pro Plan (Monthly) -->
-        <div class="pricing-card" id="pro-monthly">
-          <h3>Pro Monthly</h3>
-          <div class="price">
-            <span class="currency">$</span>29
-            <span class="period">/month</span>
-          </div>
-          <ul>
-            <li>Unlimited scans</li>
-            <li class="highlight">250 report unlocks/month</li>
-            <li>Full Pro section access</li>
-            <li>Up to 250 pages per scan</li>
-            <li>PDF export</li>
-            <li>Priority email support</li>
-            <li>Cancel anytime</li>
-          </ul>
-          <button class="pricing-btn" id="upgrade-monthly-btn">Upgrade to Pro</button>
-        </div>
-
-        <!-- Pro Plan (Annual) -->
-        <div class="pricing-card featured" id="pro-annual">
-          <span class="pricing-badge">Best Value</span>
-          <h3>Pro Annual</h3>
-          <div class="price">
-            <span class="currency">$</span>24
-            <span class="period">/month</span>
-            <span class="save-badge">Save $60/year</span>
-          </div>
-          <div style="color: #888; font-size: 0.875rem; margin-top: -0.5rem; margin-bottom: 1rem;">
-            Billed annually at $290
-          </div>
-          <ul>
-            <li>Unlimited scans</li>
-            <li class="highlight">Unlimited report unlocks</li>
-            <li>Full Pro section access</li>
-            <li>Up to 250 pages per scan</li>
-            <li>PDF export</li>
-            <li>Priority email support</li>
-            <li>Best value - save $60/year</li>
-          </ul>
-          <button class="pricing-btn" id="upgrade-annual-btn">Upgrade to Pro Annual</button>
-        </div>
-      </div>
-
-      <div id="error-message" class="error-message hidden"></div>
-      <div id="success-message" class="success-message hidden"></div>
-
-      <!-- FAQ Section -->
-      <div class="faq-section">
-        <h2>Frequently Asked Questions</h2>
-
-        <div class="faq-item">
-          <h3>Can I cancel anytime?</h3>
-          <p>Yes! You can cancel your subscription at any time from your account dashboard. You'll continue to have Pro access until the end of your billing period.</p>
-        </div>
-
-        <div class="faq-item">
-          <h3>What payment methods do you accept?</h3>
-          <p>We accept all major credit cards (Visa, MasterCard, American Express) and debit cards through Stripe's secure payment processing.</p>
-        </div>
-
-        <div class="faq-item">
-          <h3>What's included in "advanced recommendations"?</h3>
-          <p>Each analyzer provides 4 free basic steps and 4 Pro advanced steps. The advanced steps include expert-level optimization techniques, code examples, and best practices used by professionals.</p>
-        </div>
-
-        <div class="faq-item">
-          <h3>Do you offer refunds?</h3>
-          <p>Yes! If you're not satisfied within the first 14 days, contact us for a full refund.</p>
-        </div>
-
-        <div class="faq-item">
-          <h3>Is my payment information secure?</h3>
-          <p>Absolutely. We use Stripe for payment processing, which is PCI-DSS compliant and handles billions of dollars annually. We never store your credit card information on our servers.</p>
         </div>
       </div>
     </div>
   </main>
 
+  <script src="/js/pricing-config.js"></script>
   <script src="/pro-utils.js"></script>
   <script src="/nav-template.js"></script>
   <!-- Language Switcher (after nav-template so container exists) -->

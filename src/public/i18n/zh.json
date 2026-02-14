@@ -112,7 +112,7 @@
     "admin": "管理",
     "plans": {
       "free": "免费",
-      "dayPass": "8小时通行证",
+      "dayPass": "24小时通行证",
       "singleReport": "单次报告",
       "proMonthly": "Pro月度",
       "proAnnual": "Pro年度"
@@ -127,7 +127,7 @@
     "planSummary": {
       "proAnnual": "方案：Pro 年付（无限制）",
       "proMonthly": "方案：Pro 月付（剩余 {{remaining}}/{{limit}} 份报告）",
-      "dayPass": "方案：8小时日卡（剩余 {{remaining}}/{{limit}} 份报告）",
+      "dayPass": "方案：24小时日卡（剩余 {{remaining}}/{{limit}} 份报告）",
       "singleReport": "方案：单份报告（已解锁 {{count}} 份）",
       "free": "方案：免费（今日剩余 {{remaining}}/{{limit}} 次扫描）"
     }
@@ -151,7 +151,9 @@
     "needOneReport": "只需要一份报告？扫描后您可以用$5解锁这份单独的报告。",
     "dayPassTimeLeft": "剩余{hours}小时{mins}分钟",
     "dayPassMinutesLeft": "剩余{mins}分钟",
-    "expired": "已过期"
+    "expired": "已过期",
+    "haveAccount": "已有账户？",
+    "loginToRestore": "登录以恢复您的计划"
   },
   "errors": {
     "urlRequired": "请输入有效的URL",
@@ -312,7 +314,8 @@
       "urlPlaceholder": "https://example.com",
       "messageLabel": "消息",
       "messagePlaceholder": "有什么可以帮您的？",
-      "submitButton": "发送消息"
+      "submitButton": "发送消息",
+      "sending": "发送中..."
     },
     "results": {
       "resultsFor": "{domain} 的结果",
@@ -420,7 +423,8 @@
     "seoAnalysis": "SEO分析",
     "performanceAnalysis": "性能分析",
     "accessibilityAnalysis": "无障碍分析",
-    "securityAnalysis": "安全分析"
+    "securityAnalysis": "安全分析",
+    "runningAudit": "正在运行审计..."
   },
   "loader": {
     "started": "开始时间:",
@@ -435,6 +439,8 @@
     "analysisFailed": "分析失败",
     "scanTimeout": "扫描超时。网站响应可能过慢。请重试。",
     "tryAgain": "重试",
+    "upgradeToPro": "Upgrade to Pro",
+    "goToDashboard": "Go to Dashboard",
     "analyzingFonts": "正在分析字体",
     "connectingToWebsite": "正在连接网站",
     "loadingPage": "正在加载页面和资源...",
@@ -657,6 +663,10 @@
     "previous": "上一步",
     "submit": "提交",
     "search": "搜索",
+    "grade": "等级",
+    "desktop": "桌面端",
+    "mobile": "移动端",
+    "pageScreenshot": "页面截图",
     "difficulty": {
       "easy": "简单",
       "medium": "中等",
@@ -708,6 +718,44 @@
         "generatedBy": "由 Site Mechanic 生成",
         "page": "第",
         "of": "页，共"
+      },
+      "impact": {
+        "critical": "危急",
+        "serious": "严重",
+        "moderate": "中等",
+        "minor": "轻微"
+      },
+      "status": {
+        "pass": "通过",
+        "fail": "未通过",
+        "optimal": "最佳",
+        "review": "待审查",
+        "missing": "缺失",
+        "warning": "警告",
+        "good": "良好",
+        "configured": "已配置",
+        "notConfigured": "未配置"
+      },
+      "reportLabel": {
+        "seo": "SEO",
+        "cro": "CRO",
+        "gdpr": "GDPR",
+        "cwv": "CWV",
+        "security": "安全",
+        "performance": "性能",
+        "accessibility": "无障碍",
+        "fonts": "字体",
+        "tag-intelligence": "标签智能",
+        "enhanced-fonts": "增强字体",
+        "brand-consistency": "品牌一致性",
+        "broken-links": "失效链接",
+        "ip-reputation": "IP信誉",
+        "local-seo": "本地SEO",
+        "mobile-analyzer": "移动端",
+        "competitive": "竞争分析",
+        "hosting": "主机托管",
+        "site-crawler": "网站爬虫",
+        "core-web-vitals": "核心网页指标"
       }
     },
     "notAvailable": "N/A",
@@ -729,7 +777,6 @@
     "help": "帮助",
     "settings": "设置",
     "copyFailed": "复制失败",
-    "pageScreenshot": "页面截图",
     "url": "URL",
     "screenshotUnavailable": "截图不可用",
     "unique": "唯一",
@@ -853,19 +900,19 @@
           },
           "planLimits": {
             "q": "各计划的限制是什么？",
-            "a": "<strong>免费：</strong>每天 10 次扫描，Pro 区块锁定。<br><strong>8小时通行证（$20）：</strong>8 小时内不限扫描 + 30 次报告解锁。<br><strong>Pro 月付（$29/月）：</strong>不限扫描 + 每月 250 次解锁。<br><strong>Pro 年付（$290/年）：</strong>不限扫描 + 不限解锁。"
+            "a": "<strong>免费：</strong>每天 10 次扫描，Pro 区块锁定。<br><strong>24小时通行证（$20）：</strong>24 小时内不限扫描 + 30 次报告解锁。<br><strong>Pro 月付（$29/月）：</strong>不限扫描 + 每月 250 次解锁。<br><strong>Pro 年付（$290/年）：</strong>不限扫描 + 不限解锁。"
           },
           "dailyLimit": {
             "q": "达到每日扫描上限会怎样？",
-            "a": "免费用户每日达到 10 次后，扫描按钮将禁用至 UTC 午夜。可选择8小时通行证或 Pro 订阅继续扫描。"
+            "a": "免费用户每日达到 10 次后，扫描按钮将禁用至 UTC 午夜。可选择24小时通行证或 Pro 订阅继续扫描。"
           },
           "unlocksRunOut": {
             "q": "报告解锁用完会怎样？",
-            "a": "8小时通行证用户在 8 小时窗口内最多解锁 30 份报告。Pro 月付每个计费周期重置 250 份。Pro 年付不限。用完后可购买单份报告（$5）或升级方案。"
+            "a": "24小时通行证用户在 24 小时窗口内最多解锁 30 份报告。Pro 月付每个计费周期重置 250 份。Pro 年付不限。用完后可购买单份报告（$5）或升级方案。"
           },
           "dayPass": {
-            "q": "8小时通行证如何使用？",
-            "a": "8小时通行证（$20）自购买起 8 小时内享受完整 Pro 权限：不限扫描 + 最多 30 次解锁。不自动续订，适合一次性项目或客户演示。"
+            "q": "24小时通行证如何使用？",
+            "a": "24小时通行证（$20）自购买起 24 小时内享受完整 Pro 权限：不限扫描 + 最多 30 次解锁。不自动续订，适合一次性项目或客户演示。"
           },
           "singleReport": {
             "q": "单份报告如何解锁？",
@@ -873,7 +920,7 @@
           },
           "resets": {
             "q": "限制何时重置？",
-            "a": "每日扫描上限在 UTC 午夜重置。Pro 月付解锁在每个计费周期开始时重置。8小时通行证限制在购买 8 小时后过期。"
+            "a": "每日扫描上限在 UTC 午夜重置。Pro 月付解锁在每个计费周期开始时重置。24小时通行证限制在购买 24 小时后过期。"
           }
         }
       },
@@ -1042,7 +1089,78 @@
     "vulnerabilities": "漏洞",
     "cookieSecurity": "Cookie 安全",
     "thirdPartyScripts": "第三方脚本",
-    "helperText": "测试 SSL/TLS、安全标头（CSP、HSTS、X-Frame-Options）以及与 OWASP 对齐的检查。"
+    "sslTlsSecurity": "SSL/TLS安全",
+    "headers": "安全标头",
+    "cookies": "Cookie安全",
+    "thirdParty": "第三方脚本",
+    "validCertificate": "有效",
+    "invalidCertificate": "无效",
+    "helperText": "测试 SSL/TLS、安全标头（CSP、HSTS、X-Frame-Options）以及与 OWASP 对齐的检查。",
+    "report": {
+      "recommendations": "改进建议",
+      "sectionIntros": {
+        "ssl": "SSL/TLS证书在您的服务器和访客之间建立加密连接，保护传输中的数据。有效且正确配置的证书对用户信任和搜索引擎排名至关重要。本节评估您的证书有效性、协议版本、颁发者和过期状态。现代网站应使用TLS 1.2或更高版本，并确保在过期前及时续期。",
+        "headers": "安全标头指示浏览器如何处理您网站的内容，提供跨站脚本、点击劫持和其他常见攻击的防御。每个标头都有特定的保护功能。本节评估关键安全标头的实施情况，并识别使您的网站易受攻击的缺失保护。",
+        "vulnerabilities": "本节识别分析过程中发现的潜在安全漏洞。漏洞按严重程度分类——危急问题需要立即关注，而低严重度发现代表加强安全态势的机会。定期的漏洞评估对于维护安全的网络形象至关重要。",
+        "cookies": "Cookie存储会话数据和用户偏好，使其安全性对保护用户隐私至关重要。正确配置的Cookie使用Secure、HttpOnly和SameSite属性来防止窃取和滥用。本节审计在您网站上检测到的所有Cookie并评估其安全配置。",
+        "thirdParty": "第三方脚本扩展了您网站的功能，但引入了安全风险。每个外部脚本如果被篡改都是潜在的攻击向量。子资源完整性（SRI）哈希验证获取的脚本未被篡改。本节评估所有外部脚本、其加载模式和SRI覆盖率。",
+        "recommendations": "基于安全分析，这些建议优先考虑对您网站安全态势最有影响的改进。每项建议包括具体问题、潜在影响和可操作的修复步骤。"
+      },
+      "ssl": {
+        "overviewHeading": "证书详情",
+        "rows": {
+          "status": "证书状态",
+          "protocol": "协议",
+          "issuer": "颁发者",
+          "validFrom": "有效期自",
+          "validUntil": "有效期至",
+          "daysRemaining": "剩余天数"
+        }
+      },
+      "headers": {
+        "implementedLabel": "已实施标头",
+        "table": {
+          "header": "标头",
+          "description": "描述",
+          "valueOrRisk": "值/风险"
+        }
+      },
+      "status": {
+        "present": "存在",
+        "missing": "缺失"
+      },
+      "vulnerabilities": {
+        "critical": "危急",
+        "high": "高",
+        "medium": "中",
+        "low": "低",
+        "detectedHeading": "检测到的漏洞",
+        "noneFoundTitle": "未检测到漏洞",
+        "noneFoundBody": "分析过程中未发现重大安全漏洞。"
+      },
+      "cookies": {
+        "totalLabel": "Cookie总数",
+        "secureLabel": "安全配置",
+        "securedLabel": "已保护Cookie",
+        "detailsHeading": "Cookie详情",
+        "table": {
+          "name": "Cookie名称"
+        }
+      },
+      "thirdParty": {
+        "totalLabel": "外部脚本",
+        "withSriLabel": "具有SRI",
+        "sriCoverageLabel": "SRI覆盖率",
+        "detailsHeading": "脚本详情",
+        "table": {
+          "scriptUrl": "脚本URL",
+          "protocol": "协议",
+          "risk": "风险"
+        }
+      },
+      "recommendations.noneTitle": "安全态势良好",
+      "recommendations.noneBody": "您的网站遵循安全最佳实践。请继续监控新漏洞。"
+    }
   },
   "performanceHub": {
     "title": "速度与用户体验",
@@ -1949,7 +2067,7 @@
     "crossPageConsistency": "跨页一致性",
     "pageBreakdown": "页面明细",
     "competitiveBrandComparison": "竞争品牌比较",
-    "reportAndRecommendations": "报告与建议",
+    "reportAndRecommendations": "建议",
     "overall": "总体",
     "type": "类型",
     "identity": "标识",
@@ -2062,7 +2180,7 @@
       "security": "安全",
       "structuredData": "结构化数据",
       "additional": "其他检查",
-      "fixCode": "修复代码 + 建议"
+      "fixCode": "建议"
     },
     "steps": {
       "running": "正在运行 SEO 分析",
@@ -2278,7 +2396,7 @@
       "links": {
         "title": "修复链接安全和锚文本",
         "impact": "防止安全漏洞并改善链接权重信号",
-        "description": "在新标签中打开的外部链接如果没有 rel=\"noopener noreferrer\"，会使您的网站面临反向标签劫持攻击，即打开的页面可以将您的标签重定向到钓鱼网站。空锚文本浪费链接权重，并且不向搜索引擎或屏幕阅读器提供任何上下文。"
+        "description": "在新标签页中打开但没有rel=\"noopener noreferrer\"的外部链接会使您的网站面临反向标签劫持攻击，即打开的页面可以使用window.opener API将您的原始标签页重定向到钓鱼网站。这是一个有据可查的安全漏洞，可以诱使用户在不知道已被重定向的情况下在您网站的假冒版本上输入凭据。此外，锚文本为空或缺失的链接浪费了宝贵的链接权重，因为搜索引擎使用锚文本来理解链接页面的上下文和相关性。屏幕阅读器用户在激活链接之前也依赖锚文本来了解链接指向的位置，因此空锚点会造成混乱且不可访问的体验。这两个问题都很容易修复，应在所有外部和内部链接中予以解决。"
       },
       "canonical": {
         "title": "添加规范链接 + 站点地图引用",
@@ -2592,6 +2710,56 @@
         "twitter_title": "CWV检查"
       }
     },
+    "analyzer": {
+      "issues": {
+        "missingTitle": "缺少页面标题",
+        "missingDescription": "缺少 meta 描述",
+        "missingViewport": "缺少 viewport meta 标签（影响移动端显示）",
+        "noH1": "未找到 H1 标题",
+        "multipleH1": "发现 {{count}} 个 H1 标题。每页只应使用一个 H1",
+        "noHeadings": "页面上未找到标题",
+        "lowWordCount": "字数过少（< 300字）。搜索引擎偏好内容丰富的页面",
+        "missingAlt": "{{count}} 张图片缺少 alt 文本（影响无障碍和 SEO）",
+        "emptyAnchors": "{{count}} 个链接缺少锚文本",
+        "horizontalScroll": "移动端视口检测到水平滚动",
+        "missingViewportMobile": "缺少 viewport meta 标签（对移动端响应至关重要）",
+        "slowLoad": "页面加载缓慢（{{time}}）。目标：< 3秒",
+        "largePageSize": "页面体积过大（{{size}}）。请优化图片和资源",
+        "noHttps": "网站未使用 HTTPS（对安全和 SEO 至关重要）",
+        "invalidSchemas": "发现 {{count}} 个无效的结构化数据架构"
+      },
+      "recs": {
+        "titleTooShort": "标题过短（< 30 字符）。建议：50-60 字符",
+        "titleTooLong": "标题过长（> 60 字符）。可能在搜索结果中被截断",
+        "descTooShort": "meta 描述过短（< 120 字符）。建议：150-160 字符",
+        "descTooLong": "meta 描述过长（> 160 字符）。可能被截断",
+        "addOpenGraph": "添加 Open Graph 标签以改善社交媒体分享",
+        "addTwitterCard": "添加 Twitter Card 标签以改善 Twitter 显示",
+        "addLangAttr": "在 <html> 标签中添加语言属性",
+        "addHeadings": "建议添加更多标题以改善内容结构",
+        "headingGaps": "标题层级有间断（如 H1 → H3）。请使用连续的层级",
+        "addContent": "建议添加更多内容。600字以上的页面往往排名更高",
+        "longSentences": "检测到长句。建议使用更短的句子以提高可读性",
+        "lowTextRatio": "文本与 HTML 比率低。代码相对内容过多",
+        "lazyLoading": "建议对首屏外的图片使用懒加载",
+        "largeImages": "检测到 {{count}} 张大图。建议优化图片大小",
+        "unsafeExternalLinks": "{{count}} 个外部链接在新标签页打开但缺少 rel=\"noopener noreferrer\"",
+        "brokenLinks": "{{count}} 个链接格式可能有误（href=\"#\" 或 javascript:）",
+        "smallFontSize": "字体大小在移动设备上可能过小",
+        "improveLoadTime": "页面加载时间可以改善",
+        "largeDom": "DOM 过大（{{count}} 个节点）。建议简化",
+        "manyResources": "加载资源过多（{{count}} 个）。建议合并/压缩",
+        "addHsts": "添加 Strict-Transport-Security 响应头（HSTS）",
+        "addCsp": "添加 Content-Security-Policy 响应头",
+        "addXFrameOptions": "添加 X-Frame-Options 响应头（防止点击劫持）",
+        "addXContentType": "添加 X-Content-Type-Options 响应头",
+        "addStructuredData": "添加结构化数据（Schema.org/JSON-LD）以获取富媒体搜索结果",
+        "addRobotsTxt": "添加 robots.txt 文件以更好地控制爬取",
+        "addSitemap": "添加 XML 站点地图以改善索引",
+        "addFavicon": "添加 favicon 以增强品牌形象",
+        "addAnalytics": "建议添加 Google Analytics 以获取流量洞察"
+      }
+    },
     "report": {
       "sectionIntros": {
         "metaTags": "Meta 标签是搜索引擎和社交平台理解页面内容的基础。它们决定了您的内容在搜索结果、社交分享和浏览器标签页中的展示方式。本节评估您的标题标签、meta 描述、Open Graph、Twitter Card、视口和规范 URL 配置。经过良好优化的 meta 标签可以显著提升点击率，并有效防止重复内容问题。",
@@ -2645,6 +2813,8 @@
           },
           "moreFields": "+{{count}} 更多"
         },
+        "microdataLabel": "Microdata",
+        "totalLabel": "总计",
         "info": {
           "title": "ⓘ 什么是结构化数据Schema？",
           "body": "结构化数据（也称为Schema标记）是帮助搜索引擎更好理解内容的代码，能够实现<strong style=\"color: #00ff41;\">富搜索结果</strong>，如星级评分、产品价格、活动日期、FAQ下拉菜单等。它使用<strong style=\"color: #00ccff;\">Schema.org</strong>词汇表，支持JSON-LD、Microdata或RDFa格式。",
@@ -3455,7 +3625,7 @@
           "header": "标头"
         },
         "fixCode": {
-          "title": "修复代码 + 建议",
+          "title": "建议",
           "subtitle": "可操作的修复方案以提升 SEO 分数",
           "severity": "严重程度",
           "category": "类别",
@@ -3519,13 +3689,13 @@
     "plans": {
       "proMonthly": "Pro 月付",
       "proYearly": "Pro 年付",
-      "dayPass": "8小时通行证",
+      "dayPass": "24小时通行证",
       "thisReport": "此报告"
     },
     "periods": {
       "perMonth": "每月",
       "perYear": "每年",
-      "hours24": "8小时",
+      "hours24": "24小时",
       "oneTime": "一次性",
       "effectiveMonthly": "实际${{amount}}/月"
     },
@@ -3541,14 +3711,17 @@
       "managePlan": "管理计划",
       "switchToMonthly": "切换至月付",
       "switchToYearly": "切换至年付",
-      "getDayPass": "获取8小时通行证",
+      "getDayPass": "获取24小时通行证",
       "activePass": "有效通行证",
       "youHavePro": "已拥有Pro",
       "buyReport": "购买报告",
       "purchased": "已购买",
       "includedWithPro": "Pro已包含",
       "runScanFirst": "请先运行扫描",
-      "processing": "处理中..."
+      "processing": "处理中...",
+      "currentPlan": "当前计划",
+      "loginToUpgrade": "登录以升级",
+      "redirecting": "正在跳转至结账..."
     },
     "benefits": {
       "unlimitedProTools": "无限Pro工具",
@@ -3556,20 +3729,20 @@
       "unlimitedReports": "无限报告",
       "reportsPerMonth": "每月250份报告",
       "reportsPerPass": "包含30份报告",
-      "unlimitedScans24h": "8小时无限扫描",
+      "unlimitedScans24h": "24小时无限扫描",
       "noAutoRenewal": "无自动续订",
       "exportPdfs": "导出PDF",
       "cancelAnytime": "随时取消",
       "bestValue": "最佳价值",
       "fullProAccess": "完整Pro权限",
-      "expiresIn24h": "8小时后过期",
+      "expiresIn24h": "24小时后过期",
       "unlocksThisReport": "解锁此报告",
       "exportPdf": "导出PDF",
       "permanentAccess": "永久访问"
     },
     "oneTime": "一次性",
-    "dayPass": "8小时通行证",
-    "dayPassDesc": "8小时无限扫描",
+    "dayPass": "24小时通行证",
+    "dayPassDesc": "24小时无限扫描",
     "proMonthly": "专业版月付",
     "monthlyDesc": "无限扫描 + 250份报告",
     "proAnnual": "专业版年付",
@@ -3603,7 +3776,10 @@
     "cancel": "取消",
     "pleaseLoginToContinue": "请登录以继续",
     "pleaseLoginToManageBilling": "请登录以管理账单",
-    "signIn": "登录"
+    "signIn": "登录",
+    "sending": "发送中...",
+    "sendResetLink": "发送重置链接",
+    "resetting": "重置中..."
   },
   "account": {
     "accountShort": "账户",
@@ -3735,9 +3911,9 @@
       "recommendations": "建议",
       "issuesFound": "发现问题",
       "checksPassed": "检查通过",
-      "reportRecommendations": "报告与建议",
-      "fixCode": "修复代码 + 建议",
-      "fixCodeRecommendations": "修复代码 + 建议",
+      "reportRecommendations": "建议",
+      "fixCode": "建议",
+      "fixCodeRecommendations": "建议",
       "takeAction": "采取行动",
       "copy": "复制",
       "copied": "已复制！",
@@ -3811,8 +3987,8 @@
       "unlockToSeeMore": "解锁查看更多",
       "remove": "删除",
       "screenshotOf": "{{url}}的截图",
-      "reportAndRecommendations": "报告和建议",
-      "reportAndRecommendationsCount": "报告和建议 ({{count}})",
+      "reportAndRecommendations": "建议",
+      "reportAndRecommendationsCount": "建议 ({{count}})",
       "errorInvalidData": "错误：无效的响应数据结构",
       "errorMissingScores": "错误：缺少分数数据",
       "errorDisplayingResults": "显示结果时出错：{{message}}",
@@ -3847,7 +4023,7 @@
       "coreMetrics": "核心指标",
       "url": "URL",
       "generated": "生成时间",
-      "noDiagnostics": "没有可用的诊断信息。",
+      "noDiagnostics": "未报告诊断信息。",
       "howToImprove": "如何改进",
       "topRecommendations": "主要建议",
       "noRecommendations": "没有具体建议",
@@ -3965,6 +4141,7 @@
       "stepByStepInstructions": "分步说明",
       "timeout": "超时",
       "timeRemaining": "剩余时间：{{minutes}}分{{seconds}}秒",
+      "timeRemainingDefault": "剩余时间：3分0秒",
       "timestamp": "时间戳",
       "unknown": "未知",
       "upgradeToPro": "升级到Pro",
@@ -3979,7 +4156,27 @@
       "desktop": "桌面端",
       "mobile": "移动端",
       "scanTimeout": "扫描超时。网站可能太慢。请重试。",
-      "analysisResults": "分析结果"
+      "analysisResults": "分析结果",
+      "cwvStatus": {
+        "pass": "通过",
+        "atRisk": "有风险",
+        "fail": "未通过",
+        "unknown": "未知"
+      },
+      "riskBanner": {
+        "failing": "部分指标未通过：",
+        "atRisk": "有风险的指标：",
+        "suffix": " — 请改进以达到目标。"
+      },
+      "noOpportunities": "未报告改进机会。",
+      "opportunity": "改进机会",
+      "impactLabel": "影响：",
+      "noResourceBreakdown": "资源分解不可用。",
+      "difficulty": {
+        "beginner": "初级",
+        "intermediate": "中级",
+        "advanced": "高级"
+      }
     },
     "fonts": {
       "title": "字体与排版报告",
@@ -4510,7 +4707,10 @@
         },
         "recommendations": "Recommendations",
         "recommendations.noneTitle": "Well-Optimized Typography",
-        "recommendations.noneBody": "Your font stack follows best practices. Continue monitoring for optimization opportunities."
+        "recommendations.noneBody": "Your font stack follows best practices. Continue monitoring for optimization opportunities.",
+        "recommendationsHeading": "建议",
+        "recommendationsNoneTitle": "优化良好的排版",
+        "recommendationsNoneBody": "您的字体栈遵循最佳实践。请继续监控优化机会。"
       },
       "considerVariableFonts": "考虑使用可变字体以获得更灵活的排版和更少的文件。",
       "excellentTypography": "优秀的排版！",
@@ -4716,72 +4916,72 @@
         "implementHttps": {
           "title": "实施HTTPS",
           "impact": "+30 安全评分",
-          "summary": "您的网站未使用HTTPS加密。包括密码、个人信息和支付详情在内的所有数据均以明文传输，容易被网络上的攻击者拦截。",
-          "steps": {
-            "0": "使用Let's Encrypt的certbot获取免费SSL证书",
-            "1": "安装证书并配置您的Web服务器",
-            "2": "设置HTTP→HTTPS自动重定向"
-          }
+          "summary": "您的网站未使用HTTPS加密，这意味着服务器和访问者之间传输的所有数据都以明文形式发送。这包括密码、个人信息、支付详情和会话令牌，所有这些都可能被同一网络上的攻击者通过中间人攻击截获。现代浏览器会在地址栏中为HTTP网站显示醒目的\"不安全\"警告，这会削弱访问者的信任并增加跳出率。Google也将HTTPS作为排名信号，因此未加密的网站会受到可衡量的SEO惩罚。通过Let's Encrypt可以获得免费的SSL证书，使得任何网站都能轻松实现HTTPS。",
+          "steps": [
+            "使用Let's Encrypt的certbot获取免费SSL证书",
+            "安装证书并配置您的Web服务器",
+            "设置HTTP→HTTPS自动重定向"
+          ]
         },
         "implementCsp": {
           "title": "实施内容安全策略",
           "impact": "+15 安全评分",
-          "summary": "您的网站缺少内容安全策略（CSP）标头，容易受到跨站脚本（XSS）攻击。攻击者可注入恶意脚本，窃取用户数据、劫持会话或篡改您的网站。",
-          "steps": {
-            "0": "先使用 <code>Content-Security-Policy-Report-Only</code> 标头来发现问题",
-            "1": "设置 <code>default-src 'self'; script-src 'self'</code> 作为基础策略",
-            "2": "将内联脚本/样式替换为外部文件或添加nonce",
-            "3": "测试后切换到 <code>Content-Security-Policy</code> 标头进行强制执行"
-          }
+          "summary": "您的网站缺少内容安全策略（CSP）头部，使其容易受到跨站脚本（XSS）攻击。CSP是一个HTTP响应头部，它准确告诉浏览器哪些内容来源（脚本、样式、图像、字体）被允许在您的页面上加载。没有它，找到注入点的攻击者可以执行任意JavaScript来窃取用户Cookie、将访问者重定向到钓鱼页面或默默记录键盘输入。XSS一直被OWASP列为顶级Web安全漏洞之一，是最常被利用的攻击向量之一。即使实施基本的CSP也能大幅减少您的攻击面，并提供强大的纵深防御层来防止脚本注入。",
+          "steps": [
+            "先使用 <code>Content-Security-Policy-Report-Only</code> 标头来发现问题",
+            "设置 <code>default-src 'self'; script-src 'self'</code> 作为基础策略",
+            "将内联脚本/样式替换为外部文件或添加nonce",
+            "测试后切换到 <code>Content-Security-Policy</code> 标头进行强制执行"
+          ]
         },
         "enableHsts": {
           "title": "启用HTTP严格传输安全",
           "impact": "+10 安全评分",
-          "summary": "HSTS标头未配置。缺少HSTS时，攻击者可执行协议降级攻击，即使HTTPS可用也会强制用户通过不安全的HTTP连接。",
-          "steps": {
-            "0": "首先确保HTTPS在所有页面正常工作",
-            "1": "添加 <code>Strict-Transport-Security: max-age=300</code> 进行测试",
-            "2": "测试通过后增加到 <code>max-age=31536000; includeSubDomains</code>"
-          }
+          "summary": "HSTS头部未配置，使您的网站容易受到协议降级攻击。当用户输入您的域名而不带\"https://\"前缀时，浏览器最初通过明文HTTP连接，然后才被重定向到HTTPS。在这个短暂的未加密请求期间，同一网络上的攻击者可以拦截连接并完全阻止重定向到HTTPS，这种技术被称为SSL剥离。HSTS头部告诉浏览器始终对您的域名使用HTTPS，完全消除了最初的不安全请求。一旦设置，浏览器会在指定的持续时间内记住此偏好，并拒绝通过HTTP连接，即使用户明确输入也是如此。",
+          "steps": [
+            "首先确保HTTPS在所有页面正常工作",
+            "添加 <code>Strict-Transport-Security: max-age=300</code> 进行测试",
+            "测试通过后增加到 <code>max-age=31536000; includeSubDomains</code>"
+          ]
         },
         "preventClickjacking": {
           "title": "防止点击劫持攻击",
           "impact": "+5 安全评分",
-          "summary": "X-Frame-Options标头未设置。攻击者可将您的网站嵌入隐藏的iframe中，诱骗用户点击非预期的按钮，可能导致更改设置或进行购买。",
-          "steps": {
-            "0": "在服务器配置中添加 <code>X-Frame-Options: DENY</code> 标头",
-            "1": "同时为现代浏览器添加CSP：<code>frame-ancestors 'none'</code>"
-          }
+          "summary": "X-Frame-Options头部未设置，使您的网站容易受到点击劫持攻击。在点击劫持攻击中，恶意网站在一个不可见的iframe中加载您的页面，并在其上叠加欺骗性内容，诱使用户在不知情的情况下点击您网站上的按钮。这可能导致未经授权的操作，如更改账户设置、进行购买或向攻击者的应用程序授予权限。这种攻击特别危险，因为用户认为他们在与恶意页面交互，而实际上他们在使用已认证的会话在您的网站上执行操作。添加X-Frame-Options头部或使用CSP frame-ancestors指令可以完全防止您的页面被嵌入第三方框架中。",
+          "steps": [
+            "在服务器配置中添加 <code>X-Frame-Options: DENY</code> 标头",
+            "同时为现代浏览器添加CSP：<code>frame-ancestors 'none'</code>"
+          ]
         },
         "preventMimeSniffing": {
           "title": "防止MIME嗅探",
           "impact": "+5 安全评分",
-          "summary": "缺少X-Content-Type-Options标头。浏览器可能错误解析文件类型，可能将上传的文件作为脚本执行，即使它们有不同的扩展名。",
-          "steps": {
-            "0": "在所有响应中添加 <code>X-Content-Type-Options: nosniff</code> 标头",
-            "1": "确保服务器为所有文件发送正确的Content-Type",
-            "2": "实施后测试文件下载和上传是否仍然正常工作"
-          }
+          "summary": "缺少X-Content-Type-Options头部，这允许浏览器覆盖声明的内容类型并猜测文件的实际内容。这种被称为MIME嗅探的行为意味着，如果浏览器在一个以text/plain提供的文件中检测到类似脚本的内容，该文件可能会被重新解释并作为HTML或JavaScript执行。攻击者利用这一点上传带有无害扩展名（如.txt或.jpg）但包含恶意脚本的文件，浏览器随后在您的域名上下文中执行这些脚本。这个单行头部（X-Content-Type-Options: nosniff）强制浏览器严格遵守您声明的Content-Type，阻止任何执行错误类型文件的尝试。这是最容易实施的安全头部之一，对正常网站功能没有负面影响。",
+          "steps": [
+            "在所有响应中添加 <code>X-Content-Type-Options: nosniff</code> 标头",
+            "确保服务器为所有文件发送正确的Content-Type",
+            "实施后测试文件下载和上传是否仍然正常工作"
+          ]
         },
         "improveCookieSecurity": {
           "title": "改善Cookie安全性",
           "impact": "+10 安全评分",
-          "summary": "Cookie未正确保护。缺少HttpOnly、Secure和SameSite标志的会话Cookie容易通过XSS攻击和跨站请求伪造被窃取。",
-          "steps": {
-            "0": "为所有会话Cookie添加 <code>HttpOnly; Secure; SameSite=Lax</code> 标志",
-            "1": "更新会话库或框架配置",
-            "2": "测试登录/退出功能是否仍然正常"
-          }
+          "summary": "Cookie未得到适当保护，使用户会话和敏感数据面临风险。没有HttpOnly标志，页面上运行的JavaScript代码（包括注入的恶意脚本）可以读取会话Cookie并将其发送给攻击者，从而实现完全的账户接管。没有Secure标志，Cookie通过未加密的HTTP连接传输，在公共Wi-Fi或受损网络中可能被截获。SameSite属性通过控制浏览器是否在来自其他网站的请求中发送Cookie来防止跨站请求伪造（CSRF）攻击。在会话Cookie上设置所有三个标志可以用最少的实施工作关闭最常见的Cookie相关攻击向量。",
+          "steps": [
+            "为所有会话Cookie添加 <code>HttpOnly; Secure; SameSite=Lax</code> 标志",
+            "更新会话库或框架配置",
+            "测试登录/退出功能是否仍然正常"
+          ]
         },
         "addSri": {
           "title": "添加子资源完整性",
           "impact": "+8 安全评分",
-          "summary": "第三方脚本未经完整性验证即加载。如果CDN被入侵，恶意代码可能在不被检测的情况下注入您的网站。",
-          "steps": {
-            "0": "在srihash.org为每个外部脚本/样式表生成SRI哈希",
-            "1": "添加 <code>integrity</code> 和 <code>crossorigin=\"anonymous\"</code> 属性",
-            "2": "每次升级库版本时更新哈希值"
-          }
+          "summary": "第三方脚本和样式表在未经完整性验证的情况下加载，造成了供应链漏洞。如果托管这些文件的CDN或外部服务器被入侵，攻击者可以用恶意代码替换合法文件，该代码将在所有访问者的每次页面加载时执行。子资源完整性（SRI）为每个外部资源标签添加加密哈希，浏览器在执行之前验证下载的文件是否与该哈希匹配。如果文件被篡改，浏览器会完全阻止它，防止被破坏的代码运行。这种保护对于jQuery或Bootstrap等广泛使用的库尤为关键，因为它们是供应链攻击的高价值目标。",
+          "steps": [
+            "在srihash.org为每个外部脚本/样式表生成SRI哈希",
+            "添加 <code>integrity</code> 和 <code>crossorigin=\"anonymous\"</code> 属性",
+            "每次升级库版本时更新哈希值"
+          ]
         },
         "tabSummary": "摘要",
         "tabCode": "代码",
@@ -4807,11 +5007,11 @@
         "reviewAndImplement": "审查并实施安全建议",
         "testInStaging": "先在预发布环境中测试更改",
         "deployAndVerify": "部署到生产环境并验证修复",
-        "genericSteps": {
-          "0": "审查并实施安全建议",
-          "1": "先在预发布环境中测试更改",
-          "2": "部署到生产环境并验证修复"
-        }
+        "genericSteps": [
+          "审查并实施安全建议",
+          "先在预发布环境中测试更改",
+          "部署到生产环境并验证修复"
+        ]
       },
       "xss": "XSS防护",
       "clickjacking": "点击劫持防护",
@@ -5399,7 +5599,39 @@
       "accessibility": "无障碍",
       "performance": "性能",
       "bestPracticesLabel": "最佳实践",
-      "wcagAuditDescription": "对两个平台进行 Web 内容无障碍指南 (WCAG) 2.1 AA 级合规审计。"
+      "wcagAuditDescription": "对两个平台进行 Web 内容无障碍指南 (WCAG) 2.1 AA 级合规审计。",
+      "fixTitles": {
+        "colorContrast": "多个颜色对比度问题",
+        "focusIndicators": "缺少焦点指示器",
+        "formLabels": "缺少表单标签",
+        "headingStructure": "标题结构不当",
+        "ariaLandmarks": "缺少ARIA地标",
+        "mobileGap": "移动端无障碍差距"
+      },
+      "fixDescriptions": {
+        "colorContrast": "发现{{count}}个元素的颜色对比度不足。WCAG 2.1成功标准1.4.3要求普通文本的最低对比度为4.5:1，大文本为3:1。",
+        "focusIndicators": "{{count}}个交互元素缺少可见的焦点指示器。焦点指示器是在键盘导航时显示当前选中元素的视觉轮廓或高亮。",
+        "formLabels": "{{count}}个表单元素缺少无障碍标签。每个表单输入都必须有一个关联标签，以便辅助技术向用户传达其用途。",
+        "headingStructure": "标题结构为{{structure}}。标题为页面内容创建层次大纲。屏幕阅读器用户通过在标题之间跳转来快速找到所需部分。",
+        "ariaLandmarks": "在此页面上未找到语义地标。ARIA地标定义页面的主要区域，允许屏幕阅读器用户直接跳转到所需部分。",
+        "mobileGap": "移动端无障碍评分比桌面端低{{diff}}分，表明移动用户面临显著的额外障碍。"
+      },
+      "fixImpacts": {
+        "colorContrast": "视力低下或色盲用户可能难以阅读内容。",
+        "focusIndicators": "仅使用键盘的用户无法看到哪个元素获得焦点，导致导航困难。",
+        "formLabels": "屏幕阅读器用户无法理解表单输入的用途。",
+        "headingStructure": "屏幕阅读器用户依赖标题结构来导航和理解页面层次。",
+        "ariaLandmarks": "屏幕阅读器用户无法快速导航到页面的主要部分。",
+        "mobileGap": "有残障的移动用户与桌面用户相比体验较差。"
+      },
+      "fixSolutions": {
+        "colorContrast": "增加文本和背景颜色之间的对比度。使用在线对比度检查器验证您的配色方案。",
+        "focusIndicators": "使用CSS :focus伪类添加可见的焦点样式。确保焦点指示器有足够的对比度。",
+        "formLabels": "添加aria-label属性或使用for/id属性将label元素与表单输入关联。",
+        "headingStructure": "确保标题遵循逻辑顺序（h1 > h2 > h3），不跳过级别。每页包含一个h1。",
+        "ariaLandmarks": "使用语义化HTML5元素（header、nav、main、aside、footer）或添加适当的ARIA地标角色。",
+        "mobileGap": "检查触摸目标大小、视口配置和移动端特定交互。确保最小触摸目标尺寸为44x44像素。"
+      }
     },
     "performance": {
       "title": "性能报告",
@@ -5439,7 +5671,7 @@
       "consistentScoresMessage": "桌面端和移动端的性能分数在10分以内。",
       "networkPerformance": "网络性能",
       "cachingOptimization": "缓存与优化",
-      "reportAndRecommendations": "报告和建议",
+      "reportAndRecommendations": "建议",
       "whatAreWebVitals": "什么是核心Web指标？",
       "webVitalsDescription": "核心Web指标是Google用于衡量用户体验的指标。",
       "metric": "指标",
@@ -5564,11 +5796,11 @@
         "improveAccessibility": "改善无障碍性"
       },
       "fixSummaries": {
-        "lcpOptimization": "您的最大内容绘制时间为{{value}}，超过了{{target}}的目标。这意味着主要内容显示时间过长，导致用户感觉网站加载缓慢。",
-        "javascriptOptimization": "您的网站有{{value}}的总阻塞时间，这意味着主线程被阻塞，无法响应用户输入。这会导致交互延迟和糟糕的用户体验。",
-        "clsOptimization": "页面加载过程中发生布局偏移，导致内容意外移动。这会让用户感到沮丧，并可能导致误点击。",
-        "imageOptimization": "图片占据了页面权重的很大一部分。优化图片可以显著改善加载时间并降低带宽成本。",
-        "accessibilityImprovements": "无障碍改进可以帮助残障用户并提升SEO。常见问题包括缺少替代文本、颜色对比度不足和缺少ARIA标签。"
+        "lcpOptimization": "您的最大内容绘制（LCP）为{{value}}，超过了{{target}}的目标值。LCP衡量最大可见内容元素（通常是主图、标题或背景图形）在屏幕上完成渲染所需的时间。这是用户与感知加载速度最密切相关的指标，Google将其用作Core Web Vitals的直接排名因素。较慢的LCP通常表明关键资源未被优先处理、图像未压缩或阻塞渲染的脚本延迟了页面绘制。优化LCP通常能在用户体验和搜索排名方面带来最大的单项改善。",
+        "javascriptOptimization": "您的网站有{{value}}的总阻塞时间（TBT），这意味着浏览器的主线程被JavaScript执行占用，无法响应用户输入（如点击、触摸或按键）。这会造成令人沮丧的体验：按钮看起来可点击但没有反应，滚动卡顿，表单似乎无响应。总阻塞时间直接测量主线程被阻塞超过50毫秒的累积时间段，是Core Web Vitals评分的关键组成部分。常见原因包括未压缩的大型JavaScript包、同步第三方脚本以及下载但从未执行的未使用库代码。延迟加载非关键脚本、删除未使用代码和代码分割大型包可以大幅减少阻塞时间。",
+        "clsOptimization": "页面加载期间发生布局偏移，导致内容意外移动并破坏用户体验。当页面初始渲染后元素改变位置时就会发生这种情况——例如，图像在没有预留尺寸的情况下加载，Web字体以不同的度量值替换，或动态广告横幅将内容向下推。这些意外偏移对正准备点击按钮或阅读突然跳到不同位置的文本的用户来说尤其令人沮丧，经常导致误点击。累积布局偏移（CLS）是Google三个Core Web Vitals指标之一，直接影响您的搜索排名。最有效的修复方法包括为图像添加明确的宽度和高度属性、使用font-display: swap配合尺寸调整后的备用字体，以及为动态内容预留空间。",
+        "imageOptimization": "图像通常占页面总重量的最大部分，通常消耗所有下载字节的50-80%。未优化的图像——以JPEG或PNG等旧格式提供、分辨率不必要地高或没有响应式尺寸——迫使访问者下载可能不需要的数兆字节数据。这大幅增加了加载时间，特别是在带宽有限且数据可能计量的移动网络上。WebP和AVIF等现代图像格式可以在没有可见质量损失的情况下将文件大小减少60-80%。将格式优化与响应式srcset属性和折叠下方图像的延迟加载相结合，通常能为大多数网站带来最大的单项性能改善。",
+        "accessibilityImprovements": "您网站的无障碍评分表明，残障用户在尝试使用您的网站时可能会遇到严重障碍。常见问题包括没有描述性替代文本的图像（阻止屏幕阅读器用户理解视觉内容）、色彩对比度不足（使低视力用户无法阅读文本）以及没有关联标签的表单输入（使辅助技术无法使用表单）。无障碍不仅是道德义务，更是ADA、Section 508和欧洲无障碍法案下日益严格的法律要求，不合规将导致诉讼和罚款。搜索引擎在排名中也会考虑无障碍性，因为许多无障碍最佳实践与SEO基础一致，如语义HTML和清晰的内容结构。解决这些问题可以改善所有用户的体验，而不仅仅是使用辅助技术的用户。"
       },
       "fixImpacts": {
         "lcpOptimization": "+15 性能分数",
@@ -5631,6 +5863,64 @@
       },
       "notAvailable": "N/A",
       "seo": "SEO",
+      "diagnostics": {
+        "ttfb": "首字节时间",
+        "connectionTime": "连接时间",
+        "cacheHitRate": "缓存命中率",
+        "uncachedResources": "未缓存的资源"
+      },
+      "recommendations": {
+        "minimizeJs": {
+          "title": "最小化JavaScript",
+          "description": "您的JavaScript包大小为{{size}}。请考虑代码分割、树摇和删除未使用的依赖项。",
+          "impact": "高 - 更快的初始页面加载和改善的可交互时间"
+        },
+        "optimizeImages": {
+          "title": "优化图片",
+          "description": "图片占{{size}}。使用新一代格式（WebP、AVIF）、懒加载和响应式图片。",
+          "impact": "高 - 显著减少页面重量并改善LCP"
+        },
+        "reduceCss": {
+          "title": "减少CSS大小",
+          "description": "CSS文件总计{{size}}。删除未使用的CSS，压缩样式表，并考虑关键CSS内联。",
+          "impact": "中 - 更快加载渲染阻塞资源"
+        },
+        "improveCaching": {
+          "title": "改善缓存策略",
+          "description": "仅有{{rate}}的资源可缓存。实施适当的Cache-Control头和版本控制策略。",
+          "impact": "高 - 大幅改善重复访问性能"
+        },
+        "optimizeLcp": {
+          "title": "优化最大内容绘制 (LCP)",
+          "description": "{{platform}}上的LCP为{{value}}，超过了建议的2.5秒阈值。优化首屏最大元素。",
+          "impact": "关键 - 核心Web指标影响Google排名和用户体验"
+        },
+        "reduceCls": {
+          "title": "减少累计布局偏移 (CLS)",
+          "description": "{{platform}}上的CLS为{{value}}，超过了建议的0.1阈值。为图片/广告预留空间并使用尺寸属性。",
+          "impact": "中 - 核心Web指标影响用户体验和排名"
+        },
+        "mobileGap": {
+          "title": "移动端性能差距显著",
+          "description": "移动端性能（{{mobileScore}}）显著低于桌面端（{{desktopScore}}）。移动用户可能体验到较差的性能。",
+          "impact": "高 - 大多数用户通过移动设备访问"
+        },
+        "enableCompression": {
+          "title": "启用文本压缩",
+          "description": "为基于文本的资源启用gzip或brotli压缩，可将传输大小减少70-90%。",
+          "impact": "中 - 减少带宽并加速下载"
+        },
+        "reduceRequests": {
+          "title": "减少HTTP请求",
+          "description": "页面发出{{count}}个HTTP请求。考虑打包资源、使用CSS精灵图和合并第三方脚本。",
+          "impact": "低-中 - 减少连接开销"
+        },
+        "optimizeFonts": {
+          "title": "优化Web字体",
+          "description": "字体总计{{size}}。使用font-display: swap，子集化字体并预加载关键字体。",
+          "impact": "低-中 - 防止不可见文本并改善感知性能"
+        }
+      },
       "report": {
         "sectionIntros": {
           "cwv": "核心Web指标是Google衡量真实用户体验的关键指标。它们评估加载速度（LCP）、交互性（INP/FID）和视觉稳定性（CLS）。这些指标通过Google的页面体验信号直接影响搜索排名。本节展示桌面端和移动端的核心Web指标评分，评级基于Google发布的阈值。",
@@ -5932,8 +6222,8 @@
     "recommendations": "建议",
     "issuesFound": "发现问题",
     "checksPassed": "检查通过",
-    "reportRecommendations": "报告与建议",
-    "fixCode": "修复代码 + 建议",
+    "reportRecommendations": "建议",
+    "fixCode": "建议",
     "takeAction": "采取行动",
     "copy": "复制",
     "copied": "已复制！",
@@ -6086,6 +6376,34 @@
         "clsCssBestPracticesDesc": "避免对布局属性（width、height、top、left）使用动画，改用transform和opacity。"
       },
       "report": {
+        "desktop": "桌面端指标",
+        "mobile": "移动端指标",
+        "comparison": "桌面端 vs 移动端",
+        "desktop.details": "指标详情",
+        "mobile.details": "指标详情",
+        "desktop.additionalMetrics": "附加指标",
+        "mobile.additionalMetrics": "附加指标",
+        "diagnostics": "诊断",
+        "diagnostics.desktop": "桌面端诊断",
+        "diagnostics.mobile": "移动端诊断",
+        "recommendations": "建议",
+        "recommendations.noneTitle": "优秀的核心Web指标",
+        "recommendations.noneBody": "您的网站在所有核心Web指标上都达到了良好的分数。请继续监控以防回归。",
+        "comparison.desktopScore": "桌面端分数",
+        "comparison.mobileScore": "移动端分数",
+        "comparison.summary": "对比摘要",
+        "vitals": {
+          "lcp": "最大内容绘制 (LCP)",
+          "inp": "下次绘制的交互 (INP)",
+          "cls": "累计布局偏移 (CLS)",
+          "ttfb": "首字节时间 (TTFB)",
+          "fcp": "首次内容绘制 (FCP)"
+        },
+        "cwv": {
+          "good": "良好",
+          "needsImprovement": "需要改进",
+          "poor": "差"
+        },
         "sectionIntros": {
           "desktop": "Desktop Core Web Vitals measure how real users experience your site on desktop devices. This section presents LCP, INP, CLS, and additional metrics with ratings based on Google's published thresholds. Good scores indicate a fast, responsive, and visually stable experience for desktop visitors.",
           "mobile": "Mobile Core Web Vitals are especially important since Google uses mobile-first indexing. This section presents your mobile LCP, INP, CLS, and additional metrics. Mobile performance often differs significantly from desktop due to slower processors and network conditions. Optimizing for mobile is critical for search rankings.",
@@ -6102,7 +6420,7 @@
       "additionalMetricsTitle": "其他性能指标",
       "siName": "Speed Index",
       "ttiName": "Time to Interactive",
-      "recommendationsTitle": "报告与建议",
+      "recommendationsTitle": "建议",
       "detailedRecommendationsBlur": "详细的性能建议...",
       "criticalOptimizationsBlur": "关键优化建议...",
       "recommendationsAvailable": "{{count}}条建议可用",
@@ -6168,14 +6486,78 @@
       "performanceMetrics": "性能指标",
       "report": {
         "sectionIntros": {
-          "overview": "Mobile optimization is critical as over 60% of web traffic comes from mobile devices and Google uses mobile-first indexing. This overview presents your aggregate mobile score and key performance indicators across tested device configurations. A strong mobile experience directly impacts search rankings, user engagement, and conversion rates.",
-          "touch": "Touch target sizing ensures interactive elements are easily tappable on touchscreen devices. Google recommends touch targets be at least 48x48 CSS pixels with adequate spacing. This section identifies elements that are too small or too close together, which can frustrate mobile users and increase error rates.",
-          "readability": "Mobile readability encompasses font sizing, line height, contrast, and text layout on small screens. Text that is too small, has poor contrast, or requires horizontal scrolling creates a poor reading experience. This section evaluates your content's readability across mobile viewport sizes.",
-          "responsiveness": "Responsive design ensures your layout adapts properly across different screen sizes and orientations. This section evaluates viewport configuration, media query usage, and layout behavior to identify issues that may cause content to overflow or display incorrectly on mobile devices.",
-          "viewport": "Viewport meta configuration and Progressive Web App (PWA) readiness determine how your site behaves on mobile devices. A properly configured viewport prevents unwanted zooming and scaling. PWA features like a web manifest and service worker enable app-like experiences.",
-          "accessibility": "Mobile accessibility focuses on ensuring your site is usable by people with disabilities on mobile devices. This includes touch target accessibility, screen reader compatibility, and gesture-based navigation support. Mobile-specific accessibility issues can affect a significant portion of your mobile audience.",
-          "recommendations": "Based on the mobile analysis, these recommendations target the most impactful improvements for mobile user experience, performance, and accessibility."
-        }
+          "overview": "移动优化至关重要，因为超过60%的网络流量来自移动设备，且Google采用移动优先索引。此概览展示您在所有测试设备配置中的综合移动评分和关键性能指标。出色的移动体验直接影响搜索排名、用户参与度和转化率。",
+          "touch": "触摸目标尺寸确保交互元素在触摸屏设备上易于点击。Google建议触摸目标至少为48x48 CSS像素，并保持适当间距。本节识别过小或过于密集的元素。",
+          "readability": "移动端可读性涵盖小屏幕上的字体大小、行高、对比度和文本布局。过小的文字、低对比度或需要横向滚动会导致糟糕的阅读体验。本节评估您的内容在不同移动视口大小下的可读性。",
+          "responsiveness": "响应式设计确保您的布局正确适应不同的屏幕尺寸和方向。本节评估视口配置、媒体查询使用和布局行为，以识别可能导致内容溢出或在移动设备上显示不正确的问题。",
+          "viewport": "视口元标签配置和渐进式Web应用（PWA）就绪性决定了您的网站在移动设备上的行为。正确配置的视口可防止不必要的缩放和缩放。Web清单和服务工作器等PWA功能可实现类似应用的体验。",
+          "accessibility": "移动无障碍性侧重于确保残障人士可以在移动设备上使用您的网站。这包括触摸目标无障碍性、屏幕阅读器兼容性和手势导航支持。特定于移动端的无障碍问题可能影响大量移动用户。",
+          "recommendations": "基于移动分析，这些建议针对移动用户体验、性能和无障碍性最具影响力的改进。"
+        },
+        "overview": "移动概览",
+        "overview.overallScore": "综合评分",
+        "overview.devicesTested": "已测试设备",
+        "overview.avgPerformance": "平均性能",
+        "overview.deviceSummary": "设备摘要",
+        "overview.table": {
+          "device": "设备",
+          "performance": "性能",
+          "touchTargets": "触摸目标",
+          "readability": "可读性"
+        },
+        "touchTargets": "触摸目标",
+        "touch": {
+          "totalTargets": "目标总数",
+          "tooSmall": "过小",
+          "tooClose": "过密",
+          "passingTargets": "合格目标",
+          "issuesHeading": "触摸目标问题",
+          "table": {
+            "severity": "严重程度",
+            "issue": "问题"
+          }
+        },
+        "readability": "可读性",
+        "readability.fontSize": "字体大小",
+        "readability.lineHeight": "行高",
+        "readability.contrast": "对比度",
+        "readability.tooSmall": "过小",
+        "readability.issuesHeading": "可读性问题",
+        "responsiveness": "响应性",
+        "responsiveness.viewport": "视口已配置",
+        "responsiveness.mediaQueries": "媒体查询",
+        "responsiveness.noMediaQueries": "未检测到",
+        "responsiveness.issuesHeading": "响应性问题",
+        "responsiveness.allPassTitle": "完全响应",
+        "responsiveness.allPassBody": "您的页面正确适应不同屏幕尺寸，未检测到响应性问题。",
+        "viewportPwa": "视口与PWA",
+        "viewport": {
+          "metaHeading": "视口元标签配置",
+          "configured": "视口已配置",
+          "width": "宽度",
+          "initialScale": "初始缩放",
+          "pwaHeading": "PWA就绪性",
+          "pwaScore": "PWA评分",
+          "manifest": "Web应用清单",
+          "serviceWorker": "Service Worker",
+          "https": "HTTPS",
+          "darkModeTitle": "支持深色模式",
+          "darkModeBody": "通过{{method}}检测到深色模式。",
+          "noDarkModeTitle": "不支持深色模式",
+          "noDarkModeBody": "未检测到深色模式支持。请考虑添加prefers-color-scheme媒体查询支持。"
+        },
+        "accessibility": "移动无障碍性",
+        "accessibility.score": "无障碍性评分",
+        "accessibility.issuesHeading": "无障碍性问题",
+        "accessibility.table": {
+          "severity": "严重程度",
+          "issue": "问题"
+        },
+        "accessibility.noneTitle": "无无障碍性问题",
+        "accessibility.noneBody": "未检测到特定于移动端的无障碍性问题。请继续遵循WCAG最佳实践。",
+        "recommendations": "建议",
+        "recommendations.noneTitle": "出色的移动体验",
+        "recommendations.noneBody": "您的网站提供出色的移动体验。请继续监控内容和功能变更带来的回退问题。"
       },
       "mobileScore": "移动端评分",
       "errorCapturingDevice": "捕获此设备时出错",
@@ -6608,6 +6990,87 @@
           "anchors": "Anchor text analysis examines the descriptive text used in your links. Well-crafted anchor text helps both users and search engines understand link destinations. This section evaluates anchor text quality, diversity, and relevance.",
           "attributes": "Link attributes like rel, target, and nofollow influence how search engines interpret and follow your links. This section analyzes the distribution and usage of link attributes to ensure they align with your SEO strategy.",
           "recommendations": "Based on the broken links analysis, these recommendations prioritize fixing the most impactful link issues to improve user experience and search engine crawling."
+        },
+        "sections": {
+          "summary": "链接摘要",
+          "broken": "失效链接",
+          "redirects": "重定向",
+          "anchors": "锚点分析",
+          "attributes": "链接属性",
+          "recommendations": "建议"
+        },
+        "metrics": {
+          "total": "总链接数",
+          "broken": "失效",
+          "redirects": "重定向",
+          "working": "正常",
+          "external": "外部",
+          "linkHealth": "链接健康度"
+        },
+        "summary": {
+          "breakdownHeading": "链接分布",
+          "table": {
+            "type": "类型",
+            "count": "数量",
+            "percentage": "百分比"
+          },
+          "internal": "内部链接",
+          "external": "外部链接",
+          "broken": "失效链接",
+          "redirects": "重定向"
+        },
+        "broken": {
+          "totalBroken": "发现的失效链接",
+          "table": {
+            "url": "URL",
+            "status": "状态",
+            "source": "来源页面",
+            "anchor": "锚文本"
+          },
+          "noneTitle": "未发现失效链接",
+          "noneBody": "所有链接均返回成功响应。请继续监控以及时发现问题。"
+        },
+        "redirects": {
+          "totalRedirects": "发现的重定向",
+          "chainsWarning": "检测到重定向链",
+          "chainsFound": "条链",
+          "table": {
+            "url": "原始URL",
+            "status": "状态",
+            "target": "重定向目标"
+          },
+          "noneTitle": "未发现重定向",
+          "noneBody": "所有链接均直接解析，无需重定向。这对性能和SEO是最优的。"
+        },
+        "anchors": {
+          "totalAnchors": "总锚点数",
+          "emptyAnchors": "空锚点",
+          "genericAnchors": "通用锚点",
+          "descriptiveAnchors": "描述性锚点",
+          "descriptiveRatio": "描述性锚点比率",
+          "commonHeading": "最常见的锚文本",
+          "generic": "通用",
+          "descriptive": "描述性",
+          "table": {
+            "text": "锚文本",
+            "count": "数量",
+            "quality": "质量"
+          },
+          "noData": "无锚文本分析数据。"
+        },
+        "attributes": {
+          "breakdownHeading": "属性分布",
+          "table": {
+            "attribute": "属性",
+            "count": "数量",
+            "description": "描述"
+          },
+          "unsafeBlank": "发现{{count}}个具有target=\"_blank\"但缺少rel=\"noopener noreferrer\"的链接",
+          "noData": "无链接属性分析数据。"
+        },
+        "recommendations": {
+          "noneTitle": "健康的链接配置",
+          "noneBody": "您的网站链接配置健康，无重大问题。请继续监控。"
         }
       },
       "exportBrokenLinksData": "导出损坏链接数据",
@@ -6781,6 +7244,17 @@
     },
     "competitive": {
       "title": "竞争分析",
+      "pageSubtitle": "在SEO、性能、可访问性和安全性方面将您的网站与竞争对手进行比较。",
+      "competitiveAdvantageTitle": "竞争优势",
+      "competitiveAdvantageDesc": "将您的网站与最多5个竞争对手在SEO、性能、Core Web Vitals、可访问性和安全性方面进行比较。获取可操作的洞察以超越竞争对手。",
+      "analysisNote": "注意：分析需要2-3分钟，由于资源使用量较大，每15分钟限制2次请求。",
+      "yourWebsiteUrl": "您的网站URL",
+      "competitorUrlsLabel": "竞争对手URL（最多5个）",
+      "addCompetitor": "+ 添加竞争对手",
+      "inspectButton": "检查",
+      "modalTitle": "竞争分析",
+      "modalSubtitle": "正在分析您的竞争对手... 这可能需要2-3分钟",
+      "progress": "进度",
       "interactiveScoreAnalysis": "交互式分数分析",
       "detailedMetricsBreakdown": "详细指标分解",
       "comparison": "比较",
@@ -6809,6 +7283,54 @@
           "competitors": "Competitor profiles provide detailed score breakdowns for each analyzed competitor. Understanding each competitor's strengths and weaknesses helps inform your optimization strategy and identify opportunities to differentiate.",
           "insights": "Strategic insights synthesize the competitive data into actionable intelligence. These insights identify patterns, opportunities, and threats that emerge from the comparative analysis.",
           "recommendations": "Based on the competitive analysis, these recommendations prioritize improvements that will have the greatest impact on your competitive position."
+        },
+        "sections": {
+          "overview": "竞争概览",
+          "rankings": "评分排名",
+          "gaps": "性能差距",
+          "competitors": "竞争对手概况",
+          "insights": "战略洞察",
+          "recommendations": "建议"
+        },
+        "categories": {
+          "overall": "综合",
+          "seo": "SEO",
+          "performance": "性能",
+          "security": "安全",
+          "accessibility": "无障碍"
+        },
+        "overview": {
+          "yourSiteLabel": "您的网站",
+          "competitorsAnalyzed": "已分析的竞争对手",
+          "strengthAreas": "优势领域",
+          "improvementAreas": "改善领域"
+        },
+        "rankings": {
+          "site": "网站",
+          "noData": "无排名数据。"
+        },
+        "gaps": {
+          "tableHeading": "评分差距分析",
+          "category": "类别",
+          "yourScore": "您的评分",
+          "bestScore": "最佳评分",
+          "gap": "差距",
+          "strengthsHeading": "优势领域",
+          "improvementsHeading": "改善领域",
+          "noData": "无差距数据。"
+        },
+        "competitors": {
+          "competitorLabel": "竞争对手",
+          "theirScore": "他们的评分",
+          "difference": "差异",
+          "noData": "无竞争对手数据。"
+        },
+        "insights": {
+          "noData": "无战略洞察。"
+        },
+        "recommendations": {
+          "noneTitle": "强竞争地位",
+          "noneBody": "您的网站在分析的竞争对手中表现良好。请继续监控。"
         }
       },
       "competitorUrlLabel": "竞争对手 {{num}} URL",
@@ -7095,7 +7617,7 @@
         "formOptimization": "表单优化",
         "trustSignals": "信任信号",
         "mobileExperience": "移动端体验",
-        "fixCodeRecommendations": "修复代码 + 建议"
+        "fixCodeRecommendations": "建议"
       },
       "summary": {
         "overallCro": "整体CRO",
@@ -7320,14 +7842,82 @@
         }
       },
       "report": {
+        "overviewTitle": "CRO概览",
+        "overview": {
+          "scoresHeading": "CRO子评分",
+          "overallScore": "综合评分"
+        },
         "sectionIntros": {
-          "overview": "Conversion Rate Optimization (CRO) analyzes how effectively your page converts visitors into customers or leads. This overview presents your aggregate CRO score across four key dimensions: calls to action, forms, trust signals, and mobile user experience. A well-optimized page guides visitors toward desired actions with clear, compelling elements.",
-          "cta": "Calls to action (CTAs) are the primary conversion drivers on your page. Effective CTAs use action-oriented language, stand out visually, and are positioned where users are most likely to engage. This section evaluates your CTAs for visibility, clarity, and placement effectiveness.",
-          "forms": "Form design directly impacts completion rates. Complex, lengthy, or poorly designed forms are a leading cause of conversion abandonment. This section analyzes your forms for field count, label clarity, validation feedback, and mobile usability to identify friction points.",
-          "trust": "Trust signals reassure visitors that your site is legitimate, secure, and reliable. These include security badges, testimonials, reviews, contact information, and social proof. This section evaluates the presence and effectiveness of trust-building elements on your page.",
-          "mobileUx": "Mobile UX optimization ensures conversion elements work effectively on touchscreen devices. This includes tap-friendly buttons, mobile-optimized forms, and responsive layouts that maintain conversion paths. Over 50% of purchases now begin on mobile devices.",
-          "quickWins": "Quick wins are high-impact, low-effort changes that can immediately improve your conversion rate. These prioritized actions offer the best return on investment for optimization efforts.",
-          "recommendations": "Based on the CRO analysis, these recommendations prioritize improvements with the highest potential impact on your conversion rate."
+          "overview": "转化率优化（CRO）分析您的页面将访客转化为客户或潜在客户的效果。此概览展示了您在四个关键维度上的综合CRO评分：行动号召、表单、信任信号和移动端用户体验。优化良好的页面通过清晰、有说服力的元素引导访客完成期望的操作。",
+          "cta": "行动号召（CTA）是页面上的主要转化驱动力。有效的CTA使用行动导向的语言，在视觉上突出显示，并放置在用户最有可能互动的位置。本节评估您的CTA的可见性、清晰度和布局效果。",
+          "forms": "表单设计直接影响完成率。复杂、冗长或设计不佳的表单是转化流失的主要原因。本节分析您的表单的字段数量、标签清晰度、验证反馈和移动端可用性，以识别摩擦点。",
+          "trust": "信任信号向访客保证您的网站是合法、安全和可靠的。包括安全徽章、客户评价、评论、联系信息和社会证明。本节评估页面上信任建设元素的存在和效果。",
+          "mobileUx": "移动端UX优化确保转化元素在触屏设备上有效运作。包括易于点击的按钮、移动端优化的表单以及保持转化路径的响应式布局。目前超过50%的购买从移动设备开始。",
+          "quickWins": "速效改进是高影响力、低成本的更改，可以立即提升您的转化率。这些优先行动为优化工作提供最佳投资回报。",
+          "recommendations": "基于CRO分析，这些建议优先考虑对转化率潜在影响最大的改进措施。"
+        },
+        "sections": {
+          "cta": "行动号召",
+          "forms": "表单分析",
+          "trust": "信任信号",
+          "mobile": "移动端UX",
+          "quickWins": "速效改进",
+          "recommendations": "建议"
+        },
+        "cta": {
+          "totalFound": "发现的CTA数量",
+          "score": "CTA评分",
+          "foundHeading": "检测到的CTA",
+          "table": {
+            "text": "CTA文本",
+            "type": "类型",
+            "location": "位置"
+          },
+          "noneTitle": "未检测到CTA",
+          "noneBody": "此页面未发现明确的行动号召。添加醒目的CTA对转化至关重要。"
+        },
+        "forms": {
+          "totalFound": "发现的表单数量",
+          "score": "表单评分",
+          "foundHeading": "检测到的表单",
+          "table": {
+            "form": "表单",
+            "fields": "字段数",
+            "type": "类型"
+          },
+          "noneTitle": "未检测到表单",
+          "noneBody": "此页面未发现表单。建议添加潜在客户获取表单或联系表单以提升转化率。"
+        },
+        "trust": {
+          "totalFound": "发现的信任信号数量",
+          "score": "信任评分",
+          "foundHeading": "检测到的信任信号",
+          "table": {
+            "signal": "信任信号",
+            "type": "类型"
+          },
+          "noneTitle": "未检测到信任信号",
+          "noneBody": "此页面未发现信任信号。添加客户评价、安全徽章和社会证明可以显著提升转化率。"
+        },
+        "mobileUx": {
+          "score": "移动端UX评分",
+          "issuesHeading": "移动端UX问题",
+          "noIssuesTitle": "无移动端UX问题",
+          "noIssuesBody": "未检测到重大移动端UX问题。您的页面已针对移动端转化进行了良好优化。"
+        },
+        "quickWins": {
+          "tableHeading": "已识别的速效改进",
+          "table": {
+            "item": "速效改进",
+            "impact": "影响",
+            "effort": "工作量"
+          },
+          "noneTitle": "未识别到速效改进",
+          "noneBody": "分析未发现具体的速效改进。请查看各节的详细建议以了解改进机会。"
+        },
+        "recommendations": {
+          "noneTitle": "CRO状况良好",
+          "noneBody": "您的网站遵循CRO最佳实践。请继续监控转化指标并进行A/B测试以持续优化。"
         }
       }
     },
@@ -7348,7 +7938,7 @@
         "legalPages": "法律页面",
         "dataSubjectRights": "数据主体权利",
         "complianceRisks": "合规风险",
-        "fixCodeRecommendations": "修复代码 + 建议"
+        "fixCodeRecommendations": "建议"
       },
       "loader": {
         "scanInProgress": "GDPR合规扫描进行中...",
@@ -7612,7 +8202,71 @@
           "cookies": "This cookie audit catalogs all cookies and tracking technologies found on your site. Each cookie is classified by purpose, security attributes, and regulatory category. Understanding your cookie landscape is essential for maintaining accurate consent mechanisms and privacy compliance.",
           "risks": "Risk assessment identifies potential compliance gaps and their severity. High-risk issues may expose your organization to regulatory enforcement action. This section prioritizes risks based on their potential impact and likelihood of regulatory scrutiny.",
           "recommendations": "Based on the GDPR compliance analysis, these recommendations prioritize the most critical compliance gaps to reduce regulatory risk and improve user privacy."
-        }
+        },
+        "consent": "Cookie Consent",
+        "privacy": "Privacy Policy",
+        "cookiePolicy": "Cookie Policy",
+        "rights": "Data Subject Rights",
+        "cookies": "Cookie Audit",
+        "risks": "Risk Assessment",
+        "recommendations": "建议",
+        "consent.overviewHeading": "Consent Overview",
+        "consent.rows": {
+          "detected": "Consent Banner Detected",
+          "platform": "Consent Platform",
+          "score": "Consent Score"
+        },
+        "privacy.overviewHeading": "Policy Overview",
+        "privacy.rows": {
+          "found": "Privacy Policy Found",
+          "url": "Policy URL",
+          "score": "Policy Score"
+        },
+        "privacy.keywordsHeading": "Keywords Found",
+        "privacy.table": {
+          "keyword": "Keyword"
+        },
+        "cookiePolicy.overviewHeading": "Cookie Policy Overview",
+        "cookiePolicy.rows": {
+          "found": "Cookie Policy Found",
+          "url": "Policy URL",
+          "score": "Policy Score"
+        },
+        "rights.overviewHeading": "Rights Overview",
+        "rights.rows": {
+          "found": "Rights Information Found"
+        },
+        "rights.mechanismsHeading": "Mechanisms Found",
+        "rights.mechanismsLabel": "Rights Mechanisms",
+        "rights.table": {
+          "mechanism": "Mechanism"
+        },
+        "cookies.totalLabel": "Total Cookies",
+        "cookies.secureLabel": "Secure Cookies",
+        "cookies.httpOnlyLabel": "HttpOnly Cookies",
+        "cookies.trackersLabel": "Trackers Detected",
+        "cookies.secureCoverageLabel": "Secure Cookie Coverage",
+        "cookies.detailsHeading": "Cookie Details",
+        "cookies.table": {
+          "name": "Name",
+          "domain": "Domain",
+          "expiry": "Expiry",
+          "trackerName": "Tracker",
+          "trackerType": "Type",
+          "trackerDomain": "Domain"
+        },
+        "cookies.trackersHeading": "Third-Party Trackers",
+        "risks.critical": "Critical",
+        "risks.high": "High",
+        "risks.medium": "Medium",
+        "risks.low": "Low",
+        "risks.detectedHeading": "Detected Risks",
+        "risks.noneFoundTitle": "No Significant Risks Detected",
+        "risks.noneFoundBody": "No major compliance risks were identified during the analysis.",
+        "risks.consentQualityHeading": "Consent Quality",
+        "risks.consentQualityScore": "Consent Quality Score",
+        "recommendations.noneTitle": "Strong Compliance Posture",
+        "recommendations.noneBody": "Your site follows GDPR best practices. Continue monitoring for regulatory changes and maintaining your data protection standards."
       }
     },
     "hosting": {
@@ -7633,7 +8287,49 @@
           "cms": "Content Management Systems and web technologies determine how your site is built and maintained. This section identifies the CMS platform, its version, and additional technologies detected on your site. Keeping your CMS and its dependencies up to date is critical for security and performance.",
           "performance": "Hosting performance directly impacts your site's loading speed and user experience. This section measures server response time and Time to First Byte (TTFB), which indicate how quickly your server processes and begins delivering requests. Fast server response times are essential for good Core Web Vitals scores.",
           "recommendations": "Based on the hosting analysis, these recommendations prioritize the most impactful improvements for your server infrastructure, performance, and configuration."
-        }
+        },
+        "provider": "Hosting Provider",
+        "infrastructure": "Server Infrastructure",
+        "cms": "CMS & Technology",
+        "performance": "Hosting Performance",
+        "recommendations": "建议",
+        "provider.overviewHeading": "Provider Details",
+        "provider.rows": {
+          "name": "Provider",
+          "category": "Category",
+          "tier": "Tier"
+        },
+        "provider.featuresHeading": "Included Features",
+        "provider.table": {
+          "feature": "Feature"
+        },
+        "infrastructure.serverHeading": "Server Information",
+        "infrastructure.rows": {
+          "ip": "IP Address",
+          "provider": "Provider"
+        },
+        "infrastructure.headersHeading": "Response Headers",
+        "infrastructure.table": {
+          "header": "Header"
+        },
+        "cms.detectionHeading": "CMS Detection",
+        "cms.rows": {
+          "platform": "Platform",
+          "version": "Version",
+          "confidence": "Confidence"
+        },
+        "cms.noneTitle": "No CMS Detected",
+        "cms.noneBody": "No content management system was detected. The site may use a custom-built solution or a static site generator.",
+        "cms.technologiesHeading": "Detected Technologies",
+        "cms.table": {
+          "technology": "Technology",
+          "category": "Category"
+        },
+        "performance.responseTime": "Response Time",
+        "performance.ttfb": "TTFB",
+        "performance.detailsHeading": "Performance Details",
+        "recommendations.noneTitle": "Solid Hosting Setup",
+        "recommendations.noneBody": "Your hosting configuration follows best practices. Continue monitoring for performance changes."
       },
       "categories": {
         "managedWordPress": "托管WordPress",
@@ -8032,16 +8728,624 @@
             "使用警报监控到期日期",
             "证书安装需要服务器访问权限"
           ]
+        },
+        "removeBlacklist": {
+          "title": "从DNS黑名单中移除",
+          "description": "您的IP被列入一个或多个DNS黑名单，影响邮件投递。",
+          "whyItMatters": "被列入黑名单严重影响邮件投递能力——您的邮件可能被拒绝或标记为垃圾邮件。这会损害商业沟通和声誉。",
+          "impact": "高——恢复邮件投递能力和发送者声誉",
+          "technicalDetails": [
+            "黑名单由反垃圾邮件组织维护",
+            "IP因垃圾邮件、恶意软件或不良邮件实践而被列入",
+            "大多数黑名单在清理后自动移除",
+            "部分需要手动提交移除申请"
+          ]
+        },
+        "closePorts": {
+          "title": "关闭关键暴露端口",
+          "description": "关键管理端口处于公开可访问状态，增加了攻击面。",
+          "whyItMatters": "暴露的管理端口（SSH、数据库等）是自动化攻击的主要目标。黑客持续扫描可利用的开放端口。",
+          "impact": "严重——减少攻击面并防止未授权访问",
+          "technicalDetails": [
+            "常见攻击方式：SSH暴力破解、数据库漏洞利用",
+            "端口扫描器持续探测漏洞",
+            "管理端口应位于VPN或防火墙之后",
+            "最小暴露原则：仅开放必要的端口"
+          ]
+        },
+        "monitorReputation": {
+          "title": "定期监控声誉",
+          "description": "设置定期监控，在声誉问题影响投递之前及早发现。",
+          "whyItMatters": "IP和域名声誉可能随时间因垃圾邮件、安全事件或与恶意行为者共享而下降。定期监控可在影响投递之前发现问题。",
+          "impact": "中等——实现主动声誉管理",
+          "technicalDetails": [
+            "声誉系统跟踪发送模式和投诉",
+            "共享IP托管可能影响您的声誉",
+            "早期检测可以更快地进行修复",
+            "存在多个黑名单和声誉服务"
+          ]
         }
       },
       "report": {
         "sectionIntros": {
-          "reputation": "IP reputation reflects how trusted your server's IP address is across the internet. This section evaluates trust scores, spam likelihood, malware association, and blacklist status. A poor IP reputation can cause email deliverability issues, search engine penalties, and may indicate shared hosting with malicious neighbors.",
-          "security": "This security assessment examines your server's SSL/TLS configuration, DNS security, and email authentication setup. Proper security configuration protects your visitors and builds trust with search engines and email providers.",
-          "infrastructure": "Infrastructure analysis reveals details about your server's hosting environment, network configuration, and technical setup. Understanding your infrastructure helps identify potential single points of failure and optimization opportunities.",
-          "dns": "DNS and email configuration are critical for both deliverability and security. This section examines your MX records, DNSSEC status, and email authentication mechanisms (SPF, DKIM, DMARC). Proper configuration prevents email spoofing and improves deliverability.",
-          "ports": "Open port analysis identifies network services exposed on your server. Unnecessary open ports increase your attack surface and may indicate misconfigured services. This section lists detected open ports and their associated services.",
-          "recommendations": "Based on the IP reputation and security analysis, these recommendations prioritize improvements for your server's trustworthiness, security posture, and email deliverability."
+          "reputation": "IP声誉反映了您服务器IP地址在互联网上的可信度。本节评估信任评分、垃圾邮件可能性、恶意软件关联和黑名单状态。较差的IP声誉可能导致邮件投递问题和搜索引擎惩罚。",
+          "security": "本安全评估检查您服务器的SSL/TLS配置、DNS安全性和邮件认证设置。适当的安全配置保护访客并与搜索引擎和邮件提供商建立信任。",
+          "infrastructure": "基础设施分析揭示了服务器托管环境、网络配置和技术设置的详细信息。了解您的基础设施有助于识别潜在的单点故障和优化机会。",
+          "dns": "DNS和邮件配置对投递和安全都至关重要。本节检查您的MX记录、DNSSEC状态和邮件认证机制（SPF、DKIM、DMARC）。正确配置可防止邮件欺骗并改善投递。",
+          "ports": "开放端口分析识别服务器上暴露的网络服务。不必要的开放端口增加攻击面，可能表明服务配置不当。",
+          "recommendations": "基于IP声誉和安全分析，这些建议优先考虑提高服务器可信度、安全态势和邮件投递能力的改进。"
+        },
+        "reputation": "IP Reputation",
+        "security": "Security Assessment",
+        "infrastructure": "Infrastructure",
+        "dns": "DNS & Email",
+        "ports": "Open Ports",
+        "recommendations": "建议",
+        "reputation.trustScore": "Trust Score",
+        "reputation.spamScore": "Spam Score",
+        "reputation.malwareScore": "Malware Score",
+        "reputation.phishingScore": "Phishing Score",
+        "reputation.blacklistHeading": "Blacklist Status",
+        "reputation.blacklistCleanTitle": "Clean Blacklist Status",
+        "reputation.blacklistCleanBody": "This IP is not listed on any of the checked blacklists.",
+        "reputation.listed": "Listed",
+        "reputation.clean": "Clean",
+        "reputation.table": {
+          "blacklist": "Blacklist"
+        },
+        "security.sslHeading": "SSL/TLS Certificate",
+        "security.rows": {
+          "status": "Certificate Status",
+          "issuer": "Issuer",
+          "protocol": "Protocol",
+          "validFrom": "Valid From",
+          "expiry": "Expiry",
+          "daysRemaining": "Days Remaining",
+          "subject": "Subject"
+        },
+        "security.valid": "Valid",
+        "security.invalid": "Invalid",
+        "security.noSslTitle": "No SSL Certificate",
+        "security.noSslBody": "No SSL/TLS certificate was detected for this target.",
+        "infrastructure.server": "Server",
+        "infrastructure.hosting": "Hosting",
+        "infrastructure.location": "Location",
+        "infrastructure.asn": "ASN",
+        "infrastructure.detailsHeading": "Infrastructure Details",
+        "infrastructure.rows": {
+          "ip": "IP Address",
+          "hostname": "Hostname",
+          "server": "Server Software",
+          "os": "Operating System",
+          "hosting": "Hosting Provider",
+          "provider": "Provider",
+          "country": "Country",
+          "city": "City",
+          "location": "Location",
+          "asn": "ASN",
+          "org": "Organization",
+          "cdn": "CDN",
+          "reverseIp": "Reverse DNS"
+        },
+        "infrastructure.noDataTitle": "No Infrastructure Data",
+        "infrastructure.noDataBody": "Infrastructure information could not be determined for this target.",
+        "dns.dnssecHeading": "DNSSEC",
+        "dns.dnssecEnabled": "DNSSEC Enabled",
+        "dns.dnssecDisabled": "DNSSEC Not Enabled",
+        "dns.mxHeading": "MX Records",
+        "dns.table": {
+          "priority": "Priority",
+          "mailServer": "Mail Server"
+        },
+        "dns.noMxTitle": "No MX Records",
+        "dns.noMxBody": "No MX records were found for this domain. Email delivery may not be configured.",
+        "ports.totalOpen": "Open Ports",
+        "ports.table": {
+          "port": "Port",
+          "service": "Service"
+        },
+        "ports.noneTitle": "No Open Ports Detected",
+        "ports.noneBody": "No open ports were found during the scan, or port scanning was not performed.",
+        "recommendations.noneTitle": "Good Reputation Standing",
+        "recommendations.noneBody": "Your IP has a clean reputation. Continue monitoring for changes and maintain security best practices."
+      },
+      "codeExamples": {
+        "addCaa": [
+          {
+            "title": "Let's Encrypt的CAA记录",
+            "subtitle": "最常用的免费CA——添加到DNS区域文件",
+            "notes": [
+              "将yourdomain.com替换为您的实际域名",
+              "如果使用多个CA，请添加多条issue记录",
+              "使用issuewild控制通配符证书的颁发",
+              "iodef指定违规报告的发送目标"
+            ]
+          },
+          {
+            "title": "商业CA的CAA记录",
+            "subtitle": "常见的商业证书颁发机构"
+          }
+        ],
+        "strengthenDmarc": [
+          {
+            "title": "当前策略（仅监控）",
+            "subtitle": "您当前的DMARC记录——未执行"
+          },
+          {
+            "title": "推荐：隔离策略",
+            "subtitle": "步骤1——将失败邮件发送到垃圾邮件文件夹",
+            "notes": [
+              "pct=25最初仅对25%的失败应用策略",
+              "在增加百分比之前监控报告1-2周",
+              "ruf启用取证报告（单独的失败记录）",
+              "隔离稳定后转换到拒绝策略"
+            ]
+          },
+          {
+            "title": "最终目标：拒绝策略",
+            "subtitle": "步骤2——阻止所有未认证的邮件"
+          }
+        ],
+        "implementDmarc": [
+          {
+            "title": "基本DMARC记录",
+            "subtitle": "从监控模式开始",
+            "notes": [
+              "创建专用邮箱或使用DMARC报告服务",
+              "报告为XML格式——使用免费工具解析",
+              "启用执行前监控2-4周",
+              "Postmark、dmarcian等服务提供免费报告分析"
+            ]
+          },
+          {
+            "title": "使用DMARC报告服务",
+            "subtitle": "使用第三方工具更轻松地分析报告"
+          }
+        ],
+        "configureSpf": [
+          {
+            "title": "基本SPF记录",
+            "subtitle": "包含常见邮件提供商",
+            "notes": [
+              "替换为您实际邮件提供商的SPF includes",
+              "最初使用~all（软失败），然后改为-all（硬失败）",
+              "最多允许10次DNS查询——必要时扁平化",
+              "测试方法：dig TXT yourdomain.com 或 mxtoolbox.com/spf.aspx"
+            ]
+          },
+          {
+            "title": "常见邮件提供商的SPF Includes",
+            "subtitle": "复制您使用的服务的includes"
+          }
+        ],
+        "configureDkim": [
+          {
+            "title": "DKIM设置概览",
+            "subtitle": "DKIM需要邮件服务器配置",
+            "notes": [
+              "DKIM密钥由您的邮件提供商/服务器生成",
+              "选择器（如\"google\"、\"selector1\"）因提供商而异",
+              "将提供商提供的TXT记录添加到DNS",
+              "验证方法：dig TXT selector._domainkey.yourdomain.com"
+            ]
+          },
+          {
+            "title": "按提供商启用DKIM",
+            "subtitle": "在常见提供商中启用DKIM的位置"
+          }
+        ],
+        "fixSslCertificate": [
+          {
+            "title": "使用Certbot安装Let's Encrypt",
+            "subtitle": "适用于大多数服务器的免费自动SSL",
+            "notes": [
+              "Certbot通过cron/systemd自动处理续期",
+              "免费证书有效期90天，自动续期",
+              "适用于大多数托管提供商和CDN",
+              "cPanel用户：使用内置的Let's Encrypt或AutoSSL"
+            ]
+          },
+          {
+            "title": "验证SSL配置",
+            "subtitle": "检查您的SSL设置是否正确"
+          }
+        ],
+        "removeBlacklist": [
+          {
+            "title": "检查黑名单状态",
+            "subtitle": "识别您被列入的名单",
+            "notes": [
+              "大多数黑名单在1-4周无垃圾邮件后自动移除",
+              "在请求移除之前先修复根本原因",
+              "检查服务器是否被入侵、存在开放中继或垃圾邮件脚本",
+              "检查出站邮件日志中的可疑活动"
+            ]
+          },
+          {
+            "title": "常见黑名单移除链接",
+            "subtitle": "在哪里申请移除"
+          }
+        ],
+        "closePorts": [
+          {
+            "title": "UFW防火墙配置",
+            "subtitle": "适用于Ubuntu/Debian的简单防火墙",
+            "notes": [
+              "切勿公开数据库端口（3306、5432、27017）",
+              "使用SSH密钥而非密码",
+              "考虑使用fail2ban进行额外的暴力破解防护",
+              "使用VPN或SSH隧道进行管理访问"
+            ]
+          },
+          {
+            "title": "iptables配置",
+            "subtitle": "适用于没有UFW的系统"
+          }
+        ],
+        "monitorReputation": [
+          {
+            "title": "设置监控",
+            "subtitle": "免费和付费监控选项",
+            "notes": [
+              "设置Google Postmaster Tools获取Gmail洞察",
+              "每周通过mxtoolbox.com检查黑名单",
+              "DMARC报告显示认证失败",
+              "在邮件平台中跟踪退信率"
+            ]
+          }
+        ]
+      },
+      "guides": {
+        "addCaa": {
+          "difficulty": "初级",
+          "timeEstimate": "5-10分钟",
+          "prerequisites": "DNS管理访问权限",
+          "steps": [
+            {
+              "title": "识别您的证书颁发机构",
+              "description": "确定哪些CA为您的域名颁发SSL证书。检查当前证书详情或托管提供商的文档。",
+              "tip": "常见CA：letsencrypt.org、digicert.com、comodoca.com、godaddy.com"
+            },
+            {
+              "title": "访问DNS管理",
+              "description": "登录您的域名注册商或DNS提供商（如Cloudflare、GoDaddy、Namecheap、AWS Route 53）。"
+            },
+            {
+              "title": "添加CAA记录",
+              "description": "创建新的CAA记录，flag为0，tag为\"issue\"，值设为CA的域名（如\"letsencrypt.org\"）。",
+              "tip": "如果使用通配符，也添加\"issuewild\"记录"
+            },
+            {
+              "title": "验证记录",
+              "description": "使用dig或在线工具验证：dig CAA yourdomain.com 或在dnschecker.org检查"
+            }
+          ],
+          "verificationSteps": [
+            "运行：dig CAA yourdomain.com（或使用mxtoolbox.com/CAA.aspx）",
+            "验证输出中列出了您的CA",
+            "尝试申请新证书以确认仍然有效"
+          ]
+        },
+        "strengthenDmarc": {
+          "difficulty": "中级",
+          "timeEstimate": "2-4周（逐步推出）",
+          "prerequisites": "SPF和DKIM必须先配置，DMARC监控已启用",
+          "steps": [
+            {
+              "title": "查看当前DMARC报告",
+              "description": "在加强之前，分析DMARC聚合报告以识别可能未通过认证的合法邮件来源。",
+              "tip": "使用dmarcian.com或Postmark DMARC报告等免费工具"
+            },
+            {
+              "title": "修复认证失败",
+              "description": "确保所有合法邮件来源（营销工具、CRM等）都已通过SPF includes和DKIM正确认证。"
+            },
+            {
+              "title": "升级到隔离（25%）",
+              "description": "更新DMARC记录为：p=quarantine; pct=25——25%的失败邮件将被发送到垃圾邮件。",
+              "tip": "增加百分比前监控1-2周"
+            },
+            {
+              "title": "增加隔离到100%",
+              "description": "监控成功后，删除pct标签或设为100以隔离所有失败。"
+            },
+            {
+              "title": "升级到拒绝策略",
+              "description": "隔离稳定2周以上后，将p=quarantine改为p=reject以实现完全保护。"
+            }
+          ],
+          "verificationSteps": [
+            "检查DMARC记录：dig TXT _dmarc.yourdomain.com",
+            "监控报告确认合法邮件未被阻止",
+            "通过发送邮件并检查收件人头部的DMARC pass进行测试"
+          ]
+        },
+        "implementDmarc": {
+          "difficulty": "初级",
+          "timeEstimate": "15-30分钟设置，2-4周监控",
+          "prerequisites": "SPF记录已配置（推荐DKIM）",
+          "steps": [
+            {
+              "title": "选择报告邮箱或服务",
+              "description": "决定DMARC报告的发送目标。使用专用邮箱或dmarcian.com等免费服务。"
+            },
+            {
+              "title": "创建DMARC DNS记录",
+              "description": "在_dmarc.yourdomain.com添加TXT记录：\"v=DMARC1; p=none; rua=mailto:your-email@yourdomain.com\"",
+              "tip": "从p=none开始，在不影响投递的情况下监控"
+            },
+            {
+              "title": "验证记录",
+              "description": "确认记录已发布：dig TXT _dmarc.yourdomain.com"
+            },
+            {
+              "title": "监控报告",
+              "description": "等待24-48小时报告开始到达。分析它们以了解邮件认证状态。",
+              "tip": "报告为XML格式——使用在线解析器或DMARC服务读取"
+            }
+          ],
+          "verificationSteps": [
+            "运行：dig TXT _dmarc.yourdomain.com",
+            "发送测试邮件到check-auth@verifier.port25.com获取即时结果",
+            "确认聚合报告在24-48小时内开始到达"
+          ]
+        },
+        "configureSpf": {
+          "difficulty": "初级",
+          "timeEstimate": "15-30分钟",
+          "prerequisites": "DNS管理访问权限，邮件发送服务列表",
+          "steps": [
+            {
+              "title": "盘点邮件发送者",
+              "description": "列出所有为您域名发送邮件的服务：邮件服务器、营销工具（Mailchimp、SendGrid）、CRM等。"
+            },
+            {
+              "title": "收集SPF Includes",
+              "description": "查找每个服务的SPF include声明，通常在其文档的\"邮件认证\"或\"DNS设置\"中。",
+              "tip": "Google Workspace: include:_spf.google.com, Microsoft 365: include:spf.protection.outlook.com"
+            },
+            {
+              "title": "创建SPF记录",
+              "description": "在@（根域）添加TXT记录：\"v=spf1 [您的includes] ~all\"",
+              "tip": "最初使用~all（软失败），确认后改为-all（硬失败）"
+            },
+            {
+              "title": "验证和测试",
+              "description": "检查SPF记录并发送测试邮件以确认通过SPF检查。"
+            }
+          ],
+          "verificationSteps": [
+            "检查记录：dig TXT yourdomain.com | grep spf",
+            "在mxtoolbox.com/spf.aspx测试",
+            "发送邮件到check-auth@verifier.port25.com",
+            "检查邮件头部显示\"spf=pass\""
+          ]
+        },
+        "configureDkim": {
+          "difficulty": "中级",
+          "timeEstimate": "30-60分钟",
+          "prerequisites": "邮件服务器设置访问权限和DNS管理权限",
+          "steps": [
+            {
+              "title": "在邮件服务中启用DKIM",
+              "description": "进入邮件提供商的管理面板，找到DKIM/邮件认证设置。启用DKIM签名。",
+              "tip": "Google Workspace：管理控制台 → 应用 → Gmail → 认证邮件"
+            },
+            {
+              "title": "复制DNS记录",
+              "description": "您的邮件提供商将生成包含公钥的TXT记录。复制包含选择器的完整记录。"
+            },
+            {
+              "title": "添加DNS记录",
+              "description": "在[选择器]._domainkey.yourdomain.com创建TXT记录，填入提供的公钥值。",
+              "tip": "选择器是主机名的一部分（如\"google._domainkey\"或\"selector1._domainkey\"）"
+            },
+            {
+              "title": "在邮件提供商处验证",
+              "description": "返回邮件提供商，点击\"开始认证\"或\"验证\"以确认DNS记录被检测到。"
+            },
+            {
+              "title": "测试邮件签名",
+              "description": "发送测试邮件，检查头部中的\"dkim=pass\"或使用在线DKIM验证器。"
+            }
+          ],
+          "verificationSteps": [
+            "检查DNS：dig TXT selector._domainkey.yourdomain.com",
+            "发送测试邮件并检查头部\"dkim=pass\"",
+            "使用mail-tester.com进行全面的邮件认证检查"
+          ]
+        },
+        "fixSslCertificate": {
+          "difficulty": "中级",
+          "timeEstimate": "15-60分钟（取决于托管）",
+          "prerequisites": "服务器访问权限（SSH或托管面板）",
+          "steps": [
+            {
+              "title": "识别问题",
+              "description": "使用SSL Labs（ssllabs.com/ssltest）识别具体证书问题：过期、域名不匹配、自签名、证书链问题。",
+              "tip": "这将准确告诉您问题所在及如何修复"
+            },
+            {
+              "title": "选择解决方案",
+              "description": "大多数情况下，Let's Encrypt提供免费的自动续期证书。特殊需求可从DigiCert、Comodo等购买。"
+            },
+            {
+              "title": "安装/续期证书",
+              "description": "使用Let's Encrypt时，安装certbot并运行：sudo certbot --nginx -d yourdomain.com（如适用替换nginx为apache）。"
+            },
+            {
+              "title": "配置自动续期",
+              "description": "确保证书自动续期：sudo certbot renew --dry-run 测试续期过程。"
+            },
+            {
+              "title": "验证安装",
+              "description": "在浏览器中测试网站并重新运行SSL Labs测试以确认所有问题已解决。"
+            }
+          ],
+          "verificationSteps": [
+            "在浏览器中访问网站——应显示锁图标无警告",
+            "重新运行SSL Labs测试——应显示A或A+评级",
+            "检查到期日：echo | openssl s_client -connect yourdomain.com:443 2>/dev/null | openssl x509 -noout -dates"
+          ]
+        },
+        "addNameservers": {
+          "difficulty": "初级",
+          "timeEstimate": "15-30分钟",
+          "prerequisites": "域名注册商访问权限",
+          "steps": [
+            {
+              "title": "检查当前域名服务器",
+              "description": "使用dig NS yourdomain.com或在线DNS检查器查看当前域名服务器。"
+            },
+            {
+              "title": "联系DNS提供商",
+              "description": "大多数DNS提供商提供多个域名服务器。查看文档了解额外的域名服务器地址。"
+            },
+            {
+              "title": "添加额外的域名服务器",
+              "description": "在域名注册商控制面板中添加额外的域名服务器地址。"
+            },
+            {
+              "title": "验证传播",
+              "description": "等待DNS传播并验证所有域名服务器都在响应：dig NS yourdomain.com"
+            }
+          ],
+          "verificationSteps": [
+            "运行：dig NS yourdomain.com 验证列出多个域名服务器",
+            "在dnschecker.org检查全球传播",
+            "确保域名服务器在不同网络上"
+          ]
+        },
+        "renewCertificate": {
+          "difficulty": "初级",
+          "timeEstimate": "15-30分钟",
+          "prerequisites": "服务器或托管面板访问权限",
+          "steps": [
+            {
+              "title": "检查当前证书到期日",
+              "description": "检查确切日期：echo | openssl s_client -connect yourdomain.com:443 2>/dev/null | openssl x509 -noout -dates"
+            },
+            {
+              "title": "续期证书",
+              "description": "使用Let's Encrypt和certbot：sudo certbot renew。手动证书请向CA购买续期。"
+            },
+            {
+              "title": "安装新证书",
+              "description": "手动续期时，在服务器上安装新证书并重启Web服务器。"
+            },
+            {
+              "title": "设置自动续期",
+              "description": "配置自动续期：sudo certbot renew --dry-run 进行测试。",
+              "tip": "设置日历提醒，在下次到期前30天提示"
+            }
+          ],
+          "verificationSteps": [
+            "在浏览器证书详情中检查新的到期日",
+            "运行SSL Labs测试确认证书有效",
+            "验证自动续期正常工作：sudo certbot renew --dry-run"
+          ]
+        },
+        "removeBlacklist": {
+          "difficulty": "中级",
+          "timeEstimate": "不定——数小时到数周",
+          "prerequisites": "服务器访问权限以调查和修复根本原因",
+          "steps": [
+            {
+              "title": "识别所有列入记录",
+              "description": "使用mxtoolbox.com/blacklists.aspx检查所有主要黑名单。",
+              "tip": "某些列入记录比其他更有影响力——Spamhaus影响最大"
+            },
+            {
+              "title": "调查根本原因",
+              "description": "检查服务器日志、邮件队列和出站流量，寻找垃圾邮件或入侵迹象。",
+              "tip": "查找端口25上的异常出站连接"
+            },
+            {
+              "title": "修复问题",
+              "description": "清除恶意软件，关闭开放中继，重置被入侵的密码，实施邮件认证（SPF/DKIM/DMARC）。"
+            },
+            {
+              "title": "请求移除",
+              "description": "访问每个黑名单的移除页面。有些自动过期，有些需要手动申请。",
+              "tip": "Spamhaus: check.spamhaus.org, Barracuda: barracudacentral.org"
+            },
+            {
+              "title": "实施预防措施",
+              "description": "设置监控、邮件发送速率限制和定期安全扫描以防止再次发生。"
+            }
+          ],
+          "verificationSteps": [
+            "移除后在mxtoolbox.com重新检查黑名单",
+            "向Gmail/Outlook发送测试邮件并检查投递",
+            "下周监控邮件退信率"
+          ]
+        },
+        "closePorts": {
+          "difficulty": "中级",
+          "timeEstimate": "30-60分钟",
+          "prerequisites": "服务器SSH/root访问权限",
+          "steps": [
+            {
+              "title": "审计开放端口",
+              "description": "使用nmap或在线端口扫描器：nmap -Pn yourdomain.com",
+              "tip": "与应该暴露的内容进行比较（通常仅80、443，可能还有22）"
+            },
+            {
+              "title": "识别不必要的服务",
+              "description": "对每个开放端口，确定是否需要公开访问。数据库端口（3306、5432）、管理面板不应公开。"
+            },
+            {
+              "title": "配置防火墙",
+              "description": "使用UFW（Ubuntu/Debian）或firewalld（CentOS/RHEL）限制端口。仅允许80/tcp、443/tcp和受控的SSH访问。"
+            },
+            {
+              "title": "保护SSH访问",
+              "description": "使用基于密钥的认证，禁用密码登录，考虑更改端口或使用fail2ban防暴力破解。"
+            },
+            {
+              "title": "设置管理访问VPN",
+              "description": "对于需要远程访问的服务（数据库、管理面板），配置VPN而非直接暴露端口。"
+            }
+          ],
+          "verificationSteps": [
+            "使用nmap重新扫描确认端口已关闭",
+            "验证仍可访问必要的服务",
+            "测试SSH访问仍然有效（不要把自己锁在外面！）"
+          ]
+        },
+        "monitorReputation": {
+          "difficulty": "初级",
+          "timeEstimate": "30分钟设置",
+          "prerequisites": "域名所有权用于验证",
+          "steps": [
+            {
+              "title": "设置Google Postmaster Tools",
+              "description": "访问postmaster.google.com，添加域名并验证所有权。这显示Gmail如何处理您的邮件。",
+              "tip": "验证通常需要添加DNS记录"
+            },
+            {
+              "title": "设置Microsoft SNDS",
+              "description": "在sendersupport.olc.protection.outlook.com注册，获取Outlook/Hotmail投递洞察。"
+            },
+            {
+              "title": "配置DMARC报告",
+              "description": "确保DMARC记录中rua=指向接收认证报告的邮箱或DMARC服务。"
+            },
+            {
+              "title": "设置黑名单监控",
+              "description": "使用MXToolbox、HetrixTools或类似工具，在IP被列入黑名单时收到邮件警报。",
+              "tip": "大多数提供免费的基础监控"
+            },
+            {
+              "title": "创建监控计划",
+              "description": "每周检查Postmaster/SNDS，黑名单警报立即处理，DMARC报告每月或出现问题时检查。"
+            }
+          ],
+          "verificationSteps": [
+            "确认Google Postmaster Tools显示域名已验证",
+            "验证DMARC报告正在接收",
+            "通过检查警报设置测试黑名单监控"
+          ]
         }
       }
     },
@@ -8259,7 +9563,58 @@
           "keywords": "Local keywords signal geographic relevance to search engines. This section analyzes your content for location-specific terms, service area keywords, and local intent signals. Proper use of local keywords helps your pages rank for geographically targeted searches.",
           "presence": "Local presence factors include Google Business Profile optimization, local directory citations, and review signals. This section evaluates indicators of your local search presence and identifies opportunities to strengthen your visibility in local search results.",
           "recommendations": "Based on the local SEO analysis, these recommendations target the most impactful improvements for your local search visibility and geographic relevance."
-        }
+        },
+        "nap": "NAP Consistency",
+        "status": {
+          "consistent": "一致",
+          "inconsistent": "不一致",
+          "listed": "已列出",
+          "notListed": "未列出"
+        },
+        "schema": "Schema Markup",
+        "keywords": "Local Keywords",
+        "presence": "Local Presence",
+        "recommendations": "建议",
+        "nap.detailsHeading": "Business Information",
+        "nap.rows": {
+          "name": "Business Name",
+          "address": "Address",
+          "phone": "Phone",
+          "consistency": "Consistency"
+        },
+        "schema.statusLabel": "Schema Status",
+        "schema.typesCountLabel": "Schema Types Found",
+        "schema.typesHeading": "Detected Schema Types",
+        "schema.table": {
+          "type": "Schema Type"
+        },
+        "schema.noneTitle": "No Schema Markup Found",
+        "schema.noneBody": "Adding LocalBusiness or Organization schema markup can significantly improve your local search visibility and enable rich results.",
+        "schema.markupHeading": "Markup Preview",
+        "keywords.foundLabel": "Local Keywords Found",
+        "keywords.densityLabel": "Local Keyword Density",
+        "keywords.foundHeading": "Local Keywords Detected",
+        "keywords.table": {
+          "keyword": "Keyword",
+          "suggestion": "Suggested Keyword"
+        },
+        "keywords.suggestionsHeading": "Keyword Suggestions",
+        "keywords.suggestionsCalloutTitle": "Expand Your Local Reach",
+        "keywords.suggestionsCalloutBody": "Consider incorporating these additional local keywords into your content to broaden your geographic search visibility.",
+        "presence.claimed": "Claimed",
+        "presence.notFound": "Not Found",
+        "presence.googleBusinessLabel": "Google Business Profile",
+        "presence.citationsLabel": "Citations Found",
+        "presence.gbpCalloutTitle": "Claim Your Google Business Profile",
+        "presence.gbpCalloutBody": "A verified Google Business Profile is essential for appearing in Google Maps and the local pack. Claiming and optimizing your profile should be a top priority.",
+        "presence.gbpFoundTitle": "Google Business Profile Detected",
+        "presence.gbpFoundBody": "Your Google Business Profile was detected. Ensure it is fully optimized with accurate hours, photos, and regular posts for maximum local visibility.",
+        "presence.directoriesHeading": "Directory Listings",
+        "presence.table": {
+          "directory": "Directory"
+        },
+        "recommendations.noneTitle": "Strong Local SEO",
+        "recommendations.noneBody": "Your site follows local SEO best practices. Continue monitoring your local presence and NAP consistency for sustained rankings."
       }
     },
     "crawler": {
@@ -8272,7 +9627,7 @@
       "visualSitemap": "可视化站点地图",
       "discoveredPages": "发现的页面和导出",
       "discoveredPagesExport": "发现的页面和导出 ({{count}})",
-      "fixCodeRecommendations": "修复代码 + 建议",
+      "fixCodeRecommendations": "建议",
       "noSitemapToPrint": "没有站点地图可打印",
       "allowPopupsToPrint": "请允许弹出窗口以打印站点地图",
       "noSitemapToDownload": "没有站点地图可下载",
@@ -8475,6 +9830,69 @@
           "issues": "Issues detected during the crawl include broken pages, missing titles, duplicate content, and other technical SEO problems. Each issue is categorized by severity to help you prioritize fixes that will have the greatest impact on search performance.",
           "performance": "Page performance across your site reveals patterns in response times and server behavior. Consistently slow pages may indicate server capacity issues or inefficient code. This section highlights the slowest pages and overall response time distribution.",
           "recommendations": "Based on the site crawl analysis, these recommendations target the most critical structural and technical issues affecting your site's search engine crawlability."
+        },
+        "sections": {
+          "overview": "Crawl Overview",
+          "pages": "Pages Crawled",
+          "structure": "Site Structure",
+          "issues": "Issues Detected",
+          "performance": "Page Performance",
+          "recommendations": "建议"
+        },
+        "metrics": {
+          "totalPages": "Total Pages",
+          "discoveredUrls": "Discovered URLs",
+          "maxDepth": "Max Depth",
+          "crawlTime": "Crawl Time",
+          "avgResponseTime": "Avg Response Time"
+        },
+        "overview": {
+          "statusOverview": "Status Code Overview",
+          "ok": "2xx OK",
+          "redirects": "3xx Redirects",
+          "errors": "4xx/5xx Errors"
+        },
+        "pages": {
+          "totalCrawled": "Pages Crawled",
+          "table": {
+            "url": "URL",
+            "title": "Title",
+            "status": "状态",
+            "responseTime": "Response Time"
+          },
+          "noData": "No page data available."
+        },
+        "structure": {
+          "depthHeading": "Depth Distribution",
+          "depthLevel": "Depth {{level}}",
+          "statusHeading": "Status Code Breakdown",
+          "table": {
+            "depth": "Depth",
+            "pages": "Pages",
+            "percentage": "百分比",
+            "statusCode": "Status Code",
+            "count": "数量"
+          }
+        },
+        "issues": {
+          "totalIssues": "Total Issues",
+          "noneTitle": "No Issues Found",
+          "noneBody": "The crawl did not detect any issues. Continue monitoring your site to catch problems early."
+        },
+        "performance": {
+          "avgResponseTime": "Avg Response Time",
+          "pagesAnalyzed": "Pages Analyzed",
+          "slowestHeading": "Slowest Pages",
+          "table": {
+            "url": "URL",
+            "responseTime": "Response Time",
+            "rating": "Rating"
+          },
+          "noData": "No performance data available."
+        },
+        "recommendations": {
+          "noneTitle": "Healthy Site Structure",
+          "noneBody": "Your site has a healthy structure with no significant crawl issues. Continue monitoring to maintain site health."
         }
       }
     },
@@ -8521,13 +9939,46 @@
         "ga4AndUniversal": "同时检测到GA4和通用分析。通用分析已弃用（2023年7月）。",
         "duplicateTracking": "Google分析同时通过GTM和硬编码加载。这可能导致重复跟踪。",
         "noConsentManagement": "检测到广告标签但没有同意管理解决方案",
-        "advertisingCookiesNoConsent": "在未检测到同意的情况下设置了广告Cookie"
+        "advertisingCookiesNoConsent": "在未检测到同意的情况下设置了广告Cookie",
+        "insecureCookies": "{{count}}个Cookie缺少Secure标志",
+        "sameSiteNoSecure": "{{count}}个Cookie设置了SameSite=None但缺少Secure标志",
+        "blockingScripts": "{{count}}个同步脚本可能阻塞页面渲染",
+        "headScripts": "{{count}}个脚本在<head>中 - 建议将非关键脚本移至body"
       },
       "recommendations": {
         "migrateToGa4": "完成迁移到GA4",
         "useGtmExclusively": "仅使用GTM进行GA或删除硬编码实现",
         "implementConsent": "实施同意管理（OneTrust、Cookiebot等）以符合GDPR/CCPA",
-        "implementConsentBeforeCookies": "在设置广告Cookie之前实施同意管理"
+        "implementConsentBeforeCookies": "在设置广告Cookie之前实施同意管理",
+        "addSecureFlag": "为Cookie添加Secure标志以防止通过HTTP传输",
+        "sameSiteRequiresSecure": "SameSite=None的Cookie需要Secure属性"
+      },
+      "severity": {
+        "high": "高",
+        "warning": "警告",
+        "info": "信息"
+      },
+      "loadingMethod": {
+        "async": "异步",
+        "defer": "延迟",
+        "sync": "同步"
+      },
+      "recTitles": {
+        "addConsentManagement": "添加同意管理",
+        "fixCriticalIssue": "修复关键问题",
+        "removeDuplicateTags": "移除重复标签",
+        "implementConsentManagement": "实施同意管理",
+        "considerGtm": "考虑使用Google Tag Manager"
+      },
+      "recDescriptions": {
+        "duplicateTags": "检测到{{count}}个重复标签。这可能导致双重跟踪。",
+        "analyticsNoConsent": "检测到分析标签但缺少同意管理。GDPR/CCPA合规所需。",
+        "considerGtm": "检测到{{count}}个标签。GTM可简化标签管理并提升性能。"
+      },
+      "recActions": {
+        "removeDuplicates": "检查并移除重复的实现",
+        "addConsentSolution": "添加OneTrust、Cookiebot或类似的同意管理解决方案",
+        "migrateToGtm": "将标签迁移到Google Tag Manager以便于管理"
       },
       "fixes": {
         "addConsentManagement": "添加同意管理",
@@ -8538,80 +9989,81 @@
       "cookieSecure": "Secure",
       "report": {
         "sectionIntros": {
-          "overview": "This section provides an overview of all marketing, analytics, and tracking tags detected on your page. A healthy tag implementation uses a tag management system, avoids duplicates, and loads scripts efficiently. Too many tags can slow page performance and create data quality issues. This analysis identifies each tag, its category, and how many instances were found.",
-          "issues": "This section highlights implementation issues and conflicts found among your tags. Common problems include duplicate tracking pixels, migration gaps between analytics versions, missing consent management, and conflicting scripts. Each issue includes severity level and a specific recommendation for resolution. Addressing these issues improves data accuracy and site performance.",
-          "categories": "Tags are organized by functional category to provide a clear picture of your marketing and analytics stack. This breakdown helps identify redundancies, gaps in coverage, and opportunities for consolidation. A well-organized tag infrastructure typically uses one tool per function with clear data ownership. Review each category to ensure every tag serves a specific, non-overlapping purpose.",
-          "performance": "Marketing tags and tracking scripts can significantly impact page load performance. Synchronous scripts block rendering while they load, and inline scripts add to the initial HTML payload. This section analyzes script loading methods, identifying blocking scripts that should be converted to async or defer loading. Optimizing script loading can reduce Time to Interactive by hundreds of milliseconds.",
-          "thirdParty": "Third-party scripts are loaded from external domains and include analytics libraries, advertising pixels, and CDN-hosted utilities. Each external script introduces a dependency on another server's availability and performance. This section catalogs all third-party scripts by host, category, and loading method. Minimizing third-party dependencies and ensuring proper async loading reduces performance risk.",
-          "dataLayer": "The dataLayer is a JavaScript array used by Google Tag Manager to pass structured data between your website and marketing tags. A well-implemented dataLayer centralizes event tracking and enables consistent measurement across all tags. This section checks for dataLayer presence, event count, and ecommerce implementation. A robust dataLayer is the foundation of accurate marketing analytics.",
-          "cookies": "Cookies set by tags and third-party scripts carry privacy and compliance implications. Under GDPR, CCPA, and similar regulations, users must be informed about cookies and in many cases give consent before non-essential cookies are set. This section audits all detected cookies, their vendors, purposes, and security attributes. Understanding your cookie landscape is essential for privacy compliance.",
-          "recommendations": "Based on the tag intelligence analysis, this section provides prioritized recommendations to optimize your tag implementation. Recommendations cover performance optimization, data quality improvement, privacy compliance, and infrastructure consolidation. Implementing these changes will result in faster page loads, more accurate tracking data, and better compliance with privacy regulations."
+          "overview": "本节提供页面上检测到的所有营销、分析和跟踪标签的概述。健康的标签实现使用标签管理系统，避免重复，并高效加载脚本。过多的标签会降低页面性能并产生数据质量问题。此分析识别每个标签、其类别以及发现的实例数量。",
+          "issues": "本节突出显示在标签中发现的实现问题和冲突。常见问题包括重复的跟踪像素、分析版本之间的迁移差距、缺少同意管理以及冲突的脚本。每个问题包含严重程度级别和具体的解决建议。解决这些问题可以提高数据准确性和网站性能。",
+          "categories": "标签按功能类别组织，以提供营销和分析堆栈的清晰图片。此细分有助于识别冗余、覆盖差距和整合机会。组织良好的标签基础设施通常每个功能使用一个工具，具有明确的数据所有权。检查每个类别以确保每个标签服务于特定的、不重叠的目的。",
+          "performance": "营销标签和跟踪脚本可能显著影响页面加载性能。同步脚本在加载时阻塞渲染，内联脚本增加初始HTML负载。本节分析脚本加载方法，识别应转换为async或defer加载的阻塞脚本。优化脚本加载可以将可交互时间缩短数百毫秒。",
+          "thirdParty": "第三方脚本从外部域加载，包括分析库、广告像素和CDN托管的实用工具。每个外部脚本都引入了对另一台服务器可用性和性能的依赖。本节按主机、类别和加载方法对所有第三方脚本进行分类。最小化第三方依赖并确保适当的异步加载可降低性能风险。",
+          "dataLayer": "dataLayer是Google Tag Manager用于在您的网站和营销标签之间传递结构化数据的JavaScript数组。实现良好的dataLayer集中了事件跟踪，并实现了跨所有标签的一致测量。本节检查dataLayer的存在、事件计数和电子商务实现。强大的dataLayer是准确营销分析的基础。",
+          "cookies": "由标签和第三方脚本设置的Cookie具有隐私和合规影响。根据GDPR、CCPA和类似法规，必须告知用户有关Cookie的信息，在许多情况下，在设置非必要Cookie之前需要获得同意。本节审核所有检测到的Cookie、其供应商、用途和安全属性。了解您的Cookie环境对于隐私合规至关重要。",
+          "recommendations": "基于标签智能分析，本节提供优先排序的建议以优化您的标签实现。建议涵盖性能优化、数据质量改进、隐私合规和基础设施整合。实施这些更改将带来更快的页面加载、更准确的跟踪数据以及更好地遵守隐私法规。"
         },
         "overview": {
-          "categoriesLabel": "Categories",
-          "duplicatesLabel": "Duplicates",
-          "detectedHeading": "Detected Tags",
+          "categoriesLabel": "类别",
+          "duplicatesLabel": "重复",
+          "detectedHeading": "检测到的标签",
           "table": {
-            "name": "Tag Name",
-            "category": "Category",
-            "instances": "Instances",
-            "ids": "IDs"
+            "name": "标签名称",
+            "category": "类别",
+            "instances": "实例",
+            "ids": "ID"
           }
         },
         "issues": {
-          "duplicatesHeading": "Duplicate Tags",
-          "noneTitle": "No Issues Found",
-          "noneBody": "No implementation issues or conflicts were detected in your tag setup."
+          "duplicatesHeading": "重复标签",
+          "noneTitle": "未发现问题",
+          "noneBody": "在您的标签设置中未检测到实现问题或冲突。"
         },
         "categories": {
           "table": {
-            "category": "Category",
-            "count": "Count",
-            "tags": "Tags"
+            "category": "类别",
+            "count": "数量",
+            "tags": "标签"
           }
         },
         "performance": {
-          "syncLabel": "Sync (Blocking)",
-          "asyncLabel": "Async",
-          "deferLabel": "Defer",
-          "inlineLabel": "Inline",
-          "issuesHeading": "Performance Issues"
+          "syncLabel": "同步（阻塞）",
+          "asyncLabel": "异步",
+          "deferLabel": "延迟",
+          "inlineLabel": "内联",
+          "issuesHeading": "性能问题"
         },
         "thirdParty": {
-          "totalLabel": "Third-Party Scripts",
+          "totalLabel": "第三方脚本",
           "table": {
-            "name": "Name",
-            "host": "Host",
-            "category": "Category",
-            "loading": "Loading"
+            "name": "名称",
+            "host": "主机",
+            "category": "类别",
+            "loading": "加载方式"
           }
         },
         "dataLayer": {
-          "eventsLabel": "Events",
-          "ecommerceTitle": "Ecommerce Tracking Detected",
-          "eventsHeading": "DataLayer Events",
+          "eventsLabel": "事件",
+          "ecommerceTitle": "检测到电子商务跟踪",
+          "eventsHeading": "DataLayer事件",
           "table": {
-            "event": "Event Name"
+            "event": "事件名称"
           },
-          "consentImplemented": "Consent Mode Implemented",
-          "consentMissing": "Consent Mode Not Implemented"
+          "consentImplemented": "已实施同意模式",
+          "consentMissing": "未实施同意模式"
         },
         "cookies": {
-          "totalLabel": "Total Cookies",
-          "detailsHeading": "Cookie Details",
-          "issuesHeading": "Compliance Issues",
+          "totalLabel": "Cookie总数",
+          "detailsHeading": "Cookie详情",
+          "issuesHeading": "合规问题",
           "table": {
-            "type": "Type",
-            "count": "Count",
-            "name": "Name",
-            "vendor": "Vendor",
-            "domain": "Domain",
-            "expires": "Expires"
+            "type": "类型",
+            "count": "数量",
+            "name": "名称",
+            "vendor": "供应商",
+            "domain": "域名",
+            "secure": "安全",
+            "expires": "过期时间"
           }
         },
-        "recommendations": "Recommendations",
-        "recommendations.noneTitle": "Well-Managed Tag Infrastructure",
-        "recommendations.noneBody": "Your tag implementation follows best practices. Continue monitoring for new issues."
+        "recommendationsTitle": "建议",
+        "recommendationsNoneTitle": "管理良好的标签基础设施",
+        "recommendationsNoneBody": "您的标签实现遵循最佳实践。请继续监控是否出现新问题。"
       },
       "actionableRecommendations": "可操作的优化建议",
       "prioritySteps": "基于优先级的修复步骤",
@@ -8695,6 +10147,85 @@
       "accessibility": "无障碍",
       "performance": "性能",
       "coreWebVitals": "核心网页指标"
+    },
+    "brandConsistency": {
+      "report": {
+        "sectionIntros": {
+          "overview": "本部分提供网站品牌一致性的概览。",
+          "colors": "颜色一致性是品牌识别的基石。本部分分析所使用的调色板。",
+          "typography": "一致的排版强化品牌识别并提高可读性。",
+          "contrast": "充分的颜色对比度确保所有用户都能阅读内容。",
+          "crossPage": "跨页面一致性衡量用户浏览时品牌元素的统一程度。",
+          "recommendations": "基于品牌一致性分析的优先建议。"
+        },
+        "overview": "一致性概览",
+        "colorAnalysis": "颜色分析",
+        "colors": {
+          "paletteHeading": "调色板",
+          "table": {
+            "color": "颜色",
+            "name": "名称",
+            "usage": "用途",
+            "percentage": "百分比"
+          },
+          "dominantHeading": "主色调",
+          "contrastRatio": "对比度",
+          "issuesHeading": "颜色问题"
+        },
+        "typographyAnalysis": "排版分析",
+        "typography": {
+          "fontsHeading": "使用的字体",
+          "table": {
+            "font": "字体",
+            "weight": "字重",
+            "usage": "用途",
+            "pages": "页面",
+            "element": "元素",
+            "size": "大小",
+            "lineHeight": "行高"
+          },
+          "headingStylesHeading": "标题样式",
+          "bodyStylesHeading": "正文样式",
+          "issuesHeading": "排版问题"
+        },
+        "contrastAnalysis": "对比度分析",
+        "contrast": {
+          "pairsHeading": "对比度配对",
+          "table": {
+            "foreground": "前景",
+            "background": "背景",
+            "ratio": "比率"
+          },
+          "pass": "通过",
+          "fail": "未通过",
+          "issuesHeading": "对比度问题",
+          "noIssuesTitle": "良好的对比度",
+          "noIssuesBody": "所有分析的颜色配对均满足WCAG对比度要求。"
+        },
+        "crossPageConsistency": "跨页面一致性",
+        "crossPage": {
+          "pagesHeading": "已分析的页面",
+          "totalPages": "总页面数",
+          "table": {
+            "page": "页面",
+            "score": "评分"
+          },
+          "issuesHeading": "一致性问题",
+          "noIssuesTitle": "一致的品牌形象",
+          "noIssuesBody": "未检测到跨页面一致性问题。您的品牌元素是统一的。"
+        },
+        "recommendations": "建议",
+        "overview.consistency": "Consistency",
+        "overview.colorAnalysis": "Color Analysis",
+        "overview.typographyAnalysis": "Typography Analysis",
+        "overview.elementsHeading": "Brand Elements Detected",
+        "overview.logos": "Logos",
+        "overview.colors": "Colors",
+        "overview.fonts": "Fonts",
+        "overview.patterns": "Patterns",
+        "recommendations.noneTitle": "Strong Brand Consistency",
+        "recommendations.noneBody": "Your site maintains excellent brand consistency. Continue monitoring for visual drift as content evolves."
+      }
     }
   },
   "reportsPage": {
@@ -8896,7 +10427,58 @@
     "bestPractices": "最佳实践",
     "coreWebVitals": "核心网页指标",
     "detailedMetrics": "详细指标",
-    "recommendations": "建议"
+    "recommendations": "建议",
+    "resourceAnalysis": "资源分析",
+    "networkPerformance": "网络性能",
+    "cachingOptimization": "缓存与优化",
+    "requests": "请求数",
+    "pageSize": "页面大小",
+    "loadTime": "加载时间",
+    "report": {
+      "recommendations": "改进建议",
+      "cwv": {
+        "good": "良好",
+        "needsImprovement": "需要改进",
+        "poor": "差"
+      },
+      "lighthouse": {
+        "title": "Lighthouse 类别评分",
+        "bestPractices": "最佳实践"
+      },
+      "sectionIntros": {
+        "cwv": "核心网页指标是Google衡量真实用户体验的关键指标。它们关注加载性能（LCP）、交互性（FID/INP）和视觉稳定性（CLS）。评分与Google的良好、需要改进和差三个阈值进行比较。所有三项指标达到良好阈值对最佳搜索排名至关重要。",
+        "lighthouse": "Lighthouse为性能、无障碍、最佳实践和SEO类别提供自动审计。每个类别分数反映对网页开发最佳实践的遵守程度。本节显示分析期间每个Lighthouse审计类别的评分。",
+        "resources": "资源分析检查页面的组成——脚本、样式表、图像、字体和其他资源。了解资源构成有助于识别优化机会。减少资源数量和大小直接改善加载时间和核心网页指标评分。",
+        "network": "网络性能指标衡量服务器响应和交付内容的速度。首字节时间（TTFB）表示服务器处理速度，而DNS查询和SSL协商时间揭示连接开销。优化这些指标需要关注服务器配置和网络基础设施。",
+        "caching": "有效的缓存减少服务器负载，显著提高重复访问性能。正确配置的缓存标头确保浏览器存储和复用静态资源。本节评估您的缓存策略，识别可从更长缓存持续时间中受益的资源。",
+        "recommendations": "基于性能分析，这些建议针对最有影响的改进。优先处理高优先级项目将在加载时间和核心网页指标评分方面产生最大收益。"
+      },
+      "resources": {
+        "breakdownHeading": "资源分类",
+        "table": {
+          "type": "类型",
+          "count": "文件数",
+          "size": "大小"
+        }
+      },
+      "network": {
+        "title": "网络性能",
+        "ttfb": "首字节时间",
+        "dns": "DNS查询",
+        "ssl": "SSL协商",
+        "connection": "连接时间",
+        "domInteractive": "DOM可交互",
+        "domContentLoaded": "DOM内容加载"
+      },
+      "caching": {
+        "title": "缓存与优化",
+        "hitRateLabel": "缓存命中率",
+        "cachedLabel": "已缓存资源",
+        "notCachedLabel": "未缓存"
+      },
+      "recommendations.noneTitle": "出色的性能",
+      "recommendations.noneBody": "您的网站在所有指标上表现良好。请继续监控性能变化。"
+    }
   },
   "grades": {
     "aPlus": "A+",
@@ -8924,8 +10506,70 @@
     "passes": "通过",
     "colorContrast": "颜色对比度",
     "keyboardNav": "键盘导航",
-    "ariaLabels": "ARIA标签",
-    "imageAlt": "图片替代文本"
+    "ariaLabels": "ARIA与语义化",
+    "imageAlt": "图片替代文本",
+    "report": {
+      "recommendations": "改进建议",
+      "sectionIntros": {
+        "wcag": "Web内容无障碍指南（WCAG）2.1定义了使网页内容对残障人士无障碍的标准。合规性通过四项原则衡量：可感知、可操作、可理解和健壮性。本节评估您的页面对关键WCAG AA级成功标准的符合程度。满足这些标准可确保您的网站为最广泛的受众所用，且在许多司法管辖区可能是法律要求。",
+        "contrast": "充足的颜色对比度确保文本和交互元素对低视力或色觉缺陷人群可读。WCAG 2.1 AA级要求正常文本的最低对比度为4.5:1，大文本为3:1。本节识别未达到这些阈值的元素。修复对比度问题是最有影响力的无障碍改进之一。",
+        "keyboard": "键盘无障碍确保所有交互元素都可以仅使用键盘到达和操作。这对于因运动障碍无法使用鼠标的用户以及偏好键盘导航的高级用户至关重要。本节检查可聚焦元素、Tab陷阱和可见焦点指示器。每个交互元素必须可通过Tab键到达，并可通过Enter或空格键操作。",
+        "aria": "ARIA（无障碍的富互联网应用）属性和语义化HTML为屏幕阅读器无障碍提供基础。正确使用地标、标签、角色和标题结构使辅助技术能够导航和理解您的页面。本节检查ARIA实施质量、地标区域、表单标签和标题层次结构。不正确的ARIA使用实际上可能使无障碍性更差，因此正确实施至关重要。",
+        "recommendations": "基于无障碍审计，本节提供按优先级排列的建议，以改善您网站的包容性。每项建议参考相关的WCAG成功标准，并包括实施的实际步骤。优先处理高优先级项目将在无障碍合规性和残障人士用户体验方面产生最大改进。"
+      },
+      "wcag": {
+        "levelTitle": "目标级别：WCAG 2.1 AA",
+        "levelBody": "WCAG AA级是全球大多数无障碍法规要求的标准，包括ADA、第508条和欧洲无障碍法案。",
+        "criteriaHeading": "成功标准",
+        "deviceScoresHeading": "设备评分",
+        "criteria": {
+          "nonTextContent": "1.1.1 非文本内容",
+          "infoRelationships": "1.3.1 信息和关系",
+          "contrastMinimum": "1.4.3 对比度（最低）",
+          "keyboard": "2.1.1 键盘",
+          "bypassBlocks": "2.4.1 绕过区块",
+          "pageTitled": "2.4.2 页面标题",
+          "focusOrder": "2.4.3 焦点顺序",
+          "languagePage": "3.1.1 页面语言",
+          "parsing": "4.1.1 解析",
+          "nameRoleValue": "4.1.2 名称、角色、值"
+        },
+        "table": {
+          "criterion": "成功标准"
+        }
+      },
+      "contrast": {
+        "issuesLabel": "对比度问题",
+        "detailsHeading": "对比度问题",
+        "allPassTitle": "所有对比度检查通过",
+        "allPassBody": "所有文本元素均满足最低对比度要求。",
+        "table": {
+          "element": "元素",
+          "ratio": "比率",
+          "required": "要求"
+        }
+      },
+      "keyboard": {
+        "focusableLabel": "可聚焦元素",
+        "tabTrapsLabel": "Tab陷阱",
+        "missingFocusLabel": "缺失焦点指示器",
+        "issuesHeading": "键盘问题"
+      },
+      "aria": {
+        "landmarksLabel": "地标",
+        "missingLabelsLabel": "缺失标签",
+        "invalidRolesLabel": "无效角色",
+        "headingStructureLabel": "标题结构",
+        "issuesHeading": "ARIA问题",
+        "table": {
+          "issue": "问题",
+          "description": "描述",
+          "impact": "影响"
+        }
+      },
+      "recommendations.noneTitle": "优秀的无障碍性",
+      "recommendations.noneBody": "您的网站符合无障碍最佳实践。请继续监控以确保合规。"
+    }
   },
   "status": {
     "excellent": "优秀",
@@ -8960,7 +10604,8 @@
     "essentialDesc": "网站正常运行所必需的（会话、偏好设置）。",
     "analytics": "分析",
     "analyticsDesc": "帮助我们了解访客如何使用本网站（Google Analytics）。",
-    "alwaysOn": "始终开启"
+    "alwaysOn": "始终开启",
+    "ariaLabel": "Cookie 同意"
   },
   "privacyPage": {
     "breadcrumb": "隐私政策",
@@ -9161,5 +10806,8 @@
       "low": "低",
       "medium": "中"
     }
-  }
+  },
+  "auto_scan": "true",
+  "report_type": "cwv",
+  "print": "1"
 }

@@ -199,7 +199,8 @@ async function analyze() {
       const errorData = await response.json().catch(() => ({}));
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        return;
       }
       const errorMsg = errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed - please try again');
       throw new Error(errorMsg);
@@ -360,7 +361,7 @@ function displayResults(data) {
       },
       {
         id: 'report-recommendations',
-        title: t('reports.common.reportAndRecommendations', 'Report and Recommendations'),
+        title: t('reports.common.reportAndRecommendations', 'Recommendations'),
         scoreTextRight: null,
         contentHTML: renderRecommendationsContent(data.recommendations),
         isPro: true,
@@ -382,7 +383,7 @@ function displayResults(data) {
       proBlock: true,
       proBlockOptions: {
         context: 'local-seo',
-        features: ['pdf', 'csv', 'share'],
+        features: ['pdf', 'excel', 'csv', 'share'],
         title: t('reports.common.unlockReport', 'Unlock Report'),
         subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
         reportId
@@ -438,7 +439,7 @@ function displayResults(data) {
       }),
       ReportAccordion.createSection({
         id: 'report-recommendations',
-        title: t('reports.common.reportRecommendations', 'Report and Recommendations'),
+        title: t('reports.common.reportRecommendations', 'Recommendations'),
         isPro: true,
         locked: !isUnlocked,
         context: 'local-seo',
@@ -1258,7 +1259,7 @@ function renderLocalSeoFixAccordion(rec, index) {
       </div>
 
       <div class="local-seo-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps)}
         </div>
       </div>

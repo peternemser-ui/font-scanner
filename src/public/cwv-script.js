@@ -691,12 +691,12 @@ analyzeButton.addEventListener('click', async () => {
         const errorData = await response.json();
         if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
           const limit = errorData.scansLimit || 10;
-          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+          return;
         }
         errorMessage = errorData.message || errorData.error || errorMessage;
         console.error('[CWV] API error:', { status: response.status, error: errorData });
       } catch (parseErr) {
-        if (parseErr.message && parseErr.message.includes('scan limit')) throw parseErr;
         console.error('[CWV] API error (non-JSON):', response.status, response.statusText);
       }
       throw new Error(errorMessage);
@@ -1123,8 +1123,8 @@ function displayResults(data) {
       </div>
     `, null)}
 
-    <!-- Report and Recommendations (Pro) -->
-    ${recommendations.length > 0 ? createCWVAccordionSection('report-recommendations', '📋', t('reports.cwv.recommendationsTitle', 'Report and Recommendations') + ' <span class="pro-pill">PRO</span>',
+    <!-- Recommendations (Pro) -->
+    ${recommendations.length > 0 ? createCWVAccordionSection('report-recommendations', '📋', t('reports.cwv.recommendationsTitle', 'Recommendations') + ' <span class="pro-pill">PRO</span>',
       hasProAccess ? `
       <div style="display: grid; gap: 1rem; padding: 1rem 0;">
         ${recommendations.map(rec => `
@@ -1186,6 +1186,20 @@ function displayResults(data) {
 
     <!-- PDF Download button removed - monetization disabled -->
   `;
+
+  // Pro Report Block (Export & Share)
+  if (window.ProReportBlock && window.ProReportBlock.render) {
+    resultsContainer.insertAdjacentHTML('beforeend', window.ProReportBlock.render({
+      context: 'core-web-vitals',
+      features: ['pdf', 'excel', 'csv', 'share'],
+      title: t('reports.common.unlockReport', 'Unlock Report'),
+      subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.')
+    }));
+  } else {
+    const opts = { context: 'core-web-vitals', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, share link, export data, and fix packs for this scan.' };
+    const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
+    resultsContainer.insertAdjacentHTML('beforeend', '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>');
+  }
 
   // Add click handler for screenshot lightbox
   if (screenshotUrl) {

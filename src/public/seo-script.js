@@ -186,6 +186,29 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Handle billing re-scan: user returned from Stripe but cached results weren't available.
+  // Re-scan with the purchased reportId preserved so pro sections render unlocked.
+  window.addEventListener('sm:billingRescan', (e) => {
+    const { reportId: purchasedReportId, url: scanUrl } = e.detail || {};
+    const analyzerKey = window.SM_ANALYZER_KEY || '';
+    if (!analyzerKey.includes('seo')) return; // Not for this analyzer
+    console.log('[SEO] Billing re-scan requested:', { purchasedReportId, scanUrl });
+    window.__smBillingRescanHandled = true;
+
+    // Pre-fill URL input
+    if (scanUrl) {
+      shell.setUrl(scanUrl);
+    }
+
+    // Ensure the purchased reportId is set on the body so preserveReportId logic picks it up
+    if (purchasedReportId) {
+      document.body.setAttribute('data-report-id', purchasedReportId);
+    }
+
+    // Trigger re-scan with preserveReportId to keep the purchased reportId
+    shell.startScan({ preserveReportId: true });
+  });
+
   // Expose displaySEOResults globally for billing return handler
   window.displaySEOResults = displaySEOResults;
 });
@@ -244,24 +267,7 @@ function displaySEOResults(results) {
 
   const startedAt = results.startedAt || results.timestamp || '';
 
-  // Summary donuts (standard shell)
-  const summary = [];
-  if (results && results.score && typeof results.score.overall === 'number') {
-    summary.push({ label: t('seo.overall', 'Overall'), score: results.score.overall });
-  }
-  if (results && results.score && results.score.breakdown) {
-    const hiddenSeoSections = ['performanceMetrics', 'securityHeaders'];
-    Object.entries(results.score.breakdown).forEach(([key, data]) => {
-      if (hiddenSeoSections.includes(key)) return;
-      let score = null;
-      if (typeof data === 'number') score = data;
-      else if (data && typeof data.score === 'number') score = data.score;
-      const translatedLabel = t(`seo.components.${key}`, null);
-      summary.push({ label: translatedLabel && translatedLabel !== `seo.components.${key}` ? translatedLabel : formatComponentName(key), score });
-    });
-  }
-
-  // Gated Fix Code + Recommendations (reference implementation)
+  // Gated Recommendations (reference implementation)
   // Pro/Day Pass users get global access; single-report purchases need reportId
   const isUnlocked = !!(
     // Pro/Day Pass: global access regardless of reportId
@@ -276,107 +282,124 @@ function displaySEOResults(results) {
     ))
   );
 
-  const proFixesPreview = renderSeoFixesPreview([
-    t('seo.proPreview.metaTags', 'Meta tags improvements'),
-    t('seo.proPreview.structuredData', 'Structured data quick wins')
-  ]);
-
-  const sections = [
-    {
-      id: 'meta-tags',
-      title: getSeoSectionTitle('metaTags', 'Meta Tags'),
-      scoreTextRight: results.metaTags?.score,
-      contentHTML: renderMetaTagsContent(results.metaTags)
-    },
-    {
-      id: 'heading-structure',
-      title: getSeoSectionTitle('headings', 'Headings'),
-      scoreTextRight: results.headingStructure?.score,
-      contentHTML: renderHeadingStructureContent(results.headingStructure)
-    },
-    {
-      id: 'content-analysis',
-      title: getSeoSectionTitle('content', 'Content'),
-      scoreTextRight: results.contentAnalysis?.score,
-      contentHTML: renderContentAnalysisContent(results.contentAnalysis)
-    },
-    {
-      id: 'image-analysis',
-      title: getSeoSectionTitle('images', 'Images'),
-      scoreTextRight: results.imageAnalysis?.score,
-      contentHTML: renderImageAnalysisContent(results.imageAnalysis)
-    },
-    {
-      id: 'link-analysis',
-      title: getSeoSectionTitle('links', 'Link Analysis'),
-      scoreTextRight: results.linkAnalysis?.score,
-      contentHTML: renderLinkAnalysisContent(results.linkAnalysis)
-    },
-    {
-      id: 'mobile-responsive',
-      title: getSeoSectionTitle('mobile', 'Mobile Responsiveness'),
-      scoreTextRight: results.mobileResponsive?.score,
-      contentHTML: results.mobileResponsive
-        ? renderMobileResponsivenessContent(results.mobileResponsive)
-        : renderUnavailableSection(t('seo.report.unavailable.mobile', 'Mobile responsiveness data requires full headless analysis. This scan used lightweight mode.'))
-    },
-    {
-      id: 'structured-data',
-      title: getSeoSectionTitle('structuredData', 'Structured Data'),
-      scoreTextRight: results.structuredData?.score,
-      isPro: true,
-      locked: !isUnlocked,
-      context: 'seo',
-      reportId,
-      contentHTML: results.structuredData ? renderStructuredDataContent(results.structuredData)
-        : renderUnavailableSection(t('seo.report.unavailable.structuredData', 'Structured data analysis unavailable.'))
-    },
-    {
-      id: 'additional-checks',
-      title: getSeoSectionTitle('additional', 'Additional Checks'),
-      scoreTextRight: results.additionalChecks?.score,
-      isPro: true,
-      locked: !isUnlocked,
-      context: 'seo',
-      reportId,
-      contentHTML: results.additionalChecks ? renderAdditionalChecksContent(results.additionalChecks)
-        : renderUnavailableSection(t('seo.report.unavailable.additional', 'Additional checks require full headless analysis.'))
-    },
-    {
-      id: 'report-recommendations',
-      title: getSeoSectionTitle('fixCode', 'Report and Recommendations'),
-      scoreTextRight: results.score?.overall,
-      isPro: true,
-      locked: !isUnlocked,
-      context: 'seo',
-      reportId,
-      contentHTML: renderProFixes(results)
-    }
-  ];
-
-  const screenshotUrl =
-    results.screenshotUrl ||
-    (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
-
-  // Set screenshot URL body attribute for report-ui.js
-  if (screenshotUrl) {
-    document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
-  }
-
-  const screenshots = screenshotUrl
-    ? [{ src: screenshotUrl, alt: t('common.pageScreenshotAlt', 'Page screenshot'), device: '' }]
-    : [];
-
-  if (screenshots.length) {
-    screenshots[0].alt = t('common.pageScreenshotAlt', screenshots[0].alt);
-  }
-
-  console.log('[SEO] Building report HTML, sections count:', sections.length);
-  console.log('[SEO] Summary items:', summary.length);
-  console.log('[SEO] Screenshots:', screenshots.length);
-
   let reportHTML = '';
   try {
+    // Summary donuts (standard shell)
+    const summary = [];
+    if (results && results.score && typeof results.score.overall === 'number') {
+      summary.push({ label: t('seo.overall', 'Overall'), score: results.score.overall });
+    }
+    if (results && results.score && results.score.breakdown) {
+      const hiddenSeoSections = ['performanceMetrics', 'securityHeaders'];
+      Object.entries(results.score.breakdown).forEach(([key, data]) => {
+        if (hiddenSeoSections.includes(key)) return;
+        let score = null;
+        if (typeof data === 'number') score = data;
+        else if (data && typeof data.score === 'number') score = data.score;
+        const translatedLabel = t(`seo.components.${key}`, null);
+        summary.push({ label: translatedLabel && translatedLabel !== `seo.components.${key}` ? translatedLabel : formatComponentName(key), score });
+      });
+    }
+
+    const proFixesPreview = renderSeoFixesPreview([
+      t('seo.proPreview.metaTags', 'Meta tags improvements'),
+      t('seo.proPreview.structuredData', 'Structured data quick wins')
+    ]);
+
+    const sections = [
+      {
+        id: 'meta-tags',
+        title: getSeoSectionTitle('metaTags', 'Meta Tags'),
+        scoreTextRight: results.metaTags?.score,
+        contentHTML: renderMetaTagsContent(results.metaTags)
+      },
+      {
+        id: 'heading-structure',
+        title: getSeoSectionTitle('headings', 'Headings'),
+        scoreTextRight: results.headingStructure?.score,
+        contentHTML: renderHeadingStructureContent(results.headingStructure)
+      },
+      {
+        id: 'content-analysis',
+        title: getSeoSectionTitle('content', 'Content'),
+        scoreTextRight: results.contentAnalysis?.score,
+        contentHTML: renderContentAnalysisContent(results.contentAnalysis)
+      },
+      {
+        id: 'image-analysis',
+        title: getSeoSectionTitle('images', 'Images'),
+        scoreTextRight: results.imageAnalysis?.score,
+        contentHTML: renderImageAnalysisContent(results.imageAnalysis)
+      },
+      {
+        id: 'link-analysis',
+        title: getSeoSectionTitle('links', 'Link Analysis'),
+        scoreTextRight: results.linkAnalysis?.score,
+        contentHTML: renderLinkAnalysisContent(results.linkAnalysis)
+      },
+      {
+        id: 'mobile-responsive',
+        title: getSeoSectionTitle('mobile', 'Mobile Responsiveness'),
+        scoreTextRight: results.mobileResponsive?.score,
+        contentHTML: results.mobileResponsive
+          ? renderMobileResponsivenessContent(results.mobileResponsive)
+          : renderUnavailableSection(t('seo.report.unavailable.mobile', 'Mobile responsiveness data requires full headless analysis. This scan used lightweight mode.'))
+      },
+      {
+        id: 'structured-data',
+        title: getSeoSectionTitle('structuredData', 'Structured Data'),
+        scoreTextRight: results.structuredData?.score,
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'seo',
+        reportId,
+        contentHTML: results.structuredData ? renderStructuredDataContent(results.structuredData)
+          : renderUnavailableSection(t('seo.report.unavailable.structuredData', 'Structured data analysis unavailable.'))
+      },
+      {
+        id: 'additional-checks',
+        title: getSeoSectionTitle('additional', 'Additional Checks'),
+        scoreTextRight: results.additionalChecks?.score,
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'seo',
+        reportId,
+        contentHTML: results.additionalChecks ? renderAdditionalChecksContent(results.additionalChecks)
+          : renderUnavailableSection(t('seo.report.unavailable.additional', 'Additional checks require full headless analysis.'))
+      },
+      {
+        id: 'report-recommendations',
+        title: getSeoSectionTitle('fixCode', 'Recommendations'),
+        scoreTextRight: results.score?.overall,
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'seo',
+        reportId,
+        contentHTML: renderProFixes(results)
+      }
+    ];
+
+    const screenshotUrl =
+      results.screenshotUrl ||
+      (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+
+    // Set screenshot URL body attribute for report-ui.js
+    if (screenshotUrl) {
+      document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
+    }
+
+    const screenshots = screenshotUrl
+      ? [{ src: screenshotUrl, alt: t('common.pageScreenshotAlt', 'Page screenshot'), device: '' }]
+      : [];
+
+    if (screenshots.length) {
+      screenshots[0].alt = t('common.pageScreenshotAlt', screenshots[0].alt);
+    }
+
+    console.log('[SEO] Building report HTML, sections count:', sections.length);
+    console.log('[SEO] Summary items:', summary.length);
+    console.log('[SEO] Screenshots:', screenshots.length);
+
     reportHTML = (window.ReportContainer && typeof window.ReportContainer.create === 'function')
       ? window.ReportContainer.create({
         url: results.url,
@@ -548,6 +571,12 @@ function revealSeoProContent() {
     }
     overlay.replaceWith(fragment);
   });
+
+  // Remove locked state from Pro Report Blocks (show accent border after unlock)
+  document.querySelectorAll('.pro-report-block--locked, .pro-report-block[data-locked]').forEach((block) => {
+    block.classList.remove('pro-report-block--locked');
+    block.removeAttribute('data-locked');
+  });
 }
 function renderSeoFixesPreview(previewLines = []) {
   const lines = Array.isArray(previewLines) && previewLines.length
@@ -714,7 +743,7 @@ function renderSeoFixAccordion(fix, index) {
       </div>
 
       <div class="seo-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderSeoFixTabs(fix, accordionId)}
         </div>
       </div>
@@ -2962,7 +2991,7 @@ function getAccentPrimaryHex() {
 // C grades (50-69): Orange
 // Below C (<50): Red
 function getScoreColor(score) {
-  if (score >= 90) return getAccentPrimaryHex();
+  if (score >= 90) return '#22c55e';  // A: Green
   if (score >= 70) return '#ffd700';  // B: Yellow (gold)
   if (score >= 50) return '#ff8c00';  // C: Dark orange
   return '#ff4444';                   // D/F: Red
@@ -3985,7 +4014,7 @@ window.exportSeoExcel = async function() {
         const wsFix = wb.addWorksheet(t('seo.export.excel.sheets.fixCode', 'Fix Code'), { properties: { tabColor: { argb: COLORS.good } } });
         wsFix.columns = [{ width: 100 }];
 
-        const fixTitle = wsFix.addRow([t('seo.export.excel.fixCode.title', 'Fix Code + Recommendations')]);
+        const fixTitle = wsFix.addRow([t('seo.export.excel.fixCode.title', 'Recommendations')]);
         applyStyle(wsFix.getCell('A1'), styles.title);
         fixTitle.height = 30;
         wsFix.addRow([t('seo.export.excel.fixCode.subtitle', 'Actionable fixes to improve your SEO score')]);

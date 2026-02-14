@@ -444,30 +444,295 @@
 
       var html = '';
 
+      // Common schema types lookup (mirrors seo-script.js)
+      var commonSchemas = {
+        Organization:        { desc: t('seo.report.structuredData.schemas.Organization.desc', 'Company/Brand information'), benefit: t('seo.report.structuredData.schemas.Organization.benefit', 'Establishes brand identity in Knowledge Graph'), fields: ['name', 'logo', 'url', 'contactPoint', 'sameAs'] },
+        Person:              { desc: t('seo.report.structuredData.schemas.Person.desc', 'Individual profile data'), benefit: t('seo.report.structuredData.schemas.Person.benefit', 'Powers author rich snippets and Knowledge Panel'), fields: ['name', 'image', 'jobTitle', 'worksFor', 'sameAs'] },
+        Product:             { desc: t('seo.report.structuredData.schemas.Product.desc', 'Product listings & details'), benefit: t('seo.report.structuredData.schemas.Product.benefit', 'Shows price, availability, and reviews in search'), fields: ['name', 'image', 'description', 'sku', 'offers', 'aggregateRating'] },
+        Article:             { desc: t('seo.report.structuredData.schemas.Article.desc', 'Blog posts & articles'), benefit: t('seo.report.structuredData.schemas.Article.benefit', 'Enables article snippets with author and publish date'), fields: ['headline', 'author', 'datePublished', 'image'] },
+        WebSite:             { desc: t('seo.report.structuredData.schemas.WebSite.desc', 'Website metadata'), benefit: t('seo.report.structuredData.schemas.WebSite.benefit', 'Enables sitelinks search box in Google'), fields: ['name', 'url', 'potentialAction'] },
+        BreadcrumbList:      { desc: t('seo.report.structuredData.schemas.BreadcrumbList.desc', 'Navigation breadcrumbs'), benefit: t('seo.report.structuredData.schemas.BreadcrumbList.benefit', 'Shows breadcrumb trail in search results'), fields: ['itemListElement', 'position', 'name', 'item'] },
+        LocalBusiness:       { desc: t('seo.report.structuredData.schemas.LocalBusiness.desc', 'Local business info'), benefit: t('seo.report.structuredData.schemas.LocalBusiness.benefit', 'Appears in local search and Google Maps'), fields: ['name', 'address', 'telephone', 'openingHours', 'geo'] },
+        Event:               { desc: t('seo.report.structuredData.schemas.Event.desc', 'Event information'), benefit: t('seo.report.structuredData.schemas.Event.benefit', 'Shows event details in search with "Add to Calendar"'), fields: ['name', 'startDate', 'location', 'description', 'offers'] },
+        Recipe:              { desc: t('seo.report.structuredData.schemas.Recipe.desc', 'Recipe content'), benefit: t('seo.report.structuredData.schemas.Recipe.benefit', 'Rich recipe cards with ratings, cook time, calories'), fields: ['name', 'image', 'author', 'recipeIngredient', 'recipeInstructions'] },
+        Review:              { desc: t('seo.report.structuredData.schemas.Review.desc', 'User reviews'), benefit: t('seo.report.structuredData.schemas.Review.benefit', 'Display star ratings directly in search results'), fields: ['itemReviewed', 'reviewRating', 'author', 'reviewBody'] },
+        VideoObject:         { desc: t('seo.report.structuredData.schemas.VideoObject.desc', 'Video content'), benefit: t('seo.report.structuredData.schemas.VideoObject.benefit', 'Video snippets with thumbnails and key moments'), fields: ['name', 'description', 'thumbnailUrl', 'uploadDate', 'duration'] },
+        FAQPage:             { desc: t('seo.report.structuredData.schemas.FAQPage.desc', 'FAQ content'), benefit: t('seo.report.structuredData.schemas.FAQPage.benefit', 'Expandable FAQ sections in search results'), fields: ['mainEntity', 'name', 'acceptedAnswer'] },
+        HowTo:               { desc: t('seo.report.structuredData.schemas.HowTo.desc', 'Step-by-step guides'), benefit: t('seo.report.structuredData.schemas.HowTo.benefit', 'Numbered steps with images in search'), fields: ['name', 'step', 'totalTime', 'tool', 'supply'] },
+        SoftwareApplication: { desc: t('seo.report.structuredData.schemas.SoftwareApplication.desc', 'Software/app details'), benefit: t('seo.report.structuredData.schemas.SoftwareApplication.benefit', 'App install buttons and ratings in search'), fields: ['name', 'operatingSystem', 'applicationCategory', 'offers', 'aggregateRating'] },
+        JobPosting:          { desc: t('seo.report.structuredData.schemas.JobPosting.desc', 'Job listings'), benefit: t('seo.report.structuredData.schemas.JobPosting.benefit', 'Appears in Google for Jobs with salary and location'), fields: ['title', 'description', 'datePosted', 'employmentType', 'hiringOrganization'] }
+      };
+
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.structuredData', 'Structured data helps search engines understand your content and enables rich results such as star ratings, FAQs, and product cards in search results. Pages with rich results typically see 20-30% higher click-through rates compared to standard listings. This section checks for JSON-LD and Microdata markup, including the schema types implemented on your page. Google recommends JSON-LD as the preferred format for structured data implementation.')) + '</p>';
 
+      // Info callout with benefit cards
+      html += PR.renderCallout(
+        t('seo.report.structuredData.info.title', 'What is Structured Data Schema?'),
+        t('seo.report.structuredData.info.body', 'Structured data (also called schema markup) is code that helps search engines understand your content better, enabling rich search results like star ratings, product prices, event dates, FAQ dropdowns, and more. It uses the Schema.org vocabulary in JSON-LD, Microdata, or RDFa formats.'),
+        'info'
+      );
+
+      // Top-level metrics
       html += PR.renderMetrics([
-        { value: d.hasStructuredData ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not Detected'), label: 'Structured Data', color: d.hasStructuredData ? '#10b981' : '#ef4444' },
+        { value: d.hasStructuredData ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not Detected'), label: t('seo.structuredData', 'Structured Data'), color: d.hasStructuredData ? '#10b981' : '#ef4444' },
         { value: d.jsonLdCount || 0, label: 'JSON-LD' },
-        { value: d.microdataCount || 0, label: 'Microdata' },
+        { value: d.microdataCount || 0, label: t('seo.report.structuredData.microdataLabel', 'Microdata') },
         { value: d.count || 0, label: t('seo.report.headings.table.count', 'Total') }
       ]);
 
-      if (d.types && d.types.length > 0) {
-        html += '<h3 class="pdf-subsection__title">Schema Types</h3>';
-        var typeRows = d.types.map(function (type) {
-          return [esc(type), PR.renderStatus('found', t('seo.report.status.found', 'Found'))];
-        });
+      // Summary table
+      html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.structuredData.summary.heading', 'Summary')) + '</h3>';
+
+      var summaryTypesImpact = (d.count || 0) >= 3
+        ? t('seo.report.structuredData.summary.rows.types.impact.great', 'Great coverage')
+        : (d.count || 0) >= 1
+          ? t('seo.report.structuredData.summary.rows.types.impact.good', 'Good start')
+          : t('seo.report.structuredData.summary.rows.types.impact.none', 'None implemented');
+
+      var summaryScoreImpact = (d.score || 0) >= 80
+        ? t('seo.report.structuredData.summary.rows.score.impact.excellent', 'Excellent implementation')
+        : (d.score || 0) >= 60
+          ? t('seo.report.structuredData.summary.rows.score.impact.room', 'Room for improvement')
+          : t('seo.report.structuredData.summary.rows.score.impact.critical', 'Critical gap');
+
+      html += PR.renderTable(
+        [
+          { label: t('seo.report.table.metric', 'Metric'), width: '25%' },
+          { label: t('seo.report.table.status', 'Status'), width: '12%' },
+          { label: t('seo.report.table.value', 'Value'), width: '25%' },
+          { label: t('seo.report.structuredData.summary.table.impact', 'Impact'), width: '38%' }
+        ],
+        [
+          [
+            esc(t('seo.report.structuredData.summary.rows.found.metric', 'Structured Data Found')),
+            PR.renderStatus(d.hasStructuredData ? 'pass' : 'fail', d.hasStructuredData ? '✓' : '✗'),
+            '<strong>' + esc(d.hasStructuredData ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notFound', 'Not Found')) + '</strong>',
+            esc(d.hasStructuredData
+              ? t('seo.report.structuredData.summary.rows.found.impact.detected', 'Enables rich search results')
+              : t('seo.report.structuredData.summary.rows.found.impact.notFound', 'Missing enhanced search appearances'))
+          ],
+          [
+            esc(t('seo.report.structuredData.summary.rows.types.metric', 'Schema Types Implemented')),
+            PR.renderStatus('info', String(d.count || 0)),
+            '<strong>' + (d.count || 0) + ' ' + ((d.count || 0) === 1
+              ? esc(t('seo.report.structuredData.summary.rows.types.value.singular', 'Type'))
+              : esc(t('seo.report.structuredData.summary.rows.types.value.plural', 'Types'))) + '</strong>',
+            esc(summaryTypesImpact)
+          ],
+          [
+            esc(t('seo.report.structuredData.summary.rows.score.metric', 'Overall Score')),
+            PR.renderStatus('info', String(d.score || 0)),
+            '<strong>' + (d.score || 0) + '/100</strong>',
+            esc(summaryScoreImpact)
+          ]
+        ],
+        { striped: true }
+      );
+
+      // Branch: data found vs not found
+      if (d.hasStructuredData) {
+        // Detected schema types table
+        if (d.types && d.types.length > 0) {
+          html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.structuredData.detected.heading', 'Detected Schema Types')) + '</h3>';
+          var schemaRows = d.types.map(function (type) {
+            var schema = commonSchemas[type] || {
+              desc: t('seo.report.structuredData.detected.unknown.desc', 'Schema markup'),
+              benefit: t('seo.report.structuredData.detected.unknown.benefit', 'Structured data implementation'),
+              fields: []
+            };
+            var fieldsHtml = schema.fields.slice(0, 3).map(function (f) {
+              return '<code style="background:#e0f2fe;color:#0369a1;padding:1px 4px;border-radius:3px;font-size:0.75rem;">' + esc(f) + '</code>';
+            }).join(' ');
+            if (schema.fields.length > 3) {
+              fieldsHtml += ' <span style="color:#888;font-size:0.75rem;">+' + (schema.fields.length - 3) + '</span>';
+            }
+            return [
+              '<strong>' + esc(type) + '</strong><br/><span style="font-size:0.75rem;color:#888;">' + esc(schema.desc) + '</span>',
+              esc(schema.benefit),
+              fieldsHtml || '-'
+            ];
+          });
+
+          html += PR.renderTable(
+            [
+              { label: t('seo.report.structuredData.detected.table.schemaType', 'Schema Type'), width: '30%' },
+              { label: t('seo.report.structuredData.detected.table.seoBenefit', 'SEO Benefit'), width: '45%' },
+              { label: t('seo.report.structuredData.detected.table.keyFields', 'Key Fields'), width: '25%' }
+            ],
+            schemaRows,
+            { striped: true }
+          );
+        }
+
+        // Validation tip
+        html += PR.renderCallout(
+          t('seo.report.structuredData.validation.title', 'Next Step: Validate Your Schema'),
+          t('seo.report.structuredData.validation.body.beforeLink', 'Use') + ' ' +
+            t('seo.report.structuredData.validation.body.linkText', "Google's Rich Results Test") +
+            ' (search.google.com/test/rich-results) ' +
+            t('seo.report.structuredData.validation.body.afterLink', 'to ensure your structured data is error-free and eligible for rich snippets. Monitor Search Console for structured data errors.'),
+          'tip'
+        );
+      } else {
+        // Missing structured data — show opportunity
+        html += '<h3 class="pdf-subsection__title" style="color:#ef4444;">' + esc(t('seo.report.structuredData.missing.heading', 'Missing Critical SEO Opportunity')) + '</h3>';
+
+        html += PR.renderCallout(
+          t('seo.report.structuredData.missing.card.title', 'No Structured Data Detected'),
+          t('seo.report.structuredData.missing.card.body', "You're missing enhanced search appearances that boost visibility and click-through rates"),
+          'warning'
+        );
+
+        // Rich results impact table
         html += PR.renderTable(
           [
-            { label: 'Type', width: '70%' },
-            { label: t('seo.report.table.status', 'Status'), width: '30%' }
+            { label: t('seo.report.structuredData.missing.table.richResultType', 'Rich Result Type'), width: '25%' },
+            { label: t('seo.report.structuredData.missing.table.whatMissing', "What You're Missing"), width: '50%' },
+            { label: t('seo.report.structuredData.missing.table.ctrImpact', 'CTR Impact'), width: '25%' }
           ],
-          typeRows,
+          [
+            [
+              '<strong>' + esc(t('seo.report.structuredData.missing.rows.starRatings.title', 'Star Ratings')) + '</strong>',
+              esc(t('seo.report.structuredData.missing.rows.starRatings.body', 'Display review stars and ratings directly in search results')),
+              '<strong style="color:#10b981;">+35%</strong>'
+            ],
+            [
+              '<strong>' + esc(t('seo.report.structuredData.missing.rows.productInfo.title', 'Product Info')) + '</strong>',
+              esc(t('seo.report.structuredData.missing.rows.productInfo.body', 'Show prices, availability, and special offers inline')),
+              '<strong style="color:#10b981;">+25%</strong>'
+            ],
+            [
+              '<strong>' + esc(t('seo.report.structuredData.missing.rows.eventDetails.title', 'Event Details')) + '</strong>',
+              esc(t('seo.report.structuredData.missing.rows.eventDetails.body', 'Event dates, locations, and ticket info with calendar integration')),
+              '<strong style="color:#f59e0b;">+20%</strong>'
+            ],
+            [
+              '<strong>' + esc(t('seo.report.structuredData.missing.rows.richMedia.title', 'Rich Media')) + '</strong>',
+              esc(t('seo.report.structuredData.missing.rows.richMedia.body', 'Enhanced thumbnails, carousels, and video snippets')),
+              '<strong style="color:#f59e0b;">+18%</strong>'
+            ],
+            [
+              '<strong>' + esc(t('seo.report.structuredData.missing.rows.faq.title', 'FAQ Dropdowns')) + '</strong>',
+              esc(t('seo.report.structuredData.missing.rows.faq.body', 'Expandable Q&A sections directly in search results')),
+              '<strong style="color:#f59e0b;">+15%</strong>'
+            ]
+          ],
+          { striped: true }
+        );
+
+        // Recommended schemas
+        html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.structuredData.recommended.heading', 'Recommended Schema Types to Implement')) + '</h3>';
+
+        html += PR.renderCallout(
+          t('seo.report.structuredData.recommended.box.title', 'Start with these foundational schemas'),
+          t('seo.report.structuredData.recommended.box.body', 'that work for almost every website. You can add more specific schemas based on your content type later.'),
+          'info'
+        );
+
+        var recSchemas = [
+          { type: 'Organization', priority: t('seo.report.structuredData.priority.high', 'HIGH'), severity: 'high' },
+          { type: 'WebSite', priority: t('seo.report.structuredData.priority.high', 'HIGH'), severity: 'high' },
+          { type: 'BreadcrumbList', priority: t('seo.report.structuredData.priority.medium', 'MEDIUM'), severity: 'medium' },
+          { type: 'Article', priority: t('seo.report.structuredData.priority.medium', 'MEDIUM'), severity: 'medium' }
+        ];
+
+        var recRows = recSchemas.map(function (item) {
+          var schema = commonSchemas[item.type];
+          var fieldsHtml = schema.fields.slice(0, 4).map(function (f) {
+            return '<code style="background:#e0f2fe;color:#0369a1;padding:1px 4px;border-radius:3px;font-size:0.75rem;">' + esc(f) + '</code>';
+          }).join(' ');
+          return [
+            '<strong>' + esc(item.type) + '</strong><br/><span style="font-size:0.75rem;color:#888;">' + esc(schema.desc) + '</span>',
+            PR.renderStatus(item.severity, item.priority),
+            esc(schema.benefit),
+            fieldsHtml
+          ];
+        });
+
+        html += PR.renderTable(
+          [
+            { label: t('seo.report.structuredData.recommended.table.schemaType', 'Schema Type'), width: '22%' },
+            { label: t('seo.report.structuredData.recommended.table.priority', 'Priority'), width: '12%' },
+            { label: t('seo.report.structuredData.recommended.table.seoBenefit', 'SEO Benefit'), width: '38%' },
+            { label: t('seo.report.structuredData.recommended.table.requiredFields', 'Required Fields'), width: '28%' }
+          ],
+          recRows,
           { striped: true }
         );
       }
+
+      // Implementation Formats subsection (shown for both cases)
+      html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.structuredData.formats.heading', 'Implementation Formats')) + '</h3>';
+
+      html += PR.renderTable(
+        [
+          { label: t('seo.report.structuredData.formats.table.format', 'Format'), width: '18%' },
+          { label: t('seo.report.table.status', 'Status'), width: '14%' },
+          { label: t('seo.report.structuredData.formats.table.description', 'Description'), width: '40%' },
+          { label: t('seo.report.structuredData.formats.table.example', 'Example'), width: '28%' }
+        ],
+        [
+          [
+            '<strong>JSON-LD</strong>',
+            PR.renderStatus('pass', t('seo.report.structuredData.formats.jsonld.badge', 'RECOMMENDED')),
+            esc(t('seo.report.structuredData.formats.jsonld.body', "JavaScript Object Notation for Linked Data. Google's preferred format - clean, separate from HTML, easy to maintain.")),
+            '<code style="font-size:0.7rem;">&lt;script type="application/ld+json"&gt;{...}&lt;/script&gt;</code>'
+          ],
+          [
+            '<strong>Microdata</strong>',
+            PR.renderStatus('info', t('seo.report.structuredData.formats.microdata.subtitle', 'HTML Attributes')),
+            esc(t('seo.report.structuredData.formats.microdata.body', 'Embedded directly in HTML tags. More complex to maintain but tightly couples markup with content.')),
+            '<code style="font-size:0.7rem;">&lt;div itemscope itemtype="..."&gt;</code>'
+          ],
+          [
+            '<strong>RDFa</strong>',
+            PR.renderStatus('info', t('seo.report.structuredData.formats.rdfa.subtitle', 'Resource Description')),
+            esc(t('seo.report.structuredData.formats.rdfa.body', 'Resource Description Framework in Attributes. Similar to Microdata, uses different attribute names.')),
+            '<code style="font-size:0.7rem;">&lt;div vocab="..." typeof="..."&gt;</code>'
+          ]
+        ],
+        { striped: true }
+      );
+
+      // Essential Resources & Tools
+      html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.structuredData.resources.heading', 'Essential Resources & Tools')) + '</h3>';
+
+      html += PR.renderTable(
+        [
+          { label: t('seo.report.structuredData.resources.table.tool', 'Tool'), width: '22%' },
+          { label: t('seo.report.table.purpose', 'Purpose'), width: '55%' },
+          { label: t('seo.report.structuredData.resources.table.link', 'Link'), width: '23%' }
+        ],
+        [
+          [
+            '<strong>' + esc(t('seo.report.structuredData.resources.rows.schemaDocs.title', 'Schema.org Docs')) + '</strong>',
+            esc(t('seo.report.structuredData.resources.rows.schemaDocs.purpose', 'Official vocabulary reference with complete documentation for all schema types and properties')),
+            esc(t('seo.report.structuredData.resources.rows.schemaDocs.linkText', 'schema.org'))
+          ],
+          [
+            '<strong>' + esc(t('seo.report.structuredData.resources.rows.richResultsTest.title', 'Rich Results Test')) + '</strong>',
+            esc(t('seo.report.structuredData.resources.rows.richResultsTest.purpose', 'Test your structured data markup and see which Google rich results can be generated from it')),
+            esc(t('seo.report.structuredData.resources.rows.richResultsTest.linkText', 'Test Markup'))
+          ],
+          [
+            '<strong>' + esc(t('seo.report.structuredData.resources.rows.validator.title', 'Schema Validator')) + '</strong>',
+            esc(t('seo.report.structuredData.resources.rows.validator.purpose', 'Comprehensive validation tool for all structured data formats including JSON-LD, Microdata, and RDFa')),
+            esc(t('seo.report.structuredData.resources.rows.validator.linkText', 'Validate'))
+          ],
+          [
+            '<strong>' + esc(t('seo.report.structuredData.resources.rows.googleGuide.title', 'Google Guide')) + '</strong>',
+            esc(t('seo.report.structuredData.resources.rows.googleGuide.purpose', 'Step-by-step guide from Google on implementing structured data with code examples and best practices')),
+            esc(t('seo.report.structuredData.resources.rows.googleGuide.linkText', 'Read Guide'))
+          ],
+          [
+            '<strong>' + esc(t('seo.report.structuredData.resources.rows.generator.title', 'Markup Generator')) + '</strong>',
+            esc(t('seo.report.structuredData.resources.rows.generator.purpose', 'Free tool to generate JSON-LD structured data markup for various schema types quickly and easily')),
+            esc(t('seo.report.structuredData.resources.rows.generator.linkText', 'Generate'))
+          ]
+        ],
+        { striped: true }
+      );
 
       if (d.issues && d.issues.length > 0) {
         html += _renderIssuesList(d.issues, t);
@@ -494,29 +759,134 @@
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.additional', 'Beyond core SEO factors, several technical elements contribute to overall search health and user trust. A complete technical foundation includes proper browser identification, crawl directives, and tracking infrastructure. This section verifies the presence of a favicon, robots.txt, XML sitemap, analytics tracking, and social media links. Missing any of these elements can indicate an incomplete SEO setup and reduce your site\'s professional appearance.')) + '</p>';
 
-      var checkRows = [
-        ['Favicon', d.hasFavicon],
-        ['Robots.txt', d.hasRobotsTxt],
-        ['Sitemap', d.hasSitemap],
-        ['Google Analytics', d.googleAnalytics]
-      ];
+      // Technical SEO Essentials callout
+      html += PR.renderCallout(
+        t('seo.report.additional.calloutTitle', 'Technical SEO Essentials'),
+        t('seo.report.additional.calloutBody', 'These technical elements help search engines crawl, index, and understand your site. Missing items can significantly impact discoverability.'),
+        'tip'
+      );
 
-      // Social links
-      if (d.socialLinks) {
-        ['facebook', 'twitter', 'linkedin', 'instagram'].forEach(function (platform) {
-          checkRows.push([platform.charAt(0).toUpperCase() + platform.slice(1), d.socialLinks[platform]]);
-        });
-      }
+      // Status labels
+      var found = t('seo.report.status.found', 'Found');
+      var notFound = t('seo.report.status.notFound', 'Not found');
+      var present = t('seo.report.status.present', 'Present');
+      var missingLbl = t('seo.report.status.missing', 'Missing');
+      var detectedLbl = t('seo.report.status.detected', 'Detected');
+      var notDetectedLbl = t('seo.report.status.notDetected', 'Not detected');
+
+      // Technical SEO table (5 columns)
+      html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.additional.technicalHeading', 'Technical SEO')) + '</h3>';
+
+      var techRows = [
+        [
+          'robots.txt',
+          PR.renderStatus(d.hasRobotsTxt ? 'pass' : 'warning', d.hasRobotsTxt ? '✓ ' + found : '~ ' + notFound),
+          esc(t('seo.report.additional.purpose.robots', 'Controls search engine crawling')),
+          esc(d.hasRobotsTxt
+            ? t('seo.report.additional.details.robotsPresent', 'File is present and accessible')
+            : t('seo.report.additional.details.robotsMissing', 'Missing - create /robots.txt')),
+          esc(t('seo.report.additional.bestPractice.robots', 'Allow crawlers, disallow admin/private pages'))
+        ],
+        [
+          esc(t('seo.report.additional.checks.sitemap', 'XML Sitemap')),
+          PR.renderStatus(d.hasSitemap ? 'pass' : 'warning', d.hasSitemap ? '✓ ' + found : '~ ' + notFound),
+          esc(t('seo.report.additional.purpose.sitemap', 'Helps search engines discover pages')),
+          esc(d.hasSitemap
+            ? t('seo.report.additional.details.sitemapDetected', 'Sitemap detected')
+            : t('seo.report.additional.details.sitemapMissing', 'Missing - improves indexing')),
+          esc(t('seo.report.additional.bestPractice.sitemap', 'Submit to Google Search Console, update weekly'))
+        ],
+        [
+          esc(t('seo.report.additional.checks.favicon', 'Favicon')),
+          PR.renderStatus(d.hasFavicon ? 'pass' : 'warning', d.hasFavicon ? '✓ ' + present : '~ ' + missingLbl),
+          esc(t('seo.report.additional.purpose.favicon', 'Browser tab icon')),
+          esc(d.hasFavicon
+            ? t('seo.report.status.configured', 'Configured')
+            : t('seo.report.additional.details.faviconMissing', 'No favicon found')),
+          esc(t('seo.report.additional.bestPractice.favicon', '32x32 PNG or ICO, helps brand recognition'))
+        ],
+        [
+          esc(t('seo.report.additional.checks.googleAnalytics', 'Google Analytics')),
+          PR.renderStatus(d.googleAnalytics ? 'pass' : 'warning', d.googleAnalytics ? '✓ ' + detectedLbl : '~ ' + notDetectedLbl),
+          esc(t('seo.report.additional.purpose.analytics', 'Traffic tracking')),
+          esc(d.googleAnalytics
+            ? t('seo.report.additional.details.analyticsEnabled', 'Analytics tracking enabled')
+            : t('seo.report.additional.details.analyticsMissing', 'No analytics detected')),
+          esc(t('seo.report.additional.bestPractice.analytics', 'GA4 recommended, track user behavior for SEO insights'))
+        ]
+      ];
 
       html += PR.renderTable(
         [
-          { label: t('seo.report.table.check', 'Check'), width: '50%' },
-          { label: t('seo.report.table.status', 'Status'), width: '50%' }
+          { label: t('seo.report.table.check', 'Check'), width: '14%' },
+          { label: t('seo.report.table.status', 'Status'), width: '16%' },
+          { label: t('seo.report.table.purpose', 'Purpose'), width: '22%' },
+          { label: t('seo.report.table.details', 'Details'), width: '22%' },
+          { label: t('seo.report.table.bestPractice', 'Best Practice'), width: '26%' }
         ],
-        checkRows.map(function (r) {
-          var status = r[1] ? 'found' : 'notFound';
-          return [esc(r[0]), PR.renderStatus(status, t('seo.report.status.' + status, r[1] ? 'Found' : 'Not found'))];
-        }),
+        techRows,
+        { striped: true }
+      );
+
+      // Social Signals callout
+      html += PR.renderCallout(
+        t('seo.report.additional.social.calloutTitle', 'Social Signals & SEO'),
+        t('seo.report.additional.social.calloutBody', 'While not direct ranking factors, social links increase brand visibility, drive traffic, and improve Open Graph previews when content is shared.'),
+        'info'
+      );
+
+      // Social Media Presence table (5 columns)
+      html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.additional.social.heading', 'Social Media Presence')) + '</h3>';
+
+      var socialLinks = d.socialLinks || {};
+      var socialRows = [
+        [
+          'Facebook',
+          PR.renderStatus(socialLinks.facebook ? 'pass' : 'fail', socialLinks.facebook ? '✓' : '✗'),
+          esc(t('seo.report.additional.social.value.openGraph', 'Meta Open Graph tags')),
+          esc(socialLinks.facebook
+            ? t('seo.report.additional.social.details.linkPresent', 'Link present')
+            : t('seo.report.additional.social.details.facebookMissing', 'No Facebook link found')),
+          esc(t('seo.report.additional.social.tip.openGraph', 'Add og:image, og:title, og:description tags'))
+        ],
+        [
+          'Twitter/X',
+          PR.renderStatus(socialLinks.twitter ? 'pass' : 'fail', socialLinks.twitter ? '✓' : '✗'),
+          esc(t('seo.report.additional.social.value.twitterCard', 'Twitter Card tags')),
+          esc(socialLinks.twitter
+            ? t('seo.report.additional.social.details.linkPresent', 'Link present')
+            : t('seo.report.additional.social.details.twitterMissing', 'No Twitter link found')),
+          esc(t('seo.report.additional.social.tip.twitterCard', 'Add twitter:card, twitter:image meta tags'))
+        ],
+        [
+          'LinkedIn',
+          PR.renderStatus(socialLinks.linkedin ? 'pass' : 'fail', socialLinks.linkedin ? '✓' : '✗'),
+          esc(t('seo.report.additional.social.value.professional', 'Professional network')),
+          esc(socialLinks.linkedin
+            ? t('seo.report.additional.social.details.linkPresent', 'Link present')
+            : t('seo.report.additional.social.details.linkedinMissing', 'No LinkedIn link found')),
+          esc(t('seo.report.additional.social.tip.linkedin', 'Add to company footer, improves B2B credibility'))
+        ],
+        [
+          'Instagram',
+          PR.renderStatus(socialLinks.instagram ? 'pass' : 'fail', socialLinks.instagram ? '✓' : '✗'),
+          esc(t('seo.report.additional.social.value.visual', 'Visual content')),
+          esc(socialLinks.instagram
+            ? t('seo.report.additional.social.details.linkPresent', 'Link present')
+            : t('seo.report.additional.social.details.instagramMissing', 'No Instagram link found')),
+          esc(t('seo.report.additional.social.tip.instagram', 'Link to business profile, helps visual branding'))
+        ]
+      ];
+
+      html += PR.renderTable(
+        [
+          { label: t('seo.report.table.platform', 'Platform'), width: '14%' },
+          { label: t('seo.report.table.status', 'Status'), width: '10%' },
+          { label: t('seo.report.table.seoValue', 'SEO Value'), width: '22%' },
+          { label: t('seo.report.table.details', 'Details'), width: '24%' },
+          { label: t('seo.report.table.implementationTip', 'Implementation Tip'), width: '30%' }
+        ],
+        socialRows,
         { striped: true }
       );
 
@@ -534,7 +904,7 @@
       var sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
-        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.fixCode', 'Fix Code + Recommendations'))),
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.fixCode', 'Recommendations'))),
         sec
       );
 
@@ -581,12 +951,12 @@
         var sectionName = sectionNames[key] || key;
         if (section.recommendations) {
           section.recommendations.forEach(function (rec) {
-            allRecs.push({ text: rec, section: sectionName, severity: section.passed ? 'low' : 'medium' });
+            allRecs.push({ text: _translateIssue(rec, t), section: sectionName, severity: section.passed ? 'low' : 'medium' });
           });
         }
         if (section.issues) {
           section.issues.forEach(function (issue) {
-            allRecs.push({ text: issue, section: sectionName, severity: section.score < 50 ? 'high' : 'medium' });
+            allRecs.push({ text: _translateIssue(issue, t), section: sectionName, severity: section.score < 50 ? 'high' : 'medium' });
           });
         }
       });
@@ -675,11 +1045,79 @@
     html += '<h4 class="pdf-subsection__title">' + (t('common.pdf.execSummary.issuesFound', 'Issues Found') || 'Issues') + '</h4>';
     issues.forEach(function (issue) {
       html += '<div class="pdf-issue pdf-issue--warning">' +
-        '<span class="pdf-issue__text">' + PdfReport.helpers.esc(issue) + '</span>' +
+        '<span class="pdf-issue__text">' + PdfReport.helpers.esc(_translateIssue(issue, t)) + '</span>' +
       '</div>';
     });
     html += '</div>';
     return html;
+  }
+
+  /**
+   * Translate server-generated issue/recommendation strings via i18n.
+   * Maps known English patterns from seoAnalyzer.js to i18n keys.
+   */
+  function _translateIssue(text, t) {
+    // Exact-match translations
+    var exactMap = {
+      'Missing page title': t('seo.analyzer.issues.missingTitle', 'Missing page title'),
+      'Missing meta description': t('seo.analyzer.issues.missingDescription', 'Missing meta description'),
+      'Missing viewport meta tag (affects mobile usability)': t('seo.analyzer.issues.missingViewport', 'Missing viewport meta tag (affects mobile usability)'),
+      'No H1 heading found': t('seo.analyzer.issues.noH1', 'No H1 heading found'),
+      'No headings found on page': t('seo.analyzer.issues.noHeadings', 'No headings found on page'),
+      'Horizontal scrolling detected on mobile viewport': t('seo.analyzer.issues.horizontalScroll', 'Horizontal scrolling detected on mobile viewport'),
+      'Missing viewport meta tag (critical for mobile responsiveness)': t('seo.analyzer.issues.missingViewportMobile', 'Missing viewport meta tag (critical for mobile responsiveness)'),
+      'Site not using HTTPS (critical for security and SEO)': t('seo.analyzer.issues.noHttps', 'Site not using HTTPS (critical for security and SEO)'),
+      'Add Open Graph tags for better social media sharing': t('seo.analyzer.recs.addOpenGraph', 'Add Open Graph tags for better social media sharing'),
+      'Add Twitter Card tags for better Twitter sharing': t('seo.analyzer.recs.addTwitterCard', 'Add Twitter Card tags for better Twitter sharing'),
+      'Add language attribute to <html> tag': t('seo.analyzer.recs.addLangAttr', 'Add language attribute to <html> tag'),
+      'Consider adding more headings for better content structure': t('seo.analyzer.recs.addHeadings', 'Consider adding more headings for better content structure'),
+      'Heading hierarchy has gaps (e.g., H1 → H3). Use sequential heading levels': t('seo.analyzer.recs.headingGaps', 'Heading hierarchy has gaps (e.g., H1 → H3). Use sequential heading levels'),
+      'Consider adding more content. Pages with 600+ words tend to rank better': t('seo.analyzer.recs.addContent', 'Consider adding more content. Pages with 600+ words tend to rank better'),
+      'Long sentences detected. Consider shorter sentences for better readability': t('seo.analyzer.recs.longSentences', 'Long sentences detected. Consider shorter sentences for better readability'),
+      'Low text-to-HTML ratio. Too much code relative to content': t('seo.analyzer.recs.lowTextRatio', 'Low text-to-HTML ratio. Too much code relative to content'),
+      'Consider using lazy loading for images below the fold': t('seo.analyzer.recs.lazyLoading', 'Consider using lazy loading for images below the fold'),
+      'Font size may be too small on mobile devices': t('seo.analyzer.recs.smallFontSize', 'Font size may be too small on mobile devices'),
+      'Page load time could be improved': t('seo.analyzer.recs.improveLoadTime', 'Page load time could be improved'),
+      'Add Strict-Transport-Security header (HSTS)': t('seo.analyzer.recs.addHsts', 'Add Strict-Transport-Security header (HSTS)'),
+      'Add Content-Security-Policy header': t('seo.analyzer.recs.addCsp', 'Add Content-Security-Policy header'),
+      'Add X-Frame-Options header (prevents clickjacking)': t('seo.analyzer.recs.addXFrameOptions', 'Add X-Frame-Options header (prevents clickjacking)'),
+      'Add X-Content-Type-Options header': t('seo.analyzer.recs.addXContentType', 'Add X-Content-Type-Options header'),
+      'Add structured data (Schema.org/JSON-LD) for rich search results': t('seo.analyzer.recs.addStructuredData', 'Add structured data (Schema.org/JSON-LD) for rich search results'),
+      'Add robots.txt file for better crawl control': t('seo.analyzer.recs.addRobotsTxt', 'Add robots.txt file for better crawl control'),
+      'Add XML sitemap for better indexing': t('seo.analyzer.recs.addSitemap', 'Add XML sitemap for better indexing'),
+      'Add favicon for better branding': t('seo.analyzer.recs.addFavicon', 'Add favicon for better branding'),
+      'Consider adding Google Analytics for traffic insights': t('seo.analyzer.recs.addAnalytics', 'Consider adding Google Analytics for traffic insights'),
+      'Title is too short (< 30 chars). Recommended: 50-60 chars': t('seo.analyzer.recs.titleTooShort', 'Title is too short (< 30 chars). Recommended: 50-60 chars'),
+      'Title is too long (> 60 chars). It may be truncated in search results': t('seo.analyzer.recs.titleTooLong', 'Title is too long (> 60 chars). It may be truncated in search results'),
+      'Meta description is too short (< 120 chars). Recommended: 150-160 chars': t('seo.analyzer.recs.descTooShort', 'Meta description is too short (< 120 chars). Recommended: 150-160 chars'),
+      'Meta description is too long (> 160 chars). It may be truncated': t('seo.analyzer.recs.descTooLong', 'Meta description is too long (> 160 chars). It may be truncated'),
+      'Low word count (< 300 words). Search engines prefer content-rich pages': t('seo.analyzer.issues.lowWordCount', 'Low word count (< 300 words). Search engines prefer content-rich pages')
+    };
+
+    if (exactMap[text]) return exactMap[text];
+
+    // Pattern-match translations for strings with dynamic values
+    var patterns = [
+      { re: /^Multiple H1 headings found \((\d+)\)\. Use only one H1 per page$/, fn: function (m) { return t('seo.analyzer.issues.multipleH1', 'Multiple H1 headings found ({{count}}). Use only one H1 per page', { count: m[1] }); } },
+      { re: /^(\d+) image\(s\) missing alt text \(affects accessibility and SEO\)$/, fn: function (m) { return t('seo.analyzer.issues.missingAlt', '{{count}} image(s) missing alt text (affects accessibility and SEO)', { count: m[1] }); } },
+      { re: /^(\d+) external link\(s\) opening in new tab should have rel="noopener noreferrer"$/, fn: function (m) { return t('seo.analyzer.recs.unsafeExternalLinks', '{{count}} external link(s) opening in new tab should have rel="noopener noreferrer"', { count: m[1] }); } },
+      { re: /^(\d+) link\(s\) with empty anchor text$/, fn: function (m) { return t('seo.analyzer.issues.emptyAnchors', '{{count}} link(s) with empty anchor text', { count: m[1] }); } },
+      { re: /^(\d+) link\(s\) with potentially broken format/, fn: function (m) { return t('seo.analyzer.recs.brokenLinks', '{{count}} link(s) with potentially broken format (href="#" or javascript:)', { count: m[1] }); } },
+      { re: /^Slow page load time \((.+?)\)\. Target: < 3s$/, fn: function (m) { return t('seo.analyzer.issues.slowLoad', 'Slow page load time ({{time}}). Target: < 3s', { time: m[1] }); } },
+      { re: /^Large page size \((.+?)\)\. Optimize images and resources$/, fn: function (m) { return t('seo.analyzer.issues.largePageSize', 'Large page size ({{size}}). Optimize images and resources', { size: m[1] }); } },
+      { re: /^Large DOM size \((\d+) nodes\)\. Consider simplifying$/, fn: function (m) { return t('seo.analyzer.recs.largeDom', 'Large DOM size ({{count}} nodes). Consider simplifying', { count: m[1] }); } },
+      { re: /^Many resources loaded \((\d+)\)\. Consider bundling\/minification$/, fn: function (m) { return t('seo.analyzer.recs.manyResources', 'Many resources loaded ({{count}}). Consider bundling/minification', { count: m[1] }); } },
+      { re: /^(\d+) large image\(s\) detected\. Consider optimizing image sizes$/, fn: function (m) { return t('seo.analyzer.recs.largeImages', '{{count}} large image(s) detected. Consider optimizing image sizes', { count: m[1] }); } },
+      { re: /^(\d+) invalid structured data schema\(s\) found$/, fn: function (m) { return t('seo.analyzer.issues.invalidSchemas', '{{count}} invalid structured data schema(s) found', { count: m[1] }); } }
+    ];
+
+    for (var i = 0; i < patterns.length; i++) {
+      var match = text.match(patterns[i].re);
+      if (match) return patterns[i].fn(match);
+    }
+
+    // No match — return original text
+    return text;
   }
 
   /** Extract domain from report data */
@@ -694,119 +1132,290 @@
   }
 
   /**
-   * Build 6 fix card objects from the SEO analysis data.
-   * Mirrors buildFixCards() in seo-script.js.
+   * Build conditional fix card objects from the SEO analysis data.
+   * Mirrors buildFixCards() in seo-script.js — only shows cards when issues are detected.
    */
   function _buildFixCards(data, t, esc) {
     var analyzedDomain = _getAnalyzedDomain(data);
     var cards = [];
     var meta = data.metaTags || {};
     var structured = data.structuredData || {};
+    var performance = data.performanceMetrics || {};
+    var images = data.imageAnalysis || {};
+    var headings = data.headingStructure || {};
+    var content = data.contentAnalysis || {};
+    var links = data.linkAnalysis || {};
 
-    // 1. Title tag
+    // --- 1. Title tag (only if actually problematic) ---
+    var titleLen = meta.titleLength || 0;
+    var titleNeeds = !meta.title || titleLen < 30 || titleLen > 60;
+    if (titleNeeds) {
+    var titleIssueDetail = !meta.title
+      ? t('seo.fixCards.title.missingDetail', 'The page has no <title> tag at all. Search engines use the title as the primary clickable headline in results.')
+      : titleLen < 30
+        ? t('seo.fixCards.title.tooShortDetail', 'Your title is only {{len}} characters. Titles under 30 characters waste valuable SERP real estate and miss keyword opportunities.', { len: titleLen })
+        : t('seo.fixCards.title.tooLongDetail', 'Your title is {{len}} characters. Google truncates titles beyond ~60 characters with an ellipsis.', { len: titleLen });
     cards.push({
       title: t('seo.fixCards.title.title', 'Tune your title tag'),
-      severity: 'High',
+      severity: !meta.title ? 'High' : 'Medium',
       category: t('seo.fixCards.categories.metaTags', 'Meta Tags'),
       impact: t('seo.fixCards.title.impact', 'Improves CTR in SERPs by 15-30%'),
-      description: meta.title
-        ? t('seo.fixCards.title.descriptionAdjust', 'Adjust title length to 50-60 chars and front-load the keyword.')
-        : t('seo.fixCards.title.descriptionAdd', 'Add a clear, unique <title> for this page.'),
+      description: titleIssueDetail,
       problematicCode: meta.title
-        ? '<!-- ' + t('seo.fixCards.comments.currentTitle', 'Current title') + ': ' + (meta.titleLength || 0) + ' ' + t('seo.fixCards.comments.characters', 'characters') + ' -->\n<title>' + (meta.title || '') + '</title>\n\n<!-- ' + t('seo.fixCards.comments.issues', 'Issues') + ': -->\n<!-- ' + (meta.titleLength < 50 ? t('seo.fixCards.comments.tooShort', '\u2717 Too short - missing keyword opportunity') : meta.titleLength > 60 ? t('seo.fixCards.comments.tooLong', '\u2717 Too long - will be truncated in SERPs') : t('seo.fixCards.comments.couldBeOptimized', '~ Could be optimized')) + ' -->'
+        ? '<!-- ' + t('seo.fixCards.comments.currentTitle', 'Current title') + ': ' + titleLen + ' ' + t('seo.fixCards.comments.characters', 'characters') + ' -->\n<title>' + (meta.title || '') + '</title>\n\n<!-- ' + t('seo.fixCards.comments.issues', 'Issues') + ': -->\n<!-- ' + (titleLen < 30 ? t('seo.fixCards.comments.tooShort', '\u2717 Too short - missing keyword opportunity') : t('seo.fixCards.comments.tooLong', '\u2717 Too long - will be truncated in SERPs')) + ' -->'
         : '<!-- ' + t('seo.fixCards.comments.noTitleFound', 'No title tag found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingTitle', '\u2717 Missing <title> tag') + ' -->\n</head>',
-      snippet: '<title>' + (meta.title || t('seo.fixCards.snippets.titlePlaceholder', 'Primary Keyword | Brand Name')) + '</title>\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.title50to60', '\u2713 50-60 characters') + ' -->\n<!-- ' + t('seo.fixCards.comments.keywordNearStart', '\u2713 Primary keyword near the start') + ' -->\n<!-- ' + t('seo.fixCards.comments.brandAtEnd', '\u2713 Brand name at the end') + ' -->',
+      snippet: '<title>' + (meta.title ? meta.title.substring(0, 50) + ' | Brand' : t('seo.fixCards.snippets.titlePlaceholder', 'Primary Keyword | Brand Name')) + '</title>\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.title50to60', '\u2713 50-60 characters') + ' -->\n<!-- ' + t('seo.fixCards.comments.keywordNearStart', '\u2713 Primary keyword near the start') + ' -->\n<!-- ' + t('seo.fixCards.comments.brandAtEnd', '\u2713 Brand name at the end') + ' -->',
       steps: [
         t('seo.fixes.steps.title.step1', 'Keep title between 50-60 characters'),
         t('seo.fixes.steps.title.step2', 'Place primary keyword near the beginning'),
-        t('seo.fixes.steps.title.step3', 'Make it compelling and unique for each page')
+        t('seo.fixes.steps.title.step3', 'Make it compelling and unique for each page'),
+        t('seo.fixes.steps.title.step4', 'Append your brand name after a pipe separator (e.g. "Topic | Brand")'),
+        t('seo.fixes.steps.title.step5', 'Test in Google SERP preview tool to verify it displays correctly')
       ]
     });
+    }
 
-    // 2. Meta description
+    // --- 2. Meta description (only if problematic) ---
+    var descLen = meta.descriptionLength || 0;
+    var descNeeds = !meta.description || descLen < 120 || descLen > 160;
+    if (descNeeds) {
+    var descIssueDetail = !meta.description
+      ? t('seo.fixCards.description.missingDetail', 'No meta description was found. Without one, search engines pull a random snippet from your page.')
+      : descLen < 120
+        ? t('seo.fixCards.description.tooShortDetail', 'Your description is {{len}} characters. Google displays up to ~160 characters in search results.', { len: descLen })
+        : t('seo.fixCards.description.tooLongDetail', 'Your description is {{len}} characters and will be truncated in search results.', { len: descLen });
     cards.push({
       title: t('seo.fixCards.description.title', 'Write a compelling meta description'),
-      severity: 'Medium',
+      severity: !meta.description ? 'High' : 'Medium',
       category: t('seo.fixCards.categories.metaTags', 'Meta Tags'),
       impact: t('seo.fixCards.description.impact', 'Higher click-through and relevance signals'),
-      description: t('seo.fixCards.description.description', 'Keep 150-160 chars, include a CTA, and ensure uniqueness.'),
+      description: descIssueDetail,
       problematicCode: meta.description
-        ? '<!-- ' + t('seo.fixCards.comments.current', 'Current') + ': ' + (meta.descriptionLength || 0) + ' ' + t('seo.fixCards.comments.characters', 'characters') + ' -->\n<meta name="description" content="' + (meta.description ? meta.description.substring(0, 80) : '') + '..." />\n\n<!-- ' + t('seo.fixCards.comments.issues', 'Issues') + ': -->\n<!-- ' + (meta.descriptionLength < 150 ? t('seo.fixCards.comments.descTooShort', '\u2717 Too short - not fully utilizing SERP space') : meta.descriptionLength > 160 ? t('seo.fixCards.comments.descTooLong', '\u2717 Too long - will be truncated') : t('seo.fixCards.comments.reviewForCta', '~ Review for CTA')) + ' -->'
+        ? '<!-- ' + t('seo.fixCards.comments.current', 'Current') + ': ' + descLen + ' ' + t('seo.fixCards.comments.characters', 'characters') + ' -->\n<meta name="description" content="' + (meta.description ? meta.description.substring(0, 80) : '') + '..." />\n\n<!-- ' + t('seo.fixCards.comments.issues', 'Issues') + ': -->\n<!-- ' + (descLen < 120 ? t('seo.fixCards.comments.descTooShort', '\u2717 Too short - not fully utilizing SERP space') : t('seo.fixCards.comments.descTooLong', '\u2717 Too long - will be truncated')) + ' -->'
         : '<!-- ' + t('seo.fixCards.comments.noDescriptionFound', 'No meta description found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingDescription', '\u2717 Missing meta description') + ' -->\n</head>',
       snippet: '<meta name="description" content="' + t('seo.fixCards.snippets.descriptionPlaceholder', 'Describe the main value proposition in 150-160 characters. Include a clear call to action.') + '" />\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.desc150to160', '\u2713 150-160 characters') + ' -->\n<!-- ' + t('seo.fixCards.comments.includeCta', '\u2713 Include call-to-action') + ' -->\n<!-- ' + t('seo.fixCards.comments.uniquePerPage', '\u2713 Unique for each page') + ' -->',
       steps: [
         t('seo.fixes.steps.description.step1', 'Write 150-160 characters that summarize page content'),
-        t('seo.fixes.steps.description.step2', 'Include a clear call-to-action'),
-        t('seo.fixes.steps.description.step3', 'Ensure uniqueness across all pages')
+        t('seo.fixes.steps.description.step2', 'Include a clear call-to-action (e.g. "Learn more", "Get started")'),
+        t('seo.fixes.steps.description.step3', 'Ensure uniqueness across all pages'),
+        t('seo.fixes.steps.description.step4', 'Front-load the most important information in the first 120 characters'),
+        t('seo.fixes.steps.description.step5', 'Avoid duplicating the title tag - use the description to add detail')
       ]
     });
+    }
 
-    // 3. Canonical + sitemap
+    // --- 3. Open Graph tags (only if missing) ---
+    var ogMissing = !meta.ogTitle && !meta.ogDescription;
+    var twitterMissing = !meta.twitterCard;
+    if (ogMissing || twitterMissing) {
+    var socialIssues = [];
+    if (ogMissing) socialIssues.push('<!-- ' + t('seo.fixCards.comments.missingOg', '\u2717 Missing Open Graph tags (og:title, og:description, og:image)') + ' -->');
+    if (twitterMissing) socialIssues.push('<!-- ' + t('seo.fixCards.comments.missingTwitter', '\u2717 Missing Twitter Card tags') + ' -->');
+    cards.push({
+      title: t('seo.fixCards.openGraph.title', 'Add Open Graph & social meta tags'),
+      severity: 'Medium',
+      category: t('seo.fixCards.categories.socialSeo', 'Social & Sharing'),
+      impact: t('seo.fixCards.openGraph.impact', 'Rich previews on social platforms drive 2-3x more engagement'),
+      description: t('seo.fixCards.openGraph.description', 'When your page is shared on social platforms, Open Graph and Twitter Card meta tags build a rich preview card. Without them, shares show a plain URL.'),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n' + socialIssues.join('\n') + '\n\n<head>\n  <!-- ' + t('seo.fixCards.comments.noSocialTags', 'No social sharing meta tags found') + ' -->\n</head>',
+      snippet: '<!-- Open Graph -->\n<meta property="og:type" content="website" />\n<meta property="og:title" content="' + (meta.title || t('seo.fixCards.snippets.pageTitle', 'Page Title')) + '" />\n<meta property="og:description" content="' + (meta.description || t('seo.fixCards.snippets.pageDescription', 'Page description')) + '" />\n<meta property="og:image" content="https://' + analyzedDomain + '/og-image.jpg" />\n\n<!-- Twitter Card -->\n<meta name="twitter:card" content="summary_large_image" />',
+      steps: [
+        t('seo.fixes.steps.openGraph.step1', 'Create a 1200x630 px share image for your page'),
+        t('seo.fixes.steps.openGraph.step2', 'Add og:title, og:description, og:image, and og:url meta tags'),
+        t('seo.fixes.steps.openGraph.step3', 'Add twitter:card, twitter:title, twitter:description, and twitter:image'),
+        t('seo.fixes.steps.openGraph.step4', 'Test with Facebook Sharing Debugger and Twitter Card Validator'),
+        t('seo.fixes.steps.openGraph.step5', 'Ensure each page has its own unique OG tags')
+      ]
+    });
+    }
+
+    // --- 4. Image alt text (only if images are missing alt) ---
+    var missingAlt = images.withoutAlt || 0;
+    var totalImages = images.total || 0;
+    if (missingAlt > 0) {
+    cards.push({
+      title: t('seo.fixCards.images.title', 'Add missing image alt text'),
+      severity: missingAlt > 5 ? 'High' : 'Medium',
+      category: t('seo.fixCards.categories.accessibility', 'Accessibility & Images'),
+      impact: t('seo.fixCards.images.impact', 'Improves accessibility, image search rankings, and overall SEO score'),
+      description: t('seo.fixCards.images.description', '{{count}} of {{total}} images are missing alt attributes.', { count: missingAlt, total: totalImages }),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.imagesNoAlt', '\u2717 {{count}} images missing alt text', { count: missingAlt }) + ' -->\n<img src="hero.jpg" />\n<img src="product.png" />',
+      snippet: '<img src="hero.jpg" alt="' + t('seo.fixCards.snippets.altExample1', 'Team collaborating around a whiteboard') + '" />\n<img src="product.png" alt="' + t('seo.fixCards.snippets.altExample2', 'Blue wireless headphones') + '" />\n\n<!-- ' + t('seo.fixCards.comments.decorativeImages', 'For decorative images, use empty alt') + ': -->\n<img src="divider.svg" alt="" role="presentation" />',
+      steps: [
+        t('seo.fixes.steps.images.step1', 'Audit all images: run "img:not([alt])" in DevTools Console to find them'),
+        t('seo.fixes.steps.images.step2', 'Write concise, descriptive alt text (under 125 characters) for each image'),
+        t('seo.fixes.steps.images.step3', 'For decorative images, use alt="" with role="presentation"'),
+        t('seo.fixes.steps.images.step4', 'Avoid phrases like "image of" - describe the content directly'),
+        t('seo.fixes.steps.images.step5', 'Test with a screen reader or accessibility inspector to verify')
+      ]
+    });
+    }
+
+    // --- 5. Heading structure (only if issues found) ---
+    var h1Count = headings.h1 ? headings.h1.length : 0;
+    var headingIssue = h1Count === 0 || h1Count > 1 || (headings.total || 0) < 3;
+    if (headingIssue) {
+    var headingIssueDetail = h1Count === 0
+      ? t('seo.fixCards.headings.missingH1Detail', 'Your page is missing an H1 heading.')
+      : h1Count > 1
+        ? t('seo.fixCards.headings.multipleH1Detail', 'Your page has {{count}} H1 headings. Multiple H1 tags dilute the primary keyword signal.', { count: h1Count })
+        : t('seo.fixCards.headings.lowHeadingsDetail', 'Your page has very few headings ({{count}} total).', { count: headings.total || 0 });
+    var headingProblems = [];
+    if (h1Count === 0) headingProblems.push('<!-- ' + t('seo.fixCards.comments.noH1', '\u2717 No H1 heading found') + ' -->');
+    if (h1Count > 1) headingProblems.push('<!-- ' + t('seo.fixCards.comments.multipleH1', '\u2717 Multiple H1 headings ({{count}})', { count: h1Count }) + ' -->');
+    if ((headings.total || 0) < 3) headingProblems.push('<!-- ' + t('seo.fixCards.comments.fewHeadings', '\u2717 Only {{count}} headings total', { count: headings.total || 0 }) + ' -->');
+    cards.push({
+      title: t('seo.fixCards.headings.title', 'Fix heading structure'),
+      severity: h1Count === 0 ? 'High' : 'Medium',
+      category: t('seo.fixCards.categories.contentStructure', 'Content Structure'),
+      impact: t('seo.fixCards.headings.impact', 'Clearer page structure improves crawlability and user engagement'),
+      description: headingIssueDetail,
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.currentHeadings', 'Current heading structure') + ': -->\n<!-- H1: ' + h1Count + ' | H2: ' + ((headings.h2 || []).length) + ' | H3: ' + ((headings.h3 || []).length) + ' -->\n' + headingProblems.join('\n'),
+      snippet: '<h1>' + (meta.title ? meta.title.substring(0, 50) : t('seo.fixCards.snippets.h1Placeholder', 'Primary Page Topic')) + '</h1>\n\n  <h2>' + t('seo.fixCards.snippets.h2Placeholder1', 'Key Section A') + '</h2>\n    <h3>' + t('seo.fixCards.snippets.h3Placeholder', 'Supporting Detail') + '</h3>\n\n  <h2>' + t('seo.fixCards.snippets.h2Placeholder2', 'Key Section B') + '</h2>',
+      steps: [
+        t('seo.fixes.steps.headings.step1', 'Ensure exactly one H1 tag exists'),
+        t('seo.fixes.steps.headings.step2', 'Use H2 tags for major sections and H3 for subsections'),
+        t('seo.fixes.steps.headings.step3', 'Never skip heading levels (e.g. H1 directly to H3)'),
+        t('seo.fixes.steps.headings.step4', 'Write descriptive headings - avoid generic text'),
+        t('seo.fixes.steps.headings.step5', 'Use DevTools Elements panel to audit heading tags')
+      ]
+    });
+    }
+
+    // --- 6. Content quality (only if thin content) ---
+    var wordCount = content.wordCount || 0;
+    if (wordCount < 600) {
+    cards.push({
+      title: t('seo.fixCards.content.title', 'Improve content depth'),
+      severity: wordCount < 300 ? 'High' : 'Medium',
+      category: t('seo.fixCards.categories.contentQuality', 'Content Quality'),
+      impact: t('seo.fixCards.content.impact', 'Pages with 600+ words rank higher on average'),
+      description: wordCount < 300
+        ? t('seo.fixCards.content.veryThinDetail', 'Your page has only {{count}} words. This is considered "thin content."', { count: wordCount })
+        : t('seo.fixCards.content.thinDetail', 'Your page has {{count}} words. Pages with 600+ words tend to rank better.', { count: wordCount }),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.wordCount', 'Word count') + ': ' + wordCount + ' -->\n<!-- ' + t('seo.fixCards.comments.paragraphs', 'Paragraphs') + ': ' + (content.paragraphCount || 0) + ' -->\n<!-- ' + t('seo.fixCards.comments.thinContentWarning', '\u2717 Content is below recommended threshold') + ' -->',
+      snippet: '<h1>' + t('seo.fixCards.snippets.contentH1', 'Main Topic') + '</h1>\n<p>' + t('seo.fixCards.snippets.contentIntro', 'Introduction (50-100 words)') + '</p>\n\n<h2>' + t('seo.fixCards.snippets.contentH2a', 'What / Why Section') + '</h2>\n<p>' + t('seo.fixCards.snippets.contentBody1', '150-200 words in depth') + '</p>\n\n<h2>' + t('seo.fixCards.snippets.contentH2b', 'How-To / Details') + '</h2>',
+      steps: [
+        t('seo.fixes.steps.content.step1', 'Research what competitors cover and identify gaps'),
+        t('seo.fixes.steps.content.step2', 'Add an FAQ section answering 3-5 common questions'),
+        t('seo.fixes.steps.content.step3', 'Expand existing sections with examples and data'),
+        t('seo.fixes.steps.content.step4', 'Break content into scannable sections with H2/H3 headings'),
+        t('seo.fixes.steps.content.step5', 'Aim for at least 800 words while keeping every sentence valuable')
+      ]
+    });
+    }
+
+    // --- 7. Canonical URL (only if missing) ---
+    if (!meta.canonical) {
     cards.push({
       title: t('seo.fixCards.canonical.title', 'Add canonical + sitemap refs'),
       severity: 'Medium',
       category: t('seo.fixCards.categories.technicalSeo', 'Technical SEO'),
       impact: t('seo.fixCards.canonical.impact', 'Prevents duplicate indexing issues'),
-      description: t('seo.fixCards.canonical.description', 'Declare the preferred URL and list all discoverable URLs.'),
+      description: t('seo.fixCards.canonical.fullDescription', 'No canonical URL was detected. Search engines may index multiple versions of the same page and split ranking power.'),
       problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.noCanonical', '\u2717 No canonical URL declared') + ' -->\n<!-- ' + t('seo.fixCards.comments.multipleVersions', '\u2717 Multiple versions indexed (www, non-www, http, https)') + ' -->\n<!-- ' + t('seo.fixCards.comments.sitemapNotReferenced', '\u2717 Sitemap not referenced') + ' -->\n\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingCanonicalSitemap', 'Missing canonical and sitemap links') + ' -->\n</head>',
       snippet: '<link rel="canonical" href="https://' + analyzedDomain + '/" />\n<link rel="sitemap" type="application/xml" title="Sitemap" href="https://' + analyzedDomain + '/sitemap.xml" />\n\n<!-- ' + t('seo.fixCards.comments.inRobotsTxt', 'In robots.txt') + ': -->\nSitemap: https://' + analyzedDomain + '/sitemap.xml',
       steps: [
         t('seo.fixes.steps.canonical.step1', 'Add canonical link pointing to preferred URL'),
         t('seo.fixes.steps.canonical.step2', 'Create and submit XML sitemap to search engines'),
-        t('seo.fixes.steps.canonical.step3', 'Reference sitemap in robots.txt')
+        t('seo.fixes.steps.canonical.step3', 'Reference sitemap in robots.txt'),
+        t('seo.fixes.steps.canonical.step4', 'Ensure every page has a self-referencing canonical tag'),
+        t('seo.fixes.steps.canonical.step5', 'Use Google Search Console to monitor indexing issues')
       ]
     });
+    }
 
-    // 4. JSON-LD structured data
-    var structuredTypes = (structured.types && structured.types.length > 0) ? structured.types.join(', ') : t('seo.fixCards.comments.unknown', 'Unknown');
+    // --- 8. Structured data (only if missing) ---
+    if (!structured.hasStructuredData) {
     cards.push({
       title: t('seo.fixCards.jsonld.title', 'Add JSON-LD (Article/Product)'),
       severity: 'High',
       category: t('seo.fixCards.categories.structuredData', 'Structured Data'),
       impact: t('seo.fixCards.jsonld.impact', 'Rich results eligibility - up to 30% more visibility'),
-      description: t('seo.fixCards.jsonld.description', 'Provide structured data for the primary page type.'),
-      problematicCode: structured.hasStructuredData
-        ? '<!-- ' + t('seo.fixCards.comments.structuredDataFound', 'Structured data found but may need enhancement') + ' -->\n<!-- ' + t('seo.fixCards.comments.currentTypes', 'Current types') + ': ' + structuredTypes + ' -->\n\n<!-- ' + t('seo.fixCards.comments.checkFor', 'Check for') + ': -->\n<!-- ' + t('seo.fixCards.comments.requiredProperties', '~ Required properties') + ' -->\n<!-- ' + t('seo.fixCards.comments.recommendedProperties', '~ Recommended properties') + ' -->\n<!-- ' + t('seo.fixCards.comments.validJsonLd', '~ Valid JSON-LD syntax') + ' -->'
-        : '<!-- ' + t('seo.fixCards.comments.noStructuredData', 'No structured data found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingJsonLd', '\u2717 Missing JSON-LD structured data') + ' -->\n  <!-- ' + t('seo.fixCards.comments.notEligible', '\u2717 Not eligible for rich results') + ' -->\n</head>',
-      snippet: '<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  "name": "' + (meta.title || t('seo.fixCards.snippets.pageTitle', 'Page Title')) + '",\n  "description": "' + (meta.description || t('seo.fixCards.snippets.pageDescription', 'Page description')) + '",\n  "url": "https://' + analyzedDomain + '/"\n}\n</script>',
+      description: t('seo.fixCards.jsonld.fullDescription', 'No structured data was found. JSON-LD helps search engines understand your content and enables rich results like star ratings and FAQ dropdowns.'),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.noStructuredData', 'No structured data found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingJsonLd', '\u2717 Missing JSON-LD structured data') + ' -->\n  <!-- ' + t('seo.fixCards.comments.notEligible', '\u2717 Not eligible for rich results') + ' -->\n</head>',
+      snippet: '<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  "name": "' + (meta.title || t('seo.fixCards.snippets.pageTitle', 'Page Title')) + '",\n  "description": "' + (meta.description || t('seo.fixCards.snippets.pageDescription', 'Page description')) + '",\n  "url": "https://' + analyzedDomain + '/"\n}\n<\/script>',
       steps: [
         t('seo.fixes.steps.jsonld.step1', 'Identify the primary content type (Article, Product, etc.)'),
         t('seo.fixes.steps.jsonld.step2', 'Add JSON-LD script with required properties'),
-        t('seo.fixes.steps.jsonld.step3', 'Test with Google Rich Results Test')
+        t('seo.fixes.steps.jsonld.step3', 'Test with Google Rich Results Test'),
+        t('seo.fixes.steps.jsonld.step4', 'Add Organization schema to your homepage'),
+        t('seo.fixes.steps.jsonld.step5', 'Add BreadcrumbList schema for breadcrumb-style results')
       ]
     });
+    }
 
-    // 5. Preload critical assets
+    // --- 9. Link security (only if unsafe external links found) ---
+    var linksList = links.links || [];
+    var unsafeLinks = 0;
+    var emptyAnchors = 0;
+    for (var li = 0; li < linksList.length; li++) {
+      var lnk = linksList[li];
+      if (lnk.isExternal && lnk.target === '_blank' && (!lnk.hasNoOpener || !lnk.hasNoReferrer)) unsafeLinks++;
+      if (!lnk.text || lnk.text.length === 0) emptyAnchors++;
+    }
+    if (unsafeLinks > 0 || emptyAnchors > 0) {
+    var linkProblems = [];
+    if (unsafeLinks > 0) linkProblems.push('<!-- ' + t('seo.fixCards.comments.unsafeExternalLinks', '\u2717 {{count}} external links without rel="noopener noreferrer"', { count: unsafeLinks }) + ' -->');
+    if (emptyAnchors > 0) linkProblems.push('<!-- ' + t('seo.fixCards.comments.emptyAnchorText', '\u2717 {{count}} links have empty anchor text', { count: emptyAnchors }) + ' -->');
+    cards.push({
+      title: t('seo.fixCards.links.title', 'Fix link security & anchor text'),
+      severity: unsafeLinks > 3 ? 'Medium' : 'Low',
+      category: t('seo.fixCards.categories.linkHealth', 'Link Health'),
+      impact: t('seo.fixCards.links.impact', 'Prevents security vulnerabilities and improves link equity signals'),
+      description: t('seo.fixCards.links.description', 'External links without rel="noopener noreferrer" expose your site to tabnapping attacks. Empty anchor text wastes link equity.'),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.linkIssuesFound', 'Link issues found') + ': -->\n' + linkProblems.join('\n'),
+      snippet: '<a href="https://external.com"\n   target="_blank"\n   rel="noopener noreferrer">' + t('seo.fixCards.snippets.descriptiveAnchor', 'Descriptive anchor text') + '</a>\n\n<a href="/pricing">' + t('seo.fixCards.snippets.pricingAnchor', 'View pricing plans') + '</a>',
+      steps: [
+        t('seo.fixes.steps.links.step1', 'Add rel="noopener noreferrer" to all external links with target="_blank"'),
+        t('seo.fixes.steps.links.step2', 'Replace empty anchor text with descriptive text'),
+        t('seo.fixes.steps.links.step3', 'Avoid generic anchor text like "click here"'),
+        t('seo.fixes.steps.links.step4', 'Use DevTools to find issues: a[target="_blank"]:not([rel*="noopener"])'),
+        t('seo.fixes.steps.links.step5', 'Add rel="nofollow" to paid or sponsored links')
+      ]
+    });
+    }
+
+    // --- 10. Preload critical assets (only if perf score < 80) ---
+    var perfScore = performance.score || 0;
+    if (perfScore < 80) {
     cards.push({
       title: t('seo.fixCards.preload.title', 'Preload critical assets'),
-      severity: 'Medium',
+      severity: perfScore < 50 ? 'High' : 'Medium',
       category: t('seo.fixCards.categories.performance', 'Performance'),
       impact: t('seo.fixCards.preload.impact', 'Faster LCP and render - improves Core Web Vitals'),
-      description: t('seo.fixCards.preload.description', 'Preload hero image, main font, and critical CSS.'),
-      problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.heroNotPreloaded', '\u2717 Hero image not preloaded') + ' -->\n<!-- ' + t('seo.fixCards.comments.fontsCauseShift', '\u2717 Web fonts cause layout shift') + ' -->\n<!-- ' + t('seo.fixCards.comments.cssNotPrioritized', '\u2717 Critical CSS not prioritized') + ' -->\n\n<head>\n  <!-- ' + t('seo.fixCards.comments.noPreloadHints', 'No preload hints') + ' -->\n  <link rel="stylesheet" href="/styles.css">\n</head>',
+      description: t('seo.fixCards.preload.fullDescription', 'Page performance scored {{score}}/100. Preloading tells the browser to fetch critical resources as soon as possible.', { score: perfScore }),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.heroNotPreloaded', '\u2717 Hero image not preloaded') + ' -->\n<!-- ' + t('seo.fixCards.comments.fontsCauseShift', '\u2717 Web fonts cause layout shift') + ' -->\n<!-- ' + t('seo.fixCards.comments.cssNotPrioritized', '\u2717 Critical CSS not prioritized') + ' -->\n<!-- ' + t('seo.fixCards.comments.perfScore', 'Performance score') + ': ' + perfScore + '/100 -->\n\n<head>\n  <!-- ' + t('seo.fixCards.comments.noPreloadHints', 'No preload hints') + ' -->\n  <link rel="stylesheet" href="/styles.css">\n</head>',
       snippet: '<link rel="preload" as="image" href="/hero.webp" />\n<link rel="preload" as="style" href="/critical.css" />\n<link rel="preload" as="font" type="font/woff2" href="/fonts/main.woff2" crossorigin />\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.preloadLcpImage', '\u2713 Preload LCP image') + ' -->\n<!-- ' + t('seo.fixCards.comments.preloadCriticalFonts', '\u2713 Preload critical fonts') + ' -->\n<!-- ' + t('seo.fixCards.comments.useCrossorigin', '\u2713 Use crossorigin for fonts') + ' -->',
       steps: [
         t('seo.fixes.steps.preload.step1', 'Identify above-the-fold critical resources'),
         t('seo.fixes.steps.preload.step2', 'Add preload hints for hero image and fonts'),
-        t('seo.fixes.steps.preload.step3', 'Verify with browser DevTools Network panel')
+        t('seo.fixes.steps.preload.step3', 'Verify with browser DevTools Network panel'),
+        t('seo.fixes.steps.preload.step4', 'Add fetchpriority="high" to the LCP image element'),
+        t('seo.fixes.steps.preload.step5', 'Do not over-preload - only 2-4 critical resources')
       ]
     });
+    }
 
-    // 6. Defer non-critical JS
+    // --- 11. Defer non-critical JS (only if perf score < 70) ---
+    if (perfScore < 70) {
     cards.push({
       title: t('seo.fixCards.defer.title', 'Defer non-critical JS'),
       severity: 'Low',
       category: t('seo.fixCards.categories.performance', 'Performance'),
       impact: t('seo.fixCards.defer.impact', 'Reduces blocking time - faster interactivity'),
-      description: t('seo.fixCards.defer.description', 'Use defer for scripts that can wait until DOM is parsed.'),
+      description: t('seo.fixCards.defer.fullDescription', 'Synchronous scripts block the browser from rendering content. Moving non-essential scripts to defer allows the page to paint first.'),
       problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.scriptsBlocking', '\u2717 Scripts blocking page render') + ' -->\n<!-- ' + t('seo.fixCards.comments.analyticsSync', '\u2717 Analytics loading synchronously') + ' -->\n\n<head>\n  <script src="/app.js"><\/script>\n  <script src="/analytics.js"><\/script>\n</head>',
       snippet: '<head>\n  <!-- ' + t('seo.fixCards.comments.deferNonEssential', 'Defer non-essential scripts') + ' -->\n  <script src="/app.js" defer><\/script>\n  <script src="/analytics.js" defer><\/script>\n</head>\n\n<!-- ' + t('seo.fixCards.comments.orLoadAtEnd', 'Or load at end of body') + ': -->\n<body>\n  <!-- ' + t('seo.fixCards.comments.content', 'content') + ' -->\n  <script src="/app.js"><\/script>\n</body>',
       steps: [
         t('seo.fixes.steps.defer.step1', 'Add defer attribute to non-essential scripts'),
         t('seo.fixes.steps.defer.step2', 'Move analytics to async loading'),
-        t('seo.fixes.steps.defer.step3', 'Test that functionality still works correctly')
+        t('seo.fixes.steps.defer.step3', 'Test that functionality still works correctly'),
+        t('seo.fixes.steps.defer.step4', 'Use DevTools Coverage tab to find unused JS'),
+        t('seo.fixes.steps.defer.step5', 'Consider lazy-loading third-party widgets on user interaction')
       ]
     });
+    }
 
     return cards;
   }
@@ -823,7 +1432,8 @@
 
     // Header
     html += '<div class="pdf-fix-card__header">';
-    html += '<span class="pdf-fix-card__severity pdf-fix-card__severity--' + severityLower + '">' + esc(fix.severity) + '</span>';
+    var severityLabel = { high: t('seo.fixes.severity.high', 'High'), medium: t('seo.fixes.severity.medium', 'Medium'), low: t('seo.fixes.severity.low', 'Low') }[severityLower] || fix.severity;
+    html += '<span class="pdf-fix-card__severity pdf-fix-card__severity--' + severityLower + '">' + esc(severityLabel) + '</span>';
     html += '<span class="pdf-fix-card__title">' + esc(fix.title) + '</span>';
     html += '<span class="pdf-fix-card__category">' + esc(fix.category) + '</span>';
     html += '</div>';

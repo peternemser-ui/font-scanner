@@ -117,7 +117,7 @@
     "admin": "管理",
     "plans": {
       "free": "無料",
-      "dayPass": "8時間デイパス",
+      "dayPass": "24時間デイパス",
       "singleReport": "シングルレポート",
       "proMonthly": "Pro月額",
       "proAnnual": "Pro年額"
@@ -132,7 +132,7 @@
     "planSummary": {
       "proAnnual": "プラン: Pro年間（無制限）",
       "proMonthly": "プラン: Pro月間（{{remaining}}/{{limit}}レポート残り）",
-      "dayPass": "プラン: 8時間デイパス（{{remaining}}/{{limit}}レポート残り）",
+      "dayPass": "プラン: 24時間デイパス（{{remaining}}/{{limit}}レポート残り）",
       "singleReport": "プラン: シングルレポート（{{count}}件解除済み）",
       "free": "プラン: 無料（本日{{remaining}}/{{limit}}スキャン残り）"
     }
@@ -156,7 +156,9 @@
     "needOneReport": "1つのレポートだけ必要ですか？スキャン後に$5でこの個別レポートをアンロックできます。",
     "dayPassTimeLeft": "残り{hours}時間{mins}分",
     "dayPassMinutesLeft": "残り{mins}分",
-    "expired": "期限切れ"
+    "expired": "期限切れ",
+    "haveAccount": "アカウントをお持ちですか？",
+    "loginToRestore": "ログインしてプランを復元"
   },
   "errors": {
     "urlRequired": "有効なURLを入力してください",
@@ -335,7 +337,8 @@
       "urlPlaceholder": "https://example.com",
       "messageLabel": "メッセージ",
       "messagePlaceholder": "どのようなご用件ですか？",
-      "submitButton": "メッセージを送信"
+      "submitButton": "メッセージを送信",
+      "sending": "送信中..."
     },
     "results": {
       "insights": "インサイト",
@@ -425,7 +428,8 @@
     "seoAnalysis": "SEO分析",
     "performanceAnalysis": "パフォーマンス分析",
     "accessibilityAnalysis": "アクセシビリティ分析",
-    "securityAnalysis": "セキュリティ分析"
+    "securityAnalysis": "セキュリティ分析",
+    "runningAudit": "監査を実行中..."
   },
   "loader": {
     "started": "開始:",
@@ -439,6 +443,8 @@
     "complete": "完了！",
     "analysisFailed": "分析に失敗しました",
     "tryAgain": "再試行",
+    "upgradeToPro": "Proにアップグレード",
+    "goToDashboard": "ダッシュボードへ",
     "analyzingFonts": "フォントを分析中",
     "connectingToWebsite": "ウェブサイトに接続中",
     "loadingPage": "ページとリソースを読み込み中...",
@@ -622,7 +628,9 @@
     "mayTake20To45Seconds": "20〜45秒かかる場合があります",
     "mayTake30To60Seconds": "30〜60秒かかる場合があります",
     "mayTakeTime": "複雑なサイトの場合、30〜60秒かかることがあります",
-    "scanTiming": "スキャン時間"
+    "scanTiming": "スキャン時間",
+    "upgradeToPro": "Upgrade to Pro",
+    "goToDashboard": "Go to Dashboard"
   },
   "common": {
     "loading": "読み込み中...",
@@ -649,6 +657,9 @@
     "analyzing": "分析中...",
     "analyzeCwv": "CWVを分析",
     "creatingCheckout": "チェックアウトを作成中...",
+    "grade": "評価",
+    "desktop": "デスクトップ",
+    "mobile": "モバイル",
     "difficulty": {
       "easy": "簡単",
       "medium": "中程度",
@@ -700,6 +711,44 @@
         "generatedBy": "Site Mechanic によるレポート",
         "page": "ページ",
         "of": "/"
+      },
+      "impact": {
+        "critical": "重大",
+        "serious": "深刻",
+        "moderate": "中程度",
+        "minor": "軽微"
+      },
+      "status": {
+        "pass": "合格",
+        "fail": "不合格",
+        "optimal": "最適",
+        "review": "要確認",
+        "missing": "未設定",
+        "warning": "警告",
+        "good": "良好",
+        "configured": "設定済み",
+        "notConfigured": "未設定"
+      },
+      "reportLabel": {
+        "seo": "SEO",
+        "cro": "CRO",
+        "gdpr": "GDPR",
+        "cwv": "CWV",
+        "security": "セキュリティ",
+        "performance": "パフォーマンス",
+        "accessibility": "アクセシビリティ",
+        "fonts": "フォント",
+        "tag-intelligence": "タグインテリジェンス",
+        "enhanced-fonts": "拡張フォント",
+        "brand-consistency": "ブランド一貫性",
+        "broken-links": "リンク切れ",
+        "ip-reputation": "IPレピュテーション",
+        "local-seo": "ローカルSEO",
+        "mobile-analyzer": "モバイル",
+        "competitive": "競合分析",
+        "hosting": "ホスティング",
+        "site-crawler": "サイトクローラー",
+        "core-web-vitals": "Core Web Vitals"
       }
     },
     "warning": "警告",
@@ -852,7 +901,7 @@
           },
           "planLimits": {
             "q": "プランの制限は？",
-            "a": "<strong>無料:</strong> 1日10スキャン、Pro セクションはロック。<br><strong>Day Pass（$20）:</strong> 8時間スキャン無制限 + レポート解放30回。<br><strong>Pro 月額（$29/月）:</strong> スキャン無制限 + 月250回解放。<br><strong>Pro 年額（$290/年）:</strong> スキャン無制限 + 解放無制限。"
+            "a": "<strong>無料:</strong> 1日10スキャン、Pro セクションはロック。<br><strong>Day Pass（$20）:</strong> 24時間スキャン無制限 + レポート解放30回。<br><strong>Pro 月額（$29/月）:</strong> スキャン無制限 + 月250回解放。<br><strong>Pro 年額（$290/年）:</strong> スキャン無制限 + 解放無制限。"
           },
           "dailyLimit": {
             "q": "日次スキャン上限に達すると？",
@@ -1053,9 +1102,9 @@
       "riskAssessment": "リスク評価",
       "overallRiskLevel": "総合リスクレベル",
       "threatsDetected": "脅威を検出",
-      "spfRecord": "SPF (Sender Policy Framework)",
-      "dkimRecord": "DKIM (DomainKeys Identified Mail)",
-      "dmarcRecord": "DMARC (Domain-based Message Authentication)",
+      "spfRecord": "SPF（送信ポリシーフレームワーク）",
+      "dkimRecord": "DKIM（ドメインキー認証メール）",
+      "dmarcRecord": "DMARC（ドメインベースメッセージ認証）",
       "dkimCheckRequired": "DKIMにはセレクタ固有の検索が必要です。DKIMセレクタについてはメールプロバイダーのドキュメントを確認してください。",
       "policyReject": "ポリシー: reject",
       "valid": "有効",
@@ -1102,7 +1151,78 @@
     "vulnerabilities": "脆弱性",
     "cookieSecurity": "Cookie セキュリティ",
     "thirdPartyScripts": "サードパーティスクリプト",
-    "helperText": "SSL/TLS、セキュリティヘッダー（CSP、HSTS、X-Frame-Options）および OWASP 準拠チェックを実施します。"
+    "sslTlsSecurity": "SSL/TLSセキュリティ",
+    "headers": "セキュリティヘッダー",
+    "cookies": "Cookieセキュリティ",
+    "thirdParty": "サードパーティスクリプト",
+    "validCertificate": "有効",
+    "invalidCertificate": "無効",
+    "helperText": "SSL/TLS、セキュリティヘッダー（CSP、HSTS、X-Frame-Options）および OWASP 準拠チェックを実施します。",
+    "report": {
+      "recommendations": "推奨事項",
+      "sectionIntros": {
+        "ssl": "SSL/TLS証明書は、サーバーと訪問者の間に暗号化された接続を確立し、転送中のデータを保護します。有効で適切に構成された証明書は、ユーザーの信頼と検索エンジンランキングに不可欠です。このセクションでは、証明書の有効性、プロトコルバージョン、発行者、有効期限の状態を評価します。最新のサイトではTLS 1.2以上を使用し、証明書が期限切れ前に更新されていることを確認する必要があります。",
+        "headers": "セキュリティヘッダーは、サイトのコンテンツの取り扱い方をブラウザに指示し、クロスサイトスクリプティング、クリックジャッキング、その他の一般的な攻撃に対する防御を提供します。各ヘッダーは特定の保護機能を果たします。このセクションでは、重要なセキュリティヘッダーの実装を評価し、サイトを脆弱にする欠落した保護を特定します。",
+        "vulnerabilities": "このセクションでは、分析中に発見された潜在的なセキュリティ脆弱性を特定します。脆弱性は重大度レベルで分類されます。重大な問題は即座の対応が必要であり、重大度の低い発見はセキュリティ態勢を強化する機会を示します。定期的な脆弱性評価は、安全なウェブプレゼンスを維持するために不可欠です。",
+        "cookies": "Cookieはセッションデータとユーザーの設定を保存するため、そのセキュリティはユーザーのプライバシー保護にとって重要です。適切に設定されたCookieは、Secure、HttpOnly、SameSite属性を使用して盗難と悪用を防止します。このセクションでは、サイトで検出されたすべてのCookieを監査し、セキュリティ設定を評価します。",
+        "thirdParty": "サードパーティスクリプトはサイトの機能を拡張しますが、セキュリティリスクをもたらします。各外部スクリプトは、侵害された場合の潜在的な攻撃ベクトルとなります。サブリソース完全性（SRI）ハッシュは、取得したスクリプトが改ざんされていないことを検証します。このセクションでは、すべての外部スクリプト、その読み込みパターン、SRIカバレッジを評価します。",
+        "recommendations": "セキュリティ分析に基づき、これらの推奨事項はサイトのセキュリティ態勢に対する最もインパクトのある改善を優先しています。各推奨事項には、具体的な問題、その潜在的な影響、修復のための実行可能な手順が含まれています。"
+      },
+      "ssl": {
+        "overviewHeading": "証明書の詳細",
+        "rows": {
+          "status": "証明書の状態",
+          "protocol": "プロトコル",
+          "issuer": "発行者",
+          "validFrom": "有効開始日",
+          "validUntil": "有効期限",
+          "daysRemaining": "残日数"
+        }
+      },
+      "headers": {
+        "implementedLabel": "実装済みヘッダー",
+        "table": {
+          "header": "ヘッダー",
+          "description": "説明",
+          "valueOrRisk": "値 / リスク"
+        }
+      },
+      "status": {
+        "present": "設定済み",
+        "missing": "未設定"
+      },
+      "vulnerabilities": {
+        "critical": "重大",
+        "high": "高",
+        "medium": "中",
+        "low": "低",
+        "detectedHeading": "検出された脆弱性",
+        "noneFoundTitle": "脆弱性は検出されませんでした",
+        "noneFoundBody": "分析中に重大な脆弱性は特定されませんでした。"
+      },
+      "cookies": {
+        "totalLabel": "Cookie総数",
+        "secureLabel": "適切に保護済み",
+        "securedLabel": "保護済みCookie",
+        "detailsHeading": "Cookieの詳細",
+        "table": {
+          "name": "Cookie名"
+        }
+      },
+      "thirdParty": {
+        "totalLabel": "外部スクリプト",
+        "withSriLabel": "SRI付き",
+        "sriCoverageLabel": "SRIカバレッジ",
+        "detailsHeading": "スクリプトの詳細",
+        "table": {
+          "scriptUrl": "スクリプトURL",
+          "protocol": "プロトコル",
+          "risk": "リスク"
+        }
+      },
+      "recommendations.noneTitle": "堅牢なセキュリティ態勢",
+      "recommendations.noneBody": "サイトはセキュリティのベストプラクティスに従っています。新しい脆弱性の監視を継続してください。"
+    }
   },
   "performanceHub": {
     "title": "速度とUX",
@@ -1472,7 +1592,7 @@
     "crossPageConsistency": "ページ間の一貫性",
     "pageBreakdown": "ページ別内訳",
     "competitiveBrandComparison": "競合ブランド比較",
-    "reportAndRecommendations": "レポートと推奨事項",
+    "reportAndRecommendations": "推奨事項",
     "overall": "全体",
     "type": "タイプ",
     "identity": "アイデンティティ",
@@ -1590,7 +1710,7 @@
       "security": "セキュリティ",
       "structuredData": "構造化データ",
       "additional": "追加チェック",
-      "fixCode": "修正コード + 推奨事項"
+      "fixCode": "推奨事項"
     },
     "steps": {
       "running": "SEO分析を実行中",
@@ -1830,7 +1950,7 @@
       "links": {
         "title": "リンクのセキュリティとアンカーテキストを修正",
         "impact": "セキュリティ脆弱性を防止し、リンクエクイティのシグナルを改善",
-        "description": "target=\"_blank\" で新しいタブに開く外部リンクに rel=\"noopener noreferrer\" がない場合、リバースタブナッピング攻撃にさらされます（開いたページがあなたのタブをフィッシングサイトにリダイレクトできます）。空のアンカーテキストはリンクエクイティを無駄にし、検索エンジンやスクリーンリーダーにコンテキストを提供しません。"
+        "description": "新しいタブで開かれるrel=\"noopener noreferrer\"のない外部リンクは、リバースタブナッピング攻撃にサイトをさらします。開かれたページがwindow.opener APIを使用して元のタブをフィッシングサイトにリダイレクトできるためです。これはよく知られたセキュリティ脆弱性であり、ユーザーがリダイレクトされたことに気づかずにサイトの偽バージョンに認証情報を入力するよう仕向けることができます。さらに、空のまたは欠落しているアンカーテキストを持つリンクは、検索エンジンがリンク先ページのコンテキストと関連性を理解するためにアンカーテキストを使用するため、貴重なリンクエクイティを無駄にします。スクリーンリーダーのユーザーもリンクを有効にする前にリンク先を理解するためにアンカーテキストに依存しているため、空のアンカーは混乱を招くアクセシブルでない体験を生み出します。両方の問題は修正が簡単であり、すべての外部および内部リンクで解決すべきです。"
       },
       "snippets": {
         "titlePlaceholder": "主要キーワード | ブランド名",
@@ -1963,6 +2083,56 @@
         "secureExternalLink": "安全な外部リンク",
         "descriptiveAnchors": "説明的なアンカーテキストを使用",
         "notThis": "これではなく"
+      }
+    },
+    "analyzer": {
+      "issues": {
+        "missingTitle": "ページタイトルがありません",
+        "missingDescription": "メタディスクリプションがありません",
+        "missingViewport": "viewport メタタグがありません（モバイル表示に影響）",
+        "noH1": "H1 見出しが見つかりません",
+        "multipleH1": "H1 見出しが {{count}} 個見つかりました。H1 は1ページに1つだけ使用してください",
+        "noHeadings": "ページに見出しがありません",
+        "lowWordCount": "文字数が少ない（300語未満）。検索エンジンはコンテンツの充実したページを好みます",
+        "missingAlt": "{{count}} 枚の画像に alt テキストがありません（アクセシビリティと SEO に影響）",
+        "emptyAnchors": "{{count}} 個のリンクにアンカーテキストがありません",
+        "horizontalScroll": "モバイルビューポートで横スクロールが検出されました",
+        "missingViewportMobile": "viewport メタタグがありません（モバイル対応に重要）",
+        "slowLoad": "ページ読み込みが遅い（{{time}}）。目標：3秒以内",
+        "largePageSize": "ページサイズが大きい（{{size}}）。画像とリソースを最適化してください",
+        "noHttps": "HTTPS を使用していません（セキュリティと SEO に重要）",
+        "invalidSchemas": "{{count}} 個の無効な構造化データスキーマが見つかりました"
+      },
+      "recs": {
+        "titleTooShort": "タイトルが短すぎます（30文字未満）。推奨：50〜60文字",
+        "titleTooLong": "タイトルが長すぎます（60文字超）。検索結果で切り詰められる可能性があります",
+        "descTooShort": "メタディスクリプションが短すぎます（120文字未満）。推奨：150〜160文字",
+        "descTooLong": "メタディスクリプションが長すぎます（160文字超）。切り詰められる可能性があります",
+        "addOpenGraph": "ソーシャルメディア共有のために Open Graph タグを追加",
+        "addTwitterCard": "Twitter 表示改善のために Twitter Card タグを追加",
+        "addLangAttr": "<html> タグに lang 属性を追加",
+        "addHeadings": "コンテンツ構造改善のために見出しを追加検討",
+        "headingGaps": "見出し階層にギャップがあります（例：H1 → H3）。連続するレベルを使用してください",
+        "addContent": "コンテンツの追加を検討してください。600語以上のページはランキングが向上する傾向があります",
+        "longSentences": "長い文が検出されました。可読性向上のため短い文を検討してください",
+        "lowTextRatio": "テキスト対 HTML 比率が低い。コンテンツに対してコードが多すぎます",
+        "lazyLoading": "ファーストビュー外の画像に遅延読み込みの使用を検討",
+        "largeImages": "{{count}} 枚の大きな画像が検出されました。画像サイズの最適化を検討してください",
+        "unsafeExternalLinks": "{{count}} 個の外部リンクが新しいタブで開くのに rel=\"noopener noreferrer\" がありません",
+        "brokenLinks": "{{count}} 個のリンクに不正な形式の可能性（href=\"#\" や javascript:）",
+        "smallFontSize": "モバイルデバイスでフォントサイズが小さすぎる可能性があります",
+        "improveLoadTime": "ページ読み込み時間を改善できます",
+        "largeDom": "DOM サイズが大きい（{{count}} ノード）。簡素化を検討してください",
+        "manyResources": "リソースが多い（{{count}} 件）。バンドル/圧縮を検討してください",
+        "addHsts": "Strict-Transport-Security ヘッダー（HSTS）を追加",
+        "addCsp": "Content-Security-Policy ヘッダーを追加",
+        "addXFrameOptions": "X-Frame-Options ヘッダーを追加（クリックジャッキング防止）",
+        "addXContentType": "X-Content-Type-Options ヘッダーを追加",
+        "addStructuredData": "リッチリザルトのために構造化データ（Schema.org/JSON-LD）を追加",
+        "addRobotsTxt": "クロール制御のために robots.txt を追加",
+        "addSitemap": "インデックス改善のために XML サイトマップを追加",
+        "addFavicon": "ブランディングのためにファビコンを追加",
+        "addAnalytics": "トラフィック分析のために Google Analytics の追加を検討"
       }
     },
     "report": {
@@ -2212,6 +2382,8 @@
         }
       },
       "structuredData": {
+        "microdataLabel": "Microdata",
+        "totalLabel": "合計",
         "info": {
           "title": "ⓘ 構造化データ（Schema）とは？",
           "body": "構造化データ（schema マークアップ）は、検索エンジンがコンテンツをより正確に理解できるようにするコードです。星評価、価格、イベント日時、FAQ の展開表示などの <strong style=\"color: #00ff41;\">リッチリザルト</strong> を有効化できます。<strong style=\"color: #00ccff;\">Schema.org</strong> の語彙を JSON-LD／Microdata／RDFa で実装します。",
@@ -2995,7 +3167,7 @@
           "header": "ヘッダー"
         },
         "fixCode": {
-          "title": "修正コード + 推奨事項",
+          "title": "推奨事項",
           "subtitle": "SEOスコアを改善するための実行可能な修正",
           "severity": "重要度",
           "category": "カテゴリ",
@@ -3059,13 +3231,13 @@
     "plans": {
       "proMonthly": "Pro月額",
       "proYearly": "Pro年額",
-      "dayPass": "8時間デイパス",
+      "dayPass": "24時間デイパス",
       "thisReport": "このレポート"
     },
     "periods": {
       "perMonth": "月額",
       "perYear": "年額",
-      "hours24": "8時間",
+      "hours24": "24時間",
       "oneTime": "1回限り",
       "effectiveMonthly": "実質${{amount}}/月"
     },
@@ -3081,14 +3253,17 @@
       "managePlan": "プラン管理",
       "switchToMonthly": "月額に変更",
       "switchToYearly": "年額に変更",
-      "getDayPass": "8時間デイパスを取得",
+      "getDayPass": "24時間デイパスを取得",
       "activePass": "有効なパス",
       "youHavePro": "Pro加入済み",
       "buyReport": "レポートを購入",
       "purchased": "購入済み",
       "includedWithPro": "Proに含まれる",
       "runScanFirst": "まずスキャンを実行",
-      "processing": "処理中..."
+      "processing": "処理中...",
+      "currentPlan": "現在のプラン",
+      "loginToUpgrade": "ログインしてアップグレード",
+      "redirecting": "チェックアウトにリダイレクト中..."
     },
     "benefits": {
       "unlimitedProTools": "無制限のProツール",
@@ -3096,20 +3271,20 @@
       "unlimitedReports": "無制限レポート",
       "reportsPerMonth": "月250レポート",
       "reportsPerPass": "30レポート含む",
-      "unlimitedScans24h": "8時間無制限スキャン",
+      "unlimitedScans24h": "24時間無制限スキャン",
       "noAutoRenewal": "自動更新なし",
       "exportPdfs": "PDFエクスポート",
       "cancelAnytime": "いつでもキャンセル可能",
       "bestValue": "最もお得",
       "fullProAccess": "完全なProアクセス",
-      "expiresIn24h": "8時間で期限切れ",
+      "expiresIn24h": "24時間で期限切れ",
       "unlocksThisReport": "このレポートを解放",
       "exportPdf": "PDFエクスポート",
       "permanentAccess": "永久アクセス"
     },
     "oneTime": "一回限り",
-    "dayPass": "8時間デイパス",
-    "dayPassDesc": "8時間無制限スキャン",
+    "dayPass": "24時間デイパス",
+    "dayPassDesc": "24時間無制限スキャン",
     "proMonthly": "プロ月額",
     "monthlyDesc": "無制限スキャン + 250レポート",
     "proAnnual": "プロ年額",
@@ -3143,7 +3318,10 @@
     "cancel": "キャンセル",
     "pleaseLoginToContinue": "続行するにはログインしてください",
     "pleaseLoginToManageBilling": "請求管理にはログインしてください",
-    "signIn": "サインイン"
+    "signIn": "サインイン",
+    "sending": "送信中...",
+    "sendResetLink": "リセットリンクを送信",
+    "resetting": "リセット中..."
   },
   "account": {
     "accountShort": "アカウント",
@@ -3295,9 +3473,9 @@
       "recommendations": "推奨事項",
       "issuesFound": "発見された問題",
       "checksPassed": "合格したチェック",
-      "reportRecommendations": "レポートと推奨事項",
-      "fixCode": "修正コード + 推奨事項",
-      "fixCodeRecommendations": "修正コード + 推奨事項",
+      "reportRecommendations": "推奨事項",
+      "fixCode": "推奨事項",
+      "fixCodeRecommendations": "推奨事項",
       "takeAction": "アクションを実行",
       "improvementsFound": "{{count}}件の改善点が見つかりました",
       "issuesDetected": "{{count}}件の問題が検出されました",
@@ -3331,7 +3509,7 @@
       "coreMetrics": "コア指標",
       "url": "URL",
       "generated": "生成日時",
-      "noDiagnostics": "診断情報はありません。",
+      "noDiagnostics": "診断結果はありません。",
       "howToImprove": "改善方法",
       "topRecommendations": "主な推奨事項",
       "noRecommendations": "具体的な推奨事項はありません",
@@ -3373,8 +3551,8 @@
       },
       "remove": "削除",
       "screenshotOf": "{{url}}のスクリーンショット",
-      "reportAndRecommendations": "レポートと推奨事項",
-      "reportAndRecommendationsCount": "レポートと推奨事項 ({{count}})",
+      "reportAndRecommendations": "推奨事項",
+      "reportAndRecommendationsCount": "推奨事項 ({{count}})",
       "errorInvalidData": "エラー：無効なレスポンスデータ構造",
       "errorMissingScores": "エラー：スコアデータがありません",
       "errorDisplayingResults": "結果の表示エラー：{{message}}",
@@ -3514,6 +3692,7 @@
       "stepByStepInstructions": "ステップバイステップの手順",
       "timeout": "タイムアウト",
       "timeRemaining": "残り時間: {{minutes}}分{{seconds}}秒",
+      "timeRemainingDefault": "残り時間: 3分0秒",
       "timestamp": "タイムスタンプ",
       "unknown": "不明",
       "upgradeToPro": "Proにアップグレード",
@@ -3521,7 +3700,27 @@
       "verificationSteps": "検証手順",
       "websiteScreenshot": "ウェブサイトスクリーンショット",
       "yes": "はい",
-      "analysisResults": "分析結果"
+      "analysisResults": "分析結果",
+      "cwvStatus": {
+        "pass": "合格",
+        "atRisk": "要注意",
+        "fail": "不合格",
+        "unknown": "不明"
+      },
+      "riskBanner": {
+        "failing": "一部のメトリクスが不合格です: ",
+        "atRisk": "注意が必要なメトリクス: ",
+        "suffix": " — 目標達成のために改善してください。"
+      },
+      "noOpportunities": "報告された改善点はありません。",
+      "opportunity": "改善機会",
+      "impactLabel": "影響: ",
+      "noResourceBreakdown": "リソース内訳は利用できません。",
+      "difficulty": {
+        "beginner": "初級",
+        "intermediate": "中級",
+        "advanced": "上級"
+      }
     },
     "pageScreenshot": "ページスクリーンショット",
     "screenshotUnavailable": "スクリーンショットが利用できません",
@@ -3543,8 +3742,8 @@
     "recommendations": "推奨事項",
     "issuesFound": "発見された問題",
     "checksPassed": "合格したチェック",
-    "reportRecommendations": "レポートと推奨事項",
-    "fixCode": "修正コード + 推奨事項",
+    "reportRecommendations": "推奨事項",
+    "fixCode": "推奨事項",
     "takeAction": "アクションを実行",
     "copy": "コピー",
     "copied": "コピーしました！",
@@ -4069,7 +4268,10 @@
         },
         "recommendations": "Recommendations",
         "recommendations.noneTitle": "Well-Optimized Typography",
-        "recommendations.noneBody": "Your font stack follows best practices. Continue monitoring for optimization opportunities."
+        "recommendations.noneBody": "Your font stack follows best practices. Continue monitoring for optimization opportunities.",
+        "recommendationsHeading": "推奨事項",
+        "recommendationsNoneTitle": "最適化されたタイポグラフィ",
+        "recommendationsNoneBody": "フォントスタックはベストプラクティスに従っています。最適化の機会を引き続き監視してください。"
       },
       "considerVariableFonts": "より柔軟なタイポグラフィのためにバリアブルフォントの使用を検討してください。",
       "excellentTypography": "優れたタイポグラフィ！",
@@ -4364,7 +4566,7 @@
         "implementHttps": {
           "title": "HTTPSを実装",
           "impact": "+30 セキュリティスコア",
-          "summary": "ウェブサイトがHTTPS暗号化を使用していません。パスワード、個人情報、支払い詳細などすべてのデータがプレーンテキストで送信され、ネットワーク上の攻撃者による傍受に脆弱です。",
+          "summary": "お客様のウェブサイトはHTTPS暗号化を使用していないため、サーバーと訪問者間で送信されるすべてのデータが平文で送信されています。これにはパスワード、個人情報、支払い情報、セッショントークンが含まれ、同じネットワーク上の攻撃者による中間者攻撃で傍受される可能性があります。最新のブラウザはHTTPサイトに対してアドレスバーに「保護されていない通信」という目立つ警告を表示し、訪問者の信頼を損ない、直帰率を高めます。Googleもランキングシグナルとしてhttpsを使用しているため、暗号化されていないサイトは測定可能なSEOペナルティを受けます。Let's Encryptを通じて無料のSSL証明書が利用可能で、どのウェブサイトでもHTTPSの実装を簡単に行えます。",
           "steps": [
             "Let's Encryptでcertbotを使用して無料のSSL証明書を取得",
             "証明書をインストールしてウェブサーバーを設定",
@@ -4374,7 +4576,7 @@
         "implementCsp": {
           "title": "コンテンツセキュリティポリシーを実装",
           "impact": "+15 セキュリティスコア",
-          "summary": "サイトにコンテンツセキュリティポリシー（CSP）ヘッダーがなく、クロスサイトスクリプティング（XSS）攻撃に対して脆弱です。攻撃者がユーザーデータを盗んだり、セッションをハイジャックしたり、ウェブサイトを改ざんする悪意のあるスクリプトを注入できます。",
+          "summary": "お客様のサイトにはContent Security Policy（CSP）ヘッダーがなく、クロスサイトスクリプティング（XSS）攻撃に対して脆弱な状態です。CSPは、ページ上で読み込みが許可されるコンテンツのソース（スクリプト、スタイル、画像、フォント）をブラウザに正確に指示するHTTPレスポンスヘッダーです。これがないと、インジェクションポイントを見つけた攻撃者がユーザーのCookieを盗んだり、訪問者をフィッシングページにリダイレクトしたり、キーストロークを密かに記録する任意のJavaScriptを実行できます。XSSはOWASPによって常にトップのWebセキュリティ脆弱性にランク付けされており、最も頻繁に悪用される攻撃ベクトルの一つです。基本的なCSPを実装するだけでも攻撃対象面を大幅に削減し、スクリプトインジェクションに対する強力な多層防御を提供します。",
           "steps": [
             "まず<code>Content-Security-Policy-Report-Only</code>ヘッダーで問題を特定",
             "<code>default-src 'self'; script-src 'self'</code>を基本ポリシーとして設定",
@@ -4385,7 +4587,7 @@
         "enableHsts": {
           "title": "HTTP Strict Transport Securityを有効化",
           "impact": "+10 セキュリティスコア",
-          "summary": "HSTSヘッダーが設定されていません。HSTSがない場合、攻撃者はプロトコルダウングレード攻撃を実行し、HTTPSが利用可能であっても安全でないHTTP経由での接続を強制できます。",
+          "summary": "HSTSヘッダーが設定されていないため、プロトコルダウングレード攻撃に対して脆弱な状態です。ユーザーが「https://」プレフィックスなしでドメインを入力すると、ブラウザは最初に平文のHTTPで接続し、その後HTTPSにリダイレクトされます。この短い暗号化されていないリクエストの間に、同じネットワーク上の攻撃者が接続を傍受し、HTTPSへのリダイレクトを完全に阻止できます。これはSSLストリッピングとして知られる手法です。HSTSヘッダーはブラウザに対して常にHTTPSを使用するよう指示し、最初の安全でないリクエストを完全に排除します。一度設定されると、ブラウザはこの設定を指定された期間記憶し、ユーザーが明示的にHTTPと入力しても接続を拒否します。",
           "steps": [
             "まずすべてのページでHTTPSが機能することを確認",
             "<code>Strict-Transport-Security: max-age=300</code>を追加してテスト",
@@ -4395,7 +4597,7 @@
         "preventClickjacking": {
           "title": "クリックジャッキング攻撃を防止",
           "impact": "+5 セキュリティスコア",
-          "summary": "X-Frame-Optionsヘッダーが設定されていません。攻撃者があなたのサイトを非表示のiframeに埋め込み、ユーザーを騙して意図しないボタンをクリックさせ、設定を変更させたり購入を行わせたりする可能性があります。",
+          "summary": "X-Frame-Optionsヘッダーが設定されていないため、クリックジャッキング攻撃に対して脆弱です。クリックジャッキング攻撃では、悪意のあるウェブサイトがお客様のページを目に見えないiframeで読み込み、その上に欺瞞的なコンテンツを重ね、ユーザーが気づかないうちにお客様のサイトのボタンをクリックするよう誘導します。これにより、アカウント設定の変更、購入の実行、攻撃者のアプリケーションへの権限の付与など、不正なアクションが行われる可能性があります。この攻撃が特に危険なのは、ユーザーは悪意のあるページとやり取りしていると信じている一方で、実際には認証済みセッションでお客様のサイト上でアクションを実行しているためです。X-Frame-Optionsヘッダーの追加またはCSPのframe-ancestorsディレクティブの使用により、お客様のページがサードパーティのフレームに埋め込まれることを完全に防止できます。",
           "steps": [
             "サーバー設定に<code>X-Frame-Options: DENY</code>ヘッダーを追加",
             "モダンブラウザ向けにCSP:<code>frame-ancestors 'none'</code>も追加"
@@ -4404,7 +4606,7 @@
         "preventMimeSniffing": {
           "title": "MIMEスニッフィングを防止",
           "impact": "+5 セキュリティスコア",
-          "summary": "X-Content-Type-Optionsヘッダーがありません。ブラウザがファイルタイプを誤って解釈し、異なる拡張子を持っていてもアップロードされたファイルをスクリプトとして実行する可能性があります。",
+          "summary": "X-Content-Type-Optionsヘッダーが欠落しているため、ブラウザが宣言されたコンテンツタイプを上書きし、ファイルの実際の内容を推測することが可能になっています。MIMEスニッフィングとして知られるこの動作により、text/plainとして提供されたファイルでも、ブラウザがスクリプトのようなコンテンツを検出した場合、HTMLまたはJavaScriptとして再解釈して実行される可能性があります。攻撃者は、悪意のあるスクリプトを含む無害な拡張子（.txtや.jpgなど）のファイルをアップロードすることでこれを悪用し、ブラウザがお客様のドメインのコンテキストで実行します。この1行のヘッダー（X-Content-Type-Options: nosniff）は、宣言されたContent-Typeを厳密に尊重するようブラウザに強制し、誤ったタイプのファイルの実行をブロックします。最も実装が容易なセキュリティヘッダーの一つであり、通常のサイト機能に悪影響はありません。",
           "steps": [
             "すべてのレスポンスに<code>X-Content-Type-Options: nosniff</code>ヘッダーを追加",
             "サーバーがすべてのファイルに対して正しいContent-Typeを送信することを確認",
@@ -4414,7 +4616,7 @@
         "improveCookieSecurity": {
           "title": "Cookieセキュリティを改善",
           "impact": "+10 セキュリティスコア",
-          "summary": "Cookieが適切に保護されていません。HttpOnly、Secure、SameSiteフラグのないセッションCookieは、XSS攻撃による盗難やクロスサイトリクエストフォージェリに脆弱です。",
+          "summary": "Cookieが適切に保護されておらず、ユーザーセッションと機密データが危険にさらされています。HttpOnlyフラグがないと、ページ上で実行されるJavaScriptコード（注入された悪意のあるスクリプトを含む）がセッションCookieを読み取って攻撃者に送信でき、アカウントの完全な乗っ取りが可能になります。Secureフラグがないと、Cookieは暗号化されていないHTTP接続を通じて送信され、公共Wi-Fiや侵害されたネットワークで傍受される可能性があります。SameSite属性は、他のウェブサイトから発信されたリクエストにブラウザがCookieを送信するかどうかを制御することで、クロスサイトリクエストフォージェリ（CSRF）攻撃を防止します。セッションCookieにこれら3つのフラグをすべて設定することで、最も一般的なCookie関連の攻撃ベクトルを最小限の実装努力で遮断できます。",
           "steps": [
             "すべてのセッションCookieに<code>HttpOnly; Secure; SameSite=Lax</code>フラグを追加",
             "セッションライブラリまたはフレームワーク設定を更新",
@@ -4424,7 +4626,7 @@
         "addSri": {
           "title": "サブリソース完全性を追加",
           "impact": "+8 セキュリティスコア",
-          "summary": "サードパーティスクリプトが完全性検証なしで読み込まれています。CDNが侵害された場合、検出されずに悪意のあるコードがサイトに注入される可能性があります。",
+          "summary": "サードパーティのスクリプトとスタイルシートが整合性検証なしで読み込まれており、サプライチェーンの脆弱性を生み出しています。これらのファイルをホストするCDNまたは外部サーバーが侵害された場合、攻撃者は正規のファイルを悪意のあるコードに置き換え、すべての訪問者のページ読み込みごとに実行される可能性があります。Subresource Integrity（SRI）は各外部リソースタグに暗号化ハッシュを追加し、ブラウザはダウンロードしたファイルがそのハッシュと一致することを実行前に検証します。ファイルが改ざんされている場合、ブラウザはファイルを完全にブロックし、侵害されたコードの実行を防止します。この保護は、サプライチェーン攻撃の高価値ターゲットであるjQueryやBootstrapなどの広く使用されるライブラリにとって特に重要です。",
           "steps": [
             "各外部スクリプト/スタイルシートのSRIハッシュをsrihash.orgで生成",
             "<code>integrity</code>および<code>crossorigin=\"anonymous\"</code>属性を追加",
@@ -4861,7 +5063,39 @@
       },
       "wrongReportType": "保存されたレポートは別のアナライザーのものです。新しいアクセシビリティスキャンを実行してください。",
       "wcag21Compliance": "WCAG 2.1 準拠",
-      "usingAxeCore": "影響を受けるプラットフォームにaxe-coreの代替アクセシビリティ指標を使用しています。"
+      "usingAxeCore": "影響を受けるプラットフォームにaxe-coreの代替アクセシビリティ指標を使用しています。",
+      "fixTitles": {
+        "colorContrast": "複数のカラーコントラストの問題",
+        "focusIndicators": "フォーカスインジケーターの欠如",
+        "formLabels": "フォームラベルの欠如",
+        "headingStructure": "不適切な見出し構造",
+        "ariaLandmarks": "ARIAランドマークの欠如",
+        "mobileGap": "モバイルアクセシビリティの格差"
+      },
+      "fixDescriptions": {
+        "colorContrast": "{{count}}個の要素でカラーコントラストが不十分です。WCAG 2.1の達成基準1.4.3では、通常サイズのテキストには最低4.5:1、大きなテキストには3:1のコントラスト比が必要です。",
+        "focusIndicators": "{{count}}個のインタラクティブ要素にフォーカスインジケーターがありません。フォーカスインジケーターは、キーボードで操作する際に現在選択されている要素を示す視覚的な枠線やハイライトです。",
+        "formLabels": "{{count}}個のフォーム要素にアクセシブルなラベルがありません。すべてのフォーム入力には、支援技術がユーザーに目的を伝えるためのラベルが必要です。",
+        "headingStructure": "見出し構造が{{structure}}です。見出しはページコンテンツの階層的なアウトラインを作成します。スクリーンリーダーユーザーは見出し間をジャンプして必要なセクションを素早く見つけます。",
+        "ariaLandmarks": "このページにセマンティックランドマークが見つかりませんでした。ARIAランドマークはページの主要な領域を定義し、スクリーンリーダーユーザーが必要なセクションに直接ジャンプできるようにします。",
+        "mobileGap": "モバイルのアクセシビリティスコアがデスクトップより{{diff}}ポイント低く、モバイルユーザーが大きな追加の障壁に直面していることを示しています。"
+      },
+      "fixImpacts": {
+        "colorContrast": "弱視や色覚異常のユーザーがコンテンツを読みにくい場合があります。",
+        "focusIndicators": "キーボードのみのユーザーはどの要素にフォーカスがあるか確認できず、操作が困難になります。",
+        "formLabels": "スクリーンリーダーユーザーがフォーム入力の目的を理解できません。",
+        "headingStructure": "スクリーンリーダーユーザーは見出し構造に依存してページの階層を理解し移動します。",
+        "ariaLandmarks": "スクリーンリーダーユーザーはページの主要セクションに素早くナビゲートできません。",
+        "mobileGap": "障害のあるモバイルユーザーは、デスクトップユーザーに比べて劣化した体験をしています。"
+      },
+      "fixSolutions": {
+        "colorContrast": "テキストと背景色のコントラストを上げてください。オンラインのコントラストチェッカーを使用して配色を検証してください。",
+        "focusIndicators": "CSS :focusの擬似クラスを使用して見やすいフォーカススタイルを追加してください。フォーカスインジケーターに十分なコントラストがあることを確認してください。",
+        "formLabels": "aria-label属性を追加するか、for/id属性を使用してlabel要素をフォーム入力に関連付けてください。",
+        "headingStructure": "見出しがレベルをスキップせずに論理的な順序（h1 > h2 > h3）に従うようにしてください。ページごとに1つのh1を含めてください。",
+        "ariaLandmarks": "セマンティックHTML5要素（header, nav, main, aside, footer）を使用するか、適切なARIAランドマークロールを追加してください。",
+        "mobileGap": "タッチターゲットのサイズ、ビューポートの設定、モバイル固有のインタラクションを確認してください。最小タッチターゲットサイズ44x44ピクセルを確保してください。"
+      }
     },
     "performance": {
       "title": "パフォーマンスレポート",
@@ -4901,7 +5135,7 @@
       "consistentScoresMessage": "デスクトップとモバイルのパフォーマンススコアは10ポイント以内です。",
       "networkPerformance": "ネットワークパフォーマンス",
       "cachingOptimization": "キャッシュと最適化",
-      "reportAndRecommendations": "レポートと推奨事項",
+      "reportAndRecommendations": "推奨事項",
       "whatAreWebVitals": "Core Web Vitalsとは？",
       "webVitalsDescription": "Core Web VitalsはGoogleのユーザーエクスペリエンス測定指標です。",
       "metric": "指標",
@@ -5026,11 +5260,11 @@
         "improveAccessibility": "アクセシビリティを改善"
       },
       "fixSummaries": {
-        "lcpOptimization": "Largest Contentful Paintが{{value}}で、目標の{{target}}を超えています。これはメインコンテンツの表示に時間がかかりすぎ、ユーザーにサイトが遅いと感じさせることを意味します。",
-        "javascriptOptimization": "サイトの総ブロッキング時間が{{value}}あり、メインスレッドがブロックされてユーザー入力に応答できません。これにより対話性が遅延し、ユーザーエクスペリエンスが低下します。",
-        "clsOptimization": "ページ読み込み中にレイアウトシフトが発生し、コンテンツが予期せず移動しています。これはユーザーをイライラさせ、誤ったクリックを引き起こす可能性があります。",
-        "imageOptimization": "画像がページサイズの大部分を占めています。画像を最適化することで、読み込み時間を大幅に改善し、帯域幅コストを削減できます。",
-        "accessibilityImprovements": "アクセシビリティの改善は、障害を持つユーザーを支援し、SEOを向上させます。一般的な問題には、代替テキストの欠落、色のコントラスト不足、ARIAラベルの欠落などがあります。"
+        "lcpOptimization": "Largest Contentful Paintは{{value}}で、目標の{{target}}を超えています。LCPは、最大の可視コンテンツ要素（通常はヒーロー画像、見出し、または背景グラフィック）が画面上で完全にレンダリングされるまでの時間を測定します。これはユーザーが体感的な読み込み速度と最も密接に関連付けるメトリクスであり、GoogleはこれをCore Web Vitalsの直接的なランキング要因として使用しています。遅いLCPは通常、重要なリソースが優先されていない、画像が圧縮されていない、またはレンダリングをブロックするスクリプトがページの描画を遅延させていることを示しています。LCPの最適化は、ユーザーエクスペリエンスと検索ランキングの両方において、単一で最大の改善をもたらすことが多いです。",
+        "javascriptOptimization": "お客様のサイトには{{value}}のTotal Blocking Timeがあり、ブラウザのメインスレッドがJavaScriptの実行で占有され、クリック、タップ、キー入力などのユーザー入力に応答できない状態です。これにより、ボタンがクリック可能に見えるのに何も起こらず、スクロールがカクカクし、フォームが応答しないように見える、フラストレーションの溜まる体験が生まれます。Total Blocking Timeは、メインスレッドが50ミリ秒以上ブロックされる累積期間を直接測定し、Core Web Vitalsスコアの重要な構成要素です。一般的な原因には、大きな未圧縮JavaScriptバンドル、同期的なサードパーティスクリプト、ダウンロードされたが実行されない未使用のライブラリコードが含まれます。重要でないスクリプトの遅延読み込み、未使用コードの削除、大きなバンドルのコード分割により、ブロック時間を大幅に削減できます。",
+        "clsOptimization": "ページの読み込み中にレイアウトシフトが発生し、コンテンツが予期せず移動してユーザー体験を損なっています。これは、ページが最初にレンダリングされた後に要素が位置を変えた場合に発生します。例えば、予約された寸法なしで画像が読み込まれた場合、異なるメトリクスのWebフォントが入れ替わった場合、動的な広告バナーがコンテンツを下に押しやった場合などです。これらの予期しないシフトは、ボタンをタップしようとしている、または突然別の場所にジャンプするテキストを読んでいるユーザーにとって特にフラストレーションであり、誤クリックの原因となることが多いです。Cumulative Layout ShiftはGoogleの3つのCore Web Vitalsメトリクスの一つであり、検索ランキングに直接影響します。最も効果的な修正には、画像への明示的な幅と高さの属性の追加、font-display: swapの使用、動的コンテンツ用のスペース確保が含まれます。",
+        "imageOptimization": "画像は通常、ページ全体の重量の最大部分を占め、ダウンロードされる全バイトの50〜80%を消費することが多いです。最適化されていない画像（JPEGやPNGなどの古いフォーマットで提供されるもの、不必要に高い解像度のもの、レスポンシブなサイズ設定がないもの）は、訪問者が必要としないかもしれない数メガバイトのデータをダウンロードすることを強制します。これにより、特にバンド幅が限られデータが従量制のモバイルネットワークでは、読み込み時間が劇的に増加します。WebPやAVIFなどの最新の画像フォーマットは、目に見える品質の低下なしにJPEGと比較してファイルサイズを60〜80%削減できます。フォーマット最適化とレスポンシブなsrcset属性、折り返しより下の画像の遅延読み込みを組み合わせることで、ほとんどのウェブサイトで最大の単一パフォーマンス改善を実現できます。",
+        "accessibilityImprovements": "お客様のサイトのアクセシビリティスコアは、障害のあるユーザーがウェブサイトを使用しようとする際に重大な障壁に遭遇する可能性があることを示しています。一般的な問題には、説明的なalt テキストのない画像（スクリーンリーダーのユーザーが視覚コンテンツを理解できなくなる）、不十分な色のコントラスト（低視力のユーザーにとってテキストが読めなくなる）、関連付けられたラベルのないフォーム入力（支援技術でフォームが使用できなくなる）があります。アクセシビリティは倫理的義務であるだけでなく、ADA、Section 508、欧州アクセシビリティ法の下でますます法的要件となっており、非準拠は訴訟や罰金につながります。検索エンジンもランキングにアクセシビリティを考慮しており、多くのアクセシビリティのベストプラクティスはセマンティックHTMLや明確なコンテンツ構造などのSEOの基本と一致しています。これらの問題に対処することで、支援技術を使用するユーザーだけでなく、すべてのユーザーの体験が向上します。"
       },
       "fixImpacts": {
         "lcpOptimization": "+15 パフォーマンススコア",
@@ -5093,6 +5327,64 @@
       },
       "notAvailable": "N/A",
       "seo": "SEO",
+      "diagnostics": {
+        "ttfb": "最初のバイトまでの時間",
+        "connectionTime": "接続時間",
+        "cacheHitRate": "キャッシュヒット率",
+        "uncachedResources": "キャッシュされていないリソース"
+      },
+      "recommendations": {
+        "minimizeJs": {
+          "title": "JavaScriptの最小化",
+          "description": "JavaScriptバンドルは{{size}}です。コード分割、ツリーシェイキング、未使用の依存関係の削除を検討してください。",
+          "impact": "高 - 初期ページ読み込みの高速化とTime to Interactiveの改善"
+        },
+        "optimizeImages": {
+          "title": "画像の最適化",
+          "description": "画像が{{size}}を占めています。次世代フォーマット（WebP、AVIF）、遅延読み込み、レスポンシブ画像を使用してください。",
+          "impact": "高 - ページ重量を大幅に削減し、LCPを改善"
+        },
+        "reduceCss": {
+          "title": "CSSサイズの削減",
+          "description": "CSSファイルの合計は{{size}}です。未使用のCSSを削除し、スタイルシートを圧縮し、クリティカルCSSのインライン化を検討してください。",
+          "impact": "中 - レンダリングブロックリソースの読み込みを高速化"
+        },
+        "improveCaching": {
+          "title": "キャッシュ戦略の改善",
+          "description": "リソースの{{rate}}のみがキャッシュ可能です。適切なCache-Controlヘッダーとバージョニング戦略を実装してください。",
+          "impact": "高 - リピート訪問のパフォーマンスを劇的に改善"
+        },
+        "optimizeLcp": {
+          "title": "Largest Contentful Paint (LCP) の最適化",
+          "description": "{{platform}}でのLCPは{{value}}で、推奨される2.5秒のしきい値を超えています。ファーストビューの最大要素を最適化してください。",
+          "impact": "重大 - Core Web VitalはGoogle検索順位とユーザー体験に影響"
+        },
+        "reduceCls": {
+          "title": "Cumulative Layout Shift (CLS) の削減",
+          "description": "{{platform}}でのCLSは{{value}}で、推奨される0.1のしきい値を超えています。画像や広告のスペースを確保し、サイズ属性を使用してください。",
+          "impact": "中 - Core Web Vitalはユーザー体験と検索順位に影響"
+        },
+        "mobileGap": {
+          "title": "モバイルパフォーマンスの大幅な差異",
+          "description": "モバイルパフォーマンス（{{mobileScore}}）がデスクトップ（{{desktopScore}}）より大幅に低くなっています。モバイルユーザーのパフォーマンスが低下する可能性があります。",
+          "impact": "高 - ほとんどのユーザーはモバイルデバイスでアクセス"
+        },
+        "enableCompression": {
+          "title": "テキスト圧縮の有効化",
+          "description": "テキストベースのリソースにgzipまたはbrotli圧縮を有効にして、転送サイズを70-90%削減してください。",
+          "impact": "中 - 帯域幅を削減しダウンロードを高速化"
+        },
+        "reduceRequests": {
+          "title": "HTTPリクエストの削減",
+          "description": "ページは{{count}}件のHTTPリクエストを行っています。アセットのバンドル、CSSスプライトの使用、サードパーティスクリプトの統合を検討してください。",
+          "impact": "低〜中 - 接続オーバーヘッドを削減"
+        },
+        "optimizeFonts": {
+          "title": "Webフォントの最適化",
+          "description": "フォントの合計は{{size}}です。font-display: swapを使用し、必要なグリフにサブセット化し、重要なフォントをプリロードしてください。",
+          "impact": "低〜中 - 不可視テキストを防止し、体感パフォーマンスを改善"
+        }
+      },
       "report": {
         "sectionIntros": {
           "cwv": "Core Web Vitalsは、実際のユーザー体験を測定するためのGoogleの主要指標です。読み込み速度（LCP）、インタラクティブ性（INP/FID）、視覚的安定性（CLS）を評価します。これらの指標は検索ランキングに直接影響します。",
@@ -5434,7 +5726,7 @@
       "overallScore": "CWV総合スコア",
       "grade": "評価",
       "criticalIssues": "重大な問題",
-      "recommendationsTitle": "レポートと推奨事項",
+      "recommendationsTitle": "推奨事項",
       "recommendationsAvailable": "{{count}}件の推奨事項があります",
       "criticalOptimizationsBlur": "重要な最適化の提案...",
       "detailedRecommendationsBlur": "詳細なパフォーマンスの推奨事項...",
@@ -5494,6 +5786,34 @@
           "comparison": "This comparison highlights the differences between your desktop and mobile Core Web Vitals scores. Significant gaps between the two may indicate mobile-specific performance issues such as unoptimized images, render-blocking resources, or layout shifts that only occur on smaller viewports.",
           "diagnostics": "Diagnostic information provides detailed technical insights into the factors affecting your Core Web Vitals scores. These diagnostics help identify specific elements, resources, or code patterns that contribute to poor performance metrics.",
           "recommendations": "Based on your Core Web Vitals analysis, these recommendations target the highest-impact improvements for loading speed, interactivity, and visual stability."
+        },
+        "desktop": "デスクトップバイタル",
+        "mobile": "モバイルバイタル",
+        "comparison": "デスクトップ vs モバイル",
+        "desktop.details": "メトリクスの詳細",
+        "mobile.details": "メトリクスの詳細",
+        "desktop.additionalMetrics": "追加メトリクス",
+        "mobile.additionalMetrics": "追加メトリクス",
+        "diagnostics": "診断",
+        "diagnostics.desktop": "デスクトップ診断",
+        "diagnostics.mobile": "モバイル診断",
+        "recommendations": "推奨事項",
+        "recommendations.noneTitle": "優れたCore Web Vitals",
+        "recommendations.noneBody": "サイトはすべてのCore Web Vitalsで良好なスコアを達成しています。コンテンツやトラフィックパターンの変化に伴う回帰がないか、引き続き監視してください。",
+        "comparison.desktopScore": "デスクトップスコア",
+        "comparison.mobileScore": "モバイルスコア",
+        "comparison.summary": "比較サマリー",
+        "vitals": {
+          "lcp": "Largest Contentful Paint (LCP)",
+          "inp": "Interaction to Next Paint (INP)",
+          "cls": "Cumulative Layout Shift (CLS)",
+          "ttfb": "Time to First Byte (TTFB)",
+          "fcp": "First Contentful Paint (FCP)"
+        },
+        "cwv": {
+          "good": "良好",
+          "needsImprovement": "改善が必要",
+          "poor": "不良"
         }
       }
     },
@@ -5557,14 +5877,78 @@
       "fontSizes": "フォントサイズ",
       "report": {
         "sectionIntros": {
-          "overview": "Mobile optimization is critical as over 60% of web traffic comes from mobile devices and Google uses mobile-first indexing. This overview presents your aggregate mobile score and key performance indicators across tested device configurations. A strong mobile experience directly impacts search rankings, user engagement, and conversion rates.",
-          "touch": "Touch target sizing ensures interactive elements are easily tappable on touchscreen devices. Google recommends touch targets be at least 48x48 CSS pixels with adequate spacing. This section identifies elements that are too small or too close together, which can frustrate mobile users and increase error rates.",
-          "readability": "Mobile readability encompasses font sizing, line height, contrast, and text layout on small screens. Text that is too small, has poor contrast, or requires horizontal scrolling creates a poor reading experience. This section evaluates your content's readability across mobile viewport sizes.",
-          "responsiveness": "Responsive design ensures your layout adapts properly across different screen sizes and orientations. This section evaluates viewport configuration, media query usage, and layout behavior to identify issues that may cause content to overflow or display incorrectly on mobile devices.",
-          "viewport": "Viewport meta configuration and Progressive Web App (PWA) readiness determine how your site behaves on mobile devices. A properly configured viewport prevents unwanted zooming and scaling. PWA features like a web manifest and service worker enable app-like experiences.",
-          "accessibility": "Mobile accessibility focuses on ensuring your site is usable by people with disabilities on mobile devices. This includes touch target accessibility, screen reader compatibility, and gesture-based navigation support. Mobile-specific accessibility issues can affect a significant portion of your mobile audience.",
-          "recommendations": "Based on the mobile analysis, these recommendations target the most impactful improvements for mobile user experience, performance, and accessibility."
-        }
+          "overview": "ウェブトラフィックの60%以上がモバイルデバイスからのアクセスであり、Googleはモバイルファーストインデックスを採用しているため、モバイル最適化は非常に重要です。この概要では、テスト済みデバイス構成全体のモバイルスコアと主要パフォーマンス指標を示します。優れたモバイル体験は、検索ランキング、ユーザーエンゲージメント、コンバージョン率に直接影響します。",
+          "touch": "タッチターゲットのサイズ設定は、タッチスクリーンデバイスでインタラクティブ要素を簡単にタップできるようにします。Googleは48x48 CSSピクセル以上のタッチターゲットと適切な間隔を推奨しています。このセクションでは、小さすぎるまたは近すぎる要素を特定します。",
+          "readability": "モバイルの可読性は、小さな画面でのフォントサイズ、行の高さ、コントラスト、テキストレイアウトを包括します。テキストが小さすぎたり、コントラストが不十分だったり、水平スクロールが必要な場合、読書体験が低下します。このセクションでは、モバイルビューポートサイズ全体のコンテンツの可読性を評価します。",
+          "responsiveness": "レスポンシブデザインは、さまざまな画面サイズと向きにレイアウトが適切に適応することを保証します。このセクションでは、ビューポート設定、メディアクエリの使用、レイアウト動作を評価し、モバイルデバイスでコンテンツがオーバーフローしたり、正しく表示されない問題を特定します。",
+          "viewport": "ビューポートメタ設定とProgressive Web App（PWA）対応は、モバイルデバイスでのサイトの動作を決定します。適切に設定されたビューポートは、不要なズームやスケーリングを防止します。Webマニフェストやサービスワーカーなどの PWA機能は、アプリのような体験を可能にします。",
+          "accessibility": "モバイルアクセシビリティは、モバイルデバイスで障がいのあるユーザーがサイトを利用できることに焦点を当てています。これには、タッチターゲットのアクセシビリティ、スクリーンリーダーの互換性、ジェスチャーベースのナビゲーションサポートが含まれます。モバイル固有のアクセシビリティの問題は、モバイルユーザーの大部分に影響を与える可能性があります。",
+          "recommendations": "モバイル分析に基づき、モバイルユーザー体験、パフォーマンス、アクセシビリティの最も効果的な改善を目標とした推奨事項を提供します。"
+        },
+        "overview": "モバイル概要",
+        "overview.overallScore": "総合スコア",
+        "overview.devicesTested": "テスト済みデバイス",
+        "overview.avgPerformance": "平均パフォーマンス",
+        "overview.deviceSummary": "デバイスサマリー",
+        "overview.table": {
+          "device": "デバイス",
+          "performance": "パフォーマンス",
+          "touchTargets": "タッチターゲット",
+          "readability": "可読性"
+        },
+        "touchTargets": "タッチターゲット",
+        "touch": {
+          "totalTargets": "ターゲット総数",
+          "tooSmall": "サイズ不足",
+          "tooClose": "間隔不足",
+          "passingTargets": "合格ターゲット",
+          "issuesHeading": "タッチターゲットの問題",
+          "table": {
+            "severity": "重要度",
+            "issue": "問題"
+          }
+        },
+        "readability": "可読性",
+        "readability.fontSize": "フォントサイズ",
+        "readability.lineHeight": "行の高さ",
+        "readability.contrast": "コントラスト",
+        "readability.tooSmall": "サイズ不足",
+        "readability.issuesHeading": "可読性の問題",
+        "responsiveness": "レスポンシブ対応",
+        "responsiveness.viewport": "ビューポート設定済み",
+        "responsiveness.mediaQueries": "メディアクエリ",
+        "responsiveness.noMediaQueries": "未検出",
+        "responsiveness.issuesHeading": "レスポンシブの問題",
+        "responsiveness.allPassTitle": "完全レスポンシブ",
+        "responsiveness.allPassBody": "ページはさまざまな画面サイズに正しく適応しており、レスポンシブの問題は検出されませんでした。",
+        "viewportPwa": "ビューポートとPWA",
+        "viewport": {
+          "metaHeading": "ビューポートメタ設定",
+          "configured": "ビューポート設定済み",
+          "width": "幅",
+          "initialScale": "初期スケール",
+          "pwaHeading": "PWA対応状況",
+          "pwaScore": "PWAスコア",
+          "manifest": "Webアプリマニフェスト",
+          "serviceWorker": "Service Worker",
+          "https": "HTTPS",
+          "darkModeTitle": "ダークモード対応",
+          "darkModeBody": "{{method}}経由でダークモードが検出されました。",
+          "noDarkModeTitle": "ダークモード非対応",
+          "noDarkModeBody": "ダークモードサポートが検出されませんでした。prefers-color-schemeメディアクエリの追加を検討してください。"
+        },
+        "accessibility": "モバイルアクセシビリティ",
+        "accessibility.score": "アクセシビリティスコア",
+        "accessibility.issuesHeading": "アクセシビリティの問題",
+        "accessibility.table": {
+          "severity": "重要度",
+          "issue": "問題"
+        },
+        "accessibility.noneTitle": "アクセシビリティの問題なし",
+        "accessibility.noneBody": "モバイル固有のアクセシビリティの問題は検出されませんでした。WCAGのベストプラクティスを引き続き実践してください。",
+        "recommendations": "推奨事項",
+        "recommendations.noneTitle": "優れたモバイル体験",
+        "recommendations.noneBody": "サイトは優れたモバイル体験を提供しています。コンテンツや機能の変更に伴う退行がないか、引き続きモニタリングしてください。"
       },
       "mobileScore": "モバイルスコア",
       "errorCapturingDevice": "このデバイスのキャプチャ中にエラーが発生しました",
@@ -5997,6 +6381,87 @@
           "anchors": "Anchor text analysis examines the descriptive text used in your links. Well-crafted anchor text helps both users and search engines understand link destinations. This section evaluates anchor text quality, diversity, and relevance.",
           "attributes": "Link attributes like rel, target, and nofollow influence how search engines interpret and follow your links. This section analyzes the distribution and usage of link attributes to ensure they align with your SEO strategy.",
           "recommendations": "Based on the broken links analysis, these recommendations prioritize fixing the most impactful link issues to improve user experience and search engine crawling."
+        },
+        "sections": {
+          "summary": "リンクサマリー",
+          "broken": "壊れたリンク",
+          "redirects": "リダイレクト",
+          "anchors": "アンカー分析",
+          "attributes": "リンク属性",
+          "recommendations": "推奨事項"
+        },
+        "metrics": {
+          "total": "合計リンク数",
+          "broken": "壊れたリンク",
+          "redirects": "リダイレクト",
+          "working": "正常",
+          "external": "外部",
+          "linkHealth": "リンクの状態"
+        },
+        "summary": {
+          "breakdownHeading": "リンク内訳",
+          "table": {
+            "type": "タイプ",
+            "count": "件数",
+            "percentage": "割合"
+          },
+          "internal": "内部リンク",
+          "external": "外部リンク",
+          "broken": "壊れたリンク",
+          "redirects": "リダイレクト"
+        },
+        "broken": {
+          "totalBroken": "壊れたリンク検出数",
+          "table": {
+            "url": "URL",
+            "status": "ステータス",
+            "source": "ソースページ",
+            "anchor": "アンカーテキスト"
+          },
+          "noneTitle": "壊れたリンクなし",
+          "noneBody": "すべてのリンクが正常に応答しました。引き続き監視して問題を早期に発見してください。"
+        },
+        "redirects": {
+          "totalRedirects": "リダイレクト検出数",
+          "chainsWarning": "リダイレクトチェーンを検出",
+          "chainsFound": "チェーン検出",
+          "table": {
+            "url": "元のURL",
+            "status": "ステータス",
+            "target": "リダイレクト先"
+          },
+          "noneTitle": "リダイレクトなし",
+          "noneBody": "すべてのリンクが直接解決されます。パフォーマンスとSEOに最適です。"
+        },
+        "anchors": {
+          "totalAnchors": "合計アンカー数",
+          "emptyAnchors": "空のアンカー",
+          "genericAnchors": "汎用アンカー",
+          "descriptiveAnchors": "説明的なアンカー",
+          "descriptiveRatio": "説明的アンカー率",
+          "commonHeading": "最も多いアンカーテキスト",
+          "generic": "汎用",
+          "descriptive": "説明的",
+          "table": {
+            "text": "アンカーテキスト",
+            "count": "件数",
+            "quality": "品質"
+          },
+          "noData": "アンカーテキスト分析データがありません。"
+        },
+        "attributes": {
+          "breakdownHeading": "属性内訳",
+          "table": {
+            "attribute": "属性",
+            "count": "件数",
+            "description": "説明"
+          },
+          "unsafeBlank": "target=\"_blank\"にrel=\"noopener noreferrer\"がない{{count}}個のリンクが見つかりました",
+          "noData": "リンク属性分析データがありません。"
+        },
+        "recommendations": {
+          "noneTitle": "健全なリンクプロフィール",
+          "noneBody": "サイトのリンクプロフィールは健全で、重大な問題はありません。引き続き監視してください。"
         }
       },
       "exportBrokenLinksData": "壊れたリンクのデータをエクスポート",
@@ -6170,6 +6635,17 @@
     },
     "competitive": {
       "title": "競合分析",
+      "pageSubtitle": "SEO、パフォーマンス、アクセシビリティ、セキュリティの指標で競合サイトと比較します。",
+      "competitiveAdvantageTitle": "競争優位性",
+      "competitiveAdvantageDesc": "最大5つの競合サイトとSEO、パフォーマンス、コアウェブバイタル、アクセシビリティ、セキュリティを比較。競合に勝つための実用的なインサイトを取得します。",
+      "analysisNote": "注意: 分析には2〜3分かかり、リソース使用量が多いため15分あたり2リクエストに制限されています。",
+      "yourWebsiteUrl": "あなたのウェブサイトURL",
+      "competitorUrlsLabel": "競合サイトURL（最大5件）",
+      "addCompetitor": "+ 競合を追加",
+      "inspectButton": "検査する",
+      "modalTitle": "競合分析",
+      "modalSubtitle": "競合を分析中... 2〜3分かかることがあります",
+      "progress": "進捗",
       "comparison": "比較",
       "rankings": "ランキング",
       "interactiveScoreAnalysis": "インタラクティブスコア分析",
@@ -6198,6 +6674,54 @@
           "competitors": "Competitor profiles provide detailed score breakdowns for each analyzed competitor. Understanding each competitor's strengths and weaknesses helps inform your optimization strategy and identify opportunities to differentiate.",
           "insights": "Strategic insights synthesize the competitive data into actionable intelligence. These insights identify patterns, opportunities, and threats that emerge from the comparative analysis.",
           "recommendations": "Based on the competitive analysis, these recommendations prioritize improvements that will have the greatest impact on your competitive position."
+        },
+        "sections": {
+          "overview": "競合概要",
+          "rankings": "スコアランキング",
+          "gaps": "パフォーマンスギャップ",
+          "competitors": "競合プロフィール",
+          "insights": "戦略的インサイト",
+          "recommendations": "推奨事項"
+        },
+        "categories": {
+          "overall": "総合",
+          "seo": "SEO",
+          "performance": "パフォーマンス",
+          "security": "セキュリティ",
+          "accessibility": "アクセシビリティ"
+        },
+        "overview": {
+          "yourSiteLabel": "あなたのサイト",
+          "competitorsAnalyzed": "分析済み競合",
+          "strengthAreas": "強み分野",
+          "improvementAreas": "改善分野"
+        },
+        "rankings": {
+          "site": "サイト",
+          "noData": "ランキングデータがありません。"
+        },
+        "gaps": {
+          "tableHeading": "スコアギャップ分析",
+          "category": "カテゴリ",
+          "yourScore": "あなたのスコア",
+          "bestScore": "ベストスコア",
+          "gap": "ギャップ",
+          "strengthsHeading": "強み分野",
+          "improvementsHeading": "改善分野",
+          "noData": "ギャップデータがありません。"
+        },
+        "competitors": {
+          "competitorLabel": "競合",
+          "theirScore": "そのスコア",
+          "difference": "差異",
+          "noData": "競合データがありません。"
+        },
+        "insights": {
+          "noData": "戦略的インサイトがありません。"
+        },
+        "recommendations": {
+          "noneTitle": "競争力の高いポジション",
+          "noneBody": "あなたのサイトは分析した競合に対して良好なパフォーマンスを発揮しています。引き続き監視してください。"
         }
       },
       "competitorUrlLabel": "競合サイト {{num}} URL",
@@ -6484,7 +7008,7 @@
         "formOptimization": "フォーム最適化",
         "trustSignals": "信頼シグナル",
         "mobileExperience": "モバイルエクスペリエンス",
-        "fixCodeRecommendations": "修正コード + 推奨事項"
+        "fixCodeRecommendations": "推奨事項"
       },
       "summary": {
         "overallCro": "総合CRO",
@@ -6709,14 +7233,82 @@
         }
       },
       "report": {
+        "overviewTitle": "CRO概要",
+        "overview": {
+          "scoresHeading": "CROサブスコア",
+          "overallScore": "総合スコア"
+        },
         "sectionIntros": {
-          "overview": "Conversion Rate Optimization (CRO) analyzes how effectively your page converts visitors into customers or leads. This overview presents your aggregate CRO score across four key dimensions: calls to action, forms, trust signals, and mobile user experience. A well-optimized page guides visitors toward desired actions with clear, compelling elements.",
-          "cta": "Calls to action (CTAs) are the primary conversion drivers on your page. Effective CTAs use action-oriented language, stand out visually, and are positioned where users are most likely to engage. This section evaluates your CTAs for visibility, clarity, and placement effectiveness.",
-          "forms": "Form design directly impacts completion rates. Complex, lengthy, or poorly designed forms are a leading cause of conversion abandonment. This section analyzes your forms for field count, label clarity, validation feedback, and mobile usability to identify friction points.",
-          "trust": "Trust signals reassure visitors that your site is legitimate, secure, and reliable. These include security badges, testimonials, reviews, contact information, and social proof. This section evaluates the presence and effectiveness of trust-building elements on your page.",
-          "mobileUx": "Mobile UX optimization ensures conversion elements work effectively on touchscreen devices. This includes tap-friendly buttons, mobile-optimized forms, and responsive layouts that maintain conversion paths. Over 50% of purchases now begin on mobile devices.",
-          "quickWins": "Quick wins are high-impact, low-effort changes that can immediately improve your conversion rate. These prioritized actions offer the best return on investment for optimization efforts.",
-          "recommendations": "Based on the CRO analysis, these recommendations prioritize improvements with the highest potential impact on your conversion rate."
+          "overview": "コンバージョン率最適化（CRO）は、ページが訪問者を顧客やリードにどれだけ効果的に変換しているかを分析します。この概要では、コールトゥアクション、フォーム、信頼シグナル、モバイルユーザーエクスペリエンスの4つの主要な側面にわたるCROスコアを提示します。最適化されたページは、明確で説得力のある要素によって訪問者を望ましいアクションへと導きます。",
+          "cta": "コールトゥアクション（CTA）は、ページの主要なコンバージョン促進要素です。効果的なCTAは、アクション指向の言葉を使い、視覚的に目立ち、ユーザーがエンゲージする可能性が最も高い場所に配置されています。このセクションでは、CTAの視認性、明確さ、配置の効果を評価します。",
+          "forms": "フォームのデザインは完了率に直接影響します。複雑で長く、デザインの悪いフォームは、コンバージョン離脱の主な原因です。このセクションでは、フィールド数、ラベルの明確さ、バリデーションフィードバック、モバイルユーザビリティを分析し、摩擦ポイントを特定します。",
+          "trust": "信頼シグナルは、サイトが正当で安全かつ信頼できることを訪問者に保証します。セキュリティバッジ、お客様の声、レビュー、連絡先情報、ソーシャルプルーフなどが含まれます。このセクションでは、ページ上の信頼構築要素の存在と効果を評価します。",
+          "mobileUx": "モバイルUXの最適化により、タッチスクリーンデバイスでコンバージョン要素が効果的に機能することを保証します。タップしやすいボタン、モバイル最適化されたフォーム、コンバージョンパスを維持するレスポンシブレイアウトが含まれます。現在、購入の50%以上がモバイルデバイスで開始されています。",
+          "quickWins": "クイックウィンは、コンバージョン率を即座に改善できる高インパクト・低労力の変更です。これらの優先アクションは、最適化の取り組みに対して最高の投資対効果を提供します。",
+          "recommendations": "CRO分析に基づき、これらの推奨事項はコンバージョン率への潜在的な影響が最も高い改善を優先しています。"
+        },
+        "sections": {
+          "cta": "コールトゥアクション",
+          "forms": "フォーム分析",
+          "trust": "信頼シグナル",
+          "mobile": "モバイルUX",
+          "quickWins": "クイックウィン",
+          "recommendations": "推奨事項"
+        },
+        "cta": {
+          "totalFound": "検出されたCTA数",
+          "score": "CTAスコア",
+          "foundHeading": "検出されたCTA",
+          "table": {
+            "text": "CTAテキスト",
+            "type": "タイプ",
+            "location": "配置場所"
+          },
+          "noneTitle": "CTAが検出されませんでした",
+          "noneBody": "このページに明確なコールトゥアクションが見つかりませんでした。目立つCTAの追加はコンバージョンに不可欠です。"
+        },
+        "forms": {
+          "totalFound": "検出されたフォーム数",
+          "score": "フォームスコア",
+          "foundHeading": "検出されたフォーム",
+          "table": {
+            "form": "フォーム",
+            "fields": "フィールド数",
+            "type": "タイプ"
+          },
+          "noneTitle": "フォームが検出されませんでした",
+          "noneBody": "このページにフォームが見つかりませんでした。コンバージョンを改善するために、リード獲得フォームやお問い合わせフォームの追加を検討してください。"
+        },
+        "trust": {
+          "totalFound": "検出された信頼シグナル数",
+          "score": "信頼スコア",
+          "foundHeading": "検出された信頼シグナル",
+          "table": {
+            "signal": "信頼シグナル",
+            "type": "タイプ"
+          },
+          "noneTitle": "信頼シグナルが検出されませんでした",
+          "noneBody": "このページに信頼シグナルが見つかりませんでした。お客様の声、セキュリティバッジ、ソーシャルプルーフの追加により、コンバージョンを大幅に改善できます。"
+        },
+        "mobileUx": {
+          "score": "モバイルUXスコア",
+          "issuesHeading": "モバイルUXの問題",
+          "noIssuesTitle": "モバイルUXの問題なし",
+          "noIssuesBody": "重大なモバイルUXの問題は検出されませんでした。ページはモバイルコンバージョンに適切に最適化されています。"
+        },
+        "quickWins": {
+          "tableHeading": "特定されたクイックウィン",
+          "table": {
+            "item": "クイックウィン",
+            "impact": "インパクト",
+            "effort": "労力"
+          },
+          "noneTitle": "クイックウィンが特定されませんでした",
+          "noneBody": "分析では特定のクイックウィンは見つかりませんでした。改善の機会については、各セクションの詳細な推奨事項を確認してください。"
+        },
+        "recommendations": {
+          "noneTitle": "優れたCRO体制",
+          "noneBody": "あなたのサイトはCROのベストプラクティスに従っています。さらなる最適化のために、コンバージョン指標の監視とA/Bテストを継続してください。"
         }
       }
     },
@@ -6737,7 +7329,7 @@
         "legalPages": "法的ページ",
         "dataSubjectRights": "データ主体の権利",
         "complianceRisks": "コンプライアンスリスク",
-        "fixCodeRecommendations": "修正コード + 推奨事項"
+        "fixCodeRecommendations": "推奨事項"
       },
       "loader": {
         "scanInProgress": "GDPRコンプライアンススキャン実行中...",
@@ -7001,7 +7593,71 @@
           "cookies": "This cookie audit catalogs all cookies and tracking technologies found on your site. Each cookie is classified by purpose, security attributes, and regulatory category. Understanding your cookie landscape is essential for maintaining accurate consent mechanisms and privacy compliance.",
           "risks": "Risk assessment identifies potential compliance gaps and their severity. High-risk issues may expose your organization to regulatory enforcement action. This section prioritizes risks based on their potential impact and likelihood of regulatory scrutiny.",
           "recommendations": "Based on the GDPR compliance analysis, these recommendations prioritize the most critical compliance gaps to reduce regulatory risk and improve user privacy."
-        }
+        },
+        "consent": "Cookie Consent",
+        "privacy": "Privacy Policy",
+        "cookiePolicy": "Cookie Policy",
+        "rights": "Data Subject Rights",
+        "cookies": "Cookie Audit",
+        "risks": "Risk Assessment",
+        "recommendations": "推奨事項",
+        "consent.overviewHeading": "Consent Overview",
+        "consent.rows": {
+          "detected": "Consent Banner Detected",
+          "platform": "Consent Platform",
+          "score": "Consent Score"
+        },
+        "privacy.overviewHeading": "Policy Overview",
+        "privacy.rows": {
+          "found": "Privacy Policy Found",
+          "url": "Policy URL",
+          "score": "Policy Score"
+        },
+        "privacy.keywordsHeading": "Keywords Found",
+        "privacy.table": {
+          "keyword": "Keyword"
+        },
+        "cookiePolicy.overviewHeading": "Cookie Policy Overview",
+        "cookiePolicy.rows": {
+          "found": "Cookie Policy Found",
+          "url": "Policy URL",
+          "score": "Policy Score"
+        },
+        "rights.overviewHeading": "Rights Overview",
+        "rights.rows": {
+          "found": "Rights Information Found"
+        },
+        "rights.mechanismsHeading": "Mechanisms Found",
+        "rights.mechanismsLabel": "Rights Mechanisms",
+        "rights.table": {
+          "mechanism": "Mechanism"
+        },
+        "cookies.totalLabel": "Total Cookies",
+        "cookies.secureLabel": "Secure Cookies",
+        "cookies.httpOnlyLabel": "HttpOnly Cookies",
+        "cookies.trackersLabel": "Trackers Detected",
+        "cookies.secureCoverageLabel": "Secure Cookie Coverage",
+        "cookies.detailsHeading": "Cookie Details",
+        "cookies.table": {
+          "name": "Name",
+          "domain": "Domain",
+          "expiry": "Expiry",
+          "trackerName": "Tracker",
+          "trackerType": "Type",
+          "trackerDomain": "Domain"
+        },
+        "cookies.trackersHeading": "Third-Party Trackers",
+        "risks.critical": "Critical",
+        "risks.high": "High",
+        "risks.medium": "Medium",
+        "risks.low": "Low",
+        "risks.detectedHeading": "Detected Risks",
+        "risks.noneFoundTitle": "No Significant Risks Detected",
+        "risks.noneFoundBody": "No major compliance risks were identified during the analysis.",
+        "risks.consentQualityHeading": "Consent Quality",
+        "risks.consentQualityScore": "Consent Quality Score",
+        "recommendations.noneTitle": "Strong Compliance Posture",
+        "recommendations.noneBody": "Your site follows GDPR best practices. Continue monitoring for regulatory changes and maintaining your data protection standards."
       }
     },
     "hosting": {
@@ -7022,7 +7678,49 @@
           "cms": "Content Management Systems and web technologies determine how your site is built and maintained. This section identifies the CMS platform, its version, and additional technologies detected on your site. Keeping your CMS and its dependencies up to date is critical for security and performance.",
           "performance": "Hosting performance directly impacts your site's loading speed and user experience. This section measures server response time and Time to First Byte (TTFB), which indicate how quickly your server processes and begins delivering requests. Fast server response times are essential for good Core Web Vitals scores.",
           "recommendations": "Based on the hosting analysis, these recommendations prioritize the most impactful improvements for your server infrastructure, performance, and configuration."
-        }
+        },
+        "provider": "Hosting Provider",
+        "infrastructure": "Server Infrastructure",
+        "cms": "CMS & Technology",
+        "performance": "Hosting Performance",
+        "recommendations": "推奨事項",
+        "provider.overviewHeading": "Provider Details",
+        "provider.rows": {
+          "name": "Provider",
+          "category": "Category",
+          "tier": "Tier"
+        },
+        "provider.featuresHeading": "Included Features",
+        "provider.table": {
+          "feature": "Feature"
+        },
+        "infrastructure.serverHeading": "Server Information",
+        "infrastructure.rows": {
+          "ip": "IP Address",
+          "provider": "Provider"
+        },
+        "infrastructure.headersHeading": "Response Headers",
+        "infrastructure.table": {
+          "header": "Header"
+        },
+        "cms.detectionHeading": "CMS Detection",
+        "cms.rows": {
+          "platform": "Platform",
+          "version": "Version",
+          "confidence": "Confidence"
+        },
+        "cms.noneTitle": "No CMS Detected",
+        "cms.noneBody": "No content management system was detected. The site may use a custom-built solution or a static site generator.",
+        "cms.technologiesHeading": "Detected Technologies",
+        "cms.table": {
+          "technology": "Technology",
+          "category": "Category"
+        },
+        "performance.responseTime": "Response Time",
+        "performance.ttfb": "TTFB",
+        "performance.detailsHeading": "Performance Details",
+        "recommendations.noneTitle": "Solid Hosting Setup",
+        "recommendations.noneBody": "Your hosting configuration follows best practices. Continue monitoring for performance changes."
       },
       "categories": {
         "managedWordPress": "マネージドWordPress",
@@ -7288,9 +7986,9 @@
       "overallRiskLevel": "全体的なリスクレベル",
       "threatsDetected": "脅威を検出",
       "source": "ソース",
-      "spf": "SPF (Sender Policy Framework)",
-      "dkim": "DKIM (DomainKeys Identified Mail)",
-      "dmarc": "DMARC (Domain-based Message Authentication)",
+      "spf": "SPF（送信ポリシーフレームワーク）",
+      "dkim": "DKIM（ドメインキー認証メール）",
+      "dmarc": "DMARC（ドメインベースメッセージ認証）",
       "dkimRequiresLookup": "DKIMはセレクター固有のルックアップが必要です",
       "noSpfRecord": "SPFレコードが見つかりません",
       "noDmarcRecord": "DMARCレコードが見つかりません",
@@ -7305,8 +8003,8 @@
       "commonLinks": "関連リンク",
       "configured": "設定済み",
       "dkimCheckRequired": "DKIMにはセレクター固有の検索が必要です。DKIMセレクターについてはメールプロバイダーのドキュメントをご確認ください。",
-      "dkimRecord": "DKIM (DomainKeys Identified Mail)",
-      "dmarcRecord": "DMARC (Domain-based Message Authentication)",
+      "dkimRecord": "DKIM（ドメインキー認証メール）",
+      "dmarcRecord": "DMARC（ドメインベースメッセージ認証）",
       "howToFix": "修正方法",
       "noCommonlyAttackedPorts": "よく攻撃されるオープンポートは見つかりませんでした",
       "noCriticalExposedServices": "重大な露出サービスなし",
@@ -7321,7 +8019,7 @@
       "scannedPorts": "スキャン済みポート",
       "scanningPorts": "セキュリティ上重要な一般的なポートの露出をスキャン中",
       "securityIssuesFound": "セキュリティの問題が見つかりました",
-      "spfRecord": "SPF (Sender Policy Framework)",
+      "spfRecord": "SPF（送信ポリシーフレームワーク）",
       "valid": "有効",
       "whatIsIt": "これは何ですか？",
       "whyItMatters": "重要な理由",
@@ -7421,16 +8119,624 @@
             "アラートで有効期限を監視",
             "証明書のインストールにはサーバーアクセスが必要"
           ]
+        },
+        "removeBlacklist": {
+          "title": "DNSブラックリストから削除",
+          "description": "お使いのIPが1つ以上のDNSブラックリストに登録されており、メールの配信に影響しています。",
+          "whyItMatters": "ブラックリストに登録されると、メールの配信性に深刻な影響を与えます。メールが拒否されたり、スパムとしてマークされたりする可能性があります。これはビジネスコミュニケーションと評判を損ないます。",
+          "impact": "高 - メール配信性と送信者の評判を回復",
+          "technicalDetails": [
+            "ブラックリストはスパム対策組織によって管理されています",
+            "スパム、マルウェア、または不適切なメール運用によりIPが登録されます",
+            "ほとんどのブラックリストはクリーンアップ後に自動的に解除されます",
+            "一部は手動での解除申請が必要です"
+          ]
+        },
+        "closePorts": {
+          "title": "重要な公開ポートを閉じる",
+          "description": "重要な管理用ポートが公開アクセス可能な状態であり、攻撃対象領域が拡大しています。",
+          "whyItMatters": "公開された管理ポート（SSH、データベースなど）は、自動化された攻撃の主要な標的です。ハッカーは常に脆弱なポートをスキャンしています。",
+          "impact": "重大 - 攻撃対象領域を削減し、不正アクセスを防止",
+          "technicalDetails": [
+            "一般的な攻撃手法：SSHブルートフォース、データベース攻撃",
+            "ポートスキャナーは常に脆弱性を探査しています",
+            "管理ポートはVPNまたはファイアウォールの背後に配置すべきです",
+            "最小公開の原則：必要なものだけを公開してください"
+          ]
+        },
+        "monitorReputation": {
+          "title": "定期的な評判監視",
+          "description": "定期的な監視を設定して、評判の問題を配信に影響が出る前に早期に発見しましょう。",
+          "whyItMatters": "IPとドメインの評判は、スパム、セキュリティインシデント、または悪質なアクターとの共有により、時間の経過とともに劣化する可能性があります。定期的な監視により、配信性に影響が出る前に問題を発見できます。",
+          "impact": "中 - プロアクティブな評判管理を実現",
+          "technicalDetails": [
+            "評判システムは送信パターンと苦情を追跡します",
+            "共有IPホスティングは評判に影響を与える可能性があります",
+            "早期検出により迅速な対処が可能になります",
+            "複数のブラックリストと評判サービスが存在します"
+          ]
         }
       },
       "report": {
         "sectionIntros": {
-          "reputation": "IP reputation reflects how trusted your server's IP address is across the internet. This section evaluates trust scores, spam likelihood, malware association, and blacklist status. A poor IP reputation can cause email deliverability issues, search engine penalties, and may indicate shared hosting with malicious neighbors.",
-          "security": "This security assessment examines your server's SSL/TLS configuration, DNS security, and email authentication setup. Proper security configuration protects your visitors and builds trust with search engines and email providers.",
-          "infrastructure": "Infrastructure analysis reveals details about your server's hosting environment, network configuration, and technical setup. Understanding your infrastructure helps identify potential single points of failure and optimization opportunities.",
-          "dns": "DNS and email configuration are critical for both deliverability and security. This section examines your MX records, DNSSEC status, and email authentication mechanisms (SPF, DKIM, DMARC). Proper configuration prevents email spoofing and improves deliverability.",
-          "ports": "Open port analysis identifies network services exposed on your server. Unnecessary open ports increase your attack surface and may indicate misconfigured services. This section lists detected open ports and their associated services.",
-          "recommendations": "Based on the IP reputation and security analysis, these recommendations prioritize improvements for your server's trustworthiness, security posture, and email deliverability."
+          "reputation": "IPレピュテーションは、サーバーのIPアドレスがインターネット上でどれだけ信頼されているかを反映します。このセクションでは、信頼スコア、スパムの可能性、マルウェアとの関連性、ブラックリストのステータスを評価します。IPレピュテーションが低いと、メール配信の問題、検索エンジンのペナルティを引き起こし、悪意のある隣人との共有ホスティングを示す場合があります。",
+          "security": "このセキュリティ評価では、サーバーのSSL/TLS設定、DNSセキュリティ、メール認証の設定を検査します。適切なセキュリティ設定は訪問者を保護し、検索エンジンやメールプロバイダーとの信頼を構築します。",
+          "infrastructure": "インフラストラクチャ分析では、サーバーのホスティング環境、ネットワーク構成、技術的なセットアップの詳細を明らかにします。インフラストラクチャを理解することで、潜在的な単一障害点と最適化の機会を特定できます。",
+          "dns": "DNSとメール設定は、配信性とセキュリティの両方にとって重要です。このセクションでは、MXレコード、DNSSECステータス、メール認証メカニズム（SPF、DKIM、DMARC）を検査します。適切な設定により、メールのなりすましを防止し、配信性を向上させます。",
+          "ports": "オープンポート分析は、サーバー上で公開されているネットワークサービスを特定します。不要なオープンポートは攻撃対象領域を拡大し、設定の誤りを示している可能性があります。このセクションでは、検出されたオープンポートと関連するサービスを一覧表示します。",
+          "recommendations": "IPレピュテーションとセキュリティ分析に基づいて、これらの推奨事項はサーバーの信頼性、セキュリティ体制、メール配信性の改善を優先順位付けします。"
+        },
+        "reputation": "IP Reputation",
+        "security": "Security Assessment",
+        "infrastructure": "Infrastructure",
+        "dns": "DNS & Email",
+        "ports": "Open Ports",
+        "recommendations": "推奨事項",
+        "reputation.trustScore": "Trust Score",
+        "reputation.spamScore": "Spam Score",
+        "reputation.malwareScore": "Malware Score",
+        "reputation.phishingScore": "Phishing Score",
+        "reputation.blacklistHeading": "Blacklist Status",
+        "reputation.blacklistCleanTitle": "Clean Blacklist Status",
+        "reputation.blacklistCleanBody": "This IP is not listed on any of the checked blacklists.",
+        "reputation.listed": "Listed",
+        "reputation.clean": "Clean",
+        "reputation.table": {
+          "blacklist": "Blacklist"
+        },
+        "security.sslHeading": "SSL/TLS Certificate",
+        "security.rows": {
+          "status": "Certificate Status",
+          "issuer": "Issuer",
+          "protocol": "Protocol",
+          "validFrom": "Valid From",
+          "expiry": "Expiry",
+          "daysRemaining": "Days Remaining",
+          "subject": "Subject"
+        },
+        "security.valid": "Valid",
+        "security.invalid": "Invalid",
+        "security.noSslTitle": "No SSL Certificate",
+        "security.noSslBody": "No SSL/TLS certificate was detected for this target.",
+        "infrastructure.server": "Server",
+        "infrastructure.hosting": "Hosting",
+        "infrastructure.location": "Location",
+        "infrastructure.asn": "ASN",
+        "infrastructure.detailsHeading": "Infrastructure Details",
+        "infrastructure.rows": {
+          "ip": "IP Address",
+          "hostname": "Hostname",
+          "server": "Server Software",
+          "os": "Operating System",
+          "hosting": "Hosting Provider",
+          "provider": "Provider",
+          "country": "Country",
+          "city": "City",
+          "location": "Location",
+          "asn": "ASN",
+          "org": "Organization",
+          "cdn": "CDN",
+          "reverseIp": "Reverse DNS"
+        },
+        "infrastructure.noDataTitle": "No Infrastructure Data",
+        "infrastructure.noDataBody": "Infrastructure information could not be determined for this target.",
+        "dns.dnssecHeading": "DNSSEC",
+        "dns.dnssecEnabled": "DNSSEC Enabled",
+        "dns.dnssecDisabled": "DNSSEC Not Enabled",
+        "dns.mxHeading": "MX Records",
+        "dns.table": {
+          "priority": "Priority",
+          "mailServer": "Mail Server"
+        },
+        "dns.noMxTitle": "No MX Records",
+        "dns.noMxBody": "No MX records were found for this domain. Email delivery may not be configured.",
+        "ports.totalOpen": "Open Ports",
+        "ports.table": {
+          "port": "Port",
+          "service": "Service"
+        },
+        "ports.noneTitle": "No Open Ports Detected",
+        "ports.noneBody": "No open ports were found during the scan, or port scanning was not performed.",
+        "recommendations.noneTitle": "Good Reputation Standing",
+        "recommendations.noneBody": "Your IP has a clean reputation. Continue monitoring for changes and maintain security best practices."
+      },
+      "codeExamples": {
+        "addCaa": [
+          {
+            "title": "Let's Encrypt用CAAレコード",
+            "subtitle": "最も一般的な無料CA - DNSゾーンファイルに追加",
+            "notes": [
+              "yourdomain.comを実際のドメインに置き換えてください",
+              "複数のCAを使用している場合は、複数のissueレコードを追加してください",
+              "issuewildでワイルドカード証明書の発行を制御できます",
+              "iodefは違反報告の送信先を指定します"
+            ]
+          },
+          {
+            "title": "商用CA用CAA",
+            "subtitle": "一般的な商用認証局"
+          }
+        ],
+        "strengthenDmarc": [
+          {
+            "title": "現在のポリシー（監視のみ）",
+            "subtitle": "現在のDMARCレコード - 強制なし"
+          },
+          {
+            "title": "推奨：隔離ポリシー",
+            "subtitle": "ステップ1 - 失敗したメールを迷惑メールフォルダに送信",
+            "notes": [
+              "pct=25は最初に失敗の25%にのみポリシーを適用します",
+              "割合を増やす前に1〜2週間レポートを監視してください",
+              "rufはフォレンジック（個別の失敗）レポートを有効にします",
+              "隔離が安定した後、拒否ポリシーに移行してください"
+            ]
+          },
+          {
+            "title": "最終目標：拒否ポリシー",
+            "subtitle": "ステップ2 - 未認証メールをすべてブロック"
+          }
+        ],
+        "implementDmarc": [
+          {
+            "title": "基本的なDMARCレコード",
+            "subtitle": "監視モードで開始",
+            "notes": [
+              "専用メールボックスまたはDMARCレポートサービスを作成してください",
+              "レポートはXML形式です - 無料ツールで解析できます",
+              "強制を有効にする前に2〜4週間監視してください",
+              "PostmarkやdmarcianなどのサービスでDMARCレポートを無料で分析できます"
+            ]
+          },
+          {
+            "title": "DMARCレポートサービスの使用",
+            "subtitle": "サードパーティツールで簡単にレポートを分析"
+          }
+        ],
+        "configureSpf": [
+          {
+            "title": "基本的なSPFレコード",
+            "subtitle": "一般的なメールプロバイダーを含む",
+            "notes": [
+              "実際のメールプロバイダーのSPFインクルードに置き換えてください",
+              "最初は~all（ソフトフェイル）を使用し、その後-all（ハードフェイル）に変更",
+              "最大10回のDNSルックアップが許可 - 必要に応じてフラット化してください",
+              "テスト方法：dig TXT yourdomain.com または mxtoolbox.com/spf.aspx"
+            ]
+          },
+          {
+            "title": "一般的なメールプロバイダーのSPFインクルード",
+            "subtitle": "使用するサービスのインクルードをコピー"
+          }
+        ],
+        "configureDkim": [
+          {
+            "title": "DKIMセットアップの概要",
+            "subtitle": "DKIMにはメールサーバーの設定が必要",
+            "notes": [
+              "DKIMキーはメールプロバイダー/サーバーが生成します",
+              "セレクター（例：「google」、「selector1」）はプロバイダーによって異なります",
+              "プロバイダーから提供されたTXTレコードをDNSに追加してください",
+              "検証方法：dig TXT selector._domainkey.yourdomain.com"
+            ]
+          },
+          {
+            "title": "プロバイダー別のDKIM有効化",
+            "subtitle": "一般的なプロバイダーでDKIMを有効にする方法"
+          }
+        ],
+        "fixSslCertificate": [
+          {
+            "title": "Let's EncryptをCertbotでインストール",
+            "subtitle": "ほとんどのサーバーで使える無料の自動SSL",
+            "notes": [
+              "Certbotはcron/systemdで自動的に更新を処理します",
+              "無料の証明書は90日間有効で、自動更新されます",
+              "ほとんどのホスティングプロバイダーとCDNで動作します",
+              "cPanelの場合：組み込みのLet's EncryptまたはAutoSSLを使用"
+            ]
+          },
+          {
+            "title": "SSL設定の確認",
+            "subtitle": "SSL設定が正しいか確認"
+          }
+        ],
+        "removeBlacklist": [
+          {
+            "title": "ブラックリストステータスの確認",
+            "subtitle": "登録されているリストを特定",
+            "notes": [
+              "ほとんどのブラックリストはスパムが1〜4週間なければ自動的に解除されます",
+              "削除を要求する前にまず根本原因を修正してください",
+              "サーバーの侵害、オープンリレー、スパムスクリプトを確認してください",
+              "送信メールログで不審な活動を確認してください"
+            ]
+          },
+          {
+            "title": "一般的なブラックリスト解除リンク",
+            "subtitle": "解除を申請する場所"
+          }
+        ],
+        "closePorts": [
+          {
+            "title": "UFWファイアウォール設定",
+            "subtitle": "Ubuntu/Debian用のシンプルなファイアウォール",
+            "notes": [
+              "データベースポート（3306、5432、27017）を公開しないでください",
+              "パスワードの代わりにSSHキーを使用してください",
+              "ブルートフォース対策にfail2banの導入を検討してください",
+              "管理アクセスにはVPNまたはSSHトンネルを使用してください"
+            ]
+          },
+          {
+            "title": "iptables設定",
+            "subtitle": "UFWを使用しないシステム用"
+          }
+        ],
+        "monitorReputation": [
+          {
+            "title": "監視のセットアップ",
+            "subtitle": "無料および有料の監視オプション",
+            "notes": [
+              "Gmail配信インサイトのためにGoogle Postmaster Toolsを設定してください",
+              "mxtoolbox.comで毎週ブラックリストを確認してください",
+              "DMARCレポートで認証の失敗を確認できます",
+              "メールプラットフォームでバウンス率を追跡してください"
+            ]
+          }
+        ]
+      },
+      "guides": {
+        "addCaa": {
+          "difficulty": "初級",
+          "timeEstimate": "5〜10分",
+          "prerequisites": "DNS管理アクセス",
+          "steps": [
+            {
+              "title": "認証局の特定",
+              "description": "ドメインのSSL証明書を発行しているCA（認証局）を特定します。現在の証明書の詳細またはホスティングプロバイダーのドキュメントを確認してください。",
+              "tip": "一般的なCA：letsencrypt.org、digicert.com、comodoca.com、godaddy.com"
+            },
+            {
+              "title": "DNS管理にアクセス",
+              "description": "ドメインレジストラまたはDNSプロバイダー（例：Cloudflare、GoDaddy、Namecheap、AWS Route 53）にログインしてください。"
+            },
+            {
+              "title": "CAAレコードの追加",
+              "description": "フラグ0、タグ「issue」、値をCAのドメイン（例：「letsencrypt.org」）に設定した新しいCAAレコードを作成します。",
+              "tip": "ワイルドカードを使用している場合は、「issuewild」レコードも追加してください"
+            },
+            {
+              "title": "レコードの検証",
+              "description": "digまたはオンラインツールで検証してください：dig CAA yourdomain.com またはdnschecker.orgで確認"
+            }
+          ],
+          "verificationSteps": [
+            "実行：dig CAA yourdomain.com（または mxtoolbox.com/CAA.aspx を使用）",
+            "出力にCAがリストされていることを確認",
+            "新しい証明書のリクエストを試して、まだ機能することを確認"
+          ]
+        },
+        "strengthenDmarc": {
+          "difficulty": "中級",
+          "timeEstimate": "2〜4週間（段階的なロールアウト）",
+          "prerequisites": "SPFとDKIMを先に設定し、DMARC監視が有効であること",
+          "steps": [
+            {
+              "title": "現在のDMARCレポートを確認",
+              "description": "強化する前に、DMARC集計レポートを分析して、認証に失敗している正当なメールソースを特定します。",
+              "tip": "dmarcian.comやPostmark DMARCレポートなどの無料ツールを使用"
+            },
+            {
+              "title": "認証失敗の修正",
+              "description": "すべての正当なメールソース（マーケティングツール、CRMなど）がSPFインクルードとDKIMで適切に認証されていることを確認します。"
+            },
+            {
+              "title": "隔離にアップグレード（25%）",
+              "description": "DMARCレコードを更新：p=quarantine; pct=25 - これにより失敗メールの25%が迷惑メールフォルダに送信されます。",
+              "tip": "割合を増やす前に1〜2週間監視してください"
+            },
+            {
+              "title": "隔離を100%に増加",
+              "description": "監視が成功したら、pctタグを削除するか100に設定して、すべての失敗を隔離します。"
+            },
+            {
+              "title": "拒否ポリシーにアップグレード",
+              "description": "隔離が2週間以上安定したら、p=quarantineをp=rejectに変更して完全な保護を実現します。"
+            }
+          ],
+          "verificationSteps": [
+            "DMARCレコードを確認：dig TXT _dmarc.yourdomain.com",
+            "正当なメールがブロックされていないか集計レポートを監視",
+            "メールを送信してDMARCパスの受信者ヘッダーを確認してテスト"
+          ]
+        },
+        "implementDmarc": {
+          "difficulty": "初級",
+          "timeEstimate": "15〜30分のセットアップ、2〜4週間の監視",
+          "prerequisites": "SPFレコードが設定済みであること（DKIM推奨）",
+          "steps": [
+            {
+              "title": "レポート用メールまたはサービスの選択",
+              "description": "DMARCレポートの送信先を決定します。分析しやすくするために、専用メールボックスまたはdmarcian.comなどの無料サービスを使用してください。"
+            },
+            {
+              "title": "DMARC DNSレコードの作成",
+              "description": "_dmarc.yourdomain.comにTXTレコードを追加：「v=DMARC1; p=none; rua=mailto:your-report-email@yourdomain.com」",
+              "tip": "配信に影響を与えずに監視するためにp=noneで開始"
+            },
+            {
+              "title": "レコードの検証",
+              "description": "レコードが公開されていることを確認：dig TXT _dmarc.yourdomain.com"
+            },
+            {
+              "title": "レポートの監視",
+              "description": "レポートの到着を24〜48時間待ちます。メール認証の状態を理解するために分析してください。",
+              "tip": "レポートはXML形式です - オンラインパーサーまたはDMARCサービスを使用して読んでください"
+            }
+          ],
+          "verificationSteps": [
+            "実行：dig TXT _dmarc.yourdomain.com",
+            "check-auth@verifier.port25.comにテストメールを送信して即座に結果を取得",
+            "24〜48時間以内に集計レポートが届き始めることを確認"
+          ]
+        },
+        "configureSpf": {
+          "difficulty": "初級",
+          "timeEstimate": "15〜30分",
+          "prerequisites": "DNS管理アクセス、メール送信サービスのリスト",
+          "steps": [
+            {
+              "title": "メール送信元の棚卸し",
+              "description": "ドメインのメールを送信するすべてのサービスをリストアップ：メールサーバー、マーケティングツール（Mailchimp、SendGrid）、CRMなど。"
+            },
+            {
+              "title": "SPFインクルードの収集",
+              "description": "各サービスのSPFインクルード文を見つけます。通常、ドキュメントの「メール認証」または「DNSセットアップ」に記載されています。",
+              "tip": "Google Workspace: include:_spf.google.com、Microsoft 365: include:spf.protection.outlook.com"
+            },
+            {
+              "title": "SPFレコードの作成",
+              "description": "@（ルート）にTXTレコードを追加：「v=spf1 [インクルード] ~all」",
+              "tip": "最初は~all（ソフトフェイル）を使用し、確認後に-all（ハードフェイル）に変更"
+            },
+            {
+              "title": "検証とテスト",
+              "description": "SPFレコードを確認し、テストメールを送信してSPFチェックに合格することを確認します。"
+            }
+          ],
+          "verificationSteps": [
+            "レコード確認：dig TXT yourdomain.com | grep spf",
+            "mxtoolbox.com/spf.aspxでテスト",
+            "check-auth@verifier.port25.comにメールを送信",
+            "メールヘッダーに「spf=pass」と表示されることを確認"
+          ]
+        },
+        "configureDkim": {
+          "difficulty": "中級",
+          "timeEstimate": "30〜60分",
+          "prerequisites": "メールサーバー設定およびDNS管理へのアクセス",
+          "steps": [
+            {
+              "title": "メールサービスでDKIMを有効化",
+              "description": "メールプロバイダーの管理パネルでDKIM/メール認証設定を見つけて、DKIM署名を有効にします。",
+              "tip": "Google Workspace：管理コンソール → アプリ → Gmail → メールの認証"
+            },
+            {
+              "title": "DNSレコードのコピー",
+              "description": "メールプロバイダーが公開鍵を含むTXTレコードを生成します。セレクターを含む完全なレコードをコピーしてください。"
+            },
+            {
+              "title": "DNSレコードの追加",
+              "description": "[セレクター]._domainkey.yourdomain.comにTXTレコードを作成し、提供された公開鍵の値を設定します。",
+              "tip": "セレクターはホスト名の一部です（例：「google._domainkey」または「selector1._domainkey」）"
+            },
+            {
+              "title": "メールプロバイダーで検証",
+              "description": "メールプロバイダーに戻り、「認証を開始」または「検証」をクリックしてDNSレコードが検出されたことを確認します。"
+            },
+            {
+              "title": "メール署名のテスト",
+              "description": "テストメールを送信し、ヘッダーの「dkim=pass」を確認するか、オンラインDKIMバリデーターを使用します。"
+            }
+          ],
+          "verificationSteps": [
+            "DNS確認：dig TXT selector._domainkey.yourdomain.com",
+            "テストメールを送信してヘッダーの「dkim=pass」を確認",
+            "mail-tester.comで包括的なメール認証チェックを実行"
+          ]
+        },
+        "fixSslCertificate": {
+          "difficulty": "中級",
+          "timeEstimate": "ホスティングにより15〜60分",
+          "prerequisites": "サーバーアクセス（SSHまたはホスティングパネル）",
+          "steps": [
+            {
+              "title": "問題の特定",
+              "description": "SSL Labs（ssllabs.com/ssltest）を使用して具体的な証明書の問題を特定します：期限切れ、ドメイン不一致、自己署名、チェーンの問題。",
+              "tip": "何が問題でどのように修正するかを正確に教えてくれます"
+            },
+            {
+              "title": "ソリューションの選択",
+              "description": "ほとんどの場合、Let's Encryptが無料の自動更新証明書を提供します。特殊なニーズにはDigiCert、Comodoなどから購入してください。"
+            },
+            {
+              "title": "証明書のインストール/更新",
+              "description": "Let's Encryptを使用する場合、certbotをインストールして実行：sudo certbot --nginx -d yourdomain.com（必要に応じてnginxをapacheに置き換え）。"
+            },
+            {
+              "title": "自動更新の設定",
+              "description": "証明書が自動更新されることを確認：sudo certbot renew --dry-runで更新プロセスをテストします。"
+            },
+            {
+              "title": "インストールの検証",
+              "description": "ブラウザでサイトをテストし、SSL Labsテストを再実行してすべての問題が解決されたことを確認します。"
+            }
+          ],
+          "verificationSteps": [
+            "ブラウザでサイトにアクセス - 警告なしで南京錠が表示されるはず",
+            "SSL Labsテストを再実行 - AまたはA+評価が表示されるはず",
+            "有効期限確認：echo | openssl s_client -connect yourdomain.com:443 2>/dev/null | openssl x509 -noout -dates"
+          ]
+        },
+        "addNameservers": {
+          "difficulty": "初級",
+          "timeEstimate": "15〜30分",
+          "prerequisites": "ドメインレジストラアクセス",
+          "steps": [
+            {
+              "title": "現在のネームサーバーを確認",
+              "description": "dig NS yourdomain.comまたはオンラインDNSチェッカーを使用して現在のネームサーバーを確認します。"
+            },
+            {
+              "title": "DNSプロバイダーに連絡",
+              "description": "ほとんどのDNSプロバイダーは複数のネームサーバーを提供しています。追加のネームサーバーアドレスについてはドキュメントを確認してください。"
+            },
+            {
+              "title": "追加のネームサーバーを追加",
+              "description": "ドメインレジストラのコントロールパネルで、DNSホストから提供された追加のネームサーバーアドレスを追加します。"
+            },
+            {
+              "title": "伝播の確認",
+              "description": "DNS伝播を待ち、すべてのネームサーバーが応答していることを確認：dig NS yourdomain.com"
+            }
+          ],
+          "verificationSteps": [
+            "実行：dig NS yourdomain.comで複数のネームサーバーがリストされていることを確認",
+            "dnschecker.orgでグローバルな伝播を確認",
+            "真の冗長性のためにネームサーバーが異なるネットワーク上にあることを確認"
+          ]
+        },
+        "renewCertificate": {
+          "difficulty": "初級",
+          "timeEstimate": "15〜30分",
+          "prerequisites": "サーバーアクセスまたはホスティングパネルアクセス",
+          "steps": [
+            {
+              "title": "現在の証明書の有効期限を確認",
+              "description": "正確な有効期限を確認：echo | openssl s_client -connect yourdomain.com:443 2>/dev/null | openssl x509 -noout -dates"
+            },
+            {
+              "title": "証明書の更新",
+              "description": "Let's EncryptとCertbotを使用している場合は実行：sudo certbot renew。手動証明書の場合はCAから更新を購入してください。"
+            },
+            {
+              "title": "新しい証明書のインストール",
+              "description": "手動更新の場合は、サーバーに新しい証明書をインストールしてWebサーバーを再起動します。"
+            },
+            {
+              "title": "自動更新の設定",
+              "description": "将来の期限切れを防ぐために自動更新を設定：sudo certbot renew --dry-runでテスト。",
+              "tip": "バックアップとして次の有効期限の30日前にカレンダーリマインダーを設定"
+            }
+          ],
+          "verificationSteps": [
+            "ブラウザの証明書詳細で新しい有効期限を確認",
+            "SSL Labsテストを実行して有効な証明書を確認",
+            "自動更新が機能していることを確認：sudo certbot renew --dry-run"
+          ]
+        },
+        "removeBlacklist": {
+          "difficulty": "中級",
+          "timeEstimate": "状況により数時間〜数週間",
+          "prerequisites": "根本原因の調査と修正のためのサーバーアクセス",
+          "steps": [
+            {
+              "title": "すべての登録を特定",
+              "description": "mxtoolbox.com/blacklists.aspxを使用してすべての主要なブラックリストを確認し、登録されている場所を特定します。",
+              "tip": "一部の登録は他よりも影響が大きい - Spamhausが最も影響力があります"
+            },
+            {
+              "title": "根本原因の調査",
+              "description": "サーバーログ、メールキュー、送信トラフィックでスパムや侵害の兆候を確認します。一般的な原因：ハッキングされたウェブサイト、オープンリレー、侵害されたアカウント。",
+              "tip": "ポート25の異常な送信接続を確認してください"
+            },
+            {
+              "title": "問題の修正",
+              "description": "マルウェアの駆除、オープンリレーの閉鎖、侵害されたパスワードのリセット、適切なメール認証（SPF/DKIM/DMARC）の実装を行います。"
+            },
+            {
+              "title": "解除の申請",
+              "description": "各ブラックリストの削除ページにアクセスします。自動的に期限切れになるものもあれば、手動での申請が必要なものもあります。是正措置の証拠を提供してください。",
+              "tip": "Spamhaus: check.spamhaus.org、Barracuda: barracudacentral.org"
+            },
+            {
+              "title": "予防策の実施",
+              "description": "監視の設定、メール送信のレート制限、定期的なセキュリティスキャンを実施して再発を防止します。"
+            }
+          ],
+          "verificationSteps": [
+            "解除後にmxtoolbox.comでブラックリストを再確認",
+            "Gmail/Outlookにテストメールを送信して配信を確認",
+            "次の週にメールのバウンス率を監視"
+          ]
+        },
+        "closePorts": {
+          "difficulty": "中級",
+          "timeEstimate": "30〜60分",
+          "prerequisites": "サーバーSSH/rootアクセス",
+          "steps": [
+            {
+              "title": "オープンポートの監査",
+              "description": "nmapまたはオンラインポートスキャナーを使用して公開されているものを正確に確認：nmap -Pn yourdomain.com",
+              "tip": "公開すべきもの（通常は80、443、場合により22のみ）と比較してください"
+            },
+            {
+              "title": "不要なサービスの特定",
+              "description": "各オープンポートについて、公開アクセスが必要かどうかを判断します。データベースポート（3306、5432）、管理パネルは公開すべきではありません。"
+            },
+            {
+              "title": "ファイアウォールの設定",
+              "description": "UFW（Ubuntu/Debian）またはfirewalld（CentOS/RHEL）を使用してポートを制限します。80/tcp、443/tcp、慎重に制御されたSSHアクセスのみを許可します。"
+            },
+            {
+              "title": "SSHアクセスの保護",
+              "description": "キーベースの認証を使用し、パスワードログインを無効にし、ポートの変更やfail2banによるブルートフォース対策を検討してください。"
+            },
+            {
+              "title": "管理アクセス用VPNの設定",
+              "description": "リモートアクセスが必要なサービス（データベース、管理パネル）には、ポートを直接公開するのではなくVPNを設定します。"
+            }
+          ],
+          "verificationSteps": [
+            "nmapで再スキャンしてポートが閉じていることを確認",
+            "必要なサービスにまだアクセスできることを確認",
+            "SSHアクセスがまだ機能することをテスト（ロックアウトしないでください！）"
+          ]
+        },
+        "monitorReputation": {
+          "difficulty": "初級",
+          "timeEstimate": "セットアップ30分",
+          "prerequisites": "検証のためのドメイン所有権",
+          "steps": [
+            {
+              "title": "Google Postmaster Toolsの設定",
+              "description": "postmaster.google.comにアクセスし、ドメインを追加して所有権を確認します。GmailがメールをどのFように扱っているかを確認できます。",
+              "tip": "通常、検証にはDNSレコードの追加が必要です"
+            },
+            {
+              "title": "Microsoft SNDSの設定",
+              "description": "sendersupport.olc.protection.outlook.comに登録して、Outlook/Hotmailの配信インサイトを取得します。"
+            },
+            {
+              "title": "DMARCレポートの設定",
+              "description": "DMARCレコードにrua=を設定して、認証レポートを受信するためのメールまたはDMARCサービスを指定します。"
+            },
+            {
+              "title": "ブラックリスト監視の設定",
+              "description": "MXToolbox、HetrixToolsなどを使用して、IPがブラックリストに掲載された場合にメールアラートを受信します。",
+              "tip": "ほとんどのサービスで無料の基本監視が提供されています"
+            },
+            {
+              "title": "監視スケジュールの作成",
+              "description": "Postmaster/SNDSを毎週確認、ブラックリストアラートは即座に対応、DMARCレポートは毎月または問題発生時に確認します。"
+            }
+          ],
+          "verificationSteps": [
+            "Google Postmaster Toolsでドメインが認証済みと表示されていることを確認",
+            "DMARCレポートが受信されていることを確認",
+            "アラート設定を確認してブラックリスト監視をテスト"
+          ]
         }
       }
     },
@@ -7648,7 +8954,58 @@
           "keywords": "Local keywords signal geographic relevance to search engines. This section analyzes your content for location-specific terms, service area keywords, and local intent signals. Proper use of local keywords helps your pages rank for geographically targeted searches.",
           "presence": "Local presence factors include Google Business Profile optimization, local directory citations, and review signals. This section evaluates indicators of your local search presence and identifies opportunities to strengthen your visibility in local search results.",
           "recommendations": "Based on the local SEO analysis, these recommendations target the most impactful improvements for your local search visibility and geographic relevance."
-        }
+        },
+        "nap": "NAP Consistency",
+        "status": {
+          "consistent": "一致",
+          "inconsistent": "不一致",
+          "listed": "登録済み",
+          "notListed": "未登録"
+        },
+        "schema": "Schema Markup",
+        "keywords": "Local Keywords",
+        "presence": "Local Presence",
+        "recommendations": "推奨事項",
+        "nap.detailsHeading": "Business Information",
+        "nap.rows": {
+          "name": "Business Name",
+          "address": "Address",
+          "phone": "Phone",
+          "consistency": "Consistency"
+        },
+        "schema.statusLabel": "Schema Status",
+        "schema.typesCountLabel": "Schema Types Found",
+        "schema.typesHeading": "Detected Schema Types",
+        "schema.table": {
+          "type": "Schema Type"
+        },
+        "schema.noneTitle": "No Schema Markup Found",
+        "schema.noneBody": "Adding LocalBusiness or Organization schema markup can significantly improve your local search visibility and enable rich results.",
+        "schema.markupHeading": "Markup Preview",
+        "keywords.foundLabel": "Local Keywords Found",
+        "keywords.densityLabel": "Local Keyword Density",
+        "keywords.foundHeading": "Local Keywords Detected",
+        "keywords.table": {
+          "keyword": "Keyword",
+          "suggestion": "Suggested Keyword"
+        },
+        "keywords.suggestionsHeading": "Keyword Suggestions",
+        "keywords.suggestionsCalloutTitle": "Expand Your Local Reach",
+        "keywords.suggestionsCalloutBody": "Consider incorporating these additional local keywords into your content to broaden your geographic search visibility.",
+        "presence.claimed": "Claimed",
+        "presence.notFound": "Not Found",
+        "presence.googleBusinessLabel": "Google Business Profile",
+        "presence.citationsLabel": "Citations Found",
+        "presence.gbpCalloutTitle": "Claim Your Google Business Profile",
+        "presence.gbpCalloutBody": "A verified Google Business Profile is essential for appearing in Google Maps and the local pack. Claiming and optimizing your profile should be a top priority.",
+        "presence.gbpFoundTitle": "Google Business Profile Detected",
+        "presence.gbpFoundBody": "Your Google Business Profile was detected. Ensure it is fully optimized with accurate hours, photos, and regular posts for maximum local visibility.",
+        "presence.directoriesHeading": "Directory Listings",
+        "presence.table": {
+          "directory": "Directory"
+        },
+        "recommendations.noneTitle": "Strong Local SEO",
+        "recommendations.noneBody": "Your site follows local SEO best practices. Continue monitoring your local presence and NAP consistency for sustained rankings."
       }
     },
     "crawler": {
@@ -7661,7 +9018,7 @@
       "visualSitemap": "ビジュアルサイトマップ",
       "discoveredPages": "発見されたページとエクスポート",
       "discoveredPagesExport": "発見されたページとエクスポート ({{count}})",
-      "fixCodeRecommendations": "修正コード + 推奨事項",
+      "fixCodeRecommendations": "推奨事項",
       "noSitemapToPrint": "印刷するサイトマップがありません",
       "allowPopupsToPrint": "サイトマップを印刷するにはポップアップを許可してください",
       "noSitemapToDownload": "ダウンロードするサイトマップがありません",
@@ -7864,6 +9221,69 @@
           "issues": "Issues detected during the crawl include broken pages, missing titles, duplicate content, and other technical SEO problems. Each issue is categorized by severity to help you prioritize fixes that will have the greatest impact on search performance.",
           "performance": "Page performance across your site reveals patterns in response times and server behavior. Consistently slow pages may indicate server capacity issues or inefficient code. This section highlights the slowest pages and overall response time distribution.",
           "recommendations": "Based on the site crawl analysis, these recommendations target the most critical structural and technical issues affecting your site's search engine crawlability."
+        },
+        "sections": {
+          "overview": "Crawl Overview",
+          "pages": "Pages Crawled",
+          "structure": "Site Structure",
+          "issues": "Issues Detected",
+          "performance": "Page Performance",
+          "recommendations": "推奨事項"
+        },
+        "metrics": {
+          "totalPages": "Total Pages",
+          "discoveredUrls": "Discovered URLs",
+          "maxDepth": "Max Depth",
+          "crawlTime": "Crawl Time",
+          "avgResponseTime": "Avg Response Time"
+        },
+        "overview": {
+          "statusOverview": "Status Code Overview",
+          "ok": "2xx OK",
+          "redirects": "3xx Redirects",
+          "errors": "4xx/5xx Errors"
+        },
+        "pages": {
+          "totalCrawled": "Pages Crawled",
+          "table": {
+            "url": "URL",
+            "title": "Title",
+            "status": "ステータス",
+            "responseTime": "Response Time"
+          },
+          "noData": "No page data available."
+        },
+        "structure": {
+          "depthHeading": "Depth Distribution",
+          "depthLevel": "Depth {{level}}",
+          "statusHeading": "Status Code Breakdown",
+          "table": {
+            "depth": "Depth",
+            "pages": "Pages",
+            "percentage": "割合",
+            "statusCode": "Status Code",
+            "count": "件数"
+          }
+        },
+        "issues": {
+          "totalIssues": "Total Issues",
+          "noneTitle": "No Issues Found",
+          "noneBody": "The crawl did not detect any issues. Continue monitoring your site to catch problems early."
+        },
+        "performance": {
+          "avgResponseTime": "Avg Response Time",
+          "pagesAnalyzed": "Pages Analyzed",
+          "slowestHeading": "Slowest Pages",
+          "table": {
+            "url": "URL",
+            "responseTime": "Response Time",
+            "rating": "Rating"
+          },
+          "noData": "No performance data available."
+        },
+        "recommendations": {
+          "noneTitle": "Healthy Site Structure",
+          "noneBody": "Your site has a healthy structure with no significant crawl issues. Continue monitoring to maintain site health."
         }
       }
     },
@@ -7910,13 +9330,46 @@
         "ga4AndUniversal": "GA4とユニバーサルアナリティクスの両方が検出されました。ユニバーサルアナリティクスは非推奨です（2023年7月）。",
         "duplicateTracking": "GoogleアナリティクスがGTMとハードコードの両方で読み込まれています。重複トラッキングの原因になる可能性があります。",
         "noConsentManagement": "同意管理ソリューションなしで広告タグが検出されました",
-        "advertisingCookiesNoConsent": "同意なしで広告Cookieが設定されています"
+        "advertisingCookiesNoConsent": "同意なしで広告Cookieが設定されています",
+        "insecureCookies": "{{count}}個のCookieにSecureフラグがありません",
+        "sameSiteNoSecure": "{{count}}個のCookieがSameSite=Noneですが、Secureフラグがありません",
+        "blockingScripts": "{{count}}個の同期スクリプトがページレンダリングをブロックする可能性があります",
+        "headScripts": "{{count}}個のスクリプトが<head>内にあります - 重要でないスクリプトはbodyに移動することを検討してください"
       },
       "recommendations": {
         "migrateToGa4": "GA4への移行を完了してください",
         "useGtmExclusively": "GAにはGTMのみを使用するか、ハードコードされた実装を削除してください",
         "implementConsent": "GDPR/CCPAに準拠するために同意管理（OneTrust、Cookiebotなど）を実装してください",
-        "implementConsentBeforeCookies": "広告Cookieを設定する前に同意管理を実装してください"
+        "implementConsentBeforeCookies": "広告Cookieを設定する前に同意管理を実装してください",
+        "addSecureFlag": "HTTP経由の送信を防ぐためにCookieにSecureフラグを追加してください",
+        "sameSiteRequiresSecure": "SameSite=NoneのCookieにはSecure属性が必要です"
+      },
+      "severity": {
+        "high": "高",
+        "warning": "警告",
+        "info": "情報"
+      },
+      "loadingMethod": {
+        "async": "非同期",
+        "defer": "遅延",
+        "sync": "同期"
+      },
+      "recTitles": {
+        "addConsentManagement": "同意管理を追加",
+        "fixCriticalIssue": "重大な問題を修正",
+        "removeDuplicateTags": "重複タグを削除",
+        "implementConsentManagement": "同意管理を実装",
+        "considerGtm": "Googleタグマネージャーの導入を検討"
+      },
+      "recDescriptions": {
+        "duplicateTags": "{{count}}個の重複タグが検出されました。二重トラッキングの原因になる可能性があります。",
+        "analyticsNoConsent": "同意管理なしでアナリティクスタグが検出されました。GDPR/CCPA準拠に必要です。",
+        "considerGtm": "{{count}}個のタグが検出されました。GTMはタグ管理を簡素化し、パフォーマンスを向上させます。"
+      },
+      "recActions": {
+        "removeDuplicates": "重複した実装を確認して削除してください",
+        "addConsentSolution": "OneTrust、Cookiebotなどの同意管理ソリューションを追加してください",
+        "migrateToGtm": "管理を容易にするためにタグをGoogleタグマネージャーに移行してください"
       },
       "fixes": {
         "addConsentManagement": "同意管理を追加",
@@ -7927,80 +9380,81 @@
       "cookieSecure": "Secure",
       "report": {
         "sectionIntros": {
-          "overview": "This section provides an overview of all marketing, analytics, and tracking tags detected on your page. A healthy tag implementation uses a tag management system, avoids duplicates, and loads scripts efficiently. Too many tags can slow page performance and create data quality issues. This analysis identifies each tag, its category, and how many instances were found.",
-          "issues": "This section highlights implementation issues and conflicts found among your tags. Common problems include duplicate tracking pixels, migration gaps between analytics versions, missing consent management, and conflicting scripts. Each issue includes severity level and a specific recommendation for resolution. Addressing these issues improves data accuracy and site performance.",
-          "categories": "Tags are organized by functional category to provide a clear picture of your marketing and analytics stack. This breakdown helps identify redundancies, gaps in coverage, and opportunities for consolidation. A well-organized tag infrastructure typically uses one tool per function with clear data ownership. Review each category to ensure every tag serves a specific, non-overlapping purpose.",
-          "performance": "Marketing tags and tracking scripts can significantly impact page load performance. Synchronous scripts block rendering while they load, and inline scripts add to the initial HTML payload. This section analyzes script loading methods, identifying blocking scripts that should be converted to async or defer loading. Optimizing script loading can reduce Time to Interactive by hundreds of milliseconds.",
-          "thirdParty": "Third-party scripts are loaded from external domains and include analytics libraries, advertising pixels, and CDN-hosted utilities. Each external script introduces a dependency on another server's availability and performance. This section catalogs all third-party scripts by host, category, and loading method. Minimizing third-party dependencies and ensuring proper async loading reduces performance risk.",
-          "dataLayer": "The dataLayer is a JavaScript array used by Google Tag Manager to pass structured data between your website and marketing tags. A well-implemented dataLayer centralizes event tracking and enables consistent measurement across all tags. This section checks for dataLayer presence, event count, and ecommerce implementation. A robust dataLayer is the foundation of accurate marketing analytics.",
-          "cookies": "Cookies set by tags and third-party scripts carry privacy and compliance implications. Under GDPR, CCPA, and similar regulations, users must be informed about cookies and in many cases give consent before non-essential cookies are set. This section audits all detected cookies, their vendors, purposes, and security attributes. Understanding your cookie landscape is essential for privacy compliance.",
-          "recommendations": "Based on the tag intelligence analysis, this section provides prioritized recommendations to optimize your tag implementation. Recommendations cover performance optimization, data quality improvement, privacy compliance, and infrastructure consolidation. Implementing these changes will result in faster page loads, more accurate tracking data, and better compliance with privacy regulations."
+          "overview": "このセクションでは、ページで検出されたすべてのマーケティング、アナリティクス、トラッキングタグの概要を提供します。健全なタグ実装は、タグ管理システムを使用し、重複を避け、スクリプトを効率的に読み込みます。タグが多すぎるとページパフォーマンスが低下し、データ品質の問題が生じる可能性があります。この分析では、各タグ、そのカテゴリ、検出されたインスタンス数を特定します。",
+          "issues": "このセクションでは、タグ間で見つかった実装上の問題と競合をハイライトします。一般的な問題には、重複するトラッキングピクセル、アナリティクスバージョン間の移行ギャップ、同意管理の欠如、競合するスクリプトが含まれます。各問題には重要度レベルと具体的な解決策の推奨事項が含まれています。これらの問題に対処することで、データの正確性とサイトのパフォーマンスが向上します。",
+          "categories": "タグは機能カテゴリ別に整理され、マーケティングおよびアナリティクススタックの全体像を提供します。この分類は、冗長性、カバレッジのギャップ、統合の機会を特定するのに役立ちます。よく整理されたタグインフラストラクチャは、通常、機能ごとに1つのツールを使用し、明確なデータオーナーシップを持ちます。各カテゴリを確認して、すべてのタグが特定の重複しない目的を果たしていることを確認してください。",
+          "performance": "マーケティングタグとトラッキングスクリプトは、ページ読み込みパフォーマンスに大きな影響を与える可能性があります。同期スクリプトは読み込み中にレンダリングをブロックし、インラインスクリプトは初期HTMLペイロードを増加させます。このセクションでは、スクリプトの読み込み方法を分析し、asyncまたはdefer読み込みに変換すべきブロッキングスクリプトを特定します。スクリプトの読み込みを最適化することで、インタラクティブになるまでの時間を数百ミリ秒短縮できます。",
+          "thirdParty": "サードパーティスクリプトは外部ドメインから読み込まれ、アナリティクスライブラリ、広告ピクセル、CDNホストのユーティリティが含まれます。各外部スクリプトは、別のサーバーの可用性とパフォーマンスへの依存関係を導入します。このセクションでは、すべてのサードパーティスクリプトをホスト、カテゴリ、読み込み方法別にカタログ化します。サードパーティの依存関係を最小限に抑え、適切な非同期読み込みを確保することで、パフォーマンスリスクを低減します。",
+          "dataLayer": "dataLayerは、Googleタグマネージャーがウェブサイトとマーケティングタグ間で構造化データを受け渡すために使用するJavaScript配列です。適切に実装されたdataLayerは、イベントトラッキングを一元化し、すべてのタグにわたる一貫した測定を可能にします。このセクションでは、dataLayerの存在、イベント数、eコマース実装を確認します。堅牢なdataLayerは、正確なマーケティングアナリティクスの基盤です。",
+          "cookies": "タグやサードパーティスクリプトによって設定されるCookieには、プライバシーとコンプライアンスの影響があります。GDPR、CCPA、および同様の規制の下では、ユーザーはCookieについて通知を受け、多くの場合、必須でないCookieが設定される前に同意を与える必要があります。このセクションでは、検出されたすべてのCookie、そのベンダー、目的、セキュリティ属性を監査します。Cookieの状況を理解することは、プライバシーコンプライアンスに不可欠です。",
+          "recommendations": "タグインテリジェンス分析に基づいて、このセクションでは、タグ実装を最適化するための優先度付きの推奨事項を提供します。推奨事項には、パフォーマンスの最適化、データ品質の改善、プライバシーコンプライアンス、インフラストラクチャの統合が含まれます。これらの変更を実装することで、ページの読み込みが速くなり、トラッキングデータがより正確になり、プライバシー規制への準拠が向上します。"
         },
         "overview": {
-          "categoriesLabel": "Categories",
-          "duplicatesLabel": "Duplicates",
-          "detectedHeading": "Detected Tags",
+          "categoriesLabel": "カテゴリ",
+          "duplicatesLabel": "重複",
+          "detectedHeading": "検出されたタグ",
           "table": {
-            "name": "Tag Name",
-            "category": "Category",
-            "instances": "Instances",
-            "ids": "IDs"
+            "name": "タグ名",
+            "category": "カテゴリ",
+            "instances": "インスタンス",
+            "ids": "ID"
           }
         },
         "issues": {
-          "duplicatesHeading": "Duplicate Tags",
-          "noneTitle": "No Issues Found",
-          "noneBody": "No implementation issues or conflicts were detected in your tag setup."
+          "duplicatesHeading": "重複タグ",
+          "noneTitle": "問題は見つかりませんでした",
+          "noneBody": "タグ設定に実装上の問題や競合は検出されませんでした。"
         },
         "categories": {
           "table": {
-            "category": "Category",
-            "count": "Count",
-            "tags": "Tags"
+            "category": "カテゴリ",
+            "count": "数",
+            "tags": "タグ"
           }
         },
         "performance": {
-          "syncLabel": "Sync (Blocking)",
-          "asyncLabel": "Async",
-          "deferLabel": "Defer",
-          "inlineLabel": "Inline",
-          "issuesHeading": "Performance Issues"
+          "syncLabel": "同期（ブロッキング）",
+          "asyncLabel": "非同期",
+          "deferLabel": "遅延",
+          "inlineLabel": "インライン",
+          "issuesHeading": "パフォーマンスの問題"
         },
         "thirdParty": {
-          "totalLabel": "Third-Party Scripts",
+          "totalLabel": "サードパーティスクリプト",
           "table": {
-            "name": "Name",
-            "host": "Host",
-            "category": "Category",
-            "loading": "Loading"
+            "name": "名前",
+            "host": "ホスト",
+            "category": "カテゴリ",
+            "loading": "読み込み"
           }
         },
         "dataLayer": {
-          "eventsLabel": "Events",
-          "ecommerceTitle": "Ecommerce Tracking Detected",
-          "eventsHeading": "DataLayer Events",
+          "eventsLabel": "イベント",
+          "ecommerceTitle": "eコマーストラッキングが検出されました",
+          "eventsHeading": "DataLayerイベント",
           "table": {
-            "event": "Event Name"
+            "event": "イベント名"
           },
-          "consentImplemented": "Consent Mode Implemented",
-          "consentMissing": "Consent Mode Not Implemented"
+          "consentImplemented": "同意モードが実装されています",
+          "consentMissing": "同意モードが実装されていません"
         },
         "cookies": {
-          "totalLabel": "Total Cookies",
-          "detailsHeading": "Cookie Details",
-          "issuesHeading": "Compliance Issues",
+          "totalLabel": "Cookie合計",
+          "detailsHeading": "Cookieの詳細",
+          "issuesHeading": "コンプライアンスの問題",
           "table": {
-            "type": "Type",
-            "count": "Count",
-            "name": "Name",
-            "vendor": "Vendor",
-            "domain": "Domain",
-            "expires": "Expires"
+            "type": "種類",
+            "count": "数",
+            "name": "名前",
+            "vendor": "ベンダー",
+            "domain": "ドメイン",
+            "secure": "Secure",
+            "expires": "有効期限"
           }
         },
-        "recommendations": "Recommendations",
-        "recommendations.noneTitle": "Well-Managed Tag Infrastructure",
-        "recommendations.noneBody": "Your tag implementation follows best practices. Continue monitoring for new issues."
+        "recommendationsTitle": "推奨事項",
+        "recommendationsNoneTitle": "適切に管理されたタグインフラストラクチャ",
+        "recommendationsNoneBody": "タグの実装はベストプラクティスに従っています。新しい問題がないか引き続き監視してください。"
       },
       "actionableRecommendations": "実行可能な最適化の推奨事項",
       "prioritySteps": "優先度ベースの修復ステップ",
@@ -8084,6 +9538,85 @@
       "accessibility": "アクセシビリティ",
       "performance": "パフォーマンス",
       "coreWebVitals": "Core Web Vitals"
+    },
+    "brandConsistency": {
+      "report": {
+        "sectionIntros": {
+          "overview": "ウェブサイト全体のブランド一貫性の概要を提供します。",
+          "colors": "色彩の一貫性はブランドアイデンティティの基盤です。このセクションでは使用されているカラーパレットを分析します。",
+          "typography": "一貫したタイポグラフィはブランドアイデンティティを強化し、読みやすさを向上させます。",
+          "contrast": "十分なカラーコントラストにより、すべてのユーザーがコンテンツを読めるようになります。",
+          "crossPage": "ページ間の一貫性は、ユーザーがサイトを閲覧する際にブランド要素がどれだけ統一されているかを測定します。",
+          "recommendations": "ブランド一貫性分析に基づく優先推奨事項です。"
+        },
+        "overview": "一貫性の概要",
+        "colorAnalysis": "カラー分析",
+        "colors": {
+          "paletteHeading": "カラーパレット",
+          "table": {
+            "color": "色",
+            "name": "名前",
+            "usage": "使用",
+            "percentage": "割合"
+          },
+          "dominantHeading": "主要な色",
+          "contrastRatio": "コントラスト比",
+          "issuesHeading": "カラーの問題"
+        },
+        "typographyAnalysis": "タイポグラフィ分析",
+        "typography": {
+          "fontsHeading": "使用フォント",
+          "table": {
+            "font": "フォント",
+            "weight": "ウェイト",
+            "usage": "使用",
+            "pages": "ページ",
+            "element": "要素",
+            "size": "サイズ",
+            "lineHeight": "行の高さ"
+          },
+          "headingStylesHeading": "見出しスタイル",
+          "bodyStylesHeading": "本文スタイル",
+          "issuesHeading": "タイポグラフィの問題"
+        },
+        "contrastAnalysis": "コントラスト分析",
+        "contrast": {
+          "pairsHeading": "コントラストペア",
+          "table": {
+            "foreground": "前景",
+            "background": "背景",
+            "ratio": "比率"
+          },
+          "pass": "合格",
+          "fail": "不合格",
+          "issuesHeading": "コントラストの問題",
+          "noIssuesTitle": "良好なコントラスト",
+          "noIssuesBody": "すべてのカラーペアがWCAGコントラスト要件を満たしています。"
+        },
+        "crossPageConsistency": "ページ間の一貫性",
+        "crossPage": {
+          "pagesHeading": "分析されたページ",
+          "totalPages": "合計ページ数",
+          "table": {
+            "page": "ページ",
+            "score": "スコア"
+          },
+          "issuesHeading": "一貫性の問題",
+          "noIssuesTitle": "一貫したブランディング",
+          "noIssuesBody": "ページ間の一貫性の問題は検出されませんでした。ブランド要素は統一されています。"
+        },
+        "recommendations": "推奨事項",
+        "overview.consistency": "Consistency",
+        "overview.colorAnalysis": "Color Analysis",
+        "overview.typographyAnalysis": "Typography Analysis",
+        "overview.elementsHeading": "Brand Elements Detected",
+        "overview.logos": "Logos",
+        "overview.colors": "Colors",
+        "overview.fonts": "Fonts",
+        "overview.patterns": "Patterns",
+        "recommendations.noneTitle": "Strong Brand Consistency",
+        "recommendations.noneBody": "Your site maintains excellent brand consistency. Continue monitoring for visual drift as content evolves."
+      }
     }
   },
   "reportsPage": {
@@ -8285,7 +9818,58 @@
     "bestPractices": "ベストプラクティス",
     "coreWebVitals": "Core Web Vitals",
     "detailedMetrics": "詳細メトリクス",
-    "recommendations": "推奨事項"
+    "recommendations": "推奨事項",
+    "resourceAnalysis": "リソース分析",
+    "networkPerformance": "ネットワークパフォーマンス",
+    "cachingOptimization": "キャッシュと最適化",
+    "requests": "リクエスト",
+    "pageSize": "ページサイズ",
+    "loadTime": "読み込み時間",
+    "report": {
+      "recommendations": "推奨事項",
+      "cwv": {
+        "good": "良好",
+        "needsImprovement": "改善が必要",
+        "poor": "不良"
+      },
+      "lighthouse": {
+        "title": "Lighthouseカテゴリスコア",
+        "bestPractices": "ベストプラクティス"
+      },
+      "sectionIntros": {
+        "cwv": "Core Web Vitalsは、実際のユーザー体験を測定するためのGoogleの主要指標です。読み込みパフォーマンス（LCP）、インタラクティブ性（FID/INP）、視覚的安定性（CLS）に焦点を当てています。スコアはGoogleの「良好」「改善が必要」「不良」の閾値と比較されます。3つの指標すべてで「良好」の閾値を満たすことが、最適な検索ランキングに不可欠です。",
+        "lighthouse": "Lighthouseは、パフォーマンス、アクセシビリティ、ベストプラクティス、SEOカテゴリにわたる自動監査を提供します。各カテゴリスコアは、ウェブ開発のベストプラクティスへの準拠度を反映しています。このセクションでは、分析中に測定された各Lighthouse監査カテゴリのスコアを表示します。",
+        "resources": "リソース分析は、ページの構成要素（スクリプト、スタイルシート、画像、フォント、その他のアセット）を検査します。リソースの内訳を理解することで、最適化の機会を特定できます。リソースの数とサイズを削減することで、読み込み時間とCore Web Vitalsスコアが直接改善されます。",
+        "network": "ネットワークパフォーマンス指標は、サーバーの応答速度とコンテンツ配信速度を測定します。Time to First Byte（TTFB）はサーバー処理速度を示し、DNSルックアップとSSLネゴシエーション時間は接続のオーバーヘッドを明らかにします。これらの指標の最適化には、サーバー設定とネットワークインフラの両方への注意が必要です。",
+        "caching": "効果的なキャッシュはサーバー負荷を軽減し、再訪問時のパフォーマンスを劇的に向上させます。適切に設定されたキャッシュヘッダーにより、ブラウザは静的リソースを保存して再利用できます。このセクションでは、キャッシュ戦略を評価し、より長いキャッシュ期間が有効なリソースを特定します。",
+        "recommendations": "パフォーマンス分析に基づき、これらの推奨事項は最もインパクトのある改善を対象としています。高優先度の項目から対応することで、読み込み時間とCore Web Vitalsスコアに最大の効果をもたらします。"
+      },
+      "resources": {
+        "breakdownHeading": "リソースの内訳",
+        "table": {
+          "type": "種類",
+          "count": "ファイル数",
+          "size": "サイズ"
+        }
+      },
+      "network": {
+        "title": "ネットワークパフォーマンス",
+        "ttfb": "Time To First Byte",
+        "dns": "DNSルックアップ",
+        "ssl": "SSLネゴシエーション",
+        "connection": "接続時間",
+        "domInteractive": "DOM Interactive",
+        "domContentLoaded": "DOM Content Loaded"
+      },
+      "caching": {
+        "title": "キャッシュと最適化",
+        "hitRateLabel": "キャッシュヒット率",
+        "cachedLabel": "キャッシュ済みリソース",
+        "notCachedLabel": "未キャッシュ"
+      },
+      "recommendations.noneTitle": "優れたパフォーマンス",
+      "recommendations.noneBody": "サイトはすべてのメトリクスで良好なパフォーマンスを示しています。リグレッションの監視を続けてください。"
+    }
   },
   "grades": {
     "aPlus": "A+",
@@ -8314,7 +9898,69 @@
     "colorContrast": "カラーコントラスト",
     "keyboardNav": "キーボードナビゲーション",
     "ariaLabels": "ARIAラベル",
-    "imageAlt": "画像の代替テキスト"
+    "imageAlt": "画像の代替テキスト",
+    "report": {
+      "recommendations": "推奨事項",
+      "sectionIntros": {
+        "wcag": "ウェブコンテンツ・アクセシビリティ・ガイドライン（WCAG）2.1は、障害のある人がウェブコンテンツにアクセスできるようにするための基準を定めています。準拠は「知覚可能」「操作可能」「理解可能」「堅牢」の4つの原則に基づいて測定されます。このセクションでは、WCAG レベル AA の主要な達成基準に対してページを評価します。これらの基準を満たすことで、最も幅広いユーザーがサイトを利用でき、多くの国や地域で法的要件を満たすことができます。",
+        "contrast": "十分なカラーコントラストは、低視力やカラーの識別が困難なユーザーがテキストやインタラクティブ要素を読み取れるようにします。WCAG 2.1 レベル AA では、通常テキストに最小コントラスト比 4.5:1、大きなテキストに 3:1 が必要です。このセクションでは、これらの基準を満たさない要素を特定します。コントラストの問題を修正することは、最もインパクトのあるアクセシビリティ改善の一つです。",
+        "keyboard": "キーボードアクセシビリティは、すべてのインタラクティブ要素がキーボードのみで到達・操作可能であることを保証します。これは、運動障害によりマウスを使用できないユーザーや、キーボードナビゲーションを好む上級ユーザーにとって不可欠です。このセクションでは、フォーカス可能な要素、タブトラップ、可視フォーカスインジケーターを確認します。すべてのインタラクティブ要素は Tab キーで到達可能であり、Enter または Space キーで操作可能でなければなりません。",
+        "aria": "ARIA（Accessible Rich Internet Applications）属性とセマンティック HTML は、スクリーンリーダーのアクセシビリティの基盤を提供します。ランドマーク、ラベル、ロール、見出し構造の適切な使用により、支援技術がページをナビゲートし理解できるようになります。このセクションでは、ARIA の実装品質、ランドマーク領域、フォームラベル、見出し階層を確認します。ARIA の不適切な使用は逆にアクセシビリティを悪化させる可能性があるため、正しい実装が重要です。",
+        "recommendations": "アクセシビリティ監査の結果に基づき、このセクションではサイトのインクルーシブ性を向上させるための優先的な推奨事項を提供します。各推奨事項は関連する WCAG 達成基準を参照し、実装のための具体的な手順を含んでいます。高優先度の項目から対応することで、アクセシビリティの準拠と障害のあるユーザーの体験が最も大きく改善されます。"
+      },
+      "wcag": {
+        "levelTitle": "目標レベル: WCAG 2.1 AA",
+        "levelBody": "WCAG レベル AA は、ADA、Section 508、欧州アクセシビリティ法を含む、世界中のほとんどのアクセシビリティ規制で求められる基準です。",
+        "criteriaHeading": "達成基準",
+        "deviceScoresHeading": "デバイス別スコア",
+        "criteria": {
+          "nonTextContent": "1.1.1 非テキストコンテンツ",
+          "infoRelationships": "1.3.1 情報及び関係性",
+          "contrastMinimum": "1.4.3 コントラスト（最低限）",
+          "keyboard": "2.1.1 キーボード",
+          "bypassBlocks": "2.4.1 ブロックスキップ",
+          "pageTitled": "2.4.2 ページタイトル",
+          "focusOrder": "2.4.3 フォーカス順序",
+          "languagePage": "3.1.1 ページの言語",
+          "parsing": "4.1.1 構文解析",
+          "nameRoleValue": "4.1.2 名前・役割・値"
+        },
+        "table": {
+          "criterion": "達成基準"
+        }
+      },
+      "contrast": {
+        "issuesLabel": "コントラストの問題",
+        "detailsHeading": "コントラストの問題",
+        "allPassTitle": "すべてのコントラストチェックに合格",
+        "allPassBody": "すべてのテキスト要素が最低コントラスト比の要件を満たしています。",
+        "table": {
+          "element": "要素",
+          "ratio": "比率",
+          "required": "必要値"
+        }
+      },
+      "keyboard": {
+        "focusableLabel": "フォーカス可能な要素",
+        "tabTrapsLabel": "タブトラップ",
+        "missingFocusLabel": "フォーカスインジケーター欠落",
+        "issuesHeading": "キーボードの問題"
+      },
+      "aria": {
+        "landmarksLabel": "ランドマーク",
+        "missingLabelsLabel": "ラベル欠落",
+        "invalidRolesLabel": "無効なロール",
+        "headingStructureLabel": "見出し構造",
+        "issuesHeading": "ARIAの問題",
+        "table": {
+          "issue": "問題",
+          "description": "説明",
+          "impact": "影響度"
+        }
+      },
+      "recommendations.noneTitle": "優れたアクセシビリティ",
+      "recommendations.noneBody": "サイトはアクセシビリティのベストプラクティスに準拠しています。引き続きコンプライアンスの監視を続けてください。"
+    }
   },
   "status": {
     "excellent": "優秀",
@@ -8349,7 +9995,8 @@
     "essentialDesc": "サイトの機能に必要です（セッション、設定）。",
     "analytics": "アナリティクス",
     "analyticsDesc": "訪問者のサイト利用状況を把握するのに役立ちます（Google Analytics）。",
-    "alwaysOn": "常にオン"
+    "alwaysOn": "常にオン",
+    "ariaLabel": "Cookieの同意"
   },
   "privacyPage": {
     "breadcrumb": "プライバシーポリシー",
@@ -8550,5 +10197,8 @@
       "low": "低",
       "info": "情報"
     }
-  }
+  },
+  "auto_scan": "true",
+  "report_type": "cwv",
+  "print": "1"
 }

@@ -588,7 +588,10 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
       const error = await response.json();
       if (error.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = error.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        clearInterval(modalTimer);
+        closePacmanModal();
+        return;
       }
       // Extract the actual error message from the response
       const errorMessage = error.message || error.error || error.details?.message || t('reports.competitive.analysisFailed', 'Analysis failed');
@@ -698,7 +701,7 @@ function displayResults(data) {
           proBlock: true,
           proBlockOptions: {
             context: 'competitive-analysis',
-            features: ['pdf', 'csv', 'share'],
+            features: ['pdf', 'excel', 'csv', 'share'],
             title: t('reports.common.unlockReport', 'Unlock Report'),
             subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
             reportId
@@ -804,6 +807,12 @@ function revealCompetitiveProContent() {
   // Also remove any remaining lock indicators
   document.querySelectorAll('[data-hide-when-unlocked]').forEach(el => el.remove());
   document.querySelectorAll('.pro-locked').forEach(el => el.classList.remove('pro-locked'));
+
+  // Remove locked state from Pro Report Blocks (show accent border after unlock)
+  document.querySelectorAll('.pro-report-block--locked, .pro-report-block[data-locked]').forEach((block) => {
+    block.classList.remove('pro-report-block--locked');
+    block.removeAttribute('data-locked');
+  });
 }
 
 // Build summary donuts for competitive analysis
@@ -926,7 +935,7 @@ function buildCompetitiveSections(data, reportId) {
   if (data.recommendations && data.recommendations.length > 0) {
     sections.push({
       id: 'report-recommendations',
-      title: t('reports.common.reportAndRecommendations', 'Report and Recommendations'),
+      title: t('reports.common.reportAndRecommendations', 'Recommendations'),
       expanded: true,
       isPro: true,
       locked: !isUnlocked,
@@ -1045,9 +1054,9 @@ function getAccentPrimaryColor() {
 }
 
 function getScoreColor(score) {
-  if (score >= 80) return getAccentPrimaryColor();
-  if (score >= 60) return '#ffa500';
-  return '#ff4444';
+  if (score >= 80) return '#22c55e';  // Good: Green
+  if (score >= 60) return '#ffa500';  // Needs Work: Orange
+  return '#ff4444';                   // Critical: Red
 }
 
 // Chart instances storage
@@ -2168,7 +2177,7 @@ function renderMetricAccordion(analysis, index, data) {
       </div>
 
       <div class="competitive-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderMetricTabs(analysis, accordionId, data)}
         </div>
       </div>
@@ -2533,7 +2542,7 @@ function renderStrengthAccordion(strength, index, data) {
       </div>
 
       <div class="competitive-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderStrengthTabs(strength, accordionId)}
         </div>
       </div>
@@ -2710,7 +2719,7 @@ function renderWeaknessAccordion(weakness, index, data) {
       </div>
 
       <div class="competitive-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderWeaknessTabs(weakness, accordionId)}
         </div>
       </div>
@@ -3082,7 +3091,7 @@ function renderCompetitiveFixAccordion(rec, index) {
       </div>
 
       <div class="competitive-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderCompetitiveFixTabs(rec, accordionId)}
         </div>
       </div>

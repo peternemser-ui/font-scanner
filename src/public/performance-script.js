@@ -24,7 +24,10 @@ function t(key, fallback, params = {}) {
   return value;
 }
 // Make t() available globally for inline handlers
-window.t = t;
+// NOTE: Do NOT overwrite window.t here — i18n.js already defines it with
+// a (key, params) signature. Overwriting it with (key, fallback, params)
+// breaks callers that rely on the i18n signature (e.g. renderScanContextBar).
+if (typeof window.t !== 'function') window.t = t;
 
 // Function to get analysis steps with current translations
 // Called at runtime to ensure i18n is loaded
@@ -216,7 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
       if (!response.ok) {
         if (data.code === 'SCAN_QUOTA_EXCEEDED') {
           const limit = data.scansLimit || 10;
-          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+          return;
         }
         throw new Error(data.message || data.error || t('reports.performance.analysisFailed', 'Performance analysis failed'));
       }
@@ -845,17 +849,21 @@ function displayPerformanceResults(results) {
   createAccordionSection(container, 'resource-analysis', t('reports.performance.resourceAnalysis', 'Resource Analysis'), () => renderResourceAnalysisContent(results.resources), results.resources?.score || 0);
   createAccordionSection(container, 'network-performance', t('reports.performance.networkPerformance', 'Network Performance'), () => renderNetworkPerformanceContent(results.network), results.network?.score || 0);
   createAccordionSection(container, 'caching-optimization', t('reports.performance.cachingOptimization', 'Caching & Optimization'), () => renderCachingOptimizationContent(results.caching), results.caching?.score || 0);
-  createAccordionSection(container, 'report-recommendations', t('reports.common.reportRecommendations', 'Report and Recommendations'), () => renderRecommendationsContent(results.recommendations), null, { isPro: true }); // Pro gated
+  createAccordionSection(container, 'report-recommendations', t('reports.common.reportRecommendations', 'Recommendations'), () => renderRecommendationsContent(results.recommendations), null, { isPro: true }); // Pro gated
 
   // Pro Report Block
   if (window.ProReportBlock && window.ProReportBlock.render) {
     const proBlockHtml = window.ProReportBlock.render({
       context: 'performance-analysis',
-      features: ['pdf', 'csv', 'share'],
+      features: ['pdf', 'excel', 'csv', 'share'],
       title: t('reports.common.unlockReport', 'Unlock Report'),
       subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.')
     });
     container.insertAdjacentHTML('beforeend', proBlockHtml);
+  } else {
+    const opts = { context: 'performance-analysis', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, share link, export data, and fix packs for this scan.' };
+    const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
+    container.insertAdjacentHTML('beforeend', '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>');
   }
 }
 
@@ -1726,7 +1734,7 @@ function renderPerfFixAccordion(rec, index) {
       </div>
 
       <div class="perf-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderPerfFixTabs(rec, accordionId)}
         </div>
       </div>

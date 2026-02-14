@@ -407,9 +407,9 @@
     /**
      * Show error message
      */
-    function showError(message) {
+    function showError(message, options = {}) {
       if (loader) {
-        loader.showError(message);
+        loader.showError(message, options);
       } else {
         // Fallback error display
         if (elements.loadingContainer) {
@@ -510,6 +510,9 @@
       // Show loading
       showLoading();
 
+      // Track whether success path defers cleanup to its own timeout
+      let successPathDeferred = false;
+
       try {
         const scanStartedAt = new Date().toISOString();
         window.SM_SCAN_STARTED_AT = scanStartedAt;
@@ -552,12 +555,15 @@
           // Translate known server error codes
           if (data.code === 'SCAN_QUOTA_EXCEEDED') {
             const limit = data.scansLimit || 10;
-            throw new Error(_t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.', { limit }));
+            showError(_t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.', { limit }), { isQuotaError: true });
+            return;
           }
           throw new Error(data.message || data.error || _t('errors.analysisFailed', 'Analysis failed'));
         }
 
         if (data.success) {
+          successPathDeferred = true;
+
           // Complete loader animation
           if (loader) loader.complete();
 
@@ -599,28 +605,50 @@
             }, 100);
           }
 
-          // Call success callback with delay for loader animation
-          setTimeout(async () => {
-            // CRITICAL: Fetch billing status before displaying results
-            // This ensures Pro/Day Pass users see unlocked sections immediately
+          // Call success callback with delay for loader animation.
+          // SM_IS_SCANNING stays true until after onScanComplete so that
+          // entitlements:updated handlers don't attempt premature re-renders.
+          setTimeout(() => {
+            // Start billing status fetch in background (non-blocking).
+            // Previously this was `await`ed, which blocked onScanComplete when the
+            // billing API was slow (cold start, first call). The entitlements:updated
+            // handler in each analyzer script re-renders once billing data arrives,
+            // so Pro/Day Pass sections unlock automatically without gating the initial render.
             if (window.ProReportBlock?.fetchBillingStatus) {
-              console.log('[PageShell] Fetching billing status before displaying results...');
-              try {
-                await window.ProReportBlock.fetchBillingStatus(true);
-                const isPro = window.ProReportBlock?.isProSubscriber?.();
-                console.log('[PageShell] Billing status fetched, plan:', isPro ? 'Pro/DayPass' : 'Free');
-                // Clear fresh scan flag for Pro/Day Pass users - they have global access
-                if (isPro) {
-                  console.log('[PageShell] Pro/Day Pass user detected - clearing fresh scan payment flag');
-                  window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
-                }
-              } catch (e) {
-                console.warn('[PageShell] Failed to fetch billing status:', e);
-              }
+              console.log('[PageShell] Starting billing status fetch (non-blocking)...');
+              window.ProReportBlock.fetchBillingStatus(true)
+                .then(() => {
+                  const isPro = window.ProReportBlock?.isProSubscriber?.();
+                  console.log('[PageShell] Billing status fetched, plan:', isPro ? 'Pro/DayPass' : 'Free');
+                  if (isPro) {
+                    console.log('[PageShell] Pro/Day Pass user detected - clearing fresh scan payment flag');
+                    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+                  }
+                })
+                .catch((e) => {
+                  console.warn('[PageShell] Failed to fetch billing status:', e);
+                });
             }
+
+            // Display results immediately - don't wait for billing API
             if (typeof config.onScanComplete === 'function') {
               config.onScanComplete(results);
             }
+
+            // NOW clear the scanning flag and re-enable inputs
+            isScanning = false;
+            window.SM_IS_SCANNING = false;
+            if (elements.scanButton) {
+              elements.scanButton.disabled = false;
+              elements.scanButton.style.opacity = '1';
+            }
+            if (elements.buttonText) {
+              elements.buttonText.textContent = config.scanButton?.text || 'Analyze';
+            }
+            if (elements.urlInput) {
+              elements.urlInput.disabled = false;
+            }
+
             // Dispatch report:ready event for auto-scroll to results
             // Small delay to ensure DOM is updated after onScanComplete
             setTimeout(() => {
@@ -656,19 +684,24 @@
         }
 
       } finally {
-        isScanning = false;
-        window.SM_IS_SCANNING = false;
+        // On success path, cleanup is deferred to the setTimeout callback
+        // (which runs after the loader animation and onScanComplete).
+        // Only run immediate cleanup for error/else paths.
+        if (!successPathDeferred) {
+          isScanning = false;
+          window.SM_IS_SCANNING = false;
 
-        // Re-enable inputs
-        if (elements.scanButton) {
-          elements.scanButton.disabled = false;
-          elements.scanButton.style.opacity = '1';
-        }
-        if (elements.buttonText) {
-          elements.buttonText.textContent = config.scanButton?.text || 'Analyze';
-        }
-        if (elements.urlInput) {
-          elements.urlInput.disabled = false;
+          // Re-enable inputs
+          if (elements.scanButton) {
+            elements.scanButton.disabled = false;
+            elements.scanButton.style.opacity = '1';
+          }
+          if (elements.buttonText) {
+            elements.buttonText.textContent = config.scanButton?.text || 'Analyze';
+          }
+          if (elements.urlInput) {
+            elements.urlInput.disabled = false;
+          }
         }
       }
     }

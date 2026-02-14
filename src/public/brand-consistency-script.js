@@ -393,7 +393,8 @@ async function analyze() {
       const errorData = await response.json().catch(() => ({}));
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        return;
       }
       throw new Error(errorData.message || errorData.error || t('reports.brand.analysisFailed', 'Analysis failed'));
     }
@@ -436,7 +437,7 @@ async function analyze() {
 }
 
 function getScoreColor(score) {
-  if (score >= 80) return 'var(--accent-primary)';
+  if (score >= 80) return '#22c55e';  // Good: Green
   if (score >= 60) return '#ffd700';
   if (score >= 40) return '#ff8c00';
   return '#ff4444';
@@ -600,7 +601,7 @@ function displayResults(data) {
     // When unlocked: show full content without blur
     {
       id: 'report-recommendations',
-      title: t('brandConsistency.reportAndRecommendations', 'Report and Recommendations'),
+      title: t('brandConsistency.reportAndRecommendations', 'Recommendations'),
       isPro: true,
       locked: !isUnlocked,
       context: 'brand-consistency',
@@ -634,7 +635,7 @@ function displayResults(data) {
         proBlock: true,
         proBlockOptions: {
           context: 'brand-consistency',
-          features: ['pdf', 'csv', 'share'],
+          features: ['pdf', 'excel', 'csv', 'share'],
           title: t('pricing.unlockReportTitle', 'Unlock Report'),
           subtitle: t('pricing.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
           reportId
@@ -723,12 +724,18 @@ function revealBrandProContent() {
   overlays.forEach((overlay) => {
     const locked = overlay.querySelector('.is-locked');
     if (!locked) return;
-    
+
     const fragment = document.createDocumentFragment();
     while (locked.firstChild) {
       fragment.appendChild(locked.firstChild);
     }
     overlay.replaceWith(fragment);
+  });
+
+  // Remove locked state from Pro Report Blocks (show accent border after unlock)
+  document.querySelectorAll('.pro-report-block--locked, .pro-report-block[data-locked]').forEach((block) => {
+    block.classList.remove('pro-report-block--locked');
+    block.removeAttribute('data-locked');
   });
 }
 
@@ -1747,7 +1754,7 @@ function renderBrandFixAccordion(fix, index) {
       </div>
       
       <div class="brand-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderBrandFixTabs(fix, accordionId)}
         </div>
       </div>

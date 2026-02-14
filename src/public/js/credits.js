@@ -179,8 +179,6 @@ if (window.CreditsManager) {
     if (typeof manager.isUnlocked !== 'function') {
       manager.isUnlocked = function isUnlocked(reportId) {
         if (!reportId) return false;
-        // Auto-unlock for demo domains
-        if (isDemoDomain()) return true;
         const map = getUnlockedMap();
         return !!map[reportId];
       };
@@ -345,8 +343,6 @@ window.CreditsManager = (function() {
 
   function isUnlocked(reportId) {
     if (!reportId) return false;
-    // Auto-unlock for demo domains
-    if (isDemoDomain()) return true;
     const map = getUnlockedMap();
     return !!map[reportId];
   }
@@ -579,7 +575,8 @@ window.CreditsManager = (function() {
       if (lockedOverlay) lockedOverlay.style.display = 'none';
 
       block.classList.add('unlocked');
-      block.classList.remove('locked');
+      block.classList.remove('locked', 'pro-report-block--locked');
+      block.removeAttribute('data-locked');
     } else {
       // Report is locked - show appropriate buttons
       if (unlockedBadge) unlockedBadge.style.display = 'none';
@@ -602,7 +599,8 @@ window.CreditsManager = (function() {
         }
       }
 
-      block.classList.add('locked');
+      block.classList.add('locked', 'pro-report-block--locked');
+      block.setAttribute('data-locked', '');
       block.classList.remove('unlocked');
     }
   }

@@ -210,7 +210,8 @@
       const REPORT_TYPE_LABELS = {
         seo: 'SEO', cro: 'CRO', gdpr: 'GDPR', cwv: 'CWV',
         'tag-intelligence': 'Tag-Intelligence', 'local-seo': 'Local-SEO',
-        'broken-links': 'Broken-Links', 'ip-reputation': 'IP-Reputation'
+        'broken-links': 'Broken-Links', 'ip-reputation': 'IP-Reputation',
+        'competitive': 'Competitive'
       };
       const typeLabel = REPORT_TYPE_LABELS[reportType] ||
         reportType.charAt(0).toUpperCase() + reportType.slice(1);
@@ -247,11 +248,7 @@
     console.log('[PDF Export] data-report-id attr:', document.body.getAttribute('data-report-id'));
     console.log('[PDF Export] URL report_id param:', new URLSearchParams(window.location.search).get('report_id'));
 
-    // Check demo domains first (quick check, no server call needed)
-    if (window.ProAccess?.isDemoDomain?.()) {
-      console.log('[PDF Export] Access granted: demo domain');
-      return true;
-    }
+    // Demo domain auto-unlock removed - use ProReportBlock.hasAccess() for all access checks
 
     // First try local hasAccess check (includes session-verified purchases)
     // This handles the case right after payment return when server may not have synced yet
@@ -271,13 +268,43 @@
         // Force refresh to get latest server state
         const serverResult = await window.ProReportBlock.verifyAccessViaServer(reportId, true);
         console.log('[PDF Export] Server-verified access check:', { reportId, serverResult });
-        if (serverResult.canExport) {
+        if (serverResult.canExport || serverResult.canViewPro) {
           console.log('[PDF Export] Access granted via server check');
           return true;
         }
       } catch (error) {
         console.warn('[PDF Export] Server access check failed:', error);
       }
+    }
+
+    // Final fallback: Fetch billing status directly (same endpoint PricingModal uses)
+    // This handles edge cases where the check-access endpoint fails but billing status works
+    try {
+      const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+      if (token && reportId) {
+        console.log('[PDF Export] Trying billing status fallback...');
+        const resp = await fetch('/api/billing/status', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (resp.ok) {
+          const billing = await resp.json();
+          console.log('[PDF Export] Billing status fallback:', {
+            plan: billing.plan,
+            purchasedReports: billing.purchasedReports,
+            reportId
+          });
+          if (billing.plan === 'pro' || billing.plan === 'day_pass') {
+            console.log('[PDF Export] Access granted via billing status (pro/day_pass)');
+            return true;
+          }
+          if (billing.purchasedReports && billing.purchasedReports.includes(reportId)) {
+            console.log('[PDF Export] Access granted via billing status (purchased report)');
+            return true;
+          }
+        }
+      }
+    } catch (error) {
+      console.warn('[PDF Export] Billing status fallback failed:', error);
     }
 
     console.log('[PDF Export] Access denied - no valid access found');
@@ -307,7 +334,9 @@
       'fonts': 'fonts',
       'font-scanner': 'fonts',
       'enhanced-fonts': 'fonts',
-      'tag-intelligence': 'tag-intelligence'
+      'tag-intelligence': 'tag-intelligence',
+      'competitive-analysis': 'competitive',
+      'competitive': 'competitive'
     };
 
     // Check page attribute first
@@ -323,6 +352,7 @@
     if (path.includes('accessibility') || path.includes('a11y')) return 'accessibility';
     if (path.includes('font')) return 'fonts';
     if (path.includes('tag-intelligence')) return 'tag-intelligence';
+    if (path.includes('competitive')) return 'competitive';
 
     // Default to performance (most common)
     console.warn('[PDF Export] Could not detect report type, defaulting to performance');

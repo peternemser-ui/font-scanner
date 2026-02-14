@@ -3,6 +3,23 @@
  * Handles login and registration forms
  */
 
+function t(key, fallback, params = {}) {
+  let value = fallback;
+  if (window.i18n && typeof window.i18n.t === 'function') {
+    const translated = window.i18n.t(key);
+    if (translated !== key) {
+      value = translated;
+    }
+  }
+  if (params && typeof value === 'string') {
+    Object.keys(params).forEach(param => {
+      const regex = new RegExp(`\\{\\{?${param}\\}?\\}`, 'g');
+      value = value.replace(regex, params[param]);
+    });
+  }
+  return value;
+}
+
 // Tab switching
 document.querySelectorAll('.auth-tab').forEach(tab => {
   tab.addEventListener('click', () => {
@@ -59,7 +76,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e) => {
 
   try {
     loginBtn.disabled = true;
-    loginBtn.textContent = 'Logging in...';
+    loginBtn.textContent = t('auth.loggingIn', 'Logging in...');
 
     const response = await fetch('/api/auth/login', {
       method: 'POST',
@@ -120,7 +137,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
 
   try {
     registerBtn.disabled = true;
-    registerBtn.textContent = 'Creating account...';
+    registerBtn.textContent = t('auth.creatingAccount', 'Creating account...');
 
     const response = await fetch('/api/auth/register', {
       method: 'POST',
@@ -219,7 +236,7 @@ document.getElementById('forgotPasswordForm')?.addEventListener('submit', async 
 
   try {
     forgotBtn.disabled = true;
-    forgotBtn.textContent = 'Sending...';
+    forgotBtn.textContent = t('auth.sending', 'Sending...');
 
     const response = await fetch('/api/auth/forgot-password', {
       method: 'POST',
@@ -263,7 +280,7 @@ document.getElementById('forgotPasswordForm')?.addEventListener('submit', async 
     showError('forgot', error.message);
   } finally {
     forgotBtn.disabled = false;
-    forgotBtn.textContent = 'Send Reset Link';
+    forgotBtn.textContent = t('auth.sendResetLink', 'Send Reset Link');
   }
 });
 
@@ -325,7 +342,7 @@ document.getElementById('resetPasswordForm')?.addEventListener('submit', async (
 
   try {
     resetBtn.disabled = true;
-    resetBtn.textContent = 'Resetting...';
+    resetBtn.textContent = t('auth.resetting', 'Resetting...');
 
     const response = await fetch('/api/auth/reset-password', {
       method: 'POST',

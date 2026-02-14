@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>i18n Loading Test</title>
+  <style>
+    body { font-family: system-ui; padding: 20px; max-width: 800px; margin: 0 auto; }
+    .test { margin: 10px 0; padding: 10px; border: 1px solid #ddd; border-radius: 4px; }
+    .pass { background: #d4edda; border-color: #c3e6cb; }
+    .fail { background: #f8d7da; border-color: #f5c6cb; }
+    button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+    pre { background: #f5f5f5; padding: 10px; overflow-x: auto; }
+  </style>
+</head>
+<body>
+  <h1>🔍 i18n Translation Loading Test</h1>
+  <p>This page tests if translations are loading correctly in different languages.</p>
+  
+  <div>
+    <button onclick="testLanguage('en')">Test English</button>
+    <button onclick="testLanguage('es')">Test Spanish</button>
+    <button onclick="testLanguage('zh')">Test Chinese</button>
+    <button onclick="testLanguage('fr')">Test French</button>
+    <button onclick="testLanguage('de')">Test German</button>
+    <button onclick="testLanguage('pt')">Test Portuguese</button>
+    <button onclick="testLanguage('ja')">Test Japanese</button>
+  </div>
+  
+  <div id="results"></div>
+  
+  <script src="/i18n.js"></script>
+  <script>
+    async function testLanguage(lang) {
+      const results = document.getElementById('results');
+      results.innerHTML = `<h2>Testing ${lang.toUpperCase()}...</h2>`;
+      
+      try {
+        // Set language
+        await window.i18n.setLanguage(lang);
+        
+        // Test keys that appear in the daily limit modal
+        const testKeys = [
+          'usage.scansExhausted',
+          'usage.scansResetAt',
+          'usage.needOneReport',
+          'pricing.oneTime',
+          'pricing.dayPass',
+          'pricing.dayPassDesc',
+          'pricing.proMonthly',
+          'pricing.monthlyDesc',
+          'pricing.proAnnual',
+          'pricing.annualDesc',
+          'pricing.save60',
+          'pricing.moneyBackGuarantee',
+          'auth.alreadyHaveAccount',
+          'auth.signIn'
+        ];
+        
+        let html = `<h3>✅ Successfully loaded ${lang.toUpperCase()}</h3>`;
+        html += `<p><strong>Current language:</strong> ${window.i18n.currentLanguage}</p>`;
+        
+        html += '<table border="1" cellpadding="5" style="width:100%; border-collapse: collapse;">';
+        html += '<tr><th>Key</th><th>Translation</th><th>Status</th></tr>';
+        
+        testKeys.forEach(key => {
+          const translation = window.i18n.t(key);
+          const isTranslated = translation !== key && !translation.startsWith('[');
+          const status = isTranslated ? '✅' : '❌';
+          const rowClass = isTranslated ? '' : 'style="background: #ffebee;"';
+          
+          html += `<tr ${rowClass}>`;
+          html += `<td><code>${key}</code></td>`;
+          html += `<td>${translation}</td>`;
+          html += `<td>${status}</td>`;
+          html += '</tr>';
+        });
+        
+        html += '</table>';
+        results.innerHTML = html;
+        
+      } catch (err) {
+        results.innerHTML = `<div class="test fail">
+          <h3>❌ Error loading ${lang.toUpperCase()}</h3>
+          <pre>${err.message}\n${err.stack}</pre>
+        </div>`;
+      }
+    }
+    
+    // Auto-test English on load
+    window.addEventListener('DOMContentLoaded', () => {
+      if (window.i18n && window.i18n.initialized) {
+        testLanguage('en');
+      } else {
+        setTimeout(() => testLanguage('en'), 500);
+      }
+    });
+  </script>
+</body>
+</html>

@@ -170,6 +170,20 @@ window.addEventListener('sm:restoreScanResults', (e) => {
   }
 });
 
+// Handle billing re-scan: user returned from Stripe but cached results weren't available
+window.addEventListener('sm:billingRescan', (e) => {
+  const { reportId: purchasedReportId, url: scanUrl } = e.detail || {};
+  const analyzerKey = window.SM_ANALYZER_KEY || '';
+  if (!analyzerKey.includes('cro')) return;
+  console.log('[CRO] Billing re-scan requested:', { purchasedReportId, scanUrl });
+  window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+  window.__smBillingRescanHandled = true;
+  const urlInput = document.getElementById('url');
+  if (scanUrl && urlInput) urlInput.value = scanUrl;
+  if (purchasedReportId) document.body.setAttribute('data-report-id', purchasedReportId);
+  analyzeCRO({ preserveReportId: true });
+});
+
 // Analysis steps are now defined by getAnalysisSteps() function above
 
 /**
@@ -185,15 +199,9 @@ async function analyzeCRO(options = {}) {
     return;
   }
 
-  // Auto-detect if we should preserve report_id: if there's an existing one and user has paid access
+  // NOTE: Auto-preserve is ONLY used when explicitly requested via options.preserveReportId
+  // (e.g., sm:billingRescan handler passes preserveReportId: true).
   const existingReportId = document.body.getAttribute('data-report-id');
-  if (!preserveReportId && existingReportId && window.ProReportBlock?.hasAccess?.(existingReportId)) {
-    console.log('[CRO] Auto-preserving purchased report_id:', existingReportId);
-    preserveReportId = true;
-  }
-
-  // CRITICAL: Save the existing report_id BEFORE cleanup if we need to preserve it
-  // This is used for billing return re-scans where the purchased report_id must be kept
   const preservedReportId = preserveReportId ? existingReportId : null;
   if (preservedReportId) {
     console.log('[CRO] Preserving purchased report_id:', preservedReportId);
@@ -298,7 +306,8 @@ async function analyzeCRO(options = {}) {
       const errorData = await response.json().catch(() => ({}));
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        return;
       }
       // Server returns { error: "Error", message: "actual error message" }
       const errorMsg = errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed - please try again');
@@ -466,7 +475,7 @@ function displayResults(data) {
     },
     {
       id: 'report-recommendations',
-      title: t('reports.cro.sections.fixCodeRecommendations', 'Fix Code + Recommendations'),
+      title: t('reports.cro.sections.fixCodeRecommendations', 'Recommendations'),
       scoreTextRight: data.score ? `${data.score}/100` : null,
       isPro: true,
       locked: !isUnlocked,
@@ -508,7 +517,7 @@ function displayResults(data) {
         proBlock: true,
         proBlockOptions: {
           context: 'cro',
-          features: ['pdf', 'csv', 'share'],
+          features: ['pdf', 'excel', 'csv', 'share'],
           title: t('reports.common.unlockReport', 'Unlock Report'),
           subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
           reportId
@@ -597,6 +606,12 @@ function revealCROProContent() {
 
   const lockedSections = document.querySelectorAll('.report-scope .accordion-section[data-accordion-section="report-recommendations"].locked');
   lockedSections.forEach(section => section.classList.remove('locked'));
+
+  // Remove locked state from Pro Report Blocks (show accent border after unlock)
+  document.querySelectorAll('.pro-report-block--locked, .pro-report-block[data-locked]').forEach((block) => {
+    block.classList.remove('pro-report-block--locked');
+    block.removeAttribute('data-locked');
+  });
 }
 
 function attachCROScreenshotRetry(imgEl, baseUrl, options = {}) {
@@ -679,34 +694,16 @@ function renderCROTakeActionSection(url) {
       <div class="section">
         ${window.ProReportBlock.render({
           context: 'cro',
-          features: ['pdf', 'csv', 'share'],
+          features: ['pdf', 'excel', 'csv', 'share'],
           title: t('reports.common.unlockReport', 'Unlock Report'),
           subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.')
         })}
       </div>
     `;
   } else {
-    // Fallback/legacy code
-    return `
-      <div class="section">
-        <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
-          <div style="display: flex; align-items: center; gap: 0.5rem;">
-            <span style="color: var(--accent-primary); font-weight: 600;">${t('reports.common.takeAction', 'Take Action')}</span>
-            <span style="color: #666; font-size: 0.9rem;">${t('reports.cro.exportOrShare', 'Export or share this CRO report')}</span>
-          </div>
-          <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-            <button data-action="copy-share-link" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-              ${t('reports.common.shareLink', 'Share Link')}
-            </button>
-            <button data-action="download-csv" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
-              ${t('reports.common.exportData', 'Export Data')}
-            </button>
-          </div>
-        </div>
-      </div>
-    `;
+    const opts = { context: 'cro', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, share link, export data, and fix packs for this scan.' };
+    const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
+    return '<div class="section"><div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div></div>';
   }
 }
 
@@ -826,7 +823,7 @@ function renderCROFixAccordion(fix, index) {
       </div>
 
       <div class="cro-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderCROFixTabs(fix, accordionId)}
         </div>
       </div>

@@ -588,7 +588,7 @@ class AccessibilityAnalyzerService {
       recommendations.push({
         priority: 'high',
         title: 'Multiple Color Contrast Issues',
-        description: `Found ${contrast.issuesCount} elements with insufficient color contrast. WCAG requires a minimum ratio of 4.5:1 for normal text.`,
+        description: `Found ${contrast.issuesCount} elements with insufficient color contrast. WCAG 2.1 Success Criterion 1.4.3 requires a minimum contrast ratio of 4.5:1 for normal-sized text and 3:1 for large text (18px bold or 24px regular). Low contrast makes text difficult or impossible to read for users with low vision, color blindness, or anyone viewing the page in bright sunlight. This is one of the most common accessibility failures and affects a significant portion of the population—approximately 8% of men and 0.5% of women have some form of color vision deficiency. Fixing contrast issues improves readability for all users and is often required for legal compliance under the ADA, Section 508, and the European Accessibility Act.`,
         wcagReference: '1.4.3 Contrast (Minimum)',
         impact: 'Users with low vision or color blindness may have difficulty reading content.',
         solution: 'Increase contrast between text and background colors. Use online contrast checkers to validate your color scheme.'
@@ -600,7 +600,7 @@ class AccessibilityAnalyzerService {
       recommendations.push({
         priority: 'high',
         title: 'Missing Focus Indicators',
-        description: `${keyboard.missingFocusIndicators.length} interactive elements lack visible focus indicators.`,
+        description: `${keyboard.missingFocusIndicators.length} interactive elements lack visible focus indicators. Focus indicators are the visual outlines or highlights that show which element is currently selected when navigating with a keyboard. Without them, keyboard-only users—including people with motor disabilities who cannot use a mouse—have no way to tell where they are on the page. This creates a completely unusable experience for those users, similar to navigating a website with an invisible mouse cursor. Many browsers provide a default focus ring, but CSS resets or custom styles often remove it without adding a replacement.`,
         wcagReference: '2.4.7 Focus Visible',
         impact: 'Keyboard-only users cannot see which element has focus, making navigation difficult.',
         solution: 'Add visible focus styles using CSS :focus pseudo-class. Ensure focus indicators have sufficient contrast.'
@@ -612,7 +612,7 @@ class AccessibilityAnalyzerService {
       recommendations.push({
         priority: 'high',
         title: 'Missing Form Labels',
-        description: `${aria.missingLabels.length} form elements are missing accessible labels.`,
+        description: `${aria.missingLabels.length} form elements are missing accessible labels. Every form input—text fields, checkboxes, dropdowns, and buttons—must have a programmatically associated label so that assistive technologies can announce its purpose to the user. Without labels, screen reader users hear only the input type (such as "edit text" or "checkbox") with no indication of what information is expected. This makes forms effectively unusable for visually impaired users and also affects voice control users who navigate by speaking label text. Properly labeled form elements also improve usability for sighted users because clicking the label focuses or toggles the associated input.`,
         wcagReference: '4.1.2 Name, Role, Value',
         impact: 'Screen reader users cannot understand the purpose of form inputs.',
         solution: 'Add aria-label attributes or associate label elements with form inputs using for/id attributes.'
@@ -624,7 +624,7 @@ class AccessibilityAnalyzerService {
       recommendations.push({
         priority: 'medium',
         title: 'Improper Heading Structure',
-        description: `Heading structure is ${aria.headingStructure.toLowerCase()}. This affects document outline and navigation.`,
+        description: `Heading structure is ${aria.headingStructure.toLowerCase()}. Headings (H1 through H6) create a hierarchical outline of your page content, much like a table of contents in a book. Screen reader users frequently navigate by jumping between headings to quickly find the section they need—this is one of the most common navigation methods for assistive technology users. When headings are missing, skipped, or out of order, this navigation breaks down and users must listen through all content linearly to find what they are looking for. Proper heading structure also helps search engines understand your content hierarchy and improves SEO.`,
         wcagReference: '1.3.1 Info and Relationships',
         impact: 'Screen reader users rely on heading structure to navigate and understand page hierarchy.',
         solution: 'Ensure headings follow a logical sequence (h1 > h2 > h3) without skipping levels. Include one h1 per page.'
@@ -636,7 +636,7 @@ class AccessibilityAnalyzerService {
       recommendations.push({
         priority: 'medium',
         title: 'Missing ARIA Landmarks',
-        description: 'No semantic landmarks found. Page lacks clear structure for assistive technologies.',
+        description: 'No semantic landmarks were found on this page. ARIA landmarks (such as banner, navigation, main, and contentinfo) define the major regions of a page and allow screen reader users to jump directly to the section they need. Without landmarks, users must tab through every element sequentially to reach the content they are looking for, which is extremely time-consuming on complex pages. Using semantic HTML5 elements like <header>, <nav>, <main>, and <footer> automatically creates these landmarks without any extra code. Adding landmarks is one of the simplest and most impactful accessibility improvements you can make.',
         wcagReference: '1.3.1 Info and Relationships',
         impact: 'Screen reader users cannot quickly navigate to major page sections.',
         solution: 'Use semantic HTML5 elements (header, nav, main, aside, footer) or add appropriate ARIA landmark roles.'
@@ -649,7 +649,7 @@ class AccessibilityAnalyzerService {
       recommendations.push({
         priority: 'high',
         title: 'Mobile Accessibility Gap',
-        description: `Mobile accessibility score is ${mobileDiff} points lower than desktop. Mobile users may face additional barriers.`,
+        description: `Mobile accessibility score is ${mobileDiff} points lower than desktop, indicating that mobile users face significant additional barriers. With over 60% of web traffic coming from mobile devices, a poor mobile accessibility experience affects the majority of your visitors. Common causes include touch targets that are too small (the WCAG minimum is 44x44 CSS pixels), text that is not properly resizable, and interactive elements that are placed too close together. Mobile screen readers like VoiceOver and TalkBack handle layout differently than their desktop counterparts, so elements that work on desktop may fail on mobile. Closing this gap ensures an equitable experience across all devices and prevents legal exposure under accessibility regulations.`,
         impact: 'Mobile users with disabilities experience a degraded experience compared to desktop users.',
         solution: 'Review touch target sizes, viewport configuration, and mobile-specific interactions. Ensure minimum touch target size of 44x44 pixels.'
       });

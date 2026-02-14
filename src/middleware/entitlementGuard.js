@@ -90,28 +90,69 @@ async function requirePdfExport(req, res, next) {
   }
 
   const reportId = req.body?.reportId || req.body?.report_id ||
+                   req.body?.reportData?.reportId ||
                    req.query?.reportId || req.query?.report_id;
 
   try {
     const entitlements = await resolveEntitlements({ userId: req.user.id });
 
-    if (!canExportReport(entitlements, reportId)) {
-      logger.info('PDF export denied', {
-        userId: req.user.id.substring(0, 8) + '...',
-        reportId,
-        plan: entitlements.plan
-      });
-
-      return res.status(403).json({
-        error: 'pdf_export_denied',
-        message: 'PDF export requires a Pro subscription or report purchase.',
-        code: 'PDF_EXPORT_DENIED',
-        upgradeUrl: '/upgrade.html'
-      });
+    if (canExportReport(entitlements, reportId)) {
+      req.entitlements = entitlements;
+      return next();
     }
 
-    req.entitlements = entitlements;
-    next();
+    // Fallback 1: If client has session-verified purchase headers,
+    // let the controller handle verification (it has Stripe fallback logic)
+    const sessionVerified = req.headers['x-session-verified'] === 'true';
+    const sessionCheckoutId = req.headers['x-checkout-session-id'];
+    if (sessionVerified && sessionCheckoutId) {
+      logger.info('PDF export: entitlement check failed but session-verified headers present, deferring to controller', {
+        userId: req.user.id.substring(0, 8) + '...',
+        reportId
+      });
+      req.entitlements = entitlements;
+      return next();
+    }
+
+    // Fallback 2: Check billing_sessions for a recent paid session
+    // Handles webhook race condition where purchase is recorded in billing_sessions
+    // but not yet in report_purchases
+    if (reportId) {
+      try {
+        const { getDatabase } = require('../db');
+        const db = getDatabase();
+        const recentSession = await db.get(
+          `SELECT session_id FROM billing_sessions
+           WHERE report_id = ? AND payment_status = 'paid'
+           AND purchase_type = 'single_report'
+           ORDER BY completed_at DESC LIMIT 1`,
+          [reportId]
+        );
+        if (recentSession) {
+          logger.info('PDF export: entitlement check failed but paid billing session found, allowing', {
+            userId: req.user.id.substring(0, 8) + '...',
+            reportId
+          });
+          req.entitlements = entitlements;
+          return next();
+        }
+      } catch (e) {
+        logger.warn('PDF export: billing session fallback check failed', { error: e.message });
+      }
+    }
+
+    logger.info('PDF export denied', {
+      userId: req.user.id.substring(0, 8) + '...',
+      reportId,
+      plan: entitlements.plan
+    });
+
+    return res.status(403).json({
+      error: 'pdf_export_denied',
+      message: 'PDF export requires a Pro subscription or report purchase.',
+      code: 'PDF_EXPORT_DENIED',
+      upgradeUrl: '/upgrade.html'
+    });
   } catch (error) {
     logger.error('PDF export check failed', { error: error.message });
     return res.status(500).json({

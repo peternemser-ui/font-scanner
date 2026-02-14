@@ -301,6 +301,20 @@ window.addEventListener('entitlements:updated', () => {
   }
 });
 
+// Handle billing re-scan: user returned from Stripe but cached results weren't available
+window.addEventListener('sm:billingRescan', (e) => {
+  const { reportId: purchasedReportId, url: scanUrl } = e.detail || {};
+  const analyzerKey = window.SM_ANALYZER_KEY || '';
+  if (!analyzerKey.includes('accessibility')) return; // Not for this analyzer
+  console.log('[Accessibility] Billing re-scan requested:', { purchasedReportId, scanUrl });
+  window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+  window.__smBillingRescanHandled = true;
+  const urlInput = document.getElementById('urlInput');
+  if (scanUrl && urlInput) urlInput.value = scanUrl;
+  if (purchasedReportId) document.body.setAttribute('data-report-id', purchasedReportId);
+  analyzeAccessibility({ preserveReportId: true });
+});
+
 /**
  * MEMORY MANAGEMENT: Clean up previous scan data to prevent memory leaks
  * Called before each new scan to free up memory from prior results
@@ -364,15 +378,11 @@ async function analyzeAccessibility(options = {}) {
     return;
   }
 
-  // Auto-detect if we should preserve report_id: if there's an existing one and user has paid access
+  // NOTE: Auto-preserve is ONLY used when explicitly requested via options.preserveReportId
+  // (e.g., sm:billingRescan handler passes preserveReportId: true).
+  // Previously, auto-detect logic here caused false positives where stale purchased
+  // reportIds from previous scans would grant pro access on fresh unpaid scans.
   const existingReportId = document.body.getAttribute('data-report-id');
-  if (!preserveReportId && existingReportId && window.ProReportBlock?.hasAccess?.(existingReportId)) {
-    console.log('[Accessibility] Auto-preserving purchased report_id:', existingReportId);
-    preserveReportId = true;
-  }
-
-  // CRITICAL: Save the existing report_id BEFORE cleanup if we need to preserve it
-  // This is used for billing return re-scans where the purchased report_id must be kept
   const preservedReportId = preserveReportId ? existingReportId : null;
   if (preservedReportId) {
     console.log('[Accessibility] Preserving purchased report_id:', preservedReportId);
@@ -489,7 +499,8 @@ async function analyzeAccessibility(options = {}) {
       const error = await response.json();
       if (error.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = error.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        return;
       }
       throw new Error(error.message || error.error || t('reports.common.analysisFailed', 'Analysis failed'));
     }
@@ -849,7 +860,7 @@ function displayAccessibilityResults(resultData) {
     }),
     ReportAccordion.createSection({
       id: 'report-recommendations',
-      title: t('reports.common.fixCodeRecommendations', 'Fix Code + Recommendations'),
+      title: t('reports.common.fixCodeRecommendations', 'Recommendations'),
       isPro: true,
       locked: !userHasPro(),
       context: 'accessibility',
@@ -895,34 +906,14 @@ function displayAccessibilityResults(resultData) {
   if (window.ProReportBlock && window.ProReportBlock.render) {
     actionsFooter.innerHTML = window.ProReportBlock.render({
       context: 'accessibility',
-      features: ['pdf', 'csv', 'share'],
+      features: ['pdf', 'excel', 'csv', 'share'],
       title: t('reports.common.unlockReport', 'Unlock Report'),
       subtitle: t('reports.common.unlockSubtitle', 'PDF export, share link, export data, and fix packs for this scan.')
     });
   } else {
-    // Fallback/legacy code
-    actionsFooter.innerHTML = `
-      <div style="display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid rgba(var(--accent-primary-rgb), 0.2);">
-        <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="color: var(--accent-primary); font-weight: 600;">${t('reports.common.takeAction', 'Take Action')}</span>
-          <span style="color: #666; font-size: 0.9rem;">${t('reports.accessibility.exportOrShare', 'Export or share this accessibility report')}</span>
-        </div>
-        <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
-          <button data-action="export-pdf" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(var(--accent-primary-rgb), 0.4); background: rgba(var(--accent-primary-rgb), 0.1); color: var(--accent-primary); cursor: pointer; font-weight: 600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/></svg>
-            ${t('reports.common.pdfReport', 'PDF Report')}
-          </button>
-          <button data-action="copy-share-link" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
-            ${t('reports.common.shareLink', 'Share Link')}
-          </button>
-          <button data-action="download-csv" style="display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.6rem 1rem; border-radius: 6px; border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05); color: #fff; cursor: pointer; font-weight: 600;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7v10a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V7"/><path d="M3 7h18"/><path d="M10 11h4"/><path d="M10 15h4"/><path d="M6 11h.01"/><path d="M6 15h.01"/><path d="M18 11h.01"/><path d="M18 15h.01"/></svg>
-            ${t('reports.common.exportData', 'Export Data')}
-          </button>
-        </div>
-      </div>
-    `;
+    const opts = { context: 'accessibility', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, share link, export data, and fix packs for this scan.' };
+    const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
+    actionsFooter.innerHTML = '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>';
   }
   reportScope.appendChild(actionsFooter);
 
@@ -1132,7 +1123,7 @@ function createWCAGLevelsSection(results) {
         box-shadow: 0 4px 15px ${currentLevel === 'AAA' ? 'rgba(0,217,255,0.2)' : currentLevel === 'AA' ? 'rgba(0,255,65,0.2)' : currentLevel === 'A' ? 'rgba(255,215,0,0.2)' : 'rgba(255,68,68,0.2)'};
       ">
         <h3 style="color: ${currentLevel === 'AAA' ? '#00d9ff' : currentLevel === 'AA' ? '#00ff41' : currentLevel === 'A' ? '#ffd700' : '#ff4444'}; margin: 0 0 1rem 0; font-size: 1.4rem;">
-          ${currentLevel === 'None' ? '✗ ' + t('reports.accessibility.notCompliant', 'Not Compliant') : '✓ ' + t('reports.accessibility.meetsWcagLevel', 'Meets WCAG Level') + ' ' + currentLevel}
+          ${currentLevel === 'None' ? '✗ ' + t('reports.accessibility.notCompliant', 'Not Compliant') : '✓ ' + t('reports.accessibility.meetsWcagLevel', 'Meets WCAG Level {{level}}', {level: currentLevel})}
         </h3>
         <p style="color: #c0c0c0; font-size: 1rem; margin: 0;">
           ${currentLevel === 'None' ? t('reports.accessibility.notCompliantDesc', 'This website does not meet minimum WCAG accessibility standards. Immediate improvements are needed.') :
@@ -1748,7 +1739,7 @@ function renderARIAContent(aria) {
 
       <h3 style="color: #bb86fc; margin: 1rem 0 0.5rem 0;">>> ${t('reports.accessibility.ariaSemanticHtml', 'ARIA & Semantic HTML')}</h3>
       <p style="color: #c0c0c0; margin-bottom: 1.5rem;">
-        ${t('reports.accessibility.ariaDescription', 'Proper use of ARIA attributes and semantic HTML elements ensures screen readers can understand and navigate your content.')}
+        ${t('reports.accessibility.ariaDescription', 'ARIA (Accessible Rich Internet Applications) is a set of HTML attributes that define how your UI is exposed to assistive technologies like screen readers. Combined with semantic HTML elements (<nav>, <main>, <header>, etc.), ARIA landmarks, labels, and roles let assistive tools understand your page structure and allow users to navigate efficiently. Issues here directly affect users who rely on these technologies.')}
       </p>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
@@ -1889,7 +1880,7 @@ function renderA11yFixAccordion(rec, index, fullResults) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${rec.title || t('reports.accessibility.accessibilityIssue', 'Accessibility Issue')}</h4>
+            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${(typeof translateA11yFixTitle === 'function' ? translateA11yFixTitle(rec.title) : rec.title) || t('reports.accessibility.accessibilityIssue', 'Accessibility Issue')}</h4>
             <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${rec.wcagReference || t('reports.accessibility.wcag21Compliance', 'WCAG 2.1 Compliance')}</p>
           </div>
         </div>
@@ -1908,7 +1899,7 @@ function renderA11yFixAccordion(rec, index, fullResults) {
       </div>
 
       <div class="a11y-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderA11yFixTabs(rec, accordionId, fullResults)}
         </div>
       </div>
@@ -1951,11 +1942,11 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
     <!-- Summary Tab -->
     <div class="a11y-fix-tab-content active" id="${accordionId}-summary">
       <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
-        ${rec.description || t('reports.common.noDescriptionAvailable', 'No description available')}
+        ${(typeof translateA11yFixDescription === 'function' ? translateA11yFixDescription(rec.title, rec.description) : rec.description) || t('reports.common.noDescriptionAvailable', 'No description available')}
       </p>
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
         <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.expectedImpact', 'Expected Impact')}</div>
-        <div style="color: #c0c0c0; font-size: 0.9rem;">${rec.impact || t('reports.accessibility.defaultImpact', 'Improved accessibility and user experience for all users')}</div>
+        <div style="color: #c0c0c0; font-size: 0.9rem;">${(typeof translateA11yFixImpact === 'function' ? translateA11yFixImpact(rec.title, rec.impact) : rec.impact) || t('reports.accessibility.defaultImpact', 'Improved accessibility and user experience for all users')}</div>
       </div>
     </div>
 
@@ -2642,9 +2633,14 @@ function ensureA11yFixStyles() {
 
 // -------- Monetization actions (gated) --------
 function ensureAccessibilityProAccess() {
+  const reportId = document.body?.getAttribute('data-report-id') || '';
+  // Check single report purchase via ProReportBlock (includes Pro, Day Pass, and purchased reports)
+  if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
+    if (window.ProReportBlock.hasAccess(reportId)) return true;
+  }
   const domain = getCurrentDomain();
-  if (window.ProAccess && window.ProAccess.hasProAccess(domain)) {
-    return true;
+  if (window.ProAccess && typeof window.ProAccess.hasProAccess === 'function') {
+    if (window.ProAccess.hasProAccess(domain)) return true;
   }
   if (window.ExportGate && window.ExportGate.isPro()) {
     return true;
@@ -2654,8 +2650,8 @@ function ensureAccessibilityProAccess() {
 }
 
 async function exportAccessibilityPDF() {
-  if (!ensureAccessibilityProAccess()) return;
-
+  // Access check is handled by exportReportPDF() → checkExportAccess() which does
+  // both local and async server-verified checks. No sync gate needed here.
   const results = window.currentAccessibilityResults;
   if (!results) {
     alert(t('reports.common.noResultsToExport', 'No scan results to export. Run a scan first.'));

@@ -59,18 +59,43 @@ function getI18nString(lang, keyPath, defaultVal) {
 /**
  * Build the translated PDF footer HTML for a given locale + report type.
  */
-function buildPdfFooter(lang, reportType) {
-  const reportLabel = getReportLabel(reportType);
+function buildPdfFooter(lang, reportType, analyzedUrl) {
+  const reportLabel = getI18nReportLabel(lang, reportType);
   const reportTitle = getI18nString(lang, 'common.pdf.cover.reportTitle', '{{type}} Analysis Report')
     .replace('{{type}}', reportLabel);
   const pageWord = getI18nString(lang, 'common.pdf.footer.page', 'Page');
   const ofWord = getI18nString(lang, 'common.pdf.footer.of', 'of');
+  const siteUrl = analyzedUrl ? ` &mdash; ${analyzedUrl}` : '';
 
   return `
     <div style="font-size:7px; color:#999; width:100%; display:flex; justify-content:space-between; padding:4px 16px; font-family:system-ui,-apple-system,sans-serif; box-sizing:border-box;">
-      <span>Site Mechanic &mdash; ${reportTitle}</span>
+      <span>sitemechanic.io &mdash; ${reportTitle}${siteUrl}</span>
       <span>${pageWord} <span class="pageNumber"></span> ${ofWord} <span class="totalPages"></span></span>
     </div>`;
+}
+
+/**
+ * Build the translated PDF header HTML for a given locale + report type.
+ */
+function buildPdfHeader(lang, reportType) {
+  const reportLabel = getI18nReportLabel(lang, reportType);
+  const reportTitle = getI18nString(lang, 'common.pdf.cover.reportTitle', '{{type}} Analysis Report')
+    .replace('{{type}}', reportLabel);
+
+  return `
+    <div style="font-size: 8px; color: #999; width: 100%; text-align: center; padding: 4px 0; font-family: system-ui, sans-serif;">
+      sitemechanic.io &mdash; ${reportTitle}
+    </div>`;
+}
+
+/**
+ * Get a translated report label for a given locale + report type.
+ * Falls back to REPORT_LABEL_MAP (English) if no i18n key exists.
+ */
+function getI18nReportLabel(lang, reportType) {
+  const i18nKey = `common.pdf.reportLabel.${reportType}`;
+  const fallback = REPORT_LABEL_MAP[reportType] || reportType.charAt(0).toUpperCase() + reportType.slice(1);
+  return getI18nString(lang, i18nKey, fallback);
 }
 
 /**
@@ -94,6 +119,7 @@ const REPORT_LABEL_MAP = {
   'local-seo': 'Local SEO',
   'mobile-analyzer': 'Mobile',
   'competitive-analysis': 'Competitive',
+  'competitive': 'Competitive',
   'hosting-analyzer': 'Hosting',
   'site-crawler': 'Site Crawler',
   'performance-hub': 'Performance',
@@ -914,7 +940,6 @@ async function generatePdfFromUrl(options) {
           // Localized strings
           const coverSubtitle = _t('common.pdf.cover.subtitle', 'web diagnostics & performance analysis');
           const coverTitle = _t('common.pdf.cover.reportTitle', '{{type}} Analysis Report', { type: reportLabel });
-          const coverConfidential = _t('common.pdf.cover.confidential', 'Confidential — Prepared for site owner');
           const coverOverallScore = _t('common.pdf.cover.overallScore', 'Overall Score');
 
           // --- Build cover page ---
@@ -929,14 +954,14 @@ async function generatePdfFromUrl(options) {
             align-items: center;
             min-height: 85vh;
             text-align: center;
-            padding: 64px 40px;
+            padding: 64px 40px 264px;
             background: #ffffff;
             font-family: ${fontStack};
           `;
           coverPage.innerHTML = `
             <div style="margin-bottom: 48px;">
               <div style="margin-bottom: 32px;">
-                ${logo ? `<div style="width: 220px; margin: 0 auto;">${logo}</div>` : `<div style="font-family: ${fontStack}; font-size: 14px; text-transform: uppercase; letter-spacing: 3px; color: #dd3838; font-weight: 700;">Site Mechanic</div>`}
+                ${logo ? `<div style="width: 440px; margin: 0 auto;">${logo}</div>` : `<div style="font-family: ${fontStack}; font-size: 28px; text-transform: uppercase; letter-spacing: 3px; color: #dd3838; font-weight: 700;">Site Mechanic</div>`}
               </div>
               <div style="font-family: ${fontStack}; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.1em; color: #6b7280; margin-bottom: 24px; font-weight: 500;">
                 ${coverSubtitle}
@@ -951,7 +976,6 @@ async function generatePdfFromUrl(options) {
             </div>
             <div style="font-family: ${fontStack}; color: #6b7280; font-size: 0.875rem; line-height: 2; font-weight: 400;">
               <div>${dateStr}</div>
-              <div style="margin-top: 8px;">${coverConfidential}</div>
             </div>
             ${reportData?.overallScore !== undefined ? `
               <div style="margin-top: 48px; padding: 24px 40px; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;">
@@ -1143,14 +1167,8 @@ async function generatePdfFromUrl(options) {
           preferCSSPageSize: true,
           margin: { top: '18mm', right: '12mm', bottom: '18mm', left: '12mm' },
           displayHeaderFooter: true,
-          headerTemplate: `
-            <div style="font-size: 8px; color: #999; width: 100%; text-align: center; padding: 4px 0; font-family: system-ui, sans-serif;">
-              Site Mechanic &mdash; ${reportLabel} Analysis Report
-            </div>`,
-          footerTemplate: `
-            <div style="font-size: 8px; color: #999; width: 100%; text-align: center; padding: 4px 0; font-family: system-ui, sans-serif;">
-              Page <span class="pageNumber"></span> of <span class="totalPages"></span>
-            </div>`
+          headerTemplate: buildPdfHeader(lang, reportType),
+          footerTemplate: buildPdfFooter(lang, reportType, analyzedUrl)
         });
 
         logger.info('PDF generated successfully', { filepath, filename, lang });
@@ -1302,7 +1320,7 @@ async function generatePdfFromTemplate(options) {
         await page.waitForTimeout(500);
 
         // 12. Generate PDF
-        const footerHtml = buildPdfFooter(lang, reportType);
+        const footerHtml = buildPdfFooter(lang, reportType, analyzedUrl);
         await page.pdf({
           path: filepath,
           format: 'A4',

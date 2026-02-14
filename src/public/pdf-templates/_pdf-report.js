@@ -88,19 +88,59 @@
   }
 
   /* ---------------------------------------------------------------------------
-     REPORT LABEL MAP
+     REPORT LABEL MAP (resolved via i18n at render time)
      --------------------------------------------------------------------------- */
-  var REPORT_LABELS = {
-    seo: 'SEO', cro: 'CRO', gdpr: 'GDPR', cwv: 'CWV',
-    security: 'Security', performance: 'Performance',
-    accessibility: 'Accessibility', fonts: 'Fonts',
-    'tag-intelligence': 'Tag Intelligence', 'enhanced-fonts': 'Enhanced Fonts',
-    'brand-consistency': 'Brand Consistency', 'broken-links': 'Broken Links',
-    'ip-reputation': 'IP Reputation', 'local-seo': 'Local SEO',
-    'mobile-analyzer': 'Mobile', competitive: 'Competitive',
-    'hosting-analyzer': 'Hosting', 'site-crawler': 'Site Crawler',
-    'core-web-vitals': 'Core Web Vitals'
-  };
+  function getReportLabel(reportType) {
+    var labelKeys = {
+      seo: t('common.pdf.reportLabel.seo', 'SEO'),
+      cro: t('common.pdf.reportLabel.cro', 'CRO'),
+      gdpr: t('common.pdf.reportLabel.gdpr', 'GDPR'),
+      cwv: t('common.pdf.reportLabel.cwv', 'CWV'),
+      security: t('common.pdf.reportLabel.security', 'Security'),
+      performance: t('common.pdf.reportLabel.performance', 'Performance'),
+      accessibility: t('common.pdf.reportLabel.accessibility', 'Accessibility'),
+      fonts: t('common.pdf.reportLabel.fonts', 'Fonts'),
+      'tag-intelligence': t('common.pdf.reportLabel.tag-intelligence', 'Tag Intelligence'),
+      'enhanced-fonts': t('common.pdf.reportLabel.enhanced-fonts', 'Enhanced Fonts'),
+      'brand-consistency': t('common.pdf.reportLabel.brand-consistency', 'Brand Consistency'),
+      'broken-links': t('common.pdf.reportLabel.broken-links', 'Broken Links'),
+      'ip-reputation': t('common.pdf.reportLabel.ip-reputation', 'IP Reputation'),
+      'local-seo': t('common.pdf.reportLabel.local-seo', 'Local SEO'),
+      'mobile-analyzer': t('common.pdf.reportLabel.mobile-analyzer', 'Mobile'),
+      competitive: t('common.pdf.reportLabel.competitive', 'Competitive'),
+      'hosting-analyzer': t('common.pdf.reportLabel.hosting', 'Hosting'),
+      'site-crawler': t('common.pdf.reportLabel.site-crawler', 'Site Crawler'),
+      'core-web-vitals': t('common.pdf.reportLabel.core-web-vitals', 'Core Web Vitals')
+    };
+    return labelKeys[reportType] || reportType;
+  }
+
+  /** Translate impact level */
+  function translateImpact(impact) {
+    var impactLabels = {
+      critical: t('common.pdf.impact.critical', 'Critical'),
+      serious: t('common.pdf.impact.serious', 'Serious'),
+      moderate: t('common.pdf.impact.moderate', 'Moderate'),
+      minor: t('common.pdf.impact.minor', 'Minor')
+    };
+    return impactLabels[(impact || '').toLowerCase()] || impact;
+  }
+
+  /** Translate status value */
+  function translateStatus(status) {
+    var statusLabels = {
+      pass: t('common.pdf.status.pass', 'Pass'),
+      fail: t('common.pdf.status.fail', 'Fail'),
+      optimal: t('common.pdf.status.optimal', 'Optimal'),
+      review: t('common.pdf.status.review', 'Review'),
+      missing: t('common.pdf.status.missing', 'Missing'),
+      warning: t('common.pdf.status.warning', 'Warning'),
+      good: t('common.pdf.status.good', 'Good'),
+      configured: t('common.pdf.status.configured', 'Configured'),
+      'not configured': t('common.pdf.status.notConfigured', 'Not Configured')
+    };
+    return statusLabels[(status || '').toLowerCase()] || status;
+  }
 
   /* ---------------------------------------------------------------------------
      PdfReport API
@@ -152,7 +192,7 @@
         return;
       }
 
-      var reportLabel = REPORT_LABELS[_reportType] || _reportType;
+      var reportLabel = getReportLabel(_reportType);
       var analyzedUrl = reportData.url || reportData.normalizedUrl || reportData.baseUrl || '';
 
       // Render shared pages
@@ -161,7 +201,7 @@
 
       // Call report-specific renderer
       if (typeof _renderer === 'function') {
-        _renderer(reportData, { t: t, esc: esc, truncate: truncate, scoreClass: scoreClass, scoreColor: scoreColor, scoreGrade: scoreGrade, lang: _lang });
+        _renderer(reportData, { t: t, esc: esc, truncate: truncate, scoreClass: scoreClass, scoreColor: scoreColor, scoreGrade: scoreGrade, lang: _lang, translateImpact: translateImpact, translateStatus: translateStatus });
       }
 
       // Generate TOC from rendered sections
@@ -192,7 +232,6 @@
         '<div class="pdf-cover__url">' + wrapUrl(analyzedUrl) + '</div>' +
         '<div class="pdf-cover__meta">' +
           '<div>' + formatDate(new Date(), _lang) + '</div>' +
-          '<div style="margin-top:6px;">' + esc(t('common.pdf.cover.confidential', 'Confidential \u2014 Prepared for site owner')) + '</div>' +
         '</div>' +
         (overall !== null ? (
           '<div class="pdf-cover__score-box">' +
@@ -612,7 +651,10 @@
         if (!section) return;
         if (section.issues && section.issues.length > 0) {
           section.issues.forEach(function (issue) {
-            allIssues.push(typeof issue === 'string' ? issue : (issue.message || issue.title || issue.text || JSON.stringify(issue)));
+            allIssues.push(typeof issue === 'string' ? issue
+              : (issue.message || issue.title || issue.text
+                 || ((issue.type || '') + (issue.description ? ' — ' + issue.description : ''))
+                 || JSON.stringify(issue)));
           });
         }
         if (section.passed || (section.score !== undefined && section.score >= 80)) allPasses.push(key);
@@ -650,7 +692,7 @@
             html +=
               '<li class="pdf-finding">' +
                 '<span class="pdf-finding__icon pdf-finding__icon--pass">\u2713</span>' +
-                '<span class="pdf-finding__text">' + esc(categoryNameMap[key] || key) + ' — ' + t('seo.report.status.pass', 'Pass') + '</span>' +
+                '<span class="pdf-finding__text">' + esc(categoryNameMap[key] || key) + ' — ' + t('common.pdf.status.pass', 'Pass') + '</span>' +
               '</li>';
           });
         }
@@ -705,8 +747,9 @@
     /** Render a status badge */
     renderStatus: function (status, label) {
       var cls = 'pdf-status pdf-status--';
-      if (/pass|optimal|valid|good|configured|present|set|found|detected|enabled|yes/i.test(status)) cls += 'pass';
-      else if (/fail|missing|critical|no\b|not found|not detected/i.test(status)) cls += 'fail';
+      // Check negative/fail patterns FIRST to prevent "notFound" matching "found"
+      if (/not\s*found|not\s*detected|not\s*configured|not\s*present|not\s*set|not\s*enabled|fail|missing|critical|\bno\b/i.test(status)) cls += 'fail';
+      else if (/pass|optimal|valid|good|configured|present|set|found|detected|enabled|yes/i.test(status)) cls += 'pass';
       else if (/warn|review|fair|multiple/i.test(status)) cls += 'warn';
       else if (/info|none|na|n\/a/i.test(status)) cls += 'na';
       else cls += 'info';
@@ -731,8 +774,9 @@
     /** Render an issue card */
     renderIssue: function (text, severity) {
       severity = severity || 'info';
+      var label = translateImpact(severity) || translateStatus(severity) || severity.toUpperCase();
       return '<div class="pdf-issue pdf-issue--' + severity + '">' +
-        '<span class="pdf-issue__severity pdf-issue__severity--' + severity + '">' + severity.toUpperCase() + '</span>' +
+        '<span class="pdf-issue__severity pdf-issue__severity--' + severity + '">' + label + '</span>' +
         '<span class="pdf-issue__text">' + esc(text) + '</span>' +
       '</div>';
     },
@@ -797,7 +841,8 @@
     helpers: {
       t: t, esc: esc, truncate: truncate,
       scoreClass: scoreClass, scoreColor: scoreColor, scoreGrade: scoreGrade,
-      wrapUrl: wrapUrl, formatDate: formatDate
+      wrapUrl: wrapUrl, formatDate: formatDate,
+      translateImpact: translateImpact, translateStatus: translateStatus
     }
   };
 

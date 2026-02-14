@@ -731,7 +731,9 @@ class TagAnalyzer {
       issues.push({
         type: 'migration',
         severity: 'info',
+        messageKey: 'tagIntelligence.issues.ga4AndUniversal',
         message: 'Both GA4 and Universal Analytics detected. Universal Analytics is deprecated (July 2023).',
+        recommendationKey: 'tagIntelligence.recommendations.migrateToGa4',
         recommendation: 'Complete migration to GA4'
       });
     }
@@ -747,7 +749,9 @@ class TagAnalyzer {
       issues.push({
         type: 'conflict',
         severity: 'warning',
+        messageKey: 'tagIntelligence.issues.duplicateTracking',
         message: 'Google Analytics loaded both via GTM and hardcoded. This may cause duplicate tracking.',
+        recommendationKey: 'tagIntelligence.recommendations.useGtmExclusively',
         recommendation: 'Use GTM exclusively for GA or remove hardcoded implementation'
       });
     }
@@ -760,7 +764,9 @@ class TagAnalyzer {
       issues.push({
         type: 'compliance',
         severity: 'high',
+        messageKey: 'tagIntelligence.issues.noConsentManagement',
         message: 'Advertising tags detected without consent management solution',
+        recommendationKey: 'tagIntelligence.recommendations.implementConsent',
         recommendation: 'Implement consent management (OneTrust, Cookiebot, etc.) to comply with GDPR/CCPA'
       });
     }
@@ -893,7 +899,10 @@ class TagAnalyzer {
     if (advertisingCookies.length > 0 && consentCookies.length === 0) {
       issues.push({
         severity: 'high',
+        messageKey: 'tagIntelligence.issues.advertisingCookiesNoConsent',
+        messageParams: { count: advertisingCookies.length },
         message: `${advertisingCookies.length} advertising cookie(s) set without detected consent`,
+        recommendationKey: 'tagIntelligence.recommendations.implementConsentBeforeCookies',
         recommendation: 'Implement consent management before setting advertising cookies'
       });
     }
@@ -903,7 +912,10 @@ class TagAnalyzer {
     if (insecureCookies.length > 0) {
       issues.push({
         severity: 'warning',
+        messageKey: 'tagIntelligence.issues.insecureCookies',
+        messageParams: { count: insecureCookies.length },
         message: `${insecureCookies.length} cookie(s) without Secure flag`,
+        recommendationKey: 'tagIntelligence.recommendations.addSecureFlag',
         recommendation: 'Add Secure flag to cookies to prevent transmission over HTTP'
       });
     }
@@ -913,7 +925,10 @@ class TagAnalyzer {
     if (sameSiteIssues.length > 0) {
       issues.push({
         severity: 'warning',
+        messageKey: 'tagIntelligence.issues.sameSiteNoSecure',
+        messageParams: { count: sameSiteIssues.length },
         message: `${sameSiteIssues.length} cookie(s) with SameSite=None but no Secure flag`,
+        recommendationKey: 'tagIntelligence.recommendations.sameSiteRequiresSecure',
         recommendation: 'Cookies with SameSite=None require the Secure attribute'
       });
     }
@@ -1375,15 +1390,19 @@ class TagAnalyzer {
       issues.push({
         type: 'blocking_scripts',
         severity: 'warning',
+        messageKey: 'tagIntelligence.issues.blockingScripts',
+        messageParams: { count: syncScripts },
         message: `${syncScripts} synchronous scripts may block page rendering`
       });
     }
-    
+
     if (headScripts > 10) {
       score -= 10;
       issues.push({
         type: 'head_scripts',
         severity: 'info',
+        messageKey: 'tagIntelligence.issues.headScripts',
+        messageParams: { count: headScripts },
         message: `${headScripts} scripts in <head> - consider moving non-critical scripts to body`
       });
     }

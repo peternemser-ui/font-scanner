@@ -519,7 +519,14 @@ app.use('/api/scans', scanRoutes);
 /**
  * Helper to wrap analyzer handlers with scan usage tracking
  * Increments usage count and records scan in database after successful response
+ *
+ * Deduplication: The dashboard fires 5 parallel API calls for one user-initiated
+ * scan, all sharing the same `scanStartedAt` timestamp. We use this to ensure
+ * a single user action only increments the scan counter once.
  */
+const _recentScanKeys = new Map(); // dedupKey -> timestamp
+const _SCAN_DEDUP_WINDOW_MS = 30000; // 30 seconds
+
 function withUsageTracking(handler) {
   return async (req, res, next) => {
     // Track original json method
@@ -529,7 +536,24 @@ function withUsageTracking(handler) {
       if (!data?.error) {
         const userId = req.user?.id || null;
         const anonId = req.anonId || req.cookies?.anon_id || null;
-        if (userId || anonId) {
+
+        // Deduplicate: only count once per scanStartedAt per user
+        const scanStartedAt = req.body?.scanStartedAt || null;
+        const identity = userId || anonId || 'unknown';
+        const dedupKey = scanStartedAt ? `${identity}:${scanStartedAt}` : null;
+        const now = Date.now();
+
+        // Prune expired entries
+        for (const [key, ts] of _recentScanKeys) {
+          if (now - ts > _SCAN_DEDUP_WINDOW_MS) _recentScanKeys.delete(key);
+        }
+
+        const alreadyCounted = dedupKey && _recentScanKeys.has(dedupKey);
+        if (dedupKey && !alreadyCounted) {
+          _recentScanKeys.set(dedupKey, now);
+        }
+
+        if (!alreadyCounted && (userId || anonId)) {
           usageService.incrementScanUsage(userId, anonId).catch(err => {
             logger.error('Failed to increment scan usage', { error: err.message });
           });

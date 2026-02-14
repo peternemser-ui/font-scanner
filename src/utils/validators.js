@@ -18,6 +18,8 @@ const testUrlReachability = async (url, timeout = 5000) => {
     const urlObj = new URL(url);
     const client = urlObj.protocol === 'https:' ? https : http;
     
+    const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
     const headProbe = () => new Promise((resolve) => {
       const req = client.request({
         hostname: urlObj.hostname,
@@ -26,18 +28,22 @@ const testUrlReachability = async (url, timeout = 5000) => {
         method: 'HEAD',
         timeout: timeout,
         headers: {
-          'User-Agent': 'Font-Scanner/1.0'
+          'User-Agent': UA,
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
         }
       }, (res) => {
-        resolve(res.statusCode >= 200 && res.statusCode < 400);
+        // Any HTTP response means the server is reachable (even 403/503 from WAFs).
+        // Puppeteer with stealth can handle challenge pages that simple HTTP can't.
+        resolve(res.statusCode > 0);
       });
-      
+
       req.on('error', () => resolve(false));
       req.on('timeout', () => {
         req.destroy();
         resolve(false);
       });
-      
+
       req.end();
     });
 
@@ -53,15 +59,16 @@ const testUrlReachability = async (url, timeout = 5000) => {
         method: 'GET',
         timeout: timeout,
         headers: {
-          'User-Agent': 'Font-Scanner/1.0',
+          'User-Agent': UA,
           'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9',
           'Accept-Encoding': 'identity',
           'Range': 'bytes=0-1024', // fetch only first KB to minimize bandwidth
           'Connection': 'close'
         }
       }, (res) => {
-        // Consider reachable if we get any 2xx/3xx back
-        resolve(res.statusCode >= 200 && res.statusCode < 400);
+        // Any HTTP response means the server is reachable
+        resolve(res.statusCode > 0);
         res.resume(); // discard body
       });
       req.on('error', () => resolve(false));

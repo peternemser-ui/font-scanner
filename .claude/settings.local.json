@@ -73,7 +73,24 @@
       "Bash(for f in en ja es fr de pt zh ru)",
       "Bash(do echo -n \"$f.json: \")",
       "Bash(for f in ja es fr de pt zh ru)",
-      "Bash(do echo \"=== $f.json ===\")"
+      "Bash(do echo \"=== $f.json ===\")",
+      "Bash(git checkout:*)",
+      "Bash(npm:*)",
+      "Bash(for f in layout.css components.css ui.css css/components/reportShell.css css/components/reportAccordion.css css/components/pro-report-block.css css/components/pricing-modal.css css/components/modal.css css/components/screenshot-lightbox.css css/components/ui-states.css css/components/report-jump.css design-tokens.css css/components/page-shell.css)",
+      "Bash(do if [ ! -f \"src/public/$f\" ])",
+      "Bash(then echo \"MISSING CSS: $f\")",
+      "Bash(\"F:\\\\dev\\\\font-scanner\\\\update-cache-busters.ps1\" << 'PSEOF'\nGet-ChildItem -Path \"F:\\\\dev\\\\font-scanner\\\\src\\\\public\" -Filter \"*.html\" -Recurse | ForEach-Object {\n    $content = Get-Content $_.FullName -Raw\n    $newContent = $content -replace 'ProReportBlock\\\\.js\\\\?v=[^\"'']+', 'ProReportBlock.js?v=20260210b'\n    $newContent = $newContent -replace 'performance-hub-script\\\\.js\\\\?v=[^\"'']+', 'performance-hub-script.js?v=20260210b'\n    $newContent = $newContent -replace 'reportAccordion\\\\.js\\\\?v=[^\"'']+', 'reportAccordion.js?v=20260210b'\n    $newContent = $newContent -replace 'PageShell\\\\.js\\\\?v=[^\"'']+', 'PageShell.js?v=20260210b'\n    $newContent = $newContent -replace 'seo-script\\\\.js\\\\?v=[^\"'']+', 'seo-script.js?v=20260210b'\n    $newContent = $newContent -replace 'security-script\\\\.js\\\\?v=[^\"'']+', 'security-script.js?v=20260210b'\n    $newContent = $newContent -replace 'enhanced-fonts-script\\\\.js\\\\?v=[^\"'']+', 'enhanced-fonts-script.js?v=20260210b'\n    $newContent = $newContent -replace 'brand-consistency-script\\\\.js\\\\?v=[^\"'']+', 'brand-consistency-script.js?v=20260210b'\n    $newContent = $newContent -replace 'broken-links-script\\\\.js\\\\?v=[^\"'']+', 'broken-links-script.js?v=20260210b'\n    $newContent = $newContent -replace 'competitive-script\\\\.js\\\\?v=[^\"'']+', 'competitive-script.js?v=20260210b'\n    $newContent = $newContent -replace 'cro-script\\\\.js\\\\?v=[^\"'']+', 'cro-script.js?v=20260210b'\n    $newContent = $newContent -replace 'gdpr-compliance-script\\\\.js\\\\?v=[^\"'']+', 'gdpr-compliance-script.js?v=20260210b'\n    $newContent = $newContent -replace 'ip-reputation-script\\\\.js\\\\?v=[^\"'']+', 'ip-reputation-script.js?v=20260210b'\n    $newContent = $newContent -replace 'local-seo-script\\\\.js\\\\?v=[^\"'']+', 'local-seo-script.js?v=20260210b'\n    $newContent = $newContent -replace 'site-crawler-script\\\\.js\\\\?v=[^\"'']+', 'site-crawler-script.js?v=20260210b'\n    $newContent = $newContent -replace 'scan-context\\\\.js\\\\?v=[^\"'']+', 'scan-context.js?v=20260210b'\n    $newContent = $newContent -replace 'reportShell\\\\.js\\\\?v=[^\"'']+', 'reportShell.js?v=20260210b'\n    if \\($content -ne $newContent\\) {\n        Set-Content $_.FullName -Value $newContent -NoNewline\n        Write-Host \"Updated: $\\($_.Name\\)\"\n    }\n}\nPSEOF)",
+      "Bash(\"F:\\\\dev\\\\font-scanner\\\\verify-cache-busters.ps1\" << 'PSEOF'\nGet-ChildItem -Path \"F:\\\\dev\\\\font-scanner\\\\src\\\\public\" -Filter \"*.html\" -Recurse | Select-String \"ProReportBlock.js\\\\?v=\" | ForEach-Object { Write-Host \"$\\($_.Filename\\):  $\\($_.Line.Trim\\(\\)\\)\" }\nPSEOF)",
+      "Bash(git diff:*)",
+      "Bash(python3:*)",
+      "Bash(do python -c \"import json; json.load\\(open\\(''$f'', encoding=''utf-8''\\)\\); print\\(''VALID: $f''\\)\")",
+      "Bash(python:*)",
+      "Bash(where:*)",
+      "Bash(npx --yes better-sqlite3-cli:*)",
+      "Bash(cmd /c \"taskkill /F /PID 46328\")",
+      "Bash(for f in de es fr ja pt ru zh)",
+      "Bash(git --version)",
+      "Bash(git reset:*)"
     ]
   }
 }

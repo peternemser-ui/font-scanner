@@ -420,6 +420,93 @@ function renderUnifiedHeader(appTitle, subtitle) {
 }
 
 /**
+ * Dynamically load scan-context.js if ScanContext isn't already available.
+ * Returns a promise that resolves once window.ScanContext exists.
+ * No-op if the script is already loaded.
+ */
+function ensureScanContextLoaded() {
+  if (window.ScanContext) return Promise.resolve();
+
+  return new Promise((resolve) => {
+    // Another call may have already started the load
+    if (document.getElementById('smScanContextScript')) {
+      // Script tag exists but hasn't executed yet — poll briefly
+      const t0 = Date.now();
+      const poll = setInterval(() => {
+        if (window.ScanContext || Date.now() - t0 > 3000) {
+          clearInterval(poll);
+          resolve();
+        }
+      }, 50);
+      return;
+    }
+
+    const s = document.createElement('script');
+    s.id = 'smScanContextScript';
+    s.src = '/scan-context.js';
+    s.onload = () => resolve();
+    s.onerror = () => {
+      console.warn('[nav-template] Failed to load scan-context.js');
+      resolve(); // resolve anyway so the rest of init still runs
+    };
+    document.head.appendChild(s);
+  });
+}
+
+/**
+ * Pre-fill URL inputs from ScanContext so users don't have to re-type.
+ *
+ * Rules:
+ *  - Skip if ?url= query param is present (existing behaviour takes priority)
+ *  - Skip if ScanContext is empty
+ *  - Skip if the URL input already has a value
+ *
+ * For PageShell pages (seo-analyzer, security-analyzer, performance-hub) the
+ * form is rendered AFTER nav-template runs, so we use a MutationObserver that
+ * disconnects as soon as the input is found (5-second safety timeout).
+ */
+function prefillUrlFromScanContext() {
+  // Never override an explicit ?url= param
+  if (new URLSearchParams(window.location.search).get('url')) return;
+
+  if (!window.ScanContext || !window.ScanContext.exists()) return;
+
+  const context = window.ScanContext.get();
+  if (!context || !context.url) return;
+
+  const KNOWN_INPUT_IDS = [
+    'dashboardUrlInput', 'seoUrlInput', 'urlInput',
+    'url', 'perfUrlInput', 'cwvUrlInput', 'yourUrl'
+  ];
+
+  function tryFill() {
+    for (const id of KNOWN_INPUT_IDS) {
+      const el = document.getElementById(id);
+      if (el && !el.value.trim()) {
+        el.value = context.url;
+        return true;
+      }
+    }
+    return false;
+  }
+
+  // Immediate attempt — works for pages that already have their form in the DOM
+  if (tryFill()) return;
+
+  // Deferred attempt via MutationObserver for PageShell pages
+  const observer = new MutationObserver(() => {
+    if (tryFill()) {
+      observer.disconnect();
+      clearTimeout(timeout);
+    }
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Safety: disconnect after 5 s regardless
+  const timeout = setTimeout(() => observer.disconnect(), 5000);
+}
+
+/**
  * Render the scan context bar showing current domain and actions
  * This appears below the header when there's an active scan context
  */
@@ -436,13 +523,25 @@ function renderScanContextBar() {
   const context = window.ScanContext.get();
   const domain = context.domain || 'Unknown site';
   const timeSince = window.ScanContext.getTimeSinceScan() || '';
-  
+
+  // Build the "scanned ago" text — use i18n if initialised, English fallback otherwise
+  let scannedAgoText = '';
+  if (timeSince) {
+    const i18nReady = window.i18n && window.i18n.initialized && typeof window.i18n.t === 'function';
+    if (i18nReady) {
+      const translated = window.i18n.t('dashboard.results.scannedAgo', { time: timeSince });
+      scannedAgoText = (translated && translated !== 'dashboard.results.scannedAgo') ? translated : '\u2022 Scanned ' + timeSince;
+    } else {
+      scannedAgoText = '\u2022 Scanned ' + timeSince;
+    }
+  }
+
   bar.innerHTML = `
     <div class="scan-context-content">
       <div class="scan-context-info">
         <span class="scan-context-label" data-i18n="dashboard.results.currentlyAnalyzing">Currently analyzing:</span>
         <span class="scan-context-domain">${domain}</span>
-        ${timeSince ? `<span class="scan-context-time">${window.t ? window.t('dashboard.results.scannedAgo', {time: timeSince}) : '• Scanned ' + timeSince}</span>` : ''}
+        ${timeSince ? `<span class="scan-context-time" data-scan-time-since="${timeSince}">${scannedAgoText}</span>` : ''}
       </div>
       <div class="scan-context-actions">
         <button data-action="change-site" class="scan-context-btn scan-context-btn-secondary">
@@ -948,13 +1047,13 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
     }
   });
   
-  // Initialize scan context bar
+  // Initialize scan context bar (async — loads scan-context.js if needed)
   addScanContextStyles();
-  renderScanContextBar();
-  
-  // Listen for scan context updates
-  window.addEventListener('scanContextUpdated', () => {
+  ensureScanContextLoaded().then(() => {
     renderScanContextBar();
+    prefillUrlFromScanContext();
+    window.addEventListener('scanContextUpdated', renderScanContextBar);
+    window.addEventListener('languageChanged', renderScanContextBar);
   });
 
   // Initialize theme controls after footer is ready

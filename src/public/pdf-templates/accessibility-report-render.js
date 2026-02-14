@@ -17,6 +17,8 @@
     var esc = utils.esc;
     var truncate = utils.truncate;
     var scoreClass = utils.scoreClass;
+    var translateImpact = utils.translateImpact || function(v) { return v; };
+    var translateStatus = utils.translateStatus || function(v) { return v; };
 
     var sectionIndex = 1;
 
@@ -71,8 +73,8 @@
           return [
             esc(criteriaLabels[key] || key),
             status === 'pass'
-              ? PR.renderStatus('pass', t('seo.report.status.pass', 'Pass'))
-              : PR.renderStatus('fail', t('seo.report.status.fail', 'Fail'))
+              ? PR.renderStatus('pass', t('common.pdf.status.pass', 'Pass'))
+              : PR.renderStatus('fail', t('common.pdf.status.fail', 'Fail'))
           ];
         });
 
@@ -128,7 +130,7 @@
             '<span class="pdf-table__truncate">' + esc(truncate(issue.selector || '', 50)) + '</span>',
             esc(issue.ratio ? issue.ratio.toFixed(2) + ':1' : '-'),
             esc(issue.required || '4.5:1'),
-            PR.renderStatus('fail', t('seo.report.status.fail', 'Fail'))
+            PR.renderStatus('fail', t('common.pdf.status.fail', 'Fail'))
           ];
         });
 
@@ -222,8 +224,9 @@
       // Heading structure
       if (d.headingStructure) {
         var hsStatus = d.headingStructure === 'Good' ? 'pass' : 'warning';
+        var hsLabel = translateStatus(d.headingStructure) || d.headingStructure;
         html += '<div style="margin:12px 0;">';
-        html += PR.renderStatus(hsStatus, t('accessibility.report.aria.headingStructureLabel', 'Heading Structure') + ': ' + d.headingStructure);
+        html += PR.renderStatus(hsStatus, t('accessibility.report.aria.headingStructureLabel', 'Heading Structure') + ': ' + hsLabel);
         html += '</div>';
       }
 
@@ -235,7 +238,7 @@
           return [
             esc(issue.type || ''),
             esc(issue.description || ''),
-            '<span style="color:' + impactColor + ';font-weight:600;">' + esc((issue.impact || 'moderate').charAt(0).toUpperCase() + (issue.impact || 'moderate').slice(1)) + '</span>'
+            '<span style="color:' + impactColor + ';font-weight:600;">' + esc(translateImpact(issue.impact || 'moderate')) + '</span>'
           ];
         });
 

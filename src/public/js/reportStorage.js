@@ -161,11 +161,21 @@
   function showStoredReportBanner(metadata) {
     if (!metadata?.savedAt) return;
 
+    // Defer until i18n translations are loaded (avoids English fallback on race condition)
+    if (window.i18n && !window.i18n.initialized) {
+      window.addEventListener('languageChanged', () => showStoredReportBanner(metadata), { once: true });
+      return;
+    }
+
     const savedAt = new Date(metadata.savedAt);
     const timeAgo = getTimeAgo(savedAt);
 
     // Check if banner already exists
     if (document.getElementById('stored-report-banner')) return;
+
+    // Remove payment success banner if present (avoids duplicate alerts)
+    const paymentBanner = document.getElementById('sm-payment-success-banner');
+    if (paymentBanner) paymentBanner.remove();
 
     const banner = document.createElement('div');
     banner.id = 'stored-report-banner';
@@ -184,18 +194,18 @@
       styles.textContent = `
         .stored-report-banner {
           position: fixed;
-          top: 140px;
+          top: 190px;
           left: 50%;
           transform: translateX(-50%);
           z-index: 9999;
           display: flex;
           align-items: center;
-          gap: 1rem;
-          padding: 1rem 1.5rem;
+          gap: 0.75rem;
+          padding: 0.4rem 0.8rem;
           background: #1a2332;
           border: 1px solid rgba(91, 244, 231, 0.4);
           border-radius: 10px;
-          font-size: 1.125rem;
+          font-size: 0.925rem;
           color: #fff;
           box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
         }
@@ -316,6 +326,12 @@
    */
   function showReportUnavailableBanner(options = {}) {
     const { url, analyzerType, onRescan } = options;
+
+    // Defer until i18n translations are loaded (avoids English fallback on race condition)
+    if (window.i18n && !window.i18n.initialized) {
+      window.addEventListener('languageChanged', () => showReportUnavailableBanner(options), { once: true });
+      return;
+    }
 
     // Check if banner already exists
     if (document.getElementById('report-unavailable-banner')) return;

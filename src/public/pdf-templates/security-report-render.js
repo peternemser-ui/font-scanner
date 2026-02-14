@@ -17,6 +17,7 @@
     var esc = utils.esc;
     var truncate = utils.truncate;
     var scoreClass = utils.scoreClass;
+    var translateImpact = utils.translateImpact || function(v) { return v; };
 
     var sectionIndex = 1;
 
@@ -174,7 +175,7 @@
         d.issues.slice(0, 15).forEach(function (issue) {
           var sev = (issue.severity || 'medium').toLowerCase();
           html += '<div class="pdf-issue pdf-issue--' + sev + '">' +
-            '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc((issue.severity || 'MEDIUM').toUpperCase()) + '</span>' +
+            '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc(translateImpact(issue.severity || 'medium')) + '</span>' +
             '<span class="pdf-issue__text"><strong>' + esc(issue.title || '') + '</strong>' +
             (issue.description ? ' — ' + esc(issue.description) : '') + '</span>' +
           '</div>';

@@ -251,7 +251,7 @@ const ExportGate = {
    * @returns {boolean} Whether the action was performed
    */
   gatedAction(action) {
-    if (this.isPro()) {
+    if (this.isPro() || this.hasAccess()) {
       action();
       return true;
     }
@@ -325,7 +325,7 @@ const ExportGate = {
           right: 0.75rem;
           background: none;
           border: none;
-          color: #888;
+          color: #ccc;
           font-size: 1.5rem;
           cursor: pointer;
           line-height: 1;
@@ -336,16 +336,19 @@ const ExportGate = {
           margin-bottom: 1rem;
         }
         .export-paywall-title {
-          color: #fff;
+          color: #ffffff !important;
           font-size: 1.5rem;
           font-weight: 700;
           margin: 0 0 0.75rem 0;
         }
         .export-paywall-text {
-          color: #aaa;
+          color: #d1d5db;
           font-size: 1rem;
           line-height: 1.5;
           margin: 0 0 1.25rem 0;
+        }
+        .export-paywall-text strong {
+          color: #ffffff;
         }
         .export-paywall-features {
           display: grid;
@@ -354,7 +357,7 @@ const ExportGate = {
           margin-bottom: 1.5rem;
         }
         .export-paywall-feature {
-          color: #00ff41;
+          color: #6ee7b7;
           font-size: 0.9rem;
           text-align: left;
           padding: 0.25rem 0;
@@ -375,7 +378,7 @@ const ExportGate = {
           box-shadow: 0 8px 20px rgba(0, 255, 65, 0.3);
         }
         .export-paywall-note {
-          color: #666;
+          color: #9ca3af;
           font-size: 0.8rem;
           margin: 1rem 0 0 0;
         }
@@ -525,13 +528,8 @@ const ProAccess = {
   hasProAccess(domainOverride) {
     console.log('[ProAccess] hasProAccess called with domainOverride:', domainOverride);
 
-    // Auto-unlock for demo domains
-    const isDemo = this.isDemoDomain(domainOverride);
-    console.log('[ProAccess] isDemoDomain check:', isDemo);
-    if (isDemo) {
-      console.log('[ProAccess] hasProAccess: TRUE via demo domain');
-      return true;
-    }
+    // Demo domain auto-unlock REMOVED - pro content requires actual payment on ALL domains.
+    // Use ProReportBlock.hasAccess() for proper payment/subscription verification.
 
     const entitlement = this.getEntitlement();
     console.log('[ProAccess] getEntitlement result:', entitlement);

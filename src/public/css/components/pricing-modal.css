@@ -389,10 +389,11 @@ body.sm-modal-open {
 
 .sm-plan-card__header {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 6px;
   margin-bottom: 10px;
+  min-height: 4.5rem; /* Ensures prices align across cards when titles wrap */
 }
 
 .sm-plan-card__name {
@@ -832,6 +833,10 @@ body.sm-modal-open {
    ============================================ */
 
 @media (max-width: 540px) {
+  .sm-plan-card__header {
+    min-height: auto; /* Single-column layout: no alignment needed */
+  }
+
   .sm-modal__overlay {
     padding: 0;
     align-items: flex-end;

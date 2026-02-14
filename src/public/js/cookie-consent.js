@@ -118,7 +118,7 @@
       '  background: none; border: none; cursor: pointer;',
       '  color: var(--color-text-muted, #888); font-size: 0.8125rem;',
       '  text-decoration: underline; text-underline-offset: 2px;',
-      '  padding: 0.25rem 0;',
+      '  padding: 0.5rem 1.25rem;',
       '}',
       '.cc-details {',
       '  display: none; width: 100%;',
@@ -179,6 +179,39 @@
   var detailsEl = null;
   var analyticsToggle = null;
 
+  // References to translatable elements so we can update them later
+  var elMsg = null;
+  var elPrivacyLink = null;
+  var elAcceptBtn = null;
+  var elRejectBtn = null;
+  var elCustomizeBtn = null;
+  var elEssentialName = null;
+  var elEssentialDesc = null;
+  var elAlwaysOn = null;
+  var elAnalyticsName = null;
+  var elAnalyticsDesc = null;
+  var elSaveBtn = null;
+
+  /**
+   * Re-apply translations to all translatable elements.
+   * Called on languageChanged or when i18n becomes available after initial render.
+   */
+  function updateTexts() {
+    if (!bannerEl) return;
+    if (elMsg) elMsg.textContent = t('message', 'We use cookies to improve your experience and analyze site traffic. ');
+    if (elPrivacyLink) elPrivacyLink.textContent = t('privacyPolicy', 'Privacy Policy');
+    if (elAcceptBtn) elAcceptBtn.textContent = t('acceptAll', 'Accept All');
+    if (elRejectBtn) elRejectBtn.textContent = t('rejectAll', 'Reject All');
+    if (elCustomizeBtn) elCustomizeBtn.textContent = t('customize', 'Customize');
+    if (elEssentialName) elEssentialName.textContent = t('essential', 'Essential');
+    if (elEssentialDesc) elEssentialDesc.textContent = t('essentialDesc', 'Required for the site to function (session, preferences).');
+    if (elAlwaysOn) elAlwaysOn.textContent = t('alwaysOn', 'Always on');
+    if (elAnalyticsName) elAnalyticsName.textContent = t('analytics', 'Analytics');
+    if (elAnalyticsDesc) elAnalyticsDesc.textContent = t('analyticsDesc', 'Help us understand how visitors use the site (Google Analytics).');
+    if (elSaveBtn) elSaveBtn.textContent = t('savePreferences', 'Save Preferences');
+    bannerEl.setAttribute('aria-label', t('ariaLabel', 'Cookie consent'));
+  }
+
   function createBanner() {
     if (bannerEl) return bannerEl;
     injectStyles();
@@ -194,38 +227,38 @@
     // Text
     var textEl = document.createElement('p');
     textEl.className = 'cc-text';
-    var msg = document.createTextNode(
+    elMsg = document.createTextNode(
       t('message', 'We use cookies to improve your experience and analyze site traffic. ')
     );
-    textEl.appendChild(msg);
-    var learnLink = document.createElement('a');
-    learnLink.href = '/privacy.html#cookies';
-    learnLink.textContent = t('privacyPolicy', 'Privacy Policy');
-    textEl.appendChild(learnLink);
+    textEl.appendChild(elMsg);
+    elPrivacyLink = document.createElement('a');
+    elPrivacyLink.href = '/privacy.html#cookies';
+    elPrivacyLink.textContent = t('privacyPolicy', 'Privacy Policy');
+    textEl.appendChild(elPrivacyLink);
     inner.appendChild(textEl);
 
     // Action buttons
     var actions = document.createElement('div');
     actions.className = 'cc-actions';
 
-    var acceptBtn = document.createElement('button');
-    acceptBtn.className = 'cc-btn cc-btn--primary';
-    acceptBtn.textContent = t('acceptAll', 'Accept All');
-    acceptBtn.addEventListener('click', function() { onAcceptAll(); });
+    elAcceptBtn = document.createElement('button');
+    elAcceptBtn.className = 'cc-btn cc-btn--primary';
+    elAcceptBtn.textContent = t('acceptAll', 'Accept All');
+    elAcceptBtn.addEventListener('click', function() { onAcceptAll(); });
 
-    var rejectBtn = document.createElement('button');
-    rejectBtn.className = 'cc-btn cc-btn--secondary';
-    rejectBtn.textContent = t('rejectAll', 'Reject All');
-    rejectBtn.addEventListener('click', function() { onRejectAll(); });
+    elRejectBtn = document.createElement('button');
+    elRejectBtn.className = 'cc-btn cc-btn--secondary';
+    elRejectBtn.textContent = t('rejectAll', 'Reject All');
+    elRejectBtn.addEventListener('click', function() { onRejectAll(); });
 
-    var customizeBtn = document.createElement('button');
-    customizeBtn.className = 'cc-customize-link';
-    customizeBtn.textContent = t('customize', 'Customize');
-    customizeBtn.addEventListener('click', function() { toggleDetails(); });
+    elCustomizeBtn = document.createElement('button');
+    elCustomizeBtn.className = 'cc-customize-link';
+    elCustomizeBtn.textContent = t('customize', 'Customize');
+    elCustomizeBtn.addEventListener('click', function() { toggleDetails(); });
 
-    actions.appendChild(acceptBtn);
-    actions.appendChild(rejectBtn);
-    actions.appendChild(customizeBtn);
+    actions.appendChild(elAcceptBtn);
+    actions.appendChild(elRejectBtn);
+    actions.appendChild(elCustomizeBtn);
     inner.appendChild(actions);
 
     // Details panel
@@ -237,19 +270,19 @@
     essentialRow.className = 'cc-category';
     var essentialInfo = document.createElement('div');
     essentialInfo.className = 'cc-cat-info';
-    var essentialName = document.createElement('span');
-    essentialName.className = 'cc-cat-name';
-    essentialName.textContent = t('essential', 'Essential');
-    var essentialDesc = document.createElement('span');
-    essentialDesc.className = 'cc-cat-desc';
-    essentialDesc.textContent = t('essentialDesc', 'Required for the site to function (session, preferences).');
-    essentialInfo.appendChild(essentialName);
-    essentialInfo.appendChild(essentialDesc);
-    var alwaysOn = document.createElement('span');
-    alwaysOn.className = 'cc-always-on';
-    alwaysOn.textContent = t('alwaysOn', 'Always on');
+    elEssentialName = document.createElement('span');
+    elEssentialName.className = 'cc-cat-name';
+    elEssentialName.textContent = t('essential', 'Essential');
+    elEssentialDesc = document.createElement('span');
+    elEssentialDesc.className = 'cc-cat-desc';
+    elEssentialDesc.textContent = t('essentialDesc', 'Required for the site to function (session, preferences).');
+    essentialInfo.appendChild(elEssentialName);
+    essentialInfo.appendChild(elEssentialDesc);
+    elAlwaysOn = document.createElement('span');
+    elAlwaysOn.className = 'cc-always-on';
+    elAlwaysOn.textContent = t('alwaysOn', 'Always on');
     essentialRow.appendChild(essentialInfo);
-    essentialRow.appendChild(alwaysOn);
+    essentialRow.appendChild(elAlwaysOn);
     detailsEl.appendChild(essentialRow);
 
     // Analytics row
@@ -257,14 +290,14 @@
     analyticsRow.className = 'cc-category';
     var analyticsInfo = document.createElement('div');
     analyticsInfo.className = 'cc-cat-info';
-    var analyticsName = document.createElement('span');
-    analyticsName.className = 'cc-cat-name';
-    analyticsName.textContent = t('analytics', 'Analytics');
-    var analyticsDesc = document.createElement('span');
-    analyticsDesc.className = 'cc-cat-desc';
-    analyticsDesc.textContent = t('analyticsDesc', 'Help us understand how visitors use the site (Google Analytics).');
-    analyticsInfo.appendChild(analyticsName);
-    analyticsInfo.appendChild(analyticsDesc);
+    elAnalyticsName = document.createElement('span');
+    elAnalyticsName.className = 'cc-cat-name';
+    elAnalyticsName.textContent = t('analytics', 'Analytics');
+    elAnalyticsDesc = document.createElement('span');
+    elAnalyticsDesc.className = 'cc-cat-desc';
+    elAnalyticsDesc.textContent = t('analyticsDesc', 'Help us understand how visitors use the site (Google Analytics).');
+    analyticsInfo.appendChild(elAnalyticsName);
+    analyticsInfo.appendChild(elAnalyticsDesc);
 
     var toggleLabel = document.createElement('label');
     toggleLabel.className = 'cc-toggle';
@@ -281,11 +314,11 @@
     detailsEl.appendChild(analyticsRow);
 
     // Save preferences button
-    var saveBtn = document.createElement('button');
-    saveBtn.className = 'cc-btn cc-btn--primary cc-save-btn';
-    saveBtn.textContent = t('savePreferences', 'Save Preferences');
-    saveBtn.addEventListener('click', function() { onSavePreferences(); });
-    detailsEl.appendChild(saveBtn);
+    elSaveBtn = document.createElement('button');
+    elSaveBtn.className = 'cc-btn cc-btn--primary cc-save-btn';
+    elSaveBtn.textContent = t('savePreferences', 'Save Preferences');
+    elSaveBtn.addEventListener('click', function() { onSavePreferences(); });
+    detailsEl.appendChild(elSaveBtn);
 
     inner.appendChild(detailsEl);
     bannerEl.appendChild(inner);
@@ -353,6 +386,11 @@
       loadGA();
     }
   }
+
+  // Re-translate banner when i18n loads or user switches language
+  window.addEventListener('languageChanged', function() {
+    updateTexts();
+  });
 
   // Run after DOM ready
   if (document.readyState === 'loading') {

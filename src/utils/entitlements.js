@@ -17,6 +17,9 @@ const { isSafeReportId } = require('./reportId');
 
 const logger = createLogger('Entitlements');
 
+// One-time migration flag for NULL-status report_purchases records
+let _nullStatusMigrated = false;
+
 /**
  * Canonical entitlements shape returned by resolveEntitlements
  * @typedef {Object} Entitlements
@@ -92,16 +95,52 @@ async function resolveEntitlements(userContext = {}) {
       return getDefaultEntitlements();
     }
 
-    // Get purchased reports
+    // Get purchased reports - only records with explicit 'paid' status
     let purchasedReports = [];
+    // One-time migration: backfill legacy NULL-status records to 'paid'
+    if (!_nullStatusMigrated) {
+      try {
+        const { changes } = await db.run(
+          "UPDATE report_purchases SET status = 'paid' WHERE status IS NULL"
+        );
+        if (changes > 0) {
+          logger.info('Migrated NULL-status report_purchases to paid', { count: changes });
+        }
+        _nullStatusMigrated = true;
+      } catch (_migrationErr) {
+        // Ignore - column may not exist yet; mark as done to avoid retrying every call
+        _nullStatusMigrated = true;
+      }
+    }
     try {
       const rows = await db.all(
-        'SELECT report_id FROM report_purchases WHERE user_id = ? AND (status IS NULL OR status = \'paid\') ORDER BY purchased_at DESC',
+        "SELECT report_id FROM report_purchases WHERE user_id = ? AND status = 'paid' ORDER BY purchased_at DESC",
         [userId]
       );
       purchasedReports = rows.map(r => r.report_id);
     } catch (e) {
       logger.warn('Could not fetch purchased reports', { userId, error: e.message });
+    }
+
+    // Fallback: Also check billing_sessions for paid single-report purchases
+    // This handles webhook race conditions where payment is recorded in billing_sessions
+    // but verifyAndRecordPurchase hasn't written to report_purchases yet
+    if (user.stripe_customer_id) {
+      try {
+        const billingRows = await db.all(
+          `SELECT DISTINCT report_id FROM billing_sessions
+           WHERE stripe_customer_id = ? AND payment_status = 'paid'
+           AND purchase_type = 'single_report' AND report_id IS NOT NULL`,
+          [user.stripe_customer_id]
+        );
+        for (const row of billingRows) {
+          if (row.report_id && !purchasedReports.includes(row.report_id)) {
+            purchasedReports.push(row.report_id);
+          }
+        }
+      } catch (e) {
+        logger.warn('Could not fetch billing sessions for purchased reports', { userId, error: e.message });
+      }
     }
 
     // Determine subscription status and effective plan

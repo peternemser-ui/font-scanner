@@ -740,7 +740,8 @@ async function analyzeHosting() {
       const errorData = await response.json();
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        return;
       }
       throw new Error(errorData.message || errorData.error || t('reports.hosting.analysisFailedSimple', 'Hosting analysis failed'));
     }
@@ -1327,11 +1328,15 @@ function displayHostingResults(data) {
   if (window.ProReportBlock && window.ProReportBlock.render) {
     const proBlockHtml = window.ProReportBlock.render({
       context: 'hosting-analysis',
-      features: ['pdf', 'csv', 'share'],
+      features: ['pdf', 'excel', 'csv', 'share'],
       title: t('reports.common.unlockReport', 'Unlock Report'),
       subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.')
     });
     resultsContent.insertAdjacentHTML('beforeend', proBlockHtml);
+  } else {
+    const opts = { context: 'hosting-analysis', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, share link, export data, and fix packs for this scan.' };
+    const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
+    resultsContent.insertAdjacentHTML('beforeend', '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>');
   }
 }
 

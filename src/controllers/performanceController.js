@@ -31,13 +31,24 @@ const analyzePerformance = asyncHandler(async (req, res) => {
     });
   }
 
-  // Process URL with HTTP fallback
-  const { url: sanitizedUrl, isValid } = await processUrl(url, { allowHttpFallback: true });
+  // Process URL with HTTP fallback + reachability pre-flight
+  const { url: sanitizedUrl, isValid, isReachable } = await processUrl(url, {
+    allowHttpFallback: true,
+    testReachability: true
+  });
 
   if (!isValid) {
     return res.status(400).json({
       success: false,
       error: 'Invalid URL format. Please provide a valid HTTP or HTTPS URL.'
+    });
+  }
+
+  if (isReachable === false) {
+    return res.status(502).json({
+      success: false,
+      error: 'ConnectionError',
+      message: `Unable to connect to ${sanitizedUrl}. The site may be temporarily down, overloaded, or blocking automated checks.`
     });
   }
 
@@ -75,13 +86,24 @@ const analyzeCrossBrowser = asyncHandler(async (req, res) => {
     });
   }
 
-  // Process URL with HTTP fallback
-  const { url: sanitizedUrl, isValid } = await processUrl(url, { allowHttpFallback: true });
+  // Process URL with HTTP fallback + reachability pre-flight
+  const { url: sanitizedUrl, isValid, isReachable } = await processUrl(url, {
+    allowHttpFallback: true,
+    testReachability: true
+  });
 
   if (!isValid) {
     return res.status(400).json({
       success: false,
       error: 'Invalid URL format. Please provide a valid HTTP or HTTPS URL.'
+    });
+  }
+
+  if (isReachable === false) {
+    return res.status(502).json({
+      success: false,
+      error: 'ConnectionError',
+      message: `Unable to connect to ${sanitizedUrl}. The site may be temporarily down, overloaded, or blocking automated checks.`
     });
   }
 

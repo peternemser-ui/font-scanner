@@ -119,7 +119,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const error = await response.json();
         if (error.code === 'SCAN_QUOTA_EXCEEDED') {
           const limit = error.scansLimit || 10;
-          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          if (loader) {
+            loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+          }
+          return;
         }
         throw new Error(error.message || error.error || t('reports.common.analysisFailed', 'Analysis failed'));
       }
@@ -300,7 +303,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="pro-locked" style="padding: 1rem;">
         <div class="pro-locked__header">
           <span class="pro-pill">PRO</span>
-          <span>${t('reports.common.reportRecommendations', 'Report and Recommendations')} (${recCount} ${t('reports.common.items', 'items')})</span>
+          <span>${t('reports.common.reportRecommendations', 'Recommendations')} (${recCount} ${t('reports.common.items', 'items')})</span>
         </div>
         <p style="color: #888; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">
           ${t('reports.tagIntelligence.unlockInsights', 'Unlock actionable insights and priority-based recommendations to optimize your tag implementation.')}
@@ -409,8 +412,8 @@ document.addEventListener('DOMContentLoaded', () => {
         title: `⚠️ ${t('reports.tagIntelligence.issuesDetected', 'Issues Detected')} (${data.issues.length + data.duplicates.length})`,
         contentHTML: `
           <ul style="margin: 0; padding-left: 1.5rem;">
-            ${data.duplicates.map(d => `<li class="severity-warning">${d.message}</li>`).join('')}
-            ${data.issues.map(i => `<li class="severity-${i.severity}">${i.message}</li>`).join('')}
+            ${data.duplicates.map(d => `<li class="severity-warning">${d.messageKey ? t('reports.' + d.messageKey, d.message) : d.message}</li>`).join('')}
+            ${data.issues.map(i => `<li class="severity-${i.severity}">${i.messageKey ? t('reports.' + i.messageKey, i.message, i.messageParams) : i.message}</li>`).join('')}
           </ul>
         `
       });
@@ -767,7 +770,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Report and Recommendations Section (Free)
     sections.push({
       id: 'report-recommendations',
-      title: '📋 ' + t('reports.common.reportAndRecommendations', 'Report and Recommendations'),
+      title: '📋 ' + t('reports.common.reportAndRecommendations', 'Recommendations'),
       isPro: false,
       locked: false,
       context: 'tag-intelligence',
@@ -786,7 +789,14 @@ document.addEventListener('DOMContentLoaded', () => {
           summary: [{ label: t('reports.common.overall', 'Overall'), score: data.healthScore }],
           sections,
           screenshots,
-          proBlock: false
+          proBlock: true,
+          proBlockOptions: {
+            context: 'tag-intelligence',
+            features: ['pdf', 'excel', 'csv', 'share'],
+            title: t('reports.common.unlockReport', 'Unlock Report'),
+            subtitle: t('reports.common.unlockReportSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
+            reportId
+          }
         })
       : `<h2>${t('reports.tagIntelligence.results', 'Tag Analysis Results')}</h2><p>${t('reports.common.reportContainerNotAvailable', 'ReportContainer not available')}</p>`;
 
@@ -823,9 +833,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="background: var(--bg-tertiary); border: 1px solid var(--border-primary); border-radius: 8px; padding: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
               <span style="font-size: 1.2rem;">${rec.priority === 'high' ? '🔴' : rec.priority === 'medium' ? '🟡' : '🟢'}</span>
-              <strong>${rec.title || rec.message || t('reports.common.recommendation', 'Recommendation')}</strong>
+              <strong>${rec.titleKey ? t('reports.' + rec.titleKey, rec.title || rec.message || '') : (rec.title || rec.message || t('reports.common.recommendation', 'Recommendation'))}</strong>
             </div>
-            <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">${rec.description || rec.details || ''}</p>
+            <p style="margin: 0; color: var(--text-secondary); font-size: 0.9rem;">${rec.descriptionKey ? t('reports.' + rec.descriptionKey, rec.description || rec.details || '', rec.descriptionParams) : (rec.description || rec.details || '')}</p>
           </div>
         `).join('')}
       </div>

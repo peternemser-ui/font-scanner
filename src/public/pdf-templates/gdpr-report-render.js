@@ -17,6 +17,7 @@
     var esc = utils.esc;
     var truncate = utils.truncate;
     var scoreClass = utils.scoreClass;
+    var translateImpact = utils.translateImpact || function(v) { return v; };
 
     var sectionIndex = 1;
 
@@ -454,7 +455,7 @@
           html += '<div class="pdf-recs-group__title" style="color:' + group.color + ';">&#9679; ' + group.label + ' (' + group.items.length + ')</div>';
           group.items.forEach(function (r) {
             html += '<div class="pdf-issue pdf-issue--' + (r.severity || 'medium').toLowerCase() + '">' +
-              '<span class="pdf-issue__severity pdf-issue__severity--' + (r.severity || 'medium').toLowerCase() + '">' + esc((r.severity || 'MEDIUM').toUpperCase()) + '</span>' +
+              '<span class="pdf-issue__severity pdf-issue__severity--' + (r.severity || 'medium').toLowerCase() + '">' + esc(translateImpact(r.severity || 'medium')) + '</span>' +
               '<span class="pdf-issue__text"><strong>' + esc(r.title || '') + '</strong>' +
               (r.description ? ' — ' + esc(r.description) : '') +
               (r.category ? ' <em>(' + esc(r.category) + ')</em>' : '') + '</span>' +

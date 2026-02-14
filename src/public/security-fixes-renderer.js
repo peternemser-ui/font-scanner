@@ -165,7 +165,7 @@ function createSecurityFix(rec, results) {
       icon: '🔴',
       category: t('reports.security.securityFixes.sslTls', 'SSL/TLS'),
       impact: t('reports.security.securityFixes.implementHttps.impact', '+30 Security Score'),
-      summary: t('reports.security.securityFixes.implementHttps.summary', 'Your website is not using HTTPS encryption. All data including passwords, personal information, and payment details are transmitted in plain text, making them vulnerable to interception by attackers on the network.'),
+      summary: t('reports.security.securityFixes.implementHttps.summary', 'Your website is not using HTTPS encryption, which means all data transmitted between your server and visitors is sent in plain text. This includes passwords, personal information, payment details, and session tokens, all of which can be intercepted by attackers on the same network through man-in-the-middle attacks. Modern browsers display a prominent "Not Secure" warning in the address bar for HTTP sites, which erodes visitor trust and increases bounce rates. Google also uses HTTPS as a ranking signal, so unencrypted sites face a measurable SEO penalty. Free SSL certificates are available through Let\'s Encrypt, making HTTPS implementation straightforward for any website.'),
       problematicCode: `<!-- Current insecure setup -->
 <a href="http://example.com/login">Login</a>
 
@@ -217,7 +217,7 @@ function createSecurityFix(rec, results) {
       icon: '🔴',
       category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
       impact: t('reports.security.securityFixes.implementCsp.impact', '+15 Security Score'),
-      summary: t('reports.security.securityFixes.implementCsp.summary', 'Your site lacks a Content Security Policy (CSP) header, leaving it vulnerable to Cross-Site Scripting (XSS) attacks. Attackers can inject malicious scripts that steal user data, hijack sessions, or deface your website.'),
+      summary: t('reports.security.securityFixes.implementCsp.summary', 'Your site lacks a Content Security Policy (CSP) header, leaving it vulnerable to Cross-Site Scripting (XSS) attacks. CSP is an HTTP response header that tells the browser exactly which sources of content (scripts, styles, images, fonts) are allowed to load on your page. Without it, attackers who find an injection point can execute arbitrary JavaScript that steals user cookies, redirects visitors to phishing pages, or silently records keystrokes. XSS is consistently ranked among the top web security vulnerabilities by OWASP and is one of the most commonly exploited attack vectors. Implementing even a basic CSP dramatically reduces your attack surface and provides a strong defense-in-depth layer against script injection.'),
       problematicCode: `<!-- No CSP - Vulnerable to XSS -->
 <script>
   // Attacker can inject:
@@ -271,7 +271,7 @@ Content-Security-Policy:
       icon: '🟠',
       category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
       impact: t('reports.security.securityFixes.enableHsts.impact', '+10 Security Score'),
-      summary: t('reports.security.securityFixes.enableHsts.summary', 'HSTS header is not configured. Without HSTS, attackers can perform protocol downgrade attacks, forcing users to connect over insecure HTTP even when HTTPS is available.'),
+      summary: t('reports.security.securityFixes.enableHsts.summary', 'HSTS header is not configured, leaving your site vulnerable to protocol downgrade attacks. When a user types your domain without the "https://" prefix, the browser initially connects over plain HTTP before being redirected to HTTPS. During that brief unencrypted request, an attacker on the same network can intercept the connection and prevent the redirect to HTTPS entirely, a technique known as SSL stripping. The HSTS header tells browsers to always use HTTPS for your domain, eliminating that initial insecure request completely. Once set, the browser remembers this preference for the specified duration and refuses to connect over HTTP, even if the user explicitly types it.'),
       problematicCode: `<!-- Without HSTS -->
 <!-- User types: example.com -->
 <!-- Browser connects via HTTP first -->
@@ -315,7 +315,7 @@ server {
       icon: '🟡',
       category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
       impact: t('reports.security.securityFixes.preventClickjacking.impact', '+5 Security Score'),
-      summary: t('reports.security.securityFixes.preventClickjacking.summary', 'X-Frame-Options header is not set. Attackers can embed your site in a hidden iframe and trick users into clicking buttons they didn\'t intend to, potentially changing settings or making purchases.'),
+      summary: t('reports.security.securityFixes.preventClickjacking.summary', 'X-Frame-Options header is not set, leaving your site vulnerable to clickjacking attacks. In a clickjacking attack, a malicious website loads your page inside an invisible iframe and overlays deceptive content on top, tricking users into clicking buttons on your site without realizing it. This can lead to unauthorized actions such as changing account settings, making purchases, or granting permissions to an attacker\'s application. The attack is particularly dangerous because the user believes they are interacting with the malicious page while they are actually performing actions on your site with their authenticated session. Adding the X-Frame-Options header or using the CSP frame-ancestors directive prevents your pages from being embedded in third-party frames entirely.'),
       problematicCode: `<!-- Without X-Frame-Options -->
 <!-- Attacker's malicious page: -->
 <style>
@@ -362,7 +362,7 @@ Content-Security-Policy: frame-ancestors 'self';
       icon: '🟡',
       category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
       impact: t('reports.security.securityFixes.preventMimeSniffing.impact', '+5 Security Score'),
-      summary: t('reports.security.securityFixes.preventMimeSniffing.summary', 'X-Content-Type-Options header is missing. Browsers may misinterpret file types, potentially executing uploaded files as scripts even if they have a different extension.'),
+      summary: t('reports.security.securityFixes.preventMimeSniffing.summary', 'X-Content-Type-Options header is missing, which allows browsers to override the declared content type and guess what a file actually contains. This behavior, known as MIME sniffing, means a file served as text/plain could be re-interpreted and executed as HTML or JavaScript if the browser detects script-like content inside it. Attackers exploit this by uploading files with harmless extensions (such as .txt or .jpg) that contain malicious scripts, which the browser then executes in the context of your domain. This single-line header (X-Content-Type-Options: nosniff) forces the browser to strictly respect the Content-Type you declare, blocking any attempts to execute mistyped files. It is one of the easiest security headers to implement and has no negative impact on normal site functionality.'),
       problematicCode: `<!-- Without X-Content-Type-Options -->
 <!-- Attacker uploads malicious.txt containing: -->
 <script>alert('XSS')</script>
@@ -406,7 +406,7 @@ app.use((req, res, next) => {
       icon: '🟠',
       category: t('reports.security.securityFixes.cookies', 'Cookies'),
       impact: t('reports.security.securityFixes.improveCookieSecurity.impact', '+10 Security Score'),
-      summary: t('reports.security.securityFixes.improveCookieSecurity.summary', 'Cookies are not properly secured. Session cookies without HttpOnly, Secure, and SameSite flags are vulnerable to theft via XSS attacks and cross-site request forgery.'),
+      summary: t('reports.security.securityFixes.improveCookieSecurity.summary', 'Cookies are not properly secured, putting user sessions and sensitive data at risk. Without the HttpOnly flag, JavaScript code running on the page—including injected malicious scripts—can read session cookies and send them to an attacker, enabling complete account takeover. Without the Secure flag, cookies are transmitted over unencrypted HTTP connections where they can be intercepted on public Wi-Fi or compromised networks. The SameSite attribute prevents cross-site request forgery (CSRF) attacks by controlling whether the browser sends cookies with requests originating from other websites. Setting all three flags on your session cookies closes the most common cookie-related attack vectors with minimal implementation effort.'),
       problematicCode: `<!-- Insecure cookie settings -->
 Set-Cookie: session=abc123
 
@@ -454,7 +454,7 @@ session.cookie_samesite = Strict
       icon: '🟡',
       category: t('reports.security.securityFixes.thirdPartyScripts', 'Third-Party Scripts'),
       impact: t('reports.security.securityFixes.addSri.impact', '+8 Security Score'),
-      summary: t('reports.security.securityFixes.addSri.summary', 'Third-party scripts are loaded without integrity verification. If the CDN is compromised, malicious code could be injected into your site without detection.'),
+      summary: t('reports.security.securityFixes.addSri.summary', 'Third-party scripts and stylesheets are loaded without integrity verification, creating a supply chain vulnerability. If the CDN or external server hosting these files is compromised, an attacker could replace the legitimate file with malicious code that executes on every page load for all of your visitors. Subresource Integrity (SRI) adds a cryptographic hash to each external resource tag, and the browser verifies the downloaded file matches that hash before executing it. If the file has been tampered with, the browser blocks it entirely, preventing the compromised code from running. This protection is especially critical for widely-used libraries like jQuery or Bootstrap, which are high-value targets for supply chain attacks.'),
       problematicCode: `<!-- Loading external scripts without SRI -->
 <script src="https://cdn.example.com/jquery-3.6.0.min.js"></script>
 <link href="https://cdn.example.com/bootstrap.min.css" rel="stylesheet">

@@ -17,6 +17,7 @@
     var esc = utils.esc;
     var truncate = utils.truncate;
     var scoreClass = utils.scoreClass;
+    var translateImpact = utils.translateImpact || function(v) { return v; };
 
     var sectionIndex = 1;
 
@@ -40,7 +41,7 @@
       var score = data.overallScore;
 
       sec.parentElement.insertBefore(
-        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cro.report.overview', 'CRO Overview'), score)),
+        _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cro.report.overviewTitle', 'CRO Overview'), score)),
         sec
       );
 
@@ -361,8 +362,8 @@
           return [
             '<strong>' + esc(truncate(qw.title || '', 50)) + '</strong>' +
               (qw.description ? '<br><span class="pdf-text-muted pdf-text-small">' + esc(truncate(qw.description, 80)) + '</span>' : ''),
-            '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;color:#fff;background:' + _badgeColor(impactLevel) + ';">' + esc(String(impactLevel).toUpperCase()) + '</span>',
-            '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;color:#fff;background:' + _badgeColor(effortLevel) + ';">' + esc(String(effortLevel).toUpperCase()) + '</span>'
+            '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;color:#fff;background:' + _badgeColor(impactLevel) + ';">' + esc(translateImpact(String(impactLevel))) + '</span>',
+            '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;color:#fff;background:' + _badgeColor(effortLevel) + ';">' + esc(translateImpact(String(effortLevel))) + '</span>'
           ];
         });
 

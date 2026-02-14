@@ -151,12 +151,34 @@ class I18n {
   t(key, params = {}) {
     const keys = key.split('.');
     let value = this.translations;
+    let lastObj = null;
+    let lastObjIdx = -1;
 
     // Navigate through nested object
-    for (const k of keys) {
-      if (value && typeof value === 'object' && k in value) {
-        value = value[k];
+    for (let i = 0; i < keys.length; i++) {
+      if (value && typeof value === 'object' && keys[i] in value) {
+        lastObj = value;
+        lastObjIdx = i;
+        value = value[keys[i]];
+      } else if (value && typeof value === 'object') {
+        // Fallback: check for literal dotted key (e.g. "consent.overviewHeading")
+        const remaining = keys.slice(i).join('.');
+        if (remaining in value) {
+          value = value[remaining];
+          break;
+        }
+        return key; // Return key if translation not found
       } else {
+        // value is not an object but segments remain — backtrack and try
+        // a literal dotted key from the parent (e.g. "recommendations.noneTitle"
+        // when "recommendations" resolved to a string)
+        if (lastObj) {
+          const remaining = keys.slice(lastObjIdx).join('.');
+          if (remaining in lastObj) {
+            value = lastObj[remaining];
+            break;
+          }
+        }
         return key; // Return key if translation not found
       }
     }

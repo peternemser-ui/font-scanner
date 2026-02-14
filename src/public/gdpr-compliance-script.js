@@ -151,7 +151,20 @@ function translateRecommendation(rec) {
   };
   if (msgMap[r.message]) r.message = t(msgMap[r.message], r.message);
   if (r.title && msgMap[r.title]) r.title = t(msgMap[r.title], r.title);
-  if (detailMap[r.detail]) r.detail = t(detailMap[r.detail], r.detail);
+  if (detailMap[r.detail]) {
+    r.detail = t(detailMap[r.detail], r.detail);
+  } else if (r.detail) {
+    const paramDetailMap = [
+      { pattern: /^(\d+) trackers detected\. Ensure/, key: 'reports.gdpr.recs.controlTrackersDetail', extract: (m) => ({ count: m[1] }) }
+    ];
+    for (const entry of paramDetailMap) {
+      const match = r.detail.match(entry.pattern);
+      if (match) {
+        r.detail = t(entry.key, r.detail, entry.extract(match));
+        break;
+      }
+    }
+  }
   if (impactMap[r.impact]) r.impact = t(impactMap[r.impact], r.impact);
   if (catMap[r.category]) r.category = t(catMap[r.category], r.category);
   // Translate priority labels
@@ -404,7 +417,8 @@ async function analyze(options = {}) {
       const errorData = await response.json().catch(() => ({}));
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        return;
       }
       throw new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed'));
     }
@@ -428,10 +442,10 @@ async function analyze(options = {}) {
 }
 
 function getScoreColor(score) {
-  if (score >= 90) return getAccentPrimaryHex();
-  if (score >= 75) return '#00bcd4';
-  if (score >= 50) return '#ffa500';
-  return '#ff4444';
+  if (score >= 90) return '#22c55e';  // Excellent: Green
+  if (score >= 75) return '#00bcd4';  // Good: Teal
+  if (score >= 50) return '#ffa500';  // Needs Work: Orange
+  return '#ff4444';                   // Critical: Red
 }
 
 function getAccentPrimaryHex() {
@@ -593,7 +607,7 @@ function displayResults(data) {
     // Report and Recommendations Accordion (Pro) - follows SEO pattern
     (data.recommendations && data.recommendations.length > 0) ? {
       id: 'report-recommendations',
-      title: t('reports.gdpr.sections.fixCodeRecommendations', 'Fix Code + Recommendations'),
+      title: t('reports.gdpr.sections.fixCodeRecommendations', 'Recommendations'),
       isPro: true,
       locked: !isUnlocked,
       context: 'gdpr-compliance',
@@ -616,7 +630,7 @@ function displayResults(data) {
       proBlock: true,
       proBlockOptions: {
         context: 'gdpr-compliance',
-        features: ['pdf', 'csv', 'share'],
+        features: ['pdf', 'excel', 'csv', 'share'],
         title: t('reports.common.unlockReport', 'Unlock Report'),
         subtitle: t('reports.common.unlockSubtitle', 'PDF export, share link, export data, and fix packs for this scan.'),
         reportId
@@ -701,6 +715,12 @@ function revealGdprProContent() {
   });
   document.querySelectorAll('[data-pro-locked]').forEach(el => {
     el.removeAttribute('data-pro-locked');
+  });
+
+  // Remove locked state from Pro Report Blocks (show accent border after unlock)
+  document.querySelectorAll('.pro-report-block--locked, .pro-report-block[data-locked]').forEach((block) => {
+    block.classList.remove('pro-report-block--locked');
+    block.removeAttribute('data-locked');
   });
 }
 
@@ -826,7 +846,7 @@ function renderGdprFixAccordion(rec, index) {
       </div>
 
       <div class="gdpr-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderGdprFixTabs(rec, accordionId)}
         </div>
       </div>

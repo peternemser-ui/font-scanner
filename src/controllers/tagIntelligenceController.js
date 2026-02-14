@@ -540,8 +540,12 @@ function generateTagRecommendations(issues, duplicates, tags) {
     if (issue.severity === 'high') {
       recommendations.push({
         priority: 'high',
+        titleKey: issue.type === 'compliance' ? 'tagIntelligence.recTitles.addConsentManagement' : 'tagIntelligence.recTitles.fixCriticalIssue',
         title: issue.type === 'compliance' ? 'Add Consent Management' : 'Fix Critical Issue',
+        descriptionKey: issue.messageKey,
+        descriptionParams: issue.messageParams,
         description: issue.message,
+        actionKey: issue.recommendationKey,
         action: issue.recommendation
       });
     }
@@ -551,8 +555,12 @@ function generateTagRecommendations(issues, duplicates, tags) {
   if (duplicates.length > 0) {
     recommendations.push({
       priority: 'medium',
+      titleKey: 'tagIntelligence.recTitles.removeDuplicateTags',
       title: 'Remove Duplicate Tags',
+      descriptionKey: 'tagIntelligence.recDescriptions.duplicateTags',
+      descriptionParams: { count: duplicates.length },
       description: `${duplicates.length} duplicate tag(s) detected. This may cause double-tracking.`,
+      actionKey: 'tagIntelligence.recActions.removeDuplicates',
       action: 'Review and remove duplicate implementations'
     });
   }
@@ -563,8 +571,11 @@ function generateTagRecommendations(issues, duplicates, tags) {
   if (hasAnalytics && !hasConsent) {
     recommendations.push({
       priority: 'high',
+      titleKey: 'tagIntelligence.recTitles.implementConsentManagement',
       title: 'Implement Consent Management',
+      descriptionKey: 'tagIntelligence.recDescriptions.analyticsNoConsent',
       description: 'Analytics tags detected without consent management. Required for GDPR/CCPA compliance.',
+      actionKey: 'tagIntelligence.recActions.addConsentSolution',
       action: 'Add OneTrust, Cookiebot, or similar consent solution'
     });
   }
@@ -574,8 +585,12 @@ function generateTagRecommendations(issues, duplicates, tags) {
   if (!hasGTM && tags.size > 3) {
     recommendations.push({
       priority: 'medium',
+      titleKey: 'tagIntelligence.recTitles.considerGtm',
       title: 'Consider Google Tag Manager',
+      descriptionKey: 'tagIntelligence.recDescriptions.considerGtm',
+      descriptionParams: { count: tags.size },
       description: `${tags.size} tags detected. GTM simplifies tag management and improves performance.`,
+      actionKey: 'tagIntelligence.recActions.migrateToGtm',
       action: 'Migrate tags to Google Tag Manager for easier management'
     });
   }

@@ -710,7 +710,7 @@ async function updateBillingUI(status) {
     planEl.innerHTML = '<span class="plan-badge plan-badge--free">Pay As You Go</span>';
     if (triggerBadge) {
       triggerBadge.className = 'plan-badge plan-badge--free';
-      triggerBadge.textContent = 'Free';
+      triggerBadge.textContent = t('account.free', 'Free');
     }
   }
 
@@ -766,12 +766,12 @@ async function updateBillingUI(status) {
   if (isPro) {
     upgradeBtn.classList.add('hidden');
     manageBtn.classList.remove('hidden');
-    manageBtn.textContent = 'Manage Plan';
+    manageBtn.textContent = t('nav.managePlan', 'Manage Plan');
   } else {
     upgradeBtn.classList.remove('hidden');
     if (status.hasStripeCustomer) {
       manageBtn.classList.remove('hidden');
-      manageBtn.textContent = 'Manage Billing';
+      manageBtn.textContent = t('account.manageBilling', 'Manage Billing');
     } else {
       manageBtn.classList.add('hidden');
     }
@@ -795,7 +795,7 @@ function updateBillingUILegacy(subscription) {
     upgradeBtn.classList.remove('hidden');
     if (triggerBadge) {
       triggerBadge.className = 'plan-badge plan-badge--free';
-      triggerBadge.textContent = 'Free';
+      triggerBadge.textContent = t('account.free', 'Free');
     }
   }
 }
@@ -1301,7 +1301,7 @@ async function handleManageBilling() {
 
   btn.disabled = true;
   const originalText = btn.textContent;
-  btn.textContent = 'Loading...';
+  btn.textContent = t('account.loading', 'Loading...');
 
   try {
     const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
@@ -1332,7 +1332,7 @@ async function handleLogout() {
   if (!btn) return;
 
   btn.disabled = true;
-  btn.textContent = 'Logging out...';
+  btn.textContent = t('account.loggingOut', 'Logging out...');
 
   try {
     await proManager.logout();

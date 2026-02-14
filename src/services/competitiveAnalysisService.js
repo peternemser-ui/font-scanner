@@ -59,9 +59,9 @@ class CompetitiveAnalysisService {
     });
 
     // Strict limits to prevent resource exhaustion
-    if (competitorUrls.length > 3) {
-      logger.warn(`Limiting competitors from ${competitorUrls.length} to 3 to prevent system overload`);
-      competitorUrls = competitorUrls.slice(0, 3);
+    if (competitorUrls.length > 5) {
+      logger.warn(`Limiting competitors from ${competitorUrls.length} to 5 to prevent system overload`);
+      competitorUrls = competitorUrls.slice(0, 5);
     }
 
     // Circuit breaker: Track consecutive failures
@@ -174,6 +174,20 @@ class CompetitiveAnalysisService {
         if (i < competitorUrls.length - 1 && consecutiveFailures < MAX_CONSECUTIVE_FAILURES) {
           logger.info('⏳ Waiting 5 seconds before next competitor (browser cleanup)...');
           await new Promise(resolve => setTimeout(resolve, 5000));
+        }
+      }
+
+      // Ensure ALL competitor URLs appear in results even if circuit breaker skipped them
+      if (competitors.length < competitorUrls.length) {
+        const skipped = competitorUrls.length - competitors.length;
+        logger.warn(`Adding ${skipped} skipped competitor(s) as unanalyzed entries`);
+        for (let i = competitors.length; i < competitorUrls.length; i++) {
+          competitors.push({
+            scores: { seo: 0, performance: 0, accessibility: 0, security: 0, coreWebVitals: 0, overall: 0 },
+            details: null,
+            grade: 'F',
+            error: 'Analysis skipped due to circuit breaker (consecutive failures)'
+          });
         }
       }
 

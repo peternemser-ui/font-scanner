@@ -68,7 +68,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const error = await response.json();
         if (error.code === 'SCAN_QUOTA_EXCEEDED') {
           const limit = error.scansLimit || 10;
-          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          loadingMessage.classList.add('hidden');
+          showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+            window.PricingModal.open();
+          }
+          return;
         }
         throw new Error(error.message || error.error || t('reports.common.analysisFailed', 'Analysis failed'));
       }

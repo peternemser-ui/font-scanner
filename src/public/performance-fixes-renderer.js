@@ -700,7 +700,7 @@ function generateFixesData(desktop, mobile) {
       category: 'Core Web Vitals',
       categoryKey: 'vitals-lcp',
       impact: mobileLCP > 4000 ? '+25 Performance Score' : '+15 Performance Score',
-      summary: `Your LCP is ${lcpValue}, which is ${mobileLCP > 4000 ? 'critically slow' : 'slower than recommended'}. LCP measures how long it takes for the largest content element (usually hero image or heading) to become visible. Google considers LCP a direct ranking factor.`,
+      summary: `Your LCP is ${lcpValue}, which is ${mobileLCP > 4000 ? 'critically slow' : 'slower than recommended'}. LCP measures how long it takes for the largest visible content element—typically a hero image, heading, or background graphic—to finish rendering on screen. This is the metric users most closely associate with perceived load speed, and Google uses it as a direct Core Web Vitals ranking factor. A slow LCP usually indicates that critical resources are not being prioritized, images are uncompressed, or render-blocking scripts are delaying the page paint. Optimizing LCP often yields the single biggest improvement in both user experience and search rankings.`,
       summaryParams: { value: lcpValue, target: '2.5s' },
       problematicCode: `<!-- Typical problematic pattern -->
 <img src="/images/hero-original.jpg"
@@ -758,7 +758,7 @@ function generateFixesData(desktop, mobile) {
       category: 'Performance',
       categoryKey: 'javascript',
       impact: '+20 Performance Score',
-      summary: `Your site has ${mobileTBT}ms of Total Blocking Time, meaning the main thread is blocked and can't respond to user input. This causes delays in interactivity and poor user experience.`,
+      summary: `Your site has ${mobileTBT}ms of Total Blocking Time, meaning the browser's main thread is occupied executing JavaScript and cannot respond to user input like clicks, taps, or key presses. This creates a frustrating experience where buttons appear clickable but do nothing, scroll feels janky, and forms seem unresponsive. Total Blocking Time directly measures the cumulative periods during which the main thread is blocked for more than 50 milliseconds, and it is a key component of your Core Web Vitals score. Common causes include large unminified JavaScript bundles, synchronous third-party scripts, and unused library code. Deferring non-critical scripts, removing unused code, and code-splitting large bundles can dramatically reduce blocking time.`,
       summaryParams: { value: `${mobileTBT}ms` },
       problematicCode: `<!-- Render-blocking scripts in <head> -->
 <script src="/js/jquery-3.6.0.min.js"></script>
@@ -816,7 +816,7 @@ function generateFixesData(desktop, mobile) {
       category: 'Core Web Vitals',
       categoryKey: 'vitals-cls',
       impact: '+10 Performance Score',
-      summary: `Your CLS score is ${mobileCLS.toFixed(3)}, indicating unexpected layout shifts that frustrate users. This happens when elements move after the page initially loads, often due to images, ads, or web fonts loading late.`,
+      summary: `Your CLS score is ${mobileCLS.toFixed(3)}, indicating unexpected layout shifts that disrupt the user experience. This happens when elements change position after the page initially renders—for example, an image loads without reserved dimensions, a web font swaps in with different metrics, or a dynamic ad banner pushes content down the page. These unexpected shifts are especially frustrating for users who are about to tap a button or read text that suddenly jumps to a different location, often causing accidental clicks. Cumulative Layout Shift is one of Google's three Core Web Vitals metrics and directly affects your search rankings. The most effective fixes include adding explicit width and height attributes to images, using font-display: swap, and reserving space for dynamic content.`,
       problematicCode: `<!-- Missing dimensions cause shifts -->
 <img src="product.jpg" alt="Product">
 
@@ -887,7 +887,7 @@ function generateFixesData(desktop, mobile) {
       category: 'Performance',
       categoryKey: 'images',
       impact: '+12 Performance Score',
-      summary: 'Images account for a significant portion of page weight. Optimizing images can dramatically improve load times and reduce bandwidth costs.',
+      summary: 'Images typically account for the largest portion of total page weight, often consuming 50-80% of all downloaded bytes. Unoptimized images—those served in older formats like JPEG or PNG, at unnecessarily high resolutions, or without responsive sizing—force visitors to download megabytes of data they may not need. This dramatically increases load time, especially on mobile networks where bandwidth is limited and data may be metered. Modern image formats like WebP and AVIF can reduce file sizes by 60-80% compared to JPEG with no visible quality loss. Combining format optimization with responsive srcset attributes and lazy loading for below-the-fold images typically produces the single largest performance improvement for most websites.',
       problematicCode: `<!-- Unoptimized images -->
 <img src="/photos/team-photo.jpg"
      alt="Team photo">
@@ -952,7 +952,7 @@ function generateFixesData(desktop, mobile) {
       category: 'Accessibility',
       categoryKey: 'accessibility',
       impact: 'Legal compliance + SEO boost',
-      summary: 'Accessibility improvements help users with disabilities and improve SEO. Common issues include missing alt text, poor color contrast, and missing ARIA labels.',
+      summary: 'Your site\'s accessibility score indicates that users with disabilities may encounter significant barriers when trying to use your website. Common issues include images without descriptive alt text (which prevents screen reader users from understanding visual content), insufficient color contrast (which makes text unreadable for users with low vision), and form inputs without associated labels (which makes forms unusable with assistive technology). Accessibility is not only an ethical obligation but increasingly a legal requirement under the ADA, Section 508, and the European Accessibility Act. Search engines also factor accessibility into rankings, as many accessibility best practices align with SEO fundamentals like semantic HTML and clear content structure. Addressing these issues improves the experience for all users, not just those using assistive technology.',
       problematicCode: `<!-- Missing alt text -->
 <img src="logo.png">
 

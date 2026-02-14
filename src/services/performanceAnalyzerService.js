@@ -59,9 +59,14 @@ class PerformanceAnalyzerService {
 
       // Desktop first (no external race; analyzer has its own timeout and fallback)
       logger.info('Attempting Lighthouse desktop analysis...');
-      desktopLighthouse = await lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'desktop' });
-      if (!desktopLighthouse || desktopLighthouse.score === 0) {
-        logger.warn('Lighthouse desktop returned no/failed results, using Puppeteer-only fallback score');
+      try {
+        desktopLighthouse = await lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'desktop' });
+        if (!desktopLighthouse || desktopLighthouse.score === 0) {
+          logger.warn('Lighthouse desktop returned no/failed results, using Puppeteer-only fallback score');
+          desktopLighthouse = this.createPuppeteerFallback(resourceMetrics, 'desktop');
+        }
+      } catch (lhError) {
+        logger.warn(`Lighthouse desktop failed, using Puppeteer fallback: ${lhError.message}`);
         desktopLighthouse = this.createPuppeteerFallback(resourceMetrics, 'desktop');
       }
 
@@ -69,9 +74,14 @@ class PerformanceAnalyzerService {
       await new Promise((r) => setTimeout(r, 500));
 
       logger.info('Attempting Lighthouse mobile analysis...');
-      mobileLighthouse = await lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'mobile' });
-      if (!mobileLighthouse || mobileLighthouse.score === 0) {
-        logger.warn('Lighthouse mobile returned no/failed results, using Puppeteer-only fallback score');
+      try {
+        mobileLighthouse = await lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'mobile' });
+        if (!mobileLighthouse || mobileLighthouse.score === 0) {
+          logger.warn('Lighthouse mobile returned no/failed results, using Puppeteer-only fallback score');
+          mobileLighthouse = this.createPuppeteerFallback(resourceMetrics, 'mobile');
+        }
+      } catch (lhError) {
+        logger.warn(`Lighthouse mobile failed, using Puppeteer fallback: ${lhError.message}`);
         mobileLighthouse = this.createPuppeteerFallback(resourceMetrics, 'mobile');
       }
 

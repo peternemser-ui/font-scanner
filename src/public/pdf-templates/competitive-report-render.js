@@ -18,6 +18,7 @@
     var esc = utils.esc;
     var truncate = utils.truncate;
     var scoreClass = utils.scoreClass;
+    var translateImpact = utils.translateImpact || function(v) { return v; };
 
     var sectionIndex = 1;
 
@@ -332,7 +333,7 @@
       if (insights.length > 0) {
         insights.forEach(function (insight) {
           var impact = (insight.impact || 'medium').toLowerCase();
-          var impactLabel = impact.charAt(0).toUpperCase() + impact.slice(1);
+          var impactLabel = translateImpact(impact);
 
           html += '<div class="pdf-issue pdf-issue--' + (impact === 'high' || impact === 'critical' ? 'critical' : impact === 'medium' ? 'warning' : 'info') + '" style="margin-bottom:12px;">';
           html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%;">';

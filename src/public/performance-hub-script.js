@@ -180,6 +180,28 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Handle billing re-scan: user returned from Stripe but cached results weren't available.
+  // Re-scan with the purchased reportId preserved so pro sections render unlocked.
+  window.addEventListener('sm:billingRescan', (e) => {
+    const { reportId: purchasedReportId, url: scanUrl } = e.detail || {};
+    const analyzerKey = window.SM_ANALYZER_KEY || '';
+    if (!analyzerKey.includes('performance') && !analyzerKey.includes('speed')) return; // Not for this analyzer
+    console.log('[PerformanceHub] Billing re-scan requested:', { purchasedReportId, scanUrl });
+    window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = false;
+    window.__smBillingRescanHandled = true;
+
+    // Pre-fill URL input
+    if (scanUrl && urlInput) urlInput.value = scanUrl;
+
+    // Ensure the purchased reportId is set on the body so preserveReportId logic picks it up
+    if (purchasedReportId) {
+      document.body.setAttribute('data-report-id', purchasedReportId);
+    }
+
+    // Trigger re-scan with preserveReportId to keep the purchased reportId
+    runAnalysis({ preserveReportId: true });
+  });
+
   async function ensureCreditsManagerLoaded() {
     if (window.CreditsManager) return;
     await new Promise((resolve) => {
@@ -886,7 +908,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  async function runAnalysis() {
+  /**
+   * @param {Object} options - Optional settings
+   * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
+   */
+  async function runAnalysis(options = {}) {
+    let { preserveReportId = false } = options;
     const url = urlInput.value.trim();
     if (!url) {
       showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
@@ -901,18 +928,23 @@ document.addEventListener('DOMContentLoaded', () => {
     window.__SM_FRESH_SCAN_PENDING_PAYMENT__ = true;
     window.__SM_CURRENT_SCAN_URL__ = url;
 
-    // Clear old reportId from body
-    document.body.removeAttribute('data-report-id');
-    document.body.removeAttribute('data-scan-domain');
+    // NOTE: Auto-preserve is ONLY used when explicitly requested via options.preserveReportId
+    // (e.g., sm:billingRescan handler passes preserveReportId: true).
+    const existingReportId = document.body.getAttribute('data-report-id');
 
-    // Clear ProReportBlock billing cache
+    // Clear billing cache and session markers — but KEEP markers if preserving
+    // a purchased report (the user just paid and is re-scanning)
     if (window.ProReportBlock?.clearBillingCache) {
       window.ProReportBlock.clearBillingCache();
     }
-
-    // FORCE clear ALL session markers
-    sessionStorage.removeItem('sm_payment_completed_session');
-    sessionStorage.removeItem('sm_purchased_report_id');
+    if (!preserveReportId) {
+      document.body.removeAttribute('data-report-id');
+      document.body.removeAttribute('data-scan-domain');
+      sessionStorage.removeItem('sm_payment_completed_session');
+      sessionStorage.removeItem('sm_purchased_report_id');
+    } else {
+      console.log('[PerformanceHub] Keeping session markers for post-billing re-scan');
+    }
 
     console.log('[PerformanceHub] Fresh scan flag set, session markers cleared');
 
@@ -1134,11 +1166,15 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
     } catch (error) {
-      showError(error);
+      if (error.isQuotaError && loader) {
+        loader.showError(error.message, { isQuotaError: true });
+      } else {
+        showError(error);
+      }
     } finally {
       analyzeButton.disabled = false;
       buttonText.textContent = t('common.analyze', 'Analyze');
-      if (loader) {
+      if (loader && !loader.isComplete) {
         loader.complete();
       }
     }
@@ -1164,7 +1200,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const errorData = await response.json();
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        const err = new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        err.isQuotaError = true;
+        throw err;
       }
       const err = new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Quick scan failed'));
       err.errorName = errorData.error;
@@ -1207,7 +1245,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const errorData = await response.json();
         if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
           const limit = errorData.scansLimit || 10;
-          throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          const err = new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+          err.isQuotaError = true;
+          throw err;
         }
         const err = new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Full analysis failed'));
         err.errorName = errorData.error;
@@ -1250,12 +1290,14 @@ document.addEventListener('DOMContentLoaded', () => {
           const errorData = await response.json();
           if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
             const limit = errorData.scansLimit || 10;
-            throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+            const quotaErr = new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+            quotaErr.isQuotaError = true;
+            throw quotaErr;
           }
           errorMessage = errorData.message || errorData.error || errorMessage;
           console.error('[PerformanceHub] CWV API error:', { status: response.status, error: errorData });
         } catch (parseErr) {
-          if (parseErr.message && parseErr.message.includes('scan limit')) throw parseErr;
+          if (parseErr.isQuotaError) throw parseErr;
           console.error('[PerformanceHub] CWV API error (non-JSON):', response.status, response.statusText);
           errorMessage = `Server error (${response.status}): ${response.statusText}`;
         }
@@ -1675,7 +1717,7 @@ document.addEventListener('DOMContentLoaded', () => {
       ReportAccordion.createSection({ id: 'lh-performance-metrics', title: t('reports.performance.performanceMetrics', 'Performance Metrics'), scoreTextRight: formatScoreText(overallPerf), contentHTML: performanceMetricsContent }),
       ReportAccordion.createSection({ id: 'lh-cwv', title: t('reports.performance.coreWebVitals', 'Core Web Vitals'), scoreTextRight: formatScoreText(overallPerf), contentHTML: cwvContent }),
       ReportAccordion.createSection({ id: 'lh-resources', title: t('reports.performance.resourceBreakdown', 'Resource Breakdown'), scoreTextRight: null, contentHTML: resourcesContent }),
-      ReportAccordion.createSection({ id: 'lh-fixes', title: t('reports.common.fixCodeRecommendations', 'Fix Code + Recommendations'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
+      ReportAccordion.createSection({ id: 'lh-fixes', title: t('reports.common.fixCodeRecommendations', 'Recommendations'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
     ].join('');
 
     const summaryStats = calculatePerformanceSummary({
@@ -2075,6 +2117,35 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
   }
 
+  /**
+   * Translate a backend recommendation to the user's locale.
+   * Maps English titles/descriptions/impacts from the API to i18n keys.
+   */
+  function translateRecommendation(rec) {
+    const titleMap = {
+      'Minimize JavaScript': 'reports.performance.recommendations.minimizeJs',
+      'Optimize Images': 'reports.performance.recommendations.optimizeImages',
+      'Reduce CSS Size': 'reports.performance.recommendations.reduceCss',
+      'Improve Caching Strategy': 'reports.performance.recommendations.improveCaching',
+      'Optimize Largest Contentful Paint (LCP)': 'reports.performance.recommendations.optimizeLcp',
+      'Reduce Cumulative Layout Shift (CLS)': 'reports.performance.recommendations.reduceCls',
+      'Significant Mobile Performance Gap': 'reports.performance.recommendations.mobileGap',
+      'Enable Text Compression': 'reports.performance.recommendations.enableCompression',
+      'Reduce HTTP Requests': 'reports.performance.recommendations.reduceRequests',
+      'Optimize Web Fonts': 'reports.performance.recommendations.optimizeFonts'
+    };
+
+    const baseKey = titleMap[rec.title];
+    if (!baseKey) return rec;
+
+    return {
+      ...rec,
+      title: t(baseKey + '.title', rec.title),
+      description: t(baseKey + '.description', rec.description, rec.params || {}),
+      impact: rec.impact ? t(baseKey + '.impact', rec.impact) : rec.impact
+    };
+  }
+
   function renderOpportunitiesSection(results) {
     // Try multiple sources for opportunities/recommendations
     const desktopOpp = results.desktop?.opportunities || [];
@@ -2082,16 +2153,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const topLevel = results.recommendations || results.opportunities || [];
     const all = [...desktopOpp, ...mobileOpp, ...topLevel];
     if (!all.length) {
-      return '<div style="color: var(--text-muted, #9ca3af);">No opportunities reported.</div>';
+      return '<div style="color: var(--text-muted, #9ca3af);">' + t('reports.common.noOpportunities', 'No opportunities reported.') + '</div>';
     }
+    const translated = all.map(translateRecommendation);
     return `
       <ul style="margin:0; padding-left:1.1rem; display:grid; gap:0.75rem; color: var(--text-secondary, #e5e7eb);">
-        ${all.slice(0, 8).map(op => `
+        ${translated.slice(0, 8).map(op => `
           <li style="line-height: 1.5;">
-            <strong style="color: var(--text-primary, #fff);">${op.title || op.name || 'Opportunity'}</strong>
+            <strong style="color: var(--text-primary, #fff);">${op.title || op.name || t('reports.common.opportunity', 'Opportunity')}</strong>
             ${op.priority ? `<span style="display:inline-block; margin-left:0.5rem; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; background:${op.priority === 'high' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}; color:${op.priority === 'high' ? '#ef4444' : '#f59e0b'};">${op.priority}</span>` : ''}
             ${op.description ? `<div style="color: var(--text-muted, #9ca3af); font-size: 0.9rem; margin-top: 0.25rem;">${op.description}</div>` : ''}
-            ${op.impact ? `<div style="color: #00ff41; font-size: 0.85rem; margin-top: 0.25rem;">Impact: ${op.impact}</div>` : ''}
+            ${op.impact ? `<div style="color: #00ff41; font-size: 0.85rem; margin-top: 0.25rem;">${t('reports.common.impactLabel', 'Impact: ')}${op.impact}</div>` : ''}
           </li>
         `).join('')}
       </ul>
@@ -2108,15 +2180,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const caching = results.caching || {};
     const diagnosticItems = [];
     
-    if (network.ttfb) diagnosticItems.push({ title: 'Time to First Byte', description: network.ttfb });
-    if (network.connectionTime) diagnosticItems.push({ title: 'Connection Time', description: network.connectionTime });
-    if (caching.cacheHitRate) diagnosticItems.push({ title: 'Cache Hit Rate', description: caching.cacheHitRate });
-    if (caching.notCached > 0) diagnosticItems.push({ title: 'Uncached Resources', description: `${caching.notCached} of ${caching.total} resources not cached` });
+    if (network.ttfb) diagnosticItems.push({ title: t('reports.performance.diagnostics.ttfb', 'Time to First Byte'), description: network.ttfb });
+    if (network.connectionTime) diagnosticItems.push({ title: t('reports.performance.diagnostics.connectionTime', 'Connection Time'), description: network.connectionTime });
+    if (caching.cacheHitRate) diagnosticItems.push({ title: t('reports.performance.diagnostics.cacheHitRate', 'Cache Hit Rate'), description: caching.cacheHitRate });
+    if (caching.notCached > 0) diagnosticItems.push({ title: t('reports.performance.diagnostics.uncachedResources', 'Uncached Resources'), description: `${caching.notCached} of ${caching.total} resources not cached` });
     
     const combined = [...all, ...diagnosticItems];
     
     if (!combined.length) {
-      return '<div style="color: var(--text-muted, #9ca3af);">No diagnostics reported.</div>';
+      return '<div style="color: var(--text-muted, #9ca3af);">' + t('reports.common.noDiagnostics', 'No diagnostics reported.') + '</div>';
     }
     return `
       <ul style="margin:0; padding-left:1.1rem; display:grid; gap:0.5rem; color: var(--text-secondary, #e5e7eb);">
@@ -2129,7 +2201,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const res = results.resourceSummary || results.resources || {};
     const entries = normalizeResourceBreakdown(res);
     if (!entries.length) {
-      return '<div style="color: var(--text-muted, #9ca3af);">Resource breakdown not available.</div>';
+      return '<div style="color: var(--text-muted, #9ca3af);">' + t('reports.common.noResourceBreakdown', 'Resource breakdown not available.') + '</div>';
     }
     const maxVal = Math.max(...entries.map(e => e.value || 0), 1);
     return `
@@ -2597,7 +2669,7 @@ document.addEventListener('DOMContentLoaded', () => {
         scoreTextRight: formatScoreText(inpScore),
         contentHTML: renderCWVDetailSection('INP', desktop, mobile)
       }),
-      ReportAccordion.createSection({ id: 'cwv-fixes', title: t('reports.common.fixCodeRecommendations', 'Fix Code + Recommendations'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
+      ReportAccordion.createSection({ id: 'cwv-fixes', title: t('reports.common.fixCodeRecommendations', 'Recommendations'), scoreTextRight: null, isPro: true, locked: proLocked, contentHTML: proContent })
     ].join('');
 
     // Count CWV issues: metrics below 90 (needs improvement or poor)
@@ -2785,11 +2857,11 @@ document.addEventListener('DOMContentLoaded', () => {
   function getCwvStatus(value, metric) {
     const thresholds = CWV_THRESHOLDS[metric];
     if (!thresholds || value === null || value === undefined || Number.isNaN(value)) {
-      return { tier: 'unknown', label: '—', badge: 'Unknown', tone: '#9ca3af' };
+      return { tier: 'unknown', label: '—', badge: t('reports.common.cwvStatus.unknown', 'Unknown'), tone: '#9ca3af' };
     }
-    if (value <= thresholds.good) return { tier: 'good', label: 'Pass', badge: 'Pass', tone: '#00ff41' };
-    if (value <= thresholds.poor) return { tier: 'warn', label: 'At risk', badge: 'At risk', tone: '#f59e0b' };
-    return { tier: 'fail', label: 'Fail', badge: 'Fail', tone: '#ef4444' };
+    if (value <= thresholds.good) return { tier: 'good', label: t('reports.common.cwvStatus.pass', 'Pass'), badge: t('reports.common.cwvStatus.pass', 'Pass'), tone: '#00ff41' };
+    if (value <= thresholds.poor) return { tier: 'warn', label: t('reports.common.cwvStatus.atRisk', 'At risk'), badge: t('reports.common.cwvStatus.atRisk', 'At risk'), tone: '#f59e0b' };
+    return { tier: 'fail', label: t('reports.common.cwvStatus.fail', 'Fail'), badge: t('reports.common.cwvStatus.fail', 'Fail'), tone: '#ef4444' };
   }
 
   function formatMsCompact(ms) {
@@ -2821,8 +2893,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const tone = worst === 'fail' ? '#ef4444' : '#f59e0b';
     return `
       <div style="margin: 0 0 1rem 0; padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid ${tone}33; background: ${tone}12; color: ${tone}; font-weight: 700;">
-        ${worst === 'fail' ? 'Some metrics are failing: ' : 'Metrics at risk: '}
-        ${risky.map(r => r.metric.toUpperCase()).join(', ')} — improve to meet targets.
+        ${worst === 'fail' ? t('reports.common.riskBanner.failing', 'Some metrics are failing: ') : t('reports.common.riskBanner.atRisk', 'Metrics at risk: ')}
+        ${risky.map(r => r.metric.toUpperCase()).join(', ')}${t('reports.common.riskBanner.suffix', ' — improve to meet targets.')}
       </div>
     `;
   }
@@ -3500,7 +3572,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function exportPerformancePDF() {
-    if (!ensurePerformanceProAccess()) return;
+    // Access check is handled by exportReportPDF() → checkExportAccess() which does
+    // both local and async server-verified checks. No sync gate needed here.
     // Use the unified PDF export utility
     if (typeof window.exportReportPDF === 'function') {
       const button = document.querySelector('[data-export="pdf"]');
@@ -3813,7 +3886,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       // Fallback if ProReportBlock not loaded
-      return '';
+      const opts = { context: mode === 'cwv' ? 'speed-ux-cwv' : 'speed-ux-full', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, share link, export data, and fix packs for this scan.' };
+      const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
+      return '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>';
     }
 
     // For quick scan: Show CWV & Lighthouse promotion + other free scans
@@ -4131,7 +4206,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       .accordion__body {
         display: none;
-        padding: 0 1.25rem 1.25rem 1.25rem;
+        padding: 0.5rem 1.25rem 1.25rem 1.25rem;
       }
       .accordion__body--open {
         display: block;
@@ -4474,7 +4549,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function createPaymentSession(reportType, url) {
     const proceedBtn = document.getElementById('proceedPaymentBtn');
     proceedBtn.disabled = true;
-    proceedBtn.textContent = 'Creating checkout...';
+    proceedBtn.textContent = t('common.creatingCheckout', 'Creating checkout...');
 
     try {
       const startedAt = document.body.getAttribute('data-sm-scan-started-at') || window.SM_SCAN_STARTED_AT || '';

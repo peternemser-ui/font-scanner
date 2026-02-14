@@ -150,7 +150,9 @@
     "needOneReport": "Just need one report? You can unlock this single report for $5 after scanning.",
     "dayPassTimeLeft": "{hours}h {mins}m left",
     "dayPassMinutesLeft": "{mins}m left",
-    "expired": "expired"
+    "expired": "expired",
+    "haveAccount": "Have an account?",
+    "loginToRestore": "Log in to restore your plan"
   },
   "errors": {
     "urlRequired": "Please enter a valid URL",
@@ -334,8 +336,10 @@
       "urlPlaceholder": "https://example.com",
       "messageLabel": "Message",
       "messagePlaceholder": "What can we help with?",
-      "submitButton": "Send message"
+      "submitButton": "Send message",
+      "sending": "Sending..."
     },
+    "runningAudit": "Running audit...",
     "results": {
       "resultsFor": "Results for {domain}",
       "siteHealthScore": "SITE HEALTH SCORE",
@@ -509,7 +513,7 @@
     "crossPageConsistency": "Cross-Page Consistency",
     "pageBreakdown": "Per-Page Breakdown",
     "competitiveBrandComparison": "Competitive Brand Comparison",
-    "reportAndRecommendations": "Report and Recommendations",
+    "reportAndRecommendations": "Recommendations",
     "recommendations": "Recommendations",
     "harmonyType": "Harmony Type",
     "uniqueHues": "Unique Hues",
@@ -813,7 +817,58 @@
     "fcp": "FCP",
     "ttfb": "TTFB",
     "detailedMetrics": "Detailed Performance Metrics",
-    "recommendations": "Optimization Recommendations"
+    "recommendations": "Optimization Recommendations",
+    "resourceAnalysis": "Resource Analysis",
+    "networkPerformance": "Network Performance",
+    "cachingOptimization": "Caching & Optimization",
+    "requests": "Requests",
+    "pageSize": "Page Size",
+    "loadTime": "Load Time",
+    "report": {
+      "recommendations": "Recommendations",
+      "cwv": {
+        "good": "Good",
+        "needsImprovement": "Needs Improvement",
+        "poor": "Poor"
+      },
+      "lighthouse": {
+        "title": "Lighthouse Category Scores",
+        "bestPractices": "Best Practices"
+      },
+      "sectionIntros": {
+        "cwv": "Core Web Vitals are Google's key metrics for measuring real-world user experience. They focus on loading performance (LCP), interactivity (FID/INP), and visual stability (CLS). Scores are compared against Google's thresholds for Good, Needs Improvement, and Poor performance. Meeting the Good thresholds for all three metrics is essential for optimal search rankings.",
+        "lighthouse": "Lighthouse provides automated auditing across Performance, Accessibility, Best Practices, and SEO categories. Each category score reflects adherence to web development best practices. This section shows the scores for each Lighthouse audit category as measured during the analysis.",
+        "resources": "Resource analysis examines the composition of your page — scripts, stylesheets, images, fonts, and other assets. Understanding your resource breakdown helps identify optimization opportunities. Reducing the number and size of resources directly improves load times and Core Web Vitals scores.",
+        "network": "Network performance metrics measure how quickly your server responds and delivers content. Time to First Byte (TTFB) indicates server processing speed, while DNS lookup and SSL negotiation times reveal connection overhead. Optimizing these metrics requires attention to both server configuration and network infrastructure.",
+        "caching": "Effective caching reduces server load and dramatically improves repeat-visit performance. Properly configured cache headers ensure browsers store and reuse static resources. This section evaluates your caching strategy, identifying resources that could benefit from longer cache durations.",
+        "recommendations": "Based on the performance analysis, these recommendations target the most impactful improvements. Addressing high-priority items first will deliver the greatest gains in load time and Core Web Vitals scores."
+      },
+      "resources": {
+        "breakdownHeading": "Resource Breakdown",
+        "table": {
+          "type": "Type",
+          "count": "Files",
+          "size": "Size"
+        }
+      },
+      "network": {
+        "title": "Network Performance",
+        "ttfb": "Time To First Byte",
+        "dns": "DNS Lookup",
+        "ssl": "SSL Negotiation",
+        "connection": "Connection Time",
+        "domInteractive": "DOM Interactive",
+        "domContentLoaded": "DOM Content Loaded"
+      },
+      "caching": {
+        "title": "Caching & Optimization",
+        "hitRateLabel": "Cache Hit Rate",
+        "cachedLabel": "Cached Resources",
+        "notCachedLabel": "Not Cached"
+      },
+      "recommendations.noneTitle": "Excellent Performance",
+      "recommendations.noneBody": "Your site performs well across all metrics. Continue monitoring for regressions."
+    }
   },
   "accessibility": {
     "title": "Accessibility Analyzer",
@@ -828,8 +883,70 @@
     "passes": "Passes",
     "colorContrast": "Color Contrast",
     "keyboardNav": "Keyboard Navigation",
-    "ariaLabels": "ARIA Labels",
-    "imageAlt": "Image Alt Text"
+    "ariaLabels": "ARIA & Semantics",
+    "imageAlt": "Image Alt Text",
+    "report": {
+      "recommendations": "Recommendations",
+      "sectionIntros": {
+        "wcag": "The Web Content Accessibility Guidelines (WCAG) 2.1 define standards for making web content accessible to people with disabilities. Compliance is measured across four principles: Perceivable, Operable, Understandable, and Robust. This section evaluates your page against key WCAG Level AA success criteria. Meeting these standards ensures your site is usable by the widest possible audience and may be required by law in many jurisdictions.",
+        "contrast": "Sufficient color contrast ensures that text and interactive elements are readable by people with low vision or color vision deficiencies. WCAG 2.1 Level AA requires a minimum contrast ratio of 4.5:1 for normal text and 3:1 for large text. This section identifies elements that fail to meet these thresholds. Fixing contrast issues is one of the most impactful accessibility improvements you can make.",
+        "keyboard": "Keyboard accessibility ensures that all interactive elements can be reached and operated using only a keyboard. This is essential for users who cannot use a mouse due to motor disabilities, as well as power users who prefer keyboard navigation. This section checks for focusable elements, tab traps, and visible focus indicators. Every interactive element must be reachable via Tab key and operable via Enter or Space.",
+        "aria": "ARIA (Accessible Rich Internet Applications) attributes and semantic HTML provide the foundation for screen reader accessibility. Proper use of landmarks, labels, roles, and heading structure allows assistive technology to navigate and understand your page. This section checks for ARIA implementation quality, landmark regions, form labels, and heading hierarchy. Incorrect ARIA usage can actually make accessibility worse, so proper implementation is critical.",
+        "recommendations": "Based on the accessibility audit, this section provides prioritized recommendations to improve your site's inclusivity. Each recommendation references the relevant WCAG success criterion and includes practical steps for implementation. Addressing high-priority items first will yield the greatest improvement in accessibility compliance and user experience for people with disabilities."
+      },
+      "wcag": {
+        "levelTitle": "Target Level: WCAG 2.1 AA",
+        "levelBody": "WCAG Level AA is the standard required by most accessibility regulations worldwide, including ADA, Section 508, and the European Accessibility Act.",
+        "criteriaHeading": "Success Criteria",
+        "deviceScoresHeading": "Device Scores",
+        "criteria": {
+          "nonTextContent": "1.1.1 Non-text Content",
+          "infoRelationships": "1.3.1 Info and Relationships",
+          "contrastMinimum": "1.4.3 Contrast (Minimum)",
+          "keyboard": "2.1.1 Keyboard",
+          "bypassBlocks": "2.4.1 Bypass Blocks",
+          "pageTitled": "2.4.2 Page Titled",
+          "focusOrder": "2.4.3 Focus Order",
+          "languagePage": "3.1.1 Language of Page",
+          "parsing": "4.1.1 Parsing",
+          "nameRoleValue": "4.1.2 Name, Role, Value"
+        },
+        "table": {
+          "criterion": "Success Criterion"
+        }
+      },
+      "contrast": {
+        "issuesLabel": "Contrast Issues",
+        "detailsHeading": "Contrast Issues",
+        "allPassTitle": "All Contrast Checks Pass",
+        "allPassBody": "All text elements meet the minimum contrast ratio requirements.",
+        "table": {
+          "element": "Element",
+          "ratio": "Ratio",
+          "required": "Required"
+        }
+      },
+      "keyboard": {
+        "focusableLabel": "Focusable Elements",
+        "tabTrapsLabel": "Tab Traps",
+        "missingFocusLabel": "Missing Focus Indicators",
+        "issuesHeading": "Keyboard Issues"
+      },
+      "aria": {
+        "landmarksLabel": "Landmarks",
+        "missingLabelsLabel": "Missing Labels",
+        "invalidRolesLabel": "Invalid Roles",
+        "headingStructureLabel": "Heading Structure",
+        "issuesHeading": "ARIA Issues",
+        "table": {
+          "issue": "Issue",
+          "description": "Description",
+          "impact": "Impact"
+        }
+      },
+      "recommendations.noneTitle": "Excellent Accessibility",
+      "recommendations.noneBody": "Your site meets accessibility best practices. Continue monitoring for compliance."
+    }
   },
   "security": {
     "title": "Security Analyzer",
@@ -844,7 +961,78 @@
     "vulnerabilities": "Vulnerabilities",
     "cookieSecurity": "Cookie Security",
     "thirdPartyScripts": "Third-Party Scripts",
-    "helperText": "Tests SSL/TLS, security headers (CSP, HSTS, X-Frame-Options), and OWASP-aligned checks."
+    "sslTlsSecurity": "SSL/TLS Security",
+    "headers": "Security Headers",
+    "cookies": "Cookie Security",
+    "thirdParty": "Third-Party Scripts",
+    "validCertificate": "Valid",
+    "invalidCertificate": "Invalid",
+    "helperText": "Tests SSL/TLS, security headers (CSP, HSTS, X-Frame-Options), and OWASP-aligned checks.",
+    "report": {
+      "recommendations": "Recommendations",
+      "sectionIntros": {
+        "ssl": "SSL/TLS certificates establish encrypted connections between your server and visitors, protecting data in transit. A valid, properly configured certificate is essential for user trust and search engine rankings. This section evaluates your certificate validity, protocol version, issuer, and expiration status. Modern sites should use TLS 1.2 or higher and ensure certificates are renewed well before expiration.",
+        "headers": "Security headers instruct browsers on how to handle your site's content, providing defense against cross-site scripting, clickjacking, and other common attacks. Each header serves a specific protective function. This section evaluates the implementation of critical security headers and identifies missing protections that leave your site vulnerable.",
+        "vulnerabilities": "This section identifies potential security vulnerabilities discovered during the analysis. Vulnerabilities are categorized by severity level — critical issues require immediate attention, while lower-severity findings represent opportunities to strengthen your security posture. Regular vulnerability assessments are essential for maintaining a secure web presence.",
+        "cookies": "Cookies store session data and user preferences, making their security critical for protecting user privacy. Properly configured cookies use the Secure, HttpOnly, and SameSite attributes to prevent theft and misuse. This section audits all cookies detected on your site and evaluates their security configuration.",
+        "thirdParty": "Third-party scripts extend your site's functionality but introduce security risks. Each external script is a potential attack vector if compromised. Subresource Integrity (SRI) hashes verify that fetched scripts haven't been tampered with. This section evaluates all external scripts, their loading patterns, and SRI coverage.",
+        "recommendations": "Based on the security analysis, these recommendations prioritize the most impactful improvements for your site's security posture. Each recommendation includes the specific issue, its potential impact, and actionable steps for remediation."
+      },
+      "ssl": {
+        "overviewHeading": "Certificate Details",
+        "rows": {
+          "status": "Certificate Status",
+          "protocol": "Protocol",
+          "issuer": "Issuer",
+          "validFrom": "Valid From",
+          "validUntil": "Valid Until",
+          "daysRemaining": "Days Remaining"
+        }
+      },
+      "headers": {
+        "implementedLabel": "Headers Implemented",
+        "table": {
+          "header": "Header",
+          "description": "Description",
+          "valueOrRisk": "Value / Risk"
+        }
+      },
+      "status": {
+        "present": "Present",
+        "missing": "Missing"
+      },
+      "vulnerabilities": {
+        "critical": "Critical",
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low",
+        "detectedHeading": "Detected Vulnerabilities",
+        "noneFoundTitle": "No Vulnerabilities Detected",
+        "noneFoundBody": "No significant vulnerabilities were identified during the analysis."
+      },
+      "cookies": {
+        "totalLabel": "Total Cookies",
+        "secureLabel": "Properly Secured",
+        "securedLabel": "Cookies Secured",
+        "detailsHeading": "Cookie Details",
+        "table": {
+          "name": "Cookie Name"
+        }
+      },
+      "thirdParty": {
+        "totalLabel": "External Scripts",
+        "withSriLabel": "With SRI",
+        "sriCoverageLabel": "SRI Coverage",
+        "detailsHeading": "Script Details",
+        "table": {
+          "scriptUrl": "Script URL",
+          "protocol": "Protocol",
+          "risk": "Risk"
+        }
+      },
+      "recommendations.noneTitle": "Strong Security Posture",
+      "recommendations.noneBody": "Your site follows security best practices. Continue monitoring for new vulnerabilities."
+    }
   },
   "seo": {
     "title": "SEO Analyzer",
@@ -881,7 +1069,7 @@
       "security": "Security",
       "structuredData": "Structured Data",
       "additional": "Additional Checks",
-      "fixCode": "Fix Code + Recommendations"
+      "fixCode": "Recommendations"
     },
     "steps": {
       "running": "Running SEO analysis",
@@ -1272,6 +1460,8 @@
         }
       },
       "structuredData": {
+        "microdataLabel": "Microdata",
+        "totalLabel": "Total",
         "info": {
           "title": "ⓘ What is Structured Data Schema?",
           "body": "Structured data (also called schema markup) is code that helps search engines understand your content better, enabling <strong style=\"color: #00ff41;\">rich search results</strong> like star ratings, product prices, event dates, FAQ dropdowns, and more. It uses the <strong style=\"color: #00ccff;\">Schema.org</strong> vocabulary in JSON-LD, Microdata, or RDFa formats.",
@@ -1935,7 +2125,7 @@
       "links": {
         "title": "Fix link security & anchor text",
         "impact": "Prevents security vulnerabilities and improves link equity signals",
-        "description": "External links that open in a new tab without rel=\"noopener noreferrer\" expose your site to reverse tabnapping attacks, where the opened page can redirect your tab to a phishing site. Empty anchor text wastes link equity and provides no context to search engines or screen readers."
+        "description": "External links that open in a new tab without rel=\"noopener noreferrer\" expose your site to reverse tabnapping attacks, where the opened page can use the window.opener API to redirect your original tab to a phishing site. This is a well-documented security vulnerability that can trick users into entering credentials on a fake version of your site without realizing they have been redirected. Additionally, links with empty or missing anchor text waste valuable link equity because search engines use anchor text to understand the context and relevance of the linked page. Screen reader users also rely on anchor text to understand where a link leads before activating it, so empty anchors create a confusing and inaccessible experience. Both issues are simple to fix and should be resolved across all external and internal links."
       },
       "canonical": {
         "title": "Add canonical + sitemap refs",
@@ -1960,6 +2150,56 @@
         "impact": "Reduces blocking time - faster interactivity",
         "description": "Use defer for scripts that can wait until DOM is parsed.",
         "fullDescription": "Synchronous scripts in the <head> block the browser from rendering any content until they finish downloading and executing. Moving non-essential scripts to defer or async allows the page to paint first, improving perceived load speed and Core Web Vitals scores (especially FID/INP)."
+      }
+    },
+    "analyzer": {
+      "issues": {
+        "missingTitle": "Missing page title",
+        "missingDescription": "Missing meta description",
+        "missingViewport": "Missing viewport meta tag (affects mobile usability)",
+        "noH1": "No H1 heading found",
+        "multipleH1": "Multiple H1 headings found ({{count}}). Use only one H1 per page",
+        "noHeadings": "No headings found on page",
+        "lowWordCount": "Low word count (< 300 words). Search engines prefer content-rich pages",
+        "missingAlt": "{{count}} image(s) missing alt text (affects accessibility and SEO)",
+        "emptyAnchors": "{{count}} link(s) with empty anchor text",
+        "horizontalScroll": "Horizontal scrolling detected on mobile viewport",
+        "missingViewportMobile": "Missing viewport meta tag (critical for mobile responsiveness)",
+        "slowLoad": "Slow page load time ({{time}}). Target: < 3s",
+        "largePageSize": "Large page size ({{size}}). Optimize images and resources",
+        "noHttps": "Site not using HTTPS (critical for security and SEO)",
+        "invalidSchemas": "{{count}} invalid structured data schema(s) found"
+      },
+      "recs": {
+        "titleTooShort": "Title is too short (< 30 chars). Recommended: 50-60 chars",
+        "titleTooLong": "Title is too long (> 60 chars). It may be truncated in search results",
+        "descTooShort": "Meta description is too short (< 120 chars). Recommended: 150-160 chars",
+        "descTooLong": "Meta description is too long (> 160 chars). It may be truncated",
+        "addOpenGraph": "Add Open Graph tags for better social media sharing",
+        "addTwitterCard": "Add Twitter Card tags for better Twitter sharing",
+        "addLangAttr": "Add language attribute to <html> tag",
+        "addHeadings": "Consider adding more headings for better content structure",
+        "headingGaps": "Heading hierarchy has gaps (e.g., H1 → H3). Use sequential heading levels",
+        "addContent": "Consider adding more content. Pages with 600+ words tend to rank better",
+        "longSentences": "Long sentences detected. Consider shorter sentences for better readability",
+        "lowTextRatio": "Low text-to-HTML ratio. Too much code relative to content",
+        "lazyLoading": "Consider using lazy loading for images below the fold",
+        "largeImages": "{{count}} large image(s) detected. Consider optimizing image sizes",
+        "unsafeExternalLinks": "{{count}} external link(s) opening in new tab should have rel=\"noopener noreferrer\"",
+        "brokenLinks": "{{count}} link(s) with potentially broken format (href=\"#\" or javascript:)",
+        "smallFontSize": "Font size may be too small on mobile devices",
+        "improveLoadTime": "Page load time could be improved",
+        "largeDom": "Large DOM size ({{count}} nodes). Consider simplifying",
+        "manyResources": "Many resources loaded ({{count}}). Consider bundling/minification",
+        "addHsts": "Add Strict-Transport-Security header (HSTS)",
+        "addCsp": "Add Content-Security-Policy header",
+        "addXFrameOptions": "Add X-Frame-Options header (prevents clickjacking)",
+        "addXContentType": "Add X-Content-Type-Options header",
+        "addStructuredData": "Add structured data (Schema.org/JSON-LD) for rich search results",
+        "addRobotsTxt": "Add robots.txt file for better crawl control",
+        "addSitemap": "Add XML sitemap for better indexing",
+        "addFavicon": "Add favicon for better branding",
+        "addAnalytics": "Consider adding Google Analytics for traffic insights"
       }
     },
     "export": {
@@ -2246,7 +2486,7 @@
           "header": "Header"
         },
         "fixCode": {
-          "title": "Fix Code + Recommendations",
+          "title": "Recommendations",
           "subtitle": "Actionable fixes to improve your SEO score",
           "severity": "Severity",
           "category": "Category",
@@ -2296,6 +2536,8 @@
     "complete": "Complete!",
     "analysisFailed": "Analysis Failed",
     "tryAgain": "Try Again",
+    "upgradeToPro": "Upgrade to Pro",
+    "goToDashboard": "Go to Dashboard",
     "scanTiming": "Scan timing",
     "analyzingFonts": "ANALYZING FONTS",
     "connectingToWebsite": "Connecting to website",
@@ -2530,6 +2772,9 @@
     "analyzing": "Analyzing...",
     "analyzeCwv": "ANALYZE CWV",
     "creatingCheckout": "Creating checkout...",
+    "grade": "Grade",
+    "desktop": "Desktop",
+    "mobile": "Mobile",
     "difficulty": {
       "easy": "Easy",
       "medium": "Medium",
@@ -2581,6 +2826,44 @@
         "generatedBy": "Generated by Site Mechanic",
         "page": "Page",
         "of": "of"
+      },
+      "impact": {
+        "critical": "Critical",
+        "serious": "Serious",
+        "moderate": "Moderate",
+        "minor": "Minor"
+      },
+      "status": {
+        "pass": "Pass",
+        "fail": "Fail",
+        "optimal": "Optimal",
+        "review": "Review",
+        "missing": "Missing",
+        "warning": "Warning",
+        "good": "Good",
+        "configured": "Configured",
+        "notConfigured": "Not Configured"
+      },
+      "reportLabel": {
+        "seo": "SEO",
+        "cro": "CRO",
+        "gdpr": "GDPR",
+        "cwv": "CWV",
+        "security": "Security",
+        "performance": "Performance",
+        "accessibility": "Accessibility",
+        "fonts": "Fonts",
+        "tag-intelligence": "Tag Intelligence",
+        "enhanced-fonts": "Enhanced Fonts",
+        "brand-consistency": "Brand Consistency",
+        "broken-links": "Broken Links",
+        "ip-reputation": "IP Reputation",
+        "local-seo": "Local SEO",
+        "mobile-analyzer": "Mobile",
+        "competitive": "Competitive",
+        "hosting": "Hosting",
+        "site-crawler": "Site Crawler",
+        "core-web-vitals": "Core Web Vitals"
       }
     },
     "copyFailed": "Failed to copy",
@@ -3069,7 +3352,10 @@
     "cancel": "Cancel",
     "pleaseLoginToContinue": "Please log in to continue",
     "pleaseLoginToManageBilling": "Please log in to manage billing",
-    "signIn": "Sign in"
+    "signIn": "Sign in",
+    "sending": "Sending...",
+    "sendResetLink": "Send Reset Link",
+    "resetting": "Resetting..."
   },
   "account": {
     "title": "My Account",
@@ -3319,7 +3605,10 @@
       "purchased": "Purchased",
       "includedWithPro": "Included with Pro",
       "runScanFirst": "Run scan first",
-      "processing": "Processing..."
+      "processing": "Processing...",
+      "currentPlan": "Current Plan",
+      "loginToUpgrade": "Login to Upgrade",
+      "redirecting": "Redirecting to checkout..."
     },
     "benefits": {
       "unlimitedProTools": "Unlimited Pro tools",
@@ -3480,9 +3769,9 @@
       "recommendations": "Recommendations",
       "issuesFound": "Issues Found",
       "checksPassed": "Checks Passed",
-      "reportRecommendations": "Report and Recommendations",
-      "fixCode": "Fix Code + Recommendations",
-      "fixCodeRecommendations": "Fix Code + Recommendations",
+      "reportRecommendations": "Recommendations",
+      "fixCode": "Recommendations",
+      "fixCodeRecommendations": "Recommendations",
       "takeAction": "Take Action",
       "copy": "Copy",
       "copied": "Copied!",
@@ -3550,6 +3839,11 @@
         "unknown": "Unknown",
         "needsWork": "Needs Work"
       },
+      "difficulty": {
+        "beginner": "Beginner",
+        "intermediate": "Intermediate",
+        "advanced": "Advanced"
+      },
       "selectDevice": "Please select at least one device to test",
       "source": "source",
       "sources": "sources",
@@ -3571,8 +3865,8 @@
       "unlockToSeeMore": "Unlock to see more",
       "remove": "Remove",
       "screenshotOf": "Screenshot of {{url}}",
-      "reportAndRecommendations": "Report and Recommendations",
-      "reportAndRecommendationsCount": "Report and Recommendations ({{count}})",
+      "reportAndRecommendations": "Recommendations",
+      "reportAndRecommendationsCount": "Recommendations ({{count}})",
       "errorInvalidData": "Error: Invalid response data structure",
       "errorMissingScores": "Error: Missing scores data",
       "errorDisplayingResults": "Error displaying results: {{message}}",
@@ -3683,6 +3977,7 @@
       "prevArrow": "← Prev",
       "nextArrow": "Next →",
       "timeRemaining": "Time remaining: {{minutes}}m {{seconds}}s",
+      "timeRemainingDefault": "Time remaining: 3m 0s",
       "elements": "elements",
       "available": "Available",
       "pagePreview": "Page Preview",
@@ -3723,7 +4018,23 @@
       "andMore": "and",
       "moreRecommendations": "more recommendations",
       "errorComponentsNotLoaded": "Error: Report components not loaded. Please refresh the page.",
-      "reportContainerNotAvailable": "ReportContainer not available"
+      "reportContainerNotAvailable": "ReportContainer not available",
+      "cwvStatus": {
+        "pass": "Pass",
+        "atRisk": "At risk",
+        "fail": "Fail",
+        "unknown": "Unknown"
+      },
+      "riskBanner": {
+        "failing": "Some metrics are failing: ",
+        "atRisk": "Metrics at risk: ",
+        "suffix": " — improve to meet targets."
+      },
+      "noOpportunities": "No opportunities reported.",
+      "opportunity": "Opportunity",
+      "impactLabel": "Impact: ",
+      "noDiagnostics": "No diagnostics reported.",
+      "noResourceBreakdown": "Resource breakdown not available."
     },
     "fonts": {
       "title": "Fonts & Typography Report",
@@ -4198,9 +4509,9 @@
             "feature": "Feature"
           }
         },
-        "recommendations": "Recommendations",
-        "recommendations.noneTitle": "Well-Optimized Typography",
-        "recommendations.noneBody": "Your font stack follows best practices. Continue monitoring for optimization opportunities."
+        "recommendationsHeading": "Recommendations",
+        "recommendationsNoneTitle": "Well-Optimized Typography",
+        "recommendationsNoneBody": "Your font stack follows best practices. Continue monitoring for optimization opportunities."
       }
     },
     "seo": {
@@ -4393,7 +4704,7 @@
         "implementHttps": {
           "title": "Implement HTTPS",
           "impact": "+30 Security Score",
-          "summary": "Your website is not using HTTPS encryption. All data including passwords, personal information, and payment details are transmitted in plain text, making them vulnerable to interception by attackers on the network.",
+          "summary": "Your website is not using HTTPS encryption, which means all data transmitted between your server and visitors is sent in plain text. This includes passwords, personal information, payment details, and session tokens, all of which can be intercepted by attackers on the same network through man-in-the-middle attacks. Modern browsers display a prominent \"Not Secure\" warning in the address bar for HTTP sites, which erodes visitor trust and increases bounce rates. Google also uses HTTPS as a ranking signal, so unencrypted sites face a measurable SEO penalty. Free SSL certificates are available through Let's Encrypt, making HTTPS implementation straightforward for any website.",
           "steps": [
             "Obtain a free SSL certificate using certbot from Let's Encrypt",
             "Install the certificate and configure your web server",
@@ -4403,7 +4714,7 @@
         "implementCsp": {
           "title": "Implement Content Security Policy",
           "impact": "+15 Security Score",
-          "summary": "Your site lacks a Content Security Policy (CSP) header, leaving it vulnerable to Cross-Site Scripting (XSS) attacks. Attackers can inject malicious scripts that steal user data, hijack sessions, or deface your website.",
+          "summary": "Your site lacks a Content Security Policy (CSP) header, leaving it vulnerable to Cross-Site Scripting (XSS) attacks. CSP is an HTTP response header that tells the browser exactly which sources of content (scripts, styles, images, fonts) are allowed to load on your page. Without it, attackers who find an injection point can execute arbitrary JavaScript that steals user cookies, redirects visitors to phishing pages, or silently records keystrokes. XSS is consistently ranked among the top web security vulnerabilities by OWASP and is one of the most commonly exploited attack vectors. Implementing even a basic CSP dramatically reduces your attack surface and provides a strong defense-in-depth layer against script injection.",
           "steps": [
             "Start with <code>Content-Security-Policy-Report-Only</code> header to identify issues",
             "Set <code>default-src 'self'; script-src 'self'</code> as base policy",
@@ -4414,7 +4725,7 @@
         "enableHsts": {
           "title": "Enable HTTP Strict Transport Security",
           "impact": "+10 Security Score",
-          "summary": "HSTS header is not configured. Without HSTS, attackers can perform protocol downgrade attacks, forcing users to connect over insecure HTTP even when HTTPS is available.",
+          "summary": "HSTS header is not configured, leaving your site vulnerable to protocol downgrade attacks. When a user types your domain without the \"https://\" prefix, the browser initially connects over plain HTTP before being redirected to HTTPS. During that brief unencrypted request, an attacker on the same network can intercept the connection and prevent the redirect to HTTPS entirely, a technique known as SSL stripping. The HSTS header tells browsers to always use HTTPS for your domain, eliminating that initial insecure request completely. Once set, the browser remembers this preference for the specified duration and refuses to connect over HTTP, even if the user explicitly types it.",
           "steps": [
             "First ensure HTTPS works on all pages",
             "Add <code>Strict-Transport-Security: max-age=300</code> to test",
@@ -4424,7 +4735,7 @@
         "preventClickjacking": {
           "title": "Prevent Clickjacking Attacks",
           "impact": "+5 Security Score",
-          "summary": "X-Frame-Options header is not set. Attackers can embed your site in a hidden iframe and trick users into clicking buttons they didn't intend to, potentially changing settings or making purchases.",
+          "summary": "X-Frame-Options header is not set, leaving your site vulnerable to clickjacking attacks. In a clickjacking attack, a malicious website loads your page inside an invisible iframe and overlays deceptive content on top, tricking users into clicking buttons on your site without realizing it. This can lead to unauthorized actions such as changing account settings, making purchases, or granting permissions to an attacker's application. The attack is particularly dangerous because the user believes they are interacting with the malicious page while they are actually performing actions on your site with their authenticated session. Adding the X-Frame-Options header or using the CSP frame-ancestors directive prevents your pages from being embedded in third-party frames entirely.",
           "steps": [
             "Add <code>X-Frame-Options: DENY</code> header to your server config",
             "Also add CSP: <code>frame-ancestors 'none'</code> for modern browsers"
@@ -4433,7 +4744,7 @@
         "preventMimeSniffing": {
           "title": "Prevent MIME Sniffing",
           "impact": "+5 Security Score",
-          "summary": "X-Content-Type-Options header is missing. Browsers may misinterpret file types, potentially executing uploaded files as scripts even if they have a different extension.",
+          "summary": "X-Content-Type-Options header is missing, which allows browsers to override the declared content type and guess what a file actually contains. This behavior, known as MIME sniffing, means a file served as text/plain could be re-interpreted and executed as HTML or JavaScript if the browser detects script-like content inside it. Attackers exploit this by uploading files with harmless extensions (such as .txt or .jpg) that contain malicious scripts, which the browser then executes in the context of your domain. This single-line header (X-Content-Type-Options: nosniff) forces the browser to strictly respect the Content-Type you declare, blocking any attempts to execute mistyped files. It is one of the easiest security headers to implement and has no negative impact on normal site functionality.",
           "steps": [
             "Add <code>X-Content-Type-Options: nosniff</code> header to all responses",
             "Ensure your server sends correct Content-Type for all files",
@@ -4443,7 +4754,7 @@
         "improveCookieSecurity": {
           "title": "Improve Cookie Security",
           "impact": "+10 Security Score",
-          "summary": "Cookies are not properly secured. Session cookies without HttpOnly, Secure, and SameSite flags are vulnerable to theft via XSS attacks and cross-site request forgery.",
+          "summary": "Cookies are not properly secured, putting user sessions and sensitive data at risk. Without the HttpOnly flag, JavaScript code running on the page—including injected malicious scripts—can read session cookies and send them to an attacker, enabling complete account takeover. Without the Secure flag, cookies are transmitted over unencrypted HTTP connections where they can be intercepted on public Wi-Fi or compromised networks. The SameSite attribute prevents cross-site request forgery (CSRF) attacks by controlling whether the browser sends cookies with requests originating from other websites. Setting all three flags on your session cookies closes the most common cookie-related attack vectors with minimal implementation effort.",
           "steps": [
             "Add <code>HttpOnly; Secure; SameSite=Lax</code> flags to all session cookies",
             "Update your session library or framework configuration",
@@ -4453,7 +4764,7 @@
         "addSri": {
           "title": "Add Subresource Integrity",
           "impact": "+8 Security Score",
-          "summary": "Third-party scripts are loaded without integrity verification. If the CDN is compromised, malicious code could be injected into your site without detection.",
+          "summary": "Third-party scripts and stylesheets are loaded without integrity verification, creating a supply chain vulnerability. If the CDN or external server hosting these files is compromised, an attacker could replace the legitimate file with malicious code that executes on every page load for all of your visitors. Subresource Integrity (SRI) adds a cryptographic hash to each external resource tag, and the browser verifies the downloaded file matches that hash before executing it. If the file has been tampered with, the browser blocks it entirely, preventing the compromised code from running. This protection is especially critical for widely-used libraries like jQuery or Bootstrap, which are high-value targets for supply chain attacks.",
           "steps": [
             "Generate SRI hashes for each external script/stylesheet at srihash.org",
             "Add <code>integrity</code> and <code>crossorigin=\"anonymous\"</code> attributes",
@@ -4933,6 +5244,38 @@
         "recommendations": "Recommendations",
         "recommendations.noneTitle": "Excellent Accessibility",
         "recommendations.noneBody": "Your site meets accessibility best practices. Continue monitoring for compliance."
+      },
+      "fixTitles": {
+        "colorContrast": "Multiple Color Contrast Issues",
+        "focusIndicators": "Missing Focus Indicators",
+        "formLabels": "Missing Form Labels",
+        "headingStructure": "Improper Heading Structure",
+        "ariaLandmarks": "Missing ARIA Landmarks",
+        "mobileGap": "Mobile Accessibility Gap"
+      },
+      "fixDescriptions": {
+        "colorContrast": "Found {{count}} elements with insufficient color contrast. WCAG 2.1 Success Criterion 1.4.3 requires a minimum contrast ratio of 4.5:1 for normal-sized text and 3:1 for large text. Low contrast makes text difficult or impossible to read for users with low vision, color blindness, or anyone viewing the page in bright sunlight.",
+        "focusIndicators": "{{count}} interactive elements lack visible focus indicators. Focus indicators are the visual outlines or highlights that show which element is currently selected when navigating with a keyboard. Without them, keyboard-only users have no way to tell where they are on the page.",
+        "formLabels": "{{count}} form elements are missing accessible labels. Every form input must have a programmatically associated label so that assistive technologies can announce its purpose to the user. Without labels, screen reader users hear only the input type with no indication of what information is expected.",
+        "headingStructure": "Heading structure is {{structure}}. Headings create a hierarchical outline of your page content. Screen reader users frequently navigate by jumping between headings to quickly find the section they need. When headings are missing, skipped, or out of order, this navigation breaks down.",
+        "ariaLandmarks": "No semantic landmarks were found on this page. ARIA landmarks define the major regions of a page and allow screen reader users to jump directly to the section they need. Using semantic HTML5 elements like <header>, <nav>, <main>, and <footer> automatically creates these landmarks.",
+        "mobileGap": "Mobile accessibility score is {{diff}} points lower than desktop, indicating that mobile users face significant additional barriers. With over 60% of web traffic coming from mobile devices, a poor mobile accessibility experience affects the majority of your visitors."
+      },
+      "fixImpacts": {
+        "colorContrast": "Users with low vision or color blindness may have difficulty reading content.",
+        "focusIndicators": "Keyboard-only users cannot see which element has focus, making navigation difficult.",
+        "formLabels": "Screen reader users cannot understand the purpose of form inputs.",
+        "headingStructure": "Screen reader users rely on heading structure to navigate and understand page hierarchy.",
+        "ariaLandmarks": "Screen reader users cannot quickly navigate to major page sections.",
+        "mobileGap": "Mobile users with disabilities experience a degraded experience compared to desktop users."
+      },
+      "fixSolutions": {
+        "colorContrast": "Increase contrast between text and background colors. Use online contrast checkers to validate your color scheme.",
+        "focusIndicators": "Add visible focus styles using CSS :focus pseudo-class. Ensure focus indicators have sufficient contrast.",
+        "formLabels": "Add aria-label attributes or associate label elements with form inputs using for/id attributes.",
+        "headingStructure": "Ensure headings follow a logical sequence (h1 > h2 > h3) without skipping levels. Include one h1 per page.",
+        "ariaLandmarks": "Use semantic HTML5 elements (header, nav, main, aside, footer) or add appropriate ARIA landmark roles.",
+        "mobileGap": "Review touch target sizes, viewport configuration, and mobile-specific interactions. Ensure minimum touch target size of 44x44 pixels."
       }
     },
     "performance": {
@@ -4973,7 +5316,7 @@
       "consistentScoresMessage": "Desktop and mobile performance scores are within 10 points of each other.",
       "networkPerformance": "Network Performance",
       "cachingOptimization": "Caching & Optimization",
-      "reportAndRecommendations": "Report and Recommendations",
+      "reportAndRecommendations": "Recommendations",
       "whatAreWebVitals": "What are Core Web Vitals?",
       "webVitalsDescription": "Core Web Vitals are Google's metrics for measuring user experience.",
       "metric": "Metric",
@@ -5087,11 +5430,11 @@
         "improveAccessibility": "Improve Accessibility"
       },
       "fixSummaries": {
-        "lcpOptimization": "Your Largest Contentful Paint is {{value}}, which is above the {{target}} target. This means the main content takes too long to appear, causing users to perceive your site as slow.",
-        "javascriptOptimization": "Your site has {{value}} of Total Blocking Time, meaning the main thread is blocked and can't respond to user input. This causes delays in interactivity and poor user experience.",
-        "clsOptimization": "Layout shifts are occurring during page load, causing content to move unexpectedly. This frustrates users and can cause accidental clicks on wrong elements.",
-        "imageOptimization": "Images account for a significant portion of page weight. Optimizing images can dramatically improve load times and reduce bandwidth costs.",
-        "accessibilityImprovements": "Accessibility improvements help users with disabilities and improve SEO. Common issues include missing alt text, poor color contrast, and missing ARIA labels."
+        "lcpOptimization": "Your Largest Contentful Paint is {{value}}, which is above the {{target}} target. LCP measures how long it takes for the largest visible content element—typically a hero image, heading, or background graphic—to finish rendering on screen. This is the metric users most closely associate with perceived load speed, and Google uses it as a direct Core Web Vitals ranking factor. A slow LCP usually indicates that critical resources are not being prioritized, images are uncompressed, or render-blocking scripts are delaying the page paint. Optimizing LCP often yields the single biggest improvement in both user experience and search rankings.",
+        "javascriptOptimization": "Your site has {{value}} of Total Blocking Time, meaning the browser's main thread is occupied executing JavaScript and cannot respond to user input like clicks, taps, or key presses. This creates a frustrating experience where buttons appear clickable but do nothing, scroll feels janky, and forms seem unresponsive. Total Blocking Time directly measures the cumulative periods during which the main thread is blocked for more than 50 milliseconds, and it is a key component of your Core Web Vitals score. Common causes include large unminified JavaScript bundles, synchronous third-party scripts, and unused library code that is downloaded but never executed. Deferring non-critical scripts, removing unused code, and code-splitting large bundles can dramatically reduce blocking time.",
+        "clsOptimization": "Layout shifts are occurring during page load, causing content to move unexpectedly and disrupting the user experience. This happens when elements change position after the page initially renders—for example, an image loads without reserved dimensions, a web font swaps in with different metrics, or a dynamic ad banner pushes content down the page. These unexpected shifts are especially frustrating for users who are about to tap a button or read text that suddenly jumps to a different location, often causing accidental clicks. Cumulative Layout Shift (CLS) is one of Google's three Core Web Vitals metrics and directly affects your search rankings. The most effective fixes include adding explicit width and height attributes to images, using font-display: swap with size-adjusted fallback fonts, and reserving space for dynamic content.",
+        "imageOptimization": "Images typically account for the largest portion of total page weight, often consuming 50-80% of all downloaded bytes. Unoptimized images—those served in older formats like JPEG or PNG, at unnecessarily high resolutions, or without responsive sizing—force visitors to download megabytes of data they may not need. This dramatically increases load time, especially on mobile networks where bandwidth is limited and data may be metered. Modern image formats like WebP and AVIF can reduce file sizes by 60-80% compared to JPEG with no visible quality loss. Combining format optimization with responsive srcset attributes and lazy loading for below-the-fold images typically produces the single largest performance improvement for most websites.",
+        "accessibilityImprovements": "Your site's accessibility score indicates that users with disabilities may encounter significant barriers when trying to use your website. Common issues include images without descriptive alt text (which prevents screen reader users from understanding visual content), insufficient color contrast (which makes text unreadable for users with low vision), and form inputs without associated labels (which makes forms unusable with assistive technology). Accessibility is not only an ethical obligation but increasingly a legal requirement under the ADA, Section 508, and the European Accessibility Act, with non-compliance leading to lawsuits and fines. Search engines also factor accessibility into rankings, as many accessibility best practices align with SEO fundamentals like semantic HTML and clear content structure. Addressing these issues improves the experience for all users, not just those using assistive technology."
       },
       "fixImpacts": {
         "lcpOptimization": "+15 Performance Score",
@@ -5397,6 +5740,64 @@
       "enableCompressionDesc": "Enable Gzip/Brotli compression on your server to reduce file sizes by 70-90%.",
       "networkPerformance": "Network Performance",
       "cachingOptimization": "Caching & Optimization",
+      "diagnostics": {
+        "ttfb": "Time to First Byte",
+        "connectionTime": "Connection Time",
+        "cacheHitRate": "Cache Hit Rate",
+        "uncachedResources": "Uncached Resources"
+      },
+      "recommendations": {
+        "minimizeJs": {
+          "title": "Minimize JavaScript",
+          "description": "Your JavaScript bundle is {{size}}. Consider code splitting, tree shaking, and removing unused dependencies.",
+          "impact": "High - Faster initial page load and improved Time to Interactive"
+        },
+        "optimizeImages": {
+          "title": "Optimize Images",
+          "description": "Images account for {{size}}. Use next-gen formats (WebP, AVIF), lazy loading, and responsive images.",
+          "impact": "High - Significantly reduces page weight and improves LCP"
+        },
+        "reduceCss": {
+          "title": "Reduce CSS Size",
+          "description": "CSS files total {{size}}. Remove unused CSS, minify stylesheets, and consider critical CSS inlining.",
+          "impact": "Medium - Faster render-blocking resource loading"
+        },
+        "improveCaching": {
+          "title": "Improve Caching Strategy",
+          "description": "Only {{rate}} of resources are cacheable. Implement proper Cache-Control headers and versioning strategy.",
+          "impact": "High - Dramatically improves repeat visit performance"
+        },
+        "optimizeLcp": {
+          "title": "Optimize Largest Contentful Paint (LCP)",
+          "description": "LCP is {{value}} on {{platform}}, exceeding the recommended 2.5s threshold. Optimize your largest above-the-fold element.",
+          "impact": "Critical - Core Web Vital affects Google rankings and user experience"
+        },
+        "reduceCls": {
+          "title": "Reduce Cumulative Layout Shift (CLS)",
+          "description": "CLS is {{value}} on {{platform}}, exceeding the recommended 0.1 threshold. Reserve space for images/ads and use size attributes.",
+          "impact": "Medium - Core Web Vital affects user experience and rankings"
+        },
+        "mobileGap": {
+          "title": "Significant Mobile Performance Gap",
+          "description": "Mobile performance ({{mobileScore}}) is significantly lower than desktop ({{desktopScore}}). Mobile users may experience poor performance.",
+          "impact": "High - Most users access sites on mobile devices"
+        },
+        "enableCompression": {
+          "title": "Enable Text Compression",
+          "description": "Enable gzip or brotli compression for text-based resources to reduce transfer size by 70-90%.",
+          "impact": "Medium - Reduces bandwidth and speeds up downloads"
+        },
+        "reduceRequests": {
+          "title": "Reduce HTTP Requests",
+          "description": "Page makes {{count}} HTTP requests. Consider bundling assets, using CSS sprites, and consolidating third-party scripts.",
+          "impact": "Low-Medium - Reduces connection overhead"
+        },
+        "optimizeFonts": {
+          "title": "Optimize Web Fonts",
+          "description": "Fonts total {{size}}. Use font-display: swap, subset fonts to required glyphs, and preload critical fonts.",
+          "impact": "Low-Medium - Prevents invisible text and improves perceived performance"
+        }
+      },
       "report": {
         "sectionIntros": {
           "cwv": "Core Web Vitals are Google's key metrics for measuring real-world user experience. They assess loading speed (LCP), interactivity (INP/FID), and visual stability (CLS). These metrics directly influence search rankings through Google's page experience signals. This section presents your Core Web Vitals scores for both desktop and mobile, with performance ratings based on Google's published thresholds.",
@@ -5546,18 +5947,46 @@
       "additionalMetricsTitle": "Additional Performance Metrics",
       "siName": "Speed Index",
       "ttiName": "Time to Interactive",
-      "recommendationsTitle": "Report and Recommendations",
+      "recommendationsTitle": "Recommendations",
       "detailedRecommendationsBlur": "Detailed performance recommendations...",
       "criticalOptimizationsBlur": "Critical optimization suggestions...",
       "recommendationsAvailable": "{{count}} Recommendation(s) Available",
       "understandingScoresTitle": "Understanding Your Scores",
       "report": {
+        "desktop": "Desktop Vitals",
+        "mobile": "Mobile Vitals",
+        "comparison": "Desktop vs Mobile",
+        "desktop.details": "Metric Details",
+        "mobile.details": "Metric Details",
+        "desktop.additionalMetrics": "Additional Metrics",
+        "mobile.additionalMetrics": "Additional Metrics",
+        "diagnostics": "Diagnostics",
+        "diagnostics.desktop": "Desktop Diagnostics",
+        "diagnostics.mobile": "Mobile Diagnostics",
+        "recommendations": "Recommendations",
+        "recommendations.noneTitle": "Excellent Core Web Vitals",
+        "recommendations.noneBody": "Your site achieves good scores across all Core Web Vitals. Continue monitoring for regressions as content and traffic patterns change.",
+        "comparison.desktopScore": "Desktop Score",
+        "comparison.mobileScore": "Mobile Score",
+        "comparison.summary": "Comparison Summary",
         "sectionIntros": {
           "desktop": "Desktop Core Web Vitals measure how real users experience your site on desktop devices. This section presents LCP, INP, CLS, and additional metrics with ratings based on Google's published thresholds. Good scores indicate a fast, responsive, and visually stable experience for desktop visitors.",
           "mobile": "Mobile Core Web Vitals are especially important since Google uses mobile-first indexing. This section presents your mobile LCP, INP, CLS, and additional metrics. Mobile performance often differs significantly from desktop due to slower processors and network conditions. Optimizing for mobile is critical for search rankings.",
           "comparison": "This comparison highlights the differences between your desktop and mobile Core Web Vitals scores. Significant gaps between the two may indicate mobile-specific performance issues such as unoptimized images, render-blocking resources, or layout shifts that only occur on smaller viewports.",
           "diagnostics": "Diagnostic information provides detailed technical insights into the factors affecting your Core Web Vitals scores. These diagnostics help identify specific elements, resources, or code patterns that contribute to poor performance metrics.",
           "recommendations": "Based on your Core Web Vitals analysis, these recommendations target the highest-impact improvements for loading speed, interactivity, and visual stability."
+        },
+        "vitals": {
+          "lcp": "Largest Contentful Paint (LCP)",
+          "inp": "Interaction to Next Paint (INP)",
+          "cls": "Cumulative Layout Shift (CLS)",
+          "ttfb": "Time to First Byte (TTFB)",
+          "fcp": "First Contentful Paint (FCP)"
+        },
+        "cwv": {
+          "good": "Good",
+          "needsImprovement": "Needs Improvement",
+          "poor": "Poor"
         }
       }
     },
@@ -5775,7 +6204,71 @@
           "viewport": "Viewport meta configuration and Progressive Web App (PWA) readiness determine how your site behaves on mobile devices. A properly configured viewport prevents unwanted zooming and scaling. PWA features like a web manifest and service worker enable app-like experiences.",
           "accessibility": "Mobile accessibility focuses on ensuring your site is usable by people with disabilities on mobile devices. This includes touch target accessibility, screen reader compatibility, and gesture-based navigation support. Mobile-specific accessibility issues can affect a significant portion of your mobile audience.",
           "recommendations": "Based on the mobile analysis, these recommendations target the most impactful improvements for mobile user experience, performance, and accessibility."
-        }
+        },
+        "overview": "Mobile Overview",
+        "overview.overallScore": "Overall Score",
+        "overview.devicesTested": "Devices Tested",
+        "overview.avgPerformance": "Avg Performance",
+        "overview.deviceSummary": "Device Summary",
+        "overview.table": {
+          "device": "Device",
+          "performance": "Performance",
+          "touchTargets": "Touch Targets",
+          "readability": "Readability"
+        },
+        "touchTargets": "Touch Targets",
+        "touch": {
+          "totalTargets": "Total Targets",
+          "tooSmall": "Too Small",
+          "tooClose": "Too Close",
+          "passingTargets": "Passing Targets",
+          "issuesHeading": "Touch Target Issues",
+          "table": {
+            "severity": "Severity",
+            "issue": "Issue"
+          }
+        },
+        "readability": "Readability",
+        "readability.fontSize": "Font Size",
+        "readability.lineHeight": "Line Height",
+        "readability.contrast": "Contrast",
+        "readability.tooSmall": "Too Small",
+        "readability.issuesHeading": "Readability Issues",
+        "responsiveness": "Responsiveness",
+        "responsiveness.viewport": "Viewport Configured",
+        "responsiveness.mediaQueries": "Media Queries",
+        "responsiveness.noMediaQueries": "Not Detected",
+        "responsiveness.issuesHeading": "Responsiveness Issues",
+        "responsiveness.allPassTitle": "Fully Responsive",
+        "responsiveness.allPassBody": "Your page adapts correctly to different screen sizes with no responsiveness issues detected.",
+        "viewportPwa": "Viewport & PWA",
+        "viewport": {
+          "metaHeading": "Viewport Meta Configuration",
+          "configured": "Viewport Configured",
+          "width": "Width",
+          "initialScale": "Initial Scale",
+          "pwaHeading": "PWA Readiness",
+          "pwaScore": "PWA Score",
+          "manifest": "Web App Manifest",
+          "serviceWorker": "Service Worker",
+          "https": "HTTPS",
+          "darkModeTitle": "Dark Mode Supported",
+          "darkModeBody": "Dark mode is detected via {{method}}.",
+          "noDarkModeTitle": "No Dark Mode",
+          "noDarkModeBody": "Dark mode support was not detected. Consider adding prefers-color-scheme media query support."
+        },
+        "accessibility": "Mobile Accessibility",
+        "accessibility.score": "Accessibility Score",
+        "accessibility.issuesHeading": "Accessibility Issues",
+        "accessibility.table": {
+          "severity": "Severity",
+          "issue": "Issue"
+        },
+        "accessibility.noneTitle": "No Accessibility Issues",
+        "accessibility.noneBody": "No mobile-specific accessibility issues were detected. Continue following WCAG best practices.",
+        "recommendations": "Recommendations",
+        "recommendations.noneTitle": "Excellent Mobile Experience",
+        "recommendations.noneBody": "Your site provides a strong mobile experience. Continue monitoring for regressions as content and features change."
       }
     },
     "brokenLinks": {
@@ -6079,6 +6572,87 @@
           "anchors": "Anchor text analysis examines the descriptive text used in your links. Well-crafted anchor text helps both users and search engines understand link destinations. This section evaluates anchor text quality, diversity, and relevance.",
           "attributes": "Link attributes like rel, target, and nofollow influence how search engines interpret and follow your links. This section analyzes the distribution and usage of link attributes to ensure they align with your SEO strategy.",
           "recommendations": "Based on the broken links analysis, these recommendations prioritize fixing the most impactful link issues to improve user experience and search engine crawling."
+        },
+        "sections": {
+          "summary": "Link Summary",
+          "broken": "Broken Links",
+          "redirects": "Redirects",
+          "anchors": "Anchor Analysis",
+          "attributes": "Link Attributes",
+          "recommendations": "Recommendations"
+        },
+        "metrics": {
+          "total": "Total Links",
+          "broken": "Broken",
+          "redirects": "Redirects",
+          "working": "Working",
+          "external": "External",
+          "linkHealth": "Link Health"
+        },
+        "summary": {
+          "breakdownHeading": "Link Breakdown",
+          "table": {
+            "type": "Type",
+            "count": "Count",
+            "percentage": "Percentage"
+          },
+          "internal": "Internal Links",
+          "external": "External Links",
+          "broken": "Broken Links",
+          "redirects": "Redirects"
+        },
+        "broken": {
+          "totalBroken": "Broken Links Found",
+          "table": {
+            "url": "URL",
+            "status": "Status",
+            "source": "Source Page",
+            "anchor": "Anchor Text"
+          },
+          "noneTitle": "No Broken Links Found",
+          "noneBody": "All links on this site returned successful responses. Continue monitoring to catch new issues early."
+        },
+        "redirects": {
+          "totalRedirects": "Redirects Found",
+          "chainsWarning": "Redirect chains detected",
+          "chainsFound": "chains found",
+          "table": {
+            "url": "Original URL",
+            "status": "Status",
+            "target": "Redirect Target"
+          },
+          "noneTitle": "No Redirects Found",
+          "noneBody": "All links resolve directly without redirects. This is optimal for performance and link equity."
+        },
+        "anchors": {
+          "totalAnchors": "Total Anchors",
+          "emptyAnchors": "Empty Anchors",
+          "genericAnchors": "Generic Anchors",
+          "descriptiveAnchors": "Descriptive Anchors",
+          "descriptiveRatio": "Descriptive Anchor Ratio",
+          "commonHeading": "Most Common Anchor Texts",
+          "generic": "Generic",
+          "descriptive": "Descriptive",
+          "table": {
+            "text": "Anchor Text",
+            "count": "Count",
+            "quality": "Quality"
+          },
+          "noData": "No anchor text analysis data available."
+        },
+        "attributes": {
+          "breakdownHeading": "Attribute Breakdown",
+          "table": {
+            "attribute": "Attribute",
+            "count": "Count",
+            "description": "Description"
+          },
+          "unsafeBlank": "Found {{count}} links with target=\"_blank\" missing rel=\"noopener noreferrer\"",
+          "noData": "No link attribute analysis data available."
+        },
+        "recommendations": {
+          "noneTitle": "Healthy Link Profile",
+          "noneBody": "Your site has a healthy link profile with no significant issues. Continue monitoring to maintain link health."
         }
       }
     },
@@ -6226,8 +6800,98 @@
       "noCrossPageData": "No cross-page data available",
       "noPageData": "No page data available"
     },
+    "brandConsistency": {
+      "report": {
+        "sectionIntros": {
+          "overview": "This section provides a high-level overview of your brand consistency across the analyzed pages. A consistent brand identity strengthens user trust and recognition. The scores below reflect how well your site maintains uniform colors, typography, and visual patterns throughout.",
+          "colors": "Color consistency is a cornerstone of brand identity. This section analyzes the color palette detected across your pages, identifies dominant colors, and flags inconsistencies. A well-defined palette with limited variation ensures your brand is instantly recognizable and visually cohesive.",
+          "typography": "Consistent typography reinforces brand identity and improves readability. This section catalogs all fonts detected across your pages, analyzes heading and body text styles, and identifies typographic inconsistencies. Limiting your site to a well-defined type scale with consistent font families ensures a professional, cohesive appearance.",
+          "contrast": "Adequate color contrast ensures your content is readable for all users, including those with visual impairments. WCAG 2.1 requires a minimum contrast ratio of 4.5:1 for normal text and 3:1 for large text. This section evaluates foreground-background color pairs across your pages and identifies pairs that fail to meet accessibility standards.",
+          "crossPage": "Cross-page consistency measures how uniform your brand elements remain as users navigate between pages. Inconsistent styling, differing color palettes, or mismatched typography across pages can undermine brand trust and create a disjointed user experience. This section compares brand elements across all analyzed pages and highlights deviations.",
+          "recommendations": "Based on the brand consistency analysis, this section provides prioritized recommendations to strengthen your visual identity. Each recommendation targets a specific area of improvement — from color palette standardization to typographic consistency. Addressing high-priority items first will yield the greatest impact on brand coherence and user trust."
+        },
+        "overview": "Consistency Overview",
+        "overview.consistency": "Consistency",
+        "overview.colorAnalysis": "Color Analysis",
+        "overview.typographyAnalysis": "Typography Analysis",
+        "overview.elementsHeading": "Brand Elements Detected",
+        "overview.logos": "Logos",
+        "overview.colors": "Colors",
+        "overview.fonts": "Fonts",
+        "overview.patterns": "Patterns",
+        "colorAnalysis": "Color Analysis",
+        "colors": {
+          "paletteHeading": "Color Palette",
+          "table": {
+            "color": "Color",
+            "name": "Name",
+            "usage": "Usage",
+            "percentage": "Percentage"
+          },
+          "dominantHeading": "Dominant Colors",
+          "contrastRatio": "Contrast Ratio",
+          "issuesHeading": "Color Issues"
+        },
+        "typographyAnalysis": "Typography Analysis",
+        "typography": {
+          "fontsHeading": "Fonts Used",
+          "table": {
+            "font": "Font",
+            "weight": "Weight",
+            "usage": "Usage",
+            "pages": "Pages",
+            "element": "Element",
+            "size": "Size",
+            "lineHeight": "Line Height"
+          },
+          "headingStylesHeading": "Heading Styles",
+          "bodyStylesHeading": "Body Styles",
+          "issuesHeading": "Typography Issues"
+        },
+        "contrastAnalysis": "Contrast Analysis",
+        "contrast": {
+          "pairsHeading": "Contrast Pairs",
+          "table": {
+            "foreground": "Foreground",
+            "background": "Background",
+            "ratio": "Ratio"
+          },
+          "pass": "Pass",
+          "fail": "Fail",
+          "issuesHeading": "Contrast Issues",
+          "noIssuesTitle": "Good Contrast",
+          "noIssuesBody": "All analyzed color pairs meet WCAG contrast requirements."
+        },
+        "crossPageConsistency": "Cross-Page Consistency",
+        "crossPage": {
+          "pagesHeading": "Pages Analyzed",
+          "totalPages": "Total Pages",
+          "table": {
+            "page": "Page",
+            "score": "Score"
+          },
+          "issuesHeading": "Consistency Issues",
+          "noIssuesTitle": "Consistent Branding",
+          "noIssuesBody": "No cross-page consistency issues were detected. Your brand elements are uniform across pages."
+        },
+        "recommendations": "Recommendations",
+        "recommendations.noneTitle": "Strong Brand Consistency",
+        "recommendations.noneBody": "Your site maintains excellent brand consistency. Continue monitoring for visual drift as content evolves."
+      }
+    },
     "competitive": {
       "title": "Competitive Analysis",
+      "pageSubtitle": "Compare your website against competitors across SEO, Performance, Accessibility, and Security metrics.",
+      "competitiveAdvantageTitle": "COMPETITIVE ADVANTAGE",
+      "competitiveAdvantageDesc": "Compare your website against up to 5 competitors across SEO, Performance, Core Web Vitals, Accessibility, and Security. Get actionable insights to outrank them.",
+      "analysisNote": "Note: Analysis takes 2-3 minutes and is limited to 2 requests per 15 minutes due to high resource usage.",
+      "yourWebsiteUrl": "Your Website URL",
+      "competitorUrlsLabel": "Competitor URLs (Max 5)",
+      "addCompetitor": "+ Add Competitor",
+      "inspectButton": "INSPECT",
+      "modalTitle": "COMPETITIVE ANALYSIS",
+      "modalSubtitle": "Analyzing your competition... This may take 2-3 minutes",
+      "progress": "Progress",
       "interactiveScoreAnalysis": "Interactive Score Analysis",
       "detailedMetricsBreakdown": "Detailed Metrics Breakdown",
       "detailedMetrics": "Detailed Metrics Breakdown",
@@ -6521,6 +7185,54 @@
           "competitors": "Competitor profiles provide detailed score breakdowns for each analyzed competitor. Understanding each competitor's strengths and weaknesses helps inform your optimization strategy and identify opportunities to differentiate.",
           "insights": "Strategic insights synthesize the competitive data into actionable intelligence. These insights identify patterns, opportunities, and threats that emerge from the comparative analysis.",
           "recommendations": "Based on the competitive analysis, these recommendations prioritize improvements that will have the greatest impact on your competitive position."
+        },
+        "sections": {
+          "overview": "Competitive Overview",
+          "rankings": "Score Rankings",
+          "gaps": "Performance Gaps",
+          "competitors": "Competitor Profiles",
+          "insights": "Strategic Insights",
+          "recommendations": "Recommendations"
+        },
+        "categories": {
+          "overall": "Overall",
+          "seo": "SEO",
+          "performance": "Performance",
+          "security": "Security",
+          "accessibility": "Accessibility"
+        },
+        "overview": {
+          "yourSiteLabel": "Your Site",
+          "competitorsAnalyzed": "Competitors Analyzed",
+          "strengthAreas": "Strength Areas",
+          "improvementAreas": "Improvement Areas"
+        },
+        "rankings": {
+          "site": "Site",
+          "noData": "No ranking data available."
+        },
+        "gaps": {
+          "tableHeading": "Score Gap Analysis",
+          "category": "Category",
+          "yourScore": "Your Score",
+          "bestScore": "Best Score",
+          "gap": "Gap",
+          "strengthsHeading": "Strength Areas",
+          "improvementsHeading": "Improvement Areas",
+          "noData": "No gap data available."
+        },
+        "competitors": {
+          "competitorLabel": "Competitor",
+          "theirScore": "Their Score",
+          "difference": "Difference",
+          "noData": "No competitor data available."
+        },
+        "insights": {
+          "noData": "No strategic insights available."
+        },
+        "recommendations": {
+          "noneTitle": "Strong Competitive Position",
+          "noneBody": "Your site performs well against the analyzed competitors. Continue monitoring to maintain your advantage."
         }
       }
     },
@@ -6538,7 +7250,7 @@
         "formOptimization": "Form Optimization",
         "trustSignals": "Trust Signals",
         "mobileExperience": "Mobile Experience",
-        "fixCodeRecommendations": "Fix Code + Recommendations"
+        "fixCodeRecommendations": "Recommendations"
       },
       "summary": {
         "overallCro": "Overall CRO",
@@ -6763,6 +7475,11 @@
         }
       },
       "report": {
+        "overviewTitle": "CRO Overview",
+        "overview": {
+          "scoresHeading": "CRO Sub-Scores",
+          "overallScore": "Overall Score"
+        },
         "sectionIntros": {
           "overview": "Conversion Rate Optimization (CRO) analyzes how effectively your page converts visitors into customers or leads. This overview presents your aggregate CRO score across four key dimensions: calls to action, forms, trust signals, and mobile user experience. A well-optimized page guides visitors toward desired actions with clear, compelling elements.",
           "cta": "Calls to action (CTAs) are the primary conversion drivers on your page. Effective CTAs use action-oriented language, stand out visually, and are positioned where users are most likely to engage. This section evaluates your CTAs for visibility, clarity, and placement effectiveness.",
@@ -6771,6 +7488,69 @@
           "mobileUx": "Mobile UX optimization ensures conversion elements work effectively on touchscreen devices. This includes tap-friendly buttons, mobile-optimized forms, and responsive layouts that maintain conversion paths. Over 50% of purchases now begin on mobile devices.",
           "quickWins": "Quick wins are high-impact, low-effort changes that can immediately improve your conversion rate. These prioritized actions offer the best return on investment for optimization efforts.",
           "recommendations": "Based on the CRO analysis, these recommendations prioritize improvements with the highest potential impact on your conversion rate."
+        },
+        "sections": {
+          "cta": "Calls to Action",
+          "forms": "Form Analysis",
+          "trust": "Trust Signals",
+          "mobile": "Mobile UX",
+          "quickWins": "Quick Wins",
+          "recommendations": "Recommendations"
+        },
+        "cta": {
+          "totalFound": "CTAs Found",
+          "score": "CTA Score",
+          "foundHeading": "CTAs Detected",
+          "table": {
+            "text": "CTA Text",
+            "type": "Type",
+            "location": "Location"
+          },
+          "noneTitle": "No CTAs Detected",
+          "noneBody": "No clear calls to action were found on this page. Adding prominent CTAs is critical for conversions."
+        },
+        "forms": {
+          "totalFound": "Forms Found",
+          "score": "Form Score",
+          "foundHeading": "Forms Detected",
+          "table": {
+            "form": "Form",
+            "fields": "Fields",
+            "type": "Type"
+          },
+          "noneTitle": "No Forms Detected",
+          "noneBody": "No forms were found on this page. Consider adding lead capture or contact forms to improve conversions."
+        },
+        "trust": {
+          "totalFound": "Trust Signals Found",
+          "score": "Trust Score",
+          "foundHeading": "Trust Signals Detected",
+          "table": {
+            "signal": "Trust Signal",
+            "type": "Type"
+          },
+          "noneTitle": "No Trust Signals Detected",
+          "noneBody": "No trust signals were found on this page. Adding testimonials, security badges, and social proof can significantly improve conversions."
+        },
+        "mobileUx": {
+          "score": "Mobile UX Score",
+          "issuesHeading": "Mobile UX Issues",
+          "noIssuesTitle": "No Mobile UX Issues",
+          "noIssuesBody": "No significant mobile UX issues were detected. Your page appears to be well-optimized for mobile conversions."
+        },
+        "quickWins": {
+          "tableHeading": "Identified Quick Wins",
+          "table": {
+            "item": "Quick Win",
+            "impact": "Impact",
+            "effort": "Effort"
+          },
+          "noneTitle": "No Quick Wins Identified",
+          "noneBody": "The analysis did not identify specific quick wins. Review the detailed section recommendations for improvement opportunities."
+        },
+        "recommendations": {
+          "noneTitle": "Strong CRO Posture",
+          "noneBody": "Your site follows CRO best practices. Continue monitoring conversion metrics and A/B testing for further optimization."
         }
       }
     },
@@ -6791,7 +7571,7 @@
         "legalPages": "Legal Pages",
         "dataSubjectRights": "Data Subject Rights",
         "complianceRisks": "Compliance Risks",
-        "fixCodeRecommendations": "Fix Code + Recommendations"
+        "fixCodeRecommendations": "Recommendations"
       },
       "loader": {
         "scanInProgress": "GDPR compliance scan in progress...",
@@ -7048,7 +7828,71 @@
           "cookies": "This cookie audit catalogs all cookies and tracking technologies found on your site. Each cookie is classified by purpose, security attributes, and regulatory category. Understanding your cookie landscape is essential for maintaining accurate consent mechanisms and privacy compliance.",
           "risks": "Risk assessment identifies potential compliance gaps and their severity. High-risk issues may expose your organization to regulatory enforcement action. This section prioritizes risks based on their potential impact and likelihood of regulatory scrutiny.",
           "recommendations": "Based on the GDPR compliance analysis, these recommendations prioritize the most critical compliance gaps to reduce regulatory risk and improve user privacy."
-        }
+        },
+        "consent": "Cookie Consent",
+        "consent.overviewHeading": "Consent Overview",
+        "consent.rows": {
+          "detected": "Consent Banner Detected",
+          "platform": "Consent Platform",
+          "score": "Consent Score"
+        },
+        "privacy": "Privacy Policy",
+        "privacy.overviewHeading": "Policy Overview",
+        "privacy.rows": {
+          "found": "Privacy Policy Found",
+          "url": "Policy URL",
+          "score": "Policy Score"
+        },
+        "privacy.keywordsHeading": "Keywords Found",
+        "privacy.table": {
+          "keyword": "Keyword"
+        },
+        "cookiePolicy": "Cookie Policy",
+        "cookiePolicy.overviewHeading": "Cookie Policy Overview",
+        "cookiePolicy.rows": {
+          "found": "Cookie Policy Found",
+          "url": "Policy URL",
+          "score": "Policy Score"
+        },
+        "rights": "Data Subject Rights",
+        "rights.overviewHeading": "Rights Overview",
+        "rights.rows": {
+          "found": "Rights Information Found"
+        },
+        "rights.mechanismsHeading": "Mechanisms Found",
+        "rights.mechanismsLabel": "Rights Mechanisms",
+        "rights.table": {
+          "mechanism": "Mechanism"
+        },
+        "cookies": "Cookie Audit",
+        "cookies.totalLabel": "Total Cookies",
+        "cookies.secureLabel": "Secure Cookies",
+        "cookies.httpOnlyLabel": "HttpOnly Cookies",
+        "cookies.trackersLabel": "Trackers Detected",
+        "cookies.secureCoverageLabel": "Secure Cookie Coverage",
+        "cookies.detailsHeading": "Cookie Details",
+        "cookies.table": {
+          "name": "Name",
+          "domain": "Domain",
+          "expiry": "Expiry",
+          "trackerName": "Tracker",
+          "trackerType": "Type",
+          "trackerDomain": "Domain"
+        },
+        "cookies.trackersHeading": "Third-Party Trackers",
+        "risks": "Risk Assessment",
+        "risks.critical": "Critical",
+        "risks.high": "High",
+        "risks.medium": "Medium",
+        "risks.low": "Low",
+        "risks.detectedHeading": "Detected Risks",
+        "risks.noneFoundTitle": "No Significant Risks Detected",
+        "risks.noneFoundBody": "No major compliance risks were identified during the analysis.",
+        "risks.consentQualityHeading": "Consent Quality",
+        "risks.consentQualityScore": "Consent Quality Score",
+        "recommendations": "Recommendations",
+        "recommendations.noneTitle": "Strong Compliance Posture",
+        "recommendations.noneBody": "Your site follows GDPR best practices. Continue monitoring for regulatory changes and maintaining your data protection standards."
       }
     },
     "hosting": {
@@ -7261,7 +8105,49 @@
           "cms": "Content Management Systems and web technologies determine how your site is built and maintained. This section identifies the CMS platform, its version, and additional technologies detected on your site. Keeping your CMS and its dependencies up to date is critical for security and performance.",
           "performance": "Hosting performance directly impacts your site's loading speed and user experience. This section measures server response time and Time to First Byte (TTFB), which indicate how quickly your server processes and begins delivering requests. Fast server response times are essential for good Core Web Vitals scores.",
           "recommendations": "Based on the hosting analysis, these recommendations prioritize the most impactful improvements for your server infrastructure, performance, and configuration."
-        }
+        },
+        "provider": "Hosting Provider",
+        "provider.overviewHeading": "Provider Details",
+        "provider.rows": {
+          "name": "Provider",
+          "category": "Category",
+          "tier": "Tier"
+        },
+        "provider.featuresHeading": "Included Features",
+        "provider.table": {
+          "feature": "Feature"
+        },
+        "infrastructure": "Server Infrastructure",
+        "infrastructure.serverHeading": "Server Information",
+        "infrastructure.rows": {
+          "ip": "IP Address",
+          "provider": "Provider"
+        },
+        "infrastructure.headersHeading": "Response Headers",
+        "infrastructure.table": {
+          "header": "Header"
+        },
+        "cms": "CMS & Technology",
+        "cms.detectionHeading": "CMS Detection",
+        "cms.rows": {
+          "platform": "Platform",
+          "version": "Version",
+          "confidence": "Confidence"
+        },
+        "cms.noneTitle": "No CMS Detected",
+        "cms.noneBody": "No content management system was detected. The site may use a custom-built solution or a static site generator.",
+        "cms.technologiesHeading": "Detected Technologies",
+        "cms.table": {
+          "technology": "Technology",
+          "category": "Category"
+        },
+        "performance": "Hosting Performance",
+        "performance.responseTime": "Response Time",
+        "performance.ttfb": "TTFB",
+        "performance.detailsHeading": "Performance Details",
+        "recommendations": "Recommendations",
+        "recommendations.noneTitle": "Solid Hosting Setup",
+        "recommendations.noneBody": "Your hosting configuration follows best practices. Continue monitoring for performance changes."
       }
     },
     "ipReputation": {
@@ -7453,6 +8339,42 @@
             "Monitor expiration dates with alerting",
             "Certificate installation requires server access"
           ]
+        },
+        "removeBlacklist": {
+          "title": "Remove from DNS Blacklists",
+          "description": "Your IP is listed on one or more DNS blacklists, which impacts email deliverability.",
+          "whyItMatters": "Being blacklisted severely impacts email deliverability - your emails may be rejected or marked as spam. This damages business communication and reputation.",
+          "impact": "High - Restores email deliverability and sender reputation",
+          "technicalDetails": [
+            "Blacklists are maintained by anti-spam organizations",
+            "IPs get listed due to spam, malware, or poor email practices",
+            "Most blacklists have automated delisting after cleanup",
+            "Some require manual delisting requests"
+          ]
+        },
+        "closePorts": {
+          "title": "Close Critical Exposed Ports",
+          "description": "Critical administrative ports are publicly accessible, increasing your attack surface.",
+          "whyItMatters": "Exposed administrative ports (SSH, databases, etc.) are primary targets for automated attacks. Hackers continuously scan for open ports to exploit.",
+          "impact": "Critical - Reduces attack surface and prevents unauthorized access",
+          "technicalDetails": [
+            "Common attack vectors: SSH brute force, database exploits",
+            "Port scanners constantly probe for vulnerabilities",
+            "Administrative ports should be behind VPN or firewall",
+            "Principle of least exposure: only open what's needed"
+          ]
+        },
+        "monitorReputation": {
+          "title": "Monitor Reputation Regularly",
+          "description": "Set up regular monitoring to catch reputation issues early before they impact deliverability.",
+          "whyItMatters": "IP and domain reputation can degrade over time due to spam, security incidents, or being shared with bad actors. Regular monitoring catches issues before they impact deliverability.",
+          "impact": "Medium - Enables proactive reputation management",
+          "technicalDetails": [
+            "Reputation systems track sending patterns and complaints",
+            "Shared IP hosting can affect your reputation",
+            "Early detection allows faster remediation",
+            "Multiple blacklists and reputation services exist"
+          ]
         }
       },
       "analysisFailed": "Reputation analysis failed",
@@ -7475,6 +8397,578 @@
           "dns": "DNS and email configuration are critical for both deliverability and security. This section examines your MX records, DNSSEC status, and email authentication mechanisms (SPF, DKIM, DMARC). Proper configuration prevents email spoofing and improves deliverability.",
           "ports": "Open port analysis identifies network services exposed on your server. Unnecessary open ports increase your attack surface and may indicate misconfigured services. This section lists detected open ports and their associated services.",
           "recommendations": "Based on the IP reputation and security analysis, these recommendations prioritize improvements for your server's trustworthiness, security posture, and email deliverability."
+        },
+        "reputation": "IP Reputation",
+        "reputation.trustScore": "Trust Score",
+        "reputation.spamScore": "Spam Score",
+        "reputation.malwareScore": "Malware Score",
+        "reputation.phishingScore": "Phishing Score",
+        "reputation.blacklistHeading": "Blacklist Status",
+        "reputation.blacklistCleanTitle": "Clean Blacklist Status",
+        "reputation.blacklistCleanBody": "This IP is not listed on any of the checked blacklists.",
+        "reputation.listed": "Listed",
+        "reputation.clean": "Clean",
+        "reputation.table": {
+          "blacklist": "Blacklist"
+        },
+        "security": "Security Assessment",
+        "security.sslHeading": "SSL/TLS Certificate",
+        "security.rows": {
+          "status": "Certificate Status",
+          "issuer": "Issuer",
+          "protocol": "Protocol",
+          "validFrom": "Valid From",
+          "expiry": "Expiry",
+          "daysRemaining": "Days Remaining",
+          "subject": "Subject"
+        },
+        "security.valid": "Valid",
+        "security.invalid": "Invalid",
+        "security.noSslTitle": "No SSL Certificate",
+        "security.noSslBody": "No SSL/TLS certificate was detected for this target.",
+        "infrastructure": "Infrastructure",
+        "infrastructure.server": "Server",
+        "infrastructure.hosting": "Hosting",
+        "infrastructure.location": "Location",
+        "infrastructure.asn": "ASN",
+        "infrastructure.detailsHeading": "Infrastructure Details",
+        "infrastructure.rows": {
+          "ip": "IP Address",
+          "hostname": "Hostname",
+          "server": "Server Software",
+          "os": "Operating System",
+          "hosting": "Hosting Provider",
+          "provider": "Provider",
+          "country": "Country",
+          "city": "City",
+          "location": "Location",
+          "asn": "ASN",
+          "org": "Organization",
+          "cdn": "CDN",
+          "reverseIp": "Reverse DNS"
+        },
+        "infrastructure.noDataTitle": "No Infrastructure Data",
+        "infrastructure.noDataBody": "Infrastructure information could not be determined for this target.",
+        "dns": "DNS & Email",
+        "dns.dnssecHeading": "DNSSEC",
+        "dns.dnssecEnabled": "DNSSEC Enabled",
+        "dns.dnssecDisabled": "DNSSEC Not Enabled",
+        "dns.mxHeading": "MX Records",
+        "dns.table": {
+          "priority": "Priority",
+          "mailServer": "Mail Server"
+        },
+        "dns.noMxTitle": "No MX Records",
+        "dns.noMxBody": "No MX records were found for this domain. Email delivery may not be configured.",
+        "ports": "Open Ports",
+        "ports.totalOpen": "Open Ports",
+        "ports.table": {
+          "port": "Port",
+          "service": "Service"
+        },
+        "ports.noneTitle": "No Open Ports Detected",
+        "ports.noneBody": "No open ports were found during the scan, or port scanning was not performed.",
+        "recommendations": "Recommendations",
+        "recommendations.noneTitle": "Good Reputation Standing",
+        "recommendations.noneBody": "Your IP has a clean reputation. Continue monitoring for changes and maintain security best practices."
+      },
+      "codeExamples": {
+        "addCaa": [
+          {
+            "title": "CAA Record for Let's Encrypt",
+            "subtitle": "Most common free CA - add to DNS zone file",
+            "notes": [
+              "Replace yourdomain.com with your actual domain",
+              "Add multiple issue records if using multiple CAs",
+              "Use issuewild to control wildcard certificate issuance",
+              "iodef specifies where to send violation reports"
+            ]
+          },
+          {
+            "title": "CAA for Commercial CAs",
+            "subtitle": "Common commercial certificate authorities"
+          }
+        ],
+        "strengthenDmarc": [
+          {
+            "title": "Current Policy (Monitor Only)",
+            "subtitle": "Your current DMARC record - no enforcement"
+          },
+          {
+            "title": "Recommended: Quarantine Policy",
+            "subtitle": "Step 1 - Send failures to spam folder",
+            "notes": [
+              "pct=25 applies policy to only 25% of failures initially",
+              "Monitor reports for 1-2 weeks before increasing percentage",
+              "ruf enables forensic (individual failure) reports",
+              "Move to reject policy after quarantine is stable"
+            ]
+          },
+          {
+            "title": "Final Goal: Reject Policy",
+            "subtitle": "Step 2 - Block all unauthenticated emails"
+          }
+        ],
+        "implementDmarc": [
+          {
+            "title": "Basic DMARC Record",
+            "subtitle": "Start with monitoring mode",
+            "notes": [
+              "Create a dedicated mailbox or use a DMARC reporting service",
+              "Reports are XML format - use free tools to parse them",
+              "Monitor for 2-4 weeks before enabling enforcement",
+              "Services like Postmark, dmarcian offer free report analysis"
+            ]
+          },
+          {
+            "title": "Using a DMARC Reporting Service",
+            "subtitle": "Easier report analysis with third-party tools"
+          }
+        ],
+        "configureSpf": [
+          {
+            "title": "Basic SPF Record",
+            "subtitle": "Common email providers included",
+            "notes": [
+              "Replace with your actual mail provider SPF includes",
+              "Use ~all (soft fail) initially, then -all (hard fail)",
+              "Maximum 10 DNS lookups allowed - flatten if needed",
+              "Test with: dig TXT yourdomain.com or mxtoolbox.com/spf.aspx"
+            ]
+          },
+          {
+            "title": "Common Email Provider SPF Includes",
+            "subtitle": "Copy the includes for services you use"
+          }
+        ],
+        "configureDkim": [
+          {
+            "title": "DKIM Setup Overview",
+            "subtitle": "DKIM requires mail server configuration",
+            "notes": [
+              "DKIM keys are generated by your email provider/server",
+              "The selector (e.g., \"google\", \"selector1\") varies by provider",
+              "Add the TXT record your provider gives you to DNS",
+              "Verify with: dig TXT selector._domainkey.yourdomain.com"
+            ]
+          },
+          {
+            "title": "Enable DKIM by Provider",
+            "subtitle": "Where to enable DKIM in common providers"
+          }
+        ],
+        "fixSslCertificate": [
+          {
+            "title": "Install Let's Encrypt with Certbot",
+            "subtitle": "Free automated SSL for most servers",
+            "notes": [
+              "Certbot handles renewal automatically via cron/systemd",
+              "Free certificates valid for 90 days, auto-renewed",
+              "Works with most hosting providers and CDNs",
+              "For cPanel: use built-in Let's Encrypt or AutoSSL"
+            ]
+          },
+          {
+            "title": "Verify SSL Configuration",
+            "subtitle": "Check your SSL setup is correct"
+          }
+        ],
+        "removeBlacklist": [
+          {
+            "title": "Check Blacklist Status",
+            "subtitle": "Identify which lists you're on",
+            "notes": [
+              "Most blacklists remove automatically after 1-4 weeks of no spam",
+              "Fix the root cause FIRST before requesting removal",
+              "Check your server for compromise, open relays, or spam scripts",
+              "Review outbound email logs for suspicious activity"
+            ]
+          },
+          {
+            "title": "Common Blacklist Removal Links",
+            "subtitle": "Where to request delisting"
+          }
+        ],
+        "closePorts": [
+          {
+            "title": "UFW Firewall Configuration",
+            "subtitle": "Simple firewall for Ubuntu/Debian",
+            "notes": [
+              "Never expose database ports (3306, 5432, 27017) publicly",
+              "Use SSH keys instead of passwords",
+              "Consider fail2ban for additional brute-force protection",
+              "Use a VPN or SSH tunnel for admin access"
+            ]
+          },
+          {
+            "title": "iptables Configuration",
+            "subtitle": "For systems without UFW"
+          }
+        ],
+        "monitorReputation": [
+          {
+            "title": "Set Up Monitoring",
+            "subtitle": "Free and paid monitoring options",
+            "notes": [
+              "Set up Google Postmaster Tools for Gmail insights",
+              "Check blacklists weekly with mxtoolbox.com",
+              "DMARC reports show authentication failures",
+              "Track email bounce rates in your email platform"
+            ]
+          }
+        ]
+      },
+      "guides": {
+        "addCaa": {
+          "difficulty": "Beginner",
+          "timeEstimate": "5-10 minutes",
+          "prerequisites": "DNS management access",
+          "steps": [
+            {
+              "title": "Identify Your Certificate Authority",
+              "description": "Determine which CA(s) issue SSL certificates for your domain. Check your current certificate details or your hosting provider's documentation.",
+              "tip": "Common CAs: letsencrypt.org, digicert.com, comodoca.com, godaddy.com"
+            },
+            {
+              "title": "Access Your DNS Management",
+              "description": "Log in to your domain registrar or DNS provider (e.g., Cloudflare, GoDaddy, Namecheap, AWS Route 53)."
+            },
+            {
+              "title": "Add CAA Record(s)",
+              "description": "Create a new CAA record with flag 0, tag \"issue\", and value set to your CA's domain (e.g., \"letsencrypt.org\").",
+              "tip": "If using wildcards, also add an \"issuewild\" record"
+            },
+            {
+              "title": "Verify the Record",
+              "description": "Use dig or an online tool to verify: dig CAA yourdomain.com or check at dnschecker.org"
+            }
+          ],
+          "verificationSteps": [
+            "Run: dig CAA yourdomain.com (or use mxtoolbox.com/CAA.aspx)",
+            "Verify your CA is listed in the output",
+            "Try requesting a new certificate to confirm it still works"
+          ]
+        },
+        "strengthenDmarc": {
+          "difficulty": "Intermediate",
+          "timeEstimate": "2-4 weeks (gradual rollout)",
+          "prerequisites": "SPF and DKIM must be configured first, DMARC monitoring in place",
+          "steps": [
+            {
+              "title": "Review Current DMARC Reports",
+              "description": "Before strengthening, analyze your DMARC aggregate reports to identify legitimate email sources that might be failing authentication.",
+              "tip": "Use free tools like dmarcian.com or Postmark DMARC reports"
+            },
+            {
+              "title": "Fix Authentication Failures",
+              "description": "Ensure all legitimate email sources (marketing tools, CRMs, etc.) are properly authenticated with SPF includes and DKIM."
+            },
+            {
+              "title": "Upgrade to Quarantine (25%)",
+              "description": "Update your DMARC record to: p=quarantine; pct=25 - this sends 25% of failing emails to spam.",
+              "tip": "Monitor for 1-2 weeks before increasing percentage"
+            },
+            {
+              "title": "Increase to Quarantine (100%)",
+              "description": "After successful monitoring, remove the pct tag or set to 100 to quarantine all failures."
+            },
+            {
+              "title": "Upgrade to Reject Policy",
+              "description": "Once quarantine is stable for 2+ weeks, change p=quarantine to p=reject for full protection."
+            }
+          ],
+          "verificationSteps": [
+            "Check DMARC record: dig TXT _dmarc.yourdomain.com",
+            "Monitor aggregate reports for any legitimate email being blocked",
+            "Test by sending emails and checking recipient headers for DMARC pass"
+          ]
+        },
+        "implementDmarc": {
+          "difficulty": "Beginner",
+          "timeEstimate": "15-30 minutes setup, 2-4 weeks monitoring",
+          "prerequisites": "SPF record should be configured (DKIM recommended)",
+          "steps": [
+            {
+              "title": "Choose a Reporting Email or Service",
+              "description": "Decide where DMARC reports will be sent. Use a dedicated mailbox or a free service like dmarcian.com for easier analysis."
+            },
+            {
+              "title": "Create the DMARC DNS Record",
+              "description": "Add a TXT record at _dmarc.yourdomain.com with: \"v=DMARC1; p=none; rua=mailto:your-report-email@yourdomain.com\"",
+              "tip": "Start with p=none to monitor without affecting delivery"
+            },
+            {
+              "title": "Verify the Record",
+              "description": "Check that the record is published: dig TXT _dmarc.yourdomain.com"
+            },
+            {
+              "title": "Monitor Reports",
+              "description": "Wait 24-48 hours for reports to start arriving. Analyze them to understand your email authentication status.",
+              "tip": "Reports are XML - use an online parser or DMARC service to read them"
+            }
+          ],
+          "verificationSteps": [
+            "Run: dig TXT _dmarc.yourdomain.com",
+            "Send a test email to check-auth@verifier.port25.com for instant results",
+            "Check that aggregate reports start arriving within 24-48 hours"
+          ]
+        },
+        "configureSpf": {
+          "difficulty": "Beginner",
+          "timeEstimate": "15-30 minutes",
+          "prerequisites": "DNS management access, list of email sending services",
+          "steps": [
+            {
+              "title": "Inventory Your Email Senders",
+              "description": "List all services that send email for your domain: your mail server, marketing tools (Mailchimp, SendGrid), CRM, etc."
+            },
+            {
+              "title": "Gather SPF Includes",
+              "description": "Find the SPF include statement for each service. Usually in their documentation under \"Email Authentication\" or \"DNS Setup\".",
+              "tip": "Google Workspace: include:_spf.google.com, Microsoft 365: include:spf.protection.outlook.com"
+            },
+            {
+              "title": "Create the SPF Record",
+              "description": "Add a TXT record at @ (root) with: \"v=spf1 [your includes] ~all\"",
+              "tip": "Use ~all (soft fail) initially, then -all (hard fail) once confirmed working"
+            },
+            {
+              "title": "Verify and Test",
+              "description": "Check your SPF record and send test emails to verify they pass SPF checks."
+            }
+          ],
+          "verificationSteps": [
+            "Check record: dig TXT yourdomain.com | grep spf",
+            "Test at mxtoolbox.com/spf.aspx",
+            "Send email to check-auth@verifier.port25.com",
+            "Check email headers show \"spf=pass\""
+          ]
+        },
+        "configureDkim": {
+          "difficulty": "Intermediate",
+          "timeEstimate": "30-60 minutes",
+          "prerequisites": "Access to mail server settings AND DNS management",
+          "steps": [
+            {
+              "title": "Enable DKIM in Your Email Service",
+              "description": "Go to your email provider's admin panel and find DKIM/Email Authentication settings. Enable DKIM signing.",
+              "tip": "For Google Workspace: Admin Console → Apps → Gmail → Authenticate Email"
+            },
+            {
+              "title": "Copy the DNS Record",
+              "description": "Your email provider will generate a TXT record with your public key. Copy the complete record including the selector."
+            },
+            {
+              "title": "Add DNS Record",
+              "description": "Create a TXT record at [selector]._domainkey.yourdomain.com with the public key value provided.",
+              "tip": "The selector is part of the hostname (e.g., \"google._domainkey\" or \"selector1._domainkey\")"
+            },
+            {
+              "title": "Verify in Email Provider",
+              "description": "Return to your email provider and click \"Start Authentication\" or \"Verify\" to confirm the DNS record is detected."
+            },
+            {
+              "title": "Test Email Signing",
+              "description": "Send a test email and check the headers for \"dkim=pass\" or use an online DKIM validator."
+            }
+          ],
+          "verificationSteps": [
+            "Check DNS: dig TXT selector._domainkey.yourdomain.com",
+            "Send test email and check headers for \"dkim=pass\"",
+            "Use mail-tester.com for comprehensive email authentication check"
+          ]
+        },
+        "fixSslCertificate": {
+          "difficulty": "Intermediate",
+          "timeEstimate": "15-60 minutes depending on hosting",
+          "prerequisites": "Server access (SSH or hosting panel)",
+          "steps": [
+            {
+              "title": "Identify the Issue",
+              "description": "Use SSL Labs (ssllabs.com/ssltest) to identify the specific certificate problem: expired, wrong domain, self-signed, chain issue.",
+              "tip": "This will tell you exactly what's wrong and how to fix it"
+            },
+            {
+              "title": "Choose Your Solution",
+              "description": "For most cases, Let's Encrypt provides free, auto-renewing certificates. For specialized needs, purchase from DigiCert, Comodo, etc."
+            },
+            {
+              "title": "Install/Renew Certificate",
+              "description": "If using Let's Encrypt, install certbot and run: sudo certbot --nginx -d yourdomain.com (replace nginx with apache if applicable)."
+            },
+            {
+              "title": "Configure Auto-Renewal",
+              "description": "Ensure certificates will auto-renew: sudo certbot renew --dry-run to test the renewal process."
+            },
+            {
+              "title": "Verify Installation",
+              "description": "Test your site in a browser and re-run SSL Labs test to confirm all issues are resolved."
+            }
+          ],
+          "verificationSteps": [
+            "Visit your site in a browser - should show padlock with no warnings",
+            "Run SSL Labs test again - should show A or A+ rating",
+            "Check expiry: echo | openssl s_client -connect yourdomain.com:443 2>/dev/null | openssl x509 -noout -dates"
+          ]
+        },
+        "addNameservers": {
+          "difficulty": "Beginner",
+          "timeEstimate": "15-30 minutes",
+          "prerequisites": "Domain registrar access",
+          "steps": [
+            {
+              "title": "Check Current Nameservers",
+              "description": "Use dig NS yourdomain.com or an online DNS checker to see your current nameservers."
+            },
+            {
+              "title": "Contact Your DNS Provider",
+              "description": "Most DNS providers offer multiple nameservers. Check their documentation for additional nameserver addresses."
+            },
+            {
+              "title": "Add Additional Nameservers",
+              "description": "In your domain registrar's control panel, add the additional nameserver addresses provided by your DNS host."
+            },
+            {
+              "title": "Verify Propagation",
+              "description": "Wait for DNS propagation and verify all nameservers are responding: dig NS yourdomain.com"
+            }
+          ],
+          "verificationSteps": [
+            "Run: dig NS yourdomain.com and verify multiple nameservers listed",
+            "Check at dnschecker.org for global propagation",
+            "Ensure nameservers are on different networks for true redundancy"
+          ]
+        },
+        "renewCertificate": {
+          "difficulty": "Beginner",
+          "timeEstimate": "15-30 minutes",
+          "prerequisites": "Server access or hosting panel access",
+          "steps": [
+            {
+              "title": "Check Current Certificate Expiry",
+              "description": "Verify the exact expiry date: echo | openssl s_client -connect yourdomain.com:443 2>/dev/null | openssl x509 -noout -dates"
+            },
+            {
+              "title": "Renew the Certificate",
+              "description": "If using Let's Encrypt with certbot, run: sudo certbot renew. For manual certificates, purchase renewal from your CA."
+            },
+            {
+              "title": "Install the New Certificate",
+              "description": "For manual renewals, install the new certificate on your server and restart the web server."
+            },
+            {
+              "title": "Set Up Auto-Renewal",
+              "description": "Configure automatic renewal to prevent future expiration: sudo certbot renew --dry-run to test.",
+              "tip": "Set calendar reminder 30 days before next expiration as backup"
+            }
+          ],
+          "verificationSteps": [
+            "Check new expiry date in browser certificate details",
+            "Run SSL Labs test to confirm valid certificate",
+            "Verify auto-renewal is working: sudo certbot renew --dry-run"
+          ]
+        },
+        "removeBlacklist": {
+          "difficulty": "Intermediate",
+          "timeEstimate": "Variable - hours to weeks",
+          "prerequisites": "Server access to investigate and fix root cause",
+          "steps": [
+            {
+              "title": "Identify All Listings",
+              "description": "Use mxtoolbox.com/blacklists.aspx to check all major blacklists and identify where you're listed.",
+              "tip": "Some listings are more impactful than others - Spamhaus affects the most"
+            },
+            {
+              "title": "Investigate Root Cause",
+              "description": "Check server logs, email queues, and outbound traffic for signs of spam or compromise. Common causes: hacked website, open relay, compromised account.",
+              "tip": "Look for unusual outbound connections on port 25"
+            },
+            {
+              "title": "Fix the Issue",
+              "description": "Clean any malware, close open relays, reset compromised passwords, and implement proper email authentication (SPF/DKIM/DMARC)."
+            },
+            {
+              "title": "Request Delisting",
+              "description": "Visit each blacklist's removal page. Some auto-expire, others require manual request. Provide evidence of remediation.",
+              "tip": "Spamhaus: check.spamhaus.org, Barracuda: barracudacentral.org"
+            },
+            {
+              "title": "Implement Prevention",
+              "description": "Set up monitoring, rate limiting on email sending, and regular security scans to prevent reoccurrence."
+            }
+          ],
+          "verificationSteps": [
+            "Re-check blacklists at mxtoolbox.com after delisting",
+            "Send test emails to Gmail/Outlook and check delivery",
+            "Monitor email bounce rates for the next week"
+          ]
+        },
+        "closePorts": {
+          "difficulty": "Intermediate",
+          "timeEstimate": "30-60 minutes",
+          "prerequisites": "Server SSH/root access",
+          "steps": [
+            {
+              "title": "Audit Open Ports",
+              "description": "Run nmap or use an online port scanner to see exactly what's exposed: nmap -Pn yourdomain.com",
+              "tip": "Compare against what should be exposed (usually just 80, 443, maybe 22)"
+            },
+            {
+              "title": "Identify Unnecessary Services",
+              "description": "For each open port, determine if it needs to be publicly accessible. Database ports (3306, 5432), admin panels should NOT be public."
+            },
+            {
+              "title": "Configure Firewall",
+              "description": "Use UFW (Ubuntu/Debian) or firewalld (CentOS/RHEL) to restrict ports. Allow only 80/tcp, 443/tcp, and carefully controlled SSH access."
+            },
+            {
+              "title": "Secure SSH Access",
+              "description": "Use key-based authentication, disable password login, consider changing port or using fail2ban for brute-force protection."
+            },
+            {
+              "title": "Set Up VPN for Admin Access",
+              "description": "For services that need remote access (databases, admin panels), configure a VPN rather than exposing ports directly."
+            }
+          ],
+          "verificationSteps": [
+            "Re-scan with nmap to confirm ports are closed",
+            "Verify you can still access necessary services",
+            "Test SSH access still works (don't lock yourself out!)"
+          ]
+        },
+        "monitorReputation": {
+          "difficulty": "Beginner",
+          "timeEstimate": "30 minutes setup",
+          "prerequisites": "Domain ownership for verification",
+          "steps": [
+            {
+              "title": "Set Up Google Postmaster Tools",
+              "description": "Visit postmaster.google.com, add your domain, and verify ownership. This shows how Gmail treats your email.",
+              "tip": "Verification usually requires adding a DNS record"
+            },
+            {
+              "title": "Set Up Microsoft SNDS",
+              "description": "Register at sendersupport.olc.protection.outlook.com for Outlook/Hotmail delivery insights."
+            },
+            {
+              "title": "Configure DMARC Reporting",
+              "description": "Ensure your DMARC record has rua= pointing to an email or DMARC service to receive authentication reports."
+            },
+            {
+              "title": "Set Up Blacklist Monitoring",
+              "description": "Use MXToolbox, HetrixTools, or similar to get email alerts if your IP appears on blacklists.",
+              "tip": "Most offer free basic monitoring"
+            },
+            {
+              "title": "Create a Monitoring Schedule",
+              "description": "Review Postmaster/SNDS weekly, blacklist alerts immediately, DMARC reports monthly or when issues arise."
+            }
+          ],
+          "verificationSteps": [
+            "Confirm Google Postmaster Tools shows your domain as verified",
+            "Verify DMARC reports are being received",
+            "Test blacklist monitoring by checking alert settings"
+          ]
         }
       }
     },
@@ -7692,7 +9186,58 @@
           "keywords": "Local keywords signal geographic relevance to search engines. This section analyzes your content for location-specific terms, service area keywords, and local intent signals. Proper use of local keywords helps your pages rank for geographically targeted searches.",
           "presence": "Local presence factors include Google Business Profile optimization, local directory citations, and review signals. This section evaluates indicators of your local search presence and identifies opportunities to strengthen your visibility in local search results.",
           "recommendations": "Based on the local SEO analysis, these recommendations target the most impactful improvements for your local search visibility and geographic relevance."
-        }
+        },
+        "nap": "NAP Consistency",
+        "nap.detailsHeading": "Business Information",
+        "nap.rows": {
+          "name": "Business Name",
+          "address": "Address",
+          "phone": "Phone",
+          "consistency": "Consistency"
+        },
+        "status": {
+          "consistent": "Consistent",
+          "inconsistent": "Inconsistent",
+          "listed": "Listed",
+          "notListed": "Not Listed"
+        },
+        "schema": "Schema Markup",
+        "schema.statusLabel": "Schema Status",
+        "schema.typesCountLabel": "Schema Types Found",
+        "schema.typesHeading": "Detected Schema Types",
+        "schema.table": {
+          "type": "Schema Type"
+        },
+        "schema.noneTitle": "No Schema Markup Found",
+        "schema.noneBody": "Adding LocalBusiness or Organization schema markup can significantly improve your local search visibility and enable rich results.",
+        "schema.markupHeading": "Markup Preview",
+        "keywords": "Local Keywords",
+        "keywords.foundLabel": "Local Keywords Found",
+        "keywords.densityLabel": "Local Keyword Density",
+        "keywords.foundHeading": "Local Keywords Detected",
+        "keywords.table": {
+          "keyword": "Keyword",
+          "suggestion": "Suggested Keyword"
+        },
+        "keywords.suggestionsHeading": "Keyword Suggestions",
+        "keywords.suggestionsCalloutTitle": "Expand Your Local Reach",
+        "keywords.suggestionsCalloutBody": "Consider incorporating these additional local keywords into your content to broaden your geographic search visibility.",
+        "presence": "Local Presence",
+        "presence.claimed": "Claimed",
+        "presence.notFound": "Not Found",
+        "presence.googleBusinessLabel": "Google Business Profile",
+        "presence.citationsLabel": "Citations Found",
+        "presence.gbpCalloutTitle": "Claim Your Google Business Profile",
+        "presence.gbpCalloutBody": "A verified Google Business Profile is essential for appearing in Google Maps and the local pack. Claiming and optimizing your profile should be a top priority.",
+        "presence.gbpFoundTitle": "Google Business Profile Detected",
+        "presence.gbpFoundBody": "Your Google Business Profile was detected. Ensure it is fully optimized with accurate hours, photos, and regular posts for maximum local visibility.",
+        "presence.directoriesHeading": "Directory Listings",
+        "presence.table": {
+          "directory": "Directory"
+        },
+        "recommendations": "Recommendations",
+        "recommendations.noneTitle": "Strong Local SEO",
+        "recommendations.noneBody": "Your site follows local SEO best practices. Continue monitoring your local presence and NAP consistency for sustained rankings."
       }
     },
     "crawler": {
@@ -7705,7 +9250,7 @@
       "visualSitemap": "Visual Sitemap",
       "discoveredPages": "Discovered Pages & Export",
       "discoveredPagesExport": "Discovered Pages & Export ({{count}})",
-      "fixCodeRecommendations": "Fix Code + Recommendations",
+      "fixCodeRecommendations": "Recommendations",
       "noSitemapToPrint": "No sitemap to print",
       "allowPopupsToPrint": "Please allow popups to print the sitemap",
       "noSitemapToDownload": "No sitemap to download",
@@ -7906,6 +9451,69 @@
           "issues": "Issues detected during the crawl include broken pages, missing titles, duplicate content, and other technical SEO problems. Each issue is categorized by severity to help you prioritize fixes that will have the greatest impact on search performance.",
           "performance": "Page performance across your site reveals patterns in response times and server behavior. Consistently slow pages may indicate server capacity issues or inefficient code. This section highlights the slowest pages and overall response time distribution.",
           "recommendations": "Based on the site crawl analysis, these recommendations target the most critical structural and technical issues affecting your site's search engine crawlability."
+        },
+        "sections": {
+          "overview": "Crawl Overview",
+          "pages": "Pages Crawled",
+          "structure": "Site Structure",
+          "issues": "Issues Detected",
+          "performance": "Page Performance",
+          "recommendations": "Recommendations"
+        },
+        "metrics": {
+          "totalPages": "Total Pages",
+          "discoveredUrls": "Discovered URLs",
+          "maxDepth": "Max Depth",
+          "crawlTime": "Crawl Time",
+          "avgResponseTime": "Avg Response Time"
+        },
+        "overview": {
+          "statusOverview": "Status Code Overview",
+          "ok": "2xx OK",
+          "redirects": "3xx Redirects",
+          "errors": "4xx/5xx Errors"
+        },
+        "pages": {
+          "totalCrawled": "Pages Crawled",
+          "table": {
+            "url": "URL",
+            "title": "Title",
+            "status": "Status",
+            "responseTime": "Response Time"
+          },
+          "noData": "No page data available."
+        },
+        "structure": {
+          "depthHeading": "Depth Distribution",
+          "depthLevel": "Depth {{level}}",
+          "statusHeading": "Status Code Breakdown",
+          "table": {
+            "depth": "Depth",
+            "pages": "Pages",
+            "percentage": "Percentage",
+            "statusCode": "Status Code",
+            "count": "Count"
+          }
+        },
+        "issues": {
+          "totalIssues": "Total Issues",
+          "noneTitle": "No Issues Found",
+          "noneBody": "The crawl did not detect any issues. Continue monitoring your site to catch problems early."
+        },
+        "performance": {
+          "avgResponseTime": "Avg Response Time",
+          "pagesAnalyzed": "Pages Analyzed",
+          "slowestHeading": "Slowest Pages",
+          "table": {
+            "url": "URL",
+            "responseTime": "Response Time",
+            "rating": "Rating"
+          },
+          "noData": "No performance data available."
+        },
+        "recommendations": {
+          "noneTitle": "Healthy Site Structure",
+          "noneBody": "Your site has a healthy structure with no significant crawl issues. Continue monitoring to maintain site health."
         }
       }
     },
@@ -7952,13 +9560,46 @@
         "ga4AndUniversal": "Both GA4 and Universal Analytics detected. Universal Analytics is deprecated (July 2023).",
         "duplicateTracking": "Google Analytics loaded both via GTM and hardcoded. This may cause duplicate tracking.",
         "noConsentManagement": "Advertising tags detected without consent management solution",
-        "advertisingCookiesNoConsent": "advertising cookie(s) set without detected consent"
+        "advertisingCookiesNoConsent": "{{count}} advertising cookie(s) set without detected consent",
+        "insecureCookies": "{{count}} cookie(s) without Secure flag",
+        "sameSiteNoSecure": "{{count}} cookie(s) with SameSite=None but no Secure flag",
+        "blockingScripts": "{{count}} synchronous scripts may block page rendering",
+        "headScripts": "{{count}} scripts in <head> - consider moving non-critical scripts to body"
       },
       "recommendations": {
         "migrateToGa4": "Complete migration to GA4",
         "useGtmExclusively": "Use GTM exclusively for GA or remove hardcoded implementation",
         "implementConsent": "Implement consent management (OneTrust, Cookiebot, etc.) to comply with GDPR/CCPA",
-        "implementConsentBeforeCookies": "Implement consent management before setting advertising cookies"
+        "implementConsentBeforeCookies": "Implement consent management before setting advertising cookies",
+        "addSecureFlag": "Add Secure flag to cookies to prevent transmission over HTTP",
+        "sameSiteRequiresSecure": "Cookies with SameSite=None require the Secure attribute"
+      },
+      "severity": {
+        "high": "HIGH",
+        "warning": "WARNING",
+        "info": "INFO"
+      },
+      "loadingMethod": {
+        "async": "async",
+        "defer": "defer",
+        "sync": "sync"
+      },
+      "recTitles": {
+        "addConsentManagement": "Add Consent Management",
+        "fixCriticalIssue": "Fix Critical Issue",
+        "removeDuplicateTags": "Remove Duplicate Tags",
+        "implementConsentManagement": "Implement Consent Management",
+        "considerGtm": "Consider Google Tag Manager"
+      },
+      "recDescriptions": {
+        "duplicateTags": "{{count}} duplicate tag(s) detected. This may cause double-tracking.",
+        "analyticsNoConsent": "Analytics tags detected without consent management. Required for GDPR/CCPA compliance.",
+        "considerGtm": "{{count}} tags detected. GTM simplifies tag management and improves performance."
+      },
+      "recActions": {
+        "removeDuplicates": "Review and remove duplicate implementations",
+        "addConsentSolution": "Add OneTrust, Cookiebot, or similar consent solution",
+        "migrateToGtm": "Migrate tags to Google Tag Manager for easier management"
       },
       "fixes": {
         "addConsentManagement": "Add Consent Management",
@@ -8111,12 +9752,13 @@
             "name": "Name",
             "vendor": "Vendor",
             "domain": "Domain",
+            "secure": "Secure",
             "expires": "Expires"
           }
         },
-        "recommendations": "Recommendations",
-        "recommendations.noneTitle": "Well-Managed Tag Infrastructure",
-        "recommendations.noneBody": "Your tag implementation follows best practices. Continue monitoring for new issues."
+        "recommendationsTitle": "Recommendations",
+        "recommendationsNoneTitle": "Well-Managed Tag Infrastructure",
+        "recommendationsNoneBody": "Your tag implementation follows best practices. Continue monitoring for new issues."
       }
     },
     "metrics": {
@@ -8149,7 +9791,8 @@
     "essentialDesc": "Required for the site to function (session, preferences).",
     "analytics": "Analytics",
     "analyticsDesc": "Help us understand how visitors use the site (Google Analytics).",
-    "alwaysOn": "Always on"
+    "alwaysOn": "Always on",
+    "ariaLabel": "Cookie consent"
   },
   "privacyPage": {
     "breadcrumb": "Privacy Policy",

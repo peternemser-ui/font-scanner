@@ -58,8 +58,13 @@
      */
     async fetchUsage() {
       try {
+        const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+        const headers = {};
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
         const response = await fetch('/api/auth/usage', {
-          credentials: 'include'
+          credentials: 'include',
+          headers
         });
         if (response.ok) {
           this.usage = await response.json();
@@ -162,10 +167,6 @@
               </a>
             </div>
           ` : ''}
-
-          <p class="upgrade-gate__footer">
-            ${t('pricing.moneyBackGuarantee', '14-day money-back guarantee')}
-          </p>
         </div>
       `;
     }

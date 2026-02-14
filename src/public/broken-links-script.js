@@ -168,7 +168,8 @@ async function analyzeLinks() {
       const errorData = await response.json();
       if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
         const limit = errorData.scansLimit || 10;
-        throw new Error(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit));
+        loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
+        return;
       }
       throw new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed'));
     }
@@ -406,7 +407,7 @@ function displayResults(data) {
   if (data.recommendations && data.recommendations.length > 0) {
     accordionHTML += ReportAccordion.createSection({
       id: 'report-recommendations',
-      title: t('reports.common.reportAndRecommendationsCount', 'Report and Recommendations ({{count}})', { count: data.recommendations.length }),
+      title: t('reports.common.reportAndRecommendationsCount', 'Recommendations ({{count}})', { count: data.recommendations.length }),
       isPro: true,
       locked: !isUnlocked,
       context: 'broken-links',
@@ -422,10 +423,10 @@ function displayResults(data) {
   ReportAccordion.initInteractions();
 
   // 9. Pro Report Block (reportId and isUnlocked already computed at top of function)
+  const proSection = document.createElement('div');
+  proSection.className = 'section';
+  proSection.style.marginTop = '2rem';
   if (window.ProReportBlock && window.ProReportBlock.render) {
-    const proSection = document.createElement('div');
-    proSection.className = 'section';
-    proSection.style.marginTop = '2rem';
     proSection.innerHTML = window.ProReportBlock.render({
       context: 'broken-links',
       features: ['pdf', 'excel', 'csv', 'share'],
@@ -433,12 +434,16 @@ function displayResults(data) {
       subtitle: t('reports.brokenLinks.unlockSubtitle', 'PDF export, Excel spreadsheet, share link, and export data for this scan.'),
       reportId: reportId
     });
-    reportScope.appendChild(proSection);
+  } else {
+    const opts = { context: 'broken-links', features: ['pdf', 'excel', 'csv', 'share'], title: 'Unlock Report', subtitle: 'PDF export, Excel spreadsheet, share link, and export data for this scan.' };
+    const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
+    proSection.innerHTML = '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>';
+  }
+  reportScope.appendChild(proSection);
 
-    // Refresh paywall state to show correct buttons
-    if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
-      window.CreditsManager.renderPaywallState();
-    }
+  // Refresh paywall state to show correct buttons
+  if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
+    window.CreditsManager.renderPaywallState();
   }
 
   // CRITICAL: Ensure fix accordion functions are available after DOM render
@@ -1037,7 +1042,7 @@ function renderBrokenLinksFixAccordion(fix, index) {
       </div>
 
       <div class="broken-links-fix-content" id="${accordionId}-content" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out;">
-        <div style="padding: 0 1.25rem 1.25rem 1.25rem;">
+        <div style="padding: 0.5rem 1.25rem 1.25rem 1.25rem;">
           ${renderBrokenLinksFixTabs(translatedFix, accordionId)}
         </div>
       </div>
@@ -1946,10 +1951,10 @@ function getGradeName(grade) {
 }
 
 function getScoreColor(score) {
-  if (score >= 80) return getAccentPrimaryHex();
-  if (score >= 60) return '#ffd700';
-  if (score >= 40) return '#ff8c00';
-  return '#ff4444';
+  if (score >= 80) return '#22c55e';  // Good: Green
+  if (score >= 60) return '#ffd700';  // Fair: Gold
+  if (score >= 40) return '#ff8c00';  // Needs Work: Dark Orange
+  return '#ff4444';                   // Critical: Red
 }
 
 function createProUpgradePrompt(message) {

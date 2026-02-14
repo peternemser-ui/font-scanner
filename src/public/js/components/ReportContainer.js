@@ -193,10 +193,11 @@
       return window.ProReportBlock.render(options);
     }
 
-    // Fallback if ProReportBlock not loaded yet
+    // Fallback: render placeholder that ProReportBlock will replace once it loads
+    // Add locked class to prevent accent border flash before content renders
+    const safeOptions = JSON.stringify(options).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
     return `
-      <div class="pro-report-block">
-        <p>Pro features available - load ProReportBlock component</p>
+      <div class="pro-report-block pro-report-block--locked" data-locked data-pro-block-pending data-pro-block-options="${safeOptions}">
       </div>
     `;
   }

@@ -3,7 +3,7 @@
  * API endpoint for comparing your site against competitors
  * 
  * WARNING: This is a VERY resource-intensive operation
- * - Analyzes 1 + up to 3 competitors = 4 sites total
+ * - Analyzes 1 + up to 5 competitors = 6 sites total
  * - Each site runs 5 analyzers sequentially (SEO, Security, Accessibility, CWV, Performance)
  * - Total operation can take 5-15 minutes
  * - Heavily rate-limited to prevent system overload
@@ -66,8 +66,8 @@ const analyzeCompetitors = asyncHandler(async (req, res) => {
     throw new ValidationError('At least one competitor URL is required');
   }
 
-  // Strict limit to prevent system overload (reduced from 5 to 3)
-  const maxCompetitors = config.competitiveAnalysis?.maxCompetitors || 3;
+  // Strict limit to prevent system overload
+  const maxCompetitors = config.competitiveAnalysis?.maxCompetitors || 5;
   if (competitorUrls.length > maxCompetitors) {
     throw new ValidationError(`Maximum ${maxCompetitors} competitor URLs allowed (system resource protection)`);
   }
@@ -102,18 +102,21 @@ const analyzeCompetitors = asyncHandler(async (req, res) => {
     }))
   );
 
-  // Filter out unreachable competitors and warn
   const reachableCompetitorUrls = reachabilityResults
     .filter(result => result.reachable)
+    .map(result => result.url);
+
+  const unreachableCompetitorUrls = reachabilityResults
+    .filter(result => !result.reachable)
     .map(result => result.url);
 
   if (reachableCompetitorUrls.length === 0) {
     throw new ValidationError('None of the competitor URLs are reachable');
   }
 
-  if (reachableCompetitorUrls.length < sanitizedCompetitorUrls.length) {
+  if (unreachableCompetitorUrls.length > 0) {
     logger.warn(`Some competitor URLs were unreachable`, {
-      unreachable: sanitizedCompetitorUrls.length - reachableCompetitorUrls.length
+      unreachable: unreachableCompetitorUrls
     });
   }
 
@@ -127,7 +130,7 @@ const analyzeCompetitors = asyncHandler(async (req, res) => {
 
   // Overall timeout for the entire competitive analysis (20 minutes)
   const OVERALL_TIMEOUT = 20 * 60 * 1000; // 20 minutes
-  
+
   const analysisPromise = competitiveAnalysisService.analyzeCompetitors(
     normalizedYourUrl,
     reachableCompetitorUrls,
@@ -174,6 +177,25 @@ const analyzeCompetitors = asyncHandler(async (req, res) => {
   // Add performance warning if circuit breaker was triggered
   if (results.metadata?.circuitBreakerTriggered) {
     results.warning = (results.warning || '') + ' Circuit breaker was triggered due to consecutive failures. Some competitors were not analyzed.';
+  }
+
+  // Append unreachable competitors so they still appear in the report
+  if (unreachableCompetitorUrls.length > 0) {
+    for (const url of unreachableCompetitorUrls) {
+      results.competitors.push({
+        url,
+        scores: { seo: 0, performance: 0, accessibility: 0, security: 0, coreWebVitals: 0, overall: 0 },
+        details: null,
+        grade: 'F',
+        error: 'Site was not reachable during pre-flight check'
+      });
+    }
+    // Update metadata counts
+    if (results.metadata) {
+      results.metadata.totalSitesRequested = 1 + sanitizedCompetitorUrls.length;
+      results.metadata.totalSitesAnalyzed = 1 + results.competitors.length;
+      results.metadata.failedAnalyses = (results.metadata.failedAnalyses || 0) + unreachableCompetitorUrls.length;
+    }
   }
 
   // Include sessionId in response for frontend WebSocket connection
