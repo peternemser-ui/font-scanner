@@ -1014,7 +1014,8 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
   // Find the nav placeholder and inject unified header + navigation
   const navPlaceholder = document.getElementById('nav-placeholder');
   if (navPlaceholder) {
-    navPlaceholder.innerHTML = renderUnifiedHeader(appTitle, subtitle) + renderNavigation(activePageId) + renderBreadcrumb(activePageId);
+    const skipLink = '<a href="#page-container" class="skip-link" style="position:absolute;left:-9999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:100000;" onfocus="this.style.position=\'static\';this.style.width=\'auto\';this.style.height=\'auto\';" onblur="this.style.position=\'absolute\';this.style.left=\'-9999px\';this.style.width=\'1px\';this.style.height=\'1px\';">Skip to main content</a>';
+    navPlaceholder.innerHTML = skipLink + renderUnifiedHeader(appTitle, subtitle) + renderNavigation(activePageId) + renderBreadcrumb(activePageId);
   }
   
   // Initialize controls after rendering

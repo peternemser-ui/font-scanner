@@ -362,6 +362,7 @@ async function analyzeCRO(options = {}) {
 }
 
 function displayResults(data) {
+  if (!data || typeof data !== 'object' || data.error || typeof data === 'string') { console.error('[CRO] displayResults received invalid data:', data?.error || data); return; }
   const resultsContainer = document.getElementById('results');
 
   // Ensure results container is visible (may be hidden if called directly without scan flow)

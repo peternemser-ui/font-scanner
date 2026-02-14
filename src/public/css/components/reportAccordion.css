@@ -4,7 +4,7 @@
   border: 1px solid var(--r-border, rgba(255,255,255,0.08));
   border-radius: var(--radius-lg, 12px);
   overflow: hidden;
-  background: var(--r-surface-1, var(--bg-card, #111));
+  background: var(--r-surface-1, var(--bg-card, #ffffff));
   margin: 0 0 0.5rem 0;
   box-shadow: var(--r-shadow, none);
 }

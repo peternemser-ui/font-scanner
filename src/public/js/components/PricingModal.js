@@ -337,7 +337,7 @@
         <div class="sm-modal__header-left">
           <img class="sm-modal__logo" src="${logoSrc}" alt="Site Mechanic" />
         </div>
-        <h2 class="sm-modal__title">${t('pricing.modal.unlockProFeatures', 'Unlock Pro Features')}</h2>
+        <h2 class="sm-modal__title" id="sm-modal-title">${t('pricing.modal.unlockProFeatures', 'Unlock Pro Features')}</h2>
         <button type="button" class="sm-modal__close" data-action="close" aria-label="${t('pricing.modal.closeModal', 'Close modal')}">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
             <line x1="18" y1="6" x2="6" y2="18"></line>
@@ -665,7 +665,8 @@
       error: null,
       billingStatus: null,
       reportId,
-      hideSingleReport: !!options.hideSingleReport
+      hideSingleReport: !!options.hideSingleReport,
+      _triggerElement: document.activeElement
     };
 
     // Pre-fetch billing status
@@ -705,7 +706,13 @@
     document.body.classList.remove('sm-modal-open');
     document.documentElement.classList.remove('sm-modal-open');
 
-    setTimeout(() => overlay.remove(), 200);
+    setTimeout(() => {
+      overlay.remove();
+      // Restore focus to the element that triggered the modal
+      if (currentState._triggerElement && typeof currentState._triggerElement.focus === 'function') {
+        currentState._triggerElement.focus();
+      }
+    }, 200);
   }
 
   // ============================================
@@ -757,31 +764,32 @@
     const savedSize = localStorage.getItem('sm-modal-font-size') || 'normal';
     applyFontSize(container, savedSize);
 
-    // Accessibility: Focus trap within modal
+    // Accessibility: Focus trap within modal (re-queries DOM on each Tab to handle re-renders)
     const focusableSelector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
-    const focusableElements = container.querySelectorAll(focusableSelector);
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
 
     // Focus first element when modal opens
-    if (firstFocusable) {
-      setTimeout(() => firstFocusable.focus(), 100);
+    const initialFocusable = container.querySelectorAll(focusableSelector);
+    if (initialFocusable[0]) {
+      setTimeout(() => initialFocusable[0].focus(), 100);
     }
 
     const trapFocus = (e) => {
       if (e.key !== 'Tab') return;
 
+      const currentFocusable = container.querySelectorAll(focusableSelector);
+      const first = currentFocusable[0];
+      const last = currentFocusable[currentFocusable.length - 1];
+      if (!first || !last) return;
+
       if (e.shiftKey) {
-        // Shift+Tab: if on first element, go to last
-        if (document.activeElement === firstFocusable) {
+        if (document.activeElement === first) {
           e.preventDefault();
-          lastFocusable.focus();
+          last.focus();
         }
       } else {
-        // Tab: if on last element, go to first
-        if (document.activeElement === lastFocusable) {
+        if (document.activeElement === last) {
           e.preventDefault();
-          firstFocusable.focus();
+          first.focus();
         }
       }
     };

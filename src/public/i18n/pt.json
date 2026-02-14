@@ -10695,5 +10695,16 @@
   },
   "auto_scan": "true",
   "report_type": "cwv",
-  "print": "1"
+  "print": "1",
+  "exportPaywall": {
+    "title": "Exportar seu relatório",
+    "description": "Obtenha o <strong>Relatório Pro SiteMechanic por $5 USD</strong> para baixar PDFs prontos para clientes, exportar pacotes de correções e compartilhar resultados.",
+    "featurePdf": "Downloads em PDF",
+    "featureFixPack": "Exportar pacote de correções",
+    "featureShare": "Compartilhar links",
+    "featureMultiPage": "Escaneamento multipáginas",
+    "cta": "Obter acesso Pro para exportar",
+    "note": "Compra única. Sem assinatura.",
+    "proRequired": "Relatório Pro necessário{{target}}{{area}}. Desbloqueie para acessar este conteúdo."
+  }
 }

@@ -2,7 +2,7 @@
 
 .report-shell,
 .report-scope .report-shell {
-  background: var(--r-surface-2, var(--bg-secondary, #111));
+  background: var(--r-surface-2, var(--bg-secondary, #F8F9FA));
   border: 1px solid var(--r-border, rgba(255,255,255,0.08));
   border-radius: var(--radius-lg, 12px);
   padding: 1.25rem;
@@ -66,7 +66,7 @@
 /* Summary card */
 .report-shell__summary-card,
 .report-scope .report-shell__summary-card {
-  background: var(--r-surface-1, #1a1a1a);
+  background: var(--r-surface-1, #ffffff);
   border: 1px solid var(--r-border, rgba(255,255,255,0.08));
   border-radius: var(--radius-lg, 12px);
   padding: 1.25rem 1rem;

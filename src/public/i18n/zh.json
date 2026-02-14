@@ -10809,5 +10809,16 @@
   },
   "auto_scan": "true",
   "report_type": "cwv",
-  "print": "1"
+  "print": "1",
+  "exportPaywall": {
+    "title": "导出您的报告",
+    "description": "获取 <strong>$5 USD SiteMechanic Pro 报告</strong>，下载客户就绪的 PDF、导出修复包并分享结果。",
+    "featurePdf": "PDF 下载",
+    "featureFixPack": "修复包导出",
+    "featureShare": "分享链接",
+    "featureMultiPage": "多页扫描",
+    "cta": "获取 Pro 访问权限以导出",
+    "note": "一次性购买。无需订阅。",
+    "proRequired": "需要 Pro 报告{{target}}{{area}}。解锁以访问此内容。"
+  }
 }

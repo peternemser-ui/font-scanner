@@ -290,9 +290,9 @@ describe('StripeService', () => {
 
       await stripeService.handleWebhook(event);
 
-      // Verify user downgraded to free (past_due is not active)
+      // Verify user retains pro during past_due grace period (Stripe still retrying payment)
       const user = await mockDbInstance.get('SELECT plan FROM users WHERE id = ?', [testUser.id]);
-      expect(user.plan).toBe('free');
+      expect(user.plan).toBe('pro');
     });
   });
 

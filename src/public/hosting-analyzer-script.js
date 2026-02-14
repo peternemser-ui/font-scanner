@@ -783,6 +783,7 @@ async function analyzeHosting() {
 
 // Display complete hosting results
 function displayHostingResults(data) {
+  if (!data || typeof data !== 'object' || data.error || typeof data === 'string') { console.error('[Hosting] received invalid data:', data?.error || data); return; }
   const resultsContent = document.getElementById('resultsContent');
   resultsContent.innerHTML = '';
 

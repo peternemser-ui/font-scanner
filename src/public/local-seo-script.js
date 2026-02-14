@@ -242,6 +242,7 @@ async function analyze() {
 }
 
 function displayResults(data) {
+  if (!data || typeof data !== 'object' || typeof data === 'string') { console.error('[LocalSEO] displayResults received invalid data:', data); return; }
   const resultsContainer = document.getElementById('results');
   resultsContainer.innerHTML = '';
 

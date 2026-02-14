@@ -9952,5 +9952,16 @@
     "questionsTitle": "Questions?",
     "questionsBefore": "If you have any questions about refunds or billing, just email ",
     "questionsAfter": ". We're real people and we're here to help."
+  },
+  "exportPaywall": {
+    "title": "Export Your Report",
+    "description": "Get the <strong>$5 USD SiteMechanic Pro Report</strong> to download client-ready PDFs, export fix packs, and share results.",
+    "featurePdf": "PDF Downloads",
+    "featureFixPack": "Fix Pack Export",
+    "featureShare": "Share Links",
+    "featureMultiPage": "Multi-page Scanning",
+    "cta": "Get Pro access to export",
+    "note": "One-time purchase. No subscription.",
+    "proRequired": "Pro Report required{{target}}{{area}}. Unlock to access this content."
   }
 }

@@ -10044,5 +10044,16 @@
   },
   "auto_scan": "true",
   "report_type": "cwv",
-  "print": "1"
+  "print": "1",
+  "exportPaywall": {
+    "title": "Экспортировать отчёт",
+    "description": "Получите <strong>Pro-отчёт SiteMechanic за $5 USD</strong> для скачивания PDF, экспорта пакетов исправлений и обмена результатами.",
+    "featurePdf": "Скачивание PDF",
+    "featureFixPack": "Экспорт пакета исправлений",
+    "featureShare": "Поделиться ссылками",
+    "featureMultiPage": "Многостраничное сканирование",
+    "cta": "Получить Pro-доступ для экспорта",
+    "note": "Разовая покупка. Без подписки.",
+    "proRequired": "Требуется Pro-отчёт{{target}}{{area}}. Разблокируйте для доступа к этому контенту."
+  }
 }

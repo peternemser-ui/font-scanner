@@ -84,6 +84,12 @@
                              window.currentCompetitiveResults ||
                              window.currentCrawlerResults ||
                              window.currentTagResults ||
+                             window.currentCWVResults ||
+                             window.currentCROResults ||
+                             window.currentLocalSEOResults ||
+                             window.currentGDPRResults ||
+                             window.currentHostingResults ||
+                             window.currentIPReputationResults ||
                              window.currentResults;
 
       if (currentResults && window.ReportStorage?.saveReport) {
@@ -324,7 +330,6 @@
       'performance-hub': 'performance',
       'performance': 'performance',
       'speed-ux': 'performance',
-      'cwv': 'performance',
       'seo': 'seo',
       'seo-analyzer': 'seo',
       'security': 'security',
@@ -336,7 +341,23 @@
       'enhanced-fonts': 'fonts',
       'tag-intelligence': 'tag-intelligence',
       'competitive-analysis': 'competitive',
-      'competitive': 'competitive'
+      'competitive': 'competitive',
+      'mobile-analyzer': 'mobile',
+      'mobile': 'mobile',
+      'cro-analyzer': 'cro',
+      'cro': 'cro',
+      'gdpr-compliance': 'gdpr',
+      'gdpr': 'gdpr',
+      'hosting-analyzer': 'hosting',
+      'hosting': 'hosting',
+      'broken-links': 'broken-links',
+      'local-seo': 'local-seo',
+      'ip-reputation-analyzer': 'ip-reputation',
+      'ip-reputation': 'ip-reputation',
+      'brand-consistency': 'brand-consistency',
+      'site-crawler': 'site-crawler',
+      'core-web-vitals': 'core-web-vitals',
+      'cwv': 'core-web-vitals'
     };
 
     // Check page attribute first
@@ -345,14 +366,24 @@
       if (normalizedType) return normalizedType;
     }
 
-    // Fallback to path-based detection
+    // Fallback to path-based detection (order matters: more specific paths first)
+    if (path.includes('tag-intelligence')) return 'tag-intelligence';
+    if (path.includes('core-web-vitals') || path.includes('cwv')) return 'core-web-vitals';
+    if (path.includes('brand-consistency')) return 'brand-consistency';
+    if (path.includes('broken-links')) return 'broken-links';
+    if (path.includes('local-seo')) return 'local-seo';
+    if (path.includes('ip-reputation')) return 'ip-reputation';
+    if (path.includes('site-crawler')) return 'site-crawler';
+    if (path.includes('gdpr')) return 'gdpr';
+    if (path.includes('hosting')) return 'hosting';
+    if (path.includes('mobile')) return 'mobile';
+    if (path.includes('cro')) return 'cro';
+    if (path.includes('competitive')) return 'competitive';
     if (path.includes('seo')) return 'seo';
-    if (path.includes('performance') || path.includes('speed') || path.includes('cwv')) return 'performance';
+    if (path.includes('performance') || path.includes('speed')) return 'performance';
     if (path.includes('security')) return 'security';
     if (path.includes('accessibility') || path.includes('a11y')) return 'accessibility';
     if (path.includes('font')) return 'fonts';
-    if (path.includes('tag-intelligence')) return 'tag-intelligence';
-    if (path.includes('competitive')) return 'competitive';
 
     // Default to performance (most common)
     console.warn('[PDF Export] Could not detect report type, defaulting to performance');

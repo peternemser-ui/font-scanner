@@ -10200,5 +10200,16 @@
   },
   "auto_scan": "true",
   "report_type": "cwv",
-  "print": "1"
+  "print": "1",
+  "exportPaywall": {
+    "title": "レポートをエクスポート",
+    "description": "<strong>$5 USD SiteMechanic Proレポート</strong>を取得して、クライアント向けPDFのダウンロード、修正パックのエクスポート、結果の共有ができます。",
+    "featurePdf": "PDFダウンロード",
+    "featureFixPack": "修正パックエクスポート",
+    "featureShare": "リンク共有",
+    "featureMultiPage": "マルチページスキャン",
+    "cta": "エクスポートするためにProアクセスを取得",
+    "note": "一回限りの購入。サブスクリプションなし。",
+    "proRequired": "Proレポートが必要です{{target}}{{area}}。このコンテンツにアクセスするにはロックを解除してください。"
+  }
 }

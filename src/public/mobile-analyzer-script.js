@@ -382,6 +382,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayResults(data, meta = {}) {
+    if (!data || typeof data !== 'object') { console.error('[Mobile] displayResults received invalid data:', data); return; }
+    if (!data.devices || typeof data.devices !== 'object') { console.error('[Mobile] displayResults missing devices field'); return; }
     // Ensure results container is visible (may be hidden if called directly without scan flow)
     if (results) {
       results.classList.remove('hidden');

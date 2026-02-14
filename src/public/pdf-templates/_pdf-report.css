@@ -905,8 +905,8 @@ html[lang="ko"] .pdf-section__title {
   color: #374151;
   white-space: pre-wrap;
   word-break: break-word;
-  max-height: 160px;
-  overflow: hidden;
+  max-height: none;
+  overflow: visible;
 }
 
 /* Step-by-step fix guide */

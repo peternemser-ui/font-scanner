@@ -84,6 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         loadingMessage.classList.add('hidden');
         displayResults(data);
+        window.__REPORT_READY__ = true;
+        window.dispatchEvent(new CustomEvent('report:ready'));
       }, 500);
 
     } catch (error) {

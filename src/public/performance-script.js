@@ -289,6 +289,11 @@ document.addEventListener('DOMContentLoaded', () => {
  */
 function displayPerformanceResults(results) {
   const container = document.getElementById('perfResults');
+  if (!results || typeof results !== 'object' || results.error || typeof results === 'string') {
+    console.error('[Performance] displayPerformanceResults received invalid data:', results?.error || results);
+    return;
+  }
+  if (!container) { console.error('[Performance] Results container #perfResults not found'); return; }
 
   // Clear container
   container.innerHTML = '';
@@ -865,6 +870,10 @@ function displayPerformanceResults(results) {
     const safe = JSON.stringify(opts).replace(/</g, '\\u003c').replace(/"/g, '&quot;');
     container.insertAdjacentHTML('beforeend', '<div class="pro-report-block" data-pro-block-pending data-pro-block-options="' + safe + '"></div>');
   }
+
+  // Dispatch report:ready for direct calls (billing return, storage recall)
+  window.__REPORT_READY__ = true;
+  window.dispatchEvent(new CustomEvent('report:ready'));
 }
 
 /**

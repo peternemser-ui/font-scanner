@@ -21,7 +21,7 @@ const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-secret-do-not-use-in-produc
 
 class StripeService {
   getBaseUrl(requestOrigin = null) {
-    return process.env.BASE_URL || requestOrigin || 'http://localhost:3000';
+    return process.env.APP_BASE_URL || process.env.BASE_URL || requestOrigin || 'http://localhost:3000';
   }
 
   getBillingPriceId(purchaseType, packId = null) {
@@ -825,8 +825,9 @@ class StripeService {
 
       // Handle Day Pass one-time purchase
       if (purchaseType === 'day_pass') {
-        // Calculate expiration (24 hours from now - matches Stripe's interval='day')
-        const dayPassExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        // Calculate expiration from payment time to avoid drift on retries
+        const paymentTime = session.created ? session.created * 1000 : Date.now();
+        const dayPassExpiresAt = new Date(paymentTime + 24 * 60 * 60 * 1000).toISOString();
 
         // Update user with day pass access
         await db.run(
@@ -914,25 +915,22 @@ class StripeService {
 
     logger.info('Processing Stripe webhook', { type: event.type, id: event.id });
 
-    // Check for duplicate events (idempotency)
+    // Atomic idempotency check: INSERT OR IGNORE and check changes to avoid TOCTOU race
     try {
-      const existing = await db.get(
-        'SELECT processed FROM stripe_events WHERE id = ?',
-        [event.id]
+      const result = await db.run(
+        'INSERT OR IGNORE INTO stripe_events (id, event_type, processed) VALUES (?, ?, 0)',
+        [event.id, event.type]
       );
 
-      if (existing && existing.processed) {
+      if (result.changes === 0) {
+        // Row already existed — this is a duplicate event
         logger.warn('Duplicate webhook event, skipping', { eventId: event.id });
         return { received: true, processed: false, reason: 'duplicate' };
       }
-
-      // Record event
-      await db.run(
-        'INSERT OR IGNORE INTO stripe_events (id, event_type, processed) VALUES (?, ?, ?)',
-        [event.id, event.type, 0]
-      );
     } catch (error) {
       logger.error('Error checking webhook idempotency', { error: error.message });
+      // Re-throw so the webhook returns 500 and Stripe retries
+      throw error;
     }
 
     try {
@@ -956,22 +954,45 @@ class StripeService {
                 const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
                 // Update user with subscription details
-                await db.run(
-                  `UPDATE users SET
-                    plan = 'pro',
-                    stripe_subscription_id = ?,
-                    stripe_subscription_status = ?,
-                    stripe_current_period_end = ?,
-                    stripe_subscription_interval = ?
-                  WHERE id = ?`,
-                  [
-                    subscriptionId,
-                    subscription.status,
-                    currentPeriodEnd,
-                    interval || (subscription.items?.data?.[0]?.price?.recurring?.interval) || 'month',
-                    userId
-                  ]
-                );
+                await db.run('BEGIN');
+                try {
+                  await db.run(
+                    `UPDATE users SET
+                      plan = 'pro',
+                      stripe_subscription_id = ?,
+                      stripe_subscription_status = ?,
+                      stripe_current_period_end = ?,
+                      stripe_subscription_interval = ?
+                    WHERE id = ?`,
+                    [
+                      subscriptionId,
+                      subscription.status,
+                      currentPeriodEnd,
+                      interval || (subscription.items?.data?.[0]?.price?.recurring?.interval) || 'month',
+                      userId
+                    ]
+                  );
+
+                  // Update entitlements
+                  await db.run(`
+                    INSERT INTO entitlements (user_id, plan, stripe_subscription_id, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
+                    VALUES (?, 'pro', ?, ?, ?, -1, 250, 1)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                      plan = 'pro',
+                      stripe_subscription_id = excluded.stripe_subscription_id,
+                      status = excluded.status,
+                      current_period_end = excluded.current_period_end,
+                      scans_remaining = -1,
+                      max_pages_per_scan = 250,
+                      pdf_export_enabled = 1,
+                      updated_at = CURRENT_TIMESTAMP
+                  `, [userId, subscriptionId, subscription.status, currentPeriodEnd]);
+
+                  await db.run('COMMIT');
+                } catch (txError) {
+                  await db.run('ROLLBACK');
+                  throw txError;
+                }
 
                 logger.info('Subscription checkout completed - user updated', {
                   userId,
@@ -979,21 +1000,6 @@ class StripeService {
                   status: subscription.status,
                   interval
                 });
-
-                // Update entitlements
-                await db.run(`
-                  INSERT INTO entitlements (user_id, plan, stripe_subscription_id, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
-                  VALUES (?, 'pro', ?, ?, ?, -1, 250, 1)
-                  ON CONFLICT(user_id) DO UPDATE SET
-                    plan = 'pro',
-                    stripe_subscription_id = excluded.stripe_subscription_id,
-                    status = excluded.status,
-                    current_period_end = excluded.current_period_end,
-                    scans_remaining = -1,
-                    max_pages_per_scan = 250,
-                    pdf_export_enabled = 1,
-                    updated_at = CURRENT_TIMESTAMP
-                `, [userId, subscriptionId, subscription.status, currentPeriodEnd]);
 
               } catch (e) {
                 logger.error('Failed to sync subscription from checkout', {
@@ -1023,39 +1029,48 @@ class StripeService {
             // Handle Day Pass one-time purchase
             if (purchaseType === 'day_pass' && userId) {
               try {
-                // Calculate expiration (24 hours from now - matches Stripe's interval='day')
-                const dayPassExpiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+                // Calculate expiration from payment time to avoid drift on retries
+                const paymentTime = session.created ? session.created * 1000 : Date.now();
+                const dayPassExpiresAt = new Date(paymentTime + 24 * 60 * 60 * 1000).toISOString();
 
                 // Update user with day pass access
-                await db.run(
-                  `UPDATE users SET
-                    plan = 'pro',
-                    stripe_subscription_status = 'active',
-                    stripe_current_period_end = ?,
-                    stripe_subscription_interval = 'day'
-                  WHERE id = ?`,
-                  [dayPassExpiresAt, userId]
-                );
+                await db.run('BEGIN');
+                try {
+                  await db.run(
+                    `UPDATE users SET
+                      plan = 'pro',
+                      stripe_subscription_status = 'active',
+                      stripe_current_period_end = ?,
+                      stripe_subscription_interval = 'day'
+                    WHERE id = ?`,
+                    [dayPassExpiresAt, userId]
+                  );
+
+                  // Update entitlements table
+                  await db.run(`
+                    INSERT INTO entitlements (user_id, plan, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
+                    VALUES (?, 'pro', 'active', ?, -1, 250, 1)
+                    ON CONFLICT(user_id) DO UPDATE SET
+                      plan = 'pro',
+                      status = 'active',
+                      current_period_end = excluded.current_period_end,
+                      scans_remaining = -1,
+                      max_pages_per_scan = 250,
+                      pdf_export_enabled = 1,
+                      updated_at = CURRENT_TIMESTAMP
+                  `, [userId, dayPassExpiresAt]);
+
+                  await db.run('COMMIT');
+                } catch (txError) {
+                  await db.run('ROLLBACK');
+                  throw txError;
+                }
 
                 logger.info('Day Pass purchase recorded successfully', {
                   userId: userId.substring(0, 8) + '...',
                   sessionId: session.id,
                   expiresAt: dayPassExpiresAt
                 });
-
-                // Update entitlements table
-                await db.run(`
-                  INSERT INTO entitlements (user_id, plan, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
-                  VALUES (?, 'pro', 'active', ?, -1, 250, 1)
-                  ON CONFLICT(user_id) DO UPDATE SET
-                    plan = 'pro',
-                    status = 'active',
-                    current_period_end = excluded.current_period_end,
-                    scans_remaining = -1,
-                    max_pages_per_scan = 250,
-                    pdf_export_enabled = 1,
-                    updated_at = CURRENT_TIMESTAMP
-                `, [userId, dayPassExpiresAt]);
 
               } catch (e) {
                 logger.error('Failed to record Day Pass purchase', {
@@ -1081,17 +1096,25 @@ class StripeService {
                 // Don't record invalid reportId - this is a critical security check
               } else {
                 try {
-                  await db.run(
-                    `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at, site_url, analyzer_type, status)
-                     VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, 'paid')
-                     ON CONFLICT(user_id, report_id) DO UPDATE SET
-                       stripe_checkout_session_id = excluded.stripe_checkout_session_id,
-                       purchased_at = CURRENT_TIMESTAMP,
-                       site_url = COALESCE(excluded.site_url, site_url),
-                       analyzer_type = COALESCE(excluded.analyzer_type, analyzer_type),
-                       status = 'paid'`,
-                    [userId, reportId, session.id, siteUrl, analyzerType]
-                  );
+                  await db.run('BEGIN');
+                  try {
+                    await db.run(
+                      `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at, site_url, analyzer_type, status)
+                       VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, 'paid')
+                       ON CONFLICT(user_id, report_id) DO UPDATE SET
+                         stripe_checkout_session_id = excluded.stripe_checkout_session_id,
+                         purchased_at = CURRENT_TIMESTAMP,
+                         site_url = COALESCE(excluded.site_url, site_url),
+                         analyzer_type = COALESCE(excluded.analyzer_type, analyzer_type),
+                         status = 'paid'`,
+                      [userId, reportId, session.id, siteUrl, analyzerType]
+                    );
+
+                    await db.run('COMMIT');
+                  } catch (txError) {
+                    await db.run('ROLLBACK');
+                    throw txError;
+                  }
 
                   logger.info('[ENTITLEMENT_DEBUG] Single report purchase recorded successfully', {
                     userId: userId.substring(0, 8) + '...',
@@ -1146,8 +1169,9 @@ class StripeService {
           });
 
           // Determine plan based on subscription status
-          const activeStatuses = ['active', 'trialing'];
-          const plan = activeStatuses.includes(subscription.status) ? 'pro' : 'free';
+          // Include past_due as a grace period — Stripe is still retrying payment
+          const retainAccessStatuses = ['active', 'trialing', 'past_due'];
+          const plan = retainAccessStatuses.includes(subscription.status) ? 'pro' : 'free';
           const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
           // Get interval from subscription items
@@ -1243,6 +1267,7 @@ class StripeService {
           const result = await db.run(
             `UPDATE users SET
               stripe_subscription_status = 'canceled',
+              stripe_subscription_id = NULL,
               stripe_current_period_end = ?
             WHERE stripe_customer_id = ?`,
             [currentPeriodEnd, customerId]
@@ -1377,8 +1402,19 @@ class StripeService {
             attemptCount: invoice.attempt_count
           });
 
-          // Future: Send email notification to user about failed payment
-          // Future: If attempt_count > 3, consider downgrading or suspending
+          // Proactively mark subscription as past_due so DB stays in sync
+          // even if the customer.subscription.updated event is delayed
+          if (invoice.customer && invoice.subscription) {
+            try {
+              await db.run(
+                `UPDATE users SET stripe_subscription_status = 'past_due'
+                 WHERE stripe_customer_id = ? AND stripe_subscription_status = 'active'`,
+                [invoice.customer]
+              );
+            } catch (e) {
+              logger.error('Failed to update subscription status on payment failure', { error: e.message });
+            }
+          }
 
           break;
         }

@@ -473,6 +473,7 @@ function getGradeLetter(score) {
 }
 
 function displayResults(data) {
+  if (!data || typeof data !== 'object' || typeof data === 'string') { console.error('[GDPR] displayResults received invalid data:', data); return; }
   const results = document.getElementById('results');
   const score = data.score || 0;
   const cookieScore = data.compliance?.cookies?.count <= 5 ? 100 : Math.max(0, 100 - (data.compliance?.cookies?.count - 5) * 5);

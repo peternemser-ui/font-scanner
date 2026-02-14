@@ -125,6 +125,7 @@
             data-mode="${tab.id}"
             aria-selected="${isActive}"
             role="tab"
+            tabindex="${isActive ? '0' : '-1'}"
           >
             <span class="tabs__label"${labelI18n}>${tab.label}</span>
             ${tab.description ? `<span class="tabs__desc"${descI18n}>${tab.description}</span>` : ''}
@@ -142,6 +143,7 @@
           data-tab="${tab.id}"
           aria-selected="${isActive}"
           role="tab"
+          tabindex="${isActive ? '0' : '-1'}"
         >
           ${tab.label}${proLabel}
         </button>
@@ -203,7 +205,6 @@
               ${placeholderI18n}
               required
               aria-required="true"
-              aria-label="${labelText}"
             />
             <button id="${ids.scanButton}" class="btn btn-primary" aria-label="${buttonText}">
               <span id="buttonText"${buttonI18n}>${buttonText}</span>
@@ -363,6 +364,7 @@
         const isActive = btn.dataset.tab === tabId;
         btn.classList.toggle('tabs__item--active', isActive);
         btn.setAttribute('aria-selected', isActive);
+        btn.setAttribute('tabindex', isActive ? '0' : '-1');
       });
 
       // Update mode indicator
@@ -739,6 +741,40 @@
             }
           });
         });
+
+        // Arrow key navigation for tabs (WAI-ARIA tab pattern)
+        const tabList = container.querySelector('[role="tablist"]');
+        if (tabList) {
+          tabList.addEventListener('keydown', (e) => {
+            const tabs = Array.from(tabList.querySelectorAll('[role="tab"]'));
+            const currentIndex = tabs.indexOf(document.activeElement);
+            if (currentIndex === -1) return;
+
+            let newIndex = currentIndex;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+              e.preventDefault();
+              newIndex = (currentIndex + 1) % tabs.length;
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+              e.preventDefault();
+              newIndex = (currentIndex - 1 + tabs.length) % tabs.length;
+            } else if (e.key === 'Home') {
+              e.preventDefault();
+              newIndex = 0;
+            } else if (e.key === 'End') {
+              e.preventDefault();
+              newIndex = tabs.length - 1;
+            } else {
+              return;
+            }
+
+            const newTab = tabs[newIndex];
+            const tabId = newTab.dataset.tab;
+            if (tabId && !isScanning) {
+              setActiveTab(tabId);
+              newTab.focus();
+            }
+          });
+        }
       }
     }
 

@@ -10800,5 +10800,16 @@
   },
   "auto_scan": "true",
   "report_type": "cwv",
-  "print": "1"
+  "print": "1",
+  "exportPaywall": {
+    "title": "Exporter votre rapport",
+    "description": "Obtenez le <strong>Rapport Pro SiteMechanic à 5 $ USD</strong> pour télécharger des PDFs prêts à l'emploi, exporter des packs de corrections et partager les résultats.",
+    "featurePdf": "Téléchargements PDF",
+    "featureFixPack": "Export du pack de corrections",
+    "featureShare": "Partager des liens",
+    "featureMultiPage": "Scan multipages",
+    "cta": "Obtenir l'accès Pro pour exporter",
+    "note": "Achat unique. Sans abonnement.",
+    "proRequired": "Rapport Pro requis{{target}}{{area}}. Débloquez pour accéder à ce contenu."
+  }
 }

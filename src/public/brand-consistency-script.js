@@ -451,6 +451,7 @@ function getGradeColor(grade) {
 }
 
 function displayResults(data) {
+  if (!data || typeof data !== 'object' || typeof data === 'string') { console.error('[BrandConsistency] displayResults received invalid data:', data); return; }
   try {
   const results = document.getElementById('results');
   const score = data.score || 0;

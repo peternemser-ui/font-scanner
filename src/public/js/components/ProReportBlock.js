@@ -3,7 +3,7 @@
  * Conversion-focused export & upgrade CTA
  *
  * New billing model:
- * - Pro subscription ($30/mo or $240/yr) - unlocks all reports
+ * - Pro subscription ($29/mo or $290/yr) - unlocks all reports
  * - Day Pass ($20) - unlocks all reports for 24 hours
  * - Single report purchase ($5) - unlocks specific report
  */
@@ -429,7 +429,6 @@
     // SECURITY: Default to FALSE - no access unless explicitly granted above
     console.log('[ProReportBlock] hasAccess: FALSE (no valid access proof)', {
       reportId: effectiveReportId,
-      currentDomain,
       hasCachedStatus: !!cachedBillingStatus
     });
     return false;
@@ -483,7 +482,7 @@
     return `
       <div class="pro-report-block__unlock-prompt" data-locked-overlay>
         <div class="pro-report-block__unlock-header">
-          <span class="pro-report-block__unlock-icon">🔒</span>
+          <span class="pro-report-block__unlock-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
           <span class="pro-report-block__unlock-text">${_t('reports.common.unlockThisReport', 'Unlock this report')}</span>
         </div>
         <div class="pro-report-block__unlock-buttons">
@@ -500,7 +499,7 @@
             data-open-pricing-modal
             data-context="${context}"
           >
-            ${_t('reports.common.goPro30', 'Go Pro — $30/mo')}
+            ${_t('reports.common.goPro', 'Go Pro — $29/mo')}
           </button>
         </div>
         <p class="pro-report-block__unlock-hint">

@@ -222,6 +222,14 @@ function displaySEOResults(results) {
   // Validate data - ignore cached error responses
   if (!results || results.error || typeof results === 'string') {
     console.warn('[SEO] Ignoring invalid/error data:', results?.error || results);
+    const errContainer = document.getElementById('seoResults');
+    if (errContainer) {
+      errContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted,#9ca3af)"><p style="font-size:1.1rem;margin-bottom:0.5rem">Data unavailable</p><p style="font-size:0.9rem">The cached data was invalid or contained an error. Please run a new scan.</p></div>';
+      errContainer.hidden = false;
+      errContainer.style.display = 'block';
+    }
+    window.__REPORT_READY__ = true;
+    window.dispatchEvent(new CustomEvent('report:ready'));
     return;
   }
 
@@ -491,6 +499,10 @@ function displaySEOResults(results) {
       scannedAt: results.startedAt || results.timestamp
     });
   }
+
+  // Dispatch report:ready for direct calls (billing return, storage recall)
+  window.__REPORT_READY__ = true;
+  window.dispatchEvent(new CustomEvent('report:ready'));
 }
 
 /**
