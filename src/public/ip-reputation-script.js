@@ -467,6 +467,7 @@ async function analyzeReputation(options = {}) {
 
 // Display complete reputation results
 function displayReputationResults(data) {
+  if (!data || typeof data !== 'object' || typeof data === 'string') { console.error('[IPReputation] displayResults received invalid data:', data); return; }
   const resultsContent = document.getElementById('resultsContent');
   resultsContent.innerHTML = '';
 

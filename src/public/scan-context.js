@@ -273,21 +273,20 @@ const ExportGate = {
     paywall.innerHTML = `
       <div class="export-paywall-overlay">
         <div class="export-paywall-modal" role="dialog" aria-modal="true" aria-labelledby="exportPaywallTitle" tabindex="-1">
-          <button type="button" class="export-paywall-close" aria-label="Close">&times;</button>
-          <div class="export-paywall-icon">📄</div>
-          <h3 class="export-paywall-title" id="exportPaywallTitle">Export Your Report</h3>
+          <button type="button" class="export-paywall-close" aria-label="${_scanT('common.close', 'Close')}">&times;</button>
+          <div class="export-paywall-icon">&#x1F4C4;</div>
+          <h3 class="export-paywall-title" id="exportPaywallTitle">${_scanT('exportPaywall.title', 'Export Your Report')}</h3>
           <p class="export-paywall-text">
-            Get the <strong>$5 USD SiteMechanic Pro Report</strong> to download client-ready PDFs, 
-            export fix packs, and share results.
+            ${_scanT('exportPaywall.description', 'Get the <strong>$5 USD SiteMechanic Pro Report</strong> to download client-ready PDFs, export fix packs, and share results.')}
           </p>
           <div class="export-paywall-features">
-            <div class="export-paywall-feature">✓ PDF Downloads</div>
-            <div class="export-paywall-feature">✓ Fix Pack Export</div>
-            <div class="export-paywall-feature">✓ Share Links</div>
-            <div class="export-paywall-feature">✓ Multi-page Scanning</div>
+            <div class="export-paywall-feature">&#x2713; ${_scanT('exportPaywall.featurePdf', 'PDF Downloads')}</div>
+            <div class="export-paywall-feature">&#x2713; ${_scanT('exportPaywall.featureFixPack', 'Fix Pack Export')}</div>
+            <div class="export-paywall-feature">&#x2713; ${_scanT('exportPaywall.featureShare', 'Share Links')}</div>
+            <div class="export-paywall-feature">&#x2713; ${_scanT('exportPaywall.featureMultiPage', 'Multi-page Scanning')}</div>
           </div>
-          <span class="export-paywall-cta">Get Pro access to export</span>
-          <p class="export-paywall-note">One-time purchase. No subscription.</p>
+          <span class="export-paywall-cta">${_scanT('exportPaywall.cta', 'Get Pro access to export')}</span>
+          <p class="export-paywall-note">${_scanT('exportPaywall.note', 'One-time purchase. No subscription.')}</p>
         </div>
       </div>
     `;
@@ -559,7 +558,8 @@ const ProAccess = {
     }
     const target = domain ? ` for ${domain}` : '';
     const area = context ? ` (${context})` : '';
-    alert(`Pro Report required${target}${area}. Unlock to access this content.`);
+    const msg = _scanT('exportPaywall.proRequired', 'Pro Report required{{target}}{{area}}. Unlock to access this content.').replace('{{target}}', target).replace('{{area}}', area);
+    alert(msg);
   }
 };
 

@@ -24,9 +24,12 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
     if (webhookSecret) {
       event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
       logger.info('Webhook signature verified', { type: event.type });
+    } else if (process.env.NODE_ENV === 'production') {
+      logger.error('STRIPE_WEBHOOK_SECRET not configured in production — rejecting webhook');
+      return res.status(500).send('Webhook not configured');
     } else {
       // No webhook secret configured - accept unverified (dev/testing only)
-      logger.warn('No webhook secret configured - accepting unverified webhook');
+      logger.warn('No webhook secret configured - accepting unverified webhook (non-production)');
       event = JSON.parse(req.body.toString());
     }
   } catch (error) {
@@ -57,9 +60,9 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
       stack: error.stack
     });
 
-    // Return 200 to acknowledge receipt even if processing failed
-    // This prevents Stripe from retrying and overwhelming the server
-    res.json({
+    // Return 500 so Stripe retries the event.
+    // Idempotency checks in handleWebhook() protect against duplicate processing.
+    res.status(500).json({
       received: true,
       processed: false,
       error: error.message

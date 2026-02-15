@@ -582,6 +582,12 @@ function displayAccessibilityResults(resultData) {
   // Validate data - ignore cached error responses
   if (!resultData || resultData.error || typeof resultData === 'string') {
     console.warn('[Accessibility] Ignoring invalid/error data:', resultData?.error || resultData);
+    const errContainer = document.getElementById('resultsContent') || document.getElementById('results');
+    if (errContainer) {
+      errContainer.innerHTML = '<div style="padding:2rem;text-align:center;color:var(--text-muted,#9ca3af)"><p style="font-size:1.1rem;margin-bottom:0.5rem">Data unavailable</p><p style="font-size:0.9rem">The cached data was invalid or contained an error. Please run a new scan.</p></div>';
+    }
+    window.__REPORT_READY__ = true;
+    window.dispatchEvent(new CustomEvent('report:ready'));
     return;
   }
 

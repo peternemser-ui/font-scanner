@@ -123,7 +123,7 @@
         <span class="print-header__right">${displayUrl || ''} | ${formattedTimestamp || ''}</span>
       </div>
       <div class="report-header">
-        <h1 class="report-header__title" data-results-heading>${displayTitle}</h1>
+        <h2 class="report-header__title" data-results-heading>${displayTitle}</h2>
         ${effectiveShowModeBadge && modeLabel ? `<div class="report-header__badge">${modeLabel}</div>` : ''}
         ${effectiveSubtitle ? `<p class="report-header__subtitle">${effectiveSubtitle}</p>` : ''}
         <div class="report-header__meta">

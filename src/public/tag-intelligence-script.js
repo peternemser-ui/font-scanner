@@ -323,6 +323,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayResults(data) {
+    if (!data || typeof data !== 'object' || typeof data === 'string') { console.error('[TagIntelligence] displayResults received invalid data:', data); return; }
     // Check required components
     if (typeof ReportAccordion === 'undefined') {
       console.error('[Tag Intelligence] ReportAccordion is not defined');

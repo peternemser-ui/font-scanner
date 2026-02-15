@@ -101,23 +101,10 @@ async function requirePdfExport(req, res, next) {
       return next();
     }
 
-    // Fallback 1: If client has session-verified purchase headers,
-    // let the controller handle verification (it has Stripe fallback logic)
-    const sessionVerified = req.headers['x-session-verified'] === 'true';
-    const sessionCheckoutId = req.headers['x-checkout-session-id'];
-    if (sessionVerified && sessionCheckoutId) {
-      logger.info('PDF export: entitlement check failed but session-verified headers present, deferring to controller', {
-        userId: req.user.id.substring(0, 8) + '...',
-        reportId
-      });
-      req.entitlements = entitlements;
-      return next();
-    }
-
-    // Fallback 2: Check billing_sessions for a recent paid session
+    // Fallback: Check billing_sessions for a recent paid session scoped to this user.
     // Handles webhook race condition where purchase is recorded in billing_sessions
-    // but not yet in report_purchases
-    if (reportId) {
+    // but not yet in report_purchases.
+    if (reportId && req.user.stripeCustomerId) {
       try {
         const { getDatabase } = require('../db');
         const db = getDatabase();
@@ -125,11 +112,12 @@ async function requirePdfExport(req, res, next) {
           `SELECT session_id FROM billing_sessions
            WHERE report_id = ? AND payment_status = 'paid'
            AND purchase_type = 'single_report'
+           AND stripe_customer_id = ?
            ORDER BY completed_at DESC LIMIT 1`,
-          [reportId]
+          [reportId, req.user.stripeCustomerId]
         );
         if (recentSession) {
-          logger.info('PDF export: entitlement check failed but paid billing session found, allowing', {
+          logger.info('PDF export: entitlement check failed but paid billing session found for user, allowing', {
             userId: req.user.id.substring(0, 8) + '...',
             reportId
           });

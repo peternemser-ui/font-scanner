@@ -424,6 +424,7 @@ router.post(
  */
 router.get(
   '/verify-session',
+  requireAuth,
   asyncHandler(async (req, res) => {
     const sessionId = req.query.session_id;
     if (!sessionId || typeof sessionId !== 'string') {

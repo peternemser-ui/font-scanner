@@ -174,6 +174,11 @@
         });
       }
 
+      // Force locale to match the PDF's target language (not the browser/user locale)
+      if (window.i18n && typeof window.i18n.forceLocale === 'function' && _lang) {
+        await window.i18n.forceLocale(_lang);
+      }
+
       // Load report data
       var reportData = null;
       if (window.ReportStorage) {
@@ -187,7 +192,7 @@
 
       if (!reportData) {
         console.error('[PdfReport] No report data available for', reportId);
-        document.body.innerHTML = '<p style="padding:40px;text-align:center;color:#ef4444;">Report data unavailable. Please re-run the scan.</p>';
+        document.body.innerHTML = '<p style="padding:40px;text-align:center;color:#ef4444;">' + t('reports.storage.dataUnavailable', 'Report data unavailable') + '. ' + t('reports.storage.pleaseRescan', 'Please run a new scan.') + '</p>';
         window.__PDF_READY__ = true;
         return;
       }

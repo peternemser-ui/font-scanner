@@ -374,6 +374,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function displayResults(data) {
     currentResults = data;
+    if (!data || typeof data !== 'object') { console.error('[Fonts] displayResults received invalid data:', data); return; }
+    if (!data.summary || typeof data.summary !== 'object') { data.summary = { totalFamilies: 0, duplicateCount: 0, displayIssueCount: 0, preloadIssueCount: 0 }; }
     // Store data globally for report recall
     window.__fontsCurrentData = data;
 

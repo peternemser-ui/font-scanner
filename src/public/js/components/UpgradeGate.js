@@ -134,7 +134,7 @@
 
           <div class="upgrade-gate__options">
             <!-- Day Pass Option -->
-            <button class="upgrade-gate__option upgrade-gate__option--daypass" data-action="daypass">
+            <button class="upgrade-gate__option upgrade-gate__option--daypass" data-action="daypass" aria-label="Purchase Day Pass for $20 — unlimited scans for 24 hours">
               <span class="upgrade-gate__option-badge">${t('pricing.oneTime', 'One-time')}</span>
               <span class="upgrade-gate__option-name">${t('pricing.dayPass', 'Day Pass')}</span>
               <span class="upgrade-gate__option-price">$20</span>
@@ -142,14 +142,14 @@
             </button>
 
             <!-- Pro Monthly Option -->
-            <button class="upgrade-gate__option upgrade-gate__option--monthly" data-action="monthly">
+            <button class="upgrade-gate__option upgrade-gate__option--monthly" data-action="monthly" aria-label="Subscribe to Pro Monthly for $29 per month — unlimited scans plus 250 reports">
               <span class="upgrade-gate__option-name">${t('pricing.proMonthly', 'Pro Monthly')}</span>
               <span class="upgrade-gate__option-price">$29<span class="upgrade-gate__option-period">/mo</span></span>
               <span class="upgrade-gate__option-desc">${t('pricing.monthlyDesc', 'Unlimited scans + 250 reports')}</span>
             </button>
 
             <!-- Pro Annual Option -->
-            <button class="upgrade-gate__option upgrade-gate__option--annual upgrade-gate__option--featured" data-action="annual">
+            <button class="upgrade-gate__option upgrade-gate__option--annual upgrade-gate__option--featured" data-action="annual" aria-label="Subscribe to Pro Annual for $290 per year — unlimited scans plus unlimited reports, save $60">
               <span class="upgrade-gate__option-badge upgrade-gate__option-badge--savings">${t('pricing.save60', 'Save $60')}</span>
               <span class="upgrade-gate__option-name">${t('pricing.proAnnual', 'Pro Annual')}</span>
               <span class="upgrade-gate__option-price">$290<span class="upgrade-gate__option-period">/yr</span></span>

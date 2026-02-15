@@ -400,6 +400,7 @@ const generatePDF = asyncHandler(async (req, res) => {
   const { getDatabase } = require('../db');
   const db = getDatabase();
   let locale = 'en';
+  let localeFromDb = false;
   try {
     const scanRow = await db.get(
       'SELECT locale FROM scans WHERE report_id = ? ORDER BY created_at DESC LIMIT 1',
@@ -407,12 +408,13 @@ const generatePDF = asyncHandler(async (req, res) => {
     );
     if (scanRow?.locale) {
       locale = scanRow.locale;
+      localeFromDb = true;
     }
   } catch (e) {
     logger.warn('Could not look up scan locale, using fallback', { error: e.message });
   }
-  // Fall back to locale from pageUrl path (e.g., /ja/seo-analyzer.html) or client lang hint
-  if (locale === 'en') {
+  // Fall back to locale from pageUrl path only when DB had no locale
+  if (!localeFromDb) {
     const SUPPORTED_LOCALES = ['en', 'es', 'fr', 'de', 'pt', 'ja', 'zh', 'ru'];
     const pageUrl = req.body.pageUrl || '';
     const pathParts = pageUrl.split('/').filter(Boolean);

@@ -72,6 +72,9 @@
     <link rel="stylesheet" href="/css/components/screenshot-lightbox.css" />
     <link rel="stylesheet" href="/css/components/pro-report-block.css" />
     <link rel="stylesheet" href="/css/components/pricing-modal.css?v=20260201j" />
+    <link rel="stylesheet" href="/css/components/reportShell.css" />
+    <link rel="stylesheet" href="/css/components/reportAccordion.css" />
+    <link rel="stylesheet" href="/css/components/page-shell.css" />
 
     <!-- CRITICAL: Theme background fix -->
     <style>
@@ -180,9 +183,9 @@
       }
 
       .scan-form .url-input:focus {
-        outline: none;
+        outline: 2px solid var(--accent-primary, #00ff41);
+        outline-offset: 2px;
         border-color: var(--accent-primary, #00ff41);
-        box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.15);
       }
 
       .scan-form .scan-button {
@@ -203,8 +206,8 @@
       }
 
       .scan-form .scan-button:focus {
-        outline: none;
-        box-shadow: 0 0 0 3px rgba(var(--accent-primary-rgb), 0.3);
+        outline: 2px solid var(--accent-primary, #00ff41);
+        outline-offset: 2px;
       }
 
       .scan-form .scan-button:disabled {
@@ -708,7 +711,7 @@
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
     <div id="nav-placeholder"></div>
 
-    <main class="page-shell" style="padding: 0;">
+    <main class="page-shell">
       <!-- Homepage Hero Section -->
       <section class="homepage-hero home-hero">
         <!-- Graphic 01: Hero Collage (right-side, absolutely positioned) -->
@@ -845,7 +848,7 @@ Get prioritized fixes &mdash; and shareable reports.</h1>
       </section>
 
       <!-- Unified Loading Container -->
-      <div id="loadingContainer" class="loading-container" style="display: none;">
+      <div id="loadingContainer" class="loading-container" role="status" aria-live="polite" style="display: none;">
         <div class="loading-content">
           <div class="loading-icon">
             <div class="terminal-cursor">?</div>

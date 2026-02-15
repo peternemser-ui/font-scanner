@@ -205,6 +205,7 @@ async function analyzeLinks() {
 }
 
 function displayResults(data) {
+  if (!data || typeof data !== 'object' || data.error === true || typeof data === 'string') { console.error('[BrokenLinks] displayResults received invalid data:', data?.error || data); return; }
   const resultsContainer = document.getElementById('results');
   resultsContainer.innerHTML = '';
 

@@ -19,7 +19,7 @@
   --sm-border-strong: rgba(0, 0, 0, 0.18);
   --sm-text-primary: #111111;
   --sm-text-secondary: #52525b;
-  --sm-text-muted: #71717a;
+  --sm-text-muted: #8b8b94;
   --sm-bg-overlay: rgba(0, 0, 0, 0.5);
   --sm-bg-panel: #ffffff;
   --sm-bg-card: #fafafa;
@@ -135,7 +135,7 @@ body.sm-modal-open {
 
 .sm-modal__title {
   margin: 0;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--sm-text-primary);
   line-height: 1.2;
@@ -211,7 +211,7 @@ body.sm-modal-open {
   padding: 0;
   background: transparent;
   border: none;
-  border-radius: 4px;
+  border-radius: 6px;
   color: var(--sm-text-muted);
   font-family: var(--sm-font);
   font-size: 11px;
@@ -935,7 +935,7 @@ body.sm-modal-open {
     --sm-border-strong: rgba(255, 255, 255, 0.18);
     --sm-text-primary: #fafafa;
     --sm-text-secondary: #a1a1aa;
-    --sm-text-muted: #71717a;
+    --sm-text-muted: #8b8b94;
     --sm-bg-overlay: rgba(0, 0, 0, 0.8);
     --sm-bg-panel: #18181b;
     --sm-bg-card: #1f1f23;

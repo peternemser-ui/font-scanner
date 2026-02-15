@@ -6,7 +6,7 @@
  *
  * Entitlement Rules:
  * 1. Pro subscription (active/trialing): Unlocks all reports and features
- * 2. Day pass (active within 8h): Unlocks all reports and features
+ * 2. Day pass (active within 24h): Unlocks all reports and features
  * 3. Single report purchase: Unlocks specific reportId only
  * 4. Free: Access to free sections only
  */
