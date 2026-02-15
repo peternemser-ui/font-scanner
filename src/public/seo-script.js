@@ -1250,7 +1250,7 @@ function buildFixCards(results) {
         t('seo.fixes.steps.links.step1', 'Add rel="noopener noreferrer" to all external links with target="_blank"'),
         t('seo.fixes.steps.links.step2', 'Replace empty anchor text with descriptive text that explains the link destination'),
         t('seo.fixes.steps.links.step3', 'Avoid generic anchor text like "click here" or "read more"'),
-        t('seo.fixes.steps.links.step4', 'Use DevTools Console: document.querySelectorAll(\'a[target="_blank"]:not([rel*="noopener"])\') to find issues'a[target="_blank"]:not([rel*="noopener"])\') to find issues'),
+        t('seo.fixes.steps.links.step4', 'Use DevTools Console: document.querySelectorAll(\'a[target="_blank"]:not([rel*="noopener"])\') to find issues'),
         t('seo.fixes.steps.links.step5', 'Consider adding rel="nofollow" to paid or sponsored external links')
       ]
     });

@@ -1852,7 +1852,7 @@ function renderThirdPartyContent(thirdParty) {
           K ${t('reports.security.sriBestPractices', 'Subresource Integrity (SRI) Best Practices')}
         </h5>
         <ul style="margin: 0; padding-left: 1.5rem; color: #ffa500; font-size: 0.9rem; line-height: 1.6;">
-          <li>${t('reports.security.sriHashTampering', 'Use SRI hashes to ensure script integrity't been tampered with')}</li>
+          <li>${t('reports.security.sriHashTampering', 'Use SRI hashes to ensure script integrity hasn\'t been tampered with')}</li>
           <li>${t('reports.security.sriHttpsLoading', 'Always load external resources over HTTPS')}</li>
           <li>${t('reports.security.sriAsyncDefer', 'Use async/defer attributes for non-critical scripts')}</li>
           <li>${t('reports.security.sriAuditDependencies', 'Regularly audit and minimize third-party dependencies')}</li>

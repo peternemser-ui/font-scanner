@@ -1286,10 +1286,8 @@ Redirect 301 /b /final`;
 
   // Fallback for other categories
   return type === 'problem'
-    ? t('reports.brokenLinks.codeSnippets.reviewIssues', 'Review the {{category}} issues in this report.
-See the summary tab for details.', { category })
-    : t('reports.brokenLinks.codeSnippets.followRecommendations', 'Follow the recommendations in the Fix Guide tab
-to resolve {{category}} issues.', { category });
+    ? t('reports.brokenLinks.codeSnippets.reviewIssues', 'Review the {{category}} issues in this report. See the summary tab for details.', { category })
+    : t('reports.brokenLinks.codeSnippets.followRecommendations', 'Follow the recommendations in the Fix Guide tab to resolve {{category}} issues.', { category });
 }
 
 function getBrokenLinksSteps(fix) {

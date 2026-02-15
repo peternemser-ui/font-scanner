@@ -1313,7 +1313,7 @@ body {
       category: t('reports.fonts.fixes.categories.modernTypography', 'Modern Typography'),
       severity: 'Low',
       description: hasVariableFonts
-        ? t('reports.fonts.fixes.variableFontsDetectedDesc', 'Variable fonts detected! Ensure you\'re leveraging their full potential with CSS font-variation-settings and animation capabilities.'re leveraging their full potential with CSS font-variation-settings and animation capabilities.')
+        ? t('reports.fonts.fixes.variableFontsDetectedDesc', 'Variable fonts detected! Ensure you\'re leveraging their full potential with CSS font-variation-settings and animation capabilities.')
         : t('reports.fonts.fixes.variableFontsConsiderDesc', 'Using multiple weights of the same font family? Variable fonts bundle all weights into one file, often smaller than 2 static fonts combined.'),
       impact: t('reports.fonts.fixes.variableFontsImpact', 'Single file for all weights (saves 50-200KB), enables smooth weight animations, more design flexibility'),
       problematicCode: `/* Static fonts: One file per weight */

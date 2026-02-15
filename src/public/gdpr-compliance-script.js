@@ -1347,7 +1347,7 @@ function getGdprDefaultSteps(rec) {
     return [
       t('reports.gdpr.fixGuide.tracker.step1', '<strong>Audit all scripts</strong> - Use a tool like Ghostery or browser DevTools to identify all third-party trackers'),
       t('reports.gdpr.fixGuide.tracker.step2', '<strong>Document each tracker</strong> - List what data each tracker collects and for what purpose'),
-      t('reports.gdpr.fixGuide.tracker.step3', '<strong>Remove unnecessary</strong> - Delete any trackers you don\'t actively use or need't actively use or need'),
+      t('reports.gdpr.fixGuide.tracker.step3', '<strong>Remove unnecessary</strong> - Delete any trackers you don\'t actively use or need'),
       t('reports.gdpr.fixGuide.tracker.step4', '<strong>Implement consent</strong> - Ensure trackers only fire after user consent is given'),
       t('reports.gdpr.fixGuide.tracker.step5', '<strong>Update privacy policy</strong> - List all third-party processors in your privacy policy'),
       t('reports.gdpr.fixGuide.tracker.step6', '<strong>Data Processing Agreements</strong> - Ensure you have DPAs with all third-party tracker providers')

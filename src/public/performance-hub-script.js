@@ -3921,7 +3921,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span style="font-size: 1.5rem;">🚀</span>
               <div>
                 <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary);">${t('reports.performanceHub.continueAnalyzing', 'Continue Analyzing')}</div>
-                <div style="font-size: 0.9rem; color: var(--text-secondary);">${t('reports.performanceHub.continueAnalyzingSubtitle', 'Get a complete picture of your site\'s health with these free scans's health with these free scans')}</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary);">${t('reports.performanceHub.continueAnalyzingSubtitle', 'Get a complete picture of your site\'s health with these free scans')}</div>
               </div>
             </div>
 
