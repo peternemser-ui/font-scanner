@@ -557,7 +557,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Build screenshots array (SEO pattern)
     const screenshots = screenshotUrl
-      ? [{ src: screenshotUrl, alt: t('reports.common.pageScreenshot', 'Page screenshot'), device: '' }]
+      ? [{ src: screenshotUrl, alt: t('reports.common.pageScreenshot', 'Page Screenshot'), device: '' }]
       : [];
 
     // Use ReportContainer.create() - SEO pattern
@@ -646,7 +646,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Pro fixes preview for locked state
   function getFontsProFixesPreview() {
     return `
-      <div style="text-align: center; padding: 2rem; color: #888;">
+      <div style="text-align: center; padding: 2rem; color: var(--r-text-faint, #9CA3AF);">
         <p style="margin-bottom: 1rem;">🔒 ${t('reports.fonts.unlockToSee', 'Unlock to see detailed font optimization recommendations')}</p>
         <ul style="text-align: left; display: inline-block; margin: 0; padding-left: 1.5rem;">
           <li>${t('reports.fonts.preview.fontLoading', 'Font loading optimizations')}</li>
@@ -701,7 +701,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const msg = document.createElement('div');
       msg.setAttribute('data-sm-screenshot-fallback', 'true');
       msg.textContent = t('reports.common.screenshotUnavailable', 'Screenshot unavailable');
-      msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 10px; color: var(--text-secondary); text-align: center;';
+      msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); text-align: center;';
       wrapper.appendChild(msg);
     };
 
@@ -742,11 +742,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (fixes.length === 0) {
       return `
-        <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+        <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 2rem;">
           <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
             <span style="font-size: 1.5rem;">✓</span> ${t('reports.fonts.excellentTypography', 'Excellent Typography!')}
           </h3>
-          <p style="color: #86efac; margin: 0;">${t('reports.fonts.wellOptimized', 'Your font setup is well-optimized. Keep monitoring for continued performance.')}</p>
+          <p style="color: #86efac; margin: 0;">${t('reports.fonts.wellOptimized', 'Good job! Your typography setup is well-optimized for performance')}</p>
         </div>
       `;
     }
@@ -760,7 +760,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="fonts-fixes-container" style="margin-top: 1rem;">
         <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
           <span style="font-size: 1.75rem;">🔍</span> ${t('reports.fonts.fontFixes', 'Font Fixes')}
-          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} ${t('reports.fonts.improvementsFound', 'improvements found')})</span>
+          <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${fixes.length} ${t('reports.fonts.improvementsFound', 'improvements found')})</span>
         </h3>
         <div class="fonts-fixes-list">
     `;
@@ -807,12 +807,12 @@ document.addEventListener('DOMContentLoaded', () => {
     fixes.push({
       id: `font-fix-${fixIndex++}`,
       title: displayIssueCount > 0
-        ? t('reports.fonts.fixes.fixFontDisplayIssues', 'Fix font-display issues ({count} fonts affected)', { count: displayIssueCount })
+        ? t('reports.fonts.fixes.fixFontDisplayIssues', 'Fix font-display issues ({{count}} fonts affected)', { count: displayIssueCount })
         : t('reports.fonts.fixes.optimizeFontDisplay', 'Optimize font-display strategy'),
       category: t('reports.fonts.fixes.categories.renderPerformance', 'Render Performance'),
       severity: displayIssueCount > 0 ? 'High' : 'Medium',
       description: displayIssueCount > 0
-        ? t('reports.fonts.fixes.fontDisplayIssueDesc', '{count} font(s) are missing or have suboptimal font-display values. This can cause Flash of Invisible Text (FOIT) where users see blank space while fonts load, or Flash of Unstyled Text (FOUT) with jarring font swaps.', { count: displayIssueCount })
+        ? t('reports.fonts.fixes.fontDisplayIssueDesc', '{{count}} font(s) are missing or have suboptimal font-display values. This can cause Flash of Invisible Text (FOIT) where users see blank space while fonts load, or Flash of Unstyled Text (FOUT) with jarring font swaps.', { count: displayIssueCount })
         : t('reports.fonts.fixes.fontDisplayOptimizeDesc', 'The font-display property controls how fonts render during loading. Choosing the right strategy improves perceived performance and prevents layout shifts.'),
       impact: t('reports.fonts.fixes.fontDisplayImpact', 'Eliminates invisible text during loading, reduces Cumulative Layout Shift (CLS), improves Core Web Vitals score'),
       problematicCode: `/* Current font declarations may have issues */
@@ -965,12 +965,12 @@ body {
     fixes.push({
       id: `font-fix-${fixIndex++}`,
       title: woff2Percentage < 80
-        ? t('reports.fonts.fixes.upgradeFormats', 'Upgrade to modern font formats ({percentage}% WOFF2)', { percentage: woff2Percentage })
+        ? t('reports.fonts.fixes.upgradeFormats', 'Upgrade to modern font formats ({{percentage}}% WOFF2)', { percentage: woff2Percentage })
         : t('reports.fonts.fixes.optimizeDelivery', 'Optimize font file delivery'),
       category: t('reports.fonts.fixes.categories.fileOptimization', 'File Optimization'),
       severity: woff2Percentage < 50 ? 'High' : 'Medium',
       description: woff2Percentage < 80
-        ? t('reports.fonts.fixes.formatIssueDesc', 'Only {percentage}% of your fonts use WOFF2 format. WOFF2 provides 30-50% smaller files compared to WOFF, and up to 75% smaller than TTF/OTF.', { percentage: woff2Percentage }) + (hasLegacyFormats ? ' ' + t('reports.fonts.fixes.legacyFormatsDetected', 'Legacy formats (EOT, SVG fonts) detected - these are no longer needed.') : '')
+        ? t('reports.fonts.fixes.formatIssueDesc', 'Only {{percentage}}% of your fonts use WOFF2 format. WOFF2 provides 30-50% smaller files compared to WOFF, and up to 75% smaller than TTF/OTF.', { percentage: woff2Percentage }) + (hasLegacyFormats ? ' ' + t('reports.fonts.fixes.legacyFormatsDetected', 'Legacy formats (EOT, SVG fonts) detected - these are no longer needed.') : '')
         : t('reports.fonts.fixes.formatOptimizeDesc', 'Modern font formats like WOFF2 provide excellent compression. Further optimization can be achieved through subsetting and variable fonts.'),
       impact: t('reports.fonts.fixes.formatImpact', 'Reduces font payload by 30-75%, faster downloads especially on mobile, lower bandwidth costs'),
       problematicCode: `/* Suboptimal: Using older/larger formats */
@@ -1039,14 +1039,14 @@ body {
     fixes.push({
       id: `font-fix-${fixIndex++}`,
       title: totalFamilies > 3
-        ? t('reports.fonts.fixes.consolidateFamilies', 'Consolidate font families ({count} currently used)', { count: totalFamilies })
+        ? t('reports.fonts.fixes.consolidateFamilies', 'Consolidate font families ({{count}} currently used)', { count: totalFamilies })
         : t('reports.fonts.fixes.establishFontSystem', 'Establish a font system'),
       category: t('reports.fonts.fixes.categories.typographySystem', 'Typography System'),
       severity: totalFamilies > 4 ? 'High' : 'Medium',
       description: totalFamilies > 3
-        ? t('reports.fonts.fixes.tooManyFamiliesDesc', 'Your site loads {count} different font families. Each additional font adds ~50-100KB and an HTTP request. Industry best practice is 2-3 fonts maximum.', { count: totalFamilies })
+        ? t('reports.fonts.fixes.tooManyFamiliesDesc', 'Your site loads {{count}} different font families. Each additional font adds ~50-100KB and an HTTP request. Industry best practice is 2-3 fonts maximum.', { count: totalFamilies })
         : t('reports.fonts.fixes.fontSystemDesc', 'A well-structured font system improves consistency, reduces maintenance, and ensures optimal performance. Define clear roles for each font.'),
-      impact: `${totalFamilies > 3 ? t('reports.fonts.fixes.familySavings', 'Could save {kb}KB+ and {ms}ms load time. ', { kb: (totalFamilies - 2) * 75, ms: (totalFamilies - 2) * 100 }) : ''}${t('reports.fonts.fixes.consistencyImpact', 'Improves visual consistency and brand recognition')}`,
+      impact: `${totalFamilies > 3 ? t('reports.fonts.fixes.familySavings', 'Could save {{kb}}KB+ and {{ms}}ms load time. ', { kb: (totalFamilies - 2) * 75, ms: (totalFamilies - 2) * 100 }) : ''}${t('reports.fonts.fixes.consistencyImpact', 'Improves visual consistency and brand recognition')}`,
       problematicCode: `/* Current fonts detected:
 ${detectedFonts.map((f, i) => ` * ${i + 1}. ${f}`).join('\n')}${totalFamilies > 5 ? `\n * ... and ${totalFamilies - 5} more` : ''}
  */
@@ -1218,15 +1218,15 @@ body {
     fixes.push({
       id: `font-fix-${fixIndex++}`,
       title: duplicateCount > 0
-        ? t('reports.fonts.fixes.removeDuplicates', 'Remove duplicate font declarations ({count} found)', { count: duplicateCount })
+        ? t('reports.fonts.fixes.removeDuplicates', 'Remove duplicate font declarations ({{count}} found)', { count: duplicateCount })
         : t('reports.fonts.fixes.auditSources', 'Audit font loading sources'),
       category: t('reports.fonts.fixes.categories.optimization', 'Optimization'),
       severity: duplicateCount > 0 ? 'High' : 'Low',
       description: duplicateCount > 0
-        ? t('reports.fonts.fixes.duplicatesDesc', '{count} duplicate font declaration(s) detected. The same font is being loaded multiple times through different methods, wasting bandwidth and slowing page load.', { count: duplicateCount })
+        ? t('reports.fonts.fixes.duplicatesDesc', '{{count}} duplicate font declaration(s) detected. The same font is being loaded multiple times through different methods, wasting bandwidth and slowing page load.', { count: duplicateCount })
         : t('reports.fonts.fixes.auditDesc', 'Fonts can be loaded through multiple sources (CSS @import, link tags, JavaScript, inline @font-face). Auditing ensures no duplicates and optimal loading order.'),
       impact: duplicateCount > 0
-        ? t('reports.fonts.fixes.duplicatesImpact', 'Removing duplicates saves {minKb}-{maxKb}KB and {ms}ms+ load time', { minKb: duplicateCount * 50, maxKb: duplicateCount * 150, ms: duplicateCount * 100 })
+        ? t('reports.fonts.fixes.duplicatesImpact', 'Removing duplicates saves {{minKb}}-{{maxKb}}KB and {{ms}}ms+ load time', { minKb: duplicateCount * 50, maxKb: duplicateCount * 150, ms: duplicateCount * 100 })
         : t('reports.fonts.fixes.auditImpact', 'Ensures clean, maintainable font loading with no wasted resources'),
       problematicCode: `/* Common duplication patterns */
 
@@ -1311,7 +1311,7 @@ body {
       category: t('reports.fonts.fixes.categories.modernTypography', 'Modern Typography'),
       severity: 'Low',
       description: hasVariableFonts
-        ? t('reports.fonts.fixes.variableFontsDetectedDesc', 'Variable fonts detected! Ensure you\'re leveraging their full potential with CSS font-variation-settings and animation capabilities.')
+        ? t('reports.fonts.fixes.variableFontsDetectedDesc', 'Variable fonts detected! Ensure you\'re leveraging their full potential with CSS font-variation-settings and animation capabilities.'re leveraging their full potential with CSS font-variation-settings and animation capabilities.')
         : t('reports.fonts.fixes.variableFontsConsiderDesc', 'Using multiple weights of the same font family? Variable fonts bundle all weights into one file, often smaller than 2 static fonts combined.'),
       impact: t('reports.fonts.fixes.variableFontsImpact', 'Single file for all weights (saves 50-200KB), enables smooth weight animations, more design flexibility'),
       problematicCode: `/* Static fonts: One file per weight */
@@ -1629,21 +1629,21 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span style="font-size: 1.25rem;">${style.icon}</span>
             <div>
-              <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
-              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || t('reports.fonts.fontOptimization', 'Font Optimization')}</p>
+              <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${fix.title}</h4>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${fix.category || t('reports.fonts.fontOptimization', 'Font Optimization')}</p>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span style="
               padding: 0.25rem 0.75rem;
-              border-radius: 20px;
+              border-radius: 999px;
               font-size: 0.75rem;
               font-weight: 600;
               background: ${style.color}20;
               color: ${style.color};
               border: 1px solid ${style.color}40;
             ">${t('reports.common.severity.' + fix.severity.toLowerCase(), fix.severity).toUpperCase()}</span>
-            <span class="fonts-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+            <span class="fonts-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
           </div>
         </div>
 
@@ -1658,31 +1658,31 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
   function renderFontsFixTabs(fix, accordionId) {
     return `
-      <div class="fonts-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <div class="fonts-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
         <button class="fonts-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
           padding: 0.5rem 1rem;
           border: 1px solid rgba(255,255,255,0.2);
           border-radius: 6px;
           background: rgba(255,255,255,0.1);
-          color: #fff;
+          color: var(--r-text, #111827);
           cursor: pointer;
           font-size: 0.85rem;
         ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
         <button class="fonts-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
           padding: 0.5rem 1rem;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
           border-radius: 6px;
           background: transparent;
-          color: #aaa;
+          color: var(--r-text-faint, #9CA3AF);
           cursor: pointer;
           font-size: 0.85rem;
         ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
         <button class="fonts-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
           padding: 0.5rem 1rem;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
           border-radius: 6px;
           background: transparent;
-          color: #aaa;
+          color: var(--r-text-faint, #9CA3AF);
           cursor: pointer;
           font-size: 0.85rem;
         ">🔧 ${t('reports.common.tabs.fixGuide', 'Fix Guide')}</button>
@@ -1690,12 +1690,12 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Summary Tab -->
       <div class="fonts-fix-tab-content active" id="${accordionId}-summary">
-        <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
           ${fix.description}
         </p>
         <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${fix.impact}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${fix.impact}</div>
         </div>
       </div>
 
@@ -1703,7 +1703,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <div class="fonts-fix-tab-content" id="${accordionId}-code" style="display: none;">
         <div style="display: grid; gap: 1rem;">
           <!-- Current Issue -->
-          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
               <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.common.fix.currentIssue', 'Current Issue')}</span>
               <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
@@ -1711,16 +1711,16 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
                 background: rgba(255,255,255,0.05);
-                color: #fff;
+                color: var(--r-text, #111827);
                 cursor: pointer;
                 font-size: 0.75rem;
               ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
-            <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeFontsHtml(fix.problematicCode || '<!-- Missing or incorrect implementation -->')}</pre>
+            <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeFontsHtml(fix.problematicCode || '<!-- Missing or incorrect implementation -->')}</pre>
           </div>
 
           <!-- Fixed Code -->
-          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
               <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
               <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
@@ -1728,20 +1728,20 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
                 background: rgba(255,255,255,0.05);
-                color: #fff;
+                color: var(--r-text, #111827);
                 cursor: pointer;
                 font-size: 0.75rem;
               ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
-            <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeFontsHtml(fix.fixedCode || '')}</pre>
+            <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeFontsHtml(fix.fixedCode || '')}</pre>
           </div>
         </div>
       </div>
 
       <!-- Fix Guide Tab -->
       <div class="fonts-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-        <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
-        <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        <h5 style="margin: 0 0 1rem 0; color: var(--r-text, #111827);">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
+        <ol style="margin: 0; padding-left: 1.5rem; color: var(--r-text-muted, #6B7280); line-height: 1.8;">
           ${(fix.steps || [t('reports.common.fix.defaultStep1', 'Review current implementation'), t('reports.common.fix.defaultStep2', 'Apply the recommended fix'), t('reports.common.fix.defaultStep3', 'Test and verify changes')]).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
         </ol>
       </div>
@@ -1775,7 +1775,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       .fonts-fix-tab.active {
         background: rgba(255,255,255,0.1) !important;
         border-color: rgba(255,255,255,0.2) !important;
-        color: #fff !important;
+        color: var(--r-text, #111827) !important;
       }
     `;
     document.head.appendChild(style);
@@ -1813,7 +1813,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
   // ============================================
   function generateAdvancedAnalysisContent(advancedAnalysis, fonts) {
     if (!advancedAnalysis || Object.keys(advancedAnalysis).length === 0) {
-      return `<p style="color: #888;">${t('reports.fonts.advancedNotAvailable', 'Advanced analysis not available. Run a full scan for detailed typography insights.')}</p>`;
+      return `<p style="color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.advancedNotAvailable', 'Advanced analysis not available. Run a full scan for detailed typography insights.')}</p>`;
     }
     
     const { formats, fontDisplay, accessibility, fallbackStacks, variableFonts, clsRisk } = advancedAnalysis;
@@ -1831,19 +1831,19 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
             <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
               <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">${formats.summary.woff2Count}</div>
-              <div style="font-size: 0.75rem; color: #888;">${t('reports.fonts.formats.woff2', 'WOFF2')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.formats.woff2', 'WOFF2')}</div>
             </div>
             <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
               <div style="font-size: 1.5rem; font-weight: bold; color: #4285f4;">${formats.formats.woff.length}</div>
-              <div style="font-size: 0.75rem; color: #888;">${t('reports.fonts.formats.woff', 'WOFF')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.formats.woff', 'WOFF')}</div>
             </div>
             <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
               <div style="font-size: 1.5rem; font-weight: bold; color: #f59e0b;">${formats.formats.ttf.length + formats.formats.otf.length}</div>
-              <div style="font-size: 0.75rem; color: #888;">${t('reports.fonts.formats.ttfOtf', 'TTF/OTF')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.formats.ttfOtf', 'TTF/OTF')}</div>
             </div>
             <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
               <div style="font-size: 1.5rem; font-weight: bold; color: ${formats.summary.woff2Percentage >= 80 ? '#10b981' : '#f59e0b'};">${formats.summary.woff2Percentage}%</div>
-              <div style="font-size: 0.75rem; color: #888;">${t('reports.fonts.modern', 'Modern')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.modern', 'Modern')}</div>
             </div>
           </div>
           ${formats.summary.hasLegacyFormats ? `
@@ -1867,37 +1867,37 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             ${fontDisplay.values.swap.length > 0 ? `
               <div style="text-align: center; padding: 0.5rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px;">
                 <div style="font-weight: bold; color: #10b981;">${fontDisplay.values.swap.length}</div>
-                <div style="font-size: 0.7rem; color: #888;">swap</div>
+                <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">swap</div>
               </div>
             ` : ''}
             ${fontDisplay.values.optional.length > 0 ? `
               <div style="text-align: center; padding: 0.5rem; background: rgba(16, 185, 129, 0.1); border-radius: 6px;">
                 <div style="font-weight: bold; color: #10b981;">${fontDisplay.values.optional.length}</div>
-                <div style="font-size: 0.7rem; color: #888;">optional</div>
+                <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">optional</div>
               </div>
             ` : ''}
             ${fontDisplay.values.fallback.length > 0 ? `
               <div style="text-align: center; padding: 0.5rem; background: rgba(66, 133, 244, 0.1); border-radius: 6px;">
                 <div style="font-weight: bold; color: #4285f4;">${fontDisplay.values.fallback.length}</div>
-                <div style="font-size: 0.7rem; color: #888;">fallback</div>
+                <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">fallback</div>
               </div>
             ` : ''}
             ${fontDisplay.values.block.length > 0 ? `
               <div style="text-align: center; padding: 0.5rem; background: rgba(239, 68, 68, 0.1); border-radius: 6px;">
                 <div style="font-weight: bold; color: #ef4444;">${fontDisplay.values.block.length}</div>
-                <div style="font-size: 0.7rem; color: #888;">block</div>
+                <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">block</div>
               </div>
             ` : ''}
             ${fontDisplay.values.auto.length + fontDisplay.values.notSet.length > 0 ? `
               <div style="text-align: center; padding: 0.5rem; background: rgba(245, 158, 11, 0.1); border-radius: 6px;">
                 <div style="font-weight: bold; color: #f59e0b;">${fontDisplay.values.auto.length + fontDisplay.values.notSet.length}</div>
-                <div style="font-size: 0.7rem; color: #888;">auto/none</div>
+                <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">auto/none</div>
               </div>
             ` : ''}
           </div>
           ${fontDisplay.summary.problematicCount > 0 ? `
             <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 0 6px 6px 0; font-size: 0.85rem;">
-              ${t('reports.fonts.addFontDisplaySwap', 'Add')} <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">font-display: swap</code> ${t('reports.fonts.toPreventFOIT', 'to prevent Flash of Invisible Text (FOIT)')}
+              ${t('reports.fonts.addFontDisplaySwap', 'Add')} <code style="background: var(--r-surface-2, #F8FAFC); padding: 2px 6px; border-radius: 3px;">font-display: swap</code> ${t('reports.fonts.toPreventFOIT', 'to prevent Flash of Invisible Text (FOIT)')}
             </div>
           ` : `
             <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 0.75rem; border-radius: 0 6px 6px 0; font-size: 0.85rem;">
@@ -1922,7 +1922,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                 <span style="color: #10b981;">✓</span>
                 <div>
                   <div style="font-weight: 500;">${item.title}</div>
-                  <div style="font-size: 0.8rem; color: #888;">${item.detail}</div>
+                  <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${item.detail}</div>
                 </div>
               </div>
             `).join('')}
@@ -1931,7 +1931,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                 <span style="color: ${item.type === 'warning' ? '#f59e0b' : '#ef4444'};">${item.type === 'warning' ? '~' : '✗'}</span>
                 <div>
                   <div style="font-weight: 500;">${item.title}</div>
-                  <div style="font-size: 0.8rem; color: #888;">${item.detail}</div>
+                  <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${item.detail}</div>
                 </div>
               </div>
             `).join('')}
@@ -1962,7 +1962,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           ${fallbackStacks.stacks.filter(s => s.quality === 'poor').slice(0, 3).map(stack => `
             <div style="background: rgba(239, 68, 68, 0.05); border-left: 4px solid #ef4444; padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 0 6px 6px 0; font-size: 0.85rem;">
               <div style="font-family: monospace; font-size: 0.8rem; margin-bottom: 0.25rem; word-break: break-all;">${stack.stack}</div>
-              <div style="color: #888;">${stack.recommendation}</div>
+              <div style="color: var(--r-text-faint, #9CA3AF);">${stack.recommendation}</div>
             </div>
           `).join('')}
         ` : `<p style="color: #666;">${t('reports.fonts.fallbackStackDataNotAvailable', 'Fallback stack data not available')}</p>`}
@@ -1983,7 +1983,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             </div>
             <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
               ${variableFonts.variableFonts.map(vf => `
-                <span style="padding: 0.25rem 0.75rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 20px; font-size: 0.8rem;">
+                <span style="padding: 0.25rem 0.75rem; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); border-radius: 999px; font-size: 0.8rem;">
                   ${vf.fontFamily}
                 </span>
               `).join('')}
@@ -2013,7 +2013,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             ${clsRisk.risks.map(risk => `
               <div style="background: rgba(${risk.type === 'high' ? '239, 68, 68' : '245, 158, 11'}, 0.1); border-left: 4px solid ${risk.type === 'high' ? '#ef4444' : '#f59e0b'}; padding: 0.75rem; margin-bottom: 0.5rem; border-radius: 0 6px 6px 0; font-size: 0.85rem;">
                 <div style="font-weight: 500; margin-bottom: 0.25rem;">${risk.title}</div>
-                <div style="color: #888;">${risk.detail}</div>
+                <div style="color: var(--r-text-faint, #9CA3AF);">${risk.detail}</div>
               </div>
             `).join('')}
           `}
@@ -2051,7 +2051,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
     return `
       <div class="sticky-alert ${hasCritical ? 'critical' : 'warning'}" role="alert">
         <div style="flex: 1;">
-          <strong>${t('reports.fonts.issuesFoundCount', '{count} Issue(s) Found', { count: totalIssues })}</strong>
+          <strong>${t('reports.fonts.issuesFoundCount', '{{count}} Issue(s) Found', { count: totalIssues })}</strong>
           <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; opacity: 0.8;">
             ${data.summary.duplicateCount > 0 ? `${data.summary.duplicateCount} ${data.summary.duplicateCount > 1 ? t('reports.fonts.duplicatesPlural', 'duplicates') : t('reports.fonts.duplicateSingular', 'duplicate')} • ` : ''}
             ${data.summary.displayIssueCount > 0 ? `${data.summary.displayIssueCount} ${data.summary.displayIssueCount > 1 ? t('reports.fonts.displayIssuesPlural', 'display issues') : t('reports.fonts.displayIssueSingular', 'display issue')} • ` : ''}
@@ -2074,7 +2074,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
     return `
       <div class="section">
         <h2>${t('reports.fonts.fontAnalysisResults', 'Font Analysis Results')}</h2>
-        <p>>> ${t('reports.common.url', 'url')}: ${data.url || 'N/A'}</p>
+        <p>>> ${t('reports.common.url', 'URL')}: ${data.url || 'N/A'}</p>
         <p>>> ${t('reports.common.timestamp', 'timestamp')}: ${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date(data.analyzedAt)) : new Date(data.analyzedAt).toLocaleString()}</p>
         
         <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.3rem;">>> ${t('reports.fonts.fontHealthSummary', 'Font Health Summary')}</h3>
@@ -2083,7 +2083,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 2rem; margin: 2rem 0;">
           <!-- Overall Score -->
           <div style="text-align: center;">
-            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('reports.fonts.fontHealthScore', 'Font Health Score')}</div>
+            <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.fonts.fontHealthScore', 'Font Health Score')}</div>
             <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
               <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
               <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(healthScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(healthScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
@@ -2094,7 +2094,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
           <!-- Font Families -->
           <div style="text-align: center;">
-            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('reports.fonts.fontFamilies', 'Font Families')}</div>
+            <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.fonts.fontFamilies', 'Font Families')}</div>
             <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
               <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
               <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(familyScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(familyScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
@@ -2105,7 +2105,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
           <!-- Duplicates -->
           <div style="text-align: center;">
-            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('reports.fonts.duplicates', 'Duplicates')}</div>
+            <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.fonts.duplicates', 'Duplicates')}</div>
             <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
               <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
               <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(duplicateScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(duplicateScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
@@ -2116,7 +2116,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           
           <!-- Display Issues -->
           <div style="text-align: center;">
-            <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('reports.fonts.displayIssues', 'Display Issues')}</div>
+            <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.fonts.displayIssues', 'Display Issues')}</div>
             <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
               <circle cx="90" cy="90" r="75" fill="none" stroke="rgba(0, 0, 0, 0.1)" stroke-width="10"/>
               <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(displayScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(displayScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
@@ -2131,11 +2131,11 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">>> ${t('reports.fonts.fontDistribution', 'Font Distribution')}</h3>
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1rem;">
         <div class="chart-container">
-          <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #c0c0c0;">${t('reports.fonts.providerDistribution', 'Provider Distribution')}</h4>
+          <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--r-text-muted, #6B7280);">${t('reports.fonts.providerDistribution', 'Provider Distribution')}</h4>
           <canvas id="providerChart"></canvas>
         </div>
         <div class="chart-container">
-          <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #c0c0c0;">${t('reports.fonts.fontWeightUsage', 'Font Weight Usage')}</h4>
+          <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--r-text-muted, #6B7280);">${t('reports.fonts.fontWeightUsage', 'Font Weight Usage')}</h4>
           <canvas id="weightChart"></canvas>
         </div>
       </div>
@@ -2144,7 +2144,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       ${screenshot ? `
         <h3 style="color: #00ff41; margin: 1.5rem 0 1rem 0; font-size: 1.1rem;">>> ${t('reports.common.pagePreview', 'Page Preview')}</h3>
         <div style="margin-bottom: 1rem;">
-          <div style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; padding: 1rem; text-align: center;">
+          <div style="background: rgba(255,255,255,0.03); border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); border-radius: 8px; padding: 1rem; text-align: center;">
             <img src="${screenshot}" alt="${t('reports.common.websiteScreenshot', 'Website screenshot')}" style="max-width: 100%; max-height: 300px; border-radius: 4px; box-shadow: 0 4px 20px rgba(0,0,0,0.4);" loading="lazy" />
           </div>
         </div>
@@ -2178,14 +2178,14 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             <div style="font-family: '${family.name}', sans-serif; font-size: 2.5rem; line-height: 1.3; margin-top: 0.75rem; letter-spacing: 0.02em;">
               0123456789
             </div>
-            <div style="font-family: '${family.name}', sans-serif; font-size: 2rem; line-height: 1.3; margin-top: 0.5rem; letter-spacing: 0.05em; color: #888;">
+            <div style="font-family: '${family.name}', sans-serif; font-size: 2rem; line-height: 1.3; margin-top: 0.5rem; letter-spacing: 0.05em; color: var(--r-text-faint, #9CA3AF);">
               !@#$%^&amp;*()_+-=[]{}|;':",./&lt;&gt;?
             </div>
           </div>
           ${family.variants && family.variants.length > 0 ? `
             <div style="margin-top: 0.75rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
               ${family.variants.slice(0, 10).map(v => `
-                <span style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; color: #888;">${v.weight || v}${v.style && v.style !== 'normal' ? ' ' + v.style : ''}</span>
+                <span style="background: rgba(255,255,255,0.05); padding: 2px 6px; border-radius: 3px; font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${v.weight || v}${v.style && v.style !== 'normal' ? ' ' + v.style : ''}</span>
               `).join('')}
               ${family.variants.length > 10 ? `<span style="color: #666; font-size: 0.75rem;">+${family.variants.length - 10} ${t('reports.fonts.more', 'more')}</span>` : ''}
             </div>
@@ -2248,7 +2248,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       const isIconFont = provider.name.toLowerCase().includes('awesome') ||
                          provider.name.toLowerCase().includes('icon');
       const noFamiliesNote = familyCount === 0 && isIconFont
-        ? `<span style="color: #888; font-style: italic;">${t('reports.fonts.iconFontLibraryNote', 'Icon font library')}</span>`
+        ? `<span style="color: var(--r-text-faint, #9CA3AF); font-style: italic;">${t('reports.fonts.iconFontLibraryNote', 'Icon font library')}</span>`
         : '';
 
       return `
@@ -2256,7 +2256,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
             <div>
               <span class="provider-badge provider-${getProviderClass(provider.name)}">${provider.name}</span>
-              <span style="color: #888;">${familyText}</span>
+              <span style="color: var(--r-text-faint, #9CA3AF);">${familyText}</span>
             </div>
           </div>
           <div style="margin-top: 0.5rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -2325,9 +2325,9 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
             <div style="display: flex; align-items: center; gap: 0.75rem;">
               <span class="provider-badge provider-${getProviderClass(provider.name)}">${provider.name}</span>
-              <span style="color: #888; font-size: 0.85rem;">${familyCount} ${familyCount === 1 ? t('reports.fonts.familySingular', 'family') : t('reports.fonts.familyPlural', 'families')}</span>
+              <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${familyCount} ${familyCount === 1 ? t('reports.fonts.familySingular', 'family') : t('reports.fonts.familyPlural', 'families')}</span>
             </div>
-            <span style="padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.7rem; font-weight: 600; background: ${colors.bg}; color: ${colors.text}; border: 1px solid ${colors.border}40; text-transform: uppercase;">
+            <span style="padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 600; background: ${colors.bg}; color: ${colors.text}; border: 1px solid ${colors.border}40; text-transform: uppercase;">
               ${provider.type || t('reports.fonts.external', 'external')}
             </span>
           </div>
@@ -2335,7 +2335,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           <!-- Font Families -->
           ${families.length > 0 ? `
             <div style="margin-bottom: 1rem;">
-              <div style="font-size: 0.75rem; color: #888; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">${t('reports.fonts.fontFamilies', 'Font Families')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">${t('reports.fonts.fontFamilies', 'Font Families')}</div>
               <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                 ${families.map(f => `
                   <span style="background: rgba(255,255,255,0.1); padding: 0.35rem 0.75rem; border-radius: 6px; font-size: 0.85rem; font-weight: 500;">${f}</span>
@@ -2343,7 +2343,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
               </div>
             </div>
           ` : isIconFont ? `
-            <div style="margin-bottom: 1rem; color: #888; font-style: italic; font-size: 0.85rem;">
+            <div style="margin-bottom: 1rem; color: var(--r-text-faint, #9CA3AF); font-style: italic; font-size: 0.85rem;">
               ${t('reports.fonts.iconFontDynamic', 'Icon font library (families loaded dynamically)')}
             </div>
           ` : ''}
@@ -2351,9 +2351,9 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           <!-- Evidence Code Block -->
           ${codeSnippet ? `
             <div style="margin-top: 0.75rem;">
-              <div style="font-size: 0.75rem; color: #888; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">${t('reports.fonts.evidence', 'Evidence')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.05em;">${t('reports.fonts.evidence', 'Evidence')}</div>
               <div style="background: rgba(0,0,0,0.4); border-radius: 6px; padding: 0.75rem; overflow-x: auto;">
-                <code style="font-size: 0.8rem; color: #e0e0e0; white-space: nowrap;">${codeSnippet}</code>
+                <code style="font-size: 0.8rem; color: var(--r-text-muted, #6B7280); white-space: nowrap;">${codeSnippet}</code>
               </div>
             </div>
           ` : ''}
@@ -2386,42 +2386,42 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
     return `
       <!-- Delivery Score -->
-      <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 12px;">
+      <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 12px;">
         <div style="text-align: center;">
           <div style="font-size: 2.5rem; font-weight: bold; color: ${scoreColor}; line-height: 1;">${displayScore || 0}</div>
-          <div style="font-size: 0.75rem; color: #888; margin-top: 0.25rem;">${t('reports.fonts.deliveryScore', 'Delivery Score')}</div>
+          <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); margin-top: 0.25rem;">${t('reports.fonts.deliveryScore', 'Delivery Score')}</div>
         </div>
         <div style="flex: 1; display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 1rem;">
           ${hasNetworkData ? `
             <div style="text-align: center; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <div style="font-size: 1.25rem; font-weight: 600; color: #fff;">${totalRequests || 0}</div>
-              <div style="font-size: 0.7rem; color: #888;">${t('reports.fonts.fontFiles', 'Font Files')}</div>
+              <div style="font-size: 1.25rem; font-weight: 600; color: var(--r-text, #111827);">${totalRequests || 0}</div>
+              <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.fontFiles', 'Font Files')}</div>
             </div>
             <div style="text-align: center; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <div style="font-size: 1.25rem; font-weight: 600; color: #fff;">${totalBytesKB || '0'}KB</div>
-              <div style="font-size: 0.7rem; color: #888;">${t('reports.fonts.totalSize', 'Total Size')}</div>
+              <div style="font-size: 1.25rem; font-weight: 600; color: var(--r-text, #111827);">${totalBytesKB || '0'}KB</div>
+              <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.totalSize', 'Total Size')}</div>
             </div>
             <div style="text-align: center; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <div style="font-size: 1.25rem; font-weight: 600; color: #fff;">${averageLoadTime || 0}ms</div>
-              <div style="font-size: 0.7rem; color: #888;">${t('reports.fonts.avgLoad', 'Avg Load')}</div>
+              <div style="font-size: 1.25rem; font-weight: 600; color: var(--r-text, #111827);">${averageLoadTime || 0}ms</div>
+              <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.avgLoad', 'Avg Load')}</div>
             </div>
           ` : `
             <div style="text-align: center; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <div style="font-size: 1.25rem; font-weight: 600; color: #fff;">${fallbackFormats.total || data?.families?.length || 0}</div>
-              <div style="font-size: 0.7rem; color: #888;">${t('reports.fonts.fontFaces', 'Font Faces')}</div>
+              <div style="font-size: 1.25rem; font-weight: 600; color: var(--r-text, #111827);">${fallbackFormats.total || data?.families?.length || 0}</div>
+              <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.fontFaces', 'Font Faces')}</div>
             </div>
             <div style="text-align: center; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <div style="font-size: 1.25rem; font-weight: 600; color: #fff;">${fallbackFormats.woff2 || 0}</div>
-              <div style="font-size: 0.7rem; color: #888;">${t('reports.fonts.formats.woff2', 'WOFF2')}</div>
+              <div style="font-size: 1.25rem; font-weight: 600; color: var(--r-text, #111827);">${fallbackFormats.woff2 || 0}</div>
+              <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.formats.woff2', 'WOFF2')}</div>
             </div>
             <div style="text-align: center; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
-              <div style="font-size: 1.25rem; font-weight: 600; color: #fff;">${(fallbackFormats.woff || 0) + (fallbackFormats.ttf || 0)}</div>
-              <div style="font-size: 0.7rem; color: #888;">${t('reports.fonts.other', 'Other')}</div>
+              <div style="font-size: 1.25rem; font-weight: 600; color: var(--r-text, #111827);">${(fallbackFormats.woff || 0) + (fallbackFormats.ttf || 0)}</div>
+              <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.other', 'Other')}</div>
             </div>
           `}
           <div style="text-align: center; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
             <div style="font-size: 1.25rem; font-weight: 600; color: ${displayModernPercentage >= 80 ? '#10b981' : '#f59e0b'};">${displayModernPercentage || 0}%</div>
-            <div style="font-size: 0.7rem; color: #888;">${t('reports.fonts.modern', 'Modern')}</div>
+            <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.modern', 'Modern')}</div>
           </div>
         </div>
       </div>
@@ -2463,8 +2463,8 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             ${preconnects.map(p => `
               <div style="display: flex; align-items: center; gap: 0.75rem; padding: 0.6rem 1rem; background: rgba(${p.found ? '16, 185, 129' : '245, 158, 11'}, 0.08); border-radius: 6px; border-left: 3px solid ${p.found ? '#10b981' : '#f59e0b'};">
                 <span style="color: ${p.found ? '#10b981' : '#f59e0b'}; font-size: 1.1rem;">${p.found ? '✓' : '!'}</span>
-                <code style="flex: 1; font-size: 0.85rem; color: #e0e0e0;">${p.domain}</code>
-                <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: ${p.found ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(245, 158, 11, 0.2); color: #f59e0b'};">
+                <code style="flex: 1; font-size: 0.85rem; color: var(--r-text-muted, #6B7280);">${p.domain}</code>
+                <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${p.found ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(245, 158, 11, 0.2); color: #f59e0b'};">
                   ${p.found ? t('reports.fonts.connected', 'connected') : t('reports.fonts.missing', 'missing')}
                 </span>
               </div>
@@ -2472,13 +2472,13 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           </div>
           ${fontDelivery.preconnectsMissing > 0 ? `
             <div style="margin-top: 1rem;">
-              <div style="font-size: 0.75rem; color: #888; margin-bottom: 0.5rem;">${t('reports.fonts.addToHead', 'Add this to your HTML <head>:')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem;">${t('reports.fonts.addToHead', 'Add this to your HTML <head>:')}</div>
               <div style="background: rgba(0,0,0,0.4); border-radius: 6px; padding: 0.75rem; overflow-x: auto;">
                 <code style="font-size: 0.8rem; color: #10b981;">${preconnects.filter(p => !p.found && p.recommended).map(p => `&lt;link rel="preconnect" href="https://${p.domain}"&gt;`).join('\\n')}</code>
               </div>
             </div>
           ` : ''}
-        ` : `<p style="color: #888; font-size: 0.9rem;">${t('reports.fonts.noPreconnectData', 'No preconnect data available')}</p>`}
+        ` : `<p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">${t('reports.fonts.noPreconnectData', 'No preconnect data available')}</p>`}
       </div>
 
       <!-- Preload Status -->
@@ -2500,7 +2500,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
         ` : `
           <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 0 6px 6px 0;">
             <p style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #fcd34d;">${t('reports.fonts.noPreloadsDetected', 'No font preloads detected. Add preload hints for critical fonts.')}</p>
-            <div style="font-size: 0.75rem; color: #888; margin-bottom: 0.5rem;">${t('reports.common.example', 'Example')}:</div>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem;">${t('reports.common.example', 'Example')}:</div>
             <div style="background: rgba(0,0,0,0.4); border-radius: 6px; padding: 0.75rem; overflow-x: auto;">
               <code style="font-size: 0.8rem; color: #10b981;">&lt;link rel="preload" href="/fonts/main.woff2" as="font" type="font/woff2" crossorigin&gt;</code>
             </div>
@@ -2530,7 +2530,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                   const fileName = req.url.split('/').pop().split('?')[0] || t('reports.fonts.fontLabel', 'font');
                   const cacheColor = req.cacheStatus === 'HIT' ? '#10b981' : '#f59e0b';
                   return `
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                       <td style="padding: 0.6rem; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${req.url}">${fileName}</td>
                       <td style="padding: 0.6rem;"><span style="padding: 2px 6px; background: rgba(${req.format === 'woff2' ? '16, 185, 129' : '245, 158, 11'}, 0.2); border-radius: 4px; font-size: 0.7rem; text-transform: uppercase;">${req.format}</span></td>
                       <td style="padding: 0.6rem; color: #06b6d4;">${req.sizeKB}KB</td>
@@ -2577,13 +2577,13 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
     return `
       <!-- Stability Score & CLS Risk -->
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-        <div style="padding: 1.25rem; background: rgba(0,0,0,0.2); border-radius: 12px; text-align: center;">
+        <div style="padding: 1.25rem; background: var(--r-surface-2, #F8FAFC); border-radius: 12px; text-align: center;">
           <div style="font-size: 2.5rem; font-weight: bold; color: ${scoreColor}; line-height: 1;">${score || 0}</div>
-          <div style="font-size: 0.8rem; color: #888; margin-top: 0.25rem;">${t('reports.fonts.stabilityScore', 'Stability Score')}</div>
+          <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF); margin-top: 0.25rem;">${t('reports.fonts.stabilityScore', 'Stability Score')}</div>
         </div>
-        <div style="padding: 1.25rem; background: rgba(0,0,0,0.2); border-radius: 12px; text-align: center; border: 2px solid ${clsColor}40;">
+        <div style="padding: 1.25rem; background: var(--r-surface-2, #F8FAFC); border-radius: 12px; text-align: center; border: 2px solid ${clsColor}40;">
           <div style="font-size: 1.75rem; font-weight: bold; color: ${clsColor}; line-height: 1; text-transform: uppercase;">${clsRisk?.level || t('reports.common.na', 'N/A')}</div>
-          <div style="font-size: 0.8rem; color: #888; margin-top: 0.25rem;">${t('reports.fonts.clsRisk', 'CLS Risk')}</div>
+          <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF); margin-top: 0.25rem;">${t('reports.fonts.clsRisk', 'CLS Risk')}</div>
         </div>
       </div>
 
@@ -2597,7 +2597,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             ${clsRisk.risks.map(risk => `
               <div style="background: rgba(${risk.type === 'warning' ? '245, 158, 11' : '239, 68, 68'}, 0.1); border-left: 4px solid ${risk.type === 'warning' ? '#f59e0b' : '#ef4444'}; padding: 0.75rem 1rem; border-radius: 0 8px 8px 0;">
                 <div style="font-weight: 600; color: ${risk.type === 'warning' ? '#f59e0b' : '#ef4444'}; margin-bottom: 0.25rem;">${risk.title}</div>
-                <div style="color: #c0c0c0; font-size: 0.85rem;">${risk.detail}</div>
+                <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${risk.detail}</div>
               </div>
             `).join('')}
           </div>
@@ -2653,8 +2653,8 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
         </div>
         ${fontDisplaySummary?.problematic > 0 ? `
           <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 0.75rem; border-radius: 0 6px 6px 0;">
-            <p style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #fcd34d;"><strong>${fontDisplaySummary.problematic}</strong> ${t('reports.fonts.fontsUseBlockOrAuto', 'font(s) use')} <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">block</code> ${t('reports.common.or', 'or')} <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px;">auto</code>, ${t('reports.fonts.mayCauseFOIT', 'which may cause Flash of Invisible Text (FOIT)')}.</p>
-            <div style="font-size: 0.75rem; color: #888; margin-bottom: 0.5rem;">${t('reports.fonts.recommendedFix', 'Recommended fix')}:</div>
+            <p style="margin: 0 0 0.75rem 0; font-size: 0.9rem; color: #fcd34d;"><strong>${fontDisplaySummary.problematic}</strong> ${t('reports.fonts.fontsUseBlockOrAuto', 'font(s) use')} <code style="background: var(--r-surface-2, #F8FAFC); padding: 2px 6px; border-radius: 3px;">block</code> ${t('reports.common.or', 'or')} <code style="background: var(--r-surface-2, #F8FAFC); padding: 2px 6px; border-radius: 3px;">auto</code>, ${t('reports.fonts.mayCauseFOIT', 'which may cause Flash of Invisible Text (FOIT)')}.</p>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem;">${t('reports.fonts.recommendedFix', 'Recommended fix')}:</div>
             <div style="background: rgba(0,0,0,0.4); border-radius: 6px; padding: 0.75rem; overflow-x: auto;">
               <code style="font-size: 0.8rem; color: #10b981;">font-display: swap;</code>
             </div>
@@ -2666,7 +2666,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <div style="margin-bottom: 1.5rem;">
         <h4 style="margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; color: #00ff41; font-size: 0.95rem;">
           >> ${t('reports.fonts.metricOverrides', 'Metric Overrides')}
-          <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${(metricOverrides || []).length > 0 ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(107, 114, 128, 0.2); color: #9ca3af'};">
+          <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${(metricOverrides || []).length > 0 ? 'rgba(16, 185, 129, 0.2); color: #10b981' : 'rgba(107, 114, 128, 0.2); color: var(--r-text-faint, #9CA3AF)'};">
             ${(metricOverrides || []).length} ${t('reports.fonts.found', 'found')}
           </span>
         </h4>
@@ -2693,10 +2693,10 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           </div>
         ` : `
           <div style="background: rgba(107, 114, 128, 0.1); border-left: 4px solid #6b7280; padding: 1rem; border-radius: 0 8px 8px 0;">
-            <p style="margin: 0 0 0.75rem 0; color: #9ca3af; font-size: 0.9rem;">${t('reports.fonts.noMetricOverrides', 'No metric overrides detected. Consider using them to minimize layout shifts.')}</p>
-            <div style="font-size: 0.75rem; color: #888; margin-bottom: 0.5rem;">${t('reports.fonts.exampleMetricOverrides', 'Example @font-face with metric overrides')}:</div>
+            <p style="margin: 0 0 0.75rem 0; color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">${t('reports.fonts.noMetricOverrides', 'No metric overrides detected. Consider using them to minimize layout shifts.')}</p>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem;">${t('reports.fonts.exampleMetricOverrides', 'Example @font-face with metric overrides')}:</div>
             <div style="background: rgba(0,0,0,0.4); border-radius: 6px; padding: 0.75rem; overflow-x: auto;">
-              <pre style="margin: 0; font-size: 0.8rem; color: #e0e0e0;">@font-face {
+              <pre style="margin: 0; font-size: 0.8rem; color: var(--r-text-muted, #6B7280);">@font-face {
   font-family: 'Fallback';
   src: local('Arial');
   size-adjust: 105%;
@@ -2729,9 +2729,9 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                 <div style="background: ${colors.bg}; border-left: 4px solid ${colors.border}; padding: 0.75rem 1rem; border-radius: 0 8px 8px 0;">
                   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                     <span style="color: ${colors.border}; font-size: 1rem;">${colors.icon}</span>
-                    <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 10px; background: ${colors.bg}; color: ${colors.border}; text-transform: uppercase; font-weight: 600;">${t('reports.fonts.quality.' + stack.quality, stack.quality)}</span>
+                    <span style="font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; background: ${colors.bg}; color: ${colors.border}; text-transform: uppercase; font-weight: 600;">${t('reports.fonts.quality.' + stack.quality, stack.quality)}</span>
                   </div>
-                  <code style="font-size: 0.8rem; color: #e0e0e0; word-break: break-all;">${stack.stack}</code>
+                  <code style="font-size: 0.8rem; color: var(--r-text-muted, #6B7280); word-break: break-all;">${stack.stack}</code>
                   ${stack.recommendation && stack.quality !== 'excellent' ? `
                     <div style="margin-top: 0.5rem; font-size: 0.8rem; color: ${colors.text};">${stack.recommendation}</div>
                   ` : ''}
@@ -2740,7 +2740,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             }).join('')}
           </div>
           ${fallbackStacks.length > 6 ? `<p style="color: #666; font-size: 0.75rem; margin-top: 0.5rem;">+ ${fallbackStacks.length - 6} ${t('reports.fonts.moreStacksAnalyzed', 'more stacks analyzed')}</p>` : ''}
-        ` : `<p style="color: #888; font-size: 0.9rem;">${t('reports.fonts.noFallbackStacksAnalyzed', 'No fallback stacks analyzed')}</p>`}
+        ` : `<p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">${t('reports.fonts.noFallbackStacksAnalyzed', 'No fallback stacks analyzed')}</p>`}
       </div>
     `;
   }
@@ -2776,14 +2776,14 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           <span style="font-size: 1.25rem; font-weight: 700; color: ${scoreColor};">${score}</span>
         </div>
         <div>
-          <div style="font-weight: 600; color: #fff;">${t('reports.fonts.fontLoadingPerformance', 'Font Loading Performance')}</div>
-          <div style="font-size: 0.85rem; color: #888;">${t('reports.fonts.preloadRenderBlockingAnalysis', 'Preload, render-blocking, and FOIT/FOUT analysis')}</div>
+          <div style="font-weight: 600; color: var(--r-text, #111827);">${t('reports.fonts.fontLoadingPerformance', 'Font Loading Performance')}</div>
+          <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.preloadRenderBlockingAnalysis', 'Preload, render-blocking, and FOIT/FOUT analysis')}</div>
         </div>
       </div>
 
       <!-- FOIT/FOUT Analysis -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="color: #fff; font-size: 0.9rem; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
+        <h4 style="color: var(--r-text, #111827); font-size: 0.9rem; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
           <span style="font-size: 1rem;">${hasFontDisplaySwap ? '✅' : '⚠️'}</span>
           ${t('reports.fonts.foitFoutPrevention', 'FOIT/FOUT Prevention')}
         </h4>
@@ -2791,14 +2791,14 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           ${hasFontDisplaySwap ? `
             <p style="margin: 0; color: #86efac;"><strong>${t('reports.common.status.good', 'Good')}:</strong> ${t('reports.fonts.fontsUseFontDisplaySwap', 'Fonts use font-display: swap or optional, preventing Flash of Invisible Text (FOIT).')}</p>
           ` : `
-            <p style="margin: 0 0 0.5rem 0; color: #fcd34d;"><strong>${t('reports.common.issue', 'Issue')}:</strong> ${fontDisplayIssues.length} ${t('reports.fonts.fontsMayCauseFOIT', 'font(s) may cause FOIT (invisible text during load).')}</p>
-            <p style="margin: 0; color: #888; font-size: 0.85rem;">${t('reports.fonts.addFontDisplaySwapToPrevent', 'Add')} <code style="background: rgba(0,0,0,0.3); padding: 0.15rem 0.35rem; border-radius: 3px;">font-display: swap</code> ${t('reports.fonts.toPreventInvisibleText', 'to prevent invisible text while fonts load.')}</p>
+            <p style="margin: 0 0 0.5rem 0; color: #fcd34d;"><strong>${t('reports.common.issue', 'issue')}:</strong> ${fontDisplayIssues.length} ${t('reports.fonts.fontsMayCauseFOIT', 'font(s) may cause FOIT (invisible text during load).')}</p>
+            <p style="margin: 0; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.fonts.addFontDisplaySwapToPrevent', 'Add')} <code style="background: var(--r-surface-2, #F8FAFC); padding: 0.15rem 0.35rem; border-radius: 3px;">font-display: swap</code> ${t('reports.fonts.toPreventInvisibleText', 'to prevent invisible text while fonts load.')}</p>
           `}
         </div>
         ${fontDisplayIssues.length > 0 ? `
           <div style="margin-top: 0.75rem;">
             ${fontDisplayIssues.slice(0, 3).map(issue => `
-              <div style="padding: 0.5rem 0.75rem; background: rgba(0,0,0,0.2); border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.85rem;">
+              <div style="padding: 0.5rem 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.85rem;">
                 <span style="color: #f59e0b;">⚠</span> ${issue.message || t('reports.fonts.fontDisplayIssueDetected', 'Font display issue detected')}
               </div>
             `).join('')}
@@ -2809,7 +2809,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
 
       <!-- Preload Status -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="color: #fff; font-size: 0.9rem; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
+        <h4 style="color: var(--r-text, #111827); font-size: 0.9rem; margin: 0 0 0.75rem 0; display: flex; align-items: center; gap: 0.5rem;">
           <span style="font-size: 1rem;">${hasPreloads ? '✅' : '⚠️'}</span>
           ${t('reports.fonts.fontPreloading', 'Font Preloading')}
         </h4>
@@ -2826,42 +2826,42 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
         ` : `
           <div style="background: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 1rem; border-radius: 0 8px 8px 0;">
             <p style="margin: 0 0 0.5rem 0; color: #fcd34d;"><strong>${t('reports.fonts.noFontPreloadsDetected', 'No font preloads detected')}</strong></p>
-            <p style="margin: 0; color: #888; font-size: 0.85rem;">${t('reports.fonts.addPreloadHint', 'Add')} <code style="background: rgba(0,0,0,0.3); padding: 0.15rem 0.35rem; border-radius: 3px;">&lt;link rel="preload" as="font" crossorigin&gt;</code> ${t('reports.fonts.forAboveFoldFonts', 'for above-the-fold fonts.')}</p>
+            <p style="margin: 0; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.fonts.addPreloadHint', 'Add')} <code style="background: var(--r-surface-2, #F8FAFC); padding: 0.15rem 0.35rem; border-radius: 3px;">&lt;link rel="preload" as="font" crossorigin&gt;</code> ${t('reports.fonts.forAboveFoldFonts', 'for above-the-fold fonts.')}</p>
           </div>
         `}
       </div>
 
       <!-- Preconnect Status -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="color: #fff; font-size: 0.9rem; margin: 0 0 0.75rem 0;">${t('reports.fonts.preconnectHints', 'Preconnect Hints')}</h4>
+        <h4 style="color: var(--r-text, #111827); font-size: 0.9rem; margin: 0 0 0.75rem 0;">${t('reports.fonts.preconnectHints', 'Preconnect Hints')}</h4>
         ${preconnectStatus.length > 0 ? `
           <div style="display: grid; gap: 0.5rem;">
             ${preconnectStatus.map(p => `
-              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; background: rgba(0,0,0,0.2); border-radius: 4px;">
-                <span style="font-family: monospace; font-size: 0.85rem; color: #e0e0e0;">${p.domain}</span>
+              <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.5rem 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px;">
+                <span style="font-family: monospace; font-size: 0.85rem; color: var(--r-text-muted, #6B7280);">${p.domain}</span>
                 <span style="padding: 0.2rem 0.5rem; border-radius: 3px; font-size: 0.75rem; font-weight: 600; ${p.found ? 'background: rgba(16, 185, 129, 0.2); color: #86efac;' : 'background: rgba(245, 158, 11, 0.2); color: #fcd34d;'}">${p.found ? '✓ ' + t('reports.fonts.connectedStatus', 'Connected') : '○ ' + t('reports.fonts.missingStatus', 'Missing')}</span>
               </div>
             `).join('')}
           </div>
-        ` : `<p style="color: #888; font-size: 0.9rem;">${t('reports.fonts.noExternalFontDomains', 'No external font domains detected.')}</p>`}
+        ` : `<p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">${t('reports.fonts.noExternalFontDomains', 'No external font domains detected.')}</p>`}
       </div>
 
       <!-- Render Blocking Summary -->
       <div>
-        <h4 style="color: #fff; font-size: 0.9rem; margin: 0 0 0.75rem 0;">${t('reports.fonts.renderBlockingAnalysis', 'Render-Blocking Analysis')}</h4>
-        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
+        <h4 style="color: var(--r-text, #111827); font-size: 0.9rem; margin: 0 0 0.75rem 0;">${t('reports.fonts.renderBlockingAnalysis', 'Render-Blocking Analysis')}</h4>
+        <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px;">
           <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
             <div>
               <div style="font-size: 1.5rem; font-weight: 700; color: #5bf4e7;">${requests.length}</div>
-              <div style="font-size: 0.75rem; color: #888;">${t('reports.fonts.totalFonts', 'Total Fonts')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.totalFonts', 'Total Fonts')}</div>
             </div>
             <div>
               <div style="font-size: 1.5rem; font-weight: 700; color: ${preloads.length > 0 ? '#10b981' : '#888'};">${preloads.length}</div>
-              <div style="font-size: 0.75rem; color: #888;">${t('reports.fonts.preloaded', 'Preloaded')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.preloaded', 'Preloaded')}</div>
             </div>
             <div>
               <div style="font-size: 1.5rem; font-weight: 700; color: ${renderBlockingFonts.length > 0 ? '#f59e0b' : '#10b981'};">${renderBlockingFonts.length}</div>
-              <div style="font-size: 0.75rem; color: #888;">${t('reports.fonts.renderBlocking', 'Render-Blocking')}</div>
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.renderBlocking', 'Render-Blocking')}</div>
             </div>
           </div>
         </div>
@@ -2919,20 +2919,20 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
         <div style="font-size: 2rem;">${riskIcon}</div>
         <div>
           <div style="font-weight: 600; color: ${riskColor}; text-transform: uppercase; font-size: 0.85rem; letter-spacing: 0.05em;">${riskLevel} ${t('reports.fonts.privacyRisk', 'Privacy Risk')}</div>
-          <div style="font-size: 0.85rem; color: #888;">${thirdPartyProviders.length} ${t('reports.fonts.thirdPartyProviders', 'third-party provider(s)')}, ${thirdPartyDomains.size} ${t('reports.fonts.externalDomains', 'external domain(s)')}</div>
+          <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${thirdPartyProviders.length} ${t('reports.fonts.thirdPartyProviders', 'third-party provider(s)')}, ${thirdPartyDomains.size} ${t('reports.fonts.externalDomains', 'External Font Domains')}</div>
         </div>
       </div>
 
       <!-- Third-Party Font Domains -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="color: #fff; font-size: 0.9rem; margin: 0 0 0.75rem 0;">${t('reports.fonts.externalDomainsContacted', 'External Domains Contacted')}</h4>
+        <h4 style="color: var(--r-text, #111827); font-size: 0.9rem; margin: 0 0 0.75rem 0;">${t('reports.fonts.externalDomainsContacted', 'External Domains Contacted')}</h4>
         ${thirdPartyDomains.size > 0 ? `
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem;">
             ${Array.from(thirdPartyDomains).map(domain => `
               <span style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fcd34d; padding: 0.35rem 0.75rem; border-radius: 4px; font-size: 0.8rem; font-family: monospace;">${domain}</span>
             `).join('')}
           </div>
-          <p style="color: #888; font-size: 0.85rem; margin: 0;">${t('reports.fonts.externalDomainPrivacyNote', 'Each external domain receives visitor IP addresses and may set cookies.')}</p>
+          <p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin: 0;">${t('reports.fonts.externalDomainPrivacyNote', 'Each external domain receives visitor IP addresses and may set cookies.')}</p>
         ` : `
           <div style="background: rgba(16, 185, 129, 0.1); border-left: 4px solid #10b981; padding: 1rem; border-radius: 0 8px 8px 0;">
             <p style="margin: 0; color: #86efac;"><strong>${t('reports.fonts.noExternalFontDomainsDetected', 'No external font domains detected.')}</strong> ${t('reports.fonts.selfHostedMaxPrivacy', 'Fonts are self-hosted, providing maximum privacy.')}</p>
@@ -2947,14 +2947,14 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             <span style="font-size: 1rem;">⚠️</span>
             <strong style="color: #fcd34d;">${t('reports.fonts.googleFontsPrivacy', 'Google Fonts Privacy Consideration')}</strong>
           </div>
-          <p style="color: #e0e0e0; margin: 0 0 0.75rem 0; font-size: 0.9rem;">${t('reports.fonts.googleFontsPrivacyDesc', 'Google Fonts sends visitor data (IP address, user agent) to Google servers. Some privacy regulations (like GDPR) may require explicit consent for this.')}</p>
-          <p style="color: #888; margin: 0; font-size: 0.85rem;"><strong>${t('reports.common.recommendation', 'Recommendation')}:</strong> ${t('reports.fonts.googleFontsRecommendation', 'Consider self-hosting Google Fonts to reduce third-party exposure. Tools like')} <code style="background: rgba(0,0,0,0.3); padding: 0.15rem 0.35rem; border-radius: 3px;">google-webfonts-helper</code> ${t('reports.fonts.canHelp', 'can help.')}</p>
+          <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 0.75rem 0; font-size: 0.9rem;">${t('reports.fonts.googleFontsPrivacyDesc', 'Google Fonts sends visitor data (IP address, user agent) to Google servers. Some privacy regulations (like GDPR) may require explicit consent for this.')}</p>
+          <p style="color: var(--r-text-faint, #9CA3AF); margin: 0; font-size: 0.85rem;"><strong>${t('reports.common.recommendation', 'Recommendation')}:</strong> ${t('reports.fonts.googleFontsRecommendation', 'Consider self-hosting Google Fonts to reduce third-party exposure. Tools like')} <code style="background: var(--r-surface-2, #F8FAFC); padding: 0.15rem 0.35rem; border-radius: 3px;">google-webfonts-helper</code> ${t('reports.fonts.canHelp', 'can help.')}</p>
         </div>
       ` : ''}
 
       <!-- Provider Classification -->
       <div style="margin-bottom: 1.5rem;">
-        <h4 style="color: #fff; font-size: 0.9rem; margin: 0 0 0.75rem 0;">${t('reports.fonts.fontProviderClassification', 'Font Provider Classification')}</h4>
+        <h4 style="color: var(--r-text, #111827); font-size: 0.9rem; margin: 0 0 0.75rem 0;">${t('reports.fonts.fontProviderClassification', 'Font Provider Classification')}</h4>
         <div style="display: grid; gap: 0.75rem;">
           ${selfHosted.length > 0 ? `
             <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: rgba(16, 185, 129, 0.1); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
@@ -2962,7 +2962,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                 <span style="font-size: 1.25rem;">🏠</span>
                 <div>
                   <div style="font-weight: 600; color: #86efac;">${t('reports.fonts.selfHosted', 'Self-Hosted')}</div>
-                  <div style="font-size: 0.8rem; color: #888;">${t('reports.fonts.selfHostedDesc', 'Maximum privacy, you control the fonts')}</div>
+                  <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.selfHostedDesc', 'Maximum privacy, you control the fonts')}</div>
                 </div>
               </div>
               <span style="background: rgba(16, 185, 129, 0.2); color: #86efac; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${selfHosted.length}</span>
@@ -2974,7 +2974,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                 <span style="font-size: 1.25rem;">🔤</span>
                 <div>
                   <div style="font-weight: 600; color: #93c5fd;">${t('reports.fonts.googleFonts', 'Google Fonts')}</div>
-                  <div style="font-size: 0.8rem; color: #888;">${t('reports.fonts.googleFontsClassDesc', 'Free, fast CDN, but sends visitor data to Google')}</div>
+                  <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.googleFontsClassDesc', 'Free, fast CDN, but sends visitor data to Google')}</div>
                 </div>
               </div>
               <span style="background: rgba(66, 133, 244, 0.2); color: #93c5fd; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${providers.filter(p => p.name.includes('Google')).length}</span>
@@ -2986,7 +2986,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                 <span style="font-size: 1.25rem;">🎨</span>
                 <div>
                   <div style="font-weight: 600; color: #fca5a5;">${t('reports.fonts.adobeFontsTypekit', 'Adobe Fonts / Typekit')}</div>
-                  <div style="font-size: 0.8rem; color: #888;">${t('reports.fonts.adobeFontsDesc', 'Requires subscription, sends data to Adobe')}</div>
+                  <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.adobeFontsDesc', 'Requires subscription, sends data to Adobe')}</div>
                 </div>
               </div>
               <span style="background: rgba(255, 0, 0, 0.2); color: #fca5a5; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${providers.filter(p => p.name.includes('Adobe') || p.name.includes('Typekit')).length}</span>
@@ -2998,7 +2998,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
                 <span style="font-size: 1.25rem;">🌐</span>
                 <div>
                   <div style="font-weight: 600; color: #c4b5fd;">${t('reports.fonts.otherCDNThirdParty', 'Other CDN/Third-Party')}</div>
-                  <div style="font-size: 0.8rem; color: #888;">${t('reports.fonts.externalFontDelivery', 'External font delivery services')}</div>
+                  <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.fonts.externalFontDelivery', 'External font delivery services')}</div>
                 </div>
               </div>
               <span style="background: rgba(139, 92, 246, 0.2); color: #c4b5fd; padding: 0.25rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${thirdPartyProviders.filter(p => !p.name.includes('Google') && !p.name.includes('Adobe')).length}</span>
@@ -3014,7 +3014,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             <span style="font-size: 1rem;">💡</span>
             <strong style="color: #5bf4e7;">${t('reports.fonts.considerSelfHosting', 'Consider Self-Hosting')}</strong>
           </div>
-          <p style="color: #e0e0e0; margin: 0; font-size: 0.9rem;">${t('reports.fonts.selfHostingBenefits', 'Self-hosting fonts eliminates third-party requests, improving privacy compliance and potentially reducing load times. Most web fonts can be legally self-hosted with proper licensing.')}</p>
+          <p style="color: var(--r-text-muted, #6B7280); margin: 0; font-size: 0.9rem;">${t('reports.fonts.selfHostingBenefits', 'Self-hosting fonts eliminates third-party requests, improving privacy compliance and potentially reducing load times. Most web fonts can be legally self-hosted with proper licensing.')}</p>
         </div>
       ` : ''}
     `;
@@ -3034,24 +3034,24 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
         ${hasFullScan && performance.initialLoadTime ? `
           <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
             <div style="font-size: 1.5rem; font-weight: bold; color: ${performance.initialLoadTime < 1000 ? '#10b981' : performance.initialLoadTime < 2000 ? '#f59e0b' : '#ef4444'};">${performance.initialLoadTime}ms</div>
-            <div style="color: #888; font-size: 0.75rem;">${t('reports.fonts.pageLoad', 'Page Load')}</div>
+            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${t('reports.fonts.pageLoad', 'Page Load')}</div>
           </div>
         ` : ''}
         <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
           <div style="font-size: 1.5rem; font-weight: bold; color: ${data.summary.totalFamilies <= 3 ? '#10b981' : data.summary.totalFamilies <= 5 ? '#f59e0b' : '#ef4444'};">${data.summary.totalFamilies}</div>
-          <div style="color: #888; font-size: 0.75rem;">${t('reports.fonts.fontFamilies', 'Font Families')}</div>
+          <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${t('reports.fonts.fontFamilies', 'Font Families')}</div>
         </div>
         <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
           <div style="font-size: 1.5rem; font-weight: bold; color: #4285f4;">${typographyStats.uniqueFonts}</div>
-          <div style="color: #888; font-size: 0.75rem;">${t('reports.fonts.uniqueFonts', 'Unique Fonts')}</div>
+          <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${t('reports.fonts.uniqueFonts', 'Unique Fonts')}</div>
         </div>
         <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
           <div style="font-size: 1.5rem; font-weight: bold; color: #a78bfa;">${typographyStats.uniqueWeights}</div>
-          <div style="color: #888; font-size: 0.75rem;">${t('reports.fonts.fontWeights', 'Font Weights')}</div>
+          <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${t('reports.fonts.fontWeights', 'Font Weights')}</div>
         </div>
         <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
           <div style="font-size: 1.5rem; font-weight: bold; color: #06b6d4;">${typographyStats.uniqueSizes}</div>
-          <div style="color: #888; font-size: 0.75rem;">${t('reports.fonts.fontSizes', 'Font Sizes')}</div>
+          <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${t('reports.fonts.fontSizes', 'Font Sizes')}</div>
         </div>
       </div>
       
@@ -3068,7 +3068,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             ${typographyStats.sizeBreakdown.slice(0, 8).map(size => `
               <div style="display: flex; flex-direction: column; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 6px; min-width: 60px;">
                 <div style="font-size: ${Math.min(parseFloat(size.size), 32)}px; font-weight: 500; line-height: 1; margin-bottom: 0.25rem;">Aa</div>
-                <div style="font-size: 0.7rem; color: #888;">${size.size}</div>
+                <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);">${size.size}</div>
                 <div style="font-size: 0.65rem; color: #666;">${size.count}×</div>
               </div>
             `).join('')}
@@ -3084,7 +3084,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             ${typographyStats.weightBreakdown.map(weight => `
               <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: rgba(255,255,255,0.05); border-radius: 6px;">
                 <span style="font-weight: ${weight.weight}; font-size: 0.9rem;">${weight.weight}</span>
-                <span style="font-size: 0.7rem; color: #888; background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 10px;">${weight.count}</span>
+                <span style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF); background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 12px;">${weight.count}</span>
               </div>
             `).join('')}
           </div>
@@ -3108,9 +3108,9 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
               </thead>
               <tbody>
                 ${fontMetrics.slice(0, 12).map(metric => `
-                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                  <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                     <td style="padding: 0.6rem;">
-                      <code style="background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 3px; font-size: 0.75rem;">&lt;${metric.element}&gt;</code>
+                      <code style="background: var(--r-surface-2, #F8FAFC); padding: 2px 6px; border-radius: 3px; font-size: 0.75rem;">&lt;${metric.element}&gt;</code>
                     </td>
                     <td style="padding: 0.6rem; font-family: '${metric.fontFamily?.split(',')[0]}', sans-serif; font-size: 0.85rem;">
                       ${metric.fontFamily?.split(',')[0]?.substring(0, 20) || t('reports.common.na', 'N/A')}
@@ -3136,10 +3136,10 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
       <!-- Performance Tips -->
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(16, 185, 129, 0.05); border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.2);">
         <h4 style="margin: 0 0 0.5rem 0; color: #10b981; font-size: 0.9rem;">${t('reports.fonts.typographyPerformanceTips', 'Typography Performance Tips')}</h4>
-        <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; color: #888;">
-          ${data.summary.totalFamilies > 3 ? `<li>${t('reports.fonts.tips.reduceFamilies', 'Consider reducing font families from {count} to 2-3 for faster loading', { count: data.summary.totalFamilies })}</li>` : ''}
-          ${typographyStats.uniqueWeights > 4 ? `<li>${t('reports.fonts.tips.consolidateWeights', 'Using {count} font weights - consider consolidating to 3-4', { count: typographyStats.uniqueWeights })}</li>` : ''}
-          ${typographyStats.uniqueSizes > 8 ? `<li>${t('reports.fonts.tips.consistentScale', '{count} different font sizes detected - aim for a consistent type scale (6-8 sizes)', { count: typographyStats.uniqueSizes })}</li>` : ''}
+        <ul style="margin: 0; padding-left: 1.25rem; font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">
+          ${data.summary.totalFamilies > 3 ? `<li>${t('reports.fonts.tips.reduceFamilies', 'Consider reducing font families from {{count}} to 2-3 for faster loading', { count: data.summary.totalFamilies })}</li>` : ''}
+          ${typographyStats.uniqueWeights > 4 ? `<li>${t('reports.fonts.tips.consolidateWeights', 'Using {{count}} font weights - consider consolidating to 3-4', { count: typographyStats.uniqueWeights })}</li>` : ''}
+          ${typographyStats.uniqueSizes > 8 ? `<li>${t('reports.fonts.tips.consistentScale', '{{count}} different font sizes detected - aim for a consistent type scale (6-8 sizes)', { count: typographyStats.uniqueSizes })}</li>` : ''}
           ${data.summary.totalFamilies <= 3 && typographyStats.uniqueWeights <= 4 ? `<li>${t('reports.fonts.tips.wellOptimized', 'Good job! Your typography setup is well-optimized for performance')}</li>` : ''}
         </ul>
       </div>
@@ -3226,7 +3226,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             <strong>1. ${t('reports.fonts.addPreconnectExternal', 'Add Preconnect for External Fonts')}</strong>
             <button class="copy-btn" data-action="copy-snippet" data-copy-target="preconnect-code">${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="preconnect-code" style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto; margin: 0;">&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
+          <pre id="preconnect-code" style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto; margin: 0;">&lt;link rel="preconnect" href="https://fonts.googleapis.com"&gt;
 &lt;link rel="preconnect" href="https://fonts.gstatic.com" crossorigin&gt;</pre>
         </div>
         
@@ -3235,7 +3235,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
             <strong>2. ${t('reports.fonts.addFontDisplaySwapLabel', 'Add font-display: swap')}</strong>
             <button class="copy-btn" data-action="copy-snippet" data-copy-target="display-code">${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="display-code" style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto; margin: 0;">/* In your Google Fonts URL: */
+          <pre id="display-code" style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto; margin: 0;">/* In your Google Fonts URL: */
 https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
 
 /* Or in @font-face: */
@@ -3251,7 +3251,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
             <strong>3. ${t('reports.fonts.preloadCriticalFonts', 'Preload Critical Fonts')}</strong>
             <button class="copy-btn" data-action="copy-snippet" data-copy-target="preload-code">${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="preload-code" style="background: rgba(0,0,0,0.3); padding: 0.75rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto; margin: 0;">&lt;link rel="preload" href="/fonts/main.woff2" as="font" type="font/woff2" crossorigin&gt;</pre>
+          <pre id="preload-code" style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto; margin: 0;">&lt;link rel="preload" href="/fonts/main.woff2" as="font" type="font/woff2" crossorigin&gt;</pre>
         </div>
       </div>
       
@@ -3264,8 +3264,8 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
               <strong style="color: ${rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#f59e0b' : '#3b82f6'};">${rec.title}</strong>
               <span class="issue-badge" style="background: ${rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#f59e0b' : '#3b82f6'}; color: white;">${t('reports.common.priority.' + rec.priority, rec.priority)}</span>
             </div>
-            <p style="margin: 0.5rem 0; color: #ccc;">${rec.description}</p>
-            <p style="margin: 0; font-size: 0.85rem; color: #888;">${rec.action}</p>
+            <p style="margin: 0.5rem 0; color: var(--r-text-muted, #6B7280);">${rec.description}</p>
+            <p style="margin: 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${rec.action}</p>
           </div>
         `).join('')}
       ` : ''}
@@ -3275,13 +3275,13 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
         <h4 style="margin: 1.5rem 0 1rem 0; color: #00ff41;">>> ${t('reports.fonts.bestPracticesAudit', 'Best Practices Audit')} (${t('reports.common.score', 'Score')}: ${bestPractices.score || 0}/100)</h4>
         <div style="background: rgba(255,255,255,0.03); border-radius: 8px; padding: 1rem;">
           ${bestPractices.recommendations.slice(0, 6).map(rec => `
-            <div style="display: flex; align-items: flex-start; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <div style="display: flex; align-items: flex-start; margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <span style="color: ${rec.type === 'error' ? '#ef4444' : rec.type === 'warning' ? '#f59e0b' : '#10b981'}; margin-right: 0.75rem; font-size: 1.2rem;">
                 ${rec.type === 'error' ? '✗' : rec.type === 'warning' ? '~' : '✓'}
               </span>
               <div>
                 <div style="font-weight: 500;">${rec.message || rec.title}</div>
-                ${rec.detail ? `<div style="color: #888; font-size: 0.85rem; margin-top: 0.25rem;">${rec.detail}</div>` : ''}
+                ${rec.detail ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-top: 0.25rem;">${rec.detail}</div>` : ''}
               </div>
             </div>
           `).join('')}
@@ -3314,7 +3314,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
       insights.push(`
         <div style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(167, 139, 250, 0.2);">
           <strong style="color: #e0e7ff;">${t('reports.fonts.performanceOptimization', 'Performance Optimization')}:</strong>
-          <span style="color: #c7d2fe;">${t('reports.fonts.performanceOptimizationDesc', 'Reduce from {current} to 2-3 font families. Estimated improvement: {savingsMin}-{savingsMax}ms faster load time.', { current: data.summary.totalFamilies, savingsMin: savings, savingsMax: savings + 200 })}</span>
+          <span style="color: #c7d2fe;">${t('reports.fonts.performanceOptimizationDesc', 'Reduce from {{current}} to 2-3 font families. Estimated improvement: {{savingsMin}}-{{savingsMax}}ms faster load time.', { current: data.summary.totalFamilies, savingsMin: savings, savingsMax: savings + 200 })}</span>
         </div>
       `);
     }
@@ -3324,7 +3324,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
       insights.push(`
         <div style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(167, 139, 250, 0.2);">
           <strong style="color: #e0e7ff;">${t('reports.fonts.providerConsolidation', 'Provider Consolidation')}:</strong>
-          <span style="color: #c7d2fe;">${t('reports.fonts.providerConsolidationDesc', 'Fonts loaded from {count} providers. Consolidate to reduce DNS lookups and connection overhead.', { count: data.providers.length })}</span>
+          <span style="color: #c7d2fe;">${t('reports.fonts.providerConsolidationDesc', 'Fonts loaded from {{count}} providers. Consolidate to reduce DNS lookups and connection overhead.', { count: data.providers.length })}</span>
         </div>
       `);
     }
@@ -3334,7 +3334,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
       insights.push(`
         <div style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(167, 139, 250, 0.2);">
           <strong style="color: #fbbf24;">${t('reports.fonts.fontDisplayFixLabel', 'Font Display Fix')}:</strong>
-          <span style="color: #c7d2fe;">${t('reports.fonts.fontDisplayFixDesc', '{count} font(s) missing font-display property. Add "font-display: swap" to prevent invisible text during load.', { count: data.summary.displayIssueCount })}</span>
+          <span style="color: #c7d2fe;">${t('reports.fonts.fontDisplayFixDesc', '{{count}} font(s) missing font-display property. Add "font-display: swap" to prevent invisible text during load.', { count: data.summary.displayIssueCount })}</span>
         </div>
       `);
     }
@@ -3344,7 +3344,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
       insights.push(`
         <div style="margin-bottom: 0.75rem; padding-bottom: 0.75rem; border-bottom: 1px solid rgba(167, 139, 250, 0.2);">
           <strong style="color: #34d399;">${t('reports.fonts.preloadOpportunity', 'Preload Opportunity')}:</strong>
-          <span style="color: #c7d2fe;">${t('reports.fonts.preloadOpportunityDesc', '{count} critical font(s) could benefit from preloading. This can improve First Contentful Paint by 100-300ms.', { count: data.summary.preloadIssueCount })}</span>
+          <span style="color: #c7d2fe;">${t('reports.fonts.preloadOpportunityDesc', '{{count}} critical font(s) could benefit from preloading. This can improve First Contentful Paint by 100-300ms.', { count: data.summary.preloadIssueCount })}</span>
         </div>
       `);
     }
@@ -3378,7 +3378,7 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
 
     // Provider suggestion
     if (data.providers.length > 1) {
-      suggestions.push(`<p style="margin: 0.5rem 0;"><strong>${t('reports.fonts.consolidationLabel', 'Consolidation')}:</strong> ${t('reports.fonts.consolidationSuggestion', 'Fonts are loaded from {count} different providers. Consolidating to one provider reduces DNS lookups.', { count: data.providers.length })}</p>`);
+      suggestions.push(`<p style="margin: 0.5rem 0;"><strong>${t('reports.fonts.consolidationLabel', 'Consolidation')}:</strong> ${t('reports.fonts.consolidationSuggestion', 'Fonts are loaded from {{count}} different providers. Consolidating to one provider reduces DNS lookups.', { count: data.providers.length })}</p>`);
     }
 
     // Accessibility suggestion

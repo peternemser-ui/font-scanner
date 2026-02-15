@@ -963,7 +963,7 @@ class BrokenLinkService {
         priority: 'success',
         category: 'Link Health',
         message: '✅ Excellent link health!',
-        detail: 'No broken links, redirect issues, or security vulnerabilities detected. Keep monitoring regularly.',
+        detail: 'No broken links, redirect issues, or security vulnerabilities detected. Re-scan after content updates to maintain link health.',
         impact: 'Maintain current standards'
       });
     }

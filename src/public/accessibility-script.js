@@ -206,7 +206,7 @@ urlInput.addEventListener('keypress', (e) => {
           <div>
             <strong>${t('reports.common.reportNeedsRegeneration', 'Report needs to be regenerated')}</strong><br>
             <span style="font-size: 0.9em; opacity: 0.9;">
-              ${t('reports.common.clickAnalyzeToView', 'Click "Analyze" to view your purchased report. It will be saved for instant access next time.')}
+              ${t('reports.common.clickAnalyzeToView', 'Click ')}
             </span>
           </div>
         </div>
@@ -692,7 +692,7 @@ function displayAccessibilityResults(resultData) {
       <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
         <img
           src="${screenshotUrl}"
-          alt="${t('reports.common.screenshotOf', 'Screenshot of')} ${displayUrl}"
+          alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}')} ${displayUrl}"
           class="screenshot-item__img"
           style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
           data-action="open-lightbox"
@@ -772,22 +772,22 @@ function displayAccessibilityResults(resultData) {
         
         <!-- Right: Quick Stats -->
         <div>
-          <h3 style="color: #bb86fc; margin: 0 0 1rem 0; font-size: 1.3rem;">>> ${t('reports.accessibility.quickStats', 'Quick Stats')}</h3>
+          <h3 style="color: #bb86fc; margin: 0 0 1rem 0; font-size: 1.35rem;">>> ${t('reports.accessibility.quickStats', 'Quick Stats')}</h3>
           <div style="display: grid; gap: 0.75rem;">
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">${t('reports.accessibility.wcagLevel', 'WCAG Level')}</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.accessibility.wcagLevel', 'WCAG Level')}</span>
               <span style="color: #bb86fc; font-weight: bold;">${results.wcagLevel || 'AA'}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">${t('reports.accessibility.violationsFound', 'Violations Found')}</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.accessibility.violationsFound', 'Violations Found')}</span>
               <span style="color: ${results.violationsCount > 0 ? '#ff4444' : '#00ff41'}; font-weight: bold;">${results.violationsCount || 0}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">${t('reports.accessibility.contrastIssues', 'Contrast Issues')}</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.accessibility.contrastIssues', 'Contrast Issues')}</span>
               <span style="color: ${results.contrastIssues > 0 ? '#ffa500' : '#00ff41'}; font-weight: bold;">${results.contrastIssues || 0}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-              <span style="color: #c0c0c0;">${t('reports.accessibility.bestPractices', 'Best Practices')}</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.accessibility.bestPractices', 'Best Practices')}</span>
               <span style="color: #bb86fc; font-weight: bold;">${results.bestPracticesCount || 0} ${t('reports.accessibility.passed', 'passed')}</span>
             </div>
           </div>
@@ -986,18 +986,18 @@ function createWCAGLevelsSection(results) {
               border: 1px solid rgba(255,215,0,0.4);
             ">${t('reports.accessibility.minimumAccessibility', 'Minimum Accessibility')}</span>
           </div>
-          <p style="color: #c0c0c0; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
-            ${t('reports.accessibility.levelADescription', 'Removes the most critical barriers to access for people with disabilities. Websites meeting Level A are considered barely accessible.')}
+          <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
+            ${t('reports.accessibility.levelADescription', 'Removes the most critical barriers to access for people with disabilities.')}
           </p>
-          <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-            <div style="color: #808080; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
+          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
+            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
             <ul style="color: #b0b0b0; font-size: 0.85rem; margin: 0; padding-left: 1.2rem; line-height: 1.8;">
               <li>${t('reports.accessibility.reqTextAlternatives', 'Text alternatives for images')}</li>
               <li>${t('reports.accessibility.reqKeyboardAccessibility', 'Keyboard accessibility')}</li>
               <li>${t('reports.accessibility.reqNoSeizure', 'No seizure-inducing content')}</li>
             </ul>
           </div>
-          <div style="margin-top: 1rem; text-align: center; color: #808080; font-size: 0.8rem;">
+          <div style="margin-top: 1rem; text-align: center; color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">
             ◉ ${t('reports.accessibility.score', 'Score')}: 60-79
           </div>
         </div>
@@ -1040,11 +1040,11 @@ function createWCAGLevelsSection(results) {
               border: 1px solid rgba(0,255,65,0.4);
             ">${t('reports.accessibility.industryStandard', 'Industry Standard')}</span>
           </div>
-          <p style="color: #c0c0c0; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
-            ${t('reports.accessibility.levelAADescription', 'The accepted legal and industry standard (ADA, Section 508, EN 301 549). Ensures content is accessible to most users with disabilities.')}
+          <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
+            ${t('reports.accessibility.levelAADescription', 'The accepted legal and industry standard (ADA, Section 508, EN 301 549).')}
           </p>
-          <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-            <div style="color: #808080; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
+          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
+            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
             <ul style="color: #b0b0b0; font-size: 0.85rem; margin: 0; padding-left: 1.2rem; line-height: 1.8;">
               <li>${t('reports.accessibility.reqColorContrast', 'Sufficient color contrast (4.5:1)')}</li>
               <li>${t('reports.accessibility.reqFocusIndicators', 'Visible focus indicators')}</li>
@@ -1052,7 +1052,7 @@ function createWCAGLevelsSection(results) {
               <li>${t('reports.accessibility.reqAllLevelA', 'All Level A requirements')}</li>
             </ul>
           </div>
-          <div style="margin-top: 1rem; text-align: center; color: #808080; font-size: 0.8rem;">
+          <div style="margin-top: 1rem; text-align: center; color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">
             ◉ ${t('reports.accessibility.score', 'Score')}: 80-94
           </div>
         </div>
@@ -1095,11 +1095,11 @@ function createWCAGLevelsSection(results) {
               border: 1px solid rgba(0,217,255,0.4);
             ">${t('reports.accessibility.highestAccessibility', 'Highest Accessibility')}</span>
           </div>
-          <p style="color: #c0c0c0; font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
-            ${t('reports.accessibility.levelAAADescription', 'Highest conformance level. Addresses all accessibility requirements. Required for government and healthcare sites, recommended for public-facing applications.')}
+          <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
+            ${t('reports.accessibility.levelAAADescription', 'Highest conformance level. Addresses all accessibility requirements.')}
           </p>
-          <div style="background: rgba(0,0,0,0.3); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-            <div style="color: #808080; font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
+          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
+            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
             <ul style="color: #b0b0b0; font-size: 0.85rem; margin: 0; padding-left: 1.2rem; line-height: 1.8;">
               <li>${t('reports.accessibility.reqSignLanguage', 'Sign language interpretation')}</li>
               <li>${t('reports.accessibility.reqAudioDescriptions', 'Extended audio descriptions')}</li>
@@ -1107,7 +1107,7 @@ function createWCAGLevelsSection(results) {
               <li>${t('reports.accessibility.reqAllLevelAAA', 'All Level A & AA requirements')}</li>
             </ul>
           </div>
-          <div style="margin-top: 1rem; text-align: center; color: #808080; font-size: 0.8rem;">
+          <div style="margin-top: 1rem; text-align: center; color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">
             ◉ ${t('reports.accessibility.score', 'Score')}: 95-100
           </div>
         </div>
@@ -1122,10 +1122,10 @@ function createWCAGLevelsSection(results) {
         text-align: center;
         box-shadow: 0 4px 15px ${currentLevel === 'AAA' ? 'rgba(0,217,255,0.2)' : currentLevel === 'AA' ? 'rgba(0,255,65,0.2)' : currentLevel === 'A' ? 'rgba(255,215,0,0.2)' : 'rgba(255,68,68,0.2)'};
       ">
-        <h3 style="color: ${currentLevel === 'AAA' ? '#00d9ff' : currentLevel === 'AA' ? '#00ff41' : currentLevel === 'A' ? '#ffd700' : '#ff4444'}; margin: 0 0 1rem 0; font-size: 1.4rem;">
+        <h3 style="color: ${currentLevel === 'AAA' ? '#00d9ff' : currentLevel === 'AA' ? '#00ff41' : currentLevel === 'A' ? '#ffd700' : '#ff4444'}; margin: 0 0 1rem 0; font-size: 1.35rem;">
           ${currentLevel === 'None' ? '✗ ' + t('reports.accessibility.notCompliant', 'Not Compliant') : '✓ ' + t('reports.accessibility.meetsWcagLevel', 'Meets WCAG Level {{level}}', {level: currentLevel})}
         </h3>
-        <p style="color: #c0c0c0; font-size: 1rem; margin: 0;">
+        <p style="color: var(--r-text-muted, #6B7280); font-size: 1rem; margin: 0;">
           ${currentLevel === 'None' ? t('reports.accessibility.notCompliantDesc', 'This website does not meet minimum WCAG accessibility standards. Immediate improvements are needed.') :
             currentLevel === 'A' ? t('reports.accessibility.levelAStatus', 'This website meets minimum accessibility standards but has room for improvement to reach the industry-standard Level AA.') :
             currentLevel === 'AA' ? t('reports.accessibility.levelAAStatus', 'This website meets industry-standard accessibility requirements. Consider implementing AAA enhancements for optimal accessibility.') :
@@ -1170,7 +1170,7 @@ function createDesktopMobileComparison(results) {
           text-align: center;
         ">
           <div style="color: #ffa500; font-size: 1.2rem; margin-bottom: 0.5rem;">~ ${t('reports.accessibility.partialAnalysis', 'Partial Analysis')}</div>
-          <p style="color: #c0c0c0; margin: 0; font-size: 0.9rem;">
+          <p style="color: var(--r-text-muted, #6B7280); margin: 0; font-size: 0.9rem;">
             ${desktopFailed && mobileFailed ? t('reports.accessibility.bothTimedOut', 'Both desktop and mobile Lighthouse analyses timed out.') :
               desktopFailed ? t('reports.accessibility.desktopTimedOut', 'Desktop Lighthouse analysis timed out.') : t('reports.accessibility.mobileTimedOut', 'Mobile Lighthouse analysis timed out.')}
             ${t('reports.accessibility.usingAxeCore', 'Using alternative accessibility metrics from axe-core for affected platform(s).')}
@@ -1186,7 +1186,7 @@ function createDesktopMobileComparison(results) {
           border-radius: 8px;
           padding: 1.5rem;
         ">
-          ${createPlatformCard('D ' + t('reports.accessibility.desktop', 'DESKTOP'), desktopScore, results.desktop, '#00ccff')}
+          ${createPlatformCard('D ' + t('reports.accessibility.desktop', 'Desktop'), desktopScore, results.desktop, '#00ccff')}
         </div>
         
         <!-- Mobile Column -->
@@ -1196,7 +1196,7 @@ function createDesktopMobileComparison(results) {
           border-radius: 8px;
           padding: 1.5rem;
         ">
-          ${createPlatformCard('M ' + t('reports.accessibility.mobile', 'MOBILE'), mobileScore, results.mobile, '#ff6600')}
+          ${createPlatformCard('M ' + t('reports.accessibility.mobile', 'Mobile'), mobileScore, results.mobile, '#ff6600')}
         </div>
       </div>
       
@@ -1212,7 +1212,7 @@ function createDesktopMobileComparison(results) {
           <h4 style="color: #ffa500; margin: 0 0 0.75rem 0; font-size: 1.1rem;">
             ~ ${t('reports.accessibility.accessibilityGapDetected', 'Accessibility Gap Detected')}
           </h4>
-          <p style="color: #c0c0c0; margin: 0;">
+          <p style="color: var(--r-text-muted, #6B7280); margin: 0;">
             ${t('reports.accessibility.gapDescription', 'There is a {{diff}}-point difference between desktop ({{desktop}}) and mobile ({{mobile}}) accessibility.', {diff: scoreDiff, desktop: desktopScore, mobile: mobileScore})}
             ${desktopScore > mobileScore ? t('reports.accessibility.mobileBarriers', 'Mobile users may face additional barriers.') : t('reports.accessibility.desktopBarriers', 'Desktop users may face additional barriers.')}
             ${t('reports.accessibility.reviewPlatformIssues', 'Review platform-specific issues in the detailed analysis below.')}
@@ -1285,7 +1285,7 @@ function createPlatformCard(title, score, data, color) {
         margin-top: 0.75rem;
         font-weight: bold;
         color: ${lighthouseFailed ? '#999999' : getAccessibilityColor(score)};
-      ">${lighthouseFailed ? t('reports.common.analysisFailed', 'Analysis Failed') : getAccessibilityGrade(score)}</div>
+      ">${lighthouseFailed ? t('reports.common.analysisFailed', 'Analysis failed') : getAccessibilityGrade(score)}</div>
     </div>
     
     ${lighthouseFailed ? `
@@ -1298,7 +1298,7 @@ function createPlatformCard(title, score, data, color) {
           text-align: center;
         ">
           <div style="color: #ffa500; font-size: 1.2rem; margin-bottom: 0.5rem;">⧗</div>
-          <div style="color: #c0c0c0; font-size: 0.85rem; line-height: 1.4;">
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.4;">
             ${t('reports.accessibility.lighthouseTimeout', 'Lighthouse analysis timed out after 45 seconds. This can happen with:')}
           </div>
           <ul style="text-align: left; color: #999999; font-size: 0.8rem; margin: 0.5rem 0 0 1.5rem; padding: 0; line-height: 1.6;">
@@ -1317,25 +1317,25 @@ function createPlatformCard(title, score, data, color) {
         <h4 style="color: ${color}; margin: 0 0 0.75rem 0; font-size: 1rem;">${t('reports.accessibility.lighthouseScores', 'Lighthouse Scores')}</h4>
         <div style="display: grid; gap: 0.5rem;">
           <div style="display: flex; justify-content: space-between;">
-            <span style="color: #c0c0c0;">A ${t('reports.accessibility.accessibility', 'Accessibility')}</span>
+            <span style="color: var(--r-text-muted, #6B7280);">A ${t('reports.accessibility.accessibility', 'Accessibility')}</span>
             <span style="color: ${getAccessibilityColor(data?.lighthouse?.accessibility || 0)}; font-weight: bold;">
               ${data?.lighthouse?.accessibility || 0}
             </span>
           </div>
           <div style="display: flex; justify-content: space-between;">
-            <span style="color: #c0c0c0;">P ${t('reports.accessibility.performance', 'Performance')}</span>
+            <span style="color: var(--r-text-muted, #6B7280);">P ${t('reports.accessibility.performance', 'Performance')}</span>
             <span style="color: ${getAccessibilityColor(data?.lighthouse?.performance || 0)}; font-weight: bold;">
               ${data?.lighthouse?.performance || 0}
             </span>
           </div>
           <div style="display: flex; justify-content: space-between;">
-            <span style="color: #c0c0c0;">B ${t('reports.accessibility.bestPracticesLabel', 'Best Practices')}</span>
+            <span style="color: var(--r-text-muted, #6B7280);">B ${t('reports.accessibility.bestPracticesLabel', 'Best Practices')}</span>
             <span style="color: ${getAccessibilityColor(data?.lighthouse?.bestPractices || 0)}; font-weight: bold;">
               ${data?.lighthouse?.bestPractices || 0}
             </span>
           </div>
           <div style="display: flex; justify-content: space-between;">
-            <span style="color: #c0c0c0;">S ${t('reports.accessibility.seo', 'SEO')}</span>
+            <span style="color: var(--r-text-muted, #6B7280);">S ${t('reports.accessibility.seo', 'SEO')}</span>
             <span style="color: ${getAccessibilityColor(data?.lighthouse?.seo || 0)}; font-weight: bold;">
               ${data?.lighthouse?.seo || 0}
             </span>
@@ -1424,7 +1424,7 @@ function ensureProStyles() {
     .pro-locked {
       position: relative;
       border: 1px dashed rgba(0, 255, 65, 0.3);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 1rem;
       background: rgba(255, 255, 255, 0.02);
       overflow: hidden;
@@ -1439,7 +1439,7 @@ function ensureProStyles() {
     .pro-locked__list {
       margin: 0;
       padding-left: 1.25rem;
-      color: #ccc;
+      color: var(--r-text-muted, #6B7280);
       font-size: 0.9rem;
     }
     .pro-locked__blur {
@@ -1542,7 +1542,7 @@ function renderWCAGContent(desktopWcag, mobileWcag) {
   return `
     <div style="padding-left: 1rem;">
       <h3 style="color: #bb86fc; margin: 1rem 0 0.5rem 0;">>> ${t('reports.accessibility.wcagComplianceStatus', 'WCAG 2.1 Compliance Status')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1.5rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
         ${t('reports.accessibility.wcagAuditDescription', 'Web Content Accessibility Guidelines (WCAG) 2.1 Level AA compliance audit across both platforms.')}
       </p>
 
@@ -1581,7 +1581,7 @@ function renderWCAGContent(desktopWcag, mobileWcag) {
       
       <div style="margin-top: 1rem; padding: 1rem; background: rgba(138,43,226,0.05); border-radius: 4px;">
         <h4 style="color: #bb86fc; margin: 0 0 0.5rem 0; font-size: 1rem;">📚 ${t('reports.accessibility.aboutWcag', 'About WCAG 2.1')}</h4>
-        <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
+        <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; margin: 0;">
           ${t('reports.accessibility.aboutWcagDesc', 'WCAG 2.1 Level AA is the international standard for web accessibility. Meeting these criteria ensures your website is usable by people with disabilities and complies with legal requirements in many jurisdictions.')}
         </p>
       </div>
@@ -1606,9 +1606,9 @@ function renderContrastContent(contrast) {
       </div>
 
       <h3 style="color: #bb86fc; margin: 1rem 0 0.5rem 0;">>> ${t('reports.accessibility.contrastRatioAnalysis', 'Contrast Ratio Analysis')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1.5rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
         ${t('reports.accessibility.wcagContrastRequirement', 'WCAG requires a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text.')}
-        ${t('reports.accessibility.foundIssues', 'Found')} <strong style="color: ${contrast.issuesCount > 0 ? '#ff4444' : '#00ff41'};">${contrast.issuesCount || 0} ${t('reports.accessibility.issues', 'issues')}</strong>.
+        ${t('reports.accessibility.foundIssues', 'Found')} <strong style="color: ${contrast.issuesCount > 0 ? '#ff4444' : '#00ff41'};">${contrast.issuesCount || 0} ${t('reports.accessibility.issues', 'Issues')}</strong>.
       </p>
       
       ${contrast.issues && contrast.issues.length > 0 ? `
@@ -1624,13 +1624,13 @@ function renderContrastContent(contrast) {
           <tbody>
             ${contrast.issues.slice(0, 10).map(issue => `
               <tr>
-                <td style="color: #c0c0c0; font-family: monospace; font-size: 0.85rem;">${issue.selector || t('reports.accessibility.unknownElement', 'Unknown element')}</td>
+                <td style="color: var(--r-text-muted, #6B7280); font-family: monospace; font-size: 0.85rem;">${issue.selector || t('reports.accessibility.unknownElement', 'Unknown element')}</td>
                 <td style="text-align: center;">
                   <span style="color: ${issue.ratio < 4.5 ? '#ff4444' : '#ffa500'}; font-weight: bold;">
                     ${issue.ratio?.toFixed(2) || t('reports.common.notAvailable', 'N/A')}:1
                   </span>
                 </td>
-                <td style="text-align: center; color: #808080;">${issue.required || '4.5:1'}</td>
+                <td style="text-align: center; color: var(--r-text-faint, #9CA3AF);">${issue.required || '4.5:1'}</td>
                 <td style="text-align: center;">
                   <span style="
                     color: ${issue.ratio >= 4.5 ? '#00ff41' : '#ff4444'};
@@ -1677,29 +1677,29 @@ function renderKeyboardContent(keyboard) {
         </p>
       </div>
 
-      <h3 style="color: #bb86fc; margin: 1rem 0 0.5rem 0;">>> ${t('reports.accessibility.keyboardAccessibility', 'Keyboard Accessibility')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1.5rem;">
+      <h3 style="color: #bb86fc; margin: 1rem 0 0.5rem 0;">>> ${t('reports.accessibility.keyboardAccessibility', 'Keyboard accessibility')}</h3>
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
         ${t('reports.accessibility.keyboardAccessibilityDesc', 'All interactive elements must be accessible via keyboard. Tab order should be logical and focus indicators visible.')}
       </p>
 
       <div style="display: grid; gap: 1rem; margin-bottom: 1.5rem;">
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid #bb86fc;">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #c0c0c0;">T ${t('reports.accessibility.focusableElements', 'Focusable Elements')}</span>
+            <span style="color: var(--r-text-muted, #6B7280);">T ${t('reports.accessibility.focusableElements', 'Focusable Elements')}</span>
             <span style="color: #bb86fc; font-weight: bold; font-size: 1.2rem;">${keyboard.focusableCount || 0}</span>
           </div>
         </div>
 
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid ${keyboard.tabTraps > 0 ? '#ff4444' : '#00ff41'};">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #c0c0c0;">🚫 ${t('reports.accessibility.tabTrapsDetected', 'Tab Traps Detected')}</span>
+            <span style="color: var(--r-text-muted, #6B7280);">🚫 ${t('reports.accessibility.tabTrapsDetected', 'Tab Traps Detected')}</span>
             <span style="color: ${keyboard.tabTraps > 0 ? '#ff4444' : '#00ff41'}; font-weight: bold; font-size: 1.2rem;">${keyboard.tabTraps || 0}</span>
           </div>
         </div>
 
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; border-left: 4px solid ${keyboard.missingFocusIndicators > 0 ? '#ffa500' : '#00ff41'};">
           <div style="display: flex; justify-content: space-between; align-items: center;">
-            <span style="color: #c0c0c0;">👁️ ${t('reports.accessibility.missingFocusIndicators', 'Missing Focus Indicators')}</span>
+            <span style="color: var(--r-text-muted, #6B7280);">👁️ ${t('reports.accessibility.missingFocusIndicators', 'Missing Focus Indicators')}</span>
             <span style="color: ${keyboard.missingFocusIndicators > 0 ? '#ffa500' : '#00ff41'}; font-weight: bold; font-size: 1.2rem;">${keyboard.missingFocusIndicators || 0}</span>
           </div>
         </div>
@@ -1711,8 +1711,8 @@ function renderKeyboardContent(keyboard) {
           ${keyboard.issues.map(issue => `
             <div style="background: rgba(255,68,68,0.1); border-left: 3px solid #ff4444; padding: 1rem; border-radius: 4px;">
               <div style="color: #ff4444; font-weight: bold; margin-bottom: 0.25rem;">${issue.type || t('reports.accessibility.keyboardIssue', 'Keyboard Issue')}</div>
-              <div style="color: #c0c0c0; font-size: 0.9rem;">${issue.description || t('reports.common.noDescriptionAvailable', 'No description available')}</div>
-              ${issue.element ? `<div style="color: #808080; font-size: 0.85rem; margin-top: 0.25rem; font-family: monospace;">${issue.element}</div>` : ''}
+              <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${issue.description || t('reports.common.noDescriptionAvailable', 'No description available')}</div>
+              ${issue.element ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-top: 0.25rem; font-family: monospace;">${issue.element}</div>` : ''}
             </div>
           `).join('')}
         </div>
@@ -1738,29 +1738,29 @@ function renderARIAContent(aria) {
       </div>
 
       <h3 style="color: #bb86fc; margin: 1rem 0 0.5rem 0;">>> ${t('reports.accessibility.ariaSemanticHtml', 'ARIA & Semantic HTML')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1.5rem;">
-        ${t('reports.accessibility.ariaDescription', 'ARIA (Accessible Rich Internet Applications) is a set of HTML attributes that define how your UI is exposed to assistive technologies like screen readers. Combined with semantic HTML elements (<nav>, <main>, <header>, etc.), ARIA landmarks, labels, and roles let assistive tools understand your page structure and allow users to navigate efficiently. Issues here directly affect users who rely on these technologies.')}
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
+        ${t('reports.accessibility.ariaDescription', 'Proper use of ARIA attributes and semantic HTML elements ensures screen readers can understand and navigate your content.')}
       </p>
 
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; text-align: center;">
           <div style="font-size: 2rem; color: #bb86fc; margin-bottom: 0.5rem;">${aria.landmarksCount || 0}</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${t('reports.accessibility.ariaLandmarks', 'ARIA Landmarks')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.accessibility.ariaLandmarks', 'ARIA Landmarks')}</div>
         </div>
 
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; text-align: center;">
           <div style="font-size: 2rem; color: ${aria.missingLabels > 0 ? '#ff4444' : '#00ff41'}; margin-bottom: 0.5rem;">${aria.missingLabels || 0}</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${t('reports.accessibility.missingLabels', 'Missing Labels')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.accessibility.missingLabels', 'Missing Labels')}</div>
         </div>
 
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; text-align: center;">
           <div style="font-size: 2rem; color: ${aria.invalidRoles > 0 ? '#ffa500' : '#00ff41'}; margin-bottom: 0.5rem;">${aria.invalidRoles || 0}</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${t('reports.accessibility.invalidRoles', 'Invalid Roles')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.accessibility.invalidRoles', 'Invalid Roles')}</div>
         </div>
 
         <div style="background: rgba(138,43,226,0.1); border-radius: 8px; padding: 1rem; text-align: center;">
           <div style="font-size: 2rem; color: #bb86fc; margin-bottom: 0.5rem;">${aria.headingStructure || t('reports.accessibility.good', 'Good')}</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${t('reports.accessibility.headingStructure', 'Heading Structure')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.accessibility.headingStructure', 'Heading Structure')}</div>
         </div>
       </div>
 
@@ -1778,7 +1778,7 @@ function renderARIAContent(aria) {
             ${aria.issues.slice(0, 10).map(issue => `
               <tr>
                 <td style="color: #bb86fc; font-weight: bold;">${issue.type || t('reports.accessibility.ariaIssue', 'ARIA Issue')}</td>
-                <td style="color: #c0c0c0; font-size: 0.9rem;">${issue.description || t('reports.common.noDescription', 'No description')}</td>
+                <td style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${issue.description || t('reports.common.noDescription', 'No description')}</td>
                 <td style="text-align: center;">
                   <span style="
                     color: ${issue.impact === 'critical' ? '#ff4444' : issue.impact === 'serious' ? '#ffa500' : '#00ccff'};
@@ -1823,7 +1823,7 @@ function renderRecommendationsContent(recommendations, fullResults) {
       <div style="padding: 2rem; text-align: center;">
         <div style="font-size: 3rem; margin-bottom: 1rem;">✓</div>
         <h3 style="color: #22c55e; margin: 0 0 0.5rem 0;">${t('reports.accessibility.excellentAccessibility', 'Excellent Accessibility!')}</h3>
-        <p style="color: #c0c0c0;">${t('reports.accessibility.noIssuesFound', 'No critical accessibility issues found. Your site meets WCAG 2.1 guidelines across both desktop and mobile!')}</p>
+        <p style="color: var(--r-text-muted, #6B7280);">${t('reports.accessibility.noIssuesFound', 'No critical accessibility issues found. Your site meets WCAG 2.1 guidelines across both desktop and mobile!')}</p>
       </div>
     `;
   }
@@ -1839,7 +1839,7 @@ function renderRecommendationsContent(recommendations, fullResults) {
     <div class="a11y-fixes-container" style="margin-top: 1rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
         <span style="font-size: 1.75rem;">♿</span> ${t('reports.accessibility.accessibilityFixes', 'Accessibility Fixes')}
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${allFixes.length} ${t('reports.accessibility.improvementsFound', 'improvements found')})</span>
+        <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${allFixes.length} ${t('reports.accessibility.improvementsFound', '{{count}} improvements found')})</span>
       </h3>
       <div class="a11y-fixes-list">
   `;
@@ -1855,9 +1855,9 @@ function renderRecommendationsContent(recommendations, fullResults) {
 function renderA11yFixAccordion(rec, index, fullResults) {
   const accordionId = `a11yfix-${index}`;
   const priorityStyles = {
-    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴', label: t('reports.common.high', 'HIGH') },
-    medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠', label: t('reports.common.medium', 'MEDIUM') },
-    low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢', label: t('reports.common.low', 'LOW') }
+    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴', label: t('reports.common.high', 'High') },
+    medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠', label: t('reports.common.medium', 'Medium') },
+    low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢', label: t('reports.common.low', 'Low') }
   };
   const style = priorityStyles[rec.priority] || priorityStyles.medium;
 
@@ -1880,21 +1880,21 @@ function renderA11yFixAccordion(rec, index, fullResults) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${(typeof translateA11yFixTitle === 'function' ? translateA11yFixTitle(rec.title) : rec.title) || t('reports.accessibility.accessibilityIssue', 'Accessibility Issue')}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${rec.wcagReference || t('reports.accessibility.wcag21Compliance', 'WCAG 2.1 Compliance')}</p>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${(typeof translateA11yFixTitle === 'function' ? translateA11yFixTitle(rec.title) : rec.title) || t('reports.accessibility.accessibilityIssue', 'Accessibility Issue')}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${rec.wcagReference || t('reports.accessibility.wcag21Compliance', 'WCAG 2.1 Compliance')}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
           ">${style.label}</span>
-          <span class="a11y-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+          <span class="a11y-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
         </div>
       </div>
 
@@ -1909,31 +1909,31 @@ function renderA11yFixAccordion(rec, index, fullResults) {
 
 function renderA11yFixTabs(rec, accordionId, fullResults) {
   return `
-    <div class="a11y-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+    <div class="a11y-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="a11y-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
         background: rgba(255,255,255,0.1);
-        color: #fff;
+        color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 ${t('reports.common.summary', 'Summary')}</button>
       <button class="a11y-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">💻 ${t('reports.common.code', 'Code')}</button>
       <button class="a11y-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">🔧 ${t('reports.common.fixGuide', 'Fix Guide')}</button>
@@ -1941,12 +1941,12 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
 
     <!-- Summary Tab -->
     <div class="a11y-fix-tab-content active" id="${accordionId}-summary">
-      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+      <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
         ${(typeof translateA11yFixDescription === 'function' ? translateA11yFixDescription(rec.title, rec.description) : rec.description) || t('reports.common.noDescriptionAvailable', 'No description available')}
       </p>
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
         <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.expectedImpact', 'Expected Impact')}</div>
-        <div style="color: #c0c0c0; font-size: 0.9rem;">${(typeof translateA11yFixImpact === 'function' ? translateA11yFixImpact(rec.title, rec.impact) : rec.impact) || t('reports.accessibility.defaultImpact', 'Improved accessibility and user experience for all users')}</div>
+        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${(typeof translateA11yFixImpact === 'function' ? translateA11yFixImpact(rec.title, rec.impact) : rec.impact) || t('reports.accessibility.defaultImpact', 'Improved accessibility and user experience for all users')}</div>
       </div>
     </div>
 
@@ -1954,7 +1954,7 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
     <div class="a11y-fix-tab-content" id="${accordionId}-code" style="display: none;">
       <div style="display: grid; gap: 1rem;">
         <!-- Current Issue -->
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
             <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.common.currentIssue', 'Current Issue')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
@@ -1962,16 +1962,16 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.05);
-              color: #fff;
+              color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
             ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlA11y(getA11yProblemCode(rec, fullResults))}</pre>
+          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlA11y(getA11yProblemCode(rec, fullResults))}</pre>
         </div>
 
         <!-- Fixed Code -->
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
             <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.recommendedFix', 'Recommended Fix')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
@@ -1979,20 +1979,20 @@ function renderA11yFixTabs(rec, accordionId, fullResults) {
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.05);
-              color: #fff;
+              color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
             ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlA11y(getA11ySolutionCode(rec, fullResults))}</pre>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlA11y(getA11ySolutionCode(rec, fullResults))}</pre>
         </div>
       </div>
     </div>
 
     <!-- Fix Guide Tab -->
     <div class="a11y-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.stepByStepFix', 'Step-by-Step Fix')}:</h5>
-      <ol style="margin: 0 0 1.5rem 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--r-text, #111827);">${t('reports.common.stepByStepFix', 'Step-by-Step Fix')}:</h5>
+      <ol style="margin: 0 0 1.5rem 0; padding-left: 1.5rem; color: var(--r-text-muted, #6B7280); line-height: 1.8;">
         ${getA11yFixSteps(rec, fullResults).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
       </ol>
       ${getA11yExternalTools(rec)}
@@ -2247,8 +2247,8 @@ function getA11yExternalTools(rec) {
   `.replace(/\n\s+/g, ' ').trim();
 
   return `
-    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
-      <h5 style="margin: 0 0 0.75rem 0; color: #aaa; font-size: 0.85rem; font-weight: 500;">🔗 ${t('reports.common.externalTestingTools', 'External Testing Tools')}</h5>
+    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+      <h5 style="margin: 0 0 0.75rem 0; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; font-weight: 500;">🔗 ${t('reports.common.externalTestingTools', 'External Testing Tools')}</h5>
       <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
         ${tools.map(tool => `
           <a href="${tool.url}" target="_blank" rel="noopener noreferrer" class="a11y-tool-link" style="${buttonStyle}">
@@ -2281,7 +2281,7 @@ function getA11yProblemCode(rec, fullResults) {
       }).join('\n\n');
       return `/* Found ${issues.length} low contrast elements */\n\n${examples}`;
     }
-    return `/* Low contrast detected */\n.text-element {\n  color: #888;      /* Too light */\n  background: #ccc; /* Not enough contrast */\n}`;
+    return `/* Low contrast detected */\n.text-element {\n  color: var(--r-text-faint, #9CA3AF);      /* Too light */\n  background: #ccc; /* Not enough contrast */\n}`;
   }
   
   // Missing form labels - use real missing labels from scan
@@ -2520,7 +2520,7 @@ function getA11yFixSteps(rec, fullResults) {
     const count = results.contrast?.issuesCount || t('reports.common.multiple', 'multiple');
     return [
       t('reports.accessibility.steps.openDevTools', 'Open browser DevTools and navigate to the Elements panel'),
-      t('reports.accessibility.steps.useAccessibilityPane', 'Use the Accessibility pane or "Inspect" to check color contrast ratios'),
+      t('reports.accessibility.steps.useAccessibilityPane', 'Use the Accessibility pane or '),
       t('reports.accessibility.steps.foundContrastIssues', 'Found {{count}} elements below 4.5:1 contrast ratio', {count}),
       t('reports.accessibility.steps.useWebAIM', 'Use WebAIM Contrast Checker to find compliant color alternatives'),
       t('reports.accessibility.steps.updateCSS', 'Update CSS with new color values that meet WCAG AA (4.5:1 for text)'),
@@ -2534,7 +2534,7 @@ function getA11yFixSteps(rec, fullResults) {
     return [
       t('reports.accessibility.steps.identifyMissingLabels', 'Identify the {{count}} form inputs missing accessible labels', {count}),
       t('reports.accessibility.steps.addLabelElement', 'For each input, add a <label> element with matching for/id attributes'),
-      t('reports.accessibility.steps.useAriaLabel', 'If visual labels aren\'t possible, use aria-label attribute'),
+      t('reports.accessibility.steps.useAriaLabel', 'If visual labels aren\\'),
       t('reports.accessibility.steps.ensureLabelAssociation', 'Ensure labels are programmatically associated (not just visually positioned)'),
       t('reports.accessibility.steps.testScreenReaderLabels', 'Test with a screen reader: input purpose should be announced')
     ];
@@ -2559,9 +2559,9 @@ function getA11yFixSteps(rec, fullResults) {
       t('reports.accessibility.steps.runHeadingCheck', 'Run a heading outline check (browser extensions or DevTools)'),
       t('reports.accessibility.steps.ensureOneH1', 'Ensure page has exactly one <h1> element'),
       t('reports.accessibility.steps.verifyHeadingOrder', 'Verify headings follow sequential order (h1 → h2 → h3)'),
-      t('reports.accessibility.steps.dontSkipLevels', 'Don\'t skip heading levels (e.g., h2 directly to h4)'),
+      t('reports.accessibility.steps.dontSkipLevels', 'Don\\'),
       t('reports.accessibility.steps.useHeadingsForStructure', 'Use headings for document structure, not for styling'),
-      t('reports.accessibility.steps.testHeadingsList', 'Test with screen reader "headings list" navigation')
+      t('reports.accessibility.steps.testHeadingsList', 'Test with screen reader ')
     ];
   }
 
@@ -2618,7 +2618,7 @@ function ensureA11yFixStyles() {
     }
     .a11y-fix-tab:hover:not(.active) {
       background: rgba(255,255,255,0.05) !important;
-      color: #ccc !important;
+      color: var(--r-text-muted, #6B7280) !important;
     }
     .a11y-tool-link {
       transition: all 0.2s ease;
@@ -2677,7 +2677,7 @@ function copyAccessibilityShareLink() {
   const targetUrl = window.currentAccessibilityResults?.url || window.location.href;
   const shareUrl = `${window.location.origin}/accessibility-analyzer.html?url=${encodeURIComponent(targetUrl)}`;
   navigator.clipboard.writeText(shareUrl).then(() => {
-    alert(t('reports.common.shareLinkCopied', 'Share link copied to clipboard'));
+    alert(t('reports.common.shareLinkCopied', 'Share link copied to clipboard!'));
   });
 }
 
@@ -2748,7 +2748,7 @@ function countAccessibilityPassedChecks(results) {
  * Show error message
  */
 function showError(message) {
-  errorMessage.textContent = `>>> ${t('reports.common.error', 'ERROR')}: ${message}`;
+  errorMessage.textContent = `>>> ${t('reports.common.error', 'Error: {{message}}')}: ${message}`;
   errorMessage.classList.remove('hidden');
   results.classList.add('hidden');
 }
@@ -2815,26 +2815,26 @@ window.exportAccessibilityCSV = function() {
 
   const rows = [];
   // Header
-  rows.push([t('reports.common.category', 'Category'), t('reports.common.item', 'Item'), t('reports.common.value', 'Value'), t('reports.common.status', 'Status'), t('reports.accessibility.score', 'Score')]);
+  rows.push([t('reports.common.category', 'Category'), t('reports.common.item', 'item'), t('reports.common.value', 'Value'), t('reports.common.status', 'Status'), t('reports.accessibility.score', 'Score')]);
 
   // Overall Score
   rows.push([t('reports.common.overall', 'Overall'), t('reports.accessibility.accessibilityScore', 'Accessibility Score'), '', results.accessibilityScore >= 90 ? t('reports.accessibility.excellent', 'Excellent') : results.accessibilityScore >= 70 ? t('reports.accessibility.good', 'Good') : results.accessibilityScore >= 50 ? t('reports.accessibility.fair', 'Fair') : t('reports.accessibility.poor', 'Poor'), results.accessibilityScore || '']);
   rows.push([t('reports.common.overall', 'Overall'), t('reports.accessibility.wcagLevel', 'WCAG Level'), results.wcagLevel || t('reports.accessibility.notCompliant', 'Not Compliant'), '', '']);
 
   // Violations
-  rows.push([t('reports.accessibility.violations', 'Violations'), t('reports.accessibility.totalViolations', 'Total Violations'), String(results.violationsCount || 0), results.violationsCount === 0 ? t('reports.accessibility.good', 'Good') : t('reports.common.issue', 'Issue'), '']);
+  rows.push([t('reports.accessibility.violations', 'Violations'), t('reports.accessibility.totalViolations', 'Total Violations'), String(results.violationsCount || 0), results.violationsCount === 0 ? t('reports.accessibility.good', 'Good') : t('reports.common.issue', 'issue'), '']);
 
   // Contrast Issues
   const contrastIssues = results.contrastIssues ?? results.contrast?.issues?.length ?? 0;
-  rows.push([t('reports.accessibility.contrast', 'Contrast'), t('reports.accessibility.contrastIssues', 'Contrast Issues'), String(contrastIssues), contrastIssues === 0 ? t('reports.accessibility.good', 'Good') : t('reports.common.issue', 'Issue'), results.contrast?.score || '']);
+  rows.push([t('reports.accessibility.contrast', 'Contrast'), t('reports.accessibility.contrastIssues', 'Contrast Issues'), String(contrastIssues), contrastIssues === 0 ? t('reports.accessibility.good', 'Good') : t('reports.common.issue', 'issue'), results.contrast?.score || '']);
 
   // Keyboard Accessibility
   const keyboardIssues = results.keyboard?.issues?.length ?? 0;
-  rows.push([t('reports.accessibility.keyboard', 'Keyboard'), t('reports.accessibility.keyboardIssues', 'Keyboard Issues'), String(keyboardIssues), keyboardIssues === 0 ? t('reports.accessibility.good', 'Good') : t('reports.common.issue', 'Issue'), results.keyboard?.score || '']);
+  rows.push([t('reports.accessibility.keyboard', 'Keyboard'), t('reports.accessibility.keyboardIssues', 'Keyboard Issues'), String(keyboardIssues), keyboardIssues === 0 ? t('reports.accessibility.good', 'Good') : t('reports.common.issue', 'issue'), results.keyboard?.score || '']);
 
   // ARIA
   const ariaIssues = results.aria?.issues?.length ?? 0;
-  rows.push([t('reports.accessibility.aria', 'ARIA'), t('reports.accessibility.ariaIssues', 'ARIA Issues'), String(ariaIssues), ariaIssues === 0 ? t('reports.accessibility.good', 'Good') : t('reports.common.issue', 'Issue'), results.aria?.score || '']);
+  rows.push([t('reports.accessibility.aria', 'ARIA'), t('reports.accessibility.ariaIssues', 'ARIA Issues'), String(ariaIssues), ariaIssues === 0 ? t('reports.accessibility.good', 'Good') : t('reports.common.issue', 'issue'), results.aria?.score || '']);
 
   // Recommendations
   const recommendationsCount = results.recommendations?.length || 0;

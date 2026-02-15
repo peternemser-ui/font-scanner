@@ -561,6 +561,30 @@ html[data-theme="print"] {
   --border-color-strong: rgba(0, 0, 0, 0.2);
 }
 
+/* --- Report surfaces always light (regardless of page theme) --- */
+.report-shell,
+.report-scope {
+  --r-bg: #FFFFFF;
+  --r-surface-1: #FFFFFF;
+  --r-surface-2: #F8FAFC;
+  --r-border: rgba(0, 0, 0, 0.08);
+  --r-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --r-text: #111827;
+  --r-text-muted: #6B7280;
+  --r-text-faint: #9CA3AF;
+  --r-good: #16A34A;
+  --r-warn: #D97706;
+  --r-bad: #DC2626;
+  --r-info: #2563EB;
+  --r-dial-track: rgba(0, 0, 0, 0.10);
+  --r-dial-glow: none;
+  --r-table-row-alt: rgba(0, 0, 0, 0.02);
+  --r-table-divider: rgba(0, 0, 0, 0.06);
+  --r-code-bg: #F3F4F6;
+  --r-code-border: rgba(0, 0, 0, 0.08);
+  --r-accordion-hover: rgba(0, 0, 0, 0.03);
+}
+
 /* Backward compat: .white-theme without data-theme still gets light report tokens */
 body.white-theme {
   --r-bg: #FFFFFF;

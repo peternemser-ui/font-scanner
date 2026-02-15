@@ -814,7 +814,7 @@
     });
 
     if (purchaseType === 'single_report' && !reportId) {
-      showToast(t('pricing.buttons.runScanFirst', 'Run a scan first to purchase a report'));
+      showToast(t('pricing.buttons.runScanFirst', 'Run scan first'));
       return;
     }
 

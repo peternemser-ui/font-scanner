@@ -847,6 +847,11 @@
                 if (results.screenshotUrl) {
                   document.body.setAttribute('data-sm-screenshot-url', results.screenshotUrl);
                 }
+                // Force the locale from the stored scan so the report renders in its original language
+                const serverLocale = serverReport.locale;
+                if (serverLocale && window.i18n && typeof window.i18n.forceLocale === 'function') {
+                  await window.i18n.forceLocale(serverLocale);
+                }
                 config.onScanComplete(results);
                 loaded = true;
                 window.__REPORT_READY__ = true;

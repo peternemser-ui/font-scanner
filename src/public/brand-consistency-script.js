@@ -762,7 +762,7 @@ function attachBrandScreenshotRetry(imgEl, baseUrl, options = {}) {
     const msg = document.createElement('div');
     msg.setAttribute('data-sm-screenshot-fallback', 'true');
     msg.textContent = t('common.screenshotUnavailable', 'Screenshot unavailable');
-    msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 10px; color: var(--text-secondary); text-align: center;';
+    msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); text-align: center;';
     wrapper.appendChild(msg);
   };
   
@@ -815,7 +815,7 @@ function renderBrandProFixes(data) {
   
   if (fixes.length === 0) {
     return `
-      <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+      <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           <span style="font-size: 1.5rem;">✓</span> ${t('reports.brand.excellentBrand', 'Excellent Brand Consistency!')}
         </h3>
@@ -833,7 +833,7 @@ function renderBrandProFixes(data) {
     <div class="brand-fixes-container" style="margin-top: 1rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
         <span style="font-size: 1.75rem;">🎨</span> ${t('reports.brand.brandFixes', 'Brand Fixes')}
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${fixes.length} ${t('reports.brand.improvementsFound', 'improvements found')})</span>
+        <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${fixes.length} ${t('reports.brand.improvementsFound', 'improvements found')})</span>
       </h3>
       <div class="brand-fixes-list">
   `;
@@ -933,7 +933,7 @@ ${colorCount > 12 ? `\n/* ...and ${colorCount - 12} additional colors */` : ''}
   color: var(--text-primary);
 }`,
     steps: [
-      t('reports.brand.steps.documentPrimaryColor', 'Document your brand\'s primary color and its meaning'),
+      t('reports.brand.steps.documentPrimaryColor', 'Document your brand\\'),
       t('reports.brand.steps.defineSecondaryColors', 'Define 2-3 secondary/accent colors with specific use cases'),
       t('reports.brand.steps.createNeutralPalette', 'Create a neutral palette for text and backgrounds'),
       t('reports.brand.steps.addSemanticColors', 'Add semantic colors for success/error/warning states'),
@@ -950,7 +950,7 @@ ${colorCount > 12 ? `\n/* ...and ${colorCount - 12} additional colors */` : ''}
     severity: harmonyScore < 60 ? 'High' : 'Medium',
     description: harmonyScore < 60
       ? t('reports.brand.fixes.poorHarmonyDesc', 'Color harmony ensures your palette creates a cohesive, professional appearance. Your harmony score of {{score}}% indicates colors may clash or lack intentional relationship.').replace('{{score}}', Math.round(harmonyScore))
-      : t('reports.brand.fixes.goodHarmonyDesc', 'Color harmony ensures your palette creates a cohesive, professional appearance. Fine-tuning your color relationships will elevate your brand\'s visual appeal.'),
+      : t('reports.brand.fixes.goodHarmonyDesc', 'Color harmony ensures your palette creates a cohesive, professional appearance. Fine-tuning your color relationships will elevate your brand\\'),
     impact: t('reports.brand.fixes.harmonyImpact', 'Professional appearance, improved user trust, better visual hierarchy'),
     problematicCode: `/* Current color analysis */
 Detected primary colors:
@@ -1420,12 +1420,12 @@ p + p { margin-top: 1rem; }
 }
 
 .subtle-link {
-  color: #aaa;              /* Too light */
+  color: var(--r-text-faint, #9CA3AF);              /* Too light */
   /* Hard to read, especially in bright environments */
 }
 
 .placeholder::placeholder {
-  color: #ccc;              /* Nearly invisible */
+  color: var(--r-text-muted, #6B7280);              /* Nearly invisible */
 }`,
     fixedCode: `/* WCAG 2.1 Compliant Contrast */
 
@@ -1483,7 +1483,7 @@ p + p { margin-top: 1rem; }
       t('reports.brand.steps.auditContrast', 'Audit all text/background combinations with a contrast checker'),
       t('reports.brand.steps.ensureNormalTextContrast', 'Ensure 4.5:1 minimum for normal text (WCAG AA)'),
       t('reports.brand.steps.ensureLargeTextContrast', 'Ensure 3:1 minimum for large text and UI elements'),
-      t('reports.brand.steps.dontRelyOnColor', 'Don\'t rely solely on color to convey information'),
+      t('reports.brand.steps.dontRelyOnColor', 'Don\\'),
       t('reports.brand.steps.addUnderlines', 'Add underlines to links, icons to buttons'),
       t('reports.brand.steps.testColorblind', 'Test with colorblind simulation tools'),
       t('reports.brand.steps.runAccessibilityAudits', 'Run automated accessibility audits (Lighthouse, axe)'),
@@ -1579,7 +1579,7 @@ h1 { font-size: 48px; }  /* Too large on mobile */
       t('reports.brand.steps.ensureTouchTargets', 'Ensure touch targets are at least 44x44px on mobile'),
       t('reports.brand.steps.testBreakpoints', 'Test brand appearance at 320px, 768px, 1024px, and 1440px'),
       t('reports.brand.steps.maintainHierarchy', 'Maintain visual hierarchy at all screen sizes'),
-      t('reports.brand.steps.useSameComponents', 'Use the same components everywhere - don\'t create mobile-only variants')
+      t('reports.brand.steps.useSameComponents', 'Use the same components everywhere - don\\')
     ]
   });
 
@@ -1592,7 +1592,7 @@ h1 { font-size: 48px; }  /* Too large on mobile */
     title: t('reports.brand.fixes.implementDarkMode', 'Implement dark mode support'),
     category: t('reports.brand.categories.brandExperience', 'Brand Experience'),
     severity: 'Low',
-    description: t('reports.brand.fixes.darkModeDesc', 'Dark mode is now expected by users, with 80%+ of people using it regularly. A well-designed dark mode protects your brand\'s appearance while respecting user preferences.'),
+    description: t('reports.brand.fixes.darkModeDesc', 'Dark mode is now expected by users, with 80%+ of people using it regularly. A well-designed dark mode protects your brand\\'),
     impact: t('reports.brand.fixes.darkModeImpact', 'Better user experience, reduced eye strain, modern brand perception'),
     problematicCode: `/* No dark mode consideration */
 body {
@@ -1670,7 +1670,7 @@ body {
 }`,
     steps: [
       t('reports.brand.steps.createColorTokens', 'Create semantic color tokens (bg-primary, text-secondary, etc.)'),
-      t('reports.brand.steps.designDarkPalette', 'Design your dark palette - don\'t just invert colors'),
+      t('reports.brand.steps.designDarkPalette', 'Design your dark palette - don\\'),
       t('reports.brand.steps.useColorSchemeQuery', 'Use prefers-color-scheme media query for automatic switching'),
       t('reports.brand.steps.provideLightDarkVersions', 'Provide light/dark versions of logo and images'),
       t('reports.brand.steps.testDarkMode', 'Test all components in dark mode'),
@@ -1735,21 +1735,21 @@ function renderBrandFixAccordion(fix, index) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${escapeBrandHtml(fix.title)}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category}</p>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${escapeBrandHtml(fix.title)}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${fix.category}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
           ">${t(`reports.common.severity.${fix.severity.toLowerCase()}`, fix.severity).toUpperCase()}</span>
-          <span class="brand-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+          <span class="brand-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
         </div>
       </div>
       
@@ -1764,31 +1764,31 @@ function renderBrandFixAccordion(fix, index) {
 
 function renderBrandFixTabs(fix, accordionId) {
   return `
-    <div class="brand-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+    <div class="brand-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="brand-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
         background: rgba(255,255,255,0.1);
-        color: #fff;
+        color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
       <button class="brand-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
       <button class="brand-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">🔧 ${t('reports.common.tabs.fixGuide', 'Fix Guide')}</button>
@@ -1796,12 +1796,12 @@ function renderBrandFixTabs(fix, accordionId) {
     
     <!-- Summary Tab -->
     <div class="brand-fix-tab-content active" id="${accordionId}-summary">
-      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+      <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
         ${escapeBrandHtml(fix.description)}
       </p>
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
         <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
-        <div style="color: #c0c0c0; font-size: 0.9rem;">${escapeBrandHtml(fix.impact)}</div>
+        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${escapeBrandHtml(fix.impact)}</div>
       </div>
     </div>
     
@@ -1809,7 +1809,7 @@ function renderBrandFixTabs(fix, accordionId) {
     <div class="brand-fix-tab-content" id="${accordionId}-code" style="display: none;">
       <div style="display: grid; gap: 1rem;">
         ${fix.problematicCode ? `
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
             <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.common.fix.currentIssue', 'Current Issue')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
@@ -1817,16 +1817,16 @@ function renderBrandFixTabs(fix, accordionId) {
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.05);
-              color: #fff;
+              color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
             ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeBrandHtml(fix.problematicCode)}</pre>
+          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeBrandHtml(fix.problematicCode)}</pre>
         </div>
         ` : ''}
         
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
             <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
@@ -1834,20 +1834,20 @@ function renderBrandFixTabs(fix, accordionId) {
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.05);
-              color: #fff;
+              color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
             ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeBrandHtml(fix.fixedCode)}</pre>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeBrandHtml(fix.fixedCode)}</pre>
         </div>
       </div>
     </div>
     
     <!-- Fix Guide Tab -->
     <div class="brand-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix')}:</h5>
-      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--r-text, #111827);">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: var(--r-text-muted, #6B7280); line-height: 1.8;">
         ${fix.steps.map(step => `<li style="margin-bottom: 0.5rem;">${escapeBrandHtml(step)}</li>`).join('')}
       </ol>
     </div>
@@ -1889,7 +1889,7 @@ function ensureBrandFixStyles() {
     .brand-fix-header:hover { background: rgba(255,255,255,0.02); }
     .brand-fix-accordion.expanded .brand-fix-expand-icon { transform: rotate(180deg); }
     .brand-fix-tab:hover { background: rgba(255,255,255,0.05) !important; }
-    .brand-fix-tab.active { background: rgba(255,255,255,0.1) !important; border-color: rgba(255,255,255,0.2) !important; color: #fff !important; }
+    .brand-fix-tab.active { background: rgba(255,255,255,0.1) !important; border-color: rgba(255,255,255,0.2) !important; color: var(--r-text, #111827) !important; }
   `;
   document.head.appendChild(style);
 }
@@ -1935,15 +1935,15 @@ function renderColorPaletteContent(data) {
       <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
         <div>
           <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.harmonyType', 'Harmony Type')}:</span>
-          <span style="color: #fff; margin-left: 0.5rem; text-transform: capitalize;">${translateHarmonyType(colorAnalysis.harmonyType)}</span>
+          <span style="color: var(--r-text, #111827); margin-left: 0.5rem; text-transform: capitalize;">${translateHarmonyType(colorAnalysis.harmonyType)}</span>
         </div>
         <div>
           <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.uniqueHues', 'Unique Hues')}:</span>
-          <span style="color: #fff; margin-left: 0.5rem;">${colorAnalysis.uniqueHueCount || '—'}</span>
+          <span style="color: var(--r-text, #111827); margin-left: 0.5rem;">${colorAnalysis.uniqueHueCount || '—'}</span>
         </div>
         <div>
           <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.neutralRatio', 'Neutral Ratio')}:</span>
-          <span style="color: #fff; margin-left: 0.5rem;">${colorAnalysis.neutralRatio || 0}%</span>
+          <span style="color: var(--r-text, #111827); margin-left: 0.5rem;">${colorAnalysis.neutralRatio || 0}%</span>
         </div>
       </div>
     </div>
@@ -1974,7 +1974,7 @@ function renderColorPaletteContent(data) {
     </div>
     
     <!-- Export Color Palette -->
-    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
+    <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
       <h4 style="margin: 0 0 0.75rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.exportColorPalette', 'Export Color Palette')}</h4>
       <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
         <button data-action="export-palette" data-format="css" data-colors="${encodeURIComponent(JSON.stringify(colorAnalysis.primaryColors || colors.slice(0, 5)))}"
@@ -2026,7 +2026,7 @@ function renderTypographyContent(data) {
       <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
         <div>
           <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.totalFonts', 'Total Fonts')}:</span>
-          <span style="color: #fff; margin-left: 0.5rem;">${typography.fontCount || fonts.length}</span>
+          <span style="color: var(--r-text, #111827); margin-left: 0.5rem;">${typography.fontCount || fonts.length}</span>
         </div>
         <div>
           <span style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">${t('brandConsistency.quality', 'Quality')}:</span>
@@ -2044,7 +2044,7 @@ function renderTypographyContent(data) {
         <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.headingFonts', 'Heading Fonts')}</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
           ${typography.headingFonts.map(font => `
-            <span style="background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${font}; color: #fff;">${font}</span>
+            <span style="background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${font}; color: var(--r-text, #111827);">${font}</span>
           `).join('')}
         </div>
       </div>
@@ -2055,7 +2055,7 @@ function renderTypographyContent(data) {
         <h4 style="margin: 0 0 0.5rem 0; color: var(--accent-primary); font-family: monospace; font-size: 0.85rem;">>> ${t('brandConsistency.bodyFonts', 'Body Fonts')}</h4>
         <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
           ${typography.bodyFonts.map(font => `
-            <span style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${font}; color: #fff;">${font}</span>
+            <span style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.2); padding: 0.4rem 0.8rem; border-radius: 4px; font-family: ${font}; color: var(--r-text, #111827);">${font}</span>
           `).join('')}
         </div>
       </div>
@@ -2066,7 +2066,7 @@ function renderTypographyContent(data) {
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
         ${fonts.slice(0, 10).map(f => `
           <div style="display: flex; align-items: center; gap: 1rem; padding: 0.5rem; background: rgba(255,255,255,0.03); border-radius: 4px;">
-            <span style="flex: 1; font-family: ${f.font}; color: #fff;">${f.font}</span>
+            <span style="flex: 1; font-family: ${f.font}; color: var(--r-text, #111827);">${f.font}</span>
             <span style="color: rgba(255,255,255,0.5); font-size: 0.8rem;">${f.count} ${t('brandConsistency.uses', 'uses')}</span>
           </div>
         `).join('')}
@@ -2115,7 +2115,7 @@ function renderBrandIdentityContent(data) {
           ${hasFavicon ? '✓' : '✗'}
         </div>
         <div>
-          <div style="color: #fff; font-weight: 500;">${hasFavicon ? t('brandConsistency.faviconPresent', 'Favicon Present') : t('brandConsistency.faviconMissing', 'Favicon Missing')}</div>
+          <div style="color: var(--r-text, #111827); font-weight: 500;">${hasFavicon ? t('brandConsistency.faviconPresent', 'Favicon Present') : t('brandConsistency.faviconMissing', 'Favicon Missing')}</div>
           <div style="color: rgba(255,255,255,0.5); font-size: 0.85rem;">
             ${hasFavicon ? t('brandConsistency.faviconPresentDesc', 'Your site has a favicon for browser tab identification') : t('brandConsistency.faviconMissingDesc', 'Add a favicon to help users identify your site in browser tabs')}
           </div>
@@ -2286,7 +2286,7 @@ function renderRecommendationsContent(recommendations) {
       noOgImage: {
         message: t('brandConsistency.rec.noOgImage.message', 'Missing Open Graph image'),
         detail: t('brandConsistency.rec.noOgImage.detail', 'No og:image meta tag found. Social shares will lack a preview image.'),
-        action: t('brandConsistency.rec.noOgImage.action', 'Add <meta property="og:image" content="your-image-url"> to your page.')
+        action: t('brandConsistency.rec.noOgImage.action', 'Add <meta property=')
       },
       noTwitterCard: {
         message: t('brandConsistency.rec.noTwitterCard.message', 'Missing Twitter Card meta tags'),
@@ -2296,7 +2296,7 @@ function renderRecommendationsContent(recommendations) {
       noAppleTouchIcon: {
         message: t('brandConsistency.rec.noAppleTouchIcon.message', 'Missing Apple Touch Icon'),
         detail: t('brandConsistency.rec.noAppleTouchIcon.detail', 'No apple-touch-icon found. iOS home screen bookmarks will use a screenshot.'),
-        action: t('brandConsistency.rec.noAppleTouchIcon.action', 'Add <link rel="apple-touch-icon" href="icon.png"> for iOS devices.')
+        action: t('brandConsistency.rec.noAppleTouchIcon.action', 'Add <link rel=')
       },
       // Cross-page consistency recommendations
       fontVariationAcrossPages: {
@@ -2345,7 +2345,7 @@ function renderRecommendationsContent(recommendations) {
     <div style="padding: 1rem; margin-bottom: 0.75rem; background: ${rec.priority === 'success' ? 'rgba(var(--accent-primary-rgb), 0.1)' : 'rgba(255,255,255,0.03)'}; border-left: 4px solid ${priorityColors[rec.priority] || '#888'}; border-radius: 0 8px 8px 0;">
       <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
         <span style="font-size: 1.2rem;">${priorityIcons[rec.priority] || '•'}</span>
-        <h4 style="margin: 0; color: #fff; font-weight: 600;">${content.message}</h4>
+        <h4 style="margin: 0; color: var(--r-text, #111827); font-weight: 600;">${content.message}</h4>
         <span style="margin-left: auto; font-size: 0.7rem; padding: 0.2rem 0.5rem; background: ${priorityColors[rec.priority]}30; color: ${priorityColors[rec.priority]}; border-radius: 4px; text-transform: uppercase;">${priorityLabels[rec.priority] || rec.priority}</span>
       </div>
       <p style="margin: 0 0 0.5rem 1.7rem; color: rgba(255,255,255,0.7); font-size: 0.9rem;">${content.detail}</p>
@@ -2361,7 +2361,7 @@ function renderColorContrastContent(contrastAnalysis) {
   const getContrastBadge = (level) => {
     if (level === 'AAA') return `<span style="background: ${getAccentPrimaryHex()}; color: var(--accent-primary-contrast); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">AAA</span>`;
     if (level === 'AA') return '<span style="background: #90EE90; color: #000; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">AA</span>';
-    return `<span style="background: #ff6b6b; color: #fff; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">${t('brandConsistency.failBadge', 'FAIL')}</span>`;
+    return `<span style="background: #ff6b6b; color: var(--r-text, #111827); padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem; font-weight: 600;">${t('brandConsistency.failBadge', 'FAIL')}</span>`;
   };
   
   return `
@@ -2369,7 +2369,7 @@ function renderColorContrastContent(contrastAnalysis) {
       <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.wcagCompliance', 'WCAG Compliance Summary')}</h4>
       <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem;">
         <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 1.5rem; font-weight: 600; color: #fff;">${summary.total}</div>
+          <div style="font-size: 1.5rem; font-weight: 600; color: var(--r-text, #111827);">${summary.total}</div>
           <div style="font-size: 0.75rem; color: rgba(255,255,255,0.5);">${t('brandConsistency.pairsTested', 'Pairs Tested')}</div>
         </div>
         <div style="background: rgba(var(--accent-primary-rgb), 0.1); padding: 1rem; border-radius: 8px; text-align: center;">
@@ -2439,7 +2439,7 @@ function renderColorUsageContent(colorUsageAnalysis) {
             <div style="min-width: 120px; color: rgba(255,255,255,0.8);">${categoryLabels[key]}</div>
             <div style="flex: 1; background: rgba(255,255,255,0.1); border-radius: 4px; height: 20px; overflow: hidden; position: relative;">
               <div style="width: ${data.percentage}%; height: 100%; background: ${categoryColors[key]}; border-radius: 4px;"></div>
-              <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: #fff;">${data.percentage}%</span>
+              <span style="position: absolute; right: 8px; top: 50%; transform: translateY(-50%); font-size: 0.75rem; color: var(--r-text, #111827);">${data.percentage}%</span>
             </div>
             <div style="min-width: 80px; text-align: right; color: rgba(255,255,255,0.6); font-size: 0.85rem;">${data.count} ${t('common.unique', 'unique')}</div>
           </div>
@@ -2491,7 +2491,7 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
           ${headings.map(h => `
             <div style="display: flex; align-items: center; gap: 1rem; padding: 0.75rem; background: rgba(255,255,255,0.03); border-radius: 6px;">
-              <span style="font-size: ${h.fontSizeUnit}; font-weight: ${h.fontWeight}; color: #fff; min-width: 40px;">${h.tag.toUpperCase()}</span>
+              <span style="font-size: ${h.fontSizeUnit}; font-weight: ${h.fontWeight}; color: var(--r-text, #111827); min-width: 40px;">${h.tag.toUpperCase()}</span>
               <div style="flex: 1; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; overflow: hidden;">
                 <div style="width: ${Math.min(h.fontSize / 48 * 100, 100)}%; height: 100%; background: var(--accent-primary);"></div>
               </div>
@@ -2522,9 +2522,9 @@ function renderVisualHierarchyContent(hierarchyAnalysis) {
       <div>
         <h4 style="margin: 0 0 0.75rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.bodyText', 'Body Text')}</h4>
         <div style="display: flex; gap: 2rem; flex-wrap: wrap;">
-          <div><span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.fontSize', 'Font Size')}:</span> <span style="color: #fff;">${bodyStyle.fontSize}</span></div>
-          <div><span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.lineHeight', 'Line Height')}:</span> <span style="color: #fff;">${bodyStyle.lineHeight}</span></div>
-          <div><span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.font', 'Font')}:</span> <span style="color: #fff;">${bodyStyle.fontFamily}</span></div>
+          <div><span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.fontSize', 'Font Size')}:</span> <span style="color: var(--r-text, #111827);">${bodyStyle.fontSize}</span></div>
+          <div><span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.lineHeight', 'Line Height')}:</span> <span style="color: var(--r-text, #111827);">${bodyStyle.lineHeight}</span></div>
+          <div><span style="color: rgba(255,255,255,0.5);">${t('brandConsistency.font', 'Font')}:</span> <span style="color: var(--r-text, #111827);">${bodyStyle.fontFamily}</span></div>
         </div>
       </div>
     ` : ''}
@@ -2607,7 +2607,7 @@ function renderCompetitiveComparisonContent(data) {
           <path d="M2 12l10 5 10-5"/>
         </svg>
       </div>
-      <h3 style="margin: 0 0 0.5rem 0; color: #fff; font-size: 1.2rem;">${t('brandConsistency.competitiveAnalysis', 'Competitive Brand Analysis')}</h3>
+      <h3 style="margin: 0 0 0.5rem 0; color: var(--r-text, #111827); font-size: 1.2rem;">${t('brandConsistency.competitiveAnalysis', 'Competitive Brand Analysis')}</h3>
       <p style="color: rgba(255,255,255,0.6); margin: 0 0 1.5rem 0; font-size: 0.9rem;">
         ${t('brandConsistency.competitiveDesc', 'Compare your brand consistency against competitors. Analyze color palettes, typography, and visual identity side-by-side.')}
       </p>
@@ -2627,7 +2627,7 @@ function renderCompetitiveComparisonContent(data) {
         </div>
       </div>
       
-      <button style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: #fff; font-weight: 600; cursor: pointer; font-size: 1rem;">
+      <button style="padding: 0.75rem 2rem; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none; border-radius: 8px; color: var(--r-text, #111827); font-weight: 600; cursor: pointer; font-size: 1rem;">
         ${t('brandConsistency.upgradeToPro', 'Upgrade to Pro')}
       </button>
       <p style="margin: 0.75rem 0 0 0; color: rgba(255,255,255,0.4); font-size: 0.8rem;">
@@ -2667,7 +2667,7 @@ function renderCrossPageConsistencyContent(data) {
           <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 0.9rem; font-weight: 600; color: ${scoreColor};">${crossPage.score}</div>
         </div>
         <div style="flex: 1;">
-          <div style="font-size: 1rem; font-weight: 600; color: #fff;">
+          <div style="font-size: 1rem; font-weight: 600; color: var(--r-text, #111827);">
             ${crossPage.score >= 90 ? t('brandConsistency.excellentConsistency', 'Excellent Consistency') :
               crossPage.score >= 70 ? t('brandConsistency.goodConsistency', 'Good Consistency') :
               crossPage.score >= 50 ? t('brandConsistency.moderateVariation', 'Moderate Variation') :
@@ -2735,11 +2735,11 @@ function renderPageBreakdownContent(pageBreakdown) {
   
   return `
     <div>
-      <h4 style="margin: 0 0 1rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.pagesAnalyzed', 'Pages Analyzed')}</h4>
+      <h4 style="margin: 0 0 1rem 0; color: rgba(255,255,255,0.8);">${t('brandConsistency.pagesAnalyzed', 'pages analyzed')}</h4>
       <div style="overflow-x: auto;">
         <table style="width: 100%; border-collapse: collapse; font-size: 0.85rem;">
           <thead>
-            <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <th style="padding: 0.75rem; text-align: left; color: rgba(255,255,255,0.6); font-weight: 500;">${t('brandConsistency.page', 'Page')}</th>
               <th style="padding: 0.75rem; text-align: center; color: rgba(255,255,255,0.6); font-weight: 500;">${t('brandConsistency.colors', 'Colors')}</th>
               <th style="padding: 0.75rem; text-align: center; color: rgba(255,255,255,0.6); font-weight: 500;">${t('brandConsistency.fonts', 'Fonts')}</th>
@@ -2749,11 +2749,11 @@ function renderPageBreakdownContent(pageBreakdown) {
           </thead>
           <tbody>
             ${pageBreakdown.map((page, idx) => `
-              <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); ${idx === 0 ? 'background: rgba(var(--accent-primary-rgb), 0.05);' : ''}">
+              <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${idx === 0 ? 'background: rgba(var(--accent-primary-rgb), 0.05);' : ''}">
                 <td style="padding: 0.75rem;">
                   <div style="display: flex; align-items: center; gap: 0.5rem;">
                     ${idx === 0 ? '<span style="color: var(--accent-primary); font-size: 0.7rem;">★</span>' : ''}
-                    <span style="color: #fff; font-weight: 500;">${page.pageName}</span>
+                    <span style="color: var(--r-text, #111827); font-weight: 500;">${page.pageName}</span>
                   </div>
                   <div style="font-size: 0.75rem; color: rgba(255,255,255,0.4); max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${page.url}">
                     ${page.url}
@@ -2862,7 +2862,7 @@ window.copyBrandCode = function(elementId, btn) {
     const targetBtn = btn || document.querySelector(`button[data-copy-target="${elementId}"]`);
     if (targetBtn) {
       const original = targetBtn.innerHTML;
-      targetBtn.innerHTML = '✓ ' + t('common.copied', 'Copied');
+      targetBtn.innerHTML = '✓ ' + t('common.copied', 'Copied!');
       setTimeout(() => { targetBtn.innerHTML = original; }, 1500);
     }
   }).catch(err => {
@@ -2953,8 +2953,8 @@ function generateScoreBreakdown(scoreBreakdown) {
   if (items.length === 0) return '';
   
   return `
-    <div style="margin: 1.5rem 0; padding: 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px;">
-      <h3 style="margin: 0 0 1rem 0; color: #fff; font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
+    <div style="margin: 1.5rem 0; padding: 1.25rem; background: rgba(255,255,255,0.03); border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); border-radius: 12px;">
+      <h3 style="margin: 0 0 1rem 0; color: var(--r-text, #111827); font-size: 0.95rem; display: flex; align-items: center; gap: 0.5rem;">
         <span>📊</span> ${t('brandConsistency.scoreBreakdown', 'Score Breakdown')}
       </h3>
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">

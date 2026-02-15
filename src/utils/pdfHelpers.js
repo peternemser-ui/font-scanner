@@ -811,7 +811,7 @@ function addRecommendationsSection(doc, recommendations, options = {}) {
     doc.fontSize(10)
        .font('Helvetica')
        .fillColor(COLORS.textSecondary)
-       .text('No critical issues detected. Continue monitoring for best results.', 70, doc.y + 10);
+       .text('Review the detailed analysis in the sections above for specific areas to address.', 70, doc.y + 10);
 
     doc.y += 70;
     return;

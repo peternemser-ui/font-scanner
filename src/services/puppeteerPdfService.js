@@ -268,6 +268,13 @@ function buildPdfOverrideCSS(lang) {
       max-height: none !important;
     }
 
+    /* Preserve screenshot sizing in exec summary */
+    .pdf-exec__screenshot-img,
+    .pdf-exec-summary img {
+      max-height: 320px !important;
+      overflow: hidden !important;
+    }
+
     /* --- PRINT COLOR PRESERVATION --- */
     * {
       print-color-adjust: exact !important;
@@ -1108,6 +1115,18 @@ async function generatePdfFromUrl(options) {
             }
           }
 
+          // Page screenshot (if available)
+          const ssUrl = reportData?.screenshotUrl || (reportData?.reportId ? `/reports/${encodeURIComponent(reportData.reportId)}/screenshot.jpg` : '');
+          if (ssUrl) {
+            const absSsUrl = ssUrl.startsWith('/') ? window.location.origin + ssUrl : ssUrl;
+            summaryHTML += `
+              <div style="margin: 24px 0; text-align: center;">
+                <img src="${absSsUrl}" alt="Page screenshot"
+                  style="max-width: 100%; max-height: 320px; border: 1px solid rgba(0,0,0,0.1); border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);"
+                  onerror="this.parentElement.style.display='none'" />
+              </div>`;
+          }
+
           execSummary.innerHTML = summaryHTML;
 
           // --- Insert all at the beginning of the page body ---
@@ -1119,6 +1138,19 @@ async function generatePdfFromUrl(options) {
           return { headings: headings.length, hasCover: true, hasTOC: headings.length > 0, hasExecSummary: true };
         }, { reportType, reportLabel, analyzedUrl, lang, reportData, logoSvg });
         logger.info('Injected cover page, TOC, executive summary', injectedContent);
+
+        // 21b. Wait for the exec-summary screenshot image (injected in step 21)
+        await page.evaluate(() => {
+          const ssImg = document.querySelector('.pdf-exec-summary img[onerror]');
+          if (!ssImg) return 'no-screenshot-img';
+          if (ssImg.complete) return ssImg.naturalWidth > 0 ? 'already-loaded' : 'already-errored';
+          return new Promise(resolve => {
+            ssImg.addEventListener('load', () => resolve('loaded'), { once: true });
+            ssImg.addEventListener('error', () => resolve('error'), { once: true });
+            setTimeout(() => resolve('timeout'), 8000);
+          });
+        }).then(status => logger.info('Exec summary screenshot status', { status }))
+          .catch(() => logger.warn('Exec summary screenshot wait failed'));
 
         // 22. Final DOM walk as belt-and-suspenders for any remaining dark elements
         await page.evaluate(() => {
@@ -1303,18 +1335,20 @@ async function generatePdfFromTemplate(options) {
         await page.waitForFunction(() => document.fonts.ready.then(() => true),
           { timeout: 10000 }).catch(() => logger.warn('Template fonts timed out'));
 
-        // 10. Wait for images
-        await page.evaluate(() => {
+        // 10. Wait for images (including dynamically-injected screenshot)
+        const imageStatus = await page.evaluate(() => {
           const imgs = Array.from(document.querySelectorAll('img'));
+          const screenshotImg = document.querySelector('.pdf-exec__screenshot-img');
           return Promise.all(imgs.map(img => {
-            if (img.complete) return Promise.resolve();
+            if (img.complete) return Promise.resolve(img === screenshotImg ? 'screenshot-already-complete' : 'complete');
             return new Promise(resolve => {
-              img.addEventListener('load', resolve, { once: true });
-              img.addEventListener('error', resolve, { once: true });
-              setTimeout(resolve, 5000);
+              img.addEventListener('load', () => resolve(img === screenshotImg ? 'screenshot-loaded' : 'loaded'), { once: true });
+              img.addEventListener('error', () => resolve(img === screenshotImg ? 'screenshot-error' : 'error'), { once: true });
+              setTimeout(() => resolve(img === screenshotImg ? 'screenshot-timeout' : 'timeout'), 8000);
             });
           }));
-        }).catch(() => logger.warn('Template image wait timed out'));
+        }).catch(() => { logger.warn('Template image wait timed out'); return []; });
+        logger.info('Template image loading results', { imageStatus });
 
         // 11. Brief settle time
         await page.waitForTimeout(500);

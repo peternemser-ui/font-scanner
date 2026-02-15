@@ -70,7 +70,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.overview', 'This section provides a high-level summary of the site crawl. It includes the total number of pages discovered, maximum depth reached, crawl duration, and average server response time. These metrics give an overall picture of your site\'s size, structure, and responsiveness.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.overview', 'The crawl overview summarizes the scope and results of the site crawl. It shows how many pages were discovered, the maximum depth reached, and overall crawl performance. Understanding your site\'s crawlable structure helps ensure search engines can efficiently index all your important content.'s size, structure, and responsiveness.')) + '</p>';
 
       // Metrics cards
       var totalPages = results.totalPages || 0;
@@ -119,7 +119,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.pages', 'This section lists all pages discovered during the crawl with their HTTP status codes and response times. Pages returning error status codes (4xx, 5xx) need attention, while slow response times may indicate server performance issues. Use this table to identify problematic pages across your site.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.pages', 'This section lists all pages discovered during the crawl with their HTTP status codes, titles, and response times. Pages with errors or slow response times may be hurting your search engine visibility and user experience.')) + '</p>';
 
       if (pages.length > 0) {
         html += PR.renderMetrics([
@@ -174,7 +174,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.structure', 'Site structure analysis reveals how your pages are organized by depth level and the distribution of HTTP status codes. A well-structured site keeps important content within 3 clicks of the homepage. Deep pages may be harder for search engines to discover and for users to navigate to. This section provides depth distribution and a full status code breakdown.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.structure', 'Site structure analysis examines how your pages are organized and interconnected. A well-structured site has a shallow, logical hierarchy that enables both users and search engines to find content efficiently. Deep or orphaned pages may receive less crawl budget and link equity.')) + '</p>';
 
       // Depth distribution
       if (pages.length > 0) {
@@ -265,7 +265,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.issues', 'This section lists all issues discovered during the crawl, grouped by severity. Critical and high-severity issues should be addressed first as they may impact site availability, search engine indexing, or user experience. Each issue includes the affected URL, issue type, and a description of the problem.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.issues', 'Issues detected during the crawl include broken pages, missing titles, duplicate content, and other technical SEO problems. Each issue is categorized by severity to help you prioritize fixes that will have the greatest impact on search performance.')) + '</p>';
 
       if (issues.length > 0) {
         html += PR.renderMetrics([
@@ -323,7 +323,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.performance', 'Page performance analysis examines server response times across all crawled pages. Slow pages can hurt user experience and search engine rankings. This section highlights the average response time and identifies the slowest pages on your site so you can prioritize optimization efforts.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.performance', 'Page performance across your site reveals patterns in response times and server behavior. Consistently slow pages may indicate server capacity issues or inefficient code. This section highlights the slowest pages and overall response time distribution.')) + '</p>';
 
       if (pages.length > 0) {
         // Calculate average response time
@@ -403,7 +403,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.recommendations', 'Based on the site crawl analysis, this section provides prioritized recommendations to improve your site\'s structure, performance, and crawlability. Each recommendation includes a priority level and actionable description. Addressing high-priority items first will yield the greatest improvements to search engine indexing and user experience.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.recommendations', 'Based on the site crawl analysis, these recommendations target the most critical structural and technical issues affecting your site\'s search engine crawlability.'s structure, performance, and crawlability. Each recommendation includes a priority level and actionable description. Addressing high-priority items first will yield the greatest improvements to search engine indexing and user experience.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Group by priority/severity

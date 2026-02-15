@@ -970,8 +970,8 @@ function renderCompetitiveProPreview() {
     <div class="pro-preview-content" style="padding: 1.5rem; text-align: center; color: var(--text-secondary);">
       <p style="margin-bottom: 1rem;">🔒 ${t('reports.competitive.unlockToSeeRecommendations', 'Unlock to see detailed recommendations')}</p>
       <ul style="list-style: none; padding: 0; margin: 0; text-align: left; max-width: 300px; margin: 0 auto;">
-        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">• ${t('reports.competitive.proFeature1', 'Prioritized action items')}</li>
-        <li style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.1);">• ${t('reports.competitive.proFeature2', 'Gap analysis details')}</li>
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">• ${t('reports.competitive.proFeature1', 'Prioritized action items')}</li>
+        <li style="padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">• ${t('reports.competitive.proFeature2', 'Gap analysis details')}</li>
         <li style="padding: 0.5rem 0;">• ${t('reports.competitive.proFeature3', 'Implementation guidance')}</li>
       </ul>
     </div>
@@ -1421,11 +1421,11 @@ function renderDetailedMetricsContent(data) {
       <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden;">
         <thead>
           <tr style="background: rgba(var(--accent-primary-rgb), 0.1); border-bottom: 2px solid rgba(var(--accent-primary-rgb), 0.3);">
-            <th style="padding: 0.6rem 0.8rem; text-align: left; color: var(--accent-primary); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem;">
+            <th style="padding: 0.6rem 0.8rem; text-align: left; color: var(--accent-primary); font-weight: bold; border-right: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); font-size: 0.9rem;">
               ${t('reports.competitive.site', 'Site')}
             </th>
             ${metrics.map(({ label, icon }) => `
-              <th style="padding: 0.6rem 0.8rem; text-align: center; color: var(--text-primary); font-weight: bold; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
+              <th style="padding: 0.6rem 0.8rem; text-align: center; color: var(--text-primary); font-weight: bold; border-right: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); font-size: 0.85rem;">
                 ${icon} ${label}
               </th>
             `).join('')}
@@ -1441,8 +1441,8 @@ function renderDetailedMetricsContent(data) {
             const isYou = site.isYou;
             
             return `
-              <tr style="background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.05)' : siteIdx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}; border-bottom: 1px solid rgba(255,255,255,0.05);">
-                <td style="padding: 0.6rem 0.8rem; font-weight: ${isYou ? 'bold' : 'normal'}; color: ${isYou ? 'var(--accent-primary)' : 'var(--text-primary)'}; border-right: 1px solid rgba(255,255,255,0.1); font-size: 0.85rem;">
+              <tr style="background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.05)' : siteIdx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+                <td style="padding: 0.6rem 0.8rem; font-weight: ${isYou ? 'bold' : 'normal'}; color: ${isYou ? 'var(--accent-primary)' : 'var(--text-primary)'}; border-right: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); font-size: 0.85rem;">
                   ${isYou ? '◉ ' : ''}${site.name}${isYou ? ' (' + t('reports.competitive.you', 'YOU') + ')' : ''}
                   <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.15rem;">
                     ${getDomainName(site.data.url)}
@@ -1465,7 +1465,7 @@ function renderDetailedMetricsContent(data) {
                   else if (score >= 50) grade = 'D';
                   
                   return `
-                    <td style="padding: 0.5rem 0.6rem; text-align: center; border-right: 1px solid rgba(255,255,255,0.1);">
+                    <td style="padding: 0.5rem 0.6rem; text-align: center; border-right: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                       <div style="font-size: 1.2rem; font-weight: bold; color: ${scoreColor}; margin-bottom: 0.15rem;">
                         ${failed ? '✗' : score}
                       </div>
@@ -1557,7 +1557,7 @@ function renderExecutiveSummary(data) {
     <div style="
       background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.05) 0%, rgba(0,0,0,0.1) 100%);
       border: 2px solid ${statusColor};
-      border-radius: 16px;
+      border-radius: 12px;
       padding: 2.5rem;
       margin-bottom: 2rem;
       position: relative;
@@ -1702,7 +1702,7 @@ function renderExecutiveSummary(data) {
             font-size: 0.8rem; 
             color: var(--text-secondary);
             padding: 0.5rem 1rem;
-            background: rgba(0,0,0,0.2);
+            background: var(--r-surface-2, #F8FAFC);
             border-radius: 6px;
             display: inline-block;
           ">
@@ -1822,7 +1822,7 @@ function renderRankings(rankings) {
               }
               
               return `
-                <tr style="border-bottom: 1px solid rgba(255,255,255,0.05); transition: background 0.2s;" class="comp-hover-row">
+                <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); transition: background 0.2s;" class="comp-hover-row">
                   <td style="padding: 0.75rem 1rem; color: var(--text-primary); font-weight: 500;">${label}</td>
                   <td style="padding: 0.75rem; text-align: center; font-size: 1.5rem;">${medal}</td>
                   <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; font-weight: bold; color: ${failed ? '#666' : statusColor};">${rankDisplay}</td>
@@ -1899,7 +1899,7 @@ function getMetricStatus(data, metric) {
       ? (rankingData.total === 0 ? '✗ ' + t('reports.competitive.allSitesFailed', 'All Sites Failed') : '✗ ' + t('reports.status.failed', 'Failed'))
       : `${rankingData.rank || 0}/${rankingData.total || 0}`,
     statusText: failed
-      ? '✗ ' + t('reports.competitive.analysisFailed', 'Analysis Failed')
+      ? '✗ ' + t('reports.competitive.analysisFailed', 'Analysis failed')
       : (rankingData.rank === 1 ? '↑ ' + t('reports.competitive.leading', 'Leading!') : rankingData.rank === 2 ? '≈ ' + t('reports.competitive.strong', 'Strong') : '◉ ' + t('reports.competitive.competitiveStatus', 'Competitive')),
     statusColor: failed ? '#ff4444' : (rankingData.rank === 1 ? getAccentPrimaryColor() : rankingData.rank === 2 ? '#ffd700' : '#ff8c00')
   };
@@ -1935,7 +1935,7 @@ function renderVisualComparisonContent(data) {
       const gap = bestCompetitor ? bestCompetitor.scores[metric] - yourScore : 0;
       
       return `
-        <div style="margin-bottom: 2.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="margin-bottom: 2.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
             <h3 style="margin: 0; font-size: 1.1rem;">
               ${formatMetricName(metric)}
@@ -2011,8 +2011,8 @@ function renderCompetitivePositionContent(data) {
           <div class="stat-sublabel" style="font-weight: bold; color: ${stats.status === 'winning' ? 'var(--accent-primary)' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
             ${stats.status === 'winning' ? t('reports.competitive.winning', 'WINNING') : stats.status === 'tied' ? t('reports.competitive.tied', 'TIED') : t('reports.competitive.losing', 'LOSING')}
           </div>
-          <div style="font-size: 0.8rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div>${t('reports.competitive.you', 'You')}: <strong>${stats.yourScore}</strong></div>
+          <div style="font-size: 0.8rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+            <div>${t('reports.competitive.you', 'YOU')}: <strong>${stats.yourScore}</strong></div>
             <div>${t('reports.competitive.avg', 'Avg')}: ${stats.avgCompetitor}</div>
             <div>${t('reports.competitive.best', 'Best')}: ${stats.maxCompetitor}</div>
             <div style="margin-top: 0.25rem; color: var(--text-secondary);">
@@ -2165,7 +2165,7 @@ function renderMetricAccordion(analysis, index, data) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
             background: ${style.color}20;
@@ -2191,31 +2191,31 @@ function renderMetricTabs(analysis, accordionId, data) {
   const actionSteps = getCompetitiveActionSteps({ metric: analysis.metric });
 
   return `
-    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="competitive-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
         background: rgba(255,255,255,0.1);
-        color: #fff;
+        color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 ${t('reports.common.overview', 'Overview')}</button>
       <button class="competitive-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="analysis" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">📊 ${t('reports.competitive.comparison', 'Comparison')}</button>
       <button class="competitive-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">🎯 ${t('reports.competitive.actionSteps', 'Action Steps')}</button>
@@ -2224,16 +2224,16 @@ function renderMetricTabs(analysis, accordionId, data) {
     <!-- Overview Tab -->
     <div class="competitive-fix-tab-content active" id="${accordionId}-summary">
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
-        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your Score')}</div>
+        <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your score')}</div>
           <div style="font-size: 1.75rem; font-weight: bold; color: ${analysis.isWinning ? '#00ff41' : '#ffa500'};">${analysis.yourScore}</div>
         </div>
-        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
+        <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.bestCompetitor', 'Best Competitor')}</div>
           <div style="font-size: 1.75rem; font-weight: bold; color: var(--text-primary);">${analysis.maxScore}</div>
         </div>
-        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.avgCompetitor', 'Avg Competitor')}</div>
+        <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.avgCompetitor', 'Avg competitor')}</div>
           <div style="font-size: 1.75rem; font-weight: bold; color: var(--text-secondary);">${Math.round(analysis.avgCompetitor)}</div>
         </div>
       </div>
@@ -2280,7 +2280,7 @@ function renderMetricTabs(analysis, accordionId, data) {
                   font-weight: bold;
                 ">${rank + 1}</span>
                 <span style="font-weight: ${site.isYou ? 'bold' : 'normal'}; color: ${site.isYou ? 'var(--accent-primary)' : 'var(--text-primary)'};">
-                  ${site.isYou ? '👤 ' + t('reports.competitive.you', 'You') : site.name}
+                  ${site.isYou ? '👤 ' + t('reports.competitive.you', 'YOU') : site.name}
                 </span>
               </div>
               <span style="font-weight: bold; font-size: 1.1rem; color: ${rank === 0 ? '#ffd700' : 'var(--text-primary)'};">
@@ -2328,8 +2328,8 @@ function getMetricCompetitiveInsight(analysis) {
 
   const insights = {
     performance: t('reports.competitive.insight.performance', 'A {{gap}}-point performance gap means users experience noticeably faster load times on competitor sites. This directly impacts user engagement, bounce rates, and can affect search rankings.', { gap }),
-    seo: t('reports.competitive.insight.seo', 'Being {{gap}} points behind in SEO means competitors likely have better search visibility. They may be capturing organic traffic you\'re missing, particularly for competitive keywords.', { gap }),
-    accessibility: t('reports.competitive.insight.accessibility', 'This {{gap}}-point accessibility gap could mean competitors are reaching audiences you\'re not. It may also expose you to compliance risks that competitors have already addressed.', { gap }),
+    seo: t('reports.competitive.insight.seo', 'Being {{gap}} points behind in SEO means competitors likely have better search visibility. They may be capturing organic traffic you\\', { gap }),
+    accessibility: t('reports.competitive.insight.accessibility', 'This {{gap}}-point accessibility gap could mean competitors are reaching audiences you\\', { gap }),
     security: t('reports.competitive.insight.security', 'Competitors with {{gap}} more security points likely have stronger trust signals. This is especially important for e-commerce or sites handling sensitive information.', { gap }),
     corewebvitals: t('reports.competitive.insight.coreWebVitals', 'Core Web Vitals directly affect Google rankings. This {{gap}}-point gap means competitors may rank higher in search results and provide a better user experience.', { gap })
   };
@@ -2461,7 +2461,7 @@ function renderStrengthsWeaknessesContent(data) {
         <div style="font-size: 2rem; font-weight: bold; color: #ffa500;">${weaknesses.length}</div>
         <div style="font-size: 0.75rem; color: var(--text-secondary);">${t('reports.competitive.needImprovement', 'Need Improvement')}</div>
       </div>
-      <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(255,255,255,0.1);">
+      <div style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
         <div style="font-size: 2rem; font-weight: bold; color: var(--text-primary);">${data.yourSite.scores.overall}</div>
         <div style="font-size: 0.75rem; color: var(--text-secondary);">${t('reports.competitive.overallScore', 'Overall Score')}</div>
       </div>
@@ -2486,7 +2486,7 @@ function renderStrengthsWeaknessesContent(data) {
         ${weaknesses.map((w, index) => renderWeaknessAccordion(w, index, data)).join('')}
       </div>
     ` : `
-      <div style="background: linear-gradient(135deg, rgba(0,255,65,0.1), rgba(91,244,231,0.05)); border: 1px solid rgba(0,255,65,0.3); border-radius: 16px; padding: 2rem; text-align: center;">
+      <div style="background: linear-gradient(135deg, rgba(0,255,65,0.1), rgba(91,244,231,0.05)); border: 1px solid rgba(0,255,65,0.3); border-radius: 12px; padding: 2rem; text-align: center;">
         <h3 style="margin: 0 0 1rem 0; color: #00ff41;">🏆 ${t('reports.competitive.outstandingPerformance', 'Outstanding Performance!')}</h3>
         <p style="color: var(--text-secondary); margin: 0;">${t('reports.competitive.noWeaknesses', "You have no significant weaknesses. You're leading or competitive in all measured areas!")}</p>
       </div>
@@ -2523,14 +2523,14 @@ function renderStrengthAccordion(strength, index, data) {
           <div>
             <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">${formatMetricName(strength.metric)}</h4>
             <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">
-              ${t('reports.competitive.score', 'Score')}: <strong>${strength.score}</strong> | +${strength.lead.toFixed(0)} ${t('reports.competitive.aboveAverageLower', 'above average')}
+              ${t('reports.competitive.score', 'score')}: <strong>${strength.score}</strong> | +${strength.lead.toFixed(0)} ${t('reports.competitive.aboveAverageLower', 'above average')}
             </p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
             background: ${style.color}20;
@@ -2556,31 +2556,31 @@ function renderStrengthTabs(strength, accordionId) {
   const defensiveSteps = getDefensiveSteps(strength.metric);
 
   return `
-    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="competitive-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
         background: rgba(255,255,255,0.1);
-        color: #fff;
+        color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 ${t('reports.common.overview', 'Overview')}</button>
       <button class="competitive-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="analysis" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">📊 ${t('reports.competitive.comparison', 'Comparison')}</button>
       <button class="competitive-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">🛡️ ${t('reports.competitive.maintainLeadTab', 'Maintain Lead')}</button>
@@ -2589,15 +2589,15 @@ function renderStrengthTabs(strength, accordionId) {
     <!-- Overview Tab -->
     <div class="competitive-fix-tab-content active" id="${accordionId}-summary">
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
-        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your Score')}</div>
+        <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your score')}</div>
           <div style="font-size: 1.75rem; font-weight: bold; color: #00ff41;">${strength.score}</div>
         </div>
-        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
+        <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.bestCompetitor', 'Best Competitor')}</div>
           <div style="font-size: 1.75rem; font-weight: bold; color: var(--text-primary);">${strength.maxCompetitor}</div>
         </div>
-        <div style="background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px; text-align: center;">
+        <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourLead', 'Your Lead')}</div>
           <div style="font-size: 1.75rem; font-weight: bold; color: #ffd700;">+${strength.lead.toFixed(0)}</div>
         </div>
@@ -2616,7 +2616,7 @@ function renderStrengthTabs(strength, accordionId) {
     <div class="competitive-fix-tab-content" id="${accordionId}-analysis" style="display: none;">
       <h5 style="margin: 0 0 1rem 0; color: var(--text-primary);">${metricName} ${t('reports.competitive.standings', 'Standings')}</h5>
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        ${[{ name: t('reports.competitive.you', 'You'), score: strength.score, isYou: true }, ...strength.competitorScores]
+        ${[{ name: t('reports.competitive.you', 'YOU'), score: strength.score, isYou: true }, ...strength.competitorScores]
           .sort((a, b) => b.score - a.score)
           .map((site, rank) => `
             <div style="
@@ -2642,7 +2642,7 @@ function renderStrengthTabs(strength, accordionId) {
                   font-weight: bold;
                 ">${rank + 1}</span>
                 <span style="font-weight: ${site.isYou ? 'bold' : 'normal'}; color: ${site.isYou ? '#00ff41' : 'var(--text-primary)'};">
-                  ${site.isYou ? '👤 ' + t('reports.competitive.you', 'You') : site.name}
+                  ${site.isYou ? '👤 ' + t('reports.competitive.you', 'YOU') : site.name}
                 </span>
               </div>
               <span style="font-weight: bold; font-size: 1.1rem; color: ${rank === 0 ? '#ffd700' : 'var(--text-primary)'};">
@@ -2700,14 +2700,14 @@ function renderWeaknessAccordion(weakness, index, data) {
           <div>
             <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">${formatMetricName(weakness.metric)}</h4>
             <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">
-              ${t('reports.competitive.score', 'Score')}: <strong>${weakness.score}</strong> | ${t('reports.competitive.pointsBehindShort', '{{gap}} points behind {{leader}}', { gap: weakness.gap, leader: weakness.leader?.name || t('reports.competitive.leader', 'leader') })}
+              ${t('reports.competitive.score', 'score')}: <strong>${weakness.score}</strong> | ${t('reports.competitive.pointsBehindShort', '{{gap}} points behind {{leader}}', { gap: weakness.gap, leader: weakness.leader?.name || t('reports.competitive.leader', 'leader') })}
             </p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
             background: ${style.color}20;
@@ -2733,31 +2733,31 @@ function renderWeaknessTabs(weakness, accordionId) {
   const actionSteps = getCompetitiveActionSteps({ metric: weakness.metric });
 
   return `
-    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="competitive-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
         background: rgba(255,255,255,0.1);
-        color: #fff;
+        color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 ${t('reports.common.overview', 'Overview')}</button>
       <button class="competitive-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="analysis" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">📊 ${t('reports.competitive.gapAnalysis', 'Gap Analysis')}</button>
       <button class="competitive-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">🎯 ${t('reports.competitive.fixIt', 'Fix It')}</button>
@@ -2767,7 +2767,7 @@ function renderWeaknessTabs(weakness, accordionId) {
     <div class="competitive-fix-tab-content active" id="${accordionId}-summary">
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
         <div style="background: rgba(255,68,68,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
-          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your Score')}</div>
+          <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your score')}</div>
           <div style="font-size: 1.75rem; font-weight: bold; color: #ff6666;">${weakness.score}</div>
         </div>
         <div style="background: rgba(0,255,65,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
@@ -2794,10 +2794,10 @@ function renderWeaknessTabs(weakness, accordionId) {
       <h5 style="margin: 0 0 1rem 0; color: var(--text-primary);">${metricName} ${t('reports.competitive.gapBreakdown', 'Gap Breakdown')}</h5>
 
       <!-- Visual Gap Bar -->
-      <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
+      <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span style="color: #ff6666;">${t('reports.competitive.you', 'You')}: ${weakness.score}</span>
-          <span style="color: #00ff41;">${t('reports.competitive.leader', 'Leader')}: ${weakness.leader?.score || weakness.maxCompetitor}</span>
+          <span style="color: #ff6666;">${t('reports.competitive.you', 'YOU')}: ${weakness.score}</span>
+          <span style="color: #00ff41;">${t('reports.competitive.leader', 'leader')}: ${weakness.leader?.score || weakness.maxCompetitor}</span>
         </div>
         <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden; position: relative;">
           <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${weakness.score}%; background: linear-gradient(90deg, #ff4444, #ffa500);"></div>
@@ -2811,7 +2811,7 @@ function renderWeaknessTabs(weakness, accordionId) {
       <!-- Competitor Standings -->
       <h6 style="margin: 1rem 0 0.5rem; color: var(--text-secondary); font-size: 0.85rem;">${t('reports.competitive.allCompetitors', 'All Competitors')}:</h6>
       <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-        ${[{ name: t('reports.competitive.you', 'You'), score: weakness.score, isYou: true }, ...weakness.competitorScores]
+        ${[{ name: t('reports.competitive.you', 'YOU'), score: weakness.score, isYou: true }, ...weakness.competitorScores]
           .sort((a, b) => b.score - a.score)
           .map((site, rank) => `
             <div style="
@@ -2824,7 +2824,7 @@ function renderWeaknessTabs(weakness, accordionId) {
               border-left: 2px solid ${site.isYou ? '#ff4444' : rank === 0 ? '#00ff41' : 'transparent'};
             ">
               <span style="color: ${site.isYou ? '#ff6666' : 'var(--text-primary)'}; font-size: 0.9rem;">
-                ${site.isYou ? '👤 ' + t('reports.competitive.you', 'You') : site.name}
+                ${site.isYou ? '👤 ' + t('reports.competitive.you', 'YOU') : site.name}
               </span>
               <span style="font-weight: bold; color: ${rank === 0 ? '#00ff41' : 'var(--text-primary)'};">
                 ${site.score}
@@ -2918,7 +2918,7 @@ function ensureCompetitiveFixStyles() {
     }
     .competitive-fix-tab.active {
       background: rgba(255, 255, 255, 0.1) !important;
-      color: #fff !important;
+      color: var(--r-text, #111827) !important;
       border-color: rgba(255, 255, 255, 0.2) !important;
     }
     .competitive-fix-tab-content {
@@ -3011,7 +3011,7 @@ function renderRecommendationsContent(recommendations) {
   
   if (!recommendations || recommendations.length === 0) {
     return `
-      <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+      <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           <span style="font-size: 1.5rem;">✓</span> ${t('reports.competitive.youreAheadOfCompetition', "You're Ahead of Competition!")}
         </h3>
@@ -3079,7 +3079,7 @@ function renderCompetitiveFixAccordion(rec, index) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
             background: ${style.color}20;
@@ -3104,31 +3104,31 @@ function renderCompetitiveFixTabs(rec, accordionId) {
   const actionSteps = getCompetitiveActionSteps(rec);
   
   return `
-    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+    <div class="competitive-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="competitive-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
         background: rgba(255,255,255,0.1);
-        color: #fff;
+        color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
       ">${t('reports.competitive.summary', 'Summary')}</button>
       <button class="competitive-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="analysis" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">${t('reports.competitive.gapAnalysis', 'Gap Analysis')}</button>
       <button class="competitive-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">${t('reports.competitive.actionSteps', 'Action Steps')}</button>
@@ -3149,11 +3149,11 @@ function renderCompetitiveFixTabs(rec, accordionId) {
     <div class="competitive-fix-tab-content" id="${accordionId}-analysis" style="display: none;">
       <div style="display: grid; gap: 1rem;">
         <!-- Score Comparison -->
-        <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,255,255,0.1);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; padding: 1rem; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
           <h5 style="margin: 0 0 0.75rem 0; color: var(--text-primary);">${metricName} ${t('reports.competitive.scoreComparison', 'Score Comparison')}</h5>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div style="text-align: center; padding: 1rem; background: rgba(255,68,68,0.1); border-radius: 8px;">
-              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your Score')}</div>
+              <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your score')}</div>
               <div style="font-size: 2rem; font-weight: bold; color: #ff6666;">${rec.yourScore ?? '?'}</div>
             </div>
             <div style="text-align: center; padding: 1rem; background: rgba(0,255,65,0.1); border-radius: 8px;">
@@ -3165,15 +3165,15 @@ function renderCompetitiveFixTabs(rec, accordionId) {
           <!-- Visual Gap Bar -->
           <div style="margin-top: 1.25rem;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.8rem;">
-              <span style="color: #ff6666;">${t('reports.competitive.you', 'You')}: ${rec.yourScore ?? '?'}</span>
-              <span style="color: #00ff41;">${rec.topCompetitorName || t('reports.competitive.leader', 'Leader')}: ${rec.topCompetitorScore ?? '?'}</span>
+              <span style="color: #ff6666;">${t('reports.competitive.you', 'YOU')}: ${rec.yourScore ?? '?'}</span>
+              <span style="color: #00ff41;">${rec.topCompetitorName || t('reports.competitive.leader', 'leader')}: ${rec.topCompetitorScore ?? '?'}</span>
             </div>
             <div style="background: rgba(255,255,255,0.1); height: 12px; border-radius: 6px; overflow: hidden; position: relative;">
               <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${Math.min(rec.yourScore || 0, 100)}%; background: linear-gradient(90deg, #ff4444, #ff6666); border-radius: 6px 0 0 6px;"></div>
               <div style="position: absolute; left: ${Math.min(rec.yourScore || 0, 100)}%; top: 0; height: 100%; width: ${Math.min(rec.gap || 0, 100 - (rec.yourScore || 0))}%; background: repeating-linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,165,0,0.3) 5px, rgba(255,165,0,0.1) 5px, rgba(255,165,0,0.1) 10px);"></div>
             </div>
             <div style="text-align: center; margin-top: 0.75rem;">
-              <span style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,165,0,0.2); border-radius: 20px; color: #ffa500; font-weight: 600; font-size: 0.9rem;">
+              <span style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,165,0,0.2); border-radius: 999px; color: #ffa500; font-weight: 600; font-size: 0.9rem;">
                 ${t('reports.competitive.pointGapToClose', '{{gap}} point gap to close', { gap: rec.gap })}
               </span>
             </div>
@@ -3191,8 +3191,8 @@ function renderCompetitiveFixTabs(rec, accordionId) {
         </div>
 
         <!-- What This Means -->
-        <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,255,255,0.1);">
-          <h5 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">${t('reports.competitive.whatThisMeans', 'What This Means')}</h5>
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; padding: 1rem; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+          <h5 style="margin: 0 0 0.5rem 0; color: var(--text-primary);">${t('reports.competitive.whatThisMeans', 'What this means')}</h5>
           <p style="color: var(--text-secondary); margin: 0; line-height: 1.6;">
             ${getGapExplanation(rec)}
           </p>

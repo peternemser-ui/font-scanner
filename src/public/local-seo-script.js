@@ -97,7 +97,7 @@ document.getElementById('url').addEventListener('keypress', (e) => {
 async function analyze() {
   const url = document.getElementById('url').value.trim();
   if (!url) { 
-    alert(t('reports.common.pleaseEnterUrl', 'Please enter a URL')); 
+    alert(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL')); 
     return; 
   }
   
@@ -202,7 +202,7 @@ async function analyze() {
         loader.showError(t('errors.scanQuotaExceeded', 'Daily scan limit reached ({{limit}} scans). Upgrade to Pro for unlimited scans.').replace('{{limit}}', limit), { isQuotaError: true });
         return;
       }
-      const errorMsg = errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed - please try again');
+      const errorMsg = errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed');
       throw new Error(errorMsg);
     }
     
@@ -292,7 +292,7 @@ function displayResults(data) {
   if (screenshotUrl) {
     document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
   }
-  const screenshots = screenshotUrl ? [{ src: screenshotUrl, alt: t('reports.common.screenshotOf', 'Screenshot of') + ' ' + reportUrl, device: '' }] : [];
+  const screenshots = screenshotUrl ? [{ src: screenshotUrl, alt: t('reports.common.screenshotOf', 'Screenshot of {{url}}') + ' ' + reportUrl, device: '' }] : [];
 
   if (window.ReportContainer && typeof window.ReportContainer.create === 'function') {
     const summary = [
@@ -537,23 +537,23 @@ function createOverviewSection(data) {
           <h3 style="color: ${gradeColor}; margin: 0 0 1rem 0; font-size: 1.3rem;">${t('reports.localSeo.quickStats', 'Quick Stats')}</h3>
           <div style="display: grid; gap: 0.75rem;">
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">${t('reports.localSeo.overallGrade', 'Overall Grade')}</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.localSeo.overallGrade', 'Overall Grade')}</span>
               <span style="color: ${gradeColor}; font-weight: bold;">${data.grade}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">${t('reports.localSeo.phoneNumbersFound', 'Phone Numbers Found')}</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.localSeo.phoneNumbersFound', 'Phone Numbers Found')}</span>
               <span style="color: ${nap.phoneCount > 0 ? '#00ff41' : '#ff4444'}; font-weight: bold;">${nap.phoneCount}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">${t('reports.localSeo.businessAddress', 'Business Address')}</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.localSeo.businessAddress', 'Business Address')}</span>
               <span style="color: ${nap.hasAddress ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${nap.hasAddress ? t('reports.common.detected', 'Detected') : t('reports.common.notFound', 'Not Found')}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: #c0c0c0;">${t('reports.localSeo.localBusinessSchema', 'LocalBusiness Schema')}</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.localSeo.localBusinessSchema', 'LocalBusiness Schema')}</span>
               <span style="color: ${data.analysis.schema.hasLocalBusinessSchema ? '#00ff41' : '#ff4444'}; font-weight: bold;">${data.analysis.schema.hasLocalBusinessSchema ? t('reports.common.present', 'Present') : t('reports.common.missing', 'Missing')}</span>
             </div>
             <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-              <span style="color: #c0c0c0;">${t('reports.localSeo.googleMapsEmbed', 'Google Maps Embed')}</span>
+              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.localSeo.googleMapsEmbed', 'Google Maps Embed')}</span>
               <span style="color: ${presence.hasGoogleMap ? '#00ff41' : '#ff8c00'}; font-weight: bold;">${presence.hasGoogleMap ? t('reports.common.found', 'Found') : t('reports.common.notFound', 'Not Found')}</span>
             </div>
           </div>
@@ -581,20 +581,20 @@ function createQuickWinsSection(quickWins) {
       padding: 1.5rem 2rem;
       margin: 1rem 0 2rem 0;
     ">
-      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
         <span style="font-size: 1.75rem;">⚡</span>
-        <div style="margin: 0; color: #ffd700; font-size: 1.15rem; font-weight: 700;">${t('reports.common.highImpactLowEffort', 'High Impact • Low Effort')}</div>
+        <div style="margin: 0; color: #ffd700; font-size: 1.1rem; font-weight: 700;">${t('reports.common.highImpactLowEffort', 'High Impact • Low Effort')}</div>
       </div>
-      <p style="color: #c0c0c0; margin: 0 0 1.5rem 0; font-size: 0.95rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 1.5rem 0; font-size: 0.95rem;">
         ${t('reports.localSeo.quickFixesDescription', 'These quick fixes can boost your local search visibility fast.')}
       </p>
       
       <div style="display: grid; gap: 1rem;">
         ${translatedWins.map((win, index) => `
           <div style="
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--r-surface-2, #F8FAFC);
             border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 1.25rem;
             display: grid;
             grid-template-columns: auto 1fr auto;
@@ -606,7 +606,7 @@ function createQuickWinsSection(quickWins) {
               width: 50px;
               height: 50px;
               background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
-              border-radius: 10px;
+              border-radius: 12px;
               display: flex;
               align-items: center;
               justify-content: center;
@@ -617,7 +617,7 @@ function createQuickWinsSection(quickWins) {
             
             <!-- Content -->
             <div>
-              <h3 style="margin: 0 0 0.5rem 0; color: #fff; font-size: 1.1rem;">${win.title}</h3>
+              <h3 style="margin: 0 0 0.5rem 0; color: var(--r-text, #111827); font-size: 1.1rem;">${win.title}</h3>
               <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
                 <span style="
                   display: inline-flex;
@@ -655,7 +655,7 @@ function createQuickWinsSection(quickWins) {
                 border-radius: 6px;
                 padding: 0.75rem 1rem;
               ">
-                <div style="color: #808080; font-size: 0.75rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('reports.common.howToFix', 'How to fix:')}</div>
+                <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('reports.common.howToFix', 'How to fix:')}</div>
                 <ol style="margin: 0; padding-left: 1.25rem; color: #b0b0b0; font-size: 0.85rem; line-height: 1.6;">
                   ${win.steps.map(step => `<li>${step}</li>`).join('')}
                 </ol>
@@ -734,8 +734,8 @@ function createScoreBreakdownCards(scores) {
                 ${score}
               </text>
             </svg>
-            <div style="color: #ffffff; font-size: 1rem; font-weight: 600;">${cat.label}</div>
-            <div style="color: #808080; font-size: 0.8rem; margin-top: 0.25rem;">${cat.description}</div>
+            <div style="color: var(--r-text, #111827); font-size: 1rem; font-weight: 600;">${cat.label}</div>
+            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-top: 0.25rem;">${cat.description}</div>
           </div>
         `;
       }).join('')}
@@ -749,7 +749,7 @@ function renderNAPContent(analysis) {
   return `
     <div>
       <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.localSeo.contactInfoAnalysis', 'Contact Information Analysis')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.localSeo.napConsistencyDesc', 'NAP (Name, Address, Phone) consistency is crucial for local SEO. Ensure this information matches across all platforms.')}
       </p>
       
@@ -765,8 +765,8 @@ function renderNAPContent(analysis) {
             <span style="font-size: 1.5rem;">📞</span>
             <span style="color: #00ff41; font-weight: bold;">${t('reports.localSeo.phoneNumbers', 'Phone Numbers')}</span>
           </div>
-          <div style="font-size: 2rem; font-weight: 900; color: #ffffff; margin-bottom: 0.5rem;">${nap.phoneCount}</div>
-          <div style="color: #808080; font-size: 0.85rem;">${t('reports.localSeo.detectedOnPage', 'detected on page')}</div>
+          <div style="font-size: 2rem; font-weight: 900; color: var(--r-text, #111827); margin-bottom: 0.5rem;">${nap.phoneCount}</div>
+          <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.localSeo.detectedOnPage', 'detected on page')}</div>
           ${nap.phones.length > 0 ? `
             <div style="margin-top: 1rem; display: flex; flex-wrap: wrap; gap: 0.5rem;">
               ${nap.phones.map(phone => `
@@ -798,7 +798,7 @@ function renderNAPContent(analysis) {
             ${nap.hasAddress ? '✅ ' + t('reports.common.detected', 'Detected') : '⚠️ ' + t('reports.common.notFound', 'Not Found')}
           </div>
           ${nap.zipCodes.length > 0 ? `
-            <div style="margin-top: 0.5rem; color: #c0c0c0; font-size: 0.85rem;">
+            <div style="margin-top: 0.5rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">
               ${t('reports.localSeo.zipCodes', 'ZIP Codes')}: ${nap.zipCodes.join(', ')}
             </div>
           ` : ''}
@@ -813,7 +813,7 @@ function renderNAPContent(analysis) {
       ">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem;">
           <span style="font-size: 1.2rem;">✉️</span>
-          <span style="color: #c0c0c0; font-weight: bold;">${t('reports.localSeo.emailAddresses', 'Email Addresses')}</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-weight: bold;">${t('reports.localSeo.emailAddresses', 'Email Addresses')}</span>
         </div>
         ${nap.emails.length > 0 ? `
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -828,7 +828,7 @@ function renderNAPContent(analysis) {
             `).join('')}
           </div>
         ` : `
-          <span style="color: #808080; font-size: 0.9rem;">${t('reports.localSeo.noEmailsDetected', 'No email addresses detected on page')}</span>
+          <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">${t('reports.localSeo.noEmailsDetected', 'No email addresses detected on page')}</span>
         `}
       </div>
     </div>
@@ -847,7 +847,7 @@ function renderSchemaContent(schema) {
   return `
     <div>
       <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.localSeo.structuredDataAnalysis', 'Structured Data Analysis')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.localSeo.schemaDescription', 'Schema markup helps search engines understand your business. LocalBusiness schema is essential for local pack results.')}
       </p>
       
@@ -859,7 +859,7 @@ function renderSchemaContent(schema) {
           padding: 1rem;
           margin-bottom: 1rem;
         ">
-          <span style="color: #808080; font-size: 0.85rem;">${t('reports.localSeo.businessNameInSchema', 'Business Name in Schema')}:</span>
+          <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.localSeo.businessNameInSchema', 'Business Name in Schema')}:</span>
           <div style="color: #00ff41; font-size: 1.1rem; font-weight: bold; margin-top: 0.25rem;">${schema.businessName}</div>
         </div>
       ` : ''}
@@ -875,7 +875,7 @@ function renderSchemaContent(schema) {
             border-radius: 6px;
             border-left: 3px solid ${item.value ? '#00ff41' : (item.critical ? '#ff4444' : '#ff8c00')};
           ">
-            <span style="color: #c0c0c0;">${item.label}</span>
+            <span style="color: var(--r-text-muted, #6B7280);">${item.label}</span>
             <span style="
               color: ${item.value ? '#00ff41' : '#ff4444'};
               font-weight: bold;
@@ -900,7 +900,7 @@ function renderSchemaContent(schema) {
           <div style="display: flex; align-items: center; gap: 0.5rem; color: #ff4444; font-weight: bold; margin-bottom: 0.5rem;">
             <span>⚠️</span> ${t('reports.localSeo.criticalSchemaMissing', 'Critical: LocalBusiness Schema Missing')}
           </div>
-          <p style="color: #c0c0c0; margin: 0; font-size: 0.9rem;">
+          <p style="color: var(--r-text-muted, #6B7280); margin: 0; font-size: 0.9rem;">
             ${t('reports.localSeo.schemaMissingDesc', 'Without LocalBusiness schema, Google may not fully understand your business type and location, reducing your chances of appearing in local pack results.')}
           </p>
         </div>
@@ -920,7 +920,7 @@ function renderLocalPresenceContent(presence) {
   return `
     <div>
       <h3 style="color: #00ff41; margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.localSeo.localPresenceSignals', 'Local Presence Signals')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.localSeo.presenceSignalsDesc', 'These signals help establish your local presence and build trust with potential customers.')}
       </p>
       
@@ -938,7 +938,7 @@ function renderLocalPresenceContent(presence) {
           ">
             <span style="font-size: 1.5rem;">${signal.icon}</span>
             <div style="flex: 1;">
-              <div style="color: #ffffff; font-weight: 600;">${signal.label}</div>
+              <div style="color: var(--r-text, #111827); font-weight: 600;">${signal.label}</div>
               <div style="color: ${signal.value ? '#00ff41' : '#ff8c00'}; font-size: 0.85rem;">
                 ${signal.value ? '✅ ' + t('reports.common.found', 'Found') : '⚠️ ' + t('reports.common.notFound', 'Not Found')}
               </div>
@@ -950,7 +950,7 @@ function renderLocalPresenceContent(presence) {
               border-radius: 4px;
               font-size: 0.7rem;
               font-weight: 600;
-            ">${signal.impact === 'High' ? t('reports.common.highImpact', 'High Impact') : t('reports.common.mediumImpact', 'Medium Impact')}</span>
+            ">${signal.impact === 'High' ? t('reports.common.highImpact', 'High impact') : t('reports.common.mediumImpact', 'Medium Impact')}</span>
           </div>
         `).join('')}
       </div>
@@ -963,7 +963,7 @@ function renderLocalPresenceContent(presence) {
       ">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
           <span style="font-size: 1.2rem;">📱</span>
-          <span style="color: #c0c0c0; font-weight: bold;">${t('reports.localSeo.socialProfilesLinked', 'Social Profiles Linked')}</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-weight: bold;">${t('reports.localSeo.socialProfilesLinked', 'Social Profiles Linked')}</span>
           <span style="
             background: rgba(0, 217, 255, 0.15);
             color: #00d9ff;
@@ -971,7 +971,7 @@ function renderLocalPresenceContent(presence) {
             border-radius: 4px;
             font-size: 0.75rem;
             font-weight: 600;
-          ">${presence.socialProfiles.length} ${t('reports.common.found', 'found')}</span>
+          ">${presence.socialProfiles.length} ${t('reports.common.found', 'Found')}</span>
         </div>
         ${presence.socialProfiles.length > 0 ? `
           <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -987,7 +987,7 @@ function renderLocalPresenceContent(presence) {
             `).join('')}
           </div>
         ` : `
-          <p style="color: #808080; margin: 0; font-size: 0.9rem;">
+          <p style="color: var(--r-text-faint, #9CA3AF); margin: 0; font-size: 0.9rem;">
             ${t('reports.localSeo.noSocialProfilesDesc', 'No social media profile links detected. Consider adding links to your business profiles on Facebook, Instagram, LinkedIn, or Yelp to improve local trust signals.')}
           </p>
         `}
@@ -1002,7 +1002,7 @@ function renderRecommendationsContent(recommendations) {
 
   if (!recommendations || recommendations.length === 0) {
     return `
-      <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+      <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           <span style="font-size: 1.5rem;">✓</span> ${t('reports.localSeo.excellentLocalSeo', 'Excellent Local SEO!')}
         </h3>
@@ -1022,7 +1022,7 @@ function renderRecommendationsContent(recommendations) {
     <div class="local-seo-fixes-container" style="margin-top: 1rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
         <span style="font-size: 1.75rem;">🔍</span> ${t('reports.localSeo.localSeoFixes', 'Local SEO Fixes')}
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('reports.common.improvementsFound', '{{count}} improvements found', { count: allRecs.length })})</span>
+        <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${t('reports.common.improvementsFound', '{{count}} improvements found', { count: allRecs.length })})</span>
       </h3>
       <div class="local-seo-fixes-list">
   `;
@@ -1240,21 +1240,21 @@ function renderLocalSeoFixAccordion(rec, index) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${translatedFix.title}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${t('reports.localSeo.localSeoOptimization', 'Local SEO Optimization')}</p>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${translatedFix.title}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.localSeo.localSeoOptimization', 'Local SEO Optimization')}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
           ">${severityLabel.toUpperCase()}</span>
-          <span class="local-seo-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+          <span class="local-seo-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
         </div>
       </div>
 
@@ -1272,31 +1272,31 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
   const translatedFix = getTranslatedFix(rec);
 
   return `
-    <div class="local-seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+    <div class="local-seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="local-seo-fix-tab active" data-action="switch-local-seo-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
         background: rgba(255,255,255,0.1);
-        color: #fff;
+        color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
       <button class="local-seo-fix-tab" data-action="switch-local-seo-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
       <button class="local-seo-fix-tab" data-action="switch-local-seo-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">📖 ${t('reports.common.tabs.guide', 'Guide')}</button>
@@ -1304,9 +1304,9 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
 
     <!-- Summary Tab -->
     <div class="local-seo-fix-tab-content active" id="${accordionId}-summary" style="display: block;">
-      <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem;">
+      <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; padding: 1rem;">
         <h5 style="margin: 0 0 0.75rem 0; color: #00ff41; font-size: 0.95rem;">${t('reports.common.whatsTheIssue', "What's the issue?")}</h5>
-        <p style="margin: 0 0 1rem 0; color: #c0c0c0; font-size: 0.9rem; line-height: 1.6;">${translatedFix.description}</p>
+        <p style="margin: 0 0 1rem 0; color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6;">${translatedFix.description}</p>
         <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
           <span style="background: rgba(0,255,65,0.1); color: #00ff41; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">${t('reports.common.impact', 'Impact')}: ${rec.priority === 'critical' || rec.priority === 'high' ? t('reports.common.high', 'High') : t('reports.common.medium', 'Medium')}</span>
           <span style="background: rgba(59,130,246,0.1); color: #3b82f6; padding: 0.25rem 0.75rem; border-radius: 4px; font-size: 0.8rem;">${t('reports.common.category', 'Category')}: ${t('reports.localSeo.localSeo', 'Local SEO')}</span>
@@ -1318,7 +1318,7 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
     <div class="local-seo-fix-tab-content" id="${accordionId}-code" style="display: none;">
       <div style="display: grid; gap: 1rem;">
         <!-- Recommended Fix -->
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
             <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.recommendedImplementation', 'Recommended Implementation')}</span>
             <button data-action="copy-local-seo-code" data-code-id="${accordionId}-solution" style="
@@ -1326,20 +1326,20 @@ function renderLocalSeoFixTabs(accordionId, rec, codeSnippet, steps) {
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.05);
-              color: #fff;
+              color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
             ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeLocalSeoHtml(codeSnippet)}</pre>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeLocalSeoHtml(codeSnippet)}</pre>
         </div>
       </div>
     </div>
 
     <!-- Guide Tab -->
     <div class="local-seo-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.stepByStepFix', 'Step-by-Step Fix')}:</h5>
-      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--r-text, #111827);">${t('reports.common.stepByStepFix', 'Step-by-Step Fix')}:</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: var(--r-text-muted, #6B7280); line-height: 1.8;">
         ${steps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
       </ol>
     </div>

@@ -228,7 +228,7 @@ function getPopularProviders() {
       rating: 4.4,
       highlights: [
         t('reports.hosting.highlights.excellentSupport', 'Excellent support'),
-        t('reports.hosting.highlights.googleCloud', 'Google Cloud'),
+        t('reports.hosting.highlights.googleCloud', 'Google Cloud Platform'),
         t('reports.hosting.highlights.freeCdnEmail', 'Free CDN & Email')
       ],
       bestFor: ['WordPress', t('reports.hosting.bestFor.smallBusiness', 'Small business'), t('reports.hosting.bestFor.beginners', 'Beginners')]
@@ -593,7 +593,7 @@ function renderPopularProviders() {
     : POPULAR_PROVIDERS.filter(p => p.tags && p.tags.includes(currentFilter));
 
   if (filteredProviders.length === 0) {
-    container.innerHTML = `<p style="color: #808080; text-align: center; padding: 2rem;">${t('reports.hosting.noProvidersMatch', 'No providers match this filter. Try another category.')}</p>`;
+    container.innerHTML = `<p style="color: var(--r-text-faint, #9CA3AF); text-align: center; padding: 2rem;">${t('reports.hosting.noProvidersMatch', 'No providers match this filter. Try another category.')}</p>`;
     return;
   }
 
@@ -605,19 +605,19 @@ function renderPopularProviders() {
       <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
         <div style="font-size: 2.5rem;">${provider.logo}</div>
         <div style="flex: 1;">
-          <div style="font-size: 1.25rem; font-weight: bold; color: #ffffff;">${provider.name}</div>
-          <div style="font-size: 0.85rem; color: #808080;">${provider.category}</div>
+          <div style="font-size: 1.25rem; font-weight: bold; color: var(--r-text, #111827);">${provider.name}</div>
+          <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${provider.category}</div>
         </div>
       </div>
 
       <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
         <span style="color: #ffd700; font-size: 1rem;">${getRatingStars(provider.rating)}</span>
-        <span style="color: #ffffff; font-weight: 600;">${provider.rating}</span>
+        <span style="color: var(--r-text, #111827); font-weight: 600;">${provider.rating}</span>
       </div>
 
       <div style="background: rgba(0, 217, 255, 0.1); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: #808080; font-size: 0.85rem;">${t('reports.hosting.pricing.startingAt', 'Starting at')}</span>
+          <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.hosting.pricing.startingAt', 'Starting at')}</span>
           <span style="font-size: 1.5rem; font-weight: bold; color: #00d9ff;">${provider.startingPrice === 0 ? `<span style="color: #00ff41;">${t('reports.hosting.pricing.free', 'FREE')}</span>` : `$${provider.startingPrice}/${t('reports.hosting.pricing.mo', 'mo')}`}</span>
         </div>
       </div>
@@ -628,7 +628,7 @@ function renderPopularProviders() {
         `).join('')}
       </div>
 
-      <div style="font-size: 0.8rem; color: #808080; margin-bottom: 0.75rem;">
+      <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.75rem;">
         <strong>${t('reports.hosting.bestForLabel', 'Best for')}:</strong> ${provider.bestFor.join(', ')}
       </div>
 
@@ -684,7 +684,7 @@ async function analyzeHosting() {
   };
 
   if (!input) {
-    showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid website URL or domain name'));
+    showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
     return;
   }
 
@@ -924,9 +924,9 @@ function displayHostingResults(data) {
       <div style="background: rgba(0, 255, 65, 0.05); border: 1px solid rgba(0, 255, 65, 0.2); border-radius: 8px; padding: 1rem; margin-bottom: 1.5rem;">
         <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
           <span style="color: #00ff41;">${t('reports.common.analyzed', 'Analyzed')}:</span>
-          <span style="color: #ffffff;">${data.hostname || data.url || 'N/A'}</span>
-          <span style="color: #00ff41;">${t('reports.common.timestamp', 'Timestamp')}:</span>
-          <span style="color: #ffffff;">${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString()}</span>
+          <span style="color: var(--r-text, #111827);">${data.hostname || data.url || 'N/A'}</span>
+          <span style="color: #00ff41;">${t('reports.common.timestamp', 'timestamp')}:</span>
+          <span style="color: var(--r-text, #111827);">${window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString()}</span>
         </div>
       </div>
 
@@ -940,7 +940,7 @@ function displayHostingResults(data) {
             ${activeFilters.map(filter => `
               <div style="background: rgba(153, 51, 255, 0.15); border: 1px solid rgba(153, 51, 255, 0.4); padding: 0.4rem 0.75rem; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem;">
                 <span style="font-size: 0.85rem;">${filter.icon}</span>
-                <span style="color: #808080; font-size: 0.8rem;">${filter.label}:</span>
+                <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">${filter.label}:</span>
                 <span style="color: #bb77ff; font-size: 0.85rem; font-weight: 500;">${filter.value}</span>
               </div>
             `).join('')}
@@ -955,33 +955,33 @@ function displayHostingResults(data) {
             <div style="display: flex; align-items: center; gap: 1rem;">
               <div style="font-size: 3rem;">${trafficTier.icon || '◈'}</div>
               <div>
-                <div style="font-size: 0.85rem; color: #808080;">${t('reports.hosting.estimatedWebsiteTier', 'Estimated Website Tier')}</div>
+                <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.estimatedWebsiteTier', 'Estimated Website Tier')}</div>
                 <div style="font-size: 1.75rem; font-weight: bold; color: ${tierColor};">${trafficTier.name}</div>
-                <div style="font-size: 0.9rem; color: #808080; margin-top: 0.25rem;">${trafficTier.description}</div>
+                <div style="font-size: 0.9rem; color: var(--r-text-faint, #9CA3AF); margin-top: 0.25rem;">${trafficTier.description}</div>
               </div>
             </div>
-            <div style="background: rgba(0, 0, 0, 0.3); padding: 1rem 1.5rem; border-radius: 8px; text-align: center;">
-              <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.confidence', 'Confidence')}</div>
+            <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem 1.5rem; border-radius: 8px; text-align: center;">
+              <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.confidence', 'Confidence')}</div>
               <div style="font-size: 1.5rem; font-weight: bold; color: ${tierColor};">${data.tierConfidence || 70}%</div>
             </div>
           </div>
 
           ${trafficIndicators.length > 0 ? `
             <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px solid ${tierColor}30;">
-              <div style="font-size: 0.8rem; color: #808080; margin-bottom: 0.75rem;">${t('reports.hosting.detectionSignals', 'Detection Signals')}:</div>
+              <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.75rem;">${t('reports.hosting.detectionSignals', 'Detection Signals')}:</div>
               <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                 ${trafficIndicators.slice(0, 6).map(ind => `
-                  <div style="background: rgba(0, 0, 0, 0.3); padding: 0.4rem 0.75rem; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem;">
+                  <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.4rem 0.75rem; border-radius: 6px; display: flex; align-items: center; gap: 0.4rem;">
                     <span>${ind.icon || '•'}</span>
-                    <span style="color: #ffffff; font-size: 0.85rem;">${ind.signal}</span>
+                    <span style="color: var(--r-text, #111827); font-size: 0.85rem;">${ind.signal}</span>
                   </div>
                 `).join('')}
               </div>
             </div>
           ` : ''}
           
-          <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 6px;">
-            <div style="font-size: 0.8rem; color: #808080;">
+          <div style="margin-top: 1rem; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 6px;">
+            <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">
               <strong>${t('reports.hosting.recommendedBudget', 'Recommended hosting budget')}:</strong>
               <span style="color: ${tierColor}; font-weight: 600;">$${trafficTier.minMonthly || 0}+/${t('reports.hosting.pricing.month', 'month')}</span>
               ${trafficTier.characteristics ? ` • ${t('reports.hosting.typicalFor', 'Typical for')}: ${trafficTier.characteristics.slice(0, 2).join(', ')}` : ''}
@@ -997,8 +997,8 @@ function displayHostingResults(data) {
             <span style="font-size: 1.25rem;">◉</span>
             <div>
               <div style="color: #ffa500; font-weight: 600; margin-bottom: 0.25rem;">${t('reports.hosting.trafficAppropriateRecommendations', 'Traffic-Appropriate Recommendations')}</div>
-              <div style="color: #808080; font-size: 0.9rem;">${tierWarning.message}</div>
-              ${tierWarning.hiddenCount ? `<div style="color: #808080; font-size: 0.8rem; margin-top: 0.5rem;">(${tierWarning.hiddenCount} budget options hidden as inadequate for this tier)</div>` : ''}
+              <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">${tierWarning.message}</div>
+              ${tierWarning.hiddenCount ? `<div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-top: 0.5rem;">(${tierWarning.hiddenCount} budget options hidden as inadequate for this tier)</div>` : ''}
             </div>
           </div>
         </div>
@@ -1011,24 +1011,24 @@ function displayHostingResults(data) {
           <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
             <div style="font-size: 3rem;">${cms?.icon || '🔍'}</div>
             <div>
-              <div style="font-size: 0.85rem; color: #808080;">${t('reports.hosting.detectedCms', 'Detected CMS')}</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">${cms?.name || t('reports.hosting.unknownCustom', 'Unknown / Custom')}</div>
+              <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.detectedCms', 'Detected CMS')}</div>
+              <div style="font-size: 1.5rem; font-weight: bold; color: var(--r-text, #111827);">${cms?.name || t('reports.hosting.unknownCustom', 'Unknown / Custom')}</div>
             </div>
           </div>
           ${cms ? `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem;">
-              <div style="background: rgba(0, 0, 0, 0.3); padding: 0.75rem; border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.marketShare', 'Market Share')}</div>
+              <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 6px;">
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.marketShare', 'Market Share')}</div>
                 <div style="font-size: 1.25rem; font-weight: bold; color: #00d9ff;">${cms.marketShare || 'N/A'}</div>
               </div>
-              <div style="background: rgba(0, 0, 0, 0.3); padding: 0.75rem; border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.confidence', 'Confidence')}</div>
+              <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 6px;">
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.confidence', 'Confidence')}</div>
                 <div style="font-size: 1.25rem; font-weight: bold; color: #9933ff;">${cms.confidence || 0}%</div>
               </div>
             </div>
             ${cms.matchedPatterns?.length > 0 ? `
-              <div style="margin-top: 1rem; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080; margin-bottom: 0.5rem;">${t('reports.hosting.detectionSignals', 'Detection Signals')}</div>
+              <div style="margin-top: 1rem; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 6px;">
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem;">${t('reports.hosting.detectionSignals', 'Detection Signals')}</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
                   ${cms.matchedPatterns.slice(0, 5).map(p => `
                     <span style="background: rgba(153, 51, 255, 0.2); color: #9933ff; padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.7rem; font-family: monospace;">${p}</span>
@@ -1037,7 +1037,7 @@ function displayHostingResults(data) {
               </div>
             ` : ''}
           ` : `
-            <div style="color: #808080; font-size: 0.9rem; margin-top: 0.5rem;">
+            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem; margin-top: 0.5rem;">
               ${t('reports.hosting.noCmsDetected', 'Could not detect a known CMS. This site may be using a custom-built platform or a CMS not in our database.')}
             </div>
           `}
@@ -1048,23 +1048,23 @@ function displayHostingResults(data) {
           <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
             <div style="font-size: 3rem;">${currentHost ? '🏢' : '❓'}</div>
             <div>
-              <div style="font-size: 0.85rem; color: #808080;">${t('reports.hosting.currentHost', 'Current Host')}</div>
-              <div style="font-size: 1.5rem; font-weight: bold; color: #ffffff;">${currentHost?.name || t('reports.hosting.notDetected', 'Not Detected')}</div>
+              <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.currentHost', 'Current Host')}</div>
+              <div style="font-size: 1.5rem; font-weight: bold; color: var(--r-text, #111827);">${currentHost?.name || t('reports.hosting.notDetected', 'Not Detected')}</div>
             </div>
           </div>
           ${currentHost ? `
             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; margin-top: 1rem;">
-              <div style="background: rgba(0, 0, 0, 0.3); padding: 0.75rem; border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.category', 'Category')}</div>
+              <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 6px;">
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.category', 'Category')}</div>
                 <div style="font-size: 1rem; font-weight: 600; color: #00ff41;">${currentHost.category}</div>
               </div>
-              <div style="background: rgba(0, 0, 0, 0.3); padding: 0.75rem; border-radius: 6px;">
-                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.detectedVia', 'Detected Via')}</div>
+              <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 6px;">
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.detectedVia', 'Detected Via')}</div>
                 <div style="font-size: 1rem; font-weight: 600; color: #00d9ff;">${currentHost.detectedVia}</div>
               </div>
             </div>
           ` : `
-            <div style="color: #808080; font-size: 0.9rem; margin-top: 0.5rem;">
+            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem; margin-top: 0.5rem;">
               ${t('reports.hosting.noHostDetected', 'Unable to determine current hosting provider from DNS records. The site may be behind a CDN or using custom infrastructure.')}
             </div>
           `}
@@ -1079,27 +1079,27 @@ function displayHostingResults(data) {
     html += `
       <div class="section" style="background: rgba(255, 165, 0, 0.08); border: 1px solid rgba(255, 165, 0, 0.3); border-radius: 12px; padding: 1.5rem; margin-bottom: 2rem;">
         <h3 style="color: #ffa500; margin: 0 0 0.5rem 0;">💰 ${t('reports.hosting.pricingOverview', 'Pricing Overview')} ${cms ? t('reports.hosting.forHosting', 'for {{name}} Hosting', { name: cms.name }) : ''}</h3>
-        ${tierMinLabel ? `<div style="font-size: 0.85rem; color: #808080; margin-bottom: 1rem;">${tierMinLabel}</div>` : ''}
+        ${tierMinLabel ? `<div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 1rem;">${tierMinLabel}</div>` : ''}
         <div class="price-stats">
           <div class="price-stat-card">
-            <div style="font-size: 0.8rem; color: #808080;">${priceComparison.tierMinimum > 0 ? t('reports.hosting.tierMinimumLabel', 'Tier Minimum') : t('reports.hosting.lowestPrice', 'Lowest Price')}</div>
+            <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${priceComparison.tierMinimum > 0 ? t('reports.hosting.tierMinimumLabel', 'Tier Minimum') : t('reports.hosting.lowestPrice', 'Lowest Price')}</div>
             <div style="font-size: 1.75rem; font-weight: bold; color: #00ff41;">$${priceComparison.lowestPrice}</div>
-            <div style="font-size: 0.75rem; color: #808080;">/${t('reports.hosting.pricing.month', 'month')}</div>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">/${t('reports.hosting.pricing.month', 'month')}</div>
           </div>
           <div class="price-stat-card">
-            <div style="font-size: 0.8rem; color: #808080;">${t('reports.hosting.averagePrice', 'Average Price')}</div>
+            <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.averagePrice', 'Average Price')}</div>
             <div style="font-size: 1.75rem; font-weight: bold; color: #ffa500;">$${priceComparison.averagePrice}</div>
-            <div style="font-size: 0.75rem; color: #808080;">/${t('reports.hosting.pricing.month', 'month')}</div>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">/${t('reports.hosting.pricing.month', 'month')}</div>
           </div>
           <div class="price-stat-card">
-            <div style="font-size: 0.8rem; color: #808080;">${t('reports.hosting.premiumPrice', 'Premium Price')}</div>
+            <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.premiumPrice', 'Premium Price')}</div>
             <div style="font-size: 1.75rem; font-weight: bold; color: #9933ff;">$${priceComparison.highestPrice}</div>
-            <div style="font-size: 0.75rem; color: #808080;">/${t('reports.hosting.pricing.month', 'month')}</div>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">/${t('reports.hosting.pricing.month', 'month')}</div>
           </div>
           <div class="price-stat-card">
-            <div style="font-size: 0.8rem; color: #808080;">${t('reports.hosting.budgetOptions', 'Budget Options')}</div>
+            <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.budgetOptions', 'Budget Options')}</div>
             <div style="font-size: 1.75rem; font-weight: bold; color: #00d9ff;">${priceComparison.budgetOptions}</div>
-            <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.under5mo', 'under $5/mo')}</div>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.under5mo', 'under $5/mo')}</div>
           </div>
         </div>
       </div>
@@ -1111,19 +1111,19 @@ function displayHostingResults(data) {
     html += `
       <div class="savings-card" style="margin-bottom: 2rem;">
         <h3 style="color: #00ff41; margin: 0 0 1rem 0;">💸 ${t('reports.hosting.potentialSavings', 'Potential Savings Opportunities')}</h3>
-        <p style="color: #808080; font-size: 0.9rem; margin-bottom: 1rem;">${t('reports.hosting.savingsDescription', 'Based on your current hosting, here are alternatives that could save you money')}:</p>
+        <p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem; margin-bottom: 1rem;">${t('reports.hosting.savingsDescription', 'Based on your current hosting, here are alternatives that could save you money')}:</p>
         <div style="display: grid; gap: 1rem;">
           ${savingsOpportunities.map(opp => `
-            <div style="background: rgba(0, 0, 0, 0.3); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
               <div>
-                <div style="font-weight: 600; color: #ffffff;">${opp.provider}</div>
-                <div style="font-size: 0.85rem; color: #808080;">${opp.category} • ★ ${opp.rating}</div>
+                <div style="font-weight: 600; color: var(--r-text, #111827);">${opp.provider}</div>
+                <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${opp.category} • ★ ${opp.rating}</div>
               </div>
               <div style="text-align: center;">
-                <div style="font-size: 0.75rem; color: #808080;">${t('reports.hosting.currentToNew', 'Current → New')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.hosting.currentToNew', 'Current → New')}</div>
                 <div style="font-size: 1rem;">
                   <span style="color: #ff4444; text-decoration: line-through;">$${opp.currentPrice}</span>
-                  <span style="color: #808080;"> → </span>
+                  <span style="color: var(--r-text-faint, #9CA3AF);"> → </span>
                   <span style="color: #00ff41; font-weight: bold;">$${opp.newPrice}</span>
                 </div>
               </div>
@@ -1142,7 +1142,7 @@ function displayHostingResults(data) {
   if (recommendedHosts.length > 0) {
     html += `
       <div class="section" style="margin-bottom: 2rem;">
-        <h3 style="color: #ffffff; margin: 0 0 1rem 0;">🏆 ${t('reports.hosting.topRecommendedHosts', 'Top Recommended Hosts')} ${cms ? t('reports.hosting.forPlatform', 'for {{name}}', { name: cms.name }) : ''}</h3>
+        <h3 style="color: var(--r-text, #111827); margin: 0 0 1rem 0;">🏆 ${t('reports.hosting.topRecommendedHosts', 'Top Recommended Hosts')} ${cms ? t('reports.hosting.forPlatform', 'for {{name}}', { name: cms.name }) : ''}</h3>
         <div class="providers-grid">
           ${recommendedHosts.slice(0, 6).map((host, index) => `
             <div class="provider-card ${index === 0 ? 'top-pick' : ''}">
@@ -1152,12 +1152,12 @@ function displayHostingResults(data) {
               <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
                 <div style="font-size: 2rem;">${getCategoryIcon(host.category)}</div>
                 <div style="flex: 1;">
-                  <div style="font-size: 1.25rem; font-weight: bold; color: #ffffff;">${host.name}</div>
-                  <div style="font-size: 0.85rem; color: #808080;">${host.category}</div>
+                  <div style="font-size: 1.25rem; font-weight: bold; color: var(--r-text, #111827);">${host.name}</div>
+                  <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${host.category}</div>
                 </div>
                 ${host.matchScore ? `
                   <div style="background: rgba(0, 255, 65, 0.15); border: 1px solid rgba(0, 255, 65, 0.3); padding: 0.4rem 0.6rem; border-radius: 6px;">
-                    <div style="font-size: 0.7rem; color: #808080; text-align: center;">${t('reports.hosting.match', 'Match')}</div>
+                    <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF); text-align: center;">${t('reports.hosting.match', 'Match')}</div>
                     <div style="font-size: 1rem; font-weight: bold; color: #00ff41;">${Math.round(host.matchScore)}%</div>
                   </div>
                 ` : ''}
@@ -1165,13 +1165,13 @@ function displayHostingResults(data) {
 
               <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 1rem;">
                 <span style="color: #ffd700; font-size: 1rem;">${getRatingStars(host.rating)}</span>
-                <span style="color: #ffffff; font-weight: 600;">${host.rating}</span>
-                <span style="color: #808080; font-size: 0.85rem;">• ${host.uptime} ${t('reports.hosting.uptime', 'uptime')}</span>
+                <span style="color: var(--r-text, #111827); font-weight: 600;">${host.rating}</span>
+                <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">• ${host.uptime} ${t('reports.hosting.uptime', 'uptime')}</span>
               </div>
 
               ${host.matchReasons && host.matchReasons.length > 0 ? `
                 <div style="background: rgba(153, 51, 255, 0.1); border: 1px solid rgba(153, 51, 255, 0.3); border-radius: 6px; padding: 0.6rem; margin-bottom: 1rem;">
-                  <div style="font-size: 0.7rem; color: #808080; margin-bottom: 0.4rem;">${t('reports.hosting.whyThisProvider', 'Why this provider')}:</div>
+                  <div style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.4rem;">${t('reports.hosting.whyThisProvider', 'Why this provider')}:</div>
                   <div style="display: flex; flex-wrap: wrap; gap: 0.3rem;">
                     ${host.matchReasons.slice(0, 3).map(reason => `
                       <span style="background: rgba(153, 51, 255, 0.2); color: #bb77ff; padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem;">▸ ${reason}</span>
@@ -1182,10 +1182,10 @@ function displayHostingResults(data) {
 
               <div style="background: rgba(0, 217, 255, 0.1); border: 1px solid rgba(0, 217, 255, 0.3); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
-                  <span style="color: #808080; font-size: 0.85rem;">${t('reports.hosting.pricing.startingAt', 'Starting at')}</span>
+                  <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${t('reports.hosting.pricing.startingAt', 'Starting at')}</span>
                   <span style="font-size: 1.5rem; font-weight: bold; color: #00d9ff;">${formatPrice(host.cheapestPlan?.price)}</span>
                 </div>
-                <div style="font-size: 0.8rem; color: #808080;">
+                <div style="font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF);">
                   ${host.cheapestPlan?.name}: ${host.cheapestPlan?.storage} ${t('reports.hosting.storage', 'storage')}
                 </div>
               </div>
@@ -1245,8 +1245,8 @@ function displayHostingResults(data) {
   if (allProviders.length > 0) {
     html += `
       <div class="section">
-        <h3 style="color: #ffffff; margin: 0 0 1rem 0;">📝 ${t('reports.hosting.completeProviderComparison', 'Complete Provider Comparison')} (${allProviders.length} ${t('reports.hosting.matchingProviders', 'matching providers')})</h3>
-        <div style="overflow-x: auto; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.1);">
+        <h3 style="color: var(--r-text, #111827); margin: 0 0 1rem 0;">📝 ${t('reports.hosting.completeProviderComparison', 'Complete Provider Comparison')} (${allProviders.length} ${t('reports.hosting.matchingProviders', 'matching providers')})</h3>
+        <div style="overflow-x: auto; border-radius: 12px; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
           <table class="comparison-table">
             <thead>
               <tr>
@@ -1264,8 +1264,8 @@ function displayHostingResults(data) {
               ${allProviders.slice(0, 20).map(provider => `
                 <tr>
                   <td>
-                    <div style="font-weight: 600; color: #ffffff;">${provider.name}</div>
-                    <div style="font-size: 0.75rem; color: #808080;">${provider.highlights?.[0] || ''}</div>
+                    <div style="font-weight: 600; color: var(--r-text, #111827);">${provider.name}</div>
+                    <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${provider.highlights?.[0] || ''}</div>
                   </td>
                   <td>
                     <span style="background: rgba(153, 51, 255, 0.2); color: #9933ff; padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${provider.category}</span>
@@ -1303,7 +1303,7 @@ function displayHostingResults(data) {
             </tbody>
           </table>
         </div>
-        <div style="margin-top: 1rem; padding: 1rem; background: rgba(0, 0, 0, 0.2); border-radius: 8px; font-size: 0.85rem; color: #808080;">
+        <div style="margin-top: 1rem; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">
           <strong>◎ ${t('reports.hosting.proTip', 'Pro Tip')}:</strong> ${t('reports.hosting.proTipText', 'Prices shown are starting prices with annual billing. Monthly billing is typically 20-30% higher. Match % indicates how well the provider fits your requirements. Consider your traffic needs, support requirements, and scaling plans when choosing a host.')}
         </div>
       </div>

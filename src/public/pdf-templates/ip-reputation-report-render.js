@@ -39,7 +39,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.reputation', 'This section evaluates the overall reputation of the analyzed IP address across multiple trust and threat dimensions. A high trust score indicates the IP is not associated with malicious activity, while elevated spam, malware, or phishing scores signal potential threats. Blacklist status checks confirm whether the IP appears on major DNS-based blackhole lists used by email providers and security gateways.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.reputation', 'IP reputation reflects how trusted your server\'s IP address is across the internet. This section evaluates trust scores, spam likelihood, malware association, and blacklist status. A poor IP reputation can cause email deliverability issues, search engine penalties, and may indicate shared hosting with malicious neighbors.')) + '</p>';
 
       // Metrics cards for trust/spam/malware/phishing scores
       html += PR.renderMetrics([
@@ -104,7 +104,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.security', 'This section examines the security posture of the target, focusing on SSL/TLS certificate validity, issuer information, and expiration status. A valid certificate with a trusted issuer and sufficient remaining validity ensures encrypted communications and user trust. Expired or self-signed certificates can trigger browser warnings and undermine confidence in the site.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.security', 'This security assessment examines your server\'s SSL/TLS configuration, DNS security, and email authentication setup. Proper security configuration protects your visitors and builds trust with search engines and email providers.')) + '</p>';
 
       // SSL Certificate details table
       if (Object.keys(ssl).length > 0) {
@@ -183,7 +183,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.infrastructure', 'This section provides information about the hosting infrastructure and network configuration of the target. Understanding the server environment, hosting provider, and geographic location helps assess reliability and performance. Key infrastructure details include the server software, operating system, content delivery network usage, and autonomous system information.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.infrastructure', 'Infrastructure analysis reveals details about your server\'s hosting environment, network configuration, and technical setup. Understanding your infrastructure helps identify potential single points of failure and optimization opportunities.')) + '</p>';
 
       if (Object.keys(infrastructure).length > 0) {
         // Build metrics from available infrastructure data
@@ -269,7 +269,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.dns', 'This section analyzes DNS configuration and email infrastructure. MX records determine where email is routed, and their configuration affects deliverability. DNSSEC provides cryptographic authentication of DNS responses, preventing cache poisoning and man-in-the-middle attacks. Properly configured DNS and email records are critical for communication security and reliability.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.dns', 'DNS and email configuration are critical for both deliverability and security. This section examines your MX records, DNSSEC status, and email authentication mechanisms (SPF, DKIM, DMARC). Proper configuration prevents email spoofing and improves deliverability.')) + '</p>';
 
       // DNSSEC status
       if (Object.keys(dnsSecurity).length > 0) {
@@ -334,7 +334,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.ports', 'This section identifies open network ports detected during the scan. Open ports expose services to the internet and represent potential entry points for attackers. While common ports like 80 (HTTP) and 443 (HTTPS) are expected, unnecessary open ports should be closed or firewalled. Each open port is listed with its associated service name and current status.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.ports', 'Open port analysis identifies network services exposed on your server. Unnecessary open ports increase your attack surface and may indicate misconfigured services. This section lists detected open ports and their associated services.')) + '</p>';
 
       if (openPorts.length > 0) {
         // Metrics
@@ -387,7 +387,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.recommendations', 'Based on the IP reputation analysis, this section provides prioritized recommendations to improve your security posture and reputation standing. Each recommendation includes the severity level and actionable guidance for implementation. Addressing critical and high-priority items first will provide the greatest improvement to your overall IP reputation and security.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.recommendations', 'Based on the IP reputation and security analysis, these recommendations prioritize improvements for your server\'s trustworthiness, security posture, and email deliverability.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Group by priority/severity
@@ -396,7 +396,7 @@
         var medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
         var low = recommendations.filter(function (r) { var p = r.priority || r.severity; return !p || p === 'low'; });
         var groups = [
-          { items: critical, label: t('common.pdf.execSummary.highPriority', 'Critical'), color: '#ef4444' },
+          { items: critical, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444' },
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
           { items: low, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6' }

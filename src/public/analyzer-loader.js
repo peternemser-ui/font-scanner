@@ -278,7 +278,7 @@ class AnalyzerLoader {
       
       const detail = step.querySelector('.step-detail');
       if (detail) {
-        detail.textContent = errorMessage || _t('loader.analysisFailed', 'Analysis failed');
+        detail.textContent = errorMessage || _t('loader.analysisFailed', 'Analysis Failed');
       }
     }
   }

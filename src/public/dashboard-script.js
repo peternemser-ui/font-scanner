@@ -185,21 +185,21 @@ function initializeDashboardContactForm() {
       const data = await resp.json().catch(() => ({}));
 
       if (!resp.ok || !data.success) {
-        const msg = data && data.message ? data.message : 'Failed to send message. Please try again.';
+        const msg = data && data.message ? data.message : t('dashboard.contact.failedToSend', 'Failed to send message. Please try again.');
         setStatus(msg, true);
         return;
       }
 
-      setStatus('Message sent. We’ll reply by email.');
+      setStatus(t('dashboard.contact.messageSent', 'Message sent. We\'ll reply by email.'));
       // Keep name/email for convenience; clear only the message
       const messageEl = document.getElementById('contactMessage');
       if (messageEl) messageEl.value = '';
     } catch (err) {
-      setStatus('Failed to send message. Please try again.', true);
+      setStatus(t('dashboard.contact.failedToSend', 'Failed to send message. Please try again.'), true);
     } finally {
       if (submitBtn) {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Send message';
+        submitBtn.textContent = t('dashboard.contact.sendMessage', 'Send message');
       }
     }
   });
@@ -430,12 +430,12 @@ async function runComprehensiveAnalysis() {
     
   } catch (error) {
     console.error('Dashboard analysis error:', error);
-    showError(error.message || 'Analysis failed. Please try again.');
+    showError(error.message || t('reports.common.analysisFailedRetry', 'Analysis failed. Please try again.'));
     window.AnalyzerLoader.hide();
   } finally {
     // Re-enable inputs
     submitButton.disabled = false;
-    submitButton.textContent = 'Run audit';
+    submitButton.textContent = t('dashboard.scan.runAudit', 'Run audit');
     urlInput.disabled = false;
   }
 }
@@ -444,9 +444,20 @@ async function runComprehensiveAnalysis() {
  * Display dashboard with actionable results
  */
 function displayDashboard(data) {
+  if (!data || typeof data !== 'object') return;
+
   const container = document.getElementById('dashboardResults');
+  if (!container) return;
   container.style.display = 'block';
   container.innerHTML = '';
+
+  // Defensive defaults for module data
+  data.font = data.font || {};
+  data.seo = data.seo || {};
+  data.performance = data.performance || {};
+  data.accessibility = data.accessibility || {};
+  data.security = data.security || {};
+  data.url = data.url || '';
 
   // Hide promotional sections after scan completes
   document.body.classList.add('scan-complete');
@@ -747,6 +758,9 @@ function displayDashboard(data) {
       this.style.background = defaultBg;
     });
   });
+
+  // Dispatch report:ready for PDF export and ReportJump triggers
+  document.dispatchEvent(new CustomEvent('report:ready', { detail: { type: 'dashboard', data } }));
 }
 
 /**
@@ -757,15 +771,15 @@ function createAnalyzerDial(name, scores, icon, link) {
   if (!scores || (scores.desktop === null && scores.mobile === null)) {
     return `
       <div style="text-align: center; opacity: 0.5;">
-        <div style="margin-bottom: 0.5rem; font-weight: 600; color: #808080; font-size: 0.85rem;">${icon} ${name}</div>
+        <div style="margin-bottom: 0.5rem; font-weight: 600; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${icon} ${name}</div>
         <div style="
           width: 140px; height: 140px; border-radius: 50%; margin: 0 auto;
-          background: rgba(0,0,0,0.3); border: 2px dashed rgba(255,255,255,0.2);
+          background: var(--r-surface-2, #F8FAFC); border: 2px dashed rgba(255,255,255,0.2);
           display: flex; align-items: center; justify-content: center;
         ">
-          <span style="color: #808080; font-size: 0.9rem;">N/A</span>
+          <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">N/A</span>
         </div>
-        <div style="margin-top: 0.35rem; color: #808080; font-size: 0.85rem;">Error</div>
+        <div style="margin-top: 0.35rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">Error</div>
       </div>
     `;
   }
@@ -867,7 +881,7 @@ function createCategoryLink(title, description, link, scores, icon) {
       padding: 1.25rem 1.5rem;
       background: ${linkBg};
       border: 1px solid ${linkBorder};
-      border-radius: 10px;
+      border-radius: 12px;
       text-decoration: none;
       transition: all 0.2s ease;
     "
@@ -1510,7 +1524,7 @@ function generateImprovementGuide(data) {
           <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
         </svg>
         <p style="color: var(--accent-primary); margin: 0; font-weight: 600;">Excellent work!</p>
-        <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0;">Your site is performing well across all categories. Keep monitoring for changes.</p>
+        <p style="color: var(--text-secondary); margin: 0.5rem 0 0 0;">Your site is performing well across all categories. Run detailed scans for deeper insights.</p>
       </div>
     `;
   }
@@ -1518,7 +1532,7 @@ function generateImprovementGuide(data) {
   return `
     <p style="color: var(--text-secondary); font-size: 0.85rem; margin: 0 0 1rem 0;">Click each category to see what to fix and why it matters.</p>
     ${improvements.map((imp, idx) => `
-    <details style="background: rgba(0, 0, 0, 0.2); border-radius: 8px; margin-bottom: 0.5rem;" ${idx === 0 ? 'open' : ''}>
+    <details style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; margin-bottom: 0.5rem;" ${idx === 0 ? 'open' : ''}>
       <summary style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; cursor: pointer; list-style: none;">
         <div style="display: flex; align-items: center; gap: 0.5rem;">
           <span style="color: var(--color-warning, #ffa500);">${imp.icon}</span>
@@ -1527,7 +1541,7 @@ function generateImprovementGuide(data) {
         </div>
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="transition: transform 0.2s;"><path d="M6 9l6 6 6-6"/></svg>
       </summary>
-      <div style="padding: 0 1rem 1rem 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
+      <div style="padding: 0 1rem 1rem 1rem; border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
         <p style="margin: 0.75rem 0 0.5rem 0; font-size: 0.85rem; color: var(--text-secondary); font-style: italic;">Why it matters: ${imp.why}</p>
         <ul style="margin: 0.5rem 0 0 0; padding-left: 1.25rem; color: var(--text-secondary); font-size: 0.9rem; line-height: 1.6;">
           ${imp.actions.map(action => `<li>${action}</li>`).join('')}

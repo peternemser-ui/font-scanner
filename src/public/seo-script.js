@@ -106,8 +106,8 @@ document.addEventListener('DOMContentLoaded', () => {
     },
 
     scanButton: {
-      text: t('seo.analyze', 'Analyze'),
-      loadingText: t('seo.analyzing', 'Analyzing...'),
+      text: t('seo.analyze', 'ANALYZE SEO'),
+      loadingText: t('seo.analyzing', 'ANALYZING...'),
       i18nText: 'seo.analyze'
     },
 
@@ -491,6 +491,10 @@ function displaySEOResults(results) {
       scannedAt: results.startedAt || results.timestamp
     });
   }
+
+  // Dispatch report:ready for PDF export and ReportJump triggers
+  window.__REPORT_READY__ = true;
+  window.dispatchEvent(new CustomEvent('report:ready'));
 }
 
 /**
@@ -526,7 +530,7 @@ function attachScreenshotRetry(imgEl, baseUrl, options = {}) {
     const msg = document.createElement('div');
     msg.setAttribute('data-sm-screenshot-fallback', 'true');
     msg.textContent = t('common.screenshotUnavailable', 'Screenshot unavailable');
-    msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 10px; color: var(--text-secondary); text-align: center;';
+    msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); text-align: center;';
     wrapper.appendChild(msg);
   };
 
@@ -662,7 +666,7 @@ function renderProFixes(results) {
 
   if (fixes.length === 0) {
     return `
-      <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+      <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           <span style="font-size: 1.5rem;">✓</span> ${t('seo.fixes.excellentSeo', 'Excellent SEO!')}
         </h3>
@@ -680,7 +684,7 @@ function renderProFixes(results) {
     <div class="seo-fixes-container" style="margin-top: 1rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
         <span style="font-size: 1.75rem;">🔍</span> ${t('seo.fixes.title', 'SEO Fixes')}
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('seo.fixes.improvementsFound', '{{count}} improvements found', { count: fixes.length })})</span>
+        <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${t('seo.fixes.improvementsFound', '{{count}} improvements found', { count: fixes.length })})</span>
       </h3>
       <div class="seo-fixes-list">
   `;
@@ -724,21 +728,21 @@ function renderSeoFixAccordion(fix, index) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || t('seo.fixes.defaultCategory', 'SEO Optimization')}</p>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${fix.title}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${fix.category || t('seo.fixes.defaultCategory', 'SEO Optimization')}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
           ">${t(`seo.fixes.severity.${fix.severity.toLowerCase()}`, fix.severity).toUpperCase()}</span>
-          <span class="seo-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+          <span class="seo-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
         </div>
       </div>
 
@@ -753,31 +757,31 @@ function renderSeoFixAccordion(fix, index) {
 
 function renderSeoFixTabs(fix, accordionId) {
   return `
-    <div class="seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+    <div class="seo-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="seo-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
         background: rgba(255,255,255,0.1);
-        color: #fff;
+        color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 ${t('seo.fixes.tabs.summary', 'Summary')}</button>
       <button class="seo-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">💻 ${t('seo.fixes.tabs.code', 'Code')}</button>
       <button class="seo-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">🔧 ${t('seo.fixes.tabs.fixGuide', 'Fix Guide')}</button>
@@ -785,12 +789,12 @@ function renderSeoFixTabs(fix, accordionId) {
 
     <!-- Summary Tab -->
     <div class="seo-fix-tab-content active" id="${accordionId}-summary">
-      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+      <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
         ${fix.description}
       </p>
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
         <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('seo.fixes.expectedImpact', 'Expected Impact')}</div>
-        <div style="color: #c0c0c0; font-size: 0.9rem;">${fix.impact}</div>
+        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${fix.impact}</div>
       </div>
     </div>
 
@@ -798,7 +802,7 @@ function renderSeoFixTabs(fix, accordionId) {
     <div class="seo-fix-tab-content" id="${accordionId}-code" style="display: none;">
       <div style="display: grid; gap: 1rem;">
         <!-- Current Issue -->
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
             <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('seo.fixes.currentIssue', 'Current Issue')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
@@ -806,16 +810,16 @@ function renderSeoFixTabs(fix, accordionId) {
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.05);
-              color: #fff;
+              color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
             ">📋 ${t('common.copy', 'Copy')}</button>
           </div>
-          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtml(fix.problematicCode || fix.currentIssue || t('seo.fixes.missingImplementation', '<!-- Missing or incorrect implementation -->'))}</pre>
+          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeHtml(fix.problematicCode || fix.currentIssue || t('seo.fixes.missingImplementation', '<!-- Missing or incorrect implementation -->'))}</pre>
         </div>
 
         <!-- Fixed Code -->
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
             <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('seo.fixes.recommendedFix', 'Recommended Fix')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
@@ -823,20 +827,20 @@ function renderSeoFixTabs(fix, accordionId) {
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.05);
-              color: #fff;
+              color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
             ">📋 ${t('common.copy', 'Copy')}</button>
           </div>
-          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtml(fix.snippet || fix.fixedCode)}</pre>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeHtml(fix.snippet || fix.fixedCode)}</pre>
         </div>
       </div>
     </div>
 
     <!-- Fix Guide Tab -->
     <div class="seo-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('seo.fixes.stepByStepFix', 'Step-by-Step Fix:')}</h5>
-      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--r-text, #111827);">${t('seo.fixes.stepByStepFix', 'Step-by-Step Fix:')}</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: var(--r-text-muted, #6B7280); line-height: 1.8;">
         ${(fix.steps || getDefaultSeoSteps(fix)).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
       </ol>
     </div>
@@ -934,7 +938,7 @@ function copySeoCode(elementId) {
     const btn = codeElement.parentElement.querySelector('button');
     if (btn) {
       const originalText = btn.textContent;
-      btn.textContent = t('common.copied', '✓ Copied!');
+      btn.textContent = t('common.copied', 'Copied!');
       setTimeout(() => { btn.textContent = originalText; }, 2000);
     }
   });
@@ -1239,14 +1243,14 @@ function buildFixCards(results) {
       severity: unsafeLinks > 3 ? 'Medium' : 'Low',
       category: t('seo.fixCards.categories.linkHealth', 'Link Health'),
       impact: t('seo.fixCards.links.impact', 'Prevents security vulnerabilities and improves link equity signals'),
-      description: t('seo.fixCards.links.description', 'External links that open in a new tab without rel="noopener noreferrer" expose your site to reverse tabnapping attacks, where the opened page can redirect your tab to a phishing site. Empty anchor text wastes link equity and provides no context to search engines or screen readers.'),
+      description: t('seo.fixCards.links.description', 'External links that open in a new tab without rel="noopener noreferrer" expose your site to reverse tabnapping attacks, where the opened page can use the window.opener API to redirect your original tab to a phishing site. This is a well-documented security vulnerability that can trick users into entering credentials on a fake version of your site without realizing they have been redirected. Additionally, links with empty or missing anchor text waste valuable link equity because search engines use anchor text to understand the context and relevance of the linked page. Screen reader users also rely on anchor text to understand where a link leads before activating it, so empty anchors create a confusing and inaccessible experience. Both issues are simple to fix and should be resolved across all external and internal links.'),
       problematicCode: `<!-- ${t('seo.fixCards.comments.linkIssuesFound', 'Link issues found')}: -->\n${linkProblems.map(p => `<!-- ${p} -->`).join('\n')}\n\n${unsafeLinks > 0 ? `<a href="https://external.com" target="_blank">Link</a>\n<!-- ${t('seo.fixCards.comments.vulnToTabnapping', '✗ Vulnerable to reverse tabnapping')} -->` : ''}\n${emptyAnchors > 0 ? `<a href="/page"></a>\n<!-- ${t('seo.fixCards.comments.noAnchorText', '✗ No descriptive anchor text')} -->` : ''}`,
       snippet: `<!-- ${t('seo.fixCards.comments.secureExternalLink', 'Secure external link')}: -->\n<a href="https://external.com"\n   target="_blank"\n   rel="noopener noreferrer">${t('seo.fixCards.snippets.descriptiveAnchor', 'Descriptive anchor text')}</a>\n\n<!-- ${t('seo.fixCards.comments.descriptiveAnchors', 'Use descriptive anchor text')}: -->\n<a href="/pricing">${t('seo.fixCards.snippets.pricingAnchor', 'View pricing plans')}</a>\n<!-- ${t('seo.fixCards.comments.notThis', 'Not this')}: -->\n<!-- <a href="/pricing">${t('seo.fixCards.snippets.clickHere', 'Click here')}</a> -->`,
       steps: [
         t('seo.fixes.steps.links.step1', 'Add rel="noopener noreferrer" to all external links with target="_blank"'),
         t('seo.fixes.steps.links.step2', 'Replace empty anchor text with descriptive text that explains the link destination'),
         t('seo.fixes.steps.links.step3', 'Avoid generic anchor text like "click here" or "read more"'),
-        t('seo.fixes.steps.links.step4', 'Use DevTools Console: document.querySelectorAll(\'a[target="_blank"]:not([rel*="noopener"])\') to find issues'),
+        t('seo.fixes.steps.links.step4', 'Use DevTools Console: document.querySelectorAll(\'a[target="_blank"]:not([rel*="noopener"])\') to find issues'a[target="_blank"]:not([rel*="noopener"])\') to find issues'),
         t('seo.fixes.steps.links.step5', 'Consider adding rel="nofollow" to paid or sponsored external links')
       ]
     });
@@ -1433,7 +1437,7 @@ function renderMetaTagsContent(metaTags) {
           </thead>
           <tbody>
             ${metaTableData.map((row) => `
-              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${row[3].includes('✗') ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
+              <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${row[3].includes('✗') ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                 <td style="padding: 0.75rem; font-weight: 500;">${row[0]}</td>
                 <td style="padding: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.9rem; word-break: break-word; max-width: 300px;">${row[1]}</td>
                 <td style="padding: 0.75rem; text-align: center;">${row[2]}</td>
@@ -1540,8 +1544,8 @@ function renderHeadingStructureContent(headings) {
 
       ${headings.hierarchy.length > 3 ? `
         <p>>> ${t('seo.report.headings.hierarchySampleLabel', 'hierarchy_sample')}:</p>
-        ${headings.hierarchy.slice(0, 5).map(h => `<p style="margin-left: 1rem; color: #808080;">${h.level.toUpperCase()}: ${h.text.substring(0, 80)}${h.text.length > 80 ? '...' : ''}</p>`).join('')}
-        ${headings.hierarchy.length > 5 ? `<p style="margin-left: 1rem; color: #808080;">${t('seo.report.common.moreCount', '... {{count}} more', { count: headings.hierarchy.length - 5 })}</p>` : ''}
+        ${headings.hierarchy.slice(0, 5).map(h => `<p style="margin-left: 1rem; color: var(--r-text-faint, #9CA3AF);">${h.level.toUpperCase()}: ${h.text.substring(0, 80)}${h.text.length > 80 ? '...' : ''}</p>`).join('')}
+        ${headings.hierarchy.length > 5 ? `<p style="margin-left: 1rem; color: var(--r-text-faint, #9CA3AF);">${t('seo.report.common.moreCount', '... {{count}} more', { count: headings.hierarchy.length - 5 })}</p>` : ''}
       ` : ''}
 
       ${renderIssuesAndRecommendations(headings)}
@@ -1723,7 +1727,7 @@ function renderImageAnalysisContent(images) {
                 const passLabel = t('seo.report.status.pass', 'Pass');
                 const failLabel = t('seo.report.status.fail', 'Fail');
                 return `
-                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${row.pass ? '' : 'background: rgba(255, 68, 68, 0.05);'}">
+                <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${row.pass ? '' : 'background: rgba(255, 68, 68, 0.05);'}">
                   <td style="padding: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.85rem; word-break: break-all;">${row.url}</td>
                   <td style="padding: 0.75rem; text-align: center; font-family: monospace;">${row.dimensions}</td>
                   <td style="padding: 0.75rem; color: ${row.altText.includes('✓') ? 'var(--accent-primary)' : '#ff4444'}; font-size: 0.9rem;">${row.altText}</td>
@@ -1825,9 +1829,9 @@ function renderMobileResponsivenessContent(mobile) {
               : t('seo.report.mobile.recommendations.desktop', 'Desktop fallback');
             
             return `
-              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-                <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">${deviceLabel(vp.viewport)}</td>
-                <td style="padding: 0.75rem; text-align: center; color: #c0c0c0; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.width}px</td>
+              <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+                <td style="padding: 0.75rem; font-weight: 600; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${deviceLabel(vp.viewport)}</td>
+                <td style="padding: 0.75rem; text-align: center; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${vp.width}px</td>
                 <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.hasHorizontalScroll ? '✗' : '✓'}</td>
                 <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.hasViewportMeta ? '✓' : '✗'}</td>
                 <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${vp.fontSizeReadable ? '✓' : '✗'}</td>
@@ -1934,9 +1938,9 @@ function renderPerformanceMetricsContent(perf) {
         </thead>
         <tbody>
           ${metrics.map(({ metric, value, status, description, recommended }) => `
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-              <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">${metric}</td>
-              <td style="padding: 0.75rem; text-align: center; color: #c0c0c0; font-family: 'Courier New', monospace; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.05);">${value}</td>
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+              <td style="padding: 0.75rem; font-weight: 600; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${metric}</td>
+              <td style="padding: 0.75rem; text-align: center; color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.05);">${value}</td>
               <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${status}</td>
               <td style="padding: 0.75rem; text-align: center; color: var(--accent-primary); font-size: 0.85rem; font-weight: 500; border: 1px solid rgba(255, 255, 255, 0.05);">${recommended}</td>
               <td style="padding: 0.75rem; color: #909090; font-size: 0.9rem; border: 1px solid rgba(255, 255, 255, 0.05);">${description}</td>
@@ -2039,10 +2043,10 @@ function renderSecurityHeadersContent(security) {
         </thead>
         <tbody>
           ${securityChecks.map(({ header, status, purpose, details, recommended }) => `
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-              <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">${header}</td>
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+              <td style="padding: 0.75rem; font-weight: 600; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${header}</td>
               <td style="padding: 0.75rem; text-align: center; font-size: 1.1rem; border: 1px solid rgba(255, 255, 255, 0.05);">${status}</td>
-              <td style="padding: 0.75rem; color: #c0c0c0; border: 1px solid rgba(255, 255, 255, 0.05);">${purpose}</td>
+              <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${purpose}</td>
               <td style="padding: 0.75rem; color: #909090; font-size: 0.9rem; font-family: 'Courier New', monospace; word-break: break-all; border: 1px solid rgba(255, 255, 255, 0.05);">${details}</td>
               <td style="padding: 0.75rem; color: var(--accent-primary); font-size: 0.85rem; font-family: 'Courier New', monospace; border: 1px solid rgba(255, 255, 255, 0.05);">${recommended}</td>
             </tr>
@@ -2191,10 +2195,8 @@ function renderStructuredDataContent(data) {
         box-shadow: 0 2px 8px rgba(0,204,255,0.15);
       ">
         <div style="color: #00ccff; font-weight: bold; margin-bottom: 0.75rem; font-size: 1.1rem;">${t('seo.report.structuredData.info.title', 'ⓘ What is Structured Data Schema?')}</div>
-        <div style="color: #c0c0c0; font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
-          ${t(
-            'seo.report.structuredData.info.body',
-            'Structured data (also called schema markup) is code that helps search engines understand your content better, enabling rich search results like star ratings, product prices, event dates, FAQ dropdowns, and more. It uses the Schema.org vocabulary in JSON-LD, Microdata, or RDFa formats.'
+        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.95rem; line-height: 1.6; margin-bottom: 1rem;">
+          ${t('seo.report.structuredData.info.body', 'Structured data (also called schema markup) is code that helps search engines understand your content better, enabling <strong style="color: #00ff41;">rich search results</strong> like star ratings, product prices, event dates, FAQ dropdowns, and more. It uses the <strong style="color: #00ccff;">Schema.org</strong> vocabulary in JSON-LD, Microdata, or RDFa formats.'
           )}
         </div>
         <div style="
@@ -2230,27 +2232,27 @@ function renderStructuredDataContent(data) {
           </tr>
         </thead>
         <tbody>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">${t('seo.report.structuredData.summary.rows.found.metric', 'Structured Data Found')}</td>
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+            <td style="padding: 0.75rem; font-weight: 600; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${t('seo.report.structuredData.summary.rows.found.metric', 'Structured Data Found')}</td>
             <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${data.hasStructuredData ? '✓' : '✗'}</td>
             <td style="padding: 0.75rem; color: ${data.hasStructuredData ? 'var(--accent-primary)' : '#ff6600'}; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${data.hasStructuredData ? detected : notFound}
             </td>
-            <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${data.hasStructuredData
                 ? t('seo.report.structuredData.summary.rows.found.impact.detected', 'Enables rich search results')
                 : t('seo.report.structuredData.summary.rows.found.impact.notFound', 'Missing enhanced search appearances')}
             </td>
           </tr>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">${t('seo.report.structuredData.summary.rows.types.metric', 'Schema Types Implemented')}</td>
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+            <td style="padding: 0.75rem; font-weight: 600; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${t('seo.report.structuredData.summary.rows.types.metric', 'Schema Types Implemented')}</td>
             <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">C</td>
             <td style="padding: 0.75rem; color: #00ccff; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${data.count} ${data.count === 1
                 ? t('seo.report.structuredData.summary.rows.types.value.singular', 'Type')
                 : t('seo.report.structuredData.summary.rows.types.value.plural', 'Types')}
             </td>
-            <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${data.count >= 3
                 ? t('seo.report.structuredData.summary.rows.types.impact.great', 'Great coverage')
                 : data.count >= 1
@@ -2258,13 +2260,13 @@ function renderStructuredDataContent(data) {
                   : t('seo.report.structuredData.summary.rows.types.impact.none', 'None implemented')}
             </td>
           </tr>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">${t('seo.report.structuredData.summary.rows.score.metric', 'Overall Score')}</td>
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+            <td style="padding: 0.75rem; font-weight: 600; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${t('seo.report.structuredData.summary.rows.score.metric', 'Overall Score')}</td>
             <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">T</td>
             <td style="padding: 0.75rem; color: #bb86fc; font-weight: bold; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${data.score}/100
             </td>
-            <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${data.score >= 80
                 ? t('seo.report.structuredData.summary.rows.score.impact.excellent', 'Excellent implementation')
                 : data.score >= 60
@@ -2295,17 +2297,17 @@ function renderStructuredDataContent(data) {
                 fields: []
               };
               return `
-                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                   <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.5rem;">${schema.icon}</span>
                       <div>
                         <div style="color: var(--accent-primary); font-weight: 600; font-size: 0.95rem;">${type}</div>
-                        <div style="color: #808080; font-size: 0.75rem;">${schema.desc}</div>
+                        <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${schema.desc}</div>
                       </div>
                     </div>
                   </td>
-                  <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; line-height: 1.5; border: 1px solid rgba(255, 255, 255, 0.05);">
+                  <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.5; border: 1px solid rgba(255, 255, 255, 0.05);">
                     ${schema.benefit}
                   </td>
                   <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
@@ -2322,9 +2324,9 @@ function renderStructuredDataContent(data) {
                             border: 1px solid rgba(0,204,255,0.3);
                           ">${field}</span>
                         `).join('')}
-                        ${schema.fields.length > 3 ? `<span style="color: #808080; font-size: 0.7rem;">${t('seo.report.structuredData.detected.moreFields', '+{{count}} more', { count: schema.fields.length - 3 })}</span>` : ''}
+                        ${schema.fields.length > 3 ? `<span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.7rem;">${t('seo.report.structuredData.detected.moreFields', '+{{count}} more', { count: schema.fields.length - 3 })}</span>` : ''}
                       </div>
-                    ` : `<span style="color: #808080; font-size: 0.8rem;">${t('seo.report.structuredData.detected.na', 'N/A')}</span>`}
+                    ` : `<span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">${t('seo.report.structuredData.detected.na', 'N/A')}</span>`}
                   </td>
                 </tr>
               `;
@@ -2341,7 +2343,7 @@ function renderStructuredDataContent(data) {
           border-radius: 4px;
         ">
           <div style="color: var(--accent-primary); font-weight: bold; margin-bottom: 0.5rem;">${t('seo.report.structuredData.validation.title', '✓ Next Step: Validate Your Schema')}</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem; line-height: 1.6;">
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6;">
             ${t('seo.report.structuredData.validation.body.beforeLink', 'Use')}
             <a href="https://search.google.com/test/rich-results" target="_blank" style="color: #00ccff; text-decoration: underline;">${t('seo.report.structuredData.validation.body.linkText', "Google's Rich Results Test")}</a>
             ${t('seo.report.structuredData.validation.body.afterLink', 'to ensure your structured data is error-free and eligible for rich snippets. Monitor Search Console for structured data errors.')}
@@ -2361,7 +2363,7 @@ function renderStructuredDataContent(data) {
             <div style="font-size: 1.5rem;">~</div>
             <div>
               <div style="color: #ff6600; font-weight: bold; font-size: 1rem;">${t('seo.report.structuredData.missing.card.title', 'No Structured Data Detected')}</div>
-              <div style="color: #c0c0c0; font-size: 0.85rem;">${t('seo.report.structuredData.missing.card.body', "You're missing enhanced search appearances that boost visibility and click-through rates")}</div>
+              <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem;">${t('seo.report.structuredData.missing.card.body', "You're missing enhanced search appearances that boost visibility and click-through rates")}</div>
             </div>
           </div>
         </div>
@@ -2375,70 +2377,70 @@ function renderStructuredDataContent(data) {
             </tr>
           </thead>
           <tbody>
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <span style="font-size: 1.3rem;">*</span>
                   <span style="color: #ffd700; font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.missing.rows.starRatings.title', 'Star Ratings')}</span>
                 </div>
               </td>
-              <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+              <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 ${t('seo.report.structuredData.missing.rows.starRatings.body', 'Display review stars and ratings directly in search results')}
               </td>
               <td style="padding: 0.75rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <span style="color: var(--accent-primary); font-weight: bold; font-size: 0.9rem;">+35%</span>
               </td>
             </tr>
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <span style="font-size: 1.3rem;">💰</span>
                   <span style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.missing.rows.productInfo.title', 'Product Info')}</span>
                 </div>
               </td>
-              <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+              <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 ${t('seo.report.structuredData.missing.rows.productInfo.body', 'Show prices, availability, and special offers inline')}
               </td>
               <td style="padding: 0.75rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <span style="color: var(--accent-primary); font-weight: bold; font-size: 0.9rem;">+25%</span>
               </td>
             </tr>
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <span style="font-size: 1.3rem;">📅</span>
                   <span style="color: #00ccff; font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.missing.rows.eventDetails.title', 'Event Details')}</span>
                 </div>
               </td>
-              <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+              <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 ${t('seo.report.structuredData.missing.rows.eventDetails.body', 'Event dates, locations, and ticket info with calendar integration')}
               </td>
               <td style="padding: 0.75rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <span style="color: #ffd700; font-weight: bold; font-size: 0.9rem;">+20%</span>
               </td>
             </tr>
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <span style="font-size: 1.3rem;">I</span>
                   <span style="color: #bb86fc; font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.missing.rows.richMedia.title', 'Rich Media')}</span>
                 </div>
               </td>
-              <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+              <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 ${t('seo.report.structuredData.missing.rows.richMedia.body', 'Enhanced thumbnails, carousels, and video snippets')}
               </td>
               <td style="padding: 0.75rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <span style="color: #ffd700; font-weight: bold; font-size: 0.9rem;">+18%</span>
               </td>
             </tr>
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 <div style="display: flex; align-items: center; gap: 0.5rem;">
                   <span style="font-size: 1.3rem;">?</span>
                   <span style="color: #ff8c00; font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.missing.rows.faq.title', 'FAQ Dropdowns')}</span>
                 </div>
               </td>
-              <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+              <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                 ${t('seo.report.structuredData.missing.rows.faq.body', 'Expandable Q&A sections directly in search results')}
               </td>
               <td style="padding: 0.75rem; text-align: center; border: 1px solid rgba(255, 255, 255, 0.05);">
@@ -2455,7 +2457,7 @@ function renderStructuredDataContent(data) {
           border-radius: 4px;
           margin: 1rem 0;
         ">
-          <div style="color: #c0c0c0; font-size: 0.85rem; line-height: 1.6;">
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.6;">
             <strong style="color: var(--accent-primary);">${t('seo.report.structuredData.proTip.label', 'ⓘ Pro Tip:')}</strong> ${t(
               'seo.report.structuredData.proTip.body',
               'Rich results can increase click-through rates by 15-35% according to Google research. Start with the foundational schemas below to unlock these benefits.'
@@ -2472,7 +2474,7 @@ function renderStructuredDataContent(data) {
           border-radius: 4px;
           margin-bottom: 1rem;
         ">
-          <div style="color: #c0c0c0; font-size: 0.9rem; line-height: 1.6;">
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6;">
             <strong style="color: #00ccff;">${t('seo.report.structuredData.recommended.box.title', 'Start with these foundational schemas')}</strong>
             ${t('seo.report.structuredData.recommended.box.body', 'that work for almost every website. You can add more specific schemas based on your content type later.')}
           </div>
@@ -2496,13 +2498,13 @@ function renderStructuredDataContent(data) {
             ].map(item => {
               const schema = commonSchemas[item.type];
               return `
-                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+                <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                   <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.5rem;">${schema.icon}</span>
                       <div>
                         <div style="color: #00ccff; font-weight: 600; font-size: 0.95rem;">${item.type}</div>
-                        <div style="color: #808080; font-size: 0.75rem;">${schema.desc}</div>
+                        <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${schema.desc}</div>
                       </div>
                     </div>
                   </td>
@@ -2517,7 +2519,7 @@ function renderStructuredDataContent(data) {
                       border: 1px solid ${item.color}50;
                     ">${item.priority}</span>
                   </td>
-                  <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; line-height: 1.5; border: 1px solid rgba(255, 255, 255, 0.05);">
+                  <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.5; border: 1px solid rgba(255, 255, 255, 0.05);">
                     ${schema.benefit}
                   </td>
                   <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
@@ -2549,7 +2551,7 @@ function renderStructuredDataContent(data) {
           padding: 1.25rem;
           background: linear-gradient(135deg, rgba(var(--accent-primary-rgb), 0.08) 0%, rgba(var(--accent-primary-rgb), 0.02) 100%);
           border: 2px solid rgba(var(--accent-primary-rgb), 0.3);
-          border-radius: 10px;
+          border-radius: 12px;
         ">
           <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
             <div style="font-size: 1.8rem;">📝</div>
@@ -2583,13 +2585,13 @@ function renderStructuredDataContent(data) {
           padding: 1.25rem;
           background: rgba(0,204,255,0.05);
           border: 2px solid rgba(0,204,255,0.2);
-          border-radius: 10px;
+          border-radius: 12px;
         ">
           <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
             <div style="font-size: 1.8rem;">🏷️</div>
             <div>
               <div style="color: #00ccff; font-weight: bold; font-size: 1rem;">Microdata</div>
-              <div style="color: #808080; font-size: 0.7rem;">${t('seo.report.structuredData.formats.microdata.subtitle', 'HTML Attributes')}</div>
+              <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.7rem;">${t('seo.report.structuredData.formats.microdata.subtitle', 'HTML Attributes')}</div>
             </div>
           </div>
           <div style="color: #b0b0b0; font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.75rem;">
@@ -2617,13 +2619,13 @@ function renderStructuredDataContent(data) {
           padding: 1.25rem;
           background: rgba(187,134,252,0.05);
           border: 2px solid rgba(187,134,252,0.2);
-          border-radius: 10px;
+          border-radius: 12px;
         ">
           <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.75rem;">
             <div style="font-size: 1.8rem;">K</div>
             <div>
               <div style="color: #bb86fc; font-weight: bold; font-size: 1rem;">RDFa</div>
-              <div style="color: #808080; font-size: 0.7rem;">${t('seo.report.structuredData.formats.rdfa.subtitle', 'Resource Description')}</div>
+              <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.7rem;">${t('seo.report.structuredData.formats.rdfa.subtitle', 'Resource Description')}</div>
             </div>
           </div>
           <div style="color: #b0b0b0; font-size: 0.85rem; line-height: 1.6; margin-bottom: 0.75rem;">
@@ -2659,14 +2661,14 @@ function renderStructuredDataContent(data) {
           </tr>
         </thead>
         <tbody>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
             <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span style="font-size: 1.3rem;">🔧</span>
                 <span style="color: #00ccff; font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.resources.rows.schemaDocs.title', 'Schema.org Docs')}</span>
               </div>
             </td>
-            <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${t(
                 'seo.report.structuredData.resources.rows.schemaDocs.purpose',
                 'Official vocabulary reference with complete documentation for all schema types and properties'
@@ -2676,14 +2678,14 @@ function renderStructuredDataContent(data) {
               <a href="https://schema.org" target="_blank" style="color: #00ccff; text-decoration: none; font-size: 0.85rem; border-bottom: 1px dotted #00ccff;">${t('seo.report.structuredData.resources.rows.schemaDocs.linkText', 'schema.org →')}</a>
             </td>
           </tr>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
             <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span style="font-size: 1.3rem;">✓</span>
                 <span style="color: var(--accent-primary); font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.resources.rows.richResultsTest.title', 'Rich Results Test')}</span>
               </div>
             </td>
-            <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${t(
                 'seo.report.structuredData.resources.rows.richResultsTest.purpose',
                 'Test your structured data markup and see which Google rich results can be generated from it'
@@ -2693,14 +2695,14 @@ function renderStructuredDataContent(data) {
               <a href="https://search.google.com/test/rich-results" target="_blank" style="color: var(--accent-primary); text-decoration: none; font-size: 0.85rem; border-bottom: 1px dotted var(--accent-primary);">${t('seo.report.structuredData.resources.rows.richResultsTest.linkText', 'Test Markup →')}</a>
             </td>
           </tr>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
             <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span style="font-size: 1.3rem;">C</span>
                 <span style="color: #ffd700; font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.resources.rows.validator.title', 'Schema Validator')}</span>
               </div>
             </td>
-            <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${t(
                 'seo.report.structuredData.resources.rows.validator.purpose',
                 'Comprehensive validation tool for all structured data formats including JSON-LD, Microdata, and RDFa'
@@ -2710,14 +2712,14 @@ function renderStructuredDataContent(data) {
               <a href="https://validator.schema.org/" target="_blank" style="color: #ffd700; text-decoration: none; font-size: 0.85rem; border-bottom: 1px dotted #ffd700;">${t('seo.report.structuredData.resources.rows.validator.linkText', 'Validate →')}</a>
             </td>
           </tr>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
             <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span style="font-size: 1.3rem;">📚</span>
                 <span style="color: #bb86fc; font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.resources.rows.googleGuide.title', 'Google Guide')}</span>
               </div>
             </td>
-            <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${t(
                 'seo.report.structuredData.resources.rows.googleGuide.purpose',
                 'Step-by-step guide from Google on implementing structured data with code examples and best practices'
@@ -2727,14 +2729,14 @@ function renderStructuredDataContent(data) {
               <a href="https://developers.google.com/search/docs/appearance/structured-data/intro-structured-data" target="_blank" style="color: #bb86fc; text-decoration: none; font-size: 0.85rem; border-bottom: 1px dotted #bb86fc;">${t('seo.report.structuredData.resources.rows.googleGuide.linkText', 'Read Guide →')}</a>
             </td>
           </tr>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
             <td style="padding: 0.75rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               <div style="display: flex; align-items: center; gap: 0.5rem;">
                 <span style="font-size: 1.3rem;">🔧</span>
                 <span style="color: #ff8c00; font-weight: 600; font-size: 0.9rem;">${t('seo.report.structuredData.resources.rows.generator.title', 'Markup Generator')}</span>
               </div>
             </td>
-            <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">
               ${t(
                 'seo.report.structuredData.resources.rows.generator.purpose',
                 'Free tool to generate JSON-LD structured data markup for various schema types quickly and easily'
@@ -2890,10 +2892,10 @@ function renderAdditionalChecksContent(checks) {
         </thead>
         <tbody>
           ${additionalMetrics.map(({ check, status, purpose, details, bestPractice }) => `
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-              <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">${check}</td>
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+              <td style="padding: 0.75rem; font-weight: 600; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${check}</td>
               <td style="padding: 0.75rem; text-align: center; font-size: 1.1rem; border: 1px solid rgba(255, 255, 255, 0.05);">${status}</td>
-              <td style="padding: 0.75rem; color: #c0c0c0; border: 1px solid rgba(255, 255, 255, 0.05);">${purpose}</td>
+              <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${purpose}</td>
               <td style="padding: 0.75rem; color: #909090; font-size: 0.9rem; border: 1px solid rgba(255, 255, 255, 0.05);">${details}</td>
               <td style="padding: 0.75rem; color: var(--accent-primary); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">${bestPractice}</td>
             </tr>
@@ -2924,10 +2926,10 @@ function renderAdditionalChecksContent(checks) {
         </thead>
         <tbody>
           ${socialPlatforms.map(({ platform, status, value, details, tip }) => `
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-              <td style="padding: 0.75rem; font-weight: 600; color: #e0e0e0; border: 1px solid rgba(255, 255, 255, 0.05);">${platform}</td>
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+              <td style="padding: 0.75rem; font-weight: 600; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${platform}</td>
               <td style="padding: 0.75rem; text-align: center; font-size: 1.2rem; border: 1px solid rgba(255, 255, 255, 0.05);">${status}</td>
-              <td style="padding: 0.75rem; color: #c0c0c0; border: 1px solid rgba(255, 255, 255, 0.05);">${value}</td>
+              <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); border: 1px solid rgba(255, 255, 255, 0.05);">${value}</td>
               <td style="padding: 0.75rem; color: #909090; font-size: 0.9rem; border: 1px solid rgba(255, 255, 255, 0.05);">${details}</td>
               <td style="padding: 0.75rem; color: var(--accent-primary); font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.05);">${tip}</td>
             </tr>

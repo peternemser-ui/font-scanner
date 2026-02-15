@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const shell = window.PageShell.init('#page-container', {
     pageId: 'performance-hub',
     pageTitle: t('performanceHub.title', 'Speed & UX'),
-    pageDescription: t('performanceHub.subtitle', 'Analyze page load speed, Core Web Vitals, and Lighthouse performance metrics.'),
+    pageDescription: t('performanceHub.subtitle', 'Performance, Core Web Vitals & Lighthouse'),
     analyzerType: 'speed-ux-quick',
 
     i18n: {
@@ -54,7 +54,7 @@ document.addEventListener('DOMContentLoaded', () => {
     tabs: [
       {
         id: 'quick',
-        label: t('reports.modeLabels.quick', 'Quick scan'),
+        label: t('reports.modeLabels.quick', 'Quick Scan'),
         description: t('performanceHub.scan.quickDesc', 'Resource analysis focusing on requests, page weight, blocking assets, and server response time.'),
         i18nLabel: 'reports.modeLabels.quick',
         i18nDesc: 'performanceHub.scan.quickDesc',
@@ -401,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateModeIndicator() {
     const modeLabels = {
-      'quick': t('reports.modeLabels.quick', 'Quick scan'),
+      'quick': t('reports.modeLabels.quick', 'Quick Scan'),
       'cwv': t('reports.modeLabels.cwv', 'Core Web Vitals'),
       'full': t('reports.modeLabels.full', 'Lighthouse Audit')
     };
@@ -411,7 +411,7 @@ document.addEventListener('DOMContentLoaded', () => {
       'full': t('performanceHub.modes.fullDescLong', 'Complete Lighthouse Audit across Performance, Accessibility, Best Practices, and SEO (desktop + mobile).')
     };
     if (modeIndicator) {
-      modeIndicator.textContent = modeLabels[currentMode] || t('reports.modeLabels.quick', 'Quick scan');
+      modeIndicator.textContent = modeLabels[currentMode] || t('reports.modeLabels.quick', 'Quick Scan');
     }
     if (modeDescription) {
       modeDescription.textContent = modeDescriptions[currentMode] || modeDescriptions.quick;
@@ -863,8 +863,8 @@ document.addEventListener('DOMContentLoaded', () => {
     switch (mode) {
       case 'quick':
         return [
-          { label: t('loader.connectingToWebsite', 'Connecting to website'), detail: t('loader.establishingConnection', 'Establishing connection...') },
-          { label: t('loader.analyzingResources', 'Analyzing resources'), detail: t('loader.scanningResources', 'Scanning CSS, JS, images...') },
+          { label: t('loader.connectingToWebsite', 'Connecting to website'), detail: t('loader.establishingConnection', 'Establishing secure connection...') },
+          { label: t('loader.analyzingResources', 'Analyzing resource loading'), detail: t('loader.scanningResources', 'Scanning CSS, JS, images...') },
           { label: t('loader.calculatingMetrics', 'Calculating metrics'), detail: t('loader.computingScore', 'Computing performance score...') }
         ];
       case 'full':
@@ -873,18 +873,18 @@ document.addEventListener('DOMContentLoaded', () => {
           { label: t('loader.desktopAnalysis', 'Desktop analysis'), detail: t('loader.runningDesktopAudit', 'Running desktop performance audit...') },
           { label: t('loader.mobileAnalysis', 'Mobile analysis'), detail: t('loader.runningMobileAudit', 'Running mobile performance audit...') },
           { label: t('loader.calculatingScores', 'Calculating scores'), detail: t('loader.computingLighthouseScores', 'Computing Lighthouse scores...') },
-          { label: t('loader.generatingReport', 'Generating report'), detail: t('loader.compilingResults', 'Compiling comprehensive results...') }
+          { label: t('loader.generatingReport', 'Generating report'), detail: t('loader.compilingResults', 'Compiling results and recommendations...') }
         ];
       case 'cwv':
         return [
-          { label: t('loader.loadingPage', 'Loading page'), detail: t('loader.navigatingToWebsite', 'Navigating to website...') },
+          { label: t('loader.loadingPage', 'Loading page and resources...'), detail: t('loader.navigatingToWebsite', 'Navigating to website...') },
           { label: t('loader.measuringLcp', 'Measuring LCP'), detail: t('reports.cwv.lcpName', 'Largest Contentful Paint') + '...' },
           { label: t('loader.measuringCls', 'Measuring CLS'), detail: t('reports.cwv.clsName', 'Cumulative Layout Shift') + '...' },
           { label: t('loader.measuringInp', 'Measuring INP'), detail: t('reports.cwv.inpName', 'Interaction to Next Paint') + '...' },
           { label: t('loader.calculatingScore', 'Calculating score'), detail: t('loader.computingCwvGrade', 'Computing overall CWV grade...') }
         ];
       default:
-        return [{ label: t('common.analyzing', 'Analyzing'), detail: t('common.pleaseWait', 'Please wait...') }];
+        return [{ label: t('common.analyzing', 'Analyzing...'), detail: t('common.pleaseWait', 'Please wait...') }];
     }
   }
 
@@ -904,7 +904,7 @@ document.addEventListener('DOMContentLoaded', () => {
       case 'quick': return t('reports.performance.quickScan', 'Quick Scan');
       case 'full': return t('reports.performance.fullLighthouseAnalysis', 'Full Lighthouse Analysis');
       case 'cwv': return t('reports.cwv.title', 'Core Web Vitals');
-      default: return t('common.analyzing', 'Analyzing');
+      default: return t('common.analyzing', 'Analyzing...');
     }
   }
 
@@ -967,7 +967,7 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContent.innerHTML = '';
     errorMessage.classList.add('hidden');
     analyzeButton.disabled = true;
-    buttonText.textContent = t('common.analyzing', 'Analyzing') + '...';
+    buttonText.textContent = t('common.analyzing', 'Analyzing...') + '...';
 
     // Reset ReportUI waiting state to ensure screenshot card is created for new scan
     if (window.ReportUI?.resetWaitingState) {
@@ -1204,7 +1204,7 @@ document.addEventListener('DOMContentLoaded', () => {
         err.isQuotaError = true;
         throw err;
       }
-      const err = new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Quick scan failed'));
+      const err = new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed'));
       err.errorName = errorData.error;
       err.errorMessage = errorData.message;
       err.errorTimestamp = errorData.timestamp;
@@ -1249,7 +1249,7 @@ document.addEventListener('DOMContentLoaded', () => {
           err.isQuotaError = true;
           throw err;
         }
-        const err = new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Full analysis failed'));
+        const err = new Error(errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed'));
         err.errorName = errorData.error;
         err.errorMessage = errorData.message;
         err.errorTimestamp = errorData.timestamp;
@@ -1285,7 +1285,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (loader) loader.nextStep(3);
 
       if (!response.ok) {
-        let errorMessage = t('reports.common.analysisFailed', 'CWV analysis failed');
+        let errorMessage = t('reports.common.analysisFailed', 'Analysis failed');
         try {
           const errorData = await response.json();
           if (errorData.code === 'SCAN_QUOTA_EXCEEDED') {
@@ -1368,7 +1368,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div style="text-align: right;">
             <div style="
-              background: rgba(0,0,0,0.3);
+              background: var(--r-surface-2, #F8FAFC);
               border: 1px solid ${config.borderColor};
               border-radius: 8px;
               padding: 0.5rem 1rem;
@@ -1436,12 +1436,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const isTimeout = message.includes('too long to load') || message.includes('timeout');
     const suggestions = isTimeout ? `
       <div style="margin-top: 1.5rem; text-align: left; background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 8px; padding: 1rem;">
-        <h4 style="color: #60a5fa; margin: 0 0 0.75rem 0; font-size: 0.9rem;">💡 Suggestions:</h4>
+        <h4 style="color: #60a5fa; margin: 0 0 0.75rem 0; font-size: 0.9rem;">${t('reports.common.suggestions', 'Suggestions:')}</h4>
         <ul style="color: #93c5fd; margin: 0; padding-left: 1.5rem; font-size: 0.85rem; line-height: 1.6;">
-          <li>Wait a few moments and try again</li>
-          <li>Test a specific page instead of the homepage</li>
-          <li>Check if the website is accessible in your browser</li>
-          <li>The site may be experiencing high traffic or server issues</li>
+          <li>${t('reports.common.suggestionWait', 'Wait a few moments and try again')}</li>
+          <li>${t('reports.common.suggestionSpecificPage', 'Test a specific page instead of the homepage')}</li>
+          <li>${t('reports.common.suggestionCheckBrowser', 'Check if the website is accessible in your browser')}</li>
+          <li>${t('reports.common.suggestionHighTraffic', 'The site may be experiencing high traffic or server issues')}</li>
         </ul>
       </div>
     ` : '';
@@ -1449,17 +1449,17 @@ document.addEventListener('DOMContentLoaded', () => {
     const html = `
       <div style="background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(220, 38, 38, 0.05)); border: 2px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 2rem; margin: 2rem 0; text-align: center;">
         <div style="font-size: 3rem; margin-bottom: 1rem;">⚠️</div>
-        <h2 style="color: #ef4444; margin: 0 0 1rem 0;">Analysis Failed</h2>
+        <h2 style="color: #ef4444; margin: 0 0 1rem 0;">${t('reports.common.analysisFailed', 'Analysis Failed')}</h2>
         <p style="color: #fca5a5; margin: 0 0 1rem 0; font-size: 1.1rem;">${message}</p>
         ${suggestions}
         ${details ? `
-          <details style="margin-top: 1.5rem; text-align: left; background: rgba(0,0,0,0.2); padding: 1rem; border-radius: 8px;">
-            <summary style="cursor: pointer; color: #fca5a5; font-weight: 600; margin-bottom: 0.5rem;">Technical Details</summary>
+          <details style="margin-top: 1.5rem; text-align: left; background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px;">
+            <summary style="cursor: pointer; color: #fca5a5; font-weight: 600; margin-bottom: 0.5rem;">${t('reports.common.technicalDetails', 'Technical Details')}</summary>
             <pre style="color: #fca5a5; font-size: 0.85rem; margin: 0.5rem 0 0 0; overflow-x: auto;">${JSON.stringify(details, null, 2)}</pre>
           </details>
         ` : ''}
-        <button data-action="reload" style="margin-top: 1.5rem; background: #ef4444; border: none; color: #fff; padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
-          Try Again
+        <button data-action="reload" style="margin-top: 1.5rem; background: #ef4444; border: none; color: var(--r-text, #111827); padding: 0.75rem 2rem; border-radius: 8px; cursor: pointer; font-weight: 600;">
+          ${t('reports.common.tryAgain', 'Try Again')}
         </button>
       </div>
     `;
@@ -1497,6 +1497,10 @@ document.addEventListener('DOMContentLoaded', () => {
       return '#ef4444';
     };
 
+    // Build screenshot URL for Quick Scan report display
+    const reportId = document.body.getAttribute('data-report-id') || '';
+    const screenshotUrl = data.screenshotUrl || document.body.getAttribute('data-sm-screenshot-url') || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
+
     const quickScore = normalizeScore(data.performanceScore) ?? computeQuickScoreFromSummary(summary, issues);
     const summaryDonuts = ReportShell.renderSummaryDonuts([
       { label: t('reports.performance.quickScore', 'Quick Score'), score: quickScore }
@@ -1504,9 +1508,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const metrics = [
       { label: t('reports.performance.requests', 'Requests'), value: summary.totalRequests ?? '—', color: ratingColor(requestsRating) },
-      { label: t('reports.performance.pageWeight', 'Page Weight'), value: formatKB(summary.estimatedPageWeightKB), color: ratingColor(weightRating) },
-      { label: t('reports.performance.renderBlocking', 'Blocking'), value: summary.renderBlockingCount ?? 0, color: ratingColor(blockingRating) },
-      { label: t('reports.performance.serverResponse', 'Response'), value: `${summary.serverResponseTime || 0}ms`, color: ratingColor(responseRating) }
+      { label: t('reports.performance.pageWeight', 'Page Weight (KB)'), value: formatKB(summary.estimatedPageWeightKB), color: ratingColor(weightRating) },
+      { label: t('reports.performance.renderBlocking', 'Render Blocking'), value: summary.renderBlockingCount ?? 0, color: ratingColor(blockingRating) },
+      { label: t('reports.performance.serverResponse', 'Server Response'), value: `${summary.serverResponseTime || 0}ms`, color: ratingColor(responseRating) }
     ];
 
     const metricsSection = `
@@ -1559,8 +1563,27 @@ document.addEventListener('DOMContentLoaded', () => {
       ReportAccordion.createSection({ id: 'quick-resources', title: t('reports.performance.resourceBreakdown', 'Resource Breakdown'), scoreTextRight: null, contentHTML: resourcesContent })
     ].join('');
 
+    // Build screenshot HTML for Quick Scan report
+    const screenshotHTML = screenshotUrl ? `
+      <div class="screenshot-section" style="margin-bottom: 1.5rem;">
+        <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+          ${t('reports.common.pageScreenshot', 'Page Screenshot')}
+        </h3>
+        <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+          <img
+            src="${screenshotUrl}"
+            alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}')} ${url}"
+            class="screenshot-item__img perf-hub-screenshot"
+            style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
+            onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${t('reports.common.screenshotUnavailable', 'Screenshot unavailable')}</div>'"
+          />
+        </div>
+      </div>
+    ` : '';
+
     const html = `
       ${ReportShell.renderReportHeader({ title: t('reports.performanceHub.quickScanTitle', 'Speed & UX Report: Quick Scan'), url, timestamp: generatedAt, badgeText: t('reports.performanceHub.quickScanBadge', 'Quick Scan'), mode: 'quick' })}
+      ${screenshotHTML}
       ${summaryDonuts}
       ${scoreNote}
       ${accordions}
@@ -1585,6 +1608,19 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     resultsContent.innerHTML = `<div class="report-scope">${fullHtml}</div>`;
+
+    // Add click handler for screenshot lightbox
+    if (screenshotUrl) {
+      const screenshotImg = resultsContent.querySelector('.perf-hub-screenshot');
+      if (screenshotImg) {
+        screenshotImg.addEventListener('click', () => {
+          if (window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+            window.ScreenshotLightbox.open(screenshotUrl, t('reports.common.pageScreenshot', 'Page Screenshot'));
+          }
+        });
+      }
+    }
+
     window.currentPerformanceHubResults = { mode: 'quick', url, data };
     ReportAccordion.initInteractions();
     showPdfExportButton();
@@ -1623,9 +1659,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const generatedAt = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
     const summaryDonuts = ReportShell.renderSummaryDonuts([
       { label: t('reports.performance.performance', 'Performance'), score: averageScore(desktopPerf, mobilePerf) },
-      { label: t('reports.accessibility.title', 'Accessibility'), score: averageScore(desktop?.lighthouse?.accessibility, mobile?.lighthouse?.accessibility) },
+      { label: t('reports.accessibility.title', 'Accessibility Report'), score: averageScore(desktop?.lighthouse?.accessibility, mobile?.lighthouse?.accessibility) },
       { label: t('reports.performance.bestPractices', 'Best Practices'), score: averageScore(desktop?.lighthouse?.bestPractices, mobile?.lighthouse?.bestPractices) },
-      { label: t('reports.seo.title', 'SEO'), score: averageScore(desktop?.lighthouse?.seo, mobile?.lighthouse?.seo) }
+      { label: t('reports.seo.title', 'SEO Analysis Report'), score: averageScore(desktop?.lighthouse?.seo, mobile?.lighthouse?.seo) }
     ]);
 
     const performanceMetricsContent = renderPerformanceMetricsSection(desktop, mobile, network);
@@ -1707,7 +1743,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${renderFreeFixBullets(desktopForFixes, mobileForFixes)}
         ${renderFixesToMake(desktopForFixes, mobileForFixes, true)}
         <div style="margin-top: 1.5rem;">
-          <h4 style="margin: 0 0 0.75rem 0;">Opportunities</h4>
+          <h4 style="margin: 0 0 0.75rem 0;">${t('reports.performance.opportunities', 'Opportunities')}</h4>
           ${opportunitiesContent}
         </div>
       `;
@@ -1731,15 +1767,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const screenshotHTML = screenshotUrl ? `
       <div class="screenshot-section" style="margin-bottom: 1.5rem;">
         <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
-          Page Screenshot
+          ${t('reports.common.pageScreenshot', 'Page Screenshot')}
         </h3>
         <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
           <img
             src="${screenshotUrl}"
-            alt="Screenshot of ${url}"
+            alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}')} ${url}"
             class="screenshot-item__img perf-hub-screenshot"
             style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
-            onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>Screenshot unavailable</div>'"
+            onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${t('reports.common.screenshotUnavailable', 'Screenshot unavailable')}</div>'"
           />
         </div>
       </div>
@@ -1762,7 +1798,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (screenshotImg) {
         screenshotImg.addEventListener('click', () => {
           if (window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
-            window.ScreenshotLightbox.open(screenshotUrl, 'Page Screenshot');
+            window.ScreenshotLightbox.open(screenshotUrl, t('reports.common.pageScreenshot', 'Page Screenshot'));
           }
         });
       }
@@ -1793,7 +1829,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!fallback.length) {
       return `
         <div style="margin-bottom: 1rem; color: var(--text-muted, #9ca3af); font-size: 0.95rem;">
-          ${t('reports.performanceHub.noFixesDetected', 'No specific fixes detected. Keep monitoring for changes after code deployments.')}
+          ${t('reports.performanceHub.noFixesDetected', 'See the detailed performance fixes below for actionable recommendations.')}
         </div>
       `;
     }
@@ -1916,14 +1952,14 @@ document.addEventListener('DOMContentLoaded', () => {
       { label: 'TBT/FID', d: formatMsCompact(d.inpMs || d.fidMs), m: formatMsCompact(m.inpMs || m.fidMs), dVal: d.inpMs || d.fidMs, mVal: m.inpMs || m.fidMs, thresholds: { good: 200, poor: 500 }, max: 800 },
       { label: 'FCP', d: formatMsCompact(d.fcpMs), m: formatMsCompact(m.fcpMs), dVal: d.fcpMs, mVal: m.fcpMs, thresholds: { good: 1800, poor: 3000 }, max: 5000 },
       { label: 'TTFB', d: valueOrDash(ttfbValue), m: '—', single: true },
-      { label: 'DOM Interactive', d: valueOrDash(domInteractiveValue), m: '—', single: true }
+      { label: t('reports.performance.domInteractive', 'DOM Interactive'), d: valueOrDash(domInteractiveValue), m: '—', single: true }
     ];
 
     // Build performance bar chart for core metrics
     const chartMetrics = entries.filter(e => e.thresholds);
     const chartHtml = `
       <div style="margin-bottom: 1.5rem;">
-        <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem;">Performance Metrics</div>
+        <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem;">${t('reports.performance.performanceMetrics', 'Performance Metrics')}</div>
         ${chartMetrics.map(e => {
           const worst = Math.max(e.dVal || 0, e.mVal || 0);
           const getColor = (val) => {
@@ -1991,15 +2027,15 @@ document.addEventListener('DOMContentLoaded', () => {
     const m = mobile.lighthouse || {};
     const entries = [
       { label: t('reports.performance.performance', 'Performance'), d: d.performance, m: m.performance },
-      { label: t('reports.accessibility.title', 'Accessibility'), d: d.accessibility, m: m.accessibility },
+      { label: t('reports.accessibility.title', 'Accessibility Report'), d: d.accessibility, m: m.accessibility },
       { label: t('reports.performance.bestPractices', 'Best Practices'), d: d.bestPractices, m: m.bestPractices },
-      { label: t('reports.seo.title', 'SEO'), d: d.seo, m: m.seo }
+      { label: t('reports.seo.title', 'SEO Analysis Report'), d: d.seo, m: m.seo }
     ];
     
     // Build bar chart
     const chartHtml = `
       <div style="margin-bottom: 1.5rem;">
-        <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem;">Score Comparison</div>
+        <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem;">${t('reports.performance.scoreComparison', 'Score Comparison')}</div>
         ${entries.map(e => {
           const avg = averageScore(e.d, e.m) || 0;
           const color = getScoreColor(avg);
@@ -2056,7 +2092,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Build CWV bar chart
     const chartHtml = `
       <div style="margin-bottom: 1.5rem;">
-        <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem;">Core Web Vitals Overview</div>
+        <div style="font-weight: 700; color: #00ff41; margin-bottom: 0.75rem;">${t('reports.performance.coreWebVitalsOverview', 'Core Web Vitals Overview')}</div>
         ${items.map(item => {
           const worst = Math.max(item.dVal || 0, item.mVal || 0);
           const getColor = (val) => {
@@ -2425,22 +2461,22 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderCWVNotesSection(data) {
     const notes = data.recommendations || [];
     if (!notes.length) {
-      return `<div style="color:#9ca3af;">${t('reports.common.noDiagnostics', 'No diagnostics available.')}</div>`;
+      return `<div style="color: var(--r-text-faint, #9CA3AF);">${t('reports.common.noDiagnostics', 'No diagnostics reported.')}</div>`;
     }
     return `
       <ul style="margin:0; padding-left:1.1rem; display:grid; gap:0.4rem;">
         ${notes.slice(0, 8).map(n => {
           if (typeof n === 'string') return `<li>${n}</li>`;
-          const title = n.title || n.metric || t('reports.common.issue', 'Issue');
+          const title = n.title || n.metric || t('reports.common.issue', 'issue');
           const desc = n.description || n.issue || n.detail || '';
-          return `<li><strong>${title}</strong>${desc ? ` — <span style="color:#9ca3af;">${desc}</span>` : ''}</li>`;
+          return `<li><strong>${title}</strong>${desc ? ` — <span style="color: var(--r-text-faint, #9CA3AF);">${desc}</span>` : ''}</li>`;
         }).join('')}
       </ul>
     `;
   }
 
   function renderLighthouseSummaryCard(url, overallPerf, generatedAt) {
-    const statusText = overallPerf >= 90 ? t('reports.performance.excellentPerformance', 'Excellent performance') : overallPerf >= 50 ? t('reports.performance.moderatePerformance', 'Moderate performance') : t('reports.performance.needsWork', 'Needs work');
+    const statusText = overallPerf >= 90 ? t('reports.performance.excellentPerformance', 'Excellent Performance!') : overallPerf >= 50 ? t('reports.performance.moderatePerformance', 'Moderate performance') : t('reports.performance.needsWork', 'Needs work');
     return `
       <div class="lh-report-card">
         <div class="lh-report-header">
@@ -2495,9 +2531,9 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="lh-device-header">${icon} ${label}</div>
         <div class="lh-metric-grid">
           ${createMetricCard(scores.performance ?? '—', t('reports.performance.performance', 'Performance'), typeof scores.performance === 'number' ? (scores.performance >= 90 ? 'good' : scores.performance >= 50 ? 'average' : 'poor') : 'unknown', '⚡')}
-          ${createMetricCard(scores.accessibility ?? '—', t('reports.accessibility.title', 'Accessibility'), typeof scores.accessibility === 'number' ? (scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor') : 'unknown', '♿')}
+          ${createMetricCard(scores.accessibility ?? '—', t('reports.accessibility.title', 'Accessibility Report'), typeof scores.accessibility === 'number' ? (scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor') : 'unknown', '♿')}
           ${createMetricCard(scores.bestPractices ?? '—', t('reports.performance.bestPractices', 'Best Practices'), typeof scores.bestPractices === 'number' ? (scores.bestPractices >= 90 ? 'good' : scores.bestPractices >= 50 ? 'average' : 'poor') : 'unknown', '✓')}
-          ${createMetricCard(scores.seo ?? '—', t('reports.seo.title', 'SEO'), typeof scores.seo === 'number' ? (scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor') : 'unknown', '🔍')}
+          ${createMetricCard(scores.seo ?? '—', t('reports.seo.title', 'SEO Analysis Report'), typeof scores.seo === 'number' ? (scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor') : 'unknown', '🔍')}
         </div>
         <div class="lh-metric-grid lh-metric-grid--cwv">
           ${createMetricCard(metrics.lcpDisplay, t('reports.cwv.lcp', 'LCP'), lcpRating, '🎯')}
@@ -2545,9 +2581,9 @@ document.addEventListener('DOMContentLoaded', () => {
       ${createSectionHeader(t('reports.performance.lighthouseScores', 'Lighthouse Scores'), '📊')}
       <div class="score-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 2rem;">
         ${createMetricCard(scores.performance, t('reports.performance.performance', 'Performance'), scores.performance >= 90 ? 'good' : scores.performance >= 50 ? 'average' : 'poor', '⚡')}
-        ${createMetricCard(scores.accessibility, t('reports.accessibility.title', 'Accessibility'), scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor', '♿')}
+        ${createMetricCard(scores.accessibility, t('reports.accessibility.title', 'Accessibility Report'), scores.accessibility >= 90 ? 'good' : scores.accessibility >= 50 ? 'average' : 'poor', '♿')}
         ${createMetricCard(scores.bestPractices, t('reports.performance.bestPractices', 'Best Practices'), scores.bestPractices >= 90 ? 'good' : scores.bestPractices >= 50 ? 'average' : 'poor', '✓')}
-        ${createMetricCard(scores.seo, t('reports.seo.title', 'SEO'), scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor', '🔍')}
+        ${createMetricCard(scores.seo, t('reports.seo.title', 'SEO Analysis Report'), scores.seo >= 90 ? 'good' : scores.seo >= 50 ? 'average' : 'poor', '🔍')}
       </div>
 
       ${createSectionHeader(t('reports.cwv.title', 'Core Web Vitals'), '⚡')}
@@ -2586,6 +2622,10 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[CWV Debug] Normalized mobile:', mobile);
     const url = urlInput.value;
     const timestamp = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
+
+    // Build screenshot URL for CWV report display
+    const reportId = document.body.getAttribute('data-report-id') || '';
+    const screenshotUrl = data.screenshotUrl || data.results?.screenshotUrl || document.body.getAttribute('data-sm-screenshot-url') || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
     const lcpScore = scoreFromCwvValue(desktop.coreWebVitals?.lcpMs || desktop.coreWebVitals?.lcp, mobile.coreWebVitals?.lcpMs || mobile.coreWebVitals?.lcp, 'lcp');
     const clsScore = scoreFromCwvValue(desktop.coreWebVitals?.cls || desktop.coreWebVitals?.clsNum, mobile.coreWebVitals?.cls || mobile.coreWebVitals?.clsNum, 'cls');
     const inpScore = scoreFromCwvValue(desktop.coreWebVitals?.inpMs || desktop.coreWebVitals?.tbtMs || desktop.coreWebVitals?.fidMs, mobile.coreWebVitals?.inpMs || mobile.coreWebVitals?.tbtMs || mobile.coreWebVitals?.fidMs, 'inp');
@@ -2690,8 +2730,27 @@ document.addEventListener('DOMContentLoaded', () => {
       checks: checksCount
     });
 
+    // Build screenshot HTML for CWV report
+    const screenshotHTML = screenshotUrl ? `
+      <div class="screenshot-section" style="margin-bottom: 1.5rem;">
+        <h3 style="color: var(--text-primary, #fff); font-size: 1rem; margin: 0 0 0.75rem 0; font-weight: 600;">
+          ${t('reports.common.pageScreenshot', 'Page Screenshot')}
+        </h3>
+        <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
+          <img
+            src="${screenshotUrl}"
+            alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}')} ${url}"
+            class="screenshot-item__img perf-hub-screenshot"
+            style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
+            onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${t('reports.common.screenshotUnavailable', 'Screenshot unavailable')}</div>'"
+          />
+        </div>
+      </div>
+    ` : '';
+
     const html = `
       ${ReportShell.renderReportHeader({ title: t('reports.performanceHub.cwvTitle', 'Speed & UX Report: Core Web Vitals'), url, timestamp, badgeText: t('reports.performanceHub.cwvBadge', 'Core Web Vitals'), mode: 'cwv' })}
+      ${screenshotHTML}
       ${riskBanner}
       ${summaryDonuts}
       ${accordions}
@@ -2714,6 +2773,18 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('[CWV Debug] resultsContent after innerHTML:', resultsContent?.innerHTML?.length);
     console.log('[CWV Debug] results.hidden:', results?.hidden);
     console.log('[CWV Debug] results.classList:', results?.classList?.toString());
+
+    // Add click handler for screenshot lightbox
+    if (screenshotUrl) {
+      const screenshotImg = resultsContent.querySelector('.perf-hub-screenshot');
+      if (screenshotImg) {
+        screenshotImg.addEventListener('click', () => {
+          if (window.ScreenshotLightbox && typeof window.ScreenshotLightbox.open === 'function') {
+            window.ScreenshotLightbox.open(screenshotUrl, t('reports.common.pageScreenshot', 'Page Screenshot'));
+          }
+        });
+      }
+    }
 
     window.currentPerformanceHubResults = { mode: 'cwv', url, data };
     ReportAccordion.initInteractions();
@@ -2892,7 +2963,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const worst = risky.some(s => s.tier === 'fail') ? 'fail' : 'warn';
     const tone = worst === 'fail' ? '#ef4444' : '#f59e0b';
     return `
-      <div style="margin: 0 0 1rem 0; padding: 0.75rem 1rem; border-radius: 10px; border: 1px solid ${tone}33; background: ${tone}12; color: ${tone}; font-weight: 700;">
+      <div style="margin: 0 0 1rem 0; padding: 0.75rem 1rem; border-radius: 12px; border: 1px solid ${tone}33; background: ${tone}12; color: ${tone}; font-weight: 700;">
         ${worst === 'fail' ? t('reports.common.riskBanner.failing', 'Some metrics are failing: ') : t('reports.common.riskBanner.atRisk', 'Metrics at risk: ')}
         ${risky.map(r => r.metric.toUpperCase()).join(', ')}${t('reports.common.riskBanner.suffix', ' — improve to meet targets.')}
       </div>
@@ -2909,7 +2980,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <summary class="resource-summary">
             <span class="resource-badge resource-css">CSS</span>
             <span style="font-weight: bold;">${t('reports.performance.externalInlineCount', '{{external}} external, {{inline}} inline', {external: resources.css.totalFiles || 0, inline: resources.css.totalInline || 0})}</span>
-            <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.estimatedSize', 'Estimated: {{size}}', {size: formatKB(resources.css.estimatedSizeKB)})}</span>
+            <span style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.estimatedSize', 'Estimated: {{size}}', {size: formatKB(resources.css.estimatedSizeKB)})}</span>
           </summary>
           <div class="resource-details-content">
             ${(resources.css.files || []).length > 0 ? `
@@ -2921,7 +2992,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   `).join('')}
                 </tbody>
               </table>
-            ` : '<p style="color: #888;">' + t('reports.performance.noExternalCssFiles', 'No external CSS files') + '</p>'}
+            ` : '<p style="color: var(--r-text-faint, #9CA3AF);">' + t('reports.performance.noExternalCssFiles', 'No external CSS files') + '</p>'}
           </div>
         </details>
       `;
@@ -2934,7 +3005,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <summary class="resource-summary">
             <span class="resource-badge resource-js">JavaScript</span>
             <span style="font-weight: bold;">${t('reports.performance.externalInlineCount', '{{external}} external, {{inline}} inline', {external: resources.js.totalFiles || 0, inline: resources.js.totalInline || 0})}</span>
-            <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.asyncDeferCount', 'Async: {{async}} | Defer: {{defer}}', {async: (resources.js.async || []).length, defer: (resources.js.defer || []).length})}</span>
+            <span style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.asyncDeferCount', 'Async: {{async}} | Defer: {{defer}}', {async: (resources.js.async || []).length, defer: (resources.js.defer || []).length})}</span>
           </summary>
           <div class="resource-details-content">
             ${(resources.js.files || []).length > 0 ? `
@@ -2951,7 +3022,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   `).join('')}
                 </tbody>
               </table>
-            ` : '<p style="color: #888;">' + t('reports.performance.noExternalJsFiles', 'No external JavaScript files') + '</p>'}
+            ` : '<p style="color: var(--r-text-faint, #9CA3AF);">' + t('reports.performance.noExternalJsFiles', 'No external JavaScript files') + '</p>'}
           </div>
         </details>
       `;
@@ -2964,7 +3035,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <summary class="resource-summary">
             <span class="resource-badge resource-image">${t('reports.performance.imagesLabel', 'Images')}</span>
             <span style="font-weight: bold;">${t('reports.performance.imageCount', '{{count}} images', {count: resources.images.total || 0})}</span>
-            <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.missingAltLazy', 'Missing alt: {{alt}} | Lazy: {{lazy}}', {alt: resources.images.withoutAlt || 0, lazy: resources.images.lazyLoaded || 0})}</span>
+            <span style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.missingAltLazy', 'Missing alt: {{alt}} | Lazy: {{lazy}}', {alt: resources.images.withoutAlt || 0, lazy: resources.images.lazyLoaded || 0})}</span>
           </summary>
           <div class="resource-details-content">
             ${resources.images.formats && Object.keys(resources.images.formats).length > 0 ? `
@@ -2983,7 +3054,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     `).join('')}
                 </tbody>
               </table>
-            ` : '<p style="color: #888;">' + t('reports.performance.noImageFormatData', 'No image format data') + '</p>'}
+            ` : '<p style="color: var(--r-text-faint, #9CA3AF);">' + t('reports.performance.noImageFormatData', 'No image format data') + '</p>'}
           </div>
         </details>
       `;
@@ -3014,11 +3085,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${(resources.thirdParty.domains || []).slice(0, 20).map(d => `
                       <span style="background: rgba(236, 72, 153, 0.15); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${d}</span>
                     `).join('')}
-                    ${(resources.thirdParty.domains || []).length > 20 ? `<span style="color: #888; font-size: 0.75rem;">${t('reports.common.plusMore', '+{{count}} more', {count: resources.thirdParty.domains.length - 20})}</span>` : ''}
+                    ${(resources.thirdParty.domains || []).length > 20 ? `<span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${t('reports.common.plusMore', '+{{count}} more', {count: resources.thirdParty.domains.length - 20})}</span>` : ''}
                   </div>
                 </div>
               ` : ''}
-            ` : '<p style="color: #888;">' + t('reports.performance.noThirdPartyResources', 'No third-party resources detected') + '</p>'}
+            ` : '<p style="color: var(--r-text-faint, #9CA3AF);">' + t('reports.performance.noThirdPartyResources', 'No third-party resources detected') + '</p>'}
           </div>
         </details>
       `;
@@ -3031,7 +3102,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <summary class="resource-summary">
             <span class="resource-badge resource-font">${t('reports.performance.fonts', 'Fonts')}</span>
             <span style="font-weight: bold;">${t('reports.performance.preloadedCount', '{{count}} preloaded', {count: resources.fonts.preloaded || 0})}</span>
-            <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.missingFontDisplayCount', 'Missing font-display: {{count}}', {count: resources.fonts.withoutDisplay || 0})}</span>
+            <span style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.missingFontDisplayCount', 'Missing font-display: {{count}}', {count: resources.fonts.withoutDisplay || 0})}</span>
           </summary>
           <div class="resource-details-content">
             ${(resources.fonts.providers || []).length > 0 ? `
@@ -3041,7 +3112,7 @@ document.addEventListener('DOMContentLoaded', () => {
                   ${(resources.fonts.providers || []).map(p => `<tr><td>${p}</td></tr>`).join('')}
                 </tbody>
               </table>
-            ` : '<p style="color: #888;">' + t('reports.performance.noFontProviders', 'No font providers detected') + '</p>'}
+            ` : '<p style="color: var(--r-text-faint, #9CA3AF);">' + t('reports.performance.noFontProviders', 'No font providers detected') + '</p>'}
           </div>
         </details>
       `;
@@ -3388,10 +3459,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const statusDefault = score >= 80 ? '✓ Good Performance' : score >= 50 ? '⚠ Needs Improvement' : '✗ Poor Performance';
 
     return `
-      <div style="text-align: center; margin-bottom: 3rem; padding: 2.25rem 2rem 2rem; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.1); border-radius: 16px; overflow: visible;">
+      <div style="text-align: center; margin-bottom: 3rem; padding: 2.25rem 2rem 2rem; background: rgba(255,255,255,0.02); border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); border-radius: 12px; overflow: visible;">
         <h2 style="margin-bottom: 1.5rem; font-size: 1.5rem;">${title}</h2>
         ${renderScoreRing(score, grade, 140)}
-        ${subtitle ? `<p style="margin-top: 1rem; color: #888; font-size: 0.95rem;">${subtitle}</p>` : ''}
+        ${subtitle ? `<p style="margin-top: 1rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.95rem;">${subtitle}</p>` : ''}
         <p style="margin-top: 0.75rem; font-size: 1.05rem; color: ${colorClass}; font-weight: 600;">
           ${statusText || statusDefault}
         </p>
@@ -3412,10 +3483,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const color = colors[rating] || '#888';
 
     return `
-      <div class="metric-card" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; transition: transform 0.2s;">
+      <div class="metric-card" style="background: rgba(255,255,255,0.03); border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); border-radius: 12px; padding: 1rem 1.25rem; display: flex; align-items: center; gap: 0.75rem; transition: transform 0.2s;">
         ${icon ? `<div style="font-size: 1.5rem; flex-shrink: 0;">${icon}</div>` : ''}
         <div style="font-size: 1.25rem; font-weight: 700; color: ${color}; white-space: nowrap; flex-shrink: 0;">${value}</div>
-        <div class="metric-label" style="color: #888; text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.3px; font-weight: 600; line-height: 1.2; text-align: right; margin-left: auto;">${label}</div>
+        <div class="metric-label" style="color: var(--r-text-faint, #9CA3AF); text-transform: uppercase; font-size: 0.6rem; letter-spacing: 0.3px; font-weight: 600; line-height: 1.2; text-align: right; margin-left: auto;">${label}</div>
       </div>
     `;
   }
@@ -3528,8 +3599,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const config = steps[currentMode] || steps.quick;
 
     return `
-      <div class="no-print" style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid rgba(255,255,255,0.1);">
-        <p style="color: #888; margin-bottom: 1.5rem; font-size: 1rem;">${config.title}</p>
+      <div class="no-print" style="text-align: center; margin-top: 3rem; padding-top: 2rem; border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+        <p style="color: var(--r-text-faint, #9CA3AF); margin-bottom: 1.5rem; font-size: 1rem;">${config.title}</p>
         <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
           ${config.buttons.map(btn => {
             const isPrimary = btn.style === 'primary';
@@ -3537,7 +3608,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <button data-action="switch-mode" data-mode="${btn.mode}" class="perf-mode-btn ${isPrimary ? 'perf-mode-btn--primary' : ''}" style="
                 background: ${isPrimary ? 'linear-gradient(135deg, #3b82f6, #8b5cf6)' : 'transparent'};
                 border: ${isPrimary ? 'none' : '1px solid rgba(255,255,255,0.2)'};
-                color: #fff;
+                color: var(--r-text, #111827);
                 padding: 0.75rem 2rem;
                 border-radius: 8px;
                 cursor: pointer;
@@ -3594,7 +3665,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modeParam = current.mode ? `&mode=${current.mode}` : '';
     const shareUrl = `${window.location.origin}/performance-hub.html?url=${encodeURIComponent(targetUrl)}${modeParam}`;
     navigator.clipboard.writeText(shareUrl).then(() => {
-      alert(t('reports.common.shareLinkCopied', 'Share link copied to clipboard'));
+      alert(t('reports.common.shareLinkCopied', 'Share link copied to clipboard!'));
     });
   }
 
@@ -3844,7 +3915,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span style="font-size: 1.5rem;">🚀</span>
               <div>
                 <div style="font-weight: 700; font-size: 1.1rem; color: var(--text-primary);">${t('reports.performanceHub.continueAnalyzing', 'Continue Analyzing')}</div>
-                <div style="font-size: 0.9rem; color: var(--text-secondary);">${t('reports.performanceHub.continueAnalyzingSubtitle', 'Get a complete picture of your site\'s health with these free scans')}</div>
+                <div style="font-size: 0.9rem; color: var(--text-secondary);">${t('reports.performanceHub.continueAnalyzingSubtitle', 'Get a complete picture of your site\'s health with these free scans's health with these free scans')}</div>
               </div>
             </div>
 
@@ -3914,17 +3985,17 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="take-action">
         <div class="take-action__header">
           <div>
-            <div class="take-action__title">Take Action</div>
-            <div class="take-action__subtitle">Export and share results (Pro)</div>
+            <div class="take-action__title">${t('reports.common.takeAction', 'Take Action')}</div>
+            <div class="take-action__subtitle">${t('reports.common.exportAndShare', 'Export and share results (Pro)')}</div>
           </div>
           <span class="pro-pill">PRO</span>
         </div>
         <div class="take-action__actions">
-          <button class="take-action__btn" data-action="export-pdf">Export PDF</button>
-          <button class="take-action__btn" data-action="share-link">Share Link</button>
-          <button class="take-action__btn" data-action="download-csv">Download CSV</button>
+          <button class="take-action__btn" data-action="export-pdf">${t('reports.common.exportPdf', 'Export PDF')}</button>
+          <button class="take-action__btn" data-action="share-link">${t('reports.common.shareLink', 'Share Link')}</button>
+          <button class="take-action__btn" data-action="download-csv">${t('reports.common.downloadCsv', 'Download CSV')}</button>
         </div>
-        ${locked ? renderLockedProPreview('Pro export locked', ['Export PDF', 'Share Link', 'Download CSV']) : ''}
+        ${locked ? renderLockedProPreview(t('reports.common.proExportLocked', 'Pro export locked'), [t('reports.common.exportPdf', 'Export PDF'), t('reports.common.shareLink', 'Share Link'), t('reports.common.downloadCsv', 'Download CSV')]) : ''}
       </div>
     `;
   }
@@ -3970,7 +4041,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .pro-locked {
         position: relative;
         border: 1px dashed rgba(0, 255, 65, 0.3);
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 1rem;
         background: rgba(255, 255, 255, 0.02);
         overflow: hidden;
@@ -4035,7 +4106,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .summary-footer {
         margin: 2rem 0 0 0;
         padding: 1.25rem 1rem;
-        border-radius: 10px;
+        border-radius: 12px;
         border: 1px solid rgba(var(--accent-primary-rgb), 0.2);
         background: rgba(var(--accent-primary-rgb), 0.05);
         display: flex;
@@ -4065,8 +4136,8 @@ document.addEventListener('DOMContentLoaded', () => {
       .take-action {
         margin-top: 1.25rem;
         padding: 1.25rem;
-        border: 1px solid rgba(255,255,255,0.1);
-        border-radius: 10px;
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
+        border-radius: 12px;
         background: rgba(255,255,255,0.02);
       }
       .take-action__header {
@@ -4169,7 +4240,7 @@ document.addEventListener('DOMContentLoaded', () => {
         margin-bottom: 0.75rem;
       }
       .lh-metric-grid--cwv {
-        border-top: 1px solid rgba(255,255,255,0.05);
+        border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         padding-top: 0.75rem;
       }
       .accordion {
@@ -4280,7 +4351,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     rows.push([]);
-    rows.push([t('reports.common.recommendations', 'RECOMMENDATIONS')]);
+    rows.push([t('reports.common.recommendations', 'Recommendations')]);
     const recs = data?.recommendations || [];
     if (Array.isArray(recs) && recs.length > 0) {
       recs.forEach((rec, i) => {
@@ -4412,7 +4483,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="
           background: var(--bg-card);
           border: 2px solid ${info.color};
-          border-radius: 16px;
+          border-radius: 12px;
           padding: 2.5rem;
           max-width: 500px;
           width: 90%;
@@ -4458,7 +4529,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <button id="proceedPaymentBtn" style="
               background: ${info.color};
               border: none;
-              color: #fff;
+              color: var(--r-text, #111827);
               padding: 0.875rem 1.5rem;
               border-radius: 8px;
               cursor: pointer;

@@ -48,7 +48,7 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.nap', 'Name, Address, and Phone (NAP) consistency is a foundational local SEO ranking factor. Search engines cross-reference your NAP information across directories, citations, and your own website to verify business legitimacy. Inconsistent NAP data confuses search engines and can suppress your visibility in local search results. This section evaluates whether your business name, address, and phone number are presented consistently and identifies any discrepancies.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.nap', 'NAP (Name, Address, Phone) consistency is a fundamental local SEO ranking factor. Search engines cross-reference your business information across the web to verify legitimacy. Inconsistent NAP data can confuse search engines and reduce your local search visibility. This section checks for NAP presence and consistency issues.')) + '</p>';
 
       // NAP details table
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.localSeo.report.nap.detailsHeading', 'Business Information')) + '</h3>';
@@ -84,9 +84,9 @@
 
       // Metrics
       html += PR.renderMetrics([
-        { value: d.name ? t('seo.report.status.found', 'Found') : t('seo.report.status.notFound', 'Not Found'), label: t('reports.localSeo.report.nap.rows.name', 'Business Name'), color: d.name ? '#10b981' : '#ef4444' },
-        { value: d.address ? t('seo.report.status.found', 'Found') : t('seo.report.status.notFound', 'Not Found'), label: t('reports.localSeo.report.nap.rows.address', 'Address'), color: d.address ? '#10b981' : '#ef4444' },
-        { value: d.phone ? t('seo.report.status.found', 'Found') : t('seo.report.status.notFound', 'Not Found'), label: t('reports.localSeo.report.nap.rows.phone', 'Phone'), color: d.phone ? '#10b981' : '#ef4444' }
+        { value: d.name ? t('seo.report.status.found', 'Found') : t('seo.report.status.notFound', 'Not found'), label: t('reports.localSeo.report.nap.rows.name', 'Business Name'), color: d.name ? '#10b981' : '#ef4444' },
+        { value: d.address ? t('seo.report.status.found', 'Found') : t('seo.report.status.notFound', 'Not found'), label: t('reports.localSeo.report.nap.rows.address', 'Address'), color: d.address ? '#10b981' : '#ef4444' },
+        { value: d.phone ? t('seo.report.status.found', 'Found') : t('seo.report.status.notFound', 'Not found'), label: t('reports.localSeo.report.nap.rows.phone', 'Phone'), color: d.phone ? '#10b981' : '#ef4444' }
       ]);
 
       // Issues table
@@ -113,11 +113,11 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.schema', 'Local business schema markup helps search engines understand your business type, location, hours of operation, and service area. Implementing structured data using LocalBusiness or Organization schema types enables rich results in search, including knowledge panels and map listings. This section checks for the presence and completeness of structured data markup relevant to local SEO.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.schema', 'Local business schema markup helps search engines understand your business details and display rich results. Proper schema implementation can earn you enhanced search listings with ratings, hours, and contact information. This section evaluates your structured data for local business relevance.')) + '</p>';
 
       // Schema status metrics
       html += PR.renderMetrics([
-        { value: d.found ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not Detected'), label: t('reports.localSeo.report.schema.statusLabel', 'Schema Status'), color: d.found ? '#10b981' : '#ef4444' },
+        { value: d.found ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not detected'), label: t('reports.localSeo.report.schema.statusLabel', 'Schema Status'), color: d.found ? '#10b981' : '#ef4444' },
         { value: (d.types || []).length, label: t('reports.localSeo.report.schema.typesCountLabel', 'Schema Types Found') }
       ]);
 
@@ -177,7 +177,7 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.keywords', 'Local keywords are search terms that include geographic modifiers or local intent signals. Optimizing for local keywords helps your business appear in location-specific searches and map results. This section analyzes the local keywords found on your page, their density relative to overall content, and provides suggestions for additional local terms to target. Effective local keyword usage signals geographic relevance to search engines.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.keywords', 'Local keywords signal geographic relevance to search engines. This section analyzes your content for location-specific terms, service area keywords, and local intent signals. Proper use of local keywords helps your pages rank for geographically targeted searches.')) + '</p>';
 
       // Keyword density metric
       html += PR.renderMetrics([
@@ -270,7 +270,7 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.presence', 'Local online presence encompasses your visibility across business directories, citation sources, and Google Business Profile. A strong local presence with consistent listings across major platforms strengthens your authority in local search results. This section evaluates your Google Business Profile status, citation count, and directory listings to identify gaps in your local online footprint.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.presence', 'Local presence factors include Google Business Profile optimization, local directory citations, and review signals. This section evaluates indicators of your local search presence and identifies opportunities to strengthen your visibility in local search results.')) + '</p>';
 
       // Google Business status
       html += PR.renderMetrics([
@@ -347,7 +347,7 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.recommendations', 'Based on the local SEO analysis, this section provides prioritized recommendations to improve your local search visibility. Each recommendation includes the priority level and a description of the suggested action. Addressing high-priority items first will yield the greatest improvements to your local search rankings and visibility in map results.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.recommendations', 'Based on the local SEO analysis, these recommendations target the most impactful improvements for your local search visibility and geographic relevance.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Group by priority/severity
@@ -360,7 +360,7 @@
         });
 
         var groups = [
-          { items: critical, label: t('common.pdf.execSummary.highPriority', 'Critical'), color: '#ef4444' },
+          { items: critical, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444' },
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
           { items: low, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6' }

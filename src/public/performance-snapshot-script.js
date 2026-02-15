@@ -123,7 +123,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ">
           ${data.performanceScore || 0}
         </div>
-        <p style="margin-top: 1rem; color: #808080;">
+        <p style="margin-top: 1rem; color: var(--r-text-faint, #9CA3AF);">
           ${data.pagesScanned || 1} ${t('reports.performance.pagesAnalyzed', 'page(s) analyzed')}
         </p>
       </div>
@@ -136,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color: ${getMetricColor(summary.estimatedPageWeightKB, 1000, 3000)}">${formatKB(summary.estimatedPageWeightKB)}</div>
-          <div class="metric-label">${t('reports.performance.pageWeight', 'Page Weight')}</div>
+          <div class="metric-label">${t('reports.performance.pageWeight', 'Page Weight (KB)')}</div>
         </div>
         <div class="metric-card">
           <div class="metric-value" style="color: ${getMetricColor(summary.renderBlockingCount, 3, 5)}">${summary.renderBlockingCount || 0}</div>
@@ -169,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <summary class="resource-summary">
                 <span class="resource-badge resource-css">CSS</span>
                 <span style="font-weight: bold;">${resources.css.totalFiles || 0} ${t('reports.performance.external', 'external')}, ${resources.css.totalInline || 0} ${t('reports.performance.inline', 'inline')}</span>
-                <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.estimated', 'Estimated')}: ${formatKB(resources.css.estimatedSizeKB)}</span>
+                <span style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.estimated', 'Estimated')}: ${formatKB(resources.css.estimatedSizeKB)}</span>
               </summary>
               <div class="resource-details-content">
                 ${(resources.css.files || []).length > 0 ? `
@@ -181,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       `).join('')}
                     </tbody>
                   </table>
-                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noExternalCssFiles', 'No external CSS files') + '</p>'}
+                ` : '<p style="color: var(--r-text-faint, #9CA3AF); padding: 0.5rem;">' + t('reports.performance.noExternalCssFiles', 'No external CSS files') + '</p>'}
               </div>
             </details>
           ` : ''}
@@ -192,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <summary class="resource-summary">
                 <span class="resource-badge resource-js">JavaScript</span>
                 <span style="font-weight: bold;">${resources.js.totalFiles || 0} ${t('reports.performance.external', 'external')}, ${resources.js.totalInline || 0} ${t('reports.performance.inline', 'inline')}</span>
-                <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.async', 'Async')}: ${(resources.js.async || []).length} | ${t('reports.performance.defer', 'Defer')}: ${(resources.js.defer || []).length}</span>
+                <span style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.async', 'Async')}: ${(resources.js.async || []).length} | ${t('reports.performance.defer', 'Defer')}: ${(resources.js.defer || []).length}</span>
               </summary>
               <div class="resource-details-content">
                 ${(resources.js.files || []).length > 0 ? `
@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
                       `).join('')}
                     </tbody>
                   </table>
-                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noExternalJsFiles', 'No external JavaScript files') + '</p>'}
+                ` : '<p style="color: var(--r-text-faint, #9CA3AF); padding: 0.5rem;">' + t('reports.performance.noExternalJsFiles', 'No external JavaScript files') + '</p>'}
               </div>
             </details>
           ` : ''}
@@ -219,8 +219,8 @@ document.addEventListener('DOMContentLoaded', () => {
             <details class="resource-details">
               <summary class="resource-summary">
                 <span class="resource-badge resource-image">${t('reports.performance.imagesLabel', 'Images')}</span>
-                <span style="font-weight: bold;">${resources.images.total || 0} ${t('reports.performance.images', 'images')}</span>
-                <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.missingAlt', 'Missing alt')}: ${resources.images.withoutAlt || 0} | ${t('reports.performance.lazy', 'Lazy')}: ${resources.images.lazyLoaded || 0}</span>
+                <span style="font-weight: bold;">${resources.images.total || 0} ${t('reports.performance.images', 'Images')}</span>
+                <span style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.missingAlt', 'Missing alt')}: ${resources.images.withoutAlt || 0} | ${t('reports.performance.lazy', 'Lazy')}: ${resources.images.lazyLoaded || 0}</span>
               </summary>
               <div class="resource-details-content">
                 ${resources.images.formats && Object.keys(resources.images.formats).length > 0 ? `
@@ -239,7 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         `).join('')}
                     </tbody>
                   </table>
-                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noImageFormatData', 'No image format data') + '</p>'}
+                ` : '<p style="color: var(--r-text-faint, #9CA3AF); padding: 0.5rem;">' + t('reports.performance.noImageFormatData', 'No image format data') + '</p>'}
               </div>
             </details>
           ` : ''}
@@ -270,11 +270,11 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${(resources.thirdParty.domains || []).slice(0, 20).map(d => `
                           <span style="background: rgba(236, 72, 153, 0.15); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem;">${d}</span>
                         `).join('')}
-                        ${(resources.thirdParty.domains || []).length > 20 ? `<span style="color: #888; font-size: 0.75rem;">+${resources.thirdParty.domains.length - 20} ${t('reports.common.more', 'more')}</span>` : ''}
+                        ${(resources.thirdParty.domains || []).length > 20 ? `<span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">+${resources.thirdParty.domains.length - 20} ${t('reports.common.more', 'more')}</span>` : ''}
                       </div>
                     </div>
                   ` : ''}
-                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noThirdPartyResources', 'No third-party resources detected') + '</p>'}
+                ` : '<p style="color: var(--r-text-faint, #9CA3AF); padding: 0.5rem;">' + t('reports.performance.noThirdPartyResources', 'No third-party resources detected') + '</p>'}
               </div>
             </details>
           ` : ''}
@@ -285,7 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <summary class="resource-summary">
                 <span class="resource-badge resource-font">${t('reports.performance.fonts', 'Fonts')}</span>
                 <span style="font-weight: bold;">${resources.fonts.preloaded || 0} ${t('reports.performance.preloaded', 'preloaded')}</span>
-                <span style="font-size: 0.85rem; color: #888;">${t('reports.performance.missingFontDisplay', 'Missing font-display')}: ${resources.fonts.withoutDisplay || 0}</span>
+                <span style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.performance.missingFontDisplay', 'Missing font-display')}: ${resources.fonts.withoutDisplay || 0}</span>
               </summary>
               <div class="resource-details-content">
                 ${(resources.fonts.providers || []).length > 0 ? `
@@ -295,10 +295,10 @@ document.addEventListener('DOMContentLoaded', () => {
                       ${(resources.fonts.providers || []).map(p => `<tr><td>${p}</td></tr>`).join('')}
                     </tbody>
                   </table>
-                ` : '<p style="color: #888; padding: 0.5rem;">' + t('reports.performance.noFontProviders', 'No font providers detected') + '</p>'}
+                ` : '<p style="color: var(--r-text-faint, #9CA3AF); padding: 0.5rem;">' + t('reports.performance.noFontProviders', 'No font providers detected') + '</p>'}
                 ${(resources.fonts.issues || []).length > 0 ? `
                   <div style="margin-top: 1rem;">
-                    <strong style="font-size: 0.85rem; color: #f59e0b;">${t('reports.common.issues', 'Issues')}:</strong>
+                    <strong style="font-size: 0.85rem; color: #f59e0b;">${t('reports.common.issues', 'issues')}:</strong>
                     <ul style="margin: 0.5rem 0 0 1.5rem; padding: 0;">
                       ${resources.fonts.issues.map(i => `<li style="font-size: 0.85rem;">${i.message}</li>`).join('')}
                     </ul>
@@ -313,13 +313,13 @@ document.addEventListener('DOMContentLoaded', () => {
       <!-- Issues -->
       ${issues.length > 0 ? `
         <div style="margin-bottom: 2rem;">
-          <h3 style="margin-bottom: 1rem;">⚠️ ${t('reports.common.issuesDetected', 'Issues Detected')} (${issues.length})</h3>
+          <h3 style="margin-bottom: 1rem;">⚠️ ${t('reports.common.issuesDetected', '{{count}} issues detected')} (${issues.length})</h3>
           ${issues.map(issue => `
             <div class="issue-card ${issue.severity === 'warning' ? 'warning' : issue.severity === 'info' ? 'info' : ''}">
               <div style="font-weight: bold; color: ${issue.severity === 'high' ? '#ef4444' : issue.severity === 'warning' ? '#f59e0b' : '#3b82f6'};">
-                ${issue.title || issue.type || t('reports.common.issue', 'Issue')}
+                ${issue.title || issue.type || t('reports.common.issue', 'issue')}
               </div>
-              <p style="margin: 0.5rem 0 0 0; color: #ccc; font-size: 0.9rem;">${issue.message || issue.description || ''}</p>
+              <p style="margin: 0.5rem 0 0 0; color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${issue.message || issue.description || ''}</p>
             </div>
           `).join('')}
         </div>
@@ -336,8 +336,8 @@ document.addEventListener('DOMContentLoaded', () => {
           ${recommendations.recommendations.map(rec => `
             <div style="background: rgba(16, 185, 129, 0.05); border-left: 3px solid ${rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#f59e0b' : '#10b981'}; padding: 1rem; margin-bottom: 0.5rem; border-radius: 0 4px 4px 0;">
               <div style="font-weight: bold; color: ${rec.priority === 'high' ? '#ef4444' : rec.priority === 'medium' ? '#f59e0b' : '#10b981'};">${rec.title}</div>
-              <p style="margin: 0.5rem 0; color: #ccc;">${rec.description}</p>
-              ${rec.impact ? `<p style="margin: 0; font-size: 0.85rem; color: #888;">📈 ${t('reports.common.impact', 'Impact')}: ${rec.impact}</p>` : ''}
+              <p style="margin: 0.5rem 0; color: var(--r-text-muted, #6B7280);">${rec.description}</p>
+              ${rec.impact ? `<p style="margin: 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">📈 ${t('reports.common.impact', 'Impact')}: ${rec.impact}</p>` : ''}
             </div>
           `).join('')}
         </div>
@@ -350,7 +350,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${summary.renderBlockingCount > 0 ? `
             <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 4px;">
               <div style="font-weight: bold; margin-bottom: 0.5rem;">1. ${t('reports.performance.eliminateRenderBlocking', 'Eliminate Render-Blocking Resources')}</div>
-              <code style="display: block; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;">
+              <code style="display: block; background: var(--r-surface-2, #F8FAFC); padding: 0.5rem; border-radius: 4px; font-size: 0.8rem; overflow-x: auto;">
 &lt;script src="app.js" defer&gt;&lt;/script&gt;
 &lt;link rel="preload" href="styles.css" as="style" onload="this.rel='stylesheet'"&gt;
               </code>
@@ -359,14 +359,14 @@ document.addEventListener('DOMContentLoaded', () => {
           ${resources.images && resources.images.missingAlt > 0 ? `
             <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 4px;">
               <div style="font-weight: bold; margin-bottom: 0.5rem;">2. ${t('reports.performance.addLazyLoading', 'Add Lazy Loading to Images')}</div>
-              <code style="display: block; background: rgba(0,0,0,0.3); padding: 0.5rem; border-radius: 4px; font-size: 0.8rem;">
+              <code style="display: block; background: var(--r-surface-2, #F8FAFC); padding: 0.5rem; border-radius: 4px; font-size: 0.8rem;">
 &lt;img src="image.jpg" loading="lazy" alt="Description"&gt;
               </code>
             </div>
           ` : ''}
           <div style="background: rgba(255,255,255,0.03); padding: 1rem; border-radius: 4px;">
             <div style="font-weight: bold; margin-bottom: 0.5rem;">3. ${t('reports.performance.enableCompression', 'Enable Compression')}</div>
-            <p style="margin: 0; font-size: 0.85rem; color: #888;">
+            <p style="margin: 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">
               ${t('reports.performance.enableCompressionDesc', 'Enable Gzip/Brotli compression on your server to reduce file sizes by 70-90%.')}
             </p>
           </div>
@@ -375,6 +375,10 @@ document.addEventListener('DOMContentLoaded', () => {
     `;
 
     resultsContent.innerHTML = html;
+
+    // Dispatch report:ready for PDF export and ReportJump triggers
+    window.__REPORT_READY__ = true;
+    window.dispatchEvent(new CustomEvent('report:ready'));
   }
 
   function getScoreColor(score) {

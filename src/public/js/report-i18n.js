@@ -85,7 +85,7 @@
     // Tab labels
     tabSummary: () => t('reports.common.tabs.summary', 'Summary'),
     tabCode: () => t('reports.common.tabs.code', 'Code'),
-    tabGuide: () => t('reports.common.tabs.guide', 'Fix Guide'),
+    tabGuide: () => t('reports.common.tabs.guide', 'Guide'),
 
     // Priority/severity
     priorityHigh: () => t('reports.common.priority.high', 'High'),

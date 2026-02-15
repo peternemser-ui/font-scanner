@@ -568,11 +568,11 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div>
           <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">${t('reports.crawler.sitemap', 'Sitemap')}</div>
-          <div style="font-weight: 600;">${data.options?.includeSitemap ? t('reports.crawler.enabled', '✓ Enabled') : t('reports.crawler.disabled', '✗ Disabled')}</div>
+          <div style="font-weight: 600;">${data.options?.includeSitemap ? t('reports.crawler.enabled', 'Enabled') : t('reports.crawler.disabled', 'Disabled')}</div>
         </div>
         <div>
           <div style="color: var(--text-tertiary); font-size: 0.85rem; margin-bottom: 0.25rem;">${t('reports.crawler.robotsTxt', 'Robots.txt')}</div>
-          <div style="font-weight: 600;">${data.options?.respectRobotsTxt ? t('reports.crawler.respected', '✓ Respected') : t('reports.crawler.ignored', '✗ Ignored')}</div>
+          <div style="font-weight: 600;">${data.options?.respectRobotsTxt ? t('reports.crawler.respected', 'Respected') : t('reports.crawler.ignored', 'Ignored')}</div>
         </div>
       </div>
     `;
@@ -643,7 +643,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderDiscoveredPagesContent(pages, siteStructure) {
     return `
       <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <input type="text" id="pageSearch" placeholder="${t('reports.crawler.filterPages', '🔍 Filter pages...')}"
+        <input type="text" id="pageSearch" placeholder="${t('reports.crawler.filterPages', 'Filter pages...')}"
           data-action="filter-pages"
           class="input input-sm" style="min-width: 200px;">
         <select id="sectionFilter" data-action="filter-by-section" class="input input-sm">
@@ -651,7 +651,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${Object.keys(siteStructure.children).map(section => `<option value="${section}">/${section}/</option>`).join('')}
         </select>
         <button data-action="toggle-view-mode" id="viewModeBtn" class="btn btn-secondary btn-sm">
-          ${t('reports.crawler.groupView', '📁 Group View')}
+          ${t('reports.crawler.groupView', 'Group View')}
         </button>
       </div>
       
@@ -685,13 +685,13 @@ document.addEventListener('DOMContentLoaded', () => {
     return `
       <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
         <button data-action="download-json" class="btn btn-secondary">
-          ${t('reports.crawler.downloadJson', '💾 Download JSON')}
+          ${t('reports.crawler.downloadJson', 'Download JSON')}
         </button>
         <button data-action="download-csv" class="btn btn-secondary">
-          ${t('reports.crawler.downloadCsv', '📊 Download CSV')}
+          ${t('reports.crawler.downloadCsv', 'Download CSV')}
         </button>
         <button data-action="download-sitemap" class="btn btn-primary">
-          ${t('reports.crawler.downloadSitemapXml', '🗺️ Download Sitemap XML')}
+          ${t('reports.crawler.downloadSitemapXml', 'Download Sitemap XML')}
         </button>
       </div>
     `;
@@ -706,20 +706,20 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
         <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
           <button data-action="download-json" class="btn btn-secondary">
-            ${t('reports.crawler.downloadJson', '💾 Download JSON')}
+            ${t('reports.crawler.downloadJson', 'Download JSON')}
           </button>
           <button data-action="download-csv" class="btn btn-secondary">
-            ${t('reports.crawler.downloadCsv', '📊 Download CSV')}
+            ${t('reports.crawler.downloadCsv', 'Download CSV')}
           </button>
           <button data-action="download-sitemap" class="btn btn-primary">
-            ${t('reports.crawler.downloadSitemapXml', '🗺️ Download Sitemap XML')}
+            ${t('reports.crawler.downloadSitemapXml', 'Download Sitemap XML')}
           </button>
         </div>
       </div>
       
       <!-- Page List -->
       <div style="margin-bottom: 1rem; display: flex; gap: 0.5rem; flex-wrap: wrap;">
-        <input type="text" id="pageSearch" placeholder="${t('reports.crawler.filterPages', '🔍 Filter pages...')}"
+        <input type="text" id="pageSearch" placeholder="${t('reports.crawler.filterPages', 'Filter pages...')}"
           data-action="filter-pages"
           class="input input-sm" style="min-width: 200px;">
         <select id="sectionFilter" data-action="filter-by-section" class="input input-sm">
@@ -727,7 +727,7 @@ document.addEventListener('DOMContentLoaded', () => {
           ${Object.keys(siteStructure.children).map(section => `<option value="${section}">/${section}/</option>`).join('')}
         </select>
         <button data-action="toggle-view-mode" id="viewModeBtn" class="btn btn-secondary btn-sm">
-          ${t('reports.crawler.groupView', '📁 Group View')}
+          ${t('reports.crawler.groupView', 'Group View')}
         </button>
       </div>
       
@@ -814,7 +814,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (fixes.length === 0) {
       return `
-        <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+        <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 2rem;">
           <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
             <span style="font-size: 1.5rem;">✓</span> ${t('reports.crawler.excellentSiteStructure', 'Excellent Site Structure!')}
           </h3>
@@ -831,7 +831,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="crawler-fixes-container" style="margin-top: 1rem;">
         <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
           <span style="font-size: 1.75rem;">🕷️</span> ${t('reports.crawler.crawlerFixes', 'Crawler Fixes')}
-          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('reports.crawler.improvementsFound', '{{count}} improvements found', { count: fixes.length })})</span>
+          <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${t('reports.crawler.improvementsFound', '{{count}} improvements found', { count: fixes.length })})</span>
         </h3>
         <div class="crawler-fixes-list">
     `;
@@ -873,21 +873,21 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span style="font-size: 1.25rem;">${style.icon}</span>
             <div>
-              <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
-              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || t('reports.crawler.siteStructure', 'Site Structure')}</p>
+              <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${fix.title}</h4>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${fix.category || t('reports.crawler.siteStructure', 'Site Structure')}</p>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span style="
               padding: 0.25rem 0.75rem;
-              border-radius: 20px;
+              border-radius: 999px;
               font-size: 0.75rem;
               font-weight: 600;
               background: ${style.color}20;
               color: ${style.color};
               border: 1px solid ${style.color}40;
             ">${fix.severity.toUpperCase()}</span>
-            <span class="crawler-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+            <span class="crawler-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
           </div>
         </div>
 
@@ -902,49 +902,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderCrawlerFixTabs(fix, accordionId) {
     return `
-      <div class="crawler-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <div class="crawler-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
         <button class="crawler-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
           padding: 0.5rem 1rem;
           border: 1px solid rgba(255,255,255,0.2);
           border-radius: 6px;
           background: rgba(255,255,255,0.1);
-          color: #fff;
+          color: var(--r-text, #111827);
           cursor: pointer;
           font-size: 0.85rem;
         ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
         <button class="crawler-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
           padding: 0.5rem 1rem;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
           border-radius: 6px;
           background: transparent;
-          color: #aaa;
+          color: var(--r-text-faint, #9CA3AF);
           cursor: pointer;
           font-size: 0.85rem;
         ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
         <button class="crawler-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
           padding: 0.5rem 1rem;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
           border-radius: 6px;
           background: transparent;
-          color: #aaa;
+          color: var(--r-text-faint, #9CA3AF);
           cursor: pointer;
           font-size: 0.85rem;
         ">🔧 ${t('reports.common.tabs.fixGuide', 'Fix Guide')}</button>
       </div>
 
       <div class="crawler-fix-tab-content active" id="${accordionId}-summary">
-        <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
           ${fix.description}
         </p>
         <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${fix.impact}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${fix.impact}</div>
         </div>
       </div>
 
       <div class="crawler-fix-tab-content" id="${accordionId}-code" style="display: none;">
         <div style="display: grid; gap: 1rem;">
-          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
               <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.common.fix.currentIssue', 'Current Issue')}</span>
               <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
@@ -952,15 +952,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
                 background: rgba(255,255,255,0.05);
-                color: #fff;
+                color: var(--r-text, #111827);
                 cursor: pointer;
                 font-size: 0.75rem;
               ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
-            <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeCrawlerHtml(fix.problematicCode)}</pre>
+            <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeCrawlerHtml(fix.problematicCode)}</pre>
           </div>
 
-          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
               <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
               <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
@@ -968,19 +968,19 @@ document.addEventListener('DOMContentLoaded', () => {
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
                 background: rgba(255,255,255,0.05);
-                color: #fff;
+                color: var(--r-text, #111827);
                 cursor: pointer;
                 font-size: 0.75rem;
               ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
-            <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeCrawlerHtml(fix.snippet)}</pre>
+            <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeCrawlerHtml(fix.snippet)}</pre>
           </div>
         </div>
       </div>
 
       <div class="crawler-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-        <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
-        <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        <h5 style="margin: 0 0 1rem 0; color: var(--r-text, #111827);">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
+        <ol style="margin: 0; padding-left: 1.5rem; color: var(--r-text-muted, #6B7280); line-height: 1.8;">
           ${fix.steps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
         </ol>
       </div>
@@ -1303,7 +1303,7 @@ Sitemap: https://example.com/sitemap.xml`,
       const btn = codeElement.parentElement.querySelector('button');
       if (btn) {
         const originalText = btn.textContent;
-        btn.textContent = t('reports.common.copied', '✓ Copied!');
+        btn.textContent = t('reports.common.copied', 'Copied!');
         setTimeout(() => { btn.textContent = originalText; }, 2000);
       }
     });
@@ -1371,7 +1371,7 @@ Sitemap: https://example.com/sitemap.xml`,
       const msg = document.createElement('div');
       msg.setAttribute('data-sm-screenshot-fallback', 'true');
       msg.textContent = t('reports.crawler.screenshotUnavailable', 'Screenshot unavailable');
-      msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 10px; color: var(--text-secondary); text-align: center;';
+      msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); text-align: center;';
       wrapper.appendChild(msg);
     };
 
@@ -1904,20 +1904,20 @@ Sitemap: https://example.com/sitemap.xml`,
     return `
       <div style="display: flex; flex-direction: column; gap: 0.75rem;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: #888;">${t('reports.crawler.totalPages', 'Total Pages')}</span>
+          <span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.crawler.totalPages', 'Total Pages')}</span>
           <span style="color: #00ff41; font-weight: bold; font-size: 1.25rem;">${pages.length}</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: #888;">${t('reports.crawler.topLevelSections', 'Top-level Sections')}</span>
+          <span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.crawler.topLevelSections', 'Top-level Sections')}</span>
           <span style="color: #00d9ff; font-weight: bold;">${sections}</span>
         </div>
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <span style="color: #888;">${t('reports.crawler.avgPathDepth', 'Avg Path Depth')}</span>
+          <span style="color: var(--r-text-faint, #9CA3AF);">${t('reports.crawler.avgPathDepth', 'Avg Path Depth')}</span>
           <span style="color: #bb77ff; font-weight: bold;">${t('reports.crawler.levels', '{{count}} levels', { count: avgDepth.toFixed(1) })}</span>
         </div>
         ${Object.keys(extensions).length > 0 ? `
-          <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1);">
-            <div style="color: #888; font-size: 0.8rem; margin-bottom: 0.5rem;">${t('reports.crawler.fileTypes', 'File Types:')}</div>
+          <div style="margin-top: 0.5rem; padding-top: 0.5rem; border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-bottom: 0.5rem;">${t('reports.crawler.fileTypes', 'File Types:')}</div>
             <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
               ${Object.entries(extensions).map(([ext, count]) => `
                 <span style="background: rgba(255,255,255,0.05); padding: 0.2rem 0.5rem; border-radius: 4px; font-size: 0.75rem; color: #ffd700;">.${ext}: ${count}</span>
@@ -2043,7 +2043,7 @@ Sitemap: https://example.com/sitemap.xml`,
     return `
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.75rem;">
         ${insights.map(insight => `
-          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: rgba(0,0,0,0.2); border-radius: 6px; border-left: 3px solid ${typeColors[insight.type]};">
+          <div style="display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 6px; border-left: 3px solid ${typeColors[insight.type]};">
             <span style="font-size: 1.1rem;">${insight.icon}</span>
             <span style="color: #ddd; font-size: 0.9rem;">${insight.text}</span>
           </div>
@@ -2062,7 +2062,7 @@ Sitemap: https://example.com/sitemap.xml`,
     });
     
     return Object.entries(groups).map(([section, sectionPages]) => `
-      <details style="margin-bottom: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid rgba(255,255,255,0.1);">
+      <details style="margin-bottom: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
         <summary style="padding: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: space-between;">
           <span style="display: flex; align-items: center; gap: 0.5rem;">
             <span style="color: #00d9ff;">📁</span>
@@ -2076,7 +2076,7 @@ Sitemap: https://example.com/sitemap.xml`,
           ${sectionPages.map((page, idx) => {
             const pageType = getPageType(page);
             return `
-              <div class="page-item" style="padding: 0.5rem 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+              <div class="page-item" style="padding: 0.5rem 0; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                 <span style="font-size: 1rem; margin-right: 0.3rem;">${pageType.icon}</span>
                 <a href="${page}" target="_blank" rel="noopener" style="flex: 1; font-size: 0.9rem;">${formatPageUrl(page)}</a>
                 <div style="display: flex; gap: 0.5rem;">
@@ -2135,11 +2135,11 @@ Sitemap: https://example.com/sitemap.xml`,
     if (listView.style.display === 'none') {
       listView.style.display = '';
       groupedView.style.display = 'none';
-      btn.textContent = t('reports.crawler.groupView', '📁 Group View');
+      btn.textContent = t('reports.crawler.groupView', 'Group View');
     } else {
       listView.style.display = 'none';
       groupedView.style.display = '';
-      btn.textContent = t('reports.crawler.listView', '📋 List View');
+      btn.textContent = t('reports.crawler.listView', 'List View');
     }
   };
 
@@ -2400,7 +2400,7 @@ Sitemap: https://example.com/sitemap.xml`,
             padding-top: 16px;
             border-top: 1px solid #e5e5e5;
             font-size: 11px;
-            color: #888;
+            color: var(--r-text-faint, #9CA3AF);
             text-align: center;
           }
           @media print {
@@ -2491,7 +2491,7 @@ Sitemap: https://example.com/sitemap.xml`,
       const button = event?.target;
       if (button) {
         const originalText = button.innerHTML;
-        button.innerHTML = t('reports.crawler.downloaded', '✓ Downloaded!');
+        button.innerHTML = t('reports.crawler.downloaded', 'Downloaded!');
         button.style.background = 'rgba(0, 255, 65, 0.2)';
         setTimeout(() => {
           button.innerHTML = originalText;
@@ -2542,7 +2542,7 @@ Sitemap: https://example.com/sitemap.xml`,
 /_/   /____//___/ /_/ |_|/___/ /___/    /____//___/    /_/   /_/ |_| /_/   /___/ /___/ /_/|_/   /_/    </pre>
       </div>
       <div style="margin-top: 0.75rem; font-size: 0.85rem; color: #00ff41;">
-        ${t('reports.crawler.crawlingPagesWithPuppeteer', '🕷️ Crawling pages with Puppeteer...')}<br>
+        ${t('reports.crawler.crawlingPagesWithPuppeteer', 'Crawling pages with Puppeteer...')}<br>
         <span style="font-size: 0.75rem; color: #00ffaa;">${t('reports.crawler.thisMayTakeTime', 'This may take 30-60 seconds for large sites')}</span>
       </div>
     `;

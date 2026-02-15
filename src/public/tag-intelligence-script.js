@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // Store results globally for PDF export
       window.SM_TAG_INTELLIGENCE_RESULTS = data;
+      window.currentTagResults = data;
 
       if (loader) {
         loader.complete();
@@ -151,7 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
             displayResults(data);
           } catch (err) {
             console.error('[Tag Intelligence] Error in displayResults:', err);
-            showError(t('reports.common.errorDisplayingResults', 'Error displaying results') + ': ' + err.message);
+            showError(t('reports.common.errorDisplayingResults', 'Error displaying results: {{message}}') + ': ' + err.message);
           }
           window.__REPORT_READY__ = true;
           window.dispatchEvent(new CustomEvent('report:ready'));
@@ -161,7 +162,7 @@ document.addEventListener('DOMContentLoaded', () => {
           displayResults(data);
         } catch (err) {
           console.error('[Tag Intelligence] Error in displayResults:', err);
-          showError(t('reports.common.errorDisplayingResults', 'Error displaying results') + ': ' + err.message);
+          showError(t('reports.common.errorDisplayingResults', 'Error displaying results: {{message}}') + ': ' + err.message);
         }
         window.__REPORT_READY__ = true;
         window.dispatchEvent(new CustomEvent('report:ready'));
@@ -209,7 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .pro-locked {
         position: relative;
         border: 1px dashed rgba(var(--accent-primary-rgb, 91, 244, 231), 0.3);
-        border-radius: 10px;
+        border-radius: 12px;
         padding: 1rem;
         background: rgba(255, 255, 255, 0.02);
         overflow: hidden;
@@ -224,7 +225,7 @@ document.addEventListener('DOMContentLoaded', () => {
       .pro-locked__list {
         margin: 0;
         padding-left: 1.25rem;
-        color: #ccc;
+        color: var(--r-text-muted, #6B7280);
         font-size: 0.9rem;
       }
       .pro-locked__blur {
@@ -305,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="pro-pill">PRO</span>
           <span>${t('reports.common.reportRecommendations', 'Recommendations')} (${recCount} ${t('reports.common.items', 'items')})</span>
         </div>
-        <p style="color: #888; font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">
+        <p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">
           ${t('reports.tagIntelligence.unlockInsights', 'Unlock actionable insights and priority-based recommendations to optimize your tag implementation.')}
         </p>
         <ul class="pro-locked__list">
@@ -331,6 +332,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const url = document.getElementById('url') ? document.getElementById('url').value : (document.getElementById('urlInput') ? document.getElementById('urlInput').value : '');
     const timestamp = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
+
+    // Defensive defaults for required arrays/objects to prevent crashes on missing data
+    data.tags = data.tags || [];
+    data.issues = data.issues || [];
+    data.duplicates = data.duplicates || [];
+    data.tagsByCategory = data.tagsByCategory || {};
+    data.summary = data.summary || {};
+    data.healthScore = data.healthScore ?? 0;
 
     const scanStartedAt = data.scanStartedAt || window.SM_SCAN_STARTED_AT || new Date().toISOString();
     const analyzerKey = window.SM_ANALYZER_KEY || 'tag-intelligence';
@@ -382,14 +391,14 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin-bottom: 1rem;">
           <!-- Tags by Category Chart -->
           <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 8px;">
-            <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">${t('reports.tagIntelligence.tagsByCategory', 'Tags by Category')}</h4>
+            <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.tagsByCategory', 'Tags by Category')}</h4>
             <canvas id="tagsCategoryChart" style="max-height: 220px;"></canvas>
           </div>
 
           <!-- Script Loading Strategy Chart -->
           ${data.pageResults && data.pageResults[0]?.performanceImpact ? `
             <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 8px;">
-              <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">${t('reports.tagIntelligence.scriptLoadingStrategy', 'Script Loading Strategy')}</h4>
+              <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.scriptLoadingStrategy', 'Script Loading Strategy')}</h4>
               <canvas id="scriptLoadingChart" style="max-height: 220px;"></canvas>
             </div>
           ` : ''}
@@ -397,7 +406,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <!-- Third-Party Scripts Chart -->
           ${data.pageResults && data.pageResults[0]?.thirdPartyScripts?.total > 0 ? `
             <div style="background: rgba(255,255,255,0.03); padding: 1.5rem; border-radius: 8px;">
-              <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: #888;">${t('reports.tagIntelligence.thirdPartyScripts', 'Third-Party Scripts')}</h4>
+              <h4 style="margin: 0 0 1rem 0; font-size: 0.9rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.thirdPartyScripts', 'Third-Party Scripts')}</h4>
               <canvas id="thirdPartyChart" style="max-height: 220px;"></canvas>
             </div>
           ` : ''}
@@ -433,13 +442,13 @@ document.addEventListener('DOMContentLoaded', () => {
                   <span class="tag-badge tag-${tag.category}">${formatCategory(tag.category)}</span>
                   <strong>${tag.name}</strong>
                 </div>
-                <div style="color: #808080; font-size: 0.85rem;">
+                <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">
                   ${tag.instances} ${t('reports.tagIntelligence.instances', 'instance(s)')} • ${tag.pagesFound ? tag.pagesFound.length : 1} ${t('reports.tagIntelligence.pages', 'page(s)')}
                 </div>
               </div>
               ${tag.ids && tag.ids.length > 0 ? `
                 <div style="margin-top: 0.5rem; font-family: monospace; font-size: 0.85rem; color: #a78bfa;">
-                  ${t('reports.tagIntelligence.ids', 'ID(s)')}: ${tag.ids.join(', ')}
+                  ${t('reports.tagIntelligence.ids', 'ID(s):')}: ${tag.ids.join(', ')}
                 </div>
               ` : ''}
               <div style="margin-top: 0.5rem; font-size: 0.8rem; color: #666;">
@@ -487,29 +496,29 @@ document.addEventListener('DOMContentLoaded', () => {
         contentHTML: `
           <div style="padding: 1rem 0;">
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-              <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="text-align: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
                 <div style="font-size: 2rem; font-weight: bold; color: ${data.pageResults[0].performanceImpact.score >= 80 ? '#10b981' : data.pageResults[0].performanceImpact.score >= 60 ? '#f59e0b' : '#ef4444'};">
                   ${data.pageResults[0].performanceImpact.grade}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.performanceGrade', 'Performance Grade')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.performanceGrade', 'Performance Grade')}</div>
               </div>
-              <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="text-align: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">
                   ${data.pageResults[0].performanceImpact.stats?.syncScripts || 0}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.blockingScripts', 'Blocking Scripts')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.blockingScripts', 'Blocking Scripts')}</div>
               </div>
-              <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="text-align: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">
                   ${data.pageResults[0].performanceImpact.stats?.asyncScripts || 0}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.asyncScripts', 'Async Scripts')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.asyncScripts', 'Async Scripts')}</div>
               </div>
-              <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="text-align: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #a78bfa;">
                   ${data.pageResults[0].performanceImpact.stats?.deferScripts || 0}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.deferredScripts', 'Deferred Scripts')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.deferredScripts', 'Deferred Scripts')}</div>
               </div>
             </div>
             ${data.pageResults[0].performanceImpact.issues?.length > 0 ? `
@@ -521,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `).join('')}
               </div>
             ` : ''}
-            <p style="margin-top: 1rem; color: #888; font-size: 0.85rem;">💡 ${data.pageResults[0].performanceImpact.recommendation}</p>
+            <p style="margin-top: 1rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">💡 ${data.pageResults[0].performanceImpact.recommendation}</p>
           </div>
         `
       });
@@ -545,14 +554,14 @@ document.addEventListener('DOMContentLoaded', () => {
               ${data.pageResults[0].thirdPartyScripts.scripts.slice(0, 10).map(script => `
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem; background: rgba(255,255,255,0.02); border-radius: 4px; font-size: 0.85rem;">
                   <div>
-                    <span style="color: #fff;">${script.name}</span>
+                    <span style="color: var(--r-text, #111827);">${script.name}</span>
                     <span style="color: #666; margin-left: 0.5rem;">${script.host}</span>
                   </div>
                   <div style="display: flex; gap: 0.5rem;">
                     ${script.async ? '<span style="background: #10b981; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem;">async</span>' : ''}
                     ${script.defer ? '<span style="background: #3b82f6; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem;">defer</span>' : ''}
                     ${!script.async && !script.defer ? '<span style="background: #ef4444; padding: 0.15rem 0.4rem; border-radius: 3px; font-size: 0.7rem;">blocking</span>' : ''}
-                    <span style="color: #888;">×${script.count}</span>
+                    <span style="color: var(--r-text-faint, #9CA3AF);">×${script.count}</span>
                   </div>
                 </div>
               `).join('')}
@@ -574,18 +583,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="font-size: 1.5rem; font-weight: bold; color: #a78bfa;">
                   ${data.pageResults[0].dataLayer.eventCount || 0}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.eventsDetected', 'Events Detected')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.eventsDetected', 'Events Detected')}</div>
               </div>
               <div style="text-align: center; padding: 1rem; background: rgba(${data.pageResults[0].dataLayer.ecommerce ? '16, 185, 129' : '100, 100, 100'}, 0.1); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: ${data.pageResults[0].dataLayer.ecommerce ? '#10b981' : '#666'};">
                   ${data.pageResults[0].dataLayer.ecommerce ? '✓' : '✗'}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.ecommerceTracking', 'Ecommerce Tracking')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.ecommerceTracking', 'Ecommerce Tracking')}</div>
               </div>
             </div>
             ${data.pageResults[0].dataLayer.events?.length > 0 ? `
               <div style="margin-top: 1rem;">
-                <div style="font-size: 0.85rem; color: #888; margin-bottom: 0.5rem;">${t('reports.tagIntelligence.eventsFound', 'Events Found')}:</div>
+                <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF); margin-bottom: 0.5rem;">${t('reports.tagIntelligence.eventsFound', 'Events Found')}:</div>
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                   ${data.pageResults[0].dataLayer.events.map(event => `
                     <code style="background: rgba(167, 139, 250, 0.2); padding: 0.25rem 0.5rem; border-radius: 4px; font-size: 0.8rem;">${event}</code>
@@ -618,7 +627,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div style="font-weight: bold; color: ${data.pageResults[0].consentMode.implemented ? '#10b981' : '#ef4444'};">
                   ${data.pageResults[0].consentMode.implemented ? t('reports.tagIntelligence.consentModeDetected', 'Consent Mode Detected') : t('reports.tagIntelligence.consentModeNotDetected', 'Consent Mode Not Detected')}
                 </div>
-                <div style="font-size: 0.85rem; color: #888;">${data.pageResults[0].consentMode.recommendation}</div>
+                <div style="font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${data.pageResults[0].consentMode.recommendation}</div>
               </div>
             </div>
           </div>
@@ -635,12 +644,12 @@ document.addEventListener('DOMContentLoaded', () => {
         contentHTML: `
           <div style="padding: 1rem 0;">
             <!-- Cookie Compliance Score -->
-            <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+            <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 1.5rem; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
               <div style="text-align: center;">
                 <div style="font-size: 2rem; font-weight: bold; color: ${getScoreColor(data.pageResults[0].cookies.complianceScore || 100)};">
                   ${data.pageResults[0].cookies.complianceScore || 100}
                 </div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.complianceScore', 'Compliance Score')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.complianceScore', 'Compliance Score')}</div>
               </div>
               <div style="flex: 1;">
                 <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
@@ -659,7 +668,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${data.pageResults[0].cookies.issues.map(issue => `
                   <div style="background: rgba(${issue.severity === 'high' ? '239, 68, 68' : '245, 158, 11'}, 0.1); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.85rem; border-left: 3px solid ${issue.severity === 'high' ? '#ef4444' : '#f59e0b'};">
                     <strong>${issue.severity === 'high' ? '⚠️' : '⚡'} ${issue.message}</strong>
-                    <p style="margin: 0.25rem 0 0 0; color: #888;">${issue.recommendation}</p>
+                    <p style="margin: 0.25rem 0 0 0; color: var(--r-text-faint, #9CA3AF);">${issue.recommendation}</p>
                   </div>
                 `).join('')}
               </div>
@@ -669,27 +678,27 @@ document.addEventListener('DOMContentLoaded', () => {
             <div style="max-height: 400px; overflow-y: auto;">
               <table style="width: 100%; border-collapse: collapse; font-size: 0.8rem;">
                 <thead style="position: sticky; top: 0; background: #1a1a1a;">
-                  <tr style="border-bottom: 1px solid rgba(255,255,255,0.1);">
-                    <th style="text-align: left; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookieName', 'Name')}</th>
-                    <th style="text-align: left; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookieType', 'Type')}</th>
-                    <th style="text-align: left; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookieVendor', 'Vendor')}</th>
-                    <th style="text-align: left; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookiePurpose', 'Purpose')}</th>
-                    <th style="text-align: center; padding: 0.5rem; color: #888;">${t('reports.tagIntelligence.cookieSecure', 'Secure')}</th>
+                  <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+                    <th style="text-align: left; padding: 0.5rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.cookieName', 'Name')}</th>
+                    <th style="text-align: left; padding: 0.5rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.cookieType', 'Type')}</th>
+                    <th style="text-align: left; padding: 0.5rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.cookieVendor', 'Vendor')}</th>
+                    <th style="text-align: left; padding: 0.5rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.cookiePurpose', 'Purpose')}</th>
+                    <th style="text-align: center; padding: 0.5rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.cookieSecure', 'Secure')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   ${data.pageResults[0].cookies.cookies.slice(0, 30).map(cookie => `
-                    <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                    <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                       <td style="padding: 0.5rem; font-family: monospace; color: #a78bfa;">${cookie.name.substring(0, 25)}${cookie.name.length > 25 ? '...' : ''}</td>
                       <td style="padding: 0.5rem;"><span style="background: ${getCookieTypeColor(cookie.type)}; padding: 0.15rem 0.5rem; border-radius: 3px; font-size: 0.7rem;">${cookie.type}</span></td>
-                      <td style="padding: 0.5rem; color: #ccc;">${cookie.vendor || t('reports.tagIntelligence.unknown', 'Unknown')}</td>
-                      <td style="padding: 0.5rem; color: #888; font-size: 0.75rem;">${cookie.purpose || '-'}</td>
+                      <td style="padding: 0.5rem; color: var(--r-text-muted, #6B7280);">${cookie.vendor || t('reports.tagIntelligence.unknown', 'Unknown')}</td>
+                      <td style="padding: 0.5rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${cookie.purpose || '-'}</td>
                       <td style="padding: 0.5rem; text-align: center;">${cookie.hasSecure ? '✓' : '✗'}</td>
                     </tr>
                   `).join('')}
                 </tbody>
               </table>
-              ${data.pageResults[0].cookies.cookies.length > 30 ? `<p style="color: #888; font-size: 0.8rem; margin-top: 0.5rem;">... ${t('reports.common.andMore', 'and')} ${data.pageResults[0].cookies.cookies.length - 30} ${t('reports.tagIntelligence.moreCookies', 'more cookies')}</p>` : ''}
+              ${data.pageResults[0].cookies.cookies.length > 30 ? `<p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-top: 0.5rem;">... ${t('reports.common.andMore', 'and')} ${data.pageResults[0].cookies.cookies.length - 30} ${t('reports.tagIntelligence.moreCookies', 'more cookies')}</p>` : ''}
             </div>
           </div>
         `
@@ -705,17 +714,17 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="padding: 1rem 0;">
             <!-- Waterfall Stats -->
             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
-              <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="text-align: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #3b82f6;">${data.pageResults[0].tagLoadWaterfall.totalLoadTime}ms</div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.totalLoadTime', 'Total Load Time')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.totalLoadTime', 'Total Load Time')}</div>
               </div>
-              <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="text-align: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;">${data.pageResults[0].tagLoadWaterfall.totalSizeFormatted}</div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.totalSize', 'Total Size')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.totalSize', 'Total Size')}</div>
               </div>
-              <div style="text-align: center; padding: 1rem; background: rgba(0,0,0,0.2); border-radius: 8px;">
+              <div style="text-align: center; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px;">
                 <div style="font-size: 1.5rem; font-weight: bold; color: ${data.pageResults[0].tagLoadWaterfall.blockingCount > 5 ? '#ef4444' : '#10b981'};">${data.pageResults[0].tagLoadWaterfall.blockingCount}</div>
-                <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.blockingScripts', 'Blocking Scripts')}</div>
+                <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.blockingScripts', 'Blocking Scripts')}</div>
               </div>
             </div>
 
@@ -725,18 +734,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${data.pageResults[0].tagLoadWaterfall.insights.map(insight => `
                   <div style="background: rgba(${insight.type === 'warning' ? '245, 158, 11' : insight.type === 'good' ? '16, 185, 129' : '59, 130, 246'}, 0.1); padding: 0.75rem; border-radius: 4px; margin-bottom: 0.5rem; font-size: 0.85rem;">
                     ${insight.type === 'warning' ? '⚠️' : insight.type === 'good' ? '✅' : 'ℹ️'} ${insight.message}
-                    ${insight.recommendation ? `<span style="color: #888;"> - ${insight.recommendation}</span>` : ''}
+                    ${insight.recommendation ? `<span style="color: var(--r-text-faint, #9CA3AF);"> - ${insight.recommendation}</span>` : ''}
                   </div>
                 `).join('')}
               </div>
             ` : ''}
 
             <!-- Waterfall Visualization -->
-            <div style="background: rgba(0,0,0,0.2); border-radius: 8px; padding: 1rem; overflow-x: auto;">
+            <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; padding: 1rem; overflow-x: auto;">
               <div style="min-width: 600px;">
                 ${data.pageResults[0].tagLoadWaterfall.scripts.slice(0, 20).map(script => `
                   <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-size: 0.75rem;">
-                    <div style="width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #ccc;" title="${script.vendor}">${script.vendor}</div>
+                    <div style="width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--r-text-muted, #6B7280);" title="${script.vendor}">${script.vendor}</div>
                     <div style="flex: 1; height: 20px; background: rgba(255,255,255,0.05); border-radius: 3px; position: relative; overflow: hidden;">
                       <div style="
                         position: absolute;
@@ -747,19 +756,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         border-radius: 3px;
                       " title="${script.vendor}: ${script.duration}ms"></div>
                     </div>
-                    <div style="width: 60px; text-align: right; color: #888;">${script.duration}ms</div>
+                    <div style="width: 60px; text-align: right; color: var(--r-text-faint, #9CA3AF);">${script.duration}ms</div>
                     <div style="width: 50px; text-align: right; color: #666;">${script.sizeFormatted}</div>
                   </div>
                 `).join('')}
               </div>
 
               <!-- Legend -->
-              <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255,255,255,0.1);">
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #3b82f6; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.analytics', 'Analytics')}</span>
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #f59e0b; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.advertising', 'Advertising')}</span>
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #ec4899; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.sessionRecording', 'Session Recording')}</span>
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #8b5cf6; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.abTesting', 'A/B Testing')}</span>
-                <span style="font-size: 0.7rem; color: #888;"><span style="display: inline-block; width: 12px; height: 12px; background: #6b7280; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.other', 'Other')}</span>
+              <div style="display: flex; flex-wrap: wrap; gap: 1rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+                <span style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);"><span style="display: inline-block; width: 12px; height: 12px; background: #3b82f6; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.analytics', 'Analytics')}</span>
+                <span style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);"><span style="display: inline-block; width: 12px; height: 12px; background: #f59e0b; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.advertising', 'Advertising')}</span>
+                <span style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);"><span style="display: inline-block; width: 12px; height: 12px; background: #ec4899; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.sessionRecording', 'Session Recording')}</span>
+                <span style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);"><span style="display: inline-block; width: 12px; height: 12px; background: #8b5cf6; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.abTesting', 'A/B Testing')}</span>
+                <span style="font-size: 0.7rem; color: var(--r-text-faint, #9CA3AF);"><span style="display: inline-block; width: 12px; height: 12px; background: #6b7280; border-radius: 2px; margin-right: 4px;"></span>${t('reports.tagIntelligence.categories.other', 'Other')}</span>
               </div>
             </div>
           </div>
@@ -784,7 +793,7 @@ document.addEventListener('DOMContentLoaded', () => {
           url: url,
           timestamp: scanStartedAt,
           mode: 'tag-intelligence',
-          title: t('reports.tagIntelligence.title', 'Tracking & Analytics: Tag Intelligence'),
+          title: t('reports.tagIntelligence.title', 'Tag Intelligence Report'),
           subtitle: t('reports.tagIntelligence.scannedPagesAndTags', 'Scanned {{pages}} page(s) • {{tags}} tag(s) detected', { pages: data.pagesScanned, tags: data.summary.totalTags }),
           summary: [{ label: t('reports.common.overall', 'Overall'), score: data.healthScore }],
           sections,
@@ -1127,10 +1136,10 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- Screenshot Preview (if available) -->
         ${screenshotUrl ? `
           <div style="margin-bottom: 1.5rem;">
-            <h4 style="margin: 0 0 0.75rem 0; color: #888; font-size: 0.85rem;">📸 ${t('reports.tagIntelligence.pagePreview', 'Page Preview')}</h4>
-            <div style="position: relative; border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1);">
-              <img src="${screenshotUrl}" alt="${t('reports.tagIntelligence.pageScreenshot', 'Page screenshot')}" style="width: 100%; max-height: 200px; object-fit: cover; object-position: top; cursor: pointer;" data-action="open-lightbox" data-screenshot-url="${screenshotUrl}" data-screenshot-title="${t('reports.tagIntelligence.pageScreenshot', 'Page Screenshot')}" />
-              <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 0.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8)); font-size: 0.75rem; color: #888;">
+            <h4 style="margin: 0 0 0.75rem 0; color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">📸 ${t('reports.tagIntelligence.pagePreview', 'Page Preview')}</h4>
+            <div style="position: relative; border-radius: 8px; overflow: hidden; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+              <img src="${screenshotUrl}" alt="${t('reports.tagIntelligence.pageScreenshot', 'Page screenshot')}" style="width: 100%; max-height: 200px; object-fit: cover; object-position: top; cursor: pointer;" data-action="open-lightbox" data-screenshot-url="${screenshotUrl}" data-screenshot-title="${t('reports.tagIntelligence.pageScreenshot', 'Page screenshot')}" />
+              <div style="position: absolute; bottom: 0; left: 0; right: 0; padding: 0.5rem; background: linear-gradient(transparent, rgba(0,0,0,0.8)); font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">
                 ${t('reports.tagIntelligence.clickToEnlarge', 'Click to enlarge')} • ${t('reports.tagIntelligence.toolsRunOnThisPage', 'Tools run on this page')}
               </div>
             </div>
@@ -1141,19 +1150,19 @@ document.addEventListener('DOMContentLoaded', () => {
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;">
           <div style="text-align: center; padding: 1rem; background: rgba(139, 92, 246, 0.1); border-radius: 8px; border: 1px solid rgba(139, 92, 246, 0.2);">
             <div style="font-size: 1.75rem; font-weight: bold; color: #8b5cf6;">${abTags.length}</div>
-            <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.categories.abTesting', 'A/B Testing')}</div>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.categories.abTesting', 'A/B Testing')}</div>
           </div>
           <div style="text-align: center; padding: 1rem; background: rgba(236, 72, 153, 0.1); border-radius: 8px; border: 1px solid rgba(236, 72, 153, 0.2);">
             <div style="font-size: 1.75rem; font-weight: bold; color: #ec4899;">${sessionTags.length}</div>
-            <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.categories.sessionRecording', 'Session Recording')}</div>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.categories.sessionRecording', 'Session Recording')}</div>
           </div>
           <div style="text-align: center; padding: 1rem; background: rgba(249, 115, 22, 0.1); border-radius: 8px; border: 1px solid rgba(249, 115, 22, 0.2);">
             <div style="font-size: 1.75rem; font-weight: bold; color: #f97316;">${errorTags.length}</div>
-            <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.categories.errorMonitoring', 'Error Monitoring')}</div>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.categories.errorMonitoring', 'Error Monitoring')}</div>
           </div>
           <div style="text-align: center; padding: 1rem; background: rgba(20, 184, 166, 0.1); border-radius: 8px; border: 1px solid rgba(20, 184, 166, 0.2);">
             <div style="font-size: 1.75rem; font-weight: bold; color: #14b8a6;">${cdpTags.length}</div>
-            <div style="font-size: 0.75rem; color: #888;">${t('reports.tagIntelligence.categories.dataPlatforms', 'Data Platforms')}</div>
+            <div style="font-size: 0.75rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.tagIntelligence.categories.dataPlatforms', 'Data Platforms')}</div>
           </div>
         </div>
 
@@ -1162,7 +1171,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="margin-bottom: 1.5rem;">
             <h4 style="margin: 0 0 0.75rem 0; color: #8b5cf6; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
               🧪 ${t('reports.tagIntelligence.abTestingTools', 'A/B Testing Tools')}
-              <span style="background: rgba(139, 92, 246, 0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem;">${abTags.length}</span>
+              <span style="background: rgba(139, 92, 246, 0.2); padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.7rem;">${abTags.length}</span>
             </h4>
             <div style="display: grid; gap: 0.75rem;">
               ${abTags.map(tag => {
@@ -1172,12 +1181,12 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.25rem;">${details.icon}</span>
-                      <strong style="color: #fff;">${tag.name}</strong>
+                      <strong style="color: var(--r-text, #111827);">${tag.name}</strong>
                       ${tag.ids?.length ? `<code style="background: rgba(139, 92, 246, 0.3); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.7rem; color: #a78bfa;">${tag.ids[0]}</code>` : ''}
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                       <span style="background: #10b981; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.active', 'ACTIVE')}</span>
-                      <span style="color: #888; font-size: 0.8rem;">${tag.instances}×</span>
+                      <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">${tag.instances}×</span>
                     </div>
                   </div>
                   ${details.features.length > 0 ? `
@@ -1197,7 +1206,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="margin-bottom: 1.5rem;">
             <h4 style="margin: 0 0 0.75rem 0; color: #ec4899; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
               🎥 ${t('reports.tagIntelligence.sessionRecordingAndHeatmaps', 'Session Recording & Heatmaps')}
-              <span style="background: rgba(236, 72, 153, 0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem;">${sessionTags.length}</span>
+              <span style="background: rgba(236, 72, 153, 0.2); padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.7rem;">${sessionTags.length}</span>
             </h4>
             <div style="display: grid; gap: 0.75rem;">
               ${sessionTags.map(tag => {
@@ -1207,11 +1216,11 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.25rem;">${details.icon}</span>
-                      <strong style="color: #fff;">${tag.name}</strong>
+                      <strong style="color: var(--r-text, #111827);">${tag.name}</strong>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                       <span style="background: #10b981; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.recording', 'RECORDING')}</span>
-                      <span style="color: #888; font-size: 0.8rem;">${tag.instances}×</span>
+                      <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">${tag.instances}×</span>
                     </div>
                   </div>
                   ${details.features.length > 0 ? `
@@ -1230,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="margin-bottom: 1.5rem;">
             <h4 style="margin: 0 0 0.75rem 0; color: #f97316; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
               🐛 ${t('reports.tagIntelligence.categories.errorMonitoring', 'Error Monitoring')}
-              <span style="background: rgba(249, 115, 22, 0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem;">${errorTags.length}</span>
+              <span style="background: rgba(249, 115, 22, 0.2); padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.7rem;">${errorTags.length}</span>
             </h4>
             <div style="display: grid; gap: 0.75rem;">
               ${errorTags.map(tag => {
@@ -1240,11 +1249,11 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.25rem;">${details.icon}</span>
-                      <strong style="color: #fff;">${tag.name}</strong>
+                      <strong style="color: var(--r-text, #111827);">${tag.name}</strong>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
-                      <span style="background: #3b82f6; color: #fff; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.monitoring', 'MONITORING')}</span>
-                      <span style="color: #888; font-size: 0.8rem;">${tag.instances}×</span>
+                      <span style="background: #3b82f6; color: var(--r-text, #111827); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.monitoring', 'MONITORING')}</span>
+                      <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">${tag.instances}×</span>
                     </div>
                   </div>
                   ${details.features.length > 0 ? `
@@ -1263,7 +1272,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="margin-bottom: 1.5rem;">
             <h4 style="margin: 0 0 0.75rem 0; color: #14b8a6; font-size: 0.9rem; display: flex; align-items: center; gap: 0.5rem;">
               🔄 ${t('reports.tagIntelligence.customerDataPlatforms', 'Customer Data Platforms')}
-              <span style="background: rgba(20, 184, 166, 0.2); padding: 0.15rem 0.5rem; border-radius: 10px; font-size: 0.7rem;">${cdpTags.length}</span>
+              <span style="background: rgba(20, 184, 166, 0.2); padding: 0.15rem 0.5rem; border-radius: 12px; font-size: 0.7rem;">${cdpTags.length}</span>
             </h4>
             <div style="display: grid; gap: 0.75rem;">
               ${cdpTags.map(tag => {
@@ -1273,11 +1282,11 @@ document.addEventListener('DOMContentLoaded', () => {
                   <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
                     <div style="display: flex; align-items: center; gap: 0.5rem;">
                       <span style="font-size: 1.25rem;">${details.icon}</span>
-                      <strong style="color: #fff;">${tag.name}</strong>
+                      <strong style="color: var(--r-text, #111827);">${tag.name}</strong>
                     </div>
                     <div style="display: flex; gap: 0.5rem; align-items: center;">
                       <span style="background: #14b8a6; color: #000; padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.65rem; font-weight: 600;">${t('reports.tagIntelligence.status.collecting', 'COLLECTING')}</span>
-                      <span style="color: #888; font-size: 0.8rem;">${tag.instances}×</span>
+                      <span style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">${tag.instances}×</span>
                     </div>
                   </div>
                   ${details.features.length > 0 ? `
@@ -1294,7 +1303,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <!-- Integration & Performance Tips -->
         <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: 8px; padding: 1rem; margin-top: 1rem;">
           <h4 style="margin: 0 0 0.75rem 0; color: #3b82f6; font-size: 0.9rem;">💡 ${t('reports.tagIntelligence.optimizationInsights', 'Optimization Insights')}</h4>
-          <div style="display: grid; gap: 0.5rem; font-size: 0.85rem; color: #ccc;">
+          <div style="display: grid; gap: 0.5rem; font-size: 0.85rem; color: var(--r-text-muted, #6B7280);">
             ${abTags.length > 1 ? `
               <div style="display: flex; align-items: start; gap: 0.5rem;">
                 <span style="color: #f59e0b;">⚠️</span>
@@ -1434,9 +1443,9 @@ window.exportPDF = async function exportTagIntelligencePDF(format, buttonEl) {
 
   if (!results) {
     if (window.ReportUI?.toast) {
-      window.ReportUI.toast(t('reports.common.noResultsToExport', 'Run a scan first to export PDF.'));
+      window.ReportUI.toast(t('reports.common.noResultsToExport', 'No scan results to export. Run a scan first.'));
     } else {
-      alert(t('reports.common.noResultsToExport', 'Run a scan first to export PDF.'));
+      alert(t('reports.common.noResultsToExport', 'No scan results to export. Run a scan first.'));
     }
     return;
   }

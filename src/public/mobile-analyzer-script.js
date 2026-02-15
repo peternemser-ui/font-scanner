@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
     
-    steps.push({ label: t('loader.compilingResults', 'Compiling results'), detail: t('loader.generatingDeviceComparison', 'Generating device comparison report...') });
+    steps.push({ label: t('loader.compilingResults', 'Compiling results and recommendations...'), detail: t('loader.generatingDeviceComparison', 'Generating device comparison report...') });
     return steps;
   }
 
@@ -387,17 +387,24 @@ document.addEventListener('DOMContentLoaded', () => {
       results.classList.remove('hidden');
     }
 
+    // Defensive defaults for required objects to prevent crashes on missing data
+    data.devices = data.devices || {};
+    data.mobileScore = data.mobileScore ?? 0;
+    data.performanceSummary = data.performanceSummary || { average: 0 };
+    data.readabilitySummary = data.readabilitySummary || { average: 0 };
+    data.accessibilitySummary = data.accessibilitySummary || { average: 0 };
+
     const url = document.getElementById('urlInput').value;
     const timestamp = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
     const reportId = (meta && meta.reportId) ? String(meta.reportId) : (document.body.getAttribute('data-report-id') || '');
-    
+
     // Check if shared components are loaded
     if (typeof ReportShell === 'undefined' || typeof ReportAccordion === 'undefined') {
       console.error('Shared report components not loaded');
       resultsContent.innerHTML = `<div style="color: red; padding: 2rem;">${t('reports.common.reportComponentsError', 'Error: Report components failed to load. Please refresh the page.')}</div>`;
       return;
     }
-    
+
     // Get first device data for advanced features
     const firstDevice = Object.values(data.devices).find(d => !d.error) || {};
     
@@ -793,7 +800,7 @@ document.addEventListener('DOMContentLoaded', () => {
       : '';
 
     const varianceLine = scores.length
-      ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${t('reports.mobile.scoreSpread', 'Score spread')}: ${formatScore(spread)} ${t('reports.mobile.points', 'points')} (${t('reports.mobile.best', 'best')} ${formatScore(max)}/100, ${t('reports.mobile.lowest', 'lowest')} ${formatScore(min)}/100).</div>`
+      ? `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${t('reports.mobile.scoreSpread', 'Score spread')}: ${formatScore(spread)} ${t('reports.mobile.points', 'points')} (${t('reports.mobile.best', 'Best')} ${formatScore(max)}/100, ${t('reports.mobile.lowest', 'Lowest')} ${formatScore(min)}/100).</div>`
       : `<div style="color: var(--text-tertiary); font-size: 0.85rem;">${t('reports.mobile.scoreSpreadNotAvailable', 'Score spread not available. Using summary average')} ${formatScore(avg)}/100.</div>`;
 
     const deviceHighlights = scores.length
@@ -841,7 +848,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="report-shell__card">
           <div style="padding: 1rem; background: rgba(255,255,255,0.03); border-radius: 8px;">
             <strong>${t('reports.mobile.status', 'Status')}:</strong> ${firstDevice.viewportMetaTag?.present ? `✅ ${t('reports.mobile.present', 'Present')}` : `❌ ${t('reports.mobile.missingStatus', 'Missing')}`}<br>
-            ${firstDevice.viewportMetaTag?.content ? `<strong>${t('reports.mobile.content', 'Content')}:</strong> <code style="background: rgba(0,0,0,0.3); padding: 0.25rem 0.5rem; border-radius: 4px;">${firstDevice.viewportMetaTag.content}</code>` : ''}
+            ${firstDevice.viewportMetaTag?.content ? `<strong>${t('reports.mobile.content', 'Content')}:</strong> <code style="background: var(--r-surface-2, #F8FAFC); padding: 0.25rem 0.5rem; border-radius: 4px;">${firstDevice.viewportMetaTag.content}</code>` : ''}
           </div>
         </div>
       `
@@ -1052,26 +1059,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
   /**
    * Add ASCII art patience message to loading container
-                          <div style="border: 4px solid #333; border-radius: 16px; padding: 4px; background: #1a1a1a;">
+                          <div style="border: 4px solid #333; border-radius: 12px; padding: 4px; background: #1a1a1a;">
                             <img src="${device.screenshot}" alt="${device.device} portrait" 
                                  style="width: 120px; height: auto; border-radius: 12px; cursor: zoom-in;"
                                  class="device-screenshot" />
                           </div>
                           <div class="orientation-label">${t('reports.mobile.portrait', 'Portrait')}<br>${device.viewport.width}×${device.viewport.height}</div>
-                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: #888; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" data-action="click-screenshot">
+                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" data-action="click-screenshot">
                             🔍 <span style="text-decoration: underline;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</span>
                           </div>
                         </div>
                       ` : ''}
                       ${device.landscapeScreenshot ? `
                         <div class="orientation-item">
-                          <div style="border: 4px solid #333; border-radius: 16px; padding: 4px; background: #1a1a1a;">
+                          <div style="border: 4px solid #333; border-radius: 12px; padding: 4px; background: #1a1a1a;">
                             <img src="${device.landscapeScreenshot}" alt="${device.device} landscape" 
                                  style="width: 180px; height: auto; border-radius: 12px; cursor: zoom-in;"
                                  class="device-screenshot" />
                           </div>
                           <div class="orientation-label">${t('reports.mobile.landscape', 'Landscape')}<br>${device.viewport.height}×${device.viewport.width}</div>
-                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: #888; font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" data-action="click-screenshot">
+                          <div class="screenshot-zoom-hint" style="margin-top: 0.5rem; cursor: pointer; color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem;" data-action="click-screenshot">
                             🔍 <span style="text-decoration: underline;">${t('reports.mobile.clickToEnlarge', 'Click to enlarge')}</span>
                           </div>
                         </div>
@@ -1104,7 +1111,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="metric-value">${firstDevice.viewportMeta.exists ? `✅ ${t('reports.common.yes', 'Yes')}` : `❌ ${t('reports.common.no', 'No')}`}</span>
               </div>
               ${firstDevice.viewportMeta.content ? `
-                <div style="background: rgba(0,0,0,0.2); padding: 0.75rem; border-radius: 4px; margin: 0.5rem 0; font-family: monospace; font-size: 0.85rem;">
+                <div style="background: var(--r-surface-2, #F8FAFC); padding: 0.75rem; border-radius: 4px; margin: 0.5rem 0; font-family: monospace; font-size: 0.85rem;">
                   ${firstDevice.viewportMeta.content}
                 </div>
               ` : ''}
@@ -1276,7 +1283,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="metric-value">${firstDevice.mobileSEO.h1Count === 1 ? `✅ 1 (${t('reports.mobile.good', 'good')})` : `${firstDevice.mobileSEO.h1Count || 0} (${t('reports.mobile.shouldBeOne', 'should be 1')})`}</span>
               </div>
               ${firstDevice.mobileSEO.issues?.length > 0 ? `
-                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.common.issues', 'Issues')}:</h5>
+                <h5 style="margin-top: 1rem; margin-bottom: 0.5rem;">${t('reports.common.issues', 'issues')}:</h5>
                 ${firstDevice.mobileSEO.issues.map(issue => `
                   <div class="issue-item issue-${issue.type}">${issue.item}</div>
                 `).join('')}
@@ -1346,12 +1353,12 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
           <div class="accordion-content">
             <div class="accordion-body">
-              <p style="color: #888; margin-bottom: 1rem;">${t('reports.mobile.wcagTouchTargetRequirement', 'WCAG AAA requires touch targets to be at least 44x44 pixels.')}</p>
+              <p style="color: var(--r-text-faint, #9CA3AF); margin-bottom: 1rem;">${t('reports.mobile.wcagTouchTargetRequirement', 'WCAG AAA requires touch targets to be at least 44x44 pixels.')}</p>
               ${Object.entries(data.devices).map(([key, device]) => {
                 if (device.error || !device.touchTargets) return '';
                 return `
                   <div style="margin-bottom: 1rem;">
-                    <strong>${device.device}</strong>: ${device.touchTargets.compliancePercentage}% ${t('reports.mobile.compliant', 'compliant')}
+                    <strong>${device.device}</strong>: ${device.touchTargets.compliancePercentage}% ${t('reports.mobile.compliant', 'Compliant')}
                     ${device.touchTargets.issues > 0 ? `<span style="color: #ef4444;"> (${device.touchTargets.issues} ${t('reports.mobile.undersized', 'undersized')})</span>` : ''}
                   </div>
                 `;
@@ -1377,7 +1384,7 @@ document.addEventListener('DOMContentLoaded', () => {
               ${Object.entries(data.devices).map(([key, device]) => {
                 if (device.error || !device.performance) return '';
                 return `
-                  <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1);">
+                  <div style="margin-bottom: 1.5rem; padding-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                     <strong style="color: #00ff41;">${device.device}</strong>
                     <div class="metric-row">
                       <span class="metric-label">${t('reports.mobile.firstPaintLabel', 'First Paint')}:</span>
@@ -1415,10 +1422,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 ${rec.category}
               </span>
             </div>
-            <div style="font-size: 0.9rem; color: #aaa;">${rec.suggestion}</div>
+            <div style="font-size: 0.9rem; color: var(--r-text-faint, #9CA3AF);">${rec.suggestion}</div>
           </div>
         `).join('')}
-      ` : `<p style="color: #888;">✅ ${t('reports.mobile.noSignificantIssues', 'No significant issues detected!')}</p>`}
+      ` : `<p style="color: var(--r-text-faint, #9CA3AF);">✅ ${t('reports.mobile.noSignificantIssues', 'Your site handles mobile devices well. See the device details above for fine-tuning opportunities.')}</p>`}
     `;
 
     resultsContent.innerHTML = html;
@@ -1613,7 +1620,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderMobileFixes(recommendations) {
     if (!recommendations || recommendations.length === 0) {
       return `
-        <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+        <div style="margin-top: 1rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 2rem;">
           <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
             <span style="font-size: 1.5rem;">✓</span> ${t('reports.mobile.excellentMobileExperience', 'Excellent Mobile Experience!')}
           </h3>
@@ -1639,7 +1646,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="mobile-fixes-container" style="margin-top: 1rem;">
         <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
           <span style="font-size: 1.75rem;">📱</span> ${t('reports.mobile.mobileFixes', 'Mobile Fixes')}
-          <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${recommendations.length} ${t('reports.mobile.improvementsFound', 'improvements found')})</span>
+          <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${recommendations.length} ${t('reports.mobile.improvementsFound', 'improvements found')})</span>
         </h3>
         <div class="mobile-fixes-list">
     `;
@@ -1682,21 +1689,21 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span style="font-size: 1.25rem;">${style.icon}</span>
             <div>
-              <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
-              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || t('reports.mobile.mobileOptimization', 'Mobile Optimization')}</p>
+              <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${fix.title}</h4>
+              <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${fix.category || t('reports.mobile.mobileOptimization', 'Mobile Optimization')}</p>
             </div>
           </div>
           <div style="display: flex; align-items: center; gap: 0.75rem;">
             <span style="
               padding: 0.25rem 0.75rem;
-              border-radius: 20px;
+              border-radius: 999px;
               font-size: 0.75rem;
               font-weight: 600;
               background: ${style.color}20;
               color: ${style.color};
               border: 1px solid ${style.color}40;
             ">${t('reports.common.severity.' + fix.severity.toLowerCase(), fix.severity.toUpperCase())}</span>
-            <span class="mobile-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+            <span class="mobile-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
           </div>
         </div>
 
@@ -1713,31 +1720,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const codeExamples = getMobileFixCode(fix);
 
     return `
-      <div class="mobile-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+      <div class="mobile-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
         <button class="mobile-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
           padding: 0.5rem 1rem;
           border: 1px solid rgba(255,255,255,0.2);
           border-radius: 6px;
           background: rgba(255,255,255,0.1);
-          color: #fff;
+          color: var(--r-text, #111827);
           cursor: pointer;
           font-size: 0.85rem;
         ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
         <button class="mobile-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
           padding: 0.5rem 1rem;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
           border-radius: 6px;
           background: transparent;
-          color: #aaa;
+          color: var(--r-text-faint, #9CA3AF);
           cursor: pointer;
           font-size: 0.85rem;
         ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
         <button class="mobile-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
           padding: 0.5rem 1rem;
-          border: 1px solid rgba(255,255,255,0.1);
+          border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
           border-radius: 6px;
           background: transparent;
-          color: #aaa;
+          color: var(--r-text-faint, #9CA3AF);
           cursor: pointer;
           font-size: 0.85rem;
         ">🔧 ${t('reports.common.tabs.fixGuide', 'Fix Guide')}</button>
@@ -1745,12 +1752,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
       <!-- Summary Tab -->
       <div class="mobile-fix-tab-content active" id="${accordionId}-summary">
-        <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+        <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
           ${fix.suggestion || fix.description || t('reports.mobile.reviewAndAddress', 'Review and address this mobile optimization issue.')}
         </p>
         <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
           <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${getMobileFixImpact(fix)}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${getMobileFixImpact(fix)}</div>
         </div>
       </div>
 
@@ -1758,7 +1765,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="mobile-fix-tab-content" id="${accordionId}-code" style="display: none;">
         <div style="display: grid; gap: 1rem;">
           <!-- Current Issue -->
-          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
               <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.common.fix.currentIssue', 'Current Issue')}</span>
               <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
@@ -1766,16 +1773,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
                 background: rgba(255,255,255,0.05);
-                color: #fff;
+                color: var(--r-text, #111827);
                 cursor: pointer;
                 font-size: 0.75rem;
               ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
-            <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlForMobile(codeExamples.problem)}</pre>
+            <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlForMobile(codeExamples.problem)}</pre>
           </div>
 
           <!-- Fixed Code -->
-          <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
             <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
               <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
               <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
@@ -1783,20 +1790,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 border-radius: 4px;
                 border: 1px solid rgba(255,255,255,0.2);
                 background: rgba(255,255,255,0.05);
-                color: #fff;
+                color: var(--r-text, #111827);
                 cursor: pointer;
                 font-size: 0.75rem;
               ">📋 ${t('reports.common.copy', 'Copy')}</button>
             </div>
-            <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlForMobile(codeExamples.solution)}</pre>
+            <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeHtmlForMobile(codeExamples.solution)}</pre>
           </div>
         </div>
       </div>
 
       <!-- Fix Guide Tab -->
       <div class="mobile-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-        <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
-        <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+        <h5 style="margin: 0 0 1rem 0; color: var(--r-text, #111827);">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
+        <ol style="margin: 0; padding-left: 1.5rem; color: var(--r-text-muted, #6B7280); line-height: 1.8;">
           ${getMobileFixSteps(fix).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
         </ol>
       </div>
@@ -1962,7 +1969,7 @@ p, span {
       'Some text is too small on mobile': [
         t('reports.mobile.steps.setFontSize', 'Set body font-size to at least 16px'),
         t('reports.mobile.steps.useRelativeUnits', 'Use relative units (rem/em) instead of fixed pixels'),
-        t('reports.mobile.steps.testOnDevices', 'Test on actual devices at arm\'s length viewing distance')
+        t('reports.mobile.steps.testOnDevices', 'Test on actual devices at arm\\')
       ],
       'Touch targets below WCAG minimum': [
         t('reports.mobile.steps.increaseButtonSize', 'Increase button/link size to at least 44x44 pixels'),

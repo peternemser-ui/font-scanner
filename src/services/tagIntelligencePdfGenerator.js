@@ -394,7 +394,7 @@ class TagIntelligencePdfGenerator {
 
       doc.fontSize(10)
          .fillColor(COLORS.success)
-         .text('✓ No critical issues or duplicates detected.', 60, doc.y);
+         .text('✓ No duplicate or conflicting tag implementations found in your setup.', 60, doc.y);
 
       doc.moveDown(2);
       return;

@@ -7,7 +7,7 @@
   'use strict';
 
   // Language configuration
-  const VALID_LANGUAGES = ['en', 'es', 'fr', 'de', 'pt', 'zh', 'ja'];
+  const VALID_LANGUAGES = ['en', 'es', 'fr', 'de', 'pt', 'zh', 'ja', 'ru'];
   const DEFAULT_LANGUAGE = 'en';
 
   // Locale mapping for og:locale
@@ -18,7 +18,8 @@
     'de': 'de_DE',
     'pt': 'pt_PT',
     'zh': 'zh_CN',
-    'ja': 'ja_JP'
+    'ja': 'ja_JP',
+    'ru': 'ru_RU'
   };
 
   /**

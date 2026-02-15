@@ -45,7 +45,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.provider', 'This section identifies your hosting provider, service tier, and included features. Understanding your current hosting setup is the first step toward optimizing performance, reliability, and cost. The detected provider information is determined through DNS records, HTTP headers, and IP address analysis.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.provider', 'Your hosting provider forms the foundation of your website\'s performance, security, and reliability. This section identifies the detected hosting provider, its service tier, and available features. Understanding your hosting infrastructure helps identify opportunities for optimization and ensures your provider meets your site\'s requirements.')) + '</p>';
 
       // Provider overview table
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.provider.overviewHeading', 'Provider Details')) + '</h3>';
@@ -117,7 +117,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.infrastructure', 'Server infrastructure details reveal how your hosting environment is configured. This includes IP address information, server software, and HTTP response headers. Properly configured server headers improve security, caching efficiency, and overall reliability. This section provides a comprehensive view of your server\'s technical configuration.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.infrastructure', 'Server infrastructure encompasses the hardware, software, and network configuration that deliver your website to visitors. This section examines your server\'s IP address, response headers, and technical configuration. Properly configured server infrastructure ensures fast, reliable content delivery and reduces security vulnerabilities.'s technical configuration.')) + '</p>';
 
       // Server info table
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.infrastructure.serverHeading', 'Server Information')) + '</h3>';
@@ -189,7 +189,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.cms', 'Content Management System and technology detection identifies the software stack powering your website. Knowing your CMS version and detected technologies helps assess compatibility with hosting providers and identify potential security or performance implications. Keeping your CMS and plugins up to date is critical for security and performance.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.cms', 'Content Management Systems and web technologies determine how your site is built and maintained. This section identifies the CMS platform, its version, and additional technologies detected on your site. Keeping your CMS and its dependencies up to date is critical for security and performance.')) + '</p>';
 
       // CMS detection results
       if (cmsDetected.name) {
@@ -281,7 +281,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.performance', 'Hosting performance directly impacts user experience and search engine rankings. Response time measures how quickly your server delivers content, while Time To First Byte (TTFB) indicates server processing speed. Fast hosting with low TTFB ensures visitors see content quickly and reduces bounce rates. This section evaluates your hosting performance against industry benchmarks.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.performance', 'Hosting performance directly impacts your site\'s loading speed and user experience. This section measures server response time and Time to First Byte (TTFB), which indicate how quickly your server processes and begins delivering requests. Fast server response times are essential for good Core Web Vitals scores.')) + '</p>';
 
       // Performance metrics
       var perfMetrics = [];
@@ -359,7 +359,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.recommendations', 'Based on the hosting analysis, this section provides prioritized recommendations to improve your hosting setup. Each recommendation includes the priority level and a description of the suggested change. Addressing high-priority items first will yield the greatest improvements to performance, reliability, and cost efficiency.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.recommendations', 'Based on the hosting analysis, these recommendations prioritize the most impactful improvements for your server infrastructure, performance, and configuration.')) + '</p>';
 
       if (recommendations.length > 0) {
         var critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
@@ -370,7 +370,7 @@
           return !p || p === 'low';
         });
         var groups = [
-          { items: critical, label: t('common.pdf.execSummary.highPriority', 'Critical'), color: '#ef4444' },
+          { items: critical, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444' },
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
           { items: low, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6' }

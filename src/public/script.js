@@ -814,7 +814,7 @@ class FontScannerApp {
     this.analyzeButton.disabled = isLoading;
 
     if (isLoading) {
-      this.analyzeButton.textContent = t('common.analyzing', 'ANALYZING...');
+      this.analyzeButton.textContent = t('common.analyzing', 'Analyzing...');
       this.analyzeButton.style.opacity = '1';
       this.analyzeButton.style.backgroundColor = '#001100';
       this.analyzeButton.style.color = '#00ff41';
@@ -822,7 +822,7 @@ class FontScannerApp {
       this.analyzeButton.style.textShadow = '0 0 3px #00ff41, 0 0 6px #00ff41';
       this.analyzeButton.classList.add('animate-pulse');
     } else {
-      this.analyzeButton.textContent = t('common.analyze', 'ANALYZE');
+      this.analyzeButton.textContent = t('common.analyze', 'Analyze');
       this.analyzeButton.style.opacity = '1';
       this.analyzeButton.style.backgroundColor = '#333333';
       this.analyzeButton.style.color = '#ffffff';
