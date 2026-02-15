@@ -9,7 +9,7 @@
   padding: var(--space-8, 2rem);
   background: var(--bg-card, #161A1F);
   border: 2px solid transparent;
-  border-radius: var(--radius-lg, 12px);
+  border-radius: var(--radius-xl, 16px);
   background-image:
     linear-gradient(var(--bg-card, #161A1F), var(--bg-card, #161A1F)),
     var(--pro-block-gradient, linear-gradient(135deg, var(--color-primary, #5bf4e7) 0%, var(--color-secondary, #0AFFEF) 100%));
@@ -600,7 +600,7 @@ a.pro-report-block__action--link {
   margin: 0 0 0.5rem 0;
   font-size: 2rem;
   font-weight: 700;
-  color: var(--r-text, #111111);
+  color: var(--r-text, #111827);
   line-height: 1.2;
   text-align: left;
 }
@@ -608,7 +608,7 @@ a.pro-report-block__action--link {
 .report-header__subtitle {
   margin: 0 0 1rem 0;
   font-size: 1.125rem;
-  color: var(--r-text-muted, #9ca3af);
+  color: var(--r-text-muted, #6B7280);
   line-height: 1.5;
   text-align: left;
 }
@@ -625,7 +625,7 @@ a.pro-report-block__action--link {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: var(--r-text-muted, #9ca3af);
+  color: var(--r-text-muted, #6B7280);
 }
 
 .meta-icon {
@@ -639,8 +639,8 @@ a.pro-report-block__action--link {
 
 .meta-item--mode {
   padding: 0.25rem 0.75rem;
-  background: var(--r-surface-2, #111418);
-  border: 1px solid var(--r-border, rgba(255, 255, 255, 0.1));
+  background: var(--r-surface-2, #F8FAFC);
+  border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
   border-radius: var(--radius-md, 8px);
   font-weight: 600;
 }

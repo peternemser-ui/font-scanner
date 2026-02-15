@@ -707,7 +707,7 @@ async function updateBillingUI(status) {
       planEl.innerHTML += ` <span style="font-size: 10px; color: var(--color-text-muted);">${hoursRemaining}h left</span>`;
     }
   } else {
-    planEl.innerHTML = '<span class="plan-badge plan-badge--free">Pay As You Go</span>';
+    planEl.innerHTML = '<span class="plan-badge plan-badge--free">' + t('account.payAsYouGo', 'Pay As You Go') + '</span>';
     if (triggerBadge) {
       triggerBadge.className = 'plan-badge plan-badge--free';
       triggerBadge.textContent = t('account.free', 'Free');
@@ -784,14 +784,14 @@ function updateBillingUILegacy(subscription) {
   const triggerBadge = document.getElementById('accountTriggerBadge');
 
   if (subscription) {
-    planEl.innerHTML = '<span class="plan-badge plan-badge--pro">Pro</span>';
+    planEl.innerHTML = '<span class="plan-badge plan-badge--pro">' + t('account.pro', 'Pro') + '</span>';
     upgradeBtn.classList.add('hidden');
     if (triggerBadge) {
       triggerBadge.className = 'plan-badge plan-badge--pro';
-      triggerBadge.textContent = 'Pro';
+      triggerBadge.textContent = t('account.pro', 'Pro');
     }
   } else {
-    planEl.innerHTML = '<span class="plan-badge plan-badge--free">Pay As You Go</span>';
+    planEl.innerHTML = '<span class="plan-badge plan-badge--free">' + t('account.payAsYouGo', 'Pay As You Go') + '</span>';
     upgradeBtn.classList.remove('hidden');
     if (triggerBadge) {
       triggerBadge.className = 'plan-badge plan-badge--free';
@@ -1337,9 +1337,9 @@ async function handleLogout() {
   try {
     await proManager.logout();
   } catch (error) {
-    showError('Logout failed. Please try again.');
+    showError(t('account.logoutFailed', 'Logout failed. Please try again.'));
     btn.disabled = false;
-    btn.textContent = 'Logout';
+    btn.textContent = t('account.logout', 'Logout');
   }
 }
 

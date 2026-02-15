@@ -790,7 +790,7 @@ class SEOPdfGenerator {
     if (!recommendations || recommendations.length === 0) {
       doc.fontSize(10)
          .fillColor(COLORS.success)
-         .text('✓ Excellent! No critical issues detected.', 60, doc.y);
+         .text('✓ Review the SEO analysis sections above for optimization opportunities.', 60, doc.y);
       return;
     }
 

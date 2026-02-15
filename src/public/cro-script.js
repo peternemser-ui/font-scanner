@@ -195,7 +195,7 @@ async function analyzeCRO(options = {}) {
   const url = document.getElementById('url').value.trim();
 
   if (!url) {
-    alert(t('reports.common.pleaseEnterUrl', 'Please enter a URL'));
+    alert(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
     return;
   }
 
@@ -310,7 +310,7 @@ async function analyzeCRO(options = {}) {
         return;
       }
       // Server returns { error: "Error", message: "actual error message" }
-      const errorMsg = errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed - please try again');
+      const errorMsg = errorData.message || errorData.error || t('reports.common.analysisFailed', 'Analysis failed');
       throw new Error(errorMsg);
     }
     
@@ -362,7 +362,8 @@ async function analyzeCRO(options = {}) {
 }
 
 function displayResults(data) {
-  if (!data || typeof data !== 'object' || data.error || typeof data === 'string') { console.error('[CRO] displayResults received invalid data:', data?.error || data); return; }
+  if (!data || typeof data !== 'object') return;
+
   const resultsContainer = document.getElementById('results');
 
   // Ensure results container is visible (may be hidden if called directly without scan flow)
@@ -370,7 +371,11 @@ function displayResults(data) {
     resultsContainer.style.display = 'block';
   }
 
-  const url = document.getElementById('url').value;
+  // Defensive defaults for required properties
+  data.scores = data.scores || {};
+  data.recommendations = data.recommendations || [];
+
+  const url = (document.getElementById('url') || {}).value || '';
   const timestamp = window.i18n?.formatDateTime ? window.i18n.formatDateTime(new Date()) : new Date().toLocaleString();
   const startedAt = document.body.getAttribute('data-sm-scan-started-at') || new Date().toISOString();
 
@@ -502,7 +507,7 @@ function displayResults(data) {
   };
 
   const screenshots = screenshotUrl
-    ? [{ src: screenshotUrl, alt: t('reports.common.pageScreenshot', 'Page screenshot'), device: '' }]
+    ? [{ src: screenshotUrl, alt: t('reports.common.pageScreenshot', 'Page Screenshot'), device: '' }]
     : [];
 
   const reportHTML = (window.ReportContainer && typeof window.ReportContainer.create === 'function')
@@ -510,7 +515,7 @@ function displayResults(data) {
         url,
         timestamp: startedAt,
         mode: 'cro',
-        title: t('reports.cro.title', 'Conversion Optimization Report'),
+        title: t('reports.cro.title', 'CRO Report: Conversion Optimization'),
         subtitle: '',
         summary,
         sections,
@@ -527,13 +532,13 @@ function displayResults(data) {
     : `
       ${(window.ReportShell && typeof window.ReportShell.renderReportHeader === 'function')
         ? window.ReportShell.renderReportHeader({
-            title: t('reports.cro.title', 'Conversion Optimization Report'),
+            title: t('reports.cro.title', 'CRO Report: Conversion Optimization'),
             url,
             timestamp: startedAt,
             badgeText: '',
             mode: 'cro'
           })
-        : `<h2>${t('reports.cro.title', 'Conversion Optimization Report')}</h2>`
+        : `<h2>${t('reports.cro.title', 'CRO Report: Conversion Optimization')}</h2>`
       }
     `;
 
@@ -637,7 +642,7 @@ function attachCROScreenshotRetry(imgEl, baseUrl, options = {}) {
     const msg = document.createElement('div');
     msg.setAttribute('data-sm-screenshot-fallback', 'true');
     msg.textContent = t('reports.common.screenshotUnavailable', 'Screenshot unavailable');
-    msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 10px; color: var(--text-secondary); text-align: center;';
+    msg.style.cssText = 'padding: 12px; border: 1px dashed var(--border-color); border-radius: 12px; color: var(--text-secondary); text-align: center;';
     wrapper.appendChild(msg);
   };
 
@@ -743,7 +748,7 @@ function renderCROFixes(data) {
   
   if (fixes.length === 0) {
     return `
-      <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 16px; padding: 2rem;">
+      <div style="margin-top: 2rem; background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05)); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 2rem;">
         <h3 style="margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem; color: #22c55e;">
           <span style="font-size: 1.5rem;">✓</span> ${t('reports.cro.excellentCro', 'Excellent CRO!')}
         </h3>
@@ -761,7 +766,7 @@ function renderCROFixes(data) {
     <div class="cro-fixes-container" style="margin-top: 1rem;">
       <h3 style="margin: 0 0 1.5rem 0; display: flex; align-items: center; gap: 0.5rem; font-size: 1.35rem;">
         <span style="font-size: 1.75rem;">🎯</span> ${t('reports.cro.croFixes', 'CRO Fixes')}
-        <span style="font-size: 0.875rem; color: #888; font-weight: normal;">(${t('reports.cro.improvementsFound', '{{count}} improvements found', { count: fixes.length })})</span>
+        <span style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); font-weight: normal;">(${t('reports.cro.improvementsFound', '{{count}} improvements found', { count: fixes.length })})</span>
       </h3>
       <div class="cro-fixes-list">
   `;
@@ -805,21 +810,21 @@ function renderCROFixAccordion(fix, index) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: #fff;">${fix.title}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: #888;">${fix.category || t('reports.cro.categories.croOptimization', 'CRO Optimization')}</p>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${fix.title}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${fix.category || t('reports.cro.categories.croOptimization', 'CRO Optimization')}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="
             padding: 0.25rem 0.75rem;
-            border-radius: 20px;
+            border-radius: 999px;
             font-size: 0.75rem;
             font-weight: 600;
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
           ">${fix.severity.toUpperCase()}</span>
-          <span class="cro-fix-expand-icon" style="color: #888; transition: transform 0.3s;">▼</span>
+          <span class="cro-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
         </div>
       </div>
 
@@ -834,31 +839,31 @@ function renderCROFixAccordion(fix, index) {
 
 function renderCROFixTabs(fix, accordionId) {
   return `
-    <div class="cro-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.75rem;">
+    <div class="cro-fix-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1rem; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); padding-bottom: 0.75rem;">
       <button class="cro-fix-tab active" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="summary" style="
         padding: 0.5rem 1rem;
         border: 1px solid rgba(255,255,255,0.2);
         border-radius: 6px;
         background: rgba(255,255,255,0.1);
-        color: #fff;
+        color: var(--r-text, #111827);
         cursor: pointer;
         font-size: 0.85rem;
       ">📋 ${t('reports.common.tabs.summary', 'Summary')}</button>
       <button class="cro-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="code" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">💻 ${t('reports.common.tabs.code', 'Code')}</button>
       <button class="cro-fix-tab" data-action="switch-tab" data-accordion-id="${accordionId}" data-tab="guide" style="
         padding: 0.5rem 1rem;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
         border-radius: 6px;
         background: transparent;
-        color: #aaa;
+        color: var(--r-text-faint, #9CA3AF);
         cursor: pointer;
         font-size: 0.85rem;
       ">🔧 ${t('reports.common.tabs.fixGuide', 'Fix Guide')}</button>
@@ -866,12 +871,12 @@ function renderCROFixTabs(fix, accordionId) {
 
     <!-- Summary Tab -->
     <div class="cro-fix-tab-content active" id="${accordionId}-summary">
-      <p style="color: #ccc; line-height: 1.7; margin: 0 0 1rem 0;">
+      <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
         ${fix.description}
       </p>
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
         <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.common.fix.expectedImpact', 'Expected Impact')}</div>
-        <div style="color: #c0c0c0; font-size: 0.9rem;">${fix.impact}</div>
+        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${fix.impact}</div>
       </div>
     </div>
 
@@ -879,7 +884,7 @@ function renderCROFixTabs(fix, accordionId) {
     <div class="cro-fix-tab-content" id="${accordionId}-code" style="display: none;">
       <div style="display: grid; gap: 1rem;">
         <!-- Current Issue -->
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(255,68,68,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(255,68,68,0.1); border-bottom: 1px solid rgba(255,68,68,0.2);">
             <span style="color: #ff6666; font-weight: 600; font-size: 0.85rem;">❌ ${t('reports.common.fix.currentIssue', 'Current Issue')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-problem" style="
@@ -887,16 +892,16 @@ function renderCROFixTabs(fix, accordionId) {
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.05);
-              color: #fff;
+              color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
             ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeCROHtml(fix.problematicCode || fix.currentIssue || t('reports.cro.missingImplementation', '<!-- Missing or incorrect implementation -->'))}</pre>
+          <pre id="${accordionId}-problem" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeCROHtml(fix.problematicCode || fix.currentIssue || t('reports.cro.missingImplementation', '<!-- Missing or incorrect implementation -->'))}</pre>
         </div>
 
         <!-- Fixed Code -->
-        <div style="background: rgba(0,0,0,0.3); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; overflow: hidden; border: 1px solid rgba(0,255,65,0.3);">
           <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem 1rem; background: rgba(0,255,65,0.1); border-bottom: 1px solid rgba(0,255,65,0.2);">
             <span style="color: #00ff41; font-weight: 600; font-size: 0.85rem;">✅ ${t('reports.common.fix.recommendedFix', 'Recommended Fix')}</span>
             <button data-action="copy-code" data-copy-target="${accordionId}-solution" style="
@@ -904,20 +909,20 @@ function renderCROFixTabs(fix, accordionId) {
               border-radius: 4px;
               border: 1px solid rgba(255,255,255,0.2);
               background: rgba(255,255,255,0.05);
-              color: #fff;
+              color: var(--r-text, #111827);
               cursor: pointer;
               font-size: 0.75rem;
             ">📋 ${t('reports.common.copy', 'Copy')}</button>
           </div>
-          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: #e0e0e0; font-size: 0.85rem; white-space: pre-wrap;">${escapeCROHtml(fix.snippet || fix.fixedCode)}</pre>
+          <pre id="${accordionId}-solution" style="margin: 0; padding: 1rem; overflow-x: auto; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; white-space: pre-wrap;">${escapeCROHtml(fix.snippet || fix.fixedCode)}</pre>
         </div>
       </div>
     </div>
 
     <!-- Fix Guide Tab -->
     <div class="cro-fix-tab-content" id="${accordionId}-guide" style="display: none;">
-      <h5 style="margin: 0 0 1rem 0; color: #fff;">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
-      <ol style="margin: 0; padding-left: 1.5rem; color: #ccc; line-height: 1.8;">
+      <h5 style="margin: 0 0 1rem 0; color: var(--r-text, #111827);">${t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')}</h5>
+      <ol style="margin: 0; padding-left: 1.5rem; color: var(--r-text-muted, #6B7280); line-height: 1.8;">
         ${(fix.steps || getDefaultCROSteps(fix)).map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
       </ol>
     </div>
@@ -1394,7 +1399,7 @@ body {
 </div>
 
 <!-- Problem: Low contrast button -->
-<button style="background: #ccc; color: #999;">
+<button style="background: #ccc; color: var(--r-text-faint, #9CA3AF);">
   Click Here
 </button>`;
   }
@@ -1452,7 +1457,7 @@ body {
 
 .paragraph {
   max-width: none;        /* Lines too long */
-  color: #999;            /* Low contrast */
+  color: var(--r-text-faint, #9CA3AF);            /* Low contrast */
 }`;
   }
   
@@ -1740,28 +1745,28 @@ function createQuickWinsSection(quickWins) {
       padding: 1.5rem 2rem;
       margin: 1rem 0 2rem 0;
     ">
-      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.25rem;">
+      <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1.5rem;">
         <span style="font-size: 1.75rem;">⚡</span>
-        <h2 style="margin: 0; color: #ffd700; font-size: 1.4rem;">${t('reports.cro.quickWins', 'Quick Wins')}</h2>
+        <h2 style="margin: 0; color: #ffd700; font-size: 1.35rem;">${t('reports.cro.quickWins', 'Quick Wins')}</h2>
         <span style="
           background: rgba(255, 215, 0, 0.2);
           color: #ffd700;
           padding: 0.25rem 0.75rem;
-          border-radius: 20px;
+          border-radius: 999px;
           font-size: 0.8rem;
           font-weight: 600;
         ">${t('reports.cro.highImpactLowEffort', 'High Impact • Low Effort')}</span>
       </div>
-      <p style="color: #c0c0c0; margin: 0 0 1.5rem 0; font-size: 0.95rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 1.5rem 0; font-size: 0.95rem;">
         ${t('reports.cro.quickWinsDescription', 'These fixes take just minutes but can significantly improve your conversions.')}
       </p>
       
       <div style="display: grid; gap: 1rem;">
         ${quickWins.map((win, index) => `
           <div style="
-            background: rgba(0, 0, 0, 0.3);
+            background: var(--r-surface-2, #F8FAFC);
             border: 1px solid rgba(255, 215, 0, 0.3);
-            border-radius: 10px;
+            border-radius: 12px;
             padding: 1.25rem;
             display: grid;
             grid-template-columns: auto 1fr auto;
@@ -1773,7 +1778,7 @@ function createQuickWinsSection(quickWins) {
               width: 50px;
               height: 50px;
               background: linear-gradient(135deg, #ffd700 0%, #ffaa00 100%);
-              border-radius: 10px;
+              border-radius: 12px;
               display: flex;
               flex-direction: column;
               align-items: center;
@@ -1785,7 +1790,7 @@ function createQuickWinsSection(quickWins) {
             
             <!-- Content -->
             <div>
-              <h3 style="margin: 0 0 0.5rem 0; color: #fff; font-size: 1.1rem;">${win.title}</h3>
+              <h3 style="margin: 0 0 0.5rem 0; color: var(--r-text, #111827); font-size: 1.1rem;">${win.title}</h3>
               <div style="display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem;">
                 <span style="
                   display: inline-flex;
@@ -1823,7 +1828,7 @@ function createQuickWinsSection(quickWins) {
                 border-radius: 6px;
                 padding: 0.75rem 1rem;
               ">
-                <div style="color: #808080; font-size: 0.75rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('reports.cro.howToFix', 'How to fix:')}</div>
+                <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-bottom: 0.5rem; text-transform: uppercase; letter-spacing: 0.5px;">${t('reports.cro.howToFix', 'How to fix:')}</div>
                 <ol style="margin: 0; padding-left: 1.25rem; color: #b0b0b0; font-size: 0.85rem; line-height: 1.6;">
                   ${win.steps.map(step => `<li>${step}</li>`).join('')}
                 </ol>
@@ -1848,7 +1853,7 @@ function createQuickWinsSection(quickWins) {
         display: flex;
         align-items: center;
         gap: 0.5rem;
-        color: #808080;
+        color: var(--r-text-faint, #9CA3AF);
         font-size: 0.85rem;
       ">
         <span>💡</span>
@@ -1873,7 +1878,7 @@ function renderCTAContent(ctas) {
   return `
     <div>
       <h3 style="color: var(--accent-primary); margin: 0 0 0.75rem 0; font-size: 1rem;">>> ${t('reports.cro.sections.ctaAnalysis', 'Call-to-Action Analysis')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem; font-size: 0.9rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem; font-size: 0.9rem;">
         ${t('reports.cro.ctaDescription', 'CTAs are the primary conversion elements on your page. Strong, visible CTAs with action-oriented text drive conversions.')}
       </p>
 
@@ -1886,7 +1891,7 @@ function renderCTAContent(ctas) {
           text-align: center;
         ">
           <div style="font-size: 3rem; font-weight: 900; color: var(--accent-primary);">${ctas.count}</div>
-          <div style="color: #c0c0c0; margin-top: 0.5rem;">${t('reports.cro.totalCtasFound', 'Total CTAs Found')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); margin-top: 0.5rem;">${t('reports.cro.totalCtasFound', 'Total CTAs Found')}</div>
         </div>
         <div style="
           background: rgba(0, 200, 255, 0.05);
@@ -1896,7 +1901,7 @@ function renderCTAContent(ctas) {
           text-align: center;
         ">
           <div style="font-size: 3rem; font-weight: 900; color: #00c8ff;">${ctas.visible}</div>
-          <div style="color: #c0c0c0; margin-top: 0.5rem;">${t('reports.cro.aboveTheFold', 'Above the Fold')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); margin-top: 0.5rem;">${t('reports.cro.aboveTheFold', 'Above the Fold')}</div>
         </div>
       </div>
 
@@ -1943,7 +1948,7 @@ function renderFormContent(forms) {
         ">
           <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
           <p style="color: #ff8c00; font-weight: bold; margin: 0;">${t('reports.cro.noFormsDetected', 'No forms detected on this page')}</p>
-          <p style="color: #c0c0c0; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+          <p style="color: var(--r-text-muted, #6B7280); margin: 0.5rem 0 0 0; font-size: 0.9rem;">
             ${t('reports.cro.considerAddingForm', 'Consider adding a contact form or lead capture form to improve conversions.')}
           </p>
         </div>
@@ -1954,7 +1959,7 @@ function renderFormContent(forms) {
   return `
     <div>
       <h3 style="color: #00ff41; margin: 0 0 1rem 0;">>> ${t('reports.cro.formAnalysis', 'Form Analysis')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem;">
         ${t('reports.cro.formAnalysisDescription', 'Forms are critical for lead capture. Optimize field count, validation, and user experience for higher completion rates.')}
       </p>
 
@@ -1973,7 +1978,7 @@ function renderFormContent(forms) {
           <tbody>
             ${forms.details.map((form, idx) => `
               <tr style="border-bottom: 1px solid #333;">
-                <td style="padding: 0.75rem; color: #c0c0c0;">${t('reports.cro.formNumber', 'Form {{number}}', { number: idx + 1 })}</td>
+                <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280);">${t('reports.cro.formNumber', 'Form {{number}}', { number: idx + 1 })}</td>
                 <td style="padding: 0.75rem; text-align: center; color: ${form.fieldCount <= 5 ? '#00ff41' : form.fieldCount <= 8 ? '#ffd700' : '#ff4444'}; font-weight: bold;">
                   ${form.fieldCount}
                 </td>
@@ -2002,7 +2007,7 @@ function renderFormContent(forms) {
         margin-top: 1rem;
       ">
         <h4 style="color: #bb86fc; margin: 0 0 0.5rem 0; font-size: 0.95rem;">${t('reports.cro.formOptimizationTips', 'Form Optimization Tips')}</h4>
-        <ul style="color: #c0c0c0; margin: 0; padding-left: 1.5rem; font-size: 0.9rem;">
+        <ul style="color: var(--r-text-muted, #6B7280); margin: 0; padding-left: 1.5rem; font-size: 0.9rem;">
           <li>${t('reports.cro.tips.keepFormsUnder5', 'Keep forms under 5 fields when possible')}</li>
           <li>${t('reports.cro.tips.useAutocomplete', 'Use autocomplete to speed up form filling')}</li>
           <li>${t('reports.cro.tips.addInlineValidation', 'Add inline validation for better UX')}</li>
@@ -2027,7 +2032,7 @@ function renderTrustContent(trust) {
   return `
     <div>
       <h3 style="color: #00ff41; margin: 0 0 1rem 0;">>> ${t('reports.cro.trustSignalAnalysis', 'Trust Signal Analysis')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem;">
         ${t('reports.cro.trustSignalsDescription', 'Trust signals reduce friction and increase conversion rates. {{present}} of {{total}} trust elements detected.', { present: presentCount, total: signals.length })}
       </p>
       
@@ -2047,8 +2052,8 @@ function renderTrustContent(trust) {
             ">
               <span style="font-size: 1.5rem;">${signal.icon}</span>
               <div>
-                <div style="color: #e0e0e0; font-weight: 500;">${signal.label}</div>
-                <div style="color: #808080; font-size: 0.85rem;">${signal.desc}</div>
+                <div style="color: var(--r-text-muted, #6B7280); font-weight: 500;">${signal.label}</div>
+                <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem;">${signal.desc}</div>
               </div>
               <span style="
                 font-size: 1.5rem;
@@ -2068,7 +2073,7 @@ function renderMobileContent(mobile) {
   return `
     <div>
       <h3 style="color: #00ff41; margin: 0 0 1rem 0;">>> ${t('reports.cro.mobileUxAnalysis', 'Mobile UX Analysis')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem;">
         ${t('reports.cro.mobileOptimizationCritical', 'Mobile optimization is critical - over 60% of web traffic comes from mobile devices.')}
       </p>
 
@@ -2095,8 +2100,8 @@ function renderMobileContent(mobile) {
             font-weight: 900;
             color: #000;
           ">${tapPercent}%</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${t('reports.cro.mobile.tapTargetCompliance', 'Tap Target Compliance')}</div>
-          <div style="color: #808080; font-size: 0.75rem; margin-top: 0.25rem;">${t('reports.cro.mobile.minimumSize', '44×44px minimum')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.cro.mobile.tapTargetCompliance', 'Tap Target Compliance')}</div>
+          <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-top: 0.25rem;">${t('reports.cro.mobile.minimumSize', '44×44px minimum')}</div>
         </div>
 
         <!-- Font Size -->
@@ -2121,8 +2126,8 @@ function renderMobileContent(mobile) {
             font-weight: 900;
             color: #000;
           ">${mobile.avgFontSize.toFixed(0)}px</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${t('reports.cro.mobile.averageFontSize', 'Average Font Size')}</div>
-          <div style="color: #808080; font-size: 0.75rem; margin-top: 0.25rem;">${t('reports.cro.mobile.recommended16px', '16px recommended')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.cro.mobile.averageFontSize', 'Average Font Size')}</div>
+          <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-top: 0.25rem;">${t('reports.cro.mobile.recommended16px', '16px recommended')}</div>
         </div>
 
         <!-- Viewport Meta -->
@@ -2146,8 +2151,8 @@ function renderMobileContent(mobile) {
             font-size: 2rem;
             color: ${mobile.hasViewportMeta ? '#00cc33' : '#cc0000'};
           ">${mobile.hasViewportMeta ? '✓' : '✗'}</div>
-          <div style="color: #c0c0c0; font-size: 0.9rem;">${t('reports.cro.mobile.viewportMeta', 'Viewport Meta')}</div>
-          <div style="color: #808080; font-size: 0.75rem; margin-top: 0.25rem;">${t('reports.cro.mobile.responsiveScaling', 'Responsive scaling')}</div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${t('reports.cro.mobile.viewportMeta', 'Viewport Meta')}</div>
+          <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; margin-top: 0.25rem;">${t('reports.cro.mobile.responsiveScaling', 'Responsive scaling')}</div>
         </div>
       </div>
     </div>
@@ -2168,7 +2173,7 @@ function renderRecommendationsContent(recommendations, quickWins = []) {
         ">
           <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
           <p style="color: #00ff41; font-weight: bold; margin: 0;">${t('reports.cro.noCriticalIssues', 'Great job! No critical issues found.')}</p>
-          <p style="color: #c0c0c0; margin: 0.5rem 0 0 0; font-size: 0.9rem;">
+          <p style="color: var(--r-text-muted, #6B7280); margin: 0.5rem 0 0 0; font-size: 0.9rem;">
             ${t('reports.cro.followsBestPractices', 'Your page follows CRO best practices.')}
           </p>
         </div>
@@ -2192,7 +2197,7 @@ function renderRecommendationsContent(recommendations, quickWins = []) {
   return `
     <div>
       <h3 style="color: #bb86fc; margin: 0 0 1rem 0;">>> ${t('reports.cro.actionableRecommendations', 'Actionable Recommendations')}</h3>
-      <p style="color: #c0c0c0; margin-bottom: 1rem;">
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1rem;">
         ${t('reports.cro.prioritizedImprovements', 'Prioritized improvements to boost your conversion rate.')}
       </p>
       
@@ -2216,9 +2221,9 @@ function renderRecommendationsContent(recommendations, quickWins = []) {
                   font-weight: bold;
                   text-transform: uppercase;
                 ">${rec.priority}</span>
-                <h4 style="color: #e0e0e0; margin: 0; font-size: 1rem;">${rec.message}</h4>
+                <h4 style="color: var(--r-text-muted, #6B7280); margin: 0; font-size: 1rem;">${rec.message}</h4>
               </div>
-              <p style="color: #c0c0c0; margin: 0 0 0.5rem 0; font-size: 0.9rem;">${rec.detail}</p>
+              <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 0.5rem 0; font-size: 0.9rem;">${rec.detail}</p>
               <p style="color: ${color}; margin: 0; font-size: 0.85rem; font-style: italic;">
                 ${t('reports.cro.impact', 'Impact')}: ${rec.impact}
               </p>

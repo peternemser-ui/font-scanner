@@ -84,12 +84,10 @@
                              window.currentCompetitiveResults ||
                              window.currentCrawlerResults ||
                              window.currentTagResults ||
-                             window.currentCWVResults ||
                              window.currentCROResults ||
+                             window.__gdprCurrentData ||
                              window.currentLocalSEOResults ||
-                             window.currentGDPRResults ||
-                             window.currentHostingResults ||
-                             window.currentIPReputationResults ||
+                             window.currentCWVResults ||
                              window.currentResults;
 
       if (currentResults && window.ReportStorage?.saveReport) {
@@ -140,18 +138,167 @@
         analyzedUrl: analyzedUrlValue
       });
 
+      // Unwrap API response wrapper if present: { success, results: {...actualData...} }
+      // Some analyzers store the full API response in window.current*Results
+      let unwrappedResults = currentResults;
+      if (currentResults && currentResults.results && typeof currentResults.results === 'object' && !Array.isArray(currentResults.results)) {
+        const inner = currentResults.results;
+        const looksLikeWrapper = currentResults.success !== undefined ||
+          inner.desktop !== undefined || inner.mobile !== undefined ||
+          inner.performanceScore !== undefined || inner.overallScore !== undefined ||
+          inner.score !== undefined || inner.metaTags !== undefined ||
+          inner.ssl !== undefined || inner.headers !== undefined ||
+          inner.mobileScore !== undefined || inner.devices !== undefined;
+        if (looksLikeWrapper) {
+          console.log('[PDF Export] Unwrapping API response wrapper before PDF generation');
+          unwrappedResults = { ...inner };
+          // Preserve metadata from wrapper
+          if (!unwrappedResults.url && currentResults.url) unwrappedResults.url = currentResults.url;
+          if (!unwrappedResults.reportId && currentResults.reportId) unwrappedResults.reportId = currentResults.reportId;
+          if (!unwrappedResults.screenshotUrl && currentResults.screenshotUrl) unwrappedResults.screenshotUrl = currentResults.screenshotUrl;
+        }
+      }
+
       // Prepare report data with all necessary fields for PDF generation
       const pdfReportData = {
-        ...currentResults,
+        ...unwrappedResults,
         reportId: reportId,
         url: analyzedUrlValue,
         normalizedUrl: analyzedUrlValue,
         scanStartedAt: document.body.getAttribute('data-sm-scan-started-at') ||
                        window.SM_SCAN_STARTED_AT ||
-                       currentResults?.scanStartedAt ||
-                       currentResults?.timestamp ||
+                       unwrappedResults?.scanStartedAt ||
+                       unwrappedResults?.timestamp ||
                        new Date().toISOString()
       };
+
+      // ── Issue 1: Ensure screenshotUrl is present ──
+      // The PDF exec summary renders a screenshot if data.screenshotUrl exists,
+      // but many report types (especially CWV) don't include it in the API response.
+      // Fall back to the body data-attribute set by the page script, or construct
+      // a conventional path from the reportId.
+      if (!pdfReportData.screenshotUrl) {
+        const bodyScreenshot = document.body.getAttribute('data-sm-screenshot-url');
+        if (bodyScreenshot) {
+          pdfReportData.screenshotUrl = bodyScreenshot;
+          console.log('[PDF Export] Enriched screenshotUrl from body attr:', bodyScreenshot);
+        } else if (reportId) {
+          pdfReportData.screenshotUrl = `/reports/${encodeURIComponent(reportId)}/screenshot.jpg`;
+          console.log('[PDF Export] Enriched screenshotUrl from reportId fallback:', pdfReportData.screenshotUrl);
+        }
+      } else {
+        console.log('[PDF Export] screenshotUrl already present:', pdfReportData.screenshotUrl);
+      }
+
+      // ── Issue 2: Enrich with rich fix data from browser-side generators ──
+      // The page may have loaded fix-renderer scripts that expose global generator
+      // functions. These produce rich fix objects (title, subtitle, severity, impact,
+      // summary, problematicCode, fixedCode, resources[], steps[], category) that
+      // the PDF template can render instead of the simple API recommendations array.
+      try {
+        // --- Performance enriched fixes ---
+        if (typeof generateFixesData === 'function') {
+          // Locate desktop/mobile device data from whichever results global is set.
+          // Performance-hub stores { mode, url, data: { desktop, mobile, ... } }.
+          // CWV stores { desktop, mobile, ... } directly.
+          const perfSource = window.currentPerformanceHubResults?.data ||
+                             window.currentCWVResults ||
+                             window.currentPerformanceResults?.results ||
+                             window.currentPerformanceResults ||
+                             unwrappedResults;
+
+          const rawDesktop = perfSource?.desktop || {};
+          const rawMobile  = perfSource?.mobile  || {};
+
+          // Normalize CWV-shape data (where desktop.lcp is an object with .value)
+          // into the flat coreWebVitals shape that generateFixesData expects.
+          // normalizeCWVDevice is scoped inside performance-hub-script.js and is NOT
+          // a global, so we inline a lightweight normalizer here.
+          const normalizePerfDevice = (device) => {
+            // If the device already has coreWebVitals with numeric lcpMs, it's
+            // already in the "Full" normalized shape — return as-is.
+            if (device.coreWebVitals && typeof device.coreWebVitals.lcpMs === 'number') {
+              return device;
+            }
+            // CWV shape: device.lcp may be an object { value, displayValue, ... }
+            const pick = (candidates) => {
+              for (const c of candidates) {
+                if (c === null || c === undefined) continue;
+                if (typeof c === 'number' && Number.isFinite(c)) return c;
+                if (typeof c === 'string') {
+                  const trimmed = c.trim();
+                  if (trimmed.endsWith('ms')) { const n = parseFloat(trimmed); if (!Number.isNaN(n)) return n; }
+                  if (trimmed.endsWith('s'))  { const n = parseFloat(trimmed); if (!Number.isNaN(n)) return n * 1000; }
+                  const n = parseFloat(trimmed);
+                  if (!Number.isNaN(n)) return n;
+                }
+              }
+              return null;
+            };
+            const cwv = device.coreWebVitals || {};
+            const addl = device.additionalMetrics || {};
+            return {
+              ...device,
+              coreWebVitals: {
+                lcpMs: pick([cwv.lcpMs, cwv.lcp, device.lcp?.value, device.lcp?.numericValue, device.lcp, addl.lcp?.value]),
+                lcp:   device.lcp?.displayValue || cwv.lcp || null,
+                clsNum: pick([cwv.clsNum, cwv.cls, device.cls?.value, device.cls?.numericValue, device.cls, addl.cls?.value]),
+                cls:   device.cls?.displayValue || cwv.cls || null,
+                inpMs: pick([cwv.inpMs, cwv.inp, cwv.fidMs, cwv.fid, cwv.tbt,
+                             device.inp?.value, device.inp?.numericValue,
+                             device.fid?.value, device.fid?.numericValue,
+                             device.inp, device.fid, addl.tbt?.value, addl.fid?.value]),
+                fcpMs: pick([cwv.fcpMs, cwv.fcp, device.fcp?.value, device.fcp?.numericValue, device.fcp, addl.fcp?.value])
+              },
+              lighthouse: device.lighthouse || {}
+            };
+          };
+
+          const desktop = normalizePerfDevice(rawDesktop);
+          const mobile  = normalizePerfDevice(rawMobile);
+          const perfFixes = generateFixesData(desktop, mobile);
+
+          if (perfFixes && perfFixes.length > 0) {
+            pdfReportData.enrichedFixes = pdfReportData.enrichedFixes || {};
+            pdfReportData.enrichedFixes.performance = perfFixes;
+            console.log('[PDF Export] Enriched performance fixes:', perfFixes.length);
+          }
+        }
+
+        // --- Security enriched fixes ---
+        if (typeof generateSecurityFixesData === 'function') {
+          const secSource = window.currentSecurityResults || unwrappedResults;
+          const recs = secSource?.recommendations || unwrappedResults?.recommendations;
+          if (recs && recs.length > 0) {
+            const secFixes = generateSecurityFixesData(recs, secSource);
+            if (secFixes && secFixes.length > 0) {
+              pdfReportData.enrichedFixes = pdfReportData.enrichedFixes || {};
+              pdfReportData.enrichedFixes.security = secFixes;
+              console.log('[PDF Export] Enriched security fixes:', secFixes.length);
+            }
+          }
+        }
+
+        // --- Accessibility enriched fixes (future-proof) ---
+        if (typeof renderAccessibilityFixes === 'function') {
+          const a11ySource = window.currentAccessibilityResults || unwrappedResults;
+          if (a11ySource) {
+            try {
+              const a11yFixes = renderAccessibilityFixes(a11ySource);
+              if (a11yFixes && a11yFixes.length > 0) {
+                pdfReportData.enrichedFixes = pdfReportData.enrichedFixes || {};
+                pdfReportData.enrichedFixes.accessibility = a11yFixes;
+                console.log('[PDF Export] Enriched accessibility fixes:', a11yFixes.length);
+              }
+            } catch (a11yErr) {
+              console.warn('[PDF Export] Accessibility fix enrichment failed:', a11yErr);
+            }
+          }
+        }
+      } catch (enrichErr) {
+        console.warn('[PDF Export] Fix enrichment failed (non-fatal):', enrichErr);
+        // Non-fatal: the PDF will still generate with the simple recommendations array
+      }
 
       // Check if we have session-verified access (from recent payment)
       const sessionPaymentMarker = sessionStorage.getItem('sm_payment_completed_session');
@@ -215,6 +362,7 @@
       // Use correct casing for acronym report types
       const REPORT_TYPE_LABELS = {
         seo: 'SEO', cro: 'CRO', gdpr: 'GDPR', cwv: 'CWV',
+        'core-web-vitals': 'Core-Web-Vitals',
         'tag-intelligence': 'Tag-Intelligence', 'local-seo': 'Local-SEO',
         'broken-links': 'Broken-Links', 'ip-reputation': 'IP-Reputation',
         'competitive': 'Competitive'
@@ -319,17 +467,20 @@
 
   /**
    * Detect report type from current page
-   * Valid types for PDF generation: seo, performance, accessibility, security, fonts, tag-intelligence
+   * Valid types for PDF generation: seo, performance, core-web-vitals, accessibility, security, fonts, tag-intelligence, competitive, etc.
    */
   function detectReportType() {
     const path = window.location.pathname.toLowerCase();
     const pageAttr = document.body.getAttribute('data-page');
+    const analyzerKey = document.body.getAttribute('data-sm-analyzer-key');
 
     // Map of page names/paths to valid PDF report types
     const reportTypeMap = {
       'performance-hub': 'performance',
       'performance': 'performance',
       'speed-ux': 'performance',
+      'cwv': 'core-web-vitals',
+      'core-web-vitals': 'core-web-vitals',
       'seo': 'seo',
       'seo-analyzer': 'seo',
       'security': 'security',
@@ -342,48 +493,51 @@
       'tag-intelligence': 'tag-intelligence',
       'competitive-analysis': 'competitive',
       'competitive': 'competitive',
-      'mobile-analyzer': 'mobile',
-      'mobile': 'mobile',
-      'cro-analyzer': 'cro',
-      'cro': 'cro',
-      'gdpr-compliance': 'gdpr',
       'gdpr': 'gdpr',
-      'hosting-analyzer': 'hosting',
+      'gdpr-compliance': 'gdpr',
+      'mobile': 'mobile',
+      'mobile-analyzer': 'mobile',
+      'cro': 'cro',
+      'cro-analyzer': 'cro',
       'hosting': 'hosting',
+      'hosting-analyzer': 'hosting',
       'broken-links': 'broken-links',
       'local-seo': 'local-seo',
-      'ip-reputation-analyzer': 'ip-reputation',
       'ip-reputation': 'ip-reputation',
       'brand-consistency': 'brand-consistency',
-      'site-crawler': 'site-crawler',
-      'core-web-vitals': 'core-web-vitals',
-      'cwv': 'core-web-vitals'
+      'site-crawler': 'site-crawler'
     };
 
-    // Check page attribute first
+    // Check analyzer key first (most reliable)
+    if (analyzerKey) {
+      const normalizedType = reportTypeMap[analyzerKey.toLowerCase()];
+      if (normalizedType) return normalizedType;
+    }
+
+    // Check page attribute
     if (pageAttr) {
       const normalizedType = reportTypeMap[pageAttr.toLowerCase()];
       if (normalizedType) return normalizedType;
     }
 
-    // Fallback to path-based detection (order matters: more specific paths first)
-    if (path.includes('tag-intelligence')) return 'tag-intelligence';
-    if (path.includes('core-web-vitals') || path.includes('cwv')) return 'core-web-vitals';
-    if (path.includes('brand-consistency')) return 'brand-consistency';
-    if (path.includes('broken-links')) return 'broken-links';
-    if (path.includes('local-seo')) return 'local-seo';
-    if (path.includes('ip-reputation')) return 'ip-reputation';
-    if (path.includes('site-crawler')) return 'site-crawler';
-    if (path.includes('gdpr')) return 'gdpr';
-    if (path.includes('hosting')) return 'hosting';
-    if (path.includes('mobile')) return 'mobile';
-    if (path.includes('cro')) return 'cro';
-    if (path.includes('competitive')) return 'competitive';
+    // Fallback to path-based detection
     if (path.includes('seo')) return 'seo';
+    if (path.includes('cwv') || path.includes('core-web-vitals')) return 'core-web-vitals';
     if (path.includes('performance') || path.includes('speed')) return 'performance';
     if (path.includes('security')) return 'security';
     if (path.includes('accessibility') || path.includes('a11y')) return 'accessibility';
     if (path.includes('font')) return 'fonts';
+    if (path.includes('tag-intelligence')) return 'tag-intelligence';
+    if (path.includes('competitive')) return 'competitive';
+    if (path.includes('gdpr')) return 'gdpr';
+    if (path.includes('mobile')) return 'mobile';
+    if (path.includes('cro')) return 'cro';
+    if (path.includes('hosting')) return 'hosting';
+    if (path.includes('broken-link')) return 'broken-links';
+    if (path.includes('local-seo')) return 'local-seo';
+    if (path.includes('ip-reputation')) return 'ip-reputation';
+    if (path.includes('brand')) return 'brand-consistency';
+    if (path.includes('crawler')) return 'site-crawler';
 
     // Default to performance (most common)
     console.warn('[PDF Export] Could not detect report type, defaulting to performance');

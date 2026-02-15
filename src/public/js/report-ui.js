@@ -490,7 +490,7 @@
       </div>
       <div class="report-shell__card" data-screenshot-gallery>
         <a class="report-shell__screenshot-link" href="${screenshotUrl}" target="_blank" rel="noopener">
-          <img class="report-shell__screenshot" src="${screenshotUrl}" alt="${t('reports.common.pageScreenshot', 'Page screenshot')}" data-screenshot="0" loading="lazy" />
+          <img class="report-shell__screenshot" src="${screenshotUrl}" alt="${t('reports.common.pageScreenshot', 'Page Screenshot')}" data-screenshot="0" loading="lazy" />
         </a>
       </div>
     `;

@@ -165,7 +165,7 @@ function createSecurityFix(rec, results) {
       icon: '🔴',
       category: t('reports.security.securityFixes.sslTls', 'SSL/TLS'),
       impact: t('reports.security.securityFixes.implementHttps.impact', '+30 Security Score'),
-      summary: t('reports.security.securityFixes.implementHttps.summary', 'Your website is not using HTTPS encryption, which means all data transmitted between your server and visitors is sent in plain text. This includes passwords, personal information, payment details, and session tokens, all of which can be intercepted by attackers on the same network through man-in-the-middle attacks. Modern browsers display a prominent "Not Secure" warning in the address bar for HTTP sites, which erodes visitor trust and increases bounce rates. Google also uses HTTPS as a ranking signal, so unencrypted sites face a measurable SEO penalty. Free SSL certificates are available through Let\'s Encrypt, making HTTPS implementation straightforward for any website.'),
+      summary: t('reports.security.securityFixes.implementHttps.summary', 'Your website is not using HTTPS encryption, which means all data transmitted between your server and visitors is sent in plain text. This includes passwords, personal information, payment details, and session tokens, all of which can be intercepted by attackers on the same network through man-in-the-middle attacks. Modern browsers display a prominent "Not Secure" warning in the address bar for HTTP sites, which erodes visitor trust and increases bounce rates. Google also uses HTTPS as a ranking signal, so unencrypted sites face a measurable SEO penalty. Free SSL certificates are available through Let\'s Encrypt, making HTTPS implementation straightforward for any website.'s Encrypt, making HTTPS implementation straightforward for any website.'),
       problematicCode: `<!-- Current insecure setup -->
 <a href="http://example.com/login">Login</a>
 
@@ -315,7 +315,7 @@ server {
       icon: '🟡',
       category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
       impact: t('reports.security.securityFixes.preventClickjacking.impact', '+5 Security Score'),
-      summary: t('reports.security.securityFixes.preventClickjacking.summary', 'X-Frame-Options header is not set, leaving your site vulnerable to clickjacking attacks. In a clickjacking attack, a malicious website loads your page inside an invisible iframe and overlays deceptive content on top, tricking users into clicking buttons on your site without realizing it. This can lead to unauthorized actions such as changing account settings, making purchases, or granting permissions to an attacker\'s application. The attack is particularly dangerous because the user believes they are interacting with the malicious page while they are actually performing actions on your site with their authenticated session. Adding the X-Frame-Options header or using the CSP frame-ancestors directive prevents your pages from being embedded in third-party frames entirely.'),
+      summary: t('reports.security.securityFixes.preventClickjacking.summary', 'X-Frame-Options header is not set, leaving your site vulnerable to clickjacking attacks. In a clickjacking attack, a malicious website loads your page inside an invisible iframe and overlays deceptive content on top, tricking users into clicking buttons on your site without realizing it. This can lead to unauthorized actions such as changing account settings, making purchases, or granting permissions to an attacker\'s application. The attack is particularly dangerous because the user believes they are interacting with the malicious page while they are actually performing actions on your site with their authenticated session. Adding the X-Frame-Options header or using the CSP frame-ancestors directive prevents your pages from being embedded in third-party frames entirely.'s application. The attack is particularly dangerous because the user believes they are interacting with the malicious page while they are actually performing actions on your site with their authenticated session. Adding the X-Frame-Options header or using the CSP frame-ancestors directive prevents your pages from being embedded in third-party frames entirely.'),
       problematicCode: `<!-- Without X-Frame-Options -->
 <!-- Attacker's malicious page: -->
 <style>
@@ -514,7 +514,7 @@ session.cookie_samesite = Strict
     icon: template.icon || (rec.priority === 'critical' ? '🔴' : rec.priority === 'high' ? '🟠' : '🟡'),
     title: translateSecurityFixTitle(rec.title),
     subtitle: translateOwaspRef(rec.owaspRef) || t('reports.security.securityFixes.securityBestPractice', 'Security Best Practice'),
-    category: template.category || t('reports.security.securityFixes.securityHeaders', 'Security'),
+    category: template.category || t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
     impact: template.impact || '+5 ' + t('reports.security.securityFixes.securityScore', 'Security Score'),
     summary: template.summary || rec.description,
     problematicCode: template.problematicCode || `<!-- Current issue -->\n${rec.description}`,
@@ -529,17 +529,17 @@ function createGenericSecurityFix(rec) {
   const genericSteps = t('reports.security.securityFixes.genericSteps', null);
   return {
     icon: rec.priority === 'critical' ? '🔴' : rec.priority === 'high' ? '🟠' : '🟡',
-    category: t('reports.security.securityFixes.securityHeaders', 'Security'),
+    category: t('reports.security.securityFixes.securityHeaders', 'Security Headers'),
     impact: rec.priority === 'critical' ? '+15 ' + t('reports.security.securityFixes.securityScore', 'Security Score') : rec.priority === 'high' ? '+10 ' + t('reports.security.securityFixes.securityScore', 'Security Score') : '+5 ' + t('reports.security.securityFixes.securityScore', 'Security Score'),
     summary: rec.description || t('reports.security.securityFixes.genericIssueDescription', 'A security issue was detected that needs attention.'),
-    problematicCode: `<!-- ${t('reports.security.securityFixes.currentIssue', 'Security Issue Detected')} -->
+    problematicCode: `<!-- ${t('reports.security.securityFixes.currentIssue', 'Current Issue')} -->
 <!-- ${rec.title} -->
 
 ${rec.description || t('reports.security.securityFixes.issueDetailsNotAvailable', 'Issue details not available')}
 
 <!-- ${t('reports.security.securityFixes.impact', 'Impact')}: -->
 <!-- ${rec.impact || t('reports.security.securityFixes.mayAffectSecurity', 'May affect site security')} -->`,
-    fixedCode: `<!-- ${t('reports.security.securityFixes.secureSolution', 'Recommended Solution')} -->
+    fixedCode: `<!-- ${t('reports.security.securityFixes.secureSolution', 'Secure Solution')} -->
 <!-- ${rec.title} -->
 
 ${rec.solution || t('reports.security.securityFixes.implementRecommended', 'Implement the recommended security measures')}

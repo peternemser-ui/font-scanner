@@ -90,7 +90,7 @@ async function handleUpgrade(billingPeriod) {
 
   const token = getAuthToken();
   if (!token) {
-    showError(t('pricing.modal.pleaseLoginToContinue', 'Please login to upgrade'));
+    showError(t('pricing.modal.pleaseLoginToContinue', 'Please log in to continue'));
     setTimeout(() => {
       window.location.href = '/auth.html';
     }, 2000);

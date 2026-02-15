@@ -197,6 +197,37 @@
         return;
       }
 
+      // --- Normalize data shape ---
+      // 1. Unwrap API response wrapper: { success, results: {...actualData...} }
+      //    The PDF export utility sometimes passes the full API response instead of
+      //    just the results object. Detect and unwrap it.
+      if (reportData.results && typeof reportData.results === 'object' && !Array.isArray(reportData.results)) {
+        // Check if this looks like an API wrapper (has .success or .results contains report-like keys)
+        var inner = reportData.results;
+        var looksLikeWrapper = reportData.success !== undefined ||
+          inner.desktop !== undefined || inner.mobile !== undefined ||
+          inner.performanceScore !== undefined || inner.overallScore !== undefined ||
+          inner.score !== undefined || inner.metaTags !== undefined ||
+          inner.ssl !== undefined || inner.headers !== undefined ||
+          inner.mobileScore !== undefined || inner.devices !== undefined;
+        if (looksLikeWrapper) {
+          console.log('[PdfReport] Unwrapping API response wrapper');
+          var wrapper = reportData;
+          reportData = Object.assign({}, inner);
+          // Preserve metadata from the wrapper
+          if (!reportData.url && wrapper.url) reportData.url = wrapper.url;
+          if (!reportData.reportId && wrapper.reportId) reportData.reportId = wrapper.reportId;
+          if (!reportData.normalizedUrl && wrapper.normalizedUrl) reportData.normalizedUrl = wrapper.normalizedUrl;
+          if (!reportData.screenshotUrl && wrapper.screenshotUrl) reportData.screenshotUrl = wrapper.screenshotUrl;
+          if (!reportData.scanStartedAt && wrapper.scanStartedAt) reportData.scanStartedAt = wrapper.scanStartedAt;
+        }
+      }
+
+      // 2. Normalize score: if data.score is a number, convert to { overall, grade }
+      if (typeof reportData.score === 'number') {
+        reportData.score = { overall: reportData.score, grade: scoreGrade(reportData.score) };
+      }
+
       var reportLabel = getReportLabel(_reportType);
       var analyzedUrl = reportData.url || reportData.normalizedUrl || reportData.baseUrl || '';
 
@@ -324,7 +355,8 @@
       if (!el) return;
 
       var overall = data.score ? data.score.overall
-        : (data.overallScore || data.accessibilityScore || data.healthScore || data.performanceScore || 0);
+        : (data.overallScore || data.accessibilityScore || data.healthScore
+           || data.performanceScore || data.mobileScore || (data.yourSite && data.yourSite.scores && data.yourSite.scores.overall) || 0);
       var grade = data.score ? data.score.grade : scoreGrade(overall);
 
       var html = '<h2 class="pdf-exec__heading">' + esc(t('common.pdf.execSummary.title', 'Executive Summary')) + '</h2>';
@@ -392,8 +424,8 @@
         fonts: {
           categories: {
             fontDelivery: t('fonts.fontDelivery', 'Font Delivery'),
-            fallbackStability: t('fonts.fallbackLayoutStability', 'Fallback & Stability'),
-            performance: t('fonts.fontLoadingPerformance', 'Loading Performance')
+            fallbackStability: t('fonts.fallbackLayoutStability', 'Fallback & Layout Stability'),
+            performance: t('fonts.fontLoadingPerformance', 'Font Loading Performance')
           },
           sectionKeys: ['fontDelivery', 'fallbackStability', 'performance'],
           hiddenBreakdown: []
@@ -541,9 +573,16 @@
         // Build breakdown from data sub-objects with .score
         Object.keys(categoryNameMap).forEach(function (key) {
           var section = data[key];
-          if (!section || section.score === undefined) return;
-          if (!strongest || section.score > strongest.score) strongest = { key: key, score: section.score };
-          if (!weakest || section.score < weakest.score) weakest = { key: key, score: section.score };
+          var sectionScore;
+          if (section && section.score !== undefined) {
+            sectionScore = section.score;
+          } else if (data.yourSite && data.yourSite.scores && data.yourSite.scores[key] !== undefined) {
+            // Competitive analysis stores scores under data.yourSite.scores
+            sectionScore = data.yourSite.scores[key];
+          }
+          if (sectionScore === undefined) return;
+          if (!strongest || sectionScore > strongest.score) strongest = { key: key, score: sectionScore };
+          if (!weakest || sectionScore < weakest.score) weakest = { key: key, score: sectionScore };
         });
       }
 
@@ -567,26 +606,21 @@
         { url: shortUrl, score: overall, grade: grade }));
 
       if (strongest) {
-        sentences.push(t('common.pdf.execSummary.narrative.strongestArea',
-          'The strongest performing area was {{category}} with a score of {{score}}/100.',
+        sentences.push(t('common.pdf.execSummary.narrative.strongestArea', 'The strongest performing area was {{category}} with a score of {{score}}/100, demonstrating effective implementation in this domain.',
           { category: categoryNameMap[strongest.key] || strongest.key, score: strongest.score }));
       }
       if (weakest && (!strongest || weakest.key !== strongest.key)) {
-        sentences.push(t('common.pdf.execSummary.narrative.weakestArea',
-          'The area requiring the most attention is {{category}}, which scored {{score}}/100.',
+        sentences.push(t('common.pdf.execSummary.narrative.weakestArea', 'The area requiring the most attention is {{category}}, which scored {{score}}/100 and presents the greatest opportunity for improvement.',
           { category: categoryNameMap[weakest.key] || weakest.key, score: weakest.score }));
       }
       if (narrativeIssueCount > 0) {
-        sentences.push(t('common.pdf.execSummary.narrative.issuesSummary',
-          'The audit identified {{issueCount}} issues across {{categoryCount}} categories.',
+        sentences.push(t('common.pdf.execSummary.narrative.issuesSummary', 'Across {{categoryCount}} categories analyzed, the audit identified {{issueCount}} issues and confirmed {{passCount}} areas meeting best-practice standards.',
           { issueCount: narrativeIssueCount, categoryCount: narrativeSectionKeys.length, passCount: narrativePassCount }));
       } else {
-        sentences.push(t('common.pdf.execSummary.narrative.noIssues',
-          'No critical issues were identified during this analysis.'));
+        sentences.push(t('common.pdf.execSummary.narrative.noIssues', 'No critical issues were identified during this analysis — the site demonstrates strong adherence to current SEO best practices across all categories evaluated.'));
       }
       if (weakest && narrativeIssueCount > 0) {
-        sentences.push(t('common.pdf.execSummary.narrative.recommendation',
-          'Priority should be given to improving {{category}}.',
+        sentences.push(t('common.pdf.execSummary.narrative.recommendation', 'Priority should be given to improving {{category}}, as addressing the issues in this area will have the most significant impact on overall search engine rankings and organic traffic.',
           { category: categoryNameMap[weakest.key] || weakest.key }));
       }
 
@@ -594,15 +628,25 @@
         '<p>' + sentences.map(esc).join(' ') + '</p>' +
       '</div>';
 
-      // Page screenshot
+      // Page screenshot — resolve to absolute URL so Puppeteer can always fetch it
       var screenshotUrl = data.screenshotUrl || '';
       if (!screenshotUrl && data.reportId) {
         screenshotUrl = '/reports/' + encodeURIComponent(data.reportId) + '/screenshot.jpg';
       }
+      // Convert relative URLs to absolute so the <img> src resolves regardless of
+      // the page's base URL (important for Puppeteer rendering PDF templates).
+      if (screenshotUrl && screenshotUrl.charAt(0) === '/') {
+        screenshotUrl = window.location.origin + screenshotUrl;
+      }
       if (screenshotUrl) {
-        html += '<div class="pdf-exec__screenshot">' +
-          '<img src="' + esc(screenshotUrl) + '" alt="' + esc(t('common.pageScreenshot', 'Page screenshot')) + '" class="pdf-exec__screenshot-img" onerror="this.parentElement.style.display=\'none\'" />' +
+        console.log('[PdfReport] Screenshot URL for exec summary:', screenshotUrl);
+        html += '<div class="pdf-exec__screenshot" id="pdf-screenshot-container">' +
+          '<img src="' + esc(screenshotUrl) + '" alt="' + esc(t('common.pageScreenshot', 'Page screenshot')) + '" class="pdf-exec__screenshot-img"' +
+          ' onerror="console.warn(\'[PdfReport] Screenshot failed to load:\', this.src); this.parentElement.style.display=\'none\';"' +
+          ' onload="console.log(\'[PdfReport] Screenshot loaded successfully\');" />' +
         '</div>';
+      } else {
+        console.log('[PdfReport] No screenshotUrl available — skipping screenshot in exec summary');
       }
 
       // Category breakdown grid
@@ -627,21 +671,30 @@
         html += '</div>';
       } else {
         // Build category grid from data sub-objects
+        // Also check data.yourSite.scores for competitive analysis data shape
+        var _yourScoresRef = (data.yourSite && data.yourSite.scores) ? data.yourSite.scores : null;
         var hasAnyScore = false;
         Object.keys(categoryNameMap).forEach(function (key) {
           var section = data[key];
-          if (section && section.score !== undefined) hasAnyScore = true;
+          if (section && section.score !== undefined) { hasAnyScore = true; return; }
+          if (_yourScoresRef && _yourScoresRef[key] !== undefined) { hasAnyScore = true; }
         });
         if (hasAnyScore) {
           html += '<div class="pdf-exec__subheading">' + esc(t('common.pdf.execSummary.categoryBreakdown', 'Category Breakdown')) + '</div>';
           html += '<div class="pdf-score-grid">';
           Object.keys(categoryNameMap).forEach(function (key) {
             var section = data[key];
-            if (!section || section.score === undefined) return;
+            var catScore;
+            if (section && section.score !== undefined) {
+              catScore = section.score;
+            } else if (_yourScoresRef && _yourScoresRef[key] !== undefined) {
+              catScore = _yourScoresRef[key];
+            }
+            if (catScore === undefined) return;
             html +=
               '<div class="pdf-score-card">' +
                 '<div class="pdf-score-card__label">' + esc(categoryNameMap[key]) + '</div>' +
-                '<div class="pdf-score-card__value score-' + scoreClass(section.score) + '">' + section.score + '</div>' +
+                '<div class="pdf-score-card__value score-' + scoreClass(catScore) + '">' + catScore + '</div>' +
               '</div>';
           });
           html += '</div>';

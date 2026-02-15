@@ -295,8 +295,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // Note: Security analyzer has custom scan logic (preserveReportId), so we handle events manually
   const shell = window.PageShell.init('#page-container', {
     pageId: 'security-analyzer',
-    pageTitle: t('security.title', 'Security'),
-    pageDescription: t('security.subtitle', 'SSL/TLS validation, security headers audit, and vulnerability checks.'),
+    pageTitle: t('security.title', 'Security Analyzer'),
+    pageDescription: t('security.subtitle', 'SSL, Headers & Vulnerability Scan'),
     analyzerType: 'security',
 
     i18n: {
@@ -306,7 +306,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     urlInput: {
       placeholder: 'https://example.com',
-      label: t('common.websiteUrl', 'Website URL to analyze'),
+      label: t('common.websiteUrl', 'Website URL'),
       helperText: t('security.helperText', 'Tests SSL/TLS, security headers (CSP, HSTS, X-Frame-Options), and OWASP-aligned checks.'),
       i18nLabel: 'common.websiteUrl',
       i18nHelper: 'security.helperText'
@@ -813,6 +813,16 @@ function displaySecurityResults(data) {
     // Don't return - show what we have with an error banner
   }
 
+  // Defensive defaults for sub-objects to prevent crashes on missing data
+  data.ssl = data.ssl || { score: 0, valid: false, issuer: 'Unknown', validFrom: '', validUntil: '', daysRemaining: 0, protocol: 'Unknown' };
+  data.headers = data.headers || { score: 0, implemented: 0, total: 0, details: [] };
+  data.vulnerabilities = data.vulnerabilities || { score: 100, critical: 0, high: 0, medium: 0, low: 0, details: [] };
+  data.cookies = data.cookies || { score: 0, secure: 0, total: 0, details: [] };
+  data.thirdPartyScripts = data.thirdPartyScripts || { score: 0, withSRI: 0, total: 0, scripts: [] };
+  data.overallScore = data.overallScore ?? 0;
+  data.owaspCompliance = data.owaspCompliance ?? 0;
+  data.recommendations = data.recommendations || [];
+
   // Ensure results container is visible (may be hidden if called directly without scan flow)
   const resultsDiv = document.getElementById('results');
   if (resultsDiv) {
@@ -843,7 +853,7 @@ function displaySecurityResults(data) {
   // Consistent Report Header (clean, no redundant badges)
   const reportHeader = window.ReportContainer && window.ReportContainer.renderHeader
     ? window.ReportContainer.renderHeader({
-        title: t('reports.security.title', 'Security Report'),
+        title: t('reports.security.title', 'Security Analysis Report'),
         url: url,
         timestamp: timestamp,
         mode: 'security',
@@ -852,7 +862,7 @@ function displaySecurityResults(data) {
       })
     : `
       <div class="section" style="margin-bottom: 1.5rem;">
-        <h2 style="color: var(--text-primary, #fff); font-size: 1.5rem; margin: 0 0 1rem 0;">${t('reports.security.title', 'Security Report')}</h2>
+        <h2 style="color: var(--text-primary, #fff); font-size: 1.5rem; margin: 0 0 1rem 0;">${t('reports.security.title', 'Security Analysis Report')}</h2>
         ${url ? `<p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🌐 ${url}</p>` : ''}
         <p style="color: var(--text-muted, #9ca3af); margin: 0.25rem 0; font-size: 0.875rem;">🕒 ${timestamp}</p>
       </div>
@@ -865,7 +875,7 @@ function displaySecurityResults(data) {
         <span style="font-size: 1.5rem;">⚠️</span>
         <div>
           <strong style="color: #ff4444;">${t('reports.security.analysisIncomplete', 'Analysis Incomplete')}</strong>
-          <p style="margin: 0.25rem 0 0 0; color: #ccc; font-size: 0.9rem;">
+          <p style="margin: 0.25rem 0 0 0; color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">
             ${data.errorMessage || t('reports.security.someChecksNotCompleted', 'Some security checks could not be completed. Partial results shown below.')}
           </p>
         </div>
@@ -916,7 +926,7 @@ function displaySecurityResults(data) {
       <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0;">
         <!-- Overall Security Score -->
         <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('reports.security.overallSecurityScore', 'Overall Security Score')}</div>
+          <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.security.overallSecurityScore', 'Overall Security Score')}</div>
           <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
             <circle
               cx="90"
@@ -960,7 +970,7 @@ function displaySecurityResults(data) {
 
         <!-- SSL/TLS Score -->
         <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('reports.security.sslTlsSecurity', 'SSL/TLS Security')}</div>
+          <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.security.sslTlsSecurity', 'SSL/TLS Security')}</div>
           <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
             <circle
               cx="90"
@@ -1004,7 +1014,7 @@ function displaySecurityResults(data) {
 
         <!-- Security Headers Score -->
         <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('reports.security.headers', 'Security Headers')}</div>
+          <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.security.headers', 'Security Headers')}</div>
           <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
             <circle
               cx="90"
@@ -1048,7 +1058,7 @@ function displaySecurityResults(data) {
 
         <!-- Vulnerabilities Score -->
         <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: #ffffff;">${t('reports.security.vulnerabilityStatus', 'Vulnerability Status')}</div>
+          <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.security.vulnerabilityStatus', 'Vulnerability Status')}</div>
           <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
             <circle
               cx="90"
@@ -1103,19 +1113,19 @@ function displaySecurityResults(data) {
             </tr>
           </thead>
           <tbody>
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <td style="padding: 0.75rem; font-weight: 500;">◈ ${t('reports.security.sslTlsCertificate', 'SSL/TLS Certificate')}</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.ssl.score)}; font-weight: bold;">${data.ssl.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.ssl.score)}; font-weight: bold;">${getGrade(data.ssl.score)}</td>
               <td style="padding: 0.75rem; color: ${data.ssl.valid ? 'var(--accent-primary)' : '#ff4444'};">${data.ssl.valid ? '✓ ' + t('reports.security.validCertificate', 'Valid Certificate') : '✗ ' + t('reports.security.invalidCertificate', 'Invalid Certificate')}</td>
             </tr>
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <td style="padding: 0.75rem; font-weight: 500;">◈ ${t('reports.security.headers', 'Security Headers')}</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.headers.score)}; font-weight: bold;">${data.headers.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.headers.score)}; font-weight: bold;">${getGrade(data.headers.score)}</td>
-              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.headersImplemented', '{{implemented}} of {{total}} headers implemented').replace('{{implemented}}', data.headers.implemented).replace('{{total}}', data.headers.total)}</td>
+              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.headersImplemented', '{{count}} of {{total}} headers implemented').replace('{{implemented}}', data.headers.implemented).replace('{{total}}', data.headers.total)}</td>
             </tr>
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <td style="padding: 0.75rem; font-weight: 500;">~ ${t('reports.security.vulnerabilities', 'Vulnerabilities')}</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${data.vulnerabilities.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${getGrade(data.vulnerabilities.score)}</td>
@@ -1123,17 +1133,17 @@ function displaySecurityResults(data) {
                 ${data.vulnerabilities.critical} ${t('reports.security.critical', 'Critical')}, ${data.vulnerabilities.high} ${t('reports.security.high', 'High')}, ${data.vulnerabilities.medium} ${t('reports.security.medium', 'Medium')}
               </td>
             </tr>
-            <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
+            <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
               <td style="padding: 0.75rem; font-weight: 500;">🍪 ${t('reports.security.cookieSecurity', 'Cookie Security')}</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.cookies.score)}; font-weight: bold;">${data.cookies.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.cookies.score)}; font-weight: bold;">${getGrade(data.cookies.score)}</td>
-              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.cookiesSecured', '{{secure}} of {{total}} cookies properly secured').replace('{{secure}}', data.cookies.secure).replace('{{total}}', data.cookies.total)}</td>
+              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.cookiesSecured', '{{count}} cookies properly secured').replace('{{secure}}', data.cookies.secure).replace('{{total}}', data.cookies.total)}</td>
             </tr>
             <tr>
               <td style="padding: 0.75rem; font-weight: 500;">R ${t('reports.security.thirdPartyScripts', 'Third-Party Scripts')}</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.thirdPartyScripts.score)}; font-weight: bold;">${data.thirdPartyScripts.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.thirdPartyScripts.score)}; font-weight: bold;">${getGrade(data.thirdPartyScripts.score)}</td>
-              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.scriptsWithSri', '{{withSRI}} of {{total}} scripts with SRI').replace('{{withSRI}}', data.thirdPartyScripts.withSRI).replace('{{total}}', data.thirdPartyScripts.total)}</td>
+              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.scriptsWithSri', '{{count}} scripts with SRI').replace('{{withSRI}}', data.thirdPartyScripts.withSRI).replace('{{total}}', data.thirdPartyScripts.total)}</td>
             </tr>
           </tbody>
         </table>
@@ -1144,8 +1154,8 @@ function displaySecurityResults(data) {
         <div style="display: flex; align-items: center; gap: 1rem;">
           <div style="font-size: 3rem;">${data.owaspCompliance >= 70 ? '✓' : '~'}</div>
           <div style="flex: 1;">
-            <div style="font-weight: 600; font-size: 1.1rem; color: #ffffff; margin-bottom: 0.5rem;">
-              ${t('reports.security.owaspCompliance', 'OWASP Top 10 Compliance')}
+            <div style="font-weight: 600; font-size: 1.1rem; color: var(--r-text, #111827); margin-bottom: 0.5rem;">
+              ${t('reports.security.owaspCompliance', 'OWASP Compliance')}
             </div>
             <div style="color: ${data.owaspCompliance >= 70 ? 'var(--accent-primary)' : '#ff4444'}; font-size: 0.95rem;">
               <strong>${data.owaspCompliance}%</strong> ${t('reports.security.owaspControlsImplemented', 'of OWASP Top 10 security controls implemented')}
@@ -1366,22 +1376,22 @@ function createDesktopMobileComparison(container, desktop, mobile) {
                 ${desktop.securityScore}
               </text>
             </svg>
-            <div style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: #808080;">${t('reports.security.securityScore', 'Security Score')}</div>
+            <div style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.security.securityScore', 'Security Score')}</div>
           </div>
           <div style="margin-top: 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">HTTPS:</span>
               <span style="color: ${desktop.https ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${desktop.https ? '✓ ' + t('reports.security.enabled', 'Enabled') : '✗ ' + t('reports.security.missing', 'Missing')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">${t('reports.security.mixedContent', 'Mixed Content')}:</span>
               <span style="color: ${desktop.mixedContent === 0 ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${desktop.mixedContent} ${t('reports.security.issues', 'issues')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">CSP:</span>
               <span style="color: ${desktop.csp ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">${desktop.csp ? '✓ ' + t('reports.security.present', 'Present') : '⚠ ' + t('reports.security.missing', 'Missing')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px;">
               <span style="font-weight: 500;">HSTS:</span>
               <span style="color: ${desktop.hsts ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">${desktop.hsts ? '✓ ' + t('reports.security.present', 'Present') : '⚠ ' + t('reports.security.missing', 'Missing')}</span>
             </div>
@@ -1427,22 +1437,22 @@ function createDesktopMobileComparison(container, desktop, mobile) {
                 ${mobile.securityScore}
               </text>
             </svg>
-            <div style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: #808080;">${t('reports.security.securityScore', 'Security Score')}</div>
+            <div style="text-align: center; margin-top: 0.5rem; font-size: 0.9rem; color: var(--r-text-faint, #9CA3AF);">${t('reports.security.securityScore', 'Security Score')}</div>
           </div>
           <div style="margin-top: 1rem;">
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">HTTPS:</span>
               <span style="color: ${mobile.https ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${mobile.https ? '✓ ' + t('reports.security.enabled', 'Enabled') : '✗ ' + t('reports.security.missing', 'Missing')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">${t('reports.security.mixedContent', 'Mixed Content')}:</span>
               <span style="color: ${mobile.mixedContent === 0 ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold;">${mobile.mixedContent} ${t('reports.security.issues', 'issues')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px; margin-bottom: 0.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px; margin-bottom: 0.5rem;">
               <span style="font-weight: 500;">CSP:</span>
               <span style="color: ${mobile.csp ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">${mobile.csp ? '✓ ' + t('reports.security.present', 'Present') : '⚠ ' + t('reports.security.missing', 'Missing')}</span>
             </div>
-            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: rgba(0, 0, 0, 0.2); border-radius: 4px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px;">
               <span style="font-weight: 500;">HSTS:</span>
               <span style="color: ${mobile.hsts ? 'var(--accent-primary)' : '#ffa500'}; font-weight: bold;">${mobile.hsts ? '✓ ' + t('reports.security.present', 'Present') : '⚠ ' + t('reports.security.missing', 'Missing')}</span>
             </div>
@@ -1450,9 +1460,9 @@ function createDesktopMobileComparison(container, desktop, mobile) {
         </div>
       </div>
 
-      <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(0, 0, 0, 0.15); border-radius: 6px; font-size: 0.8rem; color: #808080; line-height: 1.6;">
-        <p style="margin: 0 0 0.5rem 0;"><strong style="color: #a0a0a0;">CSP (Content Security Policy):</strong> ${t('reports.security.cspDescription', 'A security header that helps prevent XSS attacks by controlling which resources the browser can load.')}</p>
-        <p style="margin: 0;"><strong style="color: #a0a0a0;">HSTS (HTTP Strict Transport Security):</strong> ${t('reports.security.hstsDescription', 'A header that forces browsers to only connect via HTTPS, preventing downgrade attacks.')}</p>
+      <div style="margin-top: 1.5rem; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 6px; font-size: 0.8rem; color: var(--r-text-faint, #9CA3AF); line-height: 1.6;">
+        <p style="margin: 0 0 0.5rem 0;"><strong style="color: #a0a0a0;">CSP (Content Security Policy):</strong> ${t('reports.security.cspDescription', 'CSP (Content Security Policy): A security header that helps prevent XSS attacks')}</p>
+        <p style="margin: 0;"><strong style="color: #a0a0a0;">HSTS (HTTP Strict Transport Security):</strong> ${t('reports.security.hstsDescription', 'HSTS (HTTP Strict Transport Security): Forces HTTPS connections')}</p>
       </div>
 
       ${Math.abs(desktop.securityScore - mobile.securityScore) > 10 ? `
@@ -1609,7 +1619,7 @@ function renderHeadersContent(headers) {
       <p style="margin-bottom: 1.5rem;">${t('reports.security.implemented', 'Implemented')}: ${headers.implemented} ${t('common.of', 'of')} ${headers.total} ${t('reports.security.recommendedHeaders', 'recommended headers')}</p>
 
       <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; border: 1px solid rgba(255, 255, 255, 0.1);">
+        <table style="width: 100%; border-collapse: collapse; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
           <thead>
             <tr style="background: rgba(255, 255, 255, 0.05); border-bottom: 2px solid rgba(255, 255, 255, 0.2);">
               <th style="padding: 0.75rem; text-align: left; font-weight: 600; color: var(--accent-primary); width: 10%;">${t('reports.security.status', 'Status')}</th>
@@ -1620,7 +1630,7 @@ function renderHeadersContent(headers) {
           </thead>
           <tbody>
             ${Object.entries(headers.details).map(([header, info]) => `
-              <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${!info.present ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
+              <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${!info.present ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                 <td style="padding: 0.75rem; text-align: center;">
                   <span style="color: ${info.present ? 'var(--accent-primary)' : '#ff4444'}; font-size: 1.2rem; font-weight: bold;">
                     ${info.present ? '✓' : '✗'}
@@ -1630,9 +1640,9 @@ function renderHeadersContent(headers) {
                   <strong style="color: ${info.present ? '#ffffff' : '#ff4444'};">${header}</strong>
                 </td>
                 <td style="padding: 0.75rem; color: ${info.present ? 'var(--accent-primary)' : '#808080'}; font-family: monospace; font-size: 0.85rem; word-break: break-all;">
-                  ${info.value || '<span style="color: #808080; font-style: italic;">' + t('reports.security.notSet', 'Not set') + '</span>'}
+                  ${info.value || '<span style="color: var(--r-text-faint, #9CA3AF); font-style: italic;">' + t('reports.security.notSet', 'Not set') + '</span>'}
                 </td>
-                <td style="padding: 0.75rem; color: #c0c0c0; font-size: 0.9rem;">
+                <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">
                   <div>${translateHeaderDescription(header, info.description)}</div>
                   ${!info.present ? `<div style="color: #ff4444; margin-top: 0.5rem; font-weight: 500;">~ ${t('reports.security.risk', 'Risk')}: ${translateHeaderRisk(header, info.risk)}</div>` : ''}
                 </td>
@@ -1659,32 +1669,32 @@ function renderVulnerabilitiesContent(vulnerabilities) {
           </tr>
         </thead>
         <tbody>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <td style="padding: 0.75rem; color: #c0c0c0;">
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280);">
               <span style="color: #ff4444; font-weight: 600;">● ${t('reports.security.critical', 'Critical')}</span>
             </td>
             <td style="text-align: center; padding: 0.75rem;">
               <span style="color: ${vulnerabilities.critical > 0 ? '#ff4444' : 'var(--accent-primary)'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.critical}</span>
             </td>
           </tr>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <td style="padding: 0.75rem; color: #c0c0c0;">
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280);">
               <span style="color: #ff6b6b; font-weight: 600;">● ${t('reports.security.high', 'High')}</span>
             </td>
             <td style="text-align: center; padding: 0.75rem;">
               <span style="color: ${vulnerabilities.high > 0 ? '#ff6b6b' : 'var(--accent-primary)'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.high}</span>
             </td>
           </tr>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <td style="padding: 0.75rem; color: #c0c0c0;">
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280);">
               <span style="color: #ffa500; font-weight: 600;">● ${t('reports.security.medium', 'Medium')}</span>
             </td>
             <td style="text-align: center; padding: 0.75rem;">
               <span style="color: ${vulnerabilities.medium > 0 ? '#ffa500' : 'var(--accent-primary)'}; font-weight: 700; font-size: 1.1rem;">${vulnerabilities.medium}</span>
             </td>
           </tr>
-          <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05);">
-            <td style="padding: 0.75rem; color: #c0c0c0;">
+          <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+            <td style="padding: 0.75rem; color: var(--r-text-muted, #6B7280);">
               <span style="color: #00ccff; font-weight: 600;">● ${t('reports.security.low', 'Low')}</span>
             </td>
             <td style="text-align: center; padding: 0.75rem;">
@@ -1712,7 +1722,7 @@ function renderVulnerabilitiesContent(vulnerabilities) {
 
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255, 165, 0, 0.1); border: 1px solid rgba(255, 165, 0, 0.3); border-radius: 4px;">
         <p style="color: #ffa500; margin: 0; font-size: 0.9rem;">
-          <strong>◈ ${t('reports.security.owaspReference', 'OWASP Reference')}:</strong> ${t('reports.security.owaspReferenceDesc', 'This analysis covers OWASP Top 10 categories including Injection, Broken Authentication, Sensitive Data Exposure, XML External Entities (XXE), and Security Misconfiguration.')}
+          <strong>◈ ${t('reports.security.owaspReference', 'OWASP Reference: This analysis covers OWASP Top 10 categories')}:</strong> ${t('reports.security.owaspReferenceDesc', 'This analysis covers OWASP Top 10 categories including Injection, Broken Authentication, Sensitive Data Exposure, XML External Entities (XXE), and Security Misconfiguration.')}
         </p>
       </div>
     </div>
@@ -1724,7 +1734,7 @@ function renderCookiesContent(cookies) {
   return `
     <div class="security-section">
       <h4>${t('reports.security.cookieSecurityAnalysis', 'Cookie Security Analysis')}</h4>
-      <p style="margin-bottom: 1rem;">${t('reports.security.totalCookies', 'Total cookies')}: ${cookies.total} | ${t('reports.security.secureCookies', 'Secure cookies')}: ${cookies.secure}</p>
+      <p style="margin-bottom: 1rem;">${t('reports.security.totalCookies', 'Total cookies: {{total}} | Secure cookies: {{secure}}')}: ${cookies.total} | ${t('reports.security.secureCookies', 'Secure cookies')}: ${cookies.secure}</p>
 
       ${cookies.list && cookies.list.length > 0 ? `
         <div class="cookies-table">
@@ -1735,12 +1745,12 @@ function renderCookiesContent(cookies) {
                 <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: #bb86fc; white-space: nowrap;">HttpOnly</th>
                 <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: #bb86fc; white-space: nowrap;">Secure</th>
                 <th style="text-align: center; padding: 0.75rem; font-weight: 600; color: #bb86fc; white-space: nowrap;">SameSite</th>
-                <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: #bb86fc;">${t('reports.security.issues', 'Issues')}</th>
+                <th style="text-align: left; padding: 0.75rem; font-weight: 600; color: #bb86fc;">${t('reports.security.issues', 'issues')}</th>
               </tr>
             </thead>
             <tbody>
               ${cookies.list.map(cookie => `
-                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${(!cookie.httpOnly || !cookie.secure) ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
+                <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${(!cookie.httpOnly || !cookie.secure) ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                   <td style="padding: 0.75rem; font-family: 'Courier New', monospace; font-size: 0.9rem; color: #00ccff;">${cookie.name}</td>
                   <td style="text-align: center; padding: 0.75rem;">
                     <span style="color: ${cookie.httpOnly ? 'var(--accent-primary)' : '#ff4444'}; font-weight: bold; font-size: 1.1rem;">
@@ -1804,7 +1814,7 @@ function renderThirdPartyContent(thirdParty) {
             </thead>
             <tbody>
               ${thirdParty.scripts.map((script) => `
-                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${!script.hasSRI ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
+                <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${!script.hasSRI ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                   <td style="padding: 0.75rem; word-break: break-all; font-family: 'Courier New', monospace; font-size: 0.85rem; color: #00ccff;">
                     ${script.url}
                   </td>
@@ -1842,10 +1852,10 @@ function renderThirdPartyContent(thirdParty) {
           K ${t('reports.security.sriBestPractices', 'Subresource Integrity (SRI) Best Practices')}
         </h5>
         <ul style="margin: 0; padding-left: 1.5rem; color: #ffa500; font-size: 0.9rem; line-height: 1.6;">
-          <li>${t('reports.security.sriHashTampering', 'Use SRI hashes to ensure third-party scripts haven\'t been tampered with')}</li>
-          <li>${t('reports.security.sriHttpsLoading', 'Always load external resources over HTTPS to prevent man-in-the-middle attacks')}</li>
-          <li>${t('reports.security.sriAsyncDefer', 'Use async/defer attributes to prevent blocking page rendering')}</li>
-          <li>${t('reports.security.sriAuditDependencies', 'Regularly audit and minimize the number of third-party dependencies')}</li>
+          <li>${t('reports.security.sriHashTampering', 'Use SRI hashes to ensure script integrity't been tampered with')}</li>
+          <li>${t('reports.security.sriHttpsLoading', 'Always load external resources over HTTPS')}</li>
+          <li>${t('reports.security.sriAsyncDefer', 'Use async/defer attributes for non-critical scripts')}</li>
+          <li>${t('reports.security.sriAuditDependencies', 'Regularly audit and minimize third-party dependencies')}</li>
         </ul>
       </div>
     </div>
@@ -1869,7 +1879,7 @@ function renderRecommendationsContent(recommendations, results) {
       <div class="security-section">
         <h4>${t('reports.security.securityRecommendations', 'Security Recommendations')}</h4>
         <p style="padding: 1rem; background: rgba(var(--accent-primary-rgb), 0.1); border: 1px solid rgba(var(--accent-primary-rgb), 0.3); border-radius: 4px; color: var(--accent-primary);">
-          ✓ ${t('reports.security.noMajorIssues', 'No major security issues detected - Excellent!')}
+          ✓ ${t('reports.security.noMajorIssues', 'Your security baseline looks strong. Review header and SSL analysis above for further hardening.')}
         </p>
       </div>
     `;
@@ -1878,8 +1888,8 @@ function renderRecommendationsContent(recommendations, results) {
   return `
     <div class="security-section">
       <h4>${t('reports.security.securityRecommendations', 'Security Recommendations')}</h4>
-      <p style="margin-bottom: 1rem; color: #999; font-size: 0.9rem;">
-        ${t('reports.security.prioritizedImprovements', 'Prioritized security improvements based on OWASP guidelines and industry best practices.')}
+      <p style="margin-bottom: 1rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem;">
+        ${t('reports.security.prioritizedImprovements', 'Prioritized security improvements based on OWASP guidelines')}
       </p>
 
       <div style="overflow-x: auto;">
@@ -1906,7 +1916,7 @@ function renderRecommendationsContent(recommendations, results) {
                 rec.priority === 'medium' ? 'M' : 'L';
 
               return `
-                <tr style="border-bottom: 1px solid rgba(255, 255, 255, 0.05); ${rec.priority === 'critical' ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
+                <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); ${rec.priority === 'critical' ? 'background: rgba(255, 68, 68, 0.05);' : ''}">
                   <td style="padding: 0.75rem; text-align: center;">
                     <span style="color: ${priorityColor}; font-weight: bold; font-size: 1.1rem; text-transform: uppercase;">
                       ${priorityLabel}
@@ -1916,7 +1926,7 @@ function renderRecommendationsContent(recommendations, results) {
                     ${translateRecTitle(rec.title)}
                     ${rec.owaspRef ? `<br><span style="font-size: 0.75rem; color: #ffa500; font-weight: normal;">OWASP: ${rec.owaspRef}</span>` : ''}
                   </td>
-                  <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #ccc;">
+                  <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: var(--r-text-muted, #6B7280);">
                     ${translateRecDescription(rec.description)}
                   </td>
                   <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: #ff6b6b;">
@@ -2027,7 +2037,7 @@ function copySecurityShareLink() {
   const targetUrl = window.currentSecurityResults?.url || window.location.href;
   const shareUrl = `${window.location.origin}/security-analyzer.html?url=${encodeURIComponent(targetUrl)}`;
   navigator.clipboard.writeText(shareUrl).then(() => {
-    alert(t('reports.common.shareLinkCopied', 'Share link copied to clipboard'));
+    alert(t('reports.common.shareLinkCopied', 'Share link copied to clipboard!'));
   });
 }
 
@@ -2038,7 +2048,7 @@ function downloadSecurityCSV() {
 
   const rows = [
     [t('reports.security.csvMetric', 'Metric'), t('reports.security.csvValue', 'Value')],
-    [t('reports.security.overallSecurityScore', 'Overall Score'), r.overallScore ?? ''],
+    [t('reports.security.overallSecurityScore', 'Overall Security Score'), r.overallScore ?? ''],
     [t('reports.security.sslScore', 'SSL Score'), r.ssl?.score ?? ''],
     [t('reports.security.headersScore', 'Headers Score'), r.headers?.score ?? ''],
     [t('reports.security.vulnerabilityScore', 'Vulnerability Score'), r.vulnerabilities?.score ?? ''],
@@ -2152,7 +2162,7 @@ function ensureProStyles() {
     .pro-locked {
       position: relative;
       border: 1px dashed rgba(var(--accent-primary-rgb), 0.3);
-      border-radius: 10px;
+      border-radius: 12px;
       padding: 1rem;
       background: rgba(255, 255, 255, 0.02);
       overflow: hidden;
@@ -2167,7 +2177,7 @@ function ensureProStyles() {
     .pro-locked__list {
       margin: 0;
       padding-left: 1.25rem;
-      color: #ccc;
+      color: var(--r-text-muted, #6B7280);
       font-size: 0.9rem;
     }
     .pro-locked__blur {

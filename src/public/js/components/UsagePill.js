@@ -217,7 +217,7 @@
 
       if (isExhausted) {
         const resetInfo = scans_reset_at
-          ? ` <span class="usage-pill__reset-info">(${t('usage.resetsIn', 'resets in {time}', { time: formatResetTime(scans_reset_at) })})</span>`
+          ? ` <span class="usage-pill__reset-info">(${t('usage.resetsIn', 'Resets in {time}', { time: formatResetTime(scans_reset_at) })})</span>`
           : '';
         const loginHint = !this.usage.is_authenticated
           ? ` <a href="/auth.html?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}" class="usage-pill__login-link">${t('usage.loginToRestore', 'Log in to restore your plan')}</a>`

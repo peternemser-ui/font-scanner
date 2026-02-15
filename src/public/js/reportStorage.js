@@ -28,11 +28,17 @@
     }
 
     try {
+      // Capture active locale so recalled reports render in the original language
+      const locale = (window.i18n && typeof window.i18n.getActiveLocale === 'function')
+        ? window.i18n.getActiveLocale()
+        : localStorage.getItem('sm_lang') || 'en';
+
       const record = {
         reportId,
         data,
         metadata: {
           ...metadata,
+          locale,
           savedAt: new Date().toISOString()
         }
       };
@@ -99,7 +105,14 @@
     }
 
     try {
-      console.log('[ReportStorage] Displaying stored report:', reportId);
+      // Force the locale that was active when the report was saved
+      // so the recalled report renders in its original language
+      const savedLocale = record.metadata?.locale;
+      if (savedLocale && window.i18n && typeof window.i18n.forceLocale === 'function') {
+        await window.i18n.forceLocale(savedLocale);
+      }
+
+      console.log('[ReportStorage] Displaying stored report:', reportId, savedLocale ? `(locale: ${savedLocale})` : '');
       await displayCallback(record.data);
 
       // Show banner if requested
@@ -183,7 +196,7 @@
     banner.innerHTML = `
       <span class="banner-icon">📋</span>
       <span class="banner-text">${t('reports.common.showingSavedReport', 'Showing saved report from')} ${timeAgo}</span>
-      <button class="banner-refresh" title="${t('reports.common.runNewScan', 'Run new scan')}">↻ ${t('reports.common.refresh', 'Refresh')}</button>
+      <button class="banner-refresh" title="${t('reports.common.runNewScan', 'Run New Scan')}">↻ ${t('reports.common.refresh', 'Refresh')}</button>
       <button class="banner-close" title="${t('common.close', 'Close')}">&times;</button>
     `;
 
@@ -273,7 +286,7 @@
   function getTimeAgo(date) {
     const seconds = Math.floor((Date.now() - date.getTime()) / 1000);
 
-    if (seconds < 60) return t('common.time.justNow', 'just now');
+    if (seconds < 60) return t('common.time.justNow', 'Just now');
     if (seconds < 3600) return t('common.time.minutesAgo', '{{count}} minutes ago').replace('{{count}}', Math.floor(seconds / 60));
     if (seconds < 86400) return t('common.time.hoursAgo', '{{count}} hours ago').replace('{{count}}', Math.floor(seconds / 3600));
     return t('common.time.daysAgo', '{{count}} days ago').replace('{{count}}', Math.floor(seconds / 86400));

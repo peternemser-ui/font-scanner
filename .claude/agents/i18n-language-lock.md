@@ -108,3 +108,17 @@ Structure your response as:
 - If the codebase has no existing i18n infrastructure, recommend a concrete setup before addressing individual issues
 - Provide diffs that are minimal and surgical — change only what's necessary to fix the language consistency issue
 - Never suggest "just translate the string" — always ensure strings flow through the proper i18n key resolution system
+
+## Project Context
+
+This is Site Mechanic (font-scanner), a Node.js/Express app with vanilla JS frontend and SQLite. See CLAUDE.md at the project root for tech stack and key file paths. i18n files are at `src/public/i18n/{locale}.json` (8 locales). The `t(key, fallback)` helper is defined in every report script.
+
+## Cross-Agent Awareness
+
+When you encounter issues outside your scope, flag them for the appropriate sibling agent:
+
+- **Hardcoded English in report output** (not using `t()`) → flag for yourself (fix it), but if it's in PDF templates, also flag for `pdf-fidelity-auditor`
+- **Missing i18n keys in billing/paywall copy** → flag for `ux-billing-copy` to draft the copy, then you ensure it's properly keyed
+- **Design tokens using hardcoded text** (e.g., inline `"Page Screenshot"` instead of `t()`) → flag for `report-shell-design-system`
+- **Entitlement-related strings that vary by tier** → flag for `entitlements-pro-gating` to confirm the correct states, then you handle the i18n keying
+- **PDF rendering in wrong language** → flag for `pdf-fidelity-auditor` (rendering pipeline issue) in addition to fixing the i18n propagation

@@ -19,6 +19,48 @@
     var truncate = utils.truncate;
     var scoreClass = utils.scoreClass;
 
+    /* -------------------------------------------------------------------
+       Normalize lightweight-mode data shapes to match the full-analyzer
+       field names that this renderer expects.  The lightweight SEO
+       analyzer returns slightly different keys (e.g. totalHeadings vs
+       total, totalImages vs total, totalLinks vs total, broken vs
+       brokenFormat, schemaCount vs count).  Normalizing here avoids
+       zero/NaN display bugs when a PDF is exported from lightweight
+       results.
+       ------------------------------------------------------------------- */
+    (function _normalizeLightweight() {
+      var hs = data.headingStructure;
+      if (hs) {
+        if (hs.total === undefined && hs.totalHeadings !== undefined) {
+          hs.total = hs.totalHeadings;
+        }
+      }
+
+      var ia = data.imageAnalysis;
+      if (ia) {
+        if (ia.total === undefined && ia.totalImages !== undefined) {
+          ia.total = ia.totalImages;
+        }
+      }
+
+      var la = data.linkAnalysis;
+      if (la) {
+        if (la.total === undefined && la.totalLinks !== undefined) {
+          la.total = la.totalLinks;
+        }
+        if (la.brokenFormat === undefined && la.broken !== undefined) {
+          la.brokenFormat = la.broken;
+        }
+      }
+
+      var sd = data.structuredData;
+      if (sd) {
+        if (sd.count === undefined && sd.schemaCount !== undefined) {
+          sd.count = sd.schemaCount;
+        }
+      }
+    })();
+
     var sectionIndex = 1;
 
     /* -----------------------------------------------------------------------
@@ -38,6 +80,13 @@
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.metaTags', 'Meta tags are the foundation of how search engines and social platforms understand your page. They control how your content appears in search results, social shares, and browser tabs. This section evaluates your title tag, meta description, Open Graph, Twitter Card, viewport, and canonical URL configurations. Properly optimized meta tags can significantly improve click-through rates and prevent duplicate content issues.')) + '</p>';
+
+      // Callout (mirrors web UI)
+      html += PR.renderCallout(
+        t('seo.report.metaTags.calloutTitle', '🏷️ Meta Tags are Your First Impression'),
+        t('seo.report.metaTags.calloutBody', 'These tags control how your site appears in search results and social media. Optimizing them can increase click-through rates by 30-50%.'),
+        'tip'
+      );
 
       // Overview table
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.metaTags.overviewHeading', 'Meta Tags Overview')) + '</h3>';
@@ -114,6 +163,38 @@
         { striped: true }
       );
 
+      // Meta Tags Health — per-metric score bars (mirrors web UI heatmap)
+      html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.metaTags.healthHeading', 'Meta Tags Health')) + '</h3>';
+
+      var titleScore = d.title ? (d.titleLength >= 50 && d.titleLength <= 60 ? 100 : 70) : 0;
+      var descScore  = d.description ? (d.descriptionLength >= 150 && d.descriptionLength <= 160 ? 100 : 70) : 0;
+      var ogScore    = (d.ogTitle || d.ogDescription || d.ogImage) ? 100 : 0;
+      var twScore    = d.twitterCard ? 100 : 0;
+      var vpScore    = d.viewport ? 100 : 0;
+      var canonScore = d.canonical ? 100 : 0;
+
+      var healthItems = [
+        { label: t('seo.report.metaTags.rows.title', 'Title'), score: titleScore },
+        { label: t('seo.report.metaTags.rows.description', 'Description'), score: descScore },
+        { label: t('seo.report.metaTags.rows.ogTags', 'OG Tags'), score: ogScore },
+        { label: t('seo.report.metaTags.rows.twitter', 'Twitter'), score: twScore },
+        { label: t('seo.report.metaTags.rows.viewport', 'Viewport'), score: vpScore },
+        { label: t('seo.report.metaTags.rows.canonical', 'Canonical'), score: canonScore }
+      ];
+
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;">';
+      healthItems.forEach(function (item) {
+        var clr = utils.scoreColor(item.score);
+        html += '<div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;">' +
+          '<span style="min-width:80px;color:#555;">' + esc(item.label) + '</span>' +
+          '<div style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;">' +
+            '<div style="width:' + item.score + '%;height:100%;background:' + clr + ';border-radius:4px;"></div>' +
+          '</div>' +
+          '<span style="min-width:30px;text-align:right;font-weight:600;color:' + clr + ';">' + item.score + '</span>' +
+        '</div>';
+      });
+      html += '</div>';
+
       // Issues
       if (d.issues && d.issues.length > 0) {
         html += _renderIssuesList(d.issues, t);
@@ -167,8 +248,8 @@
       // Metrics
       var h1Count = (d.h1 || []).length;
       html += PR.renderMetrics([
-        { value: d.total || 0, label: t('seo.report.headings.totalHeadingsLabel', 'Total Headings') },
-        { value: h1Count, label: t('seo.report.headings.primaryH1Label', 'H1 Tags'), color: h1Count === 1 ? '#10b981' : '#ef4444' }
+        { value: d.total || 0, label: t('seo.report.headings.totalHeadingsLabel', 'total_headings') },
+        { value: h1Count, label: t('seo.report.headings.primaryH1Label', 'primary_h1'), color: h1Count === 1 ? '#10b981' : '#ef4444' }
       ]);
 
       // Hierarchy preview
@@ -183,7 +264,7 @@
           '</div>';
         });
         if (d.hierarchy.length > 15) {
-          html += '<div class="pdf-text-muted pdf-text-small">... ' + t('seo.report.common.moreCount', '{{count}} more', { count: d.hierarchy.length - 15 }) + '</div>';
+          html += '<div class="pdf-text-muted pdf-text-small">... ' + t('seo.report.common.moreCount', '... {{count}} more', { count: d.hierarchy.length - 15 }) + '</div>';
         }
         html += '</div>';
       }
@@ -211,7 +292,7 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.content', 'Content quality directly impacts search rankings and user engagement. Search engines favor pages with substantial, well-written content that thoroughly covers a topic. This section examines word count, readability, text-to-HTML ratio, and sentence structure to assess your page\'s content depth. Pages with fewer than 300 words are generally considered thin content and may struggle to rank competitively.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.content', 'Content quality directly impacts search rankings and user engagement. Search engines favor pages with substantial, well-written content that thoroughly covers a topic. This section examines word count, readability, text-to-HTML ratio, and sentence structure to assess your page\'s content depth. Pages with fewer than 300 words are generally considered thin content and may struggle to rank competitively.'s content depth. Pages with fewer than 300 words are generally considered thin content and may struggle to rank competitively.')) + '</p>';
 
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.content.qualityMetricsHeading', 'Content Quality Metrics')) + '</h3>';
 
@@ -219,28 +300,81 @@
         { value: d.wordCount || 0, label: t('seo.report.content.metrics.wordCount', 'Word Count') },
         { value: d.paragraphCount || 0, label: t('seo.report.content.metrics.paragraphs', 'Paragraphs') },
         { value: d.textToHTMLRatio ? Math.round(d.textToHTMLRatio * 100) + '%' : '-', label: t('seo.report.content.metrics.textRatio', 'Text Ratio') },
-        { value: d.averageWordsPerSentence ? Math.round(d.averageWordsPerSentence) : '-', label: t('seo.report.content.avgWordsPerSentenceLineLabel', 'Avg Words/Sentence') }
+        { value: d.averageWordsPerSentence ? Math.round(d.averageWordsPerSentence) : '-', label: t('seo.report.content.avgWordsPerSentenceLineLabel', 'avg_words_per_sentence') }
       ]);
 
-      // Content table
+      // Content quality progress bars (mirrors web UI)
+      var wordPct = Math.min(Math.round(((d.wordCount || 0) / 1000) * 100), 100);
+      var readabilityPct = Math.min(100, Math.max(0, Math.round(100 - ((d.averageWordsPerSentence || 15) - 15) * 5)));
+      var textRatioPct = Math.round((d.textToHTMLRatio || 0) * 100);
+      var paraPct = Math.min(Math.round(((d.paragraphCount || 0) / 10) * 100), 100);
+
+      html += PR.renderProgress(
+        t('seo.report.content.wordCountLabel', 'Word Count: {{count}}', { count: d.wordCount || 0 }),
+        d.wordCount || 0, 1000
+      );
+      html += PR.renderProgress(
+        t('seo.report.content.readabilityScoreLabel', 'Readability Score'),
+        readabilityPct, 100
+      );
+      html += PR.renderProgress(
+        t('seo.report.content.textToHtmlLabel', 'Text-to-HTML: {{percent}}%', { percent: (d.textToHTMLRatio ? (d.textToHTMLRatio * 100).toFixed(1) : '0') }),
+        textRatioPct, 100
+      );
+      html += PR.renderProgress(
+        t('seo.report.content.paragraphsLabel', 'Paragraphs: {{count}}', { count: d.paragraphCount || 0 }),
+        d.paragraphCount || 0, 10
+      );
+
+      // Content table with target thresholds
       var contentRows = [
-        [t('seo.report.content.wordCountLineLabel', 'Word Count'), String(d.wordCount || 0), d.wordCount >= 300 ? 'pass' : 'warning'],
-        [t('seo.report.content.sentencesLineLabel', 'Sentences'), String(d.sentenceCount || 0), 'info'],
-        [t('seo.report.content.avgWordsPerSentenceLineLabel', 'Avg Words/Sentence'), d.averageWordsPerSentence ? d.averageWordsPerSentence.toFixed(1) : '-', d.averageWordsPerSentence && d.averageWordsPerSentence <= 20 ? 'pass' : 'warning'],
-        [t('seo.report.content.metrics.textRatio', 'Text-to-HTML Ratio'), d.textToHTMLRatio ? (d.textToHTMLRatio * 100).toFixed(1) + '%' : '-', d.textToHTMLRatio && d.textToHTMLRatio >= 0.1 ? 'pass' : 'warning']
+        [t('seo.report.content.wordCountLineLabel', 'word_count'), String(d.wordCount || 0), d.wordCount >= 600 ? 'pass' : d.wordCount >= 300 ? 'warning' : 'fail', t('seo.report.content.target.wordCount', '600+ recommended')],
+        [t('seo.report.content.sentencesLineLabel', 'sentences'), String(d.sentenceCount || 0), 'info', '-'],
+        [t('seo.report.content.avgWordsPerSentenceLineLabel', 'avg_words_per_sentence'), d.averageWordsPerSentence ? d.averageWordsPerSentence.toFixed(1) : '-', d.averageWordsPerSentence && d.averageWordsPerSentence <= 20 ? 'pass' : 'warning', t('seo.report.content.target.avgWords', '15-20 words')],
+        [t('seo.report.content.metrics.textRatio', 'Text Ratio'), d.textToHTMLRatio ? (d.textToHTMLRatio * 100).toFixed(1) + '%' : '-', d.textToHTMLRatio && d.textToHTMLRatio >= 0.15 ? 'pass' : 'warning', t('seo.report.content.target.textRatio', '15%+ recommended')],
+        [t('seo.report.content.metrics.paragraphs', 'Paragraphs'), String(d.paragraphCount || 0), d.paragraphCount >= 5 ? 'pass' : d.paragraphCount >= 3 ? 'warning' : 'fail', t('seo.report.content.target.paragraphs', '5+ recommended')]
       ];
 
       html += PR.renderTable(
         [
-          { label: t('seo.report.table.metric', 'Metric'), width: '40%' },
-          { label: t('seo.report.table.value', 'Value'), width: '30%' },
-          { label: t('seo.report.table.status', 'Status'), width: '30%' }
+          { label: t('seo.report.table.metric', 'Metric'), width: '30%' },
+          { label: t('seo.report.table.value', 'Value'), width: '20%' },
+          { label: t('seo.report.table.status', 'Status'), width: '20%' },
+          { label: t('seo.report.table.target', 'Target'), width: '30%' }
         ],
         contentRows.map(function (r) {
-          return [esc(r[0]), esc(r[1]), PR.renderStatus(r[2], r[2])];
+          return [esc(r[0]), esc(r[1]), PR.renderStatus(r[2], r[2]), esc(r[3])];
         }),
         { striped: true }
       );
+
+      // Content Health — per-dimension scores (mirrors web UI heatmap)
+      html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.content.healthHeading', 'Content Health')) + '</h3>';
+
+      var cWordScore = (d.wordCount || 0) >= 600 ? 100 : (d.wordCount || 0) >= 300 ? 70 : 40;
+      var cReadScore = (d.averageWordsPerSentence || 0) <= 20 ? 100 : (d.averageWordsPerSentence || 0) <= 25 ? 70 : 40;
+      var cRatioScore = (d.textToHTMLRatio || 0) >= 0.25 ? 100 : (d.textToHTMLRatio || 0) >= 0.15 ? 70 : 40;
+      var cParaScore = (d.paragraphCount || 0) >= 5 ? 100 : (d.paragraphCount || 0) >= 3 ? 70 : 40;
+
+      var cHealthItems = [
+        { label: t('seo.report.content.metrics.wordCount', 'Word Count'), score: cWordScore },
+        { label: t('seo.report.content.metrics.readability', 'Readability'), score: cReadScore },
+        { label: t('seo.report.content.metrics.textRatio', 'Text Ratio'), score: cRatioScore },
+        { label: t('seo.report.content.metrics.paragraphs', 'Paragraphs'), score: cParaScore }
+      ];
+
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;">';
+      cHealthItems.forEach(function (item) {
+        var clr = utils.scoreColor(item.score);
+        html += '<div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;">' +
+          '<span style="min-width:80px;color:#555;">' + esc(item.label) + '</span>' +
+          '<div style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;">' +
+            '<div style="width:' + item.score + '%;height:100%;background:' + clr + ';border-radius:4px;"></div>' +
+          '</div>' +
+          '<span style="min-width:30px;text-align:right;font-weight:600;color:' + clr + ';">' + item.score + '</span>' +
+        '</div>';
+      });
+      html += '</div>';
 
       if (d.issues && d.issues.length > 0) {
         html += _renderIssuesList(d.issues, t);
@@ -268,7 +402,7 @@
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.images', 'Images enhance user experience but can hurt SEO if not properly optimized. Missing alt text reduces accessibility for screen reader users and eliminates a key ranking signal for image search. This section checks alt text coverage, image dimensions, and file references to ensure your images are accessible and search-friendly. Properly optimized images with descriptive alt attributes can drive significant traffic through Google Image Search.')) + '</p>';
 
       html += PR.renderCallout(
-        t('seo.report.images.calloutTitle', 'Image SEO: Alt Text is Critical'),
+        t('seo.report.images.calloutTitle', 'I Image SEO: Alt Text is Critical'),
         t('seo.report.images.calloutBody', 'Alt text helps search engines understand images and improves accessibility. Google Image Search drives 20-30% of web traffic for many sites.'),
         'tip'
       );
@@ -282,7 +416,8 @@
           { value: d.total || 0, label: t('seo.report.images.radial.imagesFound', 'Images Found') },
           { value: d.withAlt || 0, label: t('seo.report.images.chart.withAlt', 'With Alt') },
           { value: d.withoutAlt || 0, label: t('seo.report.images.chart.missingAlt', 'Missing Alt'), color: d.withoutAlt > 0 ? '#ef4444' : '#10b981' },
-          { value: altPct + '%', label: t('seo.report.images.radial.altCoverage', 'Alt Text Coverage'), color: altPct >= 80 ? '#10b981' : '#f59e0b' }
+          { value: altPct + '%', label: t('seo.report.images.radial.altCoverage', 'Alt Text Coverage'), color: altPct >= 80 ? '#10b981' : '#f59e0b' },
+          { value: (score || 0) + '/100', label: t('seo.report.images.radial.overallScore', 'Overall Score'), color: utils.scoreColor(score || 0) }
         ]);
 
         // Alt coverage progress bar
@@ -296,20 +431,25 @@
           html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.images.detailsHeading', 'Image Details')) + '</h3>';
           var imgRows = d.images.slice(0, 20).map(function (img) {
             var altStatus = img.alt ? 'pass' : 'fail';
+            var recommendation = img.alt
+              ? t('seo.report.images.recommendation.pass', 'Descriptive, helps SEO and accessibility')
+              : t('seo.report.images.recommendation.fail', 'Add descriptive alt text for SEO + screen readers');
             return [
               '<span class="pdf-table__truncate">' + esc(truncate(img.src, 50)) + '</span>',
               (img.width && img.height) ? img.width + 'x' + img.height : '-',
               '<div class="pdf-table__value">' + esc(truncate(img.alt || '-', 60)) + '</div>',
-              PR.renderStatus(altStatus, t('seo.report.status.' + altStatus, altStatus))
+              PR.renderStatus(altStatus, t('seo.report.status.' + altStatus, altStatus)),
+              '<span style="font-size:0.78rem;color:#555;">' + esc(recommendation) + '</span>'
             ];
           });
 
           html += PR.renderTable(
             [
-              { label: t('seo.report.images.table.imageUrl', 'Image URL'), width: '30%' },
-              { label: t('seo.report.images.table.dimensions', 'Dimensions'), width: '15%' },
-              { label: t('seo.report.images.table.altText', 'Alt Text'), width: '35%' },
-              { label: t('seo.report.table.status', 'Status'), width: '12%' }
+              { label: t('seo.report.images.table.imageUrl', 'Image URL'), width: '24%' },
+              { label: t('seo.report.images.table.dimensions', 'Dimensions'), width: '12%' },
+              { label: t('seo.report.images.table.altText', 'Alt Text'), width: '26%' },
+              { label: t('seo.report.table.status', 'Status'), width: '10%' },
+              { label: t('seo.report.table.recommendation', 'Recommendation'), width: '28%' }
             ],
             imgRows,
             { striped: true }
@@ -348,25 +488,67 @@
 
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.links.healthSummaryHeading', 'Link Health Summary')) + '</h3>';
 
+      var linkTotal = d.total || 0;
+      var internalPct = linkTotal > 0 ? ((d.internal || 0) / linkTotal * 100).toFixed(1) : '0';
+      var externalPct = linkTotal > 0 ? ((d.external || 0) / linkTotal * 100).toFixed(1) : '0';
+
       html += PR.renderMetrics([
-        { value: d.total || 0, label: t('seo.report.links.totalLinksLabel', 'Total Links') },
-        { value: d.internal || 0, label: t('seo.report.links.internalLinksLabel', 'Internal Links') },
-        { value: d.external || 0, label: t('seo.report.links.externalLinksLabel', 'External Links') },
-        { value: d.noFollow || 0, label: t('seo.report.links.nofollowLinksLabel', 'Nofollow Links') }
+        { value: linkTotal, label: t('seo.report.links.totalLinksLabel', 'total_links') },
+        { value: (d.internal || 0) + ' (' + internalPct + '%)', label: t('seo.report.links.internalLinksLabel', 'internal_links') },
+        { value: (d.external || 0) + ' (' + externalPct + '%)', label: t('seo.report.links.externalLinksLabel', 'external_links') },
+        { value: d.noFollow || 0, label: t('seo.report.links.nofollowLinksLabel', 'nofollow_links') }
       ]);
 
       // Broken links metric
-      if (d.brokenFormat > 0) {
+      var brokenCount = d.brokenFormat || 0;
+      if (brokenCount > 0) {
         html += PR.renderIssue(
-          t('seo.report.links.brokenFormatLabel', 'Broken Format') + ': ' + d.brokenFormat + ' ' + t('common.pdf.execSummary.issuesFound', 'issues found'),
+          t('seo.report.links.brokenFormatLabel', 'broken_format') + ': ' + brokenCount + ' ' + t('common.pdf.execSummary.issuesFound', 'Issues Found'),
           'warning'
         );
       }
 
+      // Link distribution table (mirrors web UI detail)
+      html += PR.renderTable(
+        [
+          { label: t('seo.report.table.metric', 'Metric'), width: '30%' },
+          { label: t('seo.report.table.value', 'Value'), width: '20%' },
+          { label: t('seo.report.links.table.percentage', 'Percentage'), width: '20%' },
+          { label: t('seo.report.table.status', 'Status'), width: '30%' }
+        ],
+        [
+          [
+            esc(t('seo.report.links.internalLinksLabel', 'internal_links')),
+            String(d.internal || 0),
+            internalPct + '%',
+            PR.renderStatus(d.internal > 0 ? 'pass' : 'warning', d.internal > 0 ? 'pass' : 'warning')
+          ],
+          [
+            esc(t('seo.report.links.externalLinksLabel', 'external_links')),
+            String(d.external || 0),
+            externalPct + '%',
+            PR.renderStatus('info', 'info')
+          ],
+          [
+            esc(t('seo.report.links.nofollowLinksLabel', 'nofollow_links')),
+            String(d.noFollow || 0),
+            linkTotal > 0 ? ((d.noFollow || 0) / linkTotal * 100).toFixed(1) + '%' : '0%',
+            PR.renderStatus('info', 'info')
+          ],
+          [
+            esc(t('seo.report.links.brokenFormatLabel', 'broken_format')),
+            String(brokenCount),
+            linkTotal > 0 ? (brokenCount / linkTotal * 100).toFixed(1) + '%' : '0%',
+            PR.renderStatus(brokenCount === 0 ? 'pass' : 'warning', brokenCount === 0 ? 'pass' : 'warning')
+          ]
+        ],
+        { striped: true }
+      );
+
       // Link progress bars
-      if (d.total > 0) {
-        html += PR.renderProgress(t('seo.report.links.internalLinksLabel', 'Internal Links'), d.internal || 0, d.total);
-        html += PR.renderProgress(t('seo.report.links.externalLinksLabel', 'External Links'), d.external || 0, d.total);
+      if (linkTotal > 0) {
+        html += PR.renderProgress(t('seo.report.links.internalLinksLabel', 'internal_links'), d.internal || 0, linkTotal);
+        html += PR.renderProgress(t('seo.report.links.externalLinksLabel', 'external_links'), d.external || 0, linkTotal);
       }
 
       if (d.issues && d.issues.length > 0) {
@@ -395,31 +577,69 @@
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.mobile', 'With mobile-first indexing, Google prioritizes the mobile version of your site for ranking and indexing. Over 60% of web traffic now comes from mobile devices, making responsive design essential for reaching your audience. This section tests viewport configuration, font readability, tap target sizing, and horizontal scroll issues across device sizes. Pages that fail mobile usability checks may see reduced visibility in mobile search results.')) + '</p>';
 
       html += PR.renderCallout(
-        t('seo.report.mobile.calloutTitle', 'Mobile-First Indexing'),
+        t('seo.report.mobile.calloutTitle', 'M Mobile-First Indexing'),
         t('seo.report.mobile.calloutBody', 'Google now uses the mobile version of your site for indexing and ranking. Mobile responsiveness is critical for SEO.'),
         'tip'
       );
 
       if (d.viewports && d.viewports.length > 0) {
         var mobileRows = d.viewports.map(function (vp) {
+          var deviceName = vp.viewport || '-';
+          var rec = deviceName === 'Mobile'
+            ? t('seo.report.mobile.recommendations.mobile', '≥ 16px fonts, no horizontal scroll')
+            : deviceName === 'Tablet'
+              ? t('seo.report.mobile.recommendations.tablet', 'Responsive layout, touch-friendly')
+              : t('seo.report.mobile.recommendations.desktop', 'Desktop fallback');
           return [
-            esc(vp.viewport || '-'),
+            '<strong>' + esc(deviceName) + '</strong>',
+            vp.width ? vp.width + 'px' : '-',
+            PR.renderStatus(!vp.hasHorizontalScroll ? 'pass' : 'fail', t('seo.report.status.' + (!vp.hasHorizontalScroll ? 'yes' : 'no'))),
             PR.renderStatus(vp.hasViewportMeta ? 'pass' : 'fail', t('seo.report.status.' + (vp.hasViewportMeta ? 'yes' : 'no'))),
             PR.renderStatus(vp.fontSizeReadable ? 'pass' : 'fail', t('seo.report.status.' + (vp.fontSizeReadable ? 'yes' : 'no'))),
-            PR.renderStatus(!vp.hasHorizontalScroll ? 'pass' : 'fail', t('seo.report.status.' + (!vp.hasHorizontalScroll ? 'yes' : 'no')))
+            '<span style="font-size:0.78rem;color:#555;">' + esc(rec) + '</span>'
           ];
         });
 
         html += PR.renderTable(
           [
-            { label: t('seo.report.mobile.table.deviceType', 'Device Type'), width: '25%' },
-            { label: t('seo.report.mobile.table.viewportMeta', 'Viewport Meta'), width: '25%' },
-            { label: t('seo.report.mobile.table.readableFontSize', 'Readable Font'), width: '25%' },
-            { label: t('seo.report.mobile.table.noHorizontalScroll', 'No H. Scroll'), width: '25%' }
+            { label: t('seo.report.mobile.table.deviceType', 'Device Type'), width: '14%' },
+            { label: t('seo.report.mobile.table.width', 'Width'), width: '10%' },
+            { label: t('seo.report.mobile.table.noHorizontalScroll', 'No Horizontal Scroll'), width: '14%' },
+            { label: t('seo.report.mobile.table.viewportMeta', 'Viewport Meta'), width: '14%' },
+            { label: t('seo.report.mobile.table.readableFontSize', 'Readable Font Size'), width: '14%' },
+            { label: t('seo.report.table.recommended', 'Recommended'), width: '34%' }
           ],
           mobileRows,
           { striped: true }
         );
+
+        // Summary metric cards (mirrors web UI grid cards)
+        var noScrollAll = d.viewports.every(function (vp) { return !vp.hasHorizontalScroll; });
+        var vpMetaAll   = d.viewports.every(function (vp) { return vp.hasViewportMeta; });
+        var readableCount = d.viewports.filter(function (vp) { return vp.fontSizeReadable; }).length;
+        var readableAll = readableCount === d.viewports.length;
+
+        html += PR.renderMetrics([
+          {
+            value: noScrollAll
+              ? t('seo.report.mobile.cards.none', 'None')
+              : t('seo.report.mobile.cards.detected', 'Detected'),
+            label: t('seo.report.mobile.cards.horizontalScroll', 'Horizontal Scroll'),
+            color: noScrollAll ? '#10b981' : '#ef4444'
+          },
+          {
+            value: vpMetaAll
+              ? t('seo.report.status.present', 'Present')
+              : t('seo.report.status.missing', 'Missing'),
+            label: t('seo.report.mobile.cards.viewportMetaTag', 'Viewport Meta Tag'),
+            color: vpMetaAll ? '#10b981' : '#f59e0b'
+          },
+          {
+            value: t('seo.report.mobile.cards.devicesFraction', '{{count}}/{{total}} Devices', { count: readableCount, total: d.viewports.length }),
+            label: t('seo.report.mobile.cards.fontReadability', 'Font Readability'),
+            color: readableAll ? '#10b981' : '#f59e0b'
+          }
+        ]);
       }
 
       if (d.issues && d.issues.length > 0) {
@@ -468,17 +688,38 @@
 
       // Info callout with benefit cards
       html += PR.renderCallout(
-        t('seo.report.structuredData.info.title', 'What is Structured Data Schema?'),
-        t('seo.report.structuredData.info.body', 'Structured data (also called schema markup) is code that helps search engines understand your content better, enabling rich search results like star ratings, product prices, event dates, FAQ dropdowns, and more. It uses the Schema.org vocabulary in JSON-LD, Microdata, or RDFa formats.'),
+        t('seo.report.structuredData.info.title', 'ⓘ What is Structured Data Schema?'),
+        t('seo.report.structuredData.info.body', 'Structured data (also called schema markup) is code that helps search engines understand your content better, enabling <strong style="color: #00ff41;">rich search results</strong> like star ratings, product prices, event dates, FAQ dropdowns, and more. It uses the <strong style="color: #00ccff;">Schema.org</strong> vocabulary in JSON-LD, Microdata, or RDFa formats.'),
         'info'
       );
 
+      // Benefit mini-cards (mirrors web UI structured data info cards)
+      html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0;">';
+      var sdBenefits = [
+        { title: t('seo.report.structuredData.info.cards.ctr.title', 'U Improved CTR'), body: t('seo.report.structuredData.info.cards.ctr.body', 'Rich results stand out and attract more clicks') },
+        { title: t('seo.report.structuredData.info.cards.targeting.title', 'T Better Targeting'), body: t('seo.report.structuredData.info.cards.targeting.body', 'Helps search engines understand your niche') },
+        { title: t('seo.report.structuredData.info.cards.advantage.title', 'W SEO Advantage'), body: t('seo.report.structuredData.info.cards.advantage.body', 'Competitive edge in search results') }
+      ];
+      sdBenefits.forEach(function (b) {
+        html += '<div style="padding:10px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:6px;">' +
+          '<div style="font-weight:600;font-size:0.82rem;color:#0369a1;margin-bottom:3px;">' + esc(b.title) + '</div>' +
+          '<div style="font-size:0.75rem;color:#555;">' + esc(b.body) + '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+
       // Top-level metrics
+      // API returns `count` (number of JSON-LD schemas found) but not separate
+      // `jsonLdCount` / `microdataCount` fields.  Derive them so the metrics
+      // display correctly for both full and lightweight analyzer responses.
+      var jsonLdCount = d.jsonLdCount !== undefined ? d.jsonLdCount : (d.count || 0);
+      var microdataCount = d.microdataCount !== undefined ? d.microdataCount : 0;
+
       html += PR.renderMetrics([
-        { value: d.hasStructuredData ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not Detected'), label: t('seo.structuredData', 'Structured Data'), color: d.hasStructuredData ? '#10b981' : '#ef4444' },
-        { value: d.jsonLdCount || 0, label: 'JSON-LD' },
-        { value: d.microdataCount || 0, label: t('seo.report.structuredData.microdataLabel', 'Microdata') },
-        { value: d.count || 0, label: t('seo.report.headings.table.count', 'Total') }
+        { value: d.hasStructuredData ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not detected'), label: t('seo.structuredData', 'Structured Data'), color: d.hasStructuredData ? '#10b981' : '#ef4444' },
+        { value: jsonLdCount, label: 'JSON-LD' },
+        { value: microdataCount, label: t('seo.report.structuredData.microdataLabel', 'Microdata') },
+        { value: d.count || 0, label: t('seo.report.headings.table.count', 'Count') }
       ]);
 
       // Summary table
@@ -507,7 +748,7 @@
           [
             esc(t('seo.report.structuredData.summary.rows.found.metric', 'Structured Data Found')),
             PR.renderStatus(d.hasStructuredData ? 'pass' : 'fail', d.hasStructuredData ? '✓' : '✗'),
-            '<strong>' + esc(d.hasStructuredData ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notFound', 'Not Found')) + '</strong>',
+            '<strong>' + esc(d.hasStructuredData ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notFound', 'Not found')) + '</strong>',
             esc(d.hasStructuredData
               ? t('seo.report.structuredData.summary.rows.found.impact.detected', 'Enables rich search results')
               : t('seo.report.structuredData.summary.rows.found.impact.notFound', 'Missing enhanced search appearances'))
@@ -567,7 +808,7 @@
 
         // Validation tip
         html += PR.renderCallout(
-          t('seo.report.structuredData.validation.title', 'Next Step: Validate Your Schema'),
+          t('seo.report.structuredData.validation.title', '✓ Next Step: Validate Your Schema'),
           t('seo.report.structuredData.validation.body.beforeLink', 'Use') + ' ' +
             t('seo.report.structuredData.validation.body.linkText', "Google's Rich Results Test") +
             ' (search.google.com/test/rich-results) ' +
@@ -660,6 +901,13 @@
           recRows,
           { striped: true }
         );
+
+        // Pro Tip callout (mirrors web UI)
+        html += PR.renderCallout(
+          t('seo.report.structuredData.proTip.label', 'ⓘ Pro Tip:'),
+          t('seo.report.structuredData.proTip.body', 'Rich results can increase click-through rates by 15-35% according to Google research. Start with the foundational schemas below to unlock these benefits.'),
+          'tip'
+        );
       }
 
       // Implementation Formats subsection (shown for both cases)
@@ -708,27 +956,27 @@
           [
             '<strong>' + esc(t('seo.report.structuredData.resources.rows.schemaDocs.title', 'Schema.org Docs')) + '</strong>',
             esc(t('seo.report.structuredData.resources.rows.schemaDocs.purpose', 'Official vocabulary reference with complete documentation for all schema types and properties')),
-            esc(t('seo.report.structuredData.resources.rows.schemaDocs.linkText', 'schema.org'))
+            esc(t('seo.report.structuredData.resources.rows.schemaDocs.linkText', 'schema.org →'))
           ],
           [
             '<strong>' + esc(t('seo.report.structuredData.resources.rows.richResultsTest.title', 'Rich Results Test')) + '</strong>',
             esc(t('seo.report.structuredData.resources.rows.richResultsTest.purpose', 'Test your structured data markup and see which Google rich results can be generated from it')),
-            esc(t('seo.report.structuredData.resources.rows.richResultsTest.linkText', 'Test Markup'))
+            esc(t('seo.report.structuredData.resources.rows.richResultsTest.linkText', 'Test Markup →'))
           ],
           [
             '<strong>' + esc(t('seo.report.structuredData.resources.rows.validator.title', 'Schema Validator')) + '</strong>',
             esc(t('seo.report.structuredData.resources.rows.validator.purpose', 'Comprehensive validation tool for all structured data formats including JSON-LD, Microdata, and RDFa')),
-            esc(t('seo.report.structuredData.resources.rows.validator.linkText', 'Validate'))
+            esc(t('seo.report.structuredData.resources.rows.validator.linkText', 'Validate →'))
           ],
           [
             '<strong>' + esc(t('seo.report.structuredData.resources.rows.googleGuide.title', 'Google Guide')) + '</strong>',
             esc(t('seo.report.structuredData.resources.rows.googleGuide.purpose', 'Step-by-step guide from Google on implementing structured data with code examples and best practices')),
-            esc(t('seo.report.structuredData.resources.rows.googleGuide.linkText', 'Read Guide'))
+            esc(t('seo.report.structuredData.resources.rows.googleGuide.linkText', 'Read Guide →'))
           ],
           [
             '<strong>' + esc(t('seo.report.structuredData.resources.rows.generator.title', 'Markup Generator')) + '</strong>',
             esc(t('seo.report.structuredData.resources.rows.generator.purpose', 'Free tool to generate JSON-LD structured data markup for various schema types quickly and easily')),
-            esc(t('seo.report.structuredData.resources.rows.generator.linkText', 'Generate'))
+            esc(t('seo.report.structuredData.resources.rows.generator.linkText', 'Generate →'))
           ]
         ],
         { striped: true }
@@ -757,11 +1005,11 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.additional', 'Beyond core SEO factors, several technical elements contribute to overall search health and user trust. A complete technical foundation includes proper browser identification, crawl directives, and tracking infrastructure. This section verifies the presence of a favicon, robots.txt, XML sitemap, analytics tracking, and social media links. Missing any of these elements can indicate an incomplete SEO setup and reduce your site\'s professional appearance.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.additional', 'Beyond core SEO factors, several technical elements contribute to overall search health and user trust. A complete technical foundation includes proper browser identification, crawl directives, and tracking infrastructure. This section verifies the presence of a favicon, robots.txt, XML sitemap, analytics tracking, and social media links. Missing any of these elements can indicate an incomplete SEO setup and reduce your site\'s professional appearance.'s professional appearance.')) + '</p>';
 
       // Technical SEO Essentials callout
       html += PR.renderCallout(
-        t('seo.report.additional.calloutTitle', 'Technical SEO Essentials'),
+        t('seo.report.additional.calloutTitle', '🔧 Technical SEO Essentials'),
         t('seo.report.additional.calloutBody', 'These technical elements help search engines crawl, index, and understand your site. Missing items can significantly impact discoverability.'),
         'tip'
       );
@@ -830,7 +1078,7 @@
 
       // Social Signals callout
       html += PR.renderCallout(
-        t('seo.report.additional.social.calloutTitle', 'Social Signals & SEO'),
+        t('seo.report.additional.social.calloutTitle', 'M Social Signals & SEO'),
         t('seo.report.additional.social.calloutBody', 'While not direct ranking factors, social links increase brand visibility, drive traffic, and improve Open Graph previews when content is shared.'),
         'info'
       );
@@ -878,6 +1126,19 @@
         ]
       ];
 
+      // YouTube — only show if the API actually detects it (not present in current analyzer)
+      if (socialLinks.youtube !== undefined) {
+        socialRows.push([
+          'YouTube',
+          PR.renderStatus(socialLinks.youtube ? 'pass' : 'fail', socialLinks.youtube ? '✓' : '✗'),
+          esc(t('seo.report.additional.social.value.video', 'Video content & SEO')),
+          esc(socialLinks.youtube
+            ? t('seo.report.additional.social.details.linkPresent', 'Link present')
+            : t('seo.report.additional.social.details.youtubeMissing', 'No YouTube link found')),
+          esc(t('seo.report.additional.social.tip.youtube', 'Video content boosts engagement and dwell time'))
+        ]);
+      }
+
       html += PR.renderTable(
         [
           { label: t('seo.report.table.platform', 'Platform'), width: '14%' },
@@ -911,7 +1172,7 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.recommendations', 'Based on the complete analysis, this section provides actionable code fixes and step-by-step implementation guides. Recommendations are organized by impact level so you can prioritize the changes that will deliver the greatest SEO improvements first. Each recommendation includes both the problematic pattern and the recommended solution with copy-ready code snippets. Implementing these fixes in order of severity will help you systematically improve your site\'s search performance.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.recommendations', 'Based on the complete analysis, this section provides actionable code fixes and step-by-step implementation guides. Recommendations are organized by impact level so you can prioritize the changes that will deliver the greatest SEO improvements first. Each recommendation includes both the problematic pattern and the recommended solution with copy-ready code snippets. Implementing these fixes in order of severity will help you systematically improve your site\'s search performance.'s search performance.')) + '</p>';
 
       // Build rich fix cards (same logic as buildFixCards in seo-script.js)
       var fixCards = _buildFixCards(data, t, esc);
@@ -964,7 +1225,7 @@
       // Additional issues/recommendations summary
       if (allRecs.length > 0) {
         html += '<h3 class="pdf-subsection__title" style="margin-top:24px;">' +
-          t('common.pdf.execSummary.keyFindings', 'Additional Findings') +
+          t('common.pdf.execSummary.keyFindings', 'Key Findings') +
         '</h3>';
 
         // Group by severity
@@ -1151,10 +1412,10 @@
     var titleNeeds = !meta.title || titleLen < 30 || titleLen > 60;
     if (titleNeeds) {
     var titleIssueDetail = !meta.title
-      ? t('seo.fixCards.title.missingDetail', 'The page has no <title> tag at all. Search engines use the title as the primary clickable headline in results.')
+      ? t('seo.fixCards.title.missingDetail', 'The page has no <title> tag at all. Search engines use the title as the primary clickable headline in results. Without one, Google will auto-generate a title from page content, which is almost always worse than a well-crafted one.')
       : titleLen < 30
-        ? t('seo.fixCards.title.tooShortDetail', 'Your title is only {{len}} characters. Titles under 30 characters waste valuable SERP real estate and miss keyword opportunities.', { len: titleLen })
-        : t('seo.fixCards.title.tooLongDetail', 'Your title is {{len}} characters. Google truncates titles beyond ~60 characters with an ellipsis.', { len: titleLen });
+        ? t('seo.fixCards.title.tooShortDetail', 'Your title is only {{len}} characters. Titles under 30 characters waste valuable SERP real estate and miss keyword opportunities. Google displays up to ~60 characters, so you have room to add descriptive, keyword-rich phrasing that improves click-through rate.', { len: titleLen })
+        : t('seo.fixCards.title.tooLongDetail', 'Your title is {{len}} characters. Google truncates titles beyond ~60 characters with an ellipsis, hiding your brand name or call-to-action. Shortening it ensures the full title is visible and compelling in search results.', { len: titleLen });
     cards.push({
       title: t('seo.fixCards.title.title', 'Tune your title tag'),
       severity: !meta.title ? 'High' : 'Medium',
@@ -1162,9 +1423,9 @@
       impact: t('seo.fixCards.title.impact', 'Improves CTR in SERPs by 15-30%'),
       description: titleIssueDetail,
       problematicCode: meta.title
-        ? '<!-- ' + t('seo.fixCards.comments.currentTitle', 'Current title') + ': ' + titleLen + ' ' + t('seo.fixCards.comments.characters', 'characters') + ' -->\n<title>' + (meta.title || '') + '</title>\n\n<!-- ' + t('seo.fixCards.comments.issues', 'Issues') + ': -->\n<!-- ' + (titleLen < 30 ? t('seo.fixCards.comments.tooShort', '\u2717 Too short - missing keyword opportunity') : t('seo.fixCards.comments.tooLong', '\u2717 Too long - will be truncated in SERPs')) + ' -->'
-        : '<!-- ' + t('seo.fixCards.comments.noTitleFound', 'No title tag found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingTitle', '\u2717 Missing <title> tag') + ' -->\n</head>',
-      snippet: '<title>' + (meta.title ? meta.title.substring(0, 50) + ' | Brand' : t('seo.fixCards.snippets.titlePlaceholder', 'Primary Keyword | Brand Name')) + '</title>\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.title50to60', '\u2713 50-60 characters') + ' -->\n<!-- ' + t('seo.fixCards.comments.keywordNearStart', '\u2713 Primary keyword near the start') + ' -->\n<!-- ' + t('seo.fixCards.comments.brandAtEnd', '\u2713 Brand name at the end') + ' -->',
+        ? '<!-- ' + t('seo.fixCards.comments.currentTitle', 'Current title') + ': ' + titleLen + ' ' + t('seo.fixCards.comments.characters', 'characters') + ' -->\n<title>' + (meta.title || '') + '</title>\n\n<!-- ' + t('seo.fixCards.comments.issues', 'Issues') + ': -->\n<!-- ' + (titleLen < 30 ? t('seo.fixCards.comments.tooShort', '✗ Too short - missing keyword opportunity') : t('seo.fixCards.comments.tooLong', '✗ Too long - will be truncated in SERPs')) + ' -->'
+        : '<!-- ' + t('seo.fixCards.comments.noTitleFound', 'No title tag found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingTitle', '✗ Missing <title> tag') + ' -->\n</head>',
+      snippet: '<title>' + (meta.title ? meta.title.substring(0, 50) + ' | Brand' : t('seo.fixCards.snippets.titlePlaceholder', 'Primary Keyword | Brand Name')) + '</title>\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.title50to60', '✓ 50-60 characters') + ' -->\n<!-- ' + t('seo.fixCards.comments.keywordNearStart', '✓ Primary keyword near the start') + ' -->\n<!-- ' + t('seo.fixCards.comments.brandAtEnd', '✓ Brand name at the end') + ' -->',
       steps: [
         t('seo.fixes.steps.title.step1', 'Keep title between 50-60 characters'),
         t('seo.fixes.steps.title.step2', 'Place primary keyword near the beginning'),
@@ -1180,10 +1441,10 @@
     var descNeeds = !meta.description || descLen < 120 || descLen > 160;
     if (descNeeds) {
     var descIssueDetail = !meta.description
-      ? t('seo.fixCards.description.missingDetail', 'No meta description was found. Without one, search engines pull a random snippet from your page.')
+      ? t('seo.fixCards.description.missingDetail', 'No meta description was found. Without one, search engines pull a random snippet from your page, which often reads poorly and hurts click-through rate. A well-written description acts as ad copy for your page in search results.')
       : descLen < 120
-        ? t('seo.fixCards.description.tooShortDetail', 'Your description is {{len}} characters. Google displays up to ~160 characters in search results.', { len: descLen })
-        : t('seo.fixCards.description.tooLongDetail', 'Your description is {{len}} characters and will be truncated in search results.', { len: descLen });
+        ? t('seo.fixCards.description.tooShortDetail', 'Your description is {{len}} characters. Google displays up to ~160 characters in search results. A short description wastes this free advertising space and signals less relevance to searchers.', { len: descLen })
+        : t('seo.fixCards.description.tooLongDetail', 'Your description is {{len}} characters and will be truncated in search results. The trailing text, which often includes a call-to-action, will be hidden behind an ellipsis.', { len: descLen });
     cards.push({
       title: t('seo.fixCards.description.title', 'Write a compelling meta description'),
       severity: !meta.description ? 'High' : 'Medium',
@@ -1191,9 +1452,9 @@
       impact: t('seo.fixCards.description.impact', 'Higher click-through and relevance signals'),
       description: descIssueDetail,
       problematicCode: meta.description
-        ? '<!-- ' + t('seo.fixCards.comments.current', 'Current') + ': ' + descLen + ' ' + t('seo.fixCards.comments.characters', 'characters') + ' -->\n<meta name="description" content="' + (meta.description ? meta.description.substring(0, 80) : '') + '..." />\n\n<!-- ' + t('seo.fixCards.comments.issues', 'Issues') + ': -->\n<!-- ' + (descLen < 120 ? t('seo.fixCards.comments.descTooShort', '\u2717 Too short - not fully utilizing SERP space') : t('seo.fixCards.comments.descTooLong', '\u2717 Too long - will be truncated')) + ' -->'
-        : '<!-- ' + t('seo.fixCards.comments.noDescriptionFound', 'No meta description found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingDescription', '\u2717 Missing meta description') + ' -->\n</head>',
-      snippet: '<meta name="description" content="' + t('seo.fixCards.snippets.descriptionPlaceholder', 'Describe the main value proposition in 150-160 characters. Include a clear call to action.') + '" />\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.desc150to160', '\u2713 150-160 characters') + ' -->\n<!-- ' + t('seo.fixCards.comments.includeCta', '\u2713 Include call-to-action') + ' -->\n<!-- ' + t('seo.fixCards.comments.uniquePerPage', '\u2713 Unique for each page') + ' -->',
+        ? '<!-- ' + t('seo.fixCards.comments.current', 'Current') + ': ' + descLen + ' ' + t('seo.fixCards.comments.characters', 'characters') + ' -->\n<meta name="description" content="' + (meta.description ? meta.description.substring(0, 80) : '') + '..." />\n\n<!-- ' + t('seo.fixCards.comments.issues', 'Issues') + ': -->\n<!-- ' + (descLen < 120 ? t('seo.fixCards.comments.descTooShort', '✗ Too short - not fully utilizing SERP space') : t('seo.fixCards.comments.descTooLong', '✗ Too long - will be truncated')) + ' -->'
+        : '<!-- ' + t('seo.fixCards.comments.noDescriptionFound', 'No meta description found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingDescription', '✗ Missing meta description') + ' -->\n</head>',
+      snippet: '<meta name="description" content="' + t('seo.fixCards.snippets.descriptionPlaceholder', 'Describe the main value proposition in 150-160 characters. Include a clear call to action.') + '" />\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.desc150to160', '✓ 150-160 characters') + ' -->\n<!-- ' + t('seo.fixCards.comments.includeCta', '✓ Include call-to-action') + ' -->\n<!-- ' + t('seo.fixCards.comments.uniquePerPage', '✓ Unique for each page') + ' -->',
       steps: [
         t('seo.fixes.steps.description.step1', 'Write 150-160 characters that summarize page content'),
         t('seo.fixes.steps.description.step2', 'Include a clear call-to-action (e.g. "Learn more", "Get started")'),
@@ -1209,14 +1470,14 @@
     var twitterMissing = !meta.twitterCard;
     if (ogMissing || twitterMissing) {
     var socialIssues = [];
-    if (ogMissing) socialIssues.push('<!-- ' + t('seo.fixCards.comments.missingOg', '\u2717 Missing Open Graph tags (og:title, og:description, og:image)') + ' -->');
-    if (twitterMissing) socialIssues.push('<!-- ' + t('seo.fixCards.comments.missingTwitter', '\u2717 Missing Twitter Card tags') + ' -->');
+    if (ogMissing) socialIssues.push('<!-- ' + t('seo.fixCards.comments.missingOg', '✗ Missing Open Graph tags (og:title, og:description, og:image)') + ' -->');
+    if (twitterMissing) socialIssues.push('<!-- ' + t('seo.fixCards.comments.missingTwitter', '✗ Missing Twitter Card tags') + ' -->');
     cards.push({
       title: t('seo.fixCards.openGraph.title', 'Add Open Graph & social meta tags'),
       severity: 'Medium',
       category: t('seo.fixCards.categories.socialSeo', 'Social & Sharing'),
       impact: t('seo.fixCards.openGraph.impact', 'Rich previews on social platforms drive 2-3x more engagement'),
-      description: t('seo.fixCards.openGraph.description', 'When your page is shared on social platforms, Open Graph and Twitter Card meta tags build a rich preview card. Without them, shares show a plain URL.'),
+      description: t('seo.fixCards.openGraph.description', 'When your page is shared on Facebook, LinkedIn, Twitter/X, or messaging apps, the platform looks for Open Graph and Twitter Card meta tags to build a rich preview card. Without them, shares show a plain URL or an auto-selected image that often looks wrong. Adding these tags takes minutes and dramatically improves how your content appears when shared.'),
       problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n' + socialIssues.join('\n') + '\n\n<head>\n  <!-- ' + t('seo.fixCards.comments.noSocialTags', 'No social sharing meta tags found') + ' -->\n</head>',
       snippet: '<!-- Open Graph -->\n<meta property="og:type" content="website" />\n<meta property="og:title" content="' + (meta.title || t('seo.fixCards.snippets.pageTitle', 'Page Title')) + '" />\n<meta property="og:description" content="' + (meta.description || t('seo.fixCards.snippets.pageDescription', 'Page description')) + '" />\n<meta property="og:image" content="https://' + analyzedDomain + '/og-image.jpg" />\n\n<!-- Twitter Card -->\n<meta name="twitter:card" content="summary_large_image" />',
       steps: [
@@ -1224,7 +1485,7 @@
         t('seo.fixes.steps.openGraph.step2', 'Add og:title, og:description, og:image, and og:url meta tags'),
         t('seo.fixes.steps.openGraph.step3', 'Add twitter:card, twitter:title, twitter:description, and twitter:image'),
         t('seo.fixes.steps.openGraph.step4', 'Test with Facebook Sharing Debugger and Twitter Card Validator'),
-        t('seo.fixes.steps.openGraph.step5', 'Ensure each page has its own unique OG tags')
+        t('seo.fixes.steps.openGraph.step5', 'Ensure each page has its own unique OG tags - do not reuse the same image everywhere')
       ]
     });
     }
@@ -1238,15 +1499,15 @@
       severity: missingAlt > 5 ? 'High' : 'Medium',
       category: t('seo.fixCards.categories.accessibility', 'Accessibility & Images'),
       impact: t('seo.fixCards.images.impact', 'Improves accessibility, image search rankings, and overall SEO score'),
-      description: t('seo.fixCards.images.description', '{{count}} of {{total}} images are missing alt attributes.', { count: missingAlt, total: totalImages }),
-      problematicCode: '<!-- ' + t('seo.fixCards.comments.imagesNoAlt', '\u2717 {{count}} images missing alt text', { count: missingAlt }) + ' -->\n<img src="hero.jpg" />\n<img src="product.png" />',
-      snippet: '<img src="hero.jpg" alt="' + t('seo.fixCards.snippets.altExample1', 'Team collaborating around a whiteboard') + '" />\n<img src="product.png" alt="' + t('seo.fixCards.snippets.altExample2', 'Blue wireless headphones') + '" />\n\n<!-- ' + t('seo.fixCards.comments.decorativeImages', 'For decorative images, use empty alt') + ': -->\n<img src="divider.svg" alt="" role="presentation" />',
+      description: t('seo.fixCards.images.description', '{{count}} of {{total}} images are missing alt attributes. Alt text serves three purposes: it describes the image to screen-reader users (required for WCAG compliance), it appears when the image fails to load, and search engines use it to understand image content for Google Image Search rankings. Missing alt text is one of the most common SEO and accessibility issues.', { count: missingAlt, total: totalImages }),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.imagesNoAlt', '✗ {{count}} images missing alt text', { count: missingAlt }) + ' -->\n<img src="hero.jpg" />\n<img src="product.png" />',
+      snippet: '<img src="hero.jpg" alt="' + t('seo.fixCards.snippets.altExample1', 'Team collaborating around a whiteboard in a modern office') + '" />\n<img src="product.png" alt="' + t('seo.fixCards.snippets.altExample2', 'Blue wireless headphones with noise-cancelling feature') + '" />\n\n<!-- ' + t('seo.fixCards.comments.decorativeImages', 'For purely decorative images, use empty alt') + ': -->\n<img src="divider.svg" alt="" role="presentation" />',
       steps: [
         t('seo.fixes.steps.images.step1', 'Audit all images: run "img:not([alt])" in DevTools Console to find them'),
         t('seo.fixes.steps.images.step2', 'Write concise, descriptive alt text (under 125 characters) for each image'),
-        t('seo.fixes.steps.images.step3', 'For decorative images, use alt="" with role="presentation"'),
-        t('seo.fixes.steps.images.step4', 'Avoid phrases like "image of" - describe the content directly'),
-        t('seo.fixes.steps.images.step5', 'Test with a screen reader or accessibility inspector to verify')
+        t('seo.fixes.steps.images.step3', 'For decorative images (borders, spacers), use alt="" with role="presentation"'),
+        t('seo.fixes.steps.images.step4', 'Avoid phrases like "image of" or "picture of" - describe the content directly'),
+        t('seo.fixes.steps.images.step5', 'Test with a screen reader or browser accessibility inspector to verify')
       ]
     });
     }
@@ -1256,14 +1517,14 @@
     var headingIssue = h1Count === 0 || h1Count > 1 || (headings.total || 0) < 3;
     if (headingIssue) {
     var headingIssueDetail = h1Count === 0
-      ? t('seo.fixCards.headings.missingH1Detail', 'Your page is missing an H1 heading.')
+      ? t('seo.fixCards.headings.missingH1Detail', 'Your page is missing an H1 heading. The H1 is the primary heading that tells both search engines and users what the page is about. It carries the most weight of any heading tag and should contain your primary target keyword. Every page should have exactly one H1.')
       : h1Count > 1
-        ? t('seo.fixCards.headings.multipleH1Detail', 'Your page has {{count}} H1 headings. Multiple H1 tags dilute the primary keyword signal.', { count: h1Count })
-        : t('seo.fixCards.headings.lowHeadingsDetail', 'Your page has very few headings ({{count}} total).', { count: headings.total || 0 });
+        ? t('seo.fixCards.headings.multipleH1Detail', 'Your page has {{count}} H1 headings. Multiple H1 tags dilute the primary keyword signal and confuse search engines about the page topic. Keep one H1 as the main heading and demote others to H2 or H3.', { count: h1Count })
+        : t('seo.fixCards.headings.lowHeadingsDetail', 'Your page has very few headings ({{count}} total). Headings create a scannable outline for users and help search engines understand content hierarchy. Well-structured headings improve both readability and SEO.', { count: headings.total || 0 });
     var headingProblems = [];
-    if (h1Count === 0) headingProblems.push('<!-- ' + t('seo.fixCards.comments.noH1', '\u2717 No H1 heading found') + ' -->');
-    if (h1Count > 1) headingProblems.push('<!-- ' + t('seo.fixCards.comments.multipleH1', '\u2717 Multiple H1 headings ({{count}})', { count: h1Count }) + ' -->');
-    if ((headings.total || 0) < 3) headingProblems.push('<!-- ' + t('seo.fixCards.comments.fewHeadings', '\u2717 Only {{count}} headings total', { count: headings.total || 0 }) + ' -->');
+    if (h1Count === 0) headingProblems.push('<!-- ' + t('seo.fixCards.comments.noH1', '✗ No H1 heading found') + ' -->');
+    if (h1Count > 1) headingProblems.push('<!-- ' + t('seo.fixCards.comments.multipleH1', '✗ Multiple H1 headings ({{count}}) - use exactly one', { count: h1Count }) + ' -->');
+    if ((headings.total || 0) < 3) headingProblems.push('<!-- ' + t('seo.fixCards.comments.fewHeadings', '✗ Only {{count}} headings total - page lacks structure', { count: headings.total || 0 }) + ' -->');
     cards.push({
       title: t('seo.fixCards.headings.title', 'Fix heading structure'),
       severity: h1Count === 0 ? 'High' : 'Medium',
@@ -1271,13 +1532,13 @@
       impact: t('seo.fixCards.headings.impact', 'Clearer page structure improves crawlability and user engagement'),
       description: headingIssueDetail,
       problematicCode: '<!-- ' + t('seo.fixCards.comments.currentHeadings', 'Current heading structure') + ': -->\n<!-- H1: ' + h1Count + ' | H2: ' + ((headings.h2 || []).length) + ' | H3: ' + ((headings.h3 || []).length) + ' -->\n' + headingProblems.join('\n'),
-      snippet: '<h1>' + (meta.title ? meta.title.substring(0, 50) : t('seo.fixCards.snippets.h1Placeholder', 'Primary Page Topic')) + '</h1>\n\n  <h2>' + t('seo.fixCards.snippets.h2Placeholder1', 'Key Section A') + '</h2>\n    <h3>' + t('seo.fixCards.snippets.h3Placeholder', 'Supporting Detail') + '</h3>\n\n  <h2>' + t('seo.fixCards.snippets.h2Placeholder2', 'Key Section B') + '</h2>',
+      snippet: '<h1>' + (meta.title ? meta.title.substring(0, 50) : t('seo.fixCards.snippets.h1Placeholder', 'Primary Page Topic with Keyword')) + '</h1>\n\n  <h2>' + t('seo.fixCards.snippets.h2Placeholder1', 'Key Section About Subtopic A') + '</h2>\n    <h3>' + t('seo.fixCards.snippets.h3Placeholder', 'Supporting Detail') + '</h3>\n\n  <h2>' + t('seo.fixCards.snippets.h2Placeholder2', 'Key Section About Subtopic B') + '</h2>',
       steps: [
-        t('seo.fixes.steps.headings.step1', 'Ensure exactly one H1 tag exists'),
-        t('seo.fixes.steps.headings.step2', 'Use H2 tags for major sections and H3 for subsections'),
+        t('seo.fixes.steps.headings.step1', 'Ensure exactly one H1 tag exists - it should be the main page title'),
+        t('seo.fixes.steps.headings.step2', 'Use H2 tags for major sections and H3 for subsections within them'),
         t('seo.fixes.steps.headings.step3', 'Never skip heading levels (e.g. H1 directly to H3)'),
-        t('seo.fixes.steps.headings.step4', 'Write descriptive headings - avoid generic text'),
-        t('seo.fixes.steps.headings.step5', 'Use DevTools Elements panel to audit heading tags')
+        t('seo.fixes.steps.headings.step4', 'Write headings that describe the content below - avoid generic text'),
+        t('seo.fixes.steps.headings.step5', 'Use Chrome DevTools "Elements" panel to audit all heading tags on the page')
       ]
     });
     }
@@ -1289,18 +1550,18 @@
       title: t('seo.fixCards.content.title', 'Improve content depth'),
       severity: wordCount < 300 ? 'High' : 'Medium',
       category: t('seo.fixCards.categories.contentQuality', 'Content Quality'),
-      impact: t('seo.fixCards.content.impact', 'Pages with 600+ words rank higher on average'),
+      impact: t('seo.fixCards.content.impact', 'Pages with 600+ words rank higher on average and earn more backlinks'),
       description: wordCount < 300
-        ? t('seo.fixCards.content.veryThinDetail', 'Your page has only {{count}} words. This is considered "thin content."', { count: wordCount })
-        : t('seo.fixCards.content.thinDetail', 'Your page has {{count}} words. Pages with 600+ words tend to rank better.', { count: wordCount }),
-      problematicCode: '<!-- ' + t('seo.fixCards.comments.wordCount', 'Word count') + ': ' + wordCount + ' -->\n<!-- ' + t('seo.fixCards.comments.paragraphs', 'Paragraphs') + ': ' + (content.paragraphCount || 0) + ' -->\n<!-- ' + t('seo.fixCards.comments.thinContentWarning', '\u2717 Content is below recommended threshold') + ' -->',
-      snippet: '<h1>' + t('seo.fixCards.snippets.contentH1', 'Main Topic') + '</h1>\n<p>' + t('seo.fixCards.snippets.contentIntro', 'Introduction (50-100 words)') + '</p>\n\n<h2>' + t('seo.fixCards.snippets.contentH2a', 'What / Why Section') + '</h2>\n<p>' + t('seo.fixCards.snippets.contentBody1', '150-200 words in depth') + '</p>\n\n<h2>' + t('seo.fixCards.snippets.contentH2b', 'How-To / Details') + '</h2>',
+        ? t('seo.fixCards.content.veryThinDetail', 'Your page has only {{count}} words. Search engines consider this "thin content," which rarely ranks well. Pages competing in search typically have 800-2000+ words. Thin content also increases bounce rate because visitors find insufficient information and leave.', { count: wordCount })
+        : t('seo.fixCards.content.thinDetail', 'Your page has {{count}} words. While not critically thin, pages with 600+ words tend to rank better because they provide more value, answer more user questions, and naturally include more relevant keywords. Consider expanding key sections.', { count: wordCount }),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.wordCount', 'Word count') + ': ' + wordCount + ' -->\n<!-- ' + t('seo.fixCards.comments.paragraphs', 'Paragraphs') + ': ' + (content.paragraphCount || 0) + ' -->\n<!-- ' + t('seo.fixCards.comments.thinContentWarning', '✗ Content is below recommended threshold for competitive ranking') + ' -->',
+      snippet: '<h1>' + t('seo.fixCards.snippets.contentH1', 'Main Topic (with primary keyword)') + '</h1>\n<p>' + t('seo.fixCards.snippets.contentIntro', 'Introduction paragraph (50-100 words) - hook the reader') + '</p>\n\n<h2>' + t('seo.fixCards.snippets.contentH2a', 'What / Why Section') + '</h2>\n<p>' + t('seo.fixCards.snippets.contentBody1', '150-200 words explaining the topic in depth') + '</p>\n\n<h2>' + t('seo.fixCards.snippets.contentH2b', 'How-To / Details Section') + '</h2>',
       steps: [
-        t('seo.fixes.steps.content.step1', 'Research what competitors cover and identify gaps'),
-        t('seo.fixes.steps.content.step2', 'Add an FAQ section answering 3-5 common questions'),
-        t('seo.fixes.steps.content.step3', 'Expand existing sections with examples and data'),
-        t('seo.fixes.steps.content.step4', 'Break content into scannable sections with H2/H3 headings'),
-        t('seo.fixes.steps.content.step5', 'Aim for at least 800 words while keeping every sentence valuable')
+        t('seo.fixes.steps.content.step1', 'Research what competitors cover for the same topic and identify gaps'),
+        t('seo.fixes.steps.content.step2', 'Add an FAQ section answering 3-5 common questions (helps win featured snippets)'),
+        t('seo.fixes.steps.content.step3', 'Expand existing sections with examples, data, or step-by-step instructions'),
+        t('seo.fixes.steps.content.step4', 'Break content into scannable sections with descriptive H2/H3 headings'),
+        t('seo.fixes.steps.content.step5', 'Aim for at least 800 words while keeping every sentence valuable - avoid filler')
       ]
     });
     }
@@ -1312,15 +1573,15 @@
       severity: 'Medium',
       category: t('seo.fixCards.categories.technicalSeo', 'Technical SEO'),
       impact: t('seo.fixCards.canonical.impact', 'Prevents duplicate indexing issues'),
-      description: t('seo.fixCards.canonical.fullDescription', 'No canonical URL was detected. Search engines may index multiple versions of the same page and split ranking power.'),
-      problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.noCanonical', '\u2717 No canonical URL declared') + ' -->\n<!-- ' + t('seo.fixCards.comments.multipleVersions', '\u2717 Multiple versions indexed (www, non-www, http, https)') + ' -->\n<!-- ' + t('seo.fixCards.comments.sitemapNotReferenced', '\u2717 Sitemap not referenced') + ' -->\n\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingCanonicalSitemap', 'Missing canonical and sitemap links') + ' -->\n</head>',
+      description: t('seo.fixCards.canonical.fullDescription', 'No canonical URL was detected. Without a canonical tag, search engines may index multiple versions of the same page (www vs non-www, HTTP vs HTTPS, with/without trailing slash) and split your ranking power between them. A canonical tag declares the single preferred URL for each page.'),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.noCanonical', '✗ No canonical URL declared') + ' -->\n<!-- ' + t('seo.fixCards.comments.multipleVersions', '✗ Multiple versions indexed (www, non-www, http, https)') + ' -->\n<!-- ' + t('seo.fixCards.comments.sitemapNotReferenced', '✗ Sitemap not referenced') + ' -->\n\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingCanonicalSitemap', 'Missing canonical and sitemap links') + ' -->\n</head>',
       snippet: '<link rel="canonical" href="https://' + analyzedDomain + '/" />\n<link rel="sitemap" type="application/xml" title="Sitemap" href="https://' + analyzedDomain + '/sitemap.xml" />\n\n<!-- ' + t('seo.fixCards.comments.inRobotsTxt', 'In robots.txt') + ': -->\nSitemap: https://' + analyzedDomain + '/sitemap.xml',
       steps: [
         t('seo.fixes.steps.canonical.step1', 'Add canonical link pointing to preferred URL'),
         t('seo.fixes.steps.canonical.step2', 'Create and submit XML sitemap to search engines'),
         t('seo.fixes.steps.canonical.step3', 'Reference sitemap in robots.txt'),
         t('seo.fixes.steps.canonical.step4', 'Ensure every page has a self-referencing canonical tag'),
-        t('seo.fixes.steps.canonical.step5', 'Use Google Search Console to monitor indexing issues')
+        t('seo.fixes.steps.canonical.step5', 'Use Google Search Console to monitor indexing and duplicate issues')
       ]
     });
     }
@@ -1332,15 +1593,15 @@
       severity: 'High',
       category: t('seo.fixCards.categories.structuredData', 'Structured Data'),
       impact: t('seo.fixCards.jsonld.impact', 'Rich results eligibility - up to 30% more visibility'),
-      description: t('seo.fixCards.jsonld.fullDescription', 'No structured data was found. JSON-LD helps search engines understand your content and enables rich results like star ratings and FAQ dropdowns.'),
-      problematicCode: '<!-- ' + t('seo.fixCards.comments.noStructuredData', 'No structured data found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingJsonLd', '\u2717 Missing JSON-LD structured data') + ' -->\n  <!-- ' + t('seo.fixCards.comments.notEligible', '\u2717 Not eligible for rich results') + ' -->\n</head>',
+      description: t('seo.fixCards.jsonld.fullDescription', 'No structured data was found on this page. Structured data (JSON-LD) helps search engines understand your content type and enables rich results like star ratings, FAQ dropdowns, product prices, and breadcrumbs directly in search results. Pages with rich results get significantly higher click-through rates.'),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.noStructuredData', 'No structured data found') + ' -->\n<head>\n  <!-- ' + t('seo.fixCards.comments.missingJsonLd', '✗ Missing JSON-LD structured data') + ' -->\n  <!-- ' + t('seo.fixCards.comments.notEligible', '✗ Not eligible for rich results') + ' -->\n</head>',
       snippet: '<script type="application/ld+json">\n{\n  "@context": "https://schema.org",\n  "@type": "WebPage",\n  "name": "' + (meta.title || t('seo.fixCards.snippets.pageTitle', 'Page Title')) + '",\n  "description": "' + (meta.description || t('seo.fixCards.snippets.pageDescription', 'Page description')) + '",\n  "url": "https://' + analyzedDomain + '/"\n}\n<\/script>',
       steps: [
         t('seo.fixes.steps.jsonld.step1', 'Identify the primary content type (Article, Product, etc.)'),
         t('seo.fixes.steps.jsonld.step2', 'Add JSON-LD script with required properties'),
         t('seo.fixes.steps.jsonld.step3', 'Test with Google Rich Results Test'),
-        t('seo.fixes.steps.jsonld.step4', 'Add Organization schema to your homepage'),
-        t('seo.fixes.steps.jsonld.step5', 'Add BreadcrumbList schema for breadcrumb-style results')
+        t('seo.fixes.steps.jsonld.step4', 'Add Organization schema to your homepage for brand knowledge panel'),
+        t('seo.fixes.steps.jsonld.step5', 'Add BreadcrumbList schema for breadcrumb-style search results')
       ]
     });
     }
@@ -1356,27 +1617,29 @@
     }
     if (unsafeLinks > 0 || emptyAnchors > 0) {
     var linkProblems = [];
-    if (unsafeLinks > 0) linkProblems.push('<!-- ' + t('seo.fixCards.comments.unsafeExternalLinks', '\u2717 {{count}} external links without rel="noopener noreferrer"', { count: unsafeLinks }) + ' -->');
-    if (emptyAnchors > 0) linkProblems.push('<!-- ' + t('seo.fixCards.comments.emptyAnchorText', '\u2717 {{count}} links have empty anchor text', { count: emptyAnchors }) + ' -->');
+    if (unsafeLinks > 0) linkProblems.push('<!-- ' + t('seo.fixCards.comments.unsafeExternalLinks', '✗ {{count}} external links open in new tab without rel="noopener noreferrer"', { count: unsafeLinks }) + ' -->');
+    if (emptyAnchors > 0) linkProblems.push('<!-- ' + t('seo.fixCards.comments.emptyAnchorText', '✗ {{count}} links have empty anchor text (bad for SEO and accessibility)', { count: emptyAnchors }) + ' -->');
     cards.push({
       title: t('seo.fixCards.links.title', 'Fix link security & anchor text'),
       severity: unsafeLinks > 3 ? 'Medium' : 'Low',
       category: t('seo.fixCards.categories.linkHealth', 'Link Health'),
       impact: t('seo.fixCards.links.impact', 'Prevents security vulnerabilities and improves link equity signals'),
-      description: t('seo.fixCards.links.description', 'External links without rel="noopener noreferrer" expose your site to tabnapping attacks. Empty anchor text wastes link equity.'),
+      description: t('seo.fixCards.links.description', 'External links that open in a new tab without rel="noopener noreferrer" expose your site to reverse tabnapping attacks, where the opened page can use the window.opener API to redirect your original tab to a phishing site. This is a well-documented security vulnerability that can trick users into entering credentials on a fake version of your site without realizing they have been redirected. Additionally, links with empty or missing anchor text waste valuable link equity because search engines use anchor text to understand the context and relevance of the linked page. Screen reader users also rely on anchor text to understand where a link leads before activating it, so empty anchors create a confusing and inaccessible experience. Both issues are simple to fix and should be resolved across all external and internal links.'),
       problematicCode: '<!-- ' + t('seo.fixCards.comments.linkIssuesFound', 'Link issues found') + ': -->\n' + linkProblems.join('\n'),
       snippet: '<a href="https://external.com"\n   target="_blank"\n   rel="noopener noreferrer">' + t('seo.fixCards.snippets.descriptiveAnchor', 'Descriptive anchor text') + '</a>\n\n<a href="/pricing">' + t('seo.fixCards.snippets.pricingAnchor', 'View pricing plans') + '</a>',
       steps: [
         t('seo.fixes.steps.links.step1', 'Add rel="noopener noreferrer" to all external links with target="_blank"'),
-        t('seo.fixes.steps.links.step2', 'Replace empty anchor text with descriptive text'),
-        t('seo.fixes.steps.links.step3', 'Avoid generic anchor text like "click here"'),
-        t('seo.fixes.steps.links.step4', 'Use DevTools to find issues: a[target="_blank"]:not([rel*="noopener"])'),
-        t('seo.fixes.steps.links.step5', 'Add rel="nofollow" to paid or sponsored links')
+        t('seo.fixes.steps.links.step2', 'Replace empty anchor text with descriptive text that explains the link destination'),
+        t('seo.fixes.steps.links.step3', 'Avoid generic anchor text like "click here" or "read more"'),
+        t('seo.fixes.steps.links.step4', 'Use DevTools Console: document.querySelectorAll(\'a[target="_blank"]:not([rel*="noopener"])\') to find issues'),
+        t('seo.fixes.steps.links.step5', 'Consider adding rel="nofollow" to paid or sponsored external links')
       ]
     });
     }
 
     // --- 10. Preload critical assets (only if perf score < 80) ---
+    // Note: If no performance data exists, default to 0 (not 100) to ensure
+    // performance fix cards appear when they should. This matches web UI behavior.
     var perfScore = performance.score || 0;
     if (perfScore < 80) {
     cards.push({
@@ -1384,15 +1647,15 @@
       severity: perfScore < 50 ? 'High' : 'Medium',
       category: t('seo.fixCards.categories.performance', 'Performance'),
       impact: t('seo.fixCards.preload.impact', 'Faster LCP and render - improves Core Web Vitals'),
-      description: t('seo.fixCards.preload.fullDescription', 'Page performance scored {{score}}/100. Preloading tells the browser to fetch critical resources as soon as possible.', { score: perfScore }),
-      problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.heroNotPreloaded', '\u2717 Hero image not preloaded') + ' -->\n<!-- ' + t('seo.fixCards.comments.fontsCauseShift', '\u2717 Web fonts cause layout shift') + ' -->\n<!-- ' + t('seo.fixCards.comments.cssNotPrioritized', '\u2717 Critical CSS not prioritized') + ' -->\n<!-- ' + t('seo.fixCards.comments.perfScore', 'Performance score') + ': ' + perfScore + '/100 -->\n\n<head>\n  <!-- ' + t('seo.fixCards.comments.noPreloadHints', 'No preload hints') + ' -->\n  <link rel="stylesheet" href="/styles.css">\n</head>',
-      snippet: '<link rel="preload" as="image" href="/hero.webp" />\n<link rel="preload" as="style" href="/critical.css" />\n<link rel="preload" as="font" type="font/woff2" href="/fonts/main.woff2" crossorigin />\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.preloadLcpImage', '\u2713 Preload LCP image') + ' -->\n<!-- ' + t('seo.fixCards.comments.preloadCriticalFonts', '\u2713 Preload critical fonts') + ' -->\n<!-- ' + t('seo.fixCards.comments.useCrossorigin', '\u2713 Use crossorigin for fonts') + ' -->',
+      description: t('seo.fixCards.preload.fullDescription', 'Page performance scored {{score}}/100. Preloading tells the browser to fetch critical resources (hero image, fonts, CSS) as soon as possible, before it discovers them in the HTML. This can shave 200-500ms off your Largest Contentful Paint (LCP) and eliminate layout shift from late-loading fonts.', { score: perfScore }),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.heroNotPreloaded', '✗ Hero image not preloaded') + ' -->\n<!-- ' + t('seo.fixCards.comments.fontsCauseShift', '✗ Web fonts cause layout shift') + ' -->\n<!-- ' + t('seo.fixCards.comments.cssNotPrioritized', '✗ Critical CSS not prioritized') + ' -->\n<!-- ' + t('seo.fixCards.comments.perfScore', 'Performance score') + ': ' + perfScore + '/100 -->\n\n<head>\n  <!-- ' + t('seo.fixCards.comments.noPreloadHints', 'No preload hints') + ' -->\n  <link rel="stylesheet" href="/styles.css">\n</head>',
+      snippet: '<link rel="preload" as="image" href="/hero.webp" />\n<link rel="preload" as="style" href="/critical.css" />\n<link rel="preload" as="font" type="font/woff2" href="/fonts/main.woff2" crossorigin />\n\n<!-- ' + t('seo.fixCards.comments.bestPractices', 'Best practices') + ': -->\n<!-- ' + t('seo.fixCards.comments.preloadLcpImage', '✓ Preload LCP image') + ' -->\n<!-- ' + t('seo.fixCards.comments.preloadCriticalFonts', '✓ Preload critical fonts') + ' -->\n<!-- ' + t('seo.fixCards.comments.useCrossorigin', '✓ Use crossorigin for fonts') + ' -->',
       steps: [
         t('seo.fixes.steps.preload.step1', 'Identify above-the-fold critical resources'),
         t('seo.fixes.steps.preload.step2', 'Add preload hints for hero image and fonts'),
         t('seo.fixes.steps.preload.step3', 'Verify with browser DevTools Network panel'),
-        t('seo.fixes.steps.preload.step4', 'Add fetchpriority="high" to the LCP image element'),
-        t('seo.fixes.steps.preload.step5', 'Do not over-preload - only 2-4 critical resources')
+        t('seo.fixes.steps.preload.step4', 'Add fetchpriority="high" to the LCP image element itself'),
+        t('seo.fixes.steps.preload.step5', 'Do not over-preload - only 2-4 critical resources, or the browser delays everything')
       ]
     });
     }
@@ -1404,15 +1667,15 @@
       severity: 'Low',
       category: t('seo.fixCards.categories.performance', 'Performance'),
       impact: t('seo.fixCards.defer.impact', 'Reduces blocking time - faster interactivity'),
-      description: t('seo.fixCards.defer.fullDescription', 'Synchronous scripts block the browser from rendering content. Moving non-essential scripts to defer allows the page to paint first.'),
-      problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.scriptsBlocking', '\u2717 Scripts blocking page render') + ' -->\n<!-- ' + t('seo.fixCards.comments.analyticsSync', '\u2717 Analytics loading synchronously') + ' -->\n\n<head>\n  <script src="/app.js"><\/script>\n  <script src="/analytics.js"><\/script>\n</head>',
+      description: t('seo.fixCards.defer.fullDescription', 'Synchronous scripts in the <head> block the browser from rendering any content until they finish downloading and executing. Moving non-essential scripts to defer or async allows the page to paint first, improving perceived load speed and Core Web Vitals scores (especially FID/INP).'),
+      problematicCode: '<!-- ' + t('seo.fixCards.comments.commonIssues', 'Common issues') + ': -->\n<!-- ' + t('seo.fixCards.comments.scriptsBlocking', '✗ Scripts blocking page render') + ' -->\n<!-- ' + t('seo.fixCards.comments.analyticsSync', '✗ Analytics loading synchronously') + ' -->\n\n<head>\n  <script src="/app.js"><\/script>\n  <script src="/analytics.js"><\/script>\n</head>',
       snippet: '<head>\n  <!-- ' + t('seo.fixCards.comments.deferNonEssential', 'Defer non-essential scripts') + ' -->\n  <script src="/app.js" defer><\/script>\n  <script src="/analytics.js" defer><\/script>\n</head>\n\n<!-- ' + t('seo.fixCards.comments.orLoadAtEnd', 'Or load at end of body') + ': -->\n<body>\n  <!-- ' + t('seo.fixCards.comments.content', 'content') + ' -->\n  <script src="/app.js"><\/script>\n</body>',
       steps: [
         t('seo.fixes.steps.defer.step1', 'Add defer attribute to non-essential scripts'),
         t('seo.fixes.steps.defer.step2', 'Move analytics to async loading'),
         t('seo.fixes.steps.defer.step3', 'Test that functionality still works correctly'),
-        t('seo.fixes.steps.defer.step4', 'Use DevTools Coverage tab to find unused JS'),
-        t('seo.fixes.steps.defer.step5', 'Consider lazy-loading third-party widgets on user interaction')
+        t('seo.fixes.steps.defer.step4', 'Use Chrome DevTools Coverage tab to find unused JS you can remove entirely'),
+        t('seo.fixes.steps.defer.step5', 'Consider lazy-loading third-party widgets (chat, social embeds) on user interaction')
       ]
     });
     }

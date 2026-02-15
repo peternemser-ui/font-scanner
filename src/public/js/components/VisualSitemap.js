@@ -235,7 +235,7 @@
     if (pages.length === 0) {
       var canvas = el.querySelector('[data-vs-canvas]');
       if (canvas) canvas.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--color-text-muted);">' +
-        t('reports.crawler.noDirectoryStructure', 'No pages to visualise') + '</div>';
+        t('reports.crawler.noDirectoryStructure', 'No directory structure detected (flat site)') + '</div>';
       return;
     }
 

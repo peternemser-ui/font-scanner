@@ -2,12 +2,12 @@
 
 .report-shell,
 .report-scope .report-shell {
-  background: var(--r-surface-2, var(--bg-secondary, #F8F9FA));
-  border: 1px solid var(--r-border, rgba(255,255,255,0.08));
+  background: var(--r-surface-2, #F8FAFC);
+  border: 1px solid var(--r-border, rgba(0,0,0,0.08));
   border-radius: var(--radius-lg, 12px);
   padding: 1.25rem;
   margin-bottom: 1rem;
-  box-shadow: var(--r-shadow, none);
+  box-shadow: var(--r-shadow, 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06));
 }
 .report-shell__header,
 .report-scope .report-shell__header {
@@ -16,7 +16,7 @@
   align-items: center;
   gap: 1rem;
   flex-wrap: wrap;
-  color: var(--r-text-muted, #c7f5d9);
+  color: var(--r-text-muted, #6B7280);
   font-size: 0.95rem;
 }
 .report-shell__title,
@@ -66,16 +66,16 @@
 /* Summary card */
 .report-shell__summary-card,
 .report-scope .report-shell__summary-card {
-  background: var(--r-surface-1, #ffffff);
-  border: 1px solid var(--r-border, rgba(255,255,255,0.08));
+  background: var(--r-surface-1, #FFFFFF);
+  border: 1px solid var(--r-border, rgba(0,0,0,0.08));
   border-radius: var(--radius-lg, 12px);
   padding: 1.25rem 1rem;
   text-align: center;
-  box-shadow: var(--r-shadow, none);
+  box-shadow: var(--r-shadow, 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06));
 }
 .report-shell__summary-label,
 .report-scope .report-shell__summary-label {
-  color: var(--r-text-muted, #d1d5db);
+  color: var(--r-text-muted, #6B7280);
   font-weight: 600;
   margin-bottom: 0.5rem;
   font-size: 0.8rem;
@@ -122,14 +122,14 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  color: var(--r-text-muted, #d1d5db);
+  color: var(--r-text-muted, #6B7280);
   font-size: 0.9rem;
   margin-bottom: 0.45rem;
 }
 .report-shell__bar-label,
 .report-scope .report-shell__bar-label {
   min-width: 90px;
-  color: var(--r-text-faint, #9ca3af);
+  color: var(--r-text-faint, #9CA3AF);
   font-weight: 600;
 }
 .report-shell__bar-track,
@@ -137,7 +137,7 @@
   flex: 1;
   height: 10px;
   border-radius: 999px;
-  background: var(--r-dial-track, rgba(255,255,255,0.06));
+  background: var(--r-dial-track, rgba(0,0,0,0.10));
   overflow: hidden;
 }
 .report-shell__bar-fill,
@@ -150,7 +150,7 @@
 .report-scope .report-shell__bar-value {
   min-width: 70px;
   text-align: right;
-  color: var(--r-text, #e6ffe6);
+  color: var(--r-text, #111827);
   font-weight: 600;
 }
 
@@ -163,17 +163,17 @@
 }
 .report-shell__card,
 .report-scope .report-shell__card {
-  background: var(--r-surface-1, #1a1a1a);
-  border: 1px solid var(--r-border, rgba(255,255,255,0.08));
+  background: var(--r-surface-1, #FFFFFF);
+  border: 1px solid var(--r-border, rgba(0,0,0,0.08));
   border-radius: var(--radius-lg, 12px);
   padding: 1rem;
   overflow: hidden;
-  box-shadow: var(--r-shadow, none);
+  box-shadow: var(--r-shadow, 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06));
 }
 .report-shell__card-title,
 .report-scope .report-shell__card-title {
   font-weight: 600;
-  color: var(--r-text, #e6ffe6);
+  color: var(--r-text, #111827);
   margin-bottom: 0.5rem;
   display: flex;
   align-items: center;
@@ -188,9 +188,9 @@
   width: 100%;
   max-width: 100%;
   border-radius: var(--radius-lg, 12px);
-  border: 1px solid var(--r-border, rgba(255,255,255,0.12));
+  border: 1px solid var(--r-border, rgba(0,0,0,0.08));
   overflow: hidden;
-  background: var(--r-bg, #0b0b0b);
+  background: var(--r-bg, #FFFFFF);
   padding-top: 36px;
 }
 
@@ -202,8 +202,8 @@
   left: 0;
   right: 0;
   height: 36px;
-  background: linear-gradient(180deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02));
-  border-bottom: 1px solid rgba(255,255,255,0.08);
+  background: linear-gradient(180deg, rgba(0,0,0,0.04), rgba(0,0,0,0.01));
+  border-bottom: 1px solid rgba(0,0,0,0.08);
   pointer-events: none;
 }
 
@@ -233,7 +233,7 @@
   border-radius: 0;
   border: none;
   object-fit: contain;
-  background: var(--r-bg, #0b0b0b);
+  background: var(--r-bg, #FFFFFF);
 }
 
 /* Metric grid */
@@ -246,7 +246,7 @@
 }
 .report-shell__metric-grid--cwv,
 .report-scope .report-shell__metric-grid--cwv {
-  border-top: 1px solid var(--r-border, rgba(255,255,255,0.05));
+  border-top: 1px solid var(--r-border, rgba(0,0,0,0.06));
   padding-top: 0.75rem;
 }
 
@@ -306,7 +306,7 @@
 }
 .report-scope th,
 .report-scope td {
-  border-bottom: 1px solid var(--r-table-divider, rgba(255,255,255,0.08));
+  border-bottom: 1px solid var(--r-table-divider, rgba(0,0,0,0.06));
   padding: 0.5rem 0.75rem;
   text-align: left;
   color: var(--r-text, inherit);
@@ -327,8 +327,8 @@
    ======================================== */
 .report-scope pre,
 .report-scope code {
-  background: var(--r-code-bg, #111418);
-  border: 1px solid var(--r-code-border, rgba(255,255,255,0.08));
+  background: var(--r-code-bg, #F3F4F6);
+  border: 1px solid var(--r-code-border, rgba(0,0,0,0.08));
   border-radius: var(--radius-sm, 4px);
   color: var(--r-text, inherit);
 }

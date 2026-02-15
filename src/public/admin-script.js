@@ -113,7 +113,7 @@ function displayUsers(users) {
   const tbody = document.getElementById('usersTableBody');
 
   if (users.length === 0) {
-    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #888;">No users found</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: var(--r-text-faint, #9CA3AF);">No users found</td></tr>';
     return;
   }
 
@@ -703,7 +703,7 @@ async function runQuickCheck() {
         <div style="text-align: center; padding: 2rem;">
           <div style="font-size: 3rem; margin-bottom: 1rem;">✅</div>
           <div style="font-size: 1.25rem; font-weight: 600; color: #22c55e;">Health Check Passed</div>
-          <div style="color: #888; margin-top: 0.5rem;">
+          <div style="color: var(--r-text-faint, #9CA3AF); margin-top: 0.5rem;">
             ${data.passed} tests passed in ${data.duration}ms
           </div>
         </div>
@@ -714,7 +714,7 @@ async function runQuickCheck() {
         <div style="text-align: center; padding: 2rem;">
           <div style="font-size: 3rem; margin-bottom: 1rem;">❌</div>
           <div style="font-size: 1.25rem; font-weight: 600; color: #ef4444;">Health Check Failed</div>
-          <div style="color: #888; margin-top: 0.5rem;">
+          <div style="color: var(--r-text-faint, #9CA3AF); margin-top: 0.5rem;">
             ${data.error || `${data.failed} tests failed`}
           </div>
         </div>
@@ -811,7 +811,7 @@ function showTestError(message) {
     <div style="text-align: center; padding: 2rem; color: #ef4444;">
       <div style="font-size: 2rem; margin-bottom: 0.5rem;">⚠️</div>
       <div>Failed to run tests</div>
-      <div style="font-size: 0.875rem; color: #888; margin-top: 0.5rem;">${escapeHtml(message)}</div>
+      <div style="font-size: 0.875rem; color: var(--r-text-faint, #9CA3AF); margin-top: 0.5rem;">${escapeHtml(message)}</div>
     </div>
   `;
 }

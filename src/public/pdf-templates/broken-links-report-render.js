@@ -44,7 +44,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.summary', 'This section provides a high-level overview of all links discovered during the scan. It includes counts of broken links, redirects, working links, and the split between internal and external URLs. A healthy site should aim for zero broken links and minimal unnecessary redirects. The link health score reflects the ratio of working links to total links found.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.summary', 'This summary provides an overview of all links discovered on your page, categorized by status. Broken links create poor user experiences and waste search engine crawl budget. A healthy link profile has zero broken links, minimal redirects, and a balanced mix of internal and external links.')) + '</p>';
 
       // Metrics cards
       var total = summary.total || 0;
@@ -123,7 +123,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.broken', 'Broken links return HTTP error status codes (4xx or 5xx) and prevent users from reaching the intended content. They harm user experience, waste crawl budget, and can negatively impact search engine rankings. Each broken link should be fixed by updating the URL, setting up a redirect, or removing the link entirely. This section lists all broken links found with their status codes and source pages.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.broken', 'Broken links return HTTP error codes (4xx or 5xx) and lead visitors to dead ends. Each broken link represents a missed opportunity for engagement and can negatively impact your search rankings. This section lists all broken links found with their status codes and source locations.')) + '</p>';
 
       if (brokenLinks.length > 0) {
         html += PR.renderMetrics([
@@ -180,7 +180,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.redirects', 'Redirects (3xx status codes) indicate that a URL has moved to a new location. While redirects are normal during site migrations, excessive or chained redirects add latency and can dilute link equity. Permanent redirects (301) should be used for content that has permanently moved, while temporary redirects (302) are for short-term changes. This section identifies all redirect chains so you can update links to point directly to final destinations.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.redirects', 'Redirects add latency to page loads and can create chains that significantly slow navigation. While some redirects are necessary, excessive or chained redirects indicate maintenance issues. This section identifies all redirecting links and their final destinations.')) + '</p>';
 
       if (redirectLinks.length > 0) {
         html += PR.renderMetrics([
@@ -242,7 +242,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.anchors', 'Anchor text is the visible, clickable text in a hyperlink. Search engines use anchor text to understand the context and relevance of linked pages. Descriptive anchor text improves accessibility for screen reader users and provides better signals for search engine ranking. This section analyzes the anchor text patterns used across your links, identifying generic phrases that should be replaced with more descriptive alternatives.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.anchors', 'Anchor text analysis examines the descriptive text used in your links. Well-crafted anchor text helps both users and search engines understand link destinations. This section evaluates anchor text quality, diversity, and relevance.')) + '</p>';
 
       if (anchorAnalysis && Object.keys(anchorAnalysis).length > 0) {
         // Metrics
@@ -326,7 +326,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.attributes', 'Link attributes like rel and target control how search engines interpret links and how browsers open them. The rel="nofollow" attribute tells search engines not to pass ranking credit through a link, while target="_blank" opens links in a new tab. Proper use of rel="noopener noreferrer" on external links prevents security vulnerabilities. This section audits the attribute patterns used across your links.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.attributes', 'Link attributes like rel, target, and nofollow influence how search engines interpret and follow your links. This section analyzes the distribution and usage of link attributes to ensure they align with your SEO strategy.')) + '</p>';
 
       if (attributeAnalysis && Object.keys(attributeAnalysis).length > 0) {
         // Attribute metrics
@@ -409,7 +409,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.recommendations', 'Based on the broken links analysis, this section provides prioritized recommendations to improve your site\'s link health. Each recommendation includes the severity level and actionable steps for resolution. Fixing broken links improves user experience, preserves link equity for SEO, and ensures search engine crawlers can efficiently discover all your content.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.recommendations', 'Based on the broken links analysis, these recommendations prioritize fixing the most impactful link issues to improve user experience and search engine crawling.'s link health. Each recommendation includes the severity level and actionable steps for resolution. Fixing broken links improves user experience, preserves link equity for SEO, and ensures search engine crawlers can efficiently discover all your content.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Group by priority/severity

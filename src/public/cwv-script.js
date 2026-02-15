@@ -300,7 +300,7 @@ function showCWVPaymentGate(url) {
       <div style="
         background: var(--bg-card);
         border: 2px solid var(--color-success, #10b981);
-        border-radius: 16px;
+        border-radius: 12px;
         padding: 2.5rem;
         max-width: 500px;
         width: 90%;
@@ -352,7 +352,7 @@ function showCWVPaymentGate(url) {
           <button id="cwvProceedPaymentBtn" style="
             background: var(--color-success, #10b981);
             border: none;
-            color: #fff;
+            color: var(--r-text, #111827);
             padding: 0.875rem 1.5rem;
             border-radius: 8px;
             cursor: pointer;
@@ -571,7 +571,7 @@ analyzeButton.addEventListener('click', async () => {
   const url = urlInput.value.trim();
 
   if (!url) {
-    alert(t('reports.common.pleaseEnterUrl', 'Please enter a URL'));
+    alert(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
     return;
   }
 
@@ -594,7 +594,7 @@ analyzeButton.addEventListener('click', async () => {
   sessionStorage.removeItem('sm_purchased_report_id');
 
   analyzeButton.disabled = true;
-  analyzeButton.textContent = t('common.analyzing', 'ANALYZING...').toUpperCase();
+  analyzeButton.textContent = t('common.analyzing', 'Analyzing...').toUpperCase();
   resultsContainer.style.display = 'none';
 
   // Create loading container if it doesn't exist
@@ -1033,13 +1033,13 @@ function displayResults(data) {
     <div style="
       background: linear-gradient(135deg, ${getGradeColor(grade)}20 0%, ${getGradeColor(grade)}10 100%);
       border: 3px solid ${getGradeColor(grade)};
-      border-radius: 16px;
+      border-radius: 12px;
       padding: 2rem;
       margin-bottom: 2rem;
       text-align: center;
     ">
       <div style="font-size: 5rem; font-weight: bold; color: ${getGradeColor(grade)}; margin-bottom: 0.5rem;">${score}</div>
-      <div style="font-size: 1.5rem; color: #e0e0e0; margin-bottom: 0.5rem;">${t('reports.cwv.overallScore', 'Overall CWV Score')}</div>
+      <div style="font-size: 1.5rem; color: var(--r-text-muted, #6B7280); margin-bottom: 0.5rem;">${t('reports.cwv.overallScore', 'Overall CWV Score')}</div>
       <div style="
         display: inline-block;
         padding: 0.5rem 2rem;
@@ -1050,7 +1050,7 @@ function displayResults(data) {
         border-radius: 8px;
         margin-bottom: 1rem;
       ">${t('reports.cwv.grade', 'GRADE')}: ${grade}</div>
-      <div style="color: #c0c0c0; font-size: 1rem; margin-top: 1rem;">
+      <div style="color: var(--r-text-muted, #6B7280); font-size: 1rem; margin-top: 1rem;">
         ${mobile.passedCWV ? '✓ ' + t('reports.cwv.passingCwv', 'PASSING Core Web Vitals (Good for Google Rankings)') : '✗ ' + t('reports.cwv.failingCwv', 'FAILING Core Web Vitals (May hurt Google Rankings)')}
       </div>
     </div>
@@ -1065,7 +1065,7 @@ function displayResults(data) {
       border-radius: 8px;
     ">
       <h3 style="color: #ff4444; margin: 0 0 1rem 0;">! ${t('reports.cwv.criticalIssues', 'Critical Issues')}</h3>
-      ${issues.map(issue => `<p style="color: #e0e0e0; margin: 0.5rem 0;">${issue}</p>`).join('')}
+      ${issues.map(issue => `<p style="color: var(--r-text-muted, #6B7280); margin: 0.5rem 0;">${issue}</p>`).join('')}
     </div>
     ` : ''}
 
@@ -1084,7 +1084,7 @@ function displayResults(data) {
         </h3>
         ${renderCWVMetrics(mobile)}
         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(150, 0, 255, 0.3);">
-          <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
+          <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; margin: 0;">
             ${mobile.passedCWV ? '✓ ' + t('reports.cwv.allVitalsPassed', 'All Core Web Vitals passed') : '✗ ' + t('reports.cwv.someMetricsNeedImprovement', 'Some metrics need improvement')}
           </p>
         </div>
@@ -1103,7 +1103,7 @@ function displayResults(data) {
         </h3>
         ${renderCWVMetrics(desktop)}
         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 150, 255, 0.3);">
-          <p style="color: #c0c0c0; font-size: 0.9rem; margin: 0;">
+          <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; margin: 0;">
             ${desktop.passedCWV ? '✓ ' + t('reports.cwv.allVitalsPassed', 'All Core Web Vitals passed') : '~ ' + t('reports.cwv.someMetricsNeedImprovement', 'Some metrics need improvement')}
           </p>
         </div>
@@ -1154,8 +1154,8 @@ function displayResults(data) {
                 text-transform: uppercase;
               ">${rec.priority}</span>
             </div>
-            <p style="color: #e0e0e0; margin: 0 0 0.75rem 0; font-weight: 600;">~ ${rec.issue}</p>
-            <p style="color: #c0c0c0; margin: 0;">ⓘ ${rec.solution}</p>
+            <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 0.75rem 0; font-weight: 600;">~ ${rec.issue}</p>
+            <p style="color: var(--r-text-muted, #6B7280); margin: 0;">ⓘ ${rec.solution}</p>
           </div>
         `).join('')}
       </div>
@@ -1163,10 +1163,10 @@ function displayResults(data) {
       <div style="position: relative; padding: 1.5rem; text-align: center;">
         <div style="filter: blur(4px); opacity: 0.4; pointer-events: none;">
           <div style="background: rgba(255, 140, 0, 0.1); border-left: 4px solid #ff8c00; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;">
-            <p style="color: #888; margin: 0;">${t('reports.cwv.detailedRecommendationsBlur', 'Detailed performance recommendations...')}</p>
+            <p style="color: var(--r-text-faint, #9CA3AF); margin: 0;">${t('reports.cwv.detailedRecommendationsBlur', 'Detailed performance recommendations...')}</p>
           </div>
           <div style="background: rgba(255, 68, 68, 0.1); border-left: 4px solid #ff4444; padding: 1rem; border-radius: 8px;">
-            <p style="color: #888; margin: 0;">${t('reports.cwv.criticalOptimizationsBlur', 'Critical optimization suggestions...')}</p>
+            <p style="color: var(--r-text-faint, #9CA3AF); margin: 0;">${t('reports.cwv.criticalOptimizationsBlur', 'Critical optimization suggestions...')}</p>
           </div>
         </div>
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-primary, #1a1a2e); padding: 1.5rem 2rem; border-radius: 12px; border: 2px solid var(--color-accent, #00ff41); box-shadow: 0 4px 20px rgba(0, 255, 65, 0.3);">
@@ -1181,11 +1181,11 @@ function displayResults(data) {
 
     ${createCWVAccordionSection('understanding-scores', 'ℹ️', t('reports.cwv.understandingScoresTitle', 'Understanding Your Scores'), `
       <div style="padding: 1rem 0;">
-        <p style="color: #e0e0e0; margin: 0 0 0.5rem 0;">${comparison.context}</p>
-        <p style="color: #c0c0c0; margin: 0; font-size: 0.9rem;">${comparison.note}</p>
+        <p style="color: var(--r-text-muted, #6B7280); margin: 0 0 0.5rem 0;">${comparison.context}</p>
+        <p style="color: var(--r-text-muted, #6B7280); margin: 0; font-size: 0.9rem;">${comparison.note}</p>
         <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid rgba(0, 255, 65, 0.2);">
-          <p style="color: #e0e0e0; margin: 0.5rem 0;"><strong>LCP:</strong> ${comparison.comparison.lcp.percentile} - ${comparison.comparison.lcp.realWorldImpact}</p>
-          <p style="color: #e0e0e0; margin: 0.5rem 0;"><strong>CLS:</strong> ${comparison.comparison.cls.percentile} - ${comparison.comparison.cls.realWorldImpact}</p>
+          <p style="color: var(--r-text-muted, #6B7280); margin: 0.5rem 0;"><strong>LCP:</strong> ${comparison.comparison.lcp.percentile} - ${comparison.comparison.lcp.realWorldImpact}</p>
+          <p style="color: var(--r-text-muted, #6B7280); margin: 0.5rem 0;"><strong>CLS:</strong> ${comparison.comparison.cls.percentile} - ${comparison.comparison.cls.realWorldImpact}</p>
         </div>
       </div>
     `, null)}
@@ -1237,23 +1237,23 @@ function renderCWVMetrics(device) {
   return `
     <div style="display: grid; gap: 0.75rem;">
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: #c0c0c0;">LCP</span>
+        <span style="color: var(--r-text-muted, #6B7280);">LCP</span>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold;">${device.lcp.displayValue}</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold;">${device.lcp.displayValue}</span>
           <span style="font-size: 1.2rem;">${getRatingEmoji(device.lcp.rating)}</span>
         </div>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: #c0c0c0;">INP/FID</span>
+        <span style="color: var(--r-text-muted, #6B7280);">INP/FID</span>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold;">${device.inp.displayValue}</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold;">${device.inp.displayValue}</span>
           <span style="font-size: 1.2rem;">${getRatingEmoji(device.inp.rating)}</span>
         </div>
       </div>
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span style="color: #c0c0c0;">CLS</span>
+        <span style="color: var(--r-text-muted, #6B7280);">CLS</span>
         <div style="display: flex; align-items: center; gap: 0.5rem;">
-          <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold;">${device.cls.value.toFixed(3)}</span>
+          <span style="color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold;">${device.cls.value.toFixed(3)}</span>
           <span style="font-size: 1.2rem;">${getRatingEmoji(device.cls.rating)}</span>
         </div>
       </div>
@@ -1304,7 +1304,7 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
     ">
       <div style="font-size: 3rem; text-align: center; margin-bottom: 0.5rem;">${icon}</div>
       <div style="text-align: center; color: ${ratingColor}; font-weight: bold; font-size: 1.2rem; margin-bottom: 0.25rem;">${abbr}</div>
-      <div style="text-align: center; color: #c0c0c0; font-size: 0.85rem; margin-bottom: 1rem;">${name}</div>
+      <div style="text-align: center; color: var(--r-text-muted, #6B7280); font-size: 0.85rem; margin-bottom: 1rem;">${name}</div>
       
       <!-- Mobile and Desktop Values -->
       <div style="margin-bottom: 1rem;">
@@ -1318,7 +1318,7 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
           border-radius: 6px;
         ">
           <span style="color: #9600ff; font-size: 0.85rem; font-weight: bold;">M Mobile</span>
-          <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1rem;">
+          <span style="color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1rem;">
             ${abbr === 'CLS' ? mobileMetric.value.toFixed(3) : (mobileMetric.displayValue || 'N/A')}
           </span>
         </div>
@@ -1331,7 +1331,7 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
           border-radius: 6px;
         ">
           <span style="color: #0096ff; font-size: 0.85rem; font-weight: bold;">D Desktop</span>
-          <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1rem;">
+          <span style="color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold; font-size: 1.1rem;">
             ${abbr === 'CLS' ? desktopMetric.value.toFixed(3) : (desktopMetric.displayValue || 'N/A')}
           </span>
         </div>
@@ -1341,7 +1341,7 @@ function renderMetricCard(abbr, name, mobileMetric, desktopMetric, icon, categor
       <div style="text-align: center; padding: 0.5rem; border: 1px solid ${ratingColor}; border-radius: 6px;">
         <div style="color: ${ratingColor}; font-weight: 600; font-size: 0.9rem;">${translateCwvRating(primaryRating)}</div>
       </div>
-      <div style="margin-top: 0.75rem; color: #808080; font-size: 0.75rem; line-height: 1.3; text-align: center;">
+      <div style="margin-top: 0.75rem; color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem; line-height: 1.3; text-align: center;">
         ${translateCwvMetricDescription(mobileMetric.description || 'Metric information')}
       </div>
     </div>
@@ -1357,7 +1357,7 @@ function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
       padding: 1rem;
     ">
       <div style="color: #0096ff; font-weight: bold; margin-bottom: 0.5rem;">${abbr}</div>
-      <div style="color: #c0c0c0; font-size: 0.85rem; margin-bottom: 1rem;">${name}</div>
+      <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem; margin-bottom: 1rem;">${name}</div>
       
       <!-- Mobile Value -->
       <div style="
@@ -1370,7 +1370,7 @@ function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
         border-radius: 6px;
       ">
         <span style="color: #9600ff; font-size: 0.8rem; font-weight: bold;">M Mobile</span>
-        <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1rem;">
+        <span style="color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold; font-size: 1rem;">
           ${mobileMetric.displayValue}
         </span>
       </div>
@@ -1385,7 +1385,7 @@ function renderAdditionalMetric(abbr, name, mobileMetric, desktopMetric) {
         border-radius: 6px;
       ">
         <span style="color: #0096ff; font-size: 0.8rem; font-weight: bold;">D Desktop</span>
-        <span style="color: #e0e0e0; font-family: 'Courier New', monospace; font-weight: bold; font-size: 1rem;">
+        <span style="color: var(--r-text-muted, #6B7280); font-family: 'Courier New', monospace; font-weight: bold; font-size: 1rem;">
           ${desktopMetric.displayValue}
         </span>
       </div>
@@ -1410,7 +1410,7 @@ function renderBestPracticesTable(mobile, desktop) {
       <table style="
         width: 100%;
         border-collapse: collapse;
-        color: #e0e0e0;
+        color: var(--r-text-muted, #6B7280);
         font-size: 0.9rem;
       ">
         <thead>
@@ -1428,9 +1428,9 @@ function renderBestPracticesTable(mobile, desktop) {
           <tr style="border-bottom: 1px solid rgba(0, 255, 65, 0.2);">
             <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
               ${t('reports.cwv.lcp', 'LCP')}<br/>
-              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">${t('reports.cwv.lcpName', 'Largest Contentful Paint')}</span>
+              <span style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280); font-weight: normal;">${t('reports.cwv.lcpName', 'Largest Contentful Paint')}</span>
             </td>
-            <td style="padding: 1rem; color: #c0c0c0;">
+            <td style="padding: 1rem; color: var(--r-text-muted, #6B7280);">
               <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">${t('reports.common.good', 'Good')}:</span> ≤ 2.5s</div>
               <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">${t('reports.common.needsWork', 'Needs Work')}:</span> 2.5s - 4.0s</div>
               <div><span style="color: #ff4444;">${t('reports.common.poor', 'Poor')}:</span> > 4.0s</div>
@@ -1445,21 +1445,21 @@ function renderBestPracticesTable(mobile, desktop) {
               ${mobile.lcp.rating === 'good' && desktop.lcp.rating === 'good' ? '✓' :
                 mobile.lcp.rating === 'good' || desktop.lcp.rating === 'good' ? '~' : '✗'}
             </td>
-            <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. ${t('reports.cwv.tips.lcpOptimizeCritical', 'Optimize Critical Resources')}:</strong> ${t('reports.cwv.tips.lcpOptimizeCriticalDesc', 'Reduce render-blocking JavaScript and CSS. Inline critical CSS and defer non-essential scripts.')}</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. ${t('reports.cwv.tips.lcpImageOptimization', 'Image Optimization')}:</strong> ${t('reports.cwv.tips.lcpImageOptimizationDesc', 'Compress largest image/video, use modern formats (WebP, AVIF), implement responsive images with srcset.')}</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. ${t('reports.cwv.tips.lcpServerPerformance', 'Server Performance')}:</strong> ${t('reports.cwv.tips.lcpServerPerformanceDesc', 'Use CDN, enable HTTP/2, implement server-side caching, reduce server response time (TTFB).')}</div>
-              <div><strong style="color: #e0e0e0;">4. ${t('reports.cwv.tips.lcpResourceHints', 'Resource Hints')}:</strong> ${t('reports.cwv.tips.lcpResourceHintsDesc', 'Add preload for critical resources, preconnect to required origins, use priority hints for important images.')}</div>
+            <td style="padding: 1rem; color: var(--r-text-muted, #6B7280); line-height: 1.6;">
+              <div style="margin-bottom: 0.5rem;"><strong style="color: var(--r-text-muted, #6B7280);">1. ${t('reports.cwv.tips.lcpOptimizeCritical', 'Optimize Critical Resources')}:</strong> ${t('reports.cwv.tips.lcpOptimizeCriticalDesc', 'Reduce render-blocking JavaScript and CSS. Inline critical CSS and defer non-essential scripts.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: var(--r-text-muted, #6B7280);">2. ${t('reports.cwv.tips.lcpImageOptimization', 'Image Optimization')}:</strong> ${t('reports.cwv.tips.lcpImageOptimizationDesc', 'Compress largest image/video, use modern formats (WebP, AVIF), implement responsive images with srcset.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: var(--r-text-muted, #6B7280);">3. ${t('reports.cwv.tips.lcpServerPerformance', 'Server Performance')}:</strong> ${t('reports.cwv.tips.lcpServerPerformanceDesc', 'Use CDN, enable HTTP/2, implement server-side caching, reduce server response time (TTFB).')}</div>
+              <div><strong style="color: var(--r-text-muted, #6B7280);">4. ${t('reports.cwv.tips.lcpResourceHints', 'Resource Hints')}:</strong> ${t('reports.cwv.tips.lcpResourceHintsDesc', 'Add preload for critical resources, preconnect to required origins, use priority hints for important images.')}</div>
             </td>
           </tr>
           
           <!-- INP/FID Row -->
           <tr style="border-bottom: 1px solid rgba(0, 255, 65, 0.2);">
             <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
-              ${t('reports.cwv.inp', 'INP/FID')}<br/>
-              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">${t('reports.cwv.inpName', 'Interaction to Next Paint')}</span>
+              ${t('reports.cwv.inp', 'INP/TBT')}<br/>
+              <span style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280); font-weight: normal;">${t('reports.cwv.inpName', 'Interaction to Next Paint')}</span>
             </td>
-            <td style="padding: 1rem; color: #c0c0c0;">
+            <td style="padding: 1rem; color: var(--r-text-muted, #6B7280);">
               <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">${t('reports.common.good', 'Good')}:</span> ≤ 200ms</div>
               <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">${t('reports.common.needsWork', 'Needs Work')}:</span> 200ms - 500ms</div>
               <div><span style="color: #ff4444;">${t('reports.common.poor', 'Poor')}:</span> > 500ms</div>
@@ -1474,11 +1474,11 @@ function renderBestPracticesTable(mobile, desktop) {
               ${mobile.inp.rating === 'good' && desktop.inp.rating === 'good' ? '✓' :
                 mobile.inp.rating === 'good' || desktop.inp.rating === 'good' ? '~' : '✗'}
             </td>
-            <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. ${t('reports.cwv.tips.inpMinimizeJs', 'Minimize JavaScript')}:</strong> ${t('reports.cwv.tips.inpMinimizeJsDesc', 'Remove unused code, split bundles, lazy load non-critical JavaScript. Keep main thread under 50ms per task.')}</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. ${t('reports.cwv.tips.inpOptimizeHandlers', 'Optimize Event Handlers')}:</strong> ${t('reports.cwv.tips.inpOptimizeHandlersDesc', 'Debounce/throttle input handlers, use passive event listeners, avoid synchronous layout calculations.')}</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. ${t('reports.cwv.tips.inpWebWorkers', 'Web Workers')}:</strong> ${t('reports.cwv.tips.inpWebWorkersDesc', 'Move heavy computations to web workers, use requestIdleCallback for non-urgent tasks.')}</div>
-              <div><strong style="color: #e0e0e0;">4. ${t('reports.cwv.tips.inpThirdParty', 'Third-Party Scripts')}:</strong> ${t('reports.cwv.tips.inpThirdPartyDesc', 'Audit and remove unnecessary third-party scripts, load them asynchronously, use facade patterns for heavy widgets.')}</div>
+            <td style="padding: 1rem; color: var(--r-text-muted, #6B7280); line-height: 1.6;">
+              <div style="margin-bottom: 0.5rem;"><strong style="color: var(--r-text-muted, #6B7280);">1. ${t('reports.cwv.tips.inpMinimizeJs', 'Minimize JavaScript')}:</strong> ${t('reports.cwv.tips.inpMinimizeJsDesc', 'Remove unused code, split bundles, lazy load non-critical JavaScript. Keep main thread under 50ms per task.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: var(--r-text-muted, #6B7280);">2. ${t('reports.cwv.tips.inpOptimizeHandlers', 'Optimize Event Handlers')}:</strong> ${t('reports.cwv.tips.inpOptimizeHandlersDesc', 'Debounce/throttle input handlers, use passive event listeners, avoid synchronous layout calculations.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: var(--r-text-muted, #6B7280);">3. ${t('reports.cwv.tips.inpWebWorkers', 'Web Workers')}:</strong> ${t('reports.cwv.tips.inpWebWorkersDesc', 'Move heavy computations to web workers, use requestIdleCallback for non-urgent tasks.')}</div>
+              <div><strong style="color: var(--r-text-muted, #6B7280);">4. ${t('reports.cwv.tips.inpThirdParty', 'Third-Party Scripts')}:</strong> ${t('reports.cwv.tips.inpThirdPartyDesc', 'Audit and remove unnecessary third-party scripts, load them asynchronously, use facade patterns for heavy widgets.')}</div>
             </td>
           </tr>
           
@@ -1486,9 +1486,9 @@ function renderBestPracticesTable(mobile, desktop) {
           <tr>
             <td style="padding: 1rem; font-weight: bold; color: #ffd700;">
               ${t('reports.cwv.cls', 'CLS')}<br/>
-              <span style="font-size: 0.75rem; color: #c0c0c0; font-weight: normal;">${t('reports.cwv.clsName', 'Cumulative Layout Shift')}</span>
+              <span style="font-size: 0.75rem; color: var(--r-text-muted, #6B7280); font-weight: normal;">${t('reports.cwv.clsName', 'Cumulative Layout Shift')}</span>
             </td>
-            <td style="padding: 1rem; color: #c0c0c0;">
+            <td style="padding: 1rem; color: var(--r-text-muted, #6B7280);">
               <div style="margin-bottom: 0.25rem;"><span style="color: #00ff41;">${t('reports.common.good', 'Good')}:</span> ≤ 0.1</div>
               <div style="margin-bottom: 0.25rem;"><span style="color: #ffd700;">${t('reports.common.needsWork', 'Needs Work')}:</span> 0.1 - 0.25</div>
               <div><span style="color: #ff4444;">${t('reports.common.poor', 'Poor')}:</span> > 0.25</div>
@@ -1503,11 +1503,11 @@ function renderBestPracticesTable(mobile, desktop) {
               ${mobile.cls.rating === 'good' && desktop.cls.rating === 'good' ? '✓' :
                 mobile.cls.rating === 'good' || desktop.cls.rating === 'good' ? '~' : '✗'}
             </td>
-            <td style="padding: 1rem; color: #c0c0c0; line-height: 1.6;">
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">1. ${t('reports.cwv.tips.clsReserveSpace', 'Reserve Space')}:</strong> ${t('reports.cwv.tips.clsReserveSpaceDesc', 'Set explicit width/height on images and videos, use CSS aspect-ratio property, reserve space for ads and embeds.')}</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">2. ${t('reports.cwv.tips.clsFontLoading', 'Font Loading')}:</strong> ${t('reports.cwv.tips.clsFontLoadingDesc', 'Use font-display: swap, preload critical fonts, avoid invisible text during font load (FOIT).')}</div>
-              <div style="margin-bottom: 0.5rem;"><strong style="color: #e0e0e0;">3. ${t('reports.cwv.tips.clsDynamicContent', 'Dynamic Content')}:</strong> ${t('reports.cwv.tips.clsDynamicContentDesc', 'Never insert content above existing content without user interaction, use transform animations instead of layout-shifting properties.')}</div>
-              <div><strong style="color: #e0e0e0;">4. ${t('reports.cwv.tips.clsCssBestPractices', 'CSS Best Practices')}:</strong> ${t('reports.cwv.tips.clsCssBestPracticesDesc', 'Avoid animations on layout properties (width, height, top, left), use transform and opacity instead.')}</div>
+            <td style="padding: 1rem; color: var(--r-text-muted, #6B7280); line-height: 1.6;">
+              <div style="margin-bottom: 0.5rem;"><strong style="color: var(--r-text-muted, #6B7280);">1. ${t('reports.cwv.tips.clsReserveSpace', 'Reserve Space')}:</strong> ${t('reports.cwv.tips.clsReserveSpaceDesc', 'Set explicit width/height on images and videos, use CSS aspect-ratio property, reserve space for ads and embeds.')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: var(--r-text-muted, #6B7280);">2. ${t('reports.cwv.tips.clsFontLoading', 'Font Loading')}:</strong> ${t('reports.cwv.tips.clsFontLoadingDesc', 'Use font-display: swap, preload critical fonts, avoid invisible text during font load (FOIT).')}</div>
+              <div style="margin-bottom: 0.5rem;"><strong style="color: var(--r-text-muted, #6B7280);">3. ${t('reports.cwv.tips.clsDynamicContent', 'Dynamic Content')}:</strong> ${t('reports.cwv.tips.clsDynamicContentDesc', 'Never insert content above existing content without user interaction, use transform animations instead of layout-shifting properties.')}</div>
+              <div><strong style="color: var(--r-text-muted, #6B7280);">4. ${t('reports.cwv.tips.clsCssBestPractices', 'CSS Best Practices')}:</strong> ${t('reports.cwv.tips.clsCssBestPracticesDesc', 'Avoid animations on layout properties (width, height, top, left), use transform and opacity instead.')}</div>
             </td>
           </tr>
         </tbody>
@@ -1522,7 +1522,7 @@ function renderBestPracticesTable(mobile, desktop) {
         border-radius: 8px;
       ">
         <h4 style="color: #bb86fc; margin: 0 0 0.75rem 0; font-size: 1rem;">${t('reports.cwv.googleMethodology', "Google's Evaluation Methodology")}</h4>
-        <div style="color: #c0c0c0; font-size: 0.85rem; line-height: 1.6;">
+        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.6;">
           <p style="margin: 0 0 0.5rem 0;">${t('reports.cwv.googleMethodologyDesc', 'Google evaluates Core Web Vitals at the 75th percentile of all page loads. This means:')}</p>
           <ul style="margin: 0.5rem 0; padding-left: 1.5rem;">
             <li style="margin: 0.25rem 0;"><strong style="color: #00ff41;">${t('reports.common.good', 'Good')} (${t('reports.cwv.green', 'Green')}):</strong> ${t('reports.cwv.goodThresholdDesc', '75% or more of your users experience the "good" threshold')}</li>
@@ -1582,11 +1582,11 @@ function createCWVAccordionSection(id, icon, title, contentHTML, score = null) {
       ">
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${icon}</span>
-          <span style="font-weight: 600; color: #ffffff;">${title}</span>
+          <span style="font-weight: 600; color: var(--r-text, #111827);">${title}</span>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           ${scoreHTML}
-          <span class="accordion-chevron" style="transition: transform 0.2s ease; color: #808080;">▼</span>
+          <span class="accordion-chevron" style="transition: transform 0.2s ease; color: var(--r-text-faint, #9CA3AF);">▼</span>
         </div>
       </div>
       <div class="accordion-content" id="${id}" style="

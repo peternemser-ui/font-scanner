@@ -140,6 +140,10 @@ const analyzeTagIntelligence = asyncHandler(async (req, res) => {
     tagsByCategory[category].push(tag);
   });
 
+  // Promote first-page detailed analysis to top level so both the
+  // web UI and PDF renderer can access it without digging into pageResults
+  const firstPage = pageResults[0] || {};
+
   const response = {
     url: reachableUrl,
     analyzedAt: new Date().toISOString(),
@@ -158,7 +162,14 @@ const analyzeTagIntelligence = asyncHandler(async (req, res) => {
     issues: allIssues,
     duplicates: allDuplicates,
     recommendations: generateTagRecommendations(allIssues, allDuplicates, aggregatedTags),
-    pageResults: maxPages > 1 ? pageResults : undefined
+    // Per-page detailed data promoted to top level (from first page)
+    cookies: firstPage.cookies || null,
+    consentMode: firstPage.consentMode || null,
+    dataLayer: firstPage.dataLayer || null,
+    thirdPartyScripts: firstPage.thirdPartyScripts || null,
+    performanceImpact: firstPage.performanceImpact || null,
+    tagLoadWaterfall: firstPage.tagLoadWaterfall || null,
+    pageResults: pageResults
   };
 
   logger.info(`Tag intelligence analysis completed`, {
