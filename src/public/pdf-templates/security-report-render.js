@@ -613,7 +613,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('security.report.sectionIntros.recommendations', 'Based on the security analysis, these recommendations prioritize the most impactful improvements for your site\'s security posture. Each recommendation includes the specific issue, its potential impact, and actionable steps for remediation.'s defenses. Each recommendation includes the severity level, potential impact, and actionable steps for implementation. Addressing critical and high-priority items first will provide the greatest improvement to your overall security posture.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('security.report.sectionIntros.recommendations', 'Based on the security analysis, these recommendations prioritize the most impactful improvements for your site\'s security posture. Each recommendation includes the specific issue, its potential impact, and actionable steps for remediation.')) + '</p>';
 
       // Priority cascade: enrichedFixes > generated from scan data > simple recs
       // pdf-export-utility stores as data.enrichedFixes.security (array) or data.enrichedFixes (array)

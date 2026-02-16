@@ -37,8 +37,26 @@
 
     /** Score colour helper */
     function _scoreColor(score) {
-      var n = Number(score) || 0;
-      return n >= 80 ? '#10b981' : n >= 50 ? '#f59e0b' : '#ef4444';
+      const stops = [
+        [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
+        [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
+        [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
+        [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
+        [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
+        [100,'#00FF3B']
+      ];
+      const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
+      const idx = Math.min(Math.floor(s / 5), 19);
+      const [s1, c1] = stops[idx];
+      const [, c2] = stops[Math.min(idx + 1, 20)];
+      const t = (s - s1) / 5;
+      const p = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+      const [r1,g1,b1] = p(c1);
+      const [r2,g2,b2] = p(c2);
+      const r = Math.round(r1+(r2-r1)*t);
+      const g = Math.round(g1+(g2-g1)*t);
+      const b = Math.round(b1+(b2-b1)*t);
+      return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
     }
 
     // Resolve data sources
@@ -126,7 +144,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.overview', 'Mobile optimization is critical as over 60% of web traffic comes from mobile devices and Google uses mobile-first indexing. This overview presents your aggregate mobile score and key performance indicators across tested device configurations. A strong mobile experience directly impacts search rankings, user engagement, and conversion rates.'s mobile readiness. It covers the overall mobile score, number of devices tested, and average performance across all device profiles. A strong mobile experience is essential as the majority of web traffic now comes from mobile devices.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.overview', 'Mobile optimization is critical as over 60% of web traffic comes from mobile devices and Google uses mobile-first indexing. This overview presents your aggregate mobile score and key performance indicators across tested device configurations. A strong mobile experience directly impacts search rankings, user engagement, and conversion rates.')) + '</p>';
 
       // Primary metrics row (matching web UI summary donuts)
       var overviewMetrics = [];
@@ -1403,7 +1421,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.recommendations', 'Based on the mobile analysis, these recommendations target the most impactful improvements for mobile user experience, performance, and accessibility.'s mobile experience. Each recommendation includes the priority level, expected impact, code examples, and a step-by-step fix guide. Addressing high-priority items first will yield the greatest improvements to mobile usability, performance, and search engine rankings.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.recommendations', 'Based on the mobile analysis, these recommendations target the most impactful improvements for mobile user experience, performance, and accessibility.')) + '</p>';
 
       if (recommendations.length > 0) {
         html += '<p class="pdf-text-muted" style="margin-bottom:16px;">' +

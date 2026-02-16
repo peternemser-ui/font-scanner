@@ -919,6 +919,18 @@ async function generatePdfFromUrl(options) {
 
         const injectedContent = await page.evaluate((opts) => {
           const { reportType, reportLabel, analyzedUrl, lang, reportData, logoSvg: logo } = opts;
+          // Score-to-color gradient helper (21-stop interpolation)
+          const _scoreColor = (sc) => {
+            const stops=[[0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],[20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],[40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],[60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],[80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],[100,'#00FF3B']];
+            const s=Math.max(0,Math.min(100,Math.round(Number(sc)||0)));
+            const i=Math.min(Math.floor(s/5),19);
+            const[s1,c1]=stops[i];const[,c2]=stops[Math.min(i+1,20)];
+            const t=(s-s1)/5;
+            const p=h=>[parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+            const[r1,g1,b1]=p(c1);const[r2,g2,b2]=p(c2);
+            return '#'+Math.round(r1+(r2-r1)*t).toString(16).padStart(2,'0')+Math.round(g1+(g2-g1)*t).toString(16).padStart(2,'0')+Math.round(b1+(b2-b1)*t).toString(16).padStart(2,'0');
+          };
+          const _scoreBg = (sc) => _scoreColor(sc) + '14'; // 8% opacity via hex alpha
           // i18n helper — use page's i18n if available, else return fallback
           const _t = (key, fallback, params) => {
             let val = fallback;
@@ -987,7 +999,7 @@ async function generatePdfFromUrl(options) {
             ${reportData?.overallScore !== undefined ? `
               <div style="margin-top: 48px; padding: 24px 40px; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px;">
                 <div style="font-family: ${fontStack}; font-size: 0.75rem; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 600;">${coverOverallScore}</div>
-                <div style="font-family: ${fontStack}; font-size: 3rem; font-weight: 700; color: ${reportData.overallScore >= 80 ? '#10b981' : reportData.overallScore >= 60 ? '#f59e0b' : '#ef4444'}; letter-spacing: -0.025em;">
+                <div style="font-family: ${fontStack}; font-size: 3rem; font-weight: 700; color: ${_scoreColor(reportData.overallScore)}; letter-spacing: -0.025em;">
                   ${reportData.overallScore}<span style="font-size: 1.5rem; color: #9ca3af;">/100</span>
                 </div>
               </div>
@@ -1078,8 +1090,8 @@ async function generatePdfFromUrl(options) {
             if (categories.length > 0) {
               summaryHTML += '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 32px;">';
               categories.forEach(cat => {
-                const color = cat.score >= 80 ? '#10b981' : cat.score >= 60 ? '#f59e0b' : '#ef4444';
-                const bg = cat.score >= 80 ? 'rgba(16, 185, 129, 0.08)' : cat.score >= 60 ? 'rgba(245, 158, 11, 0.08)' : 'rgba(239, 68, 68, 0.08)';
+                const color = _scoreColor(cat.score);
+                const bg = _scoreBg(cat.score);
                 summaryHTML += `
                   <div style="font-family: ${fontStack}; padding: 20px; border: 1px solid rgba(0,0,0,0.08); border-radius: 12px; text-align: center; background: ${bg};">
                     <div style="font-size: 0.75rem; color: #6b7280; margin-bottom: 8px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.025em;">${cat.name}</div>

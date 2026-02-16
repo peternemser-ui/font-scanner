@@ -409,7 +409,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.recommendations', 'Based on the broken links analysis, these recommendations prioritize fixing the most impactful link issues to improve user experience and search engine crawling.'s link health. Each recommendation includes the severity level and actionable steps for resolution. Fixing broken links improves user experience, preserves link equity for SEO, and ensures search engine crawlers can efficiently discover all your content.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.brokenLinks.report.sectionIntros.recommendations', 'Based on the broken links analysis, these recommendations prioritize fixing the most impactful link issues to improve user experience and search engine crawling.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Group by priority/severity

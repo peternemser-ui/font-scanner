@@ -36,11 +36,11 @@ const COLORS = {
   info: '#1E88E5',
 
   // Status (for scores)
-  excellent: '#43A047',  // 90-100
-  good: '#7CB342',       // 80-89
-  fair: '#FB8C00',       // 70-79
-  poor: '#FF6F00',       // 50-69
-  critical: '#E53935',   // 0-49
+  excellent: '#33F52F',  // score ~90
+  good: '#66EB23',       // score ~80
+  fair: '#FFCC00',       // score ~50
+  poor: '#A37A00',       // score ~30
+  critical: '#482900',   // score ~10
 
   // Neutrals
   textPrimary: '#212121',
@@ -57,11 +57,26 @@ const COLORS = {
  * @returns {string} - Hex color code
  */
 function getScoreColor(score) {
-  if (score >= 90) return COLORS.excellent;
-  if (score >= 80) return COLORS.good;
-  if (score >= 70) return COLORS.fair;
-  if (score >= 50) return COLORS.poor;
-  return COLORS.critical;
+  const stops = [
+    [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
+    [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
+    [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
+    [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
+    [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
+    [100,'#00FF3B']
+  ];
+  const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
+  const idx = Math.min(Math.floor(s / 5), 19);
+  const [s1, c1] = stops[idx];
+  const [, c2] = stops[Math.min(idx + 1, 20)];
+  const t = (s - s1) / 5;
+  const p = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+  const [r1,g1,b1] = p(c1);
+  const [r2,g2,b2] = p(c2);
+  const r = Math.round(r1+(r2-r1)*t);
+  const g = Math.round(g1+(g2-g1)*t);
+  const b = Math.round(b1+(b2-b1)*t);
+  return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
 }
 
 /**

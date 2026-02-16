@@ -74,19 +74,19 @@
 
     /** Rating to hex color */
     function _ratingColor(rating) {
-      if (rating === 'good') return '#10b981';
-      if (rating === 'needs-improvement') return '#f59e0b';
-      if (rating === 'poor') return '#ef4444';
+      if (rating === 'good') return '#33F52F';
+      if (rating === 'needs-improvement') return '#FFCC00';
+      if (rating === 'poor') return '#482900';
       return '#6b7280';
     }
 
     /** Grade letter to hex color (mirrors web UI getGradeColor) */
     function _gradeColor(grade) {
-      if (grade === 'A') return '#10b981';
-      if (grade === 'B') return '#f59e0b';
-      if (grade === 'C') return '#f97316';
-      if (grade === 'D') return '#ef4444';
-      if (grade === 'F') return '#ef4444';
+      if (grade === 'A') return '#1AFA35';
+      if (grade === 'B') return '#66EB23';
+      if (grade === 'C') return '#B2DB12';
+      if (grade === 'D') return '#FFCC00';
+      if (grade === 'F') return '#8C6600';
       return '#6b7280';
     }
 
@@ -280,7 +280,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.desktop', 'Desktop Core Web Vitals measure how real users experience your site on desktop devices. This section presents LCP, INP, CLS, and additional metrics with ratings based on Google\'s published thresholds. Good scores indicate a fast, responsive, and visually stable experience for desktop visitors.'s published thresholds.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.desktop', 'Desktop Core Web Vitals measure how real users experience your site on desktop devices. This section presents LCP, INP, CLS, and additional metrics with ratings based on Google\'s published thresholds. Good scores indicate a fast, responsive, and visually stable experience for desktop visitors.')) + '</p>';
 
       // Metric cards
       var cards = _buildMetricsCards(d);
@@ -904,7 +904,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.recommendations', 'Based on your Core Web Vitals analysis, these recommendations target the highest-impact improvements for loading speed, interactivity, and visual stability.'s performance across both desktop and mobile. Each recommendation is prioritized by severity and includes the affected area and suggested remediation. Focus on high-priority items first, as they will have the greatest impact on your Core Web Vitals scores and search rankings.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.recommendations', 'Based on your Core Web Vitals analysis, these recommendations target the highest-impact improvements for loading speed, interactivity, and visual stability.')) + '</p>';
 
       // Try enrichedFixes first (for consistency with other analyzers), then fall back to recommendations
       // pdf-export-utility may store enriched fixes as data.enrichedFixes.cwv (array) or data.enrichedFixes (array)

@@ -105,9 +105,26 @@
 
     /** Score color hex */
     function _scoreColor(score) {
-      if (score >= 80) return '#10b981';
-      if (score >= 50) return '#f59e0b';
-      return '#ef4444';
+      const stops = [
+        [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
+        [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
+        [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
+        [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
+        [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
+        [100,'#00FF3B']
+      ];
+      const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
+      const idx = Math.min(Math.floor(s / 5), 19);
+      const [s1, c1] = stops[idx];
+      const [, c2] = stops[Math.min(idx + 1, 20)];
+      const t = (s - s1) / 5;
+      const p = h => [parseInt(h.slice(1,3),16), parseInt(h.slice(3,5),16), parseInt(h.slice(5,7),16)];
+      const [r1,g1,b1] = p(c1);
+      const [r2,g2,b2] = p(c2);
+      const r = Math.round(r1+(r2-r1)*t);
+      const g = Math.round(g1+(g2-g1)*t);
+      const b = Math.round(b1+(b2-b1)*t);
+      return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
     }
 
     /** Compute competitive stats for a metric */
@@ -255,7 +272,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.overview', 'This competitive overview compares your site\'s performance against your competitors across key metrics. Understanding where you stand relative to competitors helps prioritize optimization efforts and identify market opportunities.'s competitive position. Key scores are compared against the analyzed competitors to establish your overall standing. Use these metrics to quickly identify areas where you lead or trail the competition.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.overview', 'This competitive overview compares your site\'s performance against your competitors across key metrics. Understanding where you stand relative to competitors helps prioritize optimization efforts and identify market opportunities.')) + '</p>';
 
       // Your site URL callout
       html += PR.renderCallout(
@@ -598,7 +615,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.competitors', 'Competitor profiles provide detailed score breakdowns for each analyzed competitor. Understanding each competitor\'s strengths and weaknesses helps inform your optimization strategy and identify opportunities to differentiate.'s scores across all analyzed categories. Use these profiles to understand the competitive landscape and identify which competitors excel in specific areas. This information helps prioritize where to focus your improvement efforts.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.competitors', 'Competitor profiles provide detailed score breakdowns for each analyzed competitor. Understanding each competitor\'s strengths and weaknesses helps inform your optimization strategy and identify opportunities to differentiate.')) + '</p>';
 
       if (competitors.length > 0) {
         competitors.forEach(function (comp, idx) {

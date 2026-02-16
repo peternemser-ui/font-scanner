@@ -421,7 +421,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.thirdParty', 'Third-party scripts are loaded from external domains and include analytics libraries, advertising pixels, and CDN-hosted utilities. Each external script introduces a dependency on another server\'s availability and performance. This section catalogs all third-party scripts by host, category, and loading method. Minimizing third-party dependencies and ensuring proper async loading reduces performance risk.'s availability and performance. This section catalogs all third-party scripts by host, category, and loading method. Minimizing third-party dependencies and ensuring proper async loading reduces performance risk.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.thirdParty', 'Third-party scripts are loaded from external domains and include analytics libraries, advertising pixels, and CDN-hosted utilities. Each external script introduces a dependency on another server\'s availability and performance. This section catalogs all third-party scripts by host, category, and loading method. Minimizing third-party dependencies and ensuring proper async loading reduces performance risk.')) + '</p>';
 
       // Metrics — total + byCategory breakdown
       var byCat = thirdPartyScripts.byCategory || {};

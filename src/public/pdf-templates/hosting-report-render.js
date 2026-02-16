@@ -117,7 +117,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.infrastructure', 'Server infrastructure encompasses the hardware, software, and network configuration that deliver your website to visitors. This section examines your server\'s IP address, response headers, and technical configuration. Properly configured server infrastructure ensures fast, reliable content delivery and reduces security vulnerabilities.'s technical configuration.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.infrastructure', 'Server infrastructure encompasses the hardware, software, and network configuration that deliver your website to visitors. This section examines your server\'s IP address, response headers, and technical configuration. Properly configured server infrastructure ensures fast, reliable content delivery and reduces security vulnerabilities.')) + '</p>';
 
       // Server info table
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.infrastructure.serverHeading', 'Server Information')) + '</h3>';

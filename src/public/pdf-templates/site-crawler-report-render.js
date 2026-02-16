@@ -70,7 +70,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.overview', 'The crawl overview summarizes the scope and results of the site crawl. It shows how many pages were discovered, the maximum depth reached, and overall crawl performance. Understanding your site\'s crawlable structure helps ensure search engines can efficiently index all your important content.'s size, structure, and responsiveness.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.overview', 'The crawl overview summarizes the scope and results of the site crawl. It shows how many pages were discovered, the maximum depth reached, and overall crawl performance. Understanding your site\'s crawlable structure helps ensure search engines can efficiently index all your important content.')) + '</p>';
 
       // Metrics cards
       var totalPages = results.totalPages || 0;
@@ -403,7 +403,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.recommendations', 'Based on the site crawl analysis, these recommendations target the most critical structural and technical issues affecting your site\'s search engine crawlability.'s structure, performance, and crawlability. Each recommendation includes a priority level and actionable description. Addressing high-priority items first will yield the greatest improvements to search engine indexing and user experience.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.recommendations', 'Based on the site crawl analysis, these recommendations target the most critical structural and technical issues affecting your site\'s search engine crawlability.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Group by priority/severity

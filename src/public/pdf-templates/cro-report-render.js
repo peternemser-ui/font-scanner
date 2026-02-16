@@ -105,7 +105,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.overview', 'Conversion Rate Optimization (CRO) analyzes how effectively your page converts visitors into customers or leads. This overview presents your aggregate CRO score across four key dimensions: calls to action, forms, trust signals, and mobile user experience. A well-optimized page guides visitors toward desired actions with clear, compelling elements.'s conversion rate optimization posture. The analysis evaluates calls to action, form usability, trust signals, and mobile user experience to identify opportunities for improving conversion rates. Each sub-score represents a critical dimension of conversion optimization that directly impacts your site\'s ability to convert visitors into customers.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.overview', 'Conversion Rate Optimization (CRO) analyzes how effectively your page converts visitors into customers or leads. This overview presents your aggregate CRO score across four key dimensions: calls to action, forms, trust signals, and mobile user experience. A well-optimized page guides visitors toward desired actions with clear, compelling elements.')) + '</p>';
 
       // Score grid for sub-scores
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cro.report.overview.scoresHeading', 'CRO Sub-Scores')) + '</h3>';
@@ -697,7 +697,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.recommendations', 'Based on the CRO analysis, these recommendations prioritize improvements with the highest potential impact on your conversion rate.'s conversion rate. Each recommendation includes the severity level, expected impact, code examples, and step-by-step implementation guides. Addressing critical and high-priority items first will yield the greatest improvements to your conversion funnel.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.recommendations', 'Based on the CRO analysis, these recommendations prioritize improvements with the highest potential impact on your conversion rate.')) + '</p>';
 
       // Build rich fix cards (mirrors buildCROFixCards from cro-script.js)
       var fixCards = _buildCROFixCards(data, t, esc);

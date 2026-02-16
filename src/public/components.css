@@ -934,17 +934,17 @@
 }
 
 /* Status Color Classes (Standardized scoring) */
-.status-excellent { --score-color: var(--accent-primary); }
-.status-good { --score-color: var(--color-info, #00bcd4); }
-.status-needs-work { --score-color: var(--color-warning, #ffa500); }
-.status-critical { --score-color: var(--color-error, #ff4444); }
+.status-excellent { --score-color: #33F52F; }
+.status-good { --score-color: #80E61E; }
+.status-needs-work { --score-color: #FFCC00; }
+.status-critical { --score-color: #482900; }
 
 /* Legacy grade classes - deprecated, use status-* instead */
-.grade-a { --score-color: var(--accent-primary); }
-.grade-b { --score-color: var(--color-info, #00bcd4); }
-.grade-c { --score-color: var(--color-warning, #ffa500); }
-.grade-d { --score-color: var(--color-warning-dim, #ff9500); }
-.grade-f { --score-color: var(--color-error, #ff4444); }
+.grade-a { --score-color: #1AFA35; }
+.grade-b { --score-color: #66EB23; }
+.grade-c { --score-color: #B2DB12; }
+.grade-d { --score-color: #FFCC00; }
+.grade-f { --score-color: #8C6600; }
 
 /* ========================================
    COLLAPSIBLE DETAILS

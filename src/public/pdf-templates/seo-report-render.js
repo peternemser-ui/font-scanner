@@ -292,7 +292,7 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.content', 'Content quality directly impacts search rankings and user engagement. Search engines favor pages with substantial, well-written content that thoroughly covers a topic. This section examines word count, readability, text-to-HTML ratio, and sentence structure to assess your page\'s content depth. Pages with fewer than 300 words are generally considered thin content and may struggle to rank competitively.'s content depth. Pages with fewer than 300 words are generally considered thin content and may struggle to rank competitively.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.content', 'Content quality directly impacts search rankings and user engagement. Search engines favor pages with substantial, well-written content that thoroughly covers a topic. This section examines word count, readability, text-to-HTML ratio, and sentence structure to assess your page\'s content depth. Pages with fewer than 300 words are generally considered thin content and may struggle to rank competitively.')) + '</p>';
 
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.content.qualityMetricsHeading', 'Content Quality Metrics')) + '</h3>';
 
@@ -1005,7 +1005,7 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.additional', 'Beyond core SEO factors, several technical elements contribute to overall search health and user trust. A complete technical foundation includes proper browser identification, crawl directives, and tracking infrastructure. This section verifies the presence of a favicon, robots.txt, XML sitemap, analytics tracking, and social media links. Missing any of these elements can indicate an incomplete SEO setup and reduce your site\'s professional appearance.'s professional appearance.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.additional', 'Beyond core SEO factors, several technical elements contribute to overall search health and user trust. A complete technical foundation includes proper browser identification, crawl directives, and tracking infrastructure. This section verifies the presence of a favicon, robots.txt, XML sitemap, analytics tracking, and social media links. Missing any of these elements can indicate an incomplete SEO setup and reduce your site\'s professional appearance.')) + '</p>';
 
       // Technical SEO Essentials callout
       html += PR.renderCallout(
@@ -1172,7 +1172,7 @@
       var html = '';
 
       // Section intro
-      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.recommendations', 'Based on the complete analysis, this section provides actionable code fixes and step-by-step implementation guides. Recommendations are organized by impact level so you can prioritize the changes that will deliver the greatest SEO improvements first. Each recommendation includes both the problematic pattern and the recommended solution with copy-ready code snippets. Implementing these fixes in order of severity will help you systematically improve your site\'s search performance.'s search performance.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.recommendations', 'Based on the complete analysis, this section provides actionable code fixes and step-by-step implementation guides. Recommendations are organized by impact level so you can prioritize the changes that will deliver the greatest SEO improvements first. Each recommendation includes both the problematic pattern and the recommended solution with copy-ready code snippets. Implementing these fixes in order of severity will help you systematically improve your site\'s search performance.')) + '</p>';
 
       // Build rich fix cards (same logic as buildFixCards in seo-script.js)
       var fixCards = _buildFixCards(data, t, esc);

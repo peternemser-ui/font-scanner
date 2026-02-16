@@ -213,7 +213,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.cwv', 'Core Web Vitals are Google\'s key metrics for measuring real-world user experience. They focus on loading performance (LCP), interactivity (FID/INP), and visual stability (CLS). Scores are compared against Google\'s thresholds for Good, Needs Improvement, and Poor performance. Meeting the Good thresholds for all three metrics is essential for optimal search rankings.'s key metrics for measuring real-world user experience. They assess loading speed (LCP), interactivity (INP/FID), and visual stability (CLS). These metrics directly influence search rankings through Google\'s page experience signals. This section presents your Core Web Vitals scores for both desktop and mobile, with performance ratings based on Google\'s published thresholds.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.cwv', 'Core Web Vitals are Google\'s key metrics for measuring real-world user experience. They focus on loading performance (LCP), interactivity (FID/INP), and visual stability (CLS). Scores are compared against Google\'s thresholds for Good, Needs Improvement, and Poor performance. Meeting the Good thresholds for all three metrics is essential for optimal search rankings.')) + '</p>';
 
       // ---- Desktop CWV metrics with status badges ----
       html += '<h3 class="pdf-subsection__title">' + esc(t('common.desktop', 'Desktop')) + '</h3>';
@@ -938,7 +938,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.caching', 'Effective caching reduces server load and dramatically improves repeat-visit performance. Properly configured cache headers ensure browsers store and reuse static resources. This section evaluates your caching strategy, identifying resources that could benefit from longer cache durations.'t need to be re-downloaded on subsequent visits. This section evaluates your cache hit rate, cache control directives, and the proportion of cacheable resources. A well-configured caching strategy can reduce repeat-visit load times by 60-80%.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.caching', 'Effective caching reduces server load and dramatically improves repeat-visit performance. Properly configured cache headers ensure browsers store and reuse static resources. This section evaluates your caching strategy, identifying resources that could benefit from longer cache durations.')) + '</p>';
 
       // Cache hit rate progress bar
       if (caching.total > 0) {
@@ -1039,7 +1039,7 @@
 
       var html = '';
 
-      html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.recommendations', 'Based on the performance analysis, these recommendations target the most impactful improvements. Addressing high-priority items first will deliver the greatest gains in load time and Core Web Vitals scores.'s speed and user experience. Each recommendation includes the affected metric, current issue, and suggested solution. Prioritize high-impact items that affect Core Web Vitals, as these directly influence search rankings and user satisfaction.')) + '</p>';
+      html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.recommendations', 'Based on the performance analysis, these recommendations target the most impactful improvements. Addressing high-priority items first will deliver the greatest gains in load time and Core Web Vitals scores.')) + '</p>';
 
       // Try enriched fixes first, then generate from metrics, then fall back to simple recs
       // pdf-export-utility stores enriched fixes as data.enrichedFixes.performance (array)
