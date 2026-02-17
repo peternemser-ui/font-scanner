@@ -12,12 +12,12 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   /* -------------------------------------------------------------------------
      Fix-card template data (mirrors security-fixes-renderer.js)
      ------------------------------------------------------------------------- */
-  var FIX_TEMPLATES = {
+  const FIX_TEMPLATES = {
     'Implement HTTPS': {
       category: 'SSL/TLS',
       impact: '+30 Security Score',
@@ -117,35 +117,35 @@
   };
 
   PdfReport.register('security', function renderSecurity(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
-    var translateImpact = utils.translateImpact || function(v) { return v; };
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
+    const translateImpact = utils.translateImpact || function(v) { return v; };
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     /* -----------------------------------------------------------------------
        1. SSL/TLS Certificate
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-ssl .pdf-section__content');
-      var d = data.ssl || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-ssl .pdf-section__content');
+      const d = data.ssl || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('security.sslTlsSecurity', 'SSL/TLS Security'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('security.report.sectionIntros.ssl', 'SSL/TLS certificates establish encrypted connections between your server and visitors, protecting data in transit. A valid, properly configured certificate is essential for user trust and search engine rankings. This section evaluates your certificate validity, protocol version, issuer, and expiration status. Modern sites should use TLS 1.2 or higher and ensure certificates are renewed well before expiration.')) + '</p>';
 
       // SSL Overview table
       html += '<h3 class="pdf-subsection__title">' + esc(t('security.report.ssl.overviewHeading', 'Certificate Details')) + '</h3>';
 
-      var rows = [];
+      const rows = [];
       rows.push([
         esc(t('security.report.ssl.rows.status', 'Certificate Status')),
         d.valid ? PR.renderStatus('pass', t('security.validCertificate', 'Valid')) : PR.renderStatus('fail', t('security.invalidCertificate', 'Invalid'))
@@ -200,16 +200,16 @@
        2. Security Headers
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-headers .pdf-section__content');
-      var d = data.headers || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-headers .pdf-section__content');
+      const d = data.headers || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('security.headers', 'Security Headers'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('security.report.sectionIntros.headers', 'Security headers instruct browsers on how to handle your site\'s content, providing defense against cross-site scripting, clickjacking, and other common attacks. Each header serves a specific protective function. This section evaluates the implementation of critical security headers and identifies missing protections that leave your site vulnerable.')) + '</p>';
 
@@ -221,10 +221,10 @@
 
       // Header details table — split into separate Value and Risk columns like web UI
       if (d.details) {
-        var headerRows = [];
-        var headerNames = Object.keys(d.details);
+        const headerRows = [];
+        const headerNames = Object.keys(d.details);
         headerNames.forEach(function (name) {
-          var h = d.details[name];
+          const h = d.details[name];
           headerRows.push([
             '<strong>' + esc(name) + '</strong>',
             h.present ? PR.renderStatus('pass', t('security.report.status.present', 'Present')) : PR.renderStatus('fail', t('security.report.status.missing', 'Missing')),
@@ -255,16 +255,16 @@
        3. Vulnerabilities & Threats
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-vulnerabilities .pdf-section__content');
-      var d = data.vulnerabilities || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-vulnerabilities .pdf-section__content');
+      const d = data.vulnerabilities || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('security.vulnerabilities', 'Vulnerabilities'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('security.report.sectionIntros.vulnerabilities', 'This section identifies potential security vulnerabilities discovered during the analysis. Vulnerabilities are categorized by severity level — critical issues require immediate attention, while lower-severity findings represent opportunities to strengthen your security posture. Regular vulnerability assessments are essential for maintaining a secure web presence.')) + '</p>';
 
@@ -278,7 +278,7 @@
 
       // Detailed severity breakdown table (matches web UI)
       html += '<h3 class="pdf-subsection__title">' + esc(t('security.report.vulnerabilities.severityBreakdown', 'Severity Breakdown')) + '</h3>';
-      var sevRows = [
+      const sevRows = [
         [
           '<span style="color:#ef4444;font-weight:600;">' + esc(t('security.report.vulnerabilities.critical', 'Critical')) + '</span>',
           '<span style="color:' + ((d.critical || 0) > 0 ? '#ef4444' : '#10b981') + ';font-weight:700;font-size:1.05rem;">' + (d.critical || 0) + '</span>'
@@ -309,7 +309,7 @@
       if (d.issues && d.issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('security.report.vulnerabilities.detectedHeading', 'Detected Vulnerabilities')) + '</h3>';
         d.issues.slice(0, 15).forEach(function (issue) {
-          var sev = (issue.severity || 'medium').toLowerCase();
+          const sev = (issue.severity || 'medium').toLowerCase();
           html += '<div class="pdf-issue pdf-issue--' + sev + '">' +
             '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc(translateImpact(issue.severity || 'medium')) + '</span>' +
             '<span class="pdf-issue__text"><strong>' + esc(issue.title || '') + '</strong>' +
@@ -341,16 +341,16 @@
        4. Cookie Security
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-cookies .pdf-section__content');
-      var d = data.cookies || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-cookies .pdf-section__content');
+      const d = data.cookies || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('security.cookies', 'Cookie Security'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('security.report.sectionIntros.cookies', 'Cookies store session data and user preferences, making their security critical for protecting user privacy. Properly configured cookies use the Secure, HttpOnly, and SameSite attributes to prevent theft and misuse. This section audits all cookies detected on your site and evaluates their security configuration.')) + '</p>';
 
@@ -371,15 +371,15 @@
       // Cookie table — now includes Issues column like web UI
       if (d.list && d.list.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('security.report.cookies.detailsHeading', 'Cookie Details')) + '</h3>';
-        var cookieRows = d.list.slice(0, 20).map(function (c) {
-          var issuesText = '';
+        const cookieRows = d.list.slice(0, 20).map(function (c) {
+          let issuesText = '';
           if (c.issues && c.issues.length > 0) {
             issuesText = '<span style="color:#ef4444;font-size:0.75rem;">' + c.issues.map(function (iss) { return esc(iss); }).join(', ') + '</span>';
           } else {
             issuesText = '<span style="color:#9ca3af;font-size:0.75rem;">' + esc(t('common.pdf.status.none', 'None')) + '</span>';
           }
-          var sameSiteVal = c.sameSite || 'None';
-          var sameSiteColor = (sameSiteVal === 'Strict' || sameSiteVal === 'Lax') ? '#10b981' : '#ef4444';
+          const sameSiteVal = c.sameSite || 'None';
+          const sameSiteColor = (sameSiteVal === 'Strict' || sameSiteVal === 'Lax') ? '#10b981' : '#ef4444';
           return [
             '<span class="pdf-table__truncate">' + esc(truncate(c.name, 28)) + '</span>',
             c.httpOnly ? PR.renderStatus('pass', t('seo.report.status.yes', 'Yes')) : PR.renderStatus('fail', t('seo.report.status.no', 'No')),
@@ -413,16 +413,16 @@
        5. Third-Party Scripts
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-thirdparty .pdf-section__content');
-      var d = data.thirdPartyScripts || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-thirdparty .pdf-section__content');
+      const d = data.thirdPartyScripts || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('security.thirdParty', 'Third-Party Scripts'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('security.report.sectionIntros.thirdParty', 'Third-party scripts extend your site\'s functionality but introduce security risks. Each external script is a potential attack vector if compromised. Subresource Integrity (SRI) hashes verify that fetched scripts haven\'t been tampered with. This section evaluates all external scripts, their loading patterns, and SRI coverage.')) + '</p>';
 
@@ -443,8 +443,8 @@
       // Scripts table — now includes Async column like web UI
       if (d.scripts && d.scripts.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('security.report.thirdParty.detailsHeading', 'Script Details')) + '</h3>';
-        var scriptRows = d.scripts.slice(0, 20).map(function (s) {
-          var riskColor = s.risk === 'high' ? '#ef4444' : s.risk === 'medium' ? '#f59e0b' : '#10b981';
+        const scriptRows = d.scripts.slice(0, 20).map(function (s) {
+          const riskColor = s.risk === 'high' ? '#ef4444' : s.risk === 'medium' ? '#f59e0b' : '#10b981';
           return [
             '<span class="pdf-table__truncate">' + esc(truncate(s.url, 55)) + '</span>',
             s.hasSRI ? PR.renderStatus('pass', t('seo.report.status.yes', 'Yes')) : PR.renderStatus('fail', t('seo.report.status.no', 'No')),
@@ -481,10 +481,10 @@
        6. Desktop vs Mobile Comparison
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-comparison .pdf-section__content');
+      const sec = document.querySelector('#section-comparison .pdf-section__content');
       if (!sec) return;
-      var desktop = data.desktop;
-      var mobile = data.mobile;
+      const desktop = data.desktop;
+      const mobile = data.mobile;
       if (!desktop || !mobile) {
         sec.parentElement.style.display = 'none';
         return;
@@ -495,7 +495,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('security.report.comparison.intro', 'Security posture can differ between desktop and mobile environments. This section compares key security indicators across both platforms to highlight any discrepancies.')) + '</p>';
 
@@ -506,7 +506,7 @@
       ]);
 
       // Comparison table
-      var cmpRows = [];
+      const cmpRows = [];
       cmpRows.push([
         esc('HTTPS'),
         desktop.https ? PR.renderStatus('pass', t('security.report.comparison.enabled', 'Enabled')) : PR.renderStatus('fail', t('security.report.comparison.missing', 'Missing')),
@@ -539,7 +539,7 @@
       );
 
       // Platform gap warning
-      var gap = Math.abs((desktop.securityScore || 0) - (mobile.securityScore || 0));
+      const gap = Math.abs((desktop.securityScore || 0) - (mobile.securityScore || 0));
       if (gap > 10) {
         html += PR.renderCallout(
           t('security.report.comparison.platformGapTitle', 'Platform Security Gap'),
@@ -555,9 +555,9 @@
        7. OWASP Compliance
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-owasp .pdf-section__content');
+      const sec = document.querySelector('#section-owasp .pdf-section__content');
       if (!sec) return;
-      var compliance = data.owaspCompliance;
+      const compliance = data.owaspCompliance;
       if (compliance === undefined || compliance === null) {
         sec.parentElement.style.display = 'none';
         return;
@@ -568,7 +568,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += PR.renderMetrics([
         { value: compliance + '%', label: t('security.report.owasp.controlsImplemented', 'Controls Implemented'), color: compliance >= 70 ? '#10b981' : '#ef4444' }
@@ -604,21 +604,21 @@
        Priority: data.enrichedFixes > generated from scan data > simple fallback
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('security.report.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('security.report.sectionIntros.recommendations', 'Based on the security analysis, these recommendations prioritize the most impactful improvements for your site\'s security posture. Each recommendation includes the specific issue, its potential impact, and actionable steps for remediation.')) + '</p>';
 
       // Priority cascade: enrichedFixes > generated from scan data > simple recs
       // pdf-export-utility stores as data.enrichedFixes.security (array) or data.enrichedFixes (array)
-      var fixes;
-      var preEnriched = null;
+      let fixes;
+      let preEnriched = null;
       if (data.enrichedFixes) {
         if (Array.isArray(data.enrichedFixes) && data.enrichedFixes.length > 0) {
           preEnriched = data.enrichedFixes;
@@ -634,7 +634,7 @@
 
       if (fixes && fixes.length > 0) {
         // Severity group labels
-        var sevGroups = [
+        const sevGroups = [
           { key: 'critical', label: t('security.report.fixCard.criticalIssues', 'Critical Issues') },
           { key: 'high', label: t('security.report.fixCard.highPriority', 'High Priority') },
           { key: 'medium', label: t('security.report.fixCard.mediumPriority', 'Medium Priority') },
@@ -648,7 +648,7 @@
         html += '</div>';
 
         sevGroups.forEach(function (group) {
-          var groupFixes = fixes.filter(function (f) {
+          const groupFixes = fixes.filter(function (f) {
             return (f.severity || 'medium').toLowerCase() === group.key;
           });
           if (groupFixes.length > 0) {
@@ -670,7 +670,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -682,17 +682,17 @@
      ========================================================================= */
 
   function _htmlToNode(html) {
-    var temp = document.createElement('div');
+    const temp = document.createElement('div');
     temp.innerHTML = html;
     return temp.firstChild;
   }
 
   function _renderIssuesList(issues, t) {
     if (!issues || issues.length === 0) return '';
-    var html = '<div class="pdf-issues" style="margin-top:12px;">';
+    let html = '<div class="pdf-issues" style="margin-top:12px;">';
     html += '<h4 class="pdf-subsection__title">' + (t('common.pdf.execSummary.issuesFound', 'Issues Found') || 'Issues') + '</h4>';
     issues.forEach(function (issue) {
-      var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+      const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
       html += '<div class="pdf-issue pdf-issue--warning">' +
         '<span class="pdf-issue__text">' + PdfReport.helpers.esc(text) + '</span>' +
       '</div>';
@@ -706,9 +706,9 @@
      Ensures every property the card renderer expects is present.
      ------------------------------------------------------------------------- */
   function _normalizeEnrichedFixes(enriched) {
-    var priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
-    var out = [];
-    var i, ef, template;
+    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    const out = [];
+    let i, ef, template;
 
     for (i = 0; i < enriched.length; i++) {
       ef = enriched[i];
@@ -747,24 +747,24 @@
      ES5 only — no let/const, no arrow functions, no template literals.
      ------------------------------------------------------------------------- */
   function _generateSecurityFixesFromScanData(data) {
-    var fixes = [];
-    var priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    const fixes = [];
+    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
 
-    var ssl = data.ssl || {};
-    var headers = data.headers || {};
-    var headerDetails = headers.details || {};
-    var vulns = data.vulnerabilities || {};
-    var cookies = data.cookies || {};
-    var thirdParty = data.thirdPartyScripts || {};
-    var recs = data.recommendations || [];
+    const ssl = data.ssl || {};
+    const headers = data.headers || {};
+    const headerDetails = headers.details || {};
+    const vulns = data.vulnerabilities || {};
+    const cookies = data.cookies || {};
+    const thirdParty = data.thirdPartyScripts || {};
+    const recs = data.recommendations || [];
 
     // Track which titles we have already added from scan data
-    var addedTitles = {};
+    const addedTitles = {};
 
     // ---- 1. SSL / HTTPS issues ----
     if (!ssl.valid) {
       addedTitles['implement https'] = true;
-      var sslTemplate = FIX_TEMPLATES['Implement HTTPS'];
+      const sslTemplate = FIX_TEMPLATES['Implement HTTPS'];
       fixes.push({
         severity: 'critical',
         title: 'Implement HTTPS',
@@ -785,9 +785,9 @@
       });
     } else if (ssl.issues && ssl.issues.length > 0) {
       addedTitles['fix ssl/tls issues'] = true;
-      var sslFixTemplate = FIX_TEMPLATES['Fix SSL/TLS Issues'];
-      var sslIssuesList = ssl.issues.join('. ');
-      var sslProblematic = '# Current SSL/TLS Issues:\n';
+      const sslFixTemplate = FIX_TEMPLATES['Fix SSL/TLS Issues'];
+      const sslIssuesList = ssl.issues.join('. ');
+      let sslProblematic = '# Current SSL/TLS Issues:\n';
       ssl.issues.forEach(function (issue) {
         sslProblematic += '# - ' + issue + '\n';
       });
@@ -819,7 +819,7 @@
     // ---- 2. Missing Content Security Policy ----
     if (headerDetails['Content-Security-Policy'] && !headerDetails['Content-Security-Policy'].present) {
       addedTitles['implement content security policy'] = true;
-      var cspTemplate = FIX_TEMPLATES['Implement Content Security Policy'];
+      const cspTemplate = FIX_TEMPLATES['Implement Content Security Policy'];
       fixes.push({
         severity: 'critical',
         title: 'Implement Content Security Policy',
@@ -844,7 +844,7 @@
     // ---- 3. Missing HSTS ----
     if (headerDetails['Strict-Transport-Security'] && !headerDetails['Strict-Transport-Security'].present) {
       addedTitles['enable http strict transport security'] = true;
-      var hstsTemplate = FIX_TEMPLATES['Enable HTTP Strict Transport Security'];
+      const hstsTemplate = FIX_TEMPLATES['Enable HTTP Strict Transport Security'];
       fixes.push({
         severity: 'high',
         title: 'Enable HTTP Strict Transport Security',
@@ -868,7 +868,7 @@
     // ---- 4. Missing X-Frame-Options ----
     if (headerDetails['X-Frame-Options'] && !headerDetails['X-Frame-Options'].present) {
       addedTitles['prevent clickjacking attacks'] = true;
-      var xfoTemplate = FIX_TEMPLATES['Prevent Clickjacking Attacks'];
+      const xfoTemplate = FIX_TEMPLATES['Prevent Clickjacking Attacks'];
       fixes.push({
         severity: 'medium',
         title: 'Prevent Clickjacking Attacks',
@@ -892,7 +892,7 @@
     // ---- 5. Missing X-Content-Type-Options ----
     if (headerDetails['X-Content-Type-Options'] && !headerDetails['X-Content-Type-Options'].present) {
       addedTitles['prevent mime sniffing'] = true;
-      var xctoTemplate = FIX_TEMPLATES['Prevent MIME Sniffing'];
+      const xctoTemplate = FIX_TEMPLATES['Prevent MIME Sniffing'];
       fixes.push({
         severity: 'medium',
         title: 'Prevent MIME Sniffing',
@@ -916,13 +916,13 @@
     // ---- 6. Cookie security issues ----
     if (cookies.total > 0 && cookies.score !== undefined && cookies.score < 70) {
       addedTitles['improve cookie security'] = true;
-      var cookieTemplate = FIX_TEMPLATES['Improve Cookie Security'];
+      const cookieTemplate = FIX_TEMPLATES['Improve Cookie Security'];
 
       // Build affected resources from insecure cookies
-      var insecureCookies = [];
+      const insecureCookies = [];
       if (cookies.list && cookies.list.length > 0) {
         cookies.list.forEach(function (c) {
-          var issues = [];
+          const issues = [];
           if (!c.httpOnly) issues.push('Missing HttpOnly');
           if (!c.secure) issues.push('Missing Secure');
           if (!c.sameSite || c.sameSite === 'None') issues.push('SameSite=' + (c.sameSite || 'Not set'));
@@ -933,7 +933,7 @@
       }
 
       // Build dynamic problematic code showing actual cookie issues
-      var cookieProblematic = '# Insecure cookies detected (' + (cookies.total - (cookies.secure || 0)) + ' of ' + cookies.total + ')\n\n';
+      let cookieProblematic = '# Insecure cookies detected (' + (cookies.total - (cookies.secure || 0)) + ' of ' + cookies.total + ')\n\n';
       if (insecureCookies.length > 0) {
         insecureCookies.slice(0, 5).forEach(function (ic) {
           cookieProblematic += '# ' + ic.type + '\n# Issues: ' + ic.detail + '\n\n';
@@ -968,11 +968,11 @@
     // ---- 7. Third-party scripts without SRI ----
     if (thirdParty.total > 0 && thirdParty.score !== undefined && thirdParty.score < 50) {
       addedTitles['add subresource integrity checks'] = true;
-      var sriTemplate = FIX_TEMPLATES['Add Subresource Integrity Checks'];
-      var noSriCount = thirdParty.total - (thirdParty.withSRI || 0);
+      const sriTemplate = FIX_TEMPLATES['Add Subresource Integrity Checks'];
+      const noSriCount = thirdParty.total - (thirdParty.withSRI || 0);
 
       // Build affected resources from scripts missing SRI
-      var sriAffected = [];
+      const sriAffected = [];
       if (thirdParty.scripts && thirdParty.scripts.length > 0) {
         thirdParty.scripts.forEach(function (s) {
           if (!s.hasSRI) {
@@ -985,7 +985,7 @@
       }
 
       // Dynamic problematic code with actual script URLs
-      var sriProblematic = '<!-- ' + noSriCount + ' external scripts without SRI -->\n';
+      let sriProblematic = '<!-- ' + noSriCount + ' external scripts without SRI -->\n';
       if (sriAffected.length > 0) {
         sriAffected.slice(0, 4).forEach(function (s) {
           sriProblematic += '<script src="' + s.detail + '"></script>\n';
@@ -1023,11 +1023,11 @@
     if (vulns.issues && vulns.issues.length > 0) {
       vulns.issues.forEach(function (vuln) {
         if (vuln.severity === 'critical' || vuln.severity === 'high') {
-          var vulnTitle = vuln.title || 'Security Vulnerability';
+          const vulnTitle = vuln.title || 'Security Vulnerability';
           if (addedTitles[vulnTitle.toLowerCase()]) return;
           addedTitles[vulnTitle.toLowerCase()] = true;
 
-          var vulnProblematic = '# Vulnerability Detected\n';
+          let vulnProblematic = '# Vulnerability Detected\n';
           vulnProblematic += '# Title: ' + vulnTitle + '\n';
           vulnProblematic += '# Severity: ' + (vuln.severity || 'unknown').toUpperCase() + '\n';
           if (vuln.description) {
@@ -1038,7 +1038,7 @@
           }
           vulnProblematic += '\n# Impact:\n# ' + (vuln.impact || 'May affect site security');
 
-          var vulnFixed = '# Recommended Remediation\n';
+          let vulnFixed = '# Recommended Remediation\n';
           vulnFixed += '# ' + (vuln.solution || 'Apply security patches and follow best practices') + '\n';
           vulnFixed += '\n# Verification:\n# 1. Apply the fix in a staging environment\n# 2. Run a security scan to verify resolution\n# 3. Deploy to production';
 
@@ -1069,16 +1069,16 @@
     // ---- 9. Remaining recommendations not yet covered ----
     if (recs && recs.length > 0) {
       recs.forEach(function (rec) {
-        var titleKey = (rec.title || '').toLowerCase();
+        const titleKey = (rec.title || '').toLowerCase();
         if (addedTitles[titleKey]) return;
         addedTitles[titleKey] = true;
 
-        var template = _matchTemplate(rec.title);
-        var severity = rec.priority || 'medium';
+        const template = _matchTemplate(rec.title);
+        const severity = rec.priority || 'medium';
 
         // Build generic code blocks for unmatched recommendations
-        var genProblematic = template ? template.problematicCode : _buildGenericProblematicCode(rec);
-        var genFixed = template ? template.fixedCode : _buildGenericFixedCode(rec);
+        const genProblematic = template ? template.problematicCode : _buildGenericProblematicCode(rec);
+        const genFixed = template ? template.fixedCode : _buildGenericFixedCode(rec);
 
         fixes.push({
           severity: severity,
@@ -1109,10 +1109,10 @@
   /** Match a recommendation title to a FIX_TEMPLATES entry */
   function _matchTemplate(title) {
     if (!title) return null;
-    var titleLower = title.toLowerCase();
-    var keys = Object.keys(FIX_TEMPLATES);
-    for (var i = 0; i < keys.length; i++) {
-      var keyLower = keys[i].toLowerCase();
+    const titleLower = title.toLowerCase();
+    const keys = Object.keys(FIX_TEMPLATES);
+    for (let i = 0; i < keys.length; i++) {
+      const keyLower = keys[i].toLowerCase();
       if (titleLower.indexOf(keyLower) !== -1 || keyLower.indexOf(titleLower.split(' ').slice(0, 3).join(' ')) !== -1) {
         return FIX_TEMPLATES[keys[i]];
       }
@@ -1129,7 +1129,7 @@
 
   /** Build a problematic code block for recommendations without a template */
   function _buildGenericProblematicCode(rec) {
-    var code = '# Security Issue Detected\n';
+    let code = '# Security Issue Detected\n';
     code += '# ' + (rec.title || 'Unknown Issue') + '\n\n';
     if (rec.description) {
       code += '# Description:\n# ' + rec.description + '\n\n';
@@ -1141,7 +1141,7 @@
 
   /** Build a fixed code block for recommendations without a template */
   function _buildGenericFixedCode(rec) {
-    var code = '# Recommended Solution\n';
+    let code = '# Recommended Solution\n';
     code += '# ' + (rec.title || 'Security Fix') + '\n\n';
     if (rec.solution) {
       code += '# Implementation:\n# ' + rec.solution + '\n\n';
@@ -1161,11 +1161,11 @@
      Uses existing .pdf-fix-card CSS classes from _pdf-report.css.
      ------------------------------------------------------------------------- */
   function _renderSecFixCard(fix, t, esc, truncate) {
-    var severityLower = (fix.severity || 'medium').toLowerCase();
-    var sevLabelMap = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
-    var severityLabel = sevLabelMap[severityLower] || fix.severity;
+    const severityLower = (fix.severity || 'medium').toLowerCase();
+    const sevLabelMap = { critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low' };
+    const severityLabel = sevLabelMap[severityLower] || fix.severity;
 
-    var html = '<div class="pdf-fix-card">';
+    let html = '<div class="pdf-fix-card">';
 
     // ---- Header: severity badge | title | category ----
     html += '<div class="pdf-fix-card__header">';
@@ -1183,7 +1183,7 @@
     }
 
     // Summary / description — prefer the rich multi-paragraph summary
-    var desc = fix.summary || fix.description || '';
+    const desc = fix.summary || fix.description || '';
     if (desc) {
       html += '<div class="pdf-fix-card__description">' + esc(desc) + '</div>';
     }
@@ -1236,11 +1236,11 @@
       html += '<th style="text-align:left;padding:4px 8px;border-bottom:1px solid rgba(0,0,0,0.1);color:#6b7280;font-weight:600;">' + esc(t('security.report.fixCard.resourceType', 'Type')) + '</th>';
       html += '<th style="text-align:left;padding:4px 8px;border-bottom:1px solid rgba(0,0,0,0.1);color:#6b7280;font-weight:600;">' + esc(t('security.report.fixCard.resourceDetail', 'Detail')) + '</th>';
       html += '</tr></thead><tbody>';
-      var maxResources = Math.min(fix.affectedResources.length, 8);
-      var ri;
+      const maxResources = Math.min(fix.affectedResources.length, 8);
+      let ri;
       for (ri = 0; ri < maxResources; ri++) {
-        var res = fix.affectedResources[ri];
-        var bgColor = ri % 2 === 0 ? '#ffffff' : '#fafafa';
+        const res = fix.affectedResources[ri];
+        const bgColor = ri % 2 === 0 ? '#ffffff' : '#fafafa';
         html += '<tr style="background:' + bgColor + ';">';
         html += '<td style="padding:4px 8px;border-bottom:1px solid rgba(0,0,0,0.05);color:#374151;white-space:nowrap;">' + esc(res.type || '-') + '</td>';
         html += '<td style="padding:4px 8px;border-bottom:1px solid rgba(0,0,0,0.05);color:#374151;word-break:break-all;">' + esc(truncate(res.detail || '-', 80)) + '</td>';

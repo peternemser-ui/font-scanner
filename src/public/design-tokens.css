@@ -561,9 +561,39 @@ html[data-theme="print"] {
   --border-color-strong: rgba(0, 0, 0, 0.2);
 }
 
-/* --- Report surfaces always light (regardless of page theme) --- */
+/* --- Report surfaces: explicit dark/light tokens on report elements --- */
+
+/* Dark mode reports (default) — explicit so caching/inheritance can't cause white flash */
 .report-shell,
 .report-scope {
+  --r-bg: #0B0D10;
+  --r-surface-1: #161A1F;
+  --r-surface-2: #1C2128;
+  --r-border: rgba(255, 255, 255, 0.10);
+  --r-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+  --r-text: #F1F5F9;
+  --r-text-muted: #94A3B8;
+  --r-text-faint: #64748B;
+  --r-good: #22C55E;
+  --r-warn: #F59E0B;
+  --r-bad: #EF4444;
+  --r-info: #3B82F6;
+  --r-dial-track: rgba(255, 255, 255, 0.14);
+  --r-dial-glow: none;
+  --r-table-row-alt: rgba(255, 255, 255, 0.03);
+  --r-table-divider: rgba(255, 255, 255, 0.08);
+  --r-code-bg: #111418;
+  --r-code-border: rgba(255, 255, 255, 0.08);
+  --r-accordion-hover: rgba(255, 255, 255, 0.04);
+}
+
+/* Light mode reports (white-theme or data-theme="light" or print) */
+body.white-theme .report-shell,
+body.white-theme .report-scope,
+html[data-theme="light"] .report-shell,
+html[data-theme="light"] .report-scope,
+html[data-theme="print"] .report-shell,
+html[data-theme="print"] .report-scope {
   --r-bg: #FFFFFF;
   --r-surface-1: #FFFFFF;
   --r-surface-2: #F8FAFC;
@@ -583,29 +613,48 @@ html[data-theme="print"] {
   --r-code-bg: #F3F4F6;
   --r-code-border: rgba(0, 0, 0, 0.08);
   --r-accordion-hover: rgba(0, 0, 0, 0.03);
+
+  /* Legacy token overrides — light */
+  --bg-primary: #FFFFFF;
+  --bg-secondary: #F8FAFC;
+  --bg-tertiary: #F1F3F5;
+  --bg-hover: #E9ECEF;
+  --bg-input: #FFFFFF;
+  --bg-card: #FFFFFF;
+  --bg-elevated: #F8F9FA;
+  --bg-base: #FFFFFF;
+  --bg-overlay: rgba(255, 255, 255, 0.95);
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-tertiary: #6B7280;
+  --text-muted: #9CA3AF;
+  --text-body: #374151;
+  --text-heading: #111827;
+  --text-label: #6B7280;
+  --color-white: #111827;
+  --color-text: #111827;
+  --color-text-secondary: #4B5563;
+  --color-text-muted: #6B7280;
+  --border-primary: #DEE2E6;
+  --border-secondary: #CED4DA;
+  --border-color: rgba(0, 0, 0, 0.1);
+  --border-color-strong: rgba(0, 0, 0, 0.2);
+  --border-color-subtle: rgba(0, 0, 0, 0.05);
+  --surface-bg: rgba(0, 0, 0, 0.02);
+  --card-border: rgba(0, 0, 0, 0.08);
+  --donut-track: rgba(0, 0, 0, 0.1);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12), 0 1px 2px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1), 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-/* Backward compat: .white-theme without data-theme still gets light report tokens */
-body.white-theme {
-  --r-bg: #FFFFFF;
-  --r-surface-1: #FFFFFF;
-  --r-surface-2: #F8FAFC;
-  --r-border: rgba(0, 0, 0, 0.10);
-  --r-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --r-text: #111827;
-  --r-text-muted: #6B7280;
-  --r-text-faint: #9CA3AF;
-  --r-good: #16A34A;
-  --r-warn: #D97706;
-  --r-bad: #DC2626;
-  --r-info: #2563EB;
-  --r-dial-track: rgba(0, 0, 0, 0.10);
-  --r-dial-glow: none;
-  --r-table-row-alt: rgba(0, 0, 0, 0.02);
-  --r-table-divider: rgba(0, 0, 0, 0.06);
-  --r-code-bg: #F3F4F6;
-  --r-code-border: rgba(0, 0, 0, 0.08);
-  --r-accordion-hover: rgba(0, 0, 0, 0.03);
+/* Light-mode report container styling */
+body.white-theme .report-scope,
+html[data-theme="light"] .report-scope,
+html[data-theme="print"] .report-scope {
+  background: var(--r-surface-2, #F8FAFC);
+  color: var(--r-text, #111827);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.5rem;
 }
 
 /* ========================================

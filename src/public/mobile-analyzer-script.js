@@ -80,6 +80,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Handle URL parameters for report loading and billing return
   (async function initFromUrlParams() {
+    // Ensure i18n translations are loaded before rendering any report content
+    if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+    }
+
     const params = new URLSearchParams(window.location.search);
     const reportId = params.get('report_id') || '';
     const autoUrl = params.get('url') || '';
@@ -175,7 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     window.__smBillingRescanHandled = true;
     if (scanUrl && urlInput) urlInput.value = scanUrl;
     if (purchasedReportId) document.body.setAttribute('data-report-id', purchasedReportId);
-    analyzeMobile({ preserveReportId: true });
+    analyzeUrl({ preserveReportId: true, billingRescan: true });
   });
 
   /**
@@ -183,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
    */
   async function analyzeUrl(options = {}) {
-    let { preserveReportId = false } = options;
+    const { preserveReportId = false, billingRescan = false } = options;
     const url = urlInput.value.trim();
     if (!url) {
       showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
@@ -287,9 +292,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/mobile-analyze', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ 
-          url, 
+        body: JSON.stringify({
+          url,
           scanStartedAt,
+          lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en',
+          ...(billingRescan && { billingRescan: true }),
           options: {
             devices,
             includePerformance: true,
@@ -381,7 +388,12 @@ document.addEventListener('DOMContentLoaded', () => {
     errorMessage.classList.remove('hidden');
   }
 
-  function displayResults(data, meta = {}) {
+  async function displayResults(data, meta = {}) {
+    // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+    if (window.i18n && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* fallback */ }
+    }
+
     if (!data || typeof data !== 'object') { console.error('[Mobile] displayResults received invalid data:', data); return; }
     if (!data.devices || typeof data.devices !== 'object') { console.error('[Mobile] displayResults missing devices field'); return; }
     // Ensure results container is visible (may be hidden if called directly without scan flow)
@@ -410,12 +422,18 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get first device data for advanced features
     const firstDevice = Object.values(data.devices).find(d => !d.error) || {};
     
-    // Summary donuts
+    // Summary donuts — derive overall from the 3 visible component donuts so scores stay consistent.
+    // The API mobileScore also includes touchTargets (a 4th hidden component), which can pull the
+    // overall away from what the visible donuts suggest.
+    const perfAvg = data.performanceSummary.average;
+    const readAvg = data.readabilitySummary.average;
+    const a11yAvg = data.accessibilitySummary.average;
+    const derivedMobileScore = Math.round((perfAvg + readAvg + a11yAvg) / 3);
     const summaryDonuts = ReportShell.renderSummaryDonuts([
-      { label: t('reports.mobile.mobileScore', 'Mobile Score'), score: data.mobileScore },
-      { label: t('reports.mobile.performance', 'Performance'), score: data.performanceSummary.average },
-      { label: t('reports.mobile.readability', 'Readability'), score: data.readabilitySummary.average },
-      { label: t('reports.mobile.accessibility', 'Accessibility'), score: data.accessibilitySummary.average }
+      { label: t('reports.mobile.mobileScore', 'Mobile Score'), score: derivedMobileScore },
+      { label: t('reports.mobile.performance', 'Performance'), score: perfAvg },
+      { label: t('reports.mobile.readability', 'Readability'), score: readAvg },
+      { label: t('reports.mobile.accessibility', 'Accessibility'), score: a11yAvg }
     ]);
     
     // Device Screenshots Section
@@ -1049,12 +1067,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getScoreColor(score) {
     const stops = [
-      [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-      [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-      [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-      [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-      [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-      [100,'#00FF3B']
+      [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+      [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+      [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+      [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+      [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+      [100,'#0AA64F']
     ];
     const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
     const idx = Math.min(Math.floor(s / 5), 19);
@@ -1554,12 +1572,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getScoreColor(score) {
     const stops = [
-      [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-      [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-      [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-      [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-      [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-      [100,'#00FF3B']
+      [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+      [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+      [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+      [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+      [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+      [100,'#0AA64F']
     ];
     const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
     const idx = Math.min(Math.floor(s / 5), 19);

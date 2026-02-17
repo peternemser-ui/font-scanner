@@ -42,12 +42,12 @@
   /** Score → hex color */
   function scoreColor(score) {
     const stops = [
-      [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-      [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-      [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-      [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-      [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-      [100,'#00FF3B']
+      [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+      [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+      [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+      [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+      [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+      [100,'#0AA64F']
     ];
     const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
     const idx = Math.min(Math.floor(s / 5), 19);
@@ -72,15 +72,19 @@
     return 'F';
   }
 
-  /** Format date for current locale */
+  /** Format date with GMT time for current locale */
   function formatDate(date, lang) {
     const localeMap = {
       ja: 'ja-JP', zh: 'zh-CN', ko: 'ko-KR', de: 'de-DE',
       fr: 'fr-FR', es: 'es-ES', pt: 'pt-BR', ru: 'ru-RU'
     };
-    return date.toLocaleDateString(localeMap[lang] || 'en-US', {
+    const locale = localeMap[lang] || 'en-US';
+    const datePart = date.toLocaleDateString(locale, {
       year: 'numeric', month: 'long', day: 'numeric'
     });
+    const h = date.getUTCHours().toString().padStart(2, '0');
+    const m = date.getUTCMinutes().toString().padStart(2, '0');
+    return datePart + ' \u2022 ' + h + ':' + m + ' GMT';
   }
 
   /** Insert <wbr> at "/" and "-" for URL wrapping */
@@ -91,7 +95,7 @@
   /** Escape HTML */
   function esc(str) {
     if (!str) return '';
-    var d = document.createElement('div');
+    const d = document.createElement('div');
     d.appendChild(document.createTextNode(String(str)));
     return d.innerHTML;
   }
@@ -107,7 +111,7 @@
      REPORT LABEL MAP (resolved via i18n at render time)
      --------------------------------------------------------------------------- */
   function getReportLabel(reportType) {
-    var labelKeys = {
+    const labelKeys = {
       seo: t('common.pdf.reportLabel.seo', 'SEO'),
       cro: t('common.pdf.reportLabel.cro', 'CRO'),
       gdpr: t('common.pdf.reportLabel.gdpr', 'GDPR'),
@@ -121,7 +125,8 @@
       'brand-consistency': t('common.pdf.reportLabel.brand-consistency', 'Brand Consistency'),
       'broken-links': t('common.pdf.reportLabel.broken-links', 'Broken Links'),
       'ip-reputation': t('common.pdf.reportLabel.ip-reputation', 'IP Reputation'),
-      'local-seo': t('common.pdf.reportLabel.local-seo', 'Local SEO'),
+      'geo-seo': t('common.pdf.reportLabel.geo-seo', 'GEO SEO'),
+      'local-seo': t('common.pdf.reportLabel.geo-seo', 'GEO SEO'),
       'mobile-analyzer': t('common.pdf.reportLabel.mobile-analyzer', 'Mobile'),
       competitive: t('common.pdf.reportLabel.competitive', 'Competitive'),
       'hosting-analyzer': t('common.pdf.reportLabel.hosting', 'Hosting'),
@@ -133,7 +138,7 @@
 
   /** Translate impact level */
   function translateImpact(impact) {
-    var impactLabels = {
+    const impactLabels = {
       critical: t('common.pdf.impact.critical', 'Critical'),
       serious: t('common.pdf.impact.serious', 'Serious'),
       moderate: t('common.pdf.impact.moderate', 'Moderate'),
@@ -144,7 +149,7 @@
 
   /** Translate status value */
   function translateStatus(status) {
-    var statusLabels = {
+    const statusLabels = {
       pass: t('common.pdf.status.pass', 'Pass'),
       fail: t('common.pdf.status.fail', 'Fail'),
       optimal: t('common.pdf.status.optimal', 'Optimal'),
@@ -161,11 +166,11 @@
   /* ---------------------------------------------------------------------------
      PdfReport API
      --------------------------------------------------------------------------- */
-  var _renderer = null;
-  var _reportType = '';
-  var _lang = 'en';
+  let _renderer = null;
+  let _reportType = '';
+  let _lang = 'en';
 
-  var PdfReport = {
+  const PdfReport = {
 
     /** Register a report-specific renderer */
     register: function (reportType, renderFn) {
@@ -175,8 +180,8 @@
 
     /** Main initialization — call after DOMContentLoaded + i18n ready */
     init: async function () {
-      var params = new URLSearchParams(window.location.search);
-      var reportId = params.get('report_id');
+      const params = new URLSearchParams(window.location.search);
+      const reportId = params.get('report_id');
       _lang = params.get('locale') || document.documentElement.lang || 'en';
       document.documentElement.setAttribute('lang', _lang);
 
@@ -196,9 +201,9 @@
       }
 
       // Load report data
-      var reportData = null;
+      let reportData = null;
       if (window.ReportStorage) {
-        var record = window.ReportStorage.loadReport(reportId);
+        const record = window.ReportStorage.loadReport(reportId);
         if (record && record.data) reportData = record.data;
       }
       // Fallback: check for injected global
@@ -219,8 +224,8 @@
       //    just the results object. Detect and unwrap it.
       if (reportData.results && typeof reportData.results === 'object' && !Array.isArray(reportData.results)) {
         // Check if this looks like an API wrapper (has .success or .results contains report-like keys)
-        var inner = reportData.results;
-        var looksLikeWrapper = reportData.success !== undefined ||
+        const inner = reportData.results;
+        const looksLikeWrapper = reportData.success !== undefined ||
           inner.desktop !== undefined || inner.mobile !== undefined ||
           inner.performanceScore !== undefined || inner.overallScore !== undefined ||
           inner.score !== undefined || inner.metaTags !== undefined ||
@@ -228,7 +233,7 @@
           inner.mobileScore !== undefined || inner.devices !== undefined;
         if (looksLikeWrapper) {
           console.log('[PdfReport] Unwrapping API response wrapper');
-          var wrapper = reportData;
+          const wrapper = reportData;
           reportData = Object.assign({}, inner);
           // Preserve metadata from the wrapper
           if (!reportData.url && wrapper.url) reportData.url = wrapper.url;
@@ -244,8 +249,8 @@
         reportData.score = { overall: reportData.score, grade: scoreGrade(reportData.score) };
       }
 
-      var reportLabel = getReportLabel(_reportType);
-      var analyzedUrl = reportData.url || reportData.normalizedUrl || reportData.baseUrl || '';
+      const reportLabel = getReportLabel(_reportType);
+      const analyzedUrl = reportData.url || reportData.normalizedUrl || reportData.baseUrl || '';
 
       // Render shared pages
       this.renderCoverPage(reportData, reportLabel, analyzedUrl);
@@ -268,13 +273,13 @@
        Cover Page
        ------------------------------------------------------------------------- */
     renderCoverPage: function (data, reportLabel, analyzedUrl) {
-      var el = document.getElementById('cover-page');
+      const el = document.getElementById('cover-page');
       if (!el) return;
 
-      var overall = data.score ? data.score.overall
+      const overall = data.score ? data.score.overall
         : (data.overallScore || data.accessibilityScore || data.healthScore
            || data.performanceScore || data.mobileScore || (data.yourSite && data.yourSite.scores && data.yourSite.scores.overall) || null);
-      var grade = data.score ? data.score.grade : (overall !== null ? scoreGrade(overall) : '');
+      const grade = data.score ? data.score.grade : (overall !== null ? scoreGrade(overall) : '');
 
       el.innerHTML =
         '<div class="pdf-cover__logo" id="cover-logo"></div>' +
@@ -303,25 +308,25 @@
        Table of Contents (generated from rendered sections)
        ------------------------------------------------------------------------- */
     renderTOC: function () {
-      var el = document.getElementById('toc-page');
+      const el = document.getElementById('toc-page');
       if (!el) return;
 
       // Calculate page numbers based on section heights.
       // A4 content area: viewport 900px maps to 186mm width (A4 210 - 12 - 12 margins).
       // Content height per page: 269mm (A4 297 - 12 top - 16 bottom).
       // In viewport px: 269mm / (186mm / 900px) = 269 * (900/186) ≈ 1302px per page.
-      var PAGE_HEIGHT = 1300;
+      const PAGE_HEIGHT = 1300;
 
       // Fixed pages: Cover (1), TOC (2), Exec Summary (3)
-      var currentPage = 4;
+      let currentPage = 4;
 
-      var sections = document.querySelectorAll('.pdf-section');
-      var tocEntries = [];
+      const sections = document.querySelectorAll('.pdf-section');
+      const tocEntries = [];
 
       sections.forEach(function (sec) {
-        var header = sec.querySelector('.pdf-section__title');
+        const header = sec.querySelector('.pdf-section__title');
         if (!header) return;
-        var text = header.textContent.trim();
+        const text = header.textContent.trim();
         if (!text) return;
 
         // Only count visible sections
@@ -330,13 +335,13 @@
         tocEntries.push({ text: text, page: currentPage });
 
         // Estimate how many pages this section spans
-        var h = sec.scrollHeight || 0;
-        var pages = Math.max(1, Math.ceil(h / PAGE_HEIGHT));
+        const h = sec.scrollHeight || 0;
+        const pages = Math.max(1, Math.ceil(h / PAGE_HEIGHT));
         currentPage += pages;
       });
 
       // Also add fixed pages to the TOC
-      var html = '<h2 class="pdf-toc__heading">' + esc(t('common.pdf.toc.title', 'Table of Contents')) + '</h2>';
+      let html = '<h2 class="pdf-toc__heading">' + esc(t('common.pdf.toc.title', 'Table of Contents')) + '</h2>';
       html += '<ul class="pdf-toc__list">';
 
       // Executive Summary entry
@@ -367,15 +372,15 @@
        Executive Summary
        ------------------------------------------------------------------------- */
     renderExecSummary: function (data, reportLabel) {
-      var el = document.getElementById('exec-summary');
+      const el = document.getElementById('exec-summary');
       if (!el) return;
 
-      var overall = data.score ? data.score.overall
+      const overall = data.score ? data.score.overall
         : (data.overallScore || data.accessibilityScore || data.healthScore
            || data.performanceScore || data.mobileScore || (data.yourSite && data.yourSite.scores && data.yourSite.scores.overall) || 0);
-      var grade = data.score ? data.score.grade : scoreGrade(overall);
+      const grade = data.score ? data.score.grade : scoreGrade(overall);
 
-      var html = '<h2 class="pdf-exec__heading">' + esc(t('common.pdf.execSummary.title', 'Executive Summary')) + '</h2>';
+      let html = '<h2 class="pdf-exec__heading">' + esc(t('common.pdf.execSummary.title', 'Executive Summary')) + '</h2>';
 
       // Overall score hero
       html +=
@@ -390,7 +395,7 @@
         '</div>';
 
       // --- CATEGORY_CONFIGS per report type ---
-      var CATEGORY_CONFIGS = {
+      const CATEGORY_CONFIGS = {
         seo: {
           categories: {
             metaTags: t('seo.sections.metaTags', 'Meta Tags'),
@@ -491,13 +496,28 @@
           sectionKeys: ['broken', 'redirects', 'anchors'],
           hiddenBreakdown: []
         },
+        'geo-seo': {
+          categories: {
+            nap: t('geoSeo.napConsistency', 'NAP Consistency'),
+            schema: t('geoSeo.schemaMarkup', 'Schema Markup'),
+            presence: t('geoSeo.localPresence', 'Local Presence'),
+            citations: t('geoSeo.citations', 'Citations & Directories'),
+            multiLocation: t('geoSeo.multiLocation', 'Multi-Location & Geo Pages'),
+            reviews: t('geoSeo.reviews', 'Reviews & Reputation')
+          },
+          sectionKeys: ['nap', 'schema', 'presence', 'citations', 'multiLocation', 'reviews'],
+          hiddenBreakdown: []
+        },
         'local-seo': {
           categories: {
-            nap: t('localSeo.napConsistency', 'NAP Consistency'),
-            schema: t('localSeo.schemaMarkup', 'Schema Markup'),
-            presence: t('localSeo.localPresence', 'Local Presence')
+            nap: t('geoSeo.napConsistency', 'NAP Consistency'),
+            schema: t('geoSeo.schemaMarkup', 'Schema Markup'),
+            presence: t('geoSeo.localPresence', 'Local Presence'),
+            citations: t('geoSeo.citations', 'Citations & Directories'),
+            multiLocation: t('geoSeo.multiLocation', 'Multi-Location & Geo Pages'),
+            reviews: t('geoSeo.reviews', 'Reviews & Reputation')
           },
-          sectionKeys: ['nap', 'schema', 'presence'],
+          sectionKeys: ['nap', 'schema', 'presence', 'citations', 'multiLocation', 'reviews'],
           hiddenBreakdown: []
         },
         gdpr: {
@@ -560,27 +580,27 @@
         }
       };
 
-      var config = CATEGORY_CONFIGS[_reportType] || CATEGORY_CONFIGS.seo;
-      var categoryNameMap = config.categories;
+      const config = CATEGORY_CONFIGS[_reportType] || CATEGORY_CONFIGS.seo;
+      const categoryNameMap = config.categories;
 
       // Narrative paragraph
-      var analyzedUrl = data.url || data.normalizedUrl || data.baseUrl || '';
-      var shortUrl = analyzedUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
+      const analyzedUrl = data.url || data.normalizedUrl || data.baseUrl || '';
+      const shortUrl = analyzedUrl.replace(/^https?:\/\//, '').replace(/\/$/, '');
 
-      var narrativeKey;
+      let narrativeKey;
       if (overall >= 80) narrativeKey = 'overallExcellent';
       else if (overall >= 60) narrativeKey = 'overallGood';
       else if (overall >= 40) narrativeKey = 'overallFair';
       else narrativeKey = 'overallPoor';
 
       // Find strongest and weakest from breakdown or data sub-objects
-      var breakdownForNarrative = data.score ? data.score.breakdown : null;
-      var strongest = null;
-      var weakest = null;
+      const breakdownForNarrative = data.score ? data.score.breakdown : null;
+      let strongest = null;
+      let weakest = null;
 
       if (breakdownForNarrative) {
         Object.keys(breakdownForNarrative).forEach(function (key) {
-          var cat = breakdownForNarrative[key];
+          const cat = breakdownForNarrative[key];
           if (!cat || cat.score === undefined) return;
           if (!strongest || cat.score > strongest.score) strongest = { key: key, score: cat.score };
           if (!weakest || cat.score < weakest.score) weakest = { key: key, score: cat.score };
@@ -588,8 +608,8 @@
       } else {
         // Build breakdown from data sub-objects with .score
         Object.keys(categoryNameMap).forEach(function (key) {
-          var section = data[key];
-          var sectionScore;
+          const section = data[key];
+          let sectionScore;
           if (section && section.score !== undefined) {
             sectionScore = section.score;
           } else if (data.yourSite && data.yourSite.scores && data.yourSite.scores[key] !== undefined) {
@@ -603,11 +623,11 @@
       }
 
       // Count issues and passes
-      var narrativeIssueCount = 0;
-      var narrativePassCount = 0;
-      var narrativeSectionKeys = config.sectionKeys;
+      let narrativeIssueCount = 0;
+      let narrativePassCount = 0;
+      const narrativeSectionKeys = config.sectionKeys;
       narrativeSectionKeys.forEach(function (key) {
-        var section = data[key];
+        const section = data[key];
         if (!section) return;
         if (section.issues && section.issues.length > 0) narrativeIssueCount += section.issues.length;
         if (section.passed || (section.score !== undefined && section.score >= 80)) narrativePassCount++;
@@ -616,7 +636,7 @@
       if (data.issues && Array.isArray(data.issues)) narrativeIssueCount += data.issues.length;
       if (data.recommendations && Array.isArray(data.recommendations)) narrativeIssueCount += data.recommendations.length;
 
-      var sentences = [];
+      const sentences = [];
       sentences.push(t('common.pdf.execSummary.narrative.' + narrativeKey,
         'The analysis resulted in an overall score of {{score}}/100 (Grade: {{grade}}).',
         { url: shortUrl, score: overall, grade: grade }));
@@ -645,7 +665,7 @@
       '</div>';
 
       // Page screenshot — resolve to absolute URL so Puppeteer can always fetch it
-      var screenshotUrl = data.screenshotUrl || '';
+      let screenshotUrl = data.screenshotUrl || '';
       if (!screenshotUrl && data.reportId) {
         screenshotUrl = '/reports/' + encodeURIComponent(data.reportId) + '/screenshot.jpg';
       }
@@ -666,17 +686,17 @@
       }
 
       // Category breakdown grid
-      var breakdown = data.score ? data.score.breakdown : null;
-      var hiddenBreakdown = config.hiddenBreakdown || [];
+      const breakdown = data.score ? data.score.breakdown : null;
+      const hiddenBreakdown = config.hiddenBreakdown || [];
 
       if (breakdown) {
         html += '<div class="pdf-exec__subheading">' + esc(t('common.pdf.execSummary.categoryBreakdown', 'Category Breakdown')) + '</div>';
         html += '<div class="pdf-score-grid">';
         Object.keys(breakdown).forEach(function (key) {
           if (hiddenBreakdown.indexOf(key) !== -1) return;
-          var cat = breakdown[key];
+          const cat = breakdown[key];
           if (!cat || cat.score === undefined) return;
-          var name = categoryNameMap[key] || key;
+          const name = categoryNameMap[key] || key;
           html +=
             '<div class="pdf-score-card">' +
               '<div class="pdf-score-card__label">' + esc(name) + '</div>' +
@@ -688,10 +708,10 @@
       } else {
         // Build category grid from data sub-objects
         // Also check data.yourSite.scores for competitive analysis data shape
-        var _yourScoresRef = (data.yourSite && data.yourSite.scores) ? data.yourSite.scores : null;
-        var hasAnyScore = false;
+        const _yourScoresRef = (data.yourSite && data.yourSite.scores) ? data.yourSite.scores : null;
+        let hasAnyScore = false;
         Object.keys(categoryNameMap).forEach(function (key) {
-          var section = data[key];
+          const section = data[key];
           if (section && section.score !== undefined) { hasAnyScore = true; return; }
           if (_yourScoresRef && _yourScoresRef[key] !== undefined) { hasAnyScore = true; }
         });
@@ -699,8 +719,8 @@
           html += '<div class="pdf-exec__subheading">' + esc(t('common.pdf.execSummary.categoryBreakdown', 'Category Breakdown')) + '</div>';
           html += '<div class="pdf-score-grid">';
           Object.keys(categoryNameMap).forEach(function (key) {
-            var section = data[key];
-            var catScore;
+            const section = data[key];
+            let catScore;
             if (section && section.score !== undefined) {
               catScore = section.score;
             } else if (_yourScoresRef && _yourScoresRef[key] !== undefined) {
@@ -718,10 +738,10 @@
       }
 
       // Key findings
-      var allIssues = [];
-      var allPasses = [];
+      const allIssues = [];
+      const allPasses = [];
       config.sectionKeys.forEach(function (key) {
-        var section = data[key];
+        const section = data[key];
         if (!section) return;
         if (section.issues && section.issues.length > 0) {
           section.issues.forEach(function (issue) {
@@ -800,7 +820,7 @@
     /** Render a data table */
     renderTable: function (headers, rows, opts) {
       opts = opts || {};
-      var html = '<table class="pdf-table' + (opts.striped ? ' pdf-table--striped' : '') + '">';
+      let html = '<table class="pdf-table' + (opts.striped ? ' pdf-table--striped' : '') + '">';
       html += '<thead><tr>';
       headers.forEach(function (h) {
         html += '<th' + (h.width ? ' style="width:' + h.width + '"' : '') + '>' + esc(h.label) + '</th>';
@@ -809,7 +829,7 @@
       rows.forEach(function (row) {
         html += '<tr>';
         row.forEach(function (cell, i) {
-          var cls = headers[i] && headers[i].cls ? ' class="' + headers[i].cls + '"' : '';
+          const cls = headers[i] && headers[i].cls ? ' class="' + headers[i].cls + '"' : '';
           html += '<td' + cls + '>' + (cell || '') + '</td>';
         });
         html += '</tr>';
@@ -820,7 +840,7 @@
 
     /** Render a status badge */
     renderStatus: function (status, label) {
-      var cls = 'pdf-status pdf-status--';
+      let cls = 'pdf-status pdf-status--';
       // Check negative/fail patterns FIRST to prevent "notFound" matching "found"
       if (/not\s*found|not\s*detected|not\s*configured|not\s*present|not\s*set|not\s*enabled|fail|missing|critical|\bno\b/i.test(status)) cls += 'fail';
       else if (/pass|optimal|valid|good|configured|present|set|found|detected|enabled|yes/i.test(status)) cls += 'pass';
@@ -832,7 +852,7 @@
 
     /** Render a progress bar */
     renderProgress: function (label, value, max, color) {
-      var pct = max > 0 ? Math.round((value / max) * 100) : 0;
+      const pct = max > 0 ? Math.round((value / max) * 100) : 0;
       color = color || scoreColor(pct);
       return '<div class="pdf-progress">' +
         '<div class="pdf-progress__label-row">' +
@@ -848,7 +868,7 @@
     /** Render an issue card */
     renderIssue: function (text, severity) {
       severity = severity || 'info';
-      var label = translateImpact(severity) || translateStatus(severity) || severity.toUpperCase();
+      const label = translateImpact(severity) || translateStatus(severity) || severity.toUpperCase();
       return '<div class="pdf-issue pdf-issue--' + severity + '">' +
         '<span class="pdf-issue__severity pdf-issue__severity--' + severity + '">' + label + '</span>' +
         '<span class="pdf-issue__text">' + esc(text) + '</span>' +
@@ -866,7 +886,7 @@
 
     /** Render a metrics row */
     renderMetrics: function (metrics) {
-      var html = '<div class="pdf-metrics-row">';
+      let html = '<div class="pdf-metrics-row">';
       metrics.forEach(function (m) {
         html += '<div class="pdf-metric">' +
           '<div class="pdf-metric__value" style="' + (m.color ? 'color:' + m.color : '') + '">' + esc(String(m.value)) + '</div>' +
@@ -879,9 +899,9 @@
 
     /** Build a section header HTML */
     renderSectionHeader: function (number, title, score) {
-      var scoreBadge = '';
+      let scoreBadge = '';
       if (score !== undefined && score !== null) {
-        var cls = scoreClass(score);
+        const cls = scoreClass(score);
         scoreBadge = '<span class="pdf-section__score pdf-section__score--' + cls + '">' + score + '/100</span>';
       }
       return '<div class="pdf-section__header">' +
@@ -896,7 +916,7 @@
        ------------------------------------------------------------------------- */
     _loadLogo: function (container) {
       if (!container) return;
-      var xhr = new XMLHttpRequest();
+      const xhr = new XMLHttpRequest();
       xhr.open('GET', '/assets/logo-pdf.svg', true);
       xhr.onload = function () {
         if (xhr.status === 200) {

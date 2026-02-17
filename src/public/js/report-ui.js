@@ -625,19 +625,92 @@
       return;
     }
 
-    // Handle auth requirement
+    // Handle auth requirement - save purchase intent, clear stale tokens, redirect to auth
     if (response.status === 401) {
-      showToast('Please sign in to purchase reports.');
+      // Save purchase intent so pricing modal auto-opens after auth
+      try {
+        localStorage.setItem('sm_pending_purchase', JSON.stringify({
+          type: 'single_report',
+          reportId: reportId || null,
+          returnPath: window.location.pathname + window.location.search,
+          createdAt: Date.now()
+        }));
+      } catch (e) { /* continue with redirect */ }
+
+      localStorage.removeItem('sm_auth_token');
+      localStorage.removeItem('sm_token');
+
+      // Ensure report_id is in the returnTo URL
+      const params = new URLSearchParams(window.location.search);
+      if (reportId && !params.has('report_id')) params.set('report_id', reportId);
+      const returnTo = encodeURIComponent(window.location.pathname + (params.toString() ? '?' + params.toString() : ''));
+      window.location.href = `/auth.html?returnTo=${returnTo}&mode=signup`;
       return;
     }
 
     showToast('Checkout is unavailable right now.');
   }
 
+  /**
+   * Check for a pending purchase intent saved before an auth redirect.
+   * If found, wait for the report to render and auto-open the PricingModal.
+   */
+  function handlePendingPurchaseIfPresent() {
+    // Only run if user is now logged in
+    const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+    if (!token) return;
+
+    let intent;
+    try {
+      const raw = localStorage.getItem('sm_pending_purchase');
+      if (!raw) return;
+      intent = JSON.parse(raw);
+    } catch (e) {
+      localStorage.removeItem('sm_pending_purchase');
+      return;
+    }
+
+    // 30-minute TTL
+    const THIRTY_MINUTES = 30 * 60 * 1000;
+    if (!intent.createdAt || (Date.now() - intent.createdAt) > THIRTY_MINUTES) {
+      localStorage.removeItem('sm_pending_purchase');
+      return;
+    }
+
+    // Verify we're on the matching page
+    const currentPath = window.location.pathname;
+    const intentPath = (intent.returnPath || '').split('?')[0];
+    if (intentPath && currentPath !== intentPath) return;
+
+    // Consume the intent
+    localStorage.removeItem('sm_pending_purchase');
+    console.log('[ReportUI] Resuming pending purchase after auth:', intent);
+
+    // Poll for report content, then open pricing modal
+    let attempts = 0;
+    const maxAttempts = 15; // 15 * 200ms = 3 seconds
+    const checkAndOpen = () => {
+      attempts++;
+      const resultsContent = document.getElementById('resultsContent');
+      const hasResults = resultsContent && resultsContent.children.length > 0;
+
+      if (hasResults || attempts >= maxAttempts) {
+        setTimeout(() => {
+          if (window.PricingModal && typeof window.PricingModal.open === 'function') {
+            window.PricingModal.open();
+          }
+        }, 300);
+      } else {
+        setTimeout(checkAndOpen, 200);
+      }
+    };
+    setTimeout(checkAndOpen, 200);
+  }
+
   // Flag to indicate billing return is being processed
   // Other scripts should wait for this before displaying reports
   let billingReturnInProgress = false;
-  let billingReturnPromise = null;
+  const billingReturnPromise = null;
 
   async function handleBillingReturnIfPresent() {
     const params = new URLSearchParams(window.location.search);
@@ -935,10 +1008,11 @@
             window.currentCrawlerResults = results;
             window.displayCrawlerResults(results);
             displayedFromCache = true;
-          } else if (window.displayLocalSEOResults && (cachedAnalyzer?.includes('local-seo') || cachedAnalyzer?.includes('local_seo'))) {
-            // Local SEO
+          } else if ((window.displayGeoSEOResults || window.displayLocalSEOResults) && (cachedAnalyzer?.includes('geo-seo') || cachedAnalyzer?.includes('geo_seo') || cachedAnalyzer?.includes('local-seo') || cachedAnalyzer?.includes('local_seo'))) {
+            // GEO SEO (formerly Local SEO)
+            window.currentGeoSEOResults = results;
             window.currentLocalSEOResults = results;
-            window.displayLocalSEOResults(results);
+            (window.displayGeoSEOResults || window.displayLocalSEOResults)(results);
             displayedFromCache = true;
           } else if (window.displayBrokenLinksResults && (cachedAnalyzer?.includes('broken-links') || cachedAnalyzer?.includes('broken_links'))) {
             // Broken Links
@@ -1159,6 +1233,7 @@
             reloadParams.delete('session_id');
             if (reloadParams.has('url') || cachedUrl) {
               reloadParams.set('auto_scan', 'true');
+              reloadParams.set('billing_rescan', 'true');
               if (cachedUrl && !reloadParams.has('url')) {
                 reloadParams.set('url', cachedUrl);
               }
@@ -1443,6 +1518,9 @@
   function init() {
     // If we're returning from Stripe, apply entitlements first.
     handleBillingReturnIfPresent().catch(() => undefined);
+
+    // If we just returned from auth with a pending purchase, auto-open pricing modal
+    handlePendingPurchaseIfPresent();
 
     initGlobalEventDelegation();
 

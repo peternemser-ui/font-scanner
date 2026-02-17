@@ -19,9 +19,10 @@ const { v4: uuidv4 } = require('uuid');
 // Skip in CI unless explicitly enabled
 const RUN_INTEGRATION_TESTS = process.env.RUN_INTEGRATION_TESTS === 'true';
 
-describe('Entitlements Integration Tests', function() {
-  // Longer timeout for integration tests
-  this.timeout(30000);
+describe('Entitlements Integration Tests', () => {
+  // These tests require a running server — skip in unit test runs
+  const SKIP = !process.env.RUN_INTEGRATION_TESTS;
+  if (SKIP) { it.todo('requires running server (set RUN_INTEGRATION_TESTS=true)'); return; }
 
   let app;
   let testUserId;

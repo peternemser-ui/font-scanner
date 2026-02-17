@@ -76,12 +76,13 @@
     "siteCrawler": "网站爬虫",
     "mobileTesting": "移动测试",
     "ipReputation": "IP信誉",
-    "localSeo": "本地SEO",
+    "geoSeo": "GEO SEO",
     "brokenLinks": "失效链接",
     "brandAudit": "品牌审核",
     "croAnalysis": "转化优化",
     "gdprCheck": "隐私合规",
     "hostingGuide": "托管指南",
+    "myReports": "我的报告",
     "more": "更多",
     "menu": "菜单",
     "toggleTheme": "切换主题",
@@ -198,41 +199,41 @@
     },
     "contact": {
       "sending": "发送中...",
-      "messageSent": "Message sent. We'll reply by email.",
-      "failedToSend": "Failed to send message. Please try again.",
-      "sendMessage": "Send message"
+      "messageSent": "消息已发送。我们将通过邮件回复。",
+      "failedToSend": "发送失败，请重试。",
+      "sendMessage": "发送消息"
     },
     "results": {
       "resultsFor": "{domain} 的结果",
       "siteHealthScore": "网站健康评分",
       "insights": {
-        "performanceExcellent": "Performance is excellent — Your site loads quickly.",
-        "performanceGood": "Performance is good — Minor optimizations could help.",
-        "performanceNeedsWork": "Performance needs work — Slow loading times may be causing visitors to leave.",
-        "performanceCritical": "Performance is critical — Significant speed improvements needed.",
-        "runPerformanceScan": "Run performance scan",
-        "performanceNotScanned": "Performance not scanned yet",
-        "forDetailedAnalysis": "for detailed analysis.",
-        "seoExcellent": "SEO is excellent — Well-optimized for search engines.",
-        "seoGood": "SEO is good — A few improvements possible.",
-        "seoNeedsWork": "SEO needs attention — Several optimization opportunities exist.",
-        "runSeoScan": "Run SEO scan",
-        "seoNotScanned": "SEO not scanned yet",
-        "accessibilityExcellent": "Accessibility is excellent — Great inclusive design.",
-        "accessibilityGood": "Accessibility is good — Most WCAG guidelines are followed.",
-        "accessibilityNeedsWork": "Accessibility needs improvement — Some users may have difficulty.",
-        "runAccessibilityScan": "Run accessibility scan",
-        "accessibilityNotScanned": "Accessibility not scanned yet",
-        "securityExcellent": "Security is excellent — Strong protection in place.",
-        "securityGood": "Security is good — Minor hardening recommended.",
-        "securityNeedsWork": "Security vulnerabilities detected — Missing headers or SSL issues need attention.",
-        "runSecurityScan": "Run security scan",
-        "securityNotScanned": "Security not scanned yet",
-        "fontsExcellent": "Fonts are excellent — Optimized typography.",
-        "fontsGood": "Fonts are good — Font usage is reasonable.",
-        "fontsNeedsWork": "Fonts need optimization — Too many font files or poor loading strategy.",
-        "runFontScan": "Run font scan",
-        "fontsNotScanned": "Fonts not scanned yet"
+        "performanceExcellent": "性能表现优秀 — 您的网站加载速度很快。",
+        "performanceGood": "性能表现良好 — 稍加优化即可更佳。",
+        "performanceNeedsWork": "性能有待改善 — 加载速度较慢可能导致访客流失。",
+        "performanceCritical": "性能状况严重 — 需要大幅提升加载速度。",
+        "runPerformanceScan": "运行性能扫描",
+        "performanceNotScanned": "尚未扫描性能",
+        "forDetailedAnalysis": "以获取详细分析。",
+        "seoExcellent": "SEO 表现优秀 — 搜索引擎优化良好。",
+        "seoGood": "SEO 表现良好 — 仍有少量改进空间。",
+        "seoNeedsWork": "SEO 需要关注 — 存在多项优化机会。",
+        "runSeoScan": "运行 SEO 扫描",
+        "seoNotScanned": "尚未扫描 SEO",
+        "accessibilityExcellent": "无障碍性表现优秀 — 包容性设计出色。",
+        "accessibilityGood": "无障碍性表现良好 — 大部分 WCAG 准则已遵循。",
+        "accessibilityNeedsWork": "无障碍性有待改善 — 部分用户可能遇到使用困难。",
+        "runAccessibilityScan": "运行无障碍性扫描",
+        "accessibilityNotScanned": "尚未扫描无障碍性",
+        "securityExcellent": "安全性表现优秀 — 防护措施完善。",
+        "securityGood": "安全性表现良好 — 建议进行少量加固。",
+        "securityNeedsWork": "检测到安全漏洞 — 缺少安全头或存在 SSL 问题需要处理。",
+        "runSecurityScan": "运行安全扫描",
+        "securityNotScanned": "尚未扫描安全性",
+        "fontsExcellent": "字体表现优秀 — 排版优化良好。",
+        "fontsGood": "字体表现良好 — 字体使用合理。",
+        "fontsNeedsWork": "字体需要优化 — 字体文件过多或加载策略不佳。",
+        "runFontScan": "运行字体扫描",
+        "fontsNotScanned": "尚未扫描字体"
       },
       "topFixes": "主要修复",
       "viewFix": "查看修复",
@@ -310,7 +311,7 @@
     "na": "不适用",
     "runningAudit": "正在运行审计...",
     "scan": {
-      "runAudit": "Run audit"
+      "runAudit": "运行审计"
     }
   },
   "loader": {
@@ -325,8 +326,8 @@
     "complete": "完成！",
     "analysisFailed": "分析失败",
     "tryAgain": "重试",
-    "upgradeToPro": "Upgrade to Pro",
-    "goToDashboard": "Go to Dashboard",
+    "upgradeToPro": "升级到 Pro",
+    "goToDashboard": "前往控制面板",
     "analyzingFonts": "正在分析字体",
     "connectingToWebsite": "正在连接网站",
     "loadingPage": "正在加载页面和资源...",
@@ -578,8 +579,8 @@
           "recommendation": "应优先改进{{category}}，因为解决该领域的问题将对搜索引擎排名和自然流量产生最显著的影响。",
           "noIssues": "本次分析未发现关键问题——该网站在所有评估类别中均表现出对当前 SEO 最佳实践的高度遵循。"
         },
-        "criticalPriority": "Critical",
-        "critical": "Critical"
+        "criticalPriority": "严重",
+        "critical": "严重"
       },
       "footer": {
         "page": "第",
@@ -602,7 +603,7 @@
         "configured": "已配置",
         "notConfigured": "未配置",
         "na": "N/A",
-        "none": "None"
+        "none": "无"
       },
       "reportLabel": {
         "seo": "SEO",
@@ -618,18 +619,19 @@
         "brand-consistency": "品牌一致性",
         "broken-links": "失效链接",
         "ip-reputation": "IP信誉",
-        "local-seo": "本地SEO",
+        "local-seo": "GEO SEO",
+        "geo-seo": "GEO SEO",
         "mobile-analyzer": "移动端",
         "competitive": "竞争分析",
         "hosting": "主机托管",
         "site-crawler": "网站爬虫",
         "core-web-vitals": "核心网页指标"
       },
-      "summary": "Summary",
-      "metric": "Metric",
-      "value": "Value",
-      "desktop": "Desktop",
-      "mobile": "Mobile"
+      "summary": "摘要",
+      "metric": "指标",
+      "value": "值",
+      "desktop": "桌面端",
+      "mobile": "移动端"
     },
     "notAvailable": "N/A",
     "info": "信息",
@@ -691,7 +693,7 @@
       "title": "下一步",
       "prefix": "需要可分享的报告？先运行扫描，然后使用报告区块解锁导出或购买积分。",
       "middle": "订阅与账号管理请查看",
-      "upgrade": "Upgrade",
+      "upgrade": "升级",
       "and": "以及",
       "account": "账户"
     },
@@ -839,6 +841,7 @@
       "breadcrumb": "无障碍",
       "title": "无障碍",
       "subtitle": "WCAG 2.1 合规测试、颜色对比度和键盘导航审计。",
+      "pageIntro": "此报告根据WCAG 2.1指南测试您的网站，检查颜色对比度、键盘导航、ARIA标签和屏幕阅读器兼容性。无障碍性差的网站会排斥残障用户，并使您面临法律风险。利用这些结果让您的网站对所有人可用。",
       "helperText": "测试 WCAG 2.1 合规、颜色对比度、键盘导航和屏幕阅读器兼容性。",
       "ariaInput": "输入网站URL进行无障碍分析",
       "ariaAnalyze": "运行无障碍扫描",
@@ -851,6 +854,7 @@
       "breadcrumb": "移动测试",
       "title": "移动测试",
       "subtitle": "多设备性能、无障碍与触控目标分析。",
+      "pageIntro": "此报告在多种移动设备上评估您的网站，检查响应式设计、触控目标、视口设置和移动端性能。超过一半的网络流量来自手机和平板电脑。确保每位访客无论使用何种设备都能获得流畅的体验。",
       "selectDevices": "选择要测试的设备：",
       "ariaInput": "输入要测试的网站URL",
       "ariaAnalyze": "运行移动测试"
@@ -858,12 +862,14 @@
     "cro": {
       "breadcrumb": "转化优化",
       "title": "转化优化",
-      "subtitle": "分析 CTA、表单、信任信号和移动端体验以提升转化。"
+      "subtitle": "分析 CTA、表单、信任信号和移动端体验以提升转化。",
+      "pageIntro": "此报告通过分析CTA、表单、信任信号和移动端结账流程来评估您网站的转化潜力。即使是微小的摩擦点也会导致访客未转化就离开。利用这些洞察优化您的转化漏斗，将更多流量转化为客户。"
     },
     "siteCrawler": {
       "breadcrumb": "网站爬虫",
       "title": "网站爬虫",
       "subtitle": "通过智能链接提取和站点地图生成发现网站所有页面。",
+      "pageIntro": "此报告通过跟踪链接和解析站点地图来发现和映射您网站的每个页面。了解网站结构可以揭示孤立页面、损坏的导航和可抓取性问题。利用结果确保搜索引擎和访客能够访问您的所有内容。",
       "ariaInput": "输入要爬取的网站URL",
       "ariaAnalyze": "开始爬取网站",
       "crawlButton": "爬取网站",
@@ -878,22 +884,25 @@
       "breadcrumb": "跟踪与分析",
       "title": "跟踪与分析",
       "subtitle": "检测 GTM、GA4、Meta Pixel、TikTok、LinkedIn、Hotjar 等，识别重复标签与配置冲突。",
+      "pageIntro": "此报告检测嵌入您网站的分析标签、营销像素和第三方脚本，包括GTM、GA4、Meta Pixel等。重复或配置错误的标签会浪费广告预算并损坏数据。审核您的标签设置，确保精准追踪和高效的页面加载。",
       "ariaInput": "输入网站URL进行标签分析",
       "ariaAnalyze": "开始跟踪与分析",
       "analyzeButton": "分析标签",
       "helperLabel": "跟踪与分析：",
       "helperText": "检测 GTM、GA4、Universal Analytics、Meta Pixel、TikTok Pixel、LinkedIn Insight、Hotjar 等。识别重复标签、缺失同意管理与配置冲突。"
     },
-    "localSeo": {
-      "breadcrumb": "本地SEO",
-      "title": "本地SEO检查",
-      "subtitle": "检查 NAP 一致性、LocalBusiness 架构与 Google Business Profile 集成。",
+    "geoSeo": {
+      "breadcrumb": "GEO SEO",
+      "title": "GEO SEO 与引用分析",
+      "subtitle": "分析 NAP 一致性、Schema 标记、目录引用、多地点页面以及评价与声誉。",
+      "pageIntro": "此报告审核您的本地搜索表现，包括NAP一致性、Schema标记、目录引用和客户评论。本地企业依赖于出现在地图包和附近搜索中。加强您的本地信号，吸引更多所在区域的客户。",
       "inspectButton": "检查"
     },
     "brokenLinks": {
       "breadcrumb": "失效链接",
       "title": "失效链接检查",
       "subtitle": "查找并修复失效链接、重定向和外部死链，提升体验和排名。",
+      "pageIntro": "此报告扫描您网站的断链、重定向链和失效的外部引用。断链会使访客沮丧，并向搜索引擎传递维护不善的信号。修复它们以保持链接权益、改善用户体验并保护搜索排名。",
       "inspectButton": "检查",
       "maxPagesLabel": "最多扫描页面数",
       "maxDepthLabel": "最大深度",
@@ -903,6 +912,7 @@
       "breadcrumb": "IP信誉",
       "title": "IP信誉",
       "subtitle": "DNS 黑名单检查、邮件可达性与威胁情报分析。",
+      "pageIntro": "此报告将您服务器的IP地址与DNS黑名单、电子邮件信誉数据库和威胁情报源进行比对。被列入黑名单的IP可能阻止您的邮件、触发浏览器警告并损害您的信誉。监控您的信誉，在问题影响业务之前发现它们。",
       "urlLabel": "要分析的IP或域名",
       "placeholder": "example.com 或 8.8.8.8",
       "ariaInput": "输入IP或域名进行信誉分析",
@@ -917,8 +927,13 @@
       "breadcrumb": "隐私合规",
       "title": "隐私合规",
       "subtitle": "检测Cookie同意、隐私政策和跟踪器。识别GDPR违规行为及潜在罚款。",
+      "pageIntro": "此报告分析您网站的Cookie同意横幅、隐私政策、第三方追踪器和数据收集实践。不遵守GDPR及类似隐私法规可能导致巨额罚款。识别差距并采取纠正措施，保护您的用户和业务。",
       "inspectButton": "检查"
     }
+  },
+  "hostingAnalyzer": {
+    "title": "主机分析器",
+    "pageIntro": "此报告检查您网站的托管基础设施，包括服务器响应时间、CDN使用情况、SSL配置和估计成本。您的托管直接影响页面速度、正常运行时间和用户体验。识别弱点，找到提高可靠性同时降低成本的机会。"
   },
   "billingPages": {
     "success": {
@@ -937,6 +952,7 @@
   "security": {
     "title": "安全分析器",
     "subtitle": "SSL、标头与漏洞扫描",
+    "pageIntro": "此报告扫描您网站的SSL配置、安全标头、Cookie策略和已知漏洞。安全漏洞会使您的访客面临风险，并损害品牌信任。遵循建议加强防御，满足现代安全标准。",
     "securityScore": "安全评分",
     "owaspCompliance": "OWASP 合规性",
     "sslCertificate": "SSL 证书",
@@ -977,10 +993,10 @@
         "table": {
           "header": "标头",
           "description": "描述",
-          "descriptionRisk": "Description / Risk"
+          "descriptionRisk": "描述/风险"
         },
-        "notSet": "Not set",
-        "risk": "Risk"
+        "notSet": "未设置",
+        "risk": "风险"
       },
       "status": {
         "present": "存在",
@@ -994,12 +1010,12 @@
         "detectedHeading": "检测到的漏洞",
         "noneFoundTitle": "未检测到漏洞",
         "noneFoundBody": "分析过程中未发现重大安全漏洞。",
-        "severityBreakdown": "Severity Breakdown",
-        "severityLevel": "Severity Level",
-        "count": "Count",
-        "solution": "Solution",
-        "owaspRefTitle": "OWASP Reference",
-        "owaspRefBody": "This analysis covers OWASP Top 10 categories including Injection, Broken Authentication, Sensitive Data Exposure, XML External Entities (XXE), and Security Misconfiguration."
+        "severityBreakdown": "严重程度分布",
+        "severityLevel": "严重程度",
+        "count": "数量",
+        "solution": "解决方案",
+        "owaspRefTitle": "OWASP 参考",
+        "owaspRefBody": "本分析涵盖 OWASP Top 10 类别，包括注入攻击、身份验证缺陷、敏感数据泄露、XML 外部实体（XXE）和安全配置错误。"
       },
       "cookies": {
         "totalLabel": "Cookie总数",
@@ -1008,7 +1024,7 @@
         "detailsHeading": "Cookie详情",
         "table": {
           "name": "Cookie名称",
-          "issues": "Issues"
+          "issues": "问题"
         }
       },
       "thirdParty": {
@@ -1021,53 +1037,54 @@
           "protocol": "协议",
           "risk": "风险"
         },
-        "sriBestPracticesTitle": "Subresource Integrity (SRI) Best Practices",
-        "sriBestPracticesBody": "Use SRI hashes to ensure third-party scripts have not been tampered with. Always load external resources over HTTPS. Use async/defer attributes to prevent blocking page rendering. Regularly audit and minimize third-party dependencies."
+        "sriBestPracticesTitle": "子资源完整性（SRI）最佳实践",
+        "sriBestPracticesBody": "使用 SRI 哈希确保第三方脚本未被篡改。始终通过 HTTPS 加载外部资源。使用 async/defer 属性防止阻塞页面渲染。定期审计并精简第三方依赖。"
       },
       "recommendations.noneTitle": "安全态势良好",
       "recommendations.noneBody": "您的网站遵循安全最佳实践。请继续监控新漏洞。",
       "comparison": {
-        "heading": "Desktop vs Mobile Security Analysis",
-        "intro": "Security posture can differ between desktop and mobile environments. This section compares key security indicators across both platforms to highlight any discrepancies.",
-        "enabled": "Enabled",
-        "missing": "Missing",
-        "mixedContent": "Mixed Content",
-        "issues": "issues",
-        "metric": "Metric",
-        "platformGapTitle": "Platform Security Gap",
-        "platformGapBody": "point difference detected between desktop and mobile. Investigate platform-specific issues."
+        "heading": "桌面端与移动端安全分析",
+        "intro": "桌面端和移动端环境的安全状况可能有所不同。本节比较两个平台的关键安全指标，以突出差异。",
+        "enabled": "已启用",
+        "missing": "缺失",
+        "mixedContent": "混合内容",
+        "issues": "个问题",
+        "metric": "指标",
+        "platformGapTitle": "平台安全差距",
+        "platformGapBody": "桌面端与移动端之间检测到分数差异。请排查特定平台的问题。"
       },
       "owasp": {
-        "heading": "OWASP Top 10 Compliance",
-        "controlsImplemented": "Controls Implemented",
-        "complianceLevel": "OWASP Compliance Level",
-        "goodTitle": "Good Security Posture",
-        "goodBody": "of OWASP Top 10 security controls implemented.",
-        "improvementsTitle": "Improvements Needed",
-        "improvementsBody": "of OWASP Top 10 security controls implemented. Review the recommendations section for prioritized fixes."
+        "heading": "OWASP Top 10 合规性",
+        "controlsImplemented": "已实施的控制措施",
+        "complianceLevel": "OWASP 合规等级",
+        "goodTitle": "安全状况良好",
+        "goodBody": "的 OWASP Top 10 安全控制措施已实施。",
+        "improvementsTitle": "需要改进",
+        "improvementsBody": "的 OWASP Top 10 安全控制措施已实施。请查看建议部分了解优先修复事项。"
       },
       "fixCard": {
-        "criticalIssues": "Critical Issues",
-        "highPriority": "High Priority",
-        "mediumPriority": "Medium Priority",
-        "lowPriority": "Low Priority",
-        "fixesOverview": "Fixes Overview",
-        "issuesIdentified": "issues identified",
-        "impact": "Estimated Improvement",
-        "riskImpact": "Risk Impact",
-        "currentIssue": "Current Issue",
-        "secureSolution": "Secure Solution",
-        "affectedResources": "Affected Resources",
-        "resourceType": "Type",
-        "resourceDetail": "Detail",
-        "stepsTitle": "Step-by-Step Fix Guide",
-        "resources": "Resources"
+        "criticalIssues": "严重问题",
+        "highPriority": "高优先级",
+        "mediumPriority": "中优先级",
+        "lowPriority": "低优先级",
+        "fixesOverview": "修复概览",
+        "issuesIdentified": "个已识别的问题",
+        "impact": "预计改善效果",
+        "riskImpact": "风险影响",
+        "currentIssue": "当前问题",
+        "secureSolution": "安全解决方案",
+        "affectedResources": "受影响的资源",
+        "resourceType": "类型",
+        "resourceDetail": "详情",
+        "stepsTitle": "分步修复指南",
+        "resources": "参考资源"
       }
     }
   },
   "performanceHub": {
     "title": "速度与用户体验",
     "subtitle": "性能、Core Web Vitals 和 Lighthouse",
+    "pageIntro": "此报告使用真实的浏览器指标和Lighthouse审计来测量您网站的加载速度、交互性和视觉稳定性。加载慢的页面会流失访客，在搜索结果中排名也会下降。利用这些洞察识别瓶颈，提供更快、更流畅的体验。",
     "scan": {
       "quickDesc": "资源分析，重点关注请求数、页面大小、阻塞资源和服务器响应时间。",
       "cwvDesc": "Google 排名指标，包括 LCP、FID、CLS 和 INP。",
@@ -1082,6 +1099,7 @@
   "fontScanner": {
     "title": "字体与排版",
     "pageSubtitle": "深度排版分析，包括多页扫描、字体加载性能和可访问性洞察。",
+    "pageIntro": "此报告分析您网站的字体使用情况、加载性能、回退链以及各页面的排版一致性。字体加载不当会导致布局偏移和渲染延迟。优化您的字体策略，同时提升视觉质量和页面速度。",
     "analyzeFonts": "分析字体",
     "enterUrl": "输入网站URL...",
     "multiPageScan": "多页扫描（分析多个页面的字体）",
@@ -1092,6 +1110,7 @@
   "brandConsistency": {
     "title": "品牌检测",
     "subtitle": "分析您网站的调色板、字体和徽标使用情况。",
+    "pageIntro": "此报告分析您网站的色彩方案、排版和徽标使用情况，以检查品牌一致性。不一致的品牌形象会使访客困惑并削弱品牌识别度。识别偏差，在每个页面上创建统一的视觉形象。",
     "breadcrumb": "品牌一致性",
     "inspect": "检测",
     "ariaInput": "输入网站URL进行品牌分析",
@@ -1398,19 +1417,20 @@
     "homepage": "首页",
     "report": {
       "sectionIntros": {
-        "overview": "Brand consistency measures how uniformly your visual identity is applied across your website. Consistent branding builds recognition, trust, and professionalism. This overview presents your aggregate consistency score across color usage, typography, and cross-page coherence.",
-        "colors": "Color analysis examines your site's color palette for consistency and adherence to brand guidelines. A cohesive color palette reinforces brand identity, while excessive color variation can appear unprofessional and confuse visitors. This section identifies your dominant colors and any inconsistencies.",
-        "typography": "Typography analysis evaluates the font families, sizes, and styles used across your site. Consistent typography creates visual harmony and improves readability. This section identifies all typefaces in use and highlights inconsistencies in heading and body text styling.",
-        "contrast": "Contrast analysis evaluates the color combinations used for text and backgrounds. Sufficient contrast ensures readability for all users, including those with visual impairments. This section identifies color pairs that may fail WCAG contrast requirements.",
-        "crossPage": "Cross-page consistency measures how uniformly your brand elements are applied across different pages of your site. Inconsistencies between pages can undermine brand credibility and create a fragmented user experience. This section compares brand elements across analyzed pages.",
-        "recommendations": "Based on the brand consistency analysis, these recommendations target the most impactful improvements for strengthening your visual brand identity."
+        "overview": "品牌一致性衡量您的视觉形象在整个网站中的统一程度。一致的品牌形象有助于建立认知度、信任感和专业性。此概览展示了您在色彩使用、排版和跨页面一致性方面的综合评分。",
+        "colors": "色彩分析检查您网站的配色方案是否一致并符合品牌规范。统一的配色方案能强化品牌形象，而过多的色彩差异会显得不够专业并令访客困惑。本节列出您的主色调及所有不一致之处。",
+        "typography": "排版分析评估您网站使用的字体系列、字号和样式。一致的排版营造视觉和谐并提升可读性。本节列出所有使用的字体，并指出标题和正文排版中的不一致之处。",
+        "contrast": "对比度分析评估文字与背景的颜色组合。足够的对比度确保所有用户（包括视力障碍者）的可读性。本节列出可能不符合 WCAG 对比度要求的颜色组合。",
+        "crossPage": "跨页面一致性衡量品牌元素在不同页面之间的统一程度。页面间的不一致会损害品牌可信度，带来碎片化的用户体验。本节比较各分析页面中的品牌元素差异。",
+        "recommendations": "基于品牌一致性分析，以下建议针对最有影响力的改进方向，帮助您强化视觉品牌形象。"
       }
     },
-    "colorAnalysis": "Color Analysis"
+    "colorAnalysis": "色彩分析"
   },
   "seo": {
     "title": "SEO 分析器",
     "subtitle": "搜索引擎优化审核",
+    "pageIntro": "此报告审计您网站在元标签、标题、结构化数据和可抓取性方面的搜索引擎优化。SEO不佳意味着您的页面不会出现在搜索结果中，导致自然流量损失。利用发现修复技术问题，提高您在Google上的可见度。",
     "analyze": "分析 SEO",
     "analyzing": "分析中...",
     "overall": "总体",
@@ -1491,7 +1511,7 @@
         "high": "高",
         "medium": "中",
         "low": "低",
-        "critical": "Critical"
+        "critical": "严重"
       },
       "tabs": {
         "summary": "摘要",
@@ -2017,9 +2037,9 @@
             "body": "属性中的资源描述框架。与Microdata类似，使用不同的属性名称。"
           },
           "table": {
-            "format": "Format",
-            "description": "Description",
-            "example": "Example"
+            "format": "格式",
+            "description": "描述",
+            "example": "示例"
           }
         },
         "resources": {
@@ -2180,7 +2200,7 @@
         "platform": "平台",
         "seoValue": "SEO价值",
         "implementationTip": "实施提示",
-        "target": "Target"
+        "target": "目标值"
       },
       "status": {
         "missing": "缺失",
@@ -2202,7 +2222,7 @@
         "notDetected": "未检测到",
         "enabled": "已启用",
         "notConfigured": "未配置 - 浏览器可通过HTTP连接",
-        "warning": "Warning"
+        "warning": "警告"
       },
       "common": {
         "moreCount": "... 另外 {{count}} 个"
@@ -2236,10 +2256,10 @@
         "sentencesLineLabel": "sentences",
         "avgWordsPerSentenceLineLabel": "avg_words_per_sentence",
         "target": {
-          "wordCount": "600+ recommended",
-          "avgWords": "15-20 words",
-          "textRatio": "15%+ recommended",
-          "paragraphs": "5+ recommended"
+          "wordCount": "建议 600 字以上",
+          "avgWords": "15-20 个词",
+          "textRatio": "建议 15% 以上",
+          "paragraphs": "建议 5 段以上"
         }
       },
       "links": {
@@ -2251,7 +2271,7 @@
         "nofollowLinksLabel": "nofollow_links",
         "brokenFormatLabel": "broken_format",
         "table": {
-          "percentage": "Percentage"
+          "percentage": "百分比"
         }
       },
       "mobile": {
@@ -2378,7 +2398,7 @@
             "twitterCard": "Twitter Card标签",
             "professional": "职业社交网络",
             "visual": "视觉内容",
-            "video": "Video content & SEO"
+            "video": "视频内容与 SEO"
           },
           "details": {
             "linkPresent": "链接存在",
@@ -2386,14 +2406,14 @@
             "twitterMissing": "未找到Twitter链接",
             "linkedinMissing": "未找到LinkedIn链接",
             "instagramMissing": "未找到Instagram链接",
-            "youtubeMissing": "No YouTube link found"
+            "youtubeMissing": "未找到 YouTube 链接"
           },
           "tip": {
             "openGraph": "添加og:image、og:title、og:description标签",
             "twitterCard": "添加twitter:card、twitter:image元标签",
             "linkedin": "添加到公司页脚，提升B2B可信度",
             "instagram": "链接到商业资料，有助于视觉品牌建设",
-            "youtube": "Video content boosts engagement and dwell time"
+            "youtube": "视频内容可提升用户互动和页面停留时间"
           }
         }
       },
@@ -2700,7 +2720,7 @@
         },
         "performance": {
           "title": "性能指标",
-          "coreWebVitals": "Core Web Vitals",
+          "coreWebVitals": "核心网页指标",
           "fcp": "首次内容绘制",
           "lcp": "最大内容绘制",
           "cls": "累积布局偏移",
@@ -2838,7 +2858,7 @@
     "sending": "发送中...",
     "sendResetLink": "发送重置链接",
     "resetting": "重置中...",
-    "resetPassword": "Reset Password"
+    "resetPassword": "重置密码"
   },
   "account": {
     "accountShort": "账户",
@@ -2854,9 +2874,9 @@
     "loggingOut": "正在退出...",
     "loading": "加载中...",
     "accountAndBilling": "账户与账单",
-    "logoutFailed": "Logout failed. Please try again.",
+    "logoutFailed": "退出登录失败，请重试。",
     "pro": "Pro",
-    "payAsYouGo": "Pay As You Go"
+    "payAsYouGo": "按需付费"
   },
   "reports": {
     "modeLabels": {
@@ -2876,7 +2896,7 @@
       "crawler": "网站爬虫",
       "brokenLinks": "死链",
       "gdpr": "GDPR合规",
-      "localSeo": "本地SEO",
+      "geoSeo": "GEO SEO",
       "tagIntelligence": "标签智能",
       "ipReputation": "IP信誉"
     },
@@ -3195,18 +3215,18 @@
       "opportunity": "改进机会",
       "impactLabel": "影响：",
       "noResourceBreakdown": "资源分解不可用。",
-      "partial": "Partial",
-      "diagnostic": "Diagnostic",
-      "suggestions": "Suggestions:",
-      "suggestionWait": "Wait a few moments and try again",
-      "suggestionSpecificPage": "Test a specific page instead of the homepage",
-      "suggestionCheckBrowser": "Check if the website is accessible in your browser",
-      "suggestionHighTraffic": "The site may be experiencing high traffic or server issues",
-      "tryAgain": "Try Again",
-      "analysisFailedRetry": "Analysis failed. Please try again.",
-      "exportAndShare": "Export and share results (Pro)",
-      "downloadCsv": "Download CSV",
-      "proExportLocked": "Pro export locked"
+      "partial": "部分",
+      "diagnostic": "诊断",
+      "suggestions": "建议：",
+      "suggestionWait": "稍等片刻后重试",
+      "suggestionSpecificPage": "尝试测试某个具体页面而非首页",
+      "suggestionCheckBrowser": "检查该网站是否可以在浏览器中正常访问",
+      "suggestionHighTraffic": "该网站可能正在经历高流量或服务器问题",
+      "tryAgain": "重试",
+      "analysisFailedRetry": "分析失败，请重试。",
+      "exportAndShare": "导出并分享结果（Pro）",
+      "downloadCsv": "下载 CSV",
+      "proExportLocked": "Pro 导出已锁定"
     },
     "fonts": {
       "title": "字体与排版报告",
@@ -3662,7 +3682,7 @@
       "owaspReference": "OWASP参考：此分析涵盖OWASP十大类别",
       "totalCookies": "Cookie总数：{{total}} | 安全Cookie：{{secure}}",
       "name": "名称",
-      "secure": "Secure",
+      "secure": "安全",
       "noCookiesDetected": "未检测到Cookie",
       "cookieSecurityIssues": "Cookie安全问题",
       "scriptUrl": "脚本URL",
@@ -3831,8 +3851,8 @@
       "sslScore": "SSL分数",
       "vulnerabilityScore": "漏洞分数",
       "report": {
-        "recommendations.noneTitle": "Strong Security Posture",
-        "recommendations.noneBody": "Your site follows security best practices. Continue monitoring for new vulnerabilities."
+        "recommendations.noneTitle": "安全状况良好",
+        "recommendations.noneBody": "您的网站遵循安全最佳实践。请继续监控新的漏洞。"
       },
       "cookieIssues": {
         "missingHttpOnly": "缺少HttpOnly标志",
@@ -4085,20 +4105,20 @@
       "report": {
         "wcag": {
           "criteria": {
-            "nonTextContent": "1.1.1 Non-text Content",
-            "infoRelationships": "1.3.1 Info and Relationships",
-            "contrastMinimum": "1.4.3 Contrast (Minimum)",
-            "keyboard": "2.1.1 Keyboard",
-            "bypassBlocks": "2.4.1 Bypass Blocks",
-            "pageTitled": "2.4.2 Page Titled",
-            "focusOrder": "2.4.3 Focus Order",
-            "languagePage": "3.1.1 Language of Page",
-            "parsing": "4.1.1 Parsing",
-            "nameRoleValue": "4.1.2 Name, Role, Value"
+            "nonTextContent": "1.1.1 非文本内容",
+            "infoRelationships": "1.3.1 信息与关系",
+            "contrastMinimum": "1.4.3 对比度（最低要求）",
+            "keyboard": "2.1.1 键盘",
+            "bypassBlocks": "2.4.1 绕过区块",
+            "pageTitled": "2.4.2 页面标题",
+            "focusOrder": "2.4.3 焦点顺序",
+            "languagePage": "3.1.1 页面语言",
+            "parsing": "4.1.1 解析",
+            "nameRoleValue": "4.1.2 名称、角色、值"
           }
         },
-        "recommendations.noneTitle": "Excellent Accessibility",
-        "recommendations.noneBody": "Your site meets accessibility best practices. Continue monitoring for compliance."
+        "recommendations.noneTitle": "无障碍性表现优秀",
+        "recommendations.noneBody": "您的网站符合无障碍最佳实践。请继续监控合规性。"
       },
       "wrongReportType": "存储的报告似乎来自不同的分析器。请运行新的无障碍扫描。",
       "wcag21Compliance": "WCAG 2.1 合规性",
@@ -4556,9 +4576,115 @@
       "addLazyLoading": "为图片添加Lazy Loading",
       "enableCompression": "启用压缩",
       "enableCompressionDesc": "在服务器上启用Gzip/Brotli压缩，将文件大小减少70-90%。",
-      "opportunities": "Opportunities",
-      "scoreComparison": "Score Comparison",
-      "coreWebVitalsOverview": "Core Web Vitals Overview"
+      "opportunities": "优化机会",
+      "scoreComparison": "分数对比",
+      "coreWebVitalsOverview": "核心网页指标概览",
+      "priorityLabels": {
+        "high": "高",
+        "medium": "中",
+        "low": "低"
+      },
+      "recTitles": {
+        "Minimize JavaScript": "最小化JavaScript",
+        "Optimize Images": "优化图片",
+        "Reduce CSS Size": "减少CSS大小",
+        "Improve Caching Strategy": "改善缓存策略",
+        "Enable Text Compression": "启用文本压缩",
+        "Reduce HTTP Requests": "减少HTTP请求",
+        "Optimize Web Fonts": "优化网络字体",
+        "Optimize Largest Contentful Paint (LCP)": "优化最大内容绘制 (LCP)",
+        "Reduce Cumulative Layout Shift (CLS)": "减少累积布局偏移 (CLS)",
+        "Significant Mobile Performance Gap": "显著的移动端性能差距"
+      },
+      "recDescriptions": {
+        "Minimize JavaScript": "大型JavaScript包正在阻塞页面加载。使用代码分割和tree shaking来减小包大小。",
+        "Optimize Images": "未优化的图片正在增加页面重量。考虑转换为WebP/AVIF格式并实现懒加载。",
+        "Reduce CSS Size": "大型CSS文件正在阻塞渲染。内联关键 CSS并删除未使用的样式。",
+        "Improve Caching Strategy": "不充分的缓存头正在降低重复访问的性能。为静态资源设置适当的Cache-Control头。",
+        "Enable Text Compression": "基于文本的资源未被压缩。启用Gzip/Brotli压缩以减小文件大小。",
+        "Reduce HTTP Requests": "大量HTTP请求正在减慢页面加载。考虑合并资源、CSS雪碧图和删除不必要的请求。",
+        "Optimize Web Fonts": "网络字体加载未优化。使用font-display策略和预加载。",
+        "Optimize Largest Contentful Paint (LCP)": "最大内容绘制较慢。通过优先加载关键资源和优化图片来改善。",
+        "Reduce Cumulative Layout Shift (CLS)": "页面加载时发生布局偏移。为图片/媒体添加尺寸属性并为动态内容预留空间。",
+        "Significant Mobile Performance Gap": "移动端和桌面端之间存在很大的性能差距。优先进行移动端特定的优化。"
+      },
+      "recImpacts": {
+        "Minimize JavaScript": "显著减少页面加载时间",
+        "Optimize Images": "减少页面大小60-80%",
+        "Reduce CSS Size": "改善渲染开始时间",
+        "Improve Caching Strategy": "改善重复访问的加载速度",
+        "Enable Text Compression": "减少传输大小70-90%",
+        "Reduce HTTP Requests": "减少连接开销",
+        "Optimize Web Fonts": "改善文本显示延迟",
+        "Optimize Largest Contentful Paint (LCP)": "将LCP改善到2.5秒以下",
+        "Reduce Cumulative Layout Shift (CLS)": "改善视觉稳定性",
+        "Significant Mobile Performance Gap": "改善移动端用户体验"
+      },
+      "recCategories": {
+        "Performance": "性能",
+        "Resources": "资源",
+        "Caching": "缓存",
+        "Network": "网络",
+        "Web Vitals": "Web Vitals",
+        "Images": "图片",
+        "JavaScript": "JavaScript",
+        "CSS": "CSS",
+        "Fonts": "字体",
+        "Compression": "压缩",
+        "Mobile": "移动端"
+      },
+      "recommendations": {
+        "minimizeJs": {
+          "title": "最小化JavaScript",
+          "description": "大型JavaScript包正在阻塞页面加载。使用代码分割和tree shaking来减小包大小。",
+          "impact": "显著减少页面加载时间"
+        },
+        "optimizeImages": {
+          "title": "优化图片",
+          "description": "未优化的图片正在增加页面重量。考虑转换为WebP/AVIF格式并实现懒加载。",
+          "impact": "减少页面大小60-80%"
+        },
+        "reduceCss": {
+          "title": "减少CSS大小",
+          "description": "大型CSS文件正在阻塞渲染。内联关键 CSS并删除未使用的样式。",
+          "impact": "改善渲染开始时间"
+        },
+        "improveCaching": {
+          "title": "改善缓存策略",
+          "description": "不充分的缓存头正在降低重复访问的性能。为静态资源设置适当的Cache-Control头。",
+          "impact": "改善重复访问的加载速度"
+        },
+        "optimizeLcp": {
+          "title": "优化最大内容绘制 (LCP)",
+          "description": "最大内容绘制较慢。通过优先加载关键资源和优化图片来改善。",
+          "impact": "将LCP改善到2.5秒以下"
+        },
+        "reduceCls": {
+          "title": "减少累积布局偏移 (CLS)",
+          "description": "页面加载时发生布局偏移。为图片/媒体添加尺寸属性并为动态内容预留空间。",
+          "impact": "改善视觉稳定性"
+        },
+        "mobileGap": {
+          "title": "显著的移动端性能差距",
+          "description": "移动端和桌面端之间存在很大的性能差距。优先进行移动端特定的优化。",
+          "impact": "改善移动端用户体验"
+        },
+        "enableCompression": {
+          "title": "启用文本压缩",
+          "description": "基于文本的资源未被压缩。启用Gzip/Brotli压缩以减小文件大小。",
+          "impact": "减少传输大小70-90%"
+        },
+        "reduceRequests": {
+          "title": "减少HTTP请求",
+          "description": "大量HTTP请求正在减慢页面加载。考虑合并资源、CSS雪碧图和删除不必要的请求。",
+          "impact": "减少连接开销"
+        },
+        "optimizeFonts": {
+          "title": "优化网络字体",
+          "description": "网络字体加载未优化。使用font-display策略和预加载。",
+          "impact": "改善文本显示延迟"
+        }
+      }
     },
     "status": {
       "excellent": "优秀",
@@ -4661,21 +4787,21 @@
       },
       "report": {
         "desktop": {
-          "passedDesc": "All desktop Core Web Vitals meet Google\\",
-          "failedDesc": "One or more desktop metrics fall below Google\\"
+          "passedDesc": "所有桌面端核心网页指标均达到 Google",
+          "failedDesc": "一个或多个桌面端指标低于 Google"
         },
         "mobile": {
-          "passedDesc": "All mobile Core Web Vitals meet Google\\",
-          "failedDesc": "One or more mobile metrics fall below Google\\"
+          "passedDesc": "所有移动端核心网页指标均达到 Google",
+          "failedDesc": "一个或多个移动端指标低于 Google"
         },
         "comparison": {
-          "context": "Comparison Context",
-          "percentileAnalysis": "Percentile Analysis",
-          "analysis": "Analysis",
-          "percentile": "Percentile",
-          "realWorldImpact": "Real World Impact",
-          "assessment": "Assessment",
-          "details": "Details"
+          "context": "对比背景",
+          "percentileAnalysis": "百分位分析",
+          "analysis": "分析",
+          "percentile": "百分位",
+          "realWorldImpact": "实际影响",
+          "assessment": "评估",
+          "details": "详情"
         },
         "desktop.details": "指标详情",
         "mobile.details": "指标详情",
@@ -4686,8 +4812,8 @@
         "diagnostics.mobile": "移动端诊断",
         "recommendations": {
           "total": "Total Recommendations",
-          "issue": "Issue",
-          "solution": "Solution"
+          "issue": "问题",
+          "solution": "解决方案"
         },
         "recommendations.noneTitle": "优秀的核心Web指标",
         "recommendations.noneBody": "您的网站在所有核心Web指标上都达到了良好的分数。请继续监控以防回归。",
@@ -4708,16 +4834,16 @@
           "poor": "差"
         },
         "sectionIntros": {
-          "desktop": "Desktop Core Web Vitals measure how real users experience your site on desktop devices. This section presents LCP, INP, CLS, and additional metrics with ratings based on Google's published thresholds. Good scores indicate a fast, responsive, and visually stable experience for desktop visitors.",
-          "mobile": "Mobile Core Web Vitals are especially important since Google uses mobile-first indexing. This section presents your mobile LCP, INP, CLS, and additional metrics. Mobile performance often differs significantly from desktop due to slower processors and network conditions. Optimizing for mobile is critical for search rankings.",
-          "comparison": "This comparison highlights the differences between your desktop and mobile Core Web Vitals scores. Significant gaps between the two may indicate mobile-specific performance issues such as unoptimized images, render-blocking resources, or layout shifts that only occur on smaller viewports.",
-          "diagnostics": "Diagnostic information provides detailed technical insights into the factors affecting your Core Web Vitals scores. These diagnostics help identify specific elements, resources, or code patterns that contribute to poor performance metrics.",
-          "recommendations": "Based on your Core Web Vitals analysis, these recommendations target the highest-impact improvements for loading speed, interactivity, and visual stability.",
-          "coreVitals": "These three metrics are the official Core Web Vitals that Google uses as ranking signals. LCP measures loading performance, INP measures interactivity responsiveness, and CLS measures visual stability. Each metric is shown with mobile (70% weight) and desktop (30% weight) values side by side.",
+          "desktop": "桌面端核心网页指标衡量真实用户在桌面设备上的体验。本节展示 LCP、INP、CLS 及其他指标，评级基于 Google 公布的阈值。良好的分数表明桌面端访客拥有快速、响应灵敏且视觉稳定的体验。",
+          "mobile": "移动端核心网页指标尤为重要，因为 Google 采用移动优先索引。本节展示您的移动端 LCP、INP、CLS 及其他指标。由于处理器速度和网络条件的限制，移动端性能通常与桌面端差异显著。优化移动端性能对搜索排名至关重要。",
+          "comparison": "此对比突出了桌面端与移动端核心网页指标分数之间的差异。两者之间的显著差距可能表明存在移动端特有的性能问题，如未优化的图片、阻塞渲染的资源或仅在较小视口中出现的布局偏移。",
+          "diagnostics": "诊断信息提供了影响核心网页指标分数的详细技术洞察。这些诊断有助于识别导致性能指标不佳的特定元素、资源或代码模式。",
+          "recommendations": "基于核心网页指标分析，以下建议针对加载速度、交互响应性和视觉稳定性方面影响最大的改进。",
+          "coreVitals": "这三项指标是 Google 用作排名信号的官方核心网页指标。LCP 衡量加载性能，INP 衡量交互响应性，CLS 衡量视觉稳定性。每项指标均并列显示移动端（权重 70%）和桌面端（权重 30%）的值。",
           "additionalMetrics": "Beyond the three Core Web Vitals, these additional metrics provide deeper insight into your page performance. First Contentful Paint (FCP) measures how quickly the first visible content appears, Speed Index (SI) measures how quickly content is visually displayed, and Time to Interactive (TTI) measures when the page becomes fully interactive.",
-          "bestPractices": "This section provides Google\\"
+          "bestPractices": "本节提供 Google"
         },
-        "overallScore": "Overall CWV Score"
+        "overallScore": "核心网页指标综合评分"
       },
       "overallScore": "CWV总体评分",
       "grade": "评级",
@@ -4732,8 +4858,8 @@
       "criticalOptimizationsBlur": "关键优化建议...",
       "recommendationsAvailable": "{{count}}条建议可用",
       "understandingScoresTitle": "了解您的评分",
-      "passingCwvTitle": "Passing Core Web Vitals",
-      "failingCwvTitle": "Failing Core Web Vitals"
+      "passingCwvTitle": "通过的核心网页指标",
+      "failingCwvTitle": "未通过的核心网页指标"
     },
     "performanceHub": {
       "quickScanTitle": "速度和用户体验报告：快速扫描",
@@ -4798,15 +4924,15 @@
           "viewport": "视口元标签配置和渐进式Web应用（PWA）就绪性决定了您的网站在移动设备上的行为。正确配置的视口可防止不必要的缩放和缩放。Web清单和服务工作器等PWA功能可实现类似应用的体验。",
           "accessibility": "移动无障碍性侧重于确保残障人士可以在移动设备上使用您的网站。这包括触摸目标无障碍性、屏幕阅读器兼容性和手势导航支持。特定于移动端的无障碍问题可能影响大量移动用户。",
           "recommendations": "基于移动分析，这些建议针对移动用户体验、性能和无障碍性最具影响力的改进。",
-          "aboveFold": "Above the fold analysis evaluates the content visible without scrolling on mobile screens. A well-designed above-the-fold area includes a clear headline, hero image, and call-to-action to engage visitors immediately. This section checks for critical content elements and render-blocking resources that delay initial display.",
-          "mobileSeo": "Mobile SEO evaluates search engine optimization factors specific to mobile devices. This includes title tag length, meta description, viewport configuration, canonical URLs, structured data, click-to-call links, and heading hierarchy. Proper mobile SEO ensures your site is discoverable and ranks well in mobile search results.",
-          "inputFields": "Input field analysis evaluates how well form inputs are optimized for mobile devices. Proper input types (email, tel), autocomplete attributes, and associated labels make forms easier and faster to complete on mobile. This section checks for common mobile input optimization issues.",
+          "aboveFold": "首屏分析评估移动端屏幕上无需滚动即可看到的内容。良好的首屏设计包含清晰的标题、主图和行动号召按钮，以立即吸引访客。本节检查关键内容元素以及延迟初始显示的阻塞渲染资源。",
+          "mobileSeo": "移动端 SEO 评估移动设备特有的搜索引擎优化因素，包括标题标签长度、meta 描述、视口配置、规范 URL、结构化数据、点击拨号链接和标题层次结构。良好的移动端 SEO 确保您的网站在移动搜索中可被发现且排名靠前。",
+          "inputFields": "输入框分析评估表单输入针对移动设备的优化程度。正确的输入类型（email、tel）、自动完成属性和关联标签能使移动端表单填写更快捷。本节检查常见的移动端输入优化问题。",
           "performanceMetrics": "Performance metrics measure how quickly your site loads and becomes interactive on mobile devices. Key metrics include First Paint, First Contentful Paint, DOM Content Loaded, and full page load time. These measurements are taken on each emulated device to identify performance variations across different mobile profiles."
         },
         "overview": {
-          "error": "Error",
+          "error": "错误",
           "table": {
-            "accessibility": "Accessibility"
+            "accessibility": "无障碍性"
           }
         },
         "overview.overallScore": "综合评分",
@@ -4828,18 +4954,18 @@
             "severity": "严重程度",
             "issue": "问题"
           },
-          "compliance": "Compliance",
-          "hasIssues": "Has Issues",
-          "perDevice": "Per-Device Touch Compliance",
-          "undersized": "Undersized"
+          "compliance": "合规性",
+          "hasIssues": "存在问题",
+          "perDevice": "各设备触控合规性",
+          "undersized": "尺寸不足"
         },
         "readability": {
-          "score": "Readability Score",
-          "perDevice": "Per-Device Readability Scores",
+          "score": "可读性评分",
+          "perDevice": "各设备可读性评分",
           "totalElements": "Total Elements",
-          "smallFontElements": "Small Font Elements",
-          "insights": "Readability Insights",
-          "worstDevice": "Most Small Text"
+          "smallFontElements": "小字号元素",
+          "insights": "可读性洞察",
+          "worstDevice": "小字最多的设备"
         },
         "readability.fontSize": "字体大小",
         "readability.lineHeight": "行高",
@@ -4847,14 +4973,14 @@
         "readability.tooSmall": "过小",
         "readability.issuesHeading": "可读性问题",
         "responsiveness": {
-          "responsiveDesign": "Responsive Design",
-          "breakpoints": "Breakpoints Found",
-          "horizontalScroll": "Horizontal Scroll",
-          "detected": "Detected",
-          "none": "None",
-          "contentOverflow": "Content Overflow",
-          "noResponsiveTitle": "Not Responsive",
-          "noResponsiveBody": "No responsive media queries were detected. Consider adding CSS media queries for different screen sizes."
+          "responsiveDesign": "响应式设计",
+          "breakpoints": "已发现的断点",
+          "horizontalScroll": "水平滚动",
+          "detected": "已检测到",
+          "none": "无",
+          "contentOverflow": "内容溢出",
+          "noResponsiveTitle": "非响应式",
+          "noResponsiveBody": "未检测到响应式媒体查询。建议为不同屏幕尺寸添加 CSS 媒体查询。"
         },
         "responsiveness.viewport": "视口已配置",
         "responsiveness.mediaQueries": "媒体查询",
@@ -4875,16 +5001,16 @@
           "https": "HTTPS",
           "noDarkModeTitle": "不支持深色模式",
           "noDarkModeBody": "未检测到深色模式支持。请考虑添加prefers-color-scheme媒体查询支持。",
-          "viewportScore": "Viewport Score",
-          "issuesHeading": "Viewport Issues",
-          "noIssuesBody": "No viewport issues detected. The viewport meta tag is properly configured.",
-          "darkModeScore": "Dark Mode Score"
+          "viewportScore": "视口评分",
+          "issuesHeading": "视口问题",
+          "noIssuesBody": "未检测到视口问题。viewport meta 标签配置正确。",
+          "darkModeScore": "深色模式评分"
         },
         "accessibility": {
-          "perDevice": "Per-Device Accessibility Scores",
-          "insights": "Accessibility Insights",
+          "perDevice": "各设备无障碍性评分",
+          "insights": "无障碍性洞察",
           "missingAltIssue": "{{count}} images missing alt text",
-          "headingIssue": "Heading hierarchy has gaps (skipped levels)"
+          "headingIssue": "标题层次结构存在缺口（跳过了层级）"
         },
         "accessibility.score": "无障碍性评分",
         "accessibility.issuesHeading": "无障碍性问题",
@@ -4898,32 +5024,32 @@
         "recommendations.noneTitle": "出色的移动体验",
         "recommendations.noneBody": "您的网站提供出色的移动体验。请继续监控内容和功能变更带来的回退问题。",
         "breakdown": {
-          "avg": "Average",
-          "best": "Best",
-          "lowest": "Lowest",
-          "spread": "Score spread: {{spread}} points (best {{best}}/100, lowest {{lowest}}/100)"
+          "avg": "平均",
+          "best": "最佳",
+          "lowest": "最低",
+          "spread": "分数跨度：{{spread}} 分（最佳 {{best}}/100，最低 {{lowest}}/100）"
         },
         "aboveFold": {
-          "score": "Above Fold Score"
+          "score": "首屏评分"
         },
         "mobileSeo": {
-          "score": "Mobile SEO Score"
+          "score": "移动端 SEO 评分"
         },
         "inputFields": {
-          "score": "Input Fields Score",
-          "noIssuesBody": "Input fields are well-optimized for mobile devices."
+          "score": "输入框评分",
+          "noIssuesBody": "输入框已针对移动设备进行了良好优化。"
         },
         "perfMetrics": {
-          "perDevice": "Per-Device Performance Scores",
-          "timingInsights": "Timing Insights",
-          "detailedTimings": "Detailed Per-Device Timings",
-          "score": "Performance Score"
+          "perDevice": "各设备性能评分",
+          "timingInsights": "计时洞察",
+          "detailedTimings": "各设备详细计时",
+          "score": "性能评分"
         },
         "recs": {
           "improvementsFound": "{{count}} improvements found",
-          "resources": "Resources",
-          "description": "Description",
-          "link": "Link"
+          "resources": "参考资源",
+          "description": "描述",
+          "link": "链接"
         }
       },
       "mobileScore": "移动端评分",
@@ -5019,7 +5145,7 @@
       "renderBlockingScripts": "阻塞渲染的脚本",
       "titleTag": "Title标签",
       "chars": "字符",
-      "metaDescription": "Meta Description",
+      "metaDescription": "Meta 描述",
       "viewportMeta": "Viewport Meta",
       "set": "已设置",
       "schemas": "个schema",
@@ -5239,12 +5365,12 @@
       },
       "report": {
         "sectionIntros": {
-          "summary": "This summary provides an overview of all links discovered on your page, categorized by status. Broken links create poor user experiences and waste search engine crawl budget. A healthy link profile has zero broken links, minimal redirects, and a balanced mix of internal and external links.",
-          "broken": "Broken links return HTTP error codes (4xx or 5xx) and lead visitors to dead ends. Each broken link represents a missed opportunity for engagement and can negatively impact your search rankings. This section lists all broken links found with their status codes and source locations.",
-          "redirects": "Redirects add latency to page loads and can create chains that significantly slow navigation. While some redirects are necessary, excessive or chained redirects indicate maintenance issues. This section identifies all redirecting links and their final destinations.",
-          "anchors": "Anchor text analysis examines the descriptive text used in your links. Well-crafted anchor text helps both users and search engines understand link destinations. This section evaluates anchor text quality, diversity, and relevance.",
-          "attributes": "Link attributes like rel, target, and nofollow influence how search engines interpret and follow your links. This section analyzes the distribution and usage of link attributes to ensure they align with your SEO strategy.",
-          "recommendations": "Based on the broken links analysis, these recommendations prioritize fixing the most impactful link issues to improve user experience and search engine crawling."
+          "summary": "本摘要概述了页面上发现的所有链接，按状态分类。断链会造成不良用户体验并浪费搜索引擎抓取配额。健康的链接配置应做到零断链、最少重定向，以及内部链接与外部链接的合理搭配。",
+          "broken": "断链返回 HTTP 错误代码（4xx 或 5xx），将访客引向死胡同。每个断链都代表一次错失的互动机会，并可能对搜索排名产生负面影响。本节列出所有发现的断链及其状态代码和来源位置。",
+          "redirects": "重定向会增加页面加载延迟，链式重定向更会显著拖慢导航速度。虽然某些重定向是必要的，但过多或链式重定向表明存在维护问题。本节列出所有重定向链接及其最终目标。",
+          "anchors": "锚文本分析检查链接中使用的描述性文本。精心编写的锚文本有助于用户和搜索引擎理解链接目标。本节评估锚文本的质量、多样性和相关性。",
+          "attributes": "rel、target 和 nofollow 等链接属性影响搜索引擎解析和跟踪链接的方式。本节分析链接属性的分布和使用情况，以确保它们与您的 SEO 策略一致。",
+          "recommendations": "基于断链分析，以下建议优先修复影响最大的链接问题，以改善用户体验和搜索引擎抓取效率。"
         },
         "sections": {
           "summary": "链接摘要",
@@ -5487,6 +5613,7 @@
     "competitive": {
       "title": "竞争分析",
       "pageSubtitle": "在SEO、性能、可访问性和安全性方面将您的网站与竞争对手进行比较。",
+      "pageIntro": "此报告在SEO、性能、无障碍性和安全性指标方面将您的网站与竞争对手进行对标。了解您相对于竞争对手的位置可以揭示您的优势和盲点。利用竞争情报确定优先改进方向，缩小差距。",
       "competitiveAdvantageTitle": "竞争优势",
       "competitiveAdvantageDesc": "将您的网站与最多5个竞争对手在SEO、性能、Core Web Vitals、可访问性和安全性方面进行比较。获取可操作的洞察以超越竞争对手。",
       "analysisNote": "注意：分析需要2-3分钟，由于资源使用量较大，每15分钟限制2次请求。",
@@ -5502,6 +5629,11 @@
       "detailedMetrics": "详细指标分解",
       "keyInsights": "关键洞察",
       "visualComparison": "视觉分数对比",
+      "siteScreenshots": "网站截图",
+      "screenshotsDesc": "扫描期间捕获的所有分析网站的视觉比较。",
+      "screenshotOf": "{{domain}}的截图",
+      "yourSiteLabel": "您的网站",
+      "noScreenshots": "截图不可用",
       "competitivePosition": "竞争位置摘要",
       "headToHead": "正面对决",
       "strengthsWeaknesses": "您的竞争优势与劣势",
@@ -5514,16 +5646,16 @@
       "invalidCompetitorUrl": "\"{{url}}\"不是有效的URL。请输入类似\"competitor.com\"或\"https://competitor.com\"的地址",
       "report": {
         "sectionIntros": {
-          "overview": "This competitive overview compares your site's performance against your competitors across key metrics. Understanding where you stand relative to competitors helps prioritize optimization efforts and identify market opportunities.",
-          "rankings": "Score rankings show how your site compares to competitors across SEO, performance, security, and accessibility categories. Higher rankings indicate competitive advantages, while lower rankings reveal areas where competitors are outperforming you.",
-          "gaps": "Performance gaps highlight the specific areas where the difference between your scores and the best competitor scores is largest. Closing these gaps can yield the most significant competitive improvements. This section also identifies your strength areas where you lead the competition.",
-          "competitors": "Competitor profiles provide detailed score breakdowns for each analyzed competitor. Understanding each competitor's strengths and weaknesses helps inform your optimization strategy and identify opportunities to differentiate.",
-          "insights": "Strategic insights synthesize the competitive data into actionable intelligence. These insights identify patterns, opportunities, and threats that emerge from the comparative analysis.",
-          "recommendations": "Based on the competitive analysis, these recommendations prioritize improvements that will have the greatest impact on your competitive position.",
-          "visualComparison": "Visual bar comparison showing exactly where you stand against each competitor in every category. Sites are ranked within each metric, with your position clearly indicated.",
-          "competitivePosition": "This section shows your competitive position in each metric category. For each metric, see whether you are winning, losing, or tied, along with the score difference, average competitor score, best competitor score, and your percentile ranking.",
-          "headToHead": "Detailed head-to-head comparison for each metric category. Each metric includes a leaderboard, competitive insight, and actionable steps to either maintain your lead or close the gap.",
-          "strengthsWeaknesses": "Based on your competitive analysis, this section identifies where you excel and where you need improvement. Strengths should be maintained, while weaknesses represent the highest-impact improvement opportunities."
+          "overview": "此竞争概览将您的网站在关键指标上的表现与竞争对手进行比较。了解您相对于竞争对手的位置有助于确定优化工作的优先级并识别市场机会。",
+          "rankings": "评分排名展示您的网站在 SEO、性能、安全性和无障碍性类别中与竞争对手的对比情况。较高的排名表示竞争优势，而较低的排名则揭示竞争对手表现优于您的领域。",
+          "gaps": "性能差距突出显示您的分数与最佳竞争对手分数之间差距最大的特定领域。缩小这些差距可以带来最显著的竞争力提升。本部分还会识别您领先于竞争对手的优势领域。",
+          "competitors": "竞争对手资料提供每个被分析竞争对手的详细分数细分。了解每个竞争对手的优势和劣势有助于制定优化策略并识别差异化机会。",
+          "insights": "战略洞察将竞争数据综合为可操作的情报。这些洞察识别从对比分析中浮现的模式、机会和威胁。",
+          "recommendations": "基于竞争分析，这些建议优先列出对您的竞争地位影响最大的改进措施。",
+          "visualComparison": "可视化条形图对比，精确展示您在每个类别中相对于每个竞争对手的位置。网站在每个指标中进行排名，您的位置被清晰标注。",
+          "competitivePosition": "本部分显示您在每个指标类别中的竞争位置。对于每个指标，可以查看您是领先、落后还是持平，以及分数差异、竞争对手平均分、最佳竞争对手分数和您的百分位排名。",
+          "headToHead": "每个指标类别的详细一对一对比。每个指标包括排行榜、竞争洞察以及可操作的步骤，以维持领先优势或缩小差距。",
+          "strengthsWeaknesses": "基于您的竞争分析，本部分识别您的优势领域和需要改进的领域。优势应该保持，而劣势代表影响最大的改进机会。"
         },
         "sections": {
           "overview": "竞争概览",
@@ -5532,10 +5664,10 @@
           "competitors": "竞争对手概况",
           "insights": "战略洞察",
           "recommendations": "建议",
-          "visualComparison": "Visual Score Comparison",
-          "competitivePosition": "Competitive Position Summary",
-          "headToHead": "Head-to-Head Battle",
-          "strengthsWeaknesses": "Competitive Strengths & Weaknesses"
+          "visualComparison": "可视化分数对比",
+          "competitivePosition": "竞争位置概览",
+          "headToHead": "一对一对决",
+          "strengthsWeaknesses": "竞争优势与劣势"
         },
         "categories": {
           "overall": "综合",
@@ -5547,25 +5679,25 @@
         "overview": {
           "yourSiteLabel": "您的网站",
           "competitorsAnalyzed": "已分析的竞争对手",
-          "rank": "Overall Rank",
-          "grade": "Grade",
-          "categoriesWinning": "Categories Winning",
-          "categoriesBehind": "Categories Behind",
-          "avgCompetitorScore": "Avg Competitor Score",
-          "gapToLeader": "Gap to Leader",
-          "priorityFocus": "Priority Focus",
-          "fixWeaknesses": "You are behind in ",
-          "maintainLead": "You are leading or competitive in all categories. Focus on maintaining your advantage and monitoring competitor improvements."
+          "rank": "总体排名",
+          "grade": "等级",
+          "categoriesWinning": "领先类别",
+          "categoriesBehind": "落后类别",
+          "avgCompetitorScore": "竞争对手平均分",
+          "gapToLeader": "与领先者的差距",
+          "priorityFocus": "优先关注",
+          "fixWeaknesses": "您在以下类别中落后：",
+          "maintainLead": "您在所有类别中处于领先或具有竞争力。请专注于保持您的优势并监控竞争对手的改进。"
         },
         "rankings": {
           "site": "网站",
           "noData": "无排名数据。",
-          "grade": "Grade",
-          "yourRankings": "Your Rankings by Category",
-          "metric": "Metric",
-          "rank": "Rank",
-          "status": "Status",
-          "action": "Recommended Action"
+          "grade": "等级",
+          "yourRankings": "您的各类别排名",
+          "metric": "指标",
+          "rank": "排名",
+          "status": "状态",
+          "action": "建议操作"
         },
         "gaps": {
           "tableHeading": "评分差距分析",
@@ -5576,17 +5708,17 @@
           "strengthsHeading": "优势领域",
           "improvementsHeading": "改善领域",
           "noData": "无差距数据。",
-          "progress": "Score Position"
+          "progress": "分数位置"
         },
         "competitors": {
           "competitorLabel": "竞争对手",
           "theirScore": "他们的评分",
           "difference": "差异",
           "noData": "无竞争对手数据。",
-          "grade": "Grade",
-          "ahead": "Ahead",
-          "behind": "Behind",
-          "tied": "Tied"
+          "grade": "等级",
+          "ahead": "领先",
+          "behind": "落后",
+          "tied": "持平"
         },
         "insights": {
           "noData": "无战略洞察。"
@@ -5596,54 +5728,54 @@
           "noneBody": "您的网站在分析的竞争对手中表现良好。请继续监控。"
         },
         "position": {
-          "diff": "Diff",
-          "avgCompetitor": "Avg Competitor",
-          "bestCompetitor": "Best Competitor",
-          "percentile": "Percentile",
-          "scoreProgress": "Score vs Competitors",
-          "noData": "No competitive position data available."
+          "diff": "差异",
+          "avgCompetitor": "竞争对手平均",
+          "bestCompetitor": "最佳竞争对手",
+          "percentile": "百分位",
+          "scoreProgress": "分数与竞争对手对比",
+          "noData": "暂无竞争位置数据。"
         },
         "headToHead": {
-          "leaderIndicator": "Indicates category leader",
-          "detailedMetricAnalysis": "Detailed Metric Analysis",
-          "youreLeading": "You are leading",
-          "opportunity": "OPPORTUNITY",
-          "bestCompetitor": "Best Competitor",
-          "avgCompetitor": "Avg Competitor",
-          "competitiveAdvantage": "Competitive Advantage",
-          "winningInsight": "You are outperforming all competitors in this category. Focus on maintaining this advantage.",
-          "improvementOpportunity": "Improvement Opportunity",
-          "losingInsight": "Closing this gap could significantly improve your competitive position. The leader is setting the benchmark here.",
-          "maintainYourLead": "How to Maintain Your Lead",
-          "howToCloseGap": "How to Close the Gap"
+          "leaderIndicator": "表示类别领先者",
+          "detailedMetricAnalysis": "详细指标分析",
+          "youreLeading": "您处于领先",
+          "opportunity": "机会",
+          "bestCompetitor": "最佳竞争对手",
+          "avgCompetitor": "竞争对手平均",
+          "competitiveAdvantage": "竞争优势",
+          "winningInsight": "您在此类别中表现优于所有竞争对手。请专注于保持这一优势。",
+          "improvementOpportunity": "改进机会",
+          "losingInsight": "缩小这一差距可以显著提升您的竞争地位。领先者正在此处设定基准。",
+          "maintainYourLead": "如何保持您的领先优势",
+          "howToCloseGap": "如何缩小差距"
         },
         "sw": {
-          "categoriesLeading": "Categories Leading",
-          "aboveAverage": "Above Average",
-          "needImprovement": "Need Improvement",
-          "overallScore": "Overall Score",
-          "yourStrengths": "Your Competitive Strengths",
-          "score": "Score",
-          "aboveAvgLabel": "above average",
-          "yourLead": "Your Lead",
-          "maintainLead": "How to Maintain Your Lead",
-          "areasNeedingImprovement": "Areas Needing Improvement",
-          "pointsBehind": "points behind",
-          "leaderScore": "Leader Score",
-          "gapToClose": "Gap to Close",
-          "actionPlan": "Action Plan to Close the Gap",
-          "aimFor": "Aim for",
-          "toSurpass": "to surpass the leader and establish yourself as the category leader.",
-          "noData": "No strengths/weaknesses data available."
+          "categoriesLeading": "领先类别",
+          "aboveAverage": "高于平均",
+          "needImprovement": "需要改进",
+          "overallScore": "总体分数",
+          "yourStrengths": "您的竞争优势",
+          "score": "分数",
+          "aboveAvgLabel": "高于平均",
+          "yourLead": "您的领先优势",
+          "maintainLead": "如何保持您的领先优势",
+          "areasNeedingImprovement": "需要改进的领域",
+          "pointsBehind": "分落后",
+          "leaderScore": "领先者分数",
+          "gapToClose": "需缩小的差距",
+          "actionPlan": "缩小差距的行动计划",
+          "aimFor": "目标达到",
+          "toSurpass": "以超越领先者并确立您作为该类别领导者的地位。",
+          "noData": "暂无优势/劣势数据。"
         },
         "recs": {
-          "closeGap": "Close ",
-          "yourScore": "Your score",
-          "gapToClose": "Gap to Close",
-          "avgCompetitor": "Average competitor score",
-          "aimFor": "Aim for",
-          "toSurpass": "to surpass the leader and establish yourself as the category leader.",
-          "actionSteps": "Action Steps to Close the Gap"
+          "closeGap": "缩小",
+          "yourScore": "您的分数",
+          "gapToClose": "需缩小的差距",
+          "avgCompetitor": "竞争对手平均分",
+          "aimFor": "目标达到",
+          "toSurpass": "以超越领先者并确立您作为该类别领导者的地位。",
+          "actionSteps": "缩小差距的行动步骤"
         }
       },
       "competitorUrlLabel": "竞争对手 {{num}} URL",
@@ -5677,6 +5809,7 @@
       "points": "分",
       "priorityFocus": "优先关注",
       "fixWeaknesses": "修复 {{count}} 个弱点",
+      "fixWeakness": "修复 {{count}} 个弱点",
       "maintainLead": "保持领先",
       "analysis": "分析",
       "yourRankings": "您的排名",
@@ -5712,6 +5845,55 @@
         "securityFirst": "保持安全最佳实践",
         "securityImprove": "启用HTTPS、添加安全头、更新协议"
       },
+      "insights": {
+        "outperforming": "您正在超越竞争对手！",
+        "competitorsAhead": "竞争对手处于领先",
+        "losingSeo": "SEO竞争处于劣势",
+        "cwvAtRisk": "Google排名面临风险",
+        "slowerThan": "比竞争对手慢",
+        "securityGap": "检测到安全差距",
+        "outperformingDetail": "您的总体得分高于竞争对手平均水平",
+        "competitorsAheadDetail": "专注于落后的领域以获得竞争优势",
+        "losingSeoDetail": "您的SEO得分低于竞争对手平均水平。这影响了自然搜索的可见性。",
+        "cwvAtRiskDetail": "竞争对手拥有更好的Core Web Vitals。Google可能会给他们更高的排名。",
+        "slowerThanDetail": "用户可能会选择更快的竞争对手网站。",
+        "securityGapDetail": "竞争对手拥有更强的安全措施。这影响了用户信任。"
+      },
+      "recText": {
+        "high": "您的{{metric}}得分{{yourScore}}落后领先者（{{topScore}}）{{gap}}分。这是一个需要立即关注的重大竞争劣势。首先关注快速优化：{{quickWins}}",
+        "medium": "在{{metric}}方面改进{{gap}}分将使您与顶级竞争对手持平。您目前{{yourScore}}分的得分接近但还不够。{{advice}}",
+        "low": "您在{{metric}}方面接近顶部。{{gap}}分的小幅改进将帮助您赶上或超越竞争对手。{{advice}}"
+      },
+      "impactText": {
+        "high": "弥合这一差距可以显著提升您的竞争地位，并帮助您获取目前流向{{metric}}得分更好的竞争对手的流量。",
+        "medium": "中等改进机会。弥合这一差距将使您更具竞争力，并可能提高用户参与度和转化率。",
+        "low": "微调机会。您在这里已经具有竞争力，但小的改进可以产生差异。"
+      },
+      "quickWins": {
+        "seo": "优化标题标签、添加meta描述并确保正确的标题层次结构",
+        "performance": "压缩图片、启用缓存并最小化JavaScript",
+        "accessibility": "为图片添加alt文本、确保足够的颜色对比度并修复ARIA标签",
+        "security": "实施HTTPS、添加安全标头并更新依赖项",
+        "coreWebVitals": "通过预加载关键资源优化LCP并通过设置图片尺寸减少CLS",
+        "generic": "审查最佳实践并实施改进"
+      },
+      "mediumAdvice": {
+        "seo": "考虑添加结构化数据、改善内部链接并创建更有针对性的内容。",
+        "performance": "研究代码分割、延迟加载和优化关键渲染路径。",
+        "accessibility": "进行彻底的WCAG审计并解决剩余问题。",
+        "security": "审查您的CSP策略，启用额外的安全标头，并审计第三方脚本。",
+        "coreWebVitals": "专注于首字节时间（TTFB）并优化服务器响应时间。",
+        "generic": "审查当前实施并确定优化机会。"
+      },
+      "lowAdvice": {
+        "seo": "微调现有优化并监控退化。",
+        "performance": "考虑使用Service Workers或边缘缓存等高级技术。",
+        "accessibility": "与有残障的真实用户一起测试并收集反馈。",
+        "security": "了解最新的安全最佳实践和漏洞。",
+        "coreWebVitals": "监控真实用户指标并解决边缘情况。",
+        "generic": "继续监控和维护当前标准。"
+      },
+      "recSubtitle": "{{competitor}}：{{topScore}} vs {{you}}：{{yourScore}}",
       "noInsightsAvailable": "没有可用的洞察。",
       "allSitesFailed": "所有网站均失败",
       "seeWhereYouStand": "准确了解您在每个类别中与每个竞争对手的对比情况",
@@ -5727,7 +5909,7 @@
       "clickEachMetric": "点击下方每个指标查看详细的竞争分析和可操作的建议。",
       "website": "网站",
       "detailedMetricAnalysis": "详细指标分析",
-      "youreLeading": "您",
+      "youreLeading": "您正在领先！",
       "pointsBehind": "落后{{leader}} {{gap}}分",
       "yourScore": "您的分数",
       "opportunity": "改进机会",
@@ -5735,7 +5917,7 @@
       "bestCompetitor": "最佳竞争对手",
       "competitiveAdvantage": "竞争优势",
       "improvementOpportunity": "改进机会",
-      "outperformingCompetitors": "您",
+      "outperformingCompetitors": "您在{{metric}}方面超越了所有竞争对手。专注于保持这一优势，同时他们试图追赶您。",
       "closingGapHelp": "缩小这{{gap}}分的差距可以显著提升您的竞争地位。{{leader}}在此设定了基准。",
       "leaderboard": "排行榜",
       "whatThisMeans": "这意味着什么",
@@ -5743,7 +5925,7 @@
       "closeTheGap": "缩小差距",
       "proTip": "专业提示",
       "insight": {
-        "winning": "您",
+        "winning": "在{{metric}}方面，您是竞争组中的领导者。这是一个重大优势——竞争对手需要做出实质性的改进才能赶上您。",
         "performance": "{{gap}}分的性能差距意味着用户在竞争对手网站上体验到明显更快的加载时间。",
         "seo": "在SEO方面落后{{gap}}分意味着竞争对手可能拥有更好的搜索可见性。",
         "accessibility": "这{{gap}}分的无障碍差距可能意味着竞争对手正在触达您无法触达的受众。",
@@ -5753,7 +5935,7 @@
       },
       "defense": {
         "perf1": "设置持续性能监控以尽早发现退化",
-        "perf2": "记录您的性能优化",
+        "perf2": "记录您的性能优化，以免被意外删除",
         "perf3": "监控竞争对手的性能",
         "perf4": "投资性能预算以防止功能膨胀导致速度下降",
         "perf5": "考虑渐进增强以在添加功能时保持速度",
@@ -5781,9 +5963,9 @@
         "gen2": "了解行业最佳实践",
         "gen3": "如果竞争对手追赶上来则迅速应对",
         "gen4": "投资持续改进",
-        "gen5": "记录有效的做法"
+        "gen5": "记录有效的做法以便维护"
       },
-      "swDescription": "基于您的竞争分析，以下是",
+      "swDescription": "基于您的竞争分析，以下展示了您的优势和需要改进的方面。点击每个项目获取详细洞察。",
       "categoriesLeading": "领先类别",
       "aboveAverage": "高于平均",
       "needImprovement": "需要改进",
@@ -5791,7 +5973,7 @@
       "yourStrengths": "您的竞争优势",
       "areasNeedingImprovement": "需要改进的领域",
       "outstandingPerformance": "卓越表现！",
-      "noWeaknesses": "您没有显著的弱点。",
+      "noWeaknesses": "您没有显著的弱点。在所有测量领域中处于领先或有竞争力的位置！",
       "aboveAverageLower": "高于平均",
       "dominant": "占据主导",
       "aheadStatus": "领先",
@@ -5825,12 +6007,12 @@
         "accessibility": "您的网站比竞争对手更具无障碍性。",
         "security": "您的安全态势更强。",
         "coreWebVitals": "您的Core Web Vitals优于竞争对手。",
-        "generic": "您"
+        "generic": "您在{{metric}}方面超越竞争对手，为您带来了显著的竞争优势。"
       },
       "weaknessExp": {
-        "performance": "您的网站比领导者慢{{gap}}分。",
-        "seo": "您",
-        "accessibility": "您的无障碍评分低{{gap}}分。",
+        "performance": "您的网站比领导者慢{{gap}}分。用户可能体验到更长的加载时间，可能增加跳出率并降低参与度。",
+        "seo": "您在SEO方面落后{{gap}}分。这一差距可能意味着竞争对手正在获取您错过的自然流量和排名。",
+        "accessibility": "您的无障碍评分低{{gap}}分。这限制了您对残障用户的覆盖范围，并可能带来合规风险。",
         "security": "您的安全性弱{{gap}}分。",
         "coreWebVitals": "{{gap}}分的Core Web Vitals差距可能影响您的Google排名。",
         "generic": "{{metric}}方面{{gap}}分的差距使您相对于{{leader}}处于劣势。"
@@ -5844,8 +6026,8 @@
         "coreWebVitals": "Google定期更新CWV阈值。",
         "generic": "您的竞争对手可能正在努力改进。"
       },
-      "youreAheadOfCompetition": "您",
-      "alreadyOutperforming": "您",
+      "youreAheadOfCompetition": "您领先于竞争对手！",
+      "alreadyOutperforming": "您已经超越了竞争对手。继续监控以保持您的领先地位。",
       "closeGapIn": "弥合{{metric}}的{{gap}}分差距",
       "summary": "摘要",
       "expectedImpact": "预期影响",
@@ -5909,8 +6091,8 @@
         "coreWebVitals": "Core Web Vitals是Google确认的排名因素。",
         "generic": "从影响最大的更改开始。小改进随时间累积产生显著的竞争优势。"
       },
-      "youreDominating": "您",
-      "alreadyAhead": "您",
+      "youreDominating": "您占据主导地位！",
+      "alreadyAhead": "您已经领先于竞争对手。继续保持出色的工作！",
       "actionPlanBeatCompetition": "击败竞争对手的行动计划"
     },
     "cro": {
@@ -6182,10 +6364,10 @@
           },
           "noneTitle": "未检测到CTA",
           "noneBody": "此页面未发现明确的行动号召。添加醒目的CTA对转化至关重要。",
-          "noAboveFoldTitle": "No CTA Above the Fold",
-          "noAboveFoldBody": "Visitors should see a clear call-to-action without scrolling. Adding a CTA above the fold can increase conversions by 20-30%.",
-          "aboveFoldOkTitle": "CTA Visible Above the Fold",
-          "aboveFoldOkBody": "At least one call-to-action is visible without scrolling, which is critical for conversions."
+          "noAboveFoldTitle": "首屏无 CTA",
+          "noAboveFoldBody": "访客应该无需滚动即可看到明确的行动号召。在首屏添加 CTA 可将转化率提高 20-30%。",
+          "aboveFoldOkTitle": "CTA 在首屏可见",
+          "aboveFoldOkBody": "至少有一个行动号召无需滚动即可看到，这对转化至关重要。"
         },
         "forms": {
           "totalFound": "发现的表单数量",
@@ -6198,8 +6380,8 @@
           },
           "noneTitle": "未检测到表单",
           "noneBody": "此页面未发现表单。建议添加潜在客户获取表单或联系表单以提升转化率。",
-          "avgFields": "Avg. Fields",
-          "detailsHeading": "Form Details"
+          "avgFields": "平均字段数",
+          "detailsHeading": "表单详情"
         },
         "trust": {
           "totalFound": "发现的信任信号数量",
@@ -6211,21 +6393,21 @@
           },
           "noneTitle": "未检测到信任信号",
           "noneBody": "此页面未发现信任信号。添加客户评价、安全徽章和社会证明可以显著提升转化率。",
-          "present": "Present",
-          "missing": "Missing"
+          "present": "存在",
+          "missing": "缺失"
         },
         "mobileUx": {
           "score": "移动端UX评分",
           "issuesHeading": "移动端UX问题",
           "noIssuesTitle": "无移动端UX问题",
           "noIssuesBody": "未检测到重大移动端UX问题。您的页面已针对移动端转化进行了良好优化。",
-          "good": "Good",
-          "needsImprovement": "Needs Improvement",
-          "configured": "Configured",
-          "missing": "Missing",
-          "detailsHeading": "Mobile UX Details",
-          "metric": "Metric",
-          "value": "Value"
+          "good": "良好",
+          "needsImprovement": "需要改进",
+          "configured": "已配置",
+          "missing": "缺失",
+          "detailsHeading": "移动端用户体验详情",
+          "metric": "指标",
+          "value": "值"
         },
         "quickWins": {
           "table": {
@@ -6233,7 +6415,7 @@
           },
           "noneTitle": "未识别到速效改进",
           "noneBody": "分析未发现具体的速效改进。请查看各节的详细建议以了解改进机会。",
-          "time": "Time"
+          "time": "时间"
         },
         "recommendations": {
           "noneTitle": "CRO状况良好",
@@ -6411,28 +6593,28 @@
           "step6": "<strong>安排审查</strong> - 设置提醒，每年审查此合规领域"
         },
         "cookiePolicy": {
-          "step1": "Create a dedicated cookie policy page separate from privacy policy",
-          "step2": "List every cookie with name, purpose, duration, and category",
-          "step3": "Distinguish between first-party and third-party cookies",
-          "step4": "Explain which cookies require consent and which are essential",
-          "step5": "Update policy whenever you add or remove cookies",
-          "step6": "Link from consent banner and footer for easy access"
+          "step1": "创建独立于隐私政策的专用 Cookie 政策页面",
+          "step2": "列出每个 Cookie 的名称、用途、有效期和类别",
+          "step3": "区分第一方 Cookie 和第三方 Cookie",
+          "step4": "说明哪些 Cookie 需要同意，哪些是必要的",
+          "step5": "每当添加或移除 Cookie 时更新政策",
+          "step6": "在同意横幅和页脚中提供链接以便于访问"
         },
         "rejectButton": {
-          "step1": "Add an explicit Reject or Decline button to cookie banner",
-          "step2": "Make Reject button equally prominent as Accept - same size and color weight",
-          "step3": "Ensure Reject blocks all non-essential cookies immediately",
-          "step4": "Test that rejecting works without requiring additional clicks",
-          "step5": "Avoid dark patterns - do not hide or minimize the Reject option",
-          "step6": "Allow users to change their mind later via cookie settings link"
+          "step1": "在 Cookie 横幅中添加明确的拒绝或谢绝按钮",
+          "step2": "使拒绝按钮与接受按钮同样醒目 - 相同的大小和颜色权重",
+          "step3": "确保拒绝操作立即阻止所有非必要 Cookie",
+          "step4": "测试拒绝操作无需额外点击即可生效",
+          "step5": "避免暗模式设计 - 不要隐藏或最小化拒绝选项",
+          "step6": "允许用户稍后通过 Cookie 设置链接更改选择"
         },
         "https": {
-          "step1": "Obtain SSL certificate from a trusted provider or use free Let\\",
-          "step2": "Install certificate on your web server",
-          "step3": "Configure server to redirect all HTTP traffic to HTTPS",
-          "step4": "Update all internal links to use HTTPS",
-          "step5": "Enable HSTS header to force HTTPS on future visits",
-          "step6": "Test with SSL Labs to verify A+ rating"
+          "step1": "从受信任的提供商获取 SSL 证书或使用免费的 Let's Encrypt",
+          "step2": "在您的 Web 服务器上安装证书",
+          "step3": "配置服务器将所有 HTTP 流量重定向到 HTTPS",
+          "step4": "将所有内部链接更新为使用 HTTPS",
+          "step5": "启用 HSTS 标头以强制后续访问使用 HTTPS",
+          "step6": "使用 SSL Labs 测试以验证 A+ 评级"
         }
       },
       "risks": {
@@ -6526,113 +6708,113 @@
       },
       "report": {
         "sectionIntros": {
-          "consent": "Cookie consent mechanisms are required under GDPR and ePrivacy regulations. A compliant consent banner must be clearly visible, offer granular choices, and not pre-select non-essential cookies. This section evaluates whether a consent management platform is detected and if it meets regulatory requirements.",
-          "privacy": "A comprehensive privacy policy is a legal requirement under GDPR. It must clearly explain what data you collect, how you use it, who you share it with, and how users can exercise their rights. This section checks for the presence and completeness of your privacy policy.",
-          "cookiePolicy": "A dedicated cookie policy provides detailed information about the cookies your site uses. It should explain each cookie's purpose, duration, and whether it's essential or optional. This section evaluates your cookie policy's presence and completeness.",
-          "rights": "GDPR grants individuals specific rights over their personal data, including access, rectification, erasure, and portability. Your site must provide clear mechanisms for users to exercise these rights. This section checks for the availability of data subject rights mechanisms.",
-          "cookies": "This cookie audit catalogs all cookies and tracking technologies found on your site. Each cookie is classified by purpose, security attributes, and regulatory category. Understanding your cookie landscape is essential for maintaining accurate consent mechanisms and privacy compliance.",
-          "risks": "Risk assessment identifies potential compliance gaps and their severity. High-risk issues may expose your organization to regulatory enforcement action. This section prioritizes risks based on their potential impact and likelihood of regulatory scrutiny.",
-          "recommendations": "Based on the GDPR compliance analysis, these recommendations prioritize the most critical compliance gaps to reduce regulatory risk and improve user privacy.",
-          "consentQuality": "This section evaluates the quality of your cookie consent implementation against GDPR requirements. Each factor is scored individually, covering banner presence, reject options, granular controls, consent library, and pre-consent cookie blocking.",
-          "legalPages": "This section checks for the presence of essential legal pages required for GDPR compliance: a privacy policy, a cookie policy, and terms of service. Missing legal pages represent significant compliance gaps.",
-          "cookieClassification": "Cookies are classified by purpose to help you understand which require consent under GDPR. Only strictly necessary cookies are exempt from consent requirements. All other categories (functional, analytics, marketing, social) require explicit user consent before being set.",
-          "trackerAnalysis": "Third-party trackers collect user data and require explicit consent under GDPR. This section classifies detected trackers by category and evaluates their impact on user privacy. Reducing unnecessary trackers improves both compliance and page performance."
+          "consent": "GDPR 和电子隐私法规要求设置 Cookie 同意机制。合规的同意横幅必须清晰可见、提供细粒度选择，且不预选非必要 Cookie。本部分评估是否检测到同意管理平台以及其是否符合监管要求。",
+          "privacy": "全面的隐私政策是 GDPR 的法律要求。它必须清楚地解释您收集哪些数据、如何使用、与谁共享以及用户如何行使其权利。本部分检查您的隐私政策是否存在及其完整性。",
+          "cookiePolicy": "专用的 Cookie 政策提供有关您网站使用的 Cookie 的详细信息。它应说明每个 Cookie 的用途、有效期以及是否为必要或可选。本部分评估您的 Cookie 政策是否存在及其完整性。",
+          "rights": "GDPR 赋予个人对其个人数据的特定权利，包括访问权、更正权、删除权和数据可携带权。您的网站必须提供明确的机制让用户行使这些权利。本部分检查数据主体权利机制的可用性。",
+          "cookies": "此 Cookie 审计记录了在您网站上发现的所有 Cookie 和跟踪技术。每个 Cookie 按用途、安全属性和监管类别进行分类。了解您的 Cookie 状况对于维护准确的同意机制和隐私合规至关重要。",
+          "risks": "风险评估识别潜在的合规差距及其严重程度。高风险问题可能使您的组织面临监管执法行动。本部分根据潜在影响和监管审查的可能性确定风险优先级。",
+          "recommendations": "基于 GDPR 合规分析，这些建议优先列出最关键的合规差距，以降低监管风险并改善用户隐私。",
+          "consentQuality": "本部分根据 GDPR 要求评估您的 Cookie 同意实施质量。每个因素单独评分，涵盖横幅存在性、拒绝选项、细粒度控制、同意库和预同意 Cookie 阻止。",
+          "legalPages": "本部分检查 GDPR 合规所需的基本法律页面是否存在：隐私政策、Cookie 政策和服务条款。缺少法律页面代表重大合规差距。",
+          "cookieClassification": "Cookie 按用途分类，帮助您了解哪些在 GDPR 下需要同意。只有严格必要的 Cookie 可以免除同意要求。所有其他类别(功能性、分析、营销、社交)在设置前都需要用户的明确同意。",
+          "trackerAnalysis": "第三方跟踪器收集用户数据，在 GDPR 下需要明确同意。本部分按类别对检测到的跟踪器进行分类，并评估其对用户隐私的影响。减少不必要的跟踪器可以同时改善合规性和页面性能。"
         },
         "consent": {
           "rows": {
-            "hasRejectOption": "Has Reject Option",
-            "hasGranularOptions": "Granular Options"
+            "hasRejectOption": "有拒绝选项",
+            "hasGranularOptions": "细粒度选项"
           }
         },
         "privacy": {
-          "keywordsCoverage": "Privacy Keywords Coverage"
+          "keywordsCoverage": "隐私关键词覆盖率"
         },
-        "cookiePolicy": "Cookie Policy",
-        "rights": "Data Subject Rights",
+        "cookiePolicy": "Cookie 政策",
+        "rights": "数据主体权利",
         "cookies": {
-          "httpOnlyCoverageLabel": "HttpOnly Coverage",
+          "httpOnlyCoverageLabel": "HttpOnly 覆盖率",
           "table": {
-            "trackerPurpose": "Purpose"
+            "trackerPurpose": "用途"
           }
         },
-        "risks": "Risk Assessment",
+        "risks": "风险评估",
         "recommendations": "建议",
-        "consent.overviewHeading": "Consent Overview",
+        "consent.overviewHeading": "同意概览",
         "consent.rows": {
-          "detected": "Consent Banner Detected",
-          "platform": "Consent Platform",
-          "score": "Consent Score"
+          "detected": "检测到同意横幅",
+          "platform": "同意平台",
+          "score": "同意评分"
         },
-        "privacy.overviewHeading": "Policy Overview",
+        "privacy.overviewHeading": "政策概览",
         "privacy.rows": {
-          "found": "Privacy Policy Found",
-          "url": "Policy URL",
-          "score": "Policy Score"
+          "found": "找到隐私政策",
+          "url": "政策 URL",
+          "score": "政策评分"
         },
-        "privacy.keywordsHeading": "Keywords Found",
+        "privacy.keywordsHeading": "找到的关键词",
         "privacy.table": {
-          "keyword": "Keyword"
+          "keyword": "关键词"
         },
-        "cookiePolicy.overviewHeading": "Cookie Policy Overview",
+        "cookiePolicy.overviewHeading": "Cookie 政策概览",
         "cookiePolicy.rows": {
-          "found": "Cookie Policy Found",
-          "url": "Policy URL",
-          "score": "Policy Score"
+          "found": "找到 Cookie 政策",
+          "url": "政策 URL",
+          "score": "政策评分"
         },
-        "rights.overviewHeading": "Rights Overview",
+        "rights.overviewHeading": "权利概览",
         "rights.rows": {
-          "found": "Rights Information Found"
+          "found": "找到权利信息"
         },
-        "rights.mechanismsHeading": "Mechanisms Found",
-        "rights.mechanismsLabel": "Rights Mechanisms",
+        "rights.mechanismsHeading": "找到的机制",
+        "rights.mechanismsLabel": "权利机制",
         "rights.table": {
-          "mechanism": "Mechanism"
+          "mechanism": "机制"
         },
         "cookies.totalLabel": "Total Cookies",
-        "cookies.secureLabel": "Secure Cookies",
-        "cookies.httpOnlyLabel": "HttpOnly Cookies",
-        "cookies.trackersLabel": "Trackers Detected",
-        "cookies.secureCoverageLabel": "Secure Cookie Coverage",
-        "cookies.detailsHeading": "Cookie Details",
+        "cookies.secureLabel": "安全 Cookie",
+        "cookies.httpOnlyLabel": "HttpOnly Cookie",
+        "cookies.trackersLabel": "检测到的跟踪器",
+        "cookies.secureCoverageLabel": "安全 Cookie 覆盖率",
+        "cookies.detailsHeading": "Cookie 详情",
         "cookies.table": {
-          "name": "Name",
-          "domain": "Domain",
-          "expiry": "Expiry",
-          "trackerName": "Tracker",
-          "trackerType": "Type",
-          "trackerDomain": "Domain"
+          "name": "名称",
+          "domain": "域名",
+          "expiry": "过期时间",
+          "trackerName": "跟踪器",
+          "trackerType": "类型",
+          "trackerDomain": "域名"
         },
-        "cookies.trackersHeading": "Third-Party Trackers",
-        "risks.critical": "Critical",
-        "risks.high": "High",
-        "risks.medium": "Medium",
+        "cookies.trackersHeading": "第三方跟踪器",
+        "risks.critical": "严重",
+        "risks.high": "高",
+        "risks.medium": "中",
         "risks.low": "Low",
-        "risks.detectedHeading": "Detected Risks",
-        "risks.noneFoundTitle": "No Significant Risks Detected",
-        "risks.noneFoundBody": "No major compliance risks were identified during the analysis.",
-        "risks.consentQualityHeading": "Consent Quality",
-        "risks.consentQualityScore": "Consent Quality Score",
-        "recommendations.noneTitle": "Strong Compliance Posture",
-        "recommendations.noneBody": "Your site follows GDPR best practices. Continue monitoring for regulatory changes and maintaining your data protection standards.",
+        "risks.detectedHeading": "检测到的风险",
+        "risks.noneFoundTitle": "未检测到重大风险",
+        "risks.noneFoundBody": "分析过程中未发现重大合规风险。",
+        "risks.consentQualityHeading": "同意质量",
+        "risks.consentQualityScore": "同意质量评分",
+        "recommendations.noneTitle": "合规状况良好",
+        "recommendations.noneBody": "您的网站遵循了 GDPR 最佳实践。请继续关注法规变更并维护您的数据保护标准。",
         "consentQuality": {
-          "factor": "Factor",
-          "points": "Points"
+          "factor": "因素",
+          "points": "得分"
         },
         "legalPages": {
-          "page": "Legal Page"
+          "page": "法律页面"
         },
         "intl": {
-          "framework": "Framework"
+          "framework": "框架"
         },
         "cookieClass": {
-          "category": "Category",
-          "count": "Count",
-          "description": "Description",
-          "lifetimeHeading": "Cookie Lifetime Breakdown"
+          "category": "类别",
+          "count": "数量",
+          "description": "描述",
+          "lifetimeHeading": "Cookie 生命周期分布"
         },
         "trackerAnalysis": {
-          "category": "Category",
-          "trackers": "Trackers"
+          "category": "类别",
+          "trackers": "跟踪器"
         }
       }
     },
@@ -6645,54 +6827,54 @@
       "analysisFailed": "托管分析失败：{{message}}",
       "report": {
         "sectionIntros": {
-          "provider": "Your hosting provider forms the foundation of your website's performance, security, and reliability. This section identifies the detected hosting provider, its service tier, and available features. Understanding your hosting infrastructure helps identify opportunities for optimization and ensures your provider meets your site's requirements.",
-          "infrastructure": "Server infrastructure encompasses the hardware, software, and network configuration that deliver your website to visitors. This section examines your server's IP address, response headers, and technical configuration. Properly configured server infrastructure ensures fast, reliable content delivery and reduces security vulnerabilities.",
-          "cms": "Content Management Systems and web technologies determine how your site is built and maintained. This section identifies the CMS platform, its version, and additional technologies detected on your site. Keeping your CMS and its dependencies up to date is critical for security and performance.",
+          "provider": "您的托管服务提供商是网站性能、安全性和可靠性的基础。本节识别检测到的托管提供商、其服务级别和可用功能。了解您的托管基础设施有助于发现优化机会，并确保提供商满足您网站的需求。",
+          "infrastructure": "服务器基础设施包括向访客交付网站内容的硬件、软件和网络配置。本节检查您服务器的 IP 地址、响应头和技术配置。正确配置的服务器基础设施可确保快速、可靠的内容交付，并减少安全漏洞。",
+          "cms": "内容管理系统和 Web 技术决定了您的网站如何构建和维护。本节识别 CMS 平台、其版本及网站上检测到的其他技术。保持 CMS 及其依赖项的更新对安全性和性能至关重要。",
           "performance": "Hosting performance directly impacts your site's loading speed and user experience. This section measures server response time and Time to First Byte (TTFB), which indicate how quickly your server processes and begins delivering requests. Fast server response times are essential for good Core Web Vitals scores.",
-          "recommendations": "Based on the hosting analysis, these recommendations prioritize the most impactful improvements for your server infrastructure, performance, and configuration."
+          "recommendations": "基于托管分析结果，以下建议优先列出对您的服务器基础设施、性能和配置影响最大的改进措施。"
         },
-        "provider": "Hosting Provider",
-        "infrastructure": "Server Infrastructure",
-        "cms": "CMS & Technology",
-        "performance": "Hosting Performance",
+        "provider": "托管提供商",
+        "infrastructure": "服务器基础设施",
+        "cms": "CMS 与技术",
+        "performance": "托管性能",
         "recommendations": "建议",
-        "provider.overviewHeading": "Provider Details",
+        "provider.overviewHeading": "提供商详情",
         "provider.rows": {
-          "name": "Provider",
-          "category": "Category",
-          "tier": "Tier"
+          "name": "提供商",
+          "category": "类别",
+          "tier": "级别"
         },
-        "provider.featuresHeading": "Included Features",
+        "provider.featuresHeading": "包含的功能",
         "provider.table": {
-          "feature": "Feature"
+          "feature": "功能"
         },
-        "infrastructure.serverHeading": "Server Information",
+        "infrastructure.serverHeading": "服务器信息",
         "infrastructure.rows": {
-          "ip": "IP Address",
-          "provider": "Provider"
+          "ip": "IP 地址",
+          "provider": "提供商"
         },
-        "infrastructure.headersHeading": "Response Headers",
+        "infrastructure.headersHeading": "响应头",
         "infrastructure.table": {
-          "header": "Header"
+          "header": "响应头"
         },
-        "cms.detectionHeading": "CMS Detection",
+        "cms.detectionHeading": "CMS 检测",
         "cms.rows": {
-          "platform": "Platform",
-          "version": "Version",
-          "confidence": "Confidence"
+          "platform": "平台",
+          "version": "版本",
+          "confidence": "置信度"
         },
-        "cms.noneTitle": "No CMS Detected",
-        "cms.noneBody": "No content management system was detected. The site may use a custom-built solution or a static site generator.",
-        "cms.technologiesHeading": "Detected Technologies",
+        "cms.noneTitle": "未检测到 CMS",
+        "cms.noneBody": "未检测到内容管理系统。该网站可能使用了自定义构建方案或静态站点生成器。",
+        "cms.technologiesHeading": "检测到的技术",
         "cms.table": {
-          "technology": "Technology",
-          "category": "Category"
+          "technology": "技术",
+          "category": "类别"
         },
-        "performance.responseTime": "Response Time",
+        "performance.responseTime": "响应时间",
         "performance.ttfb": "TTFB",
-        "performance.detailsHeading": "Performance Details",
-        "recommendations.noneTitle": "Solid Hosting Setup",
-        "recommendations.noneBody": "Your hosting configuration follows best practices. Continue monitoring for performance changes."
+        "performance.detailsHeading": "性能详情",
+        "recommendations.noneTitle": "托管配置良好",
+        "recommendations.noneBody": "您的托管配置遵循了最佳实践。请继续监控性能变化。"
       },
       "categories": {
         "managedWordPress": "托管WordPress",
@@ -6988,97 +7170,130 @@
           "ports": "开放端口分析识别服务器上暴露的网络服务。不必要的开放端口增加攻击面，可能表明服务配置不当。",
           "recommendations": "基于IP声誉和安全分析，这些建议优先考虑提高服务器可信度、安全态势和邮件投递能力的改进。"
         },
-        "reputation": "IP Reputation",
-        "security": "Security Assessment",
-        "infrastructure": "Infrastructure",
-        "dns": "DNS & Email",
-        "ports": "Open Ports",
+        "reputation": "IP 信誉",
+        "security": "安全评估",
+        "infrastructure": "基础设施",
+        "dns": "DNS 与邮件",
+        "ports": "开放端口",
         "recommendations": "建议",
-        "reputation.trustScore": "Trust Score",
-        "reputation.spamScore": "Spam Score",
-        "reputation.malwareScore": "Malware Score",
-        "reputation.phishingScore": "Phishing Score",
-        "reputation.blacklistHeading": "Blacklist Status",
-        "reputation.blacklistCleanTitle": "Clean Blacklist Status",
-        "reputation.blacklistCleanBody": "This IP is not listed on any of the checked blacklists.",
-        "reputation.listed": "Listed",
-        "reputation.clean": "Clean",
+        "reputation.trustScore": "信任评分",
+        "reputation.spamScore": "垃圾邮件评分",
+        "reputation.malwareScore": "恶意软件评分",
+        "reputation.phishingScore": "钓鱼评分",
+        "reputation.blacklistHeading": "黑名单状态",
+        "reputation.blacklistCleanTitle": "黑名单状态良好",
+        "reputation.blacklistCleanBody": "该 IP 未被列入任何已检查的黑名单。",
+        "reputation.listed": "已列入",
+        "reputation.clean": "正常",
         "reputation.table": {
-          "blacklist": "Blacklist"
+          "blacklist": "黑名单"
         },
-        "security.sslHeading": "SSL/TLS Certificate",
+        "security.sslHeading": "SSL/TLS 证书",
         "security.rows": {
-          "status": "Certificate Status",
-          "issuer": "Issuer",
-          "protocol": "Protocol",
-          "validFrom": "Valid From",
-          "expiry": "Expiry",
-          "daysRemaining": "Days Remaining",
-          "subject": "Subject"
+          "status": "证书状态",
+          "issuer": "颁发者",
+          "protocol": "协议",
+          "validFrom": "生效日期",
+          "expiry": "过期日期",
+          "daysRemaining": "剩余天数",
+          "subject": "主题"
         },
-        "security.valid": "Valid",
-        "security.invalid": "Invalid",
-        "security.noSslTitle": "No SSL Certificate",
-        "security.noSslBody": "No SSL/TLS certificate was detected for this target.",
-        "infrastructure.server": "Server",
-        "infrastructure.hosting": "Hosting",
-        "infrastructure.location": "Location",
+        "security.valid": "有效",
+        "security.invalid": "无效",
+        "security.noSslTitle": "无 SSL 证书",
+        "security.noSslBody": "未检测到该目标的 SSL/TLS 证书。",
+        "infrastructure.server": "服务器",
+        "infrastructure.hosting": "托管",
+        "infrastructure.location": "位置",
         "infrastructure.asn": "ASN",
-        "infrastructure.detailsHeading": "Infrastructure Details",
+        "infrastructure.detailsHeading": "基础设施详情",
         "infrastructure.rows": {
-          "ip": "IP Address",
-          "hostname": "Hostname",
-          "server": "Server Software",
-          "os": "Operating System",
-          "hosting": "Hosting Provider",
-          "provider": "Provider",
-          "country": "Country",
-          "city": "City",
-          "location": "Location",
+          "ip": "IP 地址",
+          "hostname": "主机名",
+          "server": "服务器软件",
+          "os": "操作系统",
+          "hosting": "托管提供商",
+          "provider": "提供商",
+          "country": "国家",
+          "city": "城市",
+          "location": "位置",
           "asn": "ASN",
-          "org": "Organization",
+          "org": "组织",
           "cdn": "CDN",
-          "reverseIp": "Reverse DNS"
+          "reverseIp": "反向 DNS"
         },
-        "infrastructure.noDataTitle": "No Infrastructure Data",
-        "infrastructure.noDataBody": "Infrastructure information could not be determined for this target.",
+        "infrastructure.noDataTitle": "无基础设施数据",
+        "infrastructure.noDataBody": "无法确定该目标的基础设施信息。",
         "dns.dnssecHeading": "DNSSEC",
-        "dns.dnssecEnabled": "DNSSEC Enabled",
-        "dns.dnssecDisabled": "DNSSEC Not Enabled",
-        "dns.mxHeading": "MX Records",
+        "dns.dnssecEnabled": "DNSSEC 已启用",
+        "dns.dnssecDisabled": "DNSSEC 未启用",
+        "dns.mxHeading": "MX 记录",
         "dns.table": {
-          "priority": "Priority",
-          "mailServer": "Mail Server"
+          "priority": "优先级",
+          "mailServer": "邮件服务器"
         },
-        "dns.noMxTitle": "No MX Records",
-        "dns.noMxBody": "No MX records were found for this domain. Email delivery may not be configured.",
-        "ports.totalOpen": "Open Ports",
+        "dns.noMxTitle": "无 MX 记录",
+        "dns.noMxBody": "未找到该域名的 MX 记录。邮件投递可能未配置。",
+        "ports.totalOpen": "开放端口",
         "ports.table": {
-          "port": "Port",
-          "service": "Service"
+          "port": "端口",
+          "service": "服务"
         },
-        "ports.noneTitle": "No Open Ports Detected",
-        "ports.noneBody": "No open ports were found during the scan, or port scanning was not performed.",
-        "recommendations.noneTitle": "Good Reputation Standing",
-        "recommendations.noneBody": "Your IP has a clean reputation. Continue monitoring for changes and maintain security best practices."
+        "ports.noneTitle": "未检测到开放端口",
+        "ports.noneBody": "扫描期间未发现开放端口，或未执行端口扫描。",
+        "recommendations.noneTitle": "信誉状况良好",
+        "recommendations.noneBody": "您的 IP 信誉良好。请继续监控变化并保持安全最佳实践。"
       }
     },
-    "localSeo": {
-      "title": "本地SEO报告",
-      "subtitle": "本地SEO检查",
-      "overview": "本地SEO概览",
+    "geoSeo": {
+      "title": "GEO SEO报告",
+      "subtitle": "GEO SEO 与引用分析",
+      "overview": "GEO SEO概览",
       "napAnalysis": "NAP分析（名称、地址、电话）",
       "localPresence": "本地存在信号",
       "schemaAnalysis": "结构化数据和Schema",
-      "analysisInProgress": "本地SEO分析进行中...",
+      "analysisInProgress": "GEO SEO分析进行中...",
       "nap": "NAP",
       "schema": "Schema",
       "presence": "存在感",
+      "citations": "引用",
+      "directoryPresence": "目录收录",
+      "multiLocation": "多地点",
+      "geoPages": "地理页面",
+      "reviewsReputation": "评价",
+      "reputation": "声誉",
+      "citationsAnalysis": "引用与目录",
+      "citationsDescription": "目录引用是您的企业在网络上的提及。更多高质量的引用可以提升您的本地搜索权威。",
+      "directoriesFound": "已发现目录",
+      "citationSectionDetected": "引用部分",
+      "directoryBadgesDetected": "目录徽章",
+      "directoryLinksFound": "已发现目录链接",
+      "noCitationsDetected": "未检测到目录引用。在Yelp、黄页和BBB等主要目录上注册可以显著提升您的本地SEO。",
+      "multiLocationGeo": "多地点与地理页面",
+      "multiLocationDescription": "多地点信号帮助搜索引擎理解您的地理覆盖范围，并将您的页面展示给正确的本地受众。",
+      "locationPagesFound": "地点页面",
+      "serviceAreaSchema": "服务区域Schema",
+      "storeLocator": "门店查找",
+      "geoContentSignals": "地理内容信号",
+      "hreflangTags": "Hreflang标签",
+      "locationLinksFound": "已发现地点链接",
+      "noMultiLocationDetected": "未检测到多地点信号。如果您服务多个区域，请考虑创建包含独特内容的专用地点页面。",
+      "reviewsReputationSection": "评价与声誉",
+      "reviewsDescription": "在线评价和声誉信号直接影响本地搜索排名和客户信任。",
+      "aggregateRating": "AggregateRating Schema",
+      "reviewSchema": "评价Schema",
+      "testimonialsSection": "推荐部分",
+      "starWidgets": "星级评分组件",
+      "reviewCountDisplay": "评价数量显示",
+      "reviewPlatformLinks": "评价平台链接",
+      "ratingValue": "评分",
+      "reviewCount": "评价",
+      "noReviewsDetected": "未检测到评价或声誉信号。添加推荐、评价Schema和评价平台链接可以提升信任度和排名。",
       "quickStats": "快速统计",
       "overallGrade": "总体评级",
       "phoneNumbersFound": "找到的电话号码",
       "businessAddress": "企业地址",
-      "localBusinessSchema": "LocalBusiness Schema",
+      "localBusinessSchema": "本地商户 Schema",
       "googleMapsEmbed": "Google Maps嵌入",
       "quickFixesDescription": "这些快速修复可以迅速提升您的本地搜索可见性。",
       "napInfo": "NAP信息",
@@ -7092,7 +7307,7 @@
       "zipCodes": "邮政编码",
       "emailAddresses": "电子邮件地址",
       "noEmailsDetected": "页面上未检测到电子邮件地址",
-      "organizationSchema": "Organization Schema",
+      "organizationSchema": "组织 Schema",
       "contactPoint": "联系点",
       "geoCoordinates": "地理坐标",
       "openingHours": "营业时间",
@@ -7108,11 +7323,11 @@
       "presenceSignalsDesc": "这些信号有助于建立您的本地存在感，并与潜在客户建立信任。",
       "socialProfilesLinked": "已链接的社交资料",
       "noSocialProfilesDesc": "未检测到社交媒体资料链接。考虑添加Facebook、Instagram、LinkedIn或Yelp上的企业资料链接，以提高本地信任信号。",
-      "excellentLocalSeo": "出色的本地SEO！",
-      "excellentLocalSeoDesc": "您的网站遵循本地SEO最佳实践。继续监控以保持持续成功。",
-      "localSeoFixes": "本地SEO修复",
-      "localSeoOptimization": "本地SEO优化",
-      "localSeo": "本地SEO",
+      "excellentGeoSeo": "出色的GEO SEO！",
+      "excellentGeoSeoDesc": "您的网站遵循GEO SEO最佳实践。继续监控以保持持续成功。",
+      "geoSeoFixes": "GEO SEO修复",
+      "geoSeoOptimization": "GEO SEO优化",
+      "geoSeo": "GEO SEO",
       "fixSteps": {
         "default": {
           "step1": "检查网站上的当前实现",
@@ -7151,63 +7366,63 @@
       },
       "report": {
         "sectionIntros": {
-          "nap": "NAP (Name, Address, Phone) consistency is a fundamental local SEO ranking factor. Search engines cross-reference your business information across the web to verify legitimacy. Inconsistent NAP data can confuse search engines and reduce your local search visibility. This section checks for NAP presence and consistency issues.",
-          "schema": "Local business schema markup helps search engines understand your business details and display rich results. Proper schema implementation can earn you enhanced search listings with ratings, hours, and contact information. This section evaluates your structured data for local business relevance.",
-          "keywords": "Local keywords signal geographic relevance to search engines. This section analyzes your content for location-specific terms, service area keywords, and local intent signals. Proper use of local keywords helps your pages rank for geographically targeted searches.",
-          "presence": "Local presence factors include Google Business Profile optimization, local directory citations, and review signals. This section evaluates indicators of your local search presence and identifies opportunities to strengthen your visibility in local search results.",
-          "recommendations": "Based on the local SEO analysis, these recommendations target the most impactful improvements for your local search visibility and geographic relevance."
+          "nap": "NAP（名称、地址、电话）一致性是本地 SEO 排名的基本因素。搜索引擎会交叉引用您在网络上的商户信息以验证其合法性。不一致的 NAP 数据会使搜索引擎产生混淆，降低您的本地搜索可见性。本节检查 NAP 的存在性和一致性问题。",
+          "schema": "本地商户 Schema 标记帮助搜索引擎理解您的商户详情并展示富媒体结果。正确的 Schema 实现可以让您获得带有评分、营业时间和联系信息的增强搜索列表。本节评估您的结构化数据在本地商户方面的相关性。",
+          "keywords": "本地关键词向搜索引擎传达地理相关性信号。本节分析您的内容中的地理位置特定术语、服务区域关键词和本地意图信号。合理使用本地关键词有助于您的页面在地理定向搜索中获得排名。",
+          "presence": "本地存在因素包括 Google 商户资料优化、本地目录引用和评价信号。本节评估您的本地搜索存在指标，并识别增强本地搜索结果可见性的机会。",
+          "recommendations": "基于本地 SEO 分析结果，以下建议针对对您本地搜索可见性和地理相关性影响最大的改进措施。"
         },
-        "nap": "NAP Consistency",
+        "nap": "NAP 一致性",
         "status": {
           "consistent": "一致",
           "inconsistent": "不一致",
           "listed": "已列出",
           "notListed": "未列出"
         },
-        "schema": "Schema Markup",
-        "keywords": "Local Keywords",
-        "presence": "Local Presence",
+        "schema": "Schema 标记",
+        "keywords": "本地关键词",
+        "presence": "本地存在",
         "recommendations": "建议",
-        "nap.detailsHeading": "Business Information",
+        "nap.detailsHeading": "商户信息",
         "nap.rows": {
-          "name": "Business Name",
-          "address": "Address",
-          "phone": "Phone",
-          "consistency": "Consistency"
+          "name": "商户名称",
+          "address": "地址",
+          "phone": "电话",
+          "consistency": "一致性"
         },
-        "schema.statusLabel": "Schema Status",
-        "schema.typesCountLabel": "Schema Types Found",
-        "schema.typesHeading": "Detected Schema Types",
+        "schema.statusLabel": "Schema 状态",
+        "schema.typesCountLabel": "发现的 Schema 类型",
+        "schema.typesHeading": "检测到的 Schema 类型",
         "schema.table": {
-          "type": "Schema Type"
+          "type": "Schema 类型"
         },
-        "schema.noneTitle": "No Schema Markup Found",
-        "schema.noneBody": "Adding LocalBusiness or Organization schema markup can significantly improve your local search visibility and enable rich results.",
-        "schema.markupHeading": "Markup Preview",
-        "keywords.foundLabel": "Local Keywords Found",
-        "keywords.densityLabel": "Local Keyword Density",
-        "keywords.foundHeading": "Local Keywords Detected",
+        "schema.noneTitle": "未发现 Schema 标记",
+        "schema.noneBody": "添加 LocalBusiness 或 Organization Schema 标记可以显著提升您的本地搜索可见性并启用富媒体结果。",
+        "schema.markupHeading": "标记预览",
+        "keywords.foundLabel": "发现的本地关键词",
+        "keywords.densityLabel": "本地关键词密度",
+        "keywords.foundHeading": "检测到的本地关键词",
         "keywords.table": {
-          "keyword": "Keyword",
-          "suggestion": "Suggested Keyword"
+          "keyword": "关键词",
+          "suggestion": "建议关键词"
         },
-        "keywords.suggestionsHeading": "Keyword Suggestions",
-        "keywords.suggestionsCalloutTitle": "Expand Your Local Reach",
-        "keywords.suggestionsCalloutBody": "Consider incorporating these additional local keywords into your content to broaden your geographic search visibility.",
-        "presence.claimed": "Claimed",
-        "presence.notFound": "Not Found",
-        "presence.googleBusinessLabel": "Google Business Profile",
-        "presence.citationsLabel": "Citations Found",
-        "presence.gbpCalloutTitle": "Claim Your Google Business Profile",
-        "presence.gbpCalloutBody": "A verified Google Business Profile is essential for appearing in Google Maps and the local pack. Claiming and optimizing your profile should be a top priority.",
-        "presence.gbpFoundTitle": "Google Business Profile Detected",
-        "presence.gbpFoundBody": "Your Google Business Profile was detected. Ensure it is fully optimized with accurate hours, photos, and regular posts for maximum local visibility.",
-        "presence.directoriesHeading": "Directory Listings",
+        "keywords.suggestionsHeading": "关键词建议",
+        "keywords.suggestionsCalloutTitle": "扩大您的本地覆盖范围",
+        "keywords.suggestionsCalloutBody": "考虑将这些额外的本地关键词融入您的内容中，以扩大您的地理搜索可见性。",
+        "presence.claimed": "已认领",
+        "presence.notFound": "未找到",
+        "presence.googleBusinessLabel": "Google 商户资料",
+        "presence.citationsLabel": "发现的引用",
+        "presence.gbpCalloutTitle": "认领您的 Google 商户资料",
+        "presence.gbpCalloutBody": "经过验证的 Google 商户资料对于出现在 Google 地图和本地搜索结果中至关重要。认领并优化您的资料应是首要任务。",
+        "presence.gbpFoundTitle": "检测到 Google 商户资料",
+        "presence.gbpFoundBody": "已检测到您的 Google 商户资料。请确保使用准确的营业时间、照片和定期发布内容进行全面优化，以获得最大的本地曝光度。",
+        "presence.directoriesHeading": "目录列表",
         "presence.table": {
-          "directory": "Directory"
+          "directory": "目录"
         },
-        "recommendations.noneTitle": "Strong Local SEO",
-        "recommendations.noneBody": "Your site follows local SEO best practices. Continue monitoring your local presence and NAP consistency for sustained rankings."
+        "recommendations.noneTitle": "本地 SEO 表现良好",
+        "recommendations.noneBody": "您的网站遵循了本地 SEO 最佳实践。请继续监控您的本地存在和 NAP 一致性以保持排名。"
       }
     },
     "crawler": {
@@ -7237,25 +7452,25 @@
       "crawlerFixes": "爬虫修复",
       "improvementsFound": "发现{{count}}项改进",
       "tree": "树形图",
-      "pagesCrawled": "Pages crawled",
-      "pagesVisualized": "Nodes visualized",
-      "treeMode": "Tree",
-      "graphMode": "Graph",
-      "searchPlaceholder": "Search pages...",
+      "pagesCrawled": "已爬取的页面",
+      "pagesVisualized": "可视化节点",
+      "treeMode": "树形",
+      "graphMode": "图形",
+      "searchPlaceholder": "搜索页面...",
       "fitToView": "Fit",
-      "resetView": "Reset",
-      "noMatchFound": "No match found",
-      "collapseAll": "Collapse",
-      "expandAll": "Expand",
-      "legendTitle": "Legend",
-      "nodeDepth": "Depth",
-      "nodeChildren": "Children",
-      "nodeDescendants": "Descendants",
-      "nodeType": "Type",
+      "resetView": "重置",
+      "noMatchFound": "未找到匹配项",
+      "collapseAll": "全部折叠",
+      "expandAll": "全部展开",
+      "legendTitle": "图例",
+      "nodeDepth": "深度",
+      "nodeChildren": "子节点",
+      "nodeDescendants": "后代节点",
+      "nodeType": "类型",
       "nodeUrl": "URL",
-      "clickToInspect": "Click to inspect",
-      "inspectorTitle": "Page Details",
-      "rendering": "Rendering...",
+      "clickToInspect": "点击查看详情",
+      "inspectorTitle": "页面详情",
+      "rendering": "渲染中...",
       "fixes": {
         "improveSitemapCoverage": "改善站点地图覆盖范围",
         "sitemap": "站点地图",
@@ -7405,75 +7620,75 @@
     "siteCrawler": {
       "report": {
         "sectionIntros": {
-          "overview": "The crawl overview summarizes the scope and results of the site crawl. It shows how many pages were discovered, the maximum depth reached, and overall crawl performance. Understanding your site's crawlable structure helps ensure search engines can efficiently index all your important content.",
-          "pages": "This section lists all pages discovered during the crawl with their HTTP status codes, titles, and response times. Pages with errors or slow response times may be hurting your search engine visibility and user experience.",
-          "structure": "Site structure analysis examines how your pages are organized and interconnected. A well-structured site has a shallow, logical hierarchy that enables both users and search engines to find content efficiently. Deep or orphaned pages may receive less crawl budget and link equity.",
-          "issues": "Issues detected during the crawl include broken pages, missing titles, duplicate content, and other technical SEO problems. Each issue is categorized by severity to help you prioritize fixes that will have the greatest impact on search performance.",
-          "performance": "Page performance across your site reveals patterns in response times and server behavior. Consistently slow pages may indicate server capacity issues or inefficient code. This section highlights the slowest pages and overall response time distribution.",
-          "recommendations": "Based on the site crawl analysis, these recommendations target the most critical structural and technical issues affecting your site's search engine crawlability."
+          "overview": "爬取概览总结了站点爬取的范围和结果。它显示了发现的页面数量、达到的最大深度以及整体爬取性能。了解您网站的可爬取结构有助于确保搜索引擎能够高效索引您所有的重要内容。",
+          "pages": "本节列出了爬取期间发现的所有页面及其 HTTP 状态码、标题和响应时间。出现错误或响应时间过慢的页面可能正在影响您的搜索引擎可见性和用户体验。",
+          "structure": "站点结构分析检查您的页面是如何组织和互相连接的。结构良好的网站具有浅层、逻辑清晰的层级结构，使用户和搜索引擎都能高效地找到内容。层级过深或孤立的页面可能会获得较少的爬取预算和链接权重。",
+          "issues": "爬取期间检测到的问题包括死链页面、缺失标题、重复内容和其他技术 SEO 问题。每个问题按严重程度分类，帮助您优先修复对搜索性能影响最大的问题。",
+          "performance": "网站各页面的性能表现揭示了响应时间和服务器行为的模式。持续缓慢的页面可能表示服务器容量不足或代码效率低下。本节重点标出最慢的页面和整体响应时间分布。",
+          "recommendations": "基于站点爬取分析结果，以下建议针对影响您网站搜索引擎可爬取性的最关键结构和技术问题。"
         },
         "sections": {
-          "overview": "Crawl Overview",
-          "pages": "Pages Crawled",
-          "structure": "Site Structure",
-          "issues": "Issues Detected",
-          "performance": "Page Performance",
+          "overview": "爬取概览",
+          "pages": "已爬取的页面",
+          "structure": "站点结构",
+          "issues": "检测到的问题",
+          "performance": "页面性能",
           "recommendations": "建议"
         },
         "metrics": {
           "totalPages": "Total Pages",
-          "discoveredUrls": "Discovered URLs",
-          "maxDepth": "Max Depth",
-          "crawlTime": "Crawl Time",
-          "avgResponseTime": "Avg Response Time"
+          "discoveredUrls": "发现的 URL",
+          "maxDepth": "最大深度",
+          "crawlTime": "爬取时间",
+          "avgResponseTime": "平均响应时间"
         },
         "overview": {
-          "statusOverview": "Status Code Overview",
-          "ok": "2xx OK",
-          "redirects": "3xx Redirects",
-          "errors": "4xx/5xx Errors"
+          "statusOverview": "状态码概览",
+          "ok": "2xx 正常",
+          "redirects": "3xx 重定向",
+          "errors": "4xx/5xx 错误"
         },
         "pages": {
-          "totalCrawled": "Pages Crawled",
+          "totalCrawled": "已爬取的页面",
           "table": {
             "url": "URL",
-            "title": "Title",
+            "title": "标题",
             "status": "状态",
-            "responseTime": "Response Time"
+            "responseTime": "响应时间"
           },
-          "noData": "No page data available."
+          "noData": "暂无页面数据。"
         },
         "structure": {
-          "depthHeading": "Depth Distribution",
-          "depthLevel": "Depth {{level}}",
-          "statusHeading": "Status Code Breakdown",
+          "depthHeading": "深度分布",
+          "depthLevel": "深度 {{level}}",
+          "statusHeading": "状态码分布",
           "table": {
-            "depth": "Depth",
-            "pages": "Pages",
+            "depth": "深度",
+            "pages": "页面数",
             "percentage": "百分比",
-            "statusCode": "Status Code",
+            "statusCode": "状态码",
             "count": "数量"
           }
         },
         "issues": {
           "totalIssues": "Total Issues",
-          "noneTitle": "No Issues Found",
-          "noneBody": "The crawl did not detect any issues. Continue monitoring your site to catch problems early."
+          "noneTitle": "未发现问题",
+          "noneBody": "爬取未检测到任何问题。请继续监控您的网站以尽早发现问题。"
         },
         "performance": {
-          "avgResponseTime": "Avg Response Time",
-          "pagesAnalyzed": "Pages Analyzed",
-          "slowestHeading": "Slowest Pages",
+          "avgResponseTime": "平均响应时间",
+          "pagesAnalyzed": "已分析的页面",
+          "slowestHeading": "最慢的页面",
           "table": {
             "url": "URL",
-            "responseTime": "Response Time",
-            "rating": "Rating"
+            "responseTime": "响应时间",
+            "rating": "评级"
           },
-          "noData": "No performance data available."
+          "noData": "暂无性能数据。"
         },
         "recommendations": {
-          "noneTitle": "Healthy Site Structure",
-          "noneBody": "Your site has a healthy structure with no significant crawl issues. Continue monitoring to maintain site health."
+          "noneTitle": "站点结构健康",
+          "noneBody": "您的网站结构健康，没有重大爬取问题。请继续监控以保持网站健康状态。"
         }
       }
     },
@@ -7521,9 +7736,9 @@
         "async": "异步",
         "defer": "延迟",
         "sync": "同步",
-        "inline": "inline"
+        "inline": "内联"
       },
-      "cookieSecure": "Secure",
+      "cookieSecure": "安全",
       "report": {
         "sectionIntros": {
           "overview": "本节提供页面上检测到的所有营销、分析和跟踪标签的概述。健康的标签实现使用标签管理系统，避免重复，并高效加载脚本。过多的标签会降低页面性能并产生数据质量问题。此分析识别每个标签、其类别以及发现的实例数量。",
@@ -7534,7 +7749,7 @@
           "dataLayer": "dataLayer是Google Tag Manager用于在您的网站和营销标签之间传递结构化数据的JavaScript数组。实现良好的dataLayer集中了事件跟踪，并实现了跨所有标签的一致测量。本节检查dataLayer的存在、事件计数和电子商务实现。强大的dataLayer是准确营销分析的基础。",
           "cookies": "由标签和第三方脚本设置的Cookie具有隐私和合规影响。根据GDPR、CCPA和类似法规，必须告知用户有关Cookie的信息，在许多情况下，在设置非必要Cookie之前需要获得同意。本节审核所有检测到的Cookie、其供应商、用途和安全属性。了解您的Cookie环境对于隐私合规至关重要。",
           "recommendations": "基于标签智能分析，本节提供优先排序的建议以优化您的标签实现。建议涵盖性能优化、数据质量改进、隐私合规和基础设施整合。实施这些更改将带来更快的页面加载、更准确的跟踪数据以及更好地遵守隐私法规。",
-          "waterfall": "The tag load waterfall shows the timing and sequence of script loading on your page. Scripts that load early and block rendering have the greatest performance impact. This visualization helps identify opportunities to defer or async-load scripts to improve page load times."
+          "waterfall": "标签加载瀑布图显示了页面上脚本加载的时序和顺序。较早加载且阻塞渲染的脚本对性能影响最大。此可视化帮助识别延迟或异步加载脚本的机会，以改善页面加载时间。"
         },
         "overview": {
           "categoriesLabel": "类别",
@@ -7545,8 +7760,8 @@
             "category": "类别",
             "instances": "实例",
             "ids": "ID",
-            "loading": "Loading",
-            "source": "Source"
+            "loading": "加载方式",
+            "source": "来源"
           }
         },
         "issues": {
@@ -7567,13 +7782,13 @@
           "deferLabel": "延迟",
           "inlineLabel": "内联",
           "issuesHeading": "性能问题",
-          "breakdownHeading": "Loading Strategy Breakdown",
-          "optimal": "Optimal",
-          "good": "Good",
-          "blocking": "Blocking",
-          "embedded": "Embedded",
-          "method": "Method",
-          "recommendationTitle": "Performance Recommendation"
+          "breakdownHeading": "加载策略分布",
+          "optimal": "最优",
+          "good": "良好",
+          "blocking": "阻塞",
+          "embedded": "嵌入",
+          "method": "方法",
+          "recommendationTitle": "性能建议"
         },
         "thirdParty": {
           "totalLabel": "第三方脚本",
@@ -7582,10 +7797,10 @@
             "host": "主机",
             "category": "类别",
             "loading": "加载方式",
-            "count": "Count",
-            "size": "Size"
+            "count": "数量",
+            "size": "大小"
           },
-          "detailHeading": "Script Details"
+          "detailHeading": "脚本详情"
         },
         "dataLayer": {
           "eventsLabel": "事件",
@@ -7596,12 +7811,12 @@
           },
           "consentImplemented": "已实施同意模式",
           "consentMissing": "未实施同意模式",
-          "propertiesHeading": "DataLayer Properties",
-          "status": "Status",
-          "ecommerceBody": "Ecommerce events are being tracked through the dataLayer, enabling revenue and transaction reporting.",
-          "consentStatus": "Implementation Status",
-          "consentVersion": "Version",
-          "consentRecTitle": "Consent Mode Recommendation"
+          "propertiesHeading": "DataLayer 属性",
+          "status": "状态",
+          "ecommerceBody": "电子商务事件正在通过 DataLayer 进行跟踪，支持收入和交易报告。",
+          "consentStatus": "实现状态",
+          "consentVersion": "版本",
+          "consentRecTitle": "Consent Mode 建议"
         },
         "cookies": {
           "totalLabel": "Cookie总数",
@@ -7614,28 +7829,28 @@
             "vendor": "供应商",
             "domain": "域名",
             "expires": "过期时间",
-            "proportion": "Proportion"
+            "proportion": "占比"
           },
-          "typeBreakdown": "Cookie Type Breakdown"
+          "typeBreakdown": "Cookie 类型分布"
         },
         "recommendationsTitle": "建议",
         "recommendationsNoneTitle": "管理良好的标签基础设施",
         "recommendationsNoneBody": "您的标签实现遵循最佳实践。请继续监控是否出现新问题。",
         "waterfall": {
-          "insightsHeading": "Waterfall Insights",
-          "timingHeading": "Script Load Timing",
+          "insightsHeading": "瀑布图分析",
+          "timingHeading": "脚本加载时序",
           "table": {
-            "script": "Script",
-            "timing": "Timing",
-            "duration": "Duration"
+            "script": "脚本",
+            "timing": "时序",
+            "duration": "持续时间"
           }
         },
         "recommendations": {
           "totalLabel": "Total Recommendations",
-          "impact": "IMPACT",
-          "problematicCode": "Problematic Code",
-          "fixedCode": "Fixed Code",
-          "resources": "Resources"
+          "impact": "影响",
+          "problematicCode": "问题代码",
+          "fixedCode": "修复后代码",
+          "resources": "资源"
         }
       },
       "actionableRecommendations": "可操作的优化建议",
@@ -7712,9 +7927,9 @@
         "leanStack": "精简堆栈",
         "leanStackDesc": "最小化工具开销有助于保持良好的页面性能。"
       },
-      "healthScore": "Tag Health Score",
+      "healthScore": "标签健康评分",
       "totalIssues": "Total Issues",
-      "performanceScore": "Performance Score"
+      "performanceScore": "性能评分"
     },
     "metrics": {
       "seo": "SEO",
@@ -7791,16 +8006,16 @@
           "noIssuesBody": "未检测到跨页面一致性问题。您的品牌元素是统一的。"
         },
         "recommendations": "建议",
-        "overview.consistency": "Consistency",
-        "overview.colorAnalysis": "Color Analysis",
-        "overview.typographyAnalysis": "Typography Analysis",
-        "overview.elementsHeading": "Brand Elements Detected",
-        "overview.logos": "Logos",
-        "overview.colors": "Colors",
-        "overview.fonts": "Fonts",
-        "overview.patterns": "Patterns",
-        "recommendations.noneTitle": "Strong Brand Consistency",
-        "recommendations.noneBody": "Your site maintains excellent brand consistency. Continue monitoring for visual drift as content evolves."
+        "overview.consistency": "一致性",
+        "overview.colorAnalysis": "色彩分析",
+        "overview.typographyAnalysis": "排版分析",
+        "overview.elementsHeading": "检测到的品牌元素",
+        "overview.logos": "Logo",
+        "overview.colors": "颜色",
+        "overview.fonts": "字体",
+        "overview.patterns": "模式",
+        "recommendations.noneTitle": "品牌一致性强",
+        "recommendations.noneBody": "您的网站保持了出色的品牌一致性。请在内容更新时持续监控视觉偏差。"
       }
     }
   },
@@ -7837,7 +8052,7 @@
       "privacy": "隐私",
       "hosting": "托管",
       "competitive": "竞争分析",
-      "localSeo": "本地SEO",
+      "geoSeo": "GEO SEO",
       "brokenLinks": "失效链接",
       "ipReputation": "IP信誉",
       "tags": "标签",
@@ -7913,21 +8128,21 @@
     }
   },
   "scanError": {
-    "reason": "Reason: {{reason}}",
-    "editUrl": "Edit URL",
-    "tryAgain": "Try again",
-    "openInBrowser": "Open in browser",
-    "quickChecks": "Quick checks",
-    "checkSpelling": "Check spelling (common: .con vs .com)",
-    "tryWww": "Try adding or removing 'www'",
-    "verifyDns": "Verify DNS exists (A / AAAA records)",
-    "allowlistScanner": "If it's private / staging, allowlist our scanner IP",
-    "runLocally": "If it requires login, run Lighthouse from your browser",
-    "technicalDetails": "Technical details",
-    "errorCode": "Error code",
-    "timestamp": "Timestamp",
-    "attemptedUrl": "Attempted URL",
-    "failedStep": "Failed step",
+    "reason": "原因：{{reason}}",
+    "editUrl": "编辑 URL",
+    "tryAgain": "重试",
+    "openInBrowser": "在浏览器中打开",
+    "quickChecks": "快速检查",
+    "checkSpelling": "检查拼写（常见错误：.con 与 .com）",
+    "tryWww": "尝试添加或移除 'www'",
+    "verifyDns": "验证 DNS 是否存在（A / AAAA 记录）",
+    "allowlistScanner": "如果是私有/预发布站点，请将我们的扫描器 IP 加入白名单",
+    "runLocally": "如果需要登录，请从您的浏览器运行 Lighthouse",
+    "technicalDetails": "技术详情",
+    "errorCode": "错误代码",
+    "timestamp": "时间戳",
+    "attemptedUrl": "尝试的 URL",
+    "failedStep": "失败步骤",
     "statusDns": "DNS",
     "statusTls": "TLS",
     "statusHttp": "HTTP",
@@ -7960,22 +8175,22 @@
         "good": "良好",
         "needsImprovement": "需要改进",
         "poor": "差",
-        "comparisonTitle": "Desktop vs Mobile CWV Comparison",
-        "target": "Target",
-        "deviceScores": "Device Performance Scores",
+        "comparisonTitle": "桌面端与移动端核心网页指标对比",
+        "target": "目标值",
+        "deviceScores": "各设备性能评分",
         "gap": "Gap",
-        "gapWarningBody": "There is a {{gap}} point difference between desktop ({{desktop}}) and mobile ({{mobile}}) performance. Mobile users may experience degraded speed.",
+        "gapWarningBody": "桌面端（{{desktop}}）与移动端（{{mobile}}）性能相差 {{gap}} 分。移动端用户可能体验到较慢的速度。",
         "lcpFull": "Largest Contentful Paint",
-        "lcpTip": "Optimize images (WebP/AVIF, lazy-load below fold), preload hero images, reduce server response time, minimize render-blocking CSS/JS.",
+        "lcpTip": "优化图片（使用 WebP/AVIF 格式、首屏以下懒加载），预加载首屏图片，减少服务器响应时间，精简阻塞渲染的 CSS/JS。",
         "clsFull": "Cumulative Layout Shift",
-        "clsTip": "Set explicit width/height on images and embeds, avoid inserting content above existing content, reserve space for ads and dynamic content.",
+        "clsTip": "为图片和嵌入内容设置明确的宽高，避免在已有内容上方插入新内容，为广告和动态内容预留空间。",
         "inpFull": "Interaction to Next Paint",
-        "inpTip": "Break up long JavaScript tasks, use web workers for heavy computation, optimize event handlers, reduce main thread work.",
+        "inpTip": "拆分耗时的 JavaScript 任务，使用 Web Worker 处理繁重计算，优化事件处理程序，减少主线程工作负载。",
         "fcpFull": "First Contentful Paint",
-        "fcpTip": "Eliminate render-blocking resources, inline critical CSS, preconnect to required origins, reduce server response time.",
-        "issuesTitle": "Issues Identified",
-        "dataContext": "Data Context",
-        "howToImprove": "How to Improve"
+        "fcpTip": "消除阻塞渲染的资源，内联关键 CSS，预连接所需源，减少服务器响应时间。",
+        "issuesTitle": "已发现的问题",
+        "dataContext": "数据背景",
+        "howToImprove": "如何改善"
       },
       "lighthouse": {
         "title": "Lighthouse 类别评分",
@@ -7988,8 +8203,8 @@
         "network": "网络性能指标衡量服务器响应和交付内容的速度。首字节时间（TTFB）表示服务器处理速度，而DNS查询和SSL协商时间揭示连接开销。优化这些指标需要关注服务器配置和网络基础设施。",
         "caching": "有效的缓存减少服务器负载，显著提高重复访问性能。正确配置的缓存标头确保浏览器存储和复用静态资源。本节评估您的缓存策略，识别可从更长缓存持续时间中受益的资源。",
         "recommendations": "基于性能分析，这些建议针对最有影响的改进。优先处理高优先级项目将在加载时间和核心网页指标评分方面产生最大收益。",
-        "dimensionalGrades": "This section provides a multi-dimensional view of your site\\",
-        "crossBrowser": "This section compares performance between desktop and mobile environments. Mobile users often experience slower performance due to network conditions and device constraints. Understanding the gap between desktop and mobile helps prioritize optimization efforts for the platform most of your visitors use."
+        "dimensionalGrades": "本节提供对您网站的多维度视图",
+        "crossBrowser": "本节比较桌面端与移动端的性能表现。由于网络条件和设备限制，移动端用户通常会体验到较慢的性能。了解桌面端与移动端的差距有助于针对访客使用最多的平台进行优化。"
       },
       "resources": {
         "breakdownHeading": "资源分类",
@@ -7997,16 +8212,16 @@
           "type": "类型",
           "count": "文件数",
           "size": "大小",
-          "avgSize": "Avg Size",
-          "pctTotal": "% of Total"
+          "avgSize": "平均大小",
+          "pctTotal": "占总量百分比"
         },
         "tips": {
-          "jsLarge": "JavaScript exceeds 300KB. Consider code-splitting, tree-shaking, and deferring non-critical scripts.",
-          "imagesLarge": "Images exceed 1MB. Use WebP/AVIF formats, responsive srcset, and lazy loading for below-the-fold images.",
-          "cssLarge": "CSS exceeds 100KB. Remove unused styles, inline critical CSS, and defer non-critical stylesheets.",
-          "tooManyFonts": "More than 4 font files detected. Reduce font variants and use font-display: swap."
+          "jsLarge": "JavaScript 超过 300KB。请考虑代码拆分、Tree-shaking 以及延迟加载非关键脚本。",
+          "imagesLarge": "图片超过 1MB。请使用 WebP/AVIF 格式、响应式 srcset 以及首屏以下懒加载。",
+          "cssLarge": "CSS 超过 100KB。请移除未使用的样式，内联关键 CSS，延迟加载非关键样式表。",
+          "tooManyFonts": "检测到超过 4 个字体文件。请减少字体变体数量并使用 font-display: swap。"
         },
-        "optimizationTips": "Optimization Tips"
+        "optimizationTips": "优化建议"
       },
       "network": {
         "title": "网络性能",
@@ -8016,87 +8231,87 @@
         "connection": "连接时间",
         "domInteractive": "DOM可交互",
         "domContentLoaded": "DOM内容加载",
-        "ttfbDesc": "Time from request to first byte received from server",
+        "ttfbDesc": "从请求发出到服务器返回第一个字节的时间",
         "dnsDesc": "Time to resolve domain name to IP address",
         "sslDesc": "Time to establish secure TLS connection",
         "connectionDesc": "Time to establish TCP connection",
-        "domInteractiveDesc": "Time until DOM is parsed and ready for interaction",
-        "domContentLoadedDesc": "Time until DOM and deferred scripts are loaded",
-        "description": "Description",
-        "ttfbExcellentTitle": "Excellent Server Response",
-        "ttfbExcellentBody": "Your TTFB is under 200ms, indicating excellent server performance and efficient backend processing.",
-        "ttfbAcceptableTitle": "Acceptable Server Response",
-        "ttfbAcceptableBody": "Your TTFB is under 600ms. Consider server-side caching, CDN, or database optimization to bring it under 200ms.",
-        "ttfbSlowTitle": "Slow Server Response",
-        "ttfbSlowBody": "Your TTFB exceeds 600ms. This significantly impacts page load times. Investigate server-side bottlenecks, enable caching, and consider a CDN.",
-        "highRequestsTitle": "High Request Count",
-        "highRequestsBody": "Your page makes {{count}} requests. Consider bundling assets, removing unused resources, and lazy-loading below-the-fold content to reduce request count below 50."
+        "domInteractiveDesc": "DOM 解析完成并准备好进行交互的时间",
+        "domContentLoadedDesc": "DOM 和延迟脚本加载完成的时间",
+        "description": "说明",
+        "ttfbExcellentTitle": "服务器响应极佳",
+        "ttfbExcellentBody": "您的 TTFB 低于 200ms，表明服务器性能优异，后端处理高效。",
+        "ttfbAcceptableTitle": "服务器响应可接受",
+        "ttfbAcceptableBody": "您的 TTFB 低于 600ms。建议通过服务端缓存、CDN 或数据库优化将其降至 200ms 以下。",
+        "ttfbSlowTitle": "服务器响应缓慢",
+        "ttfbSlowBody": "您的 TTFB 超过 600ms，这严重影响页面加载时间。请排查服务端瓶颈、启用缓存并考虑使用 CDN。",
+        "highRequestsTitle": "请求数过多",
+        "highRequestsBody": "您的页面发出了 {{count}} 个请求。请考虑合并资源、移除未使用的资源，并对首屏以下内容进行懒加载，将请求数降至 50 以下。"
       },
       "caching": {
         "title": "缓存与优化",
         "hitRateLabel": "缓存命中率",
         "cachedLabel": "已缓存资源",
         "notCachedLabel": "未缓存",
-        "strategyBreakdown": "Cache Strategy Breakdown",
-        "strategy": "Strategy",
-        "policy": "Policy",
-        "excellentTitle": "Excellent Caching",
-        "excellentBody": "Your cache hit rate of {{rate}}% is excellent. Most resources are served from cache, minimizing server load and improving load times.",
-        "goodTitle": "Good Caching",
-        "goodBody": "Your cache hit rate of {{rate}}% is good. Consider adding cache headers to the remaining uncached resources to improve further.",
-        "fairTitle": "Caching Needs Improvement",
-        "fairBody": "Your cache hit rate of {{rate}}% indicates many resources are not being cached. Add Cache-Control headers with appropriate max-age values for static assets.",
-        "poorTitle": "Poor Caching Strategy",
-        "poorBody": "Your cache hit rate of {{rate}}% is very low. Most resources are downloaded fresh on every visit, significantly increasing load times. Implement a comprehensive caching strategy.",
-        "bestPracticesTitle": "Caching Best Practices",
-        "bp1": "Set Cache-Control: public, max-age=31536000 for versioned static assets (JS, CSS, images with hash in filename).",
-        "bp2": "Use Cache-Control: no-cache for HTML documents to ensure users always get the latest version.",
-        "bp3": "Enable ETag headers for conditional requests, reducing bandwidth for unchanged resources.",
-        "bp4": "Use a CDN to cache assets closer to users and reduce server load."
+        "strategyBreakdown": "缓存策略分布",
+        "strategy": "策略",
+        "policy": "策略",
+        "excellentTitle": "缓存表现优秀",
+        "excellentBody": "您的缓存命中率为 {{rate}}%，表现优异。大部分资源从缓存中加载，最大限度减少了服务器负载并缩短了加载时间。",
+        "goodTitle": "缓存表现良好",
+        "goodBody": "您的缓存命中率为 {{rate}}%，表现良好。建议为剩余未缓存的资源添加缓存头以进一步优化。",
+        "fairTitle": "缓存有待改善",
+        "fairBody": "您的缓存命中率为 {{rate}}%，表明许多资源未被缓存。请为静态资源添加带有适当 max-age 值的 Cache-Control 头。",
+        "poorTitle": "缓存策略欠佳",
+        "poorBody": "您的缓存命中率仅为 {{rate}}%，非常低。大部分资源每次访问都会重新下载，严重增加了加载时间。请实施全面的缓存策略。",
+        "bestPracticesTitle": "缓存最佳实践",
+        "bp1": "为带有版本号的静态资源（文件名中包含哈希值的 JS、CSS、图片）设置 Cache-Control: public, max-age=31536000。",
+        "bp2": "对 HTML 文档使用 Cache-Control: no-cache，确保用户始终获取最新版本。",
+        "bp3": "启用 ETag 头实现条件请求，减少未更改资源的带宽消耗。",
+        "bp4": "使用 CDN 将资源缓存到离用户更近的位置，减轻服务器负载。"
       },
       "recommendations.noneTitle": "出色的性能",
       "recommendations.noneBody": "您的网站在所有指标上表现良好。请继续监控性能变化。",
       "gradeAssessment": {
-        "excellent": "Excellent",
-        "good": "Good",
-        "fair": "Needs Improvement",
-        "poor": "Poor",
-        "critical": "Critical"
+        "excellent": "优秀",
+        "good": "良好",
+        "fair": "有待改善",
+        "poor": "较差",
+        "critical": "严重"
       },
-      "siteHealth": "Site Health",
-      "siteHealthScore": "Site Health Score",
+      "siteHealth": "站点健康度",
+      "siteHealthScore": "站点健康评分",
       "crossBrowser": {
-        "gapWarningTitle": "Performance Gap Detected",
-        "title": "Cross-Browser / Device Comparison",
-        "desktopScore": "Desktop Score",
-        "mobileScore": "Mobile Score",
-        "lighthouseComparison": "Lighthouse Category Comparison",
-        "category": "Category",
+        "gapWarningTitle": "检测到性能差距",
+        "title": "跨浏览器/设备对比",
+        "desktopScore": "桌面端评分",
+        "mobileScore": "移动端评分",
+        "lighthouseComparison": "Lighthouse 分类对比",
+        "category": "类别",
         "gap": "Gap",
         "gapWarningBody": "{{gap}} point difference between desktop and mobile performance. Mobile users may have a significantly degraded experience. Prioritize mobile-specific optimizations.",
-        "gapTipTitle": "Consistent Cross-Device Performance",
-        "gapTipBody": "The performance gap between desktop and mobile is {{gap}} points, which is within an acceptable range.",
-        "perDeviceCwv": "Per-Device Core Web Vitals"
+        "gapTipTitle": "跨设备性能一致",
+        "gapTipBody": "桌面端与移动端的性能差距为 {{gap}} 分，处于可接受范围内。",
+        "perDeviceCwv": "各设备核心网页指标"
       },
       "dimensionalGrades": {
-        "title": "Multi-Dimensional Analysis",
-        "performance": "Performance",
-        "resources": "Resources",
-        "caching": "Caching",
-        "network": "Network",
+        "title": "多维度分析",
+        "performance": "性能",
+        "resources": "资源",
+        "caching": "缓存",
+        "network": "网络",
         "webVitals": "Web Vitals",
-        "dimension": "Dimension",
-        "grade": "Grade",
-        "assessment": "Assessment"
+        "dimension": "维度",
+        "grade": "等级",
+        "assessment": "评估"
       },
       "rec": {
-        "before": "Before",
-        "after": "After",
-        "affectedResources": "Affected Resources",
-        "file": "File",
-        "size": "Size",
-        "issue": "Issue",
-        "stepByStep": "Step-by-Step Fix Guide"
+        "before": "修复前",
+        "after": "修复后",
+        "affectedResources": "受影响的资源",
+        "file": "文件",
+        "size": "大小",
+        "issue": "问题",
+        "stepByStep": "分步修复指南"
       }
     }
   },
@@ -8116,6 +8331,7 @@
   "accessibility": {
     "title": "无障碍",
     "subtitle": "WCAG合规性和无障碍测试",
+    "pageIntro": "此报告根据WCAG 2.1指南测试您的网站，检查颜色对比度、键盘导航、ARIA标签和屏幕阅读器兼容性。无障碍性差的网站会排斥残障用户，并使您面临法律风险。利用这些结果让您的网站对所有人可用。",
     "breadcrumb": "无障碍",
     "analyze": "分析无障碍",
     "analyzing": "分析中...",
@@ -8164,21 +8380,21 @@
           "element": "元素",
           "ratio": "比率",
           "required": "要求",
-          "colors": "Colors"
+          "colors": "颜色"
         },
-        "platformAgnostic": "Platform-Agnostic Metrics",
-        "platformAgnosticDesc": "Color contrast ratios are design-based and apply equally to all platforms."
+        "platformAgnostic": "跨平台通用指标",
+        "platformAgnosticDesc": "色彩对比度是基于设计的指标，适用于所有平台。"
       },
       "keyboard": {
         "focusableLabel": "可聚焦元素",
         "tabTrapsLabel": "Tab陷阱",
         "missingFocusLabel": "缺失焦点指示器",
         "issuesHeading": "键盘问题",
-        "platformAgnostic": "Platform-Agnostic Metrics",
-        "platformAgnosticDesc": "Keyboard navigation patterns apply universally across devices with keyboard input.",
-        "issueType": "Keyboard Issue",
-        "allPassTitle": "No Keyboard Issues",
-        "allPassBody": "All interactive elements are keyboard accessible with visible focus indicators."
+        "platformAgnostic": "跨平台通用指标",
+        "platformAgnosticDesc": "键盘导航模式普遍适用于所有支持键盘输入的设备。",
+        "issueType": "键盘问题",
+        "allPassTitle": "无键盘问题",
+        "allPassBody": "所有交互元素均可通过键盘访问，且具有可见的焦点指示器。"
       },
       "aria": {
         "landmarksLabel": "地标",
@@ -8191,133 +8407,133 @@
           "description": "描述",
           "impact": "影响"
         },
-        "platformAgnostic": "Platform-Agnostic Metrics",
-        "platformAgnosticDesc": "ARIA attributes and semantic HTML apply universally to assistive technologies.",
-        "headingGood": "Good"
+        "platformAgnostic": "跨平台通用指标",
+        "platformAgnosticDesc": "ARIA 属性和语义化 HTML 普遍适用于各类辅助技术。",
+        "headingGood": "良好"
       },
       "recommendations.noneTitle": "优秀的无障碍性",
       "recommendations.noneBody": "您的网站符合无障碍最佳实践。请继续监控以确保合规。",
-      "gradeExcellent": "Excellent",
-      "gradeGood": "Good",
-      "gradeFair": "Fair",
-      "gradePoor": "Poor",
+      "gradeExcellent": "优秀",
+      "gradeGood": "良好",
+      "gradeFair": "一般",
+      "gradePoor": "较差",
       "comparison": {
-        "title": "Desktop vs Mobile Comparison",
-        "intro": "Accessibility was analyzed on both desktop and mobile platforms. This comparison identifies platform-specific accessibility gaps that may affect different user groups.",
-        "bothTimedOut": "Both desktop and mobile Lighthouse analyses timed out. Using alternative axe-core metrics.",
-        "desktopTimedOut": "Desktop Lighthouse analysis timed out. Using alternative axe-core metrics for desktop.",
-        "mobileTimedOut": "Mobile Lighthouse analysis timed out. Using alternative axe-core metrics for mobile.",
-        "partialAnalysis": "Partial Analysis",
-        "difference": "Difference",
-        "lhAccessibility": "Accessibility",
-        "lhPerformance": "Performance",
-        "lhBestPractices": "Best Practices",
+        "title": "桌面端与移动端对比",
+        "intro": "已对桌面端和移动端平台进行无障碍性分析。此对比可识别特定平台的无障碍性差距，这些差距可能影响不同的用户群体。",
+        "bothTimedOut": "桌面端和移动端的 Lighthouse 分析均超时。已使用 axe-core 替代指标。",
+        "desktopTimedOut": "桌面端 Lighthouse 分析超时。已使用 axe-core 替代指标作为桌面端数据。",
+        "mobileTimedOut": "移动端 Lighthouse 分析超时。已使用 axe-core 替代指标作为移动端数据。",
+        "partialAnalysis": "部分分析",
+        "difference": "差异",
+        "lhAccessibility": "无障碍性",
+        "lhPerformance": "性能",
+        "lhBestPractices": "最佳实践",
         "lhSeo": "SEO",
-        "lighthouseScores": "Lighthouse Scores by Platform",
-        "metric": "Metric",
-        "gapDescription": "There is a {{diff}}-point difference between desktop ({{desktop}}) and mobile ({{mobile}}) accessibility scores.",
-        "mobileBarriers": "Mobile users may face additional barriers.",
-        "desktopBarriers": "Desktop users may face additional barriers.",
-        "gapDetected": "Accessibility Gap Detected",
-        "consistent": "Consistent Accessibility",
-        "consistentDesc": "Both platforms scored within {{diff}} points of each other."
+        "lighthouseScores": "各平台 Lighthouse 评分",
+        "metric": "指标",
+        "gapDescription": "桌面端（{{desktop}}）与移动端（{{mobile}}）的无障碍性评分相差 {{diff}} 分。",
+        "mobileBarriers": "移动端用户可能面临额外障碍。",
+        "desktopBarriers": "桌面端用户可能面临额外障碍。",
+        "gapDetected": "检测到无障碍性差距",
+        "consistent": "无障碍性一致",
+        "consistentDesc": "两个平台的评分差距在 {{diff}} 分以内。"
       },
       "wcagLevels": {
-        "title": "WCAG Compliance Levels",
-        "intro": "WCAG 2.1 defines three conformance levels. Level AA is the industry standard required by most accessibility regulations. This section shows your current compliance level and what each level requires.",
-        "levelA": "Level A",
-        "levelASubtitle": "Minimum Accessibility",
-        "levelAReqs": "Text alternatives for images, keyboard accessibility, no seizure-inducing content",
-        "current": "Current",
-        "levelAA": "Level AA",
-        "levelAASubtitle": "Industry Standard",
-        "levelAAReqs": "Sufficient color contrast (4.5:1), visible focus indicators, content reflows properly, all Level A requirements",
-        "levelAAA": "Level AAA",
-        "levelAAASubtitle": "Highest Accessibility",
-        "levelAAAReqs": "Sign language interpretation, extended audio descriptions, very high contrast (7:1), all Level A & AA requirements",
-        "levelCol": "Level",
-        "classCol": "Classification",
-        "requirementsCol": "Key Requirements",
-        "scoreRange": "Score Range",
-        "notCompliant": "Not Compliant",
-        "notCompliantDesc": "This website does not meet minimum WCAG accessibility standards. Immediate improvements are needed.",
-        "meetsA": "Meets WCAG Level A",
-        "meetsADesc": "This website meets minimum accessibility standards but has room for improvement to reach the industry-standard Level AA.",
-        "meetsAA": "Meets WCAG Level AA",
-        "meetsAADesc": "This website meets industry-standard accessibility requirements. Consider implementing AAA enhancements for optimal accessibility.",
-        "meetsAAA": "Meets WCAG Level AAA",
-        "meetsAAADesc": "This website achieves the highest level of accessibility compliance. Excellent work!",
-        "noteTitle": "About WCAG Compliance",
-        "noteBody": "Level AA is the industry standard. It covers 90% of real user needs without excessive implementation cost. Level AAA is not always feasible for all content types."
+        "title": "WCAG 合规等级",
+        "intro": "WCAG 2.1 定义了三个合规等级。AA 级是大多数无障碍法规要求的行业标准。本节展示您当前的合规等级及各等级的要求。",
+        "levelA": "A 级",
+        "levelASubtitle": "最低无障碍标准",
+        "levelAReqs": "图片替代文本、键盘可访问性、无致癫痫内容",
+        "current": "当前",
+        "levelAA": "AA 级",
+        "levelAASubtitle": "行业标准",
+        "levelAAReqs": "足够的色彩对比度（4.5:1）、可见的焦点指示器、内容正确回流、满足所有 A 级要求",
+        "levelAAA": "AAA 级",
+        "levelAAASubtitle": "最高无障碍标准",
+        "levelAAAReqs": "手语翻译、扩展音频描述、极高对比度（7:1）、满足所有 A 级和 AA 级要求",
+        "levelCol": "等级",
+        "classCol": "分类",
+        "requirementsCol": "关键要求",
+        "scoreRange": "分数范围",
+        "notCompliant": "不合规",
+        "notCompliantDesc": "该网站未达到 WCAG 最低无障碍标准，需要立即改进。",
+        "meetsA": "达到 WCAG A 级",
+        "meetsADesc": "该网站达到了最低无障碍标准，但仍有改进空间以达到行业标准的 AA 级。",
+        "meetsAA": "达到 WCAG AA 级",
+        "meetsAADesc": "该网站达到了行业标准的无障碍要求。可考虑实施 AAA 级增强以获得最佳无障碍性。",
+        "meetsAAA": "达到 WCAG AAA 级",
+        "meetsAAADesc": "该网站达到了最高级别的无障碍合规标准。表现出色！",
+        "noteTitle": "关于 WCAG 合规",
+        "noteBody": "AA 级是行业标准，覆盖了 90% 的实际用户需求，且实施成本合理。AAA 级并非始终适用于所有内容类型。"
       },
       "recs": {
-        "crossPlatform": "Cross-Platform Recommendations",
-        "crossPlatformDesc": "These accessibility improvements are analyzed based on both desktop and mobile to ensure inclusive design.",
+        "crossPlatform": "跨平台建议",
+        "crossPlatformDesc": "这些无障碍改进建议基于桌面端和移动端分析，确保实现包容性设计。",
         "totalCount": "{{count}} improvements found"
       },
       "summary": {
-        "issuesFound": "Issues Found",
-        "recommendations": "Recommendations",
-        "checksPassed": "Checks Passed",
-        "wcagLevel": "WCAG Level",
-        "overallScore": "Overall Score",
-        "violations": "Violations Found",
-        "contrastIssues": "Contrast Issues",
-        "bestPractices": "Best Practices Passed"
+        "issuesFound": "发现的问题",
+        "recommendations": "建议",
+        "checksPassed": "通过的检查",
+        "wcagLevel": "WCAG 等级",
+        "overallScore": "综合评分",
+        "violations": "发现的违规项",
+        "contrastIssues": "对比度问题",
+        "bestPractices": "通过的最佳实践"
       },
       "fixes": {
-        "impactLabel": "Expected Impact",
-        "riskImpact": "Risk Impact",
-        "solution": "Solution",
-        "currentIssue": "Current Issue",
-        "recommendedFix": "Recommended Fix",
-        "stepsTitle": "Step-by-Step Fix Guide",
-        "resources": "Resources & Tools",
+        "impactLabel": "预期影响",
+        "riskImpact": "风险影响",
+        "solution": "解决方案",
+        "currentIssue": "当前问题",
+        "recommendedFix": "建议修复",
+        "stepsTitle": "分步修复指南",
+        "resources": "资源与工具",
         "steps": {
-          "contrast1": "Open browser DevTools and navigate to the Elements panel",
-          "contrast2": "Use the Accessibility pane to check color contrast ratios",
-          "contrast3": "Found {{count}} elements below 4.5:1 contrast ratio",
-          "contrast4": "Use WebAIM Contrast Checker to find compliant color alternatives",
-          "contrast5": "Update CSS with new color values that meet WCAG AA",
-          "contrast6": "Test with browser extensions like axe DevTools or WAVE",
-          "label1": "Identify form inputs missing accessible labels",
-          "label2": "Add a <label> element with matching for/id attributes",
-          "label3": "If visual labels are not possible, use aria-label",
-          "label4": "Ensure labels are programmatically associated",
-          "label5": "Test with a screen reader to verify input purpose is announced",
-          "focus1": "Remove CSS that hides outlines (outline: none)",
-          "focus2": "Add :focus-visible styles for keyboard users",
-          "focus3": "Ensure focus indicator has minimum 3:1 contrast ratio",
-          "focus4": "Test by tabbing through the page",
-          "focus5": "Use :focus-visible to distinguish keyboard from mouse focus",
-          "heading1": "Ensure page has exactly one <h1> element",
-          "heading2": "Verify headings follow sequential order (h1, h2, h3)",
-          "heading3": "Do not skip heading levels",
-          "heading4": "Use headings for document structure, not for styling",
-          "heading5": "Test with screen reader heading navigation",
-          "landmark1": "Replace generic <div> elements with semantic HTML5 elements",
-          "landmark2": "Use <header>, <nav>, <main>, <aside>, <footer>",
-          "landmark3": "Use aria-label to differentiate multiple nav elements",
-          "landmark4": "Test with screen reader landmark navigation",
-          "landmark5": "Verify all major page sections have appropriate landmarks",
-          "mobile1": "Add proper viewport meta tag",
-          "mobile2": "Audit interactive elements for 44x44px minimum touch target",
-          "mobile3": "Ensure adequate spacing between clickable elements",
-          "mobile4": "Test with mobile screen reader (VoiceOver, TalkBack)",
-          "mobile5": "Verify text is readable without zooming (16px minimum)",
-          "generic1": "Review the specific WCAG criterion referenced",
-          "generic2": "Identify all affected elements on the page",
-          "generic3": "Implement the recommended code fix",
-          "generic4": "Test with assistive technology",
-          "generic5": "Validate with automated tools (axe, WAVE, Lighthouse)"
+          "contrast1": "打开浏览器开发者工具并导航到元素面板",
+          "contrast2": "使用无障碍性面板检查色彩对比度",
+          "contrast3": "发现 {{count}} 个元素的对比度低于 4.5:1",
+          "contrast4": "使用 WebAIM 对比度检查器找到合规的替代颜色",
+          "contrast5": "更新 CSS 中的颜色值以符合 WCAG AA 标准",
+          "contrast6": "使用浏览器扩展（如 axe DevTools 或 WAVE）进行测试",
+          "label1": "识别缺少无障碍标签的表单输入框",
+          "label2": "添加具有匹配 for/id 属性的 <label> 元素",
+          "label3": "如果无法使用可见标签，请使用 aria-label",
+          "label4": "确保标签与输入框建立了程序化关联",
+          "label5": "使用屏幕阅读器测试，验证输入用途是否被正确朗读",
+          "focus1": "移除隐藏轮廓的 CSS（outline: none）",
+          "focus2": "为键盘用户添加 :focus-visible 样式",
+          "focus3": "确保焦点指示器的对比度至少为 3:1",
+          "focus4": "通过 Tab 键在页面中导航进行测试",
+          "focus5": "使用 :focus-visible 区分键盘焦点和鼠标焦点",
+          "heading1": "确保页面有且仅有一个 <h1> 元素",
+          "heading2": "验证标题按顺序排列（h1、h2、h3）",
+          "heading3": "不要跳过标题层级",
+          "heading4": "使用标题表示文档结构，而非用于样式设置",
+          "heading5": "使用屏幕阅读器的标题导航功能进行测试",
+          "landmark1": "将通用的 <div> 元素替换为语义化 HTML5 元素",
+          "landmark2": "使用 <header>、<nav>、<main>、<aside>、<footer>",
+          "landmark3": "使用 aria-label 区分多个 nav 元素",
+          "landmark4": "使用屏幕阅读器的地标导航功能进行测试",
+          "landmark5": "验证所有主要页面区域都有适当的地标标记",
+          "mobile1": "添加正确的 viewport meta 标签",
+          "mobile2": "检查交互元素的触控目标是否达到最小 44x44 像素",
+          "mobile3": "确保可点击元素之间有足够的间距",
+          "mobile4": "使用移动端屏幕阅读器（VoiceOver、TalkBack）进行测试",
+          "mobile5": "验证文本无需缩放即可阅读（最小 16px）",
+          "generic1": "查阅所引用的具体 WCAG 准则",
+          "generic2": "识别页面上所有受影响的元素",
+          "generic3": "实施建议的代码修复",
+          "generic4": "使用辅助技术进行测试",
+          "generic5": "使用自动化工具（axe、WAVE、Lighthouse）进行验证"
         },
         "generated": {
           "contrastDesc": "{{count}} elements on the page fail to meet the WCAG AA minimum contrast ratio of 4.5:1 for normal text.",
           "focusDesc": "{{count}} interactive elements lack visible focus indicators for keyboard users.",
           "labelsDesc": "{{count}} form elements are missing accessible labels.",
-          "landmarksDesc": "Only {{count}} landmark regions found. Most pages should have at least header, navigation, main, and footer landmarks.",
-          "headingDesc": "Heading structure issue detected: {{status}}. Screen reader users rely on heading hierarchy for page navigation.",
-          "mobileDesc": "Mobile accessibility score ({{mobile}}) is {{diff}} points lower than desktop ({{desktop}})."
+          "landmarksDesc": "仅发现 {{count}} 个地标区域。大多数页面应至少包含 header、navigation、main 和 footer 地标。",
+          "headingDesc": "检测到标题结构问题：{{status}}。屏幕阅读器用户依赖标题层次结构进行页面导航。",
+          "mobileDesc": "移动端无障碍性评分（{{mobile}}）比桌面端（{{desktop}}）低 {{diff}} 分。"
         }
       }
     }
@@ -8492,391 +8708,394 @@
   "report_type": "cwv",
   "print": "1",
   "fonts": {
-    "fontFamilies": "Font Families",
+    "fontFamilies": "字体家族",
     "report": {
       "sectionIntros": {
-        "families": "Font families define the typographic identity of your site. This section catalogs all font families detected on your page, including their weight variants, styles, and loading sources. Using too many families increases page weight and load times. Best practice is to limit your site to 2-3 font families with only the weight variants you actually use.",
-        "providers": "Font providers determine how fonts are delivered to your visitors. Third-party providers like Google Fonts and Adobe Fonts offer convenience but introduce external dependencies and potential privacy concerns. Self-hosting fonts gives you full control over delivery and eliminates third-party requests. This section identifies all font sources and their delivery methods.",
+        "families": "字体家族定义了您网站的排版视觉标识。本节列出了在您页面上检测到的所有字体家族，包括其字重变体、样式和加载来源。使用过多的字体家族会增加页面大小和加载时间。最佳实践是将网站限制在 2-3 个字体家族，并只使用实际需要的字重变体。",
+        "providers": "字体提供商决定了字体如何交付给您的访客。Google Fonts 和 Adobe Fonts 等第三方提供商提供了便利，但引入了外部依赖和潜在的隐私问题。自托管字体让您完全控制交付方式，并消除了第三方请求。本节识别所有字体来源及其交付方式。",
         "loading": "Font loading speed directly impacts First Contentful Paint (FCP) and overall perceived performance. Slow-loading fonts cause invisible text (FOIT) or flash of unstyled text (FOUT), degrading user experience. This section evaluates loading time, estimated bandwidth cost, and the impact on rendering performance. Using font-display: swap and preloading critical fonts are key optimization strategies.",
-        "privacy": "Loading fonts from third-party CDNs sends visitor IP addresses and browsing data to external servers. Under GDPR and similar privacy regulations, this may require explicit user consent. Google Fonts has been the subject of GDPR enforcement actions in several EU countries. This section identifies privacy implications of your font loading strategy and highlights potential compliance risks.",
-        "delivery": "Font delivery optimization ensures fonts are downloaded efficiently. Using modern formats like WOFF2 reduces file sizes by 30-50% compared to older formats. This section analyzes font file requests, formats, sizes, and loading times. Implementing preconnect hints for external font servers and preloading critical font files accelerates delivery.",
+        "privacy": "从第三方 CDN 加载字体会将访客 IP 地址和浏览数据发送到外部服务器。根据 GDPR 及类似隐私法规，这可能需要明确的用户同意。Google Fonts 已在多个欧盟国家成为 GDPR 执法行动的对象。本节识别您的字体加载策略的隐私影响，并突出潜在的合规风险。",
+        "delivery": "字体交付优化确保字体高效下载。使用 WOFF2 等现代格式比旧格式减少 30-50% 的文件大小。本节分析字体文件请求、格式、大小和加载时间。为外部字体服务器实施预连接提示和预加载关键字体文件可以加速交付。",
         "stability": "Layout stability during font loading prevents jarring visual shifts that frustrate users and hurt Core Web Vitals scores. Proper fallback font stacks and font-display settings minimize Cumulative Layout Shift (CLS). This section analyzes your fallback stacks, font-display usage, and CLS risk factors. Using size-adjusted fallback fonts with metric overrides can virtually eliminate font-related layout shift.",
-        "advanced": "Advanced typography features like variable fonts, subsetting, and unicode-range can significantly reduce file sizes and improve performance. Variable fonts combine multiple weights and styles into a single file, reducing HTTP requests. Subsetting removes unused glyphs, and unicode-range allows the browser to download only needed character sets. This section checks for adoption of these modern optimization techniques.",
-        "performance": "This section shows how typography impacts page performance. Metrics include page load timing, font family and variant counts, and typography scale consistency. Fewer families and weights mean faster loading. A consistent type scale improves readability and design quality.",
-        "recommendations": "Based on the font analysis, this section provides actionable recommendations to optimize your typography stack. Each recommendation targets a specific area — from reducing file sizes with modern formats to improving layout stability with proper fallback chains. Implementing these changes can improve both performance metrics and user experience across all devices."
+        "advanced": "可变字体、子集化和 unicode-range 等高级排版功能可以显著减小文件大小并提升性能。可变字体将多个字重和样式合并到单个文件中，减少了 HTTP 请求。子集化移除未使用的字形，unicode-range 允许浏览器仅下载所需的字符集。本节检查这些现代优化技术的采用情况。",
+        "performance": "本节展示排版对页面性能的影响。指标包括页面加载时间、字体家族和变体数量，以及排版比例一致性。更少的字体家族和字重意味着更快的加载速度。一致的字体比例可提升可读性和设计质量。",
+        "recommendations": "基于字体分析结果，本节提供可操作的建议来优化您的排版栈。每条建议针对特定领域——从使用现代格式减小文件大小到通过适当的回退链改善布局稳定性。实施这些更改可以改善所有设备上的性能指标和用户体验。"
       },
       "families": {
         "totalLabel": "Total Families",
         "variantsLabel": "Total Variants",
-        "duplicatesLabel": "Duplicates",
-        "displayIssuesLabel": "Display Issues",
-        "detailsHeading": "Detected Families",
-        "duplicateLabel": "DUPLICATE",
-        "noDisplayLabel": "NO DISPLAY",
+        "duplicatesLabel": "重复项",
+        "displayIssuesLabel": "显示问题",
+        "detailsHeading": "检测到的字体家族",
+        "duplicateLabel": "重复",
+        "noDisplayLabel": "不显示",
         "table": {
-          "name": "Family",
-          "weights": "Weights",
-          "style": "Style",
-          "variants": "Variants",
-          "source": "Source",
-          "category": "Category",
-          "count": "Count",
-          "families": "Families"
+          "name": "字体家族",
+          "weights": "字重",
+          "style": "样式",
+          "variants": "变体",
+          "source": "来源",
+          "category": "类别",
+          "count": "数量",
+          "families": "字体家族"
         },
-        "categoriesHeading": "Font Categories",
+        "categoriesHeading": "字体类别",
         "category": {
           "google": "Google Fonts",
-          "system": "System Fonts",
-          "icons": "Icon Fonts"
+          "system": "系统字体",
+          "icons": "图标字体"
         }
       },
       "providers": {
         "noFamilies": "N/A",
-        "external": "External",
+        "external": "外部",
         "table": {
-          "provider": "Provider",
-          "type": "Type",
-          "fontsServed": "Count",
-          "families": "Families Served"
+          "provider": "提供商",
+          "type": "类型",
+          "fontsServed": "数量",
+          "families": "提供的字体家族"
         },
-        "evidenceHeading": "Detection Evidence"
+        "evidenceHeading": "检测依据"
       },
       "privacy": {
-        "selfHosted": "Self-Hosted",
-        "riskLevelLabel": "Privacy Risk",
-        "thirdPartyLabel": "Third-Party Providers",
-        "domainsLabel": "External Domains",
-        "domainsHeading": "External Domains Contacted",
-        "sendsData": "Sends Visitor Data",
-        "domainCol": "Domain",
-        "impactCol": "Privacy Impact",
-        "domainNote": "Each external domain receives visitor IP addresses and may set cookies.",
-        "gdprWarningTitle": "Google Fonts Privacy Consideration",
-        "gdprWarningBody": "Google Fonts sends visitor data (IP address, user agent) to Google servers. Under GDPR, this may require explicit consent. Consider self-hosting fonts using tools like google-webfonts-helper.",
-        "adobeWarningTitle": "Adobe Fonts Privacy Notice",
-        "adobeWarningBody": "Adobe Fonts (Typekit) sends visitor data to Adobe servers and requires an active subscription.",
-        "classificationHeading": "Font Provider Classification",
-        "noIssue": "No Privacy Concern",
-        "selfHostedDesc": "Maximum privacy, you control the fonts",
+        "selfHosted": "自托管",
+        "riskLevelLabel": "隐私风险",
+        "thirdPartyLabel": "第三方提供商",
+        "domainsLabel": "外部域名",
+        "domainsHeading": "已连接的外部域名",
+        "sendsData": "发送访客数据",
+        "domainCol": "域名",
+        "impactCol": "隐私影响",
+        "domainNote": "每个外部域名都会接收访客 IP 地址，并可能设置 Cookie。",
+        "gdprWarningTitle": "Google Fonts 隐私提示",
+        "gdprWarningBody": "Google Fonts 会将访客数据（IP 地址、用户代理）发送到 Google 服务器。根据 GDPR，这可能需要明确的用户同意。建议使用 google-webfonts-helper 等工具进行自托管。",
+        "adobeWarningTitle": "Adobe Fonts 隐私提示",
+        "adobeWarningBody": "Adobe Fonts (Typekit) 会将访客数据发送到 Adobe 服务器，且需要有效的订阅。",
+        "classificationHeading": "字体提供商分类",
+        "noIssue": "无隐私问题",
+        "selfHostedDesc": "最高隐私保护，您完全控制字体",
         "googleLabel": "Google Fonts",
-        "consentRequired": "May Require Consent",
-        "googleDesc": "Free CDN, sends visitor data to Google",
+        "consentRequired": "可能需要用户同意",
+        "googleDesc": "免费 CDN，向 Google 发送访客数据",
         "adobeLabel": "Adobe Fonts",
-        "adobeDesc": "Requires subscription, sends data to Adobe",
-        "descCol": "Description",
-        "selfHostTitle": "Consider Self-Hosting",
-        "selfHostBody": "Self-hosting fonts eliminates third-party requests, improving privacy compliance and potentially reducing load times. Most web fonts can be legally self-hosted with proper licensing."
+        "adobeDesc": "需要订阅，向 Adobe 发送数据",
+        "descCol": "描述",
+        "selfHostTitle": "建议自托管",
+        "selfHostBody": "自托管字体可消除第三方请求，提升隐私合规性并可能缩短加载时间。大多数网络字体在取得适当许可后可合法自托管。"
       },
       "loading": {
         "totalFontsLabel": "Total Fonts",
-        "preloadedLabel": "Preloaded",
-        "renderBlockingLabel": "Render-Blocking",
-        "foitGoodTitle": "FOIT/FOUT Prevention",
-        "foitGoodBody": "Fonts use font-display: swap or optional, preventing Flash of Invisible Text (FOIT).",
-        "foitIssueTitle": "FOIT/FOUT Risk Detected",
-        "foitIssueBody": "font(s) may cause invisible text during load. Add font-display: swap to prevent FOIT.",
-        "fontDisplayIssue": "Font display issue detected",
-        "preloadHeading": "Font Preloading",
-        "preloadFoundTitle": "font(s) preloaded",
-        "preloadFoundBody": "Critical fonts load early for faster rendering.",
-        "fontLabel": "font",
+        "preloadedLabel": "已预加载",
+        "renderBlockingLabel": "渲染阻塞",
+        "foitGoodTitle": "FOIT/FOUT 预防",
+        "foitGoodBody": "字体使用 font-display: swap 或 optional，可防止不可见文本闪烁 (FOIT)。",
+        "foitIssueTitle": "检测到 FOIT/FOUT 风险",
+        "foitIssueBody": "个字体在加载期间可能导致文本不可见。添加 font-display: swap 以防止 FOIT。",
+        "fontDisplayIssue": "检测到字体显示问题",
+        "preloadHeading": "字体预加载",
+        "preloadFoundTitle": "个字体已预加载",
+        "preloadFoundBody": "关键字体优先加载以加快渲染速度。",
+        "fontLabel": "个字体",
         "table": {
-          "file": "File",
+          "file": "文件",
           "href": "URL",
-          "domain": "Domain"
+          "domain": "域名"
         },
-        "noPreloadsTitle": "No Font Preloads Detected",
-        "noPreloadsBody": "Add preload hints for critical fonts: <link rel=\"preload\" href=\"/fonts/main.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
-        "preconnectHeading": "Preconnect Hints",
-        "connected": "Connected",
-        "missing": "Missing",
-        "addToHead": "Add to HTML <head>"
+        "noPreloadsTitle": "未检测到字体预加载",
+        "noPreloadsBody": "为关键字体添加预加载提示：<link rel=\"preload\" href=\"/fonts/main.woff2\" as=\"font\" type=\"font/woff2\" crossorigin>",
+        "preconnectHeading": "预连接提示",
+        "connected": "已连接",
+        "missing": "缺失",
+        "addToHead": "添加到 HTML <head>"
       },
       "delivery": {
-        "requestsLabel": "Font Requests",
-        "fontFacesLabel": "Font Faces",
+        "requestsLabel": "字体请求",
+        "fontFacesLabel": "字体声明",
         "totalSizeLabel": "Total Size",
-        "avgLoadLabel": "Avg Load Time",
-        "woff2Label": "Modern Format",
-        "formatHeading": "Font Format Distribution",
-        "modern": "Modern",
-        "acceptable": "Acceptable",
-        "legacy": "Legacy",
-        "obsolete": "Obsolete",
+        "avgLoadLabel": "平均加载时间",
+        "woff2Label": "现代格式",
+        "formatHeading": "字体格式分布",
+        "modern": "现代",
+        "acceptable": "可接受",
+        "legacy": "旧版",
+        "obsolete": "过时",
         "table": {
-          "format": "Format",
-          "count": "Count",
-          "file": "File",
-          "size": "Size",
-          "loadTime": "Load Time",
-          "cache": "Cache"
+          "format": "格式",
+          "count": "数量",
+          "file": "文件",
+          "size": "大小",
+          "loadTime": "加载时间",
+          "cache": "缓存"
         },
-        "legacyTitle": "Legacy Formats Detected",
-        "legacyBody": "Consider removing EOT/SVG formats for smaller bundles. Modern browsers all support WOFF2.",
-        "preconnectHeading": "Preconnect Hints",
-        "connected": "Connected",
-        "missing": "Missing",
-        "preloadHeading": "Font Preloads",
-        "noPreloadsTitle": "No Font Preloads Detected",
-        "noPreloadsBody": "Add preload hints for critical fonts to accelerate rendering.",
-        "requestsHeading": "Network Requests",
-        "moreRequests": "more requests"
+        "legacyTitle": "检测到旧版格式",
+        "legacyBody": "建议移除 EOT/SVG 格式以减小包体积。所有现代浏览器均支持 WOFF2。",
+        "preconnectHeading": "预连接提示",
+        "connected": "已连接",
+        "missing": "缺失",
+        "preloadHeading": "字体预加载",
+        "noPreloadsTitle": "未检测到字体预加载",
+        "noPreloadsBody": "为关键字体添加预加载提示以加速渲染。",
+        "requestsHeading": "网络请求",
+        "moreRequests": "更多请求"
       },
       "stability": {
-        "scoreLabel": "Stability Score",
-        "clsRiskLabel": "CLS Risk",
+        "scoreLabel": "稳定性评分",
+        "clsRiskLabel": "CLS 风险",
         "risksHeading": "Layout Shift Risks",
-        "lowRiskTitle": "Low CLS Risk",
-        "lowRiskBody": "Low risk of font-related layout shifts. Good configuration!",
-        "fontDisplayHeading": "font-display Values",
-        "optimalLabel": "Optimal (swap/optional)",
-        "acceptableLabel": "Acceptable (fallback)",
-        "problematicLabel": "Problematic (block/auto)",
-        "optimal": "Optimal",
-        "acceptable": "Acceptable",
-        "problematic": "Problematic",
+        "lowRiskTitle": "CLS 风险较低",
+        "lowRiskBody": "字体相关的布局偏移风险较低。配置良好！",
+        "fontDisplayHeading": "font-display 值",
+        "optimalLabel": "最优 (swap/optional)",
+        "acceptableLabel": "可接受 (fallback)",
+        "problematicLabel": "有问题 (block/auto)",
+        "optimal": "最优",
+        "acceptable": "可接受",
+        "problematic": "有问题",
         "table": {
-          "value": "Value",
-          "count": "Count",
-          "family": "Family",
-          "overrides": "Overrides Applied",
-          "stack": "Font Stack",
-          "quality": "Quality",
-          "genericFallback": "Generic",
-          "recommendation": "Recommendation"
+          "value": "值",
+          "count": "数量",
+          "family": "字体家族",
+          "overrides": "已应用覆盖",
+          "stack": "字体栈",
+          "quality": "质量",
+          "genericFallback": "通用回退",
+          "recommendation": "建议"
         },
-        "recommendedFix": "Recommended Fix",
-        "metricOverridesHeading": "Metric Overrides",
-        "metricOverridesFoundTitle": "Metric Overrides Detected",
-        "metricOverridesFoundBody": "Using metric overrides helps minimize layout shifts when fonts swap.",
-        "noMetricOverridesTitle": "No Metric Overrides Detected",
-        "noMetricOverridesBody": "Consider using metric overrides to minimize layout shifts.",
-        "exampleOverrides": "Example @font-face with metric overrides",
-        "fallbackStacksHeading": "Fallback Stack Quality",
-        "excellentLabel": "Excellent",
-        "goodLabel": "Good",
-        "poorLabel": "Poor"
+        "recommendedFix": "推荐修复",
+        "metricOverridesHeading": "度量覆盖",
+        "metricOverridesFoundTitle": "检测到度量覆盖",
+        "metricOverridesFoundBody": "使用度量覆盖有助于在字体切换时最大限度地减少布局偏移。",
+        "noMetricOverridesTitle": "未检测到度量覆盖",
+        "noMetricOverridesBody": "建议使用度量覆盖来最大限度地减少布局偏移。",
+        "exampleOverrides": "带有度量覆盖的 @font-face 示例",
+        "fallbackStacksHeading": "回退字体栈质量",
+        "excellentLabel": "优秀",
+        "goodLabel": "良好",
+        "poorLabel": "较差"
       },
       "advanced": {
-        "formatHeading": "Font Format Analysis",
-        "legacyTitle": "Legacy Formats Detected",
-        "legacyBody": "Legacy formats detected (EOT/SVG). Consider removing for smaller bundles.",
-        "fontDisplayHeading": "font-display Audit",
-        "fontDisplayFixTitle": "Action Needed",
-        "fontDisplayFixBody": "Add font-display: swap to prevent Flash of Invisible Text (FOIT).",
-        "fontDisplayGoodTitle": "All Fonts Optimal",
-        "fontDisplayGoodBody": "All fonts use optimal font-display values.",
-        "accessibilityHeading": "Typography Accessibility",
+        "formatHeading": "字体格式分析",
+        "legacyTitle": "检测到旧版格式",
+        "legacyBody": "检测到旧版格式 (EOT/SVG)。建议移除以减小包体积。",
+        "fontDisplayHeading": "font-display 审计",
+        "fontDisplayFixTitle": "需要处理",
+        "fontDisplayFixBody": "添加 font-display: swap 以防止不可见文本闪烁 (FOIT)。",
+        "fontDisplayGoodTitle": "所有字体均已优化",
+        "fontDisplayGoodBody": "所有字体均使用了最优的 font-display 值。",
+        "accessibilityHeading": "排版无障碍性",
         "table": {
-          "check": "Check",
-          "detail": "Detail",
-          "feature": "Feature"
+          "check": "检查项",
+          "detail": "详情",
+          "feature": "功能"
         },
-        "variableFontsHeading": "Variable Fonts",
-        "variableFontsFoundTitle": "Variable Fonts In Use",
-        "variableFontsFoundBody": "Using variable fonts reduces HTTP requests and enables smooth weight/width transitions.",
-        "variableFonts": "Variable Fonts",
+        "variableFontsHeading": "可变字体",
+        "variableFontsFoundTitle": "正在使用可变字体",
+        "variableFontsFoundBody": "使用可变字体可减少 HTTP 请求，并实现平滑的字重/宽度过渡。",
+        "variableFonts": "可变字体",
         "unicodeRange": "Unicode-Range",
-        "metricOverrides": "Metric Overrides",
-        "considerVariableTitle": "Consider Variable Fonts",
+        "metricOverrides": "度量覆盖",
+        "considerVariableTitle": "建议使用可变字体",
         "clsRiskHeading": "Layout Shift Risk (CLS)",
-        "lowClsBody": "Low risk of font-related layout shifts. Good font-display and fallback configuration."
+        "lowClsBody": "字体相关的布局偏移风险较低。font-display 和回退配置良好。"
       },
       "performance": {
-        "heading": "Performance Metrics",
-        "pageLoad": "Page Load",
-        "uniqueFonts": "Unique Fonts",
-        "fontWeights": "Font Weights",
-        "fontSizes": "Font Sizes",
-        "typographyScale": "Typography Scale",
+        "heading": "性能指标",
+        "pageLoad": "页面加载",
+        "uniqueFonts": "唯一字体",
+        "fontWeights": "字重",
+        "fontSizes": "字号",
+        "typographyScale": "排版比例",
         "table": {
-          "fontSize": "Font Size",
-          "usage": "Usage Count",
-          "weight": "Weight",
-          "elements": "Elements",
-          "element": "Element",
-          "font": "Font",
-          "size": "Size",
-          "sample": "Sample"
+          "fontSize": "字号",
+          "usage": "使用次数",
+          "weight": "字重",
+          "elements": "元素",
+          "element": "元素",
+          "font": "字体",
+          "size": "大小",
+          "sample": "示例"
         },
-        "weightDistribution": "Weight Distribution",
-        "typographyUsage": "Typography Usage",
-        "moreElements": "more elements analyzed",
+        "weightDistribution": "字重分布",
+        "typographyUsage": "排版使用情况",
+        "moreElements": "更多已分析的元素",
         "tip": {
-          "reduceFamilies": "Consider reducing font families to 2-3 for faster loading.",
-          "consolidateWeights": "Using ",
-          "wellOptimized": "Your typography setup is well-optimized for performance."
+          "reduceFamilies": "建议将字体家族减少到 2-3 个以加快加载速度。",
+          "consolidateWeights": "正在使用 ",
+          "wellOptimized": "您的排版设置已针对性能进行了良好优化。"
         },
-        "tipsTitle": "Typography Performance Tips"
+        "tipsTitle": "排版性能优化提示"
       },
-      "recommendationsHeading": "Recommendations",
-      "recommendationsNoneTitle": "Well-Optimized Typography",
-      "recommendationsNoneBody": "Your font stack follows best practices. Continue monitoring for optimization opportunities.",
+      "recommendationsHeading": "建议",
+      "recommendationsNoneTitle": "排版优化良好",
+      "recommendationsNoneBody": "您的字体栈遵循了最佳实践。请继续关注优化机会。",
       "fixes": {
-        "fontDisplayTitle": "Fix font-display issues",
-        "affected": "affected",
-        "optimizeFontDisplay": "Optimize font-display strategy",
-        "renderPerformance": "Render Performance",
-        "fontDisplayDesc": "Font(s) are missing or have suboptimal font-display values, which can cause Flash of Invisible Text (FOIT).",
-        "fontDisplayOptimizeDesc": "The font-display property controls how fonts render during loading. Choosing the right strategy improves perceived performance and prevents layout shifts.",
-        "fontDisplayImpact": "Eliminates invisible text during loading, reduces CLS, improves Core Web Vitals.",
+        "fontDisplayTitle": "修复 font-display 问题",
+        "affected": "受影响",
+        "optimizeFontDisplay": "优化 font-display 策略",
+        "renderPerformance": "渲染性能",
+        "fontDisplayDesc": "个字体缺少或使用了次优的 font-display 值，这可能导致不可见文本闪烁 (FOIT)。",
+        "fontDisplayOptimizeDesc": "font-display 属性控制字体在加载过程中的渲染方式。选择正确的策略可改善感知性能并防止布局偏移。",
+        "fontDisplayImpact": "消除加载期间的不可见文本，降低 CLS，改善 Core Web Vitals。",
         "steps": {
-          "1": "Audit all @font-face declarations in your CSS",
-          "2": "Add font-display: swap to each declaration",
-          "3": "For Google Fonts, append &display=swap to the URL",
-          "4": "Test with Chrome DevTools Network throttling",
-          "preload1": "Add preconnect hints for external font origins",
-          "preload2": "Preload critical above-the-fold font files",
-          "preload3": "Verify with Lighthouse or WebPageTest",
-          "format1": "Convert fonts to WOFF2 format",
-          "format2": "Update @font-face src to use WOFF2 first",
-          "format3": "Remove legacy EOT/SVG format references",
-          "reduce1": "Identify which families are critical for branding",
-          "reduce2": "Consolidate similar families (e.g., use system fonts for body)",
-          "reduce3": "Remove unused font family imports",
+          "1": "审核 CSS 中所有 @font-face 声明",
+          "2": "为每个声明添加 font-display: swap",
+          "3": "对于 Google Fonts，在 URL 后附加 &display=swap",
+          "4": "使用 Chrome DevTools 网络限速进行测试",
+          "preload1": "为外部字体源添加预连接提示",
+          "preload2": "预加载关键的首屏字体文件",
+          "preload3": "使用 Lighthouse 或 WebPageTest 进行验证",
+          "format1": "将字体转换为 WOFF2 格式",
+          "format2": "更新 @font-face src 优先使用 WOFF2",
+          "format3": "移除旧版 EOT/SVG 格式引用",
+          "reduce1": "确定哪些字体家族对品牌至关重要",
+          "reduce2": "合并相似的字体家族（例如，正文使用系统字体）",
+          "reduce3": "移除未使用的字体家族导入",
           "fallbackOptimization": {
-            "1": "Test your site with fonts blocked to see fallback appearance",
-            "2": "Choose system fonts with similar x-height and character width",
-            "3": "Use CSS size-adjust property to fine-tune fallback metrics",
-            "4": "Consider metric override properties (ascent, descent, line-gap)",
-            "5": "Use tools like Fontaine or Capsize to calculate exact adjustments",
-            "6": "Implement CSS Font Loading API for precise control",
-            "7": "Test CLS with Lighthouse and WebPageTest",
-            "8": "Verify layout stability on slow 3G connections"
+            "1": "在字体被阻止的情况下测试您的网站以查看回退效果",
+            "2": "选择具有相似 x 高度和字符宽度的系统字体",
+            "3": "使用 CSS size-adjust 属性微调回退字体的度量",
+            "4": "考虑使用度量覆盖属性（ascent、descent、line-gap）",
+            "5": "使用 Fontaine 或 Capsize 等工具计算精确的调整值",
+            "6": "实现 CSS Font Loading API 以进行精确控制",
+            "7": "使用 Lighthouse 和 WebPageTest 测试 CLS",
+            "8": "在慢速 3G 连接上验证布局稳定性"
           },
-          "dup1": "Search CSS for duplicate @font-face rules",
-          "dup2": "Remove redundant declarations, keeping one per weight/style",
-          "dup3": "Check for duplicate Google Fonts link tags",
-          "gdpr1": "Download font files using google-webfonts-helper",
-          "gdpr2": "Host WOFF2 files on your server",
-          "gdpr3": "Replace Google Fonts link with self-hosted @font-face",
-          "gdpr4": "Remove the Google Fonts <link> tag",
+          "dup1": "搜索 CSS 中重复的 @font-face 规则",
+          "dup2": "移除冗余声明，每个字重/样式只保留一个",
+          "dup3": "检查是否存在重复的 Google Fonts 链接标签",
+          "gdpr1": "使用 google-webfonts-helper 下载字体文件",
+          "gdpr2": "在您的服务器上托管 WOFF2 文件",
+          "gdpr3": "用自托管的 @font-face 替换 Google Fonts 链接",
+          "gdpr4": "移除 Google Fonts 的 <link> 标签",
           "variableFonts": {
-            "1": "Check if your font has a variable version (Google Fonts, fonts.google.com)",
-            "2": "Download or link to the variable font file",
-            "3": "Update @font-face with font-weight range (e.g., 100 900)",
-            "4": "Use format(\"woff2 supports variations\") for proper browser support",
-            "5": "Replace static weight values with variable font family",
-            "6": "Explore additional axes (width, slant, optical size) if available",
-            "7": "Remove old static font files to save space",
-            "8": "Test across browsers - variable fonts have 95%+ support"
+            "1": "检查您的字体是否有可变版本（Google Fonts, fonts.google.com）",
+            "2": "下载或链接到可变字体文件",
+            "3": "使用字重范围（例如 100 900）更新 @font-face",
+            "4": "使用 format(\"woff2 supports variations\") 以确保正确的浏览器支持",
+            "5": "用可变字体家族替换静态字重值",
+            "6": "如果可用，探索其他轴（宽度、倾斜、光学大小）",
+            "7": "移除旧的静态字体文件以节省空间",
+            "8": "跨浏览器测试——可变字体的支持率已超过 95%"
           },
           "accessibility": {
-            "1": "Set base font-size to 100% (16px) to respect user preferences",
-            "2": "Use rem/em units for all font sizes, not px",
-            "3": "Ensure line-height is at least 1.5 (WCAG requirement)",
-            "4": "Limit line length to 45-80 characters (use max-width: 70ch)",
-            "5": "Use left-alignment, avoid justified text",
-            "6": "Ensure minimum font-size of 16px for body, 14px for small text",
-            "7": "Test with browser zoom at 200% - content should remain readable",
-            "8": "Consider offering a dyslexia-friendly font option"
+            "1": "将基础 font-size 设置为 100%（16px）以遵循用户偏好",
+            "2": "所有字号使用 rem/em 单位，而非 px",
+            "3": "确保 line-height 至少为 1.5（WCAG 要求）",
+            "4": "将行宽限制在 45-80 个字符（使用 max-width: 70ch）",
+            "5": "使用左对齐，避免两端对齐",
+            "6": "确保正文最小字号为 16px，小字文本最小为 14px",
+            "7": "在浏览器 200% 缩放下测试——内容应保持可读",
+            "8": "考虑提供阅读障碍友好的字体选项"
           }
         },
-        "loadingTitle": "Implement font preloading strategy",
-        "loadingPerformance": "Loading Performance",
+        "loadingTitle": "实施字体预加载策略",
+        "loadingPerformance": "加载性能",
         "loadingDesc": "No font preloads detected. Preloading critical fonts can reduce First Contentful Paint by 100-500ms.",
-        "loadingStrategyDesc": "Font loading strategy significantly impacts page load time. Preloading critical fonts and using preconnect hints reduces FCP.",
-        "loadingImpact": "Faster FCP, improved LCP, better experience on slow connections.",
-        "modernFormatsTitle": "Upgrade to modern font formats (WOFF2)",
-        "optimizeDelivery": "Optimize font file delivery",
-        "optimization": "Optimization",
-        "formatIssueDesc": "WOFF2 provides 30-50% smaller files compared to WOFF, and up to 75% smaller than TTF/OTF.",
-        "formatOptimizeDesc": "Modern font formats like WOFF2 provide excellent compression. Further optimization can be achieved through subsetting and variable fonts.",
-        "modernFormatsImpact": "Smaller downloads, faster loading, reduced bandwidth.",
-        "tooManyTitle": "Reduce font families",
-        "establishFontSystem": "Establish a font system",
-        "tooManyDesc": "Using more than 3 font families increases page weight and load times. Each additional family adds HTTP requests and parsing overhead.",
-        "fontSystemDesc": "A well-structured font system improves consistency, reduces maintenance, and ensures optimal performance.",
-        "tooManyImpact": "Reduce page weight, fewer HTTP requests, faster rendering.",
-        "optimizeFallbacks": "Optimize fallback font stacks",
+        "loadingStrategyDesc": "字体加载策略显著影响页面加载时间。预加载关键字体和使用预连接提示可降低 FCP。",
+        "loadingImpact": "加快 FCP，改善 LCP，在慢速连接上提供更好的体验。",
+        "modernFormatsTitle": "升级到现代字体格式 (WOFF2)",
+        "optimizeDelivery": "优化字体文件交付",
+        "optimization": "优化",
+        "formatIssueDesc": "WOFF2 比 WOFF 文件小 30-50%，比 TTF/OTF 最多小 75%。",
+        "formatOptimizeDesc": "WOFF2 等现代字体格式提供出色的压缩效果。通过子集化和可变字体可进一步优化。",
+        "modernFormatsImpact": "更小的下载量，更快的加载速度，更低的带宽消耗。",
+        "tooManyTitle": "减少字体家族",
+        "establishFontSystem": "建立字体系统",
+        "tooManyDesc": "使用超过 3 个字体家族会增加页面大小和加载时间。每增加一个字体家族都会增加 HTTP 请求和解析开销。",
+        "fontSystemDesc": "结构良好的字体系统可提升一致性，降低维护成本，并确保最佳性能。",
+        "tooManyImpact": "减小页面大小，减少 HTTP 请求，加快渲染速度。",
+        "optimizeFallbacks": "优化回退字体栈",
         "categories": {
-          "layoutStability": "Layout Stability",
-          "modernTypography": "Modern Typography",
-          "accessibility": "Accessibility"
+          "layoutStability": "布局稳定性",
+          "modernTypography": "现代排版",
+          "accessibility": "无障碍性"
         },
         "fallbackDesc": "Fallback fonts display while custom fonts load. Poorly matched fallbacks cause Cumulative Layout Shift (CLS) when the web font swaps in.",
-        "fallbackImpact": "Reduces CLS by 0.05-0.2, improves Core Web Vitals score, eliminates jarring text reflow on font swap.",
-        "duplicatesTitle": "Remove duplicate font declarations",
-        "duplicatesDesc": "Duplicate font declarations waste bandwidth and increase parsing time.",
-        "duplicatesImpact": "Reduced page weight, fewer duplicate requests, cleaner CSS.",
-        "gdprTitle": "Self-host Google Fonts for GDPR compliance",
-        "privacy": "Privacy & Compliance",
-        "gdprDesc": "Google Fonts sends visitor IP addresses to Google servers, which may violate GDPR. Self-hosting eliminates this third-party data transfer.",
-        "gdprImpact": "GDPR compliance, no third-party cookies, potentially faster delivery.",
-        "optimizeVariableFonts": "Optimize variable font usage",
-        "considerVariableFonts": "Consider variable fonts for weight flexibility",
-        "variableFontsDetectedDesc": "Variable fonts detected! Ensure you are leveraging their full potential with CSS font-variation-settings.",
-        "variableFontsConsiderDesc": "Using multiple weights of the same font family? Variable fonts bundle all weights into one file, often smaller than 2 static fonts combined.",
-        "variableFontsImpact": "Single file for all weights (saves 50-200KB), enables smooth weight animations, more design flexibility.",
-        "improveAccessibility": "Improve font accessibility",
-        "accessibilityDesc": "Font choices significantly impact readability for users with visual impairments, dyslexia, and cognitive disabilities. WCAG guidelines provide minimum standards.",
-        "accessibilityImpact": "WCAG compliance, wider audience reach, improved readability for all users, reduced eye strain."
+        "fallbackImpact": "降低 0.05-0.2 的 CLS，改善 Core Web Vitals 评分，消除字体切换时的文本重排抖动。",
+        "duplicatesTitle": "移除重复的字体声明",
+        "duplicatesDesc": "重复的字体声明浪费带宽并增加解析时间。",
+        "duplicatesImpact": "减小页面大小，减少重复请求，CSS 更简洁。",
+        "gdprTitle": "自托管 Google Fonts 以符合 GDPR",
+        "privacy": "隐私与合规",
+        "gdprDesc": "Google Fonts 会将访客 IP 地址发送到 Google 服务器，这可能违反 GDPR。自托管可消除这种第三方数据传输。",
+        "gdprImpact": "符合 GDPR，无第三方 Cookie，可能加快交付速度。",
+        "optimizeVariableFonts": "优化可变字体使用",
+        "considerVariableFonts": "考虑使用可变字体以获得字重灵活性",
+        "variableFontsDetectedDesc": "检测到可变字体！请确保通过 CSS font-variation-settings 充分利用其潜力。",
+        "variableFontsConsiderDesc": "使用同一字体家族的多个字重？可变字体将所有字重打包到一个文件中，通常比 2 个静态字体文件的总和更小。",
+        "variableFontsImpact": "单个文件包含所有字重（节省 50-200KB），支持平滑的字重动画，提供更大的设计灵活性。",
+        "improveAccessibility": "改善字体无障碍性",
+        "accessibilityDesc": "字体选择对视觉障碍、阅读障碍和认知障碍用户的可读性有重大影响。WCAG 指南提供了最低标准。",
+        "accessibilityImpact": "符合 WCAG，覆盖更广泛的受众，提升所有用户的可读性，减轻眼睛疲劳。"
       }
     },
-    "providersOrigins": "Providers & Origins",
-    "fontLoadingPerformance": "Font Loading Performance",
-    "privacyLicensing": "Privacy & Licensing",
-    "fontDelivery": "Font Delivery",
-    "fallbackLayoutStability": "Fallback & Layout Stability",
-    "advancedTypographyAnalysis": "Advanced Typography"
+    "providersOrigins": "提供商与来源",
+    "fontLoadingPerformance": "字体加载性能",
+    "privacyLicensing": "隐私与许可",
+    "fontDelivery": "字体交付",
+    "fallbackLayoutStability": "回退与布局稳定性",
+    "advancedTypographyAnalysis": "高级排版"
   },
   "tagIntelligence": {
-    "scriptPerformanceImpact": "Script Performance",
-    "cookieAudit": "Cookie Audit",
-    "dataLayerAnalysis": "DataLayer Analysis",
-    "thirdPartyScripts": "Third-Party Scripts"
+    "scriptPerformanceImpact": "脚本性能",
+    "cookieAudit": "Cookie 审计",
+    "dataLayerAnalysis": "DataLayer 分析",
+    "thirdPartyScripts": "第三方脚本"
   },
   "hosting": {
-    "hostingInfrastructure": "Hosting & Infrastructure",
-    "cmsTechnology": "CMS & Technology",
-    "hostingPerformance": "Hosting Performance"
+    "hostingInfrastructure": "托管与基础设施",
+    "cmsTechnology": "CMS 与技术",
+    "hostingPerformance": "托管性能"
   },
   "cwv": {
-    "desktop": "Desktop",
-    "mobile": "Mobile"
+    "desktop": "桌面端",
+    "mobile": "移动端"
   },
   "ipReputation": {
-    "ipReputation": "IP Reputation",
-    "securityAssessment": "Security Assessment",
-    "infrastructure": "Infrastructure"
+    "ipReputation": "IP 信誉",
+    "securityAssessment": "安全评估",
+    "infrastructure": "基础设施"
   },
   "brokenLinks": {
-    "brokenLinks": "Broken Links",
-    "redirects": "Redirects",
-    "anchorAnalysis": "Anchor Analysis"
+    "brokenLinks": "死链",
+    "redirects": "重定向",
+    "anchorAnalysis": "锚点分析"
   },
-  "localSeo": {
-    "napConsistency": "NAP Consistency",
-    "schemaMarkup": "Schema Markup",
-    "localPresence": "Local Presence"
+  "geoSeo": {
+    "napConsistency": "NAP 一致性",
+    "schemaMarkup": "Schema 标记",
+    "localPresence": "本地存在",
+    "citations": "引用与目录",
+    "multiLocation": "多地点与地理页面",
+    "reviews": "评价与声誉"
   },
   "gdpr": {
-    "cookieConsent": "Cookie Consent",
-    "privacyPolicy": "Privacy Policy",
-    "dataSubjectRights": "Data Subject Rights",
-    "cookieAudit": "Cookie Audit"
+    "cookieConsent": "Cookie 同意",
+    "privacyPolicy": "隐私政策",
+    "dataSubjectRights": "数据主体权利",
+    "cookieAudit": "Cookie 审计"
   },
   "mobile": {
-    "performance": "Performance",
-    "touchTargets": "Touch Targets",
-    "readability": "Readability",
-    "responsiveness": "Responsiveness"
+    "performance": "性能",
+    "touchTargets": "触摸目标",
+    "readability": "可读性",
+    "responsiveness": "响应性"
   },
   "cro": {
-    "callsToAction": "Calls to Action",
-    "formAnalysis": "Form Analysis",
-    "trustSignals": "Trust Signals",
-    "mobileUx": "Mobile UX"
+    "callsToAction": "行动号召",
+    "formAnalysis": "表单分析",
+    "trustSignals": "信任信号",
+    "mobileUx": "移动端用户体验"
   },
   "siteCrawler": {
-    "siteStructure": "Site Structure",
-    "pagesCrawled": "Pages Crawled",
-    "issuesDetected": "Issues Detected"
+    "siteStructure": "站点结构",
+    "pagesCrawled": "已爬取的页面",
+    "issuesDetected": "检测到的问题"
   },
   "competitive": {
     "seo": "SEO",
-    "performance": "Performance",
-    "security": "Security",
-    "accessibility": "Accessibility"
+    "performance": "性能",
+    "security": "安全性",
+    "accessibility": "无障碍性"
   }
 }

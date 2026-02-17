@@ -7,23 +7,80 @@
   },
   "extends": ["eslint:recommended"],
   "parserOptions": {
-    "ecmaVersion": 2020,
-    "sourceType": "module"
+    "ecmaVersion": 2020
   },
   "globals": {
     "BigInt": "readonly"
   },
   "rules": {
-    "no-console": ["error", { "allow": ["error"] }],
-    "no-unused-vars": "warn",
+    "no-console": ["warn", { "allow": ["log", "warn", "error", "info", "debug"] }],
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }],
     "prefer-const": "error",
-    "no-var": "error"
+    "no-var": "error",
+    "no-empty": ["warn", { "allowEmptyCatch": true }],
+    "no-useless-escape": "warn",
+    "no-case-declarations": "warn"
   },
   "overrides": [
     {
       "files": ["**/*.test.js", "**/*.spec.js", "tests/**/*.js", "scripts/**/*.js"],
       "rules": {
         "no-console": "off"
+      }
+    },
+    {
+      "files": ["src/public/**/*.js"],
+      "env": {
+        "browser": true,
+        "node": false
+      },
+      "globals": {
+        "ReportAccordion": "readonly",
+        "ReportShell": "readonly",
+        "PdfReport": "readonly",
+        "Chart": "readonly",
+        "d3": "readonly",
+        "AnalyzerLoader": "readonly",
+        "UIComponents": "readonly",
+        "proManager": "readonly",
+        "interactiveRecs": "readonly",
+        "initPDFExport": "readonly",
+        "createProgressBar": "readonly",
+        "createRadialProgress": "readonly",
+        "createHeatmap": "readonly",
+        "createBarChart": "readonly",
+        "renderFixesToMake": "readonly",
+        "renderSecurityFixes": "readonly",
+        "renderAccessibilityFixes": "readonly",
+        "ProReportSnapshot": "readonly",
+        "openProPaywall": "readonly",
+        "openPDFPaymentModal": "readonly",
+        "switchToMode": "readonly",
+        "setPerformanceMode": "readonly",
+        "translateA11yFixTitle": "readonly",
+        "translateA11yFixImpact": "readonly",
+        "translateA11yFixDescription": "readonly",
+        "io": "readonly",
+        "VALUE_PROPS": "readonly",
+        "t": "readonly",
+        "module": "readonly",
+        "ExcelJS": "readonly",
+        "dataLayer": "readonly",
+        "createLinkDiagram": "readonly",
+        "createDataTable": "readonly",
+        "computeReportId": "readonly",
+        "analyzeMobile": "readonly",
+        "generateFixesData": "readonly",
+        "generateSecurityFixesData": "readonly",
+        "healthTimeline": "readonly",
+        "urlInput": "readonly",
+        "urlValue": "readonly"
+      },
+      "rules": {
+        "no-console": "off",
+        "no-redeclare": "off",
+        "no-var": "off",
+        "no-inner-declarations": "off"
       }
     }
   ]

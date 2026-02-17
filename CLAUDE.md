@@ -52,7 +52,7 @@ These are non-negotiable rules that every code change must respect:
 
 1. **Page Screenshot** — Every report page MUST render a screenshot section (`.screenshot-section`) after the report header and before summary donuts. Uses `screenshotUrl` from API response, falls back to `data-sm-screenshot-url` body attribute or `/reports/{reportId}/screenshot.jpg`. Includes `onerror` placeholder and ScreenshotLightbox click handler.
 
-2. **Light Background Reports** — All report surfaces use light backgrounds (`#F8F9FA` shell, `#FFFFFF` cards) regardless of any site-wide dark mode. Print styles enforce this too.
+2. **Theme-Consistent Reports** — Report surfaces follow the page theme: dark mode uses dark report tokens (`--r-surface-1: #161A1F`, `--r-surface-2: #1C2128`), light mode uses light tokens (`#FFFFFF` cards, `#F8FAFC` shell). Print/PDF always uses light backgrounds. The `--r-*` token system in `design-tokens.css` is the single source of truth for report surface colors.
 
 3. **Module Count >= 6** — Reports must render at least 6 distinct content modules/sections.
 
@@ -127,3 +127,32 @@ npm run i18n:audit   # Check i18n key completeness
 | `qa-harness-regression` | Automated regression tests: module count, language lock, screenshots, Pro state, PDF, print | sonnet |
 | `accessibility-auditor` | WCAG 2.1 AA/AAA audit — headings, contrast, focus, keyboard, print/PDF | sonnet |
 | `ux-billing-copy` | User-facing microcopy for billing states, paywalls, unlock flows, timers | sonnet |
+| `issue-fix-propagator` | Fix an issue on one page, then scan and fix all similar occurrences across every page, template, and locale | opus |
+| `infra-deploy-guardian` | Docker, K8s manifests, CI/CD pipelines, zero-downtime deployments, rollback procedures | opus |
+| `observability-engineer` | Structured logging, Prometheus/Grafana dashboards, OpenTelemetry tracing, alerting rules | opus |
+| `security-hardening-auditor` | CSP hardening, SSRF prevention, Redis rate limiting, audit logging, OWASP Top 10 | opus |
+| `perf-scalability-engineer` | Load testing, browser pool tuning, caching layers, asset optimization, horizontal scaling | opus |
+| `db-migration-architect` | Schema migrations, backup/recovery, index optimization, SQLite-to-PostgreSQL roadmap | sonnet |
+| `api-contract-guardian` | OpenAPI spec, API versioning, error standardization, request validation, contract testing | sonnet |
+| `error-resilience-engineer` | Circuit breakers, retry with backoff, timeout budgets, graceful degradation, crash recovery | sonnet |
+| `seo-i18n-optimizer` | Site SEO: meta tags, OG/Twitter Cards, hreflang (8 locales), sitemap, structured data, SEO parity | sonnet |
+| `user-report-dashboard` | User-facing report library, scan history, report viewing/comparison, search/filter/sort, PDF export triggers, usage quota UI | sonnet |
+| `admin-system-dashboard` | Admin panel: user management, system monitoring, billing debugging, test runner, audit trail, metrics | opus |
+
+### Issue Fix & Propagate Workflow (`issue-fix-propagator`)
+
+When the user reports an issue (bug, rendering glitch, bad string, missing element, etc.) on a specific page — often by uploading a screenshot or naming the page — follow this exact sequence:
+
+1. **Diagnose & fix the reported page** — Read the specific report script, PDF render script, or template. Identify the root cause and apply the fix.
+2. **Characterize the pattern** — Describe what the issue is in generic terms (e.g., "unescaped apostrophe in template literal", "missing `t()` wrapper on a heading", "wrong CSS class on donut container").
+3. **Sweep all similar files** — Scan every file that could contain the same pattern:
+   - All report scripts: `src/public/*-script.js`
+   - All PDF render scripts: `src/public/pdf-templates/*-render.js`
+   - All PDF HTML templates: `src/public/pdf-templates/*.html`
+   - Shared components: `src/public/js/components/*.js`
+   - Shared PDF engine: `src/public/pdf-templates/_pdf-report.js`, `_pdf-report.css`
+   - Server-side PDF generators: `src/services/*PdfGenerator.js`
+   - All 8 i18n locale files: `src/public/i18n/{en,es,fr,de,pt,ja,zh,ru}.json`
+   - Any other files where the pattern could plausibly appear
+4. **Fix every occurrence** — Apply the same class of fix to every instance found. Do not skip files that "look okay" — verify each one.
+5. **Report a summary** — List every file changed, number of fixes per file, and confirm zero remaining occurrences with a final grep.

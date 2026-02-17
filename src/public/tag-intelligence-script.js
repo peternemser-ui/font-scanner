@@ -110,7 +110,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/tag-intelligence', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ url, options, scanStartedAt })
+        body: JSON.stringify({ url, options, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en' })
       });
 
       if (loader) loader.nextStep(3);
@@ -293,6 +293,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderTagIntelligenceProPreview(recommendations) {
     ensureTagIntelligenceProStyles();
+    const reportId = document.body?.getAttribute('data-report-id') || '';
 
     const previewItems = recommendations && recommendations.length > 0
       ? recommendations.slice(0, 2).map(r => r.title || r.description?.substring(0, 50) + '...')
@@ -315,8 +316,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </ul>
         <div class="pro-locked__blur"></div>
         <div class="pro-locked__buttons">
-          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="tag-intelligence">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
-          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="tag-intelligence">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
+          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report${reportId ? ` data-report-id="${reportId}"` : ''} data-context="tag-intelligence">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
+          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal${reportId ? ` data-report-id="${reportId}"` : ''} data-context="tag-intelligence">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
         </div>
       </div>
     `;
@@ -990,12 +991,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function getScoreColor(score) {
     const stops = [
-      [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-      [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-      [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-      [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-      [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-      [100,'#00FF3B']
+      [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+      [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+      [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+      [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+      [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+      [100,'#0AA64F']
     ];
     const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
     const idx = Math.min(Math.floor(s / 5), 19);

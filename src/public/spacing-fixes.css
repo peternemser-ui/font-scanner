@@ -72,11 +72,10 @@
 }
 
 /* Generic card selectors - be more careful */
-/* Exclude WCAG level cards from 2rem padding override */
 [class*="card"]:not(.accordion-item):not(.provider-card):not(.recommendation-card):not(.price-stat-card):not(.wcag-level-card),
 [class*="panel"],
 [class*="box"]:not([class*="checkbox"]):not(.wcag-status-box):not(.wcag-note-box) {
-  padding: .5rem !important;
+  padding: 1rem !important;
 }
 
 /* Smaller padding for nested cards within cards */

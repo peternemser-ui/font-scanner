@@ -104,7 +104,7 @@ try {
 // Memory monitoring - check every 5 minutes and warn if memory is high
 const MEMORY_CHECK_INTERVAL = 5 * 60 * 1000; // 5 minutes
 const MEMORY_WARNING_THRESHOLD_MB = 512; // Warn if heap exceeds 512MB
-let memoryMonitorInterval = setInterval(() => {
+const memoryMonitorInterval = setInterval(() => {
   const used = process.memoryUsage();
   const heapUsedMB = Math.round(used.heapUsed / 1024 / 1024);
   
@@ -131,6 +131,122 @@ let memoryMonitorInterval = setInterval(() => {
     }
   }
 }, MEMORY_CHECK_INTERVAL);
+
+// Admin health dashboard — push metrics every 4s to connected admins
+const HEALTH_EMIT_INTERVAL = 4000;
+let _prevCpuUsage = process.cpuUsage();
+let _prevCpuTime = Date.now();
+let _prevHttpTotal = 0;
+let _prevHttpTime = Date.now();
+
+const healthEmitterInterval = setInterval(async () => {
+  try {
+    // Skip collection if no admin is watching
+    const room = io.sockets.adapter.rooms.get('admin-health');
+    if (!room || room.size === 0) return;
+
+    // Memory
+    const mem = process.memoryUsage();
+    const memory = {
+      heapUsed: Math.round(mem.heapUsed / 1024 / 1024 * 10) / 10,
+      heapTotal: Math.round(mem.heapTotal / 1024 / 1024 * 10) / 10,
+      rss: Math.round(mem.rss / 1024 / 1024 * 10) / 10,
+      external: Math.round((mem.external || 0) / 1024 / 1024 * 10) / 10
+    };
+
+    // CPU % from delta
+    const nowCpu = process.cpuUsage(_prevCpuUsage);
+    const elapsedMs = Date.now() - _prevCpuTime;
+    const cpuPercent = elapsedMs > 0
+      ? Math.min(100, Math.round(((nowCpu.user + nowCpu.system) / 1000) / elapsedMs * 100 * 10) / 10)
+      : 0;
+    _prevCpuUsage = process.cpuUsage();
+    _prevCpuTime = Date.now();
+
+    // Active scans from prom-client gauge (async in v15)
+    let activeScans = 0;
+    try {
+      const { metrics: promMetrics } = require('./middleware/metrics');
+      if (promMetrics && promMetrics.activeScans) {
+        const result = await promMetrics.activeScans.get();
+        if (result && result.values) {
+          for (const v of result.values) {
+            activeScans += v.value || 0;
+          }
+        }
+      }
+    } catch (_) { /* ignore */ }
+
+    // Requests per minute from httpRequestTotal counter delta
+    let requestsPerMinute = 0;
+    try {
+      const { metrics: promMetrics } = require('./middleware/metrics');
+      if (promMetrics && promMetrics.httpRequestTotal) {
+        const result = await promMetrics.httpRequestTotal.get();
+        let currentTotal = 0;
+        if (result && result.values) {
+          for (const v of result.values) {
+            currentTotal += v.value || 0;
+          }
+        }
+        const elapsed = (Date.now() - _prevHttpTime) / 1000;
+        if (elapsed > 0) {
+          requestsPerMinute = Math.round((currentTotal - _prevHttpTotal) / elapsed * 60 * 10) / 10;
+        }
+        _prevHttpTotal = currentTotal;
+        _prevHttpTime = Date.now();
+      }
+    } catch (_) { /* ignore */ }
+
+    // Error rates
+    let errors = { lastMinute: 0, lastHour: 0, thresholdViolations: [] };
+    try {
+      const errorTelemetry = require('./utils/errorTelemetry');
+      const rates = errorTelemetry.getErrorRates();
+      const thresholds = errorTelemetry.checkThresholds();
+      errors = {
+        lastMinute: rates.lastMinute || 0,
+        lastHour: rates.lastHour || 0,
+        thresholdViolations: thresholds.violations || []
+      };
+    } catch (_) { /* ignore */ }
+
+    // Rate limit stats
+    let rateLimits = { totalViolations: 0, lastHour: 0 };
+    try {
+      const analytics = getRateLimitAnalytics();
+      rateLimits = {
+        totalViolations: analytics.statistics?.totalViolations || 0,
+        lastHour: analytics.statistics?.lastHour || 0
+      };
+    } catch (_) { /* ignore */ }
+
+    // Browser pool status
+    let browserPoolStatus = { available: 0, borrowed: 0, max: 0 };
+    try {
+      const stats = browserPool.getStats();
+      browserPoolStatus = {
+        available: stats.available || 0,
+        borrowed: stats.borrowed || 0,
+        max: stats.max || 0
+      };
+    } catch (_) { /* ignore */ }
+
+    io.to('admin-health').emit('admin:health-tick', {
+      timestamp: Date.now(),
+      memory,
+      cpu: { percent: cpuPercent },
+      uptime: process.uptime(),
+      activeScans,
+      requestsPerMinute,
+      errors,
+      rateLimits,
+      browserPool: browserPoolStatus
+    });
+  } catch (err) {
+    // Never crash the interval
+  }
+}, HEALTH_EMIT_INTERVAL);
 
 // Security middleware - Content Security Policy
 // Note: 'unsafe-inline' is still required for some page-specific initialization scripts.
@@ -537,6 +653,11 @@ function withUsageTracking(handler) {
         const userId = req.user?.id || null;
         const anonId = req.anonId || req.cookies?.anon_id || null;
 
+        // Skip usage tracking for billing re-scans (post-purchase page reload).
+        // The user already consumed a scan credit on the original scan; the re-scan
+        // only re-fetches data so the purchased pro sections render unlocked.
+        const isBillingRescan = req.body?.billingRescan === true && userId;
+
         // Deduplicate: only count once per scanStartedAt per user
         const scanStartedAt = req.body?.scanStartedAt || null;
         const identity = userId || anonId || 'unknown';
@@ -553,14 +674,20 @@ function withUsageTracking(handler) {
           _recentScanKeys.set(dedupKey, now);
         }
 
-        if (!alreadyCounted && (userId || anonId)) {
+        if (!isBillingRescan && !alreadyCounted && (userId || anonId)) {
           usageService.incrementScanUsage(userId, anonId).catch(err => {
             logger.error('Failed to increment scan usage', { error: err.message });
           });
         }
+        if (isBillingRescan) {
+          logger.info('Billing re-scan: skipped scan usage increment', {
+            userId: userId.substring(0, 8) + '...'
+          });
+        }
 
         // Record scan in scans table so it appears in the reports dashboard
-        if (userId) {
+        // Skip for billing re-scans to avoid duplicate entries
+        if (userId && !isBillingRescan) {
           const targetUrl = req.body?.url || req.body?.site_url || 'unknown';
           // Derive analyzer type from the route path (e.g. /api/core-web-vitals -> core-web-vitals)
           const routePath = (req.route?.path || req.originalUrl || '').split('?')[0];
@@ -625,11 +752,13 @@ app.post('/api/competitive-analysis', optionalAuth, checkScanQuota, competitiveA
 const brokenLinkController = require('./controllers/brokenLinkController');
 app.post('/api/broken-links', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(brokenLinkController.checkBrokenLinks));
 
-// Advanced Analyzers (CRO, Brand, Local SEO, GDPR)
+// Advanced Analyzers (CRO, Brand, GEO SEO, GDPR)
 const advancedAnalyzersController = require('./controllers/advancedAnalyzersController');
 app.post('/api/cro-analysis', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(advancedAnalyzersController.analyzeCRO));
 app.post('/api/brand-consistency', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(advancedAnalyzersController.analyzeBrand));
-app.post('/api/local-seo', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(advancedAnalyzersController.analyzeLocalSEO));
+app.post('/api/geo-seo', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(advancedAnalyzersController.analyzeGeoSEO));
+// Backward compat: redirect old local-seo endpoint
+app.post('/api/local-seo', optionalAuth, checkScanQuota, scanLimiter, (req, res) => res.redirect(307, '/api/geo-seo'));
 app.post('/api/gdpr-compliance', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(advancedAnalyzersController.analyzeGDPR));
 
 // Accessibility Analyzer
@@ -648,11 +777,6 @@ app.post('/api/ip-reputation', optionalAuth, checkScanQuota, scanLimiter, withUs
 const contactController = require('./controllers/contactController');
 app.post('/api/contact', contactLimiter, contactController.submitContact);
 
-// Hosting Pricing Analyzer
-const hostingController = require('./controllers/hostingController');
-app.post('/api/hosting/analyze', optionalAuth, checkScanQuota, scanLimiter, withUsageTracking(hostingController.analyzeHosting));
-app.get('/api/hosting/providers', hostingController.getProviders);
-app.get('/api/hosting/providers/:cmsType', hostingController.getProvidersByCMS);
 
 // Tag Intelligence, Enhanced Fonts, Performance Snapshot, Crawler (monetization features)
 const tagIntelligenceController = require('./controllers/tagIntelligenceController');
@@ -727,7 +851,29 @@ io.on('connection', (socket) => {
     socket.join(sessionId);
     logger.info(`Socket ${socket.id} joined competitive analysis session: ${sessionId}`);
   });
-  
+
+  // Admin health dashboard — authenticated room join
+  socket.on('join-admin-health', async (token) => {
+    try {
+      const jwt = require('jsonwebtoken');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || config.jwt?.secret || 'dev-secret');
+      const db = getDatabase();
+      const user = await db.get('SELECT is_admin FROM users WHERE id = ?', [decoded.id || decoded.userId]);
+      if (!user || !user.is_admin) {
+        socket.emit('admin:health-error', { error: 'Not authorized' });
+        return;
+      }
+      socket.join('admin-health');
+      logger.info(`Socket ${socket.id} joined admin-health room`);
+    } catch (err) {
+      socket.emit('admin:health-error', { error: 'Authentication failed' });
+    }
+  });
+
+  socket.on('leave-admin-health', () => {
+    socket.leave('admin-health');
+  });
+
   socket.on('disconnect', () => {
     logger.info('Client disconnected from WebSocket', { socketId: socket.id });
   });
@@ -768,6 +914,16 @@ const gracefulShutdown = async (signal) => {
       }
     } catch (error) {
       logger.error('Error stopping memory monitor:', error);
+    }
+
+    // Stop health emitter interval
+    try {
+      if (healthEmitterInterval) {
+        clearInterval(healthEmitterInterval);
+        logger.info('Health emitter stopped');
+      }
+    } catch (error) {
+      logger.error('Error stopping health emitter:', error);
     }
 
     // Stop report cleanup scheduler

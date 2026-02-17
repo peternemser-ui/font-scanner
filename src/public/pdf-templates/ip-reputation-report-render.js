@@ -10,34 +10,34 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('ip-reputation', function renderIPReputation(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
-    var reputation = data.reputation || {};
-    var security = data.security || {};
-    var infrastructure = data.infrastructure || {};
-    var recommendations = data.recommendations || [];
+    const reputation = data.reputation || {};
+    const security = data.security || {};
+    const infrastructure = data.infrastructure || {};
+    const recommendations = data.recommendations || [];
 
     /* -----------------------------------------------------------------------
        1. IP Reputation
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-reputation .pdf-section__content');
-      var score = reputation.trustScore;
+      const sec = document.querySelector('#section-reputation .pdf-section__content');
+      const score = reputation.trustScore;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.ipReputation.report.reputation', 'IP Reputation'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.reputation', 'IP reputation reflects how trusted your server\'s IP address is across the internet. This section evaluates trust scores, spam likelihood, malware association, and blacklist status. A poor IP reputation can cause email deliverability issues, search engine penalties, and may indicate shared hosting with malicious neighbors.')) + '</p>';
 
@@ -50,15 +50,15 @@
       ]);
 
       // Blacklist status table
-      var blacklistData = reputation.blacklistStatus || {};
-      var blacklistEntries = Array.isArray(blacklistData) ? blacklistData : Object.keys(blacklistData).map(function (key) {
+      const blacklistData = reputation.blacklistStatus || {};
+      const blacklistEntries = Array.isArray(blacklistData) ? blacklistData : Object.keys(blacklistData).map(function (key) {
         return { name: key, listed: blacklistData[key] };
       });
 
       if (blacklistEntries.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.ipReputation.report.reputation.blacklistHeading', 'Blacklist Status')) + '</h3>';
 
-        var listedCount = blacklistEntries.filter(function (b) { return b.listed; }).length;
+        const listedCount = blacklistEntries.filter(function (b) { return b.listed; }).length;
         if (listedCount === 0) {
           html += PR.renderCallout(
             t('reports.ipReputation.report.reputation.blacklistCleanTitle', 'Clean Blacklist Status'),
@@ -67,7 +67,7 @@
           );
         }
 
-        var blRows = blacklistEntries.slice(0, 25).map(function (b) {
+        const blRows = blacklistEntries.slice(0, 25).map(function (b) {
           return [
             '<strong>' + esc(b.name || '-') + '</strong>',
             b.listed
@@ -93,16 +93,16 @@
        2. Security Assessment
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-security .pdf-section__content');
-      var ssl = security.sslCertificate || {};
-      var score = ssl.valid ? 100 : 0;
+      const sec = document.querySelector('#section-security .pdf-section__content');
+      const ssl = security.sslCertificate || {};
+      const score = ssl.valid ? 100 : 0;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.ipReputation.report.security', 'Security Assessment'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.security', 'This security assessment examines your server\'s SSL/TLS configuration, DNS security, and email authentication setup. Proper security configuration protects your visitors and builds trust with search engines and email providers.')) + '</p>';
 
@@ -110,7 +110,7 @@
       if (Object.keys(ssl).length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.ipReputation.report.security.sslHeading', 'SSL/TLS Certificate')) + '</h3>';
 
-        var sslRows = [];
+        const sslRows = [];
         sslRows.push([
           esc(t('reports.ipReputation.report.security.rows.status', 'Certificate Status')),
           ssl.valid ? PR.renderStatus('pass', t('reports.ipReputation.report.security.valid', 'Valid')) : PR.renderStatus('fail', t('reports.ipReputation.report.security.invalid', 'Invalid'))
@@ -174,20 +174,20 @@
        3. Infrastructure
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-infrastructure .pdf-section__content');
+      const sec = document.querySelector('#section-infrastructure .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.ipReputation.report.infrastructure', 'Infrastructure'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.infrastructure', 'Infrastructure analysis reveals details about your server\'s hosting environment, network configuration, and technical setup. Understanding your infrastructure helps identify potential single points of failure and optimization opportunities.')) + '</p>';
 
       if (Object.keys(infrastructure).length > 0) {
         // Build metrics from available infrastructure data
-        var infraMetrics = [];
+        const infraMetrics = [];
         if (infrastructure.server) {
           infraMetrics.push({ value: esc(truncate(infrastructure.server, 20)), label: t('reports.ipReputation.report.infrastructure.server', 'Server') });
         }
@@ -206,8 +206,8 @@
         }
 
         // Infrastructure details table
-        var infraRows = [];
-        var fields = [
+        const infraRows = [];
+        const fields = [
           { key: 'ip', label: t('reports.ipReputation.report.infrastructure.rows.ip', 'IP Address') },
           { key: 'hostname', label: t('reports.ipReputation.report.infrastructure.rows.hostname', 'Hostname') },
           { key: 'server', label: t('reports.ipReputation.report.infrastructure.rows.server', 'Server Software') },
@@ -258,16 +258,16 @@
        4. DNS & Email
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-dns .pdf-section__content');
-      var mxRecords = security.mxRecords || [];
-      var dnsSecurity = security.dnsSecurity || {};
+      const sec = document.querySelector('#section-dns .pdf-section__content');
+      const mxRecords = security.mxRecords || [];
+      const dnsSecurity = security.dnsSecurity || {};
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.ipReputation.report.dns', 'DNS & Email'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.dns', 'DNS and email configuration are critical for both deliverability and security. This section examines your MX records, DNSSEC status, and email authentication mechanisms (SPF, DKIM, DMARC). Proper configuration prevents email spoofing and improves deliverability.')) + '</p>';
 
@@ -292,9 +292,9 @@
       if (mxRecords.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.ipReputation.report.dns.mxHeading', 'MX Records')) + '</h3>';
 
-        var mxRows = mxRecords.slice(0, 20).map(function (mx) {
-          var host = typeof mx === 'string' ? mx : (mx.exchange || mx.host || mx.value || '-');
-          var priority = typeof mx === 'string' ? '-' : (mx.priority !== undefined ? String(mx.priority) : '-');
+        const mxRows = mxRecords.slice(0, 20).map(function (mx) {
+          const host = typeof mx === 'string' ? mx : (mx.exchange || mx.host || mx.value || '-');
+          const priority = typeof mx === 'string' ? '-' : (mx.priority !== undefined ? String(mx.priority) : '-');
           return [
             esc(priority),
             '<span class="pdf-table__truncate">' + esc(truncate(host, 60)) + '</span>'
@@ -324,15 +324,15 @@
        5. Open Ports
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-ports .pdf-section__content');
-      var openPorts = security.openPorts || [];
+      const sec = document.querySelector('#section-ports .pdf-section__content');
+      const openPorts = security.openPorts || [];
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.ipReputation.report.ports', 'Open Ports'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.ports', 'Open port analysis identifies network services exposed on your server. Unnecessary open ports increase your attack surface and may indicate misconfigured services. This section lists detected open ports and their associated services.')) + '</p>';
 
@@ -343,10 +343,10 @@
         ]);
 
         // Ports table
-        var portRows = openPorts.slice(0, 30).map(function (p) {
-          var port = typeof p === 'number' ? p : (p.port || '-');
-          var service = typeof p === 'number' ? '-' : (p.service || '-');
-          var status = typeof p === 'number' ? 'open' : (p.status || 'open');
+        const portRows = openPorts.slice(0, 30).map(function (p) {
+          const port = typeof p === 'number' ? p : (p.port || '-');
+          const service = typeof p === 'number' ? '-' : (p.service || '-');
+          const status = typeof p === 'number' ? 'open' : (p.status || 'open');
           return [
             '<strong>' + esc(String(port)) + '</strong>',
             esc(service),
@@ -378,24 +378,24 @@
        6. Recommendations
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.ipReputation.report.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.ipReputation.report.sectionIntros.recommendations', 'Based on the IP reputation and security analysis, these recommendations prioritize improvements for your server\'s trustworthiness, security posture, and email deliverability.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Group by priority/severity
-        var critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
-        var high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
-        var medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
-        var low = recommendations.filter(function (r) { var p = r.priority || r.severity; return !p || p === 'low'; });
-        var groups = [
+        const critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
+        const high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
+        const medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
+        const low = recommendations.filter(function (r) { const p = r.priority || r.severity; return !p || p === 'low'; });
+        const groups = [
           { items: critical, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444' },
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
@@ -428,7 +428,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -436,7 +436,7 @@
   });
 
   function _htmlToNode(html) {
-    var temp = document.createElement('div');
+    const temp = document.createElement('div');
     temp.innerHTML = html;
     return temp.firstChild;
   }

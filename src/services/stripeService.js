@@ -101,15 +101,6 @@ class StripeService {
     return priceId;
   }
 
-  /**
-   * Get the base URL for redirects
-   * @param {string} requestOrigin - The request origin (fallback)
-   * @returns {string} Base URL
-   */
-  getBaseUrl(requestOrigin) {
-    return process.env.APP_BASE_URL || process.env.BASE_URL || requestOrigin || 'http://localhost:3000';
-  }
-
   appendQuery(urlString, query) {
     const url = new URL(urlString);
     Object.entries(query).forEach(([key, value]) => {

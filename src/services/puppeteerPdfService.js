@@ -116,11 +116,11 @@ const REPORT_LABEL_MAP = {
   'brand-consistency': 'Brand Consistency',
   'broken-links': 'Broken Links',
   'ip-reputation': 'IP Reputation',
-  'local-seo': 'Local SEO',
+  'geo-seo': 'GEO SEO',
+  'local-seo': 'GEO SEO',
   'mobile-analyzer': 'Mobile',
   'competitive-analysis': 'Competitive',
   'competitive': 'Competitive',
-  'hosting-analyzer': 'Hosting',
   'site-crawler': 'Site Crawler',
   'performance-hub': 'Performance',
   'core-web-vitals': 'Core Web Vitals',
@@ -558,12 +558,12 @@ async function generatePdfFromUrl(options) {
                 'tag-intelligence': window.displayTagIntelligenceResults,
                 mobile: window.displayMobileResults,
                 cro: window.displayCROResults,
-                hosting: window.displayHostingResults,
                 gdpr: window.displayGdprResults,
                 'broken-links': window.displayBrokenLinksResults,
                 brand: window.displayBrandResults,
                 competitive: window.displayCompetitiveResults,
-                'local-seo': window.displayLocalSEOResults,
+                'geo-seo': window.displayGeoSEOResults || window.displayLocalSEOResults,
+                'local-seo': window.displayGeoSEOResults || window.displayLocalSEOResults,
                 'ip-reputation': window.displayReputationResults,
               };
               const fn = fnMap[rType];
@@ -631,7 +631,8 @@ async function generatePdfFromUrl(options) {
                       'broken-links': window.displayBrokenLinksResults,
                       brand: window.displayBrandResults,
                       competitive: window.displayCompetitiveResults,
-                      'local-seo': window.displayLocalSEOResults,
+                      'geo-seo': window.displayGeoSEOResults || window.displayLocalSEOResults,
+                'local-seo': window.displayGeoSEOResults || window.displayLocalSEOResults,
                       'ip-reputation': window.displayReputationResults,
                     };
                     const fn = fnMap[rType];
@@ -663,7 +664,8 @@ async function generatePdfFromUrl(options) {
                 'broken-links': window.displayBrokenLinksResults,
                 brand: window.displayBrandResults,
                 competitive: window.displayCompetitiveResults,
-                'local-seo': window.displayLocalSEOResults,
+                'geo-seo': window.displayGeoSEOResults || window.displayLocalSEOResults,
+                'local-seo': window.displayGeoSEOResults || window.displayLocalSEOResults,
                 'ip-reputation': window.displayReputationResults,
               };
               const fn = fnMap[rType];
@@ -950,7 +952,7 @@ async function generatePdfFromUrl(options) {
           const localeMap = { ja: 'ja-JP', zh: 'zh-CN', ko: 'ko-KR', de: 'de-DE', fr: 'fr-FR', es: 'es-ES', pt: 'pt-BR', ru: 'ru-RU' };
           const dateStr = now.toLocaleDateString(localeMap[lang] || 'en-US', {
             year: 'numeric', month: 'long', day: 'numeric'
-          });
+          }) + ' \u2022 ' + now.getUTCHours().toString().padStart(2, '0') + ':' + now.getUTCMinutes().toString().padStart(2, '0') + ' GMT';
           const siteUrl = analyzedUrl || reportData?.url || reportData?.normalizedUrl || '';
 
           // Insert <wbr> at "/" and "-" for URL wrapping

@@ -2,4 +2,4 @@
  * Intentionally thin wrapper around the canonical token source.
  */
 
-@import url('/design-tokens.css');
+@import url('/design-tokens.css?v=20260215a');

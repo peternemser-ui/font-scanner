@@ -16,5 +16,12 @@ Disallow: /index_simple.html
 Disallow: /*demo.html
 Disallow: /theme-debug.html
 
+# Auth, admin, and billing utility pages
+Disallow: /auth.html
+Disallow: /admin.html
+Disallow: /billing-success.html
+Disallow: /billing-cancel.html
+Disallow: /local-seo.html
+
 # Crawl-delay to be respectful (optional)
 Crawl-delay: 1

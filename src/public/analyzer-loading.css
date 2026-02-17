@@ -14,7 +14,7 @@
   height: 100%;
   background: rgba(0, 0, 0, 0.85);
   backdrop-filter: blur(8px);
-  z-index: 9998;
+  z-index: 99999;
   justify-content: center;
   align-items: center;
   animation: fadeIn 0.3s ease-in;
@@ -532,6 +532,11 @@ body.white-theme .loading-scan-url {
 /* ========================================
    LIGHT THEME OVERRIDES
    ======================================== */
+
+/* Ensure overlay background stays dark in light theme */
+body.white-theme .analyzer-loading-overlay {
+  background: rgba(0, 0, 0, 0.85);
+}
 
 body.white-theme .analyzer-loading {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);

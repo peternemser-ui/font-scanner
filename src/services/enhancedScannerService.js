@@ -87,7 +87,7 @@ class EnhancedScannerService {
       logger.info('⚡ Running shared Lighthouse analysis (desktop + mobile)...');
       emitProgress(1, 8, 'Lighthouse Analysis', 'running', 10);
       
-      let sharedLighthouse = { desktop: null, mobile: null };
+      const sharedLighthouse = { desktop: null, mobile: null };
       try {
         // Run desktop Lighthouse
         logger.info('Running Lighthouse desktop...');

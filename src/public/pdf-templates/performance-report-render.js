@@ -21,26 +21,26 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('performance', function renderPerformance(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     // ---- Detect data mode: CWV vs Full Performance ----
     // CWV shape: desktop.lcp is an OBJECT { value, displayValue, score, rating }
     // Full shape: desktop.coreWebVitals.lcp is a STRING like "2.42s"
-    var rawDesktop = data.desktop || {};
-    var rawMobile = data.mobile || {};
-    var isCwvMode = (rawDesktop.lcp && typeof rawDesktop.lcp === 'object' && rawDesktop.lcp.displayValue !== undefined);
+    let rawDesktop = data.desktop || {};
+    let rawMobile = data.mobile || {};
+    const isCwvMode = (rawDesktop.lcp && typeof rawDesktop.lcp === 'object' && rawDesktop.lcp.displayValue !== undefined);
 
     // Save originals for CWV per-metric deep-dives (before normalization overwrites them)
-    var cwvOrigDesktop = null;
-    var cwvOrigMobile = null;
+    let cwvOrigDesktop = null;
+    let cwvOrigMobile = null;
 
     // ---- Normalize CWV-mode data into Performance-mode shape ----
     if (isCwvMode) {
@@ -48,12 +48,12 @@
       cwvOrigMobile = rawMobile;
 
       // Build normalized coreWebVitals from CWV-mode desktop
-      var _normCwv = function (dev) {
+      const _normCwv = function (dev) {
         if (!dev) return {};
-        var lcpObj = dev.lcp || {};
-        var clsObj = dev.cls || {};
-        var inpObj = dev.inp || {};
-        var add = dev.additionalMetrics || {};
+        const lcpObj = dev.lcp || {};
+        const clsObj = dev.cls || {};
+        const inpObj = dev.inp || {};
+        const add = dev.additionalMetrics || {};
         return {
           score: dev.score || 0,
           lcp: lcpObj.displayValue || ((lcpObj.value || 0) / 1000).toFixed(2) + 's',
@@ -66,8 +66,8 @@
           ttfb: undefined
         };
       };
-      var dCwv = _normCwv(rawDesktop);
-      var mCwv = _normCwv(rawMobile);
+      const dCwv = _normCwv(rawDesktop);
+      const mCwv = _normCwv(rawMobile);
 
       // Wrap into Full-mode compatible shape (preserve original lighthouse if present)
       rawDesktop = {
@@ -88,24 +88,24 @@
     }
 
     // ---- Extract data sources ----
-    var desktop = rawDesktop;
-    var mobile = rawMobile;
-    var cwv = desktop.coreWebVitals || data.coreWebVitals || {};
-    var mobileCwv = mobile.coreWebVitals || {};
-    var resources = data.resources || {};
-    var network = data.network || {};
-    var caching = data.caching || {};
-    var desktopLH = desktop.lighthouse || {};
-    var mobileLH = mobile.lighthouse || {};
+    const desktop = rawDesktop;
+    const mobile = rawMobile;
+    const cwv = desktop.coreWebVitals || data.coreWebVitals || {};
+    const mobileCwv = mobile.coreWebVitals || {};
+    const resources = data.resources || {};
+    const network = data.network || {};
+    const caching = data.caching || {};
+    const desktopLH = desktop.lighthouse || {};
+    const mobileLH = mobile.lighthouse || {};
 
     // Cross-browser data (browsers.desktop / browsers.mobile shape)
-    var browsers = data.browsers || {};
-    var browserDesktop = browsers.desktop || {};
-    var browserMobile = browsers.mobile || {};
-    var comparison = data.comparison || {};
+    const browsers = data.browsers || {};
+    const browserDesktop = browsers.desktop || {};
+    const browserMobile = browsers.mobile || {};
+    const comparison = data.comparison || {};
 
     // Dimensional grades
-    var dimensionalGrades = data.dimensionalGrades || null;
+    const dimensionalGrades = data.dimensionalGrades || null;
 
     /* =====================================================================
        Helper functions
@@ -123,7 +123,7 @@
 
     /** CWV textual label */
     function cwvLabel(metric, value) {
-      var thresholds = {
+      const thresholds = {
         lcp: [2500, 4000],
         fid: [100, 300],
         inp: [200, 500],
@@ -131,7 +131,7 @@
         ttfb: [800, 1800],
         fcp: [1800, 3000]
       };
-      var th = thresholds[metric] || [0, 0];
+      const th = thresholds[metric] || [0, 0];
       if (value <= th[0]) return t('performance.report.cwv.good', 'Good');
       if (value <= th[1]) return t('performance.report.cwv.needsImprovement', 'Needs Improvement');
       return t('performance.report.cwv.poor', 'Poor');
@@ -139,14 +139,14 @@
 
     /** Inline HTML status badge for CWV metric */
     function cwvStatusBadge(metric, value) {
-      var color = cwvColor(metric, value);
-      var label = cwvLabel(metric, value);
+      const color = cwvColor(metric, value);
+      const label = cwvLabel(metric, value);
       return '<span style="display:inline-block;padding:2px 8px;border-radius:4px;font-size:0.7rem;font-weight:600;color:#fff;background:' + color + ';">' + esc(label) + '</span>';
     }
 
     /** Like PR.renderMetrics but allows raw HTML in values (for inline badges) */
     function _renderMetricsRaw(metrics) {
-      var html = '<div class="pdf-metrics-row">';
+      let html = '<div class="pdf-metrics-row">';
       metrics.forEach(function (m) {
         html += '<div class="pdf-metric">' +
           '<div class="pdf-metric__value" style="' + (m.color ? 'color:' + m.color : '') + '">' + String(m.value) + '</div>' +
@@ -160,7 +160,7 @@
     /** Grade letter to color */
     function gradeColor(grade) {
       if (!grade) return '#6b7280';
-      var g = String(grade).charAt(0).toUpperCase();
+      const g = String(grade).charAt(0).toUpperCase();
       if (g === 'A') return '#10b981';
       if (g === 'B') return '#3b82f6';
       if (g === 'C') return '#f59e0b';
@@ -171,7 +171,7 @@
     /** Grade assessment text */
     function gradeAssessment(grade) {
       if (!grade) return '';
-      var g = String(grade).charAt(0).toUpperCase();
+      const g = String(grade).charAt(0).toUpperCase();
       if (g === 'A') return t('performance.report.gradeAssessment.excellent', 'Excellent');
       if (g === 'B') return t('performance.report.gradeAssessment.good', 'Good');
       if (g === 'C') return t('performance.report.gradeAssessment.fair', 'Needs Improvement');
@@ -183,7 +183,7 @@
     function _parseCwvMs(val) {
       if (typeof val === 'number') return val;
       if (!val) return 0;
-      var s = String(val).trim();
+      const s = String(val).trim();
       if (s.indexOf('ms') !== -1) return parseFloat(s) || 0;
       if (s.indexOf('s') !== -1) return (parseFloat(s) || 0) * 1000;
       return parseFloat(s) || 0;
@@ -198,45 +198,45 @@
        1. Core Web Vitals
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-cwv .pdf-section__content');
+      const sec = document.querySelector('#section-cwv .pdf-section__content');
       if (!cwv.lcp && !cwv.lcpMs && !cwv.score && !mobileCwv.lcp && !mobileCwv.lcpMs) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var score = cwv.score;
+      const score = cwv.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('performance.coreWebVitals', 'Core Web Vitals'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.cwv', 'Core Web Vitals are Google\'s key metrics for measuring real-world user experience. They focus on loading performance (LCP), interactivity (FID/INP), and visual stability (CLS). Scores are compared against Google\'s thresholds for Good, Needs Improvement, and Poor performance. Meeting the Good thresholds for all three metrics is essential for optimal search rankings.')) + '</p>';
 
       // ---- Desktop CWV metrics with status badges ----
       html += '<h3 class="pdf-subsection__title">' + esc(t('common.desktop', 'Desktop')) + '</h3>';
-      var desktopMetrics = [];
+      const desktopMetrics = [];
       if (cwv.lcp || cwv.lcpMs) {
-        var lcpMs = cwv.lcpMs || parseFloat(cwv.lcp) * 1000 || 0;
-        var lcpDisplay = cwv.lcp || (lcpMs / 1000).toFixed(2) + 's';
+        const lcpMs = cwv.lcpMs || parseFloat(cwv.lcp) * 1000 || 0;
+        const lcpDisplay = cwv.lcp || (lcpMs / 1000).toFixed(2) + 's';
         desktopMetrics.push({ value: _cwvValueWithBadge('lcp', lcpDisplay, lcpMs), label: 'LCP', color: cwvColor('lcp', lcpMs) });
       }
       if (cwv.fid || cwv.fidMs) {
-        var fidVal = cwv.fidMs || parseFloat(cwv.fid) || 0;
+        const fidVal = cwv.fidMs || parseFloat(cwv.fid) || 0;
         desktopMetrics.push({ value: _cwvValueWithBadge('fid', cwv.fid || cwv.fidMs + 'ms', fidVal), label: 'FID', color: cwvColor('fid', fidVal) });
       }
       if (cwv.cls !== undefined) {
-        var clsNum = cwv.clsNum || parseFloat(cwv.cls) || 0;
+        const clsNum = cwv.clsNum || parseFloat(cwv.cls) || 0;
         desktopMetrics.push({ value: _cwvValueWithBadge('cls', cwv.cls, clsNum), label: 'CLS', color: cwvColor('cls', clsNum) });
       }
       if (cwv.ttfb) {
-        var ttfbMs = _parseCwvMs(cwv.ttfb);
+        const ttfbMs = _parseCwvMs(cwv.ttfb);
         desktopMetrics.push({ value: _cwvValueWithBadge('ttfb', cwv.ttfb, ttfbMs), label: 'TTFB', color: cwvColor('ttfb', ttfbMs) });
       }
       if (cwv.fcp) {
-        var fcpMs = _parseCwvMs(cwv.fcp);
+        const fcpMs = _parseCwvMs(cwv.fcp);
         desktopMetrics.push({ value: _cwvValueWithBadge('fcp', cwv.fcp, fcpMs), label: 'FCP', color: cwvColor('fcp', fcpMs) });
       }
       if (desktopMetrics.length > 0) {
@@ -254,26 +254,26 @@
       // ---- Mobile CWV if available ----
       if (mobileCwv.lcp || mobileCwv.lcpMs || mobileCwv.fid || mobileCwv.fidMs || mobileCwv.cls !== undefined) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('common.mobile', 'Mobile')) + '</h3>';
-        var mobileMetrics = [];
+        const mobileMetrics = [];
         if (mobileCwv.lcp || mobileCwv.lcpMs) {
-          var mLcpMs = mobileCwv.lcpMs || parseFloat(mobileCwv.lcp) * 1000 || 0;
-          var mLcpDisplay = mobileCwv.lcp || (mLcpMs / 1000).toFixed(2) + 's';
+          const mLcpMs = mobileCwv.lcpMs || parseFloat(mobileCwv.lcp) * 1000 || 0;
+          const mLcpDisplay = mobileCwv.lcp || (mLcpMs / 1000).toFixed(2) + 's';
           mobileMetrics.push({ value: _cwvValueWithBadge('lcp', mLcpDisplay, mLcpMs), label: 'LCP', color: cwvColor('lcp', mLcpMs) });
         }
         if (mobileCwv.fid || mobileCwv.fidMs) {
-          var mFidVal = mobileCwv.fidMs || parseFloat(mobileCwv.fid) || 0;
+          const mFidVal = mobileCwv.fidMs || parseFloat(mobileCwv.fid) || 0;
           mobileMetrics.push({ value: _cwvValueWithBadge('fid', mobileCwv.fid || mobileCwv.fidMs + 'ms', mFidVal), label: 'FID', color: cwvColor('fid', mFidVal) });
         }
         if (mobileCwv.cls !== undefined) {
-          var mClsNum = mobileCwv.clsNum || parseFloat(mobileCwv.cls) || 0;
+          const mClsNum = mobileCwv.clsNum || parseFloat(mobileCwv.cls) || 0;
           mobileMetrics.push({ value: _cwvValueWithBadge('cls', mobileCwv.cls, mClsNum), label: 'CLS', color: cwvColor('cls', mClsNum) });
         }
         if (mobileCwv.ttfb) {
-          var mTtfbMs = _parseCwvMs(mobileCwv.ttfb);
+          const mTtfbMs = _parseCwvMs(mobileCwv.ttfb);
           mobileMetrics.push({ value: _cwvValueWithBadge('ttfb', mobileCwv.ttfb, mTtfbMs), label: 'TTFB', color: cwvColor('ttfb', mTtfbMs) });
         }
         if (mobileCwv.fcp) {
-          var mFcpMs = _parseCwvMs(mobileCwv.fcp);
+          const mFcpMs = _parseCwvMs(mobileCwv.fcp);
           mobileMetrics.push({ value: _cwvValueWithBadge('fcp', mobileCwv.fcp, mFcpMs), label: 'FCP', color: cwvColor('fcp', mFcpMs) });
         }
         if (mobileMetrics.length > 0) {
@@ -282,24 +282,24 @@
       }
 
       // ---- Desktop vs Mobile CWV Comparison Table ----
-      var hasMobileCwv = (mobileCwv.lcp || mobileCwv.lcpMs || mobileCwv.cls !== undefined);
-      var hasDesktopCwv = (cwv.lcp || cwv.lcpMs || cwv.cls !== undefined);
+      const hasMobileCwv = (mobileCwv.lcp || mobileCwv.lcpMs || mobileCwv.cls !== undefined);
+      const hasDesktopCwv = (cwv.lcp || cwv.lcpMs || cwv.cls !== undefined);
       if (hasDesktopCwv && hasMobileCwv) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('performance.report.cwv.comparisonTitle', 'Desktop vs Mobile CWV Comparison')) + '</h3>';
 
         // Build row data
-        var dLcpMs = cwv.lcpMs || parseFloat(cwv.lcp) * 1000 || 0;
-        var mLcpMsC = mobileCwv.lcpMs || parseFloat(mobileCwv.lcp) * 1000 || 0;
-        var dFidVal = cwv.fidMs || parseFloat(cwv.fid) || 0;
-        var mFidValC = mobileCwv.fidMs || parseFloat(mobileCwv.fid) || 0;
-        var dClsNum = cwv.clsNum || parseFloat(cwv.cls) || 0;
-        var mClsNumC = mobileCwv.clsNum || parseFloat(mobileCwv.cls) || 0;
-        var dTtfbMs = _parseCwvMs(cwv.ttfb);
-        var mTtfbMsC = _parseCwvMs(mobileCwv.ttfb);
-        var dFcpMs = _parseCwvMs(cwv.fcp);
-        var mFcpMsC = _parseCwvMs(mobileCwv.fcp);
+        const dLcpMs = cwv.lcpMs || parseFloat(cwv.lcp) * 1000 || 0;
+        const mLcpMsC = mobileCwv.lcpMs || parseFloat(mobileCwv.lcp) * 1000 || 0;
+        const dFidVal = cwv.fidMs || parseFloat(cwv.fid) || 0;
+        const mFidValC = mobileCwv.fidMs || parseFloat(mobileCwv.fid) || 0;
+        const dClsNum = cwv.clsNum || parseFloat(cwv.cls) || 0;
+        const mClsNumC = mobileCwv.clsNum || parseFloat(mobileCwv.cls) || 0;
+        const dTtfbMs = _parseCwvMs(cwv.ttfb);
+        const mTtfbMsC = _parseCwvMs(mobileCwv.ttfb);
+        const dFcpMs = _parseCwvMs(cwv.fcp);
+        const mFcpMsC = _parseCwvMs(mobileCwv.fcp);
 
-        var compRows = [];
+        const compRows = [];
         // LCP
         compRows.push([
           '<strong>LCP</strong>',
@@ -351,16 +351,16 @@
       // ---- Per-Metric Deep Dives (CWV mode only) ----
       if (isCwvMode && cwvOrigDesktop) {
         // Device Score Overview
-        var dDevScore = cwvOrigDesktop.score || desktop.performanceScore || 0;
-        var mDevScore = cwvOrigMobile ? (cwvOrigMobile.score || mobile.performanceScore || 0) : 0;
+        const dDevScore = cwvOrigDesktop.score || desktop.performanceScore || 0;
+        const mDevScore = cwvOrigMobile ? (cwvOrigMobile.score || mobile.performanceScore || 0) : 0;
         html += '<h3 class="pdf-subsection__title">' + esc(t('performance.report.cwv.deviceScores', 'Device Performance Scores')) + '</h3>';
-        var devScoreItems = [
+        const devScoreItems = [
           { value: dDevScore + '/100', label: t('common.desktop', 'Desktop'), color: utils.scoreColor(dDevScore) }
         ];
         if (mDevScore > 0) {
           devScoreItems.push({ value: mDevScore + '/100', label: t('common.mobile', 'Mobile'), color: utils.scoreColor(mDevScore) });
         }
-        var perfGapCwv = Math.abs(dDevScore - mDevScore);
+        const perfGapCwv = Math.abs(dDevScore - mDevScore);
         if (perfGapCwv > 0) {
           devScoreItems.push({ value: perfGapCwv + ' pts', label: t('performance.report.cwv.gap', 'Gap'), color: perfGapCwv > 10 ? '#f59e0b' : '#10b981' });
         }
@@ -398,8 +398,8 @@
         );
 
         // INP/TBT Deep Dive
-        var origInpD = cwvOrigDesktop.inp || {};
-        var origInpM = cwvOrigMobile ? (cwvOrigMobile.inp || {}) : null;
+        const origInpD = cwvOrigDesktop.inp || {};
+        const origInpM = cwvOrigMobile ? (cwvOrigMobile.inp || {}) : null;
         html += _renderCwvDeepDive(
           'INP/TBT',
           t('performance.report.cwv.inpFull', 'Interaction to Next Paint'),
@@ -422,8 +422,8 @@
         }
 
         // FCP detail if available
-        var addDesktop = cwvOrigDesktop.additionalMetrics || {};
-        var addMobile = cwvOrigMobile ? (cwvOrigMobile.additionalMetrics || {}) : {};
+        const addDesktop = cwvOrigDesktop.additionalMetrics || {};
+        const addMobile = cwvOrigMobile ? (cwvOrigMobile.additionalMetrics || {}) : {};
         if (addDesktop.fcp || addMobile.fcp) {
           html += _renderCwvDeepDive(
             'FCP',
@@ -437,18 +437,18 @@
         }
 
         // Issues
-        var cwvIssues = data.issues || [];
+        const cwvIssues = data.issues || [];
         if (cwvIssues.length > 0) {
           html += '<h3 class="pdf-subsection__title">' + esc(t('performance.report.cwv.issuesTitle', 'Issues Identified')) + '</h3>';
           cwvIssues.forEach(function (issue) {
-            var issueText = typeof issue === 'string' ? issue : (issue.message || issue.issue || JSON.stringify(issue));
-            var isWarning = (issueText.indexOf('CRITICAL') !== -1 || issueText.indexOf('\u274c') !== -1 || issueText.indexOf('\u26a0') !== -1);
+            const issueText = typeof issue === 'string' ? issue : (issue.message || issue.issue || JSON.stringify(issue));
+            const isWarning = (issueText.indexOf('CRITICAL') !== -1 || issueText.indexOf('\u274c') !== -1 || issueText.indexOf('\u26a0') !== -1);
             html += PR.renderCallout('', issueText, isWarning ? 'warning' : 'tip');
           });
         }
 
         // Field data comparison context
-        var fieldComp = data.comparison || {};
+        const fieldComp = data.comparison || {};
         if (fieldComp.context) {
           html += '<h3 class="pdf-subsection__title">' + esc(t('performance.report.cwv.dataContext', 'Data Context')) + '</h3>';
           html += PR.renderCallout(
@@ -466,7 +466,7 @@
        2. Lighthouse Category Scores
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-lighthouse .pdf-section__content');
+      const sec = document.querySelector('#section-lighthouse .pdf-section__content');
       if (!desktopLH.performance && !mobileLH.performance) {
         sec.parentElement.style.display = 'none';
         return;
@@ -477,11 +477,11 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.lighthouse', 'Lighthouse provides automated auditing across Performance, Accessibility, Best Practices, and SEO categories. Each category score reflects adherence to web development best practices. This section shows the scores for each Lighthouse audit category as measured during the analysis.')) + '</p>';
 
-      var cats = [
+      const cats = [
         { key: 'performance', label: t('performance.performanceScore', 'Performance Score') },
         { key: 'accessibility', label: t('accessibility.title', 'Accessibility Analyzer') },
         { key: 'bestPractices', label: t('performance.report.lighthouse.bestPractices', 'Best Practices') },
@@ -493,7 +493,7 @@
         html += '<h3 class="pdf-subsection__title">' + esc(t('common.desktop', 'Desktop')) + '</h3>';
         html += '<div class="pdf-score-grid">';
         cats.forEach(function (cat) {
-          var val = desktopLH[cat.key];
+          const val = desktopLH[cat.key];
           if (val === undefined || val === null) return;
           html += '<div class="pdf-score-card">' +
             '<div class="pdf-score-card__label">' + esc(cat.label) + '</div>' +
@@ -508,7 +508,7 @@
         html += '<h3 class="pdf-subsection__title">' + esc(t('common.mobile', 'Mobile')) + '</h3>';
         html += '<div class="pdf-score-grid">';
         cats.forEach(function (cat) {
-          var val = mobileLH[cat.key];
+          const val = mobileLH[cat.key];
           if (val === undefined || val === null) return;
           html += '<div class="pdf-score-card">' +
             '<div class="pdf-score-card__label">' + esc(cat.label) + '</div>' +
@@ -525,14 +525,14 @@
        3. Dimensional Grades (A-F letter grades)
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-dimensional-grades .pdf-section__content');
+      const sec = document.querySelector('#section-dimensional-grades .pdf-section__content');
       if (!dimensionalGrades) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
       // Check there is at least one grade
-      var gradeKeys = Object.keys(dimensionalGrades);
+      const gradeKeys = Object.keys(dimensionalGrades);
       if (gradeKeys.length === 0) {
         sec.parentElement.style.display = 'none';
         return;
@@ -543,12 +543,12 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.dimensionalGrades', 'This section provides a multi-dimensional view of your site\\')) + '</p>';
 
       // Dimension label map
-      var dimensionLabels = {
+      const dimensionLabels = {
         performance: t('performance.report.dimensionalGrades.performance', 'Performance'),
         resources: t('performance.report.dimensionalGrades.resources', 'Resources'),
         caching: t('performance.report.dimensionalGrades.caching', 'Caching'),
@@ -557,9 +557,9 @@
       };
 
       // Metric cards for each grade
-      var gradeMetrics = [];
+      const gradeMetrics = [];
       gradeKeys.forEach(function (key) {
-        var grade = dimensionalGrades[key];
+        const grade = dimensionalGrades[key];
         gradeMetrics.push({
           value: grade,
           label: dimensionLabels[key] || key,
@@ -571,10 +571,10 @@
       }
 
       // Detailed table: Dimension | Grade | Assessment
-      var gradeRows = [];
+      const gradeRows = [];
       gradeKeys.forEach(function (key) {
-        var grade = dimensionalGrades[key];
-        var color = gradeColor(grade);
+        const grade = dimensionalGrades[key];
+        const color = gradeColor(grade);
         gradeRows.push([
           '<strong>' + esc(dimensionLabels[key] || key) + '</strong>',
           '<span style="font-size:1.1rem;font-weight:700;color:' + color + ';">' + esc(grade) + '</span>',
@@ -599,8 +599,8 @@
        4. Cross-Browser / Device Comparison
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-cross-browser .pdf-section__content');
-      var hasBrowserData = (browserDesktop.performanceScore !== undefined || browserMobile.performanceScore !== undefined);
+      const sec = document.querySelector('#section-cross-browser .pdf-section__content');
+      const hasBrowserData = (browserDesktop.performanceScore !== undefined || browserMobile.performanceScore !== undefined);
       if (!hasBrowserData) {
         sec.parentElement.style.display = 'none';
         return;
@@ -611,12 +611,12 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.crossBrowser', 'This section compares performance between desktop and mobile environments. Mobile users often experience slower performance due to network conditions and device constraints. Understanding the gap between desktop and mobile helps prioritize optimization efforts for the platform most of your visitors use.')) + '</p>';
 
       // Desktop vs Mobile overall performance score metrics
-      var crossMetrics = [];
+      const crossMetrics = [];
       if (browserDesktop.performanceScore !== undefined) {
         crossMetrics.push({ value: browserDesktop.performanceScore, label: t('performance.report.crossBrowser.desktopScore', 'Desktop Score'), color: utils.scoreColor(browserDesktop.performanceScore) });
       }
@@ -628,20 +628,20 @@
       }
 
       // Side-by-side Lighthouse category comparison table
-      var dPerf = browserDesktop.performanceScore;
-      var mPerf = browserMobile.performanceScore;
-      var dA11y = browserDesktop.accessibilityScore;
-      var mA11y = browserMobile.accessibilityScore;
-      var dBP = browserDesktop.bestPracticesScore;
-      var mBP = browserMobile.bestPracticesScore;
-      var dSEO = browserDesktop.seoScore;
-      var mSEO = browserMobile.seoScore;
+      const dPerf = browserDesktop.performanceScore;
+      const mPerf = browserMobile.performanceScore;
+      const dA11y = browserDesktop.accessibilityScore;
+      const mA11y = browserMobile.accessibilityScore;
+      const dBP = browserDesktop.bestPracticesScore;
+      const mBP = browserMobile.bestPracticesScore;
+      const dSEO = browserDesktop.seoScore;
+      const mSEO = browserMobile.seoScore;
 
       if (dPerf !== undefined && mPerf !== undefined) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('performance.report.crossBrowser.lighthouseComparison', 'Lighthouse Category Comparison')) + '</h3>';
 
-        var lhRows = [];
-        var lhCats = [
+        const lhRows = [];
+        const lhCats = [
           { label: t('performance.performanceScore', 'Performance Score'), d: dPerf, m: mPerf },
           { label: t('accessibility.title', 'Accessibility Analyzer'), d: dA11y, m: mA11y },
           { label: t('performance.report.lighthouse.bestPractices', 'Best Practices'), d: dBP, m: mBP },
@@ -650,10 +650,10 @@
 
         lhCats.forEach(function (cat) {
           if (cat.d === undefined && cat.m === undefined) return;
-          var dVal = cat.d !== undefined ? cat.d : '-';
-          var mVal = cat.m !== undefined ? cat.m : '-';
-          var gap = (typeof cat.d === 'number' && typeof cat.m === 'number') ? Math.abs(cat.d - cat.m) : '-';
-          var gapColor = (typeof gap === 'number' && gap > 10) ? '#f59e0b' : '#10b981';
+          const dVal = cat.d !== undefined ? cat.d : '-';
+          const mVal = cat.m !== undefined ? cat.m : '-';
+          const gap = (typeof cat.d === 'number' && typeof cat.m === 'number') ? Math.abs(cat.d - cat.m) : '-';
+          const gapColor = (typeof gap === 'number' && gap > 10) ? '#f59e0b' : '#10b981';
           lhRows.push([
             '<strong>' + esc(cat.label) + '</strong>',
             '<span style="color:' + (typeof cat.d === 'number' ? utils.scoreColor(cat.d) : '#6b7280') + ';font-weight:600;">' + dVal + '</span>',
@@ -675,7 +675,7 @@
       }
 
       // Performance gap alert callout
-      var perfGap = comparison.performanceGap || (typeof dPerf === 'number' && typeof mPerf === 'number' ? Math.abs(dPerf - mPerf) : 0);
+      const perfGap = comparison.performanceGap || (typeof dPerf === 'number' && typeof mPerf === 'number' ? Math.abs(dPerf - mPerf) : 0);
       if (perfGap > 10) {
         html += PR.renderCallout(
           t('performance.report.crossBrowser.gapWarningTitle', 'Performance Gap Detected'),
@@ -691,21 +691,21 @@
       }
 
       // Per-device CWV details
-      var bdCwv = (browserDesktop.metrics && browserDesktop.metrics.coreWebVitals) ? browserDesktop.metrics.coreWebVitals : null;
-      var bmCwv = (browserMobile.metrics && browserMobile.metrics.coreWebVitals) ? browserMobile.metrics.coreWebVitals : null;
+      const bdCwv = (browserDesktop.metrics && browserDesktop.metrics.coreWebVitals) ? browserDesktop.metrics.coreWebVitals : null;
+      const bmCwv = (browserMobile.metrics && browserMobile.metrics.coreWebVitals) ? browserMobile.metrics.coreWebVitals : null;
 
       if (bdCwv || bmCwv) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('performance.report.crossBrowser.perDeviceCwv', 'Per-Device Core Web Vitals')) + '</h3>';
 
-        var cwvDeviceRows = [];
-        var cwvMetricNames = ['lcp', 'fid', 'cls'];
-        var cwvMetricLabels = { lcp: 'LCP', fid: 'FID', cls: 'CLS' };
+        const cwvDeviceRows = [];
+        const cwvMetricNames = ['lcp', 'fid', 'cls'];
+        const cwvMetricLabels = { lcp: 'LCP', fid: 'FID', cls: 'CLS' };
 
         cwvMetricNames.forEach(function (metricName) {
-          var dVal = bdCwv ? (bdCwv[metricName] || '-') : '-';
-          var mVal = bmCwv ? (bmCwv[metricName] || '-') : '-';
-          var dMs = bdCwv ? _parseCwvMs(bdCwv[metricName]) : 0;
-          var mMs = bmCwv ? _parseCwvMs(bmCwv[metricName]) : 0;
+          const dVal = bdCwv ? (bdCwv[metricName] || '-') : '-';
+          const mVal = bmCwv ? (bmCwv[metricName] || '-') : '-';
+          const dMs = bdCwv ? _parseCwvMs(bdCwv[metricName]) : 0;
+          const mMs = bmCwv ? _parseCwvMs(bmCwv[metricName]) : 0;
 
           cwvDeviceRows.push([
             '<strong>' + cwvMetricLabels[metricName] + '</strong>',
@@ -732,20 +732,20 @@
        5. Resource Analysis
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-resources .pdf-section__content');
+      const sec = document.querySelector('#section-resources .pdf-section__content');
       if (!resources.javascript && !resources.css && !resources.breakdown && !resources.images) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var score = resources.score;
+      const score = resources.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('performance.resourceAnalysis', 'Resource Analysis'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.resources', 'Resource analysis examines the composition of your page — scripts, stylesheets, images, fonts, and other assets. Understanding your resource breakdown helps identify optimization opportunities. Reducing the number and size of resources directly improves load times and Core Web Vitals scores.')) + '</p>';
 
@@ -757,14 +757,14 @@
       ]);
 
       // Resource breakdown table with extended columns
-      var types = ['javascript', 'css', 'images', 'fonts', 'other'];
-      var totalSize = 0;
-      var resEntries = [];
+      const types = ['javascript', 'css', 'images', 'fonts', 'other'];
+      let totalSize = 0;
+      const resEntries = [];
 
       types.forEach(function (type) {
-        var r = resources[type];
+        const r = resources[type];
         if (!r) return;
-        var size = r.size || 0;
+        const size = r.size || 0;
         totalSize += size;
         resEntries.push({ type: type, count: r.count || 0, size: size, sizeFormatted: r.sizeFormatted || _formatBytes(size) });
       });
@@ -772,10 +772,10 @@
       if (resEntries.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('performance.report.resources.breakdownHeading', 'Resource Breakdown')) + '</h3>';
 
-        var resRows = [];
+        const resRows = [];
         resEntries.forEach(function (entry) {
-          var avgSize = entry.count > 0 ? _formatBytes(entry.size / entry.count) : '-';
-          var pct = totalSize > 0 ? Math.round((entry.size / totalSize) * 100) + '%' : '0%';
+          const avgSize = entry.count > 0 ? _formatBytes(entry.size / entry.count) : '-';
+          const pct = totalSize > 0 ? Math.round((entry.size / totalSize) * 100) + '%' : '0%';
           resRows.push([
             '<strong>' + esc(entry.type.charAt(0).toUpperCase() + entry.type.slice(1)) + '</strong>',
             String(entry.count),
@@ -799,7 +799,7 @@
       }
 
       // Optimization tips based on thresholds
-      var tips = [];
+      const tips = [];
       if (resources.javascript && resources.javascript.size && resources.javascript.size > 300 * 1024) {
         tips.push(t('performance.report.resources.tips.jsLarge', 'JavaScript exceeds 300KB. Consider code-splitting, tree-shaking, and deferring non-critical scripts.'));
       }
@@ -827,25 +827,25 @@
        6. Network Performance
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-network .pdf-section__content');
+      const sec = document.querySelector('#section-network .pdf-section__content');
       if (!network.ttfb && !network.requests && !network.dns) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var score = network.score;
+      const score = network.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('performance.report.network.title', 'Network Performance'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.network', 'Network performance metrics measure how quickly your server responds and delivers content. Time to First Byte (TTFB) indicates server processing speed, while DNS lookup and SSL negotiation times reveal connection overhead. Optimizing these metrics requires attention to both server configuration and network infrastructure.')) + '</p>';
 
       // Timing table with description column
-      var timingItems = [
+      const timingItems = [
         { key: 'ttfb', label: t('performance.report.network.ttfb', 'Time To First Byte'), desc: t('performance.report.network.ttfbDesc', 'Time from request to first byte received from server') },
         { key: 'dns', label: t('performance.report.network.dns', 'DNS Lookup'), desc: t('performance.report.network.dnsDesc', 'Time to resolve domain name to IP address') },
         { key: 'ssl', label: t('performance.report.network.ssl', 'SSL Negotiation'), desc: t('performance.report.network.sslDesc', 'Time to establish secure TLS connection') },
@@ -854,7 +854,7 @@
         { key: 'domContentLoaded', label: t('performance.report.network.domContentLoaded', 'DOM Content Loaded'), desc: t('performance.report.network.domContentLoadedDesc', 'Time until DOM and deferred scripts are loaded') }
       ];
 
-      var timingRows = [];
+      const timingRows = [];
       timingItems.forEach(function (item) {
         if (!network[item.key]) return;
         timingRows.push([
@@ -883,7 +883,7 @@
       ]);
 
       // TTFB-based insight callouts
-      var ttfbMs = _parseCwvMs(network.ttfb);
+      const ttfbMs = _parseCwvMs(network.ttfb);
       if (ttfbMs > 0) {
         if (ttfbMs < 200) {
           html += PR.renderCallout(
@@ -907,7 +907,7 @@
       }
 
       // High request count warning
-      var reqCount = network.requests || data.totalRequests || 0;
+      const reqCount = network.requests || data.totalRequests || 0;
       if (reqCount > 50) {
         html += PR.renderCallout(
           t('performance.report.network.highRequestsTitle', 'High Request Count'),
@@ -923,20 +923,20 @@
        7. Caching & Optimization
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-caching .pdf-section__content');
+      const sec = document.querySelector('#section-caching .pdf-section__content');
       if (!caching.total && !caching.cacheHitRate) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var score = caching.score;
+      const score = caching.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('performance.report.caching.title', 'Caching & Optimization'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.caching', 'Effective caching reduces server load and dramatically improves repeat-visit performance. Properly configured cache headers ensure browsers store and reuse static resources. This section evaluates your caching strategy, identifying resources that could benefit from longer cache durations.')) + '</p>';
 
@@ -959,7 +959,7 @@
       if (caching.strategies && Array.isArray(caching.strategies) && caching.strategies.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('performance.report.caching.strategyBreakdown', 'Cache Strategy Breakdown')) + '</h3>';
 
-        var stratRows = [];
+        const stratRows = [];
         caching.strategies.forEach(function (s) {
           stratRows.push([
             '<strong>' + esc(s.name || s.type || '-') + '</strong>',
@@ -980,7 +980,7 @@
       }
 
       // Performance-based recommendations (4 tiers based on cache hit rate)
-      var hitRate = parseFloat(caching.cacheHitRate) || 0;
+      const hitRate = parseFloat(caching.cacheHitRate) || 0;
       if (caching.total > 0) {
         if (hitRate >= 90) {
           html += PR.renderCallout(
@@ -1011,7 +1011,7 @@
 
       // Caching best practices list
       html += '<h3 class="pdf-subsection__title">' + esc(t('performance.report.caching.bestPracticesTitle', 'Caching Best Practices')) + '</h3>';
-      var bestPractices = [
+      const bestPractices = [
         t('performance.report.caching.bp1', 'Set Cache-Control: public, max-age=31536000 for versioned static assets (JS, CSS, images with hash in filename).'),
         t('performance.report.caching.bp2', 'Use Cache-Control: no-cache for HTML documents to ensure users always get the latest version.'),
         t('performance.report.caching.bp3', 'Enable ETag headers for conditional requests, reducing bandwidth for unchanged resources.'),
@@ -1030,20 +1030,20 @@
        8. Recommendations — Rich Fix Cards
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('performance.report.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('performance.report.sectionIntros.recommendations', 'Based on the performance analysis, these recommendations target the most impactful improvements. Addressing high-priority items first will deliver the greatest gains in load time and Core Web Vitals scores.')) + '</p>';
 
       // Try enriched fixes first, then generate from metrics, then fall back to simple recs
       // pdf-export-utility stores enriched fixes as data.enrichedFixes.performance (array)
-      var richFixes = null;
+      let richFixes = null;
       if (data.enrichedFixes) {
         if (Array.isArray(data.enrichedFixes)) {
           richFixes = data.enrichedFixes;
@@ -1057,10 +1057,10 @@
 
       if (richFixes && richFixes.length > 0) {
         // Map severity to priority group for rendering
-        var critical = richFixes.filter(function (r) { return r.severity === 'critical'; });
-        var medium = richFixes.filter(function (r) { return r.severity === 'medium'; });
-        var low = richFixes.filter(function (r) { return r.severity === 'low'; });
-        var groups = [
+        const critical = richFixes.filter(function (r) { return r.severity === 'critical'; });
+        const medium = richFixes.filter(function (r) { return r.severity === 'medium'; });
+        const low = richFixes.filter(function (r) { return r.severity === 'low'; });
+        const groups = [
           { items: critical, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444', priority: 'critical' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b', priority: 'medium' },
           { items: low, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6', priority: 'low' }
@@ -1079,12 +1079,12 @@
         });
       } else {
         // Fall back to simple recommendations array
-        var recs = data.recommendations || [];
+        const recs = data.recommendations || [];
         if (recs.length > 0) {
-          var criticalRecs = recs.filter(function (r) { return r.priority === 'critical' || r.priority === 'high'; });
-          var mediumRecs = recs.filter(function (r) { return r.priority === 'medium'; });
-          var lowRecs = recs.filter(function (r) { return !r.priority || r.priority === 'low'; });
-          var simpleGroups = [
+          const criticalRecs = recs.filter(function (r) { return r.priority === 'critical' || r.priority === 'high'; });
+          const mediumRecs = recs.filter(function (r) { return r.priority === 'medium'; });
+          const lowRecs = recs.filter(function (r) { return !r.priority || r.priority === 'low'; });
+          const simpleGroups = [
             { items: criticalRecs, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444' },
             { items: mediumRecs, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
             { items: lowRecs, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6' }
@@ -1113,7 +1113,7 @@
 
     // ---- Hide empty sections ----
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -1125,16 +1125,16 @@
      ========================================================================= */
 
   function _htmlToNode(html) {
-    var temp = document.createElement('div');
+    const temp = document.createElement('div');
     temp.innerHTML = html;
     return temp.firstChild;
   }
 
   function _formatBytes(bytes) {
     if (!bytes || bytes === 0) return '0 B';
-    var k = 1024;
-    var sizes = ['B', 'KB', 'MB', 'GB'];
-    var i = Math.floor(Math.log(bytes) / Math.log(k));
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
   }
 
@@ -1152,13 +1152,13 @@
    * @returns {Array} Array of rich fix objects
    */
   function _generatePerformanceFixes(data, desktop, mobile, cwv, mobileCwv) {
-    var fixes = [];
+    const fixes = [];
 
     // --- Helper: parse metric value to ms number ---
     function _toMs(val) {
       if (typeof val === 'number') return val;
       if (!val) return 0;
-      var s = String(val).trim();
+      const s = String(val).trim();
       if (s.indexOf('ms') !== -1) return parseFloat(s) || 0;
       if (s.indexOf('s') !== -1) return (parseFloat(s) || 0) * 1000;
       return parseFloat(s) || 0;
@@ -1166,8 +1166,8 @@
 
     // --- Helper: pick first valid number from candidates ---
     function _pick(candidates) {
-      for (var i = 0; i < candidates.length; i++) {
-        var n = _toMs(candidates[i]);
+      for (let i = 0; i < candidates.length; i++) {
+        const n = _toMs(candidates[i]);
         if (n !== 0 && isFinite(n)) return n;
       }
       return 0;
@@ -1175,10 +1175,10 @@
 
     // --- Helper: pick CLS (can be 0 legitimately, so check for existence) ---
     function _pickCls(candidates) {
-      for (var i = 0; i < candidates.length; i++) {
-        var v = candidates[i];
+      for (let i = 0; i < candidates.length; i++) {
+        const v = candidates[i];
         if (v !== undefined && v !== null && v !== '') {
-          var n = parseFloat(v);
+          const n = parseFloat(v);
           if (isFinite(n)) return n;
         }
       }
@@ -1186,26 +1186,26 @@
     }
 
     // --- Extract metrics from both desktop and mobile ---
-    var dCwv = cwv || {};
-    var mCwv = mobileCwv || {};
-    var dLH = (desktop && desktop.lighthouse) ? desktop.lighthouse : {};
-    var mLH = (mobile && mobile.lighthouse) ? mobile.lighthouse : {};
+    const dCwv = cwv || {};
+    const mCwv = mobileCwv || {};
+    const dLH = (desktop && desktop.lighthouse) ? desktop.lighthouse : {};
+    const mLH = (mobile && mobile.lighthouse) ? mobile.lighthouse : {};
 
     // Use mobile metrics preferentially (worse case), fall back to desktop
-    var mobileLCP = _pick([mCwv.lcpMs, mCwv.lcp, dCwv.lcpMs, dCwv.lcp]);
-    var mobileTBT = _pick([mCwv.tbtMs, mCwv.tbt, mCwv.inpMs, mCwv.inp, mCwv.fidMs, mCwv.fid,
+    const mobileLCP = _pick([mCwv.lcpMs, mCwv.lcp, dCwv.lcpMs, dCwv.lcp]);
+    const mobileTBT = _pick([mCwv.tbtMs, mCwv.tbt, mCwv.inpMs, mCwv.inp, mCwv.fidMs, mCwv.fid,
                            dCwv.tbtMs, dCwv.tbt, dCwv.inpMs, dCwv.inp, dCwv.fidMs, dCwv.fid]);
-    var mobileCLS = _pickCls([mCwv.clsNum, mCwv.cls, dCwv.clsNum, dCwv.cls]);
-    var mobilePerf = mLH.performance || dLH.performance || (mobile && mobile.performanceScore) || (desktop && desktop.performanceScore) || 0;
-    var accessScore = mLH.accessibility || dLH.accessibility || 0;
+    const mobileCLS = _pickCls([mCwv.clsNum, mCwv.cls, dCwv.clsNum, dCwv.cls]);
+    const mobilePerf = mLH.performance || dLH.performance || (mobile && mobile.performanceScore) || (desktop && desktop.performanceScore) || 0;
+    const accessScore = mLH.accessibility || dLH.accessibility || 0;
 
     // =================================================================
     // 1. LCP Fix
     // =================================================================
     if (mobileLCP > 2500) {
-      var lcpSeverity = mobileLCP > 4000 ? 'critical' : 'medium';
-      var lcpDisplay = mCwv.lcp || dCwv.lcp || (mobileLCP / 1000).toFixed(2) + 's';
-      var lcpImpact = mobileLCP > 4000 ? '+25 Performance Score' : '+15 Performance Score';
+      const lcpSeverity = mobileLCP > 4000 ? 'critical' : 'medium';
+      const lcpDisplay = mCwv.lcp || dCwv.lcp || (mobileLCP / 1000).toFixed(2) + 's';
+      const lcpImpact = mobileLCP > 4000 ? '+25 Performance Score' : '+15 Performance Score';
 
       fixes.push({
         id: 'lcp-optimization',
@@ -1272,8 +1272,8 @@
     // 2. TBT / JavaScript Optimization Fix
     // =================================================================
     if (mobileTBT > 200 || mobilePerf < 70) {
-      var tbtSeverity = mobileTBT > 600 ? 'critical' : 'medium';
-      var tbtDisplay = mobileTBT + 'ms';
+      const tbtSeverity = mobileTBT > 600 ? 'critical' : 'medium';
+      const tbtDisplay = mobileTBT + 'ms';
 
       fixes.push({
         id: 'javascript-optimization',
@@ -1340,8 +1340,8 @@
     // 3. CLS Fix
     // =================================================================
     if (mobileCLS >= 0 && mobileCLS > 0.1) {
-      var clsSeverity = mobileCLS > 0.25 ? 'critical' : 'medium';
-      var clsDisplay = mobileCLS.toFixed(3);
+      const clsSeverity = mobileCLS > 0.25 ? 'critical' : 'medium';
+      const clsDisplay = mobileCLS.toFixed(3);
 
       fixes.push({
         id: 'cls-layout-shift',
@@ -1495,7 +1495,7 @@
     // 5. Accessibility Fix
     // =================================================================
     if (accessScore < 85) {
-      var a11ySeverity = accessScore < 70 ? 'medium' : 'low';
+      const a11ySeverity = accessScore < 70 ? 'medium' : 'low';
 
       fixes.push({
         id: 'accessibility-improvements',
@@ -1573,7 +1573,7 @@
     // =================================================================
     // Sort by severity priority: critical > medium > low
     // =================================================================
-    var priorityOrder = { critical: 0, medium: 1, low: 2 };
+    const priorityOrder = { critical: 0, medium: 1, low: 2 };
     fixes.sort(function (a, b) {
       return (priorityOrder[a.severity] || 2) - (priorityOrder[b.severity] || 2);
     });
@@ -1597,11 +1597,11 @@
    * @param {Function} esc         HTML escape function
    */
   function _renderCwvDeepDive(metricLabel, fullName, dObj, mObj, targetStr, maxVal, isCls, tipText, t, esc) {
-    var html = '';
+    let html = '';
     html += '<h3 class="pdf-subsection__title">' + esc(metricLabel + ' \u2014 ' + fullName) + '</h3>';
     html += '<div style="margin-bottom:8px;font-size:0.82rem;"><strong>' + esc(t('performance.report.cwv.target', 'Target')) + ':</strong> <span style="color:#10b981;font-weight:600;">' + esc(targetStr) + '</span></div>';
 
-    var devices = [
+    const devices = [
       { label: t('common.desktop', 'Desktop'), obj: dObj },
       { label: t('common.mobile', 'Mobile'), obj: mObj }
     ];
@@ -1611,8 +1611,20 @@
       var val = dev.obj.value || 0;
       var display = dev.obj.displayValue || (isCls ? String(val) : val + 'ms');
       var rating = String(dev.obj.rating || '').toLowerCase();
-      var color = rating === 'good' ? '#10b981' : (rating.indexOf('needs') !== -1 || rating.indexOf('average') !== -1) ? '#f59e0b' : '#ef4444';
-      var width = Math.max(5, Math.min(100, Math.round((val / maxVal) * 100)));
+      var color;
+      if (rating === 'good') {
+        color = '#10b981';
+      } else if (rating.indexOf('needs') !== -1 || rating.indexOf('average') !== -1) {
+        color = '#f59e0b';
+      } else if (rating === 'poor') {
+        color = '#ef4444';
+      } else {
+        // Fallback: compute color from numeric value using known CWV thresholds
+        var knownThresholds = { LCP: [2500, 4000], CLS: [0.1, 0.25], INP: [200, 500], 'INP/TBT': [200, 500], FCP: [1800, 3000] };
+        var th = knownThresholds[metricLabel] || [maxVal * 0.6, maxVal];
+        color = val <= th[0] ? '#10b981' : val <= th[1] ? '#f59e0b' : '#ef4444';
+      }
+      const width = Math.max(5, Math.min(100, Math.round((val / maxVal) * 100)));
 
       html += '<div style="margin-bottom:10px;">';
       html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">';
@@ -1634,7 +1646,7 @@
    * fix cards, but adapted for the performance report data shape.
    */
   function _renderRecCard(r, groupColor, t, esc) {
-    var html = '<div class="pdf-rec" style="border-left-color:' + groupColor + ';">';
+    let html = '<div class="pdf-rec" style="border-left-color:' + groupColor + ';">';
     html += '<div class="pdf-rec__text">';
 
     // Metric label
@@ -1678,8 +1690,8 @@
     }
 
     // Code blocks: Before (problematic) / After (fixed)
-    var beforeCode = r.problematicCode || r.snippet || r.code || '';
-    var afterCode = r.fixedCode || r.recommendedCode || r.solutionCode || '';
+    const beforeCode = r.problematicCode || r.snippet || r.code || '';
+    const afterCode = r.fixedCode || r.recommendedCode || r.solutionCode || '';
 
     if (beforeCode || afterCode) {
       html += '<div style="margin-top:8px;display:grid;grid-template-columns:1fr 1fr;gap:8px;">';

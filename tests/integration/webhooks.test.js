@@ -12,6 +12,13 @@ jest.mock('stripe', () => {
   return jest.fn(() => mockStripe);
 });
 
+// Mock getDatabase before requiring routes
+let mockDb = null;
+jest.mock('../../src/db', () => {
+  const actual = jest.requireActual('../../src/db');
+  return { ...actual, getDatabase: () => mockDb };
+});
+
 const webhookRoutes = require('../../src/routes/webhooks');
 
 describe('Stripe Webhook Handler', () => {
@@ -22,11 +29,7 @@ describe('Stripe Webhook Handler', () => {
   beforeAll(async () => {
     testDb = new TestDatabase();
     db = await testDb.setup();
-
-    // Mock getDatabase
-    jest.doMock('../../src/db', () => ({
-      getDatabase: () => db
-    }));
+    mockDb = db;
 
     // Setup Express app with raw body parser (required for webhooks)
     app = express();

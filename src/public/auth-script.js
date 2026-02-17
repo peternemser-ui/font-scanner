@@ -184,10 +184,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
     const redirectTo = urlParams.get('redirect') || urlParams.get('returnTo') || '/dashboard.html';
     window.location.href = redirectTo;
+    return;
   }
 
   // Check for reset token in URL params
   const urlParams = new URLSearchParams(window.location.search);
+
+  // Auto-switch to Register tab if mode=signup (e.g., from pricing modal redirect)
+  const mode = urlParams.get('mode');
+  if (mode === 'signup' || mode === 'register') {
+    const registerTab = document.querySelector('[data-tab="register"]');
+    if (registerTab) registerTab.click();
+  }
   const resetUserId = urlParams.get('userId');
   const resetToken = urlParams.get('token');
 

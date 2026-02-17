@@ -61,12 +61,6 @@ const CATEGORIES = {
     icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7V4h16v3M9 20h6M12 4v16"/></svg>',
     description: 'Typography, fonts, and visual design analysis'
   },
-  infrastructure: {
-    id: 'infrastructure',
-    label: 'Infrastructure',
-    icon: '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8"/><path d="M12 17v4"/><circle cx="6" cy="10" r="1"/><circle cx="10" cy="10" r="1"/></svg>',
-    description: 'Hosting analysis, cost estimates'
-  },
   competitive: {
     id: 'competitive',
     label: 'Competitive Insights',
@@ -167,12 +161,12 @@ const ALL_DIAGNOSTICS = [
     description: 'Analytics tags, pixels, and tracking scripts'
   },
   {
-    href: '/local-seo.html',
-    label: 'Local SEO',
-    id: 'local-seo',
+    href: '/geo-seo.html',
+    label: 'GEO SEO',
+    id: 'geo-seo',
     category: 'seo',
     tier: 'pro',
-    description: 'Local business optimization'
+    description: 'Geographic & local search optimization'
   },
   {
     href: '/broken-links.html',
@@ -228,7 +222,6 @@ const ALL_DIAGNOSTICS = [
     id: 'enhanced-fonts',
     category: 'technology',
     tier: 'pro',
-    primary: true,
     description: 'Font loading, rendering, and optimization'
   },
   {
@@ -240,16 +233,6 @@ const ALL_DIAGNOSTICS = [
     description: 'Visual consistency and brand alignment'
   },
 
-  // --- G. INFRASTRUCTURE ---
-  {
-    href: '/hosting-analyzer.html',
-    label: 'Hosting Guide',
-    id: 'hosting-analyzer',
-    category: 'infrastructure',
-    tier: 'free',
-    primary: true,
-    description: 'Hosting recommendations and costs'
-  },
 
   // --- H. COMPETITIVE INSIGHTS ---
   {
@@ -279,15 +262,17 @@ const ALL_DIAGNOSTICS = [
 // Primary nav items (shown in main nav bar)
 const NAV_CONFIG = ALL_DIAGNOSTICS
   .filter(d => d.primary)
-  .slice(0, 5)  // Limit to 5 main nav items
+  .slice(0, 6)  // Limit to 6 main nav items
   .map(d => ({
     href: d.href,
     icon: CATEGORIES[d.category]?.icon || '',
-    label: d.category === 'overview' ? 'Overview' : 
+    label: d.category === 'overview' ? 'Overview' :
            d.category === 'performance' ? 'Speed' :
            d.category === 'seo' ? 'SEO' :
            d.category === 'accessibility' ? 'Accessibility' :
-           d.category === 'security' ? 'Security' : d.label,
+           d.category === 'security' ? 'Security' :
+           d.category === 'competitive' ? 'Competitive Analysis' :
+           d.label,
     id: d.id,
     stage: d.category === 'overview' ? 1 : 2
   }));
@@ -696,11 +681,10 @@ function renderNavigation(activePageId) {
     'site-crawler': 'nav.siteCrawler',
     'mobile-analyzer': 'nav.mobileTesting',
     'broken-links': 'nav.brokenLinks',
-    'local-seo': 'nav.localSeo',
+    'geo-seo': 'nav.geoSeo',
     'brand-consistency': 'nav.brandAudit',
     'cro-analyzer': 'nav.croAnalysis',
-    'gdpr-compliance': 'nav.gdprCheck',
-    'hosting-analyzer': 'nav.hostingGuide'
+    'gdpr-compliance': 'nav.gdprCheck'
   };
 
   // Helper to generate nav link HTML
@@ -737,7 +721,7 @@ function renderNavigation(activePageId) {
   const navItems = NAV_CONFIG.map(item => generateNavLink(item)).join('');
 
   // Generate dropdown items grouped by category
-  const categoryOrder = ['performance', 'seo', 'accessibility', 'security', 'technology', 'infrastructure', 'competitive', 'help'];
+  const categoryOrder = ['performance', 'seo', 'accessibility', 'security', 'technology', 'help'];
   
   const generateCategoryGroup = (categoryId) => {
     const category = CATEGORIES[categoryId];
@@ -752,13 +736,11 @@ function renderNavigation(activePageId) {
       'seo': 'categories.seo',
       'accessibility': 'categories.accessibility',
       'security': 'categories.security',
-      'technology': 'categories.technology',
-      'infrastructure': 'categories.infrastructure',
-      'competitive': 'categories.competitive'
+      'technology': 'categories.technology'
     };
     const categoryI18nKey = categoryI18nMap[categoryId] || '';
     const categoryI18nAttr = categoryI18nKey ? `data-i18n="${categoryI18nKey}"` : '';
-    
+
     return `
       <div class="dropdown-category">
         <div class="dropdown-category-header">
@@ -795,9 +777,7 @@ function renderNavigation(activePageId) {
       'seo': 'categories.seo',
       'accessibility': 'categories.accessibility',
       'security': 'categories.security',
-      'technology': 'categories.technology',
-      'infrastructure': 'categories.infrastructure',
-      'competitive': 'categories.competitive'
+      'technology': 'categories.technology'
     };
     const categoryI18nKey = categoryI18nMap[cat] || '';
     const categoryI18nAttr = categoryI18nKey ? `data-i18n="${categoryI18nKey}"` : '';
@@ -939,14 +919,14 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
       activePageId = 'performance-hub';
       appTitle = 'SITE MECHANIC';
       subtitle = '> performance / core web vitals';
-    } else if (path.includes('faq')) {
-      activePageId = 'faq';
-      appTitle = 'SITE MECHANIC';
-      subtitle = '> help / faq';
     } else if (path.includes('competitive-analysis')) {
       activePageId = 'competitive-analysis';
       appTitle = 'SITE MECHANIC';
       subtitle = '> rank competition / competitor analysis';
+    } else if (path.includes('faq')) {
+      activePageId = 'faq';
+      appTitle = 'SITE MECHANIC';
+      subtitle = '> help / faq';
     } else if (path.includes('performance-analyzer') || path.includes('performance-snapshot')) {
       // Redirect legacy URLs to performance-hub
       activePageId = 'performance-hub';
@@ -984,10 +964,10 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
       activePageId = 'broken-links';
       appTitle = 'SITE MECHANIC';
       subtitle = '> broken links / link health check';
-    } else if (path.includes('local-seo')) {
-      activePageId = 'local-seo';
+    } else if (path.includes('geo-seo')) {
+      activePageId = 'geo-seo';
       appTitle = 'SITE MECHANIC';
-      subtitle = '> local seo / business presence';
+      subtitle = '> geo seo / citations & reputation';
     } else if (path.includes('brand-consistency')) {
       activePageId = 'brand-consistency';
       appTitle = 'SITE MECHANIC';
@@ -1000,10 +980,6 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
       activePageId = 'gdpr-compliance';
       appTitle = 'SITE MECHANIC';
       subtitle = '> gdpr check / privacy compliance';
-    } else if (path.includes('hosting-analyzer')) {
-      activePageId = 'hosting-analyzer';
-      appTitle = 'SITE MECHANIC';
-      subtitle = '> hosting guide / provider comparison';
     } else if (path === '/' || path.includes('index')) {
       activePageId = 'dashboard';
       appTitle = 'SITE MECHANIC';
@@ -1023,7 +999,7 @@ function initializeNavigation(customActivePageId, customAppTitle, customSubtitle
 
   // Load cookie consent manager globally
   if (!window.CookieConsent && !document.getElementById('smCookieConsentScript')) {
-    var ccScript = document.createElement('script');
+    const ccScript = document.createElement('script');
     ccScript.id = 'smCookieConsentScript';
     ccScript.src = '/js/cookie-consent.js';
     document.body.appendChild(ccScript);
@@ -1669,6 +1645,10 @@ async function initializeAuthLinks() {
   const container = document.getElementById('authLinksContainer');
   if (!container) return;
 
+  // Remove any previously inserted My Reports button (re-render safe)
+  const existingReportsBtn = container.parentNode?.querySelector('.header-reports-btn');
+  if (existingReportsBtn) existingReportsBtn.remove();
+
   const proMgr = getProManagerForNav();
 
   // Render auth links based on authentication status
@@ -1762,6 +1742,7 @@ async function initializeAuthLinks() {
     }
 
     // Render dropdown with i18n and accessibility
+    const isAccountPage = window.location.pathname === '/account.html';
     container.innerHTML = `
       <div class="auth-dropdown" id="authDropdownWrapper" role="navigation" aria-label="${navT('userMenu.ariaLabel', 'User menu')}">
         <button class="auth-user-trigger" id="authUserTrigger" type="button"
@@ -1952,6 +1933,22 @@ async function initializeAuthLinks() {
           window.location.href = '/upgrade.html';
         }
       });
+    }
+
+    // Insert "My Reports" button next to language selector
+    const langContainer = document.getElementById('languageSelectorContainer');
+    if (langContainer) {
+      const reportsBtn = document.createElement('a');
+      reportsBtn.href = '/account.html';
+      reportsBtn.className = 'header-reports-btn' + (isAccountPage ? ' header-reports-btn--active' : '');
+      reportsBtn.setAttribute('aria-label', navT('nav.myReports', 'My Reports'));
+      reportsBtn.innerHTML = `
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+        </svg>
+        <span class="header-reports-btn__label">${navT('nav.myReports', 'My Reports')}</span>
+      `;
+      langContainer.parentNode.insertBefore(reportsBtn, langContainer);
     }
 
   } else {

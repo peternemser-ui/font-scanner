@@ -297,11 +297,13 @@ document.addEventListener('DOMContentLoaded', () => {
     pageId: 'security-analyzer',
     pageTitle: t('security.title', 'Security Analyzer'),
     pageDescription: t('security.subtitle', 'SSL, Headers & Vulnerability Scan'),
+    pageIntro: t('security.pageIntro', 'This report scans your website for SSL configuration, security headers, cookie policies, and known vulnerabilities. Security gaps put your visitors at risk and erode trust in your brand. Follow the recommendations to harden your defenses and meet modern security standards.'),
     analyzerType: 'security',
 
     i18n: {
       title: 'security.title',
-      subtitle: 'security.subtitle'
+      subtitle: 'security.subtitle',
+      pageIntro: 'security.pageIntro'
     },
 
     urlInput: {
@@ -345,6 +347,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Handle URL parameters for report loading and billing return
   (async function initFromUrlParams() {
+    // Ensure i18n translations are loaded before rendering any report content
+    if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+    }
+
     const params = new URLSearchParams(window.location.search);
     const reportId = params.get('report_id') || '';
     const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
@@ -494,7 +501,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Re-render when entitlements arrive/change (handles race conditions
   // where sections rendered before billing status was available)
   window.addEventListener('entitlements:updated', () => {
-    if (window.SM_IS_SCANNING) return;
+    if (window.SM_IS_SCANNING && !window.__smBillingReturnInProgress) return;
     if (window.currentSecurityResults) {
       try {
         console.log('[Security] Entitlements updated, re-rendering results');
@@ -527,7 +534,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Trigger re-scan with preserveReportId to keep the purchased reportId
-    analyzeSecurity({ preserveReportId: true });
+    // billingRescan tells the server to skip scan quota decrement
+    analyzeSecurity({ preserveReportId: true, billingRescan: true });
   });
 });
 
@@ -537,7 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
  * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
  */
 async function analyzeSecurity(options = {}) {
-  let { preserveReportId = false } = options;
+  const { preserveReportId = false, billingRescan = false } = options;
   const url = document.getElementById('urlInput').value.trim();
   const analyzeButton = document.getElementById('analyzeButton');
 
@@ -684,7 +692,7 @@ async function analyzeSecurity(options = {}) {
     const response = await fetch('/api/security', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ url, scanStartedAt }),
+      body: JSON.stringify({ url, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en', ...(billingRescan && { billingRescan: true }) }),
     });
 
     if (!response.ok) {
@@ -800,7 +808,12 @@ async function analyzeSecurity(options = {}) {
 }
 
 // Display complete security results
-function displaySecurityResults(data) {
+async function displaySecurityResults(data) {
+  // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+  if (window.i18n && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* fallback */ }
+  }
+
   // Validate data
   if (!data || typeof data === 'string') {
     console.warn('[Security] Ignoring invalid data:', data);
@@ -922,184 +935,12 @@ function displaySecurityResults(data) {
     <div class="summary-section security-summary-panel">
       <h2>◈ ${t('reports.security.summary', 'Summary')}</h2>
 
-      <!-- Circular Progress Dials -->
-      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 2rem; margin: 2rem 0;">
-        <!-- Overall Security Score -->
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.security.overallSecurityScore', 'Overall Security Score')}</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="rgba(0, 0, 0, 0.1)"
-              stroke-width="10"
-            />
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="${getScoreColor(data.overallScore)}"
-              stroke-width="10"
-              stroke-linecap="round"
-              stroke-dasharray="${(data.overallScore / 100) * 471.24} 471.24"
-              transform="rotate(-90 90 90)"
-            />
-            <text
-              x="90"
-              y="90"
-              text-anchor="middle"
-              dy="0.35em"
-              font-size="3.5rem"
-              font-weight="bold"
-              fill="#f9fff2"
-              stroke="rgba(0, 0, 0, 0.65)"
-              stroke-width="2.5"
-              paint-order="stroke fill"
-              style="text-shadow: 0 0 18px ${getScoreColor(data.overallScore)}, 0 0 30px rgba(0,0,0,0.6);"
-            >
-              ${data.overallScore}
-            </text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${getScoreColor(data.overallScore)}; font-weight: 600; font-size: 1.1rem;">
-            ${getGrade(data.overallScore)}
-          </div>
-        </div>
-
-        <!-- SSL/TLS Score -->
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.security.sslTlsSecurity', 'SSL/TLS Security')}</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="rgba(0, 0, 0, 0.1)"
-              stroke-width="10"
-            />
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="${getScoreColor(data.ssl.score)}"
-              stroke-width="10"
-              stroke-linecap="round"
-              stroke-dasharray="${(data.ssl.score / 100) * 471.24} 471.24"
-              transform="rotate(-90 90 90)"
-            />
-            <text
-              x="90"
-              y="90"
-              text-anchor="middle"
-              dy="0.35em"
-              font-size="3.5rem"
-              font-weight="bold"
-              fill="#f9fff2"
-              stroke="rgba(0, 0, 0, 0.65)"
-              stroke-width="2.5"
-              paint-order="stroke fill"
-              style="text-shadow: 0 0 18px ${getScoreColor(data.ssl.score)}, 0 0 30px rgba(0,0,0,0.6);"
-            >
-              ${data.ssl.score}
-            </text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${getScoreColor(data.ssl.score)}; font-weight: 600; font-size: 1.1rem;">
-            ${getGrade(data.ssl.score)}
-          </div>
-        </div>
-
-        <!-- Security Headers Score -->
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.security.headers', 'Security Headers')}</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="rgba(0, 0, 0, 0.1)"
-              stroke-width="10"
-            />
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="${getScoreColor(data.headers.score)}"
-              stroke-width="10"
-              stroke-linecap="round"
-              stroke-dasharray="${(data.headers.score / 100) * 471.24} 471.24"
-              transform="rotate(-90 90 90)"
-            />
-            <text
-              x="90"
-              y="90"
-              text-anchor="middle"
-              dy="0.35em"
-              font-size="3.5rem"
-              font-weight="bold"
-              fill="#f9fff2"
-              stroke="rgba(0, 0, 0, 0.65)"
-              stroke-width="2.5"
-              paint-order="stroke fill"
-              style="text-shadow: 0 0 18px ${getScoreColor(data.headers.score)}, 0 0 30px rgba(0,0,0,0.6);"
-            >
-              ${data.headers.score}
-            </text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${getScoreColor(data.headers.score)}; font-weight: 600; font-size: 1.1rem;">
-            ${data.headers.implemented}/${data.headers.total} ${t('reports.security.implemented', 'Implemented')}
-          </div>
-        </div>
-
-        <!-- Vulnerabilities Score -->
-        <div style="text-align: center;">
-          <div style="margin-bottom: 0.75rem; font-weight: 600; color: var(--r-text, #111827);">${t('reports.security.vulnerabilityStatus', 'Vulnerability Status')}</div>
-          <svg class="circular-progress" width="180" height="180" viewBox="0 0 180 180">
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="rgba(0, 0, 0, 0.1)"
-              stroke-width="10"
-            />
-            <circle
-              cx="90"
-              cy="90"
-              r="75"
-              fill="none"
-              stroke="${getScoreColor(data.vulnerabilities.score)}"
-              stroke-width="10"
-              stroke-linecap="round"
-              stroke-dasharray="${(data.vulnerabilities.score / 100) * 471.24} 471.24"
-              transform="rotate(-90 90 90)"
-            />
-            <text
-              x="90"
-              y="90"
-              text-anchor="middle"
-              dy="0.35em"
-              font-size="3.5rem"
-              font-weight="bold"
-              fill="#f9fff2"
-              stroke="rgba(0, 0, 0, 0.65)"
-              stroke-width="2.5"
-              paint-order="stroke fill"
-              style="text-shadow: 0 0 18px ${getScoreColor(data.vulnerabilities.score)}, 0 0 30px rgba(0,0,0,0.6);"
-            >
-              ${data.vulnerabilities.score}
-            </text>
-          </svg>
-          <div style="margin-top: 0.5rem; color: ${data.vulnerabilities.critical === 0 ? 'var(--accent-primary)' : '#ff4444'}; font-weight: 600; font-size: 1.1rem;">
-            ${data.vulnerabilities.critical} ${t('reports.security.criticalIssues', 'Critical Issues')}
-          </div>
-        </div>
-      </div>
+      ${ReportShell.renderSummaryDonuts([
+        { score: data.overallScore, label: t('reports.security.overallSecurityScore', 'Overall Security Score') },
+        { score: data.ssl.score, label: t('reports.security.sslTlsSecurity', 'SSL/TLS Security') },
+        { score: data.headers.score, label: t('reports.security.headers', 'Security Headers') },
+        { score: data.vulnerabilities.score, label: t('reports.security.vulnerabilityStatus', 'Vulnerability Status') }
+      ])}
 
       <!-- Summary Table -->
       <div style="overflow-x: auto; margin-top: 2rem;">
@@ -1123,10 +964,10 @@ function displaySecurityResults(data) {
               <td style="padding: 0.75rem; font-weight: 500;">◈ ${t('reports.security.headers', 'Security Headers')}</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.headers.score)}; font-weight: bold;">${data.headers.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.headers.score)}; font-weight: bold;">${getGrade(data.headers.score)}</td>
-              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.headersImplemented', '{{count}} of {{total}} headers implemented').replace('{{implemented}}', data.headers.implemented).replace('{{total}}', data.headers.total)}</td>
+              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.headersImplemented', '{{count}} of {{total}} headers implemented').replace('{{count}}', data.headers.implemented).replace('{{total}}', data.headers.total)}</td>
             </tr>
             <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
-              <td style="padding: 0.75rem; font-weight: 500;">~ ${t('reports.security.vulnerabilities', 'Vulnerabilities')}</td>
+              <td style="padding: 0.75rem; font-weight: 500;">◈ ${t('reports.security.vulnerabilities', 'Vulnerabilities')}</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${data.vulnerabilities.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${getGrade(data.vulnerabilities.score)}</td>
               <td style="padding: 0.75rem; color: ${data.vulnerabilities.critical === 0 ? 'var(--accent-primary)' : '#ff4444'};">
@@ -1137,13 +978,13 @@ function displaySecurityResults(data) {
               <td style="padding: 0.75rem; font-weight: 500;">🍪 ${t('reports.security.cookieSecurity', 'Cookie Security')}</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.cookies.score)}; font-weight: bold;">${data.cookies.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.cookies.score)}; font-weight: bold;">${getGrade(data.cookies.score)}</td>
-              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.cookiesSecured', '{{count}} cookies properly secured').replace('{{secure}}', data.cookies.secure).replace('{{total}}', data.cookies.total)}</td>
+              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.cookiesSecured', '{{count}} cookies properly secured').replace('{{count}}', data.cookies.secure + '/' + data.cookies.total)}</td>
             </tr>
             <tr>
-              <td style="padding: 0.75rem; font-weight: 500;">R ${t('reports.security.thirdPartyScripts', 'Third-Party Scripts')}</td>
+              <td style="padding: 0.75rem; font-weight: 500;">◈ ${t('reports.security.thirdPartyScripts', 'Third-Party Scripts')}</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.thirdPartyScripts.score)}; font-weight: bold;">${data.thirdPartyScripts.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.thirdPartyScripts.score)}; font-weight: bold;">${getGrade(data.thirdPartyScripts.score)}</td>
-              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.scriptsWithSri', '{{count}} scripts with SRI').replace('{{withSRI}}', data.thirdPartyScripts.withSRI).replace('{{total}}', data.thirdPartyScripts.total)}</td>
+              <td style="padding: 0.75rem; color: #00ccff;">${t('reports.security.scriptsWithSri', '{{count}} scripts with SRI').replace('{{count}}', data.thirdPartyScripts.withSRI + '/' + data.thirdPartyScripts.total)}</td>
             </tr>
           </tbody>
         </table>
@@ -1152,7 +993,7 @@ function displaySecurityResults(data) {
       <!-- OWASP Compliance Banner -->
       <div style="margin-top: 2rem; padding: 1.25rem; background: linear-gradient(135deg, rgba(255, 68, 68, 0.15), rgba(255, 165, 0, 0.15)); border: 2px solid ${data.owaspCompliance >= 70 ? 'var(--accent-primary)' : '#ff4444'}; border-radius: 8px;">
         <div style="display: flex; align-items: center; gap: 1rem;">
-          <div style="font-size: 3rem;">${data.owaspCompliance >= 70 ? '✓' : '~'}</div>
+          <div style="font-size: 3rem;">${data.owaspCompliance >= 70 ? '✓' : '⚠'}</div>
           <div style="flex: 1;">
             <div style="font-weight: 600; font-size: 1.1rem; color: var(--r-text, #111827); margin-bottom: 0.5rem;">
               ${t('reports.security.owaspCompliance', 'OWASP Compliance')}
@@ -1333,6 +1174,9 @@ window.displaySecurityResults = displaySecurityResults;
 
 // Create desktop vs mobile comparison section
 function createDesktopMobileComparison(container, desktop, mobile) {
+  // Ensure all fields have safe defaults
+  desktop = Object.assign({ securityScore: 0, https: false, csp: false, hsts: false, mixedContent: 0 }, desktop);
+  mobile = Object.assign({ securityScore: 0, https: false, csp: false, hsts: false, mixedContent: 0 }, mobile);
   const comparisonHtml = `
     <div class="platform-comparison" style="margin: 2rem 0;">
       <h3 style="margin-bottom: 1.5rem;">${t('reports.security.desktopVsMobileAnalysis', 'Desktop vs Mobile Security Analysis')}</h3>
@@ -1370,8 +1214,7 @@ function createDesktopMobileComparison(container, desktop, mobile) {
                 dy="0.35em"
                 font-size="2.8rem"
                 font-weight="bold"
-                fill="#ffffff"
-                style="text-shadow: 0 0 10px ${getScoreColor(desktop.securityScore)}, 0 0 20px ${getScoreColor(desktop.securityScore)};"
+                fill="var(--r-text, #111827)"
               >
                 ${desktop.securityScore}
               </text>
@@ -1431,8 +1274,7 @@ function createDesktopMobileComparison(container, desktop, mobile) {
                 dy="0.35em"
                 font-size="2.8rem"
                 font-weight="bold"
-                fill="#ffffff"
-                style="text-shadow: 0 0 10px ${getScoreColor(mobile.securityScore)}, 0 0 20px ${getScoreColor(mobile.securityScore)};"
+                fill="var(--r-text, #111827)"
               >
                 ${mobile.securityScore}
               </text>
@@ -1925,6 +1767,7 @@ function renderRecommendationsContent(recommendations, results) {
                   <td style="padding: 0.75rem; font-weight: 600; color: #00ccff; font-size: 0.9rem; line-height: 1.4;">
                     ${translateRecTitle(rec.title)}
                     ${rec.owaspRef ? `<br><span style="font-size: 0.75rem; color: #ffa500; font-weight: normal;">OWASP: ${rec.owaspRef}</span>` : ''}
+                    ${rec.location ? `<br><span style="font-size: 0.75rem; color: #818cf8; font-weight: normal;">📍 ${rec.location}</span>` : ''}
                   </td>
                   <td style="padding: 0.75rem; font-size: 0.85rem; line-height: 1.4; color: var(--r-text-muted, #6B7280);">
                     ${translateRecDescription(rec.description)}
@@ -1978,12 +1821,12 @@ function getStatus(score) {
 // Critical (<50): Red
 function getScoreColor(score) {
   const stops = [
-    [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-    [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-    [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-    [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-    [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-    [100,'#00FF3B']
+    [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+    [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+    [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+    [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+    [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+    [100,'#0AA64F']
   ];
   const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
   const idx = Math.min(Math.floor(s / 5), 19);
@@ -2106,6 +1949,18 @@ function getCurrentDomain() {
 
 function userHasPro() {
   const reportId = document.body?.getAttribute('data-report-id') || '';
+
+  // Direct localStorage purchase proof check (most reliable, 24h TTL)
+  if (reportId) {
+    try {
+      const proof = localStorage.getItem('sm_purchased_' + reportId);
+      if (proof) {
+        const parsed = JSON.parse(proof);
+        if (Date.now() - (parsed.ts || 0) < 24 * 60 * 60 * 1000) return true;
+      }
+    } catch (e) { /* continue to other checks */ }
+  }
+
   if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
     if (window.ProReportBlock.hasAccess(reportId)) return true;
   }
@@ -2117,6 +1972,7 @@ function userHasPro() {
 }
 
 function renderLockedProPreview(title = t('reports.common.proContent', 'Pro content'), previewLines = []) {
+  const reportId = document.body?.getAttribute('data-report-id') || '';
   const lines = previewLines.length ? previewLines : [t('reports.security.recommendationsPreview', 'Recommendations preview'), t('reports.security.codeFixesPreview', 'Code fixes preview')];
   return `
     <div class="pro-locked">
@@ -2129,8 +1985,8 @@ function renderLockedProPreview(title = t('reports.common.proContent', 'Pro cont
       </ul>
       <div class="pro-locked__blur"></div>
       <div class="pro-locked__buttons">
-        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="security">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
-        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="security">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
+        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report${reportId ? ` data-report-id="${reportId}"` : ''} data-context="security">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
+        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal${reportId ? ` data-report-id="${reportId}"` : ''} data-context="security">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
       </div>
     </div>
   `;

@@ -33,6 +33,13 @@
     <meta property="og:image" content="https://sitemechanic.io/og-dashboard.png" />
     <meta property="og:site_name" content="Site Mechanic" />
     <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="pt_PT" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:locale:alternate" content="ru_RU" />
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
@@ -476,7 +483,7 @@
 
       .home-hero__form-wrap .page-shell-usage-pill {
         margin: 4px 0 0;
-        justify-content: flex-start;
+        justify-content: center;
       }
 
       .home-hero__subtext {
@@ -531,10 +538,10 @@
         flex-shrink: 0;
       }
 
-      /* 2-column grid: 42% bullets / 58% chart */
+      /* 2-column grid: 58% chart / 42% bullets */
       .home-hero__checklist-inner {
         display: grid;
-        grid-template-columns: 42% 58%;
+        grid-template-columns: 58% 42%;
         align-items: center;
         gap: 0;
         min-height: 220px;
@@ -695,13 +702,13 @@
           "@type": "ListItem",
           "position": 1,
           "name": "Home",
-          "item": "https://fontscanner.app/"
+          "item": "https://sitemechanic.io/"
         },
         {
           "@type": "ListItem",
           "position": 2,
           "name": "Dashboard",
-          "item": "https://fontscanner.app/dashboard.html"
+          "item": "https://sitemechanic.io/dashboard.html"
         }
       ]
     }
@@ -755,25 +762,19 @@ Get prioritized fixes &mdash; and shareable reports.</h1>
           <p class="hero-subhead home-hero__subtext" data-i18n="homepage.hero.subhead">Performance, SEO, accessibility, security, and typography diagnostics in one scan.</p>
         </div>
 
-        <!-- Graphic 02: Dial Strip (full-width, right below form) -->
-        <div class="home-hero__dial-wrap">
-          <img class="home-hero__dial"
-               src="/assets/SM_graphic_02_dial_strip.png?v=20260112.2"
-               alt="" aria-hidden="true" loading="lazy" />
-        </div>
 
         <!-- What You'll Get Panel - Below Dial Strip -->
         <aside class="hero-right">
           <div class="home-hero__checklist-inner">
+            <img class="home-hero__checklist-chart"
+                 src="/assets/SM_graphic_03_mini_chart_module.png?v=20260112.2"
+                 alt="" aria-hidden="true" loading="lazy" />
             <ul class="hero-right__list">
               <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet1">Issue severity ranking</li>
               <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet2">Actionable fixes</li>
               <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet3">Score breakdowns</li>
               <li class="hero-right__item" data-i18n="homepage.whatYouGet.bullet4">Code snippets</li>
             </ul>
-            <img class="home-hero__checklist-chart"
-                 src="/assets/SM_graphic_03_mini_chart_module.png?v=20260112.2"
-                 alt="" aria-hidden="true" loading="lazy" />
           </div>
         </aside>
 

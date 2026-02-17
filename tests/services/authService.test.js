@@ -2,9 +2,21 @@
  * Unit Tests for Authentication Service
  */
 
-const authService = require('../../src/services/authService');
 const { TestDatabase } = require('../helpers/testSetup');
 const jwt = require('jsonwebtoken');
+
+// Mock getDatabase before requiring authService
+// Use jest.requireActual to keep the real Database class available for TestDatabase
+let mockDb = null;
+jest.mock('../../src/db', () => {
+  const actual = jest.requireActual('../../src/db');
+  return {
+    ...actual,
+    getDatabase: () => mockDb
+  };
+});
+
+const authService = require('../../src/services/authService');
 
 describe('AuthService', () => {
   let testDb;
@@ -13,11 +25,7 @@ describe('AuthService', () => {
   beforeAll(async () => {
     testDb = new TestDatabase();
     db = await testDb.setup();
-
-    // Mock getDatabase to return test database
-    jest.mock('../../src/db', () => ({
-      getDatabase: () => db
-    }));
+    mockDb = db;
   });
 
   afterAll(async () => {

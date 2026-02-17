@@ -105,6 +105,11 @@ urlInput.addEventListener('keypress', (e) => {
 
 // Handle URL parameters for report loading and billing return
 (async function initFromUrlParams() {
+  // Ensure i18n translations are loaded before rendering any report content
+  if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+  }
+
   const params = new URLSearchParams(window.location.search);
   const reportId = params.get('report_id') || '';
   const autoUrl = params.get('url') || '';
@@ -189,7 +194,7 @@ window.addEventListener('sm:restoreScanResults', (e) => {
 });
 
 // Store pending URL for resuming after payment
-let pendingCWVAnalysisUrl = null;
+const pendingCWVAnalysisUrl = null;
 
 /**
  * Check if user can run a CWV report (has subscription OR purchased this report)
@@ -682,7 +687,7 @@ analyzeButton.addEventListener('click', async () => {
     const response = await fetch('/api/core-web-vitals', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ url, scanStartedAt }),
+      body: JSON.stringify({ url, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en', ...(window.__cwvPaymentBypass && { billingRescan: true }) }),
     });
 
     if (!response.ok) {
@@ -974,7 +979,12 @@ function showCWVError(errorOrMessage, inputUrl, loader) {
   }
 }
 
-function displayResults(data) {
+async function displayResults(data) {
+  // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+  if (window.i18n && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* fallback */ }
+  }
+
   // Validate data - ignore cached error responses
   if (!data || data.error || typeof data === 'string') {
     console.warn('[CWV] Ignoring invalid/error data:', data?.error || data);

@@ -5,7 +5,7 @@
 
 const croAnalyzerService = require('../services/croAnalyzerService');
 const brandConsistencyService = require('../services/brandConsistencyService');
-const localSEOService = require('../services/localSEOService');
+const geoSeoService = require('../services/geoSeoService');
 const gdprComplianceService = require('../services/gdprComplianceService');
 const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { validateUrl, sanitizeUrl, normalizeUrl, testUrlReachability } = require('../utils/validators');
@@ -102,21 +102,21 @@ const analyzeBrand = asyncHandler(async (req, res) => {
 });
 
 /**
- * Local SEO Analysis
- * POST /api/local-seo
+ * GEO SEO Analysis
+ * POST /api/geo-seo
  */
-const analyzeLocalSEO = asyncHandler(async (req, res) => {
+const analyzeGeoSEO = asyncHandler(async (req, res) => {
   const { url } = req.body;
-  logger.info(`Local SEO analysis requested: ${url}`, { requestId: req.id });
+  logger.info(`GEO SEO analysis requested: ${url}`, { requestId: req.id });
 
   const reachableUrl = await validateAndPrepareUrl(url, req.id);
-  const results = await localSEOService.analyzeLocalSEO(reachableUrl);
+  const results = await geoSeoService.analyzeGeoSeo(reachableUrl);
   // Attach report metadata (reportId, screenshotUrl, timestamps)
-  const analyzerKey = getAnalyzerKeyOverride(req, 'local-seo');
+  const analyzerKey = getAnalyzerKeyOverride(req, 'geo-seo');
   const metadata = await buildReportMetadata({ req, results, url: reachableUrl, analyzerKey });
   attachReportMetadata(results, metadata);
 
-  logger.info(`Local SEO analysis completed`, { requestId: req.id, score: results.score });
+  logger.info(`GEO SEO analysis completed`, { requestId: req.id, score: results.overallScore });
   res.json(results);
 });
 
@@ -142,6 +142,6 @@ const analyzeGDPR = asyncHandler(async (req, res) => {
 module.exports = {
   analyzeCRO,
   analyzeBrand,
-  analyzeLocalSEO,
+  analyzeGeoSEO,
   analyzeGDPR
 };

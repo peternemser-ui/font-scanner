@@ -68,7 +68,7 @@
     "seoAnalysis": "SEO Analysis",
     "coreWebVitals": "Core Web Vitals",
     "lighthouseMetrics": "Lighthouse Metrics",
-    "rankCompetition": "Competitor Benchmarks",
+    "rankCompetition": "Competitive Analysis",
     "performance": "Speed & UX",
     "accessibility": "Accessibility",
     "security": "Security",
@@ -77,11 +77,12 @@
     "mobileTesting": "Mobile Testing",
     "ipReputation": "IP & Domain Health",
     "croAnalysis": "Conversion Optimization",
-    "localSeo": "Local SEO",
+    "geoSeo": "GEO SEO",
     "brokenLinks": "Broken Links",
     "gdprCheck": "Privacy Compliance",
     "brandAudit": "Brand & Design",
     "hostingGuide": "Hosting Guide",
+    "myReports": "My Reports",
     "more": "More",
     "menu": "Menu",
     "cancel": "Cancel",
@@ -316,6 +317,7 @@
   "fontScanner": {
     "title": "Fonts & Typography",
     "pageSubtitle": "Deep typography analysis with multi-page scanning, font loading performance, and accessibility insights.",
+    "pageIntro": "This report analyzes your website's font usage, loading performance, fallback chains, and typographic consistency across pages. Poorly loaded fonts cause layout shifts and slow rendering. Optimize your font strategy to improve both visual quality and page speed.",
     "analyzeFonts": "ANALYZE FONTS",
     "enterUrl": "Enter website URL...",
     "multiPageScan": "Multi-page scan (analyze fonts across multiple pages)",
@@ -326,6 +328,7 @@
   "brandConsistency": {
     "title": "Brand Inspection",
     "subtitle": "Analyze color palette, fonts, and logo usage across your website for brand alignment.",
+    "pageIntro": "This report analyzes color palettes, typography, and logo usage across your website to check for brand alignment. Inconsistent branding confuses visitors and weakens recognition. Identify deviations and create a cohesive visual identity across every page.",
     "breadcrumb": "Brand Consistency",
     "inspect": "INSPECT",
     "ariaInput": "Enter website URL for brand analysis",
@@ -812,6 +815,7 @@
   "accessibility": {
     "title": "Accessibility Analyzer",
     "subtitle": "WCAG Compliance & A11y Audit",
+    "pageIntro": "This report tests your website against WCAG 2.1 guidelines, checking color contrast, keyboard navigation, ARIA labels, and screen reader compatibility. An inaccessible site excludes users with disabilities and exposes you to legal risk. Use these results to make your site usable for everyone.",
     "breadcrumb": "accessibility analyzer",
     "analyze": "ANALYZE ACCESSIBILITY",
     "analyzing": "ANALYZING...",
@@ -1021,6 +1025,7 @@
   "security": {
     "title": "Security Analyzer",
     "subtitle": "SSL, Headers & Vulnerability Scan",
+    "pageIntro": "This report scans your website for SSL configuration, security headers, cookie policies, and known vulnerabilities. Security gaps put your visitors at risk and erode trust in your brand. Follow the recommendations to harden your defenses and meet modern security standards.",
     "securityScore": "Security Score",
     "owaspCompliance": "OWASP Compliance",
     "sslCertificate": "SSL Certificate",
@@ -1152,6 +1157,7 @@
   "seo": {
     "title": "SEO Analyzer",
     "subtitle": "Search Engine Optimization Audit",
+    "pageIntro": "This report audits your website's search engine optimization across meta tags, headings, structured data, and crawlability. Poor SEO means your pages won't appear in search results, costing you organic traffic. Use the findings to fix technical issues and improve your visibility on Google.",
     "analyze": "ANALYZE SEO",
     "analyzing": "ANALYZING...",
     "overall": "Overall",
@@ -2779,7 +2785,8 @@
         "brand-consistency": "Brand Consistency",
         "broken-links": "Broken Links",
         "ip-reputation": "IP Reputation",
-        "local-seo": "Local SEO",
+        "local-seo": "GEO SEO",
+        "geo-seo": "GEO SEO",
         "mobile-analyzer": "Mobile",
         "competitive": "Competitive",
         "hosting": "Hosting",
@@ -2999,6 +3006,7 @@
       "breadcrumb": "Accessibility",
       "title": "Accessibility",
       "subtitle": "WCAG 2.1 compliance testing, color contrast, and keyboard navigation audits.",
+      "pageIntro": "This report tests your website against WCAG 2.1 guidelines, checking color contrast, keyboard navigation, ARIA labels, and screen reader compatibility. An inaccessible site excludes users with disabilities and exposes you to legal risk. Use these results to make your site usable for everyone.",
       "helperText": "Tests WCAG 2.1 compliance, color contrast, keyboard navigation, and screen reader compatibility.",
       "ariaInput": "Enter website URL for accessibility analysis",
       "ariaAnalyze": "Run accessibility scan",
@@ -3011,6 +3019,7 @@
       "breadcrumb": "Mobile Testing",
       "title": "Mobile Testing",
       "subtitle": "Multi-device analysis for performance, accessibility, and touch targets.",
+      "pageIntro": "This report evaluates your website across multiple mobile devices, checking responsive design, touch targets, viewport settings, and mobile-specific performance. Over half of all web traffic comes from phones and tablets. Ensure every visitor has a smooth, usable experience regardless of device.",
       "selectDevices": "Select devices to test:",
       "ariaInput": "Enter website URL to test",
       "ariaAnalyze": "Run mobile test"
@@ -3018,12 +3027,14 @@
     "cro": {
       "breadcrumb": "Conversion Optimization",
       "title": "Conversion Optimization",
-      "subtitle": "Analyze CTAs, forms, trust signals, and mobile UX to maximize conversions."
+      "subtitle": "Analyze CTAs, forms, trust signals, and mobile UX to maximize conversions.",
+      "pageIntro": "This report evaluates your website's conversion potential by analyzing CTAs, forms, trust signals, and mobile checkout flow. Even small friction points can cause visitors to leave without converting. Use these insights to optimize your funnel and turn more traffic into customers."
     },
     "siteCrawler": {
       "breadcrumb": "Site Crawler",
       "title": "Site Crawler",
       "subtitle": "Discover all pages on a website with intelligent link extraction and sitemap generation.",
+      "pageIntro": "This report discovers and maps every page on your website by following links and parsing sitemaps. Understanding your site structure reveals orphaned pages, broken navigation, and crawlability gaps. Use the results to ensure search engines and visitors can reach all your content.",
       "ariaInput": "Enter website URL to crawl",
       "ariaAnalyze": "Start site crawl",
       "crawlButton": "Crawl Site",
@@ -3038,22 +3049,25 @@
       "breadcrumb": "Tracking & Analytics",
       "title": "Tracking & Analytics",
       "subtitle": "Detect GTM, GA4, Meta Pixel, TikTok, LinkedIn, Hotjar and more. Identify duplicate tags and configuration conflicts.",
+      "pageIntro": "This report detects analytics tags, marketing pixels, and third-party scripts embedded on your website, including GTM, GA4, Meta Pixel, and more. Duplicate or misconfigured tags waste ad spend and corrupt your data. Audit your tag setup to ensure accurate tracking and lean page loads.",
       "ariaInput": "Enter website URL for tag analysis",
       "ariaAnalyze": "Start tracking and analytics analysis",
       "analyzeButton": "Analyze Tags",
       "helperLabel": "Tracking & Analytics:",
       "helperText": "Detects GTM, GA4, Universal Analytics, Meta Pixel, TikTok Pixel, LinkedIn Insight, Hotjar, and more. Identifies duplicate tags, missing consent management, and configuration conflicts."
     },
-    "localSeo": {
-      "breadcrumb": "Local SEO",
-      "title": "Local SEO Inspection",
-      "subtitle": "Check NAP consistency, LocalBusiness schema, and Google Business Profile integration.",
+    "geoSeo": {
+      "breadcrumb": "GEO SEO",
+      "title": "GEO SEO & Citation Analysis",
+      "subtitle": "Analyze NAP consistency, schema markup, directory citations, multi-location pages, and reviews & reputation.",
+      "pageIntro": "This report audits your local search presence, including NAP consistency, schema markup, directory citations, and customer reviews. Local businesses depend on appearing in map packs and near-me searches. Strengthen your local signals to attract more customers in your geographic area.",
       "inspectButton": "Inspect"
     },
     "brokenLinks": {
       "breadcrumb": "Broken Link Checker",
       "title": "Broken Link Inspection",
       "subtitle": "Find and fix broken links, redirects, and dead external links to improve user experience and search rankings.",
+      "pageIntro": "This report scans your website for broken links, redirect chains, and dead external references. Broken links frustrate visitors and signal poor maintenance to search engines. Fix them to preserve link equity, improve user experience, and protect your search rankings.",
       "inspectButton": "Inspect",
       "maxPagesLabel": "Max Pages to Scan",
       "maxDepthLabel": "Max Depth",
@@ -3063,6 +3077,7 @@
       "breadcrumb": "IP Reputation",
       "title": "IP Reputation",
       "subtitle": "DNS blacklist checks, email deliverability, and threat intelligence analysis.",
+      "pageIntro": "This report checks your server's IP address against DNS blacklists, email reputation databases, and threat intelligence feeds. A blacklisted IP can block your emails, trigger browser warnings, and damage your credibility. Monitor your reputation to catch issues before they impact your business.",
       "urlLabel": "IP address or domain to analyze",
       "placeholder": "example.com or 8.8.8.8",
       "ariaInput": "Enter IP address or domain for reputation analysis",
@@ -3077,8 +3092,13 @@
       "breadcrumb": "Privacy Compliance",
       "title": "Privacy Compliance",
       "subtitle": "Detect cookie consent, privacy policies, and trackers. Identify GDPR violations with potential fines.",
+      "pageIntro": "This report analyzes your website for cookie consent banners, privacy policies, third-party trackers, and data collection practices. Non-compliance with GDPR and similar privacy regulations can result in significant fines. Identify gaps and take corrective action to protect your users and your business.",
       "inspectButton": "INSPECT"
     }
+  },
+  "hostingAnalyzer": {
+    "title": "Hosting Pricing Analyzer",
+    "pageIntro": "This report examines your website's hosting infrastructure, including server response times, CDN usage, SSL configuration, and estimated costs. Your hosting directly affects page speed, uptime, and user experience. Identify weaknesses and find opportunities to improve reliability while reducing costs."
   },
   "billingPages": {
     "success": {
@@ -3097,6 +3117,7 @@
   "performanceHub": {
     "title": "Speed & UX",
     "subtitle": "Performance, Core Web Vitals & Lighthouse",
+    "pageIntro": "This report measures your website's loading speed, interactivity, and visual stability using real browser metrics and Lighthouse audits. Slow pages lose visitors and rank lower in search results. Use these insights to identify bottlenecks and deliver a faster, smoother experience.",
     "scan": {
       "quickDesc": "Resource analysis focusing on requests, page weight, blocking assets, and server response time.",
       "cwvDesc": "Google ranking metrics including LCP, FID, CLS, and INP.",
@@ -3196,7 +3217,7 @@
       "reports": "Reports"
     },
     "search": {
-      "placeholder": "Search sites or report types..."
+      "placeholder": "Search..."
     },
     "filters": {
       "filters": "Filters",
@@ -3220,7 +3241,7 @@
       "privacy": "Privacy",
       "hosting": "Hosting",
       "competitive": "Competitive",
-      "localSeo": "Local SEO",
+      "geoSeo": "GEO SEO",
       "brokenLinks": "Broken Links",
       "ipReputation": "IP Reputation",
       "tags": "Tags",
@@ -3401,7 +3422,7 @@
       "crawler": "Site Crawler",
       "brokenLinks": "Broken Links",
       "gdpr": "GDPR Compliance",
-      "localSeo": "Local SEO",
+      "geoSeo": "GEO SEO",
       "tagIntelligence": "Tag Intelligence",
       "ipReputation": "IP Reputation"
     },
@@ -3519,7 +3540,7 @@
       "applyFix": "Apply Fix",
       "testFix": "Test Fix",
       "pleaseEnterUrl": "Please enter a valid URL",
-      "analysisFailed": "Analysis failed",
+      "analysisFailed": "Analysis Failed",
       "scanTimeout": "Scan timed out. The website may be too slow to respond. Please try again.",
       "noResultsToExport": "No scan results to export. Run a scan first.",
       "pdfNotAvailable": "PDF export is not available. Please refresh the page.",
@@ -3608,7 +3629,6 @@
       "suggestionCheckBrowser": "Check if the website is accessible in your browser",
       "suggestionHighTraffic": "The site may be experiencing high traffic or server issues",
       "tryAgain": "Try Again",
-      "analysisFailed": "Analysis Failed",
       "analysisFailedRetry": "Analysis failed. Please try again.",
       "exportAndShare": "Export and share results (Pro)",
       "downloadCsv": "Download CSV",
@@ -4772,7 +4792,6 @@
       "featureMetrics": "Detailed performance metrics",
       "featureOpportunities": "Specific optimization opportunities",
       "opportunities": "Opportunities",
-      "domInteractive": "DOM Interactive",
       "scoreComparison": "Score Comparison",
       "coreWebVitalsOverview": "Core Web Vitals Overview",
       "pageWeight": "Page Weight (KB)",
@@ -5085,6 +5104,112 @@
       "report": {
         "recommendations.noneTitle": "Excellent Performance",
         "recommendations.noneBody": "Your site performs well across all metrics. Continue monitoring for regressions."
+      },
+      "priorityLabels": {
+        "high": "High",
+        "medium": "Medium",
+        "low": "Low"
+      },
+      "recTitles": {
+        "Minimize JavaScript": "Minimize JavaScript",
+        "Optimize Images": "Optimize Images",
+        "Reduce CSS Size": "Reduce CSS Size",
+        "Improve Caching Strategy": "Improve Caching Strategy",
+        "Enable Text Compression": "Enable Text Compression",
+        "Reduce HTTP Requests": "Reduce HTTP Requests",
+        "Optimize Web Fonts": "Optimize Web Fonts",
+        "Optimize Largest Contentful Paint (LCP)": "Optimize Largest Contentful Paint (LCP)",
+        "Reduce Cumulative Layout Shift (CLS)": "Reduce Cumulative Layout Shift (CLS)",
+        "Significant Mobile Performance Gap": "Significant Mobile Performance Gap"
+      },
+      "recDescriptions": {
+        "Minimize JavaScript": "Large JavaScript bundles are blocking page load. Use code splitting and tree shaking to reduce bundle size.",
+        "Optimize Images": "Unoptimized images are increasing page weight. Consider converting to WebP/AVIF format and implementing lazy loading.",
+        "Reduce CSS Size": "Large CSS files are blocking rendering. Inline critical CSS and remove unused styles.",
+        "Improve Caching Strategy": "Insufficient cache headers are reducing repeat visit performance. Set proper Cache-Control headers for static assets.",
+        "Enable Text Compression": "Text-based resources are not compressed. Enable Gzip/Brotli compression to reduce file sizes.",
+        "Reduce HTTP Requests": "High number of HTTP requests is slowing page load. Consider bundling assets, CSS sprites, and removing unnecessary requests.",
+        "Optimize Web Fonts": "Web font loading is not optimized. Use font-display strategy and preloading.",
+        "Optimize Largest Contentful Paint (LCP)": "Largest content paint is slow. Improve by prioritizing critical resources and optimizing images.",
+        "Reduce Cumulative Layout Shift (CLS)": "Layout shifts occurring during page load. Add size attributes to images/media and reserve space for dynamic content.",
+        "Significant Mobile Performance Gap": "Large performance gap between mobile and desktop. Prioritize mobile-specific optimizations."
+      },
+      "recImpacts": {
+        "Minimize JavaScript": "Significantly reduce page load time",
+        "Optimize Images": "Reduce page size by 60-80%",
+        "Reduce CSS Size": "Improve render start time",
+        "Improve Caching Strategy": "Improve repeat visit load speed",
+        "Enable Text Compression": "Reduce transfer size by 70-90%",
+        "Reduce HTTP Requests": "Reduce connection overhead",
+        "Optimize Web Fonts": "Improve text display delay",
+        "Optimize Largest Contentful Paint (LCP)": "Improve LCP to under 2.5s",
+        "Reduce Cumulative Layout Shift (CLS)": "Improve visual stability",
+        "Significant Mobile Performance Gap": "Improve mobile user experience"
+      },
+      "recCategories": {
+        "Performance": "Performance",
+        "Resources": "Resources",
+        "Caching": "Caching",
+        "Network": "Network",
+        "Web Vitals": "Web Vitals",
+        "Images": "Images",
+        "JavaScript": "JavaScript",
+        "CSS": "CSS",
+        "Fonts": "Fonts",
+        "Compression": "Compression",
+        "Mobile": "Mobile"
+      },
+      "recommendations": {
+        "minimizeJs": {
+          "title": "Minimize JavaScript",
+          "description": "Large JavaScript bundles are blocking page load. Use code splitting and tree shaking to reduce bundle size.",
+          "impact": "Significantly reduce page load time"
+        },
+        "optimizeImages": {
+          "title": "Optimize Images",
+          "description": "Unoptimized images are increasing page weight. Consider converting to WebP/AVIF format and implementing lazy loading.",
+          "impact": "Reduce page size by 60-80%"
+        },
+        "reduceCss": {
+          "title": "Reduce CSS Size",
+          "description": "Large CSS files are blocking rendering. Inline critical CSS and remove unused styles.",
+          "impact": "Improve render start time"
+        },
+        "improveCaching": {
+          "title": "Improve Caching Strategy",
+          "description": "Insufficient cache headers are reducing repeat visit performance. Set proper Cache-Control headers for static assets.",
+          "impact": "Improve repeat visit load speed"
+        },
+        "optimizeLcp": {
+          "title": "Optimize Largest Contentful Paint (LCP)",
+          "description": "Largest content paint is slow. Improve by prioritizing critical resources and optimizing images.",
+          "impact": "Improve LCP to under 2.5s"
+        },
+        "reduceCls": {
+          "title": "Reduce Cumulative Layout Shift (CLS)",
+          "description": "Layout shifts occurring during page load. Add size attributes to images/media and reserve space for dynamic content.",
+          "impact": "Improve visual stability"
+        },
+        "mobileGap": {
+          "title": "Significant Mobile Performance Gap",
+          "description": "Large performance gap between mobile and desktop. Prioritize mobile-specific optimizations.",
+          "impact": "Improve mobile user experience"
+        },
+        "enableCompression": {
+          "title": "Enable Text Compression",
+          "description": "Text-based resources are not compressed. Enable Gzip/Brotli compression to reduce file sizes.",
+          "impact": "Reduce transfer size by 70-90%"
+        },
+        "reduceRequests": {
+          "title": "Reduce HTTP Requests",
+          "description": "High number of HTTP requests is slowing page load. Consider bundling assets, CSS sprites, and removing unnecessary requests.",
+          "impact": "Reduce connection overhead"
+        },
+        "optimizeFonts": {
+          "title": "Optimize Web Fonts",
+          "description": "Web font loading is not optimized. Use font-display strategy and preloading.",
+          "impact": "Improve text display delay"
+        }
       }
     },
     "cwv": {
@@ -6087,6 +6212,7 @@
     "competitive": {
       "title": "Competitive Analysis",
       "pageSubtitle": "Compare your website against competitors across SEO, Performance, Accessibility, and Security metrics.",
+      "pageIntro": "This report benchmarks your website against competitors across SEO, performance, accessibility, and security metrics. Understanding where you stand relative to rivals reveals your strengths and blind spots. Use competitive intelligence to prioritize improvements that close the gap.",
       "competitiveAdvantageTitle": "COMPETITIVE ADVANTAGE",
       "competitiveAdvantageDesc": "Compare your website against up to 5 competitors across SEO, Performance, Core Web Vitals, Accessibility, and Security. Get actionable insights to outrank them.",
       "analysisNote": "Note: Analysis takes 2-3 minutes and is limited to 2 requests per 15 minutes due to high resource usage.",
@@ -6101,6 +6227,11 @@
       "detailedMetrics": "Detailed Metrics Breakdown",
       "keyInsights": "Key Insights",
       "visualComparison": "Visual Score Comparison",
+      "siteScreenshots": "Site Screenshots",
+      "screenshotsDesc": "Visual comparison of all analyzed sites as captured during the scan.",
+      "screenshotOf": "Screenshot of {{domain}}",
+      "yourSiteLabel": "Your Site",
+      "noScreenshots": "No screenshot available",
       "competitivePosition": "Competitive Position Summary",
       "headToHead": "Head-to-Head Battle",
       "strengthsWeaknesses": "Your Competitive Strengths & Weaknesses",
@@ -6141,7 +6272,8 @@
       "gapToLeader": "Gap to leader",
       "points": "points",
       "priorityFocus": "Priority Focus",
-      "fixWeaknesses": "Fix {{count}} weakness",
+      "fixWeaknesses": "Fix {{count}} weaknesses",
+      "fixWeakness": "Fix {{count}} weakness",
       "maintainLead": "Maintain Lead",
       "analysis": "analysis",
       "yourRankings": "Your Rankings",
@@ -6177,6 +6309,55 @@
         "securityFirst": "Maintain security best practices",
         "securityImprove": "Enable HTTPS, add security headers, update protocols"
       },
+      "insights": {
+        "outperforming": "You are outperforming the competition!",
+        "competitorsAhead": "Competitors are ahead",
+        "losingSeo": "Losing SEO battle",
+        "cwvAtRisk": "Google rankings at risk",
+        "slowerThan": "Slower than competitors",
+        "securityGap": "Security gap detected",
+        "outperformingDetail": "Your overall score is above the competitive average",
+        "competitorsAheadDetail": "Focus on areas where you are falling behind to gain competitive advantage",
+        "losingSeoDetail": "Your SEO score is below competitor average. This hurts organic visibility.",
+        "cwvAtRiskDetail": "Competitors have better Core Web Vitals. Google may rank them higher.",
+        "slowerThanDetail": "Users may choose faster competitor sites.",
+        "securityGapDetail": "Competitors have stronger security measures. This affects user trust."
+      },
+      "recText": {
+        "high": "Your {{metric}} score of {{yourScore}} is {{gap}} points behind the leader ({{topScore}}). This is a significant competitive disadvantage that requires immediate attention. Focus on quick wins first: {{quickWins}}",
+        "medium": "A {{gap}}-point improvement in {{metric}} would put you on par with top competitors. Your current score of {{yourScore}} is close but not quite there. {{advice}}",
+        "low": "You are close to the top in {{metric}}. A small {{gap}}-point improvement would help you match or exceed the competition. {{advice}}"
+      },
+      "impactText": {
+        "high": "Closing this gap could significantly improve your competitive position and help you capture traffic currently going to competitors with better {{metric}} scores.",
+        "medium": "Moderate improvement opportunity. Closing this gap would make you more competitive and could lead to better user engagement and conversion rates.",
+        "low": "Fine-tuning opportunity. You are already competitive here, but small improvements can make a difference."
+      },
+      "quickWins": {
+        "seo": "optimize title tags, add meta descriptions, and ensure proper heading hierarchy",
+        "performance": "compress images, enable caching, and minimize JavaScript",
+        "accessibility": "add alt text to images, ensure proper color contrast, and fix ARIA labels",
+        "security": "implement HTTPS, add security headers, and update dependencies",
+        "coreWebVitals": "optimize LCP by preloading key resources and reduce CLS by sizing images",
+        "generic": "review best practices and implement improvements"
+      },
+      "mediumAdvice": {
+        "seo": "Consider adding structured data, improving internal linking, and creating more targeted content.",
+        "performance": "Look into code splitting, lazy loading, and optimizing your critical rendering path.",
+        "accessibility": "Conduct a thorough WCAG audit and address any remaining issues.",
+        "security": "Review your CSP policy, enable additional security headers, and audit third-party scripts.",
+        "coreWebVitals": "Focus on Time to First Byte (TTFB) and optimize server response times.",
+        "generic": "Review current implementation and identify optimization opportunities."
+      },
+      "lowAdvice": {
+        "seo": "Fine-tune your existing optimizations and monitor for any regressions.",
+        "performance": "Consider advanced techniques like service workers or edge caching.",
+        "accessibility": "Test with real users with disabilities and gather feedback.",
+        "security": "Stay updated on new security best practices and vulnerabilities.",
+        "coreWebVitals": "Monitor real-user metrics and address any edge cases.",
+        "generic": "Continue monitoring and maintaining your current standards."
+      },
+      "recSubtitle": "{{competitor}}: {{topScore}} vs {{you}}: {{yourScore}}",
       "noInsightsAvailable": "No insights available.",
       "allSitesFailed": "All Sites Failed",
       "seeWhereYouStand": "See exactly where you stand against each competitor in every category",
@@ -6192,7 +6373,7 @@
       "clickEachMetric": "Click each metric below to see detailed competitive analysis and actionable insights.",
       "website": "Website",
       "detailedMetricAnalysis": "Detailed Metric Analysis",
-      "youreLeading": "You",
+      "youreLeading": "You're leading!",
       "pointsBehind": "{{gap}} points behind {{leader}}",
       "yourScore": "Your score",
       "opportunity": "OPPORTUNITY",
@@ -6201,7 +6382,7 @@
       "bestCompetitor": "Best Competitor",
       "competitiveAdvantage": "Competitive Advantage",
       "improvementOpportunity": "Improvement Opportunity",
-      "outperformingCompetitors": "You",
+      "outperformingCompetitors": "You're outperforming all competitors in {{metric}}. Focus on maintaining this advantage while they try to catch up.",
       "closingGapHelp": "Closing this {{gap}}-point gap could significantly improve your competitive position. {{leader}} is setting the benchmark here.",
       "leaderboard": "Leaderboard",
       "whatThisMeans": "What this means",
@@ -6209,17 +6390,17 @@
       "closeTheGap": "Close the Gap",
       "proTip": "Pro Tip",
       "insight": {
-        "winning": "You",
+        "winning": "You're the {{metric}} leader in your competitive set. This is a significant advantage - competitors would need to make substantial improvements to match you.",
         "performance": "A {{gap}}-point performance gap means users experience noticeably faster load times on competitor sites. This directly impacts user engagement, bounce rates, and can affect search rankings.",
-        "seo": "Being {{gap}} points behind in SEO means competitors likely have better search visibility. They may be capturing organic traffic you\\",
-        "accessibility": "This {{gap}}-point accessibility gap could mean competitors are reaching audiences you\\",
+        "seo": "Being {{gap}} points behind in SEO means competitors likely have better search visibility. They may be capturing organic traffic you're missing out on.",
+        "accessibility": "This {{gap}}-point accessibility gap could mean competitors are reaching audiences you're not. This includes users relying on assistive technologies.",
         "security": "Competitors with {{gap}} more security points likely have stronger trust signals. This is especially important for e-commerce or sites handling sensitive information.",
         "coreWebVitals": "Core Web Vitals directly affect Google rankings. This {{gap}}-point gap means competitors may rank higher in search results and provide a better user experience.",
         "generic": "This {{gap}}-point gap represents a competitive disadvantage that should be addressed to stay competitive in your market."
       },
       "defense": {
         "perf1": "Set up continuous performance monitoring to catch regressions early",
-        "perf2": "Document your performance optimizations so they",
+        "perf2": "Document your performance optimizations so they're not accidentally removed",
         "perf3": "Monitor competitor performance to stay ahead of their improvements",
         "perf4": "Invest in performance budgets to prevent feature creep from slowing you down",
         "perf5": "Consider progressive enhancement to maintain speed as you add features",
@@ -6247,9 +6428,9 @@
         "gen2": "Stay informed about industry best practices",
         "gen3": "React quickly if competitors start catching up",
         "gen4": "Invest in continuous improvement",
-        "gen5": "Document what"
+        "gen5": "Document what's working so it can be maintained"
       },
-      "swDescription": "Based on your competitive analysis, here",
+      "swDescription": "Based on your competitive analysis, here's where you excel and where you need improvement. Click each item for detailed insights.",
       "categoriesLeading": "Categories Leading",
       "aboveAverage": "Above Average",
       "needImprovement": "Need Improvement",
@@ -6257,7 +6438,7 @@
       "yourStrengths": "Your Competitive Strengths",
       "areasNeedingImprovement": "Areas Needing Improvement",
       "outstandingPerformance": "Outstanding Performance!",
-      "noWeaknesses": "You have no significant weaknesses. You",
+      "noWeaknesses": "You have no significant weaknesses. You're leading or competitive in all measured areas!",
       "aboveAverageLower": "above average",
       "dominant": "DOMINANT",
       "aheadStatus": "AHEAD",
@@ -6291,11 +6472,11 @@
         "accessibility": "Your site is more accessible than competitors, reaching a wider audience and demonstrating commitment to inclusive design.",
         "security": "Your security posture is stronger, building more trust with users and protecting against potential vulnerabilities.",
         "coreWebVitals": "Your Core Web Vitals are better than competitors, which directly impacts Google search rankings and user experience.",
-        "generic": "You"
+        "generic": "You're outperforming competitors in {{metric}}, giving you a significant competitive advantage."
       },
       "weaknessExp": {
         "performance": "Your site is {{gap}} points slower than the leader. Users may experience longer load times, potentially increasing bounce rates and reducing engagement.",
-        "seo": "You",
+        "seo": "You're {{gap}} points behind in SEO. This gap could mean competitors are capturing organic traffic and rankings that you're missing.",
         "accessibility": "Your accessibility score is {{gap}} points lower. This limits your reach to users with disabilities and could pose compliance risks.",
         "security": "Your security is {{gap}} points weaker. Users may trust competitor sites more, especially for sensitive transactions.",
         "coreWebVitals": "Core Web Vitals gap of {{gap}} points could affect your Google rankings. Competitors may rank higher in search results.",
@@ -6306,12 +6487,12 @@
         "performance": "Performance is constantly evolving. Competitors may invest in optimization at any time. Monitor their speeds regularly.",
         "seo": "SEO rankings can shift quickly with algorithm updates or competitor content strategies. Stay vigilant with your SEO efforts.",
         "accessibility": "Accessibility standards are becoming more stringent. Competitors may catch up to meet compliance requirements.",
-        "security": "Security threats evolve daily. What",
+        "security": "Security threats evolve daily. What's secure today may be vulnerable tomorrow. Keep your security measures updated.",
         "coreWebVitals": "Google updates CWV thresholds periodically. Competitors may be working to improve their scores.",
-        "generic": "Your competitors are likely working to improve. Don"
+        "generic": "Your competitors are likely working to improve. Don't get complacent - continue to invest in this area to maintain your lead."
       },
-      "youreAheadOfCompetition": "You",
-      "alreadyOutperforming": "You",
+      "youreAheadOfCompetition": "You're Ahead of Competition!",
+      "alreadyOutperforming": "You're already outperforming your competitors. Keep monitoring to maintain your lead.",
       "closeGapIn": "Close {{gap}}-point gap in {{metric}}",
       "summary": "Summary",
       "expectedImpact": "Expected Impact",
@@ -6323,7 +6504,7 @@
       "howToCloseGap": "How to Close This Gap",
       "gapExp": {
         "performance": "Your site loads {{speed}} slower than top competitors. Users may choose faster alternatives, affecting bounce rates and conversions.",
-        "seo": "Competitors have {{degree}} better search visibility. This could mean they",
+        "seo": "Competitors have {{degree}} better search visibility. This could mean they're capturing traffic you're missing out on.",
         "accessibility": "Your site is {{degree}} less accessible than competitors. This affects users with disabilities and may have legal implications.",
         "security": "Competitors have stronger security measures. Users may trust their sites more, especially for transactions.",
         "coreWebVitals": "Core Web Vitals affect Google rankings. A {{gap}}-point gap could mean competitors rank higher in search results.",
@@ -6375,8 +6556,8 @@
         "coreWebVitals": "Core Web Vitals are a confirmed Google ranking factor. Improvements here directly impact your search visibility.",
         "generic": "Start with the highest-impact changes first. Small improvements compound over time to create significant competitive advantages."
       },
-      "youreDominating": "You",
-      "alreadyAhead": "You",
+      "youreDominating": "You're Dominating!",
+      "alreadyAhead": "You're already ahead of the competition. Keep up the great work!",
       "actionPlanBeatCompetition": "Action Plan to Beat Competition",
       "report": {
         "sectionIntros": {
@@ -7663,17 +7844,50 @@
         "recommendations.noneBody": "Your IP has a clean reputation. Continue monitoring for changes and maintain security best practices."
       }
     },
-    "localSeo": {
-      "title": "Local SEO Report",
-      "subtitle": "Local SEO Inspection",
-      "overview": "Local SEO Overview",
+    "geoSeo": {
+      "title": "GEO SEO Report",
+      "subtitle": "GEO SEO & Citation Analysis",
+      "overview": "GEO SEO Overview",
       "napAnalysis": "NAP Analysis (Name, Address, Phone)",
       "localPresence": "Local Presence Signals",
       "schemaAnalysis": "Structured Data & Schema",
-      "analysisInProgress": "Local SEO analysis in progress...",
+      "analysisInProgress": "GEO SEO analysis in progress...",
       "nap": "NAP",
       "schema": "Schema",
       "presence": "Presence",
+      "citations": "Citations",
+      "directoryPresence": "Directory Presence",
+      "multiLocation": "Multi-Location",
+      "geoPages": "Geo Pages",
+      "reviewsReputation": "Reviews",
+      "reputation": "Reputation",
+      "citationsAnalysis": "Citations & Directories",
+      "citationsDescription": "Directory citations are mentions of your business across the web. More quality citations increase your local search authority.",
+      "directoriesFound": "Directories Found",
+      "citationSectionDetected": "Citation Section",
+      "directoryBadgesDetected": "Directory Badges",
+      "directoryLinksFound": "Directory Links Found",
+      "noCitationsDetected": "No directory citations detected. Getting listed on major directories like Yelp, Yellow Pages, and BBB can significantly boost your local SEO.",
+      "multiLocationGeo": "Multi-Location & Geo Pages",
+      "multiLocationDescription": "Multi-location signals help search engines understand your geographic coverage and serve your pages to the right local audiences.",
+      "locationPagesFound": "Location Pages",
+      "serviceAreaSchema": "ServiceArea Schema",
+      "storeLocator": "Store Locator",
+      "geoContentSignals": "Geo Content Signals",
+      "hreflangTags": "Hreflang Tags",
+      "locationLinksFound": "Location Links Found",
+      "noMultiLocationDetected": "No multi-location signals detected. If you serve multiple areas, consider creating dedicated location pages with unique content.",
+      "reviewsReputationSection": "Reviews & Reputation",
+      "reviewsDescription": "Online reviews and reputation signals directly impact local search rankings and customer trust.",
+      "aggregateRating": "AggregateRating Schema",
+      "reviewSchema": "Review Schema",
+      "testimonialsSection": "Testimonials Section",
+      "starWidgets": "Star Rating Widgets",
+      "reviewCountDisplay": "Review Count Display",
+      "reviewPlatformLinks": "Review Platform Links",
+      "ratingValue": "Rating",
+      "reviewCount": "Reviews",
+      "noReviewsDetected": "No review or reputation signals detected. Adding testimonials, review schema, and links to review platforms can boost trust and rankings.",
       "quickStats": "Quick Stats",
       "overallGrade": "Overall Grade",
       "phoneNumbersFound": "Phone Numbers Found",
@@ -7708,11 +7922,11 @@
       "presenceSignalsDesc": "These signals help establish your local presence and build trust with potential customers.",
       "socialProfilesLinked": "Social Profiles Linked",
       "noSocialProfilesDesc": "No social media profile links detected. Consider adding links to your business profiles on Facebook, Instagram, LinkedIn, or Yelp to improve local trust signals.",
-      "excellentLocalSeo": "Excellent Local SEO!",
-      "excellentLocalSeoDesc": "Your site follows local SEO best practices. Keep monitoring for continued success.",
-      "localSeoFixes": "Local SEO Fixes",
-      "localSeoOptimization": "Local SEO Optimization",
-      "localSeo": "Local SEO",
+      "excellentGeoSeo": "Excellent GEO SEO!",
+      "excellentGeoSeoDesc": "Your site follows GEO SEO best practices. Keep monitoring for continued success.",
+      "geoSeoFixes": "GEO SEO Fixes",
+      "geoSeoOptimization": "GEO SEO Optimization",
+      "geoSeo": "GEO SEO",
       "fixSteps": {
         "default": {
           "step1": "Review the current implementation on your site",
@@ -8847,10 +9061,13 @@
     "redirects": "Redirects",
     "anchorAnalysis": "Anchor Analysis"
   },
-  "localSeo": {
+  "geoSeo": {
     "napConsistency": "NAP Consistency",
     "schemaMarkup": "Schema Markup",
-    "localPresence": "Local Presence"
+    "localPresence": "Local Presence",
+    "citations": "Citations & Directories",
+    "multiLocation": "Multi-Location & Geo Pages",
+    "reviews": "Reviews & Reputation"
   },
   "gdpr": {
     "cookieConsent": "Cookie Consent",

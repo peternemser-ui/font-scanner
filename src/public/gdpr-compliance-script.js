@@ -203,6 +203,11 @@ document.getElementById('url').addEventListener('keypress', (e) => {
 
 // Initialize - check for stored report or auto-start scan
 (async function initFromUrlParams() {
+  // Ensure i18n translations are loaded before rendering any report content
+  if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+  }
+
   const params = new URLSearchParams(window.location.search);
   const reportId = params.get('report_id') || '';
   const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
@@ -407,7 +412,7 @@ async function analyze(options = {}) {
     const response = await fetch('/api/gdpr-compliance', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ url, scanStartedAt })
+      body: JSON.stringify({ url, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en' })
     });
 
     loader.nextStep(2);
@@ -443,12 +448,12 @@ async function analyze(options = {}) {
 
 function getScoreColor(score) {
   const stops = [
-    [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-    [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-    [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-    [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-    [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-    [100,'#00FF3B']
+    [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+    [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+    [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+    [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+    [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+    [100,'#0AA64F']
   ];
   const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
   const idx = Math.min(Math.floor(s / 5), 19);
@@ -488,7 +493,12 @@ function getGradeLetter(score) {
   return 'F';
 }
 
-function displayResults(data) {
+async function displayResults(data) {
+  // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+  if (window.i18n && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* fallback */ }
+  }
+
   if (!data || typeof data !== 'object') return;
 
   const results = document.getElementById('results');

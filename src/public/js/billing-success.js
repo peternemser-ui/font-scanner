@@ -8,7 +8,7 @@
   function loadCreditsManager() {
     if (window.CreditsManager) return Promise.resolve(true);
     return new Promise(function (resolve) {
-      var script = document.createElement('script');
+      const script = document.createElement('script');
       script.src = '/assets/js/ui.js';
       script.async = true;
       script.onload = function () { resolve(!!window.CreditsManager); };
@@ -22,10 +22,10 @@
   }
 
   function safeRedirectReturnUrl(params) {
-    var returnUrl = params.get('returnUrl') || params.get('return_url') || '';
+    const returnUrl = params.get('returnUrl') || params.get('return_url') || '';
     if (returnUrl && typeof returnUrl === 'string') {
       try {
-        var u = new URL(returnUrl);
+        const u = new URL(returnUrl);
         if (u.protocol === 'http:' || u.protocol === 'https:') {
           return window.location.replace(u.toString());
         }
@@ -37,12 +37,12 @@
   }
 
   async function main() {
-    var params = new URLSearchParams(window.location.search);
-    var sessionId = params.get('session_id') || params.get('sessionId');
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id') || params.get('sessionId');
     if (!sessionId) return safeRedirectReturnUrl(params);
 
-    var verifyResp = await fetch('/api/billing/verify-session?session_id=' + encodeURIComponent(sessionId));
-    var verification = await verifyResp.json().catch(function () { return null; });
+    const verifyResp = await fetch('/api/billing/verify-session?session_id=' + encodeURIComponent(sessionId));
+    const verification = await verifyResp.json().catch(function () { return null; });
 
     if (!verifyResp.ok || !verification || verification.paid !== true || !verification.purchaseType) {
       return safeRedirectReturnUrl(params);
@@ -57,7 +57,7 @@
       }
 
       if (verification.purchaseType === 'credit_pack') {
-        var creditsAdded = parseInt(verification.creditsAdded || 0, 10) || 0;
+        const creditsAdded = parseInt(verification.creditsAdded || 0, 10) || 0;
         if (creditsAdded > 0) {
           window.CreditsManager.addCredits(creditsAdded);
         }

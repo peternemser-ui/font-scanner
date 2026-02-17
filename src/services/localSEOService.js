@@ -67,7 +67,7 @@ class LocalSEOService {
           const visibleText = getVisibleText();
           
           // Find phones in visible text only
-          let allPhones = [];
+          const allPhones = [];
           phonePatterns.forEach(pattern => {
             const matches = visibleText.match(pattern) || [];
             allPhones.push(...matches);
@@ -103,7 +103,7 @@ class LocalSEOService {
           
           // Local schema detection - enhanced
           const schemas = Array.from(document.querySelectorAll('script[type="application/ld+json"]'));
-          let schemaDetails = {
+          const schemaDetails = {
             hasLocalBusinessSchema: false,
             hasOrganizationSchema: false,
             hasContactPoint: false,

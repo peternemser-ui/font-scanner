@@ -709,6 +709,238 @@
       color: #666;
       margin-left: 0.5rem;
     }
+
+    /* ── System Health Dashboard ─────────────────────────────── */
+    .health-status-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      font-size: 0.875rem;
+    }
+
+    .health-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #666;
+      flex-shrink: 0;
+    }
+
+    .health-dot.live {
+      background: #00ff41;
+      box-shadow: 0 0 6px #00ff41;
+      animation: health-pulse 2s ease-in-out infinite;
+    }
+
+    .health-dot.error {
+      background: #ef4444;
+    }
+
+    @keyframes health-pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .health-uptime {
+      margin-left: auto;
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    .health-gauges {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .health-gauge-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .health-gauge-label {
+      font-size: 0.8rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+
+    .health-gauge-bar-track {
+      height: 8px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .health-gauge-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      background: #00ff41;
+      width: 0%;
+      transition: width 0.6s ease, background-color 0.4s ease;
+    }
+
+    .health-gauge-bar-fill.warn {
+      background: #f59e0b;
+    }
+
+    .health-gauge-bar-fill.danger {
+      background: #ef4444;
+    }
+
+    .health-gauge-value {
+      font-size: 0.85rem;
+      color: #ccc;
+      margin-bottom: 0.5rem;
+    }
+
+    .health-gauge-big-number {
+      font-size: 2.25rem;
+      font-weight: 700;
+      color: #00ff41;
+      margin-bottom: 0.5rem;
+    }
+
+    .health-sparkline {
+      display: flex;
+      align-items: flex-end;
+      gap: 1px;
+      height: 36px;
+      overflow: hidden;
+    }
+
+    .health-sparkline .spark-bar {
+      width: 3px;
+      min-height: 1px;
+      border-radius: 1px;
+      background: #00ff41;
+      opacity: 0.7;
+      transition: height 0.3s ease;
+    }
+
+    .health-stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .health-stat-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .health-stat-label {
+      font-size: 0.8rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+
+    .health-stat-value {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: #00ff41;
+      margin-bottom: 0.5rem;
+    }
+
+    .health-stat-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .health-stat-sub {
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+    .health-threshold-warning {
+      margin-top: 0.75rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #ef4444;
+    }
+
+    .health-pool-section {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .health-pool-label {
+      font-size: 0.8rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.75rem;
+    }
+
+    .health-pool-bar-track {
+      height: 12px;
+      background: rgba(255,255,255,0.08);
+      border-radius: 6px;
+      overflow: hidden;
+      display: flex;
+      margin-bottom: 0.75rem;
+    }
+
+    .health-pool-bar-available {
+      height: 100%;
+      background: #00ff41;
+      transition: width 0.6s ease;
+    }
+
+    .health-pool-bar-borrowed {
+      height: 100%;
+      background: #f59e0b;
+      transition: width 0.6s ease;
+    }
+
+    .health-pool-legend {
+      display: flex;
+      gap: 1.25rem;
+      font-size: 0.85rem;
+      color: #999;
+    }
+
+    .health-pool-legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .legend-dot.available {
+      background: #00ff41;
+    }
+
+    .legend-dot.borrowed {
+      background: #f59e0b;
+    }
   </style>
 </head>
 <body>
@@ -764,6 +996,7 @@
         <button class="admin-tab active" data-tab="users">Users</button>
         <button class="admin-tab" data-tab="testing">Testing Tools</button>
         <button class="admin-tab" data-tab="activity">Activity Log</button>
+        <button class="admin-tab" data-tab="health">System Health</button>
       </div>
 
       <!-- Users Tab -->
@@ -889,9 +1122,96 @@
           <div class="loading">Loading activity log...</div>
         </div>
       </div>
+
+      <!-- System Health Tab -->
+      <div id="healthTab" class="tab-content">
+        <!-- Status indicator row -->
+        <div class="health-status-bar" id="healthStatusBar">
+          <span class="health-dot" id="healthDot"></span>
+          <span id="healthStatusText">Connecting...</span>
+          <span id="healthUptime" class="health-uptime"></span>
+        </div>
+
+        <!-- Primary gauges: 4-column grid -->
+        <div class="health-gauges">
+          <div class="health-gauge-card">
+            <div class="health-gauge-label">Heap Memory</div>
+            <div class="health-gauge-bar-track">
+              <div class="health-gauge-bar-fill" id="heapBar"></div>
+            </div>
+            <div class="health-gauge-value"><span id="heapValue">—</span> / <span id="heapTotal">—</span> MB</div>
+            <div class="health-sparkline" id="heapSparkline"></div>
+          </div>
+
+          <div class="health-gauge-card">
+            <div class="health-gauge-label">RSS Memory</div>
+            <div class="health-gauge-bar-track">
+              <div class="health-gauge-bar-fill" id="rssBar"></div>
+            </div>
+            <div class="health-gauge-value"><span id="rssValue">—</span> MB</div>
+            <div class="health-sparkline" id="rssSparkline"></div>
+          </div>
+
+          <div class="health-gauge-card">
+            <div class="health-gauge-label">CPU Usage</div>
+            <div class="health-gauge-bar-track">
+              <div class="health-gauge-bar-fill" id="cpuBar"></div>
+            </div>
+            <div class="health-gauge-value"><span id="cpuValue">—</span>%</div>
+            <div class="health-sparkline" id="cpuSparkline"></div>
+          </div>
+
+          <div class="health-gauge-card">
+            <div class="health-gauge-label">Active Scans</div>
+            <div class="health-gauge-big-number" id="activeScansValue">0</div>
+            <div class="health-sparkline" id="scansSparkline"></div>
+          </div>
+        </div>
+
+        <!-- Secondary stats: 3-column grid -->
+        <div class="health-stats-row">
+          <div class="health-stat-card">
+            <div class="health-stat-label">Requests / min</div>
+            <div class="health-stat-value" id="reqPerMinValue">—</div>
+            <div class="health-sparkline" id="reqSparkline"></div>
+          </div>
+
+          <div class="health-stat-card">
+            <div class="health-stat-label">Errors</div>
+            <div class="health-stat-row">
+              <span class="health-stat-sub">Last min: <strong id="errMinValue">0</strong></span>
+              <span class="health-stat-sub">Last hr: <strong id="errHourValue">0</strong></span>
+            </div>
+            <div id="errorThresholdWarning" class="health-threshold-warning hidden"></div>
+          </div>
+
+          <div class="health-stat-card">
+            <div class="health-stat-label">Rate Limit Violations</div>
+            <div class="health-stat-row">
+              <span class="health-stat-sub">Total: <strong id="rlTotalValue">0</strong></span>
+              <span class="health-stat-sub">Last hr: <strong id="rlHourValue">0</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Browser pool row -->
+        <div class="health-pool-section">
+          <div class="health-pool-label">Browser Pool</div>
+          <div class="health-pool-bar-track">
+            <div class="health-pool-bar-available" id="poolAvailableBar"></div>
+            <div class="health-pool-bar-borrowed" id="poolBorrowedBar"></div>
+          </div>
+          <div class="health-pool-legend">
+            <span class="health-pool-legend-item"><span class="legend-dot available"></span> Available: <strong id="poolAvailable">—</strong></span>
+            <span class="health-pool-legend-item"><span class="legend-dot borrowed"></span> Borrowed: <strong id="poolBorrowed">—</strong></span>
+            <span class="health-pool-legend-item">Max: <strong id="poolMax">—</strong></span>
+          </div>
+        </div>
+      </div>
     </div>
   </main>
 
+  <script src="/socket.io/socket.io.js"></script>
   <script src="/i18n.js"></script>
   <script src="/pro-utils.js"></script>
   <script src="/admin-script.js"></script>

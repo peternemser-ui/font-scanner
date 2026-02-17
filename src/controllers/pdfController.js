@@ -56,17 +56,19 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
   // Validate report type
   const validReportTypes = [
     'seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence',
-    'hosting', 'core-web-vitals', 'ip-reputation', 'broken-links', 'local-seo',
+    'core-web-vitals', 'ip-reputation', 'broken-links', 'geo-seo', 'local-seo',
     'gdpr', 'mobile', 'cro', 'site-crawler', 'brand-consistency', 'competitive'
   ];
-  if (!validReportTypes.includes(reportType)) {
+  // Normalize legacy 'local-seo' to 'geo-seo'
+  const normalizedReportType = reportType === 'local-seo' ? 'geo-seo' : reportType;
+  if (!validReportTypes.includes(normalizedReportType)) {
     return res.status(400).json({
       success: false,
       error: `Invalid report type. Must be one of: ${validReportTypes.join(', ')}`
     });
   }
 
-  logger.info(`PDF purchase request`, { reportType, email, requestId: req.id });
+  logger.info(`PDF purchase request`, { reportType: normalizedReportType, email, requestId: req.id });
 
   const analyzerKeyByType = {
     seo: 'seo',
@@ -75,11 +77,10 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
     security: 'security',
     fonts: reportData?.analyzerKey || 'enhanced-fonts',
     'tag-intelligence': 'tag-intelligence',
-    hosting: 'hosting-analyzer',
     'core-web-vitals': 'core-web-vitals',
     'ip-reputation': 'ip-reputation',
     'broken-links': 'broken-links',
-    'local-seo': 'local-seo',
+    'geo-seo': 'geo-seo',
     gdpr: 'gdpr-compliance',
     mobile: 'mobile-analyzer',
     cro: 'cro-analyzer',
@@ -90,7 +91,7 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
 
   const resolvedReportId = resolveReportId({
     reportId: reportData?.reportId,
-    analyzerKey: analyzerKeyByType[reportType],
+    analyzerKey: analyzerKeyByType[normalizedReportType],
     url: reportData?.normalizedUrl || reportData?.url || reportData?.baseUrl,
     startedAtISO: reportData?.scanStartedAt || reportData?.startedAt || reportData?.timestamp,
   });
@@ -99,7 +100,7 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
     throw new ValidationError('Report identity is required (reportId or url + scanStartedAt + analyzerKey)');
   }
 
-  const reportDataWithId = { ...reportData, reportId: resolvedReportId, analyzerKey: analyzerKeyByType[reportType] };
+  const reportDataWithId = { ...reportData, reportId: resolvedReportId, analyzerKey: analyzerKeyByType[normalizedReportType] };
 
   // Process payment
   const paymentResult = await paymentService.processPayment({
@@ -108,7 +109,7 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
     expiryYear,
     cvv,
     email,
-    reportType,
+    reportType: normalizedReportType,
     reportId: resolvedReportId,
   });
 
@@ -123,7 +124,7 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
   // Generate PDF report
   let pdfResult;
   try {
-    switch (reportType) {
+    switch (normalizedReportType) {
       case 'seo':
         pdfResult = await seoPdfGenerator.generateReport(reportDataWithId);
         break;
@@ -143,12 +144,12 @@ const purchasePDFReport = asyncHandler(async (req, res) => {
         pdfResult = await tagIntelligencePdfGenerator.generateReport(reportDataWithId);
         break;
       default:
-        throw new Error(`Unknown report type: ${reportType}`);
+        throw new Error(`Unknown report type: ${normalizedReportType}`);
     }
 
-    logger.info(`PDF generated successfully`, { 
-      filename: pdfResult.filename, 
-      reportType,
+    logger.info(`PDF generated successfully`, {
+      filename: pdfResult.filename,
+      reportType: normalizedReportType,
       transactionId: paymentResult.transaction.transactionId 
     });
 
@@ -269,17 +270,19 @@ const generatePDF = asyncHandler(async (req, res) => {
 
   const validReportTypes = [
     'seo', 'performance', 'accessibility', 'security', 'fonts', 'tag-intelligence',
-    'hosting', 'core-web-vitals', 'ip-reputation', 'broken-links', 'local-seo',
+    'core-web-vitals', 'ip-reputation', 'broken-links', 'geo-seo', 'local-seo',
     'gdpr', 'mobile', 'cro', 'site-crawler', 'brand-consistency', 'competitive'
   ];
-  if (!validReportTypes.includes(reportType)) {
+  // Normalize legacy 'local-seo' to 'geo-seo'
+  const normalizedReportType = reportType === 'local-seo' ? 'geo-seo' : reportType;
+  if (!validReportTypes.includes(normalizedReportType)) {
     return res.status(400).json({
       success: false,
       error: `Invalid report type. Must be one of: ${validReportTypes.join(', ')}`
     });
   }
 
-  logger.info(`PDF generation request`, { reportType, requestId: req.id });
+  logger.info(`PDF generation request`, { reportType: normalizedReportType, requestId: req.id });
 
   const analyzerKeyByType = {
     seo: 'seo',
@@ -288,11 +291,10 @@ const generatePDF = asyncHandler(async (req, res) => {
     security: 'security',
     fonts: reportData?.analyzerKey || 'enhanced-fonts',
     'tag-intelligence': 'tag-intelligence',
-    hosting: 'hosting-analyzer',
     'core-web-vitals': 'core-web-vitals',
     'ip-reputation': 'ip-reputation',
     'broken-links': 'broken-links',
-    'local-seo': 'local-seo',
+    'geo-seo': 'geo-seo',
     gdpr: 'gdpr-compliance',
     mobile: 'mobile-analyzer',
     cro: 'cro-analyzer',
@@ -303,7 +305,7 @@ const generatePDF = asyncHandler(async (req, res) => {
 
   const resolvedReportId = resolveReportId({
     reportId: reportData?.reportId,
-    analyzerKey: analyzerKeyByType[reportType],
+    analyzerKey: analyzerKeyByType[normalizedReportType],
     url: reportData?.normalizedUrl || reportData?.url || reportData?.baseUrl,
     startedAtISO: reportData?.scanStartedAt || reportData?.startedAt || reportData?.timestamp,
   });
@@ -376,7 +378,7 @@ const generatePDF = asyncHandler(async (req, res) => {
 
   if (!canAccess) {
     logger.info('PDF generation blocked - paid access required', {
-      reportType,
+      reportType: normalizedReportType,
       reportId: resolvedReportId,
       userId: user?.id || 'anonymous'
     });
@@ -393,36 +395,43 @@ const generatePDF = asyncHandler(async (req, res) => {
   const reportDataWithId = {
     ...reportData,
     reportId: resolvedReportId || `gen-${Date.now()}`,
-    analyzerKey: analyzerKeyByType[reportType]
+    analyzerKey: analyzerKeyByType[normalizedReportType]
   };
 
-  // --- Resolve locale from DB (authoritative), not from client ---
+  // --- Resolve locale: prefer explicit client lang, then pageUrl, then DB, then 'en' ---
   const { getDatabase } = require('../db');
   const db = getDatabase();
+  const SUPPORTED_LOCALES = ['en', 'es', 'fr', 'de', 'pt', 'ja', 'zh', 'ru'];
   let locale = 'en';
-  let localeFromDb = false;
-  try {
-    const scanRow = await db.get(
-      'SELECT locale FROM scans WHERE report_id = ? ORDER BY created_at DESC LIMIT 1',
-      [resolvedReportId]
-    );
-    if (scanRow?.locale) {
-      locale = scanRow.locale;
-      localeFromDb = true;
-    }
-  } catch (e) {
-    logger.warn('Could not look up scan locale, using fallback', { error: e.message });
+
+  // 1. Explicit lang from the export request body (most reliable — reflects active UI language)
+  if (req.body.lang && SUPPORTED_LOCALES.includes(req.body.lang)) {
+    locale = req.body.lang;
   }
-  // Fall back to locale from pageUrl path only when DB had no locale
-  if (!localeFromDb) {
-    const SUPPORTED_LOCALES = ['en', 'es', 'fr', 'de', 'pt', 'ja', 'zh', 'ru'];
+
+  // 2. Locale from the pageUrl path prefix (e.g. /ja/performance-hub.html)
+  if (locale === 'en') {
     const pageUrl = req.body.pageUrl || '';
     const pathParts = pageUrl.split('/').filter(Boolean);
     const urlLocale = pathParts[0];
     if (urlLocale && SUPPORTED_LOCALES.includes(urlLocale) && urlLocale !== 'en') {
       locale = urlLocale;
-    } else if (req.body.lang && req.body.lang !== 'en') {
-      locale = req.body.lang;
+    }
+  }
+
+  // 3. DB scan locale (only trust non-'en' values, since 'en' is often a stale default
+  //    from Accept-Language when the user actually selected a different UI language)
+  if (locale === 'en') {
+    try {
+      const scanRow = await db.get(
+        'SELECT locale FROM scans WHERE report_id = ? ORDER BY created_at DESC LIMIT 1',
+        [resolvedReportId]
+      );
+      if (scanRow?.locale && scanRow.locale !== 'en' && SUPPORTED_LOCALES.includes(scanRow.locale)) {
+        locale = scanRow.locale;
+      }
+    } catch (e) {
+      logger.warn('Could not look up scan locale, using fallback', { error: e.message });
     }
   }
 
@@ -436,11 +445,10 @@ const generatePDF = asyncHandler(async (req, res) => {
     performance: 'pdf-templates/performance-report.html',
     fonts: 'pdf-templates/fonts-report.html',
     'tag-intelligence': 'pdf-templates/tag-intelligence-report.html',
-    hosting: 'pdf-templates/hosting-report.html',
     'core-web-vitals': 'pdf-templates/core-web-vitals-report.html',
     'ip-reputation': 'pdf-templates/ip-reputation-report.html',
     'broken-links': 'pdf-templates/broken-links-report.html',
-    'local-seo': 'pdf-templates/local-seo-report.html',
+    'geo-seo': 'pdf-templates/geo-seo-report.html',
     gdpr: 'pdf-templates/gdpr-report.html',
     mobile: 'pdf-templates/mobile-report.html',
     cro: 'pdf-templates/cro-report.html',
@@ -456,11 +464,10 @@ const generatePDF = asyncHandler(async (req, res) => {
     security: 'security-analyzer.html',
     fonts: 'enhanced-fonts.html',
     'tag-intelligence': 'tag-intelligence.html',
-    hosting: 'hosting-analyzer.html',
     'core-web-vitals': 'core-web-vitals.html',
     'ip-reputation': 'ip-reputation-analyzer.html',
     'broken-links': 'broken-links.html',
-    'local-seo': 'local-seo.html',
+    'geo-seo': 'geo-seo.html',
     gdpr: 'gdpr-compliance.html',
     mobile: 'mobile-analyzer.html',
     cro: 'cro-analyzer.html',
@@ -481,7 +488,7 @@ const generatePDF = asyncHandler(async (req, res) => {
     domain: 'localhost'
   }] : [];
 
-  const templatePage = PDF_TEMPLATE_MAP[reportType];
+  const templatePage = PDF_TEMPLATE_MAP[normalizedReportType];
   const usePdfTemplate = !!templatePage;
 
   try {
@@ -490,12 +497,12 @@ const generatePDF = asyncHandler(async (req, res) => {
     if (usePdfTemplate) {
       // --- NEW: Render dedicated PDF template ---
       const templateUrl = `http://localhost:${port}/${locale}/${templatePage}?report_id=${resolvedReportId}&locale=${locale}`;
-      logger.info('Using PDF template', { reportType, templateUrl });
+      logger.info('Using PDF template', { reportType: normalizedReportType, templateUrl });
 
       result = await puppeteerPdfService.generatePdfFromTemplate({
         templateUrl,
         reportId: resolvedReportId || `gen-${Date.now()}`,
-        reportType,
+        reportType: normalizedReportType,
         cookies,
         lang: locale,
         reportData: reportDataWithId,
@@ -503,14 +510,14 @@ const generatePDF = asyncHandler(async (req, res) => {
       });
     } else {
       // --- LEGACY: Render the actual report page via Puppeteer ---
-      const analyzerPage = analyzerPageMap[reportType] || `${reportType}.html`;
+      const analyzerPage = analyzerPageMap[normalizedReportType] || `${normalizedReportType}.html`;
       const printUrl = `http://localhost:${port}/${locale}/${analyzerPage}?report_id=${resolvedReportId}&print=1&locale=${locale}`;
-      logger.info('Using legacy Puppeteer path', { reportType, printUrl });
+      logger.info('Using legacy Puppeteer path', { reportType: normalizedReportType, printUrl });
 
       result = await puppeteerPdfService.generatePdfFromUrl({
         url: printUrl,
         reportId: resolvedReportId || `gen-${Date.now()}`,
-        reportType,
+        reportType: normalizedReportType,
         cookies,
         lang: locale,
         expandAccordions: true,

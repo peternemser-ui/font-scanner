@@ -10,14 +10,14 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('gdpr', function renderGDPR(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
-    var scoreColor = (utils.scoreColor || PR.helpers && PR.helpers.scoreColor) || function (s) {
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
+    const scoreColor = (utils.scoreColor || PR.helpers && PR.helpers.scoreColor) || function (s) {
       const stops = [
         [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
         [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
@@ -39,24 +39,24 @@
       const b = Math.round(b1+(b2-b1)*t);
       return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
     };
-    var translateImpact = utils.translateImpact || function(v) { return v; };
+    const translateImpact = utils.translateImpact || function(v) { return v; };
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     // Resolve data sources
-    var compliance = data.compliance || {};
-    var consentQuality = data.consentQuality || {};
-    var risks = data.risks || [];
-    var recommendations = data.recommendations || [];
+    const compliance = data.compliance || {};
+    const consentQuality = data.consentQuality || {};
+    const risks = data.risks || [];
+    const recommendations = data.recommendations || [];
 
     // Computed category scores (matching web UI logic)
-    var cookiesData = compliance.cookies || {};
+    let cookiesData = compliance.cookies || {};
     // The API returns cookies as an object { count, classified: {...}, ... }
     // with individual cookies nested inside classified sub-arrays.
     // Flatten classified cookies into a single list for the Cookie Audit table.
-    var cookieList = cookiesData.list || cookiesData.details || [];
+    let cookieList = cookiesData.list || cookiesData.details || [];
     if (cookieList.length === 0 && cookiesData.classified && typeof cookiesData.classified === 'object') {
-      var classified = cookiesData.classified;
+      const classified = cookiesData.classified;
       Object.keys(classified).forEach(function (catKey) {
         if (Array.isArray(classified[catKey])) {
           classified[catKey].forEach(function (c) {
@@ -70,34 +70,34 @@
       cookieList = compliance.cookies;
       cookiesData = {};
     }
-    var trackersData = compliance.trackers || {};
+    const trackersData = compliance.trackers || {};
 
     // _pdf-report.js normalizes data.score from a number to { overall, grade }.
     // Extract the numeric value for use in computed scores.
-    var overallScore = (data.score && typeof data.score === 'object') ? (data.score.overall || 0) : (data.score || 0);
-    var cookieCount = cookiesData.count || cookieList.length || 0;
-    var cookieScore = cookieCount <= 5 ? 100 : Math.max(0, 100 - (cookieCount - 5) * 5);
-    var consentDetected = (compliance.cookieConsent || {}).detected;
-    var hasKnownLib = (compliance.cookieConsent || {}).hasKnownLibrary;
-    var consentScore = consentDetected ? (hasKnownLib ? 100 : 70) : 0;
-    var privacyScore = (compliance.privacyPolicy || {}).hasLink ? 100 : 0;
-    var trackerCount = trackersData.count || (trackersData.detected || []).length || 0;
-    var trackerScore = trackerCount === 0 ? 100 : Math.max(0, 100 - trackerCount * 10);
-    var legalPagesScore = ((compliance.privacyPolicy || {}).hasLink ? 40 : 0) +
+    const overallScore = (data.score && typeof data.score === 'object') ? (data.score.overall || 0) : (data.score || 0);
+    const cookieCount = cookiesData.count || cookieList.length || 0;
+    const cookieScore = cookieCount <= 5 ? 100 : Math.max(0, 100 - (cookieCount - 5) * 5);
+    const consentDetected = (compliance.cookieConsent || {}).detected;
+    const hasKnownLib = (compliance.cookieConsent || {}).hasKnownLibrary;
+    const consentScore = consentDetected ? (hasKnownLib ? 100 : 70) : 0;
+    const privacyScore = (compliance.privacyPolicy || {}).hasLink ? 100 : 0;
+    const trackerCount = trackersData.count || (trackersData.detected || []).length || 0;
+    const trackerScore = trackerCount === 0 ? 100 : Math.max(0, 100 - trackerCount * 10);
+    const legalPagesScore = ((compliance.privacyPolicy || {}).hasLink ? 40 : 0) +
       ((compliance.cookiePolicy || {}).hasLink ? 30 : 0) +
       ((compliance.termsOfService || {}).hasLink ? 30 : 0);
-    var dataRightsScore = ((compliance.dataSubjectRights || {}).hasInfo ? 60 : 0) +
+    const dataRightsScore = ((compliance.dataSubjectRights || {}).hasInfo ? 60 : 0) +
       ((compliance.dataSubjectRights || {}).hasDPOContact ? 40 : 0);
 
     function _htmlToNode(htmlStr) {
-      var tpl = document.createElement('template');
+      const tpl = document.createElement('template');
       tpl.innerHTML = htmlStr.trim();
       return tpl.content.firstChild;
     }
 
     /** Helper: severity color mapping */
     function _sevColor(sev) {
-      var s = (sev || 'medium').toLowerCase();
+      const s = (sev || 'medium').toLowerCase();
       if (s === 'critical') return '#ef4444';
       if (s === 'high') return '#f97316';
       if (s === 'medium') return '#f59e0b';
@@ -106,9 +106,9 @@
 
     /** Helper: get GDPR code snippet for a recommendation (matches web UI) */
     function _getCodeSnippet(rec) {
-      var msg = (rec.message || rec.title || '').toLowerCase();
-      var cat = (rec.category || '').toLowerCase();
-      var combined = msg + ' ' + cat;
+      const msg = (rec.message || rec.title || '').toLowerCase();
+      const cat = (rec.category || '').toLowerCase();
+      const combined = msg + ' ' + cat;
 
       if (combined.indexOf('data subject') >= 0 || combined.indexOf('rights information') >= 0) {
         return '<!-- Data Subject Rights Section (GDPR Article 15-22) -->\n<section id="your-rights" class="privacy-section">\n  <h2>Your Data Rights</h2>\n  <p>Under GDPR, you have the following rights:</p>\n  <ul>\n    <li>Right of Access (Art. 15)</li>\n    <li>Right to Rectification (Art. 16)</li>\n    <li>Right to Erasure (Art. 17)</li>\n    <li>Right to Data Portability (Art. 20)</li>\n  </ul>\n  <p>Response Time: Within 30 days.</p>\n  <p>Contact: privacy@yourcompany.com</p>\n</section>';
@@ -148,9 +148,9 @@
 
     /** Helper: get step-by-step fix guide for a recommendation */
     function _getFixSteps(rec) {
-      var msg = (rec.message || rec.title || '').toLowerCase();
-      var cat = (rec.category || '').toLowerCase();
-      var combined = msg + ' ' + cat;
+      const msg = (rec.message || rec.title || '').toLowerCase();
+      const cat = (rec.category || '').toLowerCase();
+      const combined = msg + ' ' + cat;
 
       if (combined.indexOf('data subject') >= 0 || combined.indexOf('rights information') >= 0) {
         return [
@@ -276,24 +276,24 @@
        1. Cookie Consent
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-consent .pdf-section__content');
-      var d = compliance.cookieConsent || {};
+      const sec = document.querySelector('#section-consent .pdf-section__content');
+      const d = compliance.cookieConsent || {};
       // API does not set d.score; use the computed consentScore instead
-      var score = d.score !== undefined ? d.score : consentScore;
+      const score = d.score !== undefined ? d.score : consentScore;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.gdpr.report.consent', 'Cookie Consent'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.consent', 'Cookie consent mechanisms are required under GDPR and ePrivacy regulations. A compliant consent banner must be clearly visible, offer granular choices, and not pre-select non-essential cookies. This section evaluates whether a consent management platform is detected and if it meets regulatory requirements.')) + '</p>';
 
       // Consent overview table
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.report.consent.overviewHeading', 'Consent Overview')) + '</h3>';
 
-      var rows = [];
+      const rows = [];
       rows.push([
         esc(t('reports.gdpr.report.consent.rows.detected', 'Consent Banner Detected')),
         d.detected ? PR.renderStatus('pass', t('seo.report.status.yes', 'Yes')) : PR.renderStatus('fail', t('seo.report.status.no', 'No'))
@@ -346,7 +346,7 @@
       if (d.issues && d.issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('common.pdf.execSummary.issuesFound', 'Issues Found')) + '</h3>';
         d.issues.forEach(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+          const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
           html += PR.renderIssue(text, 'warning');
         });
       }
@@ -358,11 +358,11 @@
        2. Consent Quality (NEW — matches web UI renderConsentQualityContent)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-consent-quality .pdf-section__content');
+      const sec = document.querySelector('#section-consent-quality .pdf-section__content');
       if (!sec) return;
 
-      var qScore = consentQuality.score;
-      var hasData = qScore !== undefined || (consentQuality.factors && consentQuality.factors.length > 0);
+      const qScore = consentQuality.score;
+      const hasData = qScore !== undefined || (consentQuality.factors && consentQuality.factors.length > 0);
       if (!hasData) { sec.parentElement.style.display = 'none'; return; }
 
       sec.parentElement.insertBefore(
@@ -370,11 +370,11 @@
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.consentQuality', 'This section evaluates the quality of your cookie consent implementation against GDPR requirements. Each factor is scored individually, covering banner presence, reject options, granular controls, consent library, and pre-consent cookie blocking.')) + '</p>';
 
       // Score + Grade + Library metrics
-      var consent = compliance.cookieConsent || {};
+      const consent = compliance.cookieConsent || {};
       html += PR.renderMetrics([
         { value: qScore !== undefined ? qScore : '-', label: t('reports.gdpr.qualityScore', 'Quality Score'), color: scoreColor(qScore || 0) },
         { value: consentQuality.grade || '-', label: t('reports.common.grade', 'Grade'), color: scoreColor(qScore || 0) },
@@ -382,13 +382,13 @@
       ]);
 
       // Quality Factors table (matches web UI factor list)
-      var factors = consentQuality.factors || [];
+      const factors = consentQuality.factors || [];
       if (factors.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.qualityFactors', 'Quality Factors')) + '</h3>';
-        var factorRows = factors.map(function (f) {
-          var statusLabel = f.status === 'pass' ? t('common.pdf.status.pass', 'Pass') : f.status === 'warn' ? t('common.pdf.status.warning', 'Warning') : t('common.pdf.status.fail', 'Fail');
-          var statusType = f.status === 'pass' ? 'pass' : f.status === 'warn' ? 'warning' : 'fail';
-          var maxPoints = (f.name || '').indexOf('reject') >= 0 ? 25 : (f.name || '').indexOf('library') >= 0 ? 15 : 20;
+        const factorRows = factors.map(function (f) {
+          const statusLabel = f.status === 'pass' ? t('common.pdf.status.pass', 'Pass') : f.status === 'warn' ? t('common.pdf.status.warning', 'Warning') : t('common.pdf.status.fail', 'Fail');
+          const statusType = f.status === 'pass' ? 'pass' : f.status === 'warn' ? 'warning' : 'fail';
+          const maxPoints = (f.name || '').indexOf('reject') >= 0 ? 25 : (f.name || '').indexOf('library') >= 0 ? 15 : 20;
           return [
             esc(f.name || ''),
             '<span style="font-weight:600;">' + (f.points || 0) + '/' + maxPoints + '</span>',
@@ -414,29 +414,29 @@
        3. Privacy Policy
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-privacy .pdf-section__content');
-      var d = compliance.privacyPolicy || {};
+      const sec = document.querySelector('#section-privacy .pdf-section__content');
+      const d = compliance.privacyPolicy || {};
       // API does not set d.score; use the computed privacyScore instead
-      var score = d.score !== undefined ? d.score : privacyScore;
+      const score = d.score !== undefined ? d.score : privacyScore;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.gdpr.report.privacy', 'Privacy Policy'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.privacy', 'A comprehensive privacy policy is a legal requirement under GDPR. It must clearly explain what data you collect, how you use it, who you share it with, and how users can exercise their rights. This section checks for the presence and completeness of your privacy policy.')) + '</p>';
 
       // Privacy policy overview
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.report.privacy.overviewHeading', 'Policy Overview')) + '</h3>';
 
-      var rows = [];
+      const rows = [];
       rows.push([
         esc(t('reports.gdpr.report.privacy.rows.found', 'Privacy Policy Found')),
         d.found || d.hasLink ? PR.renderStatus('pass', t('seo.report.status.yes', 'Yes')) : PR.renderStatus('fail', t('seo.report.status.no', 'No'))
       ]);
-      var privacyUrl = d.url || (d.links && d.links.length > 0 ? d.links[0] : '');
+      const privacyUrl = d.url || (d.links && d.links.length > 0 ? d.links[0] : '');
       rows.push([
         esc(t('reports.gdpr.report.privacy.rows.url', 'Policy URL')),
         privacyUrl ? '<span class="pdf-table__truncate">' + esc(truncate(privacyUrl, 80)) + '</span>' : '-'
@@ -458,7 +458,7 @@
       ]);
 
       // Keywords found
-      var keywords = d.keywords || [];
+      const keywords = d.keywords || [];
       if (keywords.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.report.privacy.keywordsHeading', 'Keywords Found')) + '</h3>';
 
@@ -467,8 +467,8 @@
           keywords.length, keywords.length
         );
 
-        var keywordRows = keywords.slice(0, 25).map(function (kw) {
-          var kwText = typeof kw === 'string' ? kw : (kw.term || kw.keyword || '');
+        const keywordRows = keywords.slice(0, 25).map(function (kw) {
+          const kwText = typeof kw === 'string' ? kw : (kw.term || kw.keyword || '');
           return [
             '<strong>' + esc(kwText) + '</strong>',
             PR.renderStatus('pass', t('seo.report.status.detected', 'Detected'))
@@ -493,7 +493,7 @@
       if (d.issues && d.issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('common.pdf.execSummary.issuesFound', 'Issues Found')) + '</h3>';
         d.issues.forEach(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+          const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
           html += PR.renderIssue(text, 'warning');
         });
       }
@@ -505,29 +505,29 @@
        4. Cookie Policy
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-cookie-policy .pdf-section__content');
-      var d = compliance.cookiePolicy || {};
+      const sec = document.querySelector('#section-cookie-policy .pdf-section__content');
+      const d = compliance.cookiePolicy || {};
       // API does not set d.score; compute based on hasLink
-      var score = d.score !== undefined ? d.score : (d.hasLink ? 100 : 0);
+      const score = d.score !== undefined ? d.score : (d.hasLink ? 100 : 0);
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.gdpr.report.cookiePolicy', 'Cookie Policy'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.cookiePolicy', 'A dedicated cookie policy provides detailed information about the cookies your site uses. It should explain each cookie\'s purpose, duration, and whether it\'s essential or optional. This section evaluates your cookie policy\'s presence and completeness.')) + '</p>';
 
       // Cookie policy overview
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.report.cookiePolicy.overviewHeading', 'Cookie Policy Overview')) + '</h3>';
 
-      var rows = [];
+      const rows = [];
       rows.push([
         esc(t('reports.gdpr.report.cookiePolicy.rows.found', 'Cookie Policy Found')),
         (d.found || d.hasLink) ? PR.renderStatus('pass', t('seo.report.status.yes', 'Yes')) : PR.renderStatus('fail', t('seo.report.status.no', 'No'))
       ]);
-      var cookiePolicyUrl = d.url || (d.links && d.links.length > 0 ? d.links[0] : '');
+      const cookiePolicyUrl = d.url || (d.links && d.links.length > 0 ? d.links[0] : '');
       if (cookiePolicyUrl) {
         rows.push([
           esc(t('reports.gdpr.report.cookiePolicy.rows.url', 'Policy URL')),
@@ -554,7 +554,7 @@
       if (d.issues && d.issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('common.pdf.execSummary.issuesFound', 'Issues Found')) + '</h3>';
         d.issues.forEach(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+          const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
           html += PR.renderIssue(text, 'warning');
         });
       }
@@ -566,7 +566,7 @@
        5. Legal Pages (NEW — matches web UI renderLegalPagesContent)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-legal-pages .pdf-section__content');
+      const sec = document.querySelector('#section-legal-pages .pdf-section__content');
       if (!sec) return;
 
       sec.parentElement.insertBefore(
@@ -574,7 +574,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.legalPages', 'This section checks for the presence of essential legal pages required for GDPR compliance: a privacy policy, a cookie policy, and terms of service. Missing legal pages represent significant compliance gaps.')) + '</p>';
 
       html += PR.renderMetrics([
@@ -582,15 +582,15 @@
       ]);
 
       // Legal pages detection table
-      var pages = [
+      const pages = [
         { key: 'privacyPolicy', label: t('reports.gdpr.legalPages.privacyPolicy', 'Privacy Policy'), required: true },
         { key: 'cookiePolicy', label: t('reports.gdpr.legalPages.cookiePolicy', 'Cookie Policy'), required: false },
         { key: 'termsOfService', label: t('reports.gdpr.legalPages.termsOfService', 'Terms of Service'), required: false }
       ];
 
-      var pageRows = pages.map(function (p) {
-        var pd = compliance[p.key] || {};
-        var hasLink = pd.hasLink || pd.found;
+      const pageRows = pages.map(function (p) {
+        const pd = compliance[p.key] || {};
+        const hasLink = pd.hasLink || pd.found;
         return [
           '<strong>' + esc(p.label) + '</strong>' + (p.required ? ' <em style="color:#ef4444;font-size:0.85em;">(' + esc(t('reports.gdpr.required', 'Required')) + ')</em>' : ''),
           hasLink ? PR.renderStatus('pass', t('reports.gdpr.found', 'Found')) : PR.renderStatus('fail', t('reports.gdpr.missing', 'Missing'))
@@ -613,24 +613,24 @@
        6. Data Subject Rights (enhanced — DPO + International Compliance)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-rights .pdf-section__content');
-      var d = compliance.dataSubjectRights || {};
+      const sec = document.querySelector('#section-rights .pdf-section__content');
+      const d = compliance.dataSubjectRights || {};
       // API does not set d.score; use the computed dataRightsScore instead
-      var score = d.score !== undefined ? d.score : dataRightsScore;
+      const score = d.score !== undefined ? d.score : dataRightsScore;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.gdpr.report.rights', 'Data Subject Rights'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.rights', 'GDPR grants individuals specific rights over their personal data, including access, rectification, erasure, and portability. Your site must provide clear mechanisms for users to exercise these rights. This section checks for the availability of data subject rights mechanisms.')) + '</p>';
 
       // Rights overview — enhanced with DPO contact (matches web UI)
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.report.rights.overviewHeading', 'Rights Overview')) + '</h3>';
 
-      var rows = [];
+      const rows = [];
       rows.push([
         esc(t('reports.gdpr.dataRightsInformation', 'Data Rights Information')),
         (d.found || d.hasInfo) ? PR.renderStatus('pass', t('reports.gdpr.found', 'Found')) : PR.renderStatus('fail', t('reports.gdpr.missing', 'Missing'))
@@ -657,7 +657,7 @@
       ]);
 
       // Mechanisms found
-      var mechanisms = d.mechanisms || [];
+      const mechanisms = d.mechanisms || [];
       if (mechanisms.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.report.rights.mechanismsHeading', 'Mechanisms Found')) + '</h3>';
 
@@ -666,8 +666,8 @@
           mechanisms.length, mechanisms.length
         );
 
-        var mechRows = mechanisms.map(function (mech) {
-          var mechText = typeof mech === 'string' ? mech : (mech.name || mech.type || '');
+        const mechRows = mechanisms.map(function (mech) {
+          const mechText = typeof mech === 'string' ? mech : (mech.name || mech.type || '');
           return [
             '<strong>' + esc(mechText) + '</strong>',
             PR.renderStatus('pass', t('seo.report.status.detected', 'Detected'))
@@ -685,11 +685,11 @@
       }
 
       // International Compliance (matches web UI renderDataRightsContent)
-      var intl = compliance.internationalCompliance || {};
+      const intl = compliance.internationalCompliance || {};
       if (intl.gdpr !== undefined || intl.ccpa !== undefined) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.internationalCompliance', 'International Compliance')) + '</h3>';
 
-        var intlRows = [];
+        const intlRows = [];
         intlRows.push([
           '<strong>' + esc(t('reports.gdpr.gdprEU', 'GDPR (EU)')) + '</strong>',
           intl.gdpr ? PR.renderStatus('pass', t('common.pdf.status.pass', 'Pass')) : PR.renderStatus('fail', t('common.pdf.status.fail', 'Fail'))
@@ -713,7 +713,7 @@
       if (d.issues && d.issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('common.pdf.execSummary.issuesFound', 'Issues Found')) + '</h3>';
         d.issues.forEach(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+          const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
           html += PR.renderIssue(text, 'warning');
         });
       }
@@ -725,13 +725,13 @@
        7. Cookie Audit (security attributes)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-cookies .pdf-section__content');
+      const sec = document.querySelector('#section-cookies .pdf-section__content');
       // Use the flattened cookieList built at the top from classified sub-arrays
-      var cookies = Array.isArray(compliance.cookies) ? compliance.cookies : cookieList;
+      const cookies = Array.isArray(compliance.cookies) ? compliance.cookies : cookieList;
       // API returns trackers.detected as array of hostname strings, not objects.
       // Convert to objects for the tracker table renderer.
-      var trackersRaw = trackersData.detected || trackersData.list || trackersData.details || [];
-      var trackers = trackersRaw.map(function (tr) {
+      const trackersRaw = trackersData.detected || trackersData.list || trackersData.details || [];
+      const trackers = trackersRaw.map(function (tr) {
         if (typeof tr === 'string') {
           return { name: tr, domain: tr };
         }
@@ -743,13 +743,13 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.cookies', 'This cookie audit catalogs all cookies and tracking technologies found on your site. Each cookie is classified by purpose, security attributes, and regulatory category. Understanding your cookie landscape is essential for maintaining accurate consent mechanisms and privacy compliance.')) + '</p>';
 
       // Cookie metrics
-      var secureCookies = cookies.filter(function (c) { return c.secure; }).length;
-      var httpOnlyCookies = cookies.filter(function (c) { return c.httpOnly; }).length;
+      const secureCookies = cookies.filter(function (c) { return c.secure; }).length;
+      const httpOnlyCookies = cookies.filter(function (c) { return c.httpOnly; }).length;
 
       html += PR.renderMetrics([
         { value: cookies.length, label: t('reports.gdpr.report.cookies.totalLabel', 'Total Cookies') },
@@ -773,9 +773,9 @@
       // Cookie details table
       if (cookies.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.report.cookies.detailsHeading', 'Cookie Details')) + '</h3>';
-        var cookieRows = cookies.slice(0, 30).map(function (c) {
+        const cookieRows = cookies.slice(0, 30).map(function (c) {
           // Handle both expiry (string) and expires (Unix timestamp number)
-          var expiryDisplay = c.expiry || '';
+          let expiryDisplay = c.expiry || '';
           if (!expiryDisplay && c.expires !== undefined) {
             if (c.expires === -1 || c.expires === 0) {
               expiryDisplay = 'Session';
@@ -818,7 +818,7 @@
       // Trackers table (enhanced with vendor/category/purpose — matches web UI)
       if (trackers.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.report.cookies.trackersHeading', 'Third-Party Trackers')) + '</h3>';
-        var trackerRows = trackers.slice(0, 20).map(function (tr) {
+        const trackerRows = trackers.slice(0, 20).map(function (tr) {
           return [
             '<strong>' + esc(tr.name || tr.vendor || '-') + '</strong>',
             esc(tr.type || tr.category || '-'),
@@ -850,12 +850,12 @@
        8. Cookie Classification (NEW — matches web UI renderCookieAnalysisContent)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-cookie-classification .pdf-section__content');
+      const sec = document.querySelector('#section-cookie-classification .pdf-section__content');
       if (!sec) return;
 
-      var classified = cookiesData.classified || {};
-      var hasClassified = Object.keys(classified).length > 0;
-      var hasLifetimeData = cookiesData.sessionCount !== undefined || cookiesData.persistentCount !== undefined;
+      const classified = cookiesData.classified || {};
+      const hasClassified = Object.keys(classified).length > 0;
+      const hasLifetimeData = cookiesData.sessionCount !== undefined || cookiesData.persistentCount !== undefined;
 
       if (!hasClassified && !hasLifetimeData) { sec.parentElement.style.display = 'none'; return; }
 
@@ -864,12 +864,12 @@
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.cookieClassification', 'Cookies are classified by purpose to help you understand which require consent under GDPR. Only strictly necessary cookies are exempt from consent requirements. All other categories (functional, analytics, marketing, social) require explicit user consent before being set.')) + '</p>';
 
       // Category breakdown table (matches web UI categories)
       if (hasClassified) {
-        var categories = [
+        const categories = [
           { key: 'necessary', label: t('reports.gdpr.cookies.necessary', 'Necessary'), color: '#10b981' },
           { key: 'functional', label: t('reports.gdpr.cookies.functional', 'Functional'), color: '#3b82f6' },
           { key: 'analytics', label: t('reports.gdpr.cookies.analytics', 'Analytics'), color: '#f59e0b' },
@@ -878,15 +878,15 @@
           { key: 'unknown', label: t('reports.gdpr.cookies.unknown', 'Unknown'), color: '#6b7280' }
         ];
 
-        var metricItems = [];
+        const metricItems = [];
         categories.forEach(function (cat) {
-          var count = (classified[cat.key] || []).length;
+          const count = (classified[cat.key] || []).length;
           metricItems.push({ value: count, label: cat.label, color: cat.color });
         });
         html += PR.renderMetrics(metricItems);
 
-        var catRows = categories.map(function (cat) {
-          var items = classified[cat.key] || [];
+        const catRows = categories.map(function (cat) {
+          const items = classified[cat.key] || [];
           return [
             '<span style="color:' + cat.color + ';font-weight:600;">' + esc(cat.label) + '</span>',
             '<strong>' + items.length + '</strong>',
@@ -935,12 +935,12 @@
        9. Tracker Analysis (NEW — matches web UI renderTrackerAnalysisContent)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-tracker-analysis .pdf-section__content');
+      const sec = document.querySelector('#section-tracker-analysis .pdf-section__content');
       if (!sec) return;
 
-      var trackerClassified = trackersData.classified || {};
-      var trackerDetectedList = trackersData.detected || [];
-      var hasTrackerData = trackerCount > 0 || Object.keys(trackerClassified).length > 0;
+      const trackerClassified = trackersData.classified || {};
+      const trackerDetectedList = trackersData.detected || [];
+      const hasTrackerData = trackerCount > 0 || Object.keys(trackerClassified).length > 0;
 
       if (!hasTrackerData) { sec.parentElement.style.display = 'none'; return; }
 
@@ -949,11 +949,11 @@
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.trackerAnalysis', 'Third-party trackers collect user data and require explicit consent under GDPR. This section classifies detected trackers by category and evaluates their impact on user privacy. Reducing unnecessary trackers improves both compliance and page performance.')) + '</p>';
 
       // Tracker category breakdown (matches web UI categories)
-      var trackerCats = [
+      const trackerCats = [
         { key: 'analytics', label: t('reports.gdpr.trackers.analytics', 'Analytics'), color: '#3b82f6' },
         { key: 'advertising', label: t('reports.gdpr.trackers.advertising', 'Advertising'), color: '#ef4444' },
         { key: 'social', label: t('reports.gdpr.trackers.socialMedia', 'Social Media'), color: '#8b5cf6' },
@@ -962,15 +962,15 @@
       ];
 
       if (Object.keys(trackerClassified).length > 0) {
-        var tMetrics = trackerCats.map(function (cat) {
-          var items = trackerClassified[cat.key] || [];
+        const tMetrics = trackerCats.map(function (cat) {
+          const items = trackerClassified[cat.key] || [];
           return { value: items.length, label: cat.label, color: cat.color };
         });
         html += PR.renderMetrics(tMetrics);
 
-        var tCatRows = trackerCats.map(function (cat) {
-          var items = trackerClassified[cat.key] || [];
-          var names = items.map(function (item) {
+        const tCatRows = trackerCats.map(function (cat) {
+          const items = trackerClassified[cat.key] || [];
+          const names = items.map(function (item) {
             return typeof item === 'string' ? item : (item.name || item.vendor || '');
           }).filter(Boolean).slice(0, 5);
           return [
@@ -994,8 +994,8 @@
       // Detected tracker names list (matches web UI tag display)
       if (trackerDetectedList.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.detectedTrackers', 'Detected Trackers')) + '</h3>';
-        var detectedRows = trackerDetectedList.slice(0, 20).map(function (tracker) {
-          var name = typeof tracker === 'string' ? tracker : (tracker.name || tracker.vendor || '');
+        const detectedRows = trackerDetectedList.slice(0, 20).map(function (tracker) {
+          const name = typeof tracker === 'string' ? tracker : (tracker.name || tracker.vendor || '');
           return [
             '<strong>' + esc(name) + '</strong>',
             PR.renderStatus('warning', t('common.pdf.status.warning', 'Warning'))
@@ -1023,23 +1023,23 @@
        10. Risk Assessment (enhanced — add detail + fine fields)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-risks .pdf-section__content');
+      const sec = document.querySelector('#section-risks .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.gdpr.report.risks', 'Risk Assessment'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.risks', 'Risk assessment identifies potential compliance gaps and their severity. High-risk issues may expose your organization to regulatory enforcement action. This section prioritizes risks based on their potential impact and likelihood of regulatory scrutiny.')) + '</p>';
 
       // Risk severity metrics
-      var critical = risks.filter(function (r) { return (r.severity || '').toLowerCase() === 'critical'; });
-      var high = risks.filter(function (r) { return (r.severity || '').toLowerCase() === 'high'; });
-      var medium = risks.filter(function (r) { return (r.severity || '').toLowerCase() === 'medium'; });
-      var low = risks.filter(function (r) {
-        var s = (r.severity || '').toLowerCase();
+      const critical = risks.filter(function (r) { return (r.severity || '').toLowerCase() === 'critical'; });
+      const high = risks.filter(function (r) { return (r.severity || '').toLowerCase() === 'high'; });
+      const medium = risks.filter(function (r) { return (r.severity || '').toLowerCase() === 'medium'; });
+      const low = risks.filter(function (r) {
+        const s = (r.severity || '').toLowerCase();
         return s === 'low' || (!s && (r.title || r.risk));
       });
 
@@ -1051,14 +1051,14 @@
       ]);
 
       // Risk cards grouped by severity — enhanced with detail + fine (matches web UI)
-      var riskGroups = [
+      const riskGroups = [
         { items: critical, label: t('reports.gdpr.report.risks.critical', 'Critical'), color: '#ef4444' },
         { items: high, label: t('reports.gdpr.report.risks.high', 'High'), color: '#f97316' },
         { items: medium, label: t('reports.gdpr.report.risks.medium', 'Medium'), color: '#f59e0b' },
         { items: low, label: t('reports.gdpr.report.risks.low', 'Low'), color: '#3b82f6' }
       ];
 
-      var hasRisks = risks.length > 0;
+      const hasRisks = risks.length > 0;
       if (hasRisks) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.gdpr.report.risks.detectedHeading', 'Detected Risks')) + '</h3>';
         riskGroups.forEach(function (group) {
@@ -1066,10 +1066,10 @@
           html += '<div class="pdf-recs-group">';
           html += '<div class="pdf-recs-group__title" style="color:' + group.color + ';">&#9679; ' + group.label + ' (' + group.items.length + ')</div>';
           group.items.forEach(function (r) {
-            var riskTitle = r.title || r.risk || '';
-            var riskDetail = r.description || r.detail || '';
-            var riskFine = r.fine || '';
-            var riskCategory = r.category || '';
+            const riskTitle = r.title || r.risk || '';
+            const riskDetail = r.description || r.detail || '';
+            const riskFine = r.fine || '';
+            const riskCategory = r.category || '';
             html += '<div class="pdf-issue pdf-issue--' + (r.severity || 'medium').toLowerCase() + '">' +
               '<span class="pdf-issue__severity pdf-issue__severity--' + (r.severity || 'medium').toLowerCase() + '">' + esc(translateImpact(r.severity || 'medium')) + '</span>' +
               '<span class="pdf-issue__text"><strong>' + esc(riskTitle) + '</strong>' +
@@ -1102,7 +1102,7 @@
         // Strengths
         if (consentQuality.strengths && consentQuality.strengths.length > 0) {
           consentQuality.strengths.forEach(function (strength) {
-            var text = typeof strength === 'string' ? strength : (strength.message || strength.title || '');
+            const text = typeof strength === 'string' ? strength : (strength.message || strength.title || '');
             html += PR.renderIssue(text, 'pass');
           });
         }
@@ -1110,7 +1110,7 @@
         // Issues
         if (consentQuality.issues && consentQuality.issues.length > 0) {
           consentQuality.issues.forEach(function (issue) {
-            var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+            const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
             html += PR.renderIssue(text, 'warning');
           });
         }
@@ -1123,26 +1123,26 @@
        11. Recommendations (enhanced — full fix cards with code + steps)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.gdpr.report.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.gdpr.report.sectionIntros.recommendations', 'Based on the GDPR compliance analysis, these recommendations prioritize the most critical compliance gaps to reduce regulatory risk and improve user privacy.')) + '</p>';
 
       if (recommendations.length > 0) {
-        var recCritical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
-        var recHigh = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
-        var recMedium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
-        var recLow = recommendations.filter(function (r) {
-          var p = r.priority || r.severity;
+        const recCritical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
+        const recHigh = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
+        const recMedium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
+        const recLow = recommendations.filter(function (r) {
+          const p = r.priority || r.severity;
           return !p || p === 'low';
         });
-        var groups = [
+        const groups = [
           { items: recCritical, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444', severity: 'critical' },
           { items: recHigh, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316', severity: 'high' },
           { items: recMedium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b', severity: 'medium' },
@@ -1154,18 +1154,18 @@
           html += '<div class="pdf-recs-group">';
           html += '<div class="pdf-recs-group__title" style="color:' + group.color + ';">&#9679; ' + group.label + ' (' + group.items.length + ')</div>';
           group.items.forEach(function (r) {
-            var sevLower = (r.priority || r.severity || group.severity || 'medium').toLowerCase();
-            var recTitle = r.title || r.message || '';
-            var recDesc = r.description || r.detail || '';
-            var recCategory = r.category || '';
-            var recImpact = r.impact || '';
+            const sevLower = (r.priority || r.severity || group.severity || 'medium').toLowerCase();
+            const recTitle = r.title || r.message || '';
+            const recDesc = r.description || r.detail || '';
+            const recCategory = r.category || '';
+            const recImpact = r.impact || '';
 
             // Full fix card (matches SEO pdf-fix-card pattern)
             html += '<div class="pdf-fix-card">';
 
             // Header: severity badge + title + category
             html += '<div class="pdf-fix-card__header">';
-            var sevLabel = sevLower === 'critical' ? t('reports.common.severity.critical', 'Critical') :
+            const sevLabel = sevLower === 'critical' ? t('reports.common.severity.critical', 'Critical') :
               sevLower === 'high' ? t('reports.common.severity.high', 'High') :
               sevLower === 'medium' ? t('reports.common.severity.medium', 'Medium') :
               t('reports.common.severity.low', 'Low');
@@ -1192,7 +1192,7 @@
             }
 
             // Code snippet (matches web UI Code tab)
-            var codeSnippet = _getCodeSnippet(r);
+            const codeSnippet = _getCodeSnippet(r);
             if (codeSnippet && codeSnippet !== recDesc) {
               html += '<div class="pdf-fix-card__code-grid">';
               html += '<div class="pdf-fix-card__code-block">';
@@ -1204,14 +1204,14 @@
             }
 
             // Step-by-step fix guide (matches web UI Fix Guide tab)
-            var steps = _getFixSteps(r);
+            const steps = _getFixSteps(r);
             if (steps.length > 0) {
               html += '<div class="pdf-fix-card__steps">';
               html += '<div class="pdf-fix-card__steps-title">' +
                 esc(t('reports.common.fix.stepByStepFix', 'Step-by-Step Fix:')) + '</div>';
               steps.forEach(function (step, idx) {
                 // Strip HTML bold tags for PDF text
-                var cleanStep = step.replace(/<\/?strong>/g, '');
+                const cleanStep = step.replace(/<\/?strong>/g, '');
                 html += '<div class="pdf-fix-card__step">';
                 html += '<span class="pdf-fix-card__step-num">' + (idx + 1) + '</span>';
                 html += '<span>' + esc(cleanStep) + '</span>';
@@ -1238,7 +1238,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }

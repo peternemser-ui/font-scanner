@@ -11,29 +11,29 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('accessibility', function renderAccessibility(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
-    var translateImpact = utils.translateImpact || function(v) { return v; };
-    var translateStatus = utils.translateStatus || function(v) { return v; };
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
+    const translateImpact = utils.translateImpact || function(v) { return v; };
+    const translateStatus = utils.translateStatus || function(v) { return v; };
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     // Prefer desktop data, fall back to top-level
-    var desktop = data.desktop || {};
-    var mobile = data.mobile || {};
+    const desktop = data.desktop || {};
+    const mobile = data.mobile || {};
 
     // Synthesize top-level wcag object for exec summary category breakdown.
     // The API returns wcag data nested under desktop/mobile, but the exec summary
     // looks for data.wcag.score to build category grid cards.
     if (!data.wcag && (desktop.wcag || mobile.wcag)) {
-      var dWcagScore = (desktop.wcag && desktop.wcag.score) ? desktop.wcag.score : 0;
-      var mWcagScore = (mobile.wcag && mobile.wcag.score) ? mobile.wcag.score : 0;
-      var avgWcag = (dWcagScore && mWcagScore) ? Math.round((dWcagScore + mWcagScore) / 2) : (dWcagScore || mWcagScore || 0);
+      const dWcagScore = (desktop.wcag && desktop.wcag.score) ? desktop.wcag.score : 0;
+      const mWcagScore = (mobile.wcag && mobile.wcag.score) ? mobile.wcag.score : 0;
+      const avgWcag = (dWcagScore && mWcagScore) ? Math.round((dWcagScore + mWcagScore) / 2) : (dWcagScore || mWcagScore || 0);
       data.wcag = {
         score: avgWcag,
         criteria: (desktop.wcag && desktop.wcag.criteria) ? desktop.wcag.criteria : ((mobile.wcag && mobile.wcag.criteria) ? mobile.wcag.criteria : {})
@@ -85,7 +85,7 @@
       // section issue lengths.
       if (typeof data.violationsCount === 'number') return data.violationsCount;
       // Fallback: sum from individual sections
-      var sum = 0;
+      let sum = 0;
       if (data.contrast && data.contrast.issues) sum += data.contrast.issues.length;
       if (data.keyboard && data.keyboard.issues) sum += data.keyboard.issues.length;
       if (data.aria && data.aria.issues) sum += data.aria.issues.length;
@@ -106,33 +106,33 @@
        1. DESKTOP vs MOBILE COMPARISON
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-comparison .pdf-section__content');
+      const sec = document.querySelector('#section-comparison .pdf-section__content');
       if (!sec) return;
 
-      var hasComparison = desktop.accessibilityScore || mobile.accessibilityScore;
+      const hasComparison = desktop.accessibilityScore || mobile.accessibilityScore;
       if (!hasComparison) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var desktopScore = desktop.accessibilityScore || 0;
-      var mobileScore = mobile.accessibilityScore || 0;
-      var scoreDiff = Math.abs(desktopScore - mobileScore);
+      const desktopScore = desktop.accessibilityScore || 0;
+      const mobileScore = mobile.accessibilityScore || 0;
+      const scoreDiff = Math.abs(desktopScore - mobileScore);
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('accessibility.report.comparison.title', 'Desktop vs Mobile Comparison'))),
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('accessibility.report.comparison.intro', 'Accessibility was analyzed on both desktop and mobile platforms. This comparison identifies platform-specific accessibility gaps that may affect different user groups.')) + '</p>';
 
       // Lighthouse failure notices
-      var desktopFailed = desktop.lighthouse && (desktop.lighthouse.failed || (desktop.lighthouse.score === 0 && desktop.lighthouse.error));
-      var mobileFailed = mobile.lighthouse && (mobile.lighthouse.failed || (mobile.lighthouse.score === 0 && mobile.lighthouse.error));
+      const desktopFailed = desktop.lighthouse && (desktop.lighthouse.failed || (desktop.lighthouse.score === 0 && desktop.lighthouse.error));
+      const mobileFailed = mobile.lighthouse && (mobile.lighthouse.failed || (mobile.lighthouse.score === 0 && mobile.lighthouse.error));
 
       if (desktopFailed || mobileFailed) {
-        var failMsg = '';
+        let failMsg = '';
         if (desktopFailed && mobileFailed) {
           failMsg = t('accessibility.report.comparison.bothTimedOut', 'Both desktop and mobile Lighthouse analyses timed out. Using alternative axe-core metrics.');
         } else if (desktopFailed) {
@@ -167,23 +167,23 @@
       ]);
 
       // Platform detail table with Lighthouse scores
-      var platformRows = [];
-      var lighthouseFields = [
+      const platformRows = [];
+      const lighthouseFields = [
         { key: 'accessibility', label: t('accessibility.report.comparison.lhAccessibility', 'Accessibility') },
         { key: 'performance', label: t('accessibility.report.comparison.lhPerformance', 'Performance') },
         { key: 'bestPractices', label: t('accessibility.report.comparison.lhBestPractices', 'Best Practices') },
         { key: 'seo', label: t('accessibility.report.comparison.lhSeo', 'SEO') }
       ];
 
-      var hasLighthouse = (desktop.lighthouse && !desktopFailed) || (mobile.lighthouse && !mobileFailed);
+      const hasLighthouse = (desktop.lighthouse && !desktopFailed) || (mobile.lighthouse && !mobileFailed);
       if (hasLighthouse) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('accessibility.report.comparison.lighthouseScores', 'Lighthouse Scores by Platform')) + '</h3>';
 
         lighthouseFields.forEach(function (field) {
-          var dVal = (!desktopFailed && desktop.lighthouse) ? (desktop.lighthouse[field.key] || 0) : '-';
-          var mVal = (!mobileFailed && mobile.lighthouse) ? (mobile.lighthouse[field.key] || 0) : '-';
-          var dStatus = (typeof dVal === 'number') ? (dVal >= 80 ? 'pass' : dVal >= 50 ? 'warning' : 'fail') : 'na';
-          var mStatus = (typeof mVal === 'number') ? (mVal >= 80 ? 'pass' : mVal >= 50 ? 'warning' : 'fail') : 'na';
+          const dVal = (!desktopFailed && desktop.lighthouse) ? (desktop.lighthouse[field.key] || 0) : '-';
+          const mVal = (!mobileFailed && mobile.lighthouse) ? (mobile.lighthouse[field.key] || 0) : '-';
+          const dStatus = (typeof dVal === 'number') ? (dVal >= 80 ? 'pass' : dVal >= 50 ? 'warning' : 'fail') : 'na';
+          const mStatus = (typeof mVal === 'number') ? (mVal >= 80 ? 'pass' : mVal >= 50 ? 'warning' : 'fail') : 'na';
           platformRows.push([
             esc(field.label),
             PR.renderStatus(dStatus, String(dVal)),
@@ -205,7 +205,7 @@
       // Gap callout
       if (!desktopFailed && !mobileFailed) {
         if (scoreDiff > 10) {
-          var gapMsg = t('accessibility.report.comparison.gapDescription', 'There is a {{diff}}-point difference between desktop ({{desktop}}) and mobile ({{mobile}}) accessibility scores.', {
+          let gapMsg = t('accessibility.report.comparison.gapDescription', 'There is a {{diff}}-point difference between desktop ({{desktop}}) and mobile ({{mobile}}) accessibility scores.', {
             diff: scoreDiff, desktop: desktopScore, mobile: mobileScore
           });
           if (desktopScore > mobileScore) {
@@ -234,22 +234,22 @@
        2. WCAG COMPLIANCE LEVELS (A / AA / AAA cards + current status)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-wcag-levels .pdf-section__content');
+      const sec = document.querySelector('#section-wcag-levels .pdf-section__content');
       if (!sec) return;
 
-      var score = data.accessibilityScore || 0;
-      var currentLevel = _wcagLevel(score);
+      const score = data.accessibilityScore || 0;
+      const currentLevel = _wcagLevel(score);
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('accessibility.report.wcagLevels.title', 'WCAG Compliance Levels'))),
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('accessibility.report.wcagLevels.intro', 'WCAG 2.1 defines three conformance levels. Level AA is the industry standard required by most accessibility regulations. This section shows your current compliance level and what each level requires.')) + '</p>';
 
       // Level breakdown table
-      var levelRows = [
+      const levelRows = [
         [
           '<strong>' + esc(t('accessibility.report.wcagLevels.levelA', 'Level A')) + '</strong>',
           esc(t('accessibility.report.wcagLevels.levelASubtitle', 'Minimum Accessibility')),
@@ -286,8 +286,8 @@
       );
 
       // Current level status callout
-      var statusType = currentLevel === 'None' ? 'warn' : 'tip';
-      var statusTitle, statusBody;
+      const statusType = currentLevel === 'None' ? 'warn' : 'tip';
+      let statusTitle, statusBody;
       if (currentLevel === 'None') {
         statusTitle = t('accessibility.report.wcagLevels.notCompliant', 'Not Compliant');
         statusBody = t('accessibility.report.wcagLevels.notCompliantDesc', 'This website does not meet minimum WCAG accessibility standards. Immediate improvements are needed.');
@@ -317,18 +317,18 @@
        3. WCAG 2.1 COMPLIANCE CRITERIA (Desktop vs Mobile)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-wcag .pdf-section__content');
-      var desktopWcag = desktop.wcag || data.wcag || {};
-      var mobileWcag = mobile.wcag || {};
-      var hasBoth = desktop.wcag && mobile.wcag;
-      var score = desktopWcag.score || data.accessibilityScore;
+      const sec = document.querySelector('#section-wcag .pdf-section__content');
+      const desktopWcag = desktop.wcag || data.wcag || {};
+      const mobileWcag = mobile.wcag || {};
+      const hasBoth = desktop.wcag && mobile.wcag;
+      const score = desktopWcag.score || data.accessibilityScore;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('accessibility.wcagCompliance', 'WCAG Compliance'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('accessibility.report.sectionIntros.wcag', 'The Web Content Accessibility Guidelines (WCAG) 2.1 define standards for making web content accessible to people with disabilities. Compliance is measured across four principles: Perceivable, Operable, Understandable, and Robust. This section evaluates your page against key WCAG Level AA success criteria. Meeting these standards ensures your site is usable by the widest possible audience and may be required by law in many jurisdictions.')) + '</p>';
 
       // WCAG level callout
@@ -339,9 +339,9 @@
       );
 
       // Criteria table — Desktop vs Mobile columns when both available
-      var dCriteria = desktopWcag.criteria || {};
-      var mCriteria = mobileWcag.criteria || {};
-      var criteriaKeys = Object.keys(dCriteria);
+      const dCriteria = desktopWcag.criteria || {};
+      const mCriteria = mobileWcag.criteria || {};
+      let criteriaKeys = Object.keys(dCriteria);
       if (criteriaKeys.length === 0) {
         criteriaKeys = Object.keys(mCriteria);
       }
@@ -349,7 +349,7 @@
       if (criteriaKeys.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('accessibility.report.wcag.criteriaHeading', 'Success Criteria')) + '</h3>';
 
-        var criteriaLabels = {
+        const criteriaLabels = {
           nonTextContent: t('accessibility.report.wcag.criteria.nonTextContent', '1.1.1 Non-text Content'),
           infoRelationships: t('accessibility.report.wcag.criteria.infoRelationships', '1.3.1 Info and Relationships'),
           contrastMinimum: t('accessibility.report.wcag.criteria.contrastMinimum', '1.4.3 Contrast (Minimum)'),
@@ -365,8 +365,8 @@
         if (hasBoth) {
           // Rich Desktop vs Mobile table (matching web UI)
           var criteriaRows = criteriaKeys.map(function (key) {
-            var dStatus = dCriteria[key] || 'na';
-            var mStatus = mCriteria[key] || 'na';
+            const dStatus = dCriteria[key] || 'na';
+            const mStatus = mCriteria[key] || 'na';
             return [
               esc(criteriaLabels[key] || key),
               PR.renderStatus(dStatus === 'pass' ? 'pass' : (dStatus === 'fail' ? 'fail' : 'na'),
@@ -388,7 +388,7 @@
         } else {
           // Single-column fallback
           var criteriaRows = criteriaKeys.map(function (key) {
-            var status = dCriteria[key] || mCriteria[key] || 'na';
+            const status = dCriteria[key] || mCriteria[key] || 'na';
             return [
               esc(criteriaLabels[key] || key),
               status === 'pass'
@@ -424,16 +424,16 @@
        4. COLOR CONTRAST
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-contrast .pdf-section__content');
-      var d = data.contrast || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-contrast .pdf-section__content');
+      const d = data.contrast || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('accessibility.colorContrast', 'Color Contrast'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('accessibility.report.sectionIntros.contrast', 'Sufficient color contrast ensures that text and interactive elements are readable by people with low vision or color vision deficiencies. WCAG 2.1 Level AA requires a minimum contrast ratio of 4.5:1 for normal text and 3:1 for large text. This section identifies elements that fail to meet these thresholds. Fixing contrast issues is one of the most impactful accessibility improvements you can make.')) + '</p>';
 
@@ -452,8 +452,8 @@
       // Issues table with color and background columns
       if (d.issues && d.issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('accessibility.report.contrast.detailsHeading', 'Contrast Issues')) + '</h3>';
-        var contrastRows = d.issues.slice(0, 15).map(function (issue) {
-          var colorSwatch = '';
+        const contrastRows = d.issues.slice(0, 15).map(function (issue) {
+          let colorSwatch = '';
           if (issue.color || issue.backgroundColor) {
             colorSwatch = '';
             if (issue.color) {
@@ -502,16 +502,16 @@
        5. KEYBOARD NAVIGATION
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-keyboard .pdf-section__content');
-      var d = data.keyboard || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-keyboard .pdf-section__content');
+      const d = data.keyboard || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('accessibility.keyboardNav', 'Keyboard Navigation'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('accessibility.report.sectionIntros.keyboard', 'Keyboard accessibility ensures that all interactive elements can be reached and operated using only a keyboard. This is essential for users who cannot use a mouse due to motor disabilities, as well as power users who prefer keyboard navigation. This section checks for focusable elements, tab traps, and visible focus indicators. Every interactive element must be reachable via Tab key and operable via Enter or Space.')) + '</p>';
 
@@ -533,7 +533,7 @@
       if (d.issues && d.issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('accessibility.report.keyboard.issuesHeading', 'Keyboard Issues')) + '</h3>';
         d.issues.forEach(function (issue) {
-          var severity = 'warning';
+          let severity = 'warning';
           if (issue.type && issue.type.toLowerCase().indexOf('trap') >= 0) severity = 'critical';
           html += PR.renderIssue(
             (issue.type || t('accessibility.report.keyboard.issueType', 'Keyboard Issue')) +
@@ -557,16 +557,16 @@
        6. ARIA & SEMANTICS
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-aria .pdf-section__content');
-      var d = data.aria || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-aria .pdf-section__content');
+      const d = data.aria || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('accessibility.ariaLabels', 'ARIA & Semantics'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('accessibility.report.sectionIntros.aria', 'ARIA (Accessible Rich Internet Applications) attributes and semantic HTML provide the foundation for screen reader accessibility. Proper use of landmarks, labels, roles, and heading structure allows assistive technology to navigate and understand your page. This section checks for ARIA implementation quality, landmark regions, form labels, and heading hierarchy. Incorrect ARIA usage can actually make accessibility worse, so proper implementation is critical.')) + '</p>';
 
@@ -588,9 +588,9 @@
       // Issues table with impact badges (richer than before)
       if (d.issues && d.issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('accessibility.report.aria.issuesHeading', 'ARIA Issues')) + '</h3>';
-        var ariaRows = d.issues.slice(0, 15).map(function (issue) {
-          var impactLower = (issue.impact || 'moderate').toLowerCase();
-          var impactStatus = impactLower === 'critical' ? 'fail' : (impactLower === 'serious' ? 'warning' : 'info');
+        const ariaRows = d.issues.slice(0, 15).map(function (issue) {
+          const impactLower = (issue.impact || 'moderate').toLowerCase();
+          const impactStatus = impactLower === 'critical' ? 'fail' : (impactLower === 'serious' ? 'warning' : 'info');
           return [
             '<strong>' + esc(issue.type || '') + '</strong>',
             esc(issue.description || ''),
@@ -626,14 +626,14 @@
        resources table, and step-by-step fix guide.
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('accessibility.report.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('accessibility.report.sectionIntros.recommendations', 'Based on the accessibility audit, this section provides prioritized recommendations to improve your site\'s inclusivity. Each recommendation references the relevant WCAG success criterion and includes practical steps for implementation. Addressing high-priority items first will yield the greatest improvement in accessibility compliance and user experience for people with disabilities.')) + '</p>';
 
@@ -645,7 +645,7 @@
       );
 
       // Generate enriched fix data from all available sources
-      var enrichedFixes = _generateEnrichedA11yFixes(data, t);
+      const enrichedFixes = _generateEnrichedA11yFixes(data, t);
 
       if (enrichedFixes.length > 0) {
         html += '<p class="pdf-text-muted" style="margin-bottom:16px;">' +
@@ -671,7 +671,7 @@
        8. SUMMARY FOOTER
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-summary .pdf-section__content');
+      const sec = document.querySelector('#section-summary .pdf-section__content');
       if (!sec) return;
 
       sec.parentElement.insertBefore(
@@ -679,7 +679,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += PR.renderMetrics([
         { value: _countIssues(), label: t('accessibility.report.summary.issuesFound', 'Issues Found'), color: _countIssues() > 0 ? '#ef4444' : '#10b981' },
@@ -688,7 +688,7 @@
       ]);
 
       // Quick stats table (mirrors web UI summary)
-      var statsRows = [
+      const statsRows = [
         [
           esc(t('accessibility.report.summary.wcagLevel', 'WCAG Level')),
           '<strong>' + esc(data.wcagLevel || _wcagLevel(data.accessibilityScore || 0)) + '</strong>'
@@ -725,7 +725,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -739,7 +739,7 @@
      Provides: category, impact, summary, problematicCode, fixedCode,
      steps[], and resources[] for each known accessibility issue type.
      ========================================================================= */
-  var A11Y_FIX_TEMPLATES = {
+  const A11Y_FIX_TEMPLATES = {
     'contrast': {
       category: 'Color & Visual',
       wcagRef: 'WCAG 2.1 SC 1.4.3',
@@ -818,20 +818,20 @@
      - Step-by-step fix guide
      ========================================================================= */
   function _renderA11yFixCard(fix, fullData, t, esc, truncate) {
-    var severityLower = (fix.severity || fix.priority || 'medium').toLowerCase();
-    var severityClass = severityLower;
+    const severityLower = (fix.severity || fix.priority || 'medium').toLowerCase();
+    let severityClass = severityLower;
     if (severityClass !== 'high' && severityClass !== 'medium' && severityClass !== 'low' && severityClass !== 'critical') {
       severityClass = 'medium';
     }
 
-    var severityLabels = {
+    const severityLabels = {
       critical: t('common.pdf.execSummary.criticalPriority', 'Critical'),
       high: t('common.pdf.execSummary.highPriority', 'High Priority'),
       medium: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'),
       low: t('common.pdf.execSummary.lowPriority', 'Low Priority')
     };
 
-    var html = '<div class="pdf-fix-card">';
+    let html = '<div class="pdf-fix-card">';
 
     // ---- Header: severity badge | title | category ----
     html += '<div class="pdf-fix-card__header">';
@@ -848,13 +848,13 @@
     html += '<div class="pdf-fix-card__body">';
 
     // Subtitle (WCAG ref or best-practice label)
-    var subtitle = fix.subtitle || fix.wcagReference || '';
+    const subtitle = fix.subtitle || fix.wcagReference || '';
     if (subtitle) {
       html += '<div style="font-size:0.72rem;color:#6b7280;margin-bottom:6px;">' + esc(subtitle) + '</div>';
     }
 
     // Rich summary paragraph — prefer multi-paragraph summary when available
-    var summary = fix.summary || '';
+    const summary = fix.summary || '';
     if (summary) {
       html += '<div class="pdf-fix-card__description">' + esc(summary) + '</div>';
     } else if (fix.description) {
@@ -883,8 +883,8 @@
     }
 
     // Code comparison: problematic vs fixed
-    var problemCode = fix.problematicCode || fix.problemCode || _getA11yProblemCode(fix, fullData, t);
-    var fixedCode = fix.fixedCode || fix.solutionCode || fix.snippet || _getA11ySolutionCode(fix, fullData, t);
+    const problemCode = fix.problematicCode || fix.problemCode || _getA11yProblemCode(fix, fullData, t);
+    const fixedCode = fix.fixedCode || fix.solutionCode || fix.snippet || _getA11ySolutionCode(fix, fullData, t);
 
     if (problemCode || fixedCode) {
       html += '<div class="pdf-fix-card__code-grid">';
@@ -909,7 +909,7 @@
     }
 
     // Step-by-step guide
-    var steps = fix.steps || _getA11yFixSteps(fix, fullData, t);
+    const steps = fix.steps || _getA11yFixSteps(fix, fullData, t);
     if (steps && steps.length > 0) {
       html += '<div class="pdf-fix-card__steps">';
       html += '<div class="pdf-fix-card__steps-title">' +
@@ -924,13 +924,13 @@
     }
 
     // Resources table
-    var resources = fix.resources || _getA11yResources(fix, t);
+    const resources = fix.resources || _getA11yResources(fix, t);
     if (resources && resources.length > 0) {
       html += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid rgba(0,0,0,0.06);">';
       html += '<div style="font-size:0.7rem;font-weight:600;text-transform:uppercase;letter-spacing:0.03em;color:#6b7280;margin-bottom:4px;">' +
         esc(t('accessibility.report.fixes.resources', 'Resources & Tools')) + '</div>';
       resources.forEach(function (r) {
-        var label = r.title || r.url || '';
+        const label = r.title || r.url || '';
         html += '<div style="font-size:0.75rem;color:#2563eb;margin-bottom:2px;">' + esc(label);
         if (r.url && r.url !== label) {
           html += ' <span style="color:#9ca3af;font-size:0.65rem;">(' + esc(r.url) + ')</span>';
@@ -949,18 +949,18 @@
      Code generators — mirror the web UI's getA11yProblemCode / getA11ySolutionCode
      ------------------------------------------------------------------------- */
   function _getA11yProblemCode(rec, data, t) {
-    var title = (rec.title || '').toLowerCase();
+    const title = (rec.title || '').toLowerCase();
 
     if (title.indexOf('contrast') >= 0) {
-      var issues = (data.contrast && data.contrast.issues) ? data.contrast.issues : [];
+      const issues = (data.contrast && data.contrast.issues) ? data.contrast.issues : [];
       if (issues.length > 0) {
-        var examples = [];
-        for (var i = 0; i < Math.min(issues.length, 3); i++) {
-          var issue = issues[i];
-          var sel = issue.selector || 'element';
-          var ratio = issue.ratio ? issue.ratio.toFixed(2) : '?';
-          var fg = issue.color || '#unknown';
-          var bg = issue.backgroundColor || '#unknown';
+        const examples = [];
+        for (let i = 0; i < Math.min(issues.length, 3); i++) {
+          const issue = issues[i];
+          const sel = issue.selector || 'element';
+          const ratio = issue.ratio ? issue.ratio.toFixed(2) : '?';
+          const fg = issue.color || '#unknown';
+          const bg = issue.backgroundColor || '#unknown';
           examples.push('/* ' + sel + ' */\n/* Contrast ratio: ' + ratio + ':1 (needs 4.5:1) */\ncolor: ' + fg + ';\nbackground: ' + bg + ';');
         }
         return '/* Found ' + issues.length + ' low contrast elements */\n\n' + examples.join('\n\n');
@@ -977,7 +977,7 @@
     }
 
     if (title.indexOf('heading') >= 0) {
-      var hs = (data.aria && data.aria.headingStructure) ? data.aria.headingStructure : '';
+      const hs = (data.aria && data.aria.headingStructure) ? data.aria.headingStructure : '';
       if (hs === 'Missing H1') {
         return '<!-- Page is missing an h1 element -->\n<body>\n  <div class="header">Company Name</div>\n  <h2>Products</h2> <!-- First heading is h2 -->\n</body>';
       }
@@ -989,8 +989,8 @@
     }
 
     if (title.indexOf('mobile') >= 0) {
-      var dScore = (data.desktop && data.desktop.accessibilityScore) ? data.desktop.accessibilityScore : '?';
-      var mScore = (data.mobile && data.mobile.accessibilityScore) ? data.mobile.accessibilityScore : '?';
+      const dScore = (data.desktop && data.desktop.accessibilityScore) ? data.desktop.accessibilityScore : '?';
+      const mScore = (data.mobile && data.mobile.accessibilityScore) ? data.mobile.accessibilityScore : '?';
       return '/* Mobile score is lower than desktop */\n/* Desktop: ' + dScore + ' | Mobile: ' + mScore + ' */\n\n.button {\n  padding: 4px 8px; /* Touch target too small */\n}';
     }
 
@@ -998,7 +998,7 @@
   }
 
   function _getA11ySolutionCode(rec, data, t) {
-    var title = (rec.title || '').toLowerCase();
+    const title = (rec.title || '').toLowerCase();
 
     if (title.indexOf('contrast') >= 0) {
       return '/* WCAG AA compliant contrast (4.5:1 minimum) */\n\n.text-element {\n  color: #1a1a1a;\n  background: #ffffff;\n}\n\n:root {\n  --text-primary: #212121;\n  --bg-primary: #ffffff;\n}';
@@ -1028,10 +1028,10 @@
   }
 
   function _getA11yFixSteps(rec, data, t) {
-    var title = (rec.title || '').toLowerCase();
+    const title = (rec.title || '').toLowerCase();
 
     if (title.indexOf('contrast') >= 0) {
-      var count = (data.contrast && data.contrast.issuesCount) ? data.contrast.issuesCount : 'multiple';
+      const count = (data.contrast && data.contrast.issuesCount) ? data.contrast.issuesCount : 'multiple';
       return [
         t('accessibility.report.fixes.steps.contrast1', 'Open browser DevTools and navigate to the Elements panel'),
         t('accessibility.report.fixes.steps.contrast2', 'Use the Accessibility pane to check color contrast ratios'),
@@ -1124,15 +1124,15 @@
       }
     }
 
-    var fixes = [];
-    var priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
+    const fixes = [];
+    const priorityOrder = { critical: 0, high: 1, medium: 2, low: 3 };
 
     // Priority 2: enrich existing recommendations with template data
-    var recs = data.recommendations || [];
+    const recs = data.recommendations || [];
     if (recs.length > 0) {
       recs.forEach(function (rec) {
-        var template = _matchA11yTemplate(rec.title);
-        var severity = rec.priority || 'medium';
+        const template = _matchA11yTemplate(rec.title);
+        const severity = rec.priority || 'medium';
 
         fixes.push({
           severity: severity,
@@ -1156,10 +1156,10 @@
     // Priority 3: synthesize fixes from raw scan issues when no recommendations exist
     if (fixes.length === 0) {
       // Contrast issues
-      var contrast = data.contrast || {};
+      const contrast = data.contrast || {};
       if ((contrast.issues && contrast.issues.length > 0) || (contrast.issuesCount && contrast.issuesCount > 0)) {
-        var contrastTpl = A11Y_FIX_TEMPLATES['contrast'];
-        var contrastCount = contrast.issuesCount || (contrast.issues ? contrast.issues.length : 0);
+        const contrastTpl = A11Y_FIX_TEMPLATES['contrast'];
+        const contrastCount = contrast.issuesCount || (contrast.issues ? contrast.issues.length : 0);
         fixes.push({
           severity: 'high',
           title: t('reports.accessibility.fixTitles.colorContrast', 'Multiple Color Contrast Issues'),
@@ -1179,9 +1179,9 @@
       }
 
       // Keyboard / focus issues
-      var keyboard = data.keyboard || {};
+      const keyboard = data.keyboard || {};
       if ((keyboard.missingFocusIndicators && keyboard.missingFocusIndicators > 0) || (keyboard.tabTraps && keyboard.tabTraps > 0) || (keyboard.issues && keyboard.issues.length > 0)) {
-        var focusTpl = A11Y_FIX_TEMPLATES['focus'];
+        const focusTpl = A11Y_FIX_TEMPLATES['focus'];
         fixes.push({
           severity: (keyboard.tabTraps && keyboard.tabTraps > 0) ? 'high' : 'medium',
           title: t('reports.accessibility.fixTitles.focusIndicators', 'Missing Focus Indicators'),
@@ -1201,9 +1201,9 @@
       }
 
       // ARIA / labels / landmarks issues
-      var aria = data.aria || {};
+      const aria = data.aria || {};
       if ((aria.missingLabels && aria.missingLabels > 0) || (aria.invalidRoles && aria.invalidRoles > 0)) {
-        var labelTpl = A11Y_FIX_TEMPLATES['label'];
+        const labelTpl = A11Y_FIX_TEMPLATES['label'];
         fixes.push({
           severity: (aria.missingLabels && aria.missingLabels > 3) ? 'high' : 'medium',
           title: t('reports.accessibility.fixTitles.formLabels', 'Missing Form Labels'),
@@ -1223,7 +1223,7 @@
       }
 
       if (aria.landmarksCount !== undefined && aria.landmarksCount < 3) {
-        var landmarkTpl = A11Y_FIX_TEMPLATES['landmark'];
+        const landmarkTpl = A11Y_FIX_TEMPLATES['landmark'];
         fixes.push({
           severity: 'medium',
           title: t('reports.accessibility.fixTitles.ariaLandmarks', 'Missing ARIA Landmarks'),
@@ -1242,9 +1242,9 @@
         });
       }
 
-      var headingStatus = aria.headingStructure || '';
+      const headingStatus = aria.headingStructure || '';
       if (typeof headingStatus === 'string' && headingStatus !== 'Good' && headingStatus !== '') {
-        var headingTpl = A11Y_FIX_TEMPLATES['heading'];
+        const headingTpl = A11Y_FIX_TEMPLATES['heading'];
         fixes.push({
           severity: 'medium',
           title: t('reports.accessibility.fixTitles.headingStructure', 'Improper Heading Structure'),
@@ -1264,10 +1264,10 @@
       }
 
       // Mobile accessibility gap
-      var desktopScore = (data.desktop && data.desktop.accessibilityScore) ? data.desktop.accessibilityScore : 0;
-      var mobileScore = (data.mobile && data.mobile.accessibilityScore) ? data.mobile.accessibilityScore : 0;
+      const desktopScore = (data.desktop && data.desktop.accessibilityScore) ? data.desktop.accessibilityScore : 0;
+      const mobileScore = (data.mobile && data.mobile.accessibilityScore) ? data.mobile.accessibilityScore : 0;
       if (desktopScore && mobileScore && (desktopScore - mobileScore) > 10) {
-        var mobileTpl = A11Y_FIX_TEMPLATES['mobile'];
+        const mobileTpl = A11Y_FIX_TEMPLATES['mobile'];
         fixes.push({
           severity: 'medium',
           title: t('reports.accessibility.fixTitles.mobileGap', 'Mobile Accessibility Gap'),
@@ -1298,9 +1298,9 @@
   /** Match a recommendation title to an A11Y_FIX_TEMPLATES entry */
   function _matchA11yTemplate(title) {
     if (!title) return null;
-    var titleLower = title.toLowerCase();
-    var keys = Object.keys(A11Y_FIX_TEMPLATES);
-    for (var i = 0; i < keys.length; i++) {
+    const titleLower = title.toLowerCase();
+    const keys = Object.keys(A11Y_FIX_TEMPLATES);
+    for (let i = 0; i < keys.length; i++) {
       if (titleLower.indexOf(keys[i]) !== -1) {
         return A11Y_FIX_TEMPLATES[keys[i]];
       }
@@ -1314,8 +1314,8 @@
      from the web UI.
      ------------------------------------------------------------------------- */
   function _getA11yResources(fix, t) {
-    var title = (fix.title || '').toLowerCase();
-    var resources = [];
+    const title = (fix.title || '').toLowerCase();
+    const resources = [];
 
     if (title.indexOf('contrast') >= 0 || title.indexOf('color') >= 0) {
       resources.push({ title: 'WebAIM Contrast Checker', url: 'https://webaim.org/resources/contrastchecker/' });
@@ -1351,9 +1351,9 @@
 
     // Always include general tools if we have fewer than 2 resources
     if (resources.length < 2) {
-      var hasWave = false;
-      var hasAxe = false;
-      for (var i = 0; i < resources.length; i++) {
+      let hasWave = false;
+      let hasAxe = false;
+      for (let i = 0; i < resources.length; i++) {
         if (resources[i].title.indexOf('WAVE') >= 0) hasWave = true;
         if (resources[i].title.indexOf('axe') >= 0) hasAxe = true;
       }
@@ -1369,7 +1369,7 @@
   }
 
   function _htmlToNode(html) {
-    var temp = document.createElement('div');
+    const temp = document.createElement('div');
     temp.innerHTML = html;
     return temp.firstChild;
   }

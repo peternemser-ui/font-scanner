@@ -11,23 +11,23 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('local-seo', function renderLocalSEO(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     // Resolve data sources
-    var analysis = data.analysis || {};
-    var scores = data.scores || {};
-    var recommendations = data.recommendations || [];
+    const analysis = data.analysis || {};
+    const scores = data.scores || {};
+    const recommendations = data.recommendations || [];
 
     function _htmlToNode(htmlStr) {
-      var tpl = document.createElement('template');
+      const tpl = document.createElement('template');
       tpl.innerHTML = htmlStr.trim();
       return tpl.content.firstChild;
     }
@@ -36,16 +36,16 @@
        1. NAP Consistency
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-nap .pdf-section__content');
-      var d = analysis.nap || {};
-      var score = scores.nap;
+      const sec = document.querySelector('#section-nap .pdf-section__content');
+      const d = analysis.nap || {};
+      const score = scores.nap;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.localSeo.report.nap', 'NAP Consistency'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.nap', 'NAP (Name, Address, Phone) consistency is a fundamental local SEO ranking factor. Search engines cross-reference your business information across the web to verify legitimacy. Inconsistent NAP data can confuse search engines and reduce your local search visibility. This section checks for NAP presence and consistency issues.')) + '</p>';
@@ -53,7 +53,7 @@
       // NAP details table
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.localSeo.report.nap.detailsHeading', 'Business Information')) + '</h3>';
 
-      var napRows = [];
+      const napRows = [];
       napRows.push([
         esc(t('reports.localSeo.report.nap.rows.name', 'Business Name')),
         '<strong>' + esc(d.name || '-') + '</strong>'
@@ -101,16 +101,16 @@
        2. Schema Markup
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-schema .pdf-section__content');
-      var d = analysis.schema || {};
-      var score = scores.schema;
+      const sec = document.querySelector('#section-schema .pdf-section__content');
+      const d = analysis.schema || {};
+      const score = scores.schema;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.localSeo.report.schema', 'Schema Markup'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.schema', 'Local business schema markup helps search engines understand your business details and display rich results. Proper schema implementation can earn you enhanced search listings with ratings, hours, and contact information. This section evaluates your structured data for local business relevance.')) + '</p>';
@@ -124,7 +124,7 @@
       // Schema types table
       if (d.types && d.types.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.localSeo.report.schema.typesHeading', 'Detected Schema Types')) + '</h3>';
-        var typeRows = d.types.map(function (type) {
+        const typeRows = d.types.map(function (type) {
           return [
             '<strong>' + esc(type) + '</strong>',
             PR.renderStatus('found', t('seo.report.status.found', 'Found'))
@@ -165,16 +165,16 @@
        3. Local Keywords
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-keywords .pdf-section__content');
-      var d = analysis.keywords || {};
-      var score = scores.keywords;
+      const sec = document.querySelector('#section-keywords .pdf-section__content');
+      const d = analysis.keywords || {};
+      const score = scores.keywords;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.localSeo.report.keywords', 'Local Keywords'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.keywords', 'Local keywords signal geographic relevance to search engines. This section analyzes your content for location-specific terms, service area keywords, and local intent signals. Proper use of local keywords helps your pages rank for geographically targeted searches.')) + '</p>';
@@ -188,7 +188,7 @@
       // Local keywords found table
       if (d.local && d.local.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.localSeo.report.keywords.foundHeading', 'Local Keywords Detected')) + '</h3>';
-        var kwRows = d.local.slice(0, 20).map(function (kw, idx) {
+        const kwRows = d.local.slice(0, 20).map(function (kw, idx) {
           return [
             String(idx + 1),
             '<strong>' + esc(typeof kw === 'string' ? kw : (kw.term || kw.keyword || '-')) + '</strong>',
@@ -213,7 +213,7 @@
 
       // Keyword density progress bar
       if (d.density !== undefined && d.density !== null) {
-        var densityPct = Math.min(d.density * 100, 100);
+        const densityPct = Math.min(d.density * 100, 100);
         html += PR.renderProgress(
           t('reports.localSeo.report.keywords.densityLabel', 'Local Keyword Density'),
           Math.round(densityPct), 100
@@ -230,7 +230,7 @@
           'tip'
         );
 
-        var sugRows = d.suggestions.slice(0, 15).map(function (sug, idx) {
+        const sugRows = d.suggestions.slice(0, 15).map(function (sug, idx) {
           return [
             String(idx + 1),
             '<strong>' + esc(typeof sug === 'string' ? sug : (sug.term || sug.keyword || '-')) + '</strong>'
@@ -258,16 +258,16 @@
        4. Local Presence
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-presence .pdf-section__content');
-      var d = analysis.localPresence || {};
-      var score = scores.presence;
+      const sec = document.querySelector('#section-presence .pdf-section__content');
+      const d = analysis.localPresence || {};
+      const score = scores.presence;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.localSeo.report.presence', 'Local Presence'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.presence', 'Local presence factors include Google Business Profile optimization, local directory citations, and review signals. This section evaluates indicators of your local search presence and identifies opportunities to strengthen your visibility in local search results.')) + '</p>';
@@ -295,7 +295,7 @@
 
       // Citations progress
       if (d.citations !== undefined && d.citations !== null) {
-        var citationTarget = 50;
+        const citationTarget = 50;
         html += PR.renderProgress(
           t('reports.localSeo.report.presence.citationsLabel', 'Citations Found'),
           Math.min(d.citations, citationTarget), citationTarget
@@ -305,9 +305,9 @@
       // Directories table
       if (d.directories && d.directories.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.localSeo.report.presence.directoriesHeading', 'Directory Listings')) + '</h3>';
-        var dirRows = d.directories.slice(0, 20).map(function (dir) {
-          var dirName = typeof dir === 'string' ? dir : (dir.name || dir.directory || '-');
-          var dirListed = typeof dir === 'object' && dir.listed !== undefined ? dir.listed : true;
+        const dirRows = d.directories.slice(0, 20).map(function (dir) {
+          const dirName = typeof dir === 'string' ? dir : (dir.name || dir.directory || '-');
+          const dirListed = typeof dir === 'object' && dir.listed !== undefined ? dir.listed : true;
           return [
             '<strong>' + esc(dirName) + '</strong>',
             dirListed
@@ -337,29 +337,29 @@
        5. Recommendations
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.localSeo.report.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('reports.localSeo.report.sectionIntros.recommendations', 'Based on the local SEO analysis, these recommendations target the most impactful improvements for your local search visibility and geographic relevance.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Group by priority/severity
-        var critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
-        var high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
-        var medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
-        var low = recommendations.filter(function (r) {
-          var p = r.priority || r.severity;
+        const critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
+        const high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
+        const medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
+        const low = recommendations.filter(function (r) {
+          const p = r.priority || r.severity;
           return !p || p === 'low';
         });
 
-        var groups = [
+        const groups = [
           { items: critical, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444' },
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
@@ -394,7 +394,7 @@
        Hide empty sections
        ----------------------------------------------------------------------- */
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -408,10 +408,10 @@
   /** Render issues list for a section */
   function _renderIssuesList(issues, t) {
     if (!issues || issues.length === 0) return '';
-    var html = '<div class="pdf-issues" style="margin-top:12px;">';
+    let html = '<div class="pdf-issues" style="margin-top:12px;">';
     html += '<h4 class="pdf-subsection__title">' + (t('common.pdf.execSummary.issuesFound', 'Issues Found') || 'Issues') + '</h4>';
     issues.forEach(function (issue) {
-      var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+      const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
       html += '<div class="pdf-issue pdf-issue--warning">' +
         '<span class="pdf-issue__text">' + PdfReport.helpers.esc(text) + '</span>' +
       '</div>';

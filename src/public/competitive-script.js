@@ -75,6 +75,13 @@ document.addEventListener('DOMContentLoaded', () => {
 // BILLING RETURN HANDLING
 // ============================================
 (async function initCompetitiveAnalysis() {
+  // Ensure i18n translations are loaded before rendering any report content.
+  // Without this, stored reports loaded on page init may render with English
+  // fallbacks because window.i18n.init() (async fetch) hasn't completed yet.
+  if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+  }
+
   const params = new URLSearchParams(window.location.search);
   const reportId = params.get('report_id') || '';
   const autoUrl = params.get('url') || '';
@@ -580,7 +587,8 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
       body: JSON.stringify({
         yourUrl,
         competitorUrls,
-        scanStartedAt
+        scanStartedAt,
+        lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en'
       })
     });
     
@@ -652,7 +660,12 @@ document.getElementById('analyzeBtn').addEventListener('click', async () => {
 });
 
 // Display competitive analysis results
-function displayResults(data) {
+async function displayResults(data) {
+  // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+  if (window.i18n && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* fallback */ }
+  }
+
   // Defensive checks
   if (!data || !data.yourSite || !data.competitors) {
     console.error('Invalid data structure:', data);
@@ -899,6 +912,14 @@ function buildCompetitiveSections(data, reportId) {
     contentHTML: renderVisualComparisonContent(data)
   });
 
+  // Site Screenshots — visual comparison of all analyzed sites
+  sections.push({
+    id: 'site-screenshots',
+    title: t('reports.competitive.siteScreenshots', 'Site Screenshots'),
+    expanded: false,
+    contentHTML: renderSiteScreenshotsContent(data)
+  });
+
   // Competitive Position Summary
   sections.push({
     id: 'competitive-position',
@@ -1055,12 +1076,12 @@ function getAccentPrimaryColor() {
 
 function getScoreColor(score) {
   const stops = [
-    [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-    [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-    [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-    [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-    [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-    [100,'#00FF3B']
+    [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+    [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+    [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+    [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+    [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+    [100,'#0AA64F']
   ];
   const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
   const idx = Math.min(Math.floor(s / 5), 19);
@@ -1435,10 +1456,10 @@ function renderDetailedMetricsContent(data) {
     </p>
     
     <div style="overflow-x: auto;">
-      <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden;">
+      <table style="width: 100%; border-collapse: collapse; background: var(--r-surface-1, #fff); border-radius: 8px; overflow: hidden;">
         <thead>
-          <tr style="background: rgba(var(--accent-primary-rgb), 0.1); border-bottom: 2px solid rgba(var(--accent-primary-rgb), 0.3);">
-            <th style="padding: 0.6rem 0.8rem; text-align: left; color: var(--accent-primary); font-weight: bold; border-right: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); font-size: 0.9rem;">
+          <tr style="background: var(--r-surface-2, #f3f4f6); border-bottom: 2px solid var(--r-border, #e5e7eb);">
+            <th style="padding: 0.6rem 0.8rem; text-align: left; color: var(--r-text, #111827); font-weight: bold; border-right: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); font-size: 0.9rem;">
               ${t('reports.competitive.site', 'Site')}
             </th>
             ${metrics.map(({ label, icon }) => `
@@ -1446,7 +1467,7 @@ function renderDetailedMetricsContent(data) {
                 ${icon} ${label}
               </th>
             `).join('')}
-            <th style="padding: 0.6rem 0.8rem; text-align: center; color: #ffd700; font-weight: bold; font-size: 0.95rem;">
+            <th style="padding: 0.6rem 0.8rem; text-align: center; color: #f59e0b; font-weight: bold; font-size: 0.95rem;">
               ◉ ${t('reports.metrics.overall', 'Overall')}
             </th>
           </tr>
@@ -1458,7 +1479,7 @@ function renderDetailedMetricsContent(data) {
             const isYou = site.isYou;
             
             return `
-              <tr style="background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.05)' : siteIdx % 2 === 0 ? 'rgba(255,255,255,0.02)' : 'transparent'}; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+              <tr style="background: ${isYou ? 'rgba(14, 165, 233, 0.07)' : siteIdx % 2 === 0 ? 'var(--r-surface-2, #f9fafb)' : 'transparent'}; border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
                 <td style="padding: 0.6rem 0.8rem; font-weight: ${isYou ? 'bold' : 'normal'}; color: ${isYou ? 'var(--accent-primary)' : 'var(--text-primary)'}; border-right: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); font-size: 0.85rem;">
                   ${isYou ? '◉ ' : ''}${site.name}${isYou ? ' (' + t('reports.competitive.you', 'YOU') + ')' : ''}
                   <div style="font-size: 0.7rem; color: var(--text-secondary); margin-top: 0.15rem;">
@@ -1470,7 +1491,7 @@ function renderDetailedMetricsContent(data) {
                   const hasDetails = details[key] !== null && details[key] !== undefined;
                   const failed = score === 0;
                   
-                  let scoreColor = '#ff4444';
+                  let scoreColor = '#ef4444';
                   if (score >= 80) scoreColor = getAccentPrimaryColor();
                   else if (score >= 60) scoreColor = '#ffa500';
                   
@@ -1503,8 +1524,8 @@ function renderDetailedMetricsContent(data) {
                     </td>
                   `;
                 }).join('')}
-                <td style="padding: 0.6rem 0.8rem; text-align: center; background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.1)' : 'rgba(255, 215, 0, 0.05)'};">
-                  <div style="font-size: 1.5rem; font-weight: bold; color: ${scores.overall >= 80 ? 'var(--accent-primary)' : scores.overall >= 60 ? '#ffa500' : '#ff4444'};">
+                <td style="padding: 0.6rem 0.8rem; text-align: center; background: ${isYou ? 'rgba(var(--accent-primary-rgb), 0.1)' : 'rgba(245, 158, 11, 0.05)'};">
+                  <div style="font-size: 1.5rem; font-weight: bold; color: ${scores.overall >= 80 ? 'var(--accent-primary)' : scores.overall >= 60 ? '#ffa500' : '#ef4444'};">
                     ${scores.overall || 0}
                   </div>
                   <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.15rem;">
@@ -1566,7 +1587,7 @@ function renderExecutiveSummary(data) {
     if (status === 'losing') lossesCount++;
   });
   
-  const statusColor = isWinning ? getAccentPrimaryColor() : isLosing ? '#ff4444' : '#ff8c00';
+  const statusColor = isWinning ? getAccentPrimaryColor() : isLosing ? '#ef4444' : '#ff8c00';
   const statusIcon = isWinning ? '↑' : isLosing ? '↓' : '≈';
   const statusText = t('reports.competitive.competitive', 'COMPETITIVE');
   
@@ -1671,12 +1692,12 @@ function renderExecutiveSummary(data) {
               background: rgba(255,255,255,0.03);
               padding: 1rem;
               border-radius: 8px;
-              border-left: 3px solid ${maxCompetitor > yourOverall ? '#ff4444' : 'var(--accent-primary)'};
+              border-left: 3px solid ${maxCompetitor > yourOverall ? '#ef4444' : 'var(--accent-primary)'};
             ">
               <div style="font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.25rem;">
                 ${t('reports.competitive.gapToLeader', 'Gap to leader')}
               </div>
-              <div style="font-size: 2rem; font-weight: 900; color: ${maxCompetitor > yourOverall ? '#ff4444' : 'var(--accent-primary)'}; line-height: 1;">
+              <div style="font-size: 2rem; font-weight: 900; color: ${maxCompetitor > yourOverall ? '#ef4444' : 'var(--accent-primary)'}; line-height: 1;">
                 ${maxCompetitor > yourOverall ? `${maxCompetitor - yourOverall}` : `+${yourOverall - maxCompetitor}`}
               </div>
               <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
@@ -1712,7 +1733,9 @@ function renderExecutiveSummary(data) {
             margin-bottom: 1rem;
           ">
             ${lossesCount > 0 ?
-              t('reports.competitive.fixWeaknesses', 'Fix {{count}} weakness', { count: lossesCount }) + (lossesCount !== 1 ? 'es' : '') :
+              (lossesCount === 1
+                ? t('reports.competitive.fixWeakness', 'Fix {{count}} weakness', { count: lossesCount })
+                : t('reports.competitive.fixWeaknesses', 'Fix {{count}} weaknesses', { count: lossesCount })) :
               t('reports.competitive.maintainLead', 'Maintain Lead')}
           </div>
           <div style="
@@ -1754,14 +1777,14 @@ function renderRankings(rankings) {
     <section class="section">
       <h2>R ${t('reports.competitive.yourRankings', 'Your Rankings')}</h2>
       <div style="overflow-x: auto;">
-        <table style="width: 100%; border-collapse: collapse; background: rgba(255,255,255,0.03); border-radius: 8px; overflow: hidden; font-size: 0.9rem;">
+        <table style="width: 100%; border-collapse: collapse; background: var(--r-surface-1, #fff); border-radius: 8px; overflow: hidden; font-size: 0.9rem;">
           <thead>
-            <tr style="background: rgba(255,255,255,0.08);">
-              <th style="padding: 0.75rem 1rem; text-align: left; border-bottom: 2px solid rgba(255,255,255,0.1); color: var(--text-primary); font-weight: 600;">${t('reports.competitive.metric', 'Metric')}</th>
-              <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid rgba(255,255,255,0.1); color: var(--text-primary); font-weight: 600; width: 60px;">${t('reports.competitive.medal', 'Medal')}</th>
-              <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid rgba(255,255,255,0.1); color: var(--text-primary); font-weight: 600; width: 80px;">${t('reports.competitive.rank', 'Rank')}</th>
-              <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid rgba(255,255,255,0.1); color: var(--text-primary); font-weight: 600; width: 100px;">${t('reports.competitive.status', 'Status')}</th>
-              <th style="padding: 0.75rem 1rem; text-align: left; border-bottom: 2px solid rgba(255,255,255,0.1); color: var(--text-primary); font-weight: 600;">${t('reports.competitive.recommendedAction', 'Recommended Action')}</th>
+            <tr style="background: var(--r-surface-2, #f3f4f6);">
+              <th style="padding: 0.75rem 1rem; text-align: left; border-bottom: 2px solid var(--r-border, #e5e7eb); color: var(--r-text, #111827); font-weight: 600;">${t('reports.competitive.metric', 'Metric')}</th>
+              <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid var(--r-border, #e5e7eb); color: var(--r-text, #111827); font-weight: 600; width: 60px;">${t('reports.competitive.medal', 'Medal')}</th>
+              <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid var(--r-border, #e5e7eb); color: var(--r-text, #111827); font-weight: 600; width: 80px;">${t('reports.competitive.rank', 'Rank')}</th>
+              <th style="padding: 0.75rem; text-align: center; border-bottom: 2px solid var(--r-border, #e5e7eb); color: var(--r-text, #111827); font-weight: 600; width: 100px;">${t('reports.competitive.status', 'Status')}</th>
+              <th style="padding: 0.75rem 1rem; text-align: left; border-bottom: 2px solid var(--r-border, #e5e7eb); color: var(--r-text, #111827); font-weight: 600;">${t('reports.competitive.recommendedAction', 'Recommended Action')}</th>
             </tr>
           </thead>
           <tbody>
@@ -1773,14 +1796,14 @@ function renderRankings(rankings) {
               const isThird = data.rank === 3 && !failed;
               const isLast = data.rank === data.total && data.total > 0 && !failed;
               
-              let statusColor = '#ff4444';
+              let statusColor = '#ef4444';
               let statusText = '~ Behind';
               let medal = data.medal || '◉';
               let rankDisplay = data.rank ? `${data.rank}/${data.total}` : '—';
               let recommendation = '';
               
               if (failed) {
-                statusColor = '#ff4444';
+                statusColor = '#ef4444';
                 statusText = data.total === 0 ? '✗ ' + t('reports.competitive.allFailed', 'All Failed') : '✗ ' + t('reports.status.failed', 'Failed');
                 medal = '✗';
                 rankDisplay = '—';
@@ -1790,7 +1813,7 @@ function renderRankings(rankings) {
                 statusText = '↑ ' + t('reports.competitive.leading', 'Leading!');
                 recommendation = t('reports.competitive.maintainPosition', 'Maintain position - monitor competitors');
               } else if (isSecond) {
-                statusColor = '#ffd700';
+                statusColor = '#f59e0b';
                 statusText = '🥈 ' + t('reports.competitive.strong', 'Strong');
                 recommendation = t('reports.competitive.pushToFirst', 'Push to #1 - minor optimizations needed');
               } else if (isThird) {
@@ -1798,7 +1821,7 @@ function renderRankings(rankings) {
                 statusText = '≈ ' + t('reports.competitive.competitiveStatus', 'Competitive');
                 recommendation = t('reports.competitive.improveGapClosing', 'Improve {{metric}} - gap closing opportunity', { metric: label.toLowerCase() });
               } else if (isLast) {
-                statusColor = '#ff4444';
+                statusColor = '#ef4444';
                 statusText = '↓ ' + t('reports.competitive.behind', 'Behind');
                 recommendation = t('reports.competitive.priorityOverhaul', 'Priority: {{metric}} overhaul required', { metric: label.toLowerCase() });
               } else {
@@ -1869,15 +1892,70 @@ function renderRankings(rankings) {
   `;
 }
 
+// Translate insight message from server (server sends English, we translate client-side)
+function translateInsightMessage(insight) {
+  const cat = (insight.category || '').toLowerCase();
+  const type = (insight.type || '').toLowerCase();
+  // Map server-generated messages to i18n keys
+  if (cat === 'overall' && type === 'success') {
+    return t('reports.competitive.insights.outperforming', 'You are outperforming the competition!');
+  }
+  if (cat === 'overall' && (type === 'warning' || type === 'critical')) {
+    return t('reports.competitive.insights.competitorsAhead', 'Competitors are ahead');
+  }
+  if (cat === 'seo') {
+    return t('reports.competitive.insights.losingSeo', 'Losing SEO battle');
+  }
+  if (cat === 'core web vitals') {
+    return t('reports.competitive.insights.cwvAtRisk', 'Google rankings at risk');
+  }
+  if (cat === 'performance') {
+    return t('reports.competitive.insights.slowerThan', 'Slower than competitors');
+  }
+  if (cat === 'security') {
+    return t('reports.competitive.insights.securityGap', 'Security gap detected');
+  }
+  // Fallback to server message if no matching key
+  return insight.message || '';
+}
+
+// Translate insight detail from server
+function translateInsightDetail(insight) {
+  const cat = (insight.category || '').toLowerCase();
+  const type = (insight.type || '').toLowerCase();
+  // Extract scores from detail if present (server embeds them in English text)
+  const yourScore = insight.yourScore;
+  const avgScore = insight.avgScore;
+  if (cat === 'overall' && type === 'success') {
+    return t('reports.competitive.insights.outperformingDetail', 'Your overall score is above the competitive average');
+  }
+  if (cat === 'overall' && (type === 'warning' || type === 'critical')) {
+    return t('reports.competitive.insights.competitorsAheadDetail', 'Focus on areas where you are falling behind to gain competitive advantage');
+  }
+  if (cat === 'seo') {
+    return t('reports.competitive.insights.losingSeoDetail', 'Your SEO score is below competitor average. This hurts organic visibility.');
+  }
+  if (cat === 'core web vitals') {
+    return t('reports.competitive.insights.cwvAtRiskDetail', 'Competitors have better Core Web Vitals. Google may rank them higher.');
+  }
+  if (cat === 'performance') {
+    return t('reports.competitive.insights.slowerThanDetail', 'Users may choose faster competitor sites.');
+  }
+  if (cat === 'security') {
+    return t('reports.competitive.insights.securityGapDetail', 'Competitors have stronger security measures. This affects user trust.');
+  }
+  return insight.detail || '';
+}
+
 // Render insights content (for accordion)
 function renderInsightsContent(insights) {
   if (!insights || insights.length === 0) return '<p style="color: var(--text-secondary);">' + t('reports.competitive.noInsightsAvailable', 'No insights available.') + '</p>';
-  
+
   return `
     ${insights.map(insight => `
       <div class="insight-card insight-${insight.type}" style="margin-bottom: 0.75rem;">
-        <h3 style="margin: 0 0 0.5rem 0;">${insight.message}</h3>
-        <p style="margin: 0; color: var(--text-secondary);">${insight.detail}</p>
+        <h3 style="margin: 0 0 0.5rem 0;">${translateInsightMessage(insight)}</h3>
+        <p style="margin: 0; color: var(--text-secondary);">${translateInsightDetail(insight)}</p>
       </div>
     `).join('')}
   `;
@@ -1918,7 +1996,7 @@ function getMetricStatus(data, metric) {
     statusText: failed
       ? '✗ ' + t('reports.competitive.analysisFailed', 'Analysis failed')
       : (rankingData.rank === 1 ? '↑ ' + t('reports.competitive.leading', 'Leading!') : rankingData.rank === 2 ? '≈ ' + t('reports.competitive.strong', 'Strong') : '◉ ' + t('reports.competitive.competitiveStatus', 'Competitive')),
-    statusColor: failed ? '#ff4444' : (rankingData.rank === 1 ? getAccentPrimaryColor() : rankingData.rank === 2 ? '#ffd700' : '#ff8c00')
+    statusColor: failed ? '#ef4444' : (rankingData.rank === 1 ? getAccentPrimaryColor() : rankingData.rank === 2 ? '#f59e0b' : '#ff8c00')
   };
 }
 
@@ -1952,48 +2030,54 @@ function renderVisualComparisonContent(data) {
       const gap = bestCompetitor ? bestCompetitor.scores[metric] - yourScore : 0;
       
       return `
-        <div style="margin-bottom: 2.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-radius: 8px; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
+        <div style="margin-bottom: 2.5rem; padding: 1.5rem; background: var(--r-surface-2, #f3f4f6); border-radius: 8px; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
           <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-            <h3 style="margin: 0; font-size: 1.1rem;">
+            <h3 style="margin: 0; font-size: 1.1rem; color: var(--r-text, #111827);">
               ${formatMetricName(metric)}
               ${metricStatus.failed ? `<span style="color: ${metricStatus.statusColor}; font-size: 0.9rem; margin-left: 0.5rem;">(${metricStatus.statusText})</span>` :
-                gap > 0 ? `<span style="color: #ff4444; font-size: 0.9rem; margin-left: 0.5rem;">(-${gap} ${t('reports.competitive.behindLeader', 'behind leader')})</span>` :
-                 gap < 0 ? `<span style="color: var(--accent-primary); font-size: 0.9rem; margin-left: 0.5rem;">(+${Math.abs(gap)} ${t('reports.competitive.ahead', 'ahead!')})</span>` :
-                 `<span style="color: #ffd700; font-size: 0.9rem; margin-left: 0.5rem;">(${metricStatus.statusText})</span>`}
+                gap > 0 ? `<span style="color: #dc2626; font-size: 0.9rem; margin-left: 0.5rem;">(-${gap} ${t('reports.competitive.behindLeader', 'behind leader')})</span>` :
+                 gap < 0 ? `<span style="color: #16a34a; font-size: 0.9rem; margin-left: 0.5rem;">(+${Math.abs(gap)} ${t('reports.competitive.ahead', 'ahead!')})</span>` :
+                 `<span style="color: #ca8a04; font-size: 0.9rem; margin-left: 0.5rem;">(${metricStatus.statusText})</span>`}
             </h3>
             <div style="font-size: 0.85rem; color: ${metricStatus.statusColor};">
               ${t('reports.competitive.yourRank', 'Your rank')}: ${metricStatus.displayRank}
             </div>
           </div>
-          
+
           ${allScores.map((site, idx) => {
             const percentage = maxScore > 0 ? (site.score / maxScore) * 100 : 0;
             const isWinner = idx === 0;
-            const barColor = site.isYou ? getAccentPrimaryColor() : (isWinner ? '#ffd700' : '#4a9eff');
-            
+            const competitorColors = ['#6366f1', '#8b5cf6', '#a78bfa', '#94a3b8', '#64748b'];
+            const competitorIdx = site.isYou || isWinner ? 0 : Math.min(idx - 1, competitorColors.length - 1);
+            const barColor = site.isYou ? '#0ea5e9' : (isWinner ? '#10b981' : competitorColors[competitorIdx]);
+            const barGradient = site.isYou
+              ? 'linear-gradient(90deg, #0ea5e9, #06b6d4)'
+              : (isWinner ? 'linear-gradient(90deg, #10b981, #34d399)' : barColor);
+
             return `
               <div style="margin-bottom: 0.75rem;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.25rem;">
-                  <span style="font-size: 0.9rem; ${site.isYou ? 'font-weight: bold; color: var(--accent-primary);' : ''}">
+                  <span style="font-size: 0.9rem; color: var(--r-text, #111827); ${site.isYou ? 'font-weight: bold;' : ''}">
                     ${isWinner ? '👑 ' : ''}${site.name}${site.isYou ? ' (' + t('reports.competitive.you', 'YOU') + ')' : ''}
                   </span>
                   <span style="font-weight: bold; font-size: 1rem; color: ${barColor};">
                     ${site.score}
                   </span>
                 </div>
-                <div style="background: rgba(255,255,255,0.1); height: 24px; border-radius: 4px; overflow: hidden; position: relative;">
+                <div style="background: var(--r-dial-track, #e5e7eb); height: 24px; border-radius: 6px; overflow: hidden; position: relative;">
                   <div style="
-                    background: linear-gradient(90deg, ${barColor} 0%, ${barColor}dd 100%);
+                    background: ${barGradient};
                     height: 100%;
                     width: ${percentage}%;
+                    min-width: ${site.score > 0 ? '2rem' : '0'};
                     transition: width 1s ease-out;
                     display: flex;
                     align-items: center;
                     padding: 0 0.5rem;
                     font-size: 0.75rem;
                     font-weight: bold;
-                    color: white;
-                    box-shadow: ${site.isYou ? '0 0 10px ' + barColor : 'none'};
+                    color: #fff;
+                    border-radius: 6px;
                   ">
                     ${percentage.toFixed(0)}%
                   </div>
@@ -2017,7 +2101,7 @@ function renderCompetitivePositionContent(data) {
   return `
     <div class="stats-grid">
       ${Object.entries(data.comparison).map(([metric, stats]) => `
-        <div class="stat-card" style="border: 2px solid ${stats.status === 'winning' ? 'var(--accent-primary)' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
+        <div class="stat-card" style="border: 2px solid ${stats.status === 'winning' ? 'var(--accent-primary)' : stats.status === 'losing' ? '#ef4444' : '#f59e0b'};">
           <div style="text-align: center; margin-bottom: 0.5rem;">
             ${stats.status === 'winning' ? '✓' : stats.status === 'losing' ? '✗' : '≈'}
           </div>
@@ -2025,7 +2109,7 @@ function renderCompetitivePositionContent(data) {
             ${stats.diff > 0 ? '+' : ''}${stats.diff}
           </div>
           <div class="stat-label">${formatMetricName(metric)}</div>
-          <div class="stat-sublabel" style="font-weight: bold; color: ${stats.status === 'winning' ? 'var(--accent-primary)' : stats.status === 'losing' ? '#ff4444' : '#ffd700'};">
+          <div class="stat-sublabel" style="font-weight: bold; color: ${stats.status === 'winning' ? 'var(--accent-primary)' : stats.status === 'losing' ? '#ef4444' : '#f59e0b'};">
             ${stats.status === 'winning' ? t('reports.competitive.winning', 'WINNING') : stats.status === 'tied' ? t('reports.competitive.tied', 'TIED') : t('reports.competitive.losing', 'LOSING')}
           </div>
           <div style="font-size: 0.8rem; margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
@@ -2111,8 +2195,8 @@ function renderHeadToHeadContent(data) {
                     <td style="text-align: center;">
                       <span style="
                         font-weight: ${isMax ? 'bold' : 'normal'};
-                        color: ${isMax ? '#ffd700' : 'inherit'};
-                        ${isMax ? 'text-shadow: 0 0 10px #ffd700;' : ''}
+                        color: ${isMax ? '#f59e0b' : 'inherit'};
+                        ${isMax ? 'text-shadow: 0 0 10px #f59e0b;' : ''}
                       ">
                         ${isMax ? '👑 ' : ''}${score}
                       </span>
@@ -2147,7 +2231,7 @@ function renderMetricAccordion(analysis, index, data) {
   const accordionId = `h2h-metric-${index}`;
   const isWinning = analysis.isWinning;
   const style = isWinning
-    ? { bg: 'rgba(0, 255, 65, 0.08)', border: '#00ff41', color: '#00ff41', icon: '👑' }
+    ? { bg: 'rgba(16, 185, 129, 0.08)', border: '#10b981', color: '#10b981', icon: '👑' }
     : { bg: 'rgba(255, 165, 0, 0.08)', border: '#ffa500', color: '#ffa500', icon: '📈' };
 
   const statusText = isWinning
@@ -2243,7 +2327,7 @@ function renderMetricTabs(analysis, accordionId, data) {
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your score')}</div>
-          <div style="font-size: 1.75rem; font-weight: bold; color: ${analysis.isWinning ? '#00ff41' : '#ffa500'};">${analysis.yourScore}</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: ${analysis.isWinning ? '#10b981' : '#ffa500'};">${analysis.yourScore}</div>
         </div>
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.bestCompetitor', 'Best Competitor')}</div>
@@ -2254,8 +2338,8 @@ function renderMetricTabs(analysis, accordionId, data) {
           <div style="font-size: 1.75rem; font-weight: bold; color: var(--text-secondary);">${Math.round(analysis.avgCompetitor)}</div>
         </div>
       </div>
-      <div style="background: ${analysis.isWinning ? 'rgba(0,255,65,0.1)' : 'rgba(255,165,0,0.1)'}; border-left: 3px solid ${analysis.isWinning ? '#00ff41' : '#ffa500'}; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: ${analysis.isWinning ? '#00ff41' : '#ffa500'}; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
+      <div style="background: ${analysis.isWinning ? 'rgba(16,185,129,0.1)' : 'rgba(255,165,0,0.1)'}; border-left: 3px solid ${analysis.isWinning ? '#10b981' : '#ffa500'}; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: ${analysis.isWinning ? '#10b981' : '#ffa500'}; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
           ${analysis.isWinning ? '✓ ' + t('reports.competitive.competitiveAdvantage', 'Competitive Advantage') : '⚠ ' + t('reports.competitive.improvementOpportunity', 'Improvement Opportunity')}
         </div>
         <div style="color: var(--text-secondary); font-size: 0.9rem;">
@@ -2281,7 +2365,7 @@ function renderMetricTabs(analysis, accordionId, data) {
               padding: 0.75rem 1rem;
               background: ${site.isYou ? 'rgba(var(--accent-primary-rgb), 0.15)' : 'rgba(0,0,0,0.2)'};
               border-radius: 6px;
-              border-left: 3px solid ${rank === 0 ? '#ffd700' : site.isYou ? 'var(--accent-primary)' : 'transparent'};
+              border-left: 3px solid ${rank === 0 ? '#10b981' : site.isYou ? '#0ea5e9' : 'transparent'};
             ">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <span style="
@@ -2291,16 +2375,16 @@ function renderMetricTabs(analysis, accordionId, data) {
                   align-items: center;
                   justify-content: center;
                   border-radius: 50%;
-                  background: ${rank === 0 ? '#ffd700' : 'rgba(255,255,255,0.1)'};
-                  color: ${rank === 0 ? '#000' : 'var(--text-secondary)'};
+                  background: ${rank === 0 ? '#10b981' : 'rgba(255,255,255,0.1)'};
+                  color: ${rank === 0 ? '#fff' : 'var(--text-secondary)'};
                   font-size: 0.75rem;
                   font-weight: bold;
                 ">${rank + 1}</span>
-                <span style="font-weight: ${site.isYou ? 'bold' : 'normal'}; color: ${site.isYou ? 'var(--accent-primary)' : 'var(--text-primary)'};">
+                <span style="font-weight: ${site.isYou ? 'bold' : 'normal'}; color: ${site.isYou ? '#0ea5e9' : 'var(--text-primary)'};">
                   ${site.isYou ? '👤 ' + t('reports.competitive.you', 'YOU') : site.name}
                 </span>
               </div>
-              <span style="font-weight: bold; font-size: 1.1rem; color: ${rank === 0 ? '#ffd700' : 'var(--text-primary)'};">
+              <span style="font-weight: bold; font-size: 1.1rem; color: ${rank === 0 ? '#10b981' : 'var(--text-primary)'};">
                 ${site.score}
               </span>
             </div>
@@ -2345,8 +2429,8 @@ function getMetricCompetitiveInsight(analysis) {
 
   const insights = {
     performance: t('reports.competitive.insight.performance', 'A {{gap}}-point performance gap means users experience noticeably faster load times on competitor sites. This directly impacts user engagement, bounce rates, and can affect search rankings.', { gap }),
-    seo: t('reports.competitive.insight.seo', 'Being {{gap}} points behind in SEO means competitors likely have better search visibility. They may be capturing organic traffic you\\', { gap }),
-    accessibility: t('reports.competitive.insight.accessibility', 'This {{gap}}-point accessibility gap could mean competitors are reaching audiences you\\', { gap }),
+    seo: t('reports.competitive.insight.seo', 'Being {{gap}} points behind in SEO means competitors likely have better search visibility. They may be capturing organic traffic that you are missing.', { gap }),
+    accessibility: t('reports.competitive.insight.accessibility', 'This {{gap}}-point accessibility gap could mean competitors are reaching audiences that you are not. This also poses compliance risks.', { gap }),
     security: t('reports.competitive.insight.security', 'Competitors with {{gap}} more security points likely have stronger trust signals. This is especially important for e-commerce or sites handling sensitive information.', { gap }),
     corewebvitals: t('reports.competitive.insight.coreWebVitals', 'Core Web Vitals directly affect Google rankings. This {{gap}}-point gap means competitors may rank higher in search results and provide a better user experience.', { gap })
   };
@@ -2466,8 +2550,8 @@ function renderStrengthsWeaknessesContent(data) {
 
     <!-- Summary Stats -->
     <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; margin-bottom: 2rem;">
-      <div style="background: rgba(0,255,65,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(0,255,65,0.3);">
-        <div style="font-size: 2rem; font-weight: bold; color: #00ff41;">${strengths.filter(s => s.status === 'dominant').length}</div>
+      <div style="background: rgba(16,185,129,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(16,185,129,0.3);">
+        <div style="font-size: 2rem; font-weight: bold; color: #10b981;">${strengths.filter(s => s.status === 'dominant').length}</div>
         <div style="font-size: 0.75rem; color: var(--text-secondary);">${t('reports.competitive.categoriesLeading', 'Categories Leading')}</div>
       </div>
       <div style="background: rgba(91,244,231,0.1); padding: 1rem; border-radius: 8px; text-align: center; border: 1px solid rgba(91,244,231,0.3);">
@@ -2486,7 +2570,7 @@ function renderStrengthsWeaknessesContent(data) {
 
     <!-- Strengths Section -->
     ${strengths.length > 0 ? `
-      <h4 style="color: #00ff41; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+      <h4 style="color: #10b981; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
         <span style="font-size: 1.25rem;">💪</span> ${t('reports.competitive.yourStrengths', 'Your Competitive Strengths')} (${strengths.length})
       </h4>
       <div class="competitive-fixes-list" style="margin-bottom: 2rem;">
@@ -2496,15 +2580,15 @@ function renderStrengthsWeaknessesContent(data) {
 
     <!-- Weaknesses Section -->
     ${weaknesses.length > 0 ? `
-      <h4 style="color: #ff4444; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
+      <h4 style="color: #ef4444; margin: 0 0 1rem 0; display: flex; align-items: center; gap: 0.5rem;">
         <span style="font-size: 1.25rem;">⚠️</span> ${t('reports.competitive.areasNeedingImprovement', 'Areas Needing Improvement')} (${weaknesses.length})
       </h4>
       <div class="competitive-fixes-list">
         ${weaknesses.map((w, index) => renderWeaknessAccordion(w, index, data)).join('')}
       </div>
     ` : `
-      <div style="background: linear-gradient(135deg, rgba(0,255,65,0.1), rgba(91,244,231,0.05)); border: 1px solid rgba(0,255,65,0.3); border-radius: 12px; padding: 2rem; text-align: center;">
-        <h3 style="margin: 0 0 1rem 0; color: #00ff41;">🏆 ${t('reports.competitive.outstandingPerformance', 'Outstanding Performance!')}</h3>
+      <div style="background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(91,244,231,0.05)); border: 1px solid rgba(16,185,129,0.3); border-radius: 12px; padding: 2rem; text-align: center;">
+        <h3 style="margin: 0 0 1rem 0; color: #10b981;">🏆 ${t('reports.competitive.outstandingPerformance', 'Outstanding Performance!')}</h3>
         <p style="color: var(--text-secondary); margin: 0;">${t('reports.competitive.noWeaknesses', "You have no significant weaknesses. You're leading or competitive in all measured areas!")}</p>
       </div>
     `}
@@ -2516,8 +2600,8 @@ function renderStrengthAccordion(strength, index, data) {
   const accordionId = `strength-${index}`;
   const isDominant = strength.status === 'dominant';
   const style = isDominant
-    ? { bg: 'rgba(255, 215, 0, 0.08)', border: '#ffd700', color: '#ffd700', icon: '👑' }
-    : { bg: 'rgba(0, 255, 65, 0.08)', border: '#00ff41', color: '#00ff41', icon: '💪' };
+    ? { bg: 'rgba(245, 158, 11, 0.08)', border: '#f59e0b', color: '#f59e0b', icon: '👑' }
+    : { bg: 'rgba(16, 185, 129, 0.08)', border: '#10b981', color: '#10b981', icon: '💪' };
 
   return `
     <div class="competitive-fix-accordion" data-fix-id="${accordionId}" style="
@@ -2608,7 +2692,7 @@ function renderStrengthTabs(strength, accordionId) {
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your score')}</div>
-          <div style="font-size: 1.75rem; font-weight: bold; color: #00ff41;">${strength.score}</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: #10b981;">${strength.score}</div>
         </div>
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.bestCompetitor', 'Best Competitor')}</div>
@@ -2616,11 +2700,11 @@ function renderStrengthTabs(strength, accordionId) {
         </div>
         <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourLead', 'Your Lead')}</div>
-          <div style="font-size: 1.75rem; font-weight: bold; color: #ffd700;">+${strength.lead.toFixed(0)}</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: #f59e0b;">+${strength.lead.toFixed(0)}</div>
         </div>
       </div>
-      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
+      <div style="background: rgba(16,185,129,0.1); border-left: 3px solid #10b981; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #10b981; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
           ${strength.status === 'dominant' ? '👑 ' + t('reports.competitive.categoryLeader', 'Category Leader') : '✓ ' + t('reports.competitive.competitiveAdvantage', 'Competitive Advantage')}
         </div>
         <div style="color: var(--text-secondary); font-size: 0.9rem;">
@@ -2641,9 +2725,9 @@ function renderStrengthTabs(strength, accordionId) {
               justify-content: space-between;
               align-items: center;
               padding: 0.75rem 1rem;
-              background: ${site.isYou ? 'rgba(0,255,65,0.15)' : 'rgba(0,0,0,0.2)'};
+              background: ${site.isYou ? 'rgba(16, 185, 129, 0.1)' : 'var(--r-surface-2, rgba(0,0,0,0.2))'};
               border-radius: 6px;
-              border-left: 3px solid ${site.isYou ? '#00ff41' : 'transparent'};
+              border-left: 3px solid ${site.isYou ? '#10b981' : 'transparent'};
             ">
               <div style="display: flex; align-items: center; gap: 0.75rem;">
                 <span style="
@@ -2653,16 +2737,16 @@ function renderStrengthTabs(strength, accordionId) {
                   align-items: center;
                   justify-content: center;
                   border-radius: 50%;
-                  background: ${rank === 0 ? '#ffd700' : 'rgba(255,255,255,0.1)'};
-                  color: ${rank === 0 ? '#000' : 'var(--text-secondary)'};
+                  background: ${rank === 0 ? '#10b981' : 'rgba(255,255,255,0.1)'};
+                  color: ${rank === 0 ? '#fff' : 'var(--text-secondary)'};
                   font-size: 0.75rem;
                   font-weight: bold;
                 ">${rank + 1}</span>
-                <span style="font-weight: ${site.isYou ? 'bold' : 'normal'}; color: ${site.isYou ? '#00ff41' : 'var(--text-primary)'};">
+                <span style="font-weight: ${site.isYou ? 'bold' : 'normal'}; color: ${site.isYou ? '#10b981' : 'var(--text-primary)'};">
                   ${site.isYou ? '👤 ' + t('reports.competitive.you', 'YOU') : site.name}
                 </span>
               </div>
-              <span style="font-weight: bold; font-size: 1.1rem; color: ${rank === 0 ? '#ffd700' : 'var(--text-primary)'};">
+              <span style="font-weight: bold; font-size: 1.1rem; color: ${rank === 0 ? '#10b981' : 'var(--text-primary)'};">
                 ${site.score}
               </span>
             </div>
@@ -2677,7 +2761,7 @@ function renderStrengthTabs(strength, accordionId) {
         ${defensiveSteps.map(step => `<li style="margin-bottom: 0.5rem;">${step}</li>`).join('')}
       </ol>
       <div style="margin-top: 1.5rem; padding: 1rem; background: rgba(255,215,0,0.1); border-radius: 8px; border: 1px solid rgba(255,215,0,0.2);">
-        <div style="display: flex; align-items: center; gap: 0.5rem; color: #ffd700; font-weight: 600; margin-bottom: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem;">
           <span>⚠️</span> ${t('reports.competitive.watchOut', 'Watch Out')}
         </div>
         <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
@@ -2693,7 +2777,7 @@ function renderWeaknessAccordion(weakness, index, data) {
   const accordionId = `weakness-${index}`;
   const isUrgent = weakness.gap > 20;
   const style = isUrgent
-    ? { bg: 'rgba(255, 68, 68, 0.08)', border: '#ff4444', color: '#ff4444', icon: '🔴' }
+    ? { bg: 'rgba(255, 68, 68, 0.08)', border: '#ef4444', color: '#ef4444', icon: '🔴' }
     : { bg: 'rgba(255, 165, 0, 0.08)', border: '#ffa500', color: '#ffa500', icon: '🟠' };
 
   return `
@@ -2783,21 +2867,21 @@ function renderWeaknessTabs(weakness, accordionId) {
     <!-- Overview Tab -->
     <div class="competitive-fix-tab-content active" id="${accordionId}-summary">
       <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1rem;">
-        <div style="background: rgba(255,68,68,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+        <div style="background: rgba(239,68,68,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your score')}</div>
-          <div style="font-size: 1.75rem; font-weight: bold; color: #ff6666;">${weakness.score}</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: #f87171;">${weakness.score}</div>
         </div>
-        <div style="background: rgba(0,255,65,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
+        <div style="background: rgba(16,185,129,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.leaderScore', 'Leader Score')}</div>
-          <div style="font-size: 1.75rem; font-weight: bold; color: #00ff41;">${weakness.leader?.score || weakness.maxCompetitor}</div>
+          <div style="font-size: 1.75rem; font-weight: bold; color: #10b981;">${weakness.leader?.score || weakness.maxCompetitor}</div>
         </div>
         <div style="background: rgba(255,165,0,0.1); padding: 1rem; border-radius: 8px; text-align: center;">
           <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.gapToClose', 'Gap to Close')}</div>
           <div style="font-size: 1.75rem; font-weight: bold; color: #ffa500;">${weakness.gap}</div>
         </div>
       </div>
-      <div style="background: rgba(255,68,68,0.1); border-left: 3px solid #ff4444; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #ff4444; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
+      <div style="background: rgba(239,68,68,0.1); border-left: 3px solid #ef4444; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #ef4444; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">
           ⚠️ ${t('reports.competitive.competitiveDisadvantage', 'Competitive Disadvantage')}
         </div>
         <div style="color: var(--text-secondary); font-size: 0.9rem;">
@@ -2813,15 +2897,15 @@ function renderWeaknessTabs(weakness, accordionId) {
       <!-- Visual Gap Bar -->
       <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; padding: 1rem; margin-bottom: 1rem;">
         <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
-          <span style="color: #ff6666;">${t('reports.competitive.you', 'YOU')}: ${weakness.score}</span>
-          <span style="color: #00ff41;">${t('reports.competitive.leader', 'leader')}: ${weakness.leader?.score || weakness.maxCompetitor}</span>
+          <span style="color: #0ea5e9;">${t('reports.competitive.you', 'YOU')}: ${weakness.score}</span>
+          <span style="color: #10b981;">${t('reports.competitive.leader', 'leader')}: ${weakness.leader?.score || weakness.maxCompetitor}</span>
         </div>
-        <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden; position: relative;">
-          <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${weakness.score}%; background: linear-gradient(90deg, #ff4444, #ffa500);"></div>
-          <div style="position: absolute; left: ${weakness.score}%; top: 0; height: 100%; width: ${weakness.gap}%; background: rgba(255,255,255,0.2);"></div>
+        <div style="background: var(--r-dial-track, rgba(255,255,255,0.1)); height: 8px; border-radius: 4px; overflow: hidden; position: relative;">
+          <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${weakness.score}%; background: linear-gradient(90deg, #0ea5e9, #38bdf8);"></div>
+          <div style="position: absolute; left: ${weakness.score}%; top: 0; height: 100%; width: ${weakness.gap}%; background: rgba(148, 163, 184, 0.25);"></div>
         </div>
         <div style="text-align: center; margin-top: 0.5rem;">
-          <span style="color: #ffa500; font-weight: bold;">${t('reports.competitive.pointGapToClose', '{{gap}} point gap to close', { gap: weakness.gap })}</span>
+          <span style="color: #f59e0b; font-weight: bold;">${t('reports.competitive.pointGapToClose', '{{gap}} point gap to close', { gap: weakness.gap })}</span>
         </div>
       </div>
 
@@ -2836,14 +2920,14 @@ function renderWeaknessTabs(weakness, accordionId) {
               justify-content: space-between;
               align-items: center;
               padding: 0.5rem 0.75rem;
-              background: ${site.isYou ? 'rgba(255,68,68,0.15)' : 'rgba(0,0,0,0.2)'};
+              background: ${site.isYou ? 'rgba(14, 165, 233, 0.1)' : 'var(--r-surface-2, rgba(0,0,0,0.2))'};
               border-radius: 4px;
-              border-left: 2px solid ${site.isYou ? '#ff4444' : rank === 0 ? '#00ff41' : 'transparent'};
+              border-left: 2px solid ${site.isYou ? '#0ea5e9' : rank === 0 ? '#10b981' : 'transparent'};
             ">
-              <span style="color: ${site.isYou ? '#ff6666' : 'var(--text-primary)'}; font-size: 0.9rem;">
+              <span style="color: ${site.isYou ? '#0ea5e9' : 'var(--text-primary)'}; font-size: 0.9rem;">
                 ${site.isYou ? '👤 ' + t('reports.competitive.you', 'YOU') : site.name}
               </span>
-              <span style="font-weight: bold; color: ${rank === 0 ? '#00ff41' : 'var(--text-primary)'};">
+              <span style="font-weight: bold; color: ${rank === 0 ? '#10b981' : 'var(--text-primary)'};">
                 ${site.score}
               </span>
             </div>
@@ -2866,11 +2950,11 @@ function renderWeaknessTabs(weakness, accordionId) {
         </p>
       </div>
       <div style="margin-top: 1rem; padding: 1rem; background: rgba(255,215,0,0.1); border-radius: 8px; border: 1px solid rgba(255,215,0,0.2);">
-        <div style="display: flex; align-items: center; gap: 0.5rem; color: #ffd700; font-weight: 600; margin-bottom: 0.5rem;">
+        <div style="display: flex; align-items: center; gap: 0.5rem; color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem;">
           <span>🎯</span> ${t('reports.competitive.targetScore', 'Target Score')}
         </div>
         <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
-          ${t('reports.competitive.aimFor', 'Aim for')} <strong style="color: #ffd700;">${weakness.leader?.score || weakness.maxCompetitor}+</strong> ${t('reports.competitive.toMatchOrExceed', 'to match or exceed')} ${weakness.leader?.name || t('reports.competitive.theLeader', 'the leader')} ${t('reports.competitive.inMetric', 'in')} ${metricName}.
+          ${t('reports.competitive.aimFor', 'Aim for')} <strong style="color: #f59e0b;">${weakness.leader?.score || weakness.maxCompetitor}+</strong> ${t('reports.competitive.toMatchOrExceed', 'to match or exceed')} ${weakness.leader?.name || t('reports.competitive.theLeader', 'the leader')} ${t('reports.competitive.inMetric', 'in')} ${metricName}.
         </p>
       </div>
     </div>
@@ -3022,6 +3106,83 @@ window.copyCompetitiveCode = function(elementId) {
   });
 };
 
+// Translate server-generated recommendation text to the active locale
+function translateRecommendation(rec) {
+  const metric = rec.metric || '';
+  const metricName = formatMetricName(metric);
+  const gap = rec.gap || 0;
+  const yourScore = rec.yourScore || 0;
+  const topScore = rec.topCompetitorScore || 0;
+  const priority = (rec.priority || 'medium').toLowerCase();
+
+  if (priority === 'high') {
+    return t('reports.competitive.recText.high', 'Your {{metric}} score of {{yourScore}} is {{gap}} points behind the leader ({{topScore}}). This is a significant competitive disadvantage that requires immediate attention. Focus on quick wins first: {{quickWins}}', {
+      metric: metricName, yourScore, gap, topScore,
+      quickWins: getQuickWinsText(metric)
+    });
+  }
+  if (priority === 'medium') {
+    return t('reports.competitive.recText.medium', 'A {{gap}}-point improvement in {{metric}} would put you on par with top competitors. Your current score of {{yourScore}} is close but not quite there. {{advice}}', {
+      metric: metricName, gap, yourScore,
+      advice: getMediumAdviceText(metric)
+    });
+  }
+  return t('reports.competitive.recText.low', 'You are close to the top in {{metric}}. A small {{gap}}-point improvement would help you match or exceed the competition. {{advice}}', {
+    metric: metricName, gap,
+    advice: getLowAdviceText(metric)
+  });
+}
+
+// Translate server-generated impact text
+function translateImpact(rec) {
+  const priority = (rec.priority || 'medium').toLowerCase();
+  const metricName = formatMetricName(rec.metric || '');
+
+  if (priority === 'high') {
+    return t('reports.competitive.impactText.high', 'Closing this gap could significantly improve your competitive position and help you capture traffic currently going to competitors with better {{metric}} scores.', { metric: metricName });
+  }
+  if (priority === 'medium') {
+    return t('reports.competitive.impactText.medium', 'Moderate improvement opportunity. Closing this gap would make you more competitive and could lead to better user engagement and conversion rates.');
+  }
+  return t('reports.competitive.impactText.low', 'Fine-tuning opportunity. You are already competitive here, but small improvements can make a difference.');
+}
+
+// Get localized quick wins text for a metric
+function getQuickWinsText(metric) {
+  const wins = {
+    seo: t('reports.competitive.quickWins.seo', 'optimize title tags, add meta descriptions, and ensure proper heading hierarchy'),
+    performance: t('reports.competitive.quickWins.performance', 'compress images, enable caching, and minimize JavaScript'),
+    accessibility: t('reports.competitive.quickWins.accessibility', 'add alt text to images, ensure proper color contrast, and fix ARIA labels'),
+    security: t('reports.competitive.quickWins.security', 'implement HTTPS, add security headers, and update dependencies'),
+    coreWebVitals: t('reports.competitive.quickWins.coreWebVitals', 'optimize LCP by preloading key resources and reduce CLS by sizing images')
+  };
+  return wins[metric] || t('reports.competitive.quickWins.generic', 'review best practices and implement improvements');
+}
+
+// Get localized medium-priority advice
+function getMediumAdviceText(metric) {
+  const advice = {
+    seo: t('reports.competitive.mediumAdvice.seo', 'Consider adding structured data, improving internal linking, and creating more targeted content.'),
+    performance: t('reports.competitive.mediumAdvice.performance', 'Look into code splitting, lazy loading, and optimizing your critical rendering path.'),
+    accessibility: t('reports.competitive.mediumAdvice.accessibility', 'Conduct a thorough WCAG audit and address any remaining issues.'),
+    security: t('reports.competitive.mediumAdvice.security', 'Review your CSP policy, enable additional security headers, and audit third-party scripts.'),
+    coreWebVitals: t('reports.competitive.mediumAdvice.coreWebVitals', 'Focus on Time to First Byte (TTFB) and optimize server response times.')
+  };
+  return advice[metric] || t('reports.competitive.mediumAdvice.generic', 'Review current implementation and identify optimization opportunities.');
+}
+
+// Get localized low-priority advice
+function getLowAdviceText(metric) {
+  const advice = {
+    seo: t('reports.competitive.lowAdvice.seo', 'Fine-tune your existing optimizations and monitor for any regressions.'),
+    performance: t('reports.competitive.lowAdvice.performance', 'Consider advanced techniques like service workers or edge caching.'),
+    accessibility: t('reports.competitive.lowAdvice.accessibility', 'Test with real users with disabilities and gather feedback.'),
+    security: t('reports.competitive.lowAdvice.security', 'Stay updated on new security best practices and vulnerabilities.'),
+    coreWebVitals: t('reports.competitive.lowAdvice.coreWebVitals', 'Monitor real-user metrics and address any edge cases.')
+  };
+  return advice[metric] || t('reports.competitive.lowAdvice.generic', 'Continue monitoring and maintaining your current standards.');
+}
+
 // Recommendations content (for accordion) - comprehensive version with tabs
 function renderRecommendationsContent(recommendations) {
   ensureCompetitiveFixStyles();
@@ -3060,7 +3221,7 @@ function renderRecommendationsContent(recommendations) {
 function renderCompetitiveFixAccordion(rec, index) {
   const accordionId = `compfix-${index}`;
   const priorityColors = {
-    high: { bg: 'rgba(255,68,68,0.1)', border: '#ff4444', color: '#ff4444', icon: '🔴' },
+    high: { bg: 'rgba(239,68,68,0.1)', border: '#ef4444', color: '#ef4444', icon: '🔴' },
     medium: { bg: 'rgba(255,165,0,0.1)', border: '#ffa500', color: '#ffa500', icon: '🟠' },
     low: { bg: 'rgba(0,204,255,0.1)', border: '#00ccff', color: '#00ccff', icon: '🟢' }
   };
@@ -3090,7 +3251,7 @@ function renderCompetitiveFixAccordion(rec, index) {
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
             <h4 style="margin: 0; font-size: 1rem; color: var(--text-primary);">${t('reports.competitive.closeGapIn', 'Close {{gap}}-point gap in {{metric}}', { gap: rec.gap, metric: metricName })}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">${competitorName}: <strong>${topScore}</strong> vs yours: <strong>${yourScore}</strong></p>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--text-secondary);">${t('reports.competitive.recSubtitle', '{{competitor}}: {{topScore}} vs {{you}}: {{yourScore}}', { competitor: competitorName, topScore, you: t('reports.competitive.you', 'YOU'), yourScore })}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -3102,7 +3263,7 @@ function renderCompetitiveFixAccordion(rec, index) {
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
-          ">${(rec.priority || 'medium').toUpperCase()}</span>
+          ">${t('reports.common.severity.' + (rec.priority || 'medium').toLowerCase(), rec.priority || 'medium')}</span>
           <span class="competitive-fix-expand-icon" style="color: var(--text-secondary); transition: transform 0.3s;">▼</span>
         </div>
       </div>
@@ -3154,11 +3315,11 @@ function renderCompetitiveFixTabs(rec, accordionId) {
     <!-- Summary Tab -->
     <div class="competitive-fix-tab-content active" id="${accordionId}-summary">
       <p style="color: var(--text-secondary); line-height: 1.7; margin: 0 0 1rem 0;">
-        ${rec.recommendation}
+        ${translateRecommendation(rec)}
       </p>
-      <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
-        <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.competitive.expectedImpact', 'Expected Impact')}</div>
-        <div style="color: var(--text-secondary); font-size: 0.9rem;">${rec.impact}</div>
+      <div style="background: rgba(16,185,129,0.1); border-left: 3px solid #10b981; padding: 0.75rem; border-radius: 4px;">
+        <div style="color: #10b981; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.competitive.expectedImpact', 'Expected Impact')}</div>
+        <div style="color: var(--text-secondary); font-size: 0.9rem;">${translateImpact(rec)}</div>
       </div>
     </div>
 
@@ -3169,28 +3330,28 @@ function renderCompetitiveFixTabs(rec, accordionId) {
         <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 8px; padding: 1rem; border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">
           <h5 style="margin: 0 0 0.75rem 0; color: var(--text-primary);">${metricName} ${t('reports.competitive.scoreComparison', 'Score Comparison')}</h5>
           <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div style="text-align: center; padding: 1rem; background: rgba(255,68,68,0.1); border-radius: 8px;">
+            <div style="text-align: center; padding: 1rem; background: rgba(239,68,68,0.1); border-radius: 8px;">
               <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${t('reports.competitive.yourScore', 'Your score')}</div>
-              <div style="font-size: 2rem; font-weight: bold; color: #ff6666;">${rec.yourScore ?? '?'}</div>
+              <div style="font-size: 2rem; font-weight: bold; color: #f87171;">${rec.yourScore ?? '?'}</div>
             </div>
-            <div style="text-align: center; padding: 1rem; background: rgba(0,255,65,0.1); border-radius: 8px;">
+            <div style="text-align: center; padding: 1rem; background: rgba(16,185,129,0.1); border-radius: 8px;">
               <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">${rec.topCompetitorName || t('reports.competitive.topCompetitor', 'Top Competitor')}</div>
-              <div style="font-size: 2rem; font-weight: bold; color: #00ff41;">${rec.topCompetitorScore ?? '?'}</div>
+              <div style="font-size: 2rem; font-weight: bold; color: #10b981;">${rec.topCompetitorScore ?? '?'}</div>
             </div>
           </div>
 
           <!-- Visual Gap Bar -->
           <div style="margin-top: 1.25rem;">
             <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; font-size: 0.8rem;">
-              <span style="color: #ff6666;">${t('reports.competitive.you', 'YOU')}: ${rec.yourScore ?? '?'}</span>
-              <span style="color: #00ff41;">${rec.topCompetitorName || t('reports.competitive.leader', 'leader')}: ${rec.topCompetitorScore ?? '?'}</span>
+              <span style="color: #0ea5e9;">${t('reports.competitive.you', 'YOU')}: ${rec.yourScore ?? '?'}</span>
+              <span style="color: #10b981;">${rec.topCompetitorName || t('reports.competitive.leader', 'leader')}: ${rec.topCompetitorScore ?? '?'}</span>
             </div>
-            <div style="background: rgba(255,255,255,0.1); height: 12px; border-radius: 6px; overflow: hidden; position: relative;">
-              <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${Math.min(rec.yourScore || 0, 100)}%; background: linear-gradient(90deg, #ff4444, #ff6666); border-radius: 6px 0 0 6px;"></div>
-              <div style="position: absolute; left: ${Math.min(rec.yourScore || 0, 100)}%; top: 0; height: 100%; width: ${Math.min(rec.gap || 0, 100 - (rec.yourScore || 0))}%; background: repeating-linear-gradient(45deg, rgba(255,165,0,0.3), rgba(255,165,0,0.3) 5px, rgba(255,165,0,0.1) 5px, rgba(255,165,0,0.1) 10px);"></div>
+            <div style="background: var(--r-dial-track, rgba(255,255,255,0.1)); height: 12px; border-radius: 6px; overflow: hidden; position: relative;">
+              <div style="position: absolute; left: 0; top: 0; height: 100%; width: ${Math.min(rec.yourScore || 0, 100)}%; background: linear-gradient(90deg, #0ea5e9, #38bdf8); border-radius: 6px 0 0 6px;"></div>
+              <div style="position: absolute; left: ${Math.min(rec.yourScore || 0, 100)}%; top: 0; height: 100%; width: ${Math.min(rec.gap || 0, 100 - (rec.yourScore || 0))}%; background: repeating-linear-gradient(45deg, rgba(148, 163, 184, 0.3), rgba(148, 163, 184, 0.3) 5px, rgba(148, 163, 184, 0.1) 5px, rgba(148, 163, 184, 0.1) 10px);"></div>
             </div>
             <div style="text-align: center; margin-top: 0.75rem;">
-              <span style="display: inline-block; padding: 0.5rem 1rem; background: rgba(255,165,0,0.2); border-radius: 999px; color: #ffa500; font-weight: 600; font-size: 0.9rem;">
+              <span style="display: inline-block; padding: 0.5rem 1rem; background: rgba(245, 158, 11, 0.15); border-radius: 999px; color: #f59e0b; font-weight: 600; font-size: 0.9rem;">
                 ${t('reports.competitive.pointGapToClose', '{{gap}} point gap to close', { gap: rec.gap })}
               </span>
             </div>
@@ -3217,11 +3378,11 @@ function renderCompetitiveFixTabs(rec, accordionId) {
 
         <!-- Target Score -->
         <div style="background: linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,165,0,0.05)); border-radius: 8px; padding: 1rem; border: 1px solid rgba(255,215,0,0.3);">
-          <div style="display: flex; align-items: center; gap: 0.5rem; color: #ffd700; font-weight: 600; margin-bottom: 0.5rem;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; color: #f59e0b; font-weight: 600; margin-bottom: 0.5rem;">
             <span>🎯</span> ${t('reports.competitive.targetScore', 'Target Score')}
           </div>
           <p style="color: var(--text-secondary); margin: 0; font-size: 0.9rem;">
-            ${t('reports.competitive.aimForSurpass', 'Aim for')} <strong style="color: #ffd700;">${(rec.topCompetitorScore || 0) + 5}+</strong> ${t('reports.competitive.toSurpassAndEstablish', 'to surpass {{leader}} and establish yourself as the {{metric}} leader in your competitive set.', { leader: rec.topCompetitorName || t('reports.competitive.theLeader', 'the leader'), metric: metricName })}
+            ${t('reports.competitive.aimForSurpass', 'Aim for')} <strong style="color: #f59e0b;">${(rec.topCompetitorScore || 0) + 5}+</strong> ${t('reports.competitive.toSurpassAndEstablish', 'to surpass {{leader}} and establish yourself as the {{metric}} leader in your competitive set.', { leader: rec.topCompetitorName || t('reports.competitive.theLeader', 'the leader'), metric: metricName })}
           </p>
         </div>
       </div>
@@ -3338,6 +3499,69 @@ function renderRecommendations(recommendations) {
   return `<section class="section"><h2>🎯 ${t('reports.competitive.actionPlanBeatCompetition', 'Action Plan to Beat Competition')}</h2>${renderRecommendationsContent(recommendations)}</section>`;
 }
 
+// Render site screenshots grid for visual comparison of all analyzed sites
+function renderSiteScreenshotsContent(data) {
+  const sites = [];
+
+  // Your site first
+  if (data.yourSite) {
+    sites.push({
+      url: data.yourSite.url,
+      screenshotUrl: data.yourSite.screenshotUrl || null,
+      label: getDomainName(data.yourSite.url),
+      isYou: true
+    });
+  }
+
+  // Then each competitor
+  if (Array.isArray(data.competitors)) {
+    data.competitors.forEach(comp => {
+      sites.push({
+        url: comp.url,
+        screenshotUrl: comp.screenshotUrl || null,
+        label: getDomainName(comp.url),
+        isYou: false
+      });
+    });
+  }
+
+  if (sites.length === 0) {
+    return `<p class="competitive-no-data">${t('reports.competitive.noScreenshots', 'No screenshots available.')}</p>`;
+  }
+
+  const cards = sites.map((site, idx) => {
+    const youBadge = site.isYou
+      ? ` <span class="site-screenshots-grid__you-badge">${t('reports.competitive.yourSiteLabel', 'Your Site')}</span>`
+      : '';
+    const altText = t('reports.competitive.screenshotOf', 'Screenshot of {{domain}}', { domain: site.label });
+
+    if (!site.screenshotUrl) {
+      return `
+        <div class="site-screenshots-grid__item site-screenshots-grid__item--no-image">
+          <div class="site-screenshots-grid__label">${site.label}${youBadge}</div>
+          <div class="site-screenshots-grid__placeholder">
+            <span>${t('reports.competitive.noScreenshots', 'No screenshot available')}</span>
+          </div>
+        </div>`;
+    }
+
+    return `
+      <div class="site-screenshots-grid__item">
+        <div class="site-screenshots-grid__label">${site.label}${youBadge}</div>
+        <div class="site-screenshots-grid__image-wrap">
+          <img class="site-screenshots-grid__img" src="${site.screenshotUrl}" alt="${altText}" data-screenshot="${idx}" loading="lazy"
+               onerror="this.parentElement.innerHTML='<div class=\\'site-screenshots-grid__placeholder\\'><span>${t('reports.competitive.noScreenshots', 'No screenshot available')}</span></div>'" />
+        </div>
+      </div>`;
+  }).join('');
+
+  return `
+    <p class="competitive-section-desc">${t('reports.competitive.screenshotsDesc', 'Visual comparison of all analyzed sites as captured during the scan.')}</p>
+    <div class="site-screenshots-grid" data-screenshot-gallery>
+      ${cards}
+    </div>`;
+}
+
 // Utility functions
 function formatMetricName(metric) {
   const names = {
@@ -3363,10 +3587,10 @@ function getDomainName(url) {
 function getGradeColor(grade) {
   const colors = {
     'A': getAccentPrimaryColor(),
-    'B': '#ffd700',
+    'B': '#f59e0b',
     'C': '#ff8c00',
-    'D': '#ff4444',
-    'F': '#ff4444'
+    'D': '#ef4444',
+    'F': '#ef4444'
   };
   return colors[grade] || '#888';
 }

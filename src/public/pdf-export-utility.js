@@ -86,6 +86,7 @@
                              window.currentTagResults ||
                              window.currentCROResults ||
                              window.__gdprCurrentData ||
+                             window.currentGeoSEOResults ||
                              window.currentLocalSEOResults ||
                              window.currentCWVResults ||
                              window.currentResults;
@@ -113,12 +114,17 @@
       }
 
       // Detect current locale for i18n-aware PDF export
-      const currentLang = (window.i18n && typeof window.i18n.getActiveLocale === 'function')
-        ? window.i18n.getActiveLocale()
-        : localStorage.getItem('sm_lang') || 'en';
+      // Priority: localStorage (user's explicit choice) > URL path prefix > i18n state > fallback
+      const SUPPORTED_LANGS = ['en', 'es', 'fr', 'de', 'pt', 'zh', 'ja', 'ru'];
+      const storedLang = localStorage.getItem('sm_lang');
+      const urlPathParts = window.location.pathname.split('/').filter(Boolean);
+      const urlLang = SUPPORTED_LANGS.includes(urlPathParts[0]) ? urlPathParts[0] : null;
+      const i18nLang = (window.i18n && typeof window.i18n.getActiveLocale === 'function')
+        ? window.i18n.getActiveLocale() : null;
+      const currentLang = (storedLang && SUPPORTED_LANGS.includes(storedLang) ? storedLang : null)
+        || urlLang || i18nLang || 'en';
 
       // Build URL for Puppeteer to render (with report_id, print mode, and lang prefix)
-      const SUPPORTED_LANGS = ['en', 'es', 'fr', 'de', 'pt', 'zh', 'ja', 'ru'];
       const pageUrl = new URL(window.location.href);
       pageUrl.searchParams.set('report_id', reportId);
       pageUrl.searchParams.set('print', '1');
@@ -126,6 +132,10 @@
       const pathParts = pageUrl.pathname.split('/').filter(Boolean);
       if (!SUPPORTED_LANGS.includes(pathParts[0])) {
         pageUrl.pathname = `/${currentLang}${pageUrl.pathname}`;
+      } else if (pathParts[0] !== currentLang) {
+        // URL has a different language prefix than the active language — update it
+        pathParts[0] = currentLang;
+        pageUrl.pathname = '/' + pathParts.join('/');
       }
 
       const analyzedUrlValue = getAnalyzedUrl();
@@ -329,7 +339,8 @@
           reportType: reportType,
           reportData: pdfReportData,
           pageUrl: pageUrl.pathname + pageUrl.search,
-          preferBrowser: true
+          preferBrowser: true,
+          lang: currentLang
         })
       });
 
@@ -363,7 +374,7 @@
       const REPORT_TYPE_LABELS = {
         seo: 'SEO', cro: 'CRO', gdpr: 'GDPR', cwv: 'CWV',
         'core-web-vitals': 'Core-Web-Vitals',
-        'tag-intelligence': 'Tag-Intelligence', 'local-seo': 'Local-SEO',
+        'tag-intelligence': 'Tag-Intelligence', 'geo-seo': 'GEO-SEO', 'local-seo': 'Local-SEO',
         'broken-links': 'Broken-Links', 'ip-reputation': 'IP-Reputation',
         'competitive': 'Competitive'
       };
@@ -502,7 +513,8 @@
       'hosting': 'hosting',
       'hosting-analyzer': 'hosting',
       'broken-links': 'broken-links',
-      'local-seo': 'local-seo',
+      'geo-seo': 'geo-seo',
+      'local-seo': 'geo-seo',
       'ip-reputation': 'ip-reputation',
       'brand-consistency': 'brand-consistency',
       'site-crawler': 'site-crawler'
@@ -534,7 +546,7 @@
     if (path.includes('cro')) return 'cro';
     if (path.includes('hosting')) return 'hosting';
     if (path.includes('broken-link')) return 'broken-links';
-    if (path.includes('local-seo')) return 'local-seo';
+    if (path.includes('geo-seo') || path.includes('local-seo')) return 'geo-seo';
     if (path.includes('ip-reputation')) return 'ip-reputation';
     if (path.includes('brand')) return 'brand-consistency';
     if (path.includes('crawler')) return 'site-crawler';

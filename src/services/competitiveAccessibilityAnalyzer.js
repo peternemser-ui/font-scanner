@@ -43,77 +43,135 @@ class CompetitiveAccessibilityAnalyzer {
     }
   }
 
+  /**
+   * Evaluate accessibility metrics in page context
+   */
+  _evaluateMetrics(page) {
+    return page.evaluate(() => {
+      const results = {
+        contrastIssues: 0,
+        missingAlt: 0,
+        ariaIssues: 0,
+        headingStructure: { valid: true },
+        formLabels: { total: 0, missing: 0 },
+        lang: document.documentElement.lang ? 1 : 0
+      };
+
+      // Check images for alt text
+      const images = document.querySelectorAll('img');
+      results.totalImages = images.length;
+      results.missingAlt = Array.from(images).filter(img => !img.alt && !img.getAttribute('aria-label')).length;
+
+      // Check form inputs for labels
+      const inputs = document.querySelectorAll('input:not([type="hidden"]), textarea, select');
+      results.formLabels.total = inputs.length;
+      results.formLabels.missing = Array.from(inputs).filter(input => {
+        const id = input.id;
+        const hasLabel = id && document.querySelector(`label[for="${id}"]`);
+        const hasAriaLabel = input.getAttribute('aria-label') || input.getAttribute('aria-labelledby');
+        return !hasLabel && !hasAriaLabel;
+      }).length;
+
+      // Check ARIA roles
+      const invalidRoles = document.querySelectorAll('[role]:not([role="navigation"]):not([role="main"]):not([role="banner"]):not([role="contentinfo"]):not([role="complementary"]):not([role="search"]):not([role="button"]):not([role="link"])');
+      results.ariaIssues = invalidRoles.length;
+
+      // Check heading structure
+      const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
+      results.headingStructure.count = headings.length;
+      results.headingStructure.hasH1 = document.querySelector('h1') !== null;
+
+      // Basic contrast check (simple heuristic)
+      const textElements = document.querySelectorAll('p, span, a, button, h1, h2, h3, h4, h5, h6, li');
+      let lowContrastCount = 0;
+
+      Array.from(textElements).slice(0, 50).forEach(el => {
+        const style = window.getComputedStyle(el);
+        const color = style.color;
+
+        // Simple check: if text is light gray on white-ish background
+        if (color.includes('rgb')) {
+          const rgb = color.match(/\d+/g);
+          if (rgb && rgb.length >= 3) {
+            const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
+            if (luminance > 0.6) lowContrastCount++; // Light text
+          }
+        }
+      });
+
+      results.contrastIssues = lowContrastCount;
+
+      return results;
+    });
+  }
+
   async collectMetrics(url) {
     return browserPool.execute(async (browser) => {
       const page = await browser.newPage();
-      
+
       try {
-        await page.goto(url, { waitUntil: 'networkidle2', timeout: 15000 });
+        await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
 
-        await dismissPageOverlays(page, { timeout: 4000 });
+        // Wait for network to settle (catches client-side redirects)
+        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {});
 
-        const metrics = await page.evaluate(() => {
-          const results = {
-            contrastIssues: 0,
-            missingAlt: 0,
-            ariaIssues: 0,
-            headingStructure: { valid: true },
-            formLabels: { total: 0, missing: 0 },
-            lang: document.documentElement.lang ? 1 : 0
-          };
+        // Give client-side redirects time to complete
+        await new Promise(r => setTimeout(r, 1500));
 
-          // Check images for alt text
-          const images = document.querySelectorAll('img');
-          results.totalImages = images.length;
-          results.missingAlt = Array.from(images).filter(img => !img.alt && !img.getAttribute('aria-label')).length;
+        const finalUrl = page.url();
+        if (finalUrl !== url) {
+          logger.info(`URL redirected: ${url} → ${finalUrl}`);
+        }
 
-          // Check form inputs for labels
-          const inputs = document.querySelectorAll('input:not([type="hidden"]), textarea, select');
-          results.formLabels.total = inputs.length;
-          results.formLabels.missing = Array.from(inputs).filter(input => {
-            const id = input.id;
-            const hasLabel = id && document.querySelector(`label[for="${id}"]`);
-            const hasAriaLabel = input.getAttribute('aria-label') || input.getAttribute('aria-labelledby');
-            return !hasLabel && !hasAriaLabel;
-          }).length;
+        // Try to collect metrics BEFORE dismissing overlays
+        let metrics;
+        try {
+          metrics = await this._evaluateMetrics(page);
+          await page.close();
+          return metrics;
+        } catch (preOverlayError) {
+          if (!preOverlayError.message.includes('Execution context was destroyed')) {
+            throw preOverlayError;
+          }
+          logger.warn(`Pre-overlay metrics failed for ${url}, will retry cleanly`);
+        }
 
-          // Check ARIA roles
-          const invalidRoles = document.querySelectorAll('[role]:not([role="navigation"]):not([role="main"]):not([role="banner"]):not([role="contentinfo"]):not([role="complementary"]):not([role="search"]):not([role="button"]):not([role="link"])');
-          results.ariaIssues = invalidRoles.length;
-
-          // Check heading structure
-          const headings = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6'));
-          results.headingStructure.count = headings.length;
-          results.headingStructure.hasH1 = document.querySelector('h1') !== null;
-
-          // Basic contrast check (simple heuristic)
-          const textElements = document.querySelectorAll('p, span, a, button, h1, h2, h3, h4, h5, h6, li');
-          let lowContrastCount = 0;
-          
-          Array.from(textElements).slice(0, 50).forEach(el => {
-            const style = window.getComputedStyle(el);
-            const color = style.color;
-            const bgColor = style.backgroundColor;
-            
-            // Simple check: if text is light gray on white-ish background
-            if (color.includes('rgb')) {
-              const rgb = color.match(/\d+/g);
-              if (rgb && rgb.length >= 3) {
-                const luminance = (0.299 * rgb[0] + 0.587 * rgb[1] + 0.114 * rgb[2]) / 255;
-                if (luminance > 0.6) lowContrastCount++; // Light text
-              }
-            }
-          });
-          
-          results.contrastIssues = lowContrastCount;
-
-          return results;
-        });
-
-        await page.close();
-        return metrics;
+        await page.close().catch(() => {});
+        throw new Error('Execution context was destroyed');
       } catch (error) {
-        await page.close();
+        if (error.message.includes('Execution context was destroyed') ||
+            error.message.includes('navigation') ||
+            error.message.includes('detached')) {
+          logger.warn(`Context destroyed for ${url}, retrying with clean page...`);
+          await page.close().catch(() => {});
+
+          const retryPage = await browser.newPage();
+          try {
+            await retryPage.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
+
+            // Wait for any late client-side redirects to settle
+            await new Promise(r => setTimeout(r, 3000));
+
+            const retryFinalUrl = retryPage.url();
+            logger.info(`Retry landed on: ${retryFinalUrl}`);
+
+            // If we ended up on a different URL, navigate directly for a clean context
+            if (retryFinalUrl !== url) {
+              logger.info(`Re-navigating directly to final URL: ${retryFinalUrl}`);
+              await retryPage.goto(retryFinalUrl, { waitUntil: 'networkidle2', timeout: 25000 });
+              await new Promise(r => setTimeout(r, 2000));
+            }
+
+            // Skip overlay dismissal entirely on retry
+            const metrics = await this._evaluateMetrics(retryPage);
+            await retryPage.close();
+            return metrics;
+          } catch (retryError) {
+            await retryPage.close().catch(() => {});
+            throw retryError;
+          }
+        }
+        await page.close().catch(() => {});
         throw error;
       }
     });

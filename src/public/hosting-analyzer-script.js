@@ -729,9 +729,10 @@ async function analyzeHosting() {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` })
       },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         url: input,
         scanStartedAt,
+        lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en',
         ...manualInputs
       }),
     });

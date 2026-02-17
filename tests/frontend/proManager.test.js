@@ -25,6 +25,18 @@ global.localStorage = localStorageMock;
 // Mock fetch for API calls
 global.fetch = jest.fn();
 
+// Mock window for browser globals
+global.window = global.window || {};
+global.window.i18n = null;
+// Use defineProperty so location.href is settable
+const locationObj = { pathname: '/', href: 'http://localhost/', search: '', hash: '' };
+Object.defineProperty(global.window, 'location', {
+  value: locationObj,
+  writable: true,
+  configurable: true
+});
+global.location = global.window.location;
+
 // Load ProManager class
 const fs = require('fs');
 const path = require('path');
@@ -33,8 +45,12 @@ const proUtilsCode = fs.readFileSync(
   'utf8'
 );
 
-// Execute the code to define ProManager class
-eval(proUtilsCode.replace('window.proManager = proManager;', ''));
+// Execute the code to define ProManager class in global scope
+// Wrap in a function that assigns ProManager to global
+const wrappedCode = proUtilsCode
+  .replace('window.proManager = proManager;', 'global.ProManager = ProManager; global.proManager = proManager;')
+  .replace(/window\./g, 'global.');
+eval(wrappedCode);
 
 describe('ProManager', () => {
   let manager;

@@ -41,6 +41,24 @@ You enforce these non-negotiable design tokens and rules:
 - If the application has a dark mode, report pages must explicitly override or opt out. Never inherit dark mode tokens on report surfaces.
 - If you find `prefers-color-scheme: dark`, dark mode class toggles (e.g., `.dark`, `[data-theme='dark']`), or similar mechanisms affecting report pages, you must neutralize them for the report shell.
 
+### Chart & Graph Colors (Competitive / Bar Charts)
+- **"You" (user's site)**: `#0ea5e9` (sky-500), gradient: `linear-gradient(90deg, #0ea5e9, #06b6d4)` — draws attention positively, not alarming
+- **Leader / Winner**: `#10b981` (emerald-500), gradient: `linear-gradient(90deg, #10b981, #34d399)` — success, first place
+- **Competitors (ordered)**: Rotating palette for visual distinction:
+  1. `#6366f1` (indigo-500)
+  2. `#8b5cf6` (violet-500)
+  3. `#a78bfa` (violet-400)
+  4. `#94a3b8` (slate-400)
+  5. `#64748b` (slate-500)
+- **Semantic status colors** (used in status text, badges, gap indicators):
+  - Winning/ahead: `#10b981` (emerald-500), bg: `rgba(16, 185, 129, 0.1)`
+  - Losing/behind: `#ef4444` (red-500), bg: `rgba(239, 68, 68, 0.1)`
+  - Tied/neutral: `#f59e0b` (amber-500), bg: `rgba(245, 158, 11, 0.15)`
+  - Secondary negative: `#f87171` (red-400)
+- **"You" row highlight** (table backgrounds): `rgba(14, 165, 233, 0.07)`
+- **Bar styling**: `border-radius: 6px`, `height: 24px`, track: `var(--r-dial-track, #e5e7eb)`
+- **NEVER use neon colors**: No `#00ff41`, `#ff4444`, `#ff6666`, `#ffd700`, `#dc2626` for bars/charts. Use the Tailwind-based palette above.
+
 ### Report Shell Layout
 - Every report page must be wrapped in a single, consistent Report Shell component/layout.
 - The Report Shell provides: page-level padding, a consistent header area (title + optional subtitle + optional actions bar), the content grid area, and an optional footer.

@@ -60,6 +60,15 @@ summary:focus-visible,
   padding-bottom: 1.5rem;
 }
 
+.page-header__intro {
+  max-width: 680px;
+  margin: 0.5rem 0 0;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.925rem;
+  line-height: 1.6;
+  text-align: left;
+}
+
 /* ===================================================================
    UNIFIED COLOR SYSTEM - Dark & Light Themes
    =================================================================== */
@@ -2674,7 +2683,7 @@ body.white-theme #analyzeBtn:focus {
    NOTE: UI kit buttons use `.btn` + variants (e.g. `.btn-primary`) and manage
    their own colors. Avoid overriding them here.
 */
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip) {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):not(.auth-user-trigger) {
   background-color: #f8f9fa !important; /* Light neutral background */
   color: #1a1a1a !important; /* Dark text */
   border: 2px solid #dee2e6 !important; /* Subtle border */
@@ -2685,12 +2694,12 @@ body.white-theme button[style*="color"] {
   color: inherit !important; /* Respect inline color for special buttons */
 }
 
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):hover {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):not(.auth-user-trigger):hover {
   background-color: #e9ecef !important; /* Slightly darker on hover */
   border-color: #adb5bd !important;
 }
 
-body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):disabled {
+body.white-theme button:not(.btn):not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.hero-form__button):not(.example-chip):not(.auth-user-trigger):disabled {
   background-color: #e9ecef !important; /* Subtle disabled state */
   color: #6c757d !important; /* Muted but readable text */
   border-color: #dee2e6 !important;
@@ -2978,7 +2987,7 @@ body.white-theme .badge {
 
 /* Button contrast improvements */
 body.white-theme .btn,
-body.white-theme button:not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle) {
+body.white-theme button:not(.text-btn):not(.theme-toggle):not(.header-theme-toggle):not(#headerThemeToggle):not(.auth-user-trigger) {
   font-weight: 600 !important;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15) !important;
 }

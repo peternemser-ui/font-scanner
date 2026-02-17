@@ -79,6 +79,7 @@ class CoreWebVitalsService {
             fcp: {
               value: fcpValue,
               displayValue: `${formatNumber(fcpValue / 1000, 2)}s`,
+              rating: this.getCWVRating(fcpValue, 'fcp'),
               description: 'Time until first text/image appears'
             },
             si: {
@@ -126,6 +127,7 @@ class CoreWebVitalsService {
             fcp: {
               value: fcpValue + 300,
               displayValue: `${formatNumber((fcpValue + 300) / 1000, 2)}s`,
+              rating: this.getCWVRating(fcpValue + 300, 'fcp'),
               description: 'Time until first text/image appears'
             },
             si: {
@@ -281,6 +283,7 @@ class CoreWebVitalsService {
       fcp: {
         value: audits['first-contentful-paint']?.numericValue || 0,
         displayValue: audits['first-contentful-paint']?.displayValue || 'N/A',
+        rating: this.getCWVRating(audits['first-contentful-paint']?.numericValue, 'fcp'),
         description: 'Time until first text/image appears'
       },
       si: {
@@ -321,7 +324,8 @@ class CoreWebVitalsService {
     const thresholds = {
       lcp: { good: 2500, poor: 4000 },      // milliseconds
       inp: { good: 200, poor: 500 },         // milliseconds
-      cls: { good: 0.1, poor: 0.25 }         // score
+      cls: { good: 0.1, poor: 0.25 },       // score
+      fcp: { good: 1800, poor: 3000 }       // milliseconds
     };
 
     const threshold = thresholds[metric];

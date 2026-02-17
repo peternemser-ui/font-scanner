@@ -22,6 +22,19 @@ function t(key, fallback, params = {}) {
   return value;
 }
 
+/**
+ * Translate severity/priority labels from server data
+ */
+function translateSeverity(severity) {
+  const s = (severity || 'medium').toLowerCase();
+  return t('reports.common.severity.' + s, severity);
+}
+
+function translatePriority(priority) {
+  const p = (priority || 'medium').toLowerCase();
+  return t('reports.common.severity.' + p, priority);
+}
+
 // Function to get analysis steps with current translations
 // Called at runtime to ensure i18n is loaded
 function getAnalysisSteps() {
@@ -88,6 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Check for stored report or auto-start scan
   (async function initFromUrlParams() {
+    // Ensure i18n translations are loaded before rendering any report content
+    if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+    }
+
     const params = new URLSearchParams(window.location.search);
     const reportId = params.get('report_id') || '';
     const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
@@ -412,7 +430,7 @@ async function analyzeReputation(options = {}) {
         'Content-Type': 'application/json',
         ...(token && { 'Authorization': `Bearer ${token}` })
       },
-      body: JSON.stringify({ input, scanStartedAt }),
+      body: JSON.stringify({ input, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en' }),
     });
 
     if (!response.ok) {
@@ -466,7 +484,12 @@ async function analyzeReputation(options = {}) {
 }
 
 // Display complete reputation results
-function displayReputationResults(data) {
+async function displayReputationResults(data) {
+  // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+  if (window.i18n && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* fallback */ }
+  }
+
   if (!data || typeof data !== 'object' || typeof data === 'string') { console.error('[IPReputation] displayResults received invalid data:', data); return; }
   const resultsContent = document.getElementById('resultsContent');
   resultsContent.innerHTML = '';
@@ -851,8 +874,8 @@ function createThreatSection(threatIntel) {
               <div style="background: var(--r-surface-2, #F8FAFC); padding: 1rem; border-radius: 4px;">
                 <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 0.5rem;">
                   <div style="font-weight: 600; color: var(--r-text, #111827);">${threat.type}</div>
-                  <span style="background: ${getSeverityColor(threat.severity)}; color: #000000; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 1rem;">
-                    ${threat.severity.toUpperCase()}
+                  <span style="background: ${getSeverityColor(threat.severity)}; color: #000000; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 1rem; text-transform: uppercase;">
+                    ${translateSeverity(threat.severity)}
                   </span>
                 </div>
                 <div style="color: #cccccc; font-size: 0.9rem;">${threat.description}</div>
@@ -869,7 +892,7 @@ function createThreatSection(threatIntel) {
         ${threatIntel.riskLevel ? `
           <div style="margin-top: 1.5rem; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 4px;">
             <div style="color: var(--r-text, #111827); font-weight: 600; margin-bottom: 0.5rem;">${t('reports.ipReputation.riskAssessment', 'Risk Assessment')}</div>
-            <div style="color: #cccccc;">${t('reports.ipReputation.overallRiskLevel', 'Overall Risk Level')}: <span style="color: ${getRiskColor(threatIntel.riskLevel)}; font-weight: 600;">${threatIntel.riskLevel.toUpperCase()}</span></div>
+            <div style="color: #cccccc;">${t('reports.ipReputation.overallRiskLevel', 'Overall Risk Level')}: <span style="color: ${getRiskColor(threatIntel.riskLevel)}; font-weight: 600;">${translateSeverity(threatIntel.riskLevel)}</span></div>
           </div>
         ` : ''}
       </div>
@@ -910,7 +933,7 @@ function createRecommendationsSection(recommendations, options = {}) {
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
               <h3 style="margin: 0; color: var(--r-text, #111827);">${rec.title}</h3>
               <span style="background: ${getPriorityColor(rec.priority)}; color: #000000; padding: 0.3rem 0.8rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
-                ${rec.priority.toUpperCase()}
+                ${translatePriority(rec.priority)}
               </span>
             </div>
             <div style="color: #cccccc; margin-bottom: 1rem;">${rec.description}</div>
@@ -944,12 +967,12 @@ function createRecommendationsSection(recommendations, options = {}) {
 // Utility functions
 function getScoreColor(score) {
   const stops = [
-    [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-    [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-    [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-    [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-    [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-    [100,'#00FF3B']
+    [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+    [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+    [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+    [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+    [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+    [100,'#0AA64F']
   ];
   const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
   const idx = Math.min(Math.floor(s / 5), 19);
@@ -1264,7 +1287,7 @@ function createThreatContent(threatIntel) {
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <div style="font-weight: 600; color: var(--text-primary, #ffffff);">${threat.type}</div>
                 <span style="background: ${getSeverityColor(threat.severity)}; color: #000000; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600; margin-left: 1rem;">
-                  ${threat.severity.toUpperCase()}
+                  ${translateSeverity(threat.severity)}
                 </span>
               </div>
               <div style="color: var(--text-secondary, #cccccc); font-size: 0.9rem;">${threat.description}</div>
@@ -1281,7 +1304,7 @@ function createThreatContent(threatIntel) {
       ${threatIntel.riskLevel ? `
         <div style="margin-top: 1.5rem; padding: 1rem; background: var(--bg-tertiary, rgba(0, 0, 0, 0.3)); border-radius: 4px;">
           <div style="color: var(--text-primary, #ffffff); font-weight: 600; margin-bottom: 0.5rem;">${t('reports.ipReputation.riskAssessment', 'Risk Assessment')}</div>
-          <div style="color: var(--text-secondary, #cccccc);">${t('reports.ipReputation.overallRiskLevel', 'Overall Risk Level')}: <span style="color: ${getRiskColor(threatIntel.riskLevel)}; font-weight: 600;">${threatIntel.riskLevel.toUpperCase()}</span></div>
+          <div style="color: var(--text-secondary, #cccccc);">${t('reports.ipReputation.overallRiskLevel', 'Overall Risk Level')}: <span style="color: ${getRiskColor(threatIntel.riskLevel)}; font-weight: 600;">${translateSeverity(threatIntel.riskLevel)}</span></div>
         </div>
       ` : ''}
     </div>
@@ -1381,7 +1404,7 @@ function renderIpRepFixAccordion(rec, index) {
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
-          ">${rec.priority.toUpperCase()}</span>
+          ">${translatePriority(rec.priority)}</span>
           <span class="iprep-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
         </div>
       </div>
@@ -2706,7 +2729,7 @@ function createPortSecuritySection(portScan) {
               <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
                 <span style="font-weight: 600; color: var(--r-text, #111827);">${t('reports.ipReputation.port', 'Port')} ${issue.port} (${issue.service})</span>
                 <span style="background: ${issue.severity === 'critical' ? '#ff0000' : issue.severity === 'high' ? '#ff4444' : '#ffa500'}; color: #000; padding: 0.2rem 0.6rem; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">
-                  ${issue.severity.toUpperCase()}
+                  ${translateSeverity(issue.severity)}
                 </span>
               </div>
               <div style="color: #cccccc; font-size: 0.9rem;">${issue.description}</div>

@@ -88,14 +88,16 @@
    * Render page header HTML
    */
   function renderHeader(config) {
-    const { pageTitle, pageDescription, i18n } = config;
+    const { pageTitle, pageDescription, pageIntro, i18n } = config;
     const titleI18n = i18n?.title ? ` data-i18n="${i18n.title}"` : '';
     const subtitleI18n = i18n?.subtitle ? ` data-i18n="${i18n.subtitle}"` : '';
+    const introI18n = i18n?.pageIntro ? ` data-i18n="${i18n.pageIntro}"` : '';
 
     return `
       <header class="page-header">
         <h1 class="page-header__title"${titleI18n}>${pageTitle}</h1>
         ${pageDescription ? `<p class="page-header__subtitle"${subtitleI18n}>${pageDescription}</p>` : ''}
+        ${pageIntro ? `<p class="page-header__intro"${introI18n}>${pageIntro}</p>` : ''}
       </header>
     `;
   }
@@ -464,8 +466,12 @@
 
     /**
      * Start a scan
+     * @param {Object} [options] - Optional settings
+     * @param {boolean} [options.preserveReportId] - Preserve existing report_id (billing return)
+     * @param {boolean} [options.billingRescan] - Skip server-side usage tracking (post-purchase re-scan)
      */
-    async function startScan() {
+    async function startScan(options = {}) {
+      const { billingRescan = false } = options;
       const url = getUrl();
       const validation = config.validateUrl ? config.validateUrl(url) : validateUrl(url);
 
@@ -529,7 +535,8 @@
         const requestBody = {
           url: normalizedUrl,
           scanStartedAt,
-          ...(activeTab && { mode: activeTab })
+          ...(activeTab && { mode: activeTab }),
+          ...(billingRescan && { billingRescan: true })
         };
 
         // Build headers with authentication if available
@@ -814,6 +821,7 @@
       const reportId = params.get('report_id') || '';
       const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
       const autoScan = params.get('auto_scan') === 'true';
+      const billingRescanParam = params.get('billing_rescan') === 'true';
       const billingSuccess = params.get('billing_success') === 'true';
 
       // Set report ID immediately if present
@@ -930,7 +938,7 @@
 
       // Auto-scan if explicitly requested
       if (autoScan && autoUrl) {
-        setTimeout(() => startScan(), 500);
+        setTimeout(() => startScan({ billingRescan: billingRescanParam }), 500);
       }
     }
 

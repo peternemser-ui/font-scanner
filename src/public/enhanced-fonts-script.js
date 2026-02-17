@@ -75,6 +75,13 @@ window.addEventListener('sm:restoreScanResults', (e) => {
   }
 });
 
+// Re-render report when language changes (ensures translations apply after i18n loads)
+window.addEventListener('languageChanged', () => {
+  if (window.__fontsCurrentData && typeof window.displayFontsResults === 'function') {
+    window.displayFontsResults(window.__fontsCurrentData);
+  }
+});
+
 document.addEventListener('DOMContentLoaded', () => {
   _domReady = true;
 
@@ -145,6 +152,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Initialize from URL params - check for stored report first
   (async function initFromUrlParams() {
+    // Ensure i18n translations are loaded before rendering any report content
+    if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+    }
+
     // If we have a report_id, set it on body immediately for access checks
     if (reportIdParam) {
       document.body.setAttribute('data-report-id', reportIdParam);
@@ -312,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/enhanced-fonts', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ url, options, scanStartedAt }),
+        body: JSON.stringify({ url, options, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en' }),
         signal: controller.signal
       });
 
@@ -372,7 +384,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Store current results for export
   let currentResults = null;
 
-  function displayResults(data) {
+  async function displayResults(data) {
+    // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+    if (window.i18n && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* fallback */ }
+    }
+
     currentResults = data;
     if (!data || typeof data !== 'object') { console.error('[Fonts] displayResults received invalid data:', data); return; }
     if (!data.summary || typeof data.summary !== 'object') { data.summary = { totalFamilies: 0, duplicateCount: 0, displayIssueCount: 0, preloadIssueCount: 0 }; }
@@ -452,27 +469,11 @@ document.addEventListener('DOMContentLoaded', () => {
     // Get timestamp
     const startedAt = data.analyzedAt || data.timestamp || window.SM_SCAN_STARTED_AT || '';
 
-    // Build summary donuts (SEO pattern)
-    const healthScore = data.healthScore || 0;
-    const familyScore = Math.min(100, Math.max(0, 100 - (data.summary.totalFamilies - 3) * 10));
-    const duplicateScore = data.summary.duplicateCount === 0 ? 100 : Math.max(0, 100 - data.summary.duplicateCount * 20);
-    const displayScore = data.summary.displayIssueCount === 0 ? 100 : Math.max(0, 100 - data.summary.displayIssueCount * 15);
-
-    const summary = [
-      { label: t('reports.fonts.health', 'Health'), score: healthScore },
-      { label: t('reports.fonts.families', 'Families'), score: familyScore },
-      { label: t('reports.fonts.duplicates', 'Duplicates'), score: duplicateScore },
-      { label: t('reports.fonts.display', 'Display'), score: displayScore }
-    ];
-
-    // Pro preview content for locked state
-    const proFixesPreview = getFontsProFixesPreview();
-
-    // Get new font delivery and fallback stability data
+    // Get font delivery and fallback stability data (needed for both donuts and sections)
     const fontDelivery = data.fontDelivery || fullScan?.fonts?.fontDelivery || {};
     const fallbackStability = data.fallbackStability || fullScan?.fonts?.fallbackStability || {};
 
-    // Calculate display scores with fallback logic (matching content generators)
+    // Calculate section scores with fallback logic
     const hasNetworkData = fontDelivery && fontDelivery.totalRequests > 0;
     const fallbackFormats = advancedAnalysis?.formats?.summary || {};
     const deliveryDisplayScore = hasNetworkData
@@ -488,6 +489,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const stabilityClsLevel = hasStabilityData
       ? fallbackStability.clsRisk?.level
       : (aaClsRisk.level || 'low');
+
+    // Build summary donuts using real section scores (not derived from counts)
+    const healthScore = data.healthScore || 0;
+
+    const summary = [
+      { label: t('reports.fonts.health', 'Health'), score: healthScore },
+      { label: t('reports.fonts.fontDelivery', 'Delivery'), score: typeof deliveryDisplayScore === 'number' ? deliveryDisplayScore : null },
+      { label: t('reports.fonts.stability', 'Stability'), score: typeof stabilityDisplayScore === 'number' ? stabilityDisplayScore : null },
+      { label: t('reports.fonts.typography', 'Typography'), score: advancedScore }
+    ];
+
+    // Pro preview content for locked state
+    const proFixesPreview = getFontsProFixesPreview();
 
     // Build sections array (SEO pattern)
     const sections = [
@@ -524,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
       {
         id: 'fallback-stability',
         title: t('reports.fonts.fallbackLayoutStability', 'Fallback & Layout Stability'),
-        scoreTextRight: stabilityDisplayScore !== undefined ? `${stabilityDisplayScore}/100` : stabilityClsLevel.toUpperCase(),
+        scoreTextRight: stabilityDisplayScore !== undefined ? `${stabilityDisplayScore}/100` : t('reports.common.severity.' + (stabilityClsLevel || 'low').toLowerCase(), stabilityClsLevel),
         contentHTML: generateFallbackStabilityContent(fallbackStability, data, advancedAnalysis)
       },
       {
@@ -2069,9 +2083,9 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
   // ============================================
   function generateOverviewSection(data, totalIssues, hasFullScan, fonts, performance, bestPractices, screenshot) {
     const healthScore = data.healthScore || 0;
-    const familyScore = Math.min(100, Math.max(0, 100 - (data.summary.totalFamilies - 3) * 10));
-    const duplicateScore = data.summary.duplicateCount === 0 ? 100 : Math.max(0, 100 - data.summary.duplicateCount * 20);
-    const displayScore = data.summary.displayIssueCount === 0 ? 100 : Math.max(0, 100 - data.summary.displayIssueCount * 15);
+    const familyScore = Math.min(100, Math.max(0, 100 - Math.max(0, data.summary.totalFamilies - 4) * 5));
+    const duplicateScore = data.summary.duplicateCount === 0 ? 100 : Math.max(0, 100 - data.summary.duplicateCount * 10);
+    const displayScore = data.summary.displayIssueCount === 0 ? 100 : Math.max(0, 100 - data.summary.displayIssueCount * 10);
     
     return `
       <div class="section">
@@ -2102,7 +2116,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
               <circle cx="90" cy="90" r="75" fill="none" stroke="${getScoreColor(familyScore)}" stroke-width="10" stroke-linecap="round" stroke-dasharray="${(familyScore / 100) * 471.24} 471.24" transform="rotate(-90 90 90)"/>
               <text x="90" y="90" text-anchor="middle" dy="0.35em" font-size="3.5rem" font-weight="bold" fill="#f9fff2" stroke="rgba(0, 0, 0, 0.65)" stroke-width="2.5" paint-order="stroke fill" style="text-shadow: 0 0 18px ${getScoreColor(familyScore)}, 0 0 30px rgba(0,0,0,0.6);">${data.summary.totalFamilies}</text>
             </svg>
-            <div style="margin-top: 0.5rem; color: ${getScoreColor(familyScore)}; font-weight: 600; font-size: 1.1rem;">${data.summary.totalFamilies <= 3 ? t('reports.common.optimal', 'Optimal') : data.summary.totalFamilies <= 5 ? t('reports.common.acceptable', 'Acceptable') : t('reports.common.tooMany', 'Too Many')}</div>
+            <div style="margin-top: 0.5rem; color: ${getScoreColor(familyScore)}; font-weight: 600; font-size: 1.1rem;">${data.summary.totalFamilies <= 4 ? t('reports.common.optimal', 'Optimal') : data.summary.totalFamilies <= 6 ? t('reports.common.acceptable', 'Acceptable') : t('reports.common.tooMany', 'Too Many')}</div>
           </div>
 
           <!-- Duplicates -->
@@ -3040,7 +3054,7 @@ access_log /var/log/nginx/fonts.log fonts if=$is_font_request;`,
           </div>
         ` : ''}
         <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
-          <div style="font-size: 1.5rem; font-weight: bold; color: ${data.summary.totalFamilies <= 3 ? '#10b981' : data.summary.totalFamilies <= 5 ? '#f59e0b' : '#ef4444'};">${data.summary.totalFamilies}</div>
+          <div style="font-size: 1.5rem; font-weight: bold; color: ${data.summary.totalFamilies <= 4 ? '#10b981' : data.summary.totalFamilies <= 6 ? '#f59e0b' : '#ef4444'};">${data.summary.totalFamilies}</div>
           <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">${t('reports.fonts.fontFamilies', 'Font Families')}</div>
         </div>
         <div class="font-card" style="text-align: center; margin: 0; padding: 0.75rem;">
@@ -3551,12 +3565,12 @@ https://fonts.googleapis.com/css2?family=Roboto&amp;display=swap
 
   function getScoreColor(score) {
     const stops = [
-      [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-      [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-      [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-      [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-      [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-      [100,'#00FF3B']
+      [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+      [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+      [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+      [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+      [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+      [100,'#0AA64F']
     ];
     const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
     const idx = Math.min(Math.floor(s / 5), 19);

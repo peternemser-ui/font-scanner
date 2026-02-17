@@ -17,28 +17,28 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('cro', function renderCRO(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
-    var translateImpact = utils.translateImpact || function(v) { return v; };
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
+    const translateImpact = utils.translateImpact || function(v) { return v; };
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     function _htmlToNode(htmlStr) {
-      var tpl = document.createElement('template');
+      const tpl = document.createElement('template');
       tpl.innerHTML = htmlStr.trim();
       return tpl.content.firstChild;
     }
 
     // Resolve data sources
-    var scores = data.scores || {};
-    var analysis = data.analysis || {};
-    var quickWins = data.quickWins || [];
-    var recommendations = data.recommendations || [];
+    const scores = data.scores || {};
+    const analysis = data.analysis || {};
+    const quickWins = data.quickWins || [];
+    const recommendations = data.recommendations || [];
 
     // --- Normalize sub-objects: inject derived fields the renderer expects ---
     // The API returns scores at `data.scores.{cta,form,trust,mobile}` but
@@ -61,7 +61,7 @@
         analysis.forms.score = scores.form;
       }
       if (analysis.forms.avgFields === undefined && analysis.forms.details && analysis.forms.details.length > 0) {
-        var totalFields = 0;
+        let totalFields = 0;
         analysis.forms.details.forEach(function (f) { totalFields += (f.fieldCount || 0); });
         analysis.forms.avgFields = Math.round(totalFields / analysis.forms.details.length);
       }
@@ -73,8 +73,8 @@
         analysis.trustSignals.score = scores.trust;
       }
       if (analysis.trustSignals.count === undefined) {
-        var trustCount = 0;
-        var trustBoolKeys = ['hasSSL', 'hasTestimonials', 'hasSocialProof', 'hasContactInfo', 'hasPrivacyPolicy', 'hasSecurityBadges'];
+        let trustCount = 0;
+        const trustBoolKeys = ['hasSSL', 'hasTestimonials', 'hasSocialProof', 'hasContactInfo', 'hasPrivacyPolicy', 'hasSecurityBadges'];
         trustBoolKeys.forEach(function (k) { if (analysis.trustSignals[k]) trustCount++; });
         analysis.trustSignals.count = trustCount;
       }
@@ -95,15 +95,15 @@
        1. CRO Overview
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-overview .pdf-section__content');
-      var score = data.overallScore || data.score;
+      const sec = document.querySelector('#section-overview .pdf-section__content');
+      const score = data.overallScore || data.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cro.report.overviewTitle', 'CRO Overview'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.overview', 'Conversion Rate Optimization (CRO) analyzes how effectively your page converts visitors into customers or leads. This overview presents your aggregate CRO score across four key dimensions: calls to action, forms, trust signals, and mobile user experience. A well-optimized page guides visitors toward desired actions with clear, compelling elements.')) + '</p>';
 
@@ -111,7 +111,7 @@
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cro.report.overview.scoresHeading', 'CRO Sub-Scores')) + '</h3>';
       html += '<div class="pdf-score-grid">';
 
-      var subScores = [
+      const subScores = [
         { key: 'cta', label: t('reports.cro.report.sections.cta', 'Calls to Action') },
         { key: 'form', label: t('reports.cro.report.sections.forms', 'Form Analysis') },
         { key: 'trust', label: t('reports.cro.report.sections.trust', 'Trust Signals') },
@@ -119,7 +119,7 @@
       ];
 
       subScores.forEach(function (sub) {
-        var val = scores[sub.key];
+        const val = scores[sub.key];
         if (val === undefined || val === null) return;
         html += '<div class="pdf-score-card">' +
           '<div class="pdf-score-card__label">' + esc(sub.label) + '</div>' +
@@ -130,8 +130,8 @@
       html += '</div>';
 
       // Overview metrics — include mobile score too
-      var overallVal = scores.overall !== undefined ? scores.overall : (data.overallScore || data.score || '-');
-      var overallNum = Number(overallVal) || 0;
+      const overallVal = scores.overall !== undefined ? scores.overall : (data.overallScore || data.score || '-');
+      const overallNum = Number(overallVal) || 0;
       html += PR.renderMetrics([
         { value: overallVal, label: t('reports.cro.report.overview.overallScore', 'Overall Score'), color: overallNum >= 70 ? '#10b981' : overallNum >= 40 ? '#f59e0b' : '#ef4444' },
         { value: scores.cta !== undefined ? scores.cta : '-', label: t('reports.cro.report.sections.cta', 'Calls to Action') },
@@ -141,7 +141,7 @@
       ]);
 
       // Summary stats (matches web UI renderCROSummarySection)
-      var highPriorityCount = 0;
+      let highPriorityCount = 0;
       recommendations.forEach(function (r) {
         if ((r.priority || r.severity) === 'high' || (r.priority || r.severity) === 'critical') highPriorityCount++;
       });
@@ -162,21 +162,21 @@
        2. Calls to Action
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-cta .pdf-section__content');
-      var d = analysis.ctas || {};
-      var score = scores.cta;
+      const sec = document.querySelector('#section-cta .pdf-section__content');
+      const d = analysis.ctas || {};
+      const score = scores.cta;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cro.report.sections.cta', 'Calls to Action'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.cta', 'Calls to action (CTAs) are the primary conversion drivers on your page. Effective CTAs use action-oriented language, stand out visually, and are positioned where users are most likely to engage. This section evaluates your CTAs for visibility, clarity, and placement effectiveness.')) + '</p>';
 
       // Metrics — include visible/above-fold count (web UI shows ctas.visible)
-      var metricsArr = [
+      const metricsArr = [
         { value: d.count || 0, label: t('reports.cro.report.cta.totalFound', 'CTAs Found') },
         { value: d.score !== undefined ? d.score : '-', label: t('reports.cro.report.cta.score', 'CTA Score'), color: (d.score || 0) >= 70 ? '#10b981' : (d.score || 0) >= 40 ? '#f59e0b' : '#ef4444' }
       ];
@@ -201,25 +201,25 @@
       }
 
       // CTA examples (web UI shows these as styled badges)
-      var examples = d.examples || [];
+      const examples = d.examples || [];
       if (examples.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cro.ctaExamplesFound', 'CTA Examples Found:')) + '</h3>';
         html += '<div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">';
         examples.slice(0, 15).forEach(function (text) {
-          var ctaLabel = typeof text === 'string' ? text : (text.text || text.label || '');
+          const ctaLabel = typeof text === 'string' ? text : (text.text || text.label || '');
           html += '<span style="display:inline-block;padding:6px 14px;border-radius:6px;font-size:0.82rem;font-weight:500;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);color:#3b82f6;">' + esc(truncate(ctaLabel, 40)) + '</span>';
         });
         html += '</div>';
       }
 
       // CTAs found table
-      var found = d.found || [];
+      const found = d.found || [];
       if (found.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cro.report.cta.foundHeading', 'CTAs Detected')) + '</h3>';
-        var ctaRows = found.slice(0, 20).map(function (cta) {
-          var ctaText = typeof cta === 'string' ? cta : (cta.text || cta.label || '-');
-          var ctaType = typeof cta === 'object' && cta.type ? cta.type : '-';
-          var ctaLocation = typeof cta === 'object' && cta.location ? cta.location : '-';
+        const ctaRows = found.slice(0, 20).map(function (cta) {
+          const ctaText = typeof cta === 'string' ? cta : (cta.text || cta.label || '-');
+          const ctaType = typeof cta === 'object' && cta.type ? cta.type : '-';
+          const ctaLocation = typeof cta === 'object' && cta.location ? cta.location : '-';
           return [
             '<strong>' + esc(truncate(ctaText, 60)) + '</strong>',
             esc(ctaType),
@@ -260,21 +260,21 @@
        3. Form Analysis
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-forms .pdf-section__content');
-      var d = analysis.forms || {};
-      var score = scores.form;
+      const sec = document.querySelector('#section-forms .pdf-section__content');
+      const d = analysis.forms || {};
+      const score = scores.form;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cro.report.sections.forms', 'Form Analysis'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.forms', 'Form design directly impacts completion rates. Complex, lengthy, or poorly designed forms are a leading cause of conversion abandonment. This section analyzes your forms for field count, label clarity, validation feedback, and mobile usability to identify friction points.')) + '</p>';
 
       // Metrics
-      var formMetrics = [
+      const formMetrics = [
         { value: d.count || 0, label: t('reports.cro.report.forms.totalFound', 'Forms Found') },
         { value: d.score !== undefined ? d.score : '-', label: t('reports.cro.report.forms.score', 'Form Score'), color: (d.score || 0) >= 70 ? '#10b981' : (d.score || 0) >= 40 ? '#f59e0b' : '#ef4444' }
       ];
@@ -284,13 +284,13 @@
       html += PR.renderMetrics(formMetrics);
 
       // Rich form details table (web UI: renderFormContent with details array)
-      var details = d.details || [];
+      const details = d.details || [];
       if (details.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cro.report.forms.detailsHeading', 'Form Details')) + '</h3>';
 
-        var detailRows = details.slice(0, 15).map(function (form, idx) {
-          var fieldCount = form.fieldCount !== undefined ? form.fieldCount : (form.fields !== undefined ? form.fields : '-');
-          var fieldColor = Number(fieldCount) <= 5 ? '#10b981' : Number(fieldCount) <= 8 ? '#f59e0b' : '#ef4444';
+        const detailRows = details.slice(0, 15).map(function (form, idx) {
+          const fieldCount = form.fieldCount !== undefined ? form.fieldCount : (form.fields !== undefined ? form.fields : '-');
+          const fieldColor = Number(fieldCount) <= 5 ? '#10b981' : Number(fieldCount) <= 8 ? '#f59e0b' : '#ef4444';
           return [
             '<strong>' + esc(t('reports.cro.formNumber', 'Form {{number}}', { number: idx + 1 })) + '</strong>',
             '<span style="color:' + fieldColor + ';font-weight:600;">' + esc(String(fieldCount)) + '</span>',
@@ -328,13 +328,13 @@
         );
       } else {
         // Fallback: simple found-forms table
-        var found = d.found || [];
+        const found = d.found || [];
         if (found.length > 0) {
           html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cro.report.forms.foundHeading', 'Forms Detected')) + '</h3>';
-          var formRows = found.slice(0, 15).map(function (form) {
-            var formName = typeof form === 'string' ? form : (form.name || form.id || form.action || '-');
-            var fieldCount = typeof form === 'object' && form.fields !== undefined ? form.fields : (typeof form === 'object' && form.fieldCount !== undefined ? form.fieldCount : '-');
-            var formType = typeof form === 'object' && form.type ? form.type : '-';
+          const formRows = found.slice(0, 15).map(function (form) {
+            const formName = typeof form === 'string' ? form : (form.name || form.id || form.action || '-');
+            const fieldCount = typeof form === 'object' && form.fields !== undefined ? form.fields : (typeof form === 'object' && form.fieldCount !== undefined ? form.fieldCount : '-');
+            const formType = typeof form === 'object' && form.type ? form.type : '-';
             return [
               '<strong>' + esc(truncate(formName, 50)) + '</strong>',
               esc(String(fieldCount)),
@@ -376,16 +376,16 @@
        4. Trust Signals
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-trust .pdf-section__content');
-      var d = analysis.trustSignals || {};
-      var score = scores.trust;
+      const sec = document.querySelector('#section-trust .pdf-section__content');
+      const d = analysis.trustSignals || {};
+      const score = scores.trust;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cro.report.sections.trust', 'Trust Signals'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.trust', 'Trust signals reassure visitors that your site is legitimate, secure, and reliable. These include security badges, testimonials, reviews, contact information, and social proof. This section evaluates the presence and effectiveness of trust-building elements on your page.')) + '</p>';
 
@@ -397,7 +397,7 @@
 
       // Trust signal checklist (matches web UI renderTrustContent)
       // The web UI checks 6 specific boolean keys on the trustSignals object
-      var trustChecklist = [
+      const trustChecklist = [
         { key: 'hasSSL', label: t('reports.cro.trustSignalsList.sslCertificate', 'SSL Certificate'), desc: t('reports.cro.trustSignalsList.secureHttps', 'Secure HTTPS connection') },
         { key: 'hasTestimonials', label: t('reports.cro.trustSignalsList.testimonials', 'Testimonials'), desc: t('reports.cro.trustSignalsList.customerReviews', 'Customer reviews visible') },
         { key: 'hasSocialProof', label: t('reports.cro.trustSignalsList.socialProof', 'Social Proof'), desc: t('reports.cro.trustSignalsList.trustBadges', 'Trust badges or certifications') },
@@ -407,12 +407,12 @@
       ];
 
       // Check if we have any boolean trust keys in the data
-      var hasTrustBooleans = trustChecklist.some(function (item) {
+      const hasTrustBooleans = trustChecklist.some(function (item) {
         return d[item.key] !== undefined;
       });
 
       if (hasTrustBooleans) {
-        var presentCount = 0;
+        let presentCount = 0;
         trustChecklist.forEach(function (item) { if (d[item.key]) presentCount++; });
 
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cro.trustSignalAnalysis', 'Trust Signal Analysis')) + '</h3>';
@@ -421,8 +421,8 @@
           esc(t('reports.cro.trustSignalsDescription', 'Trust signals reduce friction and increase conversion rates. {{present}} of {{total}} trust elements detected.', { present: presentCount, total: trustChecklist.length })) +
         '</p>';
 
-        var trustRows = trustChecklist.map(function (item) {
-          var hasIt = !!d[item.key];
+        const trustRows = trustChecklist.map(function (item) {
+          const hasIt = !!d[item.key];
           return [
             '<strong>' + esc(item.label) + '</strong><br><span class="pdf-text-muted pdf-text-small">' + esc(item.desc) + '</span>',
             PR.renderStatus(hasIt ? 'pass' : 'fail', hasIt ? t('reports.cro.report.trust.present', 'Present') : t('reports.cro.report.trust.missing', 'Missing'))
@@ -440,17 +440,17 @@
       }
 
       // Also render the generic found-signals table if present
-      var found = d.found || [];
+      const found = d.found || [];
       if (found.length > 0) {
         if (hasTrustBooleans) {
           html += '<h3 class="pdf-subsection__title" style="margin-top:16px;">' + esc(t('reports.cro.report.trust.foundHeading', 'Trust Signals Detected')) + '</h3>';
         } else {
           html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cro.report.trust.foundHeading', 'Trust Signals Detected')) + '</h3>';
         }
-        var trustFoundRows = found.slice(0, 20).map(function (signal) {
-          var signalName = typeof signal === 'string' ? signal : (signal.name || signal.text || signal.type || '-');
-          var signalType = typeof signal === 'object' && signal.type ? signal.type : '-';
-          var signalStatus = typeof signal === 'object' && signal.status ? signal.status : 'found';
+        const trustFoundRows = found.slice(0, 20).map(function (signal) {
+          const signalName = typeof signal === 'string' ? signal : (signal.name || signal.text || signal.type || '-');
+          const signalType = typeof signal === 'object' && signal.type ? signal.type : '-';
+          const signalStatus = typeof signal === 'object' && signal.status ? signal.status : 'found';
           return [
             '<strong>' + esc(truncate(signalName, 60)) + '</strong>',
             esc(signalType),
@@ -491,26 +491,26 @@
        5. Mobile UX
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-mobile-ux .pdf-section__content');
-      var d = analysis.mobileUX || {};
-      var score = scores.mobile;
+      const sec = document.querySelector('#section-mobile-ux .pdf-section__content');
+      const d = analysis.mobileUX || {};
+      const score = scores.mobile;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cro.report.sections.mobile', 'Mobile UX'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.mobileUx', 'Mobile UX optimization ensures conversion elements work effectively on touchscreen devices. This includes tap-friendly buttons, mobile-optimized forms, and responsive layouts that maintain conversion paths. Over 50% of purchases now begin on mobile devices.')) + '</p>';
 
       // Rich metrics matching web UI (tapTargetCompliance, avgFontSize, hasViewportMeta)
-      var mobileMetrics = [
+      const mobileMetrics = [
         { value: d.score !== undefined ? d.score : (score !== undefined ? score : '-'), label: t('reports.cro.report.mobileUx.score', 'Mobile UX Score'), color: (d.score || score || 0) >= 70 ? '#10b981' : (d.score || score || 0) >= 40 ? '#f59e0b' : '#ef4444' }
       ];
 
       if (d.tapTargetCompliance !== undefined) {
-        var tapPct = (d.tapTargetCompliance * 100).toFixed(1);
+        const tapPct = (d.tapTargetCompliance * 100).toFixed(1);
         mobileMetrics.push({ value: tapPct + '%', label: t('reports.cro.mobile.tapTargetCompliance', 'Tap Target Compliance'), color: d.tapTargetCompliance >= 0.8 ? '#10b981' : '#f59e0b' });
       }
       if (d.avgFontSize !== undefined) {
@@ -519,9 +519,9 @@
       html += PR.renderMetrics(mobileMetrics);
 
       // Mobile detail table (web UI shows 3 visual circles; PDF renders a table)
-      var mobileDetailRows = [];
+      const mobileDetailRows = [];
       if (d.tapTargetCompliance !== undefined) {
-        var tapOk = d.tapTargetCompliance >= 0.8;
+        const tapOk = d.tapTargetCompliance >= 0.8;
         mobileDetailRows.push([
           '<strong>' + esc(t('reports.cro.mobile.tapTargetCompliance', 'Tap Target Compliance')) + '</strong><br><span class="pdf-text-muted pdf-text-small">' + esc(t('reports.cro.mobile.minimumSize', '44×44px minimum')) + '</span>',
           (d.tapTargetCompliance * 100).toFixed(1) + '%',
@@ -529,7 +529,7 @@
         ]);
       }
       if (d.avgFontSize !== undefined) {
-        var fontOk = d.avgFontSize >= 16;
+        const fontOk = d.avgFontSize >= 16;
         mobileDetailRows.push([
           '<strong>' + esc(t('reports.cro.mobile.averageFontSize', 'Average Font Size')) + '</strong><br><span class="pdf-text-muted pdf-text-small">' + esc(t('reports.cro.mobile.recommended16px', '16px recommended')) + '</span>',
           Number(d.avgFontSize).toFixed(0) + 'px',
@@ -558,12 +558,12 @@
       }
 
       // Mobile UX issues
-      var issues = d.issues || [];
+      const issues = d.issues || [];
       if (issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cro.report.mobileUx.issuesHeading', 'Mobile UX Issues')) + '</h3>';
         issues.slice(0, 20).forEach(function (issue) {
-          var issueText = typeof issue === 'string' ? issue : (issue.message || issue.title || issue.description || '');
-          var sev = typeof issue === 'object' && issue.severity ? issue.severity.toLowerCase() : 'warning';
+          const issueText = typeof issue === 'string' ? issue : (issue.message || issue.title || issue.description || '');
+          const sev = typeof issue === 'object' && issue.severity ? issue.severity.toLowerCase() : 'warning';
           html += PR.renderIssue(esc(issueText), sev);
         });
 
@@ -585,20 +585,20 @@
        6. Quick Wins
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-quick-wins .pdf-section__content');
+      const sec = document.querySelector('#section-quick-wins .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cro.report.sections.quickWins', 'Quick Wins'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.quickWins', 'Quick wins are high-impact, low-effort changes that can immediately improve your conversion rate. These prioritized actions offer the best return on investment for optimization efforts.')) + '</p>';
 
       if (quickWins.length > 0) {
         function _badgeColor(level) {
-          var l = (level || '').toLowerCase();
+          const l = (level || '').toLowerCase();
           if (l === 'high') return '#ef4444';
           if (l === 'medium') return '#f59e0b';
           if (l === 'low') return '#3b82f6';
@@ -607,7 +607,7 @@
         }
 
         function _difficultyColor(diff) {
-          var d = (diff || '').toLowerCase();
+          const d = (diff || '').toLowerCase();
           if (d === 'easy') return '#10b981';
           if (d === 'medium') return '#f59e0b';
           if (d === 'hard') return '#ef4444';
@@ -616,11 +616,11 @@
 
         // Render each quick win as a rich card (matches web UI createQuickWinsSection)
         quickWins.slice(0, 20).forEach(function (qw, idx) {
-          var title = qw.title || t('reports.cro.quickWin', 'Quick Win');
-          var impactText = qw.impact || '-';
-          var timeEst = qw.timeEstimate || '';
-          var difficulty = qw.difficulty || '';
-          var steps = qw.steps || [];
+          const title = qw.title || t('reports.cro.quickWin', 'Quick Win');
+          const impactText = qw.impact || '-';
+          const timeEst = qw.timeEstimate || '';
+          const difficulty = qw.difficulty || '';
+          const steps = qw.steps || [];
 
           html += '<div class="pdf-fix-card" style="margin-bottom:12px;">';
 
@@ -637,7 +637,7 @@
           html += '<div class="pdf-fix-card__body">';
 
           // Time estimate and impact line
-          var metaLine = '';
+          let metaLine = '';
           if (timeEst) {
             metaLine += '<span style="color:#10b981;font-weight:600;font-size:0.82rem;margin-right:16px;">' + esc(t('reports.cro.report.quickWins.time', 'Time')) + ': ' + esc(timeEst) + '</span>';
           }
@@ -688,19 +688,19 @@
        7. Recommendations (Rich Fix Cards)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cro.report.sections.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cro.report.sectionIntros.recommendations', 'Based on the CRO analysis, these recommendations prioritize improvements with the highest potential impact on your conversion rate.')) + '</p>';
 
       // Build rich fix cards (mirrors buildCROFixCards from cro-script.js)
-      var fixCards = _buildCROFixCards(data, t, esc);
+      const fixCards = _buildCROFixCards(data, t, esc);
 
       if (fixCards.length > 0) {
         html += '<p class="pdf-text-muted" style="margin-bottom:16px;">' +
@@ -714,14 +714,14 @@
         });
       } else if (recommendations.length > 0) {
         // Fallback: simple grouped recommendations if fix cards could not be built
-        var critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
-        var high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
-        var medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
-        var low = recommendations.filter(function (r) {
-          var p = r.priority || r.severity;
+        const critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
+        const high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
+        const medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
+        const low = recommendations.filter(function (r) {
+          const p = r.priority || r.severity;
           return !p || p === 'low';
         });
-        var groups = [
+        const groups = [
           { items: critical, label: t('common.pdf.execSummary.critical', 'Critical'), color: '#ef4444' },
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
@@ -755,7 +755,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -771,11 +771,11 @@
    */
   function _renderIssuesList(issues, t) {
     if (!issues || issues.length === 0) return '';
-    var html = '<div class="pdf-issues" style="margin-top:12px;">';
+    let html = '<div class="pdf-issues" style="margin-top:12px;">';
     html += '<h4 class="pdf-subsection__title">' + (t('common.pdf.execSummary.issuesFound', 'Issues Found') || 'Issues') + '</h4>';
     issues.forEach(function (issue) {
-      var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
-      var sev = typeof issue === 'object' && issue.severity ? issue.severity.toLowerCase() : 'warning';
+      const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+      const sev = typeof issue === 'object' && issue.severity ? issue.severity.toLowerCase() : 'warning';
       html += '<div class="pdf-issue pdf-issue--' + sev + '">' +
         '<span class="pdf-issue__text">' + PdfReport.helpers.esc(text) + '</span>' +
       '</div>';
@@ -789,14 +789,14 @@
    * Follows the same pattern as _renderFixCard in seo-report-render.js.
    */
   function _renderFixCard(fix, t, esc) {
-    var severityLower = (fix.severity || 'medium').toLowerCase();
+    const severityLower = (fix.severity || 'medium').toLowerCase();
 
-    var html = '<div class="pdf-fix-card">';
+    let html = '<div class="pdf-fix-card">';
 
     // Header
     html += '<div class="pdf-fix-card__header">';
-    var severityLabels = { high: t('seo.fixes.severity.high', 'High'), medium: t('seo.fixes.severity.medium', 'Medium'), low: t('seo.fixes.severity.low', 'Low'), critical: t('seo.fixes.severity.critical', 'Critical') };
-    var severityLabel = severityLabels[severityLower] || fix.severity;
+    const severityLabels = { high: t('seo.fixes.severity.high', 'High'), medium: t('seo.fixes.severity.medium', 'Medium'), low: t('seo.fixes.severity.low', 'Low'), critical: t('seo.fixes.severity.critical', 'Critical') };
+    const severityLabel = severityLabels[severityLower] || fix.severity;
     html += '<span class="pdf-fix-card__severity pdf-fix-card__severity--' + severityLower + '">' + esc(severityLabel) + '</span>';
     html += '<span class="pdf-fix-card__title">' + esc(fix.title) + '</span>';
     if (fix.category) {
@@ -873,17 +873,17 @@
    *   - Mobile UX fix
    */
   function _buildCROFixCards(data, t, esc) {
-    var cards = [];
-    var ctas = (data.analysis && data.analysis.ctas) || {};
-    var forms = (data.analysis && data.analysis.forms) || {};
-    var trust = (data.analysis && data.analysis.trustSignals) || {};
-    var mobile = (data.analysis && data.analysis.mobileUX) || {};
-    var recs = data.recommendations || [];
-    var qwins = data.quickWins || [];
+    const cards = [];
+    const ctas = (data.analysis && data.analysis.ctas) || {};
+    const forms = (data.analysis && data.analysis.forms) || {};
+    const trust = (data.analysis && data.analysis.trustSignals) || {};
+    const mobile = (data.analysis && data.analysis.mobileUX) || {};
+    const recs = data.recommendations || [];
+    const qwins = data.quickWins || [];
 
     // Build cards from recommendations
     recs.forEach(function (rec, idx) {
-      var severity = (rec.priority === 'high' || rec.priority === 'critical') ? 'High'
+      const severity = (rec.priority === 'high' || rec.priority === 'critical') ? 'High'
         : rec.priority === 'medium' ? 'Medium' : 'Low';
 
       cards.push({
@@ -935,7 +935,7 @@
 
     // Form optimization fix
     if (forms.count > 0 && (forms.avgFields > 5 || !forms.hasLabels)) {
-      var formDesc = forms.avgFields > 5
+      const formDesc = forms.avgFields > 5
         ? t('reports.cro.fixes.formTooManyFields', 'Forms have {{count}} fields on average. Consider reducing to 3-5 essential fields.', { count: forms.avgFields })
         : t('reports.cro.fixes.formMissingLabels', 'Forms are missing proper labels which hurts accessibility and conversions.');
       cards.push({
@@ -997,7 +997,7 @@
     }
 
     // Sort: High first, then Medium, then Low
-    var severityOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
+    const severityOrder = { 'High': 0, 'Medium': 1, 'Low': 2 };
     cards.sort(function (a, b) {
       return (severityOrder[a.severity] || 2) - (severityOrder[b.severity] || 2);
     });
@@ -1009,7 +1009,7 @@
    * Determine the CRO category from a recommendation.
    */
   function _getCROCategory(rec, t) {
-    var msg = (rec.message || rec.title || '').toLowerCase();
+    const msg = (rec.message || rec.title || '').toLowerCase();
     if (msg.indexOf('cta') >= 0 || msg.indexOf('button') >= 0 || msg.indexOf('click') >= 0) return t('reports.cro.categories.ctas', 'CTAs');
     if (msg.indexOf('form') >= 0 || msg.indexOf('input') >= 0 || msg.indexOf('field') >= 0) return t('reports.cro.categories.forms', 'Forms');
     if (msg.indexOf('trust') >= 0 || msg.indexOf('security') >= 0 || msg.indexOf('badge') >= 0) return t('reports.cro.categories.trustSignals', 'Trust Signals');
@@ -1021,7 +1021,7 @@
    * Generate problem code snippet for a recommendation.
    */
   function _generateCROProblemCode(rec, t) {
-    var title = (rec.message || rec.title || '').toLowerCase();
+    const title = (rec.message || rec.title || '').toLowerCase();
 
     if (title.indexOf('mobile') >= 0 || title.indexOf('tap') >= 0 || title.indexOf('touch') >= 0) {
       return '/* Mobile Experience Issues */\n\n/* Problem: Small tap targets */\n.button {\n  padding: 6px 12px;      /* Too small for touch */\n  font-size: 12px;        /* Hard to read on mobile */\n}\n\n/* Problem: Text too small */\nbody {\n  font-size: 14px;        /* Below 16px causes zoom on iOS */\n}';
@@ -1043,7 +1043,7 @@
       return '/* Readability Issues */\n\nbody {\n  font-size: 14px;        /* Too small on mobile */\n  line-height: 1.2;       /* Too tight */\n}\n\n.paragraph {\n  max-width: none;        /* Lines too long */\n  color: #999;            /* Low contrast */\n}';
     }
 
-    var detail = rec.detail || '';
+    const detail = rec.detail || '';
     return '<!-- Current Implementation -->\n<!-- Issue: ' + (rec.message || rec.title || 'Needs optimization') + ' -->\n' +
       (detail ? '<!-- Details: ' + detail + ' -->\n' : '') +
       '\n<!-- This affects conversion rates by making it harder\n     for users to complete their goals on the page. -->';
@@ -1053,7 +1053,7 @@
    * Generate fix code snippet for a recommendation.
    */
   function _generateCROFixCode(rec, t) {
-    var title = (rec.message || rec.title || '').toLowerCase();
+    const title = (rec.message || rec.title || '').toLowerCase();
 
     if (title.indexOf('mobile') >= 0 || title.indexOf('tap') >= 0 || title.indexOf('touch') >= 0) {
       return '/* Mobile-Optimized CSS */\n\n.button, .cta, a.nav-link {\n  min-height: 44px;       /* Apple HIG minimum */\n  min-width: 44px;\n  padding: 12px 24px;\n  font-size: 16px;\n}\n\nbody {\n  font-size: 16px;        /* Prevents iOS zoom */\n  line-height: 1.5;\n}\n\n@media (max-width: 768px) {\n  .container { padding: 16px; }\n  .button { width: 100%; }\n}';
@@ -1082,7 +1082,7 @@
    * Get default step-by-step fix instructions for a recommendation.
    */
   function _getDefaultCROSteps(rec, t) {
-    var title = (rec.message || rec.title || '').toLowerCase();
+    const title = (rec.message || rec.title || '').toLowerCase();
 
     if (title.indexOf('mobile') >= 0 || title.indexOf('tap') >= 0 || title.indexOf('touch') >= 0) {
       return [
@@ -1152,7 +1152,7 @@
    * Generate problem code for a quick win.
    */
   function _generateQuickWinProblemCode(win, t) {
-    var title = (win.title || '').toLowerCase();
+    const title = (win.title || '').toLowerCase();
 
     if (title.indexOf('cta') >= 0 || title.indexOf('fold') >= 0) {
       return '<!-- Quick Win: CTA Placement -->\n<!-- Current: CTA is below the fold -->\n<div class="hero">\n  <h1>Welcome to Our Site</h1>\n  <p>Long intro text...</p>\n</div>\n<!-- CTA appears only after scrolling -->';
@@ -1173,7 +1173,7 @@
    * Generate fix code for a quick win.
    */
   function _generateQuickWinFixCode(win, t) {
-    var title = (win.title || '').toLowerCase();
+    const title = (win.title || '').toLowerCase();
 
     if (title.indexOf('cta') >= 0 || title.indexOf('fold') >= 0) {
       return '<!-- Quick Win: CTA Above Fold -->\n<div class="hero">\n  <h1>Welcome to Our Site</h1>\n  <p>Brief, compelling intro</p>\n  <button class="cta-primary">Get Started</button>\n</div>';

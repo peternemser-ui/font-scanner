@@ -220,11 +220,12 @@ class PremiumPdfReport {
     }
 
     // Date
-    const date = new Date().toLocaleDateString('en-US', {
+    const _now = new Date();
+    const date = _now.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
-    });
+    }) + ' \u2022 ' + _now.getUTCHours().toString().padStart(2, '0') + ':' + _now.getUTCMinutes().toString().padStart(2, '0') + ' GMT';
     doc.fontSize(PREMIUM.SIZES.small)
        .fillColor(PREMIUM.COLORS.textMuted)
        .text(`Generated: ${date}`, 50, doc.y + 5);

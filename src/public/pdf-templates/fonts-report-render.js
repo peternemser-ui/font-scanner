@@ -10,39 +10,39 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('fonts', function renderFonts(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     // Resolve data sources — handle deep nesting
-    var families = data.families || data.fontFamilies || [];
+    let families = data.families || data.fontFamilies || [];
     if (families instanceof Map) families = Array.from(families.values());
     if (typeof families === 'object' && !Array.isArray(families) && !(families instanceof Map)) {
       families = Object.values(families);
     }
-    var providers = data.providers || [];
-    var summary = data.summary || {};
-    var fontDelivery = data.fontDelivery || {};
-    var fallbackStability = data.fallbackStability || {};
-    var declarations = data.declarations || [];
-    var performance = data.performance || {};
-    var duplicates = data.duplicates || (data.issues && data.issues.duplicates) || [];
-    var recommendations = data.recommendations || [];
+    const providers = data.providers || [];
+    const summary = data.summary || {};
+    let fontDelivery = data.fontDelivery || {};
+    let fallbackStability = data.fallbackStability || {};
+    const declarations = data.declarations || [];
+    const performance = data.performance || {};
+    const duplicates = data.duplicates || (data.issues && data.issues.duplicates) || [];
+    const recommendations = data.recommendations || [];
 
     // Full scan deep data
-    var fullScan = data.fullScan || {};
-    var fonts = fullScan.fonts || {};
-    var fullPerformance = fullScan.performance || {};
-    var bestPractices = fullScan.bestPractices || {};
-    var advancedAnalysis = fonts.advancedAnalysis || {};
-    var fontMetrics = fonts.fontMetrics || [];
-    var categorizedFonts = fonts.categorizedFonts || {};
+    const fullScan = data.fullScan || {};
+    const fonts = fullScan.fonts || {};
+    const fullPerformance = fullScan.performance || {};
+    const bestPractices = fullScan.bestPractices || {};
+    const advancedAnalysis = fonts.advancedAnalysis || {};
+    const fontMetrics = fonts.fontMetrics || [];
+    const categorizedFonts = fonts.categorizedFonts || {};
 
     // Resolve fontDelivery from fullScan if top-level is empty
     if (!fontDelivery.totalRequests && !fontDelivery.requests) {
@@ -56,21 +56,21 @@
        1. Font Families
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-families .pdf-section__content');
+      const sec = document.querySelector('#section-families .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('fonts.fontFamilies', 'Font Families'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('fonts.report.sectionIntros.families', 'Font families define the typographic identity of your site. This section catalogs all font families detected on your page, including their weight variants, styles, and loading sources. Using too many families increases page weight and load times. Best practice is to limit your site to 2-3 font families with only the weight variants you actually use.')) + '</p>';
 
       // Overview metrics — add display issue count
-      var displayIssueCount = summary.displayIssueCount || 0;
-      var preloadIssueCount = summary.preloadIssueCount || 0;
-      var metricsArr = [
+      const displayIssueCount = summary.displayIssueCount || 0;
+      const preloadIssueCount = summary.preloadIssueCount || 0;
+      const metricsArr = [
         { value: summary.totalFamilies || families.length || 0, label: t('fonts.report.families.totalLabel', 'Total Families'), color: (summary.totalFamilies || families.length || 0) > 3 ? '#f59e0b' : '#10b981' },
         { value: summary.totalVariants || families.reduce(function (sum, f) { return sum + (f.variants ? f.variants.length : 0); }, 0) || 0, label: t('fonts.report.families.variantsLabel', 'Total Variants') },
         { value: summary.duplicateCount || duplicates.length || 0, label: t('fonts.report.families.duplicatesLabel', 'Duplicates'), color: (summary.duplicateCount || duplicates.length || 0) > 0 ? '#f59e0b' : '#10b981' },
@@ -82,30 +82,30 @@
       if (families.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.families.detailsHeading', 'Detected Families')) + '</h3>';
 
-        var dupMap = {};
+        const dupMap = {};
         if (data.issues && data.issues.duplicates) {
           data.issues.duplicates.forEach(function (d) { dupMap[(d.family || d.name || '').toLowerCase()] = true; });
         }
-        var dispMap = {};
+        const dispMap = {};
         if (data.issues && data.issues.displayIssues) {
           data.issues.displayIssues.forEach(function (d) { dispMap[(d.family || d.name || '').toLowerCase()] = true; });
         }
 
-        var famRows = families.slice(0, 20).map(function (f) {
-          var variants = f.variants || [];
-          var weights = variants.map(function (v) { return v.weight || v || '400'; });
-          var uniqueWeights = [];
+        const famRows = families.slice(0, 20).map(function (f) {
+          const variants = f.variants || [];
+          const weights = variants.map(function (v) { return v.weight || v || '400'; });
+          const uniqueWeights = [];
           weights.forEach(function (w) { if (uniqueWeights.indexOf(String(w)) === -1) uniqueWeights.push(String(w)); });
-          var styles = [];
+          const styles = [];
           variants.forEach(function (v) {
-            var s = v.style || 'normal';
+            const s = v.style || 'normal';
             if (styles.indexOf(s) === -1) styles.push(s);
           });
-          var source = (f.sources && f.sources.length > 0) ? f.sources[0] : (f.detectedFrom || (f.pagesFound && f.pagesFound.length > 0 ? f.pagesFound[0] : '-'));
+          const source = (f.sources && f.sources.length > 0) ? f.sources[0] : (f.detectedFrom || (f.pagesFound && f.pagesFound.length > 0 ? f.pagesFound[0] : '-'));
 
           // Issue badges
-          var nameStr = '<strong>' + esc(f.name || '-') + '</strong>';
-          var fName = (f.name || '').toLowerCase();
+          let nameStr = '<strong>' + esc(f.name || '-') + '</strong>';
+          const fName = (f.name || '').toLowerCase();
           if (dupMap[fName]) {
             nameStr += ' ' + PR.renderStatus('fail', t('fonts.report.families.duplicateLabel', 'DUPLICATE'));
           }
@@ -136,10 +136,10 @@
       }
 
       // Categorized fonts (from full scan) — Google, System, Icons
-      var hasCats = categorizedFonts.googleFonts || categorizedFonts.system || categorizedFonts.iconFonts;
+      const hasCats = categorizedFonts.googleFonts || categorizedFonts.system || categorizedFonts.iconFonts;
       if (hasCats) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.families.categoriesHeading', 'Font Categories')) + '</h3>';
-        var catRows = [];
+        const catRows = [];
         if (categorizedFonts.googleFonts && categorizedFonts.googleFonts.length > 0) {
           catRows.push([
             '<strong style="color:#4285f4;">' + esc(t('fonts.report.families.category.google', 'Google Fonts')) + '</strong>',
@@ -181,7 +181,7 @@
        2. Providers & Origins
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-providers .pdf-section__content');
+      const sec = document.querySelector('#section-providers .pdf-section__content');
       if (!providers || providers.length === 0) {
         sec.parentElement.style.display = 'none';
         return;
@@ -192,22 +192,22 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('fonts.report.sectionIntros.providers', 'Font providers determine how fonts are delivered to your visitors. Third-party providers like Google Fonts and Adobe Fonts offer convenience but introduce external dependencies and potential privacy concerns. Self-hosting fonts gives you full control over delivery and eliminates third-party requests. This section identifies all font sources and their delivery methods.')) + '</p>';
 
       // Rich provider table with families, type badge, and font count
-      var provRows = providers.map(function (p) {
-        var provFamilies = (p.families || []).map(function (f) {
+      const provRows = providers.map(function (p) {
+        const provFamilies = (p.families || []).map(function (f) {
           return typeof f === 'string' ? f : (f && f.name ? f.name : String(f));
         });
-        var familyText = provFamilies.length > 0
+        const familyText = provFamilies.length > 0
           ? esc(provFamilies.slice(0, 5).join(', ')) + (provFamilies.length > 5 ? ' +' + (provFamilies.length - 5) : '')
           : '<em style="color:#888;">' + esc(t('fonts.report.providers.noFamilies', 'N/A')) + '</em>';
 
         // Self-hosted vs external status
-        var isSelfHosted = /self/i.test(p.name || '');
-        var statusHtml = isSelfHosted
+        const isSelfHosted = /self/i.test(p.name || '');
+        const statusHtml = isSelfHosted
           ? PR.renderStatus('pass', t('fonts.report.privacy.selfHosted', 'Self-Hosted'))
           : PR.renderStatus('warning', t('fonts.report.providers.external', 'External'));
 
@@ -233,11 +233,11 @@
       );
 
       // Evidence code snippets for each provider
-      var hasEvidence = providers.some(function (p) { return p.url || p.type === '@font-face'; });
+      const hasEvidence = providers.some(function (p) { return p.url || p.type === '@font-face'; });
       if (hasEvidence) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.providers.evidenceHeading', 'Detection Evidence')) + '</h3>';
         providers.forEach(function (p) {
-          var snippet = '';
+          let snippet = '';
           if (p.url) {
             if (p.type === 'link') {
               snippet = '<link href="' + esc(truncate(p.url, 70)) + '" rel="stylesheet">';
@@ -247,7 +247,7 @@
               snippet = '<script src="' + esc(truncate(p.url, 65)) + '"><\/script>';
             }
           } else if (p.type === '@font-face') {
-            var fam = (p.families && p.families[0]) || 'CustomFont';
+            let fam = (p.families && p.families[0]) || 'CustomFont';
             if (typeof fam === 'object') fam = fam.name || 'CustomFont';
             snippet = '@font-face { font-family: \'' + esc(fam) + '\'; src: url(\'/fonts/...\'); }';
           }
@@ -267,19 +267,19 @@
        3. Font Loading Performance
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-loading .pdf-section__content');
+      const sec = document.querySelector('#section-loading .pdf-section__content');
 
       // Compute a loading performance score like the web UI
-      var preloads = fontDelivery.preloads || data.preloads || [];
-      var preconnectStatus = fontDelivery.preconnectStatus || fontDelivery.preconnects || [];
-      var fontDisplayIssues = data.displayIssues || (data.issues && data.issues.displayIssues) || [];
+      const preloads = fontDelivery.preloads || data.preloads || [];
+      const preconnectStatus = fontDelivery.preconnectStatus || fontDelivery.preconnects || [];
+      let fontDisplayIssues = data.displayIssues || (data.issues && data.issues.displayIssues) || [];
       if (fontDisplayIssues.length === 0 && advancedAnalysis.fontDisplay && advancedAnalysis.fontDisplay.issues) {
         fontDisplayIssues = advancedAnalysis.fontDisplay.issues;
       }
-      var preloadIssues = data.preloadIssues || (data.issues && data.issues.preloadIssues) || [];
-      var requests = fontDelivery.requests || [];
+      const preloadIssues = data.preloadIssues || (data.issues && data.issues.preloadIssues) || [];
+      const requests = fontDelivery.requests || [];
 
-      var loadScore = 100;
+      let loadScore = 100;
       if (preloadIssues.length > 0) loadScore -= 20;
       if (fontDisplayIssues.length > 0) loadScore -= fontDisplayIssues.length * 10;
       if (preconnectStatus.filter(function (p) { return !p.found && p.recommended; }).length > 0) loadScore -= 15;
@@ -290,12 +290,12 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('fonts.report.sectionIntros.loading', 'Font loading speed directly impacts First Contentful Paint (FCP) and overall perceived performance. Slow-loading fonts cause invisible text (FOIT) or flash of unstyled text (FOUT), degrading user experience. This section evaluates loading time, estimated bandwidth cost, and the impact on rendering performance. Using font-display: swap and preloading critical fonts are key optimization strategies.')) + '</p>';
 
       // Render-blocking summary metrics (matching web UI)
-      var renderBlockingCount = requests.filter(function (r) {
+      const renderBlockingCount = requests.filter(function (r) {
         return !preloads.some(function (p) { return p.href && r.url && p.href.indexOf(r.url.split('/').pop()) !== -1; });
       }).length;
 
@@ -306,7 +306,7 @@
       ]);
 
       // FOIT/FOUT analysis
-      var hasFontDisplaySwap = fontDisplayIssues.filter(function (i) { return i.message && i.message.indexOf('block') !== -1; }).length === 0;
+      const hasFontDisplaySwap = fontDisplayIssues.filter(function (i) { return i.message && i.message.indexOf('block') !== -1; }).length === 0;
       if (hasFontDisplaySwap) {
         html += PR.renderCallout(
           t('fonts.report.loading.foitGoodTitle', 'FOIT/FOUT Prevention'),
@@ -333,8 +333,8 @@
           t('fonts.report.loading.preloadFoundBody', 'Critical fonts load early for faster rendering.'),
           'tip'
         );
-        var preloadRows = preloads.slice(0, 6).map(function (p) {
-          var fileName = (p.href || '').split('/').pop() || t('fonts.report.loading.fontLabel', 'font');
+        const preloadRows = preloads.slice(0, 6).map(function (p) {
+          const fileName = (p.href || '').split('/').pop() || t('fonts.report.loading.fontLabel', 'font');
           return [esc(fileName), '<span class="pdf-table__truncate">' + esc(truncate(p.href || '-', 60)) + '</span>'];
         });
         html += PR.renderTable(
@@ -356,7 +356,7 @@
       // Preconnect hints
       if (preconnectStatus.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.loading.preconnectHeading', 'Preconnect Hints')) + '</h3>';
-        var pcRows = preconnectStatus.map(function (p) {
+        const pcRows = preconnectStatus.map(function (p) {
           return [
             esc(p.domain || '-'),
             p.found
@@ -372,9 +372,9 @@
           pcRows,
           { striped: true }
         );
-        var missingPc = preconnectStatus.filter(function (p) { return !p.found && p.recommended; });
+        const missingPc = preconnectStatus.filter(function (p) { return !p.found && p.recommended; });
         if (missingPc.length > 0) {
-          var pcCode = missingPc.map(function (p) { return '<link rel="preconnect" href="https://' + (p.domain || '') + '">'; }).join('\n');
+          const pcCode = missingPc.map(function (p) { return '<link rel="preconnect" href="https://' + (p.domain || '') + '">'; }).join('\n');
           html += '<div class="pdf-fix-card__code-block" style="margin-top:8px;">' +
             '<div class="pdf-fix-card__code-label pdf-fix-card__code-label--good">' + esc(t('fonts.report.loading.addToHead', 'Add to HTML <head>')) + '</div>' +
             '<pre class="pdf-fix-card__code-pre" style="padding:8px 10px;font-size:0.75rem;margin:0;">' + esc(pcCode) + '</pre>' +
@@ -389,29 +389,29 @@
        4. Privacy & Licensing
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-privacy .pdf-section__content');
+      const sec = document.querySelector('#section-privacy .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('fonts.privacyLicensing', 'Privacy & Licensing'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('fonts.report.sectionIntros.privacy', 'Loading fonts from third-party CDNs sends visitor IP addresses and browsing data to external servers. Under GDPR and similar privacy regulations, this may require explicit user consent. Google Fonts has been the subject of GDPR enforcement actions in several EU countries. This section identifies privacy implications of your font loading strategy and highlights potential compliance risks.')) + '</p>';
 
       // Classify providers
-      var thirdParty = providers.filter(function (p) { return !/self/i.test(p.name || ''); });
-      var selfHosted = providers.filter(function (p) { return /self/i.test(p.name || ''); });
-      var hasGoogleFonts = providers.some(function (p) { return /google/i.test(p.name || ''); });
-      var hasAdobeFonts = providers.some(function (p) { return /adobe|typekit/i.test(p.name || ''); });
+      const thirdParty = providers.filter(function (p) { return !/self/i.test(p.name || ''); });
+      const selfHosted = providers.filter(function (p) { return /self/i.test(p.name || ''); });
+      const hasGoogleFonts = providers.some(function (p) { return /google/i.test(p.name || ''); });
+      const hasAdobeFonts = providers.some(function (p) { return /adobe|typekit/i.test(p.name || ''); });
 
       // Extract third-party domains
-      var thirdPartyDomains = [];
+      const thirdPartyDomains = [];
       providers.forEach(function (p) {
         if (p.url) {
           try {
-            var urlObj = new URL(p.url);
+            const urlObj = new URL(p.url);
             if (thirdPartyDomains.indexOf(urlObj.hostname) === -1) {
               thirdPartyDomains.push(urlObj.hostname);
             }
@@ -420,7 +420,7 @@
       });
 
       // Risk level assessment
-      var riskLevel = thirdParty.length === 0 ? 'low' : (hasGoogleFonts ? 'medium' : 'low');
+      const riskLevel = thirdParty.length === 0 ? 'low' : (hasGoogleFonts ? 'medium' : 'low');
       html += PR.renderMetrics([
         { value: riskLevel.toUpperCase(), label: t('fonts.report.privacy.riskLevelLabel', 'Privacy Risk'), color: riskLevel === 'low' ? '#10b981' : '#f59e0b' },
         { value: thirdParty.length, label: t('fonts.report.privacy.thirdPartyLabel', 'Third-Party Providers'), color: thirdParty.length > 0 ? '#f59e0b' : '#10b981' },
@@ -430,7 +430,7 @@
       // External domains table
       if (thirdPartyDomains.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.privacy.domainsHeading', 'External Domains Contacted')) + '</h3>';
-        var domainRows = thirdPartyDomains.map(function (d) {
+        const domainRows = thirdPartyDomains.map(function (d) {
           return [
             esc(d),
             PR.renderStatus('warning', t('fonts.report.privacy.sendsData', 'Sends Visitor Data'))
@@ -467,7 +467,7 @@
 
       // Provider classification table
       html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.privacy.classificationHeading', 'Font Provider Classification')) + '</h3>';
-      var classRows = [];
+      const classRows = [];
       if (selfHosted.length > 0) {
         classRows.push([
           '<strong style="color:#10b981;">' + esc(t('fonts.report.privacy.selfHosted', 'Self-Hosted')) + '</strong>',
@@ -477,7 +477,7 @@
         ]);
       }
       if (hasGoogleFonts) {
-        var googleCount = providers.filter(function (p) { return /google/i.test(p.name || ''); }).length;
+        const googleCount = providers.filter(function (p) { return /google/i.test(p.name || ''); }).length;
         classRows.push([
           '<strong style="color:#4285f4;">' + esc(t('fonts.report.privacy.googleLabel', 'Google Fonts')) + '</strong>',
           String(googleCount),
@@ -486,7 +486,7 @@
         ]);
       }
       if (hasAdobeFonts) {
-        var adobeCount = providers.filter(function (p) { return /adobe|typekit/i.test(p.name || ''); }).length;
+        const adobeCount = providers.filter(function (p) { return /adobe|typekit/i.test(p.name || ''); }).length;
         classRows.push([
           '<strong style="color:#ef4444;">' + esc(t('fonts.report.privacy.adobeLabel', 'Adobe Fonts')) + '</strong>',
           String(adobeCount),
@@ -523,18 +523,18 @@
        5. Font Delivery
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-delivery .pdf-section__content');
+      const sec = document.querySelector('#section-delivery .pdf-section__content');
 
       // Use advancedAnalysis formats as fallback
-      var fallbackFormats = (advancedAnalysis.formats && advancedAnalysis.formats.summary) ? advancedAnalysis.formats.summary : {};
-      var hasNetworkData = fontDelivery && fontDelivery.totalRequests > 0;
+      const fallbackFormats = (advancedAnalysis.formats && advancedAnalysis.formats.summary) ? advancedAnalysis.formats.summary : {};
+      const hasNetworkData = fontDelivery && fontDelivery.totalRequests > 0;
 
       if (!hasNetworkData && !fallbackFormats.total && !(fontDelivery.formats)) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var deliveryScore = hasNetworkData
+      const deliveryScore = hasNetworkData
         ? fontDelivery.score
         : (fallbackFormats.woff2Percentage >= 80 ? 90 : fallbackFormats.woff2Percentage >= 50 ? 70 : 50);
 
@@ -543,12 +543,12 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('fonts.report.sectionIntros.delivery', 'Font delivery optimization ensures fonts are downloaded efficiently. Using modern formats like WOFF2 reduces file sizes by 30-50% compared to older formats. This section analyzes font file requests, formats, sizes, and loading times. Implementing preconnect hints for external font servers and preloading critical font files accelerates delivery.')) + '</p>';
 
       // Top-level metrics
-      var modernPct = hasNetworkData ? (fontDelivery.modernFormatPercentage || 0) : (fallbackFormats.woff2Percentage || 0);
+      const modernPct = hasNetworkData ? (fontDelivery.modernFormatPercentage || 0) : (fallbackFormats.woff2Percentage || 0);
       html += PR.renderMetrics([
         { value: fontDelivery.totalRequests || fallbackFormats.total || 0, label: hasNetworkData ? t('fonts.report.delivery.requestsLabel', 'Font Requests') : t('fonts.report.delivery.fontFacesLabel', 'Font Faces') },
         { value: fontDelivery.totalBytesKB ? fontDelivery.totalBytesKB + 'KB' : '-', label: t('fonts.report.delivery.totalSizeLabel', 'Total Size') },
@@ -557,8 +557,8 @@
       ]);
 
       // WOFF2 coverage progress
-      var formats = fontDelivery.formats || {};
-      var totalFormats = (formats.woff2 || 0) + (formats.woff || 0) + (formats.ttf || 0) + (formats.otf || 0) + (formats.legacy || 0);
+      const formats = fontDelivery.formats || {};
+      const totalFormats = (formats.woff2 || 0) + (formats.woff || 0) + (formats.ttf || 0) + (formats.otf || 0) + (formats.legacy || 0);
       if (totalFormats > 0) {
         html += PR.renderProgress(
           t('fonts.report.delivery.woff2Label', 'Modern Format'),
@@ -569,7 +569,7 @@
       // Format distribution table
       if (totalFormats > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.delivery.formatHeading', 'Font Format Distribution')) + '</h3>';
-        var formatRows = [];
+        const formatRows = [];
         if (formats.woff2) formatRows.push([esc('WOFF2'), String(formats.woff2), PR.renderStatus('pass', t('fonts.report.delivery.modern', 'Modern'))]);
         if (formats.woff) formatRows.push([esc('WOFF'), String(formats.woff), PR.renderStatus('pass', t('fonts.report.delivery.acceptable', 'Acceptable'))]);
         if (formats.ttf) formatRows.push([esc('TTF'), String(formats.ttf), PR.renderStatus('warning', t('fonts.report.delivery.legacy', 'Legacy'))]);
@@ -596,10 +596,10 @@
       }
 
       // Preconnect hints
-      var preconnects = fontDelivery.preconnects || [];
+      const preconnects = fontDelivery.preconnects || [];
       if (preconnects.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.delivery.preconnectHeading', 'Preconnect Hints')) + '</h3>';
-        var pcRows = preconnects.map(function (p) {
+        const pcRows = preconnects.map(function (p) {
           return [
             esc(p.domain || '-'),
             p.found
@@ -615,9 +615,9 @@
           pcRows,
           { striped: true }
         );
-        var missingPreconnects = fontDelivery.preconnectsMissing || 0;
+        const missingPreconnects = fontDelivery.preconnectsMissing || 0;
         if (missingPreconnects > 0) {
-          var pcFixCode = preconnects.filter(function (p) { return !p.found && p.recommended; }).map(function (p) {
+          const pcFixCode = preconnects.filter(function (p) { return !p.found && p.recommended; }).map(function (p) {
             return '<link rel="preconnect" href="https://' + (p.domain || '') + '">';
           }).join('\n');
           if (pcFixCode) {
@@ -630,10 +630,10 @@
       }
 
       // Preload status
-      var preloads = fontDelivery.preloads || [];
+      const preloads = fontDelivery.preloads || [];
       if (preloads.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.delivery.preloadHeading', 'Font Preloads')) + ' (' + preloads.length + ')</h3>';
-        var plRows = preloads.slice(0, 6).map(function (p) {
+        const plRows = preloads.slice(0, 6).map(function (p) {
           return [esc((p.href || '').split('/').pop() || 'font'), '<span class="pdf-table__truncate">' + esc(truncate(p.href || '-', 60)) + '</span>'];
         });
         html += PR.renderTable(
@@ -655,9 +655,9 @@
       // Font requests table with cache status column
       if (fontDelivery.requests && fontDelivery.requests.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.delivery.requestsHeading', 'Network Requests')) + '</h3>';
-        var reqRows = fontDelivery.requests.slice(0, 15).map(function (r) {
-          var fileName = (r.url || '').split('/').pop().split('?')[0] || 'font';
-          var formatStatus = (r.format === 'woff2')
+        const reqRows = fontDelivery.requests.slice(0, 15).map(function (r) {
+          const fileName = (r.url || '').split('/').pop().split('?')[0] || 'font';
+          const formatStatus = (r.format === 'woff2')
             ? PR.renderStatus('pass', 'WOFF2')
             : PR.renderStatus('warning', (r.format || '-').toUpperCase());
           return [
@@ -694,45 +694,45 @@
        6. Fallback & Layout Stability
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-stability .pdf-section__content');
+      const sec = document.querySelector('#section-stability .pdf-section__content');
 
       // Use advancedAnalysis as fallback source (matches web UI logic)
-      var aaFallbackStacks = advancedAnalysis.fallbackStacks || {};
-      var aaClsRisk = advancedAnalysis.clsRisk || {};
-      var aaFontDisplay = advancedAnalysis.fontDisplay || {};
+      const aaFallbackStacks = advancedAnalysis.fallbackStacks || {};
+      const aaClsRisk = advancedAnalysis.clsRisk || {};
+      const aaFontDisplay = advancedAnalysis.fontDisplay || {};
 
-      var hasStabilityData = fallbackStability && (fallbackStability.score !== undefined || (fallbackStability.fallbackStacks && fallbackStability.fallbackStacks.length > 0));
+      const hasStabilityData = fallbackStability && (fallbackStability.score !== undefined || (fallbackStability.fallbackStacks && fallbackStability.fallbackStacks.length > 0));
 
-      var fsStacks = hasStabilityData ? (fallbackStability.fallbackStacks || []) : (aaFallbackStacks.stacks || []);
-      var fsSummary = hasStabilityData ? fallbackStability.fallbackStacksSummary : (aaFallbackStacks.summary || {});
-      var metricOverrides = hasStabilityData ? (fallbackStability.metricOverrides || []) : [];
-      var fontDisplayBreakdown = hasStabilityData ? fallbackStability.fontDisplayBreakdown : null;
-      var displaySummary = hasStabilityData ? (fallbackStability.fontDisplaySummary || {}) : (aaFontDisplay.summary || {});
-      var clsRisk = hasStabilityData ? (fallbackStability.clsRisk || {}) : aaClsRisk;
-      var stabilityScore = hasStabilityData ? fallbackStability.score : (aaFallbackStacks.summary ? aaFallbackStacks.summary.score : (aaClsRisk.score || 70));
+      const fsStacks = hasStabilityData ? (fallbackStability.fallbackStacks || []) : (aaFallbackStacks.stacks || []);
+      const fsSummary = hasStabilityData ? fallbackStability.fallbackStacksSummary : (aaFallbackStacks.summary || {});
+      const metricOverrides = hasStabilityData ? (fallbackStability.metricOverrides || []) : [];
+      const fontDisplayBreakdown = hasStabilityData ? fallbackStability.fontDisplayBreakdown : null;
+      const displaySummary = hasStabilityData ? (fallbackStability.fontDisplaySummary || {}) : (aaFontDisplay.summary || {});
+      const clsRisk = hasStabilityData ? (fallbackStability.clsRisk || {}) : aaClsRisk;
+      const stabilityScore = hasStabilityData ? fallbackStability.score : (aaFallbackStacks.summary ? aaFallbackStacks.summary.score : (aaClsRisk.score || 70));
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('fonts.fallbackLayoutStability', 'Fallback & Layout Stability'), stabilityScore)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('fonts.report.sectionIntros.stability', 'Layout stability during font loading prevents jarring visual shifts that frustrate users and hurt Core Web Vitals scores. Proper fallback font stacks and font-display settings minimize Cumulative Layout Shift (CLS). This section analyzes your fallback stacks, font-display usage, and CLS risk factors. Using size-adjusted fallback fonts with metric overrides can virtually eliminate font-related layout shift.')) + '</p>';
 
       // CLS Risk + Score metrics
-      var clsLevel = clsRisk.level || 'N/A';
+      const clsLevel = clsRisk.level || 'N/A';
       html += PR.renderMetrics([
         { value: stabilityScore || 0, label: t('fonts.report.stability.scoreLabel', 'Stability Score'), color: (stabilityScore || 0) >= 80 ? '#10b981' : (stabilityScore || 0) >= 60 ? '#f59e0b' : '#ef4444' },
         { value: clsLevel.toUpperCase(), label: t('fonts.report.stability.clsRiskLabel', 'CLS Risk'), color: clsLevel === 'low' ? '#10b981' : clsLevel === 'medium' ? '#f59e0b' : '#ef4444' }
       ]);
 
       // CLS Risk details (individual risks)
-      var risks = clsRisk.risks || [];
+      const risks = clsRisk.risks || [];
       if (risks.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.stability.risksHeading', 'Layout Shift Risks')) + '</h3>';
         risks.forEach(function (risk) {
-          var sev = (risk.type === 'warning' || risk.type === 'medium') ? 'warning' : 'critical';
+          const sev = (risk.type === 'warning' || risk.type === 'medium') ? 'warning' : 'critical';
           html += PR.renderIssue(esc(risk.title) + (risk.detail ? ' — ' + esc(risk.detail) : ''), sev);
         });
       } else if (clsLevel === 'low') {
@@ -756,7 +756,7 @@
 
       // font-display breakdown by value
       if (fontDisplayBreakdown) {
-        var fdRows = [];
+        const fdRows = [];
         if (fontDisplayBreakdown.swap && fontDisplayBreakdown.swap.length > 0) {
           fdRows.push([esc('swap'), String(fontDisplayBreakdown.swap.length), PR.renderStatus('pass', t('fonts.report.stability.optimal', 'Optimal'))]);
         }
@@ -801,8 +801,8 @@
           t('fonts.report.stability.metricOverridesFoundBody', 'Using metric overrides helps minimize layout shifts when fonts swap.'),
           'tip'
         );
-        var moRows = metricOverrides.map(function (mo) {
-          var props = [];
+        const moRows = metricOverrides.map(function (mo) {
+          const props = [];
           if (mo.sizeAdjust) props.push('size-adjust: ' + mo.sizeAdjust);
           if (mo.ascentOverride) props.push('ascent-override: ' + mo.ascentOverride);
           if (mo.descentOverride) props.push('descent-override: ' + mo.descentOverride);
@@ -844,10 +844,10 @@
       }
 
       if (fsStacks.length > 0) {
-        var stackRows = fsStacks.slice(0, 10).map(function (s) {
-          var qualityColor = s.quality === 'excellent' ? '#10b981' : s.quality === 'good' ? '#22c55e' : '#ef4444';
-          var qualityStatus = s.quality === 'excellent' ? 'pass' : s.quality === 'good' ? 'pass' : 'fail';
-          var recCol = (s.recommendation && s.quality !== 'excellent')
+        const stackRows = fsStacks.slice(0, 10).map(function (s) {
+          const qualityColor = s.quality === 'excellent' ? '#10b981' : s.quality === 'good' ? '#22c55e' : '#ef4444';
+          const qualityStatus = s.quality === 'excellent' ? 'pass' : s.quality === 'good' ? 'pass' : 'fail';
+          const recCol = (s.recommendation && s.quality !== 'excellent')
             ? '<em style="font-size:0.75rem;color:#888;">' + esc(truncate(s.recommendation, 50)) + '</em>'
             : '-';
           return [
@@ -877,11 +877,11 @@
        7. Advanced Typography
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-advanced .pdf-section__content');
-      var aa = advancedAnalysis;
+      const sec = document.querySelector('#section-advanced .pdf-section__content');
+      const aa = advancedAnalysis;
 
       // Calculate advanced score (matching web UI)
-      var aaScores = [];
+      const aaScores = [];
       if (aa.formats && aa.formats.summary && aa.formats.summary.woff2Percentage !== undefined) {
         aaScores.push(aa.formats.summary.woff2Percentage);
       }
@@ -897,7 +897,7 @@
       if (aa.clsRisk && aa.clsRisk.score !== undefined) {
         aaScores.push(aa.clsRisk.score);
       }
-      var advancedScore = aaScores.length > 0
+      const advancedScore = aaScores.length > 0
         ? Math.round(aaScores.reduce(function (a, b) { return a + b; }, 0) / aaScores.length)
         : null;
 
@@ -906,17 +906,17 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('fonts.report.sectionIntros.advanced', 'Advanced typography features like variable fonts, subsetting, and unicode-range can significantly reduce file sizes and improve performance. Variable fonts combine multiple weights and styles into a single file, reducing HTTP requests. Subsetting removes unused glyphs, and unicode-range allows the browser to download only needed character sets. This section checks for adoption of these modern optimization techniques.')) + '</p>';
 
-      var hasAdvancedData = aa && Object.keys(aa).length > 0;
+      const hasAdvancedData = aa && Object.keys(aa).length > 0;
 
       if (hasAdvancedData) {
         // -- Font Format Analysis subsection --
         if (aa.formats) {
-          var fmtSummary = aa.formats.summary || {};
-          var fmtFormats = aa.formats.formats || {};
+          const fmtSummary = aa.formats.summary || {};
+          const fmtFormats = aa.formats.formats || {};
           html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.advanced.formatHeading', 'Font Format Analysis')) + '</h3>';
           html += PR.renderMetrics([
             { value: fmtSummary.woff2Count || 0, label: 'WOFF2', color: '#10b981' },
@@ -935,17 +935,17 @@
 
         // -- font-display Audit subsection --
         if (aa.fontDisplay) {
-          var fdSummary = aa.fontDisplay.summary || {};
-          var fdValues = aa.fontDisplay.values || {};
+          const fdSummary = aa.fontDisplay.summary || {};
+          const fdValues = aa.fontDisplay.values || {};
           html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.advanced.fontDisplayHeading', 'font-display Audit')) +
             (fdSummary.score !== undefined ? ' (' + fdSummary.score + '/100)' : '') + '</h3>';
 
-          var fdAuditRows = [];
+          const fdAuditRows = [];
           if (fdValues.swap && fdValues.swap.length > 0) fdAuditRows.push([esc('swap'), String(fdValues.swap.length), PR.renderStatus('pass', t('fonts.report.stability.optimal', 'Optimal'))]);
           if (fdValues.optional && fdValues.optional.length > 0) fdAuditRows.push([esc('optional'), String(fdValues.optional.length), PR.renderStatus('pass', t('fonts.report.stability.optimal', 'Optimal'))]);
           if (fdValues.fallback && fdValues.fallback.length > 0) fdAuditRows.push([esc('fallback'), String(fdValues.fallback.length), PR.renderStatus('warning', t('fonts.report.stability.acceptable', 'Acceptable'))]);
           if (fdValues.block && fdValues.block.length > 0) fdAuditRows.push([esc('block'), String(fdValues.block.length), PR.renderStatus('fail', t('fonts.report.stability.problematic', 'Problematic'))]);
-          var autoLen = (fdValues.auto ? fdValues.auto.length : 0) + (fdValues.notSet ? fdValues.notSet.length : 0);
+          const autoLen = (fdValues.auto ? fdValues.auto.length : 0) + (fdValues.notSet ? fdValues.notSet.length : 0);
           if (autoLen > 0) fdAuditRows.push([esc('auto/none'), String(autoLen), PR.renderStatus('fail', t('fonts.report.stability.problematic', 'Problematic'))]);
 
           if (fdAuditRows.length > 0) {
@@ -980,11 +980,11 @@
           html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.advanced.accessibilityHeading', 'Typography Accessibility')) +
             (aa.accessibility.score !== undefined ? ' (' + aa.accessibility.score + '/100)' : '') + '</h3>';
 
-          var a11yPassed = aa.accessibility.passed || [];
-          var a11yIssues = aa.accessibility.issues || [];
+          const a11yPassed = aa.accessibility.passed || [];
+          const a11yIssues = aa.accessibility.issues || [];
 
           if (a11yPassed.length > 0 || a11yIssues.length > 0) {
-            var a11yRows = [];
+            const a11yRows = [];
             a11yPassed.forEach(function (item) {
               a11yRows.push([
                 PR.renderStatus('pass', t('seo.report.status.pass', 'Pass')),
@@ -993,7 +993,7 @@
               ]);
             });
             a11yIssues.forEach(function (item) {
-              var sev = item.type === 'warning' ? 'warning' : 'fail';
+              const sev = item.type === 'warning' ? 'warning' : 'fail';
               a11yRows.push([
                 PR.renderStatus(sev, sev === 'warning' ? t('seo.report.status.warning', 'Warning') : t('seo.report.status.fail', 'Fail')),
                 '<strong>' + esc(item.title || '') + '</strong>',
@@ -1013,7 +1013,7 @@
         }
 
         // -- Variable Fonts subsection --
-        var vf = aa.variableFonts || {};
+        const vf = aa.variableFonts || {};
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.advanced.variableFontsHeading', 'Variable Fonts')) +
           ' (' + ((vf.variableFonts && vf.variableFonts.length) || 0) + ' ' + esc(t('seo.report.status.detected', 'Detected')) + ')</h3>';
 
@@ -1023,7 +1023,7 @@
             t('fonts.report.advanced.variableFontsFoundBody', 'Using variable fonts reduces HTTP requests and enables smooth weight/width transitions.'),
             'tip'
           );
-          var vfRows = vf.variableFonts.map(function (font) {
+          const vfRows = vf.variableFonts.map(function (font) {
             return [esc(font.fontFamily || font.name || '-')];
           });
           html += PR.renderTable(
@@ -1033,10 +1033,10 @@
           );
         } else {
           // Check from declarations
-          var hasVarFromDecl = declarations.some(function (d) { return d.weight && d.weight.indexOf(' ') !== -1; });
+          const hasVarFromDecl = declarations.some(function (d) { return d.weight && d.weight.indexOf(' ') !== -1; });
           var hasUnicodeRange = declarations.some(function (d) { return d.unicodeRange; });
 
-          var featureRows = [
+          const featureRows = [
             [t('fonts.report.advanced.variableFonts', 'Variable Fonts'), (hasVarFromDecl || vf.hasVariableFonts) ? PR.renderStatus('pass', t('seo.report.status.detected', 'Detected')) : PR.renderStatus('na', t('seo.report.status.notDetected', 'Not detected'))],
             [t('fonts.report.advanced.unicodeRange', 'Unicode-Range'), hasUnicodeRange ? PR.renderStatus('pass', t('seo.report.status.detected', 'Detected')) : PR.renderStatus('na', t('seo.report.status.notDetected', 'Not detected'))],
             [t('fonts.report.advanced.metricOverrides', 'Metric Overrides'), (fallbackStability.hasMetricOverrides || (fallbackStability.metricOverrides && fallbackStability.metricOverrides.length > 0)) ? PR.renderStatus('pass', t('seo.report.status.detected', 'Detected')) : PR.renderStatus('na', t('seo.report.status.notDetected', 'Not detected'))]
@@ -1063,7 +1063,7 @@
         if (aa.clsRisk) {
           html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.advanced.clsRiskHeading', 'Layout Shift Risk (CLS)')) +
             (aa.clsRisk.level ? ' — ' + aa.clsRisk.level.toUpperCase() : '') + '</h3>';
-          var aaRisks = aa.clsRisk.risks || [];
+          const aaRisks = aa.clsRisk.risks || [];
           if (aaRisks.length === 0) {
             html += PR.renderCallout(
               t('fonts.report.stability.lowRiskTitle', 'Low CLS Risk'),
@@ -1079,10 +1079,10 @@
 
       } else {
         // No advanced analysis data — show basic feature check from declarations
-        var hasVariableFonts = declarations.some(function (d) { return d.weight && d.weight.indexOf(' ') !== -1; });
+        const hasVariableFonts = declarations.some(function (d) { return d.weight && d.weight.indexOf(' ') !== -1; });
         var hasUnicodeRange = declarations.some(function (d) { return d.unicodeRange; });
 
-        var advRows = [
+        const advRows = [
           [t('fonts.report.advanced.variableFonts', 'Variable Fonts'), hasVariableFonts ? PR.renderStatus('pass', t('seo.report.status.detected', 'Detected')) : PR.renderStatus('na', t('seo.report.status.notDetected', 'Not detected'))],
           [t('fonts.report.advanced.unicodeRange', 'Unicode-Range'), hasUnicodeRange ? PR.renderStatus('pass', t('seo.report.status.detected', 'Detected')) : PR.renderStatus('na', t('seo.report.status.notDetected', 'Not detected'))],
           [t('fonts.report.advanced.metricOverrides', 'Metric Overrides'), (fallbackStability.hasMetricOverrides) ? PR.renderStatus('pass', t('seo.report.status.detected', 'Detected')) : PR.renderStatus('na', t('seo.report.status.notDetected', 'Not detected'))]
@@ -1105,29 +1105,29 @@
        8. Performance Metrics
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-performance .pdf-section__content');
+      const sec = document.querySelector('#section-performance .pdf-section__content');
       if (!sec) return;
 
-      var hasFullScan = !!data.fullScan;
+      const hasFullScan = !!data.fullScan;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('fonts.report.performance.heading', 'Performance Metrics'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('fonts.report.sectionIntros.performance', 'This section shows how typography impacts page performance. Metrics include page load timing, font family and variant counts, and typography scale consistency. Fewer families and weights mean faster loading. A consistent type scale improves readability and design quality.')) + '</p>';
 
       // Calculate typography stats from fontMetrics (matching web UI)
-      var fontFamilySet = {};
-      var weightSet = {};
-      var sizeMap = {};
-      var weightCounts = {};
+      const fontFamilySet = {};
+      const weightSet = {};
+      const sizeMap = {};
+      const weightCounts = {};
 
       fontMetrics.forEach(function (m) {
         if (m.fontFamily) {
-          var primary = m.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
+          const primary = m.fontFamily.split(',')[0].replace(/['"]/g, '').trim();
           if (primary) fontFamilySet[primary] = true;
         }
         if (m.fontWeight) {
@@ -1139,12 +1139,12 @@
         }
       });
 
-      var uniqueFonts = Object.keys(fontFamilySet).length;
-      var uniqueWeights = Object.keys(weightSet).length;
-      var uniqueSizes = Object.keys(sizeMap).length;
+      const uniqueFonts = Object.keys(fontFamilySet).length;
+      const uniqueWeights = Object.keys(weightSet).length;
+      const uniqueSizes = Object.keys(sizeMap).length;
 
       // Core metrics
-      var perfMetrics = [];
+      const perfMetrics = [];
       if (hasFullScan && fullPerformance.initialLoadTime) {
         perfMetrics.push({ value: fullPerformance.initialLoadTime + 'ms', label: t('fonts.report.performance.pageLoad', 'Page Load'), color: fullPerformance.initialLoadTime < 1000 ? '#10b981' : fullPerformance.initialLoadTime < 2000 ? '#f59e0b' : '#ef4444' });
       }
@@ -1155,8 +1155,8 @@
       html += PR.renderMetrics(perfMetrics);
 
       // Typography scale analysis
-      var sizeEntries = [];
-      var sizeKeys = Object.keys(sizeMap);
+      const sizeEntries = [];
+      const sizeKeys = Object.keys(sizeMap);
       sizeKeys.forEach(function (k) {
         sizeEntries.push({ size: k, count: sizeMap[k], px: parseFloat(k) });
       });
@@ -1164,7 +1164,7 @@
 
       if (sizeEntries.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.performance.typographyScale', 'Typography Scale')) + '</h3>';
-        var scaleRows = sizeEntries.slice(0, 10).map(function (s) {
+        const scaleRows = sizeEntries.slice(0, 10).map(function (s) {
           return [esc(s.size), String(s.count)];
         });
         html += PR.renderTable(
@@ -1178,8 +1178,8 @@
       }
 
       // Weight distribution
-      var weightEntries = [];
-      var wKeys = Object.keys(weightCounts);
+      const weightEntries = [];
+      const wKeys = Object.keys(weightCounts);
       wKeys.forEach(function (k) {
         weightEntries.push({ weight: k, count: weightCounts[k] });
       });
@@ -1187,7 +1187,7 @@
 
       if (weightEntries.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.performance.weightDistribution', 'Weight Distribution')) + '</h3>';
-        var wRows = weightEntries.map(function (w) {
+        const wRows = weightEntries.map(function (w) {
           return [esc(w.weight), String(w.count)];
         });
         html += PR.renderTable(
@@ -1203,9 +1203,9 @@
       // Typography usage table (element, font, size, weight, sample)
       if (fontMetrics.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('fonts.report.performance.typographyUsage', 'Typography Usage')) + '</h3>';
-        var usageRows = fontMetrics.slice(0, 12).map(function (m) {
-          var fontName = m.fontFamily ? m.fontFamily.split(',')[0].replace(/['"]/g, '').trim() : '-';
-          var sample = m.textContent ? truncate(m.textContent, 30) : '-';
+        const usageRows = fontMetrics.slice(0, 12).map(function (m) {
+          const fontName = m.fontFamily ? m.fontFamily.split(',')[0].replace(/['"]/g, '').trim() : '-';
+          const sample = m.textContent ? truncate(m.textContent, 30) : '-';
           return [
             esc('<' + (m.element || '?') + '>'),
             esc(truncate(fontName, 18)),
@@ -1231,7 +1231,7 @@
       }
 
       // Performance tips
-      var tips = [];
+      const tips = [];
       if ((summary.totalFamilies || families.length || 0) > 3) {
         tips.push(t('fonts.report.performance.tip.reduceFamilies', 'Consider reducing font families to 2-3 for faster loading.'));
       }
@@ -1259,22 +1259,22 @@
        9. Recommendations
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('fonts.report.recommendationsHeading', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('fonts.report.sectionIntros.recommendations', 'Based on the font analysis, this section provides actionable recommendations to optimize your typography stack. Each recommendation targets a specific area — from reducing file sizes with modern formats to improving layout stability with proper fallback chains. Implementing these changes can improve both performance metrics and user experience across all devices.')) + '</p>';
 
       // Build rich fix cards (matching web UI pattern)
-      var fixes = _buildFontsFixes(data, bestPractices, families, providers, summary, fontDelivery, fallbackStability, advancedAnalysis, t, esc);
+      const fixes = _buildFontsFixes(data, bestPractices, families, providers, summary, fontDelivery, fallbackStability, advancedAnalysis, t, esc);
 
       // Also include simple recommendations and duplicate warnings
-      var allRecs = recommendations.slice();
+      const allRecs = recommendations.slice();
       if (duplicates.length > 0) {
         duplicates.forEach(function (dup) {
           allRecs.push({ priority: 'medium', title: dup.message || (dup.family + ' loaded ' + dup.instances + ' times'), description: dup.recommendation || '' });
@@ -1290,10 +1290,10 @@
 
       // Also render simple text recommendations that are not covered by fix cards
       if (allRecs.length > 0) {
-        var high = allRecs.filter(function (r) { return r.priority === 'high'; });
-        var medium = allRecs.filter(function (r) { return r.priority === 'medium'; });
-        var low = allRecs.filter(function (r) { return !r.priority || r.priority === 'low'; });
-        var groups = [
+        const high = allRecs.filter(function (r) { return r.priority === 'high'; });
+        const medium = allRecs.filter(function (r) { return r.priority === 'medium'; });
+        const low = allRecs.filter(function (r) { return !r.priority || r.priority === 'low'; });
+        const groups = [
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
           { items: low, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6' }
@@ -1328,7 +1328,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -1339,26 +1339,26 @@
      Fix Card Builder — mirrors web UI buildFontsFixCards logic
      ========================================================================= */
   function _buildFontsFixes(data, bestPractices, families, providers, summary, fontDelivery, fallbackStability, advancedAnalysis, t, esc) {
-    var fixes = [];
+    const fixes = [];
 
-    var displayIssueCount = summary.displayIssueCount || 0;
-    var hasGoogleFonts = providers.some(function (p) { return /google/i.test(p.name || ''); });
-    var primaryFont = (families[0] && families[0].name) || 'Inter';
-    var secondaryFont = (families[1] && families[1].name) || 'system-ui';
-    var totalFamilies = summary.totalFamilies || families.length || 0;
-    var dupCount = summary.duplicateCount || (data.duplicates ? data.duplicates.length : (data.issues && data.issues.duplicates ? data.issues.duplicates.length : 0));
-    var preloads = fontDelivery.preloads || data.preloads || [];
+    const displayIssueCount = summary.displayIssueCount || 0;
+    const hasGoogleFonts = providers.some(function (p) { return /google/i.test(p.name || ''); });
+    const primaryFont = (families[0] && families[0].name) || 'Inter';
+    const secondaryFont = (families[1] && families[1].name) || 'system-ui';
+    const totalFamilies = summary.totalFamilies || families.length || 0;
+    const dupCount = summary.duplicateCount || (data.duplicates ? data.duplicates.length : (data.issues && data.issues.duplicates ? data.issues.duplicates.length : 0));
+    const preloads = fontDelivery.preloads || data.preloads || [];
 
     // Get advanced analysis data
-    var formatAnalysis = advancedAnalysis.formats || {};
-    var woff2Percentage = formatAnalysis.summary ? formatAnalysis.summary.woff2Percentage || 0 : 0;
-    var hasLegacyFormats = formatAnalysis.summary ? formatAnalysis.summary.hasLegacyFormats || false : false;
-    var fallbackAnalysis = advancedAnalysis.fallbackStacks || {};
-    var fallbackScore = fallbackAnalysis.summary ? fallbackAnalysis.summary.score || (fallbackStability.score || 70) : (fallbackStability.score || 70);
-    var variableFontsAnalysis = advancedAnalysis.variableFonts || {};
-    var hasVariableFonts = variableFontsAnalysis.fonts ? variableFontsAnalysis.fonts.length > 0 : false;
-    var accessibilityAnalysis = advancedAnalysis.accessibility || {};
-    var accessScore = accessibilityAnalysis.score || 70;
+    const formatAnalysis = advancedAnalysis.formats || {};
+    const woff2Percentage = formatAnalysis.summary ? formatAnalysis.summary.woff2Percentage || 0 : 0;
+    const hasLegacyFormats = formatAnalysis.summary ? formatAnalysis.summary.hasLegacyFormats || false : false;
+    const fallbackAnalysis = advancedAnalysis.fallbackStacks || {};
+    const fallbackScore = fallbackAnalysis.summary ? fallbackAnalysis.summary.score || (fallbackStability.score || 70) : (fallbackStability.score || 70);
+    const variableFontsAnalysis = advancedAnalysis.variableFonts || {};
+    const hasVariableFonts = variableFontsAnalysis.fonts ? variableFontsAnalysis.fonts.length > 0 : false;
+    const accessibilityAnalysis = advancedAnalysis.accessibility || {};
+    const accessScore = accessibilityAnalysis.score || 70;
 
     // 1. Font-display optimization (ALWAYS SHOW)
     fixes.push({
@@ -1548,13 +1548,13 @@
      Fix Card Renderer — mirrors SEO _renderFixCard pattern
      ========================================================================= */
   function _renderFixCard(fix, t, esc) {
-    var severityLower = (fix.severity || 'medium').toLowerCase();
+    const severityLower = (fix.severity || 'medium').toLowerCase();
 
-    var html = '<div class="pdf-fix-card">';
+    let html = '<div class="pdf-fix-card">';
 
     // Header
     html += '<div class="pdf-fix-card__header">';
-    var severityLabel = { high: t('seo.fixes.severity.high', 'High'), medium: t('seo.fixes.severity.medium', 'Medium'), low: t('seo.fixes.severity.low', 'Low') }[severityLower] || fix.severity;
+    const severityLabel = { high: t('seo.fixes.severity.high', 'High'), medium: t('seo.fixes.severity.medium', 'Medium'), low: t('seo.fixes.severity.low', 'Low') }[severityLower] || fix.severity;
     html += '<span class="pdf-fix-card__severity pdf-fix-card__severity--' + severityLower + '">' + esc(severityLabel) + '</span>';
     html += '<span class="pdf-fix-card__title">' + esc(fix.title) + '</span>';
     if (fix.category) {
@@ -1619,7 +1619,7 @@
   }
 
   function _htmlToNode(html) {
-    var temp = document.createElement('div');
+    const temp = document.createElement('div');
     temp.innerHTML = html;
     return temp.firstChild;
   }

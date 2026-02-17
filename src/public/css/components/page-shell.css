@@ -15,12 +15,33 @@
 
 .page-shell {
   padding-top: 0.75rem;
+  padding-left: var(--space-7, 48px);
+  padding-right: var(--space-7, 48px);
 }
 
 @media (max-width: 768px) {
   .page-shell {
     padding-top: 0.5rem;
+    padding-left: var(--space-5, 24px);
+    padding-right: var(--space-5, 24px);
   }
+}
+
+@media (max-width: 480px) {
+  .page-shell {
+    padding-left: var(--space-4, 16px);
+    padding-right: var(--space-4, 16px);
+  }
+}
+
+/* ========================================
+   PAGE HEADER PADDING
+   Normalize left padding for pages that load layout.css
+   (which sets padding: var(--space-4) 0, losing left indent)
+   ======================================== */
+
+.page-header {
+  padding-left: 1.5rem;
 }
 
 /* ========================================

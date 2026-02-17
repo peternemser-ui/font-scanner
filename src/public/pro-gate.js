@@ -60,8 +60,6 @@ const ProGate = {
     // E. Security & Trust
     'security-analyzer',
     
-    // G. Infrastructure
-    'hosting-analyzer'
   ],
 
   /**
@@ -80,7 +78,7 @@ const ProGate = {
     // C. SEO & Indexing (paid: multi-page crawling)
     'site-crawler',
     'tag-intelligence',
-    'local-seo',
+    'geo-seo',
     'broken-links',
     
     // E. Security & Trust (paid: external service checks)
@@ -90,7 +88,7 @@ const ProGate = {
     // F. Technology (paid: detailed font analysis)
     'enhanced-fonts',
     'brand-consistency',
-    
+
     // H. Competitive (paid: competitor research)
     'competitive-analysis'
   ],
@@ -242,10 +240,10 @@ const ProGate = {
         saves: 'Auditing marketing tags and GTM configuration',
         timeEstimate: '3-4 hours'
       },
-      'local-seo': {
-        name: 'Local SEO Audit',
-        saves: 'Manual Google My Business and citation verification',
-        timeEstimate: '2-3 hours'
+      'geo-seo': {
+        name: 'GEO SEO & Citation Audit',
+        saves: 'Manual Google My Business, citation, and reputation verification',
+        timeEstimate: '3-4 hours'
       },
       'broken-links': {
         name: 'Broken Link Detection',
@@ -551,7 +549,7 @@ const ProGate = {
       'tag-intelligence': 'Tracking & Analytics',
       'enhanced-fonts': 'Typography Analysis',
       'broken-links': 'Broken Links Checker',
-      'local-seo': 'Local SEO Analysis',
+      'geo-seo': 'GEO SEO Analysis',
       'brand-consistency': 'Brand Audit',
       'cro-analyzer': 'CRO Analysis',
       'gdpr-compliance': 'GDPR Compliance',

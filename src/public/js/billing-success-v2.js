@@ -8,7 +8,7 @@
   function loadCreditsManager() {
     if (window.CreditsManager) return Promise.resolve(true);
     return new Promise(function (resolve) {
-      var script = document.createElement('script');
+      const script = document.createElement('script');
       script.src = '/assets/js/ui.js';
       script.async = true;
       script.onload = function () { resolve(!!window.CreditsManager); };
@@ -18,7 +18,7 @@
   }
 
   function safeRedirect(path) {
-    var target = typeof path === 'string' && path.trim() ? path.trim() : '/';
+    let target = typeof path === 'string' && path.trim() ? path.trim() : '/';
     if (!target.startsWith('/')) target = '/';
     window.location.replace(target);
   }
@@ -26,9 +26,9 @@
   function enqueueToast(message) {
     try {
       if (!message) return;
-      var key = 'sm_toast_queue';
-      var raw = sessionStorage.getItem(key);
-      var queue = raw ? JSON.parse(raw) : [];
+      const key = 'sm_toast_queue';
+      const raw = sessionStorage.getItem(key);
+      let queue = raw ? JSON.parse(raw) : [];
       if (!Array.isArray(queue)) queue = [];
       queue.push({ message: String(message), ts: Date.now() });
       sessionStorage.setItem(key, JSON.stringify(queue));
@@ -38,12 +38,12 @@
   }
 
   async function main() {
-    var params = new URLSearchParams(window.location.search);
-    var sessionId = params.get('session_id') || params.get('sessionId');
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id') || params.get('sessionId');
     if (!sessionId) return safeRedirect('/');
 
-    var verifyResp = await fetch('/api/billing/verify-session?session_id=' + encodeURIComponent(sessionId));
-    var verification = await verifyResp.json().catch(function () { return null; });
+    const verifyResp = await fetch('/api/billing/verify-session?session_id=' + encodeURIComponent(sessionId));
+    const verification = await verifyResp.json().catch(function () { return null; });
 
     if (!verifyResp.ok || !verification || verification.paid !== true || !verification.purchaseType) {
       return safeRedirect('/');
@@ -58,10 +58,10 @@
     // Dedupe: if we've already applied this session, just redirect.
     if (window.CreditsManager && typeof window.CreditsManager.hasPurchaseReceipt === 'function' && window.CreditsManager.hasPurchaseReceipt(sessionId)) {
       // Best-effort redirect: try returnUrl in query, else home.
-      var returnUrlEarly = params.get('returnUrl') || params.get('return_url') || '';
+      const returnUrlEarly = params.get('returnUrl') || params.get('return_url') || '';
       if (returnUrlEarly && typeof returnUrlEarly === 'string') {
         try {
-          var uEarly = new URL(returnUrlEarly);
+          const uEarly = new URL(returnUrlEarly);
           return window.location.replace(uEarly.toString());
         } catch (e) {
           // ignore
@@ -72,7 +72,7 @@
 
     if (window.CreditsManager) {
       if (verification.purchaseType === 'credit_pack') {
-        var creditsAdded = parseInt(verification.creditsAdded || 0, 10) || 0;
+        const creditsAdded = parseInt(verification.creditsAdded || 0, 10) || 0;
         if (creditsAdded > 0) {
           window.CreditsManager.addCredits(creditsAdded);
           enqueueToast(creditsAdded + ' credits added.');
@@ -89,10 +89,10 @@
     }
 
     // Best-effort redirect: try returnUrl in query, else home.
-    var returnUrl = params.get('returnUrl') || params.get('return_url') || '';
+    const returnUrl = params.get('returnUrl') || params.get('return_url') || '';
     if (returnUrl && typeof returnUrl === 'string') {
       try {
-        var u = new URL(returnUrl);
+        const u = new URL(returnUrl);
         return window.location.replace(u.toString());
       } catch (e) {
         // ignore

@@ -170,7 +170,7 @@ class EnhancedFontAnalyzer {
             // Get linked stylesheet contents (if same-origin)
             document.querySelectorAll('link[rel="stylesheet"]').forEach(link => {
               try {
-                for (let sheet of document.styleSheets) {
+                for (const sheet of document.styleSheets) {
                   if (sheet.href === link.href) {
                     try {
                       const rules = Array.from(sheet.cssRules || []).map(r => r.cssText).join('\\n');

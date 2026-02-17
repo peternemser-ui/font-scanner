@@ -10,33 +10,33 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('tag-intelligence', function renderTagIntelligence(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
-    var scoreColor = utils.scoreColor;
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
+    const scoreColor = utils.scoreColor;
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     // Resolve data — pageResults[0] contains detailed analysis
-    var page0 = (data.pageResults && data.pageResults[0]) || {};
-    var tags = data.tags || [];
-    var tagsByCategory = data.tagsByCategory || {};
-    var summary = data.summary || {};
-    var issues = data.issues || [];
-    var duplicates = data.duplicates || [];
-    var cookies = page0.cookies || data.cookies || {};
-    var dataLayer = page0.dataLayer || data.dataLayer || {};
-    var thirdPartyScripts = page0.thirdPartyScripts || data.thirdPartyScripts || {};
-    var performanceImpact = page0.performanceImpact || data.performanceImpact || {};
-    var recommendations = data.recommendations || [];
-    var consentMode = page0.consentMode || data.consentMode || {};
-    var waterfall = page0.tagLoadWaterfall || data.tagLoadWaterfall || {};
+    const page0 = (data.pageResults && data.pageResults[0]) || {};
+    const tags = data.tags || [];
+    const tagsByCategory = data.tagsByCategory || {};
+    const summary = data.summary || {};
+    const issues = data.issues || [];
+    const duplicates = data.duplicates || [];
+    const cookies = page0.cookies || data.cookies || {};
+    const dataLayer = page0.dataLayer || data.dataLayer || {};
+    const thirdPartyScripts = page0.thirdPartyScripts || data.thirdPartyScripts || {};
+    const performanceImpact = page0.performanceImpact || data.performanceImpact || {};
+    const recommendations = data.recommendations || [];
+    const consentMode = page0.consentMode || data.consentMode || {};
+    const waterfall = page0.tagLoadWaterfall || data.tagLoadWaterfall || {};
 
-    var CATEGORY_LABELS = {
+    const CATEGORY_LABELS = {
       analytics: t('reports.tagIntelligence.categories.analytics', 'Analytics'),
       advertising: t('reports.tagIntelligence.categories.advertising', 'Advertising'),
       tag_manager: t('reports.tagIntelligence.categories.tagManager', 'Tag Manager'),
@@ -72,15 +72,15 @@
        1. Tags Overview
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-overview .pdf-section__content');
-      var score = data.healthScore;
+      const sec = document.querySelector('#section-overview .pdf-section__content');
+      const score = data.healthScore;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.tagIntelligence.analyticsOverview', 'Analytics Overview'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.overview', 'This section provides an overview of all marketing, analytics, and tracking tags detected on your page. A healthy tag implementation uses a tag management system, avoids duplicates, and loads scripts efficiently. Too many tags can slow page performance and create data quality issues. This analysis identifies each tag, its category, and how many instances were found.')) + '</p>';
 
@@ -103,12 +103,12 @@
       // Tags table — enriched with loading method + detection source
       if (tags.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.overview.detectedHeading', 'Detected Tags')) + '</h3>';
-        var tagRows = tags.slice(0, 30).map(function (tag) {
+        const tagRows = tags.slice(0, 30).map(function (tag) {
           // Detection source indicators
-          var detection = [];
+          const detection = [];
           if (tag.foundInline) detection.push(t('reports.tagIntelligence.foundInline', 'Found inline'));
           if (tag.foundScript) detection.push(t('reports.tagIntelligence.foundInScriptSrc', 'Found in script src'));
-          var detectionStr = detection.length > 0 ? detection.join(', ') : '-';
+          const detectionStr = detection.length > 0 ? detection.join(', ') : '-';
 
           return [
             '<strong>' + esc(tag.name || '-') + '</strong>',
@@ -147,22 +147,22 @@
        2. Issues Detected
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-issues .pdf-section__content');
+      const sec = document.querySelector('#section-issues .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.tagIntelligence.issuesDetected', 'Issues Detected'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.issues', 'This section highlights implementation issues and conflicts found among your tags. Common problems include duplicate tracking pixels, migration gaps between analytics versions, missing consent management, and conflicting scripts. Each issue includes severity level and a specific recommendation for resolution. Addressing these issues improves data accuracy and site performance.')) + '</p>';
 
       // Summary metrics for issues
       if (issues.length > 0 || duplicates.length > 0) {
-        var highCount = 0;
-        var warnCount = 0;
-        var infoCount = 0;
+        let highCount = 0;
+        let warnCount = 0;
+        let infoCount = 0;
         issues.forEach(function (issue) {
           if (issue.severity === 'high') highCount++;
           else if (issue.severity === 'warning') warnCount++;
@@ -178,18 +178,18 @@
 
       // Issues
       if (issues.length > 0) {
-        var SEVERITY_LABELS = {
+        const SEVERITY_LABELS = {
           high: t('reports.tagIntelligence.severity.high', 'HIGH'),
           warning: t('reports.tagIntelligence.severity.warning', 'WARNING'),
           info: t('reports.tagIntelligence.severity.info', 'INFO')
         };
         issues.forEach(function (issue) {
-          var sev = issue.severity === 'high' ? 'warning' : (issue.severity || 'info');
-          var sevLabel = SEVERITY_LABELS[issue.severity] || SEVERITY_LABELS[sev] || (issue.severity || 'info').toUpperCase();
-          var msgKey = issue.messageKey ? 'reports.' + issue.messageKey : '';
-          var recKey = issue.recommendationKey ? 'reports.' + issue.recommendationKey : '';
-          var msg = msgKey ? t(msgKey, issue.message || '', issue.messageParams) : (issue.message || '');
-          var rec = recKey ? t(recKey, issue.recommendation || '') : (issue.recommendation || '');
+          const sev = issue.severity === 'high' ? 'warning' : (issue.severity || 'info');
+          const sevLabel = SEVERITY_LABELS[issue.severity] || SEVERITY_LABELS[sev] || (issue.severity || 'info').toUpperCase();
+          const msgKey = issue.messageKey ? 'reports.' + issue.messageKey : '';
+          const recKey = issue.recommendationKey ? 'reports.' + issue.recommendationKey : '';
+          const msg = msgKey ? t(msgKey, issue.message || '', issue.messageParams) : (issue.message || '');
+          const rec = recKey ? t(recKey, issue.recommendation || '') : (issue.recommendation || '');
           html += '<div class="pdf-issue pdf-issue--' + sev + '">' +
             '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '">' + esc(sevLabel) + '</span>' +
             '<span class="pdf-issue__text">' + esc(msg) +
@@ -202,7 +202,7 @@
       if (duplicates.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.issues.duplicatesHeading', 'Duplicate Tags')) + '</h3>';
         duplicates.forEach(function (dup) {
-          var dupMsg = dup.messageKey ? t('reports.' + dup.messageKey, dup.message || '') : (dup.message || (dup.tag + ' (' + dup.count + 'x)'));
+          const dupMsg = dup.messageKey ? t('reports.' + dup.messageKey, dup.message || '') : (dup.message || (dup.tag + ' (' + dup.count + 'x)'));
           html += '<div class="pdf-issue pdf-issue--warning">' +
             '<span class="pdf-issue__severity pdf-issue__severity--warning">' + esc(t('reports.tagIntelligence.severity.warning', 'WARNING')) + '</span>' +
             '<span class="pdf-issue__text">' + esc(dupMsg) + '</span>' +
@@ -225,24 +225,24 @@
        3. Tags by Category — enriched with per-tag detail rows
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-categories .pdf-section__content');
-      var byCategory = summary.byCategory || {};
+      const sec = document.querySelector('#section-categories .pdf-section__content');
+      const byCategory = summary.byCategory || {};
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.tagIntelligence.tagsByCategory', 'Tags by Category'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.categories', 'Tags are organized by functional category to provide a clear picture of your marketing and analytics stack. This breakdown helps identify redundancies, gaps in coverage, and opportunities for consolidation. A well-organized tag infrastructure typically uses one tool per function with clear data ownership. Review each category to ensure every tag serves a specific, non-overlapping purpose.')) + '</p>';
 
       // Category summary table
-      var catKeys = Object.keys(byCategory);
+      const catKeys = Object.keys(byCategory);
       if (catKeys.length > 0) {
-        var catRows = catKeys.map(function (cat) {
-          var catTags = tags.filter(function (tag) { return tag.category === cat; });
-          var tagNames = catTags.map(function (tag) { return tag.name; }).join(', ');
+        const catRows = catKeys.map(function (cat) {
+          const catTags = tags.filter(function (tag) { return tag.category === cat; });
+          const tagNames = catTags.map(function (tag) { return tag.name; }).join(', ');
           return [
             '<strong>' + esc(CATEGORY_LABELS[cat] || cat) + '</strong>',
             String(byCategory[cat] || 0),
@@ -262,13 +262,13 @@
 
         // Per-category detailed breakdown (like the web UI shows)
         catKeys.forEach(function (cat) {
-          var catTags = tagsByCategory[cat] || tags.filter(function (tag) { return tag.category === cat; });
+          const catTags = tagsByCategory[cat] || tags.filter(function (tag) { return tag.category === cat; });
           if (catTags.length === 0) return;
 
           html += '<h3 class="pdf-subsection__title">' + esc(CATEGORY_LABELS[cat] || cat) + ' (' + catTags.length + ')</h3>';
 
-          var detailRows = catTags.map(function (tag) {
-            var idStr = (tag.ids && tag.ids.length > 0) ? tag.ids.join(', ') : t('reports.common.notAvailable', 'N/A');
+          const detailRows = catTags.map(function (tag) {
+            const idStr = (tag.ids && tag.ids.length > 0) ? tag.ids.join(', ') : t('reports.common.notAvailable', 'N/A');
             return [
               '<strong>' + esc(tag.name || '-') + '</strong>',
               '<span style="font-family:monospace;font-size:0.85em;">' + esc(truncate(idStr, 40)) + '</span>',
@@ -296,20 +296,20 @@
           severity on issues
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-performance .pdf-section__content');
+      const sec = document.querySelector('#section-performance .pdf-section__content');
       if (!performanceImpact.score && !performanceImpact.stats) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var score = performanceImpact.score;
+      const score = performanceImpact.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.tagIntelligence.scriptPerformanceImpact', 'Script Performance Impact'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.performance', 'Marketing tags and tracking scripts can significantly impact page load performance. Synchronous scripts block rendering while they load, and inline scripts add to the initial HTML payload. This section analyzes script loading methods, identifying blocking scripts that should be converted to async or defer loading. Optimizing script loading can reduce Time to Interactive by hundreds of milliseconds.')) + '</p>';
 
@@ -322,7 +322,7 @@
       }
 
       // Stats metrics
-      var stats = performanceImpact.stats || {};
+      const stats = performanceImpact.stats || {};
       html += PR.renderMetrics([
         { value: stats.syncScripts || 0, label: t('reports.tagIntelligence.report.performance.syncLabel', 'Sync (Blocking)'), color: (stats.syncScripts || 0) > 0 ? '#ef4444' : '#10b981' },
         { value: stats.asyncScripts || 0, label: t('reports.tagIntelligence.report.performance.asyncLabel', 'Async'), color: '#10b981' },
@@ -339,10 +339,10 @@
       }
 
       // Script loading breakdown table
-      var totalScripts = (stats.syncScripts || 0) + (stats.asyncScripts || 0) + (stats.deferScripts || 0) + (stats.inlineScripts || 0);
+      const totalScripts = (stats.syncScripts || 0) + (stats.asyncScripts || 0) + (stats.deferScripts || 0) + (stats.inlineScripts || 0);
       if (totalScripts > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.performance.breakdownHeading', 'Loading Strategy Breakdown')) + '</h3>';
-        var breakdownRows = [];
+        const breakdownRows = [];
         if (stats.asyncScripts) {
           breakdownRows.push([
             esc(t('reports.tagIntelligence.report.performance.asyncLabel', 'Async')),
@@ -386,7 +386,7 @@
       if (performanceImpact.issues && performanceImpact.issues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.performance.issuesHeading', 'Performance Issues')) + '</h3>';
         performanceImpact.issues.forEach(function (issue) {
-          var issueSev = issue.severity === 'warning' ? 'warning' : 'info';
+          const issueSev = issue.severity === 'warning' ? 'warning' : 'info';
           html += PR.renderIssue(issue.message || '', issueSev);
         });
       }
@@ -408,7 +408,7 @@
           size columns
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-thirdparty .pdf-section__content');
+      const sec = document.querySelector('#section-thirdparty .pdf-section__content');
       if (!thirdPartyScripts.total && !thirdPartyScripts.scripts) {
         sec.parentElement.style.display = 'none';
         return;
@@ -419,13 +419,13 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.thirdParty', 'Third-party scripts are loaded from external domains and include analytics libraries, advertising pixels, and CDN-hosted utilities. Each external script introduces a dependency on another server\'s availability and performance. This section catalogs all third-party scripts by host, category, and loading method. Minimizing third-party dependencies and ensuring proper async loading reduces performance risk.')) + '</p>';
 
       // Metrics — total + byCategory breakdown
-      var byCat = thirdPartyScripts.byCategory || {};
-      var catMetrics = [
+      const byCat = thirdPartyScripts.byCategory || {};
+      const catMetrics = [
         { value: thirdPartyScripts.total || 0, label: t('reports.tagIntelligence.report.thirdParty.totalLabel', 'Third-Party Scripts') }
       ];
       Object.keys(byCat).forEach(function (cat) {
@@ -437,12 +437,12 @@
       html += PR.renderMetrics(catMetrics);
 
       // Scripts table with count + size
-      var scripts = thirdPartyScripts.scripts || [];
+      const scripts = thirdPartyScripts.scripts || [];
       if (scripts.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.thirdParty.detailHeading', 'Script Details')) + '</h3>';
-        var scriptRows = scripts.slice(0, 25).map(function (s) {
-          var loadLabel = s.async ? t('reports.tagIntelligence.loadingMethod.async', 'async') : s.defer ? t('reports.tagIntelligence.loadingMethod.defer', 'defer') : t('reports.tagIntelligence.loadingMethod.sync', 'sync');
-          var loadStatus = s.async ? 'pass' : s.defer ? 'pass' : 'fail';
+        const scriptRows = scripts.slice(0, 25).map(function (s) {
+          const loadLabel = s.async ? t('reports.tagIntelligence.loadingMethod.async', 'async') : s.defer ? t('reports.tagIntelligence.loadingMethod.defer', 'defer') : t('reports.tagIntelligence.loadingMethod.sync', 'sync');
+          const loadStatus = s.async ? 'pass' : s.defer ? 'pass' : 'fail';
           return [
             '<strong>' + esc(s.name || '-') + '</strong>',
             '<span class="pdf-table__truncate">' + esc(truncate(s.host || s.src || '', 30)) + '</span>',
@@ -478,9 +478,9 @@
        6. Tag Load Waterfall (NEW — matches web UI)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-waterfall .pdf-section__content');
+      const sec = document.querySelector('#section-waterfall .pdf-section__content');
       if (!sec) return;
-      var waterfallScripts = waterfall.scripts || [];
+      const waterfallScripts = waterfall.scripts || [];
       if (waterfallScripts.length === 0) {
         sec.parentElement.style.display = 'none';
         return;
@@ -491,7 +491,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.waterfall', 'The tag load waterfall shows the timing and sequence of script loading on your page. Scripts that load early and block rendering have the greatest performance impact. This visualization helps identify opportunities to defer or async-load scripts to improve page load times.')) + '</p>';
 
@@ -504,11 +504,11 @@
       ]);
 
       // Waterfall insights
-      var insights = waterfall.insights || [];
+      const insights = waterfall.insights || [];
       if (insights.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.waterfall.insightsHeading', 'Waterfall Insights')) + '</h3>';
         insights.forEach(function (insight) {
-          var insightType = insight.type === 'warning' ? 'warning' : (insight.type === 'good' ? 'tip' : 'info');
+          const insightType = insight.type === 'warning' ? 'warning' : (insight.type === 'good' ? 'tip' : 'info');
           if (insight.recommendation) {
             html += PR.renderCallout(
               insight.message || '',
@@ -524,13 +524,13 @@
       // Waterfall table — script by script timing
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.waterfall.timingHeading', 'Script Load Timing')) + '</h3>';
 
-      var maxTime = waterfall.totalLoadTime || 1;
-      var wfRows = waterfallScripts.slice(0, 25).map(function (script) {
+      const maxTime = waterfall.totalLoadTime || 1;
+      const wfRows = waterfallScripts.slice(0, 25).map(function (script) {
         // Build a text-based timing bar
-        var startPct = Math.round(((script.startTime || 0) / maxTime) * 100);
-        var widthPct = Math.max(Math.round(((script.duration || 0) / maxTime) * 100), 2);
-        var barColor = _waterfallColor(script.category);
-        var timingBar = '<div style="position:relative;height:14px;background:#f0f0f0;border-radius:3px;overflow:hidden;">' +
+        const startPct = Math.round(((script.startTime || 0) / maxTime) * 100);
+        const widthPct = Math.max(Math.round(((script.duration || 0) / maxTime) * 100), 2);
+        const barColor = _waterfallColor(script.category);
+        const timingBar = '<div style="position:relative;height:14px;background:#f0f0f0;border-radius:3px;overflow:hidden;">' +
           '<div style="position:absolute;left:' + startPct + '%;width:' + widthPct + '%;height:100%;background:' + barColor + ';border-radius:3px;"></div>' +
           '</div>';
 
@@ -566,19 +566,19 @@
        7. DataLayer Analysis — enriched with ecommerce detail
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-datalayer .pdf-section__content');
+      const sec = document.querySelector('#section-datalayer .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.tagIntelligence.dataLayerAnalysis', 'DataLayer Analysis'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.dataLayer', 'The dataLayer is a JavaScript array used by Google Tag Manager to pass structured data between your website and marketing tags. A well-implemented dataLayer centralizes event tracking and enables consistent measurement across all tags. This section checks for dataLayer presence, event count, and ecommerce implementation. A robust dataLayer is the foundation of accurate marketing analytics.')) + '</p>';
 
       // DataLayer detection + ecommerce metrics
-      var dlMetrics = [
+      const dlMetrics = [
         { value: dataLayer.found ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not detected'), label: 'DataLayer', color: dataLayer.found ? '#10b981' : '#f59e0b' },
         { value: dataLayer.eventCount || 0, label: t('reports.tagIntelligence.report.dataLayer.eventsLabel', 'Events') }
       ];
@@ -595,7 +595,7 @@
       // DataLayer properties table
       if (dataLayer.found) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.dataLayer.propertiesHeading', 'DataLayer Properties')) + '</h3>';
-        var propRows = [
+        const propRows = [
           [esc(t('reports.tagIntelligence.report.dataLayer.status', 'Status')), PR.renderStatus(dataLayer.found ? 'pass' : 'fail', dataLayer.found ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not detected'))],
           [esc(t('reports.tagIntelligence.report.dataLayer.eventsLabel', 'Events')), String(dataLayer.eventCount || 0)]
         ];
@@ -629,7 +629,7 @@
       // Event list
       if (dataLayer.events && dataLayer.events.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.dataLayer.eventsHeading', 'DataLayer Events')) + '</h3>';
-        var eventRows = dataLayer.events.slice(0, 20).map(function (evt) {
+        const eventRows = dataLayer.events.slice(0, 20).map(function (evt) {
           return [
             '<code style="font-size:0.9em;">' + esc(evt) + '</code>',
             PR.renderStatus('found', t('seo.report.status.found', 'Found'))
@@ -654,7 +654,7 @@
       if (consentMode && consentMode.implemented !== undefined) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.consentMode', 'Consent Mode')) + '</h3>';
 
-        var consentRows = [
+        const consentRows = [
           [
             esc(t('reports.tagIntelligence.report.dataLayer.consentStatus', 'Implementation Status')),
             consentMode.implemented
@@ -694,20 +694,20 @@
           richer issue cards
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-cookies .pdf-section__content');
+      const sec = document.querySelector('#section-cookies .pdf-section__content');
       if (!cookies.count && !(cookies.cookies && cookies.cookies.length > 0)) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var complianceScore = cookies.complianceScore;
+      const complianceScore = cookies.complianceScore;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.tagIntelligence.cookieAudit', 'Cookie Audit'), complianceScore)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.cookies', 'Cookies set by tags and third-party scripts carry privacy and compliance implications. Under GDPR, CCPA, and similar regulations, users must be informed about cookies and in many cases give consent before non-essential cookies are set. This section audits all detected cookies, their vendors, purposes, and security attributes. Understanding your cookie landscape is essential for privacy compliance.')) + '</p>';
 
@@ -720,7 +720,7 @@
       }
 
       // Cookie metrics including compliance score
-      var cookieMetrics = [
+      const cookieMetrics = [
         { value: cookies.count || 0, label: t('reports.tagIntelligence.report.cookies.totalLabel', 'Total Cookies') }
       ];
       if (complianceScore !== undefined && complianceScore !== null) {
@@ -733,12 +733,12 @@
       html += PR.renderMetrics(cookieMetrics);
 
       // Cookie type breakdown
-      var cookieSummary = cookies.summary || cookies.types || {};
+      const cookieSummary = cookies.summary || cookies.types || {};
       if (Object.keys(cookieSummary).length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.cookies.typeBreakdown', 'Cookie Type Breakdown')) + '</h3>';
-        var typeRows = Object.keys(cookieSummary).map(function (type) {
-          var typeLabel = _cookieTypeLabel(type, t);
-          var count = cookieSummary[type] || 0;
+        const typeRows = Object.keys(cookieSummary).map(function (type) {
+          const typeLabel = _cookieTypeLabel(type, t);
+          const count = cookieSummary[type] || 0;
           return [
             '<strong>' + esc(typeLabel) + '</strong>',
             String(count),
@@ -758,11 +758,11 @@
       }
 
       // Cookie details table — now includes purpose + type columns
-      var cookieList = cookies.cookies || [];
+      const cookieList = cookies.cookies || [];
       if (cookieList.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.tagIntelligence.report.cookies.detailsHeading', 'Cookie Details')) + '</h3>';
-        var cookieRows = cookieList.slice(0, 25).map(function (c) {
-          var typeLabel = _cookieTypeLabel(c.type, t);
+        const cookieRows = cookieList.slice(0, 25).map(function (c) {
+          const typeLabel = _cookieTypeLabel(c.type, t);
           return [
             '<span class="pdf-table__truncate" style="font-family:monospace;font-size:0.85em;">' + esc(truncate(c.name, 22)) + '</span>',
             esc(typeLabel),
@@ -800,8 +800,8 @@
           if (typeof issue === 'string') {
             html += PR.renderIssue(issue, 'warning');
           } else {
-            var issueSev = issue.severity === 'high' ? 'warning' : (issue.severity || 'warning');
-            var issueMsg = issue.message || '';
+            const issueSev = issue.severity === 'high' ? 'warning' : (issue.severity || 'warning');
+            const issueMsg = issue.message || '';
             html += '<div class="pdf-issue pdf-issue--' + issueSev + '">' +
               '<span class="pdf-issue__severity pdf-issue__severity--' + issueSev + '">' + esc((issue.severity || 'warning').toUpperCase()) + '</span>' +
               '<span class="pdf-issue__text">' + esc(issueMsg) +
@@ -820,22 +820,22 @@
           description paragraphs, category labels
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.tagIntelligence.report.recommendationsTitle', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.tagIntelligence.report.sectionIntros.recommendations', 'Based on the tag intelligence analysis, this section provides prioritized recommendations to optimize your tag implementation. Recommendations cover performance optimization, data quality improvement, privacy compliance, and infrastructure consolidation. Implementing these changes will result in faster page loads, more accurate tracking data, and better compliance with privacy regulations.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Summary metrics
-        var highRecs = recommendations.filter(function (r) { return r.priority === 'high'; });
-        var medRecs = recommendations.filter(function (r) { return r.priority === 'medium'; });
-        var lowRecs = recommendations.filter(function (r) { return !r.priority || r.priority === 'low'; });
+        const highRecs = recommendations.filter(function (r) { return r.priority === 'high'; });
+        const medRecs = recommendations.filter(function (r) { return r.priority === 'medium'; });
+        const lowRecs = recommendations.filter(function (r) { return !r.priority || r.priority === 'low'; });
 
         html += PR.renderMetrics([
           { value: recommendations.length, label: t('reports.tagIntelligence.report.recommendations.totalLabel', 'Total Recommendations') },
@@ -844,7 +844,7 @@
           { value: lowRecs.length, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6' }
         ]);
 
-        var groups = [
+        const groups = [
           { items: highRecs, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444', sev: 'warning' },
           { items: medRecs, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b', sev: 'warn' },
           { items: lowRecs, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6', sev: 'info' }
@@ -856,10 +856,10 @@
           html += '<div class="pdf-recs-group__title" style="color:' + group.color + ';">&#9679; ' + esc(group.label) + ' (' + group.items.length + ')</div>';
 
           group.items.forEach(function (r) {
-            var recTitleKey = r.titleKey ? 'reports.' + r.titleKey : '';
-            var recDescKey = r.descriptionKey ? 'reports.' + r.descriptionKey : '';
-            var recTitle = recTitleKey ? t(recTitleKey, r.title || r.message || '') : (r.title || r.message || '');
-            var recDesc = recDescKey ? t(recDescKey, r.description || r.details || '', r.descriptionParams) : (r.description || r.details || '');
+            const recTitleKey = r.titleKey ? 'reports.' + r.titleKey : '';
+            const recDescKey = r.descriptionKey ? 'reports.' + r.descriptionKey : '';
+            const recTitle = recTitleKey ? t(recTitleKey, r.title || r.message || '') : (r.title || r.message || '');
+            const recDesc = recDescKey ? t(recDescKey, r.description || r.details || '', r.descriptionParams) : (r.description || r.details || '');
 
             html += '<div class="pdf-rec" style="border-left-color:' + group.color + ';">';
             html += '<div class="pdf-rec__text">';
@@ -908,8 +908,8 @@
               html += '<div style="margin-top:6px;font-size:0.85em;">';
               html += '<strong style="color:#6b7280;">' + esc(t('reports.tagIntelligence.report.recommendations.resources', 'Resources')) + ':</strong>';
               r.resources.forEach(function (res) {
-                var resTitle = typeof res === 'string' ? res : (res.title || res.url || '');
-                var resUrl = typeof res === 'string' ? '' : (res.url || '');
+                const resTitle = typeof res === 'string' ? res : (res.title || res.url || '');
+                const resUrl = typeof res === 'string' ? '' : (res.url || '');
                 html += '<div style="color:#3b82f6;margin-left:8px;">';
                 if (resUrl) {
                   html += esc(resTitle) + ' (' + esc(truncate(resUrl, 50)) + ')';
@@ -938,7 +938,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -947,7 +947,7 @@
 
   /** Cookie type label helper */
   function _cookieTypeLabel(type, t) {
-    var labels = {
+    const labels = {
       necessary: t('reports.tagIntelligence.cookieTypes.essential', 'Essential'),
       analytics: t('reports.tagIntelligence.cookieTypes.analytics', 'Analytics'),
       advertising: t('reports.tagIntelligence.cookieTypes.advertising', 'Advertising'),
@@ -960,7 +960,7 @@
 
   /** Waterfall bar color by category */
   function _waterfallColor(category) {
-    var colors = {
+    const colors = {
       analytics: '#3b82f6',
       advertising: '#f59e0b',
       session_recording: '#ec4899',
@@ -978,7 +978,7 @@
   }
 
   function _htmlToNode(html) {
-    var temp = document.createElement('div');
+    const temp = document.createElement('div');
     temp.innerHTML = html;
     return temp.firstChild;
   }

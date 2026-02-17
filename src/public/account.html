@@ -11,7 +11,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text:wght@400&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
 
   <link rel="stylesheet" href="/design-tokens.css">
   <link rel="stylesheet" href="/components.css">
@@ -45,14 +45,19 @@
        ACCOUNT POPOVER (was sidebar)
        ======================================== */
 
+    .account-dropdown-wrapper {
+      position: relative;
+      flex-shrink: 0;
+    }
+
     .reports-sidebar {
       display: none;
-      position: fixed;
-      top: 60px;
-      right: 24px;
+      position: absolute;
+      top: calc(100% + 8px);
+      right: 0;
       width: 320px;
       z-index: 10001;
-      max-height: calc(100vh - 80px);
+      max-height: calc(100vh - 200px);
       overflow-y: auto;
       border-radius: 10px;
       box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.06);
@@ -68,16 +73,7 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    .account-popover-backdrop {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 10000;
-    }
-
-    .account-popover-backdrop.open {
-      display: block;
-    }
+    /* Backdrop no longer needed — outside-click closes dropdown */
 
     /* Trigger button in reports header */
     .account-trigger {
@@ -152,15 +148,18 @@
       justify-content: space-between;
       gap: 16px;
       margin-bottom: 12px;
+      padding: 2rem 0;
     }
 
     .reports-header__text h1 {
-      font-size: 28px;
-      font-weight: 700;
+      font-family: 'DM Serif Text', serif;
+      font-size: 32px;
+      font-weight: 400;
       margin: 0;
       color: var(--color-text, #fff);
-      letter-spacing: -0.02em;
+      letter-spacing: -0.01em;
       line-height: 1.2;
+      text-align: left;
     }
 
     .reports-header__text p {
@@ -219,7 +218,7 @@
 
     .toolbar__search-icon {
       position: absolute;
-      left: 8px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
       width: 14px;
@@ -232,9 +231,10 @@
       pointer-events: none;
     }
 
-    .toolbar__search-input {
+    input.toolbar__search-input {
       width: 100%;
-      padding: 6px 8px 6px 28px;
+      padding: 6px 8px 6px 44px;
+      min-height: auto;
       background: var(--bg-input, #1A1E23);
       border: 1px solid var(--border-color, rgba(255,255,255,0.08));
       border-radius: 6px;
@@ -1471,7 +1471,6 @@
 
     @media (max-width: 1024px) {
       .reports-sidebar {
-        right: 12px;
         width: 300px;
       }
 
@@ -1515,10 +1514,7 @@
       }
 
       .reports-sidebar {
-        right: 8px;
-        left: 8px;
-        width: auto;
-        top: 56px;
+        width: min(320px, calc(100vw - 24px));
       }
 
       .account-trigger span:not(.plan-badge) {
@@ -1846,19 +1842,68 @@
         <div class="reports-header">
           <div class="reports-header__text">
             <h1 data-i18n="reportsPage.title">Reports</h1>
-            <p data-i18n="reportsPage.subtitle">Search, reopen, rerun, and compare your past scans.</p>
+            <p data-i18n="reportsPage.subtitle">Your complete report library. Search, reopen, rerun, and compare past scans to track site improvements over time.</p>
           </div>
-          <button class="account-trigger" id="accountTrigger"
-                  type="button"
-                  aria-expanded="false"
-                  aria-controls="accountPanel"
-                  aria-label="Open account and billing panel">
-            <span id="accountTriggerBadge" class="plan-badge plan-badge--free" data-i18n="account.free">Free</span>
-            <span data-i18n="account.accountShort">Account</span>
-            <svg class="account-trigger__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M6 9l6 6 6-6"/>
-            </svg>
-          </button>
+          <div class="account-dropdown-wrapper">
+            <button class="account-trigger" id="accountTrigger"
+                    type="button"
+                    aria-expanded="false"
+                    aria-controls="accountPanel"
+                    aria-label="Open account and billing panel">
+              <span id="accountTriggerBadge" class="plan-badge plan-badge--free" data-i18n="account.free">Free</span>
+              <span data-i18n="account.accountShort">Account</span>
+              <svg class="account-trigger__chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M6 9l6 6 6-6"/>
+              </svg>
+            </button>
+            <aside class="reports-sidebar" role="dialog" aria-label="Account and billing">
+              <div class="account-panel" id="accountPanel">
+                <div class="account-panel__header" id="accountPanelHeader">
+                  <h2 class="account-panel__title">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                    </svg>
+                    <span data-i18n="account.accountAndBilling">Account & Billing</span>
+                  </h2>
+                  <svg class="account-panel__toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M6 9l6 6 6-6"/>
+                  </svg>
+                </div>
+                <div class="account-panel__body" id="accountPanelBody">
+                  <div class="account-panel__section">
+                    <div class="account-panel__label" data-i18n="account.email">Email</div>
+                    <div class="account-panel__value" id="userEmail" data-i18n="account.loading">Loading...</div>
+                  </div>
+                  <div class="account-panel__section">
+                    <div class="account-panel__label" data-i18n="account.plan">Plan</div>
+                    <div class="account-panel__value">
+                      <span id="userPlan"><span class="plan-badge plan-badge--free" data-i18n="account.loading">Loading...</span></span>
+                    </div>
+                  </div>
+                  <div class="account-panel__section" id="usageSection">
+                    <div class="account-panel__label" data-i18n="account.usageToday">Usage Today</div>
+                    <div class="usage-bar">
+                      <div class="usage-bar__track">
+                        <div class="usage-bar__fill" id="usageFill" style="width: 0%"></div>
+                      </div>
+                      <div class="usage-bar__text">
+                        <span id="usageCount">0 / 25 scans</span>
+                        <span id="usageReset" data-i18n="account.resetsIn" data-i18n-params='{"hours": "--"}'>Resets in --h</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="account-panel__actions">
+                    <button class="account-btn account-btn--secondary" id="manageSubBtn" data-i18n="account.manageBilling">Manage Billing</button>
+                    <button class="account-btn account-btn--primary" id="upgradeBtn" data-i18n="account.upgradeToPro">Upgrade to Pro</button>
+                  </div>
+                  <div class="account-panel__links">
+                    <button class="account-link" id="changePasswordBtn" data-i18n="account.changePassword">Change Password</button>
+                    <button class="account-link" id="logoutBtn" data-i18n="account.logout">Logout</button>
+                  </div>
+                </div>
+              </div>
+            </aside>
+          </div>
         </div>
 
         <!-- Sticky Toolbar -->
@@ -1868,7 +1913,7 @@
               <svg class="toolbar__search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
               </svg>
-              <input type="search" class="toolbar__search-input" id="reportSearch" data-i18n-placeholder="reportsPage.search.placeholder" placeholder="Search sites or report types..." aria-label="Search reports">
+              <input type="search" class="toolbar__search-input" id="reportSearch" data-i18n-placeholder="reportsPage.search.placeholder" placeholder="Search..." aria-label="Search reports">
             </div>
 
             <button class="btn-filters-mobile" id="filtersToggle" aria-expanded="false">
@@ -1896,7 +1941,7 @@
                   <option value="gdpr" data-i18n="reportsPage.filters.privacy">Privacy</option>
                   <option value="hosting" data-i18n="reportsPage.filters.hosting">Hosting</option>
                   <option value="competitive" data-i18n="reportsPage.filters.competitive">Competitive</option>
-                  <option value="local-seo" data-i18n="reportsPage.filters.localSeo">Local SEO</option>
+                  <option value="geo-seo" data-i18n="reportsPage.filters.geoSeo">GEO SEO</option>
                   <option value="broken-links" data-i18n="reportsPage.filters.brokenLinks">Broken Links</option>
                   <option value="ip-reputation" data-i18n="reportsPage.filters.ipReputation">IP Reputation</option>
                   <option value="tag-intelligence" data-i18n="reportsPage.filters.tags">Tags</option>
@@ -2029,62 +2074,6 @@
     </div>
   </main>
 
-  <!-- Account Popover Backdrop (outside page-shell to escape stacking context) -->
-  <div class="account-popover-backdrop" id="accountBackdrop"></div>
-
-  <!-- Account Popover (outside page-shell so z-index is not trapped) -->
-  <aside class="reports-sidebar" role="dialog" aria-label="Account and billing">
-    <div class="account-panel" id="accountPanel">
-      <div class="account-panel__header" id="accountPanelHeader">
-        <h2 class="account-panel__title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
-          </svg>
-          <span data-i18n="account.accountAndBilling">Account & Billing</span>
-        </h2>
-        <svg class="account-panel__toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M6 9l6 6 6-6"/>
-        </svg>
-      </div>
-
-      <div class="account-panel__body" id="accountPanelBody">
-        <div class="account-panel__section">
-          <div class="account-panel__label" data-i18n="account.email">Email</div>
-          <div class="account-panel__value" id="userEmail" data-i18n="account.loading">Loading...</div>
-        </div>
-
-        <div class="account-panel__section">
-          <div class="account-panel__label" data-i18n="account.plan">Plan</div>
-          <div class="account-panel__value">
-            <span id="userPlan"><span class="plan-badge plan-badge--free" data-i18n="account.loading">Loading...</span></span>
-          </div>
-        </div>
-
-        <div class="account-panel__section" id="usageSection">
-          <div class="account-panel__label" data-i18n="account.usageToday">Usage Today</div>
-          <div class="usage-bar">
-            <div class="usage-bar__track">
-              <div class="usage-bar__fill" id="usageFill" style="width: 0%"></div>
-            </div>
-            <div class="usage-bar__text">
-              <span id="usageCount">0 / 25 scans</span>
-              <span id="usageReset" data-i18n="account.resetsIn" data-i18n-params='{"hours": "--"}'>Resets in --h</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="account-panel__actions">
-          <button class="account-btn account-btn--secondary" id="manageSubBtn" data-i18n="account.manageBilling">Manage Billing</button>
-          <button class="account-btn account-btn--primary" id="upgradeBtn" data-i18n="account.upgradeToPro">Upgrade to Pro</button>
-        </div>
-
-        <div class="account-panel__links">
-          <button class="account-link" id="changePasswordBtn" data-i18n="account.changePassword">Change Password</button>
-          <button class="account-link" id="logoutBtn" data-i18n="account.logout">Logout</button>
-        </div>
-      </div>
-    </div>
-  </aside>
 
   <!-- Compare Bar -->
   <div class="compare-bar" id="compareBar">

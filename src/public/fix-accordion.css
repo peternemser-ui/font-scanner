@@ -93,6 +93,7 @@
 .fix-badge.priority-medium { background: rgba(245, 158, 11, 0.2); color: #f59e0b; }
 .fix-badge.priority-low { background: rgba(59, 130, 246, 0.2); color: #3b82f6; }
 .fix-badge.category { background: rgba(255, 255, 255, 0.1); color: #aaa; }
+.fix-badge.location { background: rgba(99, 102, 241, 0.12); color: #818cf8; letter-spacing: 0; text-transform: none; }
 
 .fix-expand-icon {
   font-size: 1.25rem;

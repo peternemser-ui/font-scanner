@@ -24,11 +24,19 @@ class SecurityAnalyzerService {
       const desktopResults = desktopResult.status === 'fulfilled' ? desktopResult.value : {
         device: 'desktop',
         securityScore: 0,
+        https: false,
+        csp: false,
+        hsts: false,
+        mixedContent: 0,
         error: desktopResult.reason?.message || 'Analysis failed'
       };
       const mobileResults = mobileResult.status === 'fulfilled' ? mobileResult.value : {
         device: 'mobile',
         securityScore: 0,
+        https: false,
+        csp: false,
+        hsts: false,
+        mixedContent: 0,
         error: mobileResult.reason?.message || 'Analysis failed'
       };
 
@@ -141,12 +149,10 @@ class SecurityAnalyzerService {
         }
 
         // Navigate to page
-        await page.goto(url, {
+        const response = await page.goto(url, {
           waitUntil: 'load',
           timeout: 30000
         });
-
-        await dismissPageOverlays(page, { timeout: 4000 });
 
         await dismissPageOverlays(page, { timeout: 4000 });
 
@@ -159,9 +165,8 @@ class SecurityAnalyzerService {
           };
         });
 
-        // Check response headers
-        const response = await page.goto(url);
-        const headers = response.headers();
+        // Check response headers from initial navigation
+        const headers = response ? response.headers() : {};
 
         const securityScore = this.calculateDeviceSecurityScore({
           https: securityInfo.https,
@@ -192,12 +197,10 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
-        const response = await page.goto(url, { 
-          waitUntil: 'domcontentloaded', 
-          timeout: 30000 
+        const response = await page.goto(url, {
+          waitUntil: 'domcontentloaded',
+          timeout: 30000
         });
-
-        await dismissPageOverlays(page, { timeout: 4000 });
 
         await dismissPageOverlays(page, { timeout: 4000 });
 
@@ -358,8 +361,6 @@ class SecurityAnalyzerService {
           waitUntil: 'load',
           timeout: 30000
         });
-
-        await dismissPageOverlays(page, { timeout: 4000 });
 
         await dismissPageOverlays(page, { timeout: 4000 });
 
@@ -765,6 +766,7 @@ class SecurityAnalyzerService {
         description: 'Website is not using HTTPS encryption',
         impact: 'All data transmitted in plain text - vulnerable to interception',
         solution: 'Obtain and install an SSL/TLS certificate from a trusted CA',
+        location: 'Web Server Config / Hosting Provider',
         owaspRef: 'A3:2017 - Sensitive Data Exposure',
         resources: [
           { title: 'Let\'s Encrypt Free SSL', url: 'https://letsencrypt.org/' },
@@ -777,6 +779,7 @@ class SecurityAnalyzerService {
         description: ssl.issues.join('. '),
         impact: 'Certificate or protocol issues may compromise security',
         solution: 'Update certificate or upgrade TLS protocol version',
+        location: 'SSL Certificate Provider / Hosting Control Panel',
         owaspRef: 'A3:2017 - Sensitive Data Exposure',
       });
     }
@@ -789,6 +792,7 @@ class SecurityAnalyzerService {
         description: 'No CSP header found - site vulnerable to XSS attacks',
         impact: 'Attackers can inject malicious scripts',
         solution: 'Add Content-Security-Policy header with restrictive directives',
+        location: 'Web Server Config (Response Headers)',
         owaspRef: 'A7:2017 - Cross-Site Scripting (XSS)',
         resources: [
           { title: 'CSP Reference', url: 'https://content-security-policy.com/' },
@@ -803,6 +807,7 @@ class SecurityAnalyzerService {
         description: 'HSTS header not present',
         impact: 'Site vulnerable to protocol downgrade attacks',
         solution: 'Add Strict-Transport-Security: max-age=31536000; includeSubDomains',
+        location: 'Web Server Config (Response Headers)',
         owaspRef: 'A3:2017 - Sensitive Data Exposure',
       });
     }
@@ -814,6 +819,7 @@ class SecurityAnalyzerService {
         description: 'X-Frame-Options header not set',
         impact: 'Site can be embedded in malicious iframes',
         solution: 'Add X-Frame-Options: DENY or SAMEORIGIN',
+        location: 'Web Server Config (Response Headers)',
         owaspRef: 'A5:2017 - Broken Access Control',
       });
     }
@@ -825,6 +831,7 @@ class SecurityAnalyzerService {
         description: 'X-Content-Type-Options header missing',
         impact: 'Browsers may misinterpret file types',
         solution: 'Add X-Content-Type-Options: nosniff',
+        location: 'Web Server Config (Response Headers)',
         owaspRef: 'A6:2017 - Security Misconfiguration',
       });
     }
@@ -859,6 +866,7 @@ class SecurityAnalyzerService {
         description: 'Cookies not properly secured with HttpOnly, Secure, and SameSite flags',
         impact: 'Cookies vulnerable to XSS and CSRF attacks',
         solution: 'Set HttpOnly, Secure, and SameSite=Strict flags on all cookies',
+        location: 'Application Code (Server-Side)',
         owaspRef: 'A2:2017 - Broken Authentication',
       });
     }
@@ -871,6 +879,7 @@ class SecurityAnalyzerService {
         description: `${thirdParty.total - thirdParty.withSRI} third-party scripts without SRI`,
         impact: 'Third-party scripts could be compromised',
         solution: 'Add integrity and crossorigin attributes to external scripts',
+        location: 'HTML Source Code (Webpage)',
         owaspRef: 'A9:2017 - Using Components with Known Vulnerabilities',
       });
     }

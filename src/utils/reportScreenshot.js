@@ -23,23 +23,23 @@ async function fileExists(filePath) {
   }
 }
 
-async function ensureReportScreenshot({ url, reportId, requestId }) {
+async function ensureReportScreenshot({ url, reportId, requestId, filename = 'screenshot.jpg' }) {
   if (!url || !reportId) return null;
   if (!isSafeReportId(reportId)) {
     logger.warn('Refusing to write screenshot for unsafe reportId', { reportId, requestId });
     return null;
   }
 
-  logger.info('Screenshot request', { url, reportId, requestId });
+  logger.info('Screenshot request', { url, reportId, filename, requestId });
 
   const reportsDir = getReportsDirAbsolute();
   const reportDir = path.join(reportsDir, reportId);
-  const screenshotPath = path.join(reportDir, 'screenshot.jpg');
+  const screenshotPath = path.join(reportDir, filename);
 
   // If already present, return URL immediately.
   if (await fileExists(screenshotPath)) {
-    logger.info('Screenshot already exists, returning cached', { url, reportId });
-    return `/reports/${encodeURIComponent(reportId)}/screenshot.jpg`;
+    logger.info('Screenshot already exists, returning cached', { url, reportId, filename });
+    return `/reports/${encodeURIComponent(reportId)}/${encodeURIComponent(filename)}`;
   }
 
   logger.info('Capturing new screenshot', { url, reportId });
@@ -89,7 +89,7 @@ async function ensureReportScreenshot({ url, reportId, requestId }) {
       return null;
     }
 
-    return `/reports/${encodeURIComponent(reportId)}/screenshot.jpg`;
+    return `/reports/${encodeURIComponent(reportId)}/${encodeURIComponent(filename)}`;
   } catch (e) {
     logger.warn('Screenshot capture failed', {
       reportId,

@@ -39,7 +39,8 @@
       crawler: t('reports.modeLabels.crawler', 'Site Crawler'),
       'broken-links': t('reports.modeLabels.brokenLinks', 'Broken Links'),
       gdpr: t('reports.modeLabels.gdpr', 'GDPR Compliance'),
-      'local-seo': t('reports.modeLabels.localSeo', 'Local SEO'),
+      'geo-seo': t('reports.modeLabels.geoSeo', 'GEO SEO'),
+      'local-seo': t('reports.modeLabels.geoSeo', 'GEO SEO'),
       'tag-intelligence': t('reports.modeLabels.tagIntelligence', 'Tag Intelligence'),
       'ip-reputation': t('reports.modeLabels.ipReputation', 'IP Reputation')
     };

@@ -28,7 +28,7 @@ let allReports = [];
 let filteredReports = [];
 let currentPage = 1;
 let compareMode = false;
-let selectedForCompare = new Set();
+const selectedForCompare = new Set();
 const REPORTS_PER_PAGE = 20;
 const MAX_COMPARE = 2;
 
@@ -63,11 +63,10 @@ const REPORT_TYPE_MAP = {
   'ip-reputation-analyzer': { label: 'IP Reputation', category: 'ip-reputation' },
   'gdpr': { label: 'Privacy', category: 'gdpr' },
   'gdpr-compliance': { label: 'Privacy Compliance', category: 'gdpr' },
-  'hosting': { label: 'Hosting', category: 'hosting' },
-  'hosting-analyzer': { label: 'Hosting', category: 'hosting' },
   'competitive': { label: 'Competitive', category: 'competitive' },
   'competitive-analysis': { label: 'Competitive Analysis', category: 'competitive' },
-  'local-seo': { label: 'Local SEO', category: 'local-seo' },
+  'geo-seo': { label: 'GEO SEO', category: 'geo-seo' },
+  'local-seo': { label: 'GEO SEO', category: 'geo-seo' },
   'broken-links': { label: 'Broken Links', category: 'broken-links' },
   'site-crawler': { label: 'Site Crawler', category: 'site-crawler' }
 };
@@ -102,11 +101,10 @@ const ANALYZER_PAGES = {
   'enhanced-fonts': '/enhanced-fonts.html',
   'brand': '/brand-consistency.html',
   'brand-consistency': '/brand-consistency.html',
-  'hosting': '/hosting-analyzer.html',
-  'hosting-analyzer': '/hosting-analyzer.html',
   'competitive': '/competitive-analysis.html',
   'competitive-analysis': '/competitive-analysis.html',
-  'local-seo': '/local-seo.html',
+  'geo-seo': '/geo-seo.html',
+  'local-seo': '/geo-seo.html',
   'broken-links': '/broken-links.html',
   'site-crawler': '/site-crawler.html'
 };
@@ -325,29 +323,20 @@ function initializeUIComponents() {
     });
   }
 
-  // Account popover (trigger + panel)
+  // Account dropdown (trigger + panel)
   const accountTrigger = document.getElementById('accountTrigger');
   const accountSidebar = document.querySelector('.reports-sidebar');
-  const accountBackdrop = document.getElementById('accountBackdrop');
 
   function openAccountPopover() {
     if (!accountSidebar || !accountTrigger) return;
     accountSidebar.classList.add('popover-open');
-    if (accountBackdrop) accountBackdrop.classList.add('open');
     accountTrigger.setAttribute('aria-expanded', 'true');
-    // Focus first interactive element inside
-    requestAnimationFrame(() => {
-      const first = accountSidebar.querySelector('button, a, input, [tabindex]');
-      if (first) first.focus();
-    });
   }
 
   function closeAccountPopover() {
     if (!accountSidebar || !accountTrigger) return;
     accountSidebar.classList.remove('popover-open');
-    if (accountBackdrop) accountBackdrop.classList.remove('open');
     accountTrigger.setAttribute('aria-expanded', 'false');
-    accountTrigger.focus();
   }
 
   function isAccountPopoverOpen() {
@@ -355,20 +344,25 @@ function initializeUIComponents() {
   }
 
   if (accountTrigger) {
-    accountTrigger.addEventListener('click', () => {
+    accountTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
       isAccountPopoverOpen() ? closeAccountPopover() : openAccountPopover();
     });
   }
 
-  if (accountBackdrop) {
-    accountBackdrop.addEventListener('click', closeAccountPopover);
-  }
+  // Close dropdown when clicking outside
+  document.addEventListener('click', (e) => {
+    if (isAccountPopoverOpen() && !e.target.closest('.account-dropdown-wrapper')) {
+      closeAccountPopover();
+    }
+  });
 
-  // Esc to close popover
+  // Esc to close dropdown
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && isAccountPopoverOpen()) {
       e.stopPropagation();
       closeAccountPopover();
+      accountTrigger.focus();
     }
   });
 
@@ -992,7 +986,7 @@ function renderSiteGroups(reset = true) {
     }
   });
 
-  let groupsArray = Array.from(siteGroups.values());
+  const groupsArray = Array.from(siteGroups.values());
   groupsArray.sort((a, b) => b.latestReport.purchasedAtDate - a.latestReport.purchasedAtDate);
 
   const totalGroups = groupsArray.length;

@@ -6,14 +6,14 @@
 (function() {
   'use strict';
 
-  var STORAGE_KEY = 'sm_cookie_consent';
-  var CONSENT_VERSION = 1;
-  var GA_ID = 'G-TZ2S73Q6BK';
+  const STORAGE_KEY = 'sm_cookie_consent';
+  const CONSENT_VERSION = 1;
+  const GA_ID = 'G-TZ2S73Q6BK';
 
   // ── i18n helper ──────────────────────────────────────────────
   function t(key, fallback) {
     if (window.i18n && typeof window.i18n.t === 'function') {
-      var result = window.i18n.t('cookieConsent.' + key);
+      const result = window.i18n.t('cookieConsent.' + key);
       if (result && result !== 'cookieConsent.' + key) return result;
     }
     return fallback;
@@ -22,16 +22,16 @@
   // ── Consent state ────────────────────────────────────────────
   function getPreferences() {
     try {
-      var raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return null;
-      var parsed = JSON.parse(raw);
+      const parsed = JSON.parse(raw);
       if (parsed && parsed.version === CONSENT_VERSION) return parsed;
     } catch (e) { /* corrupt data */ }
     return null;
   }
 
   function savePreferences(analytics) {
-    var prefs = {
+    const prefs = {
       essential: true,
       analytics: !!analytics,
       timestamp: new Date().toISOString(),
@@ -42,19 +42,19 @@
   }
 
   function hasConsent(category) {
-    var prefs = getPreferences();
+    const prefs = getPreferences();
     if (!prefs) return false;
     if (category === 'essential') return true;
     return !!prefs[category];
   }
 
   // ── GA loader ────────────────────────────────────────────────
-  var gaLoaded = false;
+  let gaLoaded = false;
   function loadGA() {
     if (gaLoaded) return;
     gaLoaded = true;
 
-    var script = document.createElement('script');
+    const script = document.createElement('script');
     script.async = true;
     script.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
     document.head.appendChild(script);
@@ -69,7 +69,7 @@
   // ── Banner CSS ───────────────────────────────────────────────
   function injectStyles() {
     if (document.getElementById('smCookieConsentStyles')) return;
-    var style = document.createElement('style');
+    const style = document.createElement('style');
     style.id = 'smCookieConsentStyles';
     style.textContent = [
       '.cc-banner {',
@@ -175,22 +175,22 @@
   }
 
   // ── Banner DOM ───────────────────────────────────────────────
-  var bannerEl = null;
-  var detailsEl = null;
-  var analyticsToggle = null;
+  let bannerEl = null;
+  let detailsEl = null;
+  let analyticsToggle = null;
 
   // References to translatable elements so we can update them later
-  var elMsg = null;
-  var elPrivacyLink = null;
-  var elAcceptBtn = null;
-  var elRejectBtn = null;
-  var elCustomizeBtn = null;
-  var elEssentialName = null;
-  var elEssentialDesc = null;
-  var elAlwaysOn = null;
-  var elAnalyticsName = null;
-  var elAnalyticsDesc = null;
-  var elSaveBtn = null;
+  let elMsg = null;
+  let elPrivacyLink = null;
+  let elAcceptBtn = null;
+  let elRejectBtn = null;
+  let elCustomizeBtn = null;
+  let elEssentialName = null;
+  let elEssentialDesc = null;
+  let elAlwaysOn = null;
+  let elAnalyticsName = null;
+  let elAnalyticsDesc = null;
+  let elSaveBtn = null;
 
   /**
    * Re-apply translations to all translatable elements.
@@ -221,11 +221,11 @@
     bannerEl.setAttribute('role', 'dialog');
     bannerEl.setAttribute('aria-label', 'Cookie consent');
 
-    var inner = document.createElement('div');
+    const inner = document.createElement('div');
     inner.className = 'cc-inner';
 
     // Text
-    var textEl = document.createElement('p');
+    const textEl = document.createElement('p');
     textEl.className = 'cc-text';
     elMsg = document.createTextNode(
       t('message', 'We use cookies to improve your experience and analyze site traffic. ')
@@ -238,7 +238,7 @@
     inner.appendChild(textEl);
 
     // Action buttons
-    var actions = document.createElement('div');
+    const actions = document.createElement('div');
     actions.className = 'cc-actions';
 
     elAcceptBtn = document.createElement('button');
@@ -266,9 +266,9 @@
     detailsEl.className = 'cc-details';
 
     // Essential row
-    var essentialRow = document.createElement('div');
+    const essentialRow = document.createElement('div');
     essentialRow.className = 'cc-category';
-    var essentialInfo = document.createElement('div');
+    const essentialInfo = document.createElement('div');
     essentialInfo.className = 'cc-cat-info';
     elEssentialName = document.createElement('span');
     elEssentialName.className = 'cc-cat-name';
@@ -286,9 +286,9 @@
     detailsEl.appendChild(essentialRow);
 
     // Analytics row
-    var analyticsRow = document.createElement('div');
+    const analyticsRow = document.createElement('div');
     analyticsRow.className = 'cc-category';
-    var analyticsInfo = document.createElement('div');
+    const analyticsInfo = document.createElement('div');
     analyticsInfo.className = 'cc-cat-info';
     elAnalyticsName = document.createElement('span');
     elAnalyticsName.className = 'cc-cat-name';
@@ -299,12 +299,12 @@
     analyticsInfo.appendChild(elAnalyticsName);
     analyticsInfo.appendChild(elAnalyticsDesc);
 
-    var toggleLabel = document.createElement('label');
+    const toggleLabel = document.createElement('label');
     toggleLabel.className = 'cc-toggle';
     analyticsToggle = document.createElement('input');
     analyticsToggle.type = 'checkbox';
     analyticsToggle.checked = false;
-    var slider = document.createElement('span');
+    const slider = document.createElement('span');
     slider.className = 'cc-toggle-slider';
     toggleLabel.appendChild(analyticsToggle);
     toggleLabel.appendChild(slider);
@@ -328,9 +328,9 @@
   }
 
   function showBanner() {
-    var banner = createBanner();
+    const banner = createBanner();
     // Restore current preference into toggle if reopening
-    var prefs = getPreferences();
+    const prefs = getPreferences();
     if (prefs && analyticsToggle) {
       analyticsToggle.checked = prefs.analytics;
     } else if (analyticsToggle) {
@@ -364,7 +364,7 @@
   }
 
   function onSavePreferences() {
-    var wantAnalytics = analyticsToggle ? analyticsToggle.checked : false;
+    const wantAnalytics = analyticsToggle ? analyticsToggle.checked : false;
     savePreferences(wantAnalytics);
     hideBanner();
     if (wantAnalytics) loadGA();
@@ -379,7 +379,7 @@
 
   // ── Init ─────────────────────────────────────────────────────
   function init() {
-    var prefs = getPreferences();
+    const prefs = getPreferences();
     if (!prefs) {
       showBanner();
     } else if (prefs.analytics) {

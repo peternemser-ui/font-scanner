@@ -65,6 +65,12 @@
       .then(r => {
         if (!r.ok) {
           console.warn('[ProReportBlock] Billing status fetch failed:', r.status);
+          // If token is expired or invalid, clear it so login prompts show correctly
+          if (r.status === 401) {
+            console.log('[ProReportBlock] Token expired/invalid, clearing auth tokens');
+            localStorage.removeItem('sm_auth_token');
+            localStorage.removeItem('sm_token');
+          }
           return null;
         }
         return r.json();
@@ -775,10 +781,11 @@
     // Shared function to unlock all currently locked sections if user has access
     function unlockAllLockedSections() {
       if (!cachedBillingStatus) return; // No billing data yet, nothing to check
+      const currentReportId = document.body?.getAttribute('data-report-id') || '';
 
       // Re-check all locked sections using ReportAccordion pattern
       document.querySelectorAll('[data-locked-overlay]').forEach(overlay => {
-        if (hasAccess()) {
+        if (hasAccess(currentReportId)) {
           const body = overlay.closest('.report-accordion__body');
           const content = body?.querySelector('.report-accordion__content-actual');
           if (content) {
@@ -790,7 +797,7 @@
 
       // Re-check createAccordionSection pattern (.pro-locked elements)
       document.querySelectorAll('.pro-section .pro-locked').forEach(lockedEl => {
-        if (hasAccess()) {
+        if (hasAccess(currentReportId)) {
           const contentInner = lockedEl.closest('.accordion-content-inner');
           if (contentInner) {
             contentInner.innerHTML = '';
@@ -877,6 +884,33 @@
   } else {
     init();
   }
+
+  // Intercept login hint links inside unlock prompts to save purchase intent before navigating
+  document.addEventListener('click', (e) => {
+    const loginLink = e.target.closest('.pro-report-block__login-hint a[href*="auth.html"]');
+    if (!loginLink) return;
+
+    e.preventDefault();
+    const reportId = document.body.getAttribute('data-report-id') || '';
+    const reportUrl = (document.getElementById('urlInput') || document.getElementById('url') || {}).value || '';
+
+    try {
+      localStorage.setItem('sm_pending_purchase', JSON.stringify({
+        type: 'single_report',
+        reportId: reportId || null,
+        returnPath: window.location.pathname + window.location.search,
+        createdAt: Date.now()
+      }));
+    } catch (err) { /* continue with redirect */ }
+
+    // Build returnTo with report_id and url ensured
+    const params = new URLSearchParams(window.location.search);
+    if (reportId && !params.has('report_id')) params.set('report_id', reportId);
+    if (reportUrl && !params.has('url')) params.set('url', reportUrl);
+    const returnTo = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+
+    window.location.href = '/auth.html?redirect=' + encodeURIComponent(returnTo);
+  });
 
   /**
    * DIAGNOSTIC: Show exactly why access is granted or denied

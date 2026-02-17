@@ -248,7 +248,7 @@ class TimelineVisualizer {
    * Render overall summary
    */
   renderOverallSummary(improvements) {
-    const changes = Object.values(improvements).filter(imp => !imp.hasOwnProperty('metric_'));
+    const changes = Object.values(improvements).filter(imp => !Object.prototype.hasOwnProperty.call(imp, 'metric_'));
     const improved = changes.filter(imp => imp.improved).length;
     const declined = changes.filter(imp => !imp.improved).length;
     const total = changes.length;

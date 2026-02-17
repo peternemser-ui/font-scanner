@@ -10,9 +10,9 @@
      Translation helper (uses global i18n when available)
      ==================================================================== */
   function t(key, fallback, params) {
-    var value = fallback;
+    let value = fallback;
     if (window.i18n && typeof window.i18n.t === 'function') {
-      var translated = window.i18n.t(key);
+      const translated = window.i18n.t(key);
       if (translated !== key) value = translated;
     }
     if (params && typeof value === 'string') {
@@ -26,7 +26,7 @@
   /* ====================================================================
      Page-type heuristic (mirrors site-crawler-script getPageType)
      ==================================================================== */
-  var PAGE_TYPE_RULES = [
+  const PAGE_TYPE_RULES = [
     { test: /\/(blog|article|news|post)/i, icon: '\u{1F4DD}', label: 'Blog', color: '#8b5cf6', key: 'blog' },
     { test: /\/(product|shop|store|item)/i, icon: '\u{1F6D2}', label: 'Product', color: '#10b981', key: 'product' },
     { test: /\/(about|team|company)/i, icon: '\u{1F465}', label: 'About', color: '#6366f1', key: 'about' },
@@ -40,10 +40,10 @@
   ];
 
   function getPageType(url) {
-    var path = url.toLowerCase();
-    for (var i = 0; i < PAGE_TYPE_RULES.length; i++) {
+    const path = url.toLowerCase();
+    for (let i = 0; i < PAGE_TYPE_RULES.length; i++) {
       if (PAGE_TYPE_RULES[i].test.test(path)) {
-        var r = PAGE_TYPE_RULES[i];
+        const r = PAGE_TYPE_RULES[i];
         return { icon: r.icon, label: r.label, color: r.color, key: r.key };
       }
     }
@@ -57,22 +57,22 @@
      Data normalisation – builds d3.hierarchy-compatible tree + flat list
      ==================================================================== */
   function normalizePages(pages, siteStructure, hostname) {
-    var flatNodes = [];
-    var pageTypes = new Map();
+    const flatNodes = [];
+    const pageTypes = new Map();
 
     // Build tree from URL paths
-    var root = { name: hostname || '/', path: '/', depth: 0, children: [], url: null, pageType: null };
+    const root = { name: hostname || '/', path: '/', depth: 0, children: [], url: null, pageType: null };
 
     pages.forEach(function (url) {
       try {
-        var urlObj = new URL(url);
-        var parts = urlObj.pathname.split('/').filter(function (p) { return p; });
-        var current = root;
-        var currentPath = '';
+        const urlObj = new URL(url);
+        const parts = urlObj.pathname.split('/').filter(function (p) { return p; });
+        let current = root;
+        let currentPath = '';
 
         parts.forEach(function (part, idx) {
           currentPath += '/' + part;
-          var existing = current.children.find(function (c) { return c.name === part; });
+          let existing = current.children.find(function (c) { return c.name === part; });
           if (!existing) {
             existing = {
               name: part,
@@ -107,8 +107,8 @@
         node.pageType = { icon: '\u{1F4C3}', label: 'Page', color: '#64748b', key: 'page' };
       }
 
-      var key = node.pageType.key;
-      var entry = pageTypes.get(key);
+      const key = node.pageType.key;
+      let entry = pageTypes.get(key);
       if (!entry) {
         entry = { count: 0, color: node.pageType.color, label: node.pageType.label, icon: node.pageType.icon };
         pageTypes.set(key, entry);
@@ -121,7 +121,7 @@
     walk(root);
 
     // Build links for graph mode
-    var links = [];
+    const links = [];
     function buildLinks(node) {
       node.children.forEach(function (child) {
         links.push({ source: node, target: child });
@@ -144,7 +144,7 @@
      ==================================================================== */
   function countDescendants(node) {
     if (!node.children || node.children.length === 0) return 0;
-    var count = node.children.length;
+    let count = node.children.length;
     node.children.forEach(function (c) { count += countDescendants(c); });
     return count;
   }
@@ -152,13 +152,13 @@
   /* ====================================================================
      Instances store (for cleanup)
      ==================================================================== */
-  var instances = {};
+  const instances = {};
 
   /* ====================================================================
      renderPlaceholder – returns HTML string for the accordion body
      ==================================================================== */
   function renderPlaceholder(containerId, options) {
-    var id = containerId || 'main';
+    const id = containerId || 'main';
     return (
       '<div class="visual-sitemap" id="vs-' + id + '">' +
         '<div class="visual-sitemap__toolbar">' +
@@ -218,8 +218,8 @@
       return;
     }
 
-    var id = containerId || 'main';
-    var el = document.getElementById('vs-' + id);
+    const id = containerId || 'main';
+    const el = document.getElementById('vs-' + id);
     if (!el) {
       console.warn('[VisualSitemap] Container #vs-' + id + ' not found');
       return;
@@ -228,23 +228,23 @@
     // Cleanup previous instance
     destroy(id);
 
-    var pages = data.pages || [];
-    var siteStructure = data.siteStructure || {};
-    var hostname = data.hostname || '';
+    const pages = data.pages || [];
+    const siteStructure = data.siteStructure || {};
+    const hostname = data.hostname || '';
 
     if (pages.length === 0) {
-      var canvas = el.querySelector('[data-vs-canvas]');
+      const canvas = el.querySelector('[data-vs-canvas]');
       if (canvas) canvas.innerHTML = '<div style="text-align:center;padding:3rem;color:var(--color-text-muted);">' +
         t('reports.crawler.noDirectoryStructure', 'No directory structure detected (flat site)') + '</div>';
       return;
     }
 
-    var normalized = normalizePages(pages, siteStructure, hostname);
-    var mode = 'tree'; // 'tree' | 'graph'
-    var LARGE_THRESHOLD = 300;
+    const normalized = normalizePages(pages, siteStructure, hostname);
+    const mode = 'tree'; // 'tree' | 'graph'
+    const LARGE_THRESHOLD = 300;
 
     // Instance state
-    var state = {
+    const state = {
       el: el,
       normalized: normalized,
       mode: mode,
@@ -269,18 +269,18 @@
     renderTree(state);
 
     // --- Wire up toolbar ---
-    var modeBtns = el.querySelectorAll('[data-vs-mode]');
+    const modeBtns = el.querySelectorAll('[data-vs-mode]');
     modeBtns.forEach(function (btn) {
       btn.addEventListener('click', function () {
-        var newMode = btn.getAttribute('data-vs-mode');
+        const newMode = btn.getAttribute('data-vs-mode');
         if (newMode === state.mode) return;
         state.mode = newMode;
         modeBtns.forEach(function (b) { b.classList.remove('visual-sitemap__mode-btn--active'); });
         btn.classList.add('visual-sitemap__mode-btn--active');
 
         // Show/hide collapse/expand buttons
-        var collapseBtn = el.querySelector('[data-vs-action="collapse-all"]');
-        var expandBtn = el.querySelector('[data-vs-action="expand-all"]');
+        const collapseBtn = el.querySelector('[data-vs-action="collapse-all"]');
+        const expandBtn = el.querySelector('[data-vs-action="expand-all"]');
         if (collapseBtn) collapseBtn.style.display = newMode === 'tree' ? '' : 'none';
         if (expandBtn) expandBtn.style.display = newMode === 'tree' ? '' : 'none';
 
@@ -294,9 +294,9 @@
     });
 
     // Search
-    var searchInput = el.querySelector('[data-vs-search]');
+    const searchInput = el.querySelector('[data-vs-search]');
     if (searchInput) {
-      var debounceTimer = null;
+      let debounceTimer = null;
       searchInput.addEventListener('input', function () {
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(function () {
@@ -308,9 +308,9 @@
 
     // Action buttons
     el.addEventListener('click', function (e) {
-      var action = e.target.getAttribute('data-vs-action');
+      let action = e.target.getAttribute('data-vs-action');
       if (!action) {
-        var parent = e.target.closest('[data-vs-action]');
+        const parent = e.target.closest('[data-vs-action]');
         if (parent) action = parent.getAttribute('data-vs-action');
       }
       if (!action) return;
@@ -322,7 +322,7 @@
     });
 
     // Inspector close
-    var inspCloseBtn = el.querySelector('[data-vs-inspector-close]');
+    const inspCloseBtn = el.querySelector('[data-vs-inspector-close]');
     if (inspCloseBtn) {
       inspCloseBtn.addEventListener('click', function () {
         closeInspector(state);
@@ -349,12 +349,12 @@
      Stats bar
      ==================================================================== */
   function renderStats(state) {
-    var statsEl = state.el.querySelector('[data-vs-stats]');
+    const statsEl = state.el.querySelector('[data-vs-stats]');
     if (!statsEl) return;
-    var n = state.normalized;
-    var crawled = n.flatNodes.filter(function (nd) { return nd.url; }).length;
-    var total = n.nodeCount;
-    var html =
+    const n = state.normalized;
+    const crawled = n.flatNodes.filter(function (nd) { return nd.url; }).length;
+    const total = n.nodeCount;
+    const html =
       '<span class="visual-sitemap__stats-item">' +
         t('reports.crawler.pagesCrawled', 'Pages crawled') + ': ' +
         '<span class="visual-sitemap__stats-value">' + crawled + '</span>' +
@@ -370,9 +370,9 @@
      Legend
      ==================================================================== */
   function renderLegend(state) {
-    var legendEl = state.el.querySelector('[data-vs-legend]');
+    const legendEl = state.el.querySelector('[data-vs-legend]');
     if (!legendEl) return;
-    var html = '<span class="visual-sitemap__legend-title">' +
+    let html = '<span class="visual-sitemap__legend-title">' +
       t('reports.crawler.legendTitle', 'Legend') + '</span>';
     state.normalized.pageTypes.forEach(function (val, key) {
       html +=
@@ -389,34 +389,34 @@
      TREE MODE
      ==================================================================== */
   function renderTree(state) {
-    var canvasEl = state.el.querySelector('[data-vs-canvas]');
+    const canvasEl = state.el.querySelector('[data-vs-canvas]');
     if (!canvasEl) return;
     canvasEl.innerHTML = '';
 
-    var width = canvasEl.clientWidth || 800;
-    var height = canvasEl.clientHeight || 500;
+    const width = canvasEl.clientWidth || 800;
+    const height = canvasEl.clientHeight || 500;
 
     // Build hierarchy with collapse support
-    var rootCopy = cloneWithCollapse(state.normalized.root, state.collapsedSet);
-    var hierarchy = d3.hierarchy(rootCopy, function (d) { return d.children; });
+    const rootCopy = cloneWithCollapse(state.normalized.root, state.collapsedSet);
+    const hierarchy = d3.hierarchy(rootCopy, function (d) { return d.children; });
 
     // Tree layout
-    var nodeCount = hierarchy.descendants().length;
-    var treeHeight = Math.max(height - 60, nodeCount * 24);
-    var treeWidth = Math.max(width - 200, 400);
+    const nodeCount = hierarchy.descendants().length;
+    const treeHeight = Math.max(height - 60, nodeCount * 24);
+    const treeWidth = Math.max(width - 200, 400);
 
-    var treeLayout = d3.tree().size([treeHeight, treeWidth]);
+    const treeLayout = d3.tree().size([treeHeight, treeWidth]);
     treeLayout(hierarchy);
 
     // Create SVG
-    var svg = d3.select(canvasEl).append('svg')
+    const svg = d3.select(canvasEl).append('svg')
       .attr('width', width)
       .attr('height', height);
 
-    var g = svg.append('g').attr('transform', 'translate(80, 30)');
+    const g = svg.append('g').attr('transform', 'translate(80, 30)');
 
     // Zoom
-    var zoom = d3.zoom()
+    const zoom = d3.zoom()
       .scaleExtent([0.1, 4])
       .on('zoom', function (event) {
         g.attr('transform', event.transform);
@@ -441,12 +441,12 @@
       });
 
     // Nodes
-    var nodes = g.selectAll('.vs-node')
+    const nodes = g.selectAll('.vs-node')
       .data(hierarchy.descendants())
       .enter()
       .append('g')
       .attr('class', function (d) {
-        var cls = 'vs-node';
+        let cls = 'vs-node';
         if (d.data._collapsed) cls += ' vs-node--collapsed';
         if (d.data._originalChildren && d.data._originalChildren.length > 0) cls += ' vs-node--has-children';
         return cls;
@@ -476,7 +476,7 @@
       .attr('text-anchor', function (d) { return d.children ? 'end' : 'start'; })
       .attr('font-size', '11px')
       .text(function (d) {
-        var name = d.data.name;
+        const name = d.data.name;
         return name.length > 28 ? name.slice(0, 26) + '\u2026' : name;
       });
 
@@ -506,21 +506,21 @@
      GRAPH MODE
      ==================================================================== */
   function renderGraph(state) {
-    var canvasEl = state.el.querySelector('[data-vs-canvas]');
+    const canvasEl = state.el.querySelector('[data-vs-canvas]');
     if (!canvasEl) return;
     canvasEl.innerHTML = '';
 
-    var width = canvasEl.clientWidth || 800;
-    var height = canvasEl.clientHeight || 500;
+    const width = canvasEl.clientWidth || 800;
+    const height = canvasEl.clientHeight || 500;
 
-    var svg = d3.select(canvasEl).append('svg')
+    const svg = d3.select(canvasEl).append('svg')
       .attr('width', width)
       .attr('height', height);
 
-    var g = svg.append('g');
+    const g = svg.append('g');
 
     // Zoom
-    var zoom = d3.zoom()
+    const zoom = d3.zoom()
       .scaleExtent([0.1, 4])
       .on('zoom', function (event) {
         g.attr('transform', event.transform);
@@ -531,26 +531,26 @@
     state.g = g;
     state.zoom = zoom;
 
-    var flat = state.normalized.flatNodes;
-    var links = state.normalized.links;
+    const flat = state.normalized.flatNodes;
+    const links = state.normalized.links;
 
     // Create simulation-friendly copies
-    var nodeMap = new Map();
-    var simNodes = flat.map(function (nd, i) {
-      var sn = { id: nd.path, x: width / 2 + (Math.random() - 0.5) * 200, y: height / 2 + (Math.random() - 0.5) * 200, data: nd, index: i };
+    const nodeMap = new Map();
+    const simNodes = flat.map(function (nd, i) {
+      const sn = { id: nd.path, x: width / 2 + (Math.random() - 0.5) * 200, y: height / 2 + (Math.random() - 0.5) * 200, data: nd, index: i };
       nodeMap.set(nd.path, sn);
       return sn;
     });
 
-    var simLinks = [];
+    const simLinks = [];
     links.forEach(function (lnk) {
-      var s = nodeMap.get(lnk.source.path);
-      var t = nodeMap.get(lnk.target.path);
+      const s = nodeMap.get(lnk.source.path);
+      const t = nodeMap.get(lnk.target.path);
       if (s && t) simLinks.push({ source: s, target: t });
     });
 
     // Force simulation
-    var simulation = d3.forceSimulation(simNodes)
+    const simulation = d3.forceSimulation(simNodes)
       .force('link', d3.forceLink(simLinks).distance(50).strength(0.5))
       .force('charge', d3.forceManyBody().strength(-80))
       .force('center', d3.forceCenter(width / 2, height / 2))
@@ -559,14 +559,14 @@
     state.simulation = simulation;
 
     // Links
-    var link = g.selectAll('.vs-link')
+    const link = g.selectAll('.vs-link')
       .data(simLinks)
       .enter()
       .append('line')
       .attr('class', 'vs-link');
 
     // Nodes
-    var node = g.selectAll('.vs-node')
+    const node = g.selectAll('.vs-node')
       .data(simNodes)
       .enter()
       .append('g')
@@ -596,7 +596,7 @@
       .attr('text-anchor', 'middle')
       .attr('font-size', '10px')
       .text(function (d) {
-        var n = d.data.name;
+        const n = d.data.name;
         return n.length > 20 ? n.slice(0, 18) + '\u2026' : n;
       });
 
@@ -627,20 +627,20 @@
      ==================================================================== */
   function fitToView(state) {
     if (!state.svg || !state.g || !state.zoom) return;
-    var canvasEl = state.el.querySelector('[data-vs-canvas]');
-    var width = canvasEl.clientWidth || 800;
-    var height = canvasEl.clientHeight || 500;
+    const canvasEl = state.el.querySelector('[data-vs-canvas]');
+    const width = canvasEl.clientWidth || 800;
+    const height = canvasEl.clientHeight || 500;
 
-    var bounds = state.g.node().getBBox();
+    const bounds = state.g.node().getBBox();
     if (bounds.width === 0 || bounds.height === 0) return;
 
-    var padding = 40;
-    var scaleX = (width - padding * 2) / bounds.width;
-    var scaleY = (height - padding * 2) / bounds.height;
-    var scale = Math.min(scaleX, scaleY, 1.5);
+    const padding = 40;
+    const scaleX = (width - padding * 2) / bounds.width;
+    const scaleY = (height - padding * 2) / bounds.height;
+    const scale = Math.min(scaleX, scaleY, 1.5);
 
-    var tx = (width - bounds.width * scale) / 2 - bounds.x * scale;
-    var ty = (height - bounds.height * scale) / 2 - bounds.y * scale;
+    const tx = (width - bounds.width * scale) / 2 - bounds.x * scale;
+    const ty = (height - bounds.height * scale) / 2 - bounds.y * scale;
 
     state.svg.transition().duration(500).call(
       state.zoom.transform,
@@ -660,7 +660,7 @@
      Collapse / Expand helpers
      ==================================================================== */
   function cloneWithCollapse(node, collapsedSet) {
-    var copy = {
+    const copy = {
       name: node.name,
       path: node.path,
       depth: node.depth,
@@ -684,9 +684,9 @@
   }
 
   function countAllDescendants(node) {
-    var orig = node._originalChildren || node.children || [];
+    const orig = node._originalChildren || node.children || [];
     if (orig.length === 0) return 0;
-    var count = orig.length;
+    let count = orig.length;
     orig.forEach(function (c) { count += countAllDescendants(c); });
     return count;
   }
@@ -708,10 +708,10 @@
      ==================================================================== */
   function applySearch(state) {
     if (!state.g) return;
-    var term = state.searchTerm;
+    const term = state.searchTerm;
 
     // Remove any previous no-match message
-    var prev = state.el.querySelector('.visual-sitemap__no-match');
+    const prev = state.el.querySelector('.visual-sitemap__no-match');
     if (prev) prev.remove();
 
     if (!term) {
@@ -722,13 +722,13 @@
       return;
     }
 
-    var matchCount = 0;
-    var firstMatch = null;
+    let matchCount = 0;
+    let firstMatch = null;
 
     state.g.selectAll('.vs-node').each(function (d) {
-      var nodeData = d.data || d;
-      var path = (nodeData.path || nodeData.name || '').toLowerCase();
-      var matches = path.indexOf(term) !== -1;
+      const nodeData = d.data || d;
+      const path = (nodeData.path || nodeData.name || '').toLowerCase();
+      const matches = path.indexOf(term) !== -1;
       d3.select(this)
         .classed('vs-node--highlighted', matches)
         .classed('vs-node--dimmed', !matches);
@@ -739,9 +739,9 @@
     });
 
     if (matchCount === 0) {
-      var canvas = state.el.querySelector('[data-vs-canvas]');
+      const canvas = state.el.querySelector('[data-vs-canvas]');
       if (canvas) {
-        var msg = document.createElement('div');
+        const msg = document.createElement('div');
         msg.className = 'visual-sitemap__no-match';
         msg.textContent = t('reports.crawler.noMatchFound', 'No match found');
         canvas.appendChild(msg);
@@ -754,13 +754,13 @@
 
   function zoomToNode(state, d) {
     if (!state.svg || !state.zoom) return;
-    var canvasEl = state.el.querySelector('[data-vs-canvas]');
-    var width = canvasEl.clientWidth || 800;
-    var height = canvasEl.clientHeight || 500;
+    const canvasEl = state.el.querySelector('[data-vs-canvas]');
+    const width = canvasEl.clientWidth || 800;
+    const height = canvasEl.clientHeight || 500;
 
-    var x = d.y || 0;
-    var y = d.x || 0;
-    var scale = 1.5;
+    const x = d.y || 0;
+    const y = d.x || 0;
+    const scale = 1.5;
 
     state.svg.transition().duration(500).call(
       state.zoom.transform,
@@ -772,13 +772,13 @@
      Tooltip
      ==================================================================== */
   function showTooltip(state, event, nodeData) {
-    var tip = state.el.querySelector('[data-vs-tooltip]');
+    const tip = state.el.querySelector('[data-vs-tooltip]');
     if (!tip) return;
 
-    var section = nodeData.path ? nodeData.path.split('/').filter(function (p) { return p; })[0] || '/' : '/';
-    var childCount = nodeData.children ? nodeData.children.length : 0;
-    var desc = countDescendants(nodeData);
-    var pt = nodeData.pageType || {};
+    const section = nodeData.path ? nodeData.path.split('/').filter(function (p) { return p; })[0] || '/' : '/';
+    const childCount = nodeData.children ? nodeData.children.length : 0;
+    const desc = countDescendants(nodeData);
+    const pt = nodeData.pageType || {};
 
     tip.innerHTML =
       '<div class="visual-sitemap__tooltip-url">' + escapeHtml(nodeData.url || nodeData.path || nodeData.name) + '</div>' +
@@ -794,20 +794,20 @@
   }
 
   function hideTooltip(state) {
-    var tip = state.el.querySelector('[data-vs-tooltip]');
+    const tip = state.el.querySelector('[data-vs-tooltip]');
     if (tip) tip.classList.remove('visual-sitemap__tooltip--visible');
   }
 
   function positionTooltip(tip, event) {
-    var x = event.pageX || (event.clientX + window.scrollX);
-    var y = event.pageY || (event.clientY + window.scrollY);
-    var pad = 12;
-    var vw = window.innerWidth;
-    var vh = window.innerHeight;
+    const x = event.pageX || (event.clientX + window.scrollX);
+    const y = event.pageY || (event.clientY + window.scrollY);
+    const pad = 12;
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
 
     // Position relative to viewport
-    var left = event.clientX + pad;
-    var top = event.clientY + pad;
+    let left = event.clientX + pad;
+    let top = event.clientY + pad;
     if (left + 320 > vw) left = event.clientX - 320 - pad;
     if (top + 200 > vh) top = event.clientY - 200 - pad;
 
@@ -819,13 +819,13 @@
      Inspector panel
      ==================================================================== */
   function openInspector(state, nodeData) {
-    var inspector = state.el.querySelector('[data-vs-inspector]');
-    var body = state.el.querySelector('[data-vs-inspector-body]');
+    const inspector = state.el.querySelector('[data-vs-inspector]');
+    const body = state.el.querySelector('[data-vs-inspector-body]');
     if (!inspector || !body) return;
 
-    var pt = nodeData.pageType || {};
-    var childCount = nodeData.children ? nodeData.children.length : 0;
-    var desc = countDescendants(nodeData);
+    const pt = nodeData.pageType || {};
+    const childCount = nodeData.children ? nodeData.children.length : 0;
+    const desc = countDescendants(nodeData);
 
     body.innerHTML =
       '<div class="visual-sitemap__inspector-field">' +
@@ -857,7 +857,7 @@
   }
 
   function closeInspector(state) {
-    var inspector = state.el.querySelector('[data-vs-inspector]');
+    const inspector = state.el.querySelector('[data-vs-inspector]');
     if (inspector) inspector.classList.remove('visual-sitemap__inspector--open');
     state.inspectorOpen = false;
   }
@@ -867,8 +867,8 @@
      ==================================================================== */
   function scrollToPageItem(nodeData) {
     if (!nodeData.url) return;
-    var urlLower = nodeData.url.toLowerCase();
-    var items = document.querySelectorAll('.page-item[data-url]');
+    const urlLower = nodeData.url.toLowerCase();
+    const items = document.querySelectorAll('.page-item[data-url]');
     for (var i = 0; i < items.length; i++) {
       if (items[i].getAttribute('data-url') === urlLower) {
         // Remove previous highlights
@@ -900,8 +900,8 @@
      Destroy (cleanup)
      ==================================================================== */
   function destroy(containerId) {
-    var id = containerId || 'main';
-    var state = instances[id];
+    const id = containerId || 'main';
+    const state = instances[id];
     if (!state) return;
 
     stopSimulation(state);
@@ -909,7 +909,7 @@
       state.themeObserver.disconnect();
       state.themeObserver = null;
     }
-    var canvasEl = state.el ? state.el.querySelector('[data-vs-canvas]') : null;
+    const canvasEl = state.el ? state.el.querySelector('[data-vs-canvas]') : null;
     if (canvasEl) canvasEl.innerHTML = '';
     delete instances[id];
   }

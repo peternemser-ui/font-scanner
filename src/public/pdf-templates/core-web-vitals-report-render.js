@@ -10,16 +10,16 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('core-web-vitals', function renderCWV(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
-    var translateImpact = utils.translateImpact || function(v) { return v; };
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
+    const translateImpact = utils.translateImpact || function(v) { return v; };
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     /* =====================================================================
        Normalize data shape — handle _pdf-report.js score normalization
@@ -28,9 +28,9 @@
 
     // _pdf-report.js converts numeric data.score to { overall, grade }.
     // Extract the numeric score and grade so the renderer can use them.
-    var _rawScore = data.score;
-    var _numericScore;
-    var _grade;
+    const _rawScore = data.score;
+    let _numericScore;
+    let _grade;
     if (_rawScore && typeof _rawScore === 'object') {
       _numericScore = _rawScore.overall;
       _grade = data.grade || _rawScore.grade;
@@ -44,9 +44,9 @@
     function _computePassedCWV(device) {
       if (!device) return undefined;
       if (device.passedCWV !== undefined) return device.passedCWV;
-      var lcp = device.lcp;
-      var inp = device.inp;
-      var cls = device.cls;
+      const lcp = device.lcp;
+      const inp = device.inp;
+      const cls = device.cls;
       // Need all three present with ratings to determine pass/fail
       if (!lcp || !inp || !cls) return undefined;
       if (!lcp.rating || !inp.rating || !cls.rating) return undefined;
@@ -102,8 +102,8 @@
 
     /** Build metrics cards array from a vitals object */
     function _buildMetricsCards(vitals) {
-      var cards = [];
-      var keys = [
+      const cards = [];
+      const keys = [
         { key: 'lcp', label: 'LCP' },
         { key: 'inp', label: 'INP' },
         { key: 'cls', label: 'CLS' },
@@ -111,7 +111,7 @@
         { key: 'fcp', label: 'FCP' }
       ];
       keys.forEach(function (k) {
-        var m = vitals[k.key];
+        const m = vitals[k.key];
         if (m && m.value !== undefined) {
           cards.push({
             value: _metricDisplay(m),
@@ -125,8 +125,8 @@
 
     /** Build a vitals detail table from a device data object (with description column) */
     function _buildVitalsTable(vitals) {
-      var rows = [];
-      var names = [
+      const rows = [];
+      const names = [
         { key: 'lcp', label: t('reports.cwv.report.vitals.lcp', 'Largest Contentful Paint (LCP)') },
         { key: 'inp', label: t('reports.cwv.report.vitals.inp', 'Interaction to Next Paint (INP)') },
         { key: 'cls', label: t('reports.cwv.report.vitals.cls', 'Cumulative Layout Shift (CLS)') },
@@ -134,10 +134,10 @@
         { key: 'fcp', label: t('reports.cwv.report.vitals.fcp', 'First Contentful Paint (FCP)') }
       ];
       names.forEach(function (n) {
-        var m = vitals[n.key];
+        const m = vitals[n.key];
         if (!m) return;
-        var display = _metricDisplay(m);
-        var desc = m.description ? esc(truncate(m.description, 120)) : '';
+        const display = _metricDisplay(m);
+        const desc = m.description ? esc(truncate(m.description, 120)) : '';
         rows.push([
           '<strong>' + esc(n.label) + '</strong>' + (desc ? '<br><small style="color:#6b7280;">' + desc + '</small>' : ''),
           esc(display),
@@ -150,15 +150,15 @@
     /** Build additional metrics table with displayValue, rating and description */
     function _buildAdditionalMetricsTable(additionalMetrics) {
       if (!additionalMetrics || typeof additionalMetrics !== 'object') return '';
-      var addKeys = Object.keys(additionalMetrics);
+      const addKeys = Object.keys(additionalMetrics);
       if (addKeys.length === 0) return '';
 
-      var rows = [];
+      const rows = [];
       addKeys.forEach(function (key) {
-        var m = additionalMetrics[key];
+        const m = additionalMetrics[key];
         if (typeof m === 'object' && m !== null) {
-          var val = _metricDisplay(m);
-          var desc = m.description ? esc(truncate(m.description, 120)) : '';
+          const val = _metricDisplay(m);
+          const desc = m.description ? esc(truncate(m.description, 120)) : '';
           rows.push([
             '<strong>' + esc(key.toUpperCase()) + '</strong>' + (desc ? '<br><small style="color:#6b7280;">' + desc + '</small>' : ''),
             esc(val),
@@ -189,14 +189,14 @@
        0. Overall Score Banner (NEW — matches web UI score + grade banner)
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-score-banner .pdf-section__content');
+      const sec = document.querySelector('#section-score-banner .pdf-section__content');
       if (!sec) return;
 
-      var score = _numericScore;
-      var grade = _grade;
-      var issues = data.issues || [];
-      var mobile = data.mobile || {};
-      var desktop = data.desktop || {};
+      const score = _numericScore;
+      const grade = _grade;
+      const issues = data.issues || [];
+      const mobile = data.mobile || {};
+      const desktop = data.desktop || {};
 
       if (score === undefined && !grade) {
         sec.parentElement.style.display = 'none';
@@ -208,11 +208,11 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Score + grade metrics row
-      var gradeClr = _gradeColor(grade);
-      var metricsRow = [];
+      const gradeClr = _gradeColor(grade);
+      const metricsRow = [];
       if (score !== undefined) {
         metricsRow.push({ value: String(score) + '/100', label: t('reports.cwv.overallScore', 'Overall CWV Score'), color: gradeClr });
       }
@@ -230,7 +230,7 @@
       }
 
       // CWV pass / fail callout
-      var passedCWV = mobile.passedCWV;
+      const passedCWV = mobile.passedCWV;
       if (passedCWV !== undefined) {
         if (passedCWV) {
           html += PR.renderCallout(
@@ -263,27 +263,27 @@
        1. Desktop Vitals
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-desktop .pdf-section__content');
-      var d = data.desktop || {};
+      const sec = document.querySelector('#section-desktop .pdf-section__content');
+      const d = data.desktop || {};
 
       if (!d.lcp && !d.inp && !d.cls && !d.score) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var score = d.score;
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cwv.report.desktop', 'Desktop Vitals'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.desktop', 'Desktop Core Web Vitals measure how real users experience your site on desktop devices. This section presents LCP, INP, CLS, and additional metrics with ratings based on Google\'s published thresholds. Good scores indicate a fast, responsive, and visually stable experience for desktop visitors.')) + '</p>';
 
       // Metric cards
-      var cards = _buildMetricsCards(d);
+      const cards = _buildMetricsCards(d);
       if (cards.length > 0) {
         html += PR.renderMetrics(cards);
       }
@@ -300,7 +300,7 @@
       }
 
       // Detail table with descriptions
-      var rows = _buildVitalsTable(d);
+      const rows = _buildVitalsTable(d);
       if (rows.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cwv.report.desktop.details', 'Metric Details')) + '</h3>';
         html += PR.renderTable(
@@ -316,7 +316,7 @@
 
       // Additional metrics with rating column
       if (d.additionalMetrics) {
-        var addHtml = _buildAdditionalMetricsTable(d.additionalMetrics);
+        const addHtml = _buildAdditionalMetricsTable(d.additionalMetrics);
         if (addHtml) {
           html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cwv.report.desktop.additionalMetrics', 'Additional Metrics')) + '</h3>';
           html += addHtml;
@@ -330,27 +330,27 @@
        2. Mobile Vitals
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-mobile .pdf-section__content');
-      var d = data.mobile || {};
+      const sec = document.querySelector('#section-mobile .pdf-section__content');
+      const d = data.mobile || {};
 
       if (!d.lcp && !d.inp && !d.cls && !d.score) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var score = d.score;
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cwv.report.mobile', 'Mobile Vitals'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.mobile', 'Mobile Core Web Vitals are especially important since Google uses mobile-first indexing. This section presents your mobile LCP, INP, CLS, and additional metrics. Mobile performance often differs significantly from desktop due to slower processors and network conditions. Optimizing for mobile is critical for search rankings.')) + '</p>';
 
       // Metric cards
-      var cards = _buildMetricsCards(d);
+      const cards = _buildMetricsCards(d);
       if (cards.length > 0) {
         html += PR.renderMetrics(cards);
       }
@@ -367,7 +367,7 @@
       }
 
       // Detail table with descriptions
-      var rows = _buildVitalsTable(d);
+      const rows = _buildVitalsTable(d);
       if (rows.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cwv.report.mobile.details', 'Metric Details')) + '</h3>';
         html += PR.renderTable(
@@ -383,7 +383,7 @@
 
       // Additional metrics with rating column
       if (d.additionalMetrics) {
-        var addHtml = _buildAdditionalMetricsTable(d.additionalMetrics);
+        const addHtml = _buildAdditionalMetricsTable(d.additionalMetrics);
         if (addHtml) {
           html += '<h3 class="pdf-subsection__title">' + esc(t('reports.cwv.report.mobile.additionalMetrics', 'Additional Metrics')) + '</h3>';
           html += addHtml;
@@ -398,11 +398,11 @@
        Matches web UI renderMetricCard: LCP, INP, CLS side-by-side
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-core-vitals .pdf-section__content');
+      const sec = document.querySelector('#section-core-vitals .pdf-section__content');
       if (!sec) return;
 
-      var desktop = data.desktop || {};
-      var mobile = data.mobile || {};
+      const desktop = data.desktop || {};
+      const mobile = data.mobile || {};
 
       if (!mobile.lcp && !desktop.lcp) {
         sec.parentElement.style.display = 'none';
@@ -414,27 +414,27 @@
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.coreVitals', 'These three metrics are the official Core Web Vitals that Google uses as ranking signals. LCP measures loading performance, INP measures interactivity responsiveness, and CLS measures visual stability. Each metric is shown with mobile (70% weight) and desktop (30% weight) values side by side.')) + '</p>';
 
       // Build the big-3 comparison table
-      var big3 = [
+      const big3 = [
         { key: 'lcp', abbr: 'LCP', name: t('reports.cwv.lcpName', 'Largest Contentful Paint'), category: t('reports.cwv.loadingPerformance', 'Loading Performance') },
         { key: 'inp', abbr: 'INP', name: t('reports.cwv.inpName', 'Interaction to Next Paint'), category: t('reports.cwv.responsiveness', 'Responsiveness') },
         { key: 'cls', abbr: 'CLS', name: t('reports.cwv.clsName', 'Cumulative Layout Shift'), category: t('reports.cwv.visualStability', 'Visual Stability') }
       ];
 
-      var rows = [];
+      const rows = [];
       big3.forEach(function (vital) {
-        var mMetric = mobile[vital.key];
-        var dMetric = desktop[vital.key];
+        const mMetric = mobile[vital.key];
+        const dMetric = desktop[vital.key];
         if (!mMetric && !dMetric) return;
 
-        var mVal = mMetric ? _metricDisplay(mMetric) : '-';
-        var dVal = dMetric ? _metricDisplay(dMetric) : '-';
-        var mRating = mMetric ? mMetric.rating : '';
-        var dRating = dMetric ? dMetric.rating : '';
-        var desc = (mMetric && mMetric.description) ? esc(truncate(mMetric.description, 140)) : '';
+        const mVal = mMetric ? _metricDisplay(mMetric) : '-';
+        const dVal = dMetric ? _metricDisplay(dMetric) : '-';
+        const mRating = mMetric ? mMetric.rating : '';
+        const dRating = dMetric ? dMetric.rating : '';
+        const desc = (mMetric && mMetric.description) ? esc(truncate(mMetric.description, 140)) : '';
 
         rows.push([
           '<strong>' + esc(vital.abbr) + '</strong><br><small style="color:#6b7280;">' + esc(vital.name) + '</small><br><small style="color:#9ca3af;">' + esc(vital.category) + '</small>',
@@ -465,16 +465,16 @@
        Matches web UI renderAdditionalMetric section
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-additional-metrics .pdf-section__content');
+      const sec = document.querySelector('#section-additional-metrics .pdf-section__content');
       if (!sec) return;
 
-      var desktop = data.desktop || {};
-      var mobile = data.mobile || {};
-      var dAdd = desktop.additionalMetrics || {};
-      var mAdd = mobile.additionalMetrics || {};
+      const desktop = data.desktop || {};
+      const mobile = data.mobile || {};
+      const dAdd = desktop.additionalMetrics || {};
+      const mAdd = mobile.additionalMetrics || {};
 
-      var metricKeys = ['fcp', 'si', 'tti', 'tbt'];
-      var hasAny = false;
+      const metricKeys = ['fcp', 'si', 'tti', 'tbt'];
+      let hasAny = false;
       metricKeys.forEach(function (k) { if (dAdd[k] || mAdd[k]) hasAny = true; });
       if (!hasAny) {
         sec.parentElement.style.display = 'none';
@@ -486,27 +486,27 @@
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.additionalMetrics', 'Beyond the three Core Web Vitals, these additional metrics provide deeper insight into your page performance. First Contentful Paint (FCP) measures how quickly the first visible content appears, Speed Index (SI) measures how quickly content is visually displayed, and Time to Interactive (TTI) measures when the page becomes fully interactive.')) + '</p>';
 
-      var metricNames = {
+      const metricNames = {
         fcp: t('reports.cwv.fcpName', 'First Contentful Paint'),
         si: t('reports.cwv.siName', 'Speed Index'),
         tti: t('reports.cwv.ttiName', 'Time to Interactive'),
         tbt: t('reports.cwv.report.vitals.tbt', 'Total Blocking Time')
       };
 
-      var rows = [];
+      const rows = [];
       metricKeys.forEach(function (key) {
-        var mM = mAdd[key];
-        var dM = dAdd[key];
+        const mM = mAdd[key];
+        const dM = dAdd[key];
         if (!mM && !dM) return;
 
-        var mVal = mM ? _metricDisplay(mM) : '-';
-        var dVal = dM ? _metricDisplay(dM) : '-';
-        var mRating = (mM && mM.rating) ? _ratingStatus(mM.rating) : '';
-        var dRating = (dM && dM.rating) ? _ratingStatus(dM.rating) : '';
-        var desc = ((mM && mM.description) || (dM && dM.description)) ? esc(truncate((mM && mM.description) || (dM && dM.description), 120)) : '';
+        const mVal = mM ? _metricDisplay(mM) : '-';
+        const dVal = dM ? _metricDisplay(dM) : '-';
+        const mRating = (mM && mM.rating) ? _ratingStatus(mM.rating) : '';
+        const dRating = (dM && dM.rating) ? _ratingStatus(dM.rating) : '';
+        const desc = ((mM && mM.description) || (dM && dM.description)) ? esc(truncate((mM && mM.description) || (dM && dM.description), 120)) : '';
 
         rows.push([
           '<strong>' + esc(key.toUpperCase()) + '</strong><br><small style="color:#6b7280;">' + esc(metricNames[key] || key) + '</small>',
@@ -537,18 +537,18 @@
        Matches web UI renderBestPracticesTable
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-best-practices .pdf-section__content');
+      const sec = document.querySelector('#section-best-practices .pdf-section__content');
       if (!sec) return;
 
-      var desktop = data.desktop || {};
-      var mobile = data.mobile || {};
+      const desktop = data.desktop || {};
+      const mobile = data.mobile || {};
 
       if (!mobile.lcp && !desktop.lcp) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var avgScore = 0;
+      let avgScore = 0;
       if (mobile.score !== undefined && desktop.score !== undefined) {
         avgScore = Math.round((mobile.score + desktop.score) / 2);
       } else if (mobile.score !== undefined) {
@@ -562,11 +562,11 @@
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.bestPractices', 'This section provides Google\\')) + '</p>';
 
       // Build the best practices table (mirrors web UI)
-      var vitals = [
+      const vitals = [
         {
           key: 'lcp',
           abbr: 'LCP',
@@ -606,20 +606,20 @@
       ];
 
       vitals.forEach(function (vital) {
-        var mMetric = mobile[vital.key];
-        var dMetric = desktop[vital.key];
+        const mMetric = mobile[vital.key];
+        const dMetric = desktop[vital.key];
         if (!mMetric && !dMetric) return;
 
-        var mVal = mMetric ? _metricDisplay(mMetric) : '-';
-        var dVal = dMetric ? _metricDisplay(dMetric) : '-';
-        var mR = mMetric ? mMetric.rating : '';
-        var dR = dMetric ? dMetric.rating : '';
+        const mVal = mMetric ? _metricDisplay(mMetric) : '-';
+        const dVal = dMetric ? _metricDisplay(dMetric) : '-';
+        const mR = mMetric ? mMetric.rating : '';
+        const dR = dMetric ? dMetric.rating : '';
 
         // Determine combined status
-        var bothGood = mR === 'good' && dR === 'good';
-        var eitherGood = mR === 'good' || dR === 'good';
-        var statusIcon = bothGood ? 'pass' : eitherGood ? 'warn' : 'fail';
-        var statusLabel = bothGood ? t('reports.common.pass', 'Pass') : eitherGood ? t('reports.common.partial', 'Partial') : t('reports.common.fail', 'Fail');
+        const bothGood = mR === 'good' && dR === 'good';
+        const eitherGood = mR === 'good' || dR === 'good';
+        const statusIcon = bothGood ? 'pass' : eitherGood ? 'warn' : 'fail';
+        const statusLabel = bothGood ? t('reports.common.pass', 'Pass') : eitherGood ? t('reports.common.partial', 'Partial') : t('reports.common.fail', 'Fail');
 
         // Build the vital card
         html += '<div style="border:1px solid #e5e7eb;border-radius:8px;padding:1rem;margin-bottom:1rem;page-break-inside:avoid;">';
@@ -629,8 +629,8 @@
         html += '</div>';
 
         // Thresholds + values row as a table
-        var threshLines = vital.thresholds.split('\n');
-        var threshHtml = threshLines.map(function (line) { return esc(line); }).join('<br>');
+        const threshLines = vital.thresholds.split('\n');
+        const threshHtml = threshLines.map(function (line) { return esc(line); }).join('<br>');
 
         html += PR.renderTable(
           [
@@ -678,10 +678,10 @@
        6. Desktop vs Mobile Comparison
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-comparison .pdf-section__content');
-      var comp = data.comparison || {};
-      var desktop = data.desktop || {};
-      var mobile = data.mobile || {};
+      const sec = document.querySelector('#section-comparison .pdf-section__content');
+      const comp = data.comparison || {};
+      const desktop = data.desktop || {};
+      const mobile = data.mobile || {};
 
       if (!comp && !desktop.lcp && !mobile.lcp) {
         sec.parentElement.style.display = 'none';
@@ -693,7 +693,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.comparison', 'This comparison highlights the differences between your desktop and mobile Core Web Vitals scores. Significant gaps between the two may indicate mobile-specific performance issues such as unoptimized images, render-blocking resources, or layout shifts that only occur on smaller viewports.')) + '</p>';
 
@@ -706,7 +706,7 @@
       }
 
       // Build comparison table with progress-bar-like visual
-      var metricNames = [
+      const metricNames = [
         { key: 'lcp', label: t('reports.cwv.report.vitals.lcp', 'Largest Contentful Paint (LCP)') },
         { key: 'inp', label: t('reports.cwv.report.vitals.inp', 'Interaction to Next Paint (INP)') },
         { key: 'cls', label: t('reports.cwv.report.vitals.cls', 'Cumulative Layout Shift (CLS)') },
@@ -714,14 +714,14 @@
         { key: 'fcp', label: t('reports.cwv.report.vitals.fcp', 'First Contentful Paint (FCP)') }
       ];
 
-      var compRows = [];
+      const compRows = [];
       metricNames.forEach(function (m) {
-        var dMetric = desktop[m.key];
-        var mMetric = mobile[m.key];
+        const dMetric = desktop[m.key];
+        const mMetric = mobile[m.key];
         if (!dMetric && !mMetric) return;
 
-        var dVal = dMetric ? _metricDisplay(dMetric) : '-';
-        var mVal = mMetric ? _metricDisplay(mMetric) : '-';
+        const dVal = dMetric ? _metricDisplay(dMetric) : '-';
+        const mVal = mMetric ? _metricDisplay(mMetric) : '-';
 
         compRows.push([
           '<strong>' + esc(m.label) + '</strong>',
@@ -755,12 +755,12 @@
 
         // Per-metric comparison details (from web UI comparison.comparison.lcp, etc.)
         if (comp.comparison && typeof comp.comparison === 'object') {
-          var compDetailRows = [];
-          var compMetrics = Object.keys(comp.comparison);
+          const compDetailRows = [];
+          const compMetrics = Object.keys(comp.comparison);
           compMetrics.forEach(function (metricKey) {
-            var cm = comp.comparison[metricKey];
+            const cm = comp.comparison[metricKey];
             if (!cm || typeof cm !== 'object') return;
-            var parts = [];
+            const parts = [];
             if (cm.percentile) parts.push(esc(cm.percentile));
             if (cm.realWorldImpact) parts.push(esc(cm.realWorldImpact));
             if (cm.assessment) parts.push(esc(cm.assessment));
@@ -785,10 +785,10 @@
         }
 
         // Flat scalar comparison keys
-        var compKeys = Object.keys(comp);
-        var extraRows = [];
+        const compKeys = Object.keys(comp);
+        const extraRows = [];
         compKeys.forEach(function (key) {
-          var val = comp[key];
+          const val = comp[key];
           if (typeof val === 'object' && val !== null) return;
           if (key === 'context' || key === 'note') return;
           extraRows.push([
@@ -816,11 +816,11 @@
        7. Diagnostics
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-diagnostics .pdf-section__content');
-      var desktop = data.desktop || {};
-      var mobile = data.mobile || {};
-      var desktopDiag = desktop.diagnostics || [];
-      var mobileDiag = mobile.diagnostics || [];
+      const sec = document.querySelector('#section-diagnostics .pdf-section__content');
+      const desktop = data.desktop || {};
+      const mobile = data.mobile || {};
+      const desktopDiag = desktop.diagnostics || [];
+      const mobileDiag = mobile.diagnostics || [];
 
       if (desktopDiag.length === 0 && mobileDiag.length === 0) {
         sec.parentElement.style.display = 'none';
@@ -832,24 +832,24 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.diagnostics', 'Diagnostic information provides detailed technical insights into the factors affecting your Core Web Vitals scores. These diagnostics help identify specific elements, resources, or code patterns that contribute to poor performance metrics.')) + '</p>';
 
       /** Render a diagnostics set as a table for richer display */
       function _renderDiagnostics(diagList, limitCount) {
-        var out = '';
-        var rows = [];
+        let out = '';
+        const rows = [];
         diagList.slice(0, limitCount).forEach(function (item) {
-          var sev = (item.severity || item.priority || 'medium').toLowerCase();
-          var sevBadge = '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '" style="display:inline-block;margin-bottom:0.25rem;">' + esc(translateImpact(item.severity || item.priority || 'info')) + '</span>';
+          const sev = (item.severity || item.priority || 'medium').toLowerCase();
+          const sevBadge = '<span class="pdf-issue__severity pdf-issue__severity--' + sev + '" style="display:inline-block;margin-bottom:0.25rem;">' + esc(translateImpact(item.severity || item.priority || 'info')) + '</span>';
 
-          var title = item.title || item.name || '';
-          var desc = item.description ? truncate(item.description, 350) : '';
-          var displayVal = item.displayValue || '';
-          var score = item.score !== undefined ? item.score : null;
+          const title = item.title || item.name || '';
+          const desc = item.description ? truncate(item.description, 350) : '';
+          const displayVal = item.displayValue || '';
+          const score = item.score !== undefined ? item.score : null;
 
-          var detailParts = [];
+          const detailParts = [];
           if (displayVal) detailParts.push('<em>' + esc(displayVal) + '</em>');
           if (score !== null) detailParts.push(t('reports.common.score', 'Score') + ': ' + esc(String(score)));
           if (item.numericValue) detailParts.push(esc(String(Math.round(item.numericValue))) + (item.numericUnit === 'millisecond' ? ' ms' : ''));
@@ -895,20 +895,20 @@
        8. Recommendations (enhanced with metric, issue, solution, priority)
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.cwv.report.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.cwv.report.sectionIntros.recommendations', 'Based on your Core Web Vitals analysis, these recommendations target the highest-impact improvements for loading speed, interactivity, and visual stability.')) + '</p>';
 
       // Try enrichedFixes first (for consistency with other analyzers), then fall back to recommendations
       // pdf-export-utility may store enriched fixes as data.enrichedFixes.cwv (array) or data.enrichedFixes (array)
-      var recs = null;
+      let recs = null;
       if (data.enrichedFixes) {
         if (Array.isArray(data.enrichedFixes)) {
           recs = data.enrichedFixes;
@@ -921,14 +921,14 @@
       }
       if (recs.length > 0) {
         // Group by priority/severity
-        var critical = recs.filter(function (r) { return r.priority === 'critical' || r.severity === 'critical' || r.priority === 'high' || r.severity === 'high'; });
-        var medium = recs.filter(function (r) { return r.priority === 'medium' || r.severity === 'medium'; });
-        var low = recs.filter(function (r) {
-          var p = r.priority || r.severity || '';
+        const critical = recs.filter(function (r) { return r.priority === 'critical' || r.severity === 'critical' || r.priority === 'high' || r.severity === 'high'; });
+        const medium = recs.filter(function (r) { return r.priority === 'medium' || r.severity === 'medium'; });
+        const low = recs.filter(function (r) {
+          const p = r.priority || r.severity || '';
           return p === 'low' || (!p && critical.indexOf(r) === -1 && medium.indexOf(r) === -1);
         });
 
-        var groups = [
+        const groups = [
           { items: critical, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444', sev: 'critical' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b', sev: 'moderate' },
           { items: low, label: t('common.pdf.execSummary.lowPriority', 'Low Priority'), color: '#3b82f6', sev: 'minor' }
@@ -994,10 +994,10 @@
        9. Understanding Your Scores (NEW — matches web UI)
        ===================================================================== */
     (function () {
-      var sec = document.querySelector('#section-understanding .pdf-section__content');
+      const sec = document.querySelector('#section-understanding .pdf-section__content');
       if (!sec) return;
 
-      var comp = data.comparison || {};
+      const comp = data.comparison || {};
 
       if (!comp.context && !comp.note && !comp.comparison) {
         sec.parentElement.style.display = 'none';
@@ -1009,7 +1009,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Context and note
       if (comp.context) {
@@ -1021,12 +1021,12 @@
 
       // Per-metric percentile and real world impact
       if (comp.comparison && typeof comp.comparison === 'object') {
-        var percRows = [];
-        var percKeys = Object.keys(comp.comparison);
+        const percRows = [];
+        const percKeys = Object.keys(comp.comparison);
         percKeys.forEach(function (key) {
-          var cm = comp.comparison[key];
+          const cm = comp.comparison[key];
           if (!cm || typeof cm !== 'object') return;
-          var details = [];
+          const details = [];
           if (cm.percentile) details.push('<strong>' + esc(t('reports.cwv.report.comparison.percentile', 'Percentile')) + ':</strong> ' + esc(cm.percentile));
           if (cm.realWorldImpact) details.push('<strong>' + esc(t('reports.cwv.report.comparison.realWorldImpact', 'Real World Impact')) + ':</strong> ' + esc(cm.realWorldImpact));
           if (cm.assessment) details.push('<strong>' + esc(t('reports.cwv.report.comparison.assessment', 'Assessment')) + ':</strong> ' + esc(cm.assessment));
@@ -1056,7 +1056,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -1064,7 +1064,7 @@
   });
 
   function _htmlToNode(html) {
-    var temp = document.createElement('div');
+    const temp = document.createElement('div');
     temp.innerHTML = html;
     return temp.firstChild;
   }

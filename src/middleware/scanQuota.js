@@ -93,6 +93,18 @@ async function checkScanQuota(req, res, next) {
     // Store anon_id on request for downstream use
     req.anonId = anonId;
 
+    // Billing re-scan: skip quota check entirely. The user already consumed a scan
+    // credit on the original scan; this re-scan only re-fetches data so purchased
+    // pro sections render unlocked. Only authenticated users can trigger this.
+    if (req.body?.billingRescan === true && userId) {
+      logger.debug('Billing re-scan: bypassing scan quota check', {
+        userId: userId.substring(0, 8) + '...'
+      });
+      req.planCode = resolveEffectivePlan(req.user);
+      req.scanQuota = { allowed: true, remaining: -1, limit: -1, resetAt: null, isUnlimited: true };
+      return next();
+    }
+
     // Resolve effective plan
     const planCode = resolveEffectivePlan(req.user);
     req.planCode = planCode;

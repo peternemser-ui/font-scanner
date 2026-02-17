@@ -101,6 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Handle URL parameters for report loading and billing return
   (async function initFromUrlParams() {
+    // Ensure i18n translations are loaded before rendering any report content
+    if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+    }
+
     const params = new URLSearchParams(window.location.search);
     const reportId = params.get('report_id') || '';
     const autoUrl = params.get('url') || '';
@@ -209,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/crawl', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ url, options, scanStartedAt })
+        body: JSON.stringify({ url, options, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en' })
       });
 
       if (loader) loader.nextStep(3);
@@ -271,7 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
   // Store crawl data globally for export and unlock handlers
   window.currentCrawlerResults = null;
 
-  function displayResults(data) {
+  async function displayResults(data) {
+    // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+    if (window.i18n && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* fallback */ }
+    }
+
     // Store results globally for PDF generation and unlock handlers
     window.currentCrawlerResults = data;
 
@@ -886,7 +896,7 @@ document.addEventListener('DOMContentLoaded', () => {
               background: ${style.color}20;
               color: ${style.color};
               border: 1px solid ${style.color}40;
-            ">${fix.severity.toUpperCase()}</span>
+            ">${t('reports.common.severity.' + fix.severity.toLowerCase(), fix.severity)}</span>
             <span class="crawler-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
           </div>
         </div>

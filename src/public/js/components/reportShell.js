@@ -1,12 +1,12 @@
 (function(window) {
   function getScoreColor(score) {
     const stops = [
-      [0,'#1A0000'],[5,'#311400'],[10,'#482900'],[15,'#5F3D00'],
-      [20,'#765200'],[25,'#8C6600'],[30,'#A37A00'],[35,'#BA8F00'],
-      [40,'#D1A300'],[45,'#E8B800'],[50,'#FFCC00'],[55,'#E6D106'],
-      [60,'#CCD60C'],[65,'#B2DB12'],[70,'#99E018'],[75,'#80E61E'],
-      [80,'#66EB23'],[85,'#4CF029'],[90,'#33F52F'],[95,'#1AFA35'],
-      [100,'#00FF3B']
+      [0,'#E53935'],[5,'#E14127'],[10,'#DD4E1A'],[15,'#DA5B0E'],
+      [20,'#D96A06'],[25,'#E07E00'],[30,'#E89200'],[35,'#F0A400'],
+      [40,'#F5B300'],[45,'#FAC200'],[50,'#FFD000'],[55,'#FFD600'],
+      [60,'#FFDC00'],[65,'#FFE100'],[70,'#F0DD00'],[75,'#D2D400'],
+      [80,'#A0C800'],[85,'#6BBD28'],[90,'#38B249'],[95,'#1FAD4F'],
+      [100,'#0AA64F']
     ];
     const s = Math.max(0, Math.min(100, Math.round(Number(score) || 0)));
     const idx = Math.min(Math.floor(s / 5), 19);
@@ -32,7 +32,7 @@
       <div class="report-shell__summary-card" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
         <div class="report-shell__summary-label">${label}</div>
         <svg class="report-shell__donut" viewBox="0 0 180 180" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
-          <circle cx="90" cy="90" r="75" fill="none" stroke="#e5e7eb" stroke-width="12"></circle>
+          <circle class="report-shell__donut-track" cx="90" cy="90" r="75" fill="none" stroke="var(--r-dial-track, #e5e7eb)" stroke-width="12"></circle>
           <circle cx="90" cy="90" r="75" fill="none" stroke="${color}" stroke-width="12" stroke-linecap="round" stroke-dasharray="${dash} ${circumference}" stroke-dashoffset="${dashOffset}" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;"></circle>
           <text x="90" y="90" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="36" font-weight="700" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">${typeof score === 'number' && !Number.isNaN(score) ? safeScore : '—'}</text>
         </svg>

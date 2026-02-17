@@ -86,6 +86,17 @@
     return !!getAuthToken();
   }
 
+  /**
+   * Clear expired/invalid auth tokens from localStorage.
+   * Called when the server returns 401 (token expired or invalid).
+   * Clears BOTH key names used across the codebase for consistency.
+   */
+  function clearExpiredAuthTokens() {
+    console.log('[PricingModal] Clearing expired/invalid auth tokens');
+    localStorage.removeItem('sm_auth_token');
+    localStorage.removeItem('sm_token');
+  }
+
   function showToast(message) {
     if (!message) return;
     if (window.ReportUI && typeof window.ReportUI.toast === 'function') {
@@ -229,7 +240,13 @@
       const resp = await fetch('/api/billing/status', {
         headers: { 'Authorization': `Bearer ${token}` }
       });
-      if (!resp.ok) return null;
+      if (!resp.ok) {
+        // If token is expired or invalid, clear it so login prompt shows
+        if (resp.status === 401) {
+          clearExpiredAuthTokens();
+        }
+        return null;
+      }
       return await resp.json();
     } catch (e) {
       return null;
@@ -295,6 +312,10 @@
     const data = await resp.json();
     if (!resp.ok) {
       console.error('[PricingModal] Checkout error response:', data);
+      // If token is expired or invalid, clear it so login prompt can show
+      if (resp.status === 401) {
+        clearExpiredAuthTokens();
+      }
       throw new Error(data.message || data.error || t('errors.checkoutFailed', 'Checkout failed'));
     }
 
@@ -353,11 +374,41 @@
       <div class="sm-pricing-login">
         <p class="sm-pricing-login__text">${t('pricing.modal.loginPrompt', 'Sign in to purchase a subscription or single report.')}</p>
         <div class="sm-pricing-login__actions">
-          <a href="/auth.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}" class="sm-btn sm-btn--primary">${t('pricing.modal.signIn', 'Sign In')}</a>
-          <a href="/auth.html?returnTo=${encodeURIComponent(window.location.pathname + window.location.search)}&mode=signup" class="sm-btn sm-btn--outline">${t('pricing.modal.createAccount', 'Create Account')}</a>
+          <button type="button" class="sm-btn sm-btn--primary" data-action="login-redirect" data-mode="login">${t('pricing.modal.signIn', 'Sign In')}</button>
+          <button type="button" class="sm-btn sm-btn--outline" data-action="login-redirect" data-mode="signup">${t('pricing.modal.createAccount', 'Create Account')}</button>
         </div>
       </div>
     `;
+  }
+
+  /**
+   * Save purchase intent and redirect to auth page.
+   * Called when an anonymous user clicks Sign In / Create Account in the pricing modal.
+   */
+  function handleLoginRedirect(mode) {
+    const reportId = getCurrentReportId();
+    const reportUrl = getReportUrl();
+
+    // Save purchase intent so we can resume after auth
+    try {
+      localStorage.setItem('sm_pending_purchase', JSON.stringify({
+        type: 'single_report',
+        reportId: reportId || null,
+        returnPath: window.location.pathname + window.location.search,
+        createdAt: Date.now()
+      }));
+    } catch (e) {
+      console.warn('[PricingModal] Failed to save purchase intent:', e);
+    }
+
+    // Build returnTo URL ensuring report_id and url are present
+    const params = new URLSearchParams(window.location.search);
+    if (reportId && !params.has('report_id')) params.set('report_id', reportId);
+    if (reportUrl && !params.has('url')) params.set('url', reportUrl);
+    const returnTo = window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+
+    const authUrl = '/auth.html?returnTo=' + encodeURIComponent(returnTo) + (mode === 'signup' ? '&mode=signup' : '');
+    window.location.href = authUrl;
   }
 
   function renderError(message) {
@@ -747,6 +798,11 @@
       btn.onclick = handleRetry;
     });
 
+    // Login redirect buttons (anonymous user → auth page)
+    container.querySelectorAll('[data-action="login-redirect"]').forEach(btn => {
+      btn.onclick = () => handleLoginRedirect(btn.dataset.mode || 'login');
+    });
+
     // Font size toggle
     container.querySelectorAll('[data-font-size]').forEach(btn => {
       btn.onclick = () => {
@@ -812,7 +868,7 @@
     const purchaseType = btn.dataset.type;
     const interval = btn.dataset.interval || null;
     // Get reportId from multiple sources - button dataset, state, or compute fresh
-    let reportId = btn.dataset.reportId || currentState.reportId || getCurrentReportId() || null;
+    const reportId = btn.dataset.reportId || currentState.reportId || getCurrentReportId() || null;
 
     console.log('[PricingModal] handleCheckout reportId sources:', {
       fromButton: btn.dataset.reportId,
@@ -874,8 +930,8 @@
         resultsToSave = window.currentFontsResults;
       } else if (analyzerType.includes('crawler') || analyzerType.includes('site-crawler')) {
         resultsToSave = window.currentCrawlerResults;
-      } else if (analyzerType.includes('local-seo') || analyzerType.includes('local_seo')) {
-        resultsToSave = window.currentLocalSEOResults;
+      } else if (analyzerType.includes('geo-seo') || analyzerType.includes('geo_seo') || analyzerType.includes('local-seo') || analyzerType.includes('local_seo')) {
+        resultsToSave = window.currentGeoSEOResults || window.currentLocalSEOResults;
       } else if (analyzerType.includes('broken-links') || analyzerType.includes('broken_links')) {
         resultsToSave = window.currentBrokenLinksResults;
       } else if (analyzerType.includes('competitive')) {
@@ -891,6 +947,7 @@
                         window.currentCROResults ||
                         window.currentCWVResults ||
                         window.currentCrawlerResults ||
+                        window.currentGeoSEOResults ||
                         window.currentLocalSEOResults ||
                         window.currentBrokenLinksResults ||
                         window.currentCompetitiveResults ||
@@ -964,7 +1021,17 @@
       window.location.href = checkoutUrl;
     } catch (err) {
       currentState.loading = false;
-      currentState.error = err.message || t('errors.checkoutFailedRetry', 'Checkout failed. Please try again.');
+      // If auth-related error, clear tokens and show login prompt instead of error
+      const msg = err.message || '';
+      const isAuthError = msg === 'Token expired' || msg === 'Invalid token' ||
+        msg === 'Authentication required' || msg === 'User not found' ||
+        msg === t('pricing.modal.pleaseLoginToContinue', 'Please log in to continue');
+      if (isAuthError) {
+        clearExpiredAuthTokens();
+        currentState.error = null; // Clear error so login prompt shows cleanly
+      } else {
+        currentState.error = msg || t('errors.checkoutFailedRetry', 'Checkout failed. Please try again.');
+      }
       updateBody();
     }
   }

@@ -85,11 +85,7 @@ class BrandConsistencyPremiumPdfGenerator extends PremiumPdfReport {
             subtitle: 'Visual Identity & Brand Guidelines Assessment',
             url: url,
             score: score,
-            date: new Date().toLocaleDateString('en-US', {
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-            })
+            date: (() => { const d = new Date(); return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' \u2022 ' + d.getUTCHours().toString().padStart(2, '0') + ':' + d.getUTCMinutes().toString().padStart(2, '0') + ' GMT'; })()
         });
 
         // Executive Summary
@@ -976,7 +972,7 @@ class BrandConsistencyPremiumPdfGenerator extends PremiumPdfReport {
         // Generation date
         this.doc.fontSize(9)
             .fillColor('rgba(255,255,255,0.7)')
-            .text(`Report generated: ${new Date().toLocaleDateString()}`, x + 160, y + 75);
+            .text(`Report generated: ${(() => { const d = new Date(); return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) + ' \u2022 ' + d.getUTCHours().toString().padStart(2, '0') + ':' + d.getUTCMinutes().toString().padStart(2, '0') + ' GMT'; })()}`, x + 160, y + 75);
     }
 }
 

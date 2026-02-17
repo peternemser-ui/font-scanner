@@ -29,6 +29,32 @@ function t(key, fallback, params = {}) {
 // breaks callers that rely on the i18n signature (e.g. renderScanContextBar).
 if (typeof window.t !== 'function') window.t = t;
 
+// --- i18n helpers for server-side recommendation data ---
+function translateRecTitle(title) {
+  const key = 'reports.performance.recTitles.' + title;
+  const translated = t(key, null);
+  return translated !== null ? translated : title;
+}
+function translateRecDescription(title, fallback) {
+  const key = 'reports.performance.recDescriptions.' + title;
+  const translated = t(key, null);
+  return translated !== null ? translated : (fallback || '');
+}
+function translateRecImpact(title, fallback) {
+  const key = 'reports.performance.recImpacts.' + title;
+  const translated = t(key, null);
+  return translated !== null ? translated : (fallback || '');
+}
+function translateRecCategory(category) {
+  const key = 'reports.performance.recCategories.' + category;
+  const translated = t(key, null);
+  return translated !== null ? translated : (category || t('reports.performance.performance', 'Performance'));
+}
+function translatePriority(priority) {
+  const p = (priority || 'medium').toLowerCase();
+  return t('reports.performance.priorityLabels.' + p, p.toUpperCase());
+}
+
 // Function to get analysis steps with current translations
 // Called at runtime to ensure i18n is loaded
 function getAnalysisSteps() {
@@ -1724,8 +1750,8 @@ function renderPerfFixAccordion(rec, index) {
         <div style="display: flex; align-items: center; gap: 0.75rem;">
           <span style="font-size: 1.25rem;">${style.icon}</span>
           <div>
-            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${rec.title}</h4>
-            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${rec.category || t('reports.performance.performance', 'Performance')}</p>
+            <h4 style="margin: 0; font-size: 1rem; color: var(--r-text, #111827);">${translateRecTitle(rec.title)}</h4>
+            <p style="margin: 0.25rem 0 0 0; font-size: 0.85rem; color: var(--r-text-faint, #9CA3AF);">${translateRecCategory(rec.category)}</p>
           </div>
         </div>
         <div style="display: flex; align-items: center; gap: 0.75rem;">
@@ -1737,7 +1763,7 @@ function renderPerfFixAccordion(rec, index) {
             background: ${style.color}20;
             color: ${style.color};
             border: 1px solid ${style.color}40;
-          ">${(rec.priority || 'medium').toUpperCase()}</span>
+          ">${translatePriority(rec.priority)}</span>
           <span class="perf-fix-expand-icon" style="color: var(--r-text-faint, #9CA3AF); transition: transform 0.3s;">▼</span>
         </div>
       </div>
@@ -1789,12 +1815,12 @@ function renderPerfFixTabs(rec, accordionId) {
     <!-- Summary Tab -->
     <div class="perf-fix-tab-content active" id="${accordionId}-summary">
       <p style="color: var(--r-text-muted, #6B7280); line-height: 1.7; margin: 0 0 1rem 0;">
-        ${rec.description || t('reports.performance.optimizeArea', 'Optimize this area to improve performance.')}
+        ${translateRecDescription(rec.title, rec.description) || t('reports.performance.optimizeArea', 'Optimize this area to improve performance.')}
       </p>
       ${rec.impact ? `
       <div style="background: rgba(0,255,65,0.1); border-left: 3px solid #00ff41; padding: 0.75rem; border-radius: 4px;">
         <div style="color: #00ff41; font-size: 0.85rem; font-weight: bold; margin-bottom: 0.25rem;">✓ ${t('reports.performance.expectedImpact', 'Expected Impact')}</div>
-        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${rec.impact}</div>
+        <div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem;">${translateRecImpact(rec.title, rec.impact)}</div>
       </div>
       ` : ''}
     </div>
@@ -2590,13 +2616,13 @@ function renderCrossBrowserRecommendationsContent(recommendations, comparison) {
       <div style="margin-bottom: 1.5rem; padding: 1.5rem; background: rgba(255,255,255,0.03); border-left: 4px solid ${priorityColor}; border-radius: 4px;">
         <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
           <span style="font-size: 1.2rem;">${priorityIcon}</span>
-          <h4 style="margin: 0; color: ${priorityColor};">${rec.title}</h4>
+          <h4 style="margin: 0; color: ${priorityColor};">${translateRecTitle(rec.title)}</h4>
           <span style="margin-left: auto; padding: 0.25rem 0.75rem; background: ${priorityColor}33; color: ${priorityColor}; border-radius: 12px; font-size: 0.75rem; font-weight: bold;">
-            ${rec.priority.toUpperCase()}
+            ${translatePriority(rec.priority)}
           </span>
         </div>
 
-        <p style="margin: 0.5rem 0; color: var(--r-text-muted, #6B7280);">${rec.description}</p>
+        <p style="margin: 0.5rem 0; color: var(--r-text-muted, #6B7280);">${translateRecDescription(rec.title, rec.description)}</p>
 
         ${rec.actions && rec.actions.length > 0 ? `
           <div style="margin-top: 1rem;">

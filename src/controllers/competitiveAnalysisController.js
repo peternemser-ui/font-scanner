@@ -21,6 +21,7 @@ const {
   buildReportMetadata,
   attachReportMetadata
 } = require('../utils/controllerHelpers');
+const { ensureReportScreenshot } = require('../utils/reportScreenshot');
 
 const logger = createLogger('CompetitiveAnalysisController');
 
@@ -206,6 +207,45 @@ const analyzeCompetitors = asyncHandler(async (req, res) => {
   const analyzerKey = getAnalyzerKeyOverride(req, 'competitive-analysis');
   const metadata = await buildReportMetadata({ req, results, url: normalizedYourUrl, analyzerKey });
   attachReportMetadata(results, metadata);
+
+  // Capture screenshots for your site and each competitor (best-effort, parallel)
+  if (metadata.reportId) {
+    const screenshotJobs = [];
+
+    // Your site screenshot (stored as your-site.jpg alongside the main screenshot.jpg)
+    screenshotJobs.push(
+      ensureReportScreenshot({
+        url: normalizedYourUrl,
+        reportId: metadata.reportId,
+        requestId: req.id,
+        filename: 'your-site.jpg'
+      }).then(ssUrl => {
+        if (results.yourSite) {
+          results.yourSite.screenshotUrl = ssUrl;
+        }
+      })
+    );
+
+    // Competitor screenshots
+    if (Array.isArray(results.competitors)) {
+      results.competitors.forEach((comp, i) => {
+        if (comp.url && !comp.error) {
+          screenshotJobs.push(
+            ensureReportScreenshot({
+              url: comp.url,
+              reportId: metadata.reportId,
+              requestId: req.id,
+              filename: `competitor-${i}.jpg`
+            }).then(ssUrl => {
+              comp.screenshotUrl = ssUrl;
+            })
+          );
+        }
+      });
+    }
+
+    await Promise.all(screenshotJobs);
+  }
 
   res.json(results);
 });

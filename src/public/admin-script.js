@@ -379,10 +379,16 @@ async function handleResetUsage(e) {
 function initializeTabs() {
   const tabs = document.querySelectorAll('.admin-tab');
   const contents = document.querySelectorAll('.tab-content');
+  let currentTab = 'users';
 
   tabs.forEach(tab => {
     tab.addEventListener('click', () => {
       const targetTab = tab.dataset.tab;
+
+      // Leave health room when switching away
+      if (currentTab === 'health' && targetTab !== 'health') {
+        leaveHealthRoom();
+      }
 
       // Update active states
       tabs.forEach(t => t.classList.remove('active'));
@@ -390,6 +396,13 @@ function initializeTabs() {
 
       tab.classList.add('active');
       document.getElementById(`${targetTab}Tab`).classList.add('active');
+
+      // Join health room when switching to health tab
+      if (targetTab === 'health') {
+        joinHealthRoom();
+      }
+
+      currentTab = targetTab;
     });
   });
 }
@@ -470,7 +483,7 @@ function debounce(func, wait) {
 // =============================================================================
 
 let testSuites = [];
-let testResultsCache = {};
+const testResultsCache = {};
 let isRunningTests = false;
 
 /**
@@ -887,3 +900,280 @@ document.addEventListener('click', function(e) {
     return;
   }
 });
+
+// =============================================================================
+// SYSTEM HEALTH DASHBOARD
+// =============================================================================
+
+let healthSocket = null;
+let healthHistory = {
+  heap: [],
+  rss: [],
+  cpu: [],
+  scans: [],
+  reqPerMin: []
+};
+const HEALTH_HISTORY_MAX = 60;
+
+/**
+ * Join the admin-health Socket.IO room
+ */
+function joinHealthRoom() {
+  const token = (typeof proManager !== 'undefined' && proManager.token)
+    ? proManager.token
+    : localStorage.getItem('sm_token');
+
+  if (!token) {
+    updateHealthStatus('error', 'No auth token');
+    return;
+  }
+
+  if (!healthSocket) {
+    healthSocket = io({ transports: ['websocket', 'polling'] });
+
+    healthSocket.on('connect', () => {
+      updateHealthStatus('live', 'Live');
+      healthSocket.emit('join-admin-health', token);
+    });
+
+    healthSocket.on('disconnect', () => {
+      updateHealthStatus('error', 'Disconnected');
+    });
+
+    healthSocket.on('connect_error', () => {
+      updateHealthStatus('error', 'Connection error');
+    });
+
+    healthSocket.on('admin:health-tick', renderHealthTick);
+
+    healthSocket.on('admin:health-error', (data) => {
+      updateHealthStatus('error', data.error || 'Auth failed');
+    });
+  } else {
+    // Already connected, just re-join the room
+    if (healthSocket.connected) {
+      healthSocket.emit('join-admin-health', token);
+      updateHealthStatus('live', 'Live');
+    } else {
+      healthSocket.connect();
+    }
+  }
+
+  // Fetch initial data via REST so we don't wait 4s
+  fetchInitialHealth();
+}
+
+/**
+ * Leave the admin-health room (server stops sending ticks)
+ */
+function leaveHealthRoom() {
+  if (healthSocket && healthSocket.connected) {
+    healthSocket.emit('leave-admin-health');
+  }
+}
+
+/**
+ * Fetch initial health data via REST API
+ */
+async function fetchInitialHealth() {
+  try {
+    const headers = (typeof proManager !== 'undefined' && proManager.getAuthHeaders)
+      ? proManager.getAuthHeaders()
+      : { 'Authorization': 'Bearer ' + localStorage.getItem('sm_token') };
+
+    const res = await fetch('/api/health', { headers });
+    if (res.ok) {
+      const data = await res.json();
+      const mem = data.memory || {};
+      renderHealthTick({
+        timestamp: Date.now(),
+        memory: {
+          heapUsed: Math.round((mem.heapUsed || 0) / 1024 / 1024 * 10) / 10,
+          heapTotal: Math.round((mem.heapTotal || 0) / 1024 / 1024 * 10) / 10,
+          rss: Math.round((mem.rss || 0) / 1024 / 1024 * 10) / 10,
+          external: Math.round((mem.external || 0) / 1024 / 1024 * 10) / 10
+        },
+        cpu: { percent: 0 },
+        uptime: data.uptime || 0,
+        activeScans: 0,
+        requestsPerMinute: 0,
+        errors: { lastMinute: 0, lastHour: 0, thresholdViolations: [] },
+        rateLimits: { totalViolations: 0, lastHour: 0 },
+        browserPool: { available: 0, borrowed: 0, max: 0 }
+      });
+    }
+  } catch (_) { /* initial fetch is best-effort */ }
+}
+
+/**
+ * Update the connection status indicator
+ */
+function updateHealthStatus(state, text) {
+  const dot = document.getElementById('healthDot');
+  const statusText = document.getElementById('healthStatusText');
+  if (!dot || !statusText) return;
+
+  dot.className = 'health-dot';
+  if (state === 'live') dot.classList.add('live');
+  else if (state === 'error') dot.classList.add('error');
+  statusText.textContent = text;
+}
+
+/**
+ * Render a single health tick into the dashboard
+ */
+function renderHealthTick(data) {
+  if (!data) return;
+
+  // Uptime
+  const uptimeEl = document.getElementById('healthUptime');
+  if (uptimeEl && data.uptime != null) {
+    uptimeEl.textContent = 'Uptime: ' + formatUptime(data.uptime);
+  }
+
+  // Memory gauges
+  if (data.memory) {
+    const heapPct = data.memory.heapTotal > 0
+      ? Math.round(data.memory.heapUsed / data.memory.heapTotal * 100)
+      : 0;
+    setGaugeBar('heapBar', heapPct);
+    setText('heapValue', data.memory.heapUsed);
+    setText('heapTotal', data.memory.heapTotal);
+
+    // RSS (use 1024 MB as reference max)
+    const rssPct = Math.min(100, Math.round(data.memory.rss / 1024 * 100));
+    setGaugeBar('rssBar', rssPct);
+    setText('rssValue', data.memory.rss);
+
+    pushHistory('heap', data.memory.heapUsed);
+    pushHistory('rss', data.memory.rss);
+  }
+
+  // CPU gauge
+  if (data.cpu) {
+    setGaugeBar('cpuBar', Math.round(data.cpu.percent));
+    setText('cpuValue', data.cpu.percent);
+    pushHistory('cpu', data.cpu.percent);
+  }
+
+  // Active scans
+  setText('activeScansValue', data.activeScans != null ? data.activeScans : 0);
+  pushHistory('scans', data.activeScans || 0);
+
+  // Requests per minute
+  setText('reqPerMinValue', data.requestsPerMinute != null ? data.requestsPerMinute : '—');
+  pushHistory('reqPerMin', data.requestsPerMinute || 0);
+
+  // Errors
+  if (data.errors) {
+    setText('errMinValue', data.errors.lastMinute);
+    setText('errHourValue', data.errors.lastHour);
+
+    const warning = document.getElementById('errorThresholdWarning');
+    if (warning) {
+      if (data.errors.thresholdViolations && data.errors.thresholdViolations.length > 0) {
+        warning.classList.remove('hidden');
+        warning.textContent = data.errors.thresholdViolations.map(function(v) { return v.message; }).join('; ');
+      } else {
+        warning.classList.add('hidden');
+      }
+    }
+  }
+
+  // Rate limits
+  if (data.rateLimits) {
+    setText('rlTotalValue', data.rateLimits.totalViolations);
+    setText('rlHourValue', data.rateLimits.lastHour);
+  }
+
+  // Browser pool
+  if (data.browserPool) {
+    var bp = data.browserPool;
+    setText('poolAvailable', bp.available);
+    setText('poolBorrowed', bp.borrowed);
+    setText('poolMax', bp.max);
+
+    var maxPool = bp.max || 1;
+    var availPct = Math.round(bp.available / maxPool * 100);
+    var borrowPct = Math.round(bp.borrowed / maxPool * 100);
+    var availBar = document.getElementById('poolAvailableBar');
+    var borrowBar = document.getElementById('poolBorrowedBar');
+    if (availBar) availBar.style.width = availPct + '%';
+    if (borrowBar) borrowBar.style.width = borrowPct + '%';
+  }
+
+  // Render sparklines
+  renderSparkline('heapSparkline', healthHistory.heap, Math.max.apply(null, healthHistory.heap.concat([100])));
+  renderSparkline('rssSparkline', healthHistory.rss, Math.max.apply(null, healthHistory.rss.concat([100])));
+  renderSparkline('cpuSparkline', healthHistory.cpu, 100);
+  renderSparkline('scansSparkline', healthHistory.scans, Math.max.apply(null, healthHistory.scans.concat([1])));
+  renderSparkline('reqSparkline', healthHistory.reqPerMin, Math.max.apply(null, healthHistory.reqPerMin.concat([1])));
+}
+
+/**
+ * Set a gauge bar's width and color class
+ */
+function setGaugeBar(id, percent) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  percent = Math.max(0, Math.min(100, percent));
+  el.style.width = percent + '%';
+  el.classList.remove('warn', 'danger');
+  if (percent > 85) el.classList.add('danger');
+  else if (percent > 60) el.classList.add('warn');
+}
+
+/**
+ * Set text content of an element by ID
+ */
+function setText(id, value) {
+  var el = document.getElementById(id);
+  if (el) el.textContent = value;
+}
+
+/**
+ * Push a value into a history array, capped at HEALTH_HISTORY_MAX
+ */
+function pushHistory(key, value) {
+  var arr = healthHistory[key];
+  if (!arr) return;
+  arr.push(value);
+  if (arr.length > HEALTH_HISTORY_MAX) arr.shift();
+}
+
+/**
+ * Render a CSS-only sparkline into a container
+ */
+function renderSparkline(containerId, data, maxValue) {
+  var container = document.getElementById(containerId);
+  if (!container || !data || data.length === 0) return;
+
+  maxValue = maxValue || 1;
+  var bars = '';
+  for (var i = 0; i < data.length; i++) {
+    var val = data[i];
+    var heightPct = Math.max(2, Math.round(val / maxValue * 100));
+    var ratio = val / maxValue;
+    var color;
+    if (ratio > 0.85) color = '#ef4444';
+    else if (ratio > 0.6) color = '#f59e0b';
+    else color = '#00ff41';
+    bars += '<div class="spark-bar" style="height:' + heightPct + '%;background:' + color + '"></div>';
+  }
+  container.innerHTML = bars;
+}
+
+/**
+ * Format uptime seconds into human-readable string
+ */
+function formatUptime(seconds) {
+  seconds = Math.floor(seconds);
+  var d = Math.floor(seconds / 86400);
+  var h = Math.floor((seconds % 86400) / 3600);
+  var m = Math.floor((seconds % 3600) / 60);
+  var s = seconds % 60;
+
+  if (d > 0) return d + 'd ' + h + 'h ' + m + 'm';
+  if (h > 0) return h + 'h ' + m + 'm ' + s + 's';
+  return m + 'm ' + s + 's';
+}

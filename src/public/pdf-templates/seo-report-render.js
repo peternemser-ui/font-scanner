@@ -11,13 +11,13 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('seo', function renderSEO(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
 
     /* -------------------------------------------------------------------
        Normalize lightweight-mode data shapes to match the full-analyzer
@@ -29,21 +29,21 @@
        results.
        ------------------------------------------------------------------- */
     (function _normalizeLightweight() {
-      var hs = data.headingStructure;
+      const hs = data.headingStructure;
       if (hs) {
         if (hs.total === undefined && hs.totalHeadings !== undefined) {
           hs.total = hs.totalHeadings;
         }
       }
 
-      var ia = data.imageAnalysis;
+      const ia = data.imageAnalysis;
       if (ia) {
         if (ia.total === undefined && ia.totalImages !== undefined) {
           ia.total = ia.totalImages;
         }
       }
 
-      var la = data.linkAnalysis;
+      const la = data.linkAnalysis;
       if (la) {
         if (la.total === undefined && la.totalLinks !== undefined) {
           la.total = la.totalLinks;
@@ -53,7 +53,7 @@
         }
       }
 
-      var sd = data.structuredData;
+      const sd = data.structuredData;
       if (sd) {
         if (sd.count === undefined && sd.schemaCount !== undefined) {
           sd.count = sd.schemaCount;
@@ -61,22 +61,22 @@
       }
     })();
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     /* -----------------------------------------------------------------------
        1. Meta Tags
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-meta-tags .pdf-section__content');
-      var d = data.metaTags || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-meta-tags .pdf-section__content');
+      const d = data.metaTags || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.metaTags', 'Meta Tags'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.metaTags', 'Meta tags are the foundation of how search engines and social platforms understand your page. They control how your content appears in search results, social shares, and browser tabs. This section evaluates your title tag, meta description, Open Graph, Twitter Card, viewport, and canonical URL configurations. Properly optimized meta tags can significantly improve click-through rates and prevent duplicate content issues.')) + '</p>';
@@ -91,10 +91,10 @@
       // Overview table
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.metaTags.overviewHeading', 'Meta Tags Overview')) + '</h3>';
 
-      var rows = [];
+      const rows = [];
 
       // Title
-      var titleStatus = d.title ? (d.titleLength >= 50 && d.titleLength <= 60 ? 'optimal' : 'review') : 'missing';
+      const titleStatus = d.title ? (d.titleLength >= 50 && d.titleLength <= 60 ? 'optimal' : 'review') : 'missing';
       rows.push([
         esc(t('seo.report.metaTags.rows.title', 'Title')),
         '<div class="pdf-table__value">' + esc(truncate(d.title || '-', 80)) + '</div>',
@@ -104,7 +104,7 @@
       ]);
 
       // Description
-      var descStatus = d.description ? (d.descriptionLength >= 150 && d.descriptionLength <= 160 ? 'optimal' : 'review') : 'missing';
+      const descStatus = d.description ? (d.descriptionLength >= 150 && d.descriptionLength <= 160 ? 'optimal' : 'review') : 'missing';
       rows.push([
         esc(t('seo.report.metaTags.rows.description', 'Description')),
         '<div class="pdf-table__value">' + esc(truncate(d.description || '-', 120)) + '</div>',
@@ -114,7 +114,7 @@
       ]);
 
       // Open Graph
-      var ogPresent = d.ogTitle || d.ogDescription || d.ogImage;
+      const ogPresent = d.ogTitle || d.ogDescription || d.ogImage;
       rows.push([
         esc(t('seo.report.metaTags.rows.openGraph', 'Open Graph')),
         '<div class="pdf-table__value">' + esc(truncate(d.ogTitle || '-', 60)) + '</div>',
@@ -124,7 +124,7 @@
       ]);
 
       // Twitter Card
-      var twPresent = d.twitterCard || d.twitterTitle;
+      const twPresent = d.twitterCard || d.twitterTitle;
       rows.push([
         esc(t('seo.report.metaTags.rows.twitterCard', 'Twitter Card')),
         '<div class="pdf-table__value">' + esc(d.twitterCard || '-') + '</div>',
@@ -166,14 +166,14 @@
       // Meta Tags Health — per-metric score bars (mirrors web UI heatmap)
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.metaTags.healthHeading', 'Meta Tags Health')) + '</h3>';
 
-      var titleScore = d.title ? (d.titleLength >= 50 && d.titleLength <= 60 ? 100 : 70) : 0;
-      var descScore  = d.description ? (d.descriptionLength >= 150 && d.descriptionLength <= 160 ? 100 : 70) : 0;
-      var ogScore    = (d.ogTitle || d.ogDescription || d.ogImage) ? 100 : 0;
-      var twScore    = d.twitterCard ? 100 : 0;
-      var vpScore    = d.viewport ? 100 : 0;
-      var canonScore = d.canonical ? 100 : 0;
+      const titleScore = d.title ? (d.titleLength >= 50 && d.titleLength <= 60 ? 100 : 70) : 0;
+      const descScore  = d.description ? (d.descriptionLength >= 150 && d.descriptionLength <= 160 ? 100 : 70) : 0;
+      const ogScore    = (d.ogTitle || d.ogDescription || d.ogImage) ? 100 : 0;
+      const twScore    = d.twitterCard ? 100 : 0;
+      const vpScore    = d.viewport ? 100 : 0;
+      const canonScore = d.canonical ? 100 : 0;
 
-      var healthItems = [
+      const healthItems = [
         { label: t('seo.report.metaTags.rows.title', 'Title'), score: titleScore },
         { label: t('seo.report.metaTags.rows.description', 'Description'), score: descScore },
         { label: t('seo.report.metaTags.rows.ogTags', 'OG Tags'), score: ogScore },
@@ -184,7 +184,7 @@
 
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;">';
       healthItems.forEach(function (item) {
-        var clr = utils.scoreColor(item.score);
+        const clr = utils.scoreColor(item.score);
         html += '<div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;">' +
           '<span style="min-width:80px;color:#555;">' + esc(item.label) + '</span>' +
           '<div style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;">' +
@@ -207,16 +207,16 @@
        2. Headings
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-headings .pdf-section__content');
-      var d = data.headingStructure || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-headings .pdf-section__content');
+      const d = data.headingStructure || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.headings', 'Headings'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.headings', 'A well-structured heading hierarchy helps both users and search engines navigate your content. Headings create a semantic outline that communicates topic relationships and content importance. This section analyzes the distribution and proper nesting of H1 through H6 tags on your page. Best practice is to have exactly one H1 tag and use subsequent levels in logical order without skipping levels.')) + '</p>';
@@ -224,10 +224,10 @@
       // Distribution table
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.headings.distributionHeading', 'Heading Distribution')) + '</h3>';
 
-      var headingLevels = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
-      var distRows = headingLevels.map(function (level) {
-        var items = d[level] || [];
-        var first = items.length > 0 ? truncate(items[0], 80) : '-';
+      const headingLevels = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6'];
+      const distRows = headingLevels.map(function (level) {
+        const items = d[level] || [];
+        const first = items.length > 0 ? truncate(items[0], 80) : '-';
         return [
           '<strong>' + level.toUpperCase() + '</strong>',
           String(items.length),
@@ -246,7 +246,7 @@
       );
 
       // Metrics
-      var h1Count = (d.h1 || []).length;
+      const h1Count = (d.h1 || []).length;
       html += PR.renderMetrics([
         { value: d.total || 0, label: t('seo.report.headings.totalHeadingsLabel', 'total_headings') },
         { value: h1Count, label: t('seo.report.headings.primaryH1Label', 'primary_h1'), color: h1Count === 1 ? '#10b981' : '#ef4444' }
@@ -257,7 +257,7 @@
         html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.headings.hierarchyHeading', 'Heading Hierarchy')) + '</h3>';
         html += '<div style="font-size:0.8rem;line-height:1.8;font-family:monospace;">';
         d.hierarchy.slice(0, 15).forEach(function (h) {
-          var indent = (parseInt(h.level.replace('h', '')) - 1) * 16;
+          const indent = (parseInt(h.level.replace('h', '')) - 1) * 16;
           html += '<div style="padding-left:' + indent + 'px;">' +
             '<span style="color:#dd3838;font-weight:600;">' + h.level.toUpperCase() + '</span> ' +
             esc(truncate(h.text, 80)) +
@@ -280,16 +280,16 @@
        3. Content Analysis
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-content .pdf-section__content');
-      var d = data.contentAnalysis || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-content .pdf-section__content');
+      const d = data.contentAnalysis || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.content', 'Content'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.content', 'Content quality directly impacts search rankings and user engagement. Search engines favor pages with substantial, well-written content that thoroughly covers a topic. This section examines word count, readability, text-to-HTML ratio, and sentence structure to assess your page\'s content depth. Pages with fewer than 300 words are generally considered thin content and may struggle to rank competitively.')) + '</p>';
@@ -304,10 +304,10 @@
       ]);
 
       // Content quality progress bars (mirrors web UI)
-      var wordPct = Math.min(Math.round(((d.wordCount || 0) / 1000) * 100), 100);
-      var readabilityPct = Math.min(100, Math.max(0, Math.round(100 - ((d.averageWordsPerSentence || 15) - 15) * 5)));
-      var textRatioPct = Math.round((d.textToHTMLRatio || 0) * 100);
-      var paraPct = Math.min(Math.round(((d.paragraphCount || 0) / 10) * 100), 100);
+      const wordPct = Math.min(Math.round(((d.wordCount || 0) / 1000) * 100), 100);
+      const readabilityPct = Math.min(100, Math.max(0, Math.round(100 - ((d.averageWordsPerSentence || 15) - 15) * 5)));
+      const textRatioPct = Math.round((d.textToHTMLRatio || 0) * 100);
+      const paraPct = Math.min(Math.round(((d.paragraphCount || 0) / 10) * 100), 100);
 
       html += PR.renderProgress(
         t('seo.report.content.wordCountLabel', 'Word Count: {{count}}', { count: d.wordCount || 0 }),
@@ -327,7 +327,7 @@
       );
 
       // Content table with target thresholds
-      var contentRows = [
+      const contentRows = [
         [t('seo.report.content.wordCountLineLabel', 'word_count'), String(d.wordCount || 0), d.wordCount >= 600 ? 'pass' : d.wordCount >= 300 ? 'warning' : 'fail', t('seo.report.content.target.wordCount', '600+ recommended')],
         [t('seo.report.content.sentencesLineLabel', 'sentences'), String(d.sentenceCount || 0), 'info', '-'],
         [t('seo.report.content.avgWordsPerSentenceLineLabel', 'avg_words_per_sentence'), d.averageWordsPerSentence ? d.averageWordsPerSentence.toFixed(1) : '-', d.averageWordsPerSentence && d.averageWordsPerSentence <= 20 ? 'pass' : 'warning', t('seo.report.content.target.avgWords', '15-20 words')],
@@ -351,12 +351,12 @@
       // Content Health — per-dimension scores (mirrors web UI heatmap)
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.content.healthHeading', 'Content Health')) + '</h3>';
 
-      var cWordScore = (d.wordCount || 0) >= 600 ? 100 : (d.wordCount || 0) >= 300 ? 70 : 40;
-      var cReadScore = (d.averageWordsPerSentence || 0) <= 20 ? 100 : (d.averageWordsPerSentence || 0) <= 25 ? 70 : 40;
-      var cRatioScore = (d.textToHTMLRatio || 0) >= 0.25 ? 100 : (d.textToHTMLRatio || 0) >= 0.15 ? 70 : 40;
-      var cParaScore = (d.paragraphCount || 0) >= 5 ? 100 : (d.paragraphCount || 0) >= 3 ? 70 : 40;
+      const cWordScore = (d.wordCount || 0) >= 600 ? 100 : (d.wordCount || 0) >= 300 ? 70 : 40;
+      const cReadScore = (d.averageWordsPerSentence || 0) <= 20 ? 100 : (d.averageWordsPerSentence || 0) <= 25 ? 70 : 40;
+      const cRatioScore = (d.textToHTMLRatio || 0) >= 0.25 ? 100 : (d.textToHTMLRatio || 0) >= 0.15 ? 70 : 40;
+      const cParaScore = (d.paragraphCount || 0) >= 5 ? 100 : (d.paragraphCount || 0) >= 3 ? 70 : 40;
 
-      var cHealthItems = [
+      const cHealthItems = [
         { label: t('seo.report.content.metrics.wordCount', 'Word Count'), score: cWordScore },
         { label: t('seo.report.content.metrics.readability', 'Readability'), score: cReadScore },
         { label: t('seo.report.content.metrics.textRatio', 'Text Ratio'), score: cRatioScore },
@@ -365,7 +365,7 @@
 
       html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 24px;">';
       cHealthItems.forEach(function (item) {
-        var clr = utils.scoreColor(item.score);
+        const clr = utils.scoreColor(item.score);
         html += '<div style="display:flex;align-items:center;gap:8px;font-size:0.8rem;">' +
           '<span style="min-width:80px;color:#555;">' + esc(item.label) + '</span>' +
           '<div style="flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden;">' +
@@ -387,16 +387,16 @@
        4. Images
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-images .pdf-section__content');
-      var d = data.imageAnalysis || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-images .pdf-section__content');
+      const d = data.imageAnalysis || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.images', 'Images'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.images', 'Images enhance user experience but can hurt SEO if not properly optimized. Missing alt text reduces accessibility for screen reader users and eliminates a key ranking signal for image search. This section checks alt text coverage, image dimensions, and file references to ensure your images are accessible and search-friendly. Properly optimized images with descriptive alt attributes can drive significant traffic through Google Image Search.')) + '</p>';
@@ -411,7 +411,7 @@
         html += '<p class="pdf-text-muted">' + esc(t('seo.report.images.noImagesFound', 'No images found on this page')) + '</p>';
       } else {
         // Stats
-        var altPct = d.total > 0 ? Math.round((d.withAlt / d.total) * 100) : 0;
+        const altPct = d.total > 0 ? Math.round((d.withAlt / d.total) * 100) : 0;
         html += PR.renderMetrics([
           { value: d.total || 0, label: t('seo.report.images.radial.imagesFound', 'Images Found') },
           { value: d.withAlt || 0, label: t('seo.report.images.chart.withAlt', 'With Alt') },
@@ -429,9 +429,9 @@
         // Image details table (first 20)
         if (d.images && d.images.length > 0) {
           html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.images.detailsHeading', 'Image Details')) + '</h3>';
-          var imgRows = d.images.slice(0, 20).map(function (img) {
-            var altStatus = img.alt ? 'pass' : 'fail';
-            var recommendation = img.alt
+          const imgRows = d.images.slice(0, 20).map(function (img) {
+            const altStatus = img.alt ? 'pass' : 'fail';
+            const recommendation = img.alt
               ? t('seo.report.images.recommendation.pass', 'Descriptive, helps SEO and accessibility')
               : t('seo.report.images.recommendation.fail', 'Add descriptive alt text for SEO + screen readers');
             return [
@@ -472,25 +472,25 @@
        5. Links
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-links .pdf-section__content');
-      var d = data.linkAnalysis || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-links .pdf-section__content');
+      const d = data.linkAnalysis || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.links', 'Links'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.links', 'Internal and external links form the connective tissue of the web and are a primary way search engines discover and rank pages. A healthy link profile includes a strong internal linking structure that distributes page authority and helps users navigate your site. This section evaluates the balance of internal vs. external links, nofollow usage, and any broken link patterns. Broken or malformed links can waste crawl budget and create poor user experiences.')) + '</p>';
 
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.links.healthSummaryHeading', 'Link Health Summary')) + '</h3>';
 
-      var linkTotal = d.total || 0;
-      var internalPct = linkTotal > 0 ? ((d.internal || 0) / linkTotal * 100).toFixed(1) : '0';
-      var externalPct = linkTotal > 0 ? ((d.external || 0) / linkTotal * 100).toFixed(1) : '0';
+      const linkTotal = d.total || 0;
+      const internalPct = linkTotal > 0 ? ((d.internal || 0) / linkTotal * 100).toFixed(1) : '0';
+      const externalPct = linkTotal > 0 ? ((d.external || 0) / linkTotal * 100).toFixed(1) : '0';
 
       html += PR.renderMetrics([
         { value: linkTotal, label: t('seo.report.links.totalLinksLabel', 'total_links') },
@@ -500,7 +500,7 @@
       ]);
 
       // Broken links metric
-      var brokenCount = d.brokenFormat || 0;
+      const brokenCount = d.brokenFormat || 0;
       if (brokenCount > 0) {
         html += PR.renderIssue(
           t('seo.report.links.brokenFormatLabel', 'broken_format') + ': ' + brokenCount + ' ' + t('common.pdf.execSummary.issuesFound', 'Issues Found'),
@@ -562,16 +562,16 @@
        6. Mobile Responsiveness
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-mobile .pdf-section__content');
-      var d = data.mobileResponsive || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-mobile .pdf-section__content');
+      const d = data.mobileResponsive || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.mobile', 'Mobile'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.mobile', 'With mobile-first indexing, Google prioritizes the mobile version of your site for ranking and indexing. Over 60% of web traffic now comes from mobile devices, making responsive design essential for reaching your audience. This section tests viewport configuration, font readability, tap target sizing, and horizontal scroll issues across device sizes. Pages that fail mobile usability checks may see reduced visibility in mobile search results.')) + '</p>';
@@ -583,9 +583,9 @@
       );
 
       if (d.viewports && d.viewports.length > 0) {
-        var mobileRows = d.viewports.map(function (vp) {
-          var deviceName = vp.viewport || '-';
-          var rec = deviceName === 'Mobile'
+        const mobileRows = d.viewports.map(function (vp) {
+          const deviceName = vp.viewport || '-';
+          const rec = deviceName === 'Mobile'
             ? t('seo.report.mobile.recommendations.mobile', '≥ 16px fonts, no horizontal scroll')
             : deviceName === 'Tablet'
               ? t('seo.report.mobile.recommendations.tablet', 'Responsive layout, touch-friendly')
@@ -614,10 +614,10 @@
         );
 
         // Summary metric cards (mirrors web UI grid cards)
-        var noScrollAll = d.viewports.every(function (vp) { return !vp.hasHorizontalScroll; });
-        var vpMetaAll   = d.viewports.every(function (vp) { return vp.hasViewportMeta; });
-        var readableCount = d.viewports.filter(function (vp) { return vp.fontSizeReadable; }).length;
-        var readableAll = readableCount === d.viewports.length;
+        const noScrollAll = d.viewports.every(function (vp) { return !vp.hasHorizontalScroll; });
+        const vpMetaAll   = d.viewports.every(function (vp) { return vp.hasViewportMeta; });
+        const readableCount = d.viewports.filter(function (vp) { return vp.fontSizeReadable; }).length;
+        const readableAll = readableCount === d.viewports.length;
 
         html += PR.renderMetrics([
           {
@@ -653,19 +653,19 @@
        7. Structured Data
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-structured-data .pdf-section__content');
-      var d = data.structuredData || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-structured-data .pdf-section__content');
+      const d = data.structuredData || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.structuredData', 'Structured Data'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Common schema types lookup (mirrors seo-script.js)
-      var commonSchemas = {
+      const commonSchemas = {
         Organization:        { desc: t('seo.report.structuredData.schemas.Organization.desc', 'Company/Brand information'), benefit: t('seo.report.structuredData.schemas.Organization.benefit', 'Establishes brand identity in Knowledge Graph'), fields: ['name', 'logo', 'url', 'contactPoint', 'sameAs'] },
         Person:              { desc: t('seo.report.structuredData.schemas.Person.desc', 'Individual profile data'), benefit: t('seo.report.structuredData.schemas.Person.benefit', 'Powers author rich snippets and Knowledge Panel'), fields: ['name', 'image', 'jobTitle', 'worksFor', 'sameAs'] },
         Product:             { desc: t('seo.report.structuredData.schemas.Product.desc', 'Product listings & details'), benefit: t('seo.report.structuredData.schemas.Product.benefit', 'Shows price, availability, and reviews in search'), fields: ['name', 'image', 'description', 'sku', 'offers', 'aggregateRating'] },
@@ -695,7 +695,7 @@
 
       // Benefit mini-cards (mirrors web UI structured data info cards)
       html += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin:12px 0;">';
-      var sdBenefits = [
+      const sdBenefits = [
         { title: t('seo.report.structuredData.info.cards.ctr.title', 'U Improved CTR'), body: t('seo.report.structuredData.info.cards.ctr.body', 'Rich results stand out and attract more clicks') },
         { title: t('seo.report.structuredData.info.cards.targeting.title', 'T Better Targeting'), body: t('seo.report.structuredData.info.cards.targeting.body', 'Helps search engines understand your niche') },
         { title: t('seo.report.structuredData.info.cards.advantage.title', 'W SEO Advantage'), body: t('seo.report.structuredData.info.cards.advantage.body', 'Competitive edge in search results') }
@@ -712,8 +712,8 @@
       // API returns `count` (number of JSON-LD schemas found) but not separate
       // `jsonLdCount` / `microdataCount` fields.  Derive them so the metrics
       // display correctly for both full and lightweight analyzer responses.
-      var jsonLdCount = d.jsonLdCount !== undefined ? d.jsonLdCount : (d.count || 0);
-      var microdataCount = d.microdataCount !== undefined ? d.microdataCount : 0;
+      const jsonLdCount = d.jsonLdCount !== undefined ? d.jsonLdCount : (d.count || 0);
+      const microdataCount = d.microdataCount !== undefined ? d.microdataCount : 0;
 
       html += PR.renderMetrics([
         { value: d.hasStructuredData ? t('seo.report.status.detected', 'Detected') : t('seo.report.status.notDetected', 'Not detected'), label: t('seo.structuredData', 'Structured Data'), color: d.hasStructuredData ? '#10b981' : '#ef4444' },
@@ -725,13 +725,13 @@
       // Summary table
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.structuredData.summary.heading', 'Summary')) + '</h3>';
 
-      var summaryTypesImpact = (d.count || 0) >= 3
+      const summaryTypesImpact = (d.count || 0) >= 3
         ? t('seo.report.structuredData.summary.rows.types.impact.great', 'Great coverage')
         : (d.count || 0) >= 1
           ? t('seo.report.structuredData.summary.rows.types.impact.good', 'Good start')
           : t('seo.report.structuredData.summary.rows.types.impact.none', 'None implemented');
 
-      var summaryScoreImpact = (d.score || 0) >= 80
+      const summaryScoreImpact = (d.score || 0) >= 80
         ? t('seo.report.structuredData.summary.rows.score.impact.excellent', 'Excellent implementation')
         : (d.score || 0) >= 60
           ? t('seo.report.structuredData.summary.rows.score.impact.room', 'Room for improvement')
@@ -776,13 +776,13 @@
         // Detected schema types table
         if (d.types && d.types.length > 0) {
           html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.structuredData.detected.heading', 'Detected Schema Types')) + '</h3>';
-          var schemaRows = d.types.map(function (type) {
-            var schema = commonSchemas[type] || {
+          const schemaRows = d.types.map(function (type) {
+            const schema = commonSchemas[type] || {
               desc: t('seo.report.structuredData.detected.unknown.desc', 'Schema markup'),
               benefit: t('seo.report.structuredData.detected.unknown.benefit', 'Structured data implementation'),
               fields: []
             };
-            var fieldsHtml = schema.fields.slice(0, 3).map(function (f) {
+            let fieldsHtml = schema.fields.slice(0, 3).map(function (f) {
               return '<code style="background:#e0f2fe;color:#0369a1;padding:1px 4px;border-radius:3px;font-size:0.75rem;">' + esc(f) + '</code>';
             }).join(' ');
             if (schema.fields.length > 3) {
@@ -871,16 +871,16 @@
           'info'
         );
 
-        var recSchemas = [
+        const recSchemas = [
           { type: 'Organization', priority: t('seo.report.structuredData.priority.high', 'HIGH'), severity: 'high' },
           { type: 'WebSite', priority: t('seo.report.structuredData.priority.high', 'HIGH'), severity: 'high' },
           { type: 'BreadcrumbList', priority: t('seo.report.structuredData.priority.medium', 'MEDIUM'), severity: 'medium' },
           { type: 'Article', priority: t('seo.report.structuredData.priority.medium', 'MEDIUM'), severity: 'medium' }
         ];
 
-        var recRows = recSchemas.map(function (item) {
-          var schema = commonSchemas[item.type];
-          var fieldsHtml = schema.fields.slice(0, 4).map(function (f) {
+        const recRows = recSchemas.map(function (item) {
+          const schema = commonSchemas[item.type];
+          const fieldsHtml = schema.fields.slice(0, 4).map(function (f) {
             return '<code style="background:#e0f2fe;color:#0369a1;padding:1px 4px;border-radius:3px;font-size:0.75rem;">' + esc(f) + '</code>';
           }).join(' ');
           return [
@@ -993,16 +993,16 @@
        8. Additional Checks
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-additional .pdf-section__content');
-      var d = data.additionalChecks || {};
-      var score = d.score;
+      const sec = document.querySelector('#section-additional .pdf-section__content');
+      const d = data.additionalChecks || {};
+      const score = d.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.additional', 'Additional Checks'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.additional', 'Beyond core SEO factors, several technical elements contribute to overall search health and user trust. A complete technical foundation includes proper browser identification, crawl directives, and tracking infrastructure. This section verifies the presence of a favicon, robots.txt, XML sitemap, analytics tracking, and social media links. Missing any of these elements can indicate an incomplete SEO setup and reduce your site\'s professional appearance.')) + '</p>';
@@ -1015,17 +1015,17 @@
       );
 
       // Status labels
-      var found = t('seo.report.status.found', 'Found');
-      var notFound = t('seo.report.status.notFound', 'Not found');
-      var present = t('seo.report.status.present', 'Present');
-      var missingLbl = t('seo.report.status.missing', 'Missing');
-      var detectedLbl = t('seo.report.status.detected', 'Detected');
-      var notDetectedLbl = t('seo.report.status.notDetected', 'Not detected');
+      const found = t('seo.report.status.found', 'Found');
+      const notFound = t('seo.report.status.notFound', 'Not found');
+      const present = t('seo.report.status.present', 'Present');
+      const missingLbl = t('seo.report.status.missing', 'Missing');
+      const detectedLbl = t('seo.report.status.detected', 'Detected');
+      const notDetectedLbl = t('seo.report.status.notDetected', 'Not detected');
 
       // Technical SEO table (5 columns)
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.additional.technicalHeading', 'Technical SEO')) + '</h3>';
 
-      var techRows = [
+      const techRows = [
         [
           'robots.txt',
           PR.renderStatus(d.hasRobotsTxt ? 'pass' : 'warning', d.hasRobotsTxt ? '✓ ' + found : '~ ' + notFound),
@@ -1086,8 +1086,8 @@
       // Social Media Presence table (5 columns)
       html += '<h3 class="pdf-subsection__title">' + esc(t('seo.report.additional.social.heading', 'Social Media Presence')) + '</h3>';
 
-      var socialLinks = d.socialLinks || {};
-      var socialRows = [
+      const socialLinks = d.socialLinks || {};
+      const socialRows = [
         [
           'Facebook',
           PR.renderStatus(socialLinks.facebook ? 'pass' : 'fail', socialLinks.facebook ? '✓' : '✗'),
@@ -1162,20 +1162,20 @@
        9. Fix Code + Recommendations
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('seo.sections.fixCode', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       // Section intro
       html += '<p class="pdf-section__intro">' + esc(t('seo.report.sectionIntros.recommendations', 'Based on the complete analysis, this section provides actionable code fixes and step-by-step implementation guides. Recommendations are organized by impact level so you can prioritize the changes that will deliver the greatest SEO improvements first. Each recommendation includes both the problematic pattern and the recommended solution with copy-ready code snippets. Implementing these fixes in order of severity will help you systematically improve your site\'s search performance.')) + '</p>';
 
       // Build rich fix cards (same logic as buildFixCards in seo-script.js)
-      var fixCards = _buildFixCards(data, t, esc);
+      const fixCards = _buildFixCards(data, t, esc);
 
       if (fixCards.length > 0) {
         html += '<p class="pdf-text-muted" style="margin-bottom:16px;">' +
@@ -1190,12 +1190,12 @@
       }
 
       // Also gather per-section issues and recommendations as a summary
-      var allRecs = [];
-      var sectionKeys = ['metaTags', 'headingStructure', 'contentAnalysis', 'imageAnalysis',
+      const allRecs = [];
+      const sectionKeys = ['metaTags', 'headingStructure', 'contentAnalysis', 'imageAnalysis',
                          'linkAnalysis', 'mobileResponsive',
                          'structuredData', 'additionalChecks'];
 
-      var sectionNames = {
+      const sectionNames = {
         metaTags: t('seo.sections.metaTags', 'Meta Tags'),
         headingStructure: t('seo.sections.headings', 'Headings'),
         contentAnalysis: t('seo.sections.content', 'Content'),
@@ -1207,9 +1207,9 @@
       };
 
       sectionKeys.forEach(function (key) {
-        var section = data[key];
+        const section = data[key];
         if (!section) return;
-        var sectionName = sectionNames[key] || key;
+        const sectionName = sectionNames[key] || key;
         if (section.recommendations) {
           section.recommendations.forEach(function (rec) {
             allRecs.push({ text: _translateIssue(rec, t), section: sectionName, severity: section.passed ? 'low' : 'medium' });
@@ -1229,9 +1229,9 @@
         '</h3>';
 
         // Group by severity
-        var high = allRecs.filter(function (r) { return r.severity === 'high'; });
-        var medium = allRecs.filter(function (r) { return r.severity === 'medium'; });
-        var low = allRecs.filter(function (r) { return r.severity === 'low'; });
+        const high = allRecs.filter(function (r) { return r.severity === 'high'; });
+        const medium = allRecs.filter(function (r) { return r.severity === 'medium'; });
+        const low = allRecs.filter(function (r) { return r.severity === 'low'; });
 
         if (high.length > 0) {
           html += '<div class="pdf-recs-group">';
@@ -1281,7 +1281,7 @@
        Helper: remove empty sections (hide if data is missing)
        ----------------------------------------------------------------------- */
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -1294,7 +1294,7 @@
 
   /** Convert HTML string to DOM node */
   function _htmlToNode(html) {
-    var temp = document.createElement('div');
+    const temp = document.createElement('div');
     temp.innerHTML = html;
     return temp.firstChild;
   }
@@ -1302,7 +1302,7 @@
   /** Render issues list for a section */
   function _renderIssuesList(issues, t) {
     if (!issues || issues.length === 0) return '';
-    var html = '<div class="pdf-issues" style="margin-top:12px;">';
+    let html = '<div class="pdf-issues" style="margin-top:12px;">';
     html += '<h4 class="pdf-subsection__title">' + (t('common.pdf.execSummary.issuesFound', 'Issues Found') || 'Issues') + '</h4>';
     issues.forEach(function (issue) {
       html += '<div class="pdf-issue pdf-issue--warning">' +
@@ -1319,7 +1319,7 @@
    */
   function _translateIssue(text, t) {
     // Exact-match translations
-    var exactMap = {
+    const exactMap = {
       'Missing page title': t('seo.analyzer.issues.missingTitle', 'Missing page title'),
       'Missing meta description': t('seo.analyzer.issues.missingDescription', 'Missing meta description'),
       'Missing viewport meta tag (affects mobile usability)': t('seo.analyzer.issues.missingViewport', 'Missing viewport meta tag (affects mobile usability)'),
@@ -1358,7 +1358,7 @@
     if (exactMap[text]) return exactMap[text];
 
     // Pattern-match translations for strings with dynamic values
-    var patterns = [
+    const patterns = [
       { re: /^Multiple H1 headings found \((\d+)\)\. Use only one H1 per page$/, fn: function (m) { return t('seo.analyzer.issues.multipleH1', 'Multiple H1 headings found ({{count}}). Use only one H1 per page', { count: m[1] }); } },
       { re: /^(\d+) image\(s\) missing alt text \(affects accessibility and SEO\)$/, fn: function (m) { return t('seo.analyzer.issues.missingAlt', '{{count}} image(s) missing alt text (affects accessibility and SEO)', { count: m[1] }); } },
       { re: /^(\d+) external link\(s\) opening in new tab should have rel="noopener noreferrer"$/, fn: function (m) { return t('seo.analyzer.recs.unsafeExternalLinks', '{{count}} external link(s) opening in new tab should have rel="noopener noreferrer"', { count: m[1] }); } },
@@ -1372,8 +1372,8 @@
       { re: /^(\d+) invalid structured data schema\(s\) found$/, fn: function (m) { return t('seo.analyzer.issues.invalidSchemas', '{{count}} invalid structured data schema(s) found', { count: m[1] }); } }
     ];
 
-    for (var i = 0; i < patterns.length; i++) {
-      var match = text.match(patterns[i].re);
+    for (let i = 0; i < patterns.length; i++) {
+      const match = text.match(patterns[i].re);
       if (match) return patterns[i].fn(match);
     }
 
@@ -1383,9 +1383,9 @@
 
   /** Extract domain from report data */
   function _getAnalyzedDomain(data) {
-    var rawUrl = data && data.url ? String(data.url) : '';
+    const rawUrl = data && data.url ? String(data.url) : '';
     try {
-      var parsed = new URL(rawUrl);
+      const parsed = new URL(rawUrl);
       return parsed.hostname || 'example.com';
     } catch (e) {
       return 'example.com';
@@ -1397,21 +1397,21 @@
    * Mirrors buildFixCards() in seo-script.js — only shows cards when issues are detected.
    */
   function _buildFixCards(data, t, esc) {
-    var analyzedDomain = _getAnalyzedDomain(data);
-    var cards = [];
-    var meta = data.metaTags || {};
-    var structured = data.structuredData || {};
-    var performance = data.performanceMetrics || {};
-    var images = data.imageAnalysis || {};
-    var headings = data.headingStructure || {};
-    var content = data.contentAnalysis || {};
-    var links = data.linkAnalysis || {};
+    const analyzedDomain = _getAnalyzedDomain(data);
+    const cards = [];
+    const meta = data.metaTags || {};
+    const structured = data.structuredData || {};
+    const performance = data.performanceMetrics || {};
+    const images = data.imageAnalysis || {};
+    const headings = data.headingStructure || {};
+    const content = data.contentAnalysis || {};
+    const links = data.linkAnalysis || {};
 
     // --- 1. Title tag (only if actually problematic) ---
-    var titleLen = meta.titleLength || 0;
-    var titleNeeds = !meta.title || titleLen < 30 || titleLen > 60;
+    const titleLen = meta.titleLength || 0;
+    const titleNeeds = !meta.title || titleLen < 30 || titleLen > 60;
     if (titleNeeds) {
-    var titleIssueDetail = !meta.title
+    const titleIssueDetail = !meta.title
       ? t('seo.fixCards.title.missingDetail', 'The page has no <title> tag at all. Search engines use the title as the primary clickable headline in results. Without one, Google will auto-generate a title from page content, which is almost always worse than a well-crafted one.')
       : titleLen < 30
         ? t('seo.fixCards.title.tooShortDetail', 'Your title is only {{len}} characters. Titles under 30 characters waste valuable SERP real estate and miss keyword opportunities. Google displays up to ~60 characters, so you have room to add descriptive, keyword-rich phrasing that improves click-through rate.', { len: titleLen })
@@ -1437,10 +1437,10 @@
     }
 
     // --- 2. Meta description (only if problematic) ---
-    var descLen = meta.descriptionLength || 0;
-    var descNeeds = !meta.description || descLen < 120 || descLen > 160;
+    const descLen = meta.descriptionLength || 0;
+    const descNeeds = !meta.description || descLen < 120 || descLen > 160;
     if (descNeeds) {
-    var descIssueDetail = !meta.description
+    const descIssueDetail = !meta.description
       ? t('seo.fixCards.description.missingDetail', 'No meta description was found. Without one, search engines pull a random snippet from your page, which often reads poorly and hurts click-through rate. A well-written description acts as ad copy for your page in search results.')
       : descLen < 120
         ? t('seo.fixCards.description.tooShortDetail', 'Your description is {{len}} characters. Google displays up to ~160 characters in search results. A short description wastes this free advertising space and signals less relevance to searchers.', { len: descLen })
@@ -1466,10 +1466,10 @@
     }
 
     // --- 3. Open Graph tags (only if missing) ---
-    var ogMissing = !meta.ogTitle && !meta.ogDescription;
-    var twitterMissing = !meta.twitterCard;
+    const ogMissing = !meta.ogTitle && !meta.ogDescription;
+    const twitterMissing = !meta.twitterCard;
     if (ogMissing || twitterMissing) {
-    var socialIssues = [];
+    const socialIssues = [];
     if (ogMissing) socialIssues.push('<!-- ' + t('seo.fixCards.comments.missingOg', '✗ Missing Open Graph tags (og:title, og:description, og:image)') + ' -->');
     if (twitterMissing) socialIssues.push('<!-- ' + t('seo.fixCards.comments.missingTwitter', '✗ Missing Twitter Card tags') + ' -->');
     cards.push({
@@ -1491,8 +1491,8 @@
     }
 
     // --- 4. Image alt text (only if images are missing alt) ---
-    var missingAlt = images.withoutAlt || 0;
-    var totalImages = images.total || 0;
+    const missingAlt = images.withoutAlt || 0;
+    const totalImages = images.total || 0;
     if (missingAlt > 0) {
     cards.push({
       title: t('seo.fixCards.images.title', 'Add missing image alt text'),
@@ -1513,15 +1513,15 @@
     }
 
     // --- 5. Heading structure (only if issues found) ---
-    var h1Count = headings.h1 ? headings.h1.length : 0;
-    var headingIssue = h1Count === 0 || h1Count > 1 || (headings.total || 0) < 3;
+    const h1Count = headings.h1 ? headings.h1.length : 0;
+    const headingIssue = h1Count === 0 || h1Count > 1 || (headings.total || 0) < 3;
     if (headingIssue) {
-    var headingIssueDetail = h1Count === 0
+    const headingIssueDetail = h1Count === 0
       ? t('seo.fixCards.headings.missingH1Detail', 'Your page is missing an H1 heading. The H1 is the primary heading that tells both search engines and users what the page is about. It carries the most weight of any heading tag and should contain your primary target keyword. Every page should have exactly one H1.')
       : h1Count > 1
         ? t('seo.fixCards.headings.multipleH1Detail', 'Your page has {{count}} H1 headings. Multiple H1 tags dilute the primary keyword signal and confuse search engines about the page topic. Keep one H1 as the main heading and demote others to H2 or H3.', { count: h1Count })
         : t('seo.fixCards.headings.lowHeadingsDetail', 'Your page has very few headings ({{count}} total). Headings create a scannable outline for users and help search engines understand content hierarchy. Well-structured headings improve both readability and SEO.', { count: headings.total || 0 });
-    var headingProblems = [];
+    const headingProblems = [];
     if (h1Count === 0) headingProblems.push('<!-- ' + t('seo.fixCards.comments.noH1', '✗ No H1 heading found') + ' -->');
     if (h1Count > 1) headingProblems.push('<!-- ' + t('seo.fixCards.comments.multipleH1', '✗ Multiple H1 headings ({{count}}) - use exactly one', { count: h1Count }) + ' -->');
     if ((headings.total || 0) < 3) headingProblems.push('<!-- ' + t('seo.fixCards.comments.fewHeadings', '✗ Only {{count}} headings total - page lacks structure', { count: headings.total || 0 }) + ' -->');
@@ -1544,7 +1544,7 @@
     }
 
     // --- 6. Content quality (only if thin content) ---
-    var wordCount = content.wordCount || 0;
+    const wordCount = content.wordCount || 0;
     if (wordCount < 600) {
     cards.push({
       title: t('seo.fixCards.content.title', 'Improve content depth'),
@@ -1607,16 +1607,16 @@
     }
 
     // --- 9. Link security (only if unsafe external links found) ---
-    var linksList = links.links || [];
-    var unsafeLinks = 0;
-    var emptyAnchors = 0;
-    for (var li = 0; li < linksList.length; li++) {
-      var lnk = linksList[li];
+    const linksList = links.links || [];
+    let unsafeLinks = 0;
+    let emptyAnchors = 0;
+    for (let li = 0; li < linksList.length; li++) {
+      const lnk = linksList[li];
       if (lnk.isExternal && lnk.target === '_blank' && (!lnk.hasNoOpener || !lnk.hasNoReferrer)) unsafeLinks++;
       if (!lnk.text || lnk.text.length === 0) emptyAnchors++;
     }
     if (unsafeLinks > 0 || emptyAnchors > 0) {
-    var linkProblems = [];
+    const linkProblems = [];
     if (unsafeLinks > 0) linkProblems.push('<!-- ' + t('seo.fixCards.comments.unsafeExternalLinks', '✗ {{count}} external links open in new tab without rel="noopener noreferrer"', { count: unsafeLinks }) + ' -->');
     if (emptyAnchors > 0) linkProblems.push('<!-- ' + t('seo.fixCards.comments.emptyAnchorText', '✗ {{count}} links have empty anchor text (bad for SEO and accessibility)', { count: emptyAnchors }) + ' -->');
     cards.push({
@@ -1640,7 +1640,7 @@
     // --- 10. Preload critical assets (only if perf score < 80) ---
     // Note: If no performance data exists, default to 0 (not 100) to ensure
     // performance fix cards appear when they should. This matches web UI behavior.
-    var perfScore = performance.score || 0;
+    const perfScore = performance.score || 0;
     if (perfScore < 80) {
     cards.push({
       title: t('seo.fixCards.preload.title', 'Preload critical assets'),
@@ -1689,13 +1689,13 @@
    * description, impact, code comparison, and step-by-step guide.
    */
   function _renderFixCard(fix, t, esc) {
-    var severityLower = (fix.severity || 'medium').toLowerCase();
+    const severityLower = (fix.severity || 'medium').toLowerCase();
 
-    var html = '<div class="pdf-fix-card">';
+    let html = '<div class="pdf-fix-card">';
 
     // Header
     html += '<div class="pdf-fix-card__header">';
-    var severityLabel = { high: t('seo.fixes.severity.high', 'High'), medium: t('seo.fixes.severity.medium', 'Medium'), low: t('seo.fixes.severity.low', 'Low') }[severityLower] || fix.severity;
+    const severityLabel = { high: t('seo.fixes.severity.high', 'High'), medium: t('seo.fixes.severity.medium', 'Medium'), low: t('seo.fixes.severity.low', 'Low') }[severityLower] || fix.severity;
     html += '<span class="pdf-fix-card__severity pdf-fix-card__severity--' + severityLower + '">' + esc(severityLabel) + '</span>';
     html += '<span class="pdf-fix-card__title">' + esc(fix.title) + '</span>';
     html += '<span class="pdf-fix-card__category">' + esc(fix.category) + '</span>';

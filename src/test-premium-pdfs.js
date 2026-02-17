@@ -21,7 +21,7 @@ const CroPremiumPdfGenerator = require('./services/croPremiumPdfGenerator');
 const MobilePremiumPdfGenerator = require('./services/mobilePremiumPdfGenerator');
 const TagIntelligencePremiumPdfGenerator = require('./services/tagIntelligencePremiumPdfGenerator');
 const BrandConsistencyPremiumPdfGenerator = require('./services/brandConsistencyPremiumPdfGenerator');
-const LocalSeoPremiumPdfGenerator = require('./services/localSeoPremiumPdfGenerator');
+const GeoSeoPremiumPdfGenerator = require('./services/geoSeoPremiumPdfGenerator');
 const GdprCompliancePremiumPdfGenerator = require('./services/gdprCompliancePremiumPdfGenerator');
 const BrokenLinksPremiumPdfGenerator = require('./services/brokenLinksPremiumPdfGenerator');
 
@@ -321,7 +321,7 @@ const testData = {
         ]
     },
 
-    localSeo: {
+    geoSeo: {
         url: 'https://example.com',
         score: 62,
         overallScore: 62,
@@ -513,7 +513,7 @@ async function runTests(filterName = null) {
         { name: 'Mobile', class: MobilePremiumPdfGenerator, data: testData.mobile },
         { name: 'Tag Intelligence', class: TagIntelligencePremiumPdfGenerator, data: testData.tagIntelligence },
         { name: 'Brand Consistency', class: BrandConsistencyPremiumPdfGenerator, data: testData.brandConsistency },
-        { name: 'Local SEO', class: LocalSeoPremiumPdfGenerator, data: testData.localSeo },
+        { name: 'GEO SEO', class: GeoSeoPremiumPdfGenerator, data: testData.geoSeo },
         { name: 'GDPR Compliance', class: GdprCompliancePremiumPdfGenerator, data: testData.gdprCompliance },
         { name: 'Broken Links', class: BrokenLinksPremiumPdfGenerator, data: testData.brokenLinks }
     ];

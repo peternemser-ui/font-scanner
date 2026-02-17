@@ -5,6 +5,14 @@
 const request = require('supertest');
 const express = require('express');
 const { TestDatabase } = require('../helpers/testSetup');
+
+// Mock getDatabase before requiring routes
+let mockDb = null;
+jest.mock('../../src/db', () => {
+  const actual = jest.requireActual('../../src/db');
+  return { ...actual, getDatabase: () => mockDb };
+});
+
 const authRoutes = require('../../src/routes/auth');
 
 describe('Authentication Routes', () => {
@@ -15,11 +23,7 @@ describe('Authentication Routes', () => {
   beforeAll(async () => {
     testDb = new TestDatabase();
     db = await testDb.setup();
-
-    // Mock getDatabase
-    jest.doMock('../../src/db', () => ({
-      getDatabase: () => db
-    }));
+    mockDb = db;
 
     // Setup Express app
     app = express();

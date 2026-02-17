@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#000000" />
 
-    <title data-i18n="faqPage.seoTitle">FAQ | Site Mechanic</title>
-    <meta name="description" content="Frequently asked questions about Site Mechanic scans, paid reports, exports, credits, data retention, and troubleshooting." data-i18n="faqPage.seoDescription" data-i18n-attr="content" />
+    <title data-i18n="faqPage.seoTitle">Frequently Asked Questions - Scans, Reports & Pricing | Site Mechanic</title>
+    <meta name="description" content="Find answers about Site Mechanic website scans, Pro reports, PDF exports, scan credits, data retention, billing, and troubleshooting. Get help quickly." data-i18n="faqPage.seoDescription" data-i18n-attr="content" />
     <meta name="robots" content="index, follow" />
     <link rel="canonical" href="https://sitemechanic.io/faq.html" />
 
@@ -20,6 +20,29 @@
     <link rel="alternate" hreflang="ja" href="https://sitemechanic.io/ja/faq.html" />
     <link rel="alternate" hreflang="ru" href="https://sitemechanic.io/ru/faq.html" />
     <link rel="alternate" hreflang="x-default" href="https://sitemechanic.io/en/faq.html" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://sitemechanic.io/faq.html" />
+    <meta property="og:title" content="Frequently Asked Questions | Site Mechanic" />
+    <meta property="og:description" content="Find answers about Site Mechanic website scans, Pro reports, PDF exports, scan credits, data retention, billing, and troubleshooting." />
+    <meta property="og:image" content="https://sitemechanic.io/og-image.png" />
+    <meta property="og:site_name" content="Site Mechanic" />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:locale:alternate" content="es_ES" />
+    <meta property="og:locale:alternate" content="fr_FR" />
+    <meta property="og:locale:alternate" content="de_DE" />
+    <meta property="og:locale:alternate" content="pt_PT" />
+    <meta property="og:locale:alternate" content="zh_CN" />
+    <meta property="og:locale:alternate" content="ja_JP" />
+    <meta property="og:locale:alternate" content="ru_RU" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://sitemechanic.io/faq.html" />
+    <meta property="twitter:title" content="Frequently Asked Questions | Site Mechanic" />
+    <meta property="twitter:description" content="Find answers about Site Mechanic website scans, Pro reports, PDF exports, and billing." />
+    <meta property="twitter:image" content="https://sitemechanic.io/twitter-image.png" />
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -47,7 +70,172 @@
 
     <script src="/i18n.js"></script>
 
-    <script type="application/ld+json" id="faqJsonLd">{}</script>
+    <script type="application/ld+json" id="faqJsonLd">{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is Site Mechanic?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Site Mechanic is a set of website diagnostics modules (Speed & UX, SEO, Accessibility, Security, Fonts & Design, Hosting, and more). You paste a URL, run a scan, and get prioritized issues plus next-step recommendations."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need an account to run scans?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Most scans can be run without signing in. If you choose a paid report/export, you may be prompted to sign in or purchase credits depending on the tool."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What URLs can I scan?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use a public, reachable URL (for example https://example.com). Redirects are fine. Pages behind logins or IP allow-lists may not be scannable."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How long do scans take?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It depends on the module and the site. Quick scans are typically under a minute; Lighthouse audits can take a few minutes. If a site is slow or blocks automation, scans can take longer or fail."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a \"paid report\" on Site Mechanic?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A paid report is an export/share outcome for a specific scan, such as PDF export, share links, downloadable data, or extended fix guidance. You can usually run the scan for free and then decide whether to purchase the report."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do credits work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Credits are used to unlock paid reports for individual scans. When a report is locked, you'll see options to buy a single report or buy a credit pack. If you already have credits, you can unlock with 1 credit."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I buy a single report without a subscription?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Many tools offer a \"buy single report\" option for one scan. Credit packs are also available if you run reports regularly."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you offer refunds?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "If you're not satisfied within the first 14 days of a subscription purchase, contact support for a refund. For one-off credit purchases, reach out and we'll help resolve issues or correct billing mistakes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What payment methods do you accept?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Payments are processed through Stripe. Most major credit/debit cards are supported. Site Mechanic does not store your full card details on our servers."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What counts as a \"scan\"?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A scan is when you run any analyzer (Performance, SEO, Security, etc.) on a URL. Each time you click \"Analyze\" or \"Run Scan\", it counts as one scan toward your daily limit."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is a \"paid report unlock\"?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A paid report unlock gives you access to Pro features for a specific scan result: PDF export, shareable links, detailed recommendations, and saved report history. Free users can view basic scan results but need to unlock for Pro features."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the plan limits?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Free: 10 scans per day, Pro sections are locked. Day Pass ($20): Unlimited scans for 24 hours + 30 report unlocks. Pro Monthly ($29/mo): Unlimited scans + 250 report unlocks per month. Pro Annual ($290/yr): Unlimited scans + unlimited report unlocks."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens when I hit my daily scan limit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "When you reach 10 scans in a day (Free tier), the scan button is disabled until midnight UTC. You'll see upgrade options for Day Pass or Pro subscriptions to continue scanning immediately."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens when I run out of report unlocks?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For Day Pass users, you can unlock up to 30 reports during your 24-hour window. For Pro Monthly, your 250 reports reset at the start of each billing period. Pro Annual has unlimited unlocks. If you run out, you can purchase a Single Report ($5) or upgrade your plan."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does the Day Pass work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Day Pass ($20) gives you full Pro access for 24 hours from the time of purchase. You get unlimited scans and up to 30 report unlocks during this window. It does not auto-renew—perfect for one-time projects or client presentations."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How does the Single Report option work?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Single Report ($5) lets you unlock one specific scan result without a subscription. After unlocking, you have permanent access to that report's Pro features including PDF export and detailed recommendations. Great if you only need one report occasionally."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When do my limits reset?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Daily scan limits reset at midnight UTC. For Pro Monthly subscribers, report unlocks reset at the start of each billing cycle. Day Pass limits expire 24 hours after purchase."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why can results differ from what I see in Chrome DevTools?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Many metrics depend on device emulation, network conditions, caching, and timing. Site Mechanic uses automated runs that may not match your exact local environment. Treat results as directional signals, then verify fixes locally."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do you crawl my entire website?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It depends on the module. Some tools analyze a single page URL. Crawling modules (when enabled) scan multiple pages based on discovered links and limits."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What data is stored after I run a scan?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Site Mechanic may store scan artifacts needed to generate reports (for example exported PDFs). Generated PDF files are automatically cleaned up after a retention period (7 days by default)."
+      }
+    }
+  ]
+}</script>
   </head>
   <body>
     <div id="nav-placeholder"></div>

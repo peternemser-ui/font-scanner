@@ -12,6 +12,13 @@ jest.mock('stripe', () => {
   return jest.fn(() => mockStripe);
 });
 
+// Mock getDatabase before requiring routes
+let mockDb = null;
+jest.mock('../../src/db', () => {
+  const actual = jest.requireActual('../../src/db');
+  return { ...actual, getDatabase: () => mockDb };
+});
+
 const paymentRoutes = require('../../src/routes/payment');
 const authService = require('../../src/services/authService');
 
@@ -25,11 +32,7 @@ describe('Payment Routes', () => {
   beforeAll(async () => {
     testDb = new TestDatabase();
     db = await testDb.setup();
-
-    // Mock getDatabase
-    jest.doMock('../../src/db', () => ({
-      getDatabase: () => db
-    }));
+    mockDb = db;
 
     // Setup Express app
     app = express();

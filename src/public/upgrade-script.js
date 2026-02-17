@@ -132,6 +132,14 @@ async function handleUpgrade(billingPeriod) {
     const data = await response.json();
 
     if (!response.ok) {
+      // If token expired/invalid, clear it and redirect to auth
+      if (response.status === 401) {
+        localStorage.removeItem('sm_auth_token');
+        localStorage.removeItem('sm_token');
+        const returnTo = encodeURIComponent(window.location.pathname + window.location.search);
+        window.location.href = `/auth.html?returnTo=${returnTo}`;
+        return;
+      }
       throw new Error(data.message || data.error || 'Failed to create checkout session');
     }
 
@@ -192,6 +200,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           dayPassBtn.className = 'sm-plan-card__btn sm-plan-card__btn--current';
           document.getElementById('card-daypass').classList.add('sm-plan-card--current');
         }
+      } else if (resp.status === 401) {
+        // Token expired/invalid - clear it so buttons show "Login to Upgrade"
+        localStorage.removeItem('sm_auth_token');
+        localStorage.removeItem('sm_token');
       }
     } catch (e) {
       // Ignore - allow user to stay on upgrade page

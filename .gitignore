@@ -93,5 +93,6 @@ data/*.db-wal
 data/*.db-shm
 *.db-wal
 *.db-shm
+tests/*.db
 tests/*.db-wal
 tests/*.db-shm

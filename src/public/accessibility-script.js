@@ -70,6 +70,11 @@ urlInput.addEventListener('keypress', (e) => {
 
 // Handle URL parameters for report loading and billing return
 (async function initFromUrlParams() {
+  // Ensure i18n translations are loaded before rendering any report content
+  if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+  }
+
   const params = new URLSearchParams(window.location.search);
   const reportId = params.get('report_id') || '';
   const autoUrl = params.get('url') || (typeof window.getUrlParameter === 'function' ? window.getUrlParameter() : '');
@@ -290,7 +295,7 @@ window.addEventListener('languageChanged', () => {
 // Re-render when entitlements arrive/change (handles race conditions
 // where sections rendered before billing status was available)
 window.addEventListener('entitlements:updated', () => {
-  if (window.SM_IS_SCANNING) return;
+  if (window.SM_IS_SCANNING && !window.__smBillingReturnInProgress) return;
   if (window.currentAccessibilityResults) {
     try {
       console.log('[Accessibility] Entitlements updated, re-rendering results');
@@ -312,7 +317,7 @@ window.addEventListener('sm:billingRescan', (e) => {
   const urlInput = document.getElementById('urlInput');
   if (scanUrl && urlInput) urlInput.value = scanUrl;
   if (purchasedReportId) document.body.setAttribute('data-report-id', purchasedReportId);
-  analyzeAccessibility({ preserveReportId: true });
+  analyzeAccessibility({ preserveReportId: true, billingRescan: true });
 });
 
 /**
@@ -370,7 +375,7 @@ function cleanupPreviousScanData(preserveReportId = false) {
  * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
  */
 async function analyzeAccessibility(options = {}) {
-  let { preserveReportId = false } = options;
+  const { preserveReportId = false, billingRescan = false } = options;
   const url = urlInput.value.trim();
 
   if (!url) {
@@ -492,7 +497,7 @@ async function analyzeAccessibility(options = {}) {
     const response = await fetch('/api/accessibility', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ url, scanStartedAt })
+      body: JSON.stringify({ url, scanStartedAt, lang: window.i18n?.getActiveLocale?.() || document.documentElement.lang || 'en', ...(billingRescan && { billingRescan: true }) })
     });
 
     if (!response.ok) {
@@ -578,7 +583,12 @@ function animateProgress() {
 /**
  * Display accessibility results
  */
-function displayAccessibilityResults(resultData) {
+async function displayAccessibilityResults(resultData) {
+  // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+  if (window.i18n && !window.i18n.initialized) {
+    try { await window.i18n.init(); } catch (e) { /* fallback */ }
+  }
+
   // Validate data - ignore cached error responses
   if (!resultData || resultData.error || typeof resultData === 'string') {
     console.warn('[Accessibility] Ignoring invalid/error data:', resultData?.error || resultData);
@@ -1376,6 +1386,18 @@ function getCurrentDomain() {
 function userHasPro() {
   // Check new billing model first (ProReportBlock)
   const reportId = document.body?.getAttribute('data-report-id') || '';
+
+  // Direct localStorage purchase proof check (most reliable, 24h TTL)
+  if (reportId) {
+    try {
+      const proof = localStorage.getItem('sm_purchased_' + reportId);
+      if (proof) {
+        const parsed = JSON.parse(proof);
+        if (Date.now() - (parsed.ts || 0) < 24 * 60 * 60 * 1000) return true;
+      }
+    } catch (e) { /* continue to other checks */ }
+  }
+
   if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
     if (window.ProReportBlock.hasAccess(reportId)) return true;
   }
@@ -1389,6 +1411,7 @@ function userHasPro() {
 }
 
 function renderLockedProPreview(title = '', previewLines = []) {
+  const reportId = document.body?.getAttribute('data-report-id') || '';
   const displayTitle = title || t('reports.common.proContent', 'Pro content');
   const lines = previewLines.length ? previewLines : [t('reports.common.recommendationsPreview', 'Recommendations preview'), t('reports.common.codeFixesPreview', 'Code fixes preview')];
   return `
@@ -1402,8 +1425,8 @@ function renderLockedProPreview(title = '', previewLines = []) {
       </ul>
       <div class="pro-locked__blur"></div>
       <div class="pro-locked__buttons">
-        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="fixes">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
-        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="fixes">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
+        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report${reportId ? ` data-report-id="${reportId}"` : ''} data-context="fixes">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
+        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal${reportId ? ` data-report-id="${reportId}"` : ''} data-context="fixes">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
       </div>
     </div>
   `;

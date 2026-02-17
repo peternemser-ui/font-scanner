@@ -10,25 +10,25 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('site-crawler', function renderSiteCrawler(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     // Resolve data sources
-    var results = data.results || {};
-    var pages = data.pages || [];
-    var issues = data.issues || [];
-    var recommendations = data.recommendations || [];
-    var statusCodes = results.statusCodes || {};
+    const results = data.results || {};
+    const pages = data.pages || [];
+    const issues = data.issues || [];
+    const recommendations = data.recommendations || [];
+    const statusCodes = results.statusCodes || {};
 
     function _htmlToNode(htmlStr) {
-      var tpl = document.createElement('template');
+      const tpl = document.createElement('template');
       tpl.innerHTML = htmlStr.trim();
       return tpl.content.firstChild;
     }
@@ -60,24 +60,24 @@
        1. Crawl Overview
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-overview .pdf-section__content');
-      var score = data.score;
+      const sec = document.querySelector('#section-overview .pdf-section__content');
+      const score = data.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.siteCrawler.report.sections.overview', 'Crawl Overview'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.overview', 'The crawl overview summarizes the scope and results of the site crawl. It shows how many pages were discovered, the maximum depth reached, and overall crawl performance. Understanding your site\'s crawlable structure helps ensure search engines can efficiently index all your important content.')) + '</p>';
 
       // Metrics cards
-      var totalPages = results.totalPages || 0;
-      var discoveredUrls = results.discoveredUrls || 0;
-      var depth = results.depth || 0;
-      var crawlTime = results.crawlTime || 0;
-      var avgResponseTime = results.avgResponseTime || 0;
+      const totalPages = results.totalPages || 0;
+      const discoveredUrls = results.discoveredUrls || 0;
+      const depth = results.depth || 0;
+      const crawlTime = results.crawlTime || 0;
+      const avgResponseTime = results.avgResponseTime || 0;
 
       html += PR.renderMetrics([
         { value: totalPages, label: t('reports.siteCrawler.report.metrics.totalPages', 'Total Pages') },
@@ -88,13 +88,13 @@
       ]);
 
       // Status codes overview
-      var codeKeys = Object.keys(statusCodes);
+      const codeKeys = Object.keys(statusCodes);
       if (codeKeys.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.siteCrawler.report.overview.statusOverview', 'Status Code Overview')) + '</h3>';
 
-        var okCount = statusCodes[200] || 0;
-        var redirectCount = (statusCodes[301] || 0) + (statusCodes[302] || 0);
-        var errorCount = (statusCodes[404] || 0) + (statusCodes[500] || 0);
+        const okCount = statusCodes[200] || 0;
+        const redirectCount = (statusCodes[301] || 0) + (statusCodes[302] || 0);
+        const errorCount = (statusCodes[404] || 0) + (statusCodes[500] || 0);
 
         html += PR.renderMetrics([
           { value: okCount, label: t('reports.siteCrawler.report.overview.ok', '2xx OK'), color: '#10b981' },
@@ -110,14 +110,14 @@
        2. Pages Crawled
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-pages .pdf-section__content');
+      const sec = document.querySelector('#section-pages .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.siteCrawler.report.sections.pages', 'Pages Crawled'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.pages', 'This section lists all pages discovered during the crawl with their HTTP status codes, titles, and response times. Pages with errors or slow response times may be hurting your search engine visibility and user experience.')) + '</p>';
 
@@ -127,10 +127,10 @@
         ]);
 
         // Pages table (up to 50)
-        var pageRows = pages.slice(0, 50).map(function (page) {
-          var code = page.statusCode || 0;
-          var statusType = code >= 200 && code < 300 ? 'pass' : code >= 300 && code < 400 ? 'review' : 'fail';
-          var rtMs = page.responseTime || 0;
+        const pageRows = pages.slice(0, 50).map(function (page) {
+          const code = page.statusCode || 0;
+          const statusType = code >= 200 && code < 300 ? 'pass' : code >= 300 && code < 400 ? 'review' : 'fail';
+          const rtMs = page.responseTime || 0;
 
           return [
             '<span class="pdf-table__truncate">' + esc(truncate(page.url || '', 60)) + '</span>',
@@ -165,14 +165,14 @@
        3. Site Structure
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-structure .pdf-section__content');
+      const sec = document.querySelector('#section-structure .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.siteCrawler.report.sections.structure', 'Site Structure'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.structure', 'Site structure analysis examines how your pages are organized and interconnected. A well-structured site has a shallow, logical hierarchy that enables both users and search engines to find content efficiently. Deep or orphaned pages may receive less crawl budget and link equity.')) + '</p>';
 
@@ -180,16 +180,16 @@
       if (pages.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.siteCrawler.report.structure.depthHeading', 'Depth Distribution')) + '</h3>';
 
-        var depthMap = {};
+        const depthMap = {};
         pages.forEach(function (page) {
-          var d = page.depth || 0;
+          const d = page.depth || 0;
           depthMap[d] = (depthMap[d] || 0) + 1;
         });
 
-        var depthKeys = Object.keys(depthMap).sort(function (a, b) { return Number(a) - Number(b); });
-        var depthRows = depthKeys.map(function (d) {
-          var count = depthMap[d];
-          var pct = pages.length > 0 ? Math.round((count / pages.length) * 100) : 0;
+        const depthKeys = Object.keys(depthMap).sort(function (a, b) { return Number(a) - Number(b); });
+        const depthRows = depthKeys.map(function (d) {
+          const count = depthMap[d];
+          const pct = pages.length > 0 ? Math.round((count / pages.length) * 100) : 0;
           return [
             '<strong>' + esc(t('reports.siteCrawler.report.structure.depthLevel', 'Depth {{level}}', { level: d })) + '</strong>',
             String(count),
@@ -217,17 +217,17 @@
       }
 
       // Status code breakdown
-      var codeKeys = Object.keys(statusCodes);
+      const codeKeys = Object.keys(statusCodes);
       if (codeKeys.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.siteCrawler.report.structure.statusHeading', 'Status Code Breakdown')) + '</h3>';
 
-        var totalResponses = 0;
+        let totalResponses = 0;
         codeKeys.forEach(function (k) { totalResponses += statusCodes[k]; });
 
-        var statusRows = codeKeys.sort().map(function (code) {
-          var count = statusCodes[code];
-          var pct = totalResponses > 0 ? Math.round((count / totalResponses) * 100) : 0;
-          var statusType = Number(code) >= 200 && Number(code) < 300 ? 'pass'
+        const statusRows = codeKeys.sort().map(function (code) {
+          const count = statusCodes[code];
+          const pct = totalResponses > 0 ? Math.round((count / totalResponses) * 100) : 0;
+          const statusType = Number(code) >= 200 && Number(code) < 300 ? 'pass'
             : Number(code) >= 300 && Number(code) < 400 ? 'review'
             : 'fail';
           return [
@@ -255,15 +255,15 @@
        4. Issues Detected
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-issues .pdf-section__content');
-      var issueScore = issues.length === 0 ? 100 : Math.max(0, 100 - (issues.length * 3));
+      const sec = document.querySelector('#section-issues .pdf-section__content');
+      const issueScore = issues.length === 0 ? 100 : Math.max(0, 100 - (issues.length * 3));
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.siteCrawler.report.sections.issues', 'Issues Detected'), issueScore)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.issues', 'Issues detected during the crawl include broken pages, missing titles, duplicate content, and other technical SEO problems. Each issue is categorized by severity to help you prioritize fixes that will have the greatest impact on search performance.')) + '</p>';
 
@@ -273,12 +273,12 @@
         ]);
 
         // Group by severity
-        var critical = issues.filter(function (i) { return i.severity === 'critical'; });
-        var high = issues.filter(function (i) { return i.severity === 'high'; });
-        var medium = issues.filter(function (i) { return i.severity === 'medium'; });
-        var low = issues.filter(function (i) { var s = i.severity; return !s || s === 'low'; });
+        const critical = issues.filter(function (i) { return i.severity === 'critical'; });
+        const high = issues.filter(function (i) { return i.severity === 'high'; });
+        const medium = issues.filter(function (i) { return i.severity === 'medium'; });
+        const low = issues.filter(function (i) { const s = i.severity; return !s || s === 'low'; });
 
-        var groups = [
+        const groups = [
           { items: critical, label: t('common.pdf.execSummary.critical', 'Critical'), color: '#ef4444' },
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
@@ -314,29 +314,29 @@
        5. Page Performance
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-performance .pdf-section__content');
+      const sec = document.querySelector('#section-performance .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.siteCrawler.report.sections.performance', 'Page Performance'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.performance', 'Page performance across your site reveals patterns in response times and server behavior. Consistently slow pages may indicate server capacity issues or inefficient code. This section highlights the slowest pages and overall response time distribution.')) + '</p>';
 
       if (pages.length > 0) {
         // Calculate average response time
-        var totalRt = 0;
-        var rtCount = 0;
+        let totalRt = 0;
+        let rtCount = 0;
         pages.forEach(function (page) {
           if (page.responseTime) {
             totalRt += page.responseTime;
             rtCount++;
           }
         });
-        var avgRt = rtCount > 0 ? Math.round(totalRt / rtCount) : 0;
-        var avgColor = _responseTimeColor(avgRt);
+        const avgRt = rtCount > 0 ? Math.round(totalRt / rtCount) : 0;
+        const avgColor = _responseTimeColor(avgRt);
 
         html += PR.renderMetrics([
           { value: _formatMs(avgRt), label: t('reports.siteCrawler.report.performance.avgResponseTime', 'Avg Response Time'), color: avgColor },
@@ -345,7 +345,7 @@
 
         // Avg response time progress (target: under 500ms)
         if (avgRt > 0) {
-          var progressVal = Math.min(avgRt, 1000);
+          const progressVal = Math.min(avgRt, 1000);
           html += PR.renderProgress(
             t('reports.siteCrawler.report.performance.avgResponseTime', 'Avg Response Time'),
             1000 - progressVal, 1000
@@ -353,16 +353,16 @@
         }
 
         // Slowest pages table (top 10)
-        var sortedPages = pages.slice().sort(function (a, b) {
+        const sortedPages = pages.slice().sort(function (a, b) {
           return (b.responseTime || 0) - (a.responseTime || 0);
         });
-        var slowest = sortedPages.slice(0, 10);
+        const slowest = sortedPages.slice(0, 10);
 
         if (slowest.length > 0 && slowest[0].responseTime) {
           html += '<h3 class="pdf-subsection__title">' + esc(t('reports.siteCrawler.report.performance.slowestHeading', 'Slowest Pages')) + '</h3>';
 
-          var slowRows = slowest.map(function (page) {
-            var rtMs = page.responseTime || 0;
+          const slowRows = slowest.map(function (page) {
+            const rtMs = page.responseTime || 0;
             return [
               '<span class="pdf-table__truncate">' + esc(truncate(page.url || '', 60)) + '</span>',
               '<span style="color:' + _responseTimeColor(rtMs) + ';font-weight:600;">' + _formatMs(rtMs) + '</span>',
@@ -394,25 +394,25 @@
        6. Recommendations
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.siteCrawler.report.sections.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.siteCrawler.report.sectionIntros.recommendations', 'Based on the site crawl analysis, these recommendations target the most critical structural and technical issues affecting your site\'s search engine crawlability.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Group by priority/severity
-        var critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
-        var high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
-        var medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
-        var low = recommendations.filter(function (r) { var p = r.priority || r.severity; return !p || p === 'low'; });
+        const critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
+        const high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
+        const medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
+        const low = recommendations.filter(function (r) { const p = r.priority || r.severity; return !p || p === 'low'; });
 
-        var groups = [
+        const groups = [
           { items: critical, label: t('common.pdf.execSummary.critical', 'Critical'), color: '#ef4444' },
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
@@ -445,7 +445,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }

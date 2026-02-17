@@ -7,9 +7,13 @@ const { Database } = require('../../src/db');
 const fs = require('fs');
 const path = require('path');
 
+let dbCounter = 0;
+
 class TestDatabase {
   constructor() {
-    this.testDbPath = path.join(__dirname, '..', 'test.db');
+    // Each instance gets a unique db file to avoid EBUSY conflicts in parallel test suites
+    const uniqueId = `${process.pid}_${++dbCounter}_${Date.now()}`;
+    this.testDbPath = path.join(__dirname, '..', `test_${uniqueId}.db`);
     this.db = null;
   }
 
@@ -17,9 +21,13 @@ class TestDatabase {
    * Initialize test database with schema
    */
   async setup() {
-    // Remove existing test database
-    if (fs.existsSync(this.testDbPath)) {
-      fs.unlinkSync(this.testDbPath);
+    // Remove existing test database (shouldn't exist with unique paths, but just in case)
+    try {
+      if (fs.existsSync(this.testDbPath)) {
+        fs.unlinkSync(this.testDbPath);
+      }
+    } catch (err) {
+      // Ignore EBUSY on Windows — the unique path should prevent conflicts
     }
 
     // Initialize database

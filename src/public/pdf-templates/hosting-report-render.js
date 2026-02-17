@@ -10,23 +10,23 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('hosting', function renderHosting(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     // Resolve data sources
-    var hosting = data.hosting || {};
-    var cmsDetected = data.cmsDetected || {};
-    var recommendations = data.recommendations || [];
+    const hosting = data.hosting || {};
+    const cmsDetected = data.cmsDetected || {};
+    const recommendations = data.recommendations || [];
 
     function _htmlToNode(htmlStr) {
-      var tpl = document.createElement('template');
+      const tpl = document.createElement('template');
       tpl.innerHTML = htmlStr.trim();
       return tpl.content.firstChild;
     }
@@ -35,22 +35,22 @@
        1. Hosting Provider
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-provider .pdf-section__content');
-      var score = data.score;
+      const sec = document.querySelector('#section-provider .pdf-section__content');
+      const score = data.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.provider', 'Hosting Provider'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.provider', 'Your hosting provider forms the foundation of your website\'s performance, security, and reliability. This section identifies the detected hosting provider, its service tier, and available features. Understanding your hosting infrastructure helps identify opportunities for optimization and ensures your provider meets your site\'s requirements.')) + '</p>';
 
       // Provider overview table
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.provider.overviewHeading', 'Provider Details')) + '</h3>';
 
-      var rows = [];
+      const rows = [];
       rows.push([
         esc(t('reports.hosting.report.provider.rows.name', 'Provider')),
         '<strong>' + esc(hosting.detectedProvider || '-') + '</strong>'
@@ -81,10 +81,10 @@
       ]);
 
       // Features table
-      var features = hosting.features || [];
+      const features = hosting.features || [];
       if (features.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.provider.featuresHeading', 'Included Features')) + '</h3>';
-        var featureRows = features.map(function (f) {
+        const featureRows = features.map(function (f) {
           return [
             esc(f),
             PR.renderStatus('pass', t('seo.report.status.yes', 'Yes'))
@@ -108,21 +108,21 @@
        2. Server Infrastructure
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-infrastructure .pdf-section__content');
+      const sec = document.querySelector('#section-infrastructure .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.infrastructure', 'Server Infrastructure'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.infrastructure', 'Server infrastructure encompasses the hardware, software, and network configuration that deliver your website to visitors. This section examines your server\'s IP address, response headers, and technical configuration. Properly configured server infrastructure ensures fast, reliable content delivery and reduces security vulnerabilities.')) + '</p>';
 
       // Server info table
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.infrastructure.serverHeading', 'Server Information')) + '</h3>';
 
-      var serverRows = [];
+      const serverRows = [];
       if (hosting.ipAddress) {
         serverRows.push([
           esc(t('reports.hosting.report.infrastructure.rows.ip', 'IP Address')),
@@ -148,11 +148,11 @@
       }
 
       // Response headers table
-      var responseHeaders = hosting.responseHeaders || {};
-      var headerKeys = Object.keys(responseHeaders);
+      const responseHeaders = hosting.responseHeaders || {};
+      const headerKeys = Object.keys(responseHeaders);
       if (headerKeys.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.infrastructure.headersHeading', 'Response Headers')) + '</h3>';
-        var headerRows = headerKeys.slice(0, 20).map(function (key) {
+        const headerRows = headerKeys.slice(0, 20).map(function (key) {
           return [
             '<strong>' + esc(key) + '</strong>',
             '<span class="pdf-table__truncate">' + esc(truncate(String(responseHeaders[key]), 80)) + '</span>'
@@ -180,14 +180,14 @@
        3. CMS & Technology
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-cms .pdf-section__content');
+      const sec = document.querySelector('#section-cms .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.cms', 'CMS & Technology'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.cms', 'Content Management Systems and web technologies determine how your site is built and maintained. This section identifies the CMS platform, its version, and additional technologies detected on your site. Keeping your CMS and its dependencies up to date is critical for security and performance.')) + '</p>';
 
@@ -195,7 +195,7 @@
       if (cmsDetected.name) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.cms.detectionHeading', 'CMS Detection')) + '</h3>';
 
-        var cmsRows = [];
+        const cmsRows = [];
         cmsRows.push([
           esc(t('reports.hosting.report.cms.rows.platform', 'Platform')),
           '<strong>' + esc(cmsDetected.name) + '</strong>'
@@ -237,12 +237,12 @@
       }
 
       // Technologies list
-      var technologies = hosting.technologies || [];
+      const technologies = hosting.technologies || [];
       if (technologies.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.hosting.report.cms.technologiesHeading', 'Detected Technologies')) + '</h3>';
-        var techRows = technologies.slice(0, 25).map(function (tech) {
-          var techName = typeof tech === 'string' ? tech : (tech.name || '-');
-          var techCategory = typeof tech === 'object' && tech.category ? tech.category : '-';
+        const techRows = technologies.slice(0, 25).map(function (tech) {
+          const techName = typeof tech === 'string' ? tech : (tech.name || '-');
+          const techCategory = typeof tech === 'object' && tech.category ? tech.category : '-';
           return [
             '<strong>' + esc(techName) + '</strong>',
             esc(techCategory),
@@ -272,25 +272,25 @@
        4. Hosting Performance
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-performance .pdf-section__content');
+      const sec = document.querySelector('#section-performance .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.performance', 'Hosting Performance'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.performance', 'Hosting performance directly impacts your site\'s loading speed and user experience. This section measures server response time and Time to First Byte (TTFB), which indicate how quickly your server processes and begins delivering requests. Fast server response times are essential for good Core Web Vitals scores.')) + '</p>';
 
       // Performance metrics
-      var perfMetrics = [];
+      const perfMetrics = [];
       if (hosting.responseTime !== undefined && hosting.responseTime !== null) {
-        var rtColor = hosting.responseTime <= 200 ? '#10b981' : hosting.responseTime <= 500 ? '#f59e0b' : '#ef4444';
+        const rtColor = hosting.responseTime <= 200 ? '#10b981' : hosting.responseTime <= 500 ? '#f59e0b' : '#ef4444';
         perfMetrics.push({ value: hosting.responseTime + 'ms', label: t('reports.hosting.report.performance.responseTime', 'Response Time'), color: rtColor });
       }
       if (hosting.ttfb !== undefined && hosting.ttfb !== null) {
-        var ttfbColor = hosting.ttfb <= 200 ? '#10b981' : hosting.ttfb <= 600 ? '#f59e0b' : '#ef4444';
+        const ttfbColor = hosting.ttfb <= 200 ? '#10b981' : hosting.ttfb <= 600 ? '#f59e0b' : '#ef4444';
         perfMetrics.push({ value: hosting.ttfb + 'ms', label: t('reports.hosting.report.performance.ttfb', 'TTFB'), color: ttfbColor });
       }
       if (perfMetrics.length > 0) {
@@ -298,7 +298,7 @@
       }
 
       // Performance details table
-      var perfRows = [];
+      const perfRows = [];
       if (hosting.responseTime !== undefined && hosting.responseTime !== null) {
         perfRows.push([
           esc(t('reports.hosting.report.performance.responseTime', 'Response Time')),
@@ -350,26 +350,26 @@
        5. Recommendations
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.hosting.report.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.hosting.report.sectionIntros.recommendations', 'Based on the hosting analysis, these recommendations prioritize the most impactful improvements for your server infrastructure, performance, and configuration.')) + '</p>';
 
       if (recommendations.length > 0) {
-        var critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
-        var high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
-        var medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
-        var low = recommendations.filter(function (r) {
-          var p = r.priority || r.severity;
+        const critical = recommendations.filter(function (r) { return (r.priority || r.severity) === 'critical'; });
+        const high = recommendations.filter(function (r) { return (r.priority || r.severity) === 'high'; });
+        const medium = recommendations.filter(function (r) { return (r.priority || r.severity) === 'medium'; });
+        const low = recommendations.filter(function (r) {
+          const p = r.priority || r.severity;
           return !p || p === 'low';
         });
-        var groups = [
+        const groups = [
           { items: critical, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#ef4444' },
           { items: high, label: t('common.pdf.execSummary.highPriority', 'High Priority'), color: '#f97316' },
           { items: medium, label: t('common.pdf.execSummary.mediumPriority', 'Medium Priority'), color: '#f59e0b' },
@@ -402,7 +402,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }

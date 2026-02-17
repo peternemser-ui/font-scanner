@@ -7,14 +7,14 @@
   'use strict';
 
   // Try to find redirect target from body data attribute
-  var body = document.body;
-  var target = body ? body.dataset.redirect : null;
-  var preserveSearch = body ? body.dataset.preserveSearch === 'true' : false;
+  const body = document.body;
+  let target = body ? body.dataset.redirect : null;
+  let preserveSearch = body ? body.dataset.preserveSearch === 'true' : false;
 
   // Fallback: check if script element has data attributes
   if (!target) {
-    var scripts = document.getElementsByTagName('script');
-    for (var i = 0; i < scripts.length; i++) {
+    const scripts = document.getElementsByTagName('script');
+    for (let i = 0; i < scripts.length; i++) {
       if (scripts[i].src && scripts[i].src.includes('redirect.js')) {
         target = scripts[i].dataset.redirect;
         preserveSearch = scripts[i].dataset.preserveSearch === 'true';
@@ -24,7 +24,7 @@
   }
 
   if (target) {
-    var url = preserveSearch ? target + window.location.search : target;
+    const url = preserveSearch ? target + window.location.search : target;
     window.location.href = url;
   }
 })();

@@ -30,11 +30,13 @@ document.addEventListener('DOMContentLoaded', () => {
     pageId: 'performance-hub',
     pageTitle: t('performanceHub.title', 'Speed & UX'),
     pageDescription: t('performanceHub.subtitle', 'Performance, Core Web Vitals & Lighthouse'),
+    pageIntro: t('performanceHub.pageIntro', 'This report measures your website\'s loading speed, interactivity, and visual stability using real browser metrics and Lighthouse audits. Slow pages lose visitors and rank lower in search results. Use these insights to identify bottlenecks and deliver a faster, smoother experience.'),
     analyzerType: 'speed-ux-quick',
 
     i18n: {
       title: 'performanceHub.title',
-      subtitle: 'performanceHub.subtitle'
+      subtitle: 'performanceHub.subtitle',
+      pageIntro: 'performanceHub.pageIntro'
     },
 
     urlInput: {
@@ -169,7 +171,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Re-render when entitlements arrive/change (handles race conditions
   // where sections rendered before billing status was available)
   window.addEventListener('entitlements:updated', () => {
-    if (window.SM_IS_SCANNING) return;
+    if (window.SM_IS_SCANNING && !window.__smBillingReturnInProgress) return;
     if (window.currentPerformanceResults) {
       try {
         console.log('[PerformanceHub] Entitlements updated, re-rendering results');
@@ -199,7 +201,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Trigger re-scan with preserveReportId to keep the purchased reportId
-    runAnalysis({ preserveReportId: true });
+    // billingRescan tells the server to skip scan quota decrement
+    runAnalysis({ preserveReportId: true, billingRescan: true });
   });
 
   async function ensureCreditsManagerLoaded() {
@@ -511,6 +514,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Exposed globally for Puppeteer PDF rendering
   window.displayResults = displayResults;
   async function displayResults(data) {
+    // Ensure i18n is loaded before rendering (prevents English fallback on fast stored-report loads)
+    if (window.i18n && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* fallback */ }
+    }
+
     if (!data) return;
 
     // CRITICAL: Ensure billing status is loaded before rendering locked/unlocked sections.
@@ -617,8 +625,36 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // --- i18n readiness gate ---
+  // i18n.init() is async (fetches locale JSON). If we render a report from
+  // stored data or URL params before the translations are loaded, every t()
+  // call falls back to its English default. This helper returns a promise
+  // that resolves once translations are available, with a safety timeout so
+  // the page never hangs.
+  function ensureI18nReady(timeoutMs = 3000) {
+    if (window.i18n && window.i18n.initialized) return Promise.resolve();
+    return new Promise(resolve => {
+      const onReady = () => {
+        clearTimeout(timer);
+        resolve();
+      };
+      // languageChanged fires at end of i18n.init() with { initial: true }
+      window.addEventListener('languageChanged', onReady, { once: true });
+      const timer = setTimeout(() => {
+        window.removeEventListener('languageChanged', onReady);
+        console.warn('[PerformanceHub] i18n init timed out after ' + timeoutMs + 'ms – rendering with available translations');
+        resolve();
+      }, timeoutMs);
+    });
+  }
+
   // Check for stored report or auto-start scan
   (async function initFromUrlParams() {
+    // Ensure i18n translations are loaded before rendering any report content
+    if (window.i18n && typeof window.i18n.init === 'function' && !window.i18n.initialized) {
+      try { await window.i18n.init(); } catch (e) { /* i18n will use fallback */ }
+    }
+
     console.log('[PerformanceHub] initFromUrlParams starting', {
       reportIdParam,
       urlParam,
@@ -638,8 +674,9 @@ document.addEventListener('DOMContentLoaded', () => {
         urlInput.value = injectedUrl;
       }
 
-      // Display the results immediately
+      // Display the results — wait for i18n so strings render in the correct locale
       try {
+        await ensureI18nReady();
         displayResults(injectedData);
         window.__REPORT_READY__ = true;
         window.dispatchEvent(new CustomEvent('report:ready'));
@@ -800,8 +837,9 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log('[PerformanceHub] Set fallback screenshot URL:', fallbackScreenshotUrl);
           }
 
-          // Display the report with error handling
+          // Display the report with error handling — wait for i18n first
           try {
+            await ensureI18nReady();
             console.log('[PerformanceHub] Calling displayResults with stored data');
             displayResults(stored.data);
             console.log('[PerformanceHub] displayResults completed successfully');
@@ -918,8 +956,12 @@ document.addEventListener('DOMContentLoaded', () => {
    * @param {Object} options - Optional settings
    * @param {boolean} options.preserveReportId - If true, preserve the existing report_id (for billing return re-scans)
    */
+  // Module-level flag: set to true during billing re-scans so API calls include billingRescan
+  let _isBillingRescan = false;
+
   async function runAnalysis(options = {}) {
-    let { preserveReportId = false } = options;
+    const { preserveReportId = false, billingRescan = false } = options;
+    _isBillingRescan = billingRescan;
     const url = urlInput.value.trim();
     if (!url) {
       showError(t('reports.common.pleaseEnterUrl', 'Please enter a valid URL'));
@@ -1197,7 +1239,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const response = await fetch('/api/performance-snapshot', {
       method: 'POST',
       headers,
-      body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY })
+      body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY, ...(_isBillingRescan && { billingRescan: true }) })
     });
 
     if (loader) loader.nextStep(1);
@@ -1239,7 +1281,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/performance', {
         method: 'POST',
         headers,
-        body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY }),
+        body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY, ...(_isBillingRescan && { billingRescan: true }) }),
         signal: controller.signal
       });
 
@@ -1285,7 +1327,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch('/api/core-web-vitals', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY })
+        body: JSON.stringify({ url, scanStartedAt, analyzerKey: window.SM_ANALYZER_KEY, ...(_isBillingRescan && { billingRescan: true }) })
       });
 
       if (loader) loader.nextStep(3);
@@ -2219,7 +2261,7 @@ document.addEventListener('DOMContentLoaded', () => {
         ${translated.slice(0, 8).map(op => `
           <li style="line-height: 1.5;">
             <strong style="color: var(--text-primary, #fff);">${op.title || op.name || t('reports.common.opportunity', 'Opportunity')}</strong>
-            ${op.priority ? `<span style="display:inline-block; margin-left:0.5rem; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; background:${op.priority === 'high' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}; color:${op.priority === 'high' ? '#ef4444' : '#f59e0b'};">${op.priority}</span>` : ''}
+            ${op.priority ? `<span style="display:inline-block; margin-left:0.5rem; padding:0.1rem 0.4rem; border-radius:4px; font-size:0.75rem; background:${op.priority === 'high' ? 'rgba(239,68,68,0.2)' : 'rgba(245,158,11,0.2)'}; color:${op.priority === 'high' ? '#ef4444' : '#f59e0b'};">${t('reports.performance.priorityLabels.' + op.priority, op.priority)}</span>` : ''}
             ${op.description ? `<div style="color: var(--text-muted, #9ca3af); font-size: 0.9rem; margin-top: 0.25rem;">${op.description}</div>` : ''}
             ${op.impact ? `<div style="color: #00ff41; font-size: 0.85rem; margin-top: 0.25rem;">${t('reports.common.impactLabel', 'Impact: ')}${op.impact}</div>` : ''}
           </li>
@@ -2619,12 +2661,13 @@ document.addEventListener('DOMContentLoaded', () => {
       ${data.recommendations && data.recommendations.length > 0
         ? createInfoBox('info', `💡 ${t('reports.common.topRecommendations', 'Top Recommendations')} (${Math.min(5, data.recommendations.length)})`, `
             <ul style="margin: 0; padding-left: 1.5rem; display: grid; gap: 0.5rem;">
-              ${data.recommendations.slice(0, 5).map(rec => `
-                <li>
-                  <strong>${rec.title || rec}</strong>
-                  ${rec.description ? `<br><span style="color: #93c5fd; font-size: 0.9rem;">${rec.description}</span>` : ''}
-                </li>
-              `).join('')}
+              ${data.recommendations.slice(0, 5).map(rec => {
+                const tr = typeof rec === 'object' ? translateRecommendation(rec) : { title: rec };
+                return `<li>
+                  <strong>${tr.title || rec}</strong>
+                  ${tr.description ? `<br><span style="color: #93c5fd; font-size: 0.9rem;">${tr.description}</span>` : ''}
+                </li>`;
+              }).join('')}
             </ul>
           `)
         : ''
@@ -3478,7 +3521,7 @@ document.addEventListener('DOMContentLoaded', () => {
    */
   function createScoreSection(title, score, grade, subtitle = '', statusText = '') {
     const colorClass = score >= 80 ? '#22c55e' : score >= 50 ? '#f59e0b' : '#ef4444';
-    const statusDefault = score >= 80 ? '✓ Good Performance' : score >= 50 ? '⚠ Needs Improvement' : '✗ Poor Performance';
+    const statusDefault = score >= 80 ? '✓ ' + t('reports.performance.good', 'Good Performance') : score >= 50 ? '⚠ ' + t('reports.performance.needsImprovement', 'Needs Improvement') : '✗ ' + t('reports.performance.poor', 'Poor Performance');
 
     return `
       <div style="text-align: center; margin-bottom: 3rem; padding: 2.25rem 2rem 2rem; background: rgba(255,255,255,0.02); border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08)); border-radius: 12px; overflow: visible;">
@@ -4023,6 +4066,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function renderLockedProPreview(title = 'Pro content', previewLines = []) {
+    const reportId = document.body?.getAttribute('data-report-id') || '';
     const lines = previewLines.length ? previewLines : ['Unlock exports', 'Unlock sharing'];
     return `
       <div class="pro-locked">
@@ -4035,8 +4079,8 @@ document.addEventListener('DOMContentLoaded', () => {
         </ul>
         <div class="pro-locked__blur"></div>
         <div class="pro-locked__buttons">
-          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report data-context="performance">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
-          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal data-context="performance">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
+          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report${reportId ? ` data-report-id="${reportId}"` : ''} data-context="performance">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
+          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal${reportId ? ` data-report-id="${reportId}"` : ''} data-context="performance">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
         </div>
       </div>
     `;
@@ -4322,6 +4366,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function userHasPro() {
     const reportId = document.body?.getAttribute('data-report-id') || '';
+
+    // Direct localStorage purchase proof check (most reliable, 24h TTL)
+    if (reportId) {
+      try {
+        const proof = localStorage.getItem('sm_purchased_' + reportId);
+        if (proof) {
+          const parsed = JSON.parse(proof);
+          if (Date.now() - (parsed.ts || 0) < 24 * 60 * 60 * 1000) return true;
+        }
+      } catch (e) { /* continue to other checks */ }
+    }
+
     if (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function') {
       if (window.ProReportBlock.hasAccess(reportId)) return true;
     }

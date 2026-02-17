@@ -11,26 +11,26 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('mobile', function renderMobile(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
-    var translateImpact = utils.translateImpact || function(v) { return v; };
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
+    const translateImpact = utils.translateImpact || function(v) { return v; };
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     function _htmlToNode(htmlStr) {
-      var tpl = document.createElement('template');
+      const tpl = document.createElement('template');
       tpl.innerHTML = htmlStr.trim();
       return tpl.content.firstChild;
     }
 
     /** Safe number formatting (mirrors formatScore in web UI) */
     function _fmtScore(val) {
-      var n = Number(val);
+      const n = Number(val);
       if (!isFinite(n)) return '0';
       return n % 1 === 0 ? String(n) : n.toFixed(1);
     }
@@ -60,34 +60,34 @@
     }
 
     // Resolve data sources
-    var deviceKeys = Object.keys(data.devices || {});
-    var primaryDevice = data.devices[deviceKeys[0]] || {};
-    var perfSummary = data.performanceSummary || {};
-    var readSummary = data.readabilitySummary || {};
-    var a11ySummary = data.accessibilitySummary || {};
-    var touchSummary = data.touchTargetsSummary || {};
-    var recommendations = data.recommendations || [];
+    const deviceKeys = Object.keys(data.devices || {});
+    const primaryDevice = data.devices[deviceKeys[0]] || {};
+    const perfSummary = data.performanceSummary || {};
+    const readSummary = data.readabilitySummary || {};
+    const a11ySummary = data.accessibilitySummary || {};
+    const touchSummary = data.touchTargetsSummary || {};
+    const recommendations = data.recommendations || [];
 
     /* -------------------------------------------------------------------
        Helper: per-device score breakdown table (mirrors web UI bars)
        ------------------------------------------------------------------- */
     function _renderDeviceBreakdown(metricKey, scoreKey, fallbackAvg) {
-      var html = '';
-      var items = [];
+      let html = '';
+      const items = [];
       deviceKeys.forEach(function (key) {
-        var dev = data.devices[key];
+        const dev = data.devices[key];
         if (!dev || dev.error) return;
-        var bucket = dev[metricKey];
+        const bucket = dev[metricKey];
         if (!bucket || bucket[scoreKey] === undefined) return;
         items.push({ name: dev.device || key, score: Number(bucket[scoreKey]) || 0 });
       });
 
       if (items.length === 0) return '';
 
-      var scores = items.map(function (i) { return i.score; });
-      var avg = scores.reduce(function (s, v) { return s + v; }, 0) / scores.length;
-      var min = Math.min.apply(null, scores);
-      var max = Math.max.apply(null, scores);
+      const scores = items.map(function (i) { return i.score; });
+      const avg = scores.reduce(function (s, v) { return s + v; }, 0) / scores.length;
+      const min = Math.min.apply(null, scores);
+      const max = Math.max.apply(null, scores);
 
       // Summary metrics row
       html += PR.renderMetrics([
@@ -97,10 +97,10 @@
       ]);
 
       // Per-device table with progress bars
-      var rows = items.map(function (item) {
-        var safe = Math.max(0, Math.min(100, item.score));
-        var barColor = safe >= 90 ? '#22c55e' : safe >= 70 ? '#eab308' : '#ef4444';
-        var bar = '<div style="display:flex;align-items:center;gap:8px;">' +
+      const rows = items.map(function (item) {
+        const safe = Math.max(0, Math.min(100, item.score));
+        const barColor = safe >= 90 ? '#22c55e' : safe >= 70 ? '#eab308' : '#ef4444';
+        const bar = '<div style="display:flex;align-items:center;gap:8px;">' +
           '<div style="flex:1;height:8px;background:#e5e7eb;border-radius:4px;overflow:hidden;">' +
             '<div style="width:' + safe + '%;height:100%;background:' + barColor + ';border-radius:4px;"></div>' +
           '</div>' +
@@ -119,7 +119,7 @@
       );
 
       // Spread callout
-      var spread = max - min;
+      const spread = max - min;
       if (spread > 0) {
         html += '<p class="pdf-text-muted pdf-text-small" style="margin-top:4px;">' +
           esc(t('reports.mobile.report.breakdown.spread', 'Score spread: {{spread}} points (best {{best}}/100, lowest {{lowest}}/100)', { spread: _fmtScore(spread), best: _fmtScore(max), lowest: _fmtScore(min) })) +
@@ -134,20 +134,20 @@
        1. Mobile Overview
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-overview .pdf-section__content');
-      var score = data.mobileScore;
+      const sec = document.querySelector('#section-overview .pdf-section__content');
+      const score = data.mobileScore;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.mobile.report.overview', 'Mobile Overview'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.overview', 'Mobile optimization is critical as over 60% of web traffic comes from mobile devices and Google uses mobile-first indexing. This overview presents your aggregate mobile score and key performance indicators across tested device configurations. A strong mobile experience directly impacts search rankings, user engagement, and conversion rates.')) + '</p>';
 
       // Primary metrics row (matching web UI summary donuts)
-      var overviewMetrics = [];
+      const overviewMetrics = [];
       overviewMetrics.push({
         value: score !== undefined && score !== null ? score : '-',
         label: t('reports.mobile.report.overview.overallScore', 'Overall Score'),
@@ -158,7 +158,7 @@
         label: t('reports.mobile.report.overview.devicesTested', 'Devices Tested')
       });
 
-      var perfAvg = perfSummary.average !== undefined ? perfSummary.average : (perfSummary.avgScore !== undefined ? perfSummary.avgScore : '-');
+      const perfAvg = perfSummary.average !== undefined ? perfSummary.average : (perfSummary.avgScore !== undefined ? perfSummary.avgScore : '-');
       overviewMetrics.push({
         value: perfAvg !== undefined && perfAvg !== null && perfAvg !== '-' ? perfAvg : (primaryDevice.performance ? primaryDevice.performance.score || '-' : '-'),
         label: t('reports.mobile.report.overview.avgPerformance', 'Avg Performance'),
@@ -168,7 +168,7 @@
       html += PR.renderMetrics(overviewMetrics);
 
       // Category averages (matching web UI summary donuts: Performance, Readability, Accessibility)
-      var catMetrics = [];
+      const catMetrics = [];
       if (readSummary.average !== undefined) {
         catMetrics.push({ value: readSummary.average, label: t('reports.mobile.readability', 'Readability'), color: _scoreColor(readSummary.average) });
       }
@@ -183,7 +183,7 @@
       }
 
       // Issues / Recommendations summary
-      var highIssues = recommendations.filter(function (r) { return r.severity === 'high' || r.severity === 'error'; }).length;
+      const highIssues = recommendations.filter(function (r) { return r.severity === 'high' || r.severity === 'error'; }).length;
       html += PR.renderMetrics([
         { value: highIssues, label: t('reports.common.issuesFound', 'Issues Found'), color: highIssues > 0 ? '#ef4444' : '#10b981' },
         { value: recommendations.length, label: t('reports.common.recommendations', 'Recommendations') }
@@ -192,8 +192,8 @@
       // Device summary table (enriched with more columns matching web UI)
       if (deviceKeys.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.overview.deviceSummary', 'Device Summary')) + '</h3>';
-        var deviceRows = deviceKeys.map(function (key) {
-          var dev = data.devices[key];
+        const deviceRows = deviceKeys.map(function (key) {
+          const dev = data.devices[key];
           if (dev.error) {
             return [
               '<strong>' + esc(dev.device || key) + '</strong>',
@@ -201,10 +201,10 @@
               '-', '-', '-'
             ];
           }
-          var perf = dev.performance || {};
-          var touch = dev.touchTargets || {};
-          var read = dev.readability || {};
-          var a11y = dev.accessibility || {};
+          const perf = dev.performance || {};
+          const touch = dev.touchTargets || {};
+          const read = dev.readability || {};
+          const a11y = dev.accessibility || {};
           return [
             '<strong>' + esc(dev.device || key) + '</strong>',
             perf.score !== undefined && perf.score !== null
@@ -236,13 +236,13 @@
        2. Touch Targets
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-touch .pdf-section__content');
-      var touch = primaryDevice.touchTargets || {};
-      var score = touch.score !== undefined ? touch.score : touch.compliancePercentage;
+      const sec = document.querySelector('#section-touch .pdf-section__content');
+      const touch = primaryDevice.touchTargets || {};
+      const score = touch.score !== undefined ? touch.score : touch.compliancePercentage;
 
       // Check across all devices for touch data
-      var anyTouchData = deviceKeys.some(function (key) {
-        var d = data.devices[key];
+      const anyTouchData = deviceKeys.some(function (key) {
+        const d = data.devices[key];
         return d && !d.error && d.touchTargets;
       });
 
@@ -256,14 +256,14 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.touch', 'Touch target sizing ensures interactive elements are easily tappable on touchscreen devices. Google recommends touch targets be at least 48x48 CSS pixels with adequate spacing. This section identifies elements that are too small or too close together, which can frustrate mobile users and increase error rates.')) + '</p>';
 
       // Touch target metrics
       // Service returns: total, compliant (count), issues (NUMBER = non-compliant count),
       // issueDetails (ARRAY of issue objects), compliancePercentage
-      var nonCompliantCount = touch.nonCompliant || touch.tooSmall || (typeof touch.issues === 'number' ? touch.issues : 0);
+      const nonCompliantCount = touch.nonCompliant || touch.tooSmall || (typeof touch.issues === 'number' ? touch.issues : 0);
       html += PR.renderMetrics([
         { value: touch.total || 0, label: t('reports.mobile.report.touch.totalTargets', 'Total Targets') },
         { value: touch.compliant || 0, label: t('reports.mobile.compliant', 'Compliant'), color: '#10b981' },
@@ -273,7 +273,7 @@
 
       // Progress bar
       if (touch.total > 0) {
-        var passing = touch.compliant || ((touch.total || 0) - nonCompliantCount);
+        let passing = touch.compliant || ((touch.total || 0) - nonCompliantCount);
         if (passing < 0) passing = 0;
         html += PR.renderProgress(
           t('reports.mobile.report.touch.passingTargets', 'Passing Targets'),
@@ -282,13 +282,13 @@
       }
 
       // Per-device touch target comparison (web UI shows this)
-      var touchDeviceRows = [];
+      const touchDeviceRows = [];
       deviceKeys.forEach(function (key) {
-        var dev = data.devices[key];
+        const dev = data.devices[key];
         if (!dev || dev.error || !dev.touchTargets) return;
-        var dt = dev.touchTargets;
-        var compliance = dt.compliancePercentage !== undefined ? dt.compliancePercentage + '%' : '-';
-        var issueCount = typeof dt.issues === 'number' ? dt.issues : (dt.nonCompliant || 0);
+        const dt = dev.touchTargets;
+        const compliance = dt.compliancePercentage !== undefined ? dt.compliancePercentage + '%' : '-';
+        const issueCount = typeof dt.issues === 'number' ? dt.issues : (dt.nonCompliant || 0);
         touchDeviceRows.push([
           '<strong>' + esc(dev.device || key) + '</strong>',
           compliance,
@@ -316,19 +316,19 @@
       // Issues table
       // Service returns issueDetails (array of {element, role, text, width, height, minDimension})
       // and issues (number count). Prefer issueDetails array, fall back to issues if it's an array.
-      var touchIssueList = Array.isArray(touch.issueDetails) ? touch.issueDetails : (Array.isArray(touch.issues) ? touch.issues : []);
+      const touchIssueList = Array.isArray(touch.issueDetails) ? touch.issueDetails : (Array.isArray(touch.issues) ? touch.issues : []);
       if (touchIssueList.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.touch.issuesHeading', 'Touch Target Issues')) + '</h3>';
-        var issueRows = touchIssueList.slice(0, 20).map(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+        const issueRows = touchIssueList.slice(0, 20).map(function (issue) {
+          let text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
           // Build descriptive text from issueDetails fields if no message/title
           if (!text && typeof issue === 'object') {
-            var el = issue.element || '';
-            var w = issue.width !== undefined ? issue.width : '';
-            var h = issue.height !== undefined ? issue.height : '';
+            const el = issue.element || '';
+            const w = issue.width !== undefined ? issue.width : '';
+            const h = issue.height !== undefined ? issue.height : '';
             text = el + (issue.text ? ' "' + issue.text + '"' : '') + (w || h ? ' (' + w + 'x' + h + 'px)' : '');
           }
-          var severity = typeof issue === 'object' ? (issue.severity || 'warning') : 'warning';
+          const severity = typeof issue === 'object' ? (issue.severity || 'warning') : 'warning';
           return [
             '<span class="pdf-issue__severity pdf-issue__severity--' + severity.toLowerCase() + '">' + esc(translateImpact(severity)) + '</span>',
             esc(truncate(text, 100))
@@ -356,13 +356,13 @@
        3. Readability
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-readability .pdf-section__content');
-      var read = primaryDevice.readability || {};
-      var score = read.readabilityScore || read.score;
+      const sec = document.querySelector('#section-readability .pdf-section__content');
+      const read = primaryDevice.readability || {};
+      const score = read.readabilityScore || read.score;
 
       // Check all devices
-      var anyReadData = deviceKeys.some(function (key) {
-        var d = data.devices[key];
+      const anyReadData = deviceKeys.some(function (key) {
+        const d = data.devices[key];
         return d && !d.error && d.readability;
       });
 
@@ -376,7 +376,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.readability', 'Mobile readability encompasses font sizing, line height, contrast, and text layout on small screens. Text that is too small, has poor contrast, or requires horizontal scrolling creates a poor reading experience. This section evaluates your content\'s readability across mobile viewport sizes.')) + '</p>';
 
@@ -392,14 +392,14 @@
       ]);
 
       // Per-device score breakdown (matches web UI bars)
-      var devBreakdown = _renderDeviceBreakdown('readability', 'readabilityScore', readSummary.average || 0);
+      const devBreakdown = _renderDeviceBreakdown('readability', 'readabilityScore', readSummary.average || 0);
       if (devBreakdown) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.readability.perDevice', 'Per-Device Readability Scores')) + '</h3>';
         html += devBreakdown;
       }
 
       // Readability details table — works with both service shape and legacy shape
-      var readRows = [];
+      const readRows = [];
       if (read.totalElements !== undefined) {
         readRows.push([
           esc(t('reports.mobile.report.readability.totalElements', 'Total Elements')),
@@ -408,7 +408,7 @@
         ]);
       }
       if (read.smallFontElements !== undefined) {
-        var smallPct = read.smallFontPercentage !== undefined ? read.smallFontPercentage : 0;
+        const smallPct = read.smallFontPercentage !== undefined ? read.smallFontPercentage : 0;
         readRows.push([
           esc(t('reports.mobile.report.readability.smallFontElements', 'Small Font Elements')),
           '<strong>' + esc(String(read.smallFontElements)) + '</strong> (' + smallPct + '%)',
@@ -420,7 +420,7 @@
         ]);
       }
       if (read.goodLineHeight !== undefined) {
-        var glhPct = read.goodLineHeightPercentage !== undefined ? read.goodLineHeightPercentage : 0;
+        const glhPct = read.goodLineHeightPercentage !== undefined ? read.goodLineHeightPercentage : 0;
         readRows.push([
           esc(t('reports.mobile.goodLineHeight', 'Good line height')),
           '<strong>' + esc(String(read.goodLineHeight)) + '</strong> (' + glhPct + '%)',
@@ -471,17 +471,17 @@
       }
 
       // Cross-device readability insights (matches web UI extraInsights for readability)
-      var readItems = [];
+      const readItems = [];
       deviceKeys.forEach(function (key) {
-        var dev = data.devices[key];
+        const dev = data.devices[key];
         if (!dev || dev.error || !dev.readability || !dev.readability.totalElements) return;
         readItems.push({ name: dev.device || key, data: dev.readability });
       });
       if (readItems.length > 0) {
-        var avgSmallFont = Math.round(readItems.reduce(function (s, i) { return s + (i.data.smallFontPercentage || 0); }, 0) / readItems.length);
-        var avgLineHt = Math.round(readItems.reduce(function (s, i) { return s + (i.data.goodLineHeightPercentage || 0); }, 0) / readItems.length);
-        var totalElements = readItems.reduce(function (s, i) { return s + (i.data.totalElements || 0); }, 0);
-        var worst = readItems.slice().sort(function (a, b) { return (b.data.smallFontPercentage || 0) - (a.data.smallFontPercentage || 0); })[0];
+        const avgSmallFont = Math.round(readItems.reduce(function (s, i) { return s + (i.data.smallFontPercentage || 0); }, 0) / readItems.length);
+        const avgLineHt = Math.round(readItems.reduce(function (s, i) { return s + (i.data.goodLineHeightPercentage || 0); }, 0) / readItems.length);
+        const totalElements = readItems.reduce(function (s, i) { return s + (i.data.totalElements || 0); }, 0);
+        const worst = readItems.slice().sort(function (a, b) { return (b.data.smallFontPercentage || 0) - (a.data.smallFontPercentage || 0); })[0];
 
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.readability.insights', 'Readability Insights')) + '</h3>';
         html += PR.renderMetrics([
@@ -500,12 +500,12 @@
       }
 
       // Issues list
-      var readIssues = read.issues || [];
+      const readIssues = read.issues || [];
       if (readIssues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.readability.issuesHeading', 'Readability Issues')) + '</h3>';
         readIssues.slice(0, 15).forEach(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
-          var sev = typeof issue === 'object' ? (issue.severity || 'warning').toLowerCase() : 'warning';
+          const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+          const sev = typeof issue === 'object' ? (issue.severity || 'warning').toLowerCase() : 'warning';
           html += PR.renderIssue(text, sev);
         });
       }
@@ -517,9 +517,9 @@
        4. Responsiveness
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-responsiveness .pdf-section__content');
-      var resp = primaryDevice.responsiveness || {};
-      var score = resp.score;
+      const sec = document.querySelector('#section-responsiveness .pdf-section__content');
+      const resp = primaryDevice.responsiveness || {};
+      const score = resp.score;
 
       if (!resp.viewport && !resp.issues && !resp.hasResponsiveDesign && resp.mediaQueries === undefined) {
         sec.parentElement.style.display = 'none';
@@ -531,14 +531,14 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.responsiveness', 'Responsive design ensures your layout adapts properly across different screen sizes and orientations. This section evaluates viewport configuration, media query usage, and layout behavior to identify issues that may cause content to overflow or display incorrectly on mobile devices.')) + '</p>';
 
       // Responsiveness details table
       // Service returns: { mediaQueries (NUMBER), hasResponsiveDesign (BOOL), breakpoints (ARRAY) }
       // Also handle legacy fields: viewport, horizontalScroll, contentOverflow
-      var respRows = [];
+      const respRows = [];
       if (resp.viewport !== undefined) {
         respRows.push([
           esc(t('reports.mobile.report.responsiveness.viewport', 'Viewport Configured')),
@@ -557,7 +557,7 @@
       }
       if (resp.mediaQueries !== undefined) {
         // mediaQueries is a number (count) from the service, or boolean from legacy
-        var mqCount = typeof resp.mediaQueries === 'number' ? resp.mediaQueries : (resp.mediaQueries ? 1 : 0);
+        const mqCount = typeof resp.mediaQueries === 'number' ? resp.mediaQueries : (resp.mediaQueries ? 1 : 0);
         respRows.push([
           esc(t('reports.mobile.report.responsiveness.mediaQueries', 'Media Queries')),
           mqCount > 0
@@ -600,12 +600,12 @@
       }
 
       // Issues
-      var respIssues = resp.issues || [];
+      const respIssues = resp.issues || [];
       if (respIssues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.responsiveness.issuesHeading', 'Responsiveness Issues')) + '</h3>';
         respIssues.slice(0, 15).forEach(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
-          var sev = typeof issue === 'object' ? (issue.severity || 'medium').toLowerCase() : 'medium';
+          const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+          const sev = typeof issue === 'object' ? (issue.severity || 'medium').toLowerCase() : 'medium';
           html += PR.renderIssue(text, sev);
         });
       } else if (resp.hasResponsiveDesign) {
@@ -629,16 +629,16 @@
        5. Viewport & PWA
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-viewport .pdf-section__content');
-      var viewportMeta = primaryDevice.viewportMeta || primaryDevice.viewportMetaTag || {};
-      var pwa = primaryDevice.pwaReadiness || {};
+      const sec = document.querySelector('#section-viewport .pdf-section__content');
+      const viewportMeta = primaryDevice.viewportMeta || primaryDevice.viewportMetaTag || {};
+      const pwa = primaryDevice.pwaReadiness || {};
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.mobile.report.viewportPwa', 'Viewport & PWA'), viewportMeta.score || pwa.score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.viewport', 'Viewport meta configuration and Progressive Web App (PWA) readiness determine how your site behaves on mobile devices. A properly configured viewport prevents unwanted zooming and scaling. PWA features like a web manifest and service worker enable app-like experiences.')) + '</p>';
 
@@ -652,22 +652,22 @@
       }
 
       // Service returns: { exists, content, parsed: { width, 'initial-scale', ... }, issues, score }
-      var vpParsed = viewportMeta.parsed || {};
-      var vpRows = [];
+      const vpParsed = viewportMeta.parsed || {};
+      const vpRows = [];
       vpRows.push([
         esc(t('reports.mobile.report.viewport.configured', 'Viewport Configured')),
         (viewportMeta.configured || viewportMeta.present || viewportMeta.exists)
           ? PR.renderStatus('pass', t('seo.report.status.yes', 'Yes'))
           : PR.renderStatus('fail', t('seo.report.status.no', 'No'))
       ]);
-      var vpWidth = viewportMeta.width || vpParsed['width'] || vpParsed.width;
+      const vpWidth = viewportMeta.width || vpParsed['width'] || vpParsed.width;
       if (vpWidth) {
         vpRows.push([
           esc(t('reports.mobile.report.viewport.width', 'Width')),
           '<strong>' + esc(String(vpWidth)) + '</strong>'
         ]);
       }
-      var vpInitScale = viewportMeta.initialScale !== undefined ? viewportMeta.initialScale : (vpParsed['initial-scale'] || vpParsed.initialScale);
+      const vpInitScale = viewportMeta.initialScale !== undefined ? viewportMeta.initialScale : (vpParsed['initial-scale'] || vpParsed.initialScale);
       if (vpInitScale !== undefined && vpInitScale !== null) {
         vpRows.push([
           esc(t('reports.mobile.report.viewport.initialScale', 'Initial Scale')),
@@ -694,12 +694,12 @@
       }
 
       // Viewport issues (web UI shows these)
-      var vpIssues = viewportMeta.issues || [];
+      const vpIssues = viewportMeta.issues || [];
       if (vpIssues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.viewport.issuesHeading', 'Viewport Issues')) + '</h3>';
         vpIssues.forEach(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.message || issue.item || '');
-          var sev = typeof issue === 'object' ? (issue.severity || issue.type || 'warning').toLowerCase() : 'warning';
+          const text = typeof issue === 'string' ? issue : (issue.message || issue.item || '');
+          const sev = typeof issue === 'object' ? (issue.severity || issue.type || 'warning').toLowerCase() : 'warning';
           html += PR.renderIssue(text, sev);
         });
       } else if (viewportMeta.configured || viewportMeta.present || viewportMeta.exists) {
@@ -724,7 +724,7 @@
       // Installable check (web UI shows this)
       // Service returns: hasManifest, serviceWorkerRegistered, isHttps, installable, checklist, score
       // Also handle legacy field names: manifest, serviceWorker, https
-      var pwaRows = [];
+      const pwaRows = [];
       if (pwa.installable !== undefined) {
         pwaRows.push([
           esc(t('reports.mobile.installable', 'Installable')),
@@ -733,21 +733,21 @@
             : PR.renderStatus('fail', t('seo.report.status.no', 'No'))
         ]);
       }
-      var hasManifest = pwa.manifest || pwa.hasManifest;
+      const hasManifest = pwa.manifest || pwa.hasManifest;
       pwaRows.push([
         esc(t('reports.mobile.report.viewport.manifest', 'Web App Manifest')),
         hasManifest
           ? PR.renderStatus('pass', typeof pwa.manifest === 'string' ? pwa.manifest : t('seo.report.status.yes', 'Yes'))
           : PR.renderStatus('fail', t('reports.mobile.missingStatus', 'Missing'))
       ]);
-      var hasServiceWorker = pwa.serviceWorker || pwa.serviceWorkerRegistered;
+      const hasServiceWorker = pwa.serviceWorker || pwa.serviceWorkerRegistered;
       pwaRows.push([
         esc(t('reports.mobile.report.viewport.serviceWorker', 'Service Worker')),
         hasServiceWorker
           ? PR.renderStatus('pass', typeof pwa.serviceWorker === 'string' ? pwa.serviceWorker : t('seo.report.status.yes', 'Yes'))
           : PR.renderStatus('fail', t('reports.mobile.notRegistered', 'Not registered'))
       ]);
-      var hasHttps = pwa.https || pwa.isHttps;
+      const hasHttps = pwa.https || pwa.isHttps;
       pwaRows.push([
         esc(t('reports.mobile.report.viewport.https', 'HTTPS')),
         hasHttps
@@ -765,11 +765,11 @@
       );
 
       // PWA checklist (web UI shows this detailed checklist)
-      var checklist = pwa.checklist || [];
+      const checklist = pwa.checklist || [];
       if (checklist.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.pwaChecklist', 'PWA Checklist')) + '</h3>';
-        var checkRows = checklist.map(function (item) {
-          var status = item.status === 'pass' ? 'pass' : 'fail';
+        const checkRows = checklist.map(function (item) {
+          const status = item.status === 'pass' ? 'pass' : 'fail';
           return [
             PR.renderStatus(status, status === 'pass' ? '\u2713' : '\u2717'),
             esc(item.item || item.label || item.name || '')
@@ -786,7 +786,7 @@
       }
 
       // --- Dark Mode Support (expanded, matching web UI detail) ---
-      var darkMode = primaryDevice.darkModeSupport || {};
+      const darkMode = primaryDevice.darkModeSupport || {};
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.darkModeSupport', 'Dark Mode Support')) + '</h3>';
 
       if (darkMode.score !== undefined) {
@@ -795,7 +795,7 @@
         ]);
       }
 
-      var dmRows = [];
+      const dmRows = [];
       dmRows.push([
         esc(t('reports.mobile.darkModeSupported', 'Dark Mode Supported')),
         (darkMode.supported || darkMode.detected)
@@ -857,13 +857,13 @@
        6. Mobile Accessibility
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-accessibility .pdf-section__content');
-      var a11y = primaryDevice.accessibility || {};
-      var score = a11y.a11yScore || a11y.score;
+      const sec = document.querySelector('#section-accessibility .pdf-section__content');
+      const a11y = primaryDevice.accessibility || {};
+      const score = a11y.a11yScore || a11y.score;
 
       // Check across all devices
-      var anyA11yData = deviceKeys.some(function (key) {
-        var d = data.devices[key];
+      const anyA11yData = deviceKeys.some(function (key) {
+        const d = data.devices[key];
         return d && !d.error && d.accessibility;
       });
 
@@ -877,7 +877,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.accessibility', 'Mobile accessibility focuses on ensuring your site is usable by people with disabilities on mobile devices. This includes touch target accessibility, screen reader compatibility, and gesture-based navigation support. Mobile-specific accessibility issues can affect a significant portion of your mobile audience.')) + '</p>';
 
@@ -891,24 +891,24 @@
       ]);
 
       // Per-device breakdown (matches web UI bars)
-      var a11yBreakdown = _renderDeviceBreakdown('accessibility', 'a11yScore', a11ySummary.average || 0);
+      const a11yBreakdown = _renderDeviceBreakdown('accessibility', 'a11yScore', a11ySummary.average || 0);
       if (a11yBreakdown) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.accessibility.perDevice', 'Per-Device Accessibility Scores')) + '</h3>';
         html += a11yBreakdown;
       }
 
       // Cross-device accessibility insights (matches web UI extraInsights)
-      var a11yItems = [];
+      const a11yItems = [];
       deviceKeys.forEach(function (key) {
-        var dev = data.devices[key];
+        const dev = data.devices[key];
         if (!dev || dev.error || !dev.accessibility) return;
         a11yItems.push({ name: dev.device || key, data: dev.accessibility });
       });
       if (a11yItems.length > 0) {
-        var totalImages = a11yItems.reduce(function (s, i) { return s + (i.data.totalImages || 0); }, 0);
-        var missingAlt = a11yItems.reduce(function (s, i) { return s + (i.data.missingAlt || 0); }, 0);
-        var headingIssueCount = a11yItems.filter(function (i) { return i.data.headingIssues; }).length;
-        var altCoverage = totalImages ? Math.round(((totalImages - missingAlt) / totalImages) * 100) : 0;
+        const totalImages = a11yItems.reduce(function (s, i) { return s + (i.data.totalImages || 0); }, 0);
+        const missingAlt = a11yItems.reduce(function (s, i) { return s + (i.data.missingAlt || 0); }, 0);
+        const headingIssueCount = a11yItems.filter(function (i) { return i.data.headingIssues; }).length;
+        const altCoverage = totalImages ? Math.round(((totalImages - missingAlt) / totalImages) * 100) : 0;
 
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.accessibility.insights', 'Accessibility Insights')) + '</h3>';
         html += PR.renderMetrics([
@@ -920,7 +920,7 @@
 
       // Issues table
       // Service returns no issues array — build from missingAlt/headingIssues if present
-      var a11yIssueList = a11y.issues || [];
+      let a11yIssueList = a11y.issues || [];
       if (!Array.isArray(a11yIssueList) || a11yIssueList.length === 0) {
         a11yIssueList = [];
         if (a11y.missingAlt > 0) {
@@ -932,9 +932,9 @@
       }
       if (a11yIssueList.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.accessibility.issuesHeading', 'Accessibility Issues')) + '</h3>';
-        var issueRows = a11yIssueList.slice(0, 20).map(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
-          var severity = typeof issue === 'object' ? (issue.severity || 'medium') : 'medium';
+        const issueRows = a11yIssueList.slice(0, 20).map(function (issue) {
+          const text = typeof issue === 'string' ? issue : (issue.message || issue.title || '');
+          const severity = typeof issue === 'object' ? (issue.severity || 'medium') : 'medium';
           return [
             '<span class="pdf-issue__severity pdf-issue__severity--' + severity.toLowerCase() + '">' + esc(translateImpact(severity)) + '</span>',
             esc(truncate(text, 100))
@@ -968,22 +968,22 @@
        7. Above the Fold
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-above-fold .pdf-section__content');
-      var fold = primaryDevice.aboveTheFold || primaryDevice.aboveTheFoldContent || {};
+      const sec = document.querySelector('#section-above-fold .pdf-section__content');
+      const fold = primaryDevice.aboveTheFold || primaryDevice.aboveTheFoldContent || {};
 
       if (!fold.criticalContentScore && !fold.score && !fold.hasHeadline) {
         sec.parentElement.style.display = 'none';
         return;
       }
 
-      var foldScore = fold.criticalContentScore || fold.score;
+      const foldScore = fold.criticalContentScore || fold.score;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.mobile.aboveTheFold', 'Above the Fold'), foldScore)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.aboveFold', 'Above the fold analysis evaluates the content visible without scrolling on mobile screens. A well-designed above-the-fold area includes a clear headline, hero image, and call-to-action to engage visitors immediately. This section checks for critical content elements and render-blocking resources that delay initial display.')) + '</p>';
 
@@ -991,7 +991,7 @@
         { value: foldScore || '-', label: t('reports.mobile.report.aboveFold.score', 'Above Fold Score'), color: _scoreColor(foldScore) }
       ]);
 
-      var foldRows = [];
+      const foldRows = [];
       if (fold.hasHeadline !== undefined) {
         foldRows.push([
           esc(t('reports.mobile.headlineH1H2', 'Headline (H1/H2)')),
@@ -1035,7 +1035,7 @@
         ]);
       }
       if (fold.renderBlockingScripts !== undefined) {
-        var rbColor = fold.renderBlockingScripts > 3 ? 'fail' : fold.renderBlockingScripts > 0 ? 'warning' : 'pass';
+        const rbColor = fold.renderBlockingScripts > 3 ? 'fail' : fold.renderBlockingScripts > 0 ? 'warning' : 'pass';
         foldRows.push([
           esc(t('reports.mobile.renderBlockingScripts', 'Render-blocking Scripts')),
           PR.renderStatus(rbColor, String(fold.renderBlockingScripts))
@@ -1060,8 +1060,8 @@
        8. Mobile SEO
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-mobile-seo .pdf-section__content');
-      var seo = primaryDevice.mobileSEO || primaryDevice.mobileSeo || {};
+      const sec = document.querySelector('#section-mobile-seo .pdf-section__content');
+      const seo = primaryDevice.mobileSEO || primaryDevice.mobileSeo || {};
 
       if (!seo.score && !seo.hasTitle && !seo.canonical) {
         sec.parentElement.style.display = 'none';
@@ -1073,7 +1073,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.mobileSeo', 'Mobile SEO evaluates search engine optimization factors specific to mobile devices. This includes title tag length, meta description, viewport configuration, canonical URLs, structured data, click-to-call links, and heading hierarchy. Proper mobile SEO ensures your site is discoverable and ranks well in mobile search results.')) + '</p>';
 
@@ -1083,9 +1083,9 @@
         ]);
       }
 
-      var seoRows = [];
+      const seoRows = [];
       if (seo.hasTitle !== undefined) {
-        var titleDetail = seo.hasTitle
+        const titleDetail = seo.hasTitle
           ? (seo.titleLength ? seo.titleLength + ' ' + t('reports.mobile.chars', 'chars') : t('reports.mobile.present', 'Present'))
           : t('reports.mobile.missingStatus', 'Missing');
         seoRows.push([
@@ -1096,7 +1096,7 @@
         ]);
       }
       if (seo.hasMetaDescription !== undefined) {
-        var descDetail = seo.hasMetaDescription
+        const descDetail = seo.hasMetaDescription
           ? (seo.descriptionLength ? seo.descriptionLength + ' ' + t('reports.mobile.chars', 'chars') : t('reports.mobile.present', 'Present'))
           : t('reports.mobile.missingStatus', 'Missing');
         seoRows.push([
@@ -1135,8 +1135,8 @@
         ]);
       }
       if (seo.h1Count !== undefined) {
-        var h1Status = seo.h1Count === 1 ? 'pass' : 'warning';
-        var h1Label = seo.h1Count === 1
+        const h1Status = seo.h1Count === 1 ? 'pass' : 'warning';
+        const h1Label = seo.h1Count === 1
           ? '1 (' + t('reports.mobile.good', 'good') + ')'
           : seo.h1Count + ' (' + t('reports.mobile.shouldBeOne', 'should be 1') + ')';
         seoRows.push([
@@ -1182,12 +1182,12 @@
       }
 
       // SEO issues
-      var seoIssues = seo.issues || [];
+      const seoIssues = seo.issues || [];
       if (seoIssues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.common.issues', 'issues')) + '</h3>';
         seoIssues.slice(0, 15).forEach(function (issue) {
-          var text = typeof issue === 'string' ? issue : (issue.item || issue.message || '');
-          var sev = typeof issue === 'object' ? (issue.type || issue.severity || 'warning').toLowerCase() : 'warning';
+          const text = typeof issue === 'string' ? issue : (issue.item || issue.message || '');
+          const sev = typeof issue === 'object' ? (issue.type || issue.severity || 'warning').toLowerCase() : 'warning';
           html += PR.renderIssue(text, sev);
         });
       }
@@ -1199,8 +1199,8 @@
        9. Input Fields
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-input-fields .pdf-section__content');
-      var input = primaryDevice.inputAnalysis || primaryDevice.inputFields || {};
+      const sec = document.querySelector('#section-input-fields .pdf-section__content');
+      const input = primaryDevice.inputAnalysis || primaryDevice.inputFields || {};
 
       if (!input.total && !input.score) {
         sec.parentElement.style.display = 'none';
@@ -1212,7 +1212,7 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.inputFields', 'Input field analysis evaluates how well form inputs are optimized for mobile devices. Proper input types (email, tel), autocomplete attributes, and associated labels make forms easier and faster to complete on mobile. This section checks for common mobile input optimization issues.')) + '</p>';
 
@@ -1222,7 +1222,7 @@
         ]);
       }
 
-      var inputRows = [];
+      const inputRows = [];
       if (input.total !== undefined) {
         inputRows.push([
           esc(t('reports.mobile.totalInputs', 'Total Inputs')),
@@ -1274,11 +1274,11 @@
       }
 
       // Input field issues
-      var inputIssues = input.issues || [];
+      const inputIssues = input.issues || [];
       if (inputIssues.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.optimizationSuggestions', 'Optimization Suggestions')) + '</h3>';
         inputIssues.slice(0, 15).forEach(function (issue) {
-          var text = typeof issue === 'string' ? issue : ((issue.field ? issue.field + ': ' : '') + (issue.issue || issue.message || ''));
+          const text = typeof issue === 'string' ? issue : ((issue.field ? issue.field + ': ' : '') + (issue.issue || issue.message || ''));
           html += PR.renderIssue(text, 'warning');
         });
       } else if (input.total > 0) {
@@ -1296,17 +1296,17 @@
        10. Performance Metrics (per-device detail)
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-performance-metrics .pdf-section__content');
+      const sec = document.querySelector('#section-performance-metrics .pdf-section__content');
 
       // Check for performance data across devices
-      var perfItems = [];
+      const perfItems = [];
       deviceKeys.forEach(function (key) {
-        var dev = data.devices[key];
+        const dev = data.devices[key];
         if (!dev || dev.error || !dev.performance) return;
         perfItems.push({ name: dev.device || key, data: dev.performance });
       });
 
-      var perfMetrics = primaryDevice.performanceMetrics || {};
+      const perfMetrics = primaryDevice.performanceMetrics || {};
 
       if (perfItems.length === 0 && !perfMetrics.score) {
         sec.parentElement.style.display = 'none';
@@ -1318,12 +1318,12 @@
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.performanceMetrics', 'Performance metrics measure how quickly your site loads and becomes interactive on mobile devices. Key metrics include First Paint, First Contentful Paint, DOM Content Loaded, and full page load time. These measurements are taken on each emulated device to identify performance variations across different mobile profiles.')) + '</p>';
 
       // Per-device score breakdown (matches web UI bars)
-      var perfBreakdown = _renderDeviceBreakdown('performance', 'score', perfSummary.average || 0);
+      const perfBreakdown = _renderDeviceBreakdown('performance', 'score', perfSummary.average || 0);
       if (perfBreakdown) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.perfMetrics.perDevice', 'Per-Device Performance Scores')) + '</h3>';
         html += perfBreakdown;
@@ -1331,10 +1331,10 @@
 
       // Cross-device timing insights (matches web UI extraInsights for performance)
       if (perfItems.length > 0) {
-        var avgDom = Math.round(perfItems.reduce(function (s, i) { return s + (i.data.domContentLoaded || 0); }, 0) / perfItems.length);
-        var avgLoad = Math.round(perfItems.reduce(function (s, i) { return s + (i.data.loadComplete || 0); }, 0) / perfItems.length);
-        var avgFcp = Math.round(perfItems.reduce(function (s, i) { return s + (i.data.firstContentfulPaint || 0); }, 0) / perfItems.length);
-        var slowest = perfItems.slice().sort(function (a, b) { return (b.data.loadComplete || 0) - (a.data.loadComplete || 0); })[0];
+        const avgDom = Math.round(perfItems.reduce(function (s, i) { return s + (i.data.domContentLoaded || 0); }, 0) / perfItems.length);
+        const avgLoad = Math.round(perfItems.reduce(function (s, i) { return s + (i.data.loadComplete || 0); }, 0) / perfItems.length);
+        const avgFcp = Math.round(perfItems.reduce(function (s, i) { return s + (i.data.firstContentfulPaint || 0); }, 0) / perfItems.length);
+        const slowest = perfItems.slice().sort(function (a, b) { return (b.data.loadComplete || 0) - (a.data.loadComplete || 0); })[0];
 
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.perfMetrics.timingInsights', 'Timing Insights')) + '</h3>';
         html += PR.renderMetrics([
@@ -1353,8 +1353,8 @@
 
         // Per-device detailed timing table (matches web UI device-by-device breakdown)
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.mobile.report.perfMetrics.detailedTimings', 'Detailed Per-Device Timings')) + '</h3>';
-        var timingRows = perfItems.map(function (item) {
-          var d = item.data;
+        const timingRows = perfItems.map(function (item) {
+          const d = item.data;
           return [
             '<strong>' + esc(item.name) + '</strong>',
             d.firstPaint ? d.firstPaint + 'ms' : '-',
@@ -1383,7 +1383,7 @@
           { value: perfMetrics.score, label: t('reports.mobile.report.perfMetrics.score', 'Performance Score'), color: _scoreColor(perfMetrics.score) }
         ]);
 
-        var legacyRows = [];
+        const legacyRows = [];
         if (perfMetrics.loadTime) {
           legacyRows.push([esc(t('reports.mobile.loadTimeLabel', 'Load Time')), '<strong>' + esc(String(perfMetrics.loadTime)) + '</strong>']);
         }
@@ -1412,14 +1412,14 @@
        11. Recommendations (rich fix cards)
        =================================================================== */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.mobile.report.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.mobile.report.sectionIntros.recommendations', 'Based on the mobile analysis, these recommendations target the most impactful improvements for mobile user experience, performance, and accessibility.')) + '</p>';
 
@@ -1430,8 +1430,8 @@
         '</p>';
 
         // Normalize severities and sort
-        var normalizedRecs = recommendations.map(function (rec, idx) {
-          var sev = rec.severity || rec.priority || 'medium';
+        const normalizedRecs = recommendations.map(function (rec, idx) {
+          let sev = rec.severity || rec.priority || 'medium';
           if (sev === 'error' || sev === 'critical') sev = 'high';
           if (sev === 'info') sev = 'low';
           return {
@@ -1450,7 +1450,7 @@
         });
 
         // Sort: high first, then medium, then low
-        var severityOrder = { high: 0, medium: 1, low: 2 };
+        const severityOrder = { high: 0, medium: 1, low: 2 };
         normalizedRecs.sort(function (a, b) {
           return (severityOrder[a.severity] || 1) - (severityOrder[b.severity] || 1);
         });
@@ -1472,7 +1472,7 @@
 
     // Hide empty sections
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }
@@ -1483,18 +1483,18 @@
      Rich Fix Card Renderer (mirrors SEO _renderFixCard pattern)
      ========================================================================= */
   function _renderMobileFixCard(fix, t, esc) {
-    var severityLower = (fix.severity || 'medium').toLowerCase();
+    const severityLower = (fix.severity || 'medium').toLowerCase();
 
-    var html = '<div class="pdf-fix-card">';
+    let html = '<div class="pdf-fix-card">';
 
     // Header
     html += '<div class="pdf-fix-card__header">';
-    var severityLabels = {
+    const severityLabels = {
       high: t('reports.common.severity.high', 'High'),
       medium: t('reports.common.severity.medium', 'Medium'),
       low: t('reports.common.severity.low', 'Low')
     };
-    var severityLabel = severityLabels[severityLower] || fix.severity;
+    const severityLabel = severityLabels[severityLower] || fix.severity;
     html += '<span class="pdf-fix-card__severity pdf-fix-card__severity--' + severityLower + '">' + esc(severityLabel) + '</span>';
     html += '<span class="pdf-fix-card__title">' + esc(fix.title) + '</span>';
     html += '<span class="pdf-fix-card__category">' + esc(fix.category) + '</span>';
@@ -1509,7 +1509,7 @@
     }
 
     // Impact statement
-    var impact = fix.impact || _getMobileFixImpact(fix, t);
+    const impact = fix.impact || _getMobileFixImpact(fix, t);
     if (impact) {
       html += '<div class="pdf-fix-card__impact">';
       html += '<strong>' + esc(t('reports.common.fix.expectedImpact', 'Expected Impact')) + ':</strong> ' + esc(impact);
@@ -1517,9 +1517,9 @@
     }
 
     // Code comparison grid
-    var codeExamples = _getMobileFixCode(fix, t);
-    var problemCode = fix.problematicCode || codeExamples.problem;
-    var solutionCode = fix.snippet || codeExamples.solution;
+    const codeExamples = _getMobileFixCode(fix, t);
+    const problemCode = fix.problematicCode || codeExamples.problem;
+    const solutionCode = fix.snippet || codeExamples.solution;
 
     if (problemCode || solutionCode) {
       html += '<div class="pdf-fix-card__code-grid">';
@@ -1544,7 +1544,7 @@
     }
 
     // Step-by-step guide
-    var steps = fix.steps && fix.steps.length > 0 ? fix.steps : _getMobileFixSteps(fix, t);
+    const steps = fix.steps && fix.steps.length > 0 ? fix.steps : _getMobileFixSteps(fix, t);
     if (steps.length > 0) {
       html += '<div class="pdf-fix-card__steps">';
       html += '<div class="pdf-fix-card__steps-title">' +
@@ -1559,11 +1559,11 @@
     }
 
     // Resources table
-    var resources = fix.resources || [];
+    const resources = fix.resources || [];
     if (resources.length > 0) {
       html += '<div style="margin-top:8px;">';
       html += '<strong style="font-size:11px;">' + esc(t('reports.mobile.report.recs.resources', 'Resources')) + '</strong>';
-      var resRows = resources.map(function (r) {
+      const resRows = resources.map(function (r) {
         return [
           '<strong>' + esc(r.title || r.name || '') + '</strong>',
           esc(r.description || r.purpose || ''),
@@ -1592,7 +1592,7 @@
      Code Example Lookup (mirrors getMobileFixCode in web UI)
      ========================================================================= */
   function _getMobileFixCode(fix, t) {
-    var codeMap = {
+    const codeMap = {
       'Touch targets below WCAG minimum': {
         problem: '/* Current: Touch targets too small */\n.button, .link {\n  padding: 4px 8px;\n  font-size: 12px;\n}\n\n/* Issues: */\n/* ' + String.fromCharCode(0x2717) + ' Touch target smaller than 44' + String.fromCharCode(0x00d7) + '44px */\n/* ' + String.fromCharCode(0x2717) + ' Difficult to tap on mobile devices */\n/* ' + String.fromCharCode(0x2717) + ' Fails WCAG 2.5.5 Target Size */',
         solution: '/* Fixed: Proper touch target sizing */\n.button, .link {\n  min-height: 44px;\n  min-width: 44px;\n  padding: 12px 16px;\n  font-size: 16px;\n}\n\n/* Best practices: */\n/* ' + String.fromCharCode(0x2713) + ' Minimum 44' + String.fromCharCode(0x00d7) + '44px touch targets */\n/* ' + String.fromCharCode(0x2713) + ' 48' + String.fromCharCode(0x00d7) + '48px recommended for primary actions */\n/* ' + String.fromCharCode(0x2713) + ' 8px minimum spacing between targets */'
@@ -1621,7 +1621,7 @@
      Impact Lookup (mirrors getMobileFixImpact in web UI)
      ========================================================================= */
   function _getMobileFixImpact(fix, t) {
-    var impactMap = {
+    const impactMap = {
       'Performance': t('reports.mobile.impact.performance', 'Faster page load and improved Core Web Vitals scores'),
       'Readability': t('reports.mobile.impact.readability', 'Better user experience with improved text legibility'),
       'Touch Targets': t('reports.mobile.impact.touchTargets', 'Easier tap interactions for mobile users'),
@@ -1636,7 +1636,7 @@
      Step-by-Step Lookup (mirrors getMobileFixSteps in web UI)
      ========================================================================= */
   function _getMobileFixSteps(fix, t) {
-    var stepsMap = {
+    const stepsMap = {
       'Mobile performance is below recommended': [
         t('reports.mobile.steps.auditImages', 'Audit images and use modern formats (WebP, AVIF)'),
         t('reports.mobile.steps.minimizeJs', 'Minimize and defer non-critical JavaScript'),

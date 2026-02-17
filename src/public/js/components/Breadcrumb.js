@@ -48,7 +48,7 @@
     }
 
     // Prepend home if requested and not already present
-    let breadcrumbItems = [...items];
+    const breadcrumbItems = [...items];
     if (includeHome && (!items.length || items[0].href !== homeHref)) {
       breadcrumbItems.unshift({ label: homeLabel, href: homeHref, i18nKey: homeI18nKey });
     }
@@ -148,7 +148,7 @@
       '/enhanced-fonts.html': { label: 'Font Analysis', i18nKey: 'nav.typography' },
       '/cro-analyzer.html': { label: 'CRO Analysis', i18nKey: 'nav.croAnalysis' },
       '/competitive-analysis.html': { label: 'Competitive Analysis', i18nKey: 'nav.rankCompetition' },
-      '/local-seo.html': { label: 'Local SEO', i18nKey: 'nav.localSeo' },
+      '/geo-seo.html': { label: 'GEO SEO', i18nKey: 'nav.geoSeo' },
       '/gdpr-compliance.html': { label: 'GDPR Compliance', i18nKey: 'nav.gdprCheck' },
       '/ip-reputation-analyzer.html': { label: 'IP Reputation', i18nKey: 'nav.ipReputation' },
       '/tag-intelligence.html': { label: 'Tag Intelligence', i18nKey: 'nav.tagIntelligence' },

@@ -221,7 +221,7 @@ class MobilePremiumPdfGenerator extends PremiumPdfReport {
   _enhanceRecommendations(recommendations) {
     return recommendations.map(rec => {
       let effort = 'medium';
-      let impact = 'high';
+      const impact = 'high';
 
       const title = (rec.title || rec.message || '').toLowerCase();
 

@@ -52,7 +52,7 @@ class SEOAnalyzer {
     // Add overall timeout to prevent analysis from hanging indefinitely
     const analysisPromise = browserPool.execute(async (browser) => {
       const page = await browser.newPage();
-      
+
       try {
         // Set desktop device profile
         await setDeviceProfile(page, 'desktop');
@@ -65,72 +65,86 @@ class SEOAnalyzer {
           retries: 0
         });
 
-        await dismissPageOverlays(page, { timeout: 4000 });
+        // Wait for network to settle (catches client-side redirects)
+        await page.waitForNavigation({ waitUntil: 'networkidle2', timeout: 10000 }).catch(() => {});
 
-        // Run analysis functions that can safely run in parallel
-        const [
-          metaTags,
-          headingStructure,
-          contentAnalysis,
-          imageAnalysis,
-          linkAnalysis,
-          structuredData,
-          securityHeaders
-        ] = await Promise.all([
-          this.analyzeMetaTags(page),
-          this.analyzeHeadingStructure(page),
-          this.analyzeContent(page),
-          this.analyzeImages(page),
-          this.analyzeLinks(page),
-          this.analyzeStructuredData(page),
-          this.checkSecurityHeaders(response, url)
-        ]);
+        // Give client-side redirects time to complete
+        await new Promise(r => setTimeout(r, 1500));
 
-        // Run functions sequentially that modify page state or navigation
-        const mobileResponsive = await this.checkMobileResponsiveness(page);
-        const performanceMetrics = await this.analyzePerformance(page);
-        const additionalChecks = await this.performAdditionalChecks(page, url);
+        const finalUrl = page.url();
+        if (finalUrl !== url) {
+          logger.info(`URL redirected: ${url} → ${finalUrl}`);
+        }
 
-        // Calculate overall SEO score
-        const score = this.calculateSEOScore({
-          metaTags,
-          headingStructure,
-          contentAnalysis,
-          imageAnalysis,
-          linkAnalysis,
-          mobileResponsive,
-          performanceMetrics,
-          securityHeaders,
-          structuredData,
-          additionalChecks
-        });
+        // Try analysis BEFORE dismissing overlays (overlay dismissal can trigger navigations)
+        try {
+          return await this._runAnalysis(page, url, response);
+        } catch (preOverlayError) {
+          if (!preOverlayError.message.includes('Execution context was destroyed') &&
+              !preOverlayError.message.includes('navigation') &&
+              !preOverlayError.message.includes('detached')) {
+            throw preOverlayError;
+          }
+          logger.warn(`Pre-overlay analysis failed for ${url}, will retry cleanly`);
+        }
 
-        return {
-          url,
-          timestamp: new Date().toISOString(),
-          score,
-          metaTags,
-          headingStructure,
-          contentAnalysis,
-          imageAnalysis,
-          linkAnalysis,
-          mobileResponsive,
-          performanceMetrics,
-          securityHeaders,
-          structuredData,
-          additionalChecks
-        };
+        await page.close().catch(() => {});
+        throw new Error('Execution context was destroyed');
+      } catch (error) {
+        if (error.message.includes('Execution context was destroyed') ||
+            error.message.includes('navigation') ||
+            error.message.includes('detached')) {
+          logger.warn(`Context destroyed for ${url}, retrying with clean page...`);
+          await page.close().catch(() => {});
 
-      } finally {
-        await page.close();
+          const retryPage = await browser.newPage();
+          try {
+            await setDeviceProfile(retryPage, 'desktop');
+            const retryResponse = await navigateToPage(retryPage, url, {
+              timeout: this.timeout,
+              waitUntil: 'networkidle2',
+              checkBotProtection: false,
+              retries: 0
+            });
+
+            // Wait for any late client-side redirects to settle
+            await new Promise(r => setTimeout(r, 3000));
+
+            const retryFinalUrl = retryPage.url();
+            logger.info(`Retry landed on: ${retryFinalUrl}`);
+
+            // If we ended up on a different URL, navigate directly for a clean context
+            let finalResponse = retryResponse;
+            if (retryFinalUrl !== url) {
+              logger.info(`Re-navigating directly to final URL: ${retryFinalUrl}`);
+              finalResponse = await navigateToPage(retryPage, retryFinalUrl, {
+                timeout: 25000,
+                waitUntil: 'networkidle2',
+                checkBotProtection: false,
+                retries: 0
+              });
+              await new Promise(r => setTimeout(r, 2000));
+            }
+
+            // Skip overlay dismissal entirely on retry
+            const results = await this._runAnalysis(retryPage, url, finalResponse);
+            await retryPage.close();
+            return results;
+          } catch (retryError) {
+            await retryPage.close().catch(() => {});
+            throw retryError;
+          }
+        }
+        await page.close().catch(() => {});
+        throw error;
       }
     });
 
-    // Create timeout promise (35 seconds total for all analysis steps)
+    // Create timeout promise (60 seconds to allow for redirect retry)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        reject(new Error('SEO analysis timed out after 35 seconds. The website may be too slow or complex to analyze.'));
-      }, 35000);
+        reject(new Error('SEO analysis timed out after 60 seconds. The website may be too slow or complex to analyze.'));
+      }, 60000);
     });
 
     // Race between analysis and timeout
@@ -138,6 +152,62 @@ class SEOAnalyzer {
 
     logger.info('SEO analysis completed', { url, score: results.score });
     return results;
+  }
+
+  /**
+   * Run the full SEO analysis pipeline on a page
+   */
+  async _runAnalysis(page, url, response) {
+    const [
+      metaTags,
+      headingStructure,
+      contentAnalysis,
+      imageAnalysis,
+      linkAnalysis,
+      structuredData,
+      securityHeaders
+    ] = await Promise.all([
+      this.analyzeMetaTags(page),
+      this.analyzeHeadingStructure(page),
+      this.analyzeContent(page),
+      this.analyzeImages(page),
+      this.analyzeLinks(page),
+      this.analyzeStructuredData(page),
+      this.checkSecurityHeaders(response, url)
+    ]);
+
+    const mobileResponsive = await this.checkMobileResponsiveness(page);
+    const performanceMetrics = await this.analyzePerformance(page);
+    const additionalChecks = await this.performAdditionalChecks(page, url);
+
+    const score = this.calculateSEOScore({
+      metaTags,
+      headingStructure,
+      contentAnalysis,
+      imageAnalysis,
+      linkAnalysis,
+      mobileResponsive,
+      performanceMetrics,
+      securityHeaders,
+      structuredData,
+      additionalChecks
+    });
+
+    return {
+      url,
+      timestamp: new Date().toISOString(),
+      score,
+      metaTags,
+      headingStructure,
+      contentAnalysis,
+      imageAnalysis,
+      linkAnalysis,
+      mobileResponsive,
+      performanceMetrics,
+      securityHeaders,
+      structuredData,
+      additionalChecks
+    };
   }
 
   /**

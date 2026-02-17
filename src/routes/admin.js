@@ -155,7 +155,7 @@ router.get('/users', async (req, res) => {
     const totalCount = await db.get(countQuery, search ? [`%${search}%`] : []);
 
     // Get scan counts for each user
-    for (let user of users) {
+    for (const user of users) {
       const scanCount = await db.get(
         'SELECT COUNT(*) as count FROM scans WHERE user_id = ?',
         [user.id]

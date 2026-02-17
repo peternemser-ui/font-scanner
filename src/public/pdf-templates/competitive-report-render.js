@@ -11,26 +11,26 @@
     return;
   }
 
-  var PR = window.PdfReport;
+  const PR = window.PdfReport;
 
   PdfReport.register('competitive', function renderCompetitive(data, utils) {
-    var t = utils.t;
-    var esc = utils.esc;
-    var truncate = utils.truncate;
-    var scoreClass = utils.scoreClass;
-    var translateImpact = utils.translateImpact || function(v) { return v; };
+    const t = utils.t;
+    const esc = utils.esc;
+    const truncate = utils.truncate;
+    const scoreClass = utils.scoreClass;
+    const translateImpact = utils.translateImpact || function(v) { return v; };
 
-    var sectionIndex = 1;
+    let sectionIndex = 1;
 
     // Resolve data sources
-    var yourSite = data.yourSite || {};
-    var yourScores = yourSite.scores || {};
-    var yourDetails = yourSite.details || {};
-    var competitors = data.competitors || [];
-    var comparison = data.comparison || {};
-    var dataRankings = data.rankings || {};
-    var insights = data.insights || [];
-    var recommendations = data.recommendations || [];
+    const yourSite = data.yourSite || {};
+    const yourScores = yourSite.scores || {};
+    const yourDetails = yourSite.details || {};
+    const competitors = data.competitors || [];
+    const comparison = data.comparison || {};
+    const dataRankings = data.rankings || {};
+    const insights = data.insights || [];
+    const recommendations = data.recommendations || [];
 
     // Derive gaps, strengthAreas, improvementAreas from the comparison object.
     // The API returns comparison as { seo: { yourScore, avgCompetitor, maxCompetitor, diff, status, ... }, ... }
@@ -38,19 +38,19 @@
     //   gaps = [{ category, yourScore, bestScore, gap }]
     //   strengthAreas = ['seo', ...]   (categories where status is 'winning')
     //   improvementAreas = ['seo', ...] (categories where status is 'losing')
-    var gaps = comparison.gaps || [];
-    var strengthAreas = comparison.strengthAreas || [];
-    var improvementAreas = comparison.improvementAreas || [];
+    const gaps = comparison.gaps || [];
+    const strengthAreas = comparison.strengthAreas || [];
+    const improvementAreas = comparison.improvementAreas || [];
 
     // If the API returned per-metric comparison objects instead of pre-built arrays, derive them
     if (gaps.length === 0 && strengthAreas.length === 0 && improvementAreas.length === 0) {
-      var compKeys = Object.keys(comparison);
+      const compKeys = Object.keys(comparison);
       compKeys.forEach(function (key) {
-        var entry = comparison[key];
+        const entry = comparison[key];
         if (!entry || typeof entry !== 'object' || !entry.status) return;
-        var bestScore = entry.maxCompetitor || 0;
-        var yours = entry.yourScore || 0;
-        var gapVal = bestScore - yours;
+        const bestScore = entry.maxCompetitor || 0;
+        const yours = entry.yourScore || 0;
+        const gapVal = bestScore - yours;
         gaps.push({
           category: key,
           yourScore: yours,
@@ -66,14 +66,14 @@
     }
 
     function _htmlToNode(htmlStr) {
-      var tpl = document.createElement('template');
+      const tpl = document.createElement('template');
       tpl.innerHTML = htmlStr.trim();
       return tpl.content.firstChild;
     }
 
     /** Map category key to display label */
     function _categoryLabel(key) {
-      var labels = {
+      const labels = {
         overall: t('reports.competitive.report.categories.overall', 'Overall'),
         seo: t('reports.competitive.report.categories.seo', 'SEO'),
         performance: t('reports.competitive.report.categories.performance', 'Performance'),
@@ -87,7 +87,7 @@
 
     /** Impact badge color */
     function _impactColor(impact) {
-      var imp = (impact || '').toLowerCase();
+      const imp = (impact || '').toLowerCase();
       if (imp === 'high' || imp === 'critical') return '#ef4444';
       if (imp === 'medium') return '#f59e0b';
       return '#3b82f6';
@@ -129,14 +129,14 @@
 
     /** Compute competitive stats for a metric */
     function _metricStats(metricKey) {
-      var yours = yourScores[metricKey] || 0;
-      var compScores = competitors.map(function(c) { return (c.scores || {})[metricKey] || 0; });
-      var validScores = compScores.filter(function(s) { return s > 0; });
-      var avg = validScores.length > 0 ? Math.round(validScores.reduce(function(a, b) { return a + b; }, 0) / validScores.length) : 0;
-      var max = validScores.length > 0 ? Math.max.apply(null, validScores) : 0;
-      var isWinning = yours >= max;
-      var gap = max - yours;
-      var leader = '';
+      const yours = yourScores[metricKey] || 0;
+      const compScores = competitors.map(function(c) { return (c.scores || {})[metricKey] || 0; });
+      const validScores = compScores.filter(function(s) { return s > 0; });
+      const avg = validScores.length > 0 ? Math.round(validScores.reduce(function(a, b) { return a + b; }, 0) / validScores.length) : 0;
+      const max = validScores.length > 0 ? Math.max.apply(null, validScores) : 0;
+      const isWinning = yours >= max;
+      const gap = max - yours;
+      let leader = '';
       competitors.forEach(function(c) {
         if ((c.scores || {})[metricKey] === max) {
           leader = c.url || '';
@@ -147,8 +147,8 @@
 
     /** Get action steps for a metric */
     function _getActionSteps(metricKey) {
-      var key = (metricKey || '').toLowerCase();
-      var stepsMap = {
+      const key = (metricKey || '').toLowerCase();
+      const stepsMap = {
         performance: [
           t('reports.competitive.action.perf1', 'Run a Lighthouse performance audit to identify specific bottlenecks'),
           t('reports.competitive.action.perf2', 'Optimize images: compress, use WebP format, and implement lazy loading'),
@@ -196,11 +196,11 @@
 
     /** Get defensive steps for maintaining lead */
     function _getDefensiveSteps(metricKey) {
-      var key = (metricKey || '').toLowerCase();
-      var stepsMap = {
+      const key = (metricKey || '').toLowerCase();
+      const stepsMap = {
         performance: [
           t('reports.competitive.defense.perf1', 'Set up continuous performance monitoring to catch regressions early'),
-          t('reports.competitive.defense.perf2', 'Document your performance optimizations so they'),
+          t('reports.competitive.defense.perf2', 'Document your performance optimizations so they are not accidentally removed'),
           t('reports.competitive.defense.perf3', 'Monitor competitor performance to stay ahead of their improvements')
         ],
         seo: [
@@ -233,8 +233,8 @@
 
     /** Get pro tip for a metric */
     function _getProTip(metricKey) {
-      var key = (metricKey || '').toLowerCase();
-      var tips = {
+      const key = (metricKey || '').toLowerCase();
+      const tips = {
         performance: t('reports.competitive.tip.performance', 'Focus on mobile performance first - Google uses mobile-first indexing and most users browse on mobile devices.'),
         seo: t('reports.competitive.tip.seo', 'Quality over quantity - one excellent, in-depth piece of content often outranks many thin pages.'),
         accessibility: t('reports.competitive.tip.accessibility', 'Accessibility improvements often benefit all users, not just those with disabilities. Better UX = better conversions.'),
@@ -246,11 +246,11 @@
 
     /** Get gap explanation for a recommendation */
     function _getGapExplanation(rec) {
-      var metric = (rec.metric || '').toLowerCase();
-      var gap = rec.gap || 0;
-      var explanations = {
+      const metric = (rec.metric || '').toLowerCase();
+      const gap = rec.gap || 0;
+      const explanations = {
         performance: t('reports.competitive.gapExp.performance', 'Your site loads {{speed}} slower than top competitors. Users may choose faster alternatives, affecting bounce rates and conversions.'),
-        seo: t('reports.competitive.gapExp.seo', 'Competitors have {{degree}} better search visibility. This could mean they'),
+        seo: t('reports.competitive.gapExp.seo', 'Competitors have {{degree}} better search visibility. This could mean they are capturing traffic you are missing.'),
         accessibility: t('reports.competitive.gapExp.accessibility', 'Your site is {{degree}} less accessible than competitors. This affects users with disabilities and may have legal implications.'),
         security: t('reports.competitive.gapExp.security', 'Competitors have stronger security measures. Users may trust their sites more, especially for transactions.'),
         corewebvitals: t('reports.competitive.gapExp.coreWebVitals', 'Core Web Vitals affect Google rankings. A {{gap}}-point gap could mean competitors rank higher in search results.')
@@ -258,19 +258,74 @@
       return explanations[metric] || t('reports.competitive.gapExp.generic', 'Closing this {{gap}}-point gap would put you on par with or ahead of your top competitors in this area.');
     }
 
+    /** Translate server-generated insight message */
+    function _translateInsightMessage(insight) {
+      var cat = (insight.category || '').toLowerCase();
+      var typ = (insight.type || '').toLowerCase();
+      if (cat === 'overall' && typ === 'success') return t('reports.competitive.insights.outperforming', 'You are outperforming the competition!');
+      if (cat === 'overall') return t('reports.competitive.insights.competitorsAhead', 'Competitors are ahead');
+      if (cat === 'seo') return t('reports.competitive.insights.losingSeo', 'Losing SEO battle');
+      if (cat === 'core web vitals') return t('reports.competitive.insights.cwvAtRisk', 'Google rankings at risk');
+      if (cat === 'performance') return t('reports.competitive.insights.slowerThan', 'Slower than competitors');
+      if (cat === 'security') return t('reports.competitive.insights.securityGap', 'Security gap detected');
+      return insight.title || insight.message || '';
+    }
+
+    /** Translate server-generated insight detail */
+    function _translateInsightDetail(insight) {
+      var cat = (insight.category || '').toLowerCase();
+      var typ = (insight.type || '').toLowerCase();
+      if (cat === 'overall' && typ === 'success') return t('reports.competitive.insights.outperformingDetail', 'Your overall score is above the competitive average');
+      if (cat === 'overall') return t('reports.competitive.insights.competitorsAheadDetail', 'Focus on areas where you are falling behind to gain competitive advantage');
+      if (cat === 'seo') return t('reports.competitive.insights.losingSeoDetail', 'Your SEO score is below competitor average. This hurts organic visibility.');
+      if (cat === 'core web vitals') return t('reports.competitive.insights.cwvAtRiskDetail', 'Competitors have better Core Web Vitals. Google may rank them higher.');
+      if (cat === 'performance') return t('reports.competitive.insights.slowerThanDetail', 'Users may choose faster competitor sites.');
+      if (cat === 'security') return t('reports.competitive.insights.securityGapDetail', 'Competitors have stronger security measures. This affects user trust.');
+      return insight.description || insight.detail || '';
+    }
+
+    /** Translate server-generated recommendation text */
+    function _translateRecommendation(r) {
+      var metricName = _categoryLabel(r.metric || '');
+      var gap = r.gap || 0;
+      var yourScore = r.yourScore || 0;
+      var topScore = r.topCompetitorScore || 0;
+      var priority = (r.priority || 'medium').toLowerCase();
+      if (priority === 'high') {
+        return t('reports.competitive.recText.high', 'Your {{metric}} score of {{yourScore}} is {{gap}} points behind the leader ({{topScore}}). This is a significant competitive disadvantage that requires immediate attention.', { metric: metricName, yourScore: yourScore, gap: gap, topScore: topScore });
+      }
+      if (priority === 'medium') {
+        return t('reports.competitive.recText.medium', 'A {{gap}}-point improvement in {{metric}} would put you on par with top competitors. Your current score of {{yourScore}} is close but not quite there.', { metric: metricName, gap: gap, yourScore: yourScore });
+      }
+      return t('reports.competitive.recText.low', 'You are close to the top in {{metric}}. A small {{gap}}-point improvement would help you match or exceed the competition.', { metric: metricName, gap: gap });
+    }
+
+    /** Translate server-generated impact text */
+    function _translateImpactText(r) {
+      var priority = (r.priority || 'medium').toLowerCase();
+      var metricName = _categoryLabel(r.metric || '');
+      if (priority === 'high') {
+        return t('reports.competitive.impactText.high', 'Closing this gap could significantly improve your competitive position and help you capture traffic currently going to competitors with better {{metric}} scores.', { metric: metricName });
+      }
+      if (priority === 'medium') {
+        return t('reports.competitive.impactText.medium', 'Moderate improvement opportunity. Closing this gap would make you more competitive and could lead to better user engagement and conversion rates.');
+      }
+      return t('reports.competitive.impactText.low', 'Fine-tuning opportunity. You are already competitive here, but small improvements can make a difference.');
+    }
+
     /* -----------------------------------------------------------------------
        1. Competitive Overview (enriched with executive summary data)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-overview .pdf-section__content');
-      var score = yourScores.overall;
+      const sec = document.querySelector('#section-overview .pdf-section__content');
+      const score = yourScores.overall;
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.overview', 'Competitive Overview'), score)),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.overview', 'This competitive overview compares your site\'s performance against your competitors across key metrics. Understanding where you stand relative to competitors helps prioritize optimization efforts and identify market opportunities.')) + '</p>';
 
@@ -282,10 +337,10 @@
       );
 
       // Score categories as metrics
-      var scoreCategories = ['overall', 'seo', 'performance', 'security', 'accessibility'];
-      var metricsArr = [];
+      const scoreCategories = ['overall', 'seo', 'performance', 'security', 'accessibility'];
+      const metricsArr = [];
       scoreCategories.forEach(function (cat) {
-        var val = yourScores[cat];
+        const val = yourScores[cat];
         if (val !== undefined && val !== null) {
           metricsArr.push({
             value: val,
@@ -300,30 +355,30 @@
       }
 
       // Executive summary metrics: rank, grade, wins/losses, avg competitor, gap to leader
-      var yourOverall = yourScores.overall || 0;
-      var competitorOveralls = [];
+      const yourOverall = yourScores.overall || 0;
+      const competitorOveralls = [];
       competitors.forEach(function(c) {
-        var cs = (c.scores || {}).overall || 0;
+        const cs = (c.scores || {}).overall || 0;
         if (cs > 0) competitorOveralls.push(cs);
       });
-      var avgCompetitor = competitorOveralls.length > 0 ? Math.round(competitorOveralls.reduce(function(a, b) { return a + b; }, 0) / competitorOveralls.length) : 0;
-      var maxCompetitor = competitorOveralls.length > 0 ? Math.max.apply(null, competitorOveralls) : 0;
-      var overallRank = (dataRankings.overall && dataRankings.overall.rank) ? dataRankings.overall.rank : '-';
-      var totalSites = competitors.length + 1;
+      const avgCompetitor = competitorOveralls.length > 0 ? Math.round(competitorOveralls.reduce(function(a, b) { return a + b; }, 0) / competitorOveralls.length) : 0;
+      const maxCompetitor = competitorOveralls.length > 0 ? Math.max.apply(null, competitorOveralls) : 0;
+      const overallRank = (dataRankings.overall && dataRankings.overall.rank) ? dataRankings.overall.rank : '-';
+      const totalSites = competitors.length + 1;
 
       // Count wins/losses across metrics
-      var winMetrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
-      var winsCount = 0;
-      var lossesCount = 0;
+      const winMetrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
+      let winsCount = 0;
+      let lossesCount = 0;
       winMetrics.forEach(function(m) {
-        var compStatus = comparison[m];
+        const compStatus = comparison[m];
         if (compStatus && compStatus.status === 'winning') winsCount++;
         if (compStatus && compStatus.status === 'losing') lossesCount++;
       });
 
       // Rank and competitive position metrics
-      var gapToLeader = maxCompetitor > yourOverall ? (maxCompetitor - yourOverall) : 0;
-      var leadOverField = yourOverall > maxCompetitor ? (yourOverall - maxCompetitor) : 0;
+      const gapToLeader = maxCompetitor > yourOverall ? (maxCompetitor - yourOverall) : 0;
+      const leadOverField = yourOverall > maxCompetitor ? (yourOverall - maxCompetitor) : 0;
 
       html += PR.renderMetrics([
         { value: '#' + overallRank + '/' + totalSites, label: t('reports.competitive.report.overview.rank', 'Overall Rank'), color: overallRank === 1 ? '#10b981' : '#f59e0b' },
@@ -369,20 +424,20 @@
        2. Score Rankings (enriched with grades and CWV details)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-rankings .pdf-section__content');
+      const sec = document.querySelector('#section-rankings .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.rankings', 'Score Rankings'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.rankings', 'Score rankings show how your site compares to competitors across SEO, performance, security, and accessibility categories. Higher rankings indicate competitive advantages, while lower rankings reveal areas where competitors are outperforming you.')) + '</p>';
 
       // Build comparison table: Site | SEO | Performance | Security | Accessibility | CWV | Overall | Grade
-      var categories = ['seo', 'performance', 'security', 'accessibility'];
-      var headers = [
+      const categories = ['seo', 'performance', 'security', 'accessibility'];
+      const headers = [
         { label: t('reports.competitive.report.rankings.site', 'Site'), width: '22%' }
       ];
       categories.forEach(function (cat) {
@@ -392,12 +447,12 @@
       headers.push({ label: _categoryLabel('overall'), width: '10%' });
       headers.push({ label: t('reports.competitive.report.rankings.grade', 'Grade'), width: '10%' });
 
-      var rows = [];
+      const rows = [];
 
       // Your site row (highlighted with bold)
-      var yourRow = ['<strong>' + esc(truncate(yourSite.url || '-', 35)) + '</strong>'];
+      const yourRow = ['<strong>' + esc(truncate(yourSite.url || '-', 35)) + '</strong>'];
       categories.forEach(function (cat) {
-        var val = yourScores[cat];
+        const val = yourScores[cat];
         if (val !== undefined && val !== null) {
           yourRow.push('<strong><span class="score-' + scoreClass(val) + '">' + val + '</span></strong><br><span style="font-size:0.7rem;color:' + _scoreColor(val) + ';">' + _scoreGrade(val) + '</span>');
         } else {
@@ -405,11 +460,11 @@
         }
       });
       // CWV
-      var yourCwv = yourScores.coreWebVitals;
+      const yourCwv = yourScores.coreWebVitals;
       if (yourCwv !== undefined && yourCwv !== null) {
-        var cwvDetail = '';
+        let cwvDetail = '';
         if (yourDetails.coreWebVitals && yourDetails.coreWebVitals.metrics) {
-          var m = yourDetails.coreWebVitals.metrics;
+          const m = yourDetails.coreWebVitals.metrics;
           cwvDetail = '<br><span style="font-size:0.65rem;color:#6b7280;">LCP: ' + (m.lcp ? (m.lcp / 1000).toFixed(2) + 's' : 'N/A') + '</span>';
         }
         yourRow.push('<strong><span class="score-' + scoreClass(yourCwv) + '">' + yourCwv + '</span></strong>' + cwvDetail);
@@ -417,7 +472,7 @@
         yourRow.push('<strong>-</strong>');
       }
       // Overall
-      var yourOvr = yourScores.overall;
+      const yourOvr = yourScores.overall;
       if (yourOvr !== undefined && yourOvr !== null) {
         yourRow.push('<strong><span class="score-' + scoreClass(yourOvr) + '">' + yourOvr + '</span></strong>');
       } else {
@@ -429,11 +484,11 @@
 
       // Competitor rows
       competitors.forEach(function (comp) {
-        var compScores = comp.scores || {};
-        var compDetails = comp.details || {};
-        var compRow = [esc(truncate(comp.url || '-', 35))];
+        const compScores = comp.scores || {};
+        const compDetails = comp.details || {};
+        const compRow = [esc(truncate(comp.url || '-', 35))];
         categories.forEach(function (cat) {
-          var val = compScores[cat];
+          const val = compScores[cat];
           if (val !== undefined && val !== null) {
             compRow.push('<span class="score-' + scoreClass(val) + '">' + val + '</span><br><span style="font-size:0.7rem;color:' + _scoreColor(val) + ';">' + _scoreGrade(val) + '</span>');
           } else {
@@ -441,11 +496,11 @@
           }
         });
         // CWV
-        var compCwv = compScores.coreWebVitals;
+        const compCwv = compScores.coreWebVitals;
         if (compCwv !== undefined && compCwv !== null) {
-          var compCwvDetail = '';
+          let compCwvDetail = '';
           if (compDetails.coreWebVitals && compDetails.coreWebVitals.metrics) {
-            var cm = compDetails.coreWebVitals.metrics;
+            const cm = compDetails.coreWebVitals.metrics;
             compCwvDetail = '<br><span style="font-size:0.65rem;color:#6b7280;">LCP: ' + (cm.lcp ? (cm.lcp / 1000).toFixed(2) + 's' : 'N/A') + '</span>';
           }
           compRow.push('<span class="score-' + scoreClass(compCwv) + '">' + compCwv + '</span>' + compCwvDetail);
@@ -453,7 +508,7 @@
           compRow.push('-');
         }
         // Overall
-        var compOvr = compScores.overall;
+        const compOvr = compScores.overall;
         if (compOvr !== undefined && compOvr !== null) {
           compRow.push('<span class="score-' + scoreClass(compOvr) + '">' + compOvr + '</span>');
         } else {
@@ -474,23 +529,23 @@
       if (dataRankings && Object.keys(dataRankings).length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.competitive.report.rankings.yourRankings', 'Your Rankings by Category')) + '</h3>';
 
-        var rankMetrics = ['overall', 'seo', 'performance', 'coreWebVitals', 'accessibility', 'security'];
-        var rankHeaders = [
+        const rankMetrics = ['overall', 'seo', 'performance', 'coreWebVitals', 'accessibility', 'security'];
+        const rankHeaders = [
           { label: t('reports.competitive.report.rankings.metric', 'Metric'), width: '20%' },
           { label: t('reports.competitive.report.rankings.rank', 'Rank'), width: '15%' },
           { label: t('reports.competitive.report.rankings.status', 'Status'), width: '20%' },
           { label: t('reports.competitive.report.rankings.action', 'Recommended Action'), width: '45%' }
         ];
 
-        var rankRows = [];
+        const rankRows = [];
         rankMetrics.forEach(function(metricKey) {
-          var rd = dataRankings[metricKey];
+          const rd = dataRankings[metricKey];
           if (!rd) return;
-          var failed = rd.failed || rd.rank === 0 || rd.total === 0;
-          var rankDisplay = failed ? '-' : rd.rank + '/' + rd.total;
-          var statusStr = 'info';
-          var statusLabel = '';
-          var recommendation = '';
+          const failed = rd.failed || rd.rank === 0 || rd.total === 0;
+          const rankDisplay = failed ? '-' : rd.rank + '/' + rd.total;
+          let statusStr = 'info';
+          let statusLabel = '';
+          let recommendation = '';
 
           if (failed) {
             statusStr = 'fail';
@@ -534,14 +589,14 @@
        3. Performance Gaps
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-gaps .pdf-section__content');
+      const sec = document.querySelector('#section-gaps .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.gaps', 'Performance Gaps'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.gaps', 'Performance gaps highlight the specific areas where the difference between your scores and the best competitor scores is largest. Closing these gaps can yield the most significant competitive improvements. This section also identifies your strength areas where you lead the competition.')) + '</p>';
 
@@ -549,7 +604,7 @@
       if (gaps.length > 0) {
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.competitive.report.gaps.tableHeading', 'Score Gap Analysis')) + '</h3>';
 
-        var gapHeaders = [
+        const gapHeaders = [
           { label: t('reports.competitive.report.gaps.category', 'Category'), width: '20%' },
           { label: t('reports.competitive.report.gaps.yourScore', 'Your Score'), width: '15%' },
           { label: t('reports.competitive.report.gaps.bestScore', 'Best Score'), width: '15%' },
@@ -558,10 +613,10 @@
           { label: t('reports.competitive.report.gaps.progress', 'Score Position'), width: '20%' }
         ];
 
-        var gapRows = gaps.map(function (g) {
-          var gapVal = g.gap || 0;
-          var status = gapVal <= 0 ? 'pass' : (gapVal <= 10 ? 'warning' : 'fail');
-          var yourVal = g.yourScore || 0;
+        const gapRows = gaps.map(function (g) {
+          const gapVal = g.gap || 0;
+          const status = gapVal <= 0 ? 'pass' : (gapVal <= 10 ? 'warning' : 'fail');
+          const yourVal = g.yourScore || 0;
           return [
             esc(_categoryLabel(g.category || '')),
             '<span class="score-' + scoreClass(g.yourScore || 0) + '">' + (g.yourScore || 0) + '</span>',
@@ -606,28 +661,28 @@
        4. Competitor Profiles (enriched with grades and progress bars)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-competitors .pdf-section__content');
+      const sec = document.querySelector('#section-competitors .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.competitors', 'Competitor Profiles'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.competitors', 'Competitor profiles provide detailed score breakdowns for each analyzed competitor. Understanding each competitor\'s strengths and weaknesses helps inform your optimization strategy and identify opportunities to differentiate.')) + '</p>';
 
       if (competitors.length > 0) {
         competitors.forEach(function (comp, idx) {
-          var compScores = comp.scores || {};
+          const compScores = comp.scores || {};
 
           html += '<h3 class="pdf-subsection__title">' + esc(t('reports.competitive.report.competitors.competitorLabel', 'Competitor') + ' ' + (idx + 1) + ': ' + truncate(comp.url || '-', 50)) + '</h3>';
 
           // Metrics row for this competitor
-          var compMetrics = [];
-          var cats = ['overall', 'seo', 'performance', 'security', 'accessibility'];
+          const compMetrics = [];
+          const cats = ['overall', 'seo', 'performance', 'security', 'accessibility'];
           cats.forEach(function (cat) {
-            var val = compScores[cat];
+            const val = compScores[cat];
             if (val !== undefined && val !== null) {
               compMetrics.push({
                 value: val,
@@ -642,7 +697,7 @@
           }
 
           // Mini comparison table: Category | Their Score | Your Score | Difference | Status
-          var miniHeaders = [
+          const miniHeaders = [
             { label: t('reports.competitive.report.gaps.category', 'Category'), width: '22%' },
             { label: t('reports.competitive.report.competitors.theirScore', 'Their Score'), width: '18%' },
             { label: t('reports.competitive.report.gaps.yourScore', 'Your Score'), width: '18%' },
@@ -651,14 +706,14 @@
             { label: t('reports.competitive.report.competitors.grade', 'Grade'), width: '12%' }
           ];
 
-          var miniRows = [];
+          const miniRows = [];
           cats.forEach(function (cat) {
-            var theirs = compScores[cat];
-            var yours = yourScores[cat];
+            const theirs = compScores[cat];
+            const yours = yourScores[cat];
             if (theirs === undefined && yours === undefined) return;
-            var diff = (yours || 0) - (theirs || 0);
-            var statusStr = diff > 0 ? 'pass' : diff < 0 ? 'fail' : 'warning';
-            var statusLabel = diff > 0 ? t('reports.competitive.report.competitors.ahead', 'Ahead') : diff < 0 ? t('reports.competitive.report.competitors.behind', 'Behind') : t('reports.competitive.report.competitors.tied', 'Tied');
+            const diff = (yours || 0) - (theirs || 0);
+            const statusStr = diff > 0 ? 'pass' : diff < 0 ? 'fail' : 'warning';
+            const statusLabel = diff > 0 ? t('reports.competitive.report.competitors.ahead', 'Ahead') : diff < 0 ? t('reports.competitive.report.competitors.behind', 'Behind') : t('reports.competitive.report.competitors.tied', 'Tied');
             miniRows.push([
               esc(_categoryLabel(cat)),
               theirs !== undefined ? '<span class="score-' + scoreClass(theirs) + '">' + theirs + '</span>' : '-',
@@ -684,21 +739,21 @@
        5. Visual Score Comparison (NEW - matches web UI bar charts)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-visual-comparison .pdf-section__content');
+      const sec = document.querySelector('#section-visual-comparison .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.visualComparison', 'Visual Score Comparison'))),
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.visualComparison', 'Visual bar comparison showing exactly where you stand against each competitor in every category. Sites are ranked within each metric, with your position clearly indicated.')) + '</p>';
 
-      var vizMetrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
+      const vizMetrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
 
       vizMetrics.forEach(function(metricKey) {
-        var stats = _metricStats(metricKey);
-        var gapLabel = '';
+        const stats = _metricStats(metricKey);
+        let gapLabel = '';
         if (stats.isWinning) {
           gapLabel = '+' + (stats.yours - stats.max) + ' ' + t('reports.competitive.ahead', 'ahead!');
         } else if (stats.gap > 0) {
@@ -712,7 +767,7 @@
         html += '</h3>';
 
         // Build sorted list of all sites for this metric
-        var allSites = [{ name: esc(t('reports.competitive.you', 'YOU')), score: stats.yours, isYou: true }];
+        const allSites = [{ name: esc(t('reports.competitive.you', 'YOU')), score: stats.yours, isYou: true }];
         competitors.forEach(function(c) {
           allSites.push({
             name: esc(truncate(c.url || '-', 30)),
@@ -724,8 +779,10 @@
 
         // Render as progress bars
         allSites.forEach(function(site, rank) {
-          var barColor = site.isYou ? '#3b82f6' : (rank === 0 ? '#10b981' : '#6b7280');
-          var label = (rank === 0 ? '#1 ' : '#' + (rank + 1) + ' ') + site.name;
+          const competitorColors = ['#6366f1', '#8b5cf6', '#a78bfa', '#94a3b8', '#64748b'];
+          const compIdx = site.isYou || rank === 0 ? 0 : Math.min(rank - 1, competitorColors.length - 1);
+          const barColor = site.isYou ? '#0ea5e9' : (rank === 0 ? '#10b981' : competitorColors[compIdx]);
+          const label = (rank === 0 ? '#1 ' : '#' + (rank + 1) + ' ') + site.name;
           html += PR.renderProgress(label, site.score, 100, barColor);
         });
 
@@ -739,20 +796,20 @@
        6. Competitive Position Summary (NEW - matches web UI stat cards)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-competitive-position .pdf-section__content');
+      const sec = document.querySelector('#section-competitive-position .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.competitivePosition', 'Competitive Position Summary'))),
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.competitivePosition', 'This section shows your competitive position in each metric category. For each metric, see whether you are winning, losing, or tied, along with the score difference, average competitor score, best competitor score, and your percentile ranking.')) + '</p>';
 
       // Position metrics from comparison data
-      var positionMetrics = Object.keys(comparison);
+      const positionMetrics = Object.keys(comparison);
       if (positionMetrics.length > 0) {
-        var posHeaders = [
+        const posHeaders = [
           { label: t('reports.competitive.report.gaps.category', 'Category'), width: '18%' },
           { label: t('seo.report.table.status', 'Status'), width: '14%' },
           { label: t('reports.competitive.report.position.diff', 'Diff'), width: '12%' },
@@ -762,13 +819,13 @@
           { label: t('reports.competitive.report.position.percentile', 'Percentile'), width: '14%' }
         ];
 
-        var posRows = [];
+        const posRows = [];
         positionMetrics.forEach(function(metricKey) {
-          var stats = comparison[metricKey];
+          const stats = comparison[metricKey];
           if (!stats || typeof stats !== 'object' || !stats.status) return;
-          var statusStr = stats.status === 'winning' ? 'pass' : stats.status === 'losing' ? 'fail' : 'warning';
-          var statusLabel = stats.status === 'winning' ? t('reports.competitive.winning', 'WINNING') : stats.status === 'tied' ? t('reports.competitive.tied', 'TIED') : t('reports.competitive.losing', 'LOSING');
-          var diff = stats.diff || 0;
+          const statusStr = stats.status === 'winning' ? 'pass' : stats.status === 'losing' ? 'fail' : 'warning';
+          const statusLabel = stats.status === 'winning' ? t('reports.competitive.winning', 'WINNING') : stats.status === 'tied' ? t('reports.competitive.tied', 'TIED') : t('reports.competitive.losing', 'LOSING');
+          const diff = stats.diff || 0;
 
           posRows.push([
             '<strong>' + esc(_categoryLabel(metricKey)) + '</strong>',
@@ -788,9 +845,9 @@
         // Per-metric progress bars showing your position
         html += '<h3 class="pdf-subsection__title">' + esc(t('reports.competitive.report.position.scoreProgress', 'Score vs Competitors')) + '</h3>';
         positionMetrics.forEach(function(metricKey) {
-          var stats = comparison[metricKey];
+          const stats = comparison[metricKey];
           if (!stats || typeof stats !== 'object' || !stats.yourScore) return;
-          var barColor = stats.status === 'winning' ? '#10b981' : stats.status === 'losing' ? '#ef4444' : '#f59e0b';
+          const barColor = stats.status === 'winning' ? '#10b981' : stats.status === 'losing' ? '#ef4444' : '#f59e0b';
           html += PR.renderProgress(_categoryLabel(metricKey) + ' (' + (stats.status || '') + ')', stats.yourScore, 100, barColor);
         });
       } else {
@@ -804,44 +861,44 @@
        7. Head-to-Head Battle (NEW - matches web UI detailed analysis)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-head-to-head .pdf-section__content');
+      const sec = document.querySelector('#section-head-to-head .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.headToHead', 'Head-to-Head Battle'))),
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.headToHead', 'Detailed head-to-head comparison for each metric category. Each metric includes a leaderboard, competitive insight, and actionable steps to either maintain your lead or close the gap.')) + '</p>';
 
       // Full comparison table (all sites, all metrics + overall + grade)
-      var h2hMetrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
-      var allSites = [{ name: t('reports.competitive.you', 'YOU'), url: yourSite.url || '-', scores: yourScores, grade: yourSite.grade || _scoreGrade(yourScores.overall || 0), isYou: true }];
+      const h2hMetrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
+      const allSites = [{ name: t('reports.competitive.you', 'YOU'), url: yourSite.url || '-', scores: yourScores, grade: yourSite.grade || _scoreGrade(yourScores.overall || 0), isYou: true }];
       competitors.forEach(function(c) {
         allSites.push({ name: truncate(c.url || '-', 30), url: c.url || '-', scores: c.scores || {}, grade: c.grade || _scoreGrade((c.scores || {}).overall || 0), isYou: false });
       });
 
-      var h2hHeaders = [{ label: t('reports.competitive.report.rankings.site', 'Site'), width: '22%' }];
+      const h2hHeaders = [{ label: t('reports.competitive.report.rankings.site', 'Site'), width: '22%' }];
       h2hMetrics.forEach(function(m) { h2hHeaders.push({ label: _categoryLabel(m), width: '12%' }); });
       h2hHeaders.push({ label: _categoryLabel('overall'), width: '12%' });
       h2hHeaders.push({ label: t('reports.competitive.report.rankings.grade', 'Grade'), width: '10%' });
 
-      var h2hRows = [];
+      const h2hRows = [];
       allSites.forEach(function(site) {
-        var row = [site.isYou ? '<strong>' + esc(site.name) + '</strong>' : esc(site.name)];
+        const row = [site.isYou ? '<strong>' + esc(site.name) + '</strong>' : esc(site.name)];
         h2hMetrics.forEach(function(m) {
-          var val = site.scores[m];
+          const val = site.scores[m];
           // Find max for this metric
-          var maxVal = 0;
+          let maxVal = 0;
           allSites.forEach(function(s) { if ((s.scores[m] || 0) > maxVal) maxVal = s.scores[m] || 0; });
-          var isLeader = val === maxVal && val > 0;
+          const isLeader = val === maxVal && val > 0;
           if (val !== undefined && val !== null) {
             row.push((site.isYou ? '<strong>' : '') + '<span class="score-' + scoreClass(val) + '">' + (isLeader ? '* ' : '') + val + '</span>' + (site.isYou ? '</strong>' : ''));
           } else {
             row.push('-');
           }
         });
-        var ovr = site.scores.overall || 0;
+        const ovr = site.scores.overall || 0;
         row.push((site.isYou ? '<strong>' : '') + '<span class="score-' + scoreClass(ovr) + '">' + ovr + '</span>' + (site.isYou ? '</strong>' : ''));
         row.push('<span style="color:' + _scoreColor(ovr) + ';font-weight:600;">' + esc(site.grade) + '</span>');
         h2hRows.push(row);
@@ -854,9 +911,9 @@
       html += '<h3 class="pdf-subsection__title">' + esc(t('reports.competitive.report.headToHead.detailedMetricAnalysis', 'Detailed Metric Analysis')) + '</h3>';
 
       h2hMetrics.forEach(function(metricKey) {
-        var stats = _metricStats(metricKey);
-        var statusColor = stats.isWinning ? '#10b981' : '#ef4444';
-        var statusLabel = stats.isWinning
+        const stats = _metricStats(metricKey);
+        const statusColor = stats.isWinning ? '#10b981' : '#ef4444';
+        const statusLabel = stats.isWinning
           ? t('reports.competitive.report.headToHead.youreLeading', 'You are leading')
           : t('reports.competitive.report.headToHead.pointsBehind', stats.gap + ' points behind ' + truncate(stats.leader, 25));
 
@@ -877,14 +934,16 @@
         ]);
 
         // Leaderboard for this metric
-        var leaderboard = [{ name: t('reports.competitive.you', 'YOU'), score: stats.yours, isYou: true }];
+        const leaderboard = [{ name: t('reports.competitive.you', 'YOU'), score: stats.yours, isYou: true }];
         competitors.forEach(function(c) {
           leaderboard.push({ name: truncate(c.url || '-', 30), score: (c.scores || {})[metricKey] || 0, isYou: false });
         });
         leaderboard.sort(function(a, b) { return b.score - a.score; });
 
         leaderboard.forEach(function(site, rank) {
-          var barColor = site.isYou ? '#3b82f6' : (rank === 0 ? '#10b981' : '#94a3b8');
+          const h2hCompColors = ['#6366f1', '#8b5cf6', '#a78bfa', '#94a3b8', '#64748b'];
+          const h2hCompIdx = site.isYou || rank === 0 ? 0 : Math.min(rank - 1, h2hCompColors.length - 1);
+          const barColor = site.isYou ? '#0ea5e9' : (rank === 0 ? '#10b981' : h2hCompColors[h2hCompIdx]);
           html += PR.renderProgress('#' + (rank + 1) + ' ' + esc(site.name), site.score, 100, barColor);
         });
 
@@ -904,7 +963,7 @@
         }
 
         // Action steps
-        var steps = stats.isWinning ? _getDefensiveSteps(metricKey) : _getActionSteps(metricKey);
+        const steps = stats.isWinning ? _getDefensiveSteps(metricKey) : _getActionSteps(metricKey);
         html += '<div style="margin:8px 0 4px 0;font-weight:600;font-size:0.85rem;">' + esc(stats.isWinning ? t('reports.competitive.report.headToHead.maintainYourLead', 'How to Maintain Your Lead') : t('reports.competitive.report.headToHead.howToCloseGap', 'How to Close the Gap')) + ':</div>';
         html += '<ol style="margin:0 0 8px 0;padding-left:20px;font-size:0.85rem;color:#374151;">';
         steps.forEach(function(step) {
@@ -927,30 +986,30 @@
        8. Strengths & Weaknesses (NEW - matches web UI detailed cards)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-strengths-weaknesses .pdf-section__content');
+      const sec = document.querySelector('#section-strengths-weaknesses .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.strengthsWeaknesses', 'Competitive Strengths & Weaknesses'))),
         sec
       );
 
-      var html = '';
+      let html = '';
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.strengthsWeaknesses', 'Based on your competitive analysis, this section identifies where you excel and where you need improvement. Strengths should be maintained, while weaknesses represent the highest-impact improvement opportunities.')) + '</p>';
 
       // Calculate strengths and weaknesses
-      var swMetrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
-      var strengths = [];
-      var weaknesses = [];
+      const swMetrics = ['seo', 'performance', 'accessibility', 'security', 'coreWebVitals'];
+      const strengths = [];
+      const weaknesses = [];
 
       swMetrics.forEach(function(metricKey) {
-        var yours = yourScores[metricKey] || 0;
-        var compScores = [];
+        const yours = yourScores[metricKey] || 0;
+        const compScores = [];
         competitors.forEach(function(c) {
           compScores.push({ name: truncate(c.url || '-', 30), score: (c.scores || {})[metricKey] || 0 });
         });
-        var validScores = compScores.filter(function(s) { return s.score > 0; });
-        var maxComp = validScores.length > 0 ? Math.max.apply(null, validScores.map(function(s) { return s.score; })) : 0;
-        var avgComp = validScores.length > 0 ? Math.round(validScores.reduce(function(a, s) { return a + s.score; }, 0) / validScores.length) : 0;
+        const validScores = compScores.filter(function(s) { return s.score > 0; });
+        const maxComp = validScores.length > 0 ? Math.max.apply(null, validScores.map(function(s) { return s.score; })) : 0;
+        const avgComp = validScores.length > 0 ? Math.round(validScores.reduce(function(a, s) { return a + s.score; }, 0) / validScores.length) : 0;
 
         if (yours >= maxComp) {
           strengths.push({
@@ -971,7 +1030,7 @@
             status: 'ahead'
           });
         } else {
-          var leaderName = '';
+          let leaderName = '';
           competitors.forEach(function(c) {
             if (((c.scores || {})[metricKey] || 0) === maxComp) leaderName = truncate(c.url || '-', 30);
           });
@@ -988,8 +1047,8 @@
       });
 
       // Summary stats
-      var dominant = strengths.filter(function(s) { return s.status === 'dominant'; }).length;
-      var ahead = strengths.filter(function(s) { return s.status === 'ahead'; }).length;
+      const dominant = strengths.filter(function(s) { return s.status === 'dominant'; }).length;
+      const ahead = strengths.filter(function(s) { return s.status === 'ahead'; }).length;
 
       html += PR.renderMetrics([
         { value: dominant, label: t('reports.competitive.report.sw.categoriesLeading', 'Categories Leading'), color: '#10b981' },
@@ -1003,8 +1062,8 @@
         html += '<h3 class="pdf-subsection__title" style="color:#10b981;">' + esc(t('reports.competitive.report.sw.yourStrengths', 'Your Competitive Strengths') + ' (' + strengths.length + ')') + '</h3>';
 
         strengths.forEach(function(s) {
-          var isDominant = s.status === 'dominant';
-          var sevClass = isDominant ? 'info' : 'info';
+          const isDominant = s.status === 'dominant';
+          const sevClass = isDominant ? 'info' : 'info';
 
           html += '<div class="pdf-issue pdf-issue--' + sevClass + '" style="margin-bottom:12px;">';
           html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%;">';
@@ -1038,8 +1097,8 @@
         html += '<h3 class="pdf-subsection__title" style="color:#ef4444;">' + esc(t('reports.competitive.report.sw.areasNeedingImprovement', 'Areas Needing Improvement') + ' (' + weaknesses.length + ')') + '</h3>';
 
         weaknesses.forEach(function(w) {
-          var isUrgent = w.gap > 20;
-          var sevClass = isUrgent ? 'critical' : 'warning';
+          const isUrgent = w.gap > 20;
+          const sevClass = isUrgent ? 'critical' : 'warning';
 
           html += '<div class="pdf-issue pdf-issue--' + sevClass + '" style="margin-bottom:12px;">';
           html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%;">';
@@ -1094,23 +1153,23 @@
        9. Strategic Insights (enriched with type-based styling)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-insights .pdf-section__content');
+      const sec = document.querySelector('#section-insights .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.insights', 'Strategic Insights'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.insights', 'Strategic insights synthesize the competitive data into actionable intelligence. These insights identify patterns, opportunities, and threats that emerge from the comparative analysis.')) + '</p>';
 
       if (insights.length > 0) {
         insights.forEach(function (insight) {
-          var impact = (insight.impact || 'medium').toLowerCase();
-          var impactLabel = translateImpact(impact);
-          var insightType = (insight.type || '').toLowerCase();
-          var sevClass = (impact === 'high' || impact === 'critical') ? 'critical' : impact === 'medium' ? 'warning' : 'info';
+          const impact = (insight.impact || 'medium').toLowerCase();
+          const impactLabel = translateImpact(impact);
+          const insightType = (insight.type || '').toLowerCase();
+          let sevClass = (impact === 'high' || impact === 'critical') ? 'critical' : impact === 'medium' ? 'warning' : 'info';
 
           // Use type to refine severity if available
           if (insightType === 'critical' || insightType === 'warning' || insightType === 'danger') sevClass = 'critical';
@@ -1120,9 +1179,9 @@
           html += '<div style="display:flex;justify-content:space-between;align-items:flex-start;width:100%;">';
           html += '<div style="flex:1;">';
 
-          // Support both title/description and message/detail field patterns
-          var insightTitle = insight.title || insight.message || '';
-          var insightBody = insight.description || insight.detail || '';
+          // Translate server-generated insight strings to the report locale
+          const insightTitle = _translateInsightMessage(insight);
+          const insightBody = _translateInsightDetail(insight);
 
           html += '<strong>' + esc(insightTitle) + '</strong>';
           if (insightBody) {
@@ -1149,34 +1208,34 @@
        10. Recommendations (enriched with gap analysis, action steps, impact)
        ----------------------------------------------------------------------- */
     (function () {
-      var sec = document.querySelector('#section-recommendations .pdf-section__content');
+      const sec = document.querySelector('#section-recommendations .pdf-section__content');
 
       sec.parentElement.insertBefore(
         _htmlToNode(PR.renderSectionHeader(sectionIndex++, t('reports.competitive.report.sections.recommendations', 'Recommendations'))),
         sec
       );
 
-      var html = '';
+      let html = '';
 
       html += '<p class="pdf-section__intro">' + esc(t('reports.competitive.report.sectionIntros.recommendations', 'Based on the competitive analysis, these recommendations prioritize improvements that will have the greatest impact on your competitive position.')) + '</p>';
 
       if (recommendations.length > 0) {
         // Sort by priority: high first, then medium, then low
-        var sortedRecs = recommendations.slice().sort(function(a, b) {
-          var order = { high: 0, critical: 0, medium: 1, low: 2 };
-          var pa = (a.priority || a.severity || 'medium').toLowerCase();
-          var pb = (b.priority || b.severity || 'medium').toLowerCase();
+        const sortedRecs = recommendations.slice().sort(function(a, b) {
+          const order = { high: 0, critical: 0, medium: 1, low: 2 };
+          const pa = (a.priority || a.severity || 'medium').toLowerCase();
+          const pb = (b.priority || b.severity || 'medium').toLowerCase();
           return (order[pa] !== undefined ? order[pa] : 1) - (order[pb] !== undefined ? order[pb] : 1);
         });
 
         sortedRecs.forEach(function (r, idx) {
-          var priority = (r.priority || r.severity || 'medium').toLowerCase();
-          var priorityColor = priority === 'high' || priority === 'critical' ? '#ef4444' : priority === 'medium' ? '#f59e0b' : '#3b82f6';
-          var priorityLabel = priority === 'high' || priority === 'critical' ? t('common.pdf.execSummary.highPriority', 'High Priority') : priority === 'medium' ? t('common.pdf.execSummary.mediumPriority', 'Medium Priority') : t('common.pdf.execSummary.lowPriority', 'Low Priority');
-          var sevClass = priority === 'high' || priority === 'critical' ? 'critical' : priority === 'medium' ? 'warning' : 'info';
+          const priority = (r.priority || r.severity || 'medium').toLowerCase();
+          const priorityColor = priority === 'high' || priority === 'critical' ? '#ef4444' : priority === 'medium' ? '#f59e0b' : '#3b82f6';
+          const priorityLabel = priority === 'high' || priority === 'critical' ? t('common.pdf.execSummary.highPriority', 'High Priority') : priority === 'medium' ? t('common.pdf.execSummary.mediumPriority', 'Medium Priority') : t('common.pdf.execSummary.lowPriority', 'Low Priority');
+          const sevClass = priority === 'high' || priority === 'critical' ? 'critical' : priority === 'medium' ? 'warning' : 'info';
 
-          var metricName = r.metric ? _categoryLabel(r.metric) : '';
-          var recTitle = r.title || '';
+          const metricName = r.metric ? _categoryLabel(r.metric) : '';
+          let recTitle = r.title || '';
           if (!recTitle && r.metric && r.gap) {
             recTitle = t('reports.competitive.report.recs.closeGap', 'Close ' + r.gap + '-point gap in ' + metricName);
           }
@@ -1189,7 +1248,7 @@
 
           // Subtitle with competitor comparison
           if (r.topCompetitorName || r.metric) {
-            var subtitle = '';
+            let subtitle = '';
             if (r.topCompetitorName && r.topCompetitorScore !== undefined) {
               subtitle += esc(r.topCompetitorName) + ': ' + r.topCompetitorScore;
             }
@@ -1201,10 +1260,8 @@
             }
           }
 
-          // Recommendation body / summary
-          if (r.recommendation || r.description) {
-            html += '<div style="margin-top:6px;font-size:0.85rem;">' + esc(r.recommendation || r.description) + '</div>';
-          }
+          // Recommendation body / summary (translated from server-generated English)
+          html += '<div style="margin-top:6px;font-size:0.85rem;">' + esc(_translateRecommendation(r)) + '</div>';
           html += '</div>';
           html += '<span style="background:' + priorityColor + ';color:#fff;padding:2px 8px;border-radius:4px;font-size:0.75rem;font-weight:600;white-space:nowrap;margin-left:8px;">' + esc(priorityLabel) + '</span>';
           html += '</div>';
@@ -1247,18 +1304,16 @@
             );
           }
 
-          // Expected impact
-          if (r.impact) {
-            html += PR.renderCallout(
-              t('reports.competitive.expectedImpact', 'Expected Impact'),
-              esc(r.impact),
-              'tip'
-            );
-          }
+          // Expected impact (translated)
+          html += PR.renderCallout(
+            t('reports.competitive.expectedImpact', 'Expected Impact'),
+            esc(_translateImpactText(r)),
+            'tip'
+          );
 
           // Action steps
           if (r.metric) {
-            var steps = _getActionSteps(r.metric);
+            const steps = _getActionSteps(r.metric);
             html += '<div style="margin:8px 0 4px 0;font-weight:600;font-size:0.85rem;">' + esc(t('reports.competitive.report.recs.actionSteps', 'Action Steps to Close the Gap')) + ':</div>';
             html += '<ol style="margin:0 0 8px 0;padding-left:20px;font-size:0.85rem;color:#374151;">';
             steps.forEach(function(step) {
@@ -1291,7 +1346,7 @@
        Hide empty sections
        ----------------------------------------------------------------------- */
     document.querySelectorAll('.pdf-section').forEach(function (sec) {
-      var content = sec.querySelector('.pdf-section__content');
+      const content = sec.querySelector('.pdf-section__content');
       if (content && !content.innerHTML.trim()) {
         sec.style.display = 'none';
       }

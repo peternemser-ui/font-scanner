@@ -546,7 +546,7 @@ class AccessibilityPremiumPdfGenerator extends PremiumPdfReport {
         }
 
         // WCAG reference and affected elements
-        let infoY = cardY + 55;
+        const infoY = cardY + 55;
         if (violation.wcagTags?.length > 0) {
           doc.fontSize(PREMIUM.SIZES.caption)
              .fillColor(PREMIUM.COLORS.textMuted)

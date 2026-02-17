@@ -74,7 +74,8 @@ class LanguageSwitcher {
       { code: 'es', name: 'Español', flag: flagImg('es'), active: false },
       { code: 'fr', name: 'Français', flag: flagImg('fr'), active: false },
       { code: 'pt', name: 'Português', flag: flagImg('br'), active: false },
-      { code: 'zh', name: '中文', flag: flagImg('cn'), active: false }
+      { code: 'zh', name: '中文', flag: flagImg('cn'), active: false },
+      { code: 'ru', name: 'Русский', flag: flagImg('ru'), active: false }
     ];
 
     let languages, currentLang, currentFlag;
@@ -216,23 +217,36 @@ class LanguageSwitcher {
     window.addEventListener('resize', () => { if (isOpen) showDropdown(); }, { passive: true });
 
     // Handle language selection
+    const LANG_CODES = ['en', 'es', 'fr', 'de', 'pt', 'zh', 'ja', 'ru'];
     const options = dropdown.querySelectorAll('.language-option');
     options.forEach(option => {
-      option.addEventListener('click', async (e) => {
+      option.addEventListener('click', (e) => {
         const lang = option.getAttribute('data-lang');
+        if (!lang) return;
 
         // Update UI immediately
         options.forEach(opt => opt.classList.remove('active'));
         option.classList.add('active');
         hideDropdown();
 
-        // Switch language
-        if (window.i18n && window.i18n.switchLanguage) {
-          await window.i18n.switchLanguage(lang);
-        }
+        // Persist preference
+        try {
+          localStorage.setItem('sm_lang', lang);
+          localStorage.setItem('preferred-language', lang);
+          localStorage.setItem('preferredLanguage', lang);
+          document.cookie = `sm_url_lang=${lang}; max-age=${365 * 24 * 60 * 60}; path=/; samesite=lax`;
+        } catch (err) { /* storage errors are non-fatal */ }
 
-        // Update switcher UI
-        this.updateUI();
+        // Navigate directly to the new language URL (most reliable approach)
+        const pathParts = window.location.pathname.split('/').filter(Boolean);
+        let newPath;
+        if (pathParts[0] && LANG_CODES.includes(pathParts[0])) {
+          pathParts[0] = lang;
+          newPath = '/' + pathParts.join('/');
+        } else {
+          newPath = '/' + lang + window.location.pathname;
+        }
+        window.location.href = newPath + window.location.search + window.location.hash;
       });
     });
   }
@@ -304,21 +318,22 @@ class LanguageSwitcher {
       .language-switcher-trigger {
         display: flex;
         align-items: center;
-        gap: 0.35rem;
-        padding: 0.6rem 0.6rem;
-        background: rgba(255, 255, 255, 0.08);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 4px;
+        gap: 0.375rem;
+        padding: 0.375rem 0.75rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
         cursor: pointer;
         transition: all 0.2s ease;
-        font-family: 'Courier New', monospace;
         white-space: nowrap;
         font-size: 0.8rem;
+        height: 36px;
+        box-sizing: border-box;
       }
 
       .language-switcher-trigger:hover {
-        background: rgba(255, 255, 255, 0.15);
-        border-color: rgba(0, 255, 65, 0.5);
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(255, 255, 255, 0.2);
       }
 
       .language-flag {
@@ -338,7 +353,7 @@ class LanguageSwitcher {
       .language-code {
         font-size: 0.75rem;
         font-weight: 600;
-        color: var(--text-primary, #00ff41);
+        color: rgba(255, 255, 255, 0.8);
         letter-spacing: 0.5px;
       }
 
@@ -348,7 +363,7 @@ class LanguageSwitcher {
       }
 
       .language-switcher-trigger:hover .dropdown-arrow {
-        color: var(--text-primary, #00ff41);
+        color: #fff;
       }
 
       .language-dropdown {
@@ -416,8 +431,8 @@ class LanguageSwitcher {
       }
 
       body.white-theme .language-switcher-trigger:hover {
-        background: rgba(0, 0, 0, 0.06);
-        border-color: rgba(0, 0, 0, 0.2);
+        background: rgba(0, 0, 0, 0.07);
+        border-color: rgba(0, 0, 0, 0.18);
       }
 
       body.white-theme .language-code {
@@ -455,22 +470,21 @@ class LanguageSwitcher {
       @media (max-width: 768px) {
         .language-switcher {
           margin-left: 0;
-          margin-right: 0.5rem;
+          margin-right: 0;
         }
 
         .language-switcher-trigger {
-          padding: 0.3rem 0.5rem;
-          gap: 0.3rem;
+          padding: 0.375rem;
+          gap: 0.25rem;
           font-size: 0.75rem;
         }
 
-        .language-flag {
-          font-size: 0.95rem;
-          /* flag images used instead of emoji */
+        .language-code {
+          display: none;
         }
 
-        .language-code {
-          font-size: 0.7rem;
+        .dropdown-arrow {
+          display: none;
         }
 
         .language-dropdown {
@@ -482,28 +496,8 @@ class LanguageSwitcher {
       }
 
       @media (max-width: 480px) {
-        .language-switcher {
-          margin-right: 0.25rem;
-        }
-
         .language-switcher-trigger {
-          padding: 0.25rem 0.4rem;
-          gap: 0.25rem;
-          font-size: 0.7rem;
-        }
-
-        .language-flag {
-          font-size: 0.9rem;
-          /* flag images used instead of emoji */
-        }
-
-        .language-code {
-          display: none;
-        }
-
-        .dropdown-arrow {
-          width: 8px;
-          height: 8px;
+          padding: 0.375rem;
         }
 
         .language-dropdown {
@@ -521,24 +515,10 @@ class LanguageSwitcher {
         .language-option .language-name {
           font-size: 0.8rem;
         }
-
-        .language-option .language-flag {
-          font-size: 1rem;
-          /* flag images used instead of emoji */
-        }
       }
 
       /* Extra small screens */
       @media (max-width: 360px) {
-        .language-switcher-trigger {
-          padding: 0.3rem 0.4rem;
-        }
-
-        .language-flag {
-          font-size: 0.95rem;
-          /* flag images used instead of emoji */
-        }
-
         .language-dropdown {
           min-width: 150px;
           max-width: 80vw;
