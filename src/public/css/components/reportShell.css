@@ -342,3 +342,135 @@
   padding: 0.15rem 0.35rem;
   font-size: 0.85em;
 }
+
+/* ========================================
+   WCAG CONFORMANCE METER
+   ======================================== */
+[data-testid="wcag-conformance-meter"] {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+/* Level row base styles */
+.wcag-level-A,
+.wcag-level-AA,
+.wcag-level-AAA {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  transition: opacity 0.2s, box-shadow 0.2s;
+}
+
+/* Achieved level highlight */
+.wcag-level--achieved {
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+}
+
+/* Badge — minimum 44x44 touch target */
+.wcag-level__badge {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  flex-shrink: 0;
+}
+
+/* Score display */
+.wcag-level__score {
+  text-align: right;
+  white-space: nowrap;
+}
+
+/* Status icon — minimum 44x44 touch target */
+.wcag-level__status {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Screen reader only utility */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* WCAG level cards grid — responsive */
+.wcag-levels-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .wcag-levels-grid {
+    grid-template-columns: 1fr;
+  }
+  .wcag-level-A,
+  .wcag-level-AA,
+  .wcag-level-AAA {
+    grid-template-columns: auto 1fr auto auto;
+    gap: 0.5rem;
+    padding: 0.5rem 0.75rem;
+  }
+}
+
+/* ========================================
+   WCAG CONFORMANCE METER — PRINT / PDF
+   ======================================== */
+@media print {
+  [data-testid="wcag-conformance-meter"] {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 0.5rem !important;
+  }
+  .wcag-level-A,
+  .wcag-level-AA,
+  .wcag-level-AAA {
+    display: grid !important;
+    grid-template-columns: auto 1fr auto auto !important;
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background: #FFFFFF !important;
+  }
+  .wcag-level--achieved {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .wcag-level__badge,
+  .wcag-level__status {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .wcag-levels-grid {
+    grid-template-columns: repeat(3, 1fr) !important;
+  }
+  .wcag-level-card {
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+  .wcag-status-box {
+    page-break-inside: avoid;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

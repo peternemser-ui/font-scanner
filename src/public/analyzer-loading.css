@@ -533,17 +533,20 @@ body.white-theme .loading-scan-url {
    LIGHT THEME OVERRIDES
    ======================================== */
 
-/* Ensure overlay background stays dark in light theme */
+/* Light frosted overlay to match light-mode page background */
 body.white-theme .analyzer-loading-overlay {
-  background: rgba(0, 0, 0, 0.85);
+  background: rgba(245, 245, 248, 0.88);
+  backdrop-filter: blur(6px);
 }
 
+/* White modal card with subtle shadow */
 body.white-theme .analyzer-loading {
   background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-  border: 1px solid rgba(var(--accent-primary-rgb), 0.3);
-  box-shadow: 0 4px 24px rgba(var(--accent-primary-rgb), 0.12);
+  border: 1px solid rgba(0, 0, 0, 0.10);
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
+/* Header */
 body.white-theme .loading-header {
   border-bottom-color: rgba(0, 0, 0, 0.08);
 }
@@ -552,15 +555,41 @@ body.white-theme .loading-title {
   color: var(--accent-primary);
 }
 
+body.white-theme .loading-subtitle {
+  color: #555;
+}
+
+/* URL pill */
+body.white-theme .loading-scan-url {
+  color: rgba(0, 0, 0, 0.65);
+  border-color: rgba(0, 0, 0, 0.12);
+  background: rgba(0, 0, 0, 0.04);
+}
+
+/* Meta row (Started / Duration) */
+body.white-theme .loading-meta {
+  border-color: rgba(0, 0, 0, 0.08);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+body.white-theme .loading-meta__item {
+  color: #444;
+}
+
+/* Progress steps */
 body.white-theme .progress-step {
   background: rgba(0, 0, 0, 0.02);
   border-color: rgba(0, 0, 0, 0.08);
 }
 
+body.white-theme .progress-step.pending::before {
+  background: rgba(0, 0, 0, 0.10);
+}
+
 body.white-theme .progress-step.active {
-  background: rgba(var(--accent-primary-rgb), 0.08);
-  border-color: rgba(var(--accent-primary-rgb), 0.4);
-  box-shadow: 0 0 16px rgba(var(--accent-primary-rgb), 0.15);
+  background: rgba(var(--accent-primary-rgb), 0.06);
+  border-color: rgba(var(--accent-primary-rgb), 0.35);
+  box-shadow: 0 0 16px rgba(var(--accent-primary-rgb), 0.10);
 }
 
 body.white-theme .progress-step.active::before {
@@ -577,7 +606,7 @@ body.white-theme .step-label {
 }
 
 body.white-theme .step-detail {
-  color: #666666;
+  color: #666;
 }
 
 body.white-theme .progress-step.active .step-label {
@@ -589,7 +618,7 @@ body.white-theme .progress-step.active .step-detail {
 }
 
 body.white-theme .progress-step.pending .step-icon::before {
-  color: rgba(0, 0, 0, 0.2);
+  color: rgba(0, 0, 0, 0.20);
   font-weight: 300;
 }
 
@@ -603,6 +632,7 @@ body.white-theme .progress-step.complete .step-icon::before {
   font-weight: 600;
 }
 
+/* Progress bar */
 body.white-theme .loading-progress-bar {
   background: rgba(0, 0, 0, 0.08);
 }
@@ -612,12 +642,32 @@ body.white-theme .progress-bar-fill {
   box-shadow: 0 0 8px rgba(var(--accent-primary-rgb), 0.4);
 }
 
+/* Long scan indicator */
+body.white-theme .loading-long-scan {
+  border-color: rgba(var(--accent-primary-rgb), 0.20);
+  background: rgba(var(--accent-primary-rgb), 0.04);
+}
+
+body.white-theme .loading-long-scan__title {
+  color: #1a1a1a;
+}
+
+body.white-theme .loading-long-scan__message {
+  color: #555;
+}
+
+body.white-theme .loading-spinner {
+  border-color: rgba(var(--accent-primary-rgb), 0.20);
+  border-top-color: var(--accent-primary);
+}
+
+/* Estimated time */
 body.white-theme .estimated-time {
   border-top-color: rgba(0, 0, 0, 0.08);
 }
 
 body.white-theme .time-label {
-  color: #666666;
+  color: #666;
 }
 
 body.white-theme .time-value {
@@ -634,4 +684,9 @@ body.white-theme .time-value.overrun {
 
 body.white-theme #progressPercentage {
   color: var(--accent-primary) !important;
+}
+
+/* Loading messages */
+body.white-theme .loading-message {
+  color: #333;
 }

@@ -1,40 +1,35 @@
 /**
- * Database Module - SQLite setup and utilities
+ * Database Module — driver-agnostic facade
+ *
+ * Consumer files (services, routes, middleware) continue calling:
+ *   db.run(sql, params)  db.get(sql, params)  db.all(sql, params)  db.transaction(cb)
+ *
+ * The active driver (SQLite or PostgreSQL) is chosen via DB_DRIVER env var.
  */
 
-const sqlite3 = require('sqlite3').verbose();
 const fs = require('fs');
 const path = require('path');
+const dbConfig = require('./dbConfig');
 
 class Database {
-  constructor(dbPath = process.env.DATABASE_PATH || './data/fontscanner.db') {
-    this.dbPath = dbPath;
-    this.db = null;
+  constructor() {
+    this.driver = null;
+    this.driverName = dbConfig.driver; // 'sqlite' | 'postgres'
   }
 
-  /**
-   * Initialize database connection and run migrations
-   */
   async initialize() {
     try {
-      // Ensure data directory exists
-      const dir = path.dirname(this.dbPath);
-      if (!fs.existsSync(dir)) {
-        fs.mkdirSync(dir, { recursive: true });
+      // Instantiate the correct driver
+      if (this.driverName === 'postgres') {
+        const PostgresDriver = require('./drivers/postgres');
+        this.driver = new PostgresDriver(dbConfig.postgres);
+      } else {
+        const SqliteDriver = require('./drivers/sqlite');
+        this.driver = new SqliteDriver(dbConfig.sqlite.path);
       }
 
-      // Open database
-      this.db = new sqlite3.Database(this.dbPath, (err) => {
-        if (err) {
-          console.error('Error opening database:', err);
-          throw err;
-        }
-      });
-
-      // Apply PRAGMA hardening with graceful error handling
-      await this.applyPragmas();
-
-      // Run migrations
+      await this.driver.open();
+      await this.driver.applyPragmas();
       await this.runMigrations();
     } catch (error) {
       console.error('Failed to initialize database:', error);
@@ -42,66 +37,41 @@ class Database {
     }
   }
 
-  /**
-   * Apply SQLite PRAGMAs for hardening
-   * Each PRAGMA is applied with graceful error handling
-   */
-  async applyPragmas() {
-    const pragmas = [
-      // Enable foreign key constraints
-      { sql: 'PRAGMA foreign_keys = ON', name: 'foreign_keys' },
-      // WAL mode for better concurrency (unless environment denies)
-      { sql: 'PRAGMA journal_mode = WAL', name: 'journal_mode' },
-      // Busy timeout (5 seconds) to handle concurrent access
-      { sql: 'PRAGMA busy_timeout = 5000', name: 'busy_timeout' },
-      // NORMAL sync for balance of safety and speed
-      { sql: 'PRAGMA synchronous = NORMAL', name: 'synchronous' },
-      // Store temp tables in memory for performance
-      { sql: 'PRAGMA temp_store = MEMORY', name: 'temp_store' }
-    ];
+  // ── Forwarded query methods ───────────────────────────────────────
+  run(sql, params = [])  { return this.driver.run(sql, params); }
+  get(sql, params = [])  { return this.driver.get(sql, params); }
+  all(sql, params = [])  { return this.driver.all(sql, params); }
+  close()                { return this.driver.close(); }
 
-    for (const pragma of pragmas) {
-      try {
-        await this.run(pragma.sql);
-      } catch (error) {
-        // Log but don't crash - some environments may deny certain pragmas
-        console.warn(`Failed to apply PRAGMA ${pragma.name}:`, error.message);
-      }
-    }
+  async transaction(callback) {
+    return this.driver.transaction(callback);
   }
 
-  /**
-   * Run all pending migrations
-   */
+  // ── Schema & migrations ───────────────────────────────────────────
+
   async runMigrations() {
-    // First, run base schema
-    const schemaPath = path.join(__dirname, 'schema.sql');
+    const schemaFile = this.driverName === 'postgres' ? 'schema.pg.sql' : 'schema.sql';
+    const schemaPath = path.join(__dirname, schemaFile);
+
+    // If no PG schema file yet, skip (allows SQLite-only dev to keep working)
+    if (!fs.existsSync(schemaPath)) {
+      if (this.driverName === 'postgres') {
+        console.warn(`PostgreSQL schema file not found at ${schemaPath} — skipping base schema`);
+      }
+      if (this.driverName === 'sqlite') {
+        throw new Error(`Schema file not found: ${schemaPath}`);
+      }
+      return;
+    }
+
     const schema = fs.readFileSync(schemaPath, 'utf8');
-
-    // Remove single-line comments and split by semicolons
-    const cleanedSchema = schema
-      .split('\n')
-      .map(line => {
-        // Remove inline comments but preserve the rest of the line
-        const commentIndex = line.indexOf('--');
-        if (commentIndex >= 0) {
-          return line.substring(0, commentIndex);
-        }
-        return line;
-      })
-      .join('\n');
-
-    // Split schema into individual statements
-    const statements = cleanedSchema
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
+    const statements = this._splitStatements(schema);
 
     for (const statement of statements) {
       try {
         await this.run(statement);
       } catch (error) {
-        // Ignore "table already exists" errors
+        // Ignore "already exists" errors (both SQLite and PG)
         if (!error.message.includes('already exists')) {
           console.error('Migration error:', error.message);
           console.error('Statement:', statement.substring(0, 100) + '...');
@@ -110,22 +80,19 @@ class Database {
       }
     }
 
-    // Then run migrations from migrations folder
     await this.runMigrationFiles();
   }
 
-  /**
-   * Run migration files from migrations folder
-   */
   async runMigrationFiles() {
-    const migrationsDir = path.join(__dirname, 'migrations');
+    // Postgres reads from migrations/pg/, SQLite from migrations/
+    const migrationsDir = this.driverName === 'postgres'
+      ? path.join(__dirname, 'migrations', 'pg')
+      : path.join(__dirname, 'migrations');
 
-    // Check if migrations directory exists
     if (!fs.existsSync(migrationsDir)) {
       return;
     }
 
-    // Get all migration files
     const files = fs.readdirSync(migrationsDir)
       .filter(f => f.endsWith('.sql'))
       .sort();
@@ -133,54 +100,29 @@ class Database {
     for (const file of files) {
       const migrationName = file.replace('.sql', '');
 
-      // Check if migration already applied
+      // Check if already applied
       try {
         const existing = await this.get(
           'SELECT 1 FROM migrations WHERE name = ?',
           [migrationName]
         );
-
-        if (existing) {
-          continue;
-        }
-      } catch (error) {
-        // migrations table doesn't exist yet - skip check
+        if (existing) continue;
+      } catch (_) {
+        // migrations table may not exist yet
       }
-      // Read and execute migration
+
       const migrationPath = path.join(migrationsDir, file);
       const migrationSQL = fs.readFileSync(migrationPath, 'utf8');
+      const migrationStatements = this._splitStatements(migrationSQL);
 
-      // Remove comments
-      const cleanedSQL = migrationSQL
-        .split('\n')
-        .map(line => {
-          const commentIndex = line.indexOf('--');
-          if (commentIndex >= 0) {
-            return line.substring(0, commentIndex);
-          }
-          return line;
-        })
-        .join('\n');
-
-      // Split into statements
-      const migrationStatements = cleanedSQL
-        .split(';')
-        .map(s => s.trim())
-        .filter(s => s.length > 0);
-
-      // Execute each statement
       for (const statement of migrationStatements) {
         try {
-          // Skip INSERT INTO migrations statements - we'll add them ourselves
-          if (statement.includes('INSERT INTO migrations')) {
-            continue;
-          }
-
+          if (statement.includes('INSERT INTO migrations')) continue;
           await this.run(statement);
         } catch (error) {
-          // Handle specific errors gracefully - ignore duplicate column/table errors
-          const isDuplicate = error.message.includes('duplicate column name') ||
-                              error.message.includes('already exists');
+          const isDuplicate =
+            error.message.includes('duplicate column name') ||
+            error.message.includes('already exists');
           if (!isDuplicate) {
             console.error('Migration statement error:', error.message);
             console.error('Statement:', statement.substring(0, 200));
@@ -189,7 +131,7 @@ class Database {
         }
       }
 
-      // Record that migration was applied
+      // Record migration
       try {
         await this.run(
           'INSERT OR IGNORE INTO migrations (name) VALUES (?)',
@@ -197,89 +139,34 @@ class Database {
         );
         console.log(`Applied migration: ${migrationName}`);
       } catch (error) {
-        // Ignore errors recording migration - it may already exist
         console.warn(`Could not record migration ${migrationName}:`, error.message);
       }
     }
   }
 
   /**
-   * Promisified run method
+   * Strip single-line comments and split SQL text into individual statements.
    */
-  run(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      this.db.run(sql, params, function(err) {
-        if (err) reject(err);
-        else resolve({ lastID: this.lastID, changes: this.changes });
-      });
-    });
-  }
+  _splitStatements(sql) {
+    const cleaned = sql
+      .split('\n')
+      .map(line => {
+        const idx = line.indexOf('--');
+        return idx >= 0 ? line.substring(0, idx) : line;
+      })
+      .join('\n');
 
-  /**
-   * Promisified get method (single row)
-   */
-  get(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      this.db.get(sql, params, (err, row) => {
-        if (err) reject(err);
-        else resolve(row);
-      });
-    });
-  }
-
-  /**
-   * Promisified all method (multiple rows)
-   */
-  all(sql, params = []) {
-    return new Promise((resolve, reject) => {
-      this.db.all(sql, params, (err, rows) => {
-        if (err) reject(err);
-        else resolve(rows);
-      });
-    });
-  }
-
-  /**
-   * Close database connection
-   */
-  close() {
-    return new Promise((resolve, reject) => {
-      if (!this.db) {
-        resolve();
-        return;
-      }
-
-      this.db.close((err) => {
-        if (err) reject(err);
-        else {
-          resolve();
-        }
-      });
-    });
-  }
-
-  /**
-   * Transaction helper
-   */
-  async transaction(callback) {
-    await this.run('BEGIN TRANSACTION');
-    try {
-      const result = await callback(this);
-      await this.run('COMMIT');
-      return result;
-    } catch (error) {
-      await this.run('ROLLBACK');
-      throw error;
-    }
+    return cleaned
+      .split(';')
+      .map(s => s.trim())
+      .filter(s => s.length > 0);
   }
 }
 
-// Singleton instance
+// ── Singleton ─────────────────────────────────────────────────────
+
 let dbInstance = null;
 
-/**
- * Get database instance
- */
 function getDatabase() {
   if (!dbInstance) {
     dbInstance = new Database();
@@ -287,9 +174,6 @@ function getDatabase() {
   return dbInstance;
 }
 
-/**
- * Initialize database (call on app startup)
- */
 async function initializeDatabase() {
   const db = getDatabase();
   await db.initialize();
@@ -299,5 +183,5 @@ async function initializeDatabase() {
 module.exports = {
   Database,
   getDatabase,
-  initializeDatabase
+  initializeDatabase,
 };

@@ -114,7 +114,7 @@ class AuthService {
 
     // Get created user (without password hash)
     const user = await db.get(
-      'SELECT id, email, plan, created_at, email_verified FROM users WHERE id = ?',
+      'SELECT id, email, plan, created_at, email_verified, is_admin FROM users WHERE id = ?',
       [userId]
     );
 
@@ -135,7 +135,7 @@ class AuthService {
 
     // Get user with password hash
     const user = await db.get(
-      'SELECT id, email, password_hash, plan, created_at, email_verified FROM users WHERE email = ?',
+      'SELECT id, email, password_hash, plan, created_at, email_verified, is_admin FROM users WHERE email = ?',
       [email]
     );
 
@@ -224,9 +224,11 @@ class AuthService {
     const tokenHash = await this.hashPassword(resetToken);
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
 
-    // Store reset token in database
+    // Store reset token — remove any prior token for this user, then insert.
+    // Works identically in both SQLite and PostgreSQL.
+    await db.run('DELETE FROM password_resets WHERE user_id = ?', [user.id]);
     await db.run(
-      `INSERT OR REPLACE INTO password_resets (user_id, token_hash, expires_at, created_at) 
+      `INSERT INTO password_resets (user_id, token_hash, expires_at, created_at)
        VALUES (?, ?, ?, CURRENT_TIMESTAMP)`,
       [user.id, tokenHash, expiresAt.toISOString()]
     );

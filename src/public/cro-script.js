@@ -498,6 +498,13 @@ async function displayResults(data) {
       context: 'cro',
       reportId,
       contentHTML: renderCROFixes(data)
+    },
+    {
+      id: 'ai-strategic-analysis',
+      title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+      isPro: true, locked: !isUnlocked, context: 'cro', reportId,
+      scoreTextRight: null,
+      contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
     }
   ];
 
@@ -560,6 +567,16 @@ async function displayResults(data) {
   `;
 
   resultsContainer.innerHTML = `<div class="report-scope">${html}</div>`;
+
+  // Fetch AI strategic analysis content
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'cro', data, locale, { skipHeader: true });
+  }
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({ data: data, analyzerType: 'cro', donutLabels: {}, resultsContent: resultsContainer, reportId: reportId });
+  }
+
   ReportAccordion.initInteractions();
 
   if (reportId) {

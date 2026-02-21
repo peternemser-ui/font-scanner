@@ -155,7 +155,7 @@ async function loadBrowserStoredReports() {
               reportTypeLabel: getReportTypeLabel(r.metadata?.analyzerType || 'unknown'),
               reportTypeCategory: getReportTypeCategory(r.metadata?.analyzerType || 'unknown'),
               purchasedAt: r.metadata?.scannedAt || r.savedAt,
-              purchasedAtDate: new Date(r.metadata?.scannedAt || r.savedAt),
+              purchasedAtDate: safeParseDate(r.metadata?.scannedAt || r.savedAt) || new Date(0),
               accessLevel: r.metadata?.source === 'pro' ? 'pro' : r.metadata?.source === 'purchased' ? 'purchased' : 'browser',
               isBrowserStored: true
             }));
@@ -562,7 +562,7 @@ async function loadBillingStatus() {
       siteUrlNormalized: normalizeDomain(report.siteUrl),
       reportTypeLabel: getReportTypeLabel(report.analyzerType),
       reportTypeCategory: getReportTypeCategory(report.analyzerType),
-      purchasedAtDate: new Date(report.purchasedAt),
+      purchasedAtDate: safeParseDate(report.purchasedAt) || new Date(0),
       accessLevel: 'purchased'
     }));
     const knownIds = new Set(purchasedReports.map(r => r.reportId));
@@ -578,9 +578,7 @@ async function loadBillingStatus() {
         serverOwnedReports = (ownedData.reports || [])
           .filter(r => !knownIds.has(r.reportId))
           .map(r => {
-            const createdAt = r.createdAt
-              ? (r.createdAt.includes('T') ? r.createdAt : r.createdAt.replace(' ', 'T') + 'Z')
-              : null;
+            const parsedDate = safeParseDate(r.createdAt);
 
             return {
               reportId: r.reportId,
@@ -589,8 +587,8 @@ async function loadBillingStatus() {
               analyzerType: r.analyzerType || 'full',
               reportTypeLabel: getReportTypeLabel(r.analyzerType || 'full'),
               reportTypeCategory: getReportTypeCategory(r.analyzerType || 'full'),
-              purchasedAt: createdAt,
-              purchasedAtDate: new Date(createdAt || 0),
+              purchasedAt: r.createdAt,
+              purchasedAtDate: parsedDate || new Date(0),
               accessLevel: r.ownedVia === 'purchased' ? 'purchased' : (isPro ? 'pro' : 'browser'),
               isServerScan: true
             };
@@ -619,9 +617,7 @@ async function loadBillingStatus() {
               accessLevel = 'pro';
             }
 
-            const createdAt = scan.createdAt
-              ? (scan.createdAt.includes('T') ? scan.createdAt : scan.createdAt.replace(' ', 'T') + 'Z')
-              : null;
+            const parsedDate = safeParseDate(scan.createdAt);
 
             return {
               reportId: scan.id,
@@ -630,8 +626,8 @@ async function loadBillingStatus() {
               analyzerType: scan.analyzerType || 'full',
               reportTypeLabel: getReportTypeLabel(scan.analyzerType || 'full'),
               reportTypeCategory: getReportTypeCategory(scan.analyzerType || 'full'),
-              purchasedAt: createdAt,
-              purchasedAtDate: new Date(createdAt || 0),
+              purchasedAt: scan.createdAt,
+              purchasedAtDate: parsedDate || new Date(0),
               accessLevel,
               isServerScan: true
             };
@@ -1189,8 +1185,19 @@ function getReportTypeCategory(type) {
   return REPORT_TYPE_MAP[type]?.category || type || 'other';
 }
 
+function safeParseDate(val) {
+  if (!val) return null;
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
+  // Convert SQLite "YYYY-MM-DD HH:MM:SS" to ISO if needed
+  if (typeof val === 'string' && !val.includes('T') && val.includes(' ')) {
+    val = val.replace(' ', 'T') + 'Z';
+  }
+  const d = new Date(val);
+  return isNaN(d.getTime()) ? null : d;
+}
+
 function formatRelativeTime(date) {
-  if (!date) return 'N/A';
+  if (!date || isNaN(date.getTime())) return t('reportsPage.time.unknown', 'Unknown date');
   const now = new Date();
   const diff = now - date;
   const minutes = Math.floor(diff / 60000);
@@ -1208,7 +1215,7 @@ function formatRelativeTime(date) {
 }
 
 function formatDateTime(date) {
-  if (!date) return 'N/A';
+  if (!date || isNaN(date.getTime())) return t('reportsPage.time.unknown', 'Unknown date');
   // Use centralized i18n formatting if available
   if (window.i18n?.formatDateTime) {
     return window.i18n.formatDateTime(date, {

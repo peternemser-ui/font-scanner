@@ -421,6 +421,13 @@ document.addEventListener('DOMContentLoaded', () => {
         context: 'crawler',
         reportId,
         contentHTML: renderCrawlerFixes(data, siteStructure, pages)
+      },
+      {
+        id: 'ai-strategic-analysis',
+        title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+        isPro: true, locked: !isUnlocked, context: 'crawler', reportId,
+        scoreTextRight: null,
+        contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
       }
     ];
 
@@ -453,6 +460,15 @@ document.addEventListener('DOMContentLoaded', () => {
       : renderLegacyCrawlerReport(data, pages, siteStructure, techStack, hostingInfo, isUnlocked, reportId);
 
     resultsContent.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
+
+    // Fetch AI strategic analysis content
+    if (window.AIRecommendations) {
+      const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+      window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'site-crawler', data, locale, { skipHeader: true });
+    }
+    if (window.SelfImprovement) {
+      window.SelfImprovement.integrate({ data: data, analyzerType: 'site-crawler', donutLabels: {}, resultsContent: resultsContent, reportId: reportId });
+    }
 
     // Initialize accordion interactions
     if (window.ReportAccordion && typeof window.ReportAccordion.initInteractions === 'function') {

@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   }
 
+  // Load analytics charts (non-blocking)
+  loadAnalytics();
+
   // Initialize tabs
   initializeTabs();
 

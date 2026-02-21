@@ -287,11 +287,18 @@ async function displayResults(data) {
           data-action="open-lightbox"
           data-screenshot-url="${screenshotUrl}"
           data-screenshot-title="${t('reports.common.pageScreenshot', 'Page Screenshot')}"
-          onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${t('reports.common.screenshotUnavailable', 'Screenshot unavailable')}</div>'"
         />
       </div>
     `;
     reportScope.appendChild(screenshotSection);
+
+    // Use JS listener instead of inline onerror (CSP blocks script-src-attr)
+    const ssImg = screenshotSection.querySelector('.screenshot-item__img');
+    if (ssImg) {
+      ssImg.addEventListener('error', function() {
+        this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'Screenshot unavailable') + '</div>';
+      });
+    }
 
     // Add click handler for screenshot lightbox
     screenshotSection.addEventListener('click', (e) => {
@@ -422,8 +429,26 @@ async function displayResults(data) {
     });
   }
 
+  // AI Strategic Analysis (Pro)
+  accordionHTML += ReportAccordion.createSection({
+    id: 'ai-strategic-analysis',
+    title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+    isPro: true, locked: !isUnlocked, context: 'broken-links', reportId: reportId,
+    scoreTextRight: null,
+    contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
+  });
+
   accordionContainer.innerHTML = accordionHTML;
   reportScope.appendChild(accordionContainer);
+
+  // Fetch AI strategic analysis content
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'broken-links', data, locale, { skipHeader: true });
+  }
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({ data: data, analyzerType: 'broken-links', donutLabels: {}, resultsContent: resultsContainer, reportId: reportId });
+  }
 
   // Initialize ReportAccordion interactions
   ReportAccordion.initInteractions();

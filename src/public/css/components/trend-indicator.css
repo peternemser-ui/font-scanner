@@ -1,0 +1,73 @@
+/* Trend Indicator — delta badges and percentile rankings */
+
+.trend-indicator {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  margin-left: 0.4rem;
+  vertical-align: middle;
+  white-space: nowrap;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.trend-indicator--up {
+  background: rgba(16, 185, 129, 0.12);
+  color: #10B981;
+}
+
+.trend-indicator--down {
+  background: rgba(239, 68, 68, 0.12);
+  color: #EF4444;
+}
+
+.trend-indicator--neutral {
+  background: rgba(156, 163, 175, 0.12);
+  color: var(--r-text-muted, #6B7280);
+}
+
+.trend-indicator__arrow {
+  font-size: 0.7rem;
+}
+
+.trend-indicator__value {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Percentile badge */
+.percentile-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--r-text-muted, #6B7280);
+  padding: 0.25rem 0.6rem;
+  background: var(--r-surface-2, #F8FAFC);
+  border: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));
+  border-radius: 999px;
+  white-space: nowrap;
+  print-color-adjust: exact;
+  -webkit-print-color-adjust: exact;
+}
+
+.percentile-badge__icon {
+  font-size: 0.7rem;
+}
+
+.percentile-badge__text {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Print-safe */
+@media print {
+  .trend-indicator,
+  .percentile-badge {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}

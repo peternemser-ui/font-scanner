@@ -292,33 +292,22 @@ document.addEventListener('DOMContentLoaded', () => {
   };
 
   function renderTagIntelligenceProPreview(recommendations) {
-    ensureTagIntelligenceProStyles();
     const reportId = document.body?.getAttribute('data-report-id') || '';
-
-    const previewItems = recommendations && recommendations.length > 0
-      ? recommendations.slice(0, 2).map(r => r.title || r.description?.substring(0, 50) + '...')
-      : [t('reports.tagIntelligence.actionableRecommendations', 'Actionable optimization recommendations'), t('reports.tagIntelligence.prioritySteps', 'Priority-based remediation steps')];
-
-    const recCount = recommendations?.length || 0;
-
+    if (window.ProReportBlock && typeof window.ProReportBlock.renderUnlockPrompt === 'function') {
+      return window.ProReportBlock.renderUnlockPrompt({ context: 'tag-intelligence', reportId });
+    }
+    // Fallback matching ProReportBlock.renderUnlockPrompt() style
     return `
-      <div class="pro-locked" style="padding: 1rem;">
-        <div class="pro-locked__header">
-          <span class="pro-pill">PRO</span>
-          <span>${t('reports.common.reportRecommendations', 'Recommendations')} (${recCount} ${t('reports.common.items', 'items')})</span>
+      <div class="pro-report-block__unlock-prompt" data-locked-overlay>
+        <div class="pro-report-block__unlock-header">
+          <span class="pro-report-block__unlock-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+          <span class="pro-report-block__unlock-text">${t('reports.common.unlockThisReport', 'Unlock this report')}</span>
         </div>
-        <p style="color: var(--r-text-faint, #9CA3AF); font-size: 0.9rem; margin: 0.5rem 0 1rem 0;">
-          ${t('reports.tagIntelligence.unlockInsights', 'Unlock actionable insights and priority-based recommendations to optimize your tag implementation.')}
-        </p>
-        <ul class="pro-locked__list">
-          ${previewItems.map(item => `<li>${item}</li>`).join('')}
-          ${recCount > 2 ? `<li style="color: #666;">...${t('reports.common.andMore', 'and')} ${recCount - 2} ${t('reports.common.moreRecommendations', 'more recommendations')}</li>` : ''}
-        </ul>
-        <div class="pro-locked__blur"></div>
-        <div class="pro-locked__buttons">
-          <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report${reportId ? ` data-report-id="${reportId}"` : ''} data-context="tag-intelligence">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
-          <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal${reportId ? ` data-report-id="${reportId}"` : ''} data-context="tag-intelligence">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
+        <div class="pro-report-block__unlock-buttons">
+          <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="tag-intelligence"${reportId ? ` data-report-id="${reportId}"` : ''}>${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
+          <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="tag-intelligence">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
         </div>
+        <p class="pro-report-block__unlock-hint">${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}</p>
       </div>
     `;
   }
@@ -789,6 +778,15 @@ document.addEventListener('DOMContentLoaded', () => {
       contentHTML: renderTagIntelligenceRecommendations(data.recommendations)
     });
 
+    // AI Strategic Analysis (Pro)
+    sections.push({
+      id: 'ai-strategic-analysis',
+      title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+      isPro: true, locked: true, context: 'tag-intelligence', reportId: reportId,
+      scoreTextRight: null,
+      contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
+    });
+
     // Use ReportContainer.create() for consistent header styling
     const reportHTML = (window.ReportContainer && typeof window.ReportContainer.create === 'function')
       ? window.ReportContainer.create({
@@ -812,6 +810,15 @@ document.addEventListener('DOMContentLoaded', () => {
       : `<h2>${t('reports.tagIntelligence.results', 'Tag Analysis Results')}</h2><p>${t('reports.common.reportContainerNotAvailable', 'ReportContainer not available')}</p>`;
 
     resultsContent.innerHTML = '<div class="report-scope">' + reportHTML + '</div>';
+
+    // Fetch AI strategic analysis content
+    if (window.AIRecommendations) {
+      const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+      window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'tag-intelligence', data, locale, { skipHeader: true });
+    }
+    if (window.SelfImprovement) {
+      window.SelfImprovement.integrate({ data: data, analyzerType: 'tag-intelligence', donutLabels: {}, resultsContent: resultsContent, reportId: reportId });
+    }
 
     // Initialize ReportAccordion interactions
     if (window.ReportAccordion && typeof window.ReportAccordion.initInteractions === 'function') {

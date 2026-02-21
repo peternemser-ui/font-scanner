@@ -726,6 +726,13 @@ async function displayResults(data) {
 
     resultsDiv.innerHTML = `<div class="report-scope">${reportHTML}</div>`;
 
+    // Use JS listener instead of inline onerror (CSP blocks script-src-attr)
+    resultsDiv.querySelectorAll('.site-screenshots-grid__img').forEach(function(img) {
+      img.addEventListener('error', function() {
+        this.parentElement.innerHTML = '<div class="site-screenshots-grid__placeholder"><span>' + t('reports.competitive.noScreenshots', 'No screenshot available') + '</span></div>';
+      });
+    });
+
     // Show the results div (important for billing return flow)
     resultsDiv.style.display = 'block';
 
@@ -734,6 +741,15 @@ async function displayResults(data) {
       initializeCharts(data);
     }, 100);
     
+    // Fetch AI strategic analysis content
+    if (window.AIRecommendations) {
+      const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+      window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'competitive', data, locale, { skipHeader: true });
+    }
+    if (window.SelfImprovement) {
+      window.SelfImprovement.integrate({ data: data, analyzerType: 'competitive', donutLabels: {}, resultsContent: resultsDiv, reportId: reportId });
+    }
+
     // Initialize accordion interactions
     if (window.ReportAccordion && typeof window.ReportAccordion.initInteractions === 'function') {
       window.ReportAccordion.initInteractions();
@@ -833,9 +849,12 @@ function buildCompetitiveSummary(data) {
   const summary = [];
   const scores = data.yourSite.scores;
   
-  // Overall score
+  // Overall score with rank subtitle
   if (typeof scores.overall === 'number') {
-    summary.push({ label: t('reports.metrics.overall', 'Overall'), score: scores.overall });
+    const rank = data.rankings?.overall?.rank;
+    const total = (data.competitors?.length || 0) + 1;
+    const rankSubtitle = rank ? `#${rank} ${t('reports.competitive.ofSites', 'of')} ${total}` : '';
+    summary.push({ label: t('reports.metrics.overall', 'Overall'), score: scores.overall, subtitle: rankSubtitle });
   }
 
   // Individual metrics
@@ -965,7 +984,16 @@ function buildCompetitiveSections(data, reportId) {
       contentHTML: renderRecommendationsContent(data.recommendations)
     });
   }
-  
+
+  // AI Strategic Analysis (Pro)
+  sections.push({
+    id: 'ai-strategic-analysis',
+    title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+    isPro: true, locked: !isUnlocked, context: 'competitive-analysis', reportId,
+    scoreTextRight: null,
+    contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
+  });
+
   return sections;
 }
 
@@ -1572,7 +1600,14 @@ function renderExecutiveSummary(data) {
   
   const avgCompetitor = competitorScores.reduce((a, b) => a + b, 0) / competitorScores.length;
   const maxCompetitor = Math.max(...competitorScores);
-  
+
+  // Find the top-performing site (could be yours or a competitor)
+  const allSites = [
+    { name: getDomainName(data.yourSite.url), score: yourOverall, isYou: true },
+    ...data.competitors.map(c => ({ name: getDomainName(c.url), score: c.scores?.overall || 0, isYou: false }))
+  ].sort((a, b) => b.score - a.score);
+  const topPerformer = allSites[0] || {};
+
   const overallRank = data.rankings?.overall?.rank || totalCompetitors + 1;
   const isWinning = overallRank === 1;
   const isLosing = overallRank === totalCompetitors + 1;
@@ -1739,14 +1774,18 @@ function renderExecutiveSummary(data) {
               t('reports.competitive.maintainLead', 'Maintain Lead')}
           </div>
           <div style="
-            font-size: 0.8rem; 
+            font-size: 0.8rem;
             color: var(--text-secondary);
             padding: 0.5rem 1rem;
             background: var(--r-surface-2, #F8FAFC);
             border-radius: 6px;
             display: inline-block;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
           ">
-            ${data.analysisTime}s ${t('reports.competitive.analysis', 'analysis')}
+            🏆 ${t('reports.competitive.topPerformer', 'Top performer')}: <strong style="color: var(--text-primary);">${topPerformer.name}</strong> (${topPerformer.score})
           </div>
         </div>
       </div>
@@ -3549,8 +3588,7 @@ function renderSiteScreenshotsContent(data) {
       <div class="site-screenshots-grid__item">
         <div class="site-screenshots-grid__label">${site.label}${youBadge}</div>
         <div class="site-screenshots-grid__image-wrap">
-          <img class="site-screenshots-grid__img" src="${site.screenshotUrl}" alt="${altText}" data-screenshot="${idx}" loading="lazy"
-               onerror="this.parentElement.innerHTML='<div class=\\'site-screenshots-grid__placeholder\\'><span>${t('reports.competitive.noScreenshots', 'No screenshot available')}</span></div>'" />
+          <img class="site-screenshots-grid__img" src="${site.screenshotUrl}" alt="${altText}" data-screenshot="${idx}" loading="lazy" />
         </div>
       </div>`;
   }).join('');

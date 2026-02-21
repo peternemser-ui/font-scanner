@@ -710,6 +710,67 @@
       margin-left: 0.5rem;
     }
 
+    /* ── Analytics Charts ─────────────────────────────────────── */
+    .charts-section {
+      margin-bottom: 2rem;
+    }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 768px) {
+      .charts-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chart-card {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px;
+      padding: 1.25rem;
+      min-height: 200px;
+    }
+
+    .chart-card:hover {
+      border-color: rgba(255,255,255,0.15);
+    }
+
+    .chart-card--full {
+      grid-column: 1 / -1;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+      padding: 0 0.25rem;
+    }
+
+    .chart-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #fff;
+      margin: 0;
+    }
+
+    .chart-period {
+      font-size: 0.7rem;
+      color: #666;
+      background: rgba(255,255,255,0.06);
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+    }
+
+    .chart-card canvas {
+      display: block;
+      width: 100%;
+    }
+
     /* ── System Health Dashboard ─────────────────────────────── */
     .health-status-bar {
       display: flex;
@@ -987,6 +1048,40 @@
         </div>
       </div>
 
+      <!-- Analytics Charts -->
+      <div class="charts-section">
+        <div class="charts-grid">
+          <div class="chart-card chart-card--full">
+            <div class="chart-header">
+              <h3 class="chart-title">Scan Activity</h3>
+              <span class="chart-period">Last 30 days</span>
+            </div>
+            <canvas id="scanActivityChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">User Registrations</h3>
+              <span class="chart-period">Last 30 days</span>
+            </div>
+            <canvas id="userGrowthChart"></canvas>
+          </div>
+          <div class="chart-card">
+            <div class="chart-header">
+              <h3 class="chart-title">Plan Distribution</h3>
+              <span class="chart-period">All users</span>
+            </div>
+            <canvas id="planDistChart"></canvas>
+          </div>
+          <div class="chart-card chart-card--full">
+            <div class="chart-header">
+              <h3 class="chart-title">Top Scan Types</h3>
+              <span class="chart-period">All time</span>
+            </div>
+            <canvas id="scanTypesChart"></canvas>
+          </div>
+        </div>
+      </div>
+
       <!-- Messages -->
       <div id="successMessage" class="message success"></div>
       <div id="errorMessage" class="message error"></div>
@@ -1214,6 +1309,7 @@
   <script src="/socket.io/socket.io.js"></script>
   <script src="/i18n.js"></script>
   <script src="/pro-utils.js"></script>
+  <script src="/admin-charts.js"></script>
   <script src="/admin-script.js"></script>
 </body>
 </html>

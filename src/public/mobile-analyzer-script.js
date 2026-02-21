@@ -577,6 +577,13 @@ document.addEventListener('DOMContentLoaded', () => {
         context: 'mobile',
         reportId,
         contentHTML: recommendationsContent
+      }),
+      ReportAccordion.createSection({
+        id: 'ai-strategic-analysis',
+        title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+        isPro: true, locked: proLocked, context: 'mobile', reportId,
+        scoreTextRight: null,
+        contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
       })
     ].join('');
     
@@ -599,6 +606,16 @@ document.addEventListener('DOMContentLoaded', () => {
     resultsContent.innerHTML = `<div class="report-scope">${html}</div>`;
     window.mobileData = data;
     window.currentMobileResults = data;  // For billing return restoration
+
+    // Fetch AI strategic analysis content
+    if (window.AIRecommendations) {
+      const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+      window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'mobile', data, locale, { skipHeader: true });
+    }
+    if (window.SelfImprovement) {
+      window.SelfImprovement.integrate({ data: data, analyzerType: 'mobile', donutLabels: {}, resultsContent: resultsContent, reportId: reportId });
+    }
+
     ReportAccordion.initInteractions();
 
     if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function' && reportId) {

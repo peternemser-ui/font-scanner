@@ -379,6 +379,20 @@ function displaySEOResults(results) {
         context: 'seo',
         reportId,
         contentHTML: renderProFixes(results)
+      },
+      {
+        id: 'ai-strategic-analysis',
+        title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+        isPro: true,
+        locked: !isUnlocked,
+        context: 'seo',
+        reportId,
+        scoreTextRight: null,
+        contentHTML: '<div id="ai-strategic-content">' +
+          (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation
+            ? window.AIRecommendations.renderLoadingAnimation()
+            : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') +
+          '</div>'
       }
     ];
 
@@ -449,6 +463,27 @@ function displaySEOResults(results) {
     if (img && img.getAttribute('src')) {
       attachScreenshotRetry(img, img.getAttribute('src'));
     }
+  }
+
+  // Fetch AI strategic analysis content
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender(
+      'ai-strategic-content',
+      reportId, 'seo', results, locale,
+      { skipHeader: true }
+    );
+  }
+
+  // Integrate trend badges and feedback buttons
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({
+      data: results,
+      analyzerType: 'seo',
+      donutLabels: { overallScore: t('seo.overallScore', 'SEO Score') },
+      resultsContent: container,
+      reportId: reportId
+    });
   }
 
   if (window.ReportAccordion && typeof window.ReportAccordion.initInteractions === 'function') {

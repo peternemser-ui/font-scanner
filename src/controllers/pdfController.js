@@ -437,6 +437,18 @@ const generatePDF = asyncHandler(async (req, res) => {
 
   logger.info('PDF locale resolved', { locale, reportId: resolvedReportId });
 
+  // --- Pre-fetch AI strategic analysis for PDF ---
+  try {
+    const { getRecommendations } = require('../services/aiRecommendationService');
+    const aiResult = await getRecommendations(resolvedReportId, normalizedReportType, reportDataWithId, locale);
+    if (aiResult.recommendations && aiResult.recommendations.strategic) {
+      reportDataWithId.aiStrategicAnalysis = aiResult.recommendations;
+      logger.info('AI strategic analysis attached to PDF', { source: aiResult.source });
+    }
+  } catch (aiErr) {
+    logger.warn('AI strategic analysis pre-fetch failed, PDF will omit section', { error: aiErr.message });
+  }
+
   // --- Map reportType to PDF template (new system) or analyzer page (legacy) ---
   const PDF_TEMPLATE_MAP = {
     seo: 'pdf-templates/seo-report.html',

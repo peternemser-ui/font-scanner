@@ -505,7 +505,7 @@
             data-open-pricing-modal
             data-context="${context}"
           >
-            ${_t('reports.common.goPro', 'Go Pro — $29/mo')}
+            ${_t('reports.common.goPro30', 'Go Pro — $30/mo')}
           </button>
         </div>
         <p class="pro-report-block__unlock-hint">

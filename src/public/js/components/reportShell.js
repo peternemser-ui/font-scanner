@@ -22,12 +22,13 @@
     return '#' + r.toString(16).padStart(2,'0') + g.toString(16).padStart(2,'0') + b.toString(16).padStart(2,'0');
   }
 
-  function renderDonut(score, label) {
+  function renderDonut(score, label, subtitle) {
     const safeScore = typeof score === 'number' && !Number.isNaN(score) ? Math.max(0, Math.min(100, score)) : 0;
     const color = getScoreColor(safeScore);
     const circumference = 2 * Math.PI * 75;
     const dash = (safeScore / 100) * circumference;
     const dashOffset = -(circumference * 0.25);
+    const subtitleHTML = subtitle ? `<div class="report-shell__donut-subtitle" style="font-size: 0.75rem; font-weight: 700; color: ${color}; margin-top: 0.15rem; letter-spacing: 0.5px;">${subtitle}</div>` : '';
     return `
       <div class="report-shell__summary-card" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">
         <div class="report-shell__summary-label">${label}</div>
@@ -37,6 +38,7 @@
           <text x="90" y="90" text-anchor="middle" dominant-baseline="central" fill="${color}" font-size="36" font-weight="700" style="-webkit-print-color-adjust: exact; print-color-adjust: exact;">${typeof score === 'number' && !Number.isNaN(score) ? safeScore : '—'}</text>
         </svg>
         <div class="report-shell__donut-grade" style="color:${color}; -webkit-print-color-adjust: exact; print-color-adjust: exact;">${typeof score === 'number' && !Number.isNaN(score) ? `${safeScore}/100` : '—'}</div>
+        ${subtitleHTML}
       </div>
     `;
   }
@@ -96,7 +98,7 @@
   function renderSummaryDonuts(items) {
     return `
       <div class="report-shell__summary">
-        ${items.map(item => renderDonut(item.score, item.label)).join('')}
+        ${items.map(item => renderDonut(item.score, item.label, item.subtitle)).join('')}
       </div>
     `;
   }

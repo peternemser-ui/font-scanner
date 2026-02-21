@@ -26,8 +26,8 @@ router.get('/dashboard-stats', async (req, res) => {
 
     // Get counts
     const totalUsers = await db.get('SELECT COUNT(*) as count FROM users');
-    const proUsers = await db.get('SELECT COUNT(*) as count FROM users WHERE plan = "pro"');
-    const freeUsers = await db.get('SELECT COUNT(*) as count FROM users WHERE plan = "free"');
+    const proUsers = await db.get(`SELECT COUNT(*) as count FROM users WHERE plan = 'pro'`);
+    const freeUsers = await db.get(`SELECT COUNT(*) as count FROM users WHERE plan = 'free'`);
 
     // Get scan stats
     const totalScans = await db.get('SELECT COUNT(*) as count FROM scans');
@@ -40,7 +40,7 @@ router.get('/dashboard-stats', async (req, res) => {
 
     // Get revenue stats (if you have payment data)
     const activeSubscriptions = await db.get(
-      'SELECT COUNT(*) as count FROM entitlements WHERE status = "active"'
+      `SELECT COUNT(*) as count FROM entitlements WHERE status = 'active'`
     );
 
     // Recent activity
@@ -751,6 +751,61 @@ router.post('/cleanup-memory', async (req, res) => {
     });
   } catch (error) {
     res.status(500).json({ error: 'Cleanup failed: ' + error.message });
+  }
+});
+
+/**
+ * GET /api/admin/analytics
+ * Time-series and aggregate data for dashboard charts
+ */
+router.get('/analytics', async (req, res) => {
+  try {
+    const db = getDatabase();
+
+    // User registrations per day (last 30 days)
+    const userGrowth = await db.all(
+      `SELECT date(created_at) as day, COUNT(*) as count
+       FROM users
+       WHERE created_at >= date("now", "-30 days")
+       GROUP BY date(created_at)
+       ORDER BY day ASC`
+    );
+
+    // Scans per day (last 30 days)
+    const scanActivity = await db.all(
+      `SELECT date(created_at) as day, COUNT(*) as count
+       FROM scans
+       WHERE created_at >= date("now", "-30 days")
+       GROUP BY date(created_at)
+       ORDER BY day ASC`
+    );
+
+    // Scan result types breakdown
+    const scanTypes = await db.all(
+      `SELECT result_type, COUNT(*) as count
+       FROM scan_results
+       GROUP BY result_type
+       ORDER BY count DESC
+       LIMIT 12`
+    );
+
+    // Plan distribution
+    const planDistribution = await db.all(
+      `SELECT plan, COUNT(*) as count
+       FROM users
+       GROUP BY plan`
+    );
+
+    res.json({
+      success: true,
+      userGrowth,
+      scanActivity,
+      scanTypes,
+      planDistribution
+    });
+  } catch (error) {
+    console.error('Error fetching analytics:', error);
+    res.status(500).json({ error: 'Failed to fetch analytics' });
   }
 });
 

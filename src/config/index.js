@@ -166,6 +166,24 @@ const config = {
       maxRequests: parseInt(process.env.COMPETITIVE_RATE_MAX_REQUESTS || '5', 10), // 5 per minute
     },
   },
+
+  // AI Recommendations (Claude API)
+  ai: {
+    enabled: process.env.AI_ENABLED === 'true',
+    apiKey: process.env.ANTHROPIC_API_KEY || '',
+    model: process.env.AI_MODEL || 'claude-sonnet-4-20250514',
+    maxTokens: parseInt(process.env.AI_MAX_TOKENS || '2048', 10),
+    cacheTtlHours: parseInt(process.env.AI_CACHE_TTL_HOURS || '24', 10),
+  },
+
+  // Database
+  database: {
+    driver: (process.env.DB_DRIVER || 'sqlite').toLowerCase(),
+    sqlitePath: process.env.DATABASE_PATH || './data/fontscanner.db',
+    postgresUrl: process.env.DATABASE_URL || '',
+    pgPoolMin: parseInt(process.env.PG_POOL_MIN || '2', 10),
+    pgPoolMax: parseInt(process.env.PG_POOL_MAX || '10', 10),
+  },
 };
 
 // Export config and pricing helpers

@@ -298,7 +298,7 @@ async function displayResults(data) {
   if (screenshotUrl) {
     document.body.setAttribute('data-sm-screenshot-url', screenshotUrl);
   }
-  const screenshots = screenshotUrl ? [{ src: screenshotUrl, alt: t('reports.common.screenshotOf', 'Screenshot of {{url}}') + ' ' + reportUrl, device: '' }] : [];
+  const screenshots = screenshotUrl ? [{ src: screenshotUrl, alt: t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: reportUrl }), device: '' }] : [];
 
   if (window.ReportContainer && typeof window.ReportContainer.create === 'function') {
     const summary = [
@@ -374,6 +374,13 @@ async function displayResults(data) {
         locked: !isUnlocked,
         context: 'local-seo',
         reportId
+      },
+      {
+        id: 'ai-strategic-analysis',
+        title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+        isPro: true, locked: !isUnlocked, context: 'local-seo', reportId,
+        scoreTextRight: null,
+        contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
       }
     );
 
@@ -451,11 +458,27 @@ async function displayResults(data) {
         context: 'local-seo',
         reportId: reportId,
         contentHTML: renderRecommendationsContent(data.recommendations)
+      }),
+      ReportAccordion.createSection({
+        id: 'ai-strategic-analysis',
+        title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+        isPro: true, locked: !isUnlocked, context: 'local-seo', reportId: reportId,
+        scoreTextRight: null,
+        contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
       })
     ].join('');
 
     accordionContainer.innerHTML = accordionHTML;
     resultsContainer.appendChild(accordionContainer);
+
+    // Fetch AI strategic analysis content
+    if (window.AIRecommendations) {
+      const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+      window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'local-seo', data, locale, { skipHeader: true });
+    }
+    if (window.SelfImprovement) {
+      window.SelfImprovement.integrate({ data: data, analyzerType: 'local-seo', donutLabels: {}, resultsContent: resultsContainer, reportId: reportId });
+    }
 
     // Initialize ReportAccordion interactions
     ReportAccordion.initInteractions();

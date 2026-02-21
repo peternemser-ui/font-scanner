@@ -792,6 +792,19 @@ function displayHostingResults(data) {
   const reportId = document.body.getAttribute('data-report-id') || '';
   const screenshotUrl = data.screenshotUrl || document.body.getAttribute('data-sm-screenshot-url') || (reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : '');
 
+  const isUnlocked = !!(
+    // Pro/Day Pass: global access regardless of reportId
+    (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+    // Report-specific access checks (need reportId)
+    (reportId && (
+      (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(reportId)) ||
+      (window.CreditsManager && (
+        (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+        (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+      ))
+    ))
+  );
+
   const cms = data.cms;
   const currentHost = data.currentHost;
   const trafficTier = data.trafficTier;
@@ -911,7 +924,6 @@ function displayHostingResults(data) {
           data-action="open-lightbox"
           data-screenshot-url="${screenshotUrl}"
           data-screenshot-title="${t('reports.common.pageScreenshot', 'Page Screenshot')}"
-          onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${t('reports.common.screenshotUnavailable', 'Screenshot unavailable')}</div>'"
         />
       </div>
     </div>
@@ -1314,6 +1326,16 @@ function displayHostingResults(data) {
 
   resultsContent.innerHTML = html;
 
+  // Use JS listener instead of inline onerror (CSP blocks script-src-attr)
+  if (screenshotUrl) {
+    const ssImg = resultsContent.querySelector('.screenshot-item__img');
+    if (ssImg) {
+      ssImg.addEventListener('error', function() {
+        this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'Screenshot unavailable') + '</div>';
+      });
+    }
+  }
+
   // Add click handler for screenshot lightbox
   if (screenshotUrl) {
     const screenshotImg = resultsContent.querySelector('[data-action="open-lightbox"]');
@@ -1324,6 +1346,46 @@ function displayHostingResults(data) {
         }
       });
     }
+  }
+
+  // AI Strategic Analysis (Pro) — using ReportAccordion for consistency
+  if (window.ReportAccordion && window.ReportAccordion.createSection) {
+    const aiSectionHTML = window.ReportAccordion.createSection({
+      id: 'ai-strategic-analysis',
+      title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'hosting-analysis',
+      reportId: reportId,
+      scoreTextRight: null,
+      contentHTML: '<div id="ai-strategic-content">' +
+        (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation
+          ? window.AIRecommendations.renderLoadingAnimation()
+          : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' +
+            t('reports.ai.loading', 'Analyzing your results...') + '</div>') +
+        '</div>'
+    });
+    resultsContent.insertAdjacentHTML('beforeend', aiSectionHTML);
+    ReportAccordion.initInteractions();
+  }
+
+  // Fetch AI strategic analysis content
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender(
+      'ai-strategic-content',
+      reportId, 'hosting', data, locale,
+      { skipHeader: true }
+    );
+  }
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({
+      data: data,
+      analyzerType: 'hosting',
+      donutLabels: {},
+      resultsContent: resultsContent,
+      reportId: reportId
+    });
   }
 
   // Pro Report Block

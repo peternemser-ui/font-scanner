@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en" data-i18n-title="contactPage.seoTitle">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#000000" />
+
+    <title data-i18n="contactPage.seoTitle">Contact Us - Site Mechanic</title>
+    <meta name="description" content="Get in touch with the Site Mechanic team. Report a bug, ask a billing question, request a feature, or just say hello." data-i18n="contactPage.seoDescription" data-i18n-attr="content" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://sitemechanic.io/contact.html" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Text&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+
+    <link rel="stylesheet" href="design-tokens.css" />
+    <link rel="stylesheet" href="components.css" />
+    <link rel="stylesheet" href="layout.css" />
+    <link rel="stylesheet" href="ui.css" />
+    <link rel="stylesheet" href="styles.css" />
+    <link rel="stylesheet" href="ui-components.css" />
+    <link rel="stylesheet" href="spacing-fixes.css" />
+
+    <style>
+      body:not(.white-theme) {
+        background: #0B0D10 !important;
+      }
+      body.white-theme {
+        background: #fafbfc !important;
+        color: #1a1a1a !important;
+      }
+
+      .contact-page {
+        max-width: 640px;
+        margin: 0 auto;
+        padding: 48px 24px 80px;
+        background-color: #fff !important;
+      }
+      .contact-page__title {
+        font-family: var(--font-serif, 'DM Serif Text', Georgia, serif);
+        font-size: clamp(2rem, 3.2vw, 2.75rem);
+        font-weight: 400;
+        color: var(--text-primary, #fff);
+        margin: 0 0 8px;
+        text-align: center;
+      }
+      .contact-page__subtitle {
+        font-size: 1.0625rem;
+        line-height: 1.5;
+        color: var(--text-muted, #888);
+        text-align: center;
+        margin: 0 0 40px;
+      }
+
+      .contact-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+      .contact-form__group {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .contact-form__label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-secondary, #ccc);
+      }
+      .contact-form__input,
+      .contact-form__select,
+      .contact-form__textarea {
+        width: 100%;
+        padding: 12px 16px;
+        font-size: 1rem;
+        font-family: var(--font-sans, Inter, sans-serif);
+        border: 1px solid var(--border-color-strong, rgba(255,255,255,0.15));
+        border-radius: 10px;
+        background: var(--bg-card, #161A1F);
+        color: var(--text-primary, #fff);
+        transition: border-color 0.2s, box-shadow 0.2s;
+        box-sizing: border-box;
+      }
+      .contact-form__input:focus,
+      .contact-form__select:focus,
+      .contact-form__textarea:focus {
+        outline: none;
+        border-color: var(--accent-primary, #5bf4e7);
+        box-shadow: 0 0 0 3px rgba(91, 244, 231, 0.12);
+      }
+      .contact-form__input::placeholder,
+      .contact-form__textarea::placeholder {
+        color: var(--text-muted, #888);
+      }
+      body.white-theme .contact-form__input,
+      body.white-theme .contact-form__select,
+      body.white-theme .contact-form__textarea {
+        background: #fff;
+        border-color: #d1d5db;
+        color: #1a1a1a;
+      }
+      body.white-theme .contact-form__input::placeholder,
+      body.white-theme .contact-form__textarea::placeholder {
+        color: #9ca3af;
+      }
+      body.white-theme .contact-form__select {
+        color: #1a1a1a;
+      }
+      .contact-form__select {
+        appearance: none;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' fill='none' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: right 14px center;
+        padding-right: 40px;
+        cursor: pointer;
+      }
+      .contact-form__textarea {
+        min-height: 160px;
+        resize: vertical;
+        line-height: 1.5;
+      }
+      .contact-form__row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+      }
+
+      .contact-form__submit {
+        height: 52px;
+        padding: 0 32px;
+        font-size: 1rem;
+        font-weight: 600;
+        font-family: var(--font-sans, Inter, sans-serif);
+        border: none;
+        border-radius: 10px;
+        background: var(--accent-primary, #5bf4e7);
+        color: #000;
+        cursor: pointer;
+        transition: background 0.15s, transform 0.1s;
+        margin-top: 4px;
+      }
+      .contact-form__submit:hover {
+        background: var(--accent-primary-dark, #4dd8cc);
+      }
+      .contact-form__submit:active {
+        transform: scale(0.98);
+      }
+      .contact-form__submit:focus-visible {
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(91, 244, 231, 0.4);
+      }
+      .contact-form__submit:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .contact-form__success {
+        display: none;
+        text-align: center;
+        padding: 32px 24px;
+        border-radius: 12px;
+        background: rgba(91, 244, 231, 0.08);
+        border: 1px solid rgba(91, 244, 231, 0.2);
+      }
+      .contact-form__success h3 {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--text-primary, #fff);
+        margin: 0 0 8px;
+      }
+      .contact-form__success p {
+        font-size: 0.9375rem;
+        color: var(--text-muted, #888);
+        margin: 0;
+      }
+
+      .contact-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 16px;
+        margin-top: 48px;
+        padding-top: 32px;
+        border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      }
+      body.white-theme .contact-info {
+        border-top-color: #e5e7eb;
+      }
+      .contact-info__card {
+        padding: 20px;
+        border-radius: 10px;
+        background: var(--bg-card, #161A1F);
+        border: 1px solid var(--border-color, rgba(255,255,255,0.08));
+      }
+      body.white-theme .contact-info__card {
+        background: #fff;
+        border-color: #e5e7eb;
+      }
+      .contact-info__title {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--text-primary, #fff);
+        margin: 0 0 4px;
+      }
+      .contact-info__text {
+        font-size: 0.8125rem;
+        color: var(--text-muted, #888);
+        margin: 0;
+        line-height: 1.5;
+      }
+      .contact-info__link {
+        color: var(--accent-primary, #5bf4e7);
+        text-decoration: none;
+      }
+      .contact-info__link:hover {
+        text-decoration: underline;
+      }
+
+      @media (max-width: 600px) {
+        .contact-form__row {
+          grid-template-columns: 1fr;
+        }
+        .contact-info {
+          grid-template-columns: 1fr;
+        }
+        .contact-page {
+          padding: 32px 16px 60px;
+        }
+      }
+    </style>
+
+    <script src="/i18n.js"></script>
+  </head>
+  <body>
+    <div id="nav-placeholder"></div>
+
+    <main>
+      <div class="contact-page">
+        <h1 class="contact-page__title" data-i18n="contactPage.title">Get in touch</h1>
+        <p class="contact-page__subtitle" data-i18n="contactPage.subtitle">Have a question, found a bug, or want to request a feature? We'd love to hear from you.</p>
+
+        <form class="contact-form" id="contactForm" action="https://formsubmit.co/info@sitemechanic.io" method="POST">
+          <!-- FormSubmit config -->
+          <input type="hidden" name="_subject" value="New contact form submission - Site Mechanic" />
+          <input type="hidden" name="_captcha" value="true" />
+          <input type="hidden" name="_next" value="https://sitemechanic.io/contact.html?sent=true" />
+          <input type="text" name="_honey" style="display:none" />
+
+          <div class="contact-form__row">
+            <div class="contact-form__group">
+              <label class="contact-form__label" for="contactName" data-i18n="contactPage.form.nameLabel">Name</label>
+              <input type="text" id="contactName" name="name" class="contact-form__input" placeholder="Your name" data-i18n-placeholder="contactPage.form.namePlaceholder" required />
+            </div>
+            <div class="contact-form__group">
+              <label class="contact-form__label" for="contactEmail" data-i18n="contactPage.form.emailLabel">Email</label>
+              <input type="email" id="contactEmail" name="email" class="contact-form__input" placeholder="you@example.com" data-i18n-placeholder="contactPage.form.emailPlaceholder" required />
+            </div>
+          </div>
+
+          <div class="contact-form__group">
+            <label class="contact-form__label" for="contactCategory" data-i18n="contactPage.form.categoryLabel">Category</label>
+            <select id="contactCategory" name="category" class="contact-form__select" required>
+              <option value="" disabled selected data-i18n="contactPage.form.categoryDefault">Select a topic</option>
+              <option value="bug" data-i18n="contactPage.form.categoryBug">Bug report</option>
+              <option value="billing" data-i18n="contactPage.form.categoryBilling">Billing or subscription</option>
+              <option value="feature" data-i18n="contactPage.form.categoryFeature">Feature request</option>
+              <option value="scan-issue" data-i18n="contactPage.form.categoryScanIssue">Scan not working</option>
+              <option value="account" data-i18n="contactPage.form.categoryAccount">Account or login issue</option>
+              <option value="enterprise" data-i18n="contactPage.form.categoryEnterprise">Enterprise or partnership</option>
+              <option value="other" data-i18n="contactPage.form.categoryOther">Something else</option>
+            </select>
+          </div>
+
+          <div class="contact-form__group">
+            <label class="contact-form__label" for="contactUrl"><span data-i18n="contactPage.form.urlLabel">Related URL</span> <span style="font-weight:400;color:var(--text-muted,#888);" data-i18n="contactPage.form.urlOptional">(optional)</span></label>
+            <input type="text" id="contactUrl" name="url" class="contact-form__input" placeholder="https://yoursite.com or a Site Mechanic report link" data-i18n-placeholder="contactPage.form.urlPlaceholder" />
+          </div>
+
+          <div class="contact-form__group">
+            <label class="contact-form__label" for="contactMessage" data-i18n="contactPage.form.messageLabel">Message</label>
+            <textarea id="contactMessage" name="message" class="contact-form__textarea" placeholder="Tell us what's going on. The more detail, the faster we can help." data-i18n-placeholder="contactPage.form.messagePlaceholder" required></textarea>
+          </div>
+
+          <button type="submit" class="contact-form__submit" id="contactSubmit" data-i18n="contactPage.form.submit">Send message</button>
+        </form>
+
+        <div class="contact-form__success" id="contactSuccess">
+          <h3 data-i18n="contactPage.success.title">Message sent</h3>
+          <p data-i18n="contactPage.success.body">Thanks for reaching out. We'll get back to you within 24 hours.</p>
+        </div>
+
+        <div class="contact-info">
+          <div class="contact-info__card">
+            <h3 class="contact-info__title" data-i18n="contactPage.info.emailTitle">Email directly</h3>
+            <p class="contact-info__text"><a href="mailto:info@sitemechanic.io" class="contact-info__link">info@sitemechanic.io</a></p>
+          </div>
+          <div class="contact-info__card">
+            <h3 class="contact-info__title" data-i18n="contactPage.info.responseTitle">Response time</h3>
+            <p class="contact-info__text" data-i18n="contactPage.info.responseText">We typically respond within 24 hours on business days.</p>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <script src="/pro-utils.js"></script>
+    <script src="nav-template.js"></script>
+    <script src="/language-switcher.js"></script>
+    <script>
+    (function() {
+      // Show success state if redirected back after send
+      if (window.location.search.includes('sent=true')) {
+        var form = document.getElementById('contactForm');
+        var success = document.getElementById('contactSuccess');
+        if (form) form.style.display = 'none';
+        if (success) success.style.display = 'block';
+      }
+    })();
+    </script>
+  </body>
+</html>

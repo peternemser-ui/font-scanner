@@ -652,7 +652,14 @@ async function displayResults(data) {
       context: 'gdpr-compliance',
       reportId: reportId,
       contentHTML: renderGdprProFixes(data.recommendations.map(translateRecommendation))
-    } : null
+    } : null,
+    {
+      id: 'ai-strategic-analysis',
+      title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+      isPro: true, locked: !isUnlocked, context: 'gdpr-compliance', reportId: reportId,
+      scoreTextRight: null,
+      contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
+    }
   ].filter(Boolean);
 
   // Use ReportContainer.create() for consistent rendering (like SEO)
@@ -686,6 +693,15 @@ async function displayResults(data) {
       }
     });
     results.innerHTML = `<div class="report-scope">${fallbackHTML}</div>`;
+  }
+
+  // Fetch AI strategic analysis content
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'gdpr', data, locale, { skipHeader: true });
+  }
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({ data: data, analyzerType: 'gdpr', donutLabels: {}, resultsContent: results, reportId: reportId });
   }
 
   // Initialize ReportAccordion interactions

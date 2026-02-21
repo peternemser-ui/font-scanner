@@ -346,11 +346,18 @@ function displayPerformanceResults(results) {
           data-action="open-lightbox"
           data-screenshot-url="${screenshotUrl}"
           data-screenshot-title="${t('reports.performance.pageScreenshot', 'Page Screenshot')}"
-          onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>'+window.t?.('reports.performance.screenshotUnavailable', 'Screenshot unavailable')+'</div>'"
         />
       </div>
     `;
     container.appendChild(screenshotSection);
+
+    // Use JS listener instead of inline onerror (CSP blocks script-src-attr)
+    const ssImg = screenshotSection.querySelector('.screenshot-item__img');
+    if (ssImg) {
+      ssImg.addEventListener('error', function() {
+        this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + (window.t?.('reports.performance.screenshotUnavailable', 'Screenshot unavailable') || 'Screenshot unavailable') + '</div>';
+      });
+    }
 
     // Add click handler for screenshot lightbox
     screenshotSection.addEventListener('click', (e) => {
@@ -881,6 +888,16 @@ function displayPerformanceResults(results) {
   createAccordionSection(container, 'network-performance', t('reports.performance.networkPerformance', 'Network Performance'), () => renderNetworkPerformanceContent(results.network), results.network?.score || 0);
   createAccordionSection(container, 'caching-optimization', t('reports.performance.cachingOptimization', 'Caching & Optimization'), () => renderCachingOptimizationContent(results.caching), results.caching?.score || 0);
   createAccordionSection(container, 'report-recommendations', t('reports.common.reportRecommendations', 'Recommendations'), () => renderRecommendationsContent(results.recommendations), null, { isPro: true }); // Pro gated
+  createAccordionSection(container, 'ai-strategic-analysis', t('reports.ai.strategicTitle', 'AI Strategic Analysis'), () => '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>', null, { isPro: true });
+
+  // Fetch AI strategic analysis content
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'performance', results, locale, { skipHeader: true });
+  }
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({ data: results, analyzerType: 'performance', donutLabels: {}, resultsContent: container, reportId: reportId });
+  }
 
   // Pro Report Block
   if (window.ProReportBlock && window.ProReportBlock.render) {

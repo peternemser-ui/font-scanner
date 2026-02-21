@@ -261,6 +261,9 @@
         _renderer(reportData, { t: t, esc: esc, truncate: truncate, scoreClass: scoreClass, scoreColor: scoreColor, scoreGrade: scoreGrade, lang: _lang, translateImpact: translateImpact, translateStatus: translateStatus });
       }
 
+      // Render AI Strategic Analysis (if data was pre-fetched server-side)
+      this.renderAIStrategicAnalysis(reportData);
+
       // Generate TOC from rendered sections
       this.renderTOC();
 
@@ -811,6 +814,95 @@
       html += '</div>';
 
       el.innerHTML = html;
+    },
+
+    /* -------------------------------------------------------------------------
+       AI Strategic Analysis (appended after report-specific sections)
+       ------------------------------------------------------------------------- */
+    renderAIStrategicAnalysis: function (data) {
+      var ai = data.aiStrategicAnalysis;
+      if (!ai || !ai.strategic) return;
+
+      // Resolve a value that might be an i18n key (from fallback engine) or a plain string (from Claude)
+      function resolve(val) {
+        if (!val) return '';
+        if (typeof val === 'string') {
+          if (val.indexOf('reports.fb.') === 0 || val.indexOf('reports.ai.') === 0) return t(val, val);
+          return val;
+        }
+        if (typeof val === 'object' && val.key) {
+          return t(val.key, val.fallback || val.key, val.params);
+        }
+        return String(val);
+      }
+
+      // Create a new pdf-section and append it to the report body
+      var container = document.querySelector('.pdf-body') || document.body;
+      var section = document.createElement('section');
+      section.className = 'pdf-section';
+      section.id = 'section-ai-strategic';
+
+      var sectionNumber = document.querySelectorAll('.pdf-section').length + 1;
+      var html = '<div class="pdf-section__header">' +
+        '<span class="pdf-section__number">' + String(sectionNumber).padStart(2, '0') + '</span>' +
+        '<h2 class="pdf-section__title">' + esc(t('reports.ai.strategicTitle', 'AI Strategic Analysis')) + '</h2>' +
+      '</div>';
+
+      // Assessment paragraph
+      if (ai.assessment) {
+        html += '<div style="font-size:0.85rem;line-height:1.7;color:#374151;margin:12px 0 20px;text-align:justify;">' +
+          '<p>' + esc(resolve(ai.assessment)) + '</p>' +
+        '</div>';
+      }
+
+      // Priority order table
+      if (ai.priorityOrder && ai.priorityOrder.length > 0) {
+        html += '<div class="pdf-exec__subheading">' + esc(t('reports.ai.priorityOrder', 'Priority Order')) + '</div>';
+        html += '<table class="pdf-table pdf-table--striped"><thead><tr>' +
+          '<th style="width:30px">#</th>' +
+          '<th>' + esc(t('reports.ai.category', 'Category')) + '</th>' +
+          '<th>' + esc(t('reports.ai.reason', 'Reason')) + '</th>' +
+        '</tr></thead><tbody>';
+        ai.priorityOrder.forEach(function (item, idx) {
+          html += '<tr>' +
+            '<td>' + (idx + 1) + '</td>' +
+            '<td><strong>' + esc(resolve(item.category)) + '</strong></td>' +
+            '<td>' + esc(resolve(item.reason)) + '</td>' +
+          '</tr>';
+        });
+        html += '</tbody></table>';
+      }
+
+      // Quick win callout
+      if (ai.quickWin) {
+        html += '<div class="pdf-callout pdf-callout--tip">' +
+          '<div class="pdf-callout__title">' + esc(t('reports.ai.quickWin', 'Quick Win') + ': ' + resolve(ai.quickWin.title || '')) + '</div>' +
+          '<div class="pdf-callout__body">' + esc(resolve(ai.quickWin.description || '')) +
+            (ai.quickWin.estimatedImpact ? ' (' + esc(t('reports.ai.estimatedImpact', 'Estimated impact') + ': ' + resolve(ai.quickWin.estimatedImpact)) + ')' : '') +
+          '</div>' +
+        '</div>';
+      }
+
+      // Cross-cutting connections
+      if (ai.connections && ai.connections.length > 0) {
+        html += '<div class="pdf-exec__subheading">' + esc(t('reports.ai.connections', 'Cross-Cutting Insights')) + '</div>';
+        html += '<ul style="margin:0 0 16px 18px;padding:0;font-size:0.82rem;line-height:1.6;color:#374151;">';
+        ai.connections.forEach(function (c) {
+          html += '<li style="margin-bottom:6px;">' + esc(resolve(c.text || c)) + '</li>';
+        });
+        html += '</ul>';
+      }
+
+      // Total impact summary
+      if (ai.totalImpact) {
+        html += '<div class="pdf-callout pdf-callout--info">' +
+          '<div class="pdf-callout__title">' + esc(t('reports.ai.totalImpact', 'Total Impact')) + '</div>' +
+          '<div class="pdf-callout__body">' + esc(resolve(ai.totalImpact)) + '</div>' +
+        '</div>';
+      }
+
+      section.innerHTML = html;
+      container.appendChild(section);
     },
 
     /* -------------------------------------------------------------------------

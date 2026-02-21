@@ -646,6 +646,15 @@ async function displayReputationResults(data) {
     });
   }
 
+  // AI Strategic Analysis (Pro)
+  sections.push({
+    id: 'ai-strategic-analysis',
+    title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+    isPro: true, locked: !isUnlocked, context: 'ip-reputation', reportId: reportId,
+    scoreTextRight: null,
+    contentHTML: '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
+  });
+
   // Use ReportContainer.create() for consistent rendering (like SEO)
   if (window.ReportContainer && typeof window.ReportContainer.create === 'function') {
     const reportHTML = window.ReportContainer.create({
@@ -677,6 +686,15 @@ async function displayReputationResults(data) {
       }
     });
     resultsContent.innerHTML = `<div class="report-scope">${fallbackHTML}</div>`;
+  }
+
+  // Fetch AI strategic analysis content
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'ip-reputation', data, locale, { skipHeader: true });
+  }
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({ data: data, analyzerType: 'ip-reputation', donutLabels: {}, resultsContent: resultsContent, reportId: reportId });
   }
 
   // Initialize ReportAccordion interactions

@@ -585,7 +585,9 @@ class StripeService {
         reportId: r.report_id,
         siteUrl: r.site_url || '',
         analyzerType: r.analyzer_type || '',
-        purchasedAt: r.purchased_at ? r.purchased_at.replace(' ', 'T') + 'Z' : null
+        purchasedAt: r.purchased_at
+          ? (r.purchased_at.includes('T') ? r.purchased_at : r.purchased_at.replace(' ', 'T') + 'Z')
+          : null
       }));
     } catch (e) {
       logger.warn('Could not fetch purchased report details', { error: e.message });
@@ -944,10 +946,9 @@ class StripeService {
                 const subscription = await stripe.subscriptions.retrieve(subscriptionId);
                 const currentPeriodEnd = new Date(subscription.current_period_end * 1000).toISOString();
 
-                // Update user with subscription details
-                await db.run('BEGIN');
-                try {
-                  await db.run(
+                // Update user + entitlements in a single transaction
+                await db.transaction(async (txDb) => {
+                  await txDb.run(
                     `UPDATE users SET
                       plan = 'pro',
                       stripe_subscription_id = ?,
@@ -964,8 +965,7 @@ class StripeService {
                     ]
                   );
 
-                  // Update entitlements
-                  await db.run(`
+                  await txDb.run(`
                     INSERT INTO entitlements (user_id, plan, stripe_subscription_id, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
                     VALUES (?, 'pro', ?, ?, ?, -1, 250, 1)
                     ON CONFLICT(user_id) DO UPDATE SET
@@ -978,12 +978,7 @@ class StripeService {
                       pdf_export_enabled = 1,
                       updated_at = CURRENT_TIMESTAMP
                   `, [userId, subscriptionId, subscription.status, currentPeriodEnd]);
-
-                  await db.run('COMMIT');
-                } catch (txError) {
-                  await db.run('ROLLBACK');
-                  throw txError;
-                }
+                });
 
                 logger.info('Subscription checkout completed - user updated', {
                   userId,
@@ -1024,10 +1019,9 @@ class StripeService {
                 const paymentTime = session.created ? session.created * 1000 : Date.now();
                 const dayPassExpiresAt = new Date(paymentTime + 24 * 60 * 60 * 1000).toISOString();
 
-                // Update user with day pass access
-                await db.run('BEGIN');
-                try {
-                  await db.run(
+                // Update user + entitlements in a single transaction
+                await db.transaction(async (txDb) => {
+                  await txDb.run(
                     `UPDATE users SET
                       plan = 'pro',
                       stripe_subscription_status = 'active',
@@ -1037,8 +1031,7 @@ class StripeService {
                     [dayPassExpiresAt, userId]
                   );
 
-                  // Update entitlements table
-                  await db.run(`
+                  await txDb.run(`
                     INSERT INTO entitlements (user_id, plan, status, current_period_end, scans_remaining, max_pages_per_scan, pdf_export_enabled)
                     VALUES (?, 'pro', 'active', ?, -1, 250, 1)
                     ON CONFLICT(user_id) DO UPDATE SET
@@ -1050,12 +1043,7 @@ class StripeService {
                       pdf_export_enabled = 1,
                       updated_at = CURRENT_TIMESTAMP
                   `, [userId, dayPassExpiresAt]);
-
-                  await db.run('COMMIT');
-                } catch (txError) {
-                  await db.run('ROLLBACK');
-                  throw txError;
-                }
+                });
 
                 logger.info('Day Pass purchase recorded successfully', {
                   userId: userId.substring(0, 8) + '...',
@@ -1087,9 +1075,8 @@ class StripeService {
                 // Don't record invalid reportId - this is a critical security check
               } else {
                 try {
-                  await db.run('BEGIN');
-                  try {
-                    await db.run(
+                  await db.transaction(async (txDb) => {
+                    await txDb.run(
                       `INSERT INTO report_purchases (user_id, report_id, stripe_checkout_session_id, purchased_at, site_url, analyzer_type, status)
                        VALUES (?, ?, ?, CURRENT_TIMESTAMP, ?, ?, 'paid')
                        ON CONFLICT(user_id, report_id) DO UPDATE SET
@@ -1100,12 +1087,7 @@ class StripeService {
                          status = 'paid'`,
                       [userId, reportId, session.id, siteUrl, analyzerType]
                     );
-
-                    await db.run('COMMIT');
-                  } catch (txError) {
-                    await db.run('ROLLBACK');
-                    throw txError;
-                  }
+                  });
 
                   logger.info('[ENTITLEMENT_DEBUG] Single report purchase recorded successfully', {
                     userId: userId.substring(0, 8) + '...',

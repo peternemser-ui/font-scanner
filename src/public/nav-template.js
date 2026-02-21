@@ -1938,6 +1938,22 @@ async function initializeAuthLinks() {
     // Insert "My Reports" button next to language selector
     const langContainer = document.getElementById('languageSelectorContainer');
     if (langContainer) {
+      // Admin button (admin users only)
+      if (isAdmin) {
+        const isAdminPage = window.location.pathname.includes('admin');
+        const adminBtn = document.createElement('a');
+        adminBtn.href = '/admin.html';
+        adminBtn.className = 'header-admin-btn' + (isAdminPage ? ' header-admin-btn--active' : '');
+        adminBtn.setAttribute('aria-label', navT('nav.admin', 'Admin'));
+        adminBtn.innerHTML = `
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 15v2m-6 4h12a2 2 0 0 0 2-2v-6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2zm10-10V7a4 4 0 0 0-8 0v4h8z"/>
+          </svg>
+          <span class="header-admin-btn__label">${navT('nav.admin', 'Admin')}</span>
+        `;
+        langContainer.parentNode.insertBefore(adminBtn, langContainer);
+      }
+
       const reportsBtn = document.createElement('a');
       reportsBtn.href = '/account.html';
       reportsBtn.className = 'header-reports-btn' + (isAccountPage ? ' header-reports-btn--active' : '');

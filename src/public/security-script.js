@@ -921,7 +921,6 @@ async function displaySecurityResults(data) {
           data-action="open-lightbox"
           data-screenshot-url="${screenshotUrl}"
           data-screenshot-title="${pageScreenshotLabel}"
-          onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${screenshotUnavailableLabel}</div>'"
         />
       </div>
     </div>
@@ -1015,6 +1014,14 @@ async function displaySecurityResults(data) {
 
   resultsContent.innerHTML = summaryHtml;
 
+  // Use JS listener instead of inline onerror (CSP blocks script-src-attr)
+  const ssImg = resultsContent.querySelector('.screenshot-item__img');
+  if (ssImg) {
+    ssImg.addEventListener('error', function() {
+      this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + screenshotUnavailableLabel + '</div>';
+    });
+  }
+
   // Store results globally for export/share
   window.currentSecurityResults = {
     ...data,
@@ -1096,7 +1103,28 @@ async function displaySecurityResults(data) {
     }
   );
 
+  // 7. AI Strategic Analysis (Pro gated)
+  createAccordionSection(
+    accordionsContainer,
+    'ai-strategic-analysis',
+    t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+    () => '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>',
+    null,
+    { isPro: true }
+  );
+
   resultsContent.appendChild(accordionsContainer);
+
+  // Fetch AI strategic analysis content
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    const secReportId = document.body.getAttribute('data-report-id') || '';
+    window.AIRecommendations.fetchAndRender('ai-strategic-content', secReportId, 'security', data, locale, { skipHeader: true });
+  }
+  if (window.SelfImprovement) {
+    const secReportId = document.body.getAttribute('data-report-id') || '';
+    window.SelfImprovement.integrate({ data: data, analyzerType: 'security', donutLabels: {}, resultsContent: resultsContent, reportId: secReportId });
+  }
 
   // Summary block (SEO-style footer)
   const summaryFooter = document.createElement('div');
@@ -1973,21 +2001,21 @@ function userHasPro() {
 
 function renderLockedProPreview(title = t('reports.common.proContent', 'Pro content'), previewLines = []) {
   const reportId = document.body?.getAttribute('data-report-id') || '';
-  const lines = previewLines.length ? previewLines : [t('reports.security.recommendationsPreview', 'Recommendations preview'), t('reports.security.codeFixesPreview', 'Code fixes preview')];
+  if (window.ProReportBlock && typeof window.ProReportBlock.renderUnlockPrompt === 'function') {
+    return window.ProReportBlock.renderUnlockPrompt({ context: 'security', reportId });
+  }
+  // Fallback matching ProReportBlock.renderUnlockPrompt() style
   return `
-    <div class="pro-locked">
-      <div class="pro-locked__header">
-        <span class="pro-pill">PRO</span>
-        <span>${title}</span>
+    <div class="pro-report-block__unlock-prompt" data-locked-overlay>
+      <div class="pro-report-block__unlock-header">
+        <span class="pro-report-block__unlock-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+        <span class="pro-report-block__unlock-text">${t('reports.common.unlockThisReport', 'Unlock this report')}</span>
       </div>
-      <ul class="pro-locked__list">
-        ${lines.slice(0, 2).map(line => `<li>${line}</li>`).join('')}
-      </ul>
-      <div class="pro-locked__blur"></div>
-      <div class="pro-locked__buttons">
-        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report${reportId ? ` data-report-id="${reportId}"` : ''} data-context="security">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
-        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal${reportId ? ` data-report-id="${reportId}"` : ''} data-context="security">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
+      <div class="pro-report-block__unlock-buttons">
+        <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="security"${reportId ? ` data-report-id="${reportId}"` : ''}>${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
+        <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="security">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
       </div>
+      <p class="pro-report-block__unlock-hint">${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}</p>
     </div>
   `;
 }

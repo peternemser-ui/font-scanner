@@ -628,6 +628,10 @@ app.use('/api/admin', adminRoutes);
 const proReportRoutes = require('./routes/proReport');
 app.use('/api/pro-report', proReportRoutes);
 
+// AI Recommendations (Claude-powered strategic analysis)
+const aiRecommendationsRoutes = require('./routes/aiRecommendations');
+app.use('/api/ai/recommendations', aiRecommendationsRoutes);
+
 // New async scan API
 const scanRoutes = require('./routes/scan.routes');
 app.use('/api/scans', scanRoutes);

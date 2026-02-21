@@ -1008,7 +1008,16 @@ async function displayResults(data) {
 
   // Check Pro access for gating premium content
   const reportId = document.body.getAttribute('data-report-id') || '';
-  const hasProAccess = window.ProReportBlock?.hasAccess?.(reportId) || false;
+  const hasProAccess = !!(
+    (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+    (reportId && (
+      (window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(reportId)) ||
+      (window.CreditsManager && (
+        (typeof window.CreditsManager.isUnlocked === 'function' && window.CreditsManager.isUnlocked(reportId)) ||
+        (typeof window.CreditsManager.isReportUnlocked === 'function' && window.CreditsManager.isReportUnlocked(reportId))
+      ))
+    ))
+  );
   console.log('[CWV] displayResults - hasProAccess:', hasProAccess, 'reportId:', reportId);
 
   // Build screenshot URL for report display
@@ -1031,7 +1040,6 @@ async function displayResults(data) {
           data-action="open-lightbox"
           data-screenshot-url="${screenshotUrl}"
           data-screenshot-title="Page Screenshot"
-          onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${t('reports.common.screenshotUnavailable', 'Screenshot unavailable')}</div>'"
         />
       </div>
     </div>
@@ -1169,25 +1177,29 @@ async function displayResults(data) {
           </div>
         `).join('')}
       </div>
-    ` : `
-      <div style="position: relative; padding: 1.5rem; text-align: center;">
-        <div style="filter: blur(4px); opacity: 0.4; pointer-events: none;">
-          <div style="background: rgba(255, 140, 0, 0.1); border-left: 4px solid #ff8c00; padding: 1rem; border-radius: 8px; margin-bottom: 0.5rem;">
-            <p style="color: var(--r-text-faint, #9CA3AF); margin: 0;">${t('reports.cwv.detailedRecommendationsBlur', 'Detailed performance recommendations...')}</p>
+    ` : (window.ProReportBlock && window.ProReportBlock.renderUnlockPrompt
+      ? window.ProReportBlock.renderUnlockPrompt({ context: 'core-web-vitals', reportId: reportId })
+      : `<div class="pro-report-block__unlock-prompt" data-locked-overlay>
+          <div class="pro-report-block__unlock-header">
+            <span class="pro-report-block__unlock-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+            <span class="pro-report-block__unlock-text">${t('reports.common.unlockThisReport', 'Unlock this report')}</span>
           </div>
-          <div style="background: rgba(255, 68, 68, 0.1); border-left: 4px solid #ff4444; padding: 1rem; border-radius: 8px;">
-            <p style="color: var(--r-text-faint, #9CA3AF); margin: 0;">${t('reports.cwv.criticalOptimizationsBlur', 'Critical optimization suggestions...')}</p>
+          <div class="pro-report-block__unlock-buttons">
+            <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="core-web-vitals" data-report-id="${reportId}">
+              ${t('reports.common.unlockFor5', 'Unlock for $5')}
+            </button>
+            <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="core-web-vitals">
+              ${t('reports.common.goPro30', 'Go Pro — $30/mo')}
+            </button>
           </div>
-        </div>
-        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-primary, #1a1a2e); padding: 1.5rem 2rem; border-radius: 12px; border: 2px solid var(--color-accent, #00ff41); box-shadow: 0 4px 20px rgba(0, 255, 65, 0.3);">
-          <div style="font-size: 2rem; margin-bottom: 0.5rem;">🔒</div>
-          <p style="color: var(--color-text-primary, #e0e0e0); margin: 0 0 1rem 0; font-weight: 600;">${t('reports.cwv.recommendationsAvailable', '{{count}} Recommendation(s) Available', { count: recommendations.length })}</p>
-          <button onclick="window.ProReportBlock?.showPurchaseOptions?.('${reportId}', 'core-web-vitals')" style="background: linear-gradient(135deg, #00ff41 0%, #00cc33 100%); color: #000; border: none; padding: 0.75rem 1.5rem; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 0.9rem;">
-            ${t('reports.common.unlockProReport', 'Unlock Pro Report - $5')}
-          </button>
-        </div>
-      </div>
-    `, null) : ''}
+          <p class="pro-report-block__unlock-hint">
+            ${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}
+          </p>
+        </div>`), null) : ''}
+
+    ${createCWVAccordionSection('ai-strategic-analysis', '✨', t('reports.ai.strategicTitle', 'AI Strategic Analysis') + ' <span class="pro-pill">PRO</span>',
+      hasProAccess ? '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>'
+      : (window.ProReportBlock && window.ProReportBlock.renderUnlockPrompt ? window.ProReportBlock.renderUnlockPrompt({ context: 'core-web-vitals', reportId: reportId }) : '<div class="pro-report-block__unlock-prompt" data-locked-overlay><div class="pro-report-block__unlock-header"><span class="pro-report-block__unlock-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span><span class="pro-report-block__unlock-text">' + t('reports.common.unlockThisReport', 'Unlock this report') + '</span></div><div class="pro-report-block__unlock-buttons"><button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="core-web-vitals" data-report-id="' + reportId + '">' + t('reports.common.unlockFor5', 'Unlock for $5') + '</button><button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="core-web-vitals">' + t('reports.common.goPro30', 'Go Pro — $30/mo') + '</button></div><p class="pro-report-block__unlock-hint">' + t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.') + '</p></div>'), null)}
 
     ${createCWVAccordionSection('understanding-scores', 'ℹ️', t('reports.cwv.understandingScoresTitle', 'Understanding Your Scores'), `
       <div style="padding: 1rem 0;">
@@ -1202,6 +1214,23 @@ async function displayResults(data) {
 
     <!-- PDF Download button removed - monetization disabled -->
   `;
+
+  // Use JS listener instead of inline onerror (CSP blocks script-src-attr)
+  const cwvSsImg = resultsContainer.querySelector('.screenshot-item__img');
+  if (cwvSsImg) {
+    cwvSsImg.addEventListener('error', function() {
+      this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'Screenshot unavailable') + '</div>';
+    });
+  }
+
+  // Fetch AI strategic analysis content
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'cwv', data, locale, { skipHeader: true });
+  }
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({ data: data, analyzerType: 'cwv', donutLabels: {}, resultsContent: resultsContainer, reportId: reportId });
+  }
 
   // Pro Report Block (Export & Share)
   if (window.ProReportBlock && window.ProReportBlock.render) {

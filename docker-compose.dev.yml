@@ -11,6 +11,8 @@ services:
     ports:
       - "3000:3000"
       - "9229:9229"  # Node.js debugging port
+    env_file:
+      - .env
     environment:
       - NODE_ENV=development
       - PORT=3000
@@ -23,6 +25,9 @@ services:
       - REPORTS_RETENTION_DAYS=7
       - MAX_PAGES_TO_SCAN=10
       - SCAN_TIMEOUT=60000
+      # Uncomment to use PostgreSQL instead of SQLite:
+      # - DB_DRIVER=postgres
+      # - DATABASE_URL=postgresql://fontscanner:fontscanner_dev@postgres-dev:5432/fontscanner
     volumes:
       - ./src:/app/src:cached
       - ./tests:/app/tests:cached
@@ -33,9 +38,32 @@ services:
       - node_modules:/app/node_modules
     networks:
       - font-scanner-dev-network
+    depends_on:
+      postgres-dev:
+        condition: service_healthy
     stdin_open: true
     tty: true
     command: npm run dev
+
+  postgres-dev:
+    image: postgres:16-alpine
+    container_name: font-scanner-postgres-dev
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: fontscanner
+      POSTGRES_USER: fontscanner
+      POSTGRES_PASSWORD: fontscanner_dev
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fontscanner"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - font-scanner-dev-network
 
 volumes:
   dev-reports:
@@ -43,6 +71,8 @@ volumes:
   dev-logs:
     driver: local
   node_modules:
+    driver: local
+  pg-data:
     driver: local
 
 networks:

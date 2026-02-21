@@ -581,6 +581,262 @@ function animateProgress() {
 }
 
 /**
+ * Compute WCAG A/AA/AAA breakdown from raw accessibility results.
+ * Maps server criteria to conformance levels with principle-based weighting.
+ *
+ * @param {Object} results — raw accessibility scan results
+ * @returns {WcagBreakdown}
+ */
+function computeWcagBreakdown(results) {
+  // Criteria-to-level mapping (matching server's extractWCAGCompliance keys)
+  // Weights: Perceivable 1.0, Operable 1.2, Understandable 0.8, Robust 1.0
+  const levelACriteria = [
+    { id: '1.1.1', key: 'nonTextContent',    weight: 1.0 },  // Perceivable
+    { id: '1.3.1', key: 'infoRelationships', weight: 1.0 },  // Perceivable
+    { id: '2.1.1', key: 'keyboard',          weight: 1.2 },  // Operable
+    { id: '2.4.1', key: 'bypassBlocks',      weight: 1.2 },  // Operable
+    { id: '2.4.2', key: 'pageTitled',        weight: 1.2 },  // Operable
+    { id: '2.4.3', key: 'focusOrder',        weight: 1.2 },  // Operable
+    { id: '3.1.1', key: 'languagePage',      weight: 0.8 },  // Understandable
+    { id: '4.1.1', key: 'parsing',           weight: 1.0 },  // Robust
+    { id: '4.1.2', key: 'nameRoleValue',     weight: 1.0 }   // Robust
+  ];
+
+  const levelAACriteria = [
+    { id: '1.4.3', key: 'contrastMinimum', weight: 1.0 }  // Perceivable
+  ];
+
+  // No AAA criteria are tested by the server; use heuristic from overall score
+  const levelAAACriteria = [];
+
+  // Merge desktop + mobile criteria (worst-of-both)
+  const desktopCriteria = results.desktop?.wcag?.criteria || {};
+  const mobileCriteria = results.mobile?.wcag?.criteria || {};
+  const allKeys = new Set([...Object.keys(desktopCriteria), ...Object.keys(mobileCriteria)]);
+
+  const merged = {};
+  for (const key of allKeys) {
+    const dVal = desktopCriteria[key];
+    const mVal = mobileCriteria[key];
+    // If either fails, it fails
+    if (dVal === 'fail' || mVal === 'fail') {
+      merged[key] = 'fail';
+    } else if (dVal === 'pass' || mVal === 'pass') {
+      merged[key] = 'pass';
+    } else {
+      merged[key] = 'unknown';
+    }
+  }
+
+  // Compute level score from criteria definitions
+  function computeLevel(criteriaDefs, threshold) {
+    let weightSum = 0;
+    let passWeight = 0;
+    let criteriaPass = 0;
+    let criteriaTotal = 0;
+    const criteria = [];
+
+    for (const c of criteriaDefs) {
+      const status = merged[c.key];
+      if (status === undefined) continue; // criterion not tested
+      criteriaTotal++;
+      const pass = (status === 'pass');
+      if (pass) {
+        criteriaPass++;
+        passWeight += c.weight;
+      }
+      weightSum += c.weight;
+      criteria.push({ id: c.id, name: c.key, pass, weight: c.weight });
+    }
+
+    const score = weightSum > 0 ? Math.round((passWeight / weightSum) * 100) : 0;
+    return {
+      score,
+      achieved: score >= threshold,
+      criteriaPass,
+      criteriaTotal,
+      criteria
+    };
+  }
+
+  const levelA = computeLevel(levelACriteria, 60);
+  let levelAA = computeLevel(levelAACriteria, 80);
+  let levelAAA;
+
+  // AA has very few direct criteria — supplement with overall score (70% weight)
+  if (levelAACriteria.length <= 2) {
+    const overallAccessScore = results.accessibilityScore ?? 0;
+    const directWeight = 0.3;
+    const overallWeight = 0.7;
+    const blendedScore = Math.round(
+      (levelAA.score * directWeight) + (overallAccessScore * overallWeight)
+    );
+    levelAA = {
+      ...levelAA,
+      score: blendedScore,
+      achieved: blendedScore >= 80
+    };
+  }
+
+  // AAA: heuristic from overall accessibility score since no AAA criteria are tested
+  const overallScore = results.accessibilityScore ?? 0;
+  levelAAA = {
+    score: Math.round(overallScore * 0.6),
+    achieved: overallScore >= 98,
+    criteriaPass: 0,
+    criteriaTotal: 0,
+    criteria: []
+  };
+
+  // Cumulative: AAA requires AA requires A
+  if (!levelA.achieved) {
+    levelAA.achieved = false;
+    levelAAA.achieved = false;
+  }
+  if (!levelAA.achieved) {
+    levelAAA.achieved = false;
+  }
+
+  const achievedLevel = levelAAA.achieved ? 'AAA'
+    : levelAA.achieved ? 'AA'
+    : levelA.achieved ? 'A'
+    : 'None';
+
+  // Overall score: weighted average across levels
+  const compositeScore = Math.round(
+    (levelA.score * 0.4) + (levelAA.score * 0.35) + (levelAAA.score * 0.25)
+  );
+
+  return {
+    overallScore: compositeScore,
+    achievedLevel,
+    levelA,
+    levelAA,
+    levelAAA,
+    levelBreakdownAvailable: Object.keys(merged).length > 0
+  };
+}
+
+/**
+ * Build the WCAG Conformance Meter — a 3-row grid showing A/AA/AAA levels.
+ * Uses Tailwind palette (amber/emerald/sky), NOT neon colors.
+ *
+ * @param {WcagBreakdown} breakdown — from computeWcagBreakdown()
+ * @returns {string} HTML string
+ */
+function buildWcagConformanceMeter(breakdown) {
+  if (!breakdown || !breakdown.levelBreakdownAvailable) {
+    return `<div style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; padding: 1rem;">
+      ${t('reports.accessibility.levelBreakdownUnavailable', 'WCAG level breakdown data is not available for this scan.')}
+    </div>`;
+  }
+
+  const levels = [
+    {
+      key: 'A', data: breakdown.levelA,
+      color: '#f59e0b', bgTint: 'rgba(245, 158, 11, 0.08)',
+      borderMuted: 'rgba(245, 158, 11, 0.25)',
+      label: t('reports.accessibility.levelA', 'Level A'),
+      subtitle: t('reports.accessibility.minimumAccessibility', 'Minimum Accessibility')
+    },
+    {
+      key: 'AA', data: breakdown.levelAA,
+      color: '#10b981', bgTint: 'rgba(16, 185, 129, 0.08)',
+      borderMuted: 'rgba(16, 185, 129, 0.25)',
+      label: t('reports.accessibility.levelAA', 'Level AA'),
+      subtitle: t('reports.accessibility.industryStandard', 'Industry Standard')
+    },
+    {
+      key: 'AAA', data: breakdown.levelAAA,
+      color: '#0ea5e9', bgTint: 'rgba(14, 165, 233, 0.08)',
+      borderMuted: 'rgba(14, 165, 233, 0.25)',
+      label: t('reports.accessibility.levelAAA', 'Level AAA'),
+      subtitle: t('reports.accessibility.highestAccessibility', 'Highest Accessibility')
+    }
+  ];
+
+  const levelOrder = ['None', 'A', 'AA', 'AAA'];
+  const achievedIdx = levelOrder.indexOf(breakdown.achievedLevel);
+
+  const rowsHTML = levels.map(level => {
+    const thisIdx = levelOrder.indexOf(level.key);
+    const isAchieved = level.data.achieved;
+    const isCurrent = breakdown.achievedLevel === level.key;
+    const isAbove = thisIdx > achievedIdx;
+    const passIcon = isAchieved ? '\u2713' : '\u2717';
+    const passText = isAchieved
+      ? t('reports.accessibility.pass', 'Pass')
+      : t('reports.accessibility.fail', 'Fail');
+    const issueCount = level.data.criteriaTotal - level.data.criteriaPass;
+    const ariaLabel = `${level.label} \u2014 ${level.subtitle}: ${level.data.score}/100, ${passText}`;
+
+    return `
+      <div class="wcag-level-${level.key} ${isAchieved ? 'wcag-level--achieved' : ''}"
+           role="listitem"
+           data-testid="wcag-level-${level.key}"
+           ${isCurrent ? 'aria-current="true"' : ''}
+           aria-label="${ariaLabel}"
+           style="
+             display: grid;
+             grid-template-columns: auto 1fr auto auto;
+             align-items: center;
+             gap: 1rem;
+             padding: 0.75rem 1rem;
+             border: 2px solid ${isAchieved ? level.color : level.borderMuted};
+             border-radius: 8px;
+             background: ${isAchieved ? level.bgTint : 'var(--r-surface-1, #FFFFFF)'};
+             opacity: ${isAbove ? '0.6' : '1'};
+             transition: opacity 0.2s;
+           ">
+        <!-- Badge -->
+        <div class="wcag-level__badge" style="
+          width: 44px; height: 44px; border-radius: 50%;
+          border: 3px solid ${level.color};
+          background: var(--r-surface-1, #FFFFFF);
+          display: flex; align-items: center; justify-content: center;
+          font-weight: 900; font-size: ${level.key === 'AAA' ? '0.75rem' : level.key === 'AA' ? '0.85rem' : '1rem'};
+          color: ${level.color};
+          flex-shrink: 0;
+        ">${level.key}</div>
+
+        <!-- Label + subtitle -->
+        <div style="min-width: 0;">
+          <div style="font-weight: 700; color: var(--r-text, #111827); font-size: 0.95rem; line-height: 1.3;">
+            ${level.label}
+            ${isCurrent ? '<span style="font-size: 0.75rem; font-weight: 600; margin-left: 0.5rem; padding: 0.15rem 0.4rem; border-radius: 3px; background: ' + level.color + '; color: #fff;">' + t('reports.accessibility.currentLevel', 'Current Level') + '</span>' : ''}
+          </div>
+          <div style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem; line-height: 1.3;">${level.subtitle}</div>
+        </div>
+
+        <!-- Score -->
+        <div class="wcag-level__score" style="
+          font-weight: 800; font-size: 1.1rem;
+          color: ${isAchieved ? level.color : 'var(--r-text-faint, #9CA3AF)'};
+          text-align: right; white-space: nowrap;
+        ">${level.data.score}<span style="font-size: 0.75rem; font-weight: 400; color: var(--r-text-faint, #9CA3AF);">/100</span></div>
+
+        <!-- Status -->
+        <div class="wcag-level__status" style="
+          width: 44px; height: 44px;
+          display: flex; align-items: center; justify-content: center;
+          border-radius: 50%;
+          background: ${isAchieved ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
+          color: ${isAchieved ? '#10b981' : '#ef4444'};
+          font-size: 1.2rem; font-weight: bold;
+          flex-shrink: 0;
+        " aria-label="${passText}">${passIcon}</div>
+      </div>`;
+  }).join('');
+
+  return `
+    <div data-testid="wcag-conformance-meter" role="list"
+         aria-label="${t('reports.accessibility.wcagConformanceTitle', 'WCAG Conformance')}"
+         style="display: flex; flex-direction: column; gap: 0.5rem;">
+      ${rowsHTML}
+    </div>`;
+}
+
+/**
  * Display accessibility results
  */
 async function displayAccessibilityResults(resultData) {
@@ -708,16 +964,22 @@ async function displayAccessibilityResults(resultData) {
       <div class="screenshot-item" style="background: var(--bg-secondary, #1a1a1a); border: 1px solid var(--border-color, #333); border-radius: 8px; overflow: hidden;">
         <img
           src="${screenshotUrl}"
-          alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}')} ${displayUrl}"
+          alt="${t('reports.common.screenshotOf', 'Screenshot of {{url}}', { url: displayUrl })}"
           class="screenshot-item__img"
           style="width: 100%; max-height: 300px; object-fit: cover; object-position: top; cursor: pointer; display: block;"
           data-action="open-lightbox"
           data-screenshot-url="${screenshotUrl}"
           data-screenshot-title="${t('reports.common.pageScreenshot', 'Page Screenshot')}"
-          onerror="this.parentElement.innerHTML='<div style=\\'padding: 2rem; text-align: center; color: var(--text-muted, #666);\\'>${t('reports.common.screenshotUnavailable', 'Screenshot unavailable')}</div>'"
         />
       </div>
     `;
+    // Use JS listener instead of inline onerror (CSP blocks script-src-attr)
+    const ssImg = screenshotSection.querySelector('.screenshot-item__img');
+    if (ssImg) {
+      ssImg.addEventListener('error', function() {
+        this.parentElement.innerHTML = '<div style="padding: 2rem; text-align: center; color: var(--text-muted, #666);">' + t('reports.common.screenshotUnavailable', 'Screenshot unavailable') + '</div>';
+      });
+    }
     reportScope.appendChild(screenshotSection);
 
     // Add click handler for screenshot lightbox
@@ -733,86 +995,72 @@ async function displayAccessibilityResults(resultData) {
     });
   }
 
-  // Summary Section
+  // Compute WCAG breakdown from results
+  const wcagBreakdown = computeWcagBreakdown(results);
+
+  // Summary Section — Overall Score + WCAG Conformance Meter
   const summary = document.createElement('div');
   summary.className = 'section';
   summary.innerHTML = `
-    
-    <!-- Performance Score Overview -->
+    <!-- Score Overview + WCAG Conformance Meter -->
     <div style="
-      background: linear-gradient(135deg, rgba(138,43,226,0.05) 0%, rgba(138,43,226,0.02) 100%);
-      border: 2px solid ${getAccessibilityColor(results.accessibilityScore)};
+      background: var(--r-surface-2, #F8FAFC);
+      border: 1px solid var(--r-border, rgba(0,0,0,0.08));
       border-radius: 12px;
       padding: 2rem;
       margin: 2rem 0;
-      box-shadow: 0 4px 20px rgba(138,43,226,0.15);
+      box-shadow: var(--r-shadow, 0 1px 3px rgba(0,0,0,0.04));
     ">
-      <div style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: center;">
-        <!-- Left: Accessibility Score Circle -->
+      <div style="display: grid; grid-template-columns: auto 1fr; gap: 2rem; align-items: start;">
+        <!-- Left: Overall Accessibility Score Circle -->
         <div style="text-align: center;">
           <div style="
-            width: 180px;
-            height: 180px;
+            width: 160px;
+            height: 160px;
             border-radius: 50%;
-            background: #ffffff;
+            background: var(--r-surface-1, #FFFFFF);
             border: 5px solid ${getAccessibilityColor(results.accessibilityScore)};
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            box-shadow: 0 0 30px ${getAccessibilityColor(results.accessibilityScore)}40, 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 2px 12px rgba(0,0,0,0.08);
           ">
             <div style="
-              font-size: 4.5rem;
+              font-size: 3.5rem;
               font-weight: 900;
-              color: #000000;
+              color: var(--r-text, #111827);
               line-height: 1;
             ">${results.accessibilityScore ?? 0}</div>
             <div style="
-              font-size: 0.9rem;
-              color: #666666;
-              margin-top: 0.5rem;
+              font-size: 0.85rem;
+              color: var(--r-text-faint, #9CA3AF);
+              margin-top: 0.35rem;
               text-transform: uppercase;
               letter-spacing: 2px;
               font-weight: 600;
             ">/ 100</div>
           </div>
           <div style="
-            margin-top: 1rem;
-            font-size: 1.5rem;
+            margin-top: 0.75rem;
+            font-size: 1.2rem;
             font-weight: bold;
             color: ${getAccessibilityColor(results.accessibilityScore)};
-            text-shadow: 0 0 10px ${getAccessibilityColor(results.accessibilityScore)}80;
           ">${getAccessibilityGrade(results.accessibilityScore)}</div>
         </div>
-        
-        <!-- Right: Quick Stats -->
+
+        <!-- Right: WCAG Conformance Meter -->
         <div>
-          <h3 style="color: #bb86fc; margin: 0 0 1rem 0; font-size: 1.35rem;">>> ${t('reports.accessibility.quickStats', 'Quick Stats')}</h3>
-          <div style="display: grid; gap: 0.75rem;">
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.accessibility.wcagLevel', 'WCAG Level')}</span>
-              <span style="color: #bb86fc; font-weight: bold;">${results.wcagLevel || 'AA'}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.accessibility.violationsFound', 'Violations Found')}</span>
-              <span style="color: ${results.violationsCount > 0 ? '#ff4444' : '#00ff41'}; font-weight: bold;">${results.violationsCount || 0}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0; border-bottom: 1px solid #333;">
-              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.accessibility.contrastIssues', 'Contrast Issues')}</span>
-              <span style="color: ${results.contrastIssues > 0 ? '#ffa500' : '#00ff41'}; font-weight: bold;">${results.contrastIssues || 0}</span>
-            </div>
-            <div style="display: flex; justify-content: space-between; padding: 0.5rem 0;">
-              <span style="color: var(--r-text-muted, #6B7280);">${t('reports.accessibility.bestPractices', 'Best Practices')}</span>
-              <span style="color: #bb86fc; font-weight: bold;">${results.bestPracticesCount || 0} ${t('reports.accessibility.passed', 'passed')}</span>
-            </div>
-          </div>
+          <h3 style="color: var(--r-text, #111827); margin: 0 0 1rem 0; font-size: 1.2rem; font-weight: 700;">
+            ${t('reports.accessibility.wcagConformanceTitle', 'WCAG Conformance')}
+          </h3>
+          ${buildWcagConformanceMeter(wcagBreakdown)}
         </div>
       </div>
     </div>
   `;
   reportScope.appendChild(summary);
-  
+
   // Store results globally for PDF generation/share
   window.currentAccessibilityResults = {
     ...results,
@@ -830,7 +1078,7 @@ async function displayAccessibilityResults(resultData) {
   // WCAG Compliance Levels Section
   const wcagLevelsSection = document.createElement('div');
   wcagLevelsSection.className = 'section';
-  wcagLevelsSection.innerHTML = createWCAGLevelsSection(results);
+  wcagLevelsSection.innerHTML = createWCAGLevelsSection(results, wcagBreakdown);
   reportScope.appendChild(wcagLevelsSection);
 
   // Calculate average scores for accordion headers
@@ -881,14 +1129,25 @@ async function displayAccessibilityResults(resultData) {
       locked: !userHasPro(),
       context: 'accessibility',
       contentHTML: renderRecommendationsContent(results.recommendations, results)
+    }),
+    // AI Strategic Analysis — inline accordion (matches style of all other tabs)
+    ReportAccordion.createSection({
+      id: 'ai-strategic-analysis',
+      title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+      isPro: true,
+      locked: !userHasPro(),
+      context: 'accessibility',
+      scoreTextRight: null,
+      contentHTML: '<div id="ai-strategic-content">' +
+        (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation
+          ? window.AIRecommendations.renderLoadingAnimation()
+          : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') +
+        '</div>'
     })
   ].join('');
 
   accordionSection.innerHTML = accordionHTML;
   reportScope.appendChild(accordionSection);
-
-  // Initialize ReportAccordion interactions
-  ReportAccordion.initInteractions();
 
   // Summary block (mirror SEO layout)
   const summaryFooter = document.createElement('div');
@@ -936,6 +1195,32 @@ async function displayAccessibilityResults(resultData) {
   // Append the complete report scope to container
   container.appendChild(reportScope);
 
+  // Initialize ReportAccordion interactions
+  ReportAccordion.initInteractions();
+
+  // Fetch AI strategic analysis content (must run after reportScope is in the DOM)
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender(
+      'ai-strategic-content',
+      reportId, 'accessibility', results, locale,
+      { skipHeader: true }
+    );
+  }
+
+  // Integrate trend badges and feedback buttons (SelfImprovement skips AI accordion if already in DOM)
+  if (window.SelfImprovement) {
+    window.SelfImprovement.integrate({
+      data: results,
+      analyzerType: 'accessibility',
+      donutLabels: {
+        overallScore: t('reports.accessibility.accessibilityScore', 'Accessibility'),
+      },
+      resultsContent: container,
+      reportId: reportId
+    });
+  }
+
   // Auto-save report if user has access (purchased or Pro)
   const reportIdForSave = document.body.getAttribute('data-report-id') || '';
   if (reportIdForSave && window.ReportStorage && typeof window.ReportStorage.autoSaveIfEligible === 'function') {
@@ -949,199 +1234,165 @@ async function displayAccessibilityResults(resultData) {
 
 /**
  * Create WCAG Compliance Levels Section
+ * Uses Tailwind palette: amber (#f59e0b), emerald (#10b981), sky (#0ea5e9)
  */
-function createWCAGLevelsSection(results) {
-  // Determine current WCAG level based on score
-  const score = results.accessibilityScore || 0;
-  let currentLevel = 'None';
-  if (score >= 95) currentLevel = 'AAA';
-  else if (score >= 80) currentLevel = 'AA';
-  else if (score >= 60) currentLevel = 'A';
+function createWCAGLevelsSection(results, wcagBreakdown) {
+  const bd = wcagBreakdown || computeWcagBreakdown(results);
+  const currentLevel = bd.achievedLevel;
+
+  // Level card config — Tailwind palette, not neon
+  const levelCards = [
+    {
+      key: 'A', data: bd.levelA,
+      color: '#f59e0b', bgTint: 'rgba(245, 158, 11, 0.08)', borderMuted: 'rgba(245, 158, 11, 0.25)',
+      label: t('reports.accessibility.levelA', 'Level A'),
+      subtitle: t('reports.accessibility.minimumAccessibility', 'Minimum Accessibility'),
+      desc: t('reports.accessibility.levelADescription', 'Removes the most critical barriers to access for people with disabilities.'),
+      reqs: [
+        t('reports.accessibility.reqTextAlternatives', 'Text alternatives for images'),
+        t('reports.accessibility.reqKeyboardAccessibility', 'Keyboard accessibility'),
+        t('reports.accessibility.reqNoSeizure', 'No seizure-inducing content')
+      ],
+      scoreRange: '60-79'
+    },
+    {
+      key: 'AA', data: bd.levelAA,
+      color: '#10b981', bgTint: 'rgba(16, 185, 129, 0.08)', borderMuted: 'rgba(16, 185, 129, 0.25)',
+      label: t('reports.accessibility.levelAA', 'Level AA'),
+      subtitle: t('reports.accessibility.industryStandard', 'Industry Standard'),
+      desc: t('reports.accessibility.levelAADescription', 'The accepted legal and industry standard (ADA, Section 508, EN 301 549).'),
+      reqs: [
+        t('reports.accessibility.reqColorContrast', 'Sufficient color contrast (4.5:1)'),
+        t('reports.accessibility.reqFocusIndicators', 'Visible focus indicators'),
+        t('reports.accessibility.reqContentReflows', 'Content reflows properly'),
+        t('reports.accessibility.reqAllLevelA', 'All Level A requirements')
+      ],
+      scoreRange: '80-94'
+    },
+    {
+      key: 'AAA', data: bd.levelAAA,
+      color: '#0ea5e9', bgTint: 'rgba(14, 165, 233, 0.08)', borderMuted: 'rgba(14, 165, 233, 0.25)',
+      label: t('reports.accessibility.levelAAA', 'Level AAA'),
+      subtitle: t('reports.accessibility.highestAccessibility', 'Highest Accessibility'),
+      desc: t('reports.accessibility.levelAAADescription', 'Highest conformance level. Addresses all accessibility requirements.'),
+      reqs: [
+        t('reports.accessibility.reqSignLanguage', 'Sign language interpretation'),
+        t('reports.accessibility.reqAudioDescriptions', 'Extended audio descriptions'),
+        t('reports.accessibility.reqHighContrast', 'Very high contrast (7:1)'),
+        t('reports.accessibility.reqAllLevelAAA', 'All Level A & AA requirements')
+      ],
+      scoreRange: '95-100'
+    }
+  ];
+
+  // Helper: is this level at or below achieved?
+  const levelOrder = ['None', 'A', 'AA', 'AAA'];
+  function isAtOrBelowAchieved(key) {
+    return levelOrder.indexOf(key) <= levelOrder.indexOf(currentLevel);
+  }
+
+  const cardsHTML = levelCards.map(card => {
+    const isActive = currentLevel === card.key;
+    const isReached = isAtOrBelowAchieved(card.key);
+    const isAboveAchieved = !isReached;
+    const issueCount = card.data.criteriaTotal - card.data.criteriaPass;
+    const resultText = card.data.achieved
+      ? t('reports.accessibility.pass', 'Pass')
+      : t('reports.accessibility.fail', 'Fail');
+    const resultColor = card.data.achieved ? '#10b981' : '#ef4444';
+
+    return `
+      <div class="wcag-level-card" style="
+        background: ${isActive ? card.bgTint : 'var(--r-surface-1, #FFFFFF)'};
+        border: 2px solid ${isActive ? card.color : card.borderMuted};
+        border-radius: 12px;
+        padding: 1.5rem;
+        opacity: ${isAboveAchieved ? '0.55' : '1'};
+        position: relative;
+        transition: opacity 0.2s;
+      ">
+        ${isActive ? '<div style="text-align: right; margin: -0.85rem -0.5rem 0.5rem 0;"><span style="display: inline-block; background: ' + card.color + '; color: #fff; font-size: 0.75rem; font-weight: 700; padding: 0.2rem 0.6rem; border-radius: 4px;">' + t('reports.accessibility.achieved', 'Achieved') + '</span></div>' : ''}
+        <!-- Result strip -->
+        <div style="
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 0.5rem 0.75rem;
+          background: ${card.data.achieved ? 'rgba(16,185,129,0.08)' : 'rgba(239,68,68,0.08)'};
+          border: 1px solid ${card.data.achieved ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'};
+          border-radius: 8px;
+          margin-bottom: 1rem;
+          font-size: 0.85rem;
+        ">
+          <span style="font-weight: 600; color: ${resultColor};">
+            ${t('reports.accessibility.yourResult', 'Your result')}: ${resultText}
+          </span>
+          <span style="color: var(--r-text-muted, #6B7280);">
+            ${t('reports.accessibility.issuesCount', '{{count}} issues', { count: issueCount })}
+          </span>
+        </div>
+
+        <div style="text-align: center; margin-bottom: 1rem;">
+          <div style="
+            width: 64px; height: 64px; margin: 0 auto; border-radius: 50%;
+            background: var(--r-surface-1, #FFFFFF);
+            border: 3px solid ${card.color};
+            display: flex; align-items: center; justify-content: center;
+            font-size: ${card.key === 'AAA' ? '1.1rem' : card.key === 'AA' ? '1.3rem' : '1.5rem'};
+            font-weight: 900; color: ${card.color};
+          ">${card.key}</div>
+        </div>
+        <h3 style="color: ${card.color}; text-align: center; margin: 0 0 0.5rem 0; font-size: 1.1rem;">
+          ${card.label}
+        </h3>
+        <div style="text-align: center; margin-bottom: 0.75rem;">
+          <span style="
+            color: ${card.color}; font-size: 0.85rem;
+            padding: 0.2rem 0.6rem; border-radius: 4px;
+            background: ${card.bgTint};
+            border: 1px solid ${card.borderMuted};
+          ">${card.subtitle}</span>
+        </div>
+        <p style="color: var(--r-text-muted, #6B7280); font-size: 0.85rem; line-height: 1.5; margin-bottom: 0.75rem;">
+          ${card.desc}
+        </p>
+        <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 6px; padding: 0.75rem; margin-top: 0.75rem;">
+          <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem; margin-bottom: 0.4rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
+          <ul style="color: var(--r-text-muted, #6B7280); font-size: 0.8rem; margin: 0; padding-left: 1.2rem; line-height: 1.7;">
+            ${card.reqs.map(r => '<li>' + r + '</li>').join('')}
+          </ul>
+        </div>
+        <div style="margin-top: 0.75rem; text-align: center; color: var(--r-text-faint, #9CA3AF); font-size: 0.75rem;">
+          ${t('reports.accessibility.score', 'Score')}: ${card.scoreRange}
+        </div>
+      </div>`;
+  }).join('');
+
+  // Current Level Status box — Tailwind palette
+  const statusColor = currentLevel === 'AAA' ? '#0ea5e9' : currentLevel === 'AA' ? '#10b981' : currentLevel === 'A' ? '#f59e0b' : '#ef4444';
+  const statusBgTint = currentLevel === 'AAA' ? 'rgba(14,165,233,0.06)' : currentLevel === 'AA' ? 'rgba(16,185,129,0.06)' : currentLevel === 'A' ? 'rgba(245,158,11,0.06)' : 'rgba(239,68,68,0.06)';
 
   return `
     <h2>${t('reports.accessibility.wcagComplianceLevels', 'WCAG Compliance Levels')}</h2>
     <div class="wcag-section-container" style="padding-left: 1rem;">
-      <p style="color: #ffd700; margin-bottom: 1.5rem;">>> ${t('reports.accessibility.understandingWcag', 'Understanding WCAG 2.1 Conformance Levels')}</p>
+      <p style="color: var(--r-text-muted, #6B7280); margin-bottom: 1.5rem;">
+        ${t('reports.accessibility.understandingWcag', 'Understanding WCAG 2.1 Conformance Levels')}
+      </p>
       
       <div class="wcag-levels-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
-        <!-- Level A Card -->
-        <div class="wcag-level-card" style="
-          background: linear-gradient(135deg, rgba(255,215,0,0.15) 0%, rgba(255,215,0,0.05) 100%);
-          border: 2px solid ${currentLevel === 'A' ? '#ffd700' : 'rgba(255,215,0,0.3)'};
-          border-radius: 12px;
-          padding: 1.5rem;
-          ${currentLevel === 'A' ? 'box-shadow: 0 0 20px rgba(255,215,0,0.3);' : ''}
-        ">
-          <div style="text-align: center; margin-bottom: 1rem;">
-            <div style="
-              width: 80px;
-              height: 80px;
-              margin: 0 auto;
-              border-radius: 50%;
-              background: #ffffff;
-              border: 3px solid #ffd700;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 2rem;
-              font-weight: 900;
-              color: #000000;
-              box-shadow: 0 0 15px rgba(255,215,0,0.4), 0 2px 8px rgba(0,0,0,0.15);
-            ">A</div>
-          </div>
-          <h3 style="color: #ffd700; text-align: center; margin: 0 0 1rem 0; font-size: 1.2rem;">
-            ${t('reports.accessibility.levelA', 'Level A')}
-          </h3>
-          <div style="text-align: center; margin-bottom: 1rem;">
-            <span style="
-              color: #ffd700;
-              font-size: 0.9rem;
-              padding: 0.3rem 0.8rem;
-              border-radius: 4px;
-              background: rgba(255,215,0,0.2);
-              border: 1px solid rgba(255,215,0,0.4);
-            ">${t('reports.accessibility.minimumAccessibility', 'Minimum Accessibility')}</span>
-          </div>
-          <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
-            ${t('reports.accessibility.levelADescription', 'Removes the most critical barriers to access for people with disabilities.')}
-          </p>
-          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
-            <ul style="color: #b0b0b0; font-size: 0.85rem; margin: 0; padding-left: 1.2rem; line-height: 1.8;">
-              <li>${t('reports.accessibility.reqTextAlternatives', 'Text alternatives for images')}</li>
-              <li>${t('reports.accessibility.reqKeyboardAccessibility', 'Keyboard accessibility')}</li>
-              <li>${t('reports.accessibility.reqNoSeizure', 'No seizure-inducing content')}</li>
-            </ul>
-          </div>
-          <div style="margin-top: 1rem; text-align: center; color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">
-            ◉ ${t('reports.accessibility.score', 'Score')}: 60-79
-          </div>
-        </div>
-
-        <!-- Level AA Card -->
-        <div class="wcag-level-card" style="
-          background: linear-gradient(135deg, rgba(0,255,65,0.15) 0%, rgba(0,255,65,0.05) 100%);
-          border: 2px solid ${currentLevel === 'AA' ? '#00ff41' : 'rgba(0,255,65,0.3)'};
-          border-radius: 12px;
-          padding: 1.5rem;
-          ${currentLevel === 'AA' ? 'box-shadow: 0 0 20px rgba(0,255,65,0.3);' : ''}
-        ">
-          <div style="text-align: center; margin-bottom: 1rem;">
-            <div style="
-              width: 80px;
-              height: 80px;
-              margin: 0 auto;
-              border-radius: 50%;
-              background: #ffffff;
-              border: 3px solid #00ff41;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 1.8rem;
-              font-weight: 900;
-              color: #000000;
-              box-shadow: 0 0 15px rgba(0,255,65,0.4), 0 2px 8px rgba(0,0,0,0.15);
-            ">AA</div>
-          </div>
-          <h3 style="color: #00ff41; text-align: center; margin: 0 0 1rem 0; font-size: 1.2rem;">
-            ${t('reports.accessibility.levelAA', 'Level AA')}
-          </h3>
-          <div style="text-align: center; margin-bottom: 1rem;">
-            <span style="
-              color: #00ff41;
-              font-size: 0.9rem;
-              padding: 0.3rem 0.8rem;
-              border-radius: 4px;
-              background: rgba(0,255,65,0.2);
-              border: 1px solid rgba(0,255,65,0.4);
-            ">${t('reports.accessibility.industryStandard', 'Industry Standard')}</span>
-          </div>
-          <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
-            ${t('reports.accessibility.levelAADescription', 'The accepted legal and industry standard (ADA, Section 508, EN 301 549).')}
-          </p>
-          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
-            <ul style="color: #b0b0b0; font-size: 0.85rem; margin: 0; padding-left: 1.2rem; line-height: 1.8;">
-              <li>${t('reports.accessibility.reqColorContrast', 'Sufficient color contrast (4.5:1)')}</li>
-              <li>${t('reports.accessibility.reqFocusIndicators', 'Visible focus indicators')}</li>
-              <li>${t('reports.accessibility.reqContentReflows', 'Content reflows properly')}</li>
-              <li>${t('reports.accessibility.reqAllLevelA', 'All Level A requirements')}</li>
-            </ul>
-          </div>
-          <div style="margin-top: 1rem; text-align: center; color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">
-            ◉ ${t('reports.accessibility.score', 'Score')}: 80-94
-          </div>
-        </div>
-
-        <!-- Level AAA Card -->
-        <div class="wcag-level-card" style="
-          background: linear-gradient(135deg, rgba(0,217,255,0.15) 0%, rgba(0,217,255,0.05) 100%);
-          border: 2px solid ${currentLevel === 'AAA' ? '#00d9ff' : 'rgba(0,217,255,0.3)'};
-          border-radius: 12px;
-          padding: 1.5rem;
-          ${currentLevel === 'AAA' ? 'box-shadow: 0 0 20px rgba(0,217,255,0.3);' : ''}
-        ">
-          <div style="text-align: center; margin-bottom: 1rem;">
-            <div style="
-              width: 80px;
-              height: 80px;
-              margin: 0 auto;
-              border-radius: 50%;
-              background: #ffffff;
-              border: 3px solid #00d9ff;
-              display: flex;
-              align-items: center;
-              justify-content: center;
-              font-size: 1.5rem;
-              font-weight: 900;
-              color: #000000;
-              box-shadow: 0 0 15px rgba(0,217,255,0.4), 0 2px 8px rgba(0,0,0,0.15);
-            ">AAA</div>
-          </div>
-          <h3 style="color: #00d9ff; text-align: center; margin: 0 0 1rem 0; font-size: 1.2rem;">
-            ${t('reports.accessibility.levelAAA', 'Level AAA')}
-          </h3>
-          <div style="text-align: center; margin-bottom: 1rem;">
-            <span style="
-              color: #00d9ff;
-              font-size: 0.9rem;
-              padding: 0.3rem 0.8rem;
-              border-radius: 4px;
-              background: rgba(0,217,255,0.2);
-              border: 1px solid rgba(0,217,255,0.4);
-            ">${t('reports.accessibility.highestAccessibility', 'Highest Accessibility')}</span>
-          </div>
-          <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; line-height: 1.6; margin-bottom: 1rem;">
-            ${t('reports.accessibility.levelAAADescription', 'Highest conformance level. Addresses all accessibility requirements.')}
-          </p>
-          <div style="background: var(--r-surface-2, #F8FAFC); border-radius: 6px; padding: 1rem; margin-top: 1rem;">
-            <div style="color: var(--r-text-faint, #9CA3AF); font-size: 0.85rem; margin-bottom: 0.5rem; font-weight: 600;">${t('reports.accessibility.keyRequirements', 'Key Requirements')}:</div>
-            <ul style="color: #b0b0b0; font-size: 0.85rem; margin: 0; padding-left: 1.2rem; line-height: 1.8;">
-              <li>${t('reports.accessibility.reqSignLanguage', 'Sign language interpretation')}</li>
-              <li>${t('reports.accessibility.reqAudioDescriptions', 'Extended audio descriptions')}</li>
-              <li>${t('reports.accessibility.reqHighContrast', 'Very high contrast (7:1)')}</li>
-              <li>${t('reports.accessibility.reqAllLevelAAA', 'All Level A & AA requirements')}</li>
-            </ul>
-          </div>
-          <div style="margin-top: 1rem; text-align: center; color: var(--r-text-faint, #9CA3AF); font-size: 0.8rem;">
-            ◉ ${t('reports.accessibility.score', 'Score')}: 95-100
-          </div>
-        </div>
+        ${cardsHTML}
       </div>
 
       <!-- Current Level Status -->
       <div class="wcag-status-box" style="
-        background: linear-gradient(135deg, ${currentLevel === 'AAA' ? 'rgba(0,217,255,0.1)' : currentLevel === 'AA' ? 'rgba(0,255,65,0.1)' : currentLevel === 'A' ? 'rgba(255,215,0,0.1)' : 'rgba(255,68,68,0.1)'} 0%, rgba(0,0,0,0.05) 100%);
-        border: 2px solid ${currentLevel === 'AAA' ? '#00d9ff' : currentLevel === 'AA' ? '#00ff41' : currentLevel === 'A' ? '#ffd700' : '#ff4444'};
+        background: ${statusBgTint};
+        border: 2px solid ${statusColor};
         border-radius: 12px;
         padding: 1.5rem;
         text-align: center;
-        box-shadow: 0 4px 15px ${currentLevel === 'AAA' ? 'rgba(0,217,255,0.2)' : currentLevel === 'AA' ? 'rgba(0,255,65,0.2)' : currentLevel === 'A' ? 'rgba(255,215,0,0.2)' : 'rgba(255,68,68,0.2)'};
       ">
-        <h3 style="color: ${currentLevel === 'AAA' ? '#00d9ff' : currentLevel === 'AA' ? '#00ff41' : currentLevel === 'A' ? '#ffd700' : '#ff4444'}; margin: 0 0 1rem 0; font-size: 1.35rem;">
-          ${currentLevel === 'None' ? '✗ ' + t('reports.accessibility.notCompliant', 'Not Compliant') : '✓ ' + t('reports.accessibility.meetsWcagLevel', 'Meets WCAG Level {{level}}', {level: currentLevel})}
+        <h3 style="color: ${statusColor}; margin: 0 0 1rem 0; font-size: 1.25rem;">
+          ${currentLevel === 'None' ? t('reports.accessibility.notCompliant', 'Not Compliant') : t('reports.accessibility.meetsWcagLevel', 'Meets WCAG Level {{level}}', {level: currentLevel})}
         </h3>
-        <p style="color: var(--r-text-muted, #6B7280); font-size: 1rem; margin: 0;">
+        <p style="color: var(--r-text-muted, #6B7280); font-size: 0.95rem; margin: 0;">
           ${currentLevel === 'None' ? t('reports.accessibility.notCompliantDesc', 'This website does not meet minimum WCAG accessibility standards. Immediate improvements are needed.') :
             currentLevel === 'A' ? t('reports.accessibility.levelAStatus', 'This website meets minimum accessibility standards but has room for improvement to reach the industry-standard Level AA.') :
             currentLevel === 'AA' ? t('reports.accessibility.levelAAStatus', 'This website meets industry-standard accessibility requirements. Consider implementing AAA enhancements for optimal accessibility.') :
@@ -1149,9 +1400,9 @@ function createWCAGLevelsSection(results) {
         </p>
       </div>
 
-      <div class="wcag-note-box" style="margin-top: 1.5rem; padding: 1rem; background: rgba(138,43,226,0.05); border-radius: 8px; border-left: 3px solid #bb86fc;">
-        <p style="color: #bb86fc; font-size: 0.9rem; margin: 0; line-height: 1.6;">
-          <strong>ⓘ ${t('reports.common.note', 'Note')}:</strong> ${t('reports.accessibility.wcagNote', 'Level AA is the industry standard—it covers 90% of real user needs without excessive implementation cost. Level AAA is not always feasible for all content types.')}
+      <div class="wcag-note-box" style="margin-top: 1.5rem; padding: 1rem; background: var(--r-surface-2, #F8FAFC); border-radius: 8px; border-left: 3px solid var(--r-text-faint, #9CA3AF);">
+        <p style="color: var(--r-text-muted, #6B7280); font-size: 0.9rem; margin: 0; line-height: 1.6;">
+          <strong>${t('reports.common.note', 'Note')}:</strong> ${t('reports.accessibility.wcagNote', 'Level AA is the industry standard—it covers 90% of real user needs without excessive implementation cost. Level AAA is not always feasible for all content types.')}
         </p>
       </div>
     </div>
@@ -1412,22 +1663,21 @@ function userHasPro() {
 
 function renderLockedProPreview(title = '', previewLines = []) {
   const reportId = document.body?.getAttribute('data-report-id') || '';
-  const displayTitle = title || t('reports.common.proContent', 'Pro content');
-  const lines = previewLines.length ? previewLines : [t('reports.common.recommendationsPreview', 'Recommendations preview'), t('reports.common.codeFixesPreview', 'Code fixes preview')];
+  if (window.ProReportBlock && typeof window.ProReportBlock.renderUnlockPrompt === 'function') {
+    return window.ProReportBlock.renderUnlockPrompt({ context: 'accessibility', reportId });
+  }
+  // Fallback matching ProReportBlock.renderUnlockPrompt() style
   return `
-    <div class="pro-locked">
-      <div class="pro-locked__header">
-        <span class="pro-pill">PRO</span>
-        <span>${displayTitle}</span>
+    <div class="pro-report-block__unlock-prompt" data-locked-overlay>
+      <div class="pro-report-block__unlock-header">
+        <span class="pro-report-block__unlock-icon" aria-hidden="true"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0110 0v4"/></svg></span>
+        <span class="pro-report-block__unlock-text">${t('reports.common.unlockThisReport', 'Unlock this report')}</span>
       </div>
-      <ul class="pro-locked__list">
-        ${lines.slice(0, 2).map(line => `<li>${line}</li>`).join('')}
-      </ul>
-      <div class="pro-locked__blur"></div>
-      <div class="pro-locked__buttons">
-        <button class="pro-locked__unlock pro-locked__unlock--primary" data-buy-single-report${reportId ? ` data-report-id="${reportId}"` : ''} data-context="fixes">${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
-        <button class="pro-locked__unlock pro-locked__unlock--secondary" data-open-pricing-modal${reportId ? ` data-report-id="${reportId}"` : ''} data-context="fixes">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
+      <div class="pro-report-block__unlock-buttons">
+        <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--primary" data-buy-single-report data-context="accessibility"${reportId ? ` data-report-id="${reportId}"` : ''}>${t('reports.common.unlockFor5', 'Unlock for $5')}</button>
+        <button class="pro-report-block__unlock-btn pro-report-block__unlock-btn--secondary" data-open-pricing-modal data-context="accessibility">${t('reports.common.goPro30', 'Go Pro — $30/mo')}</button>
       </div>
+      <p class="pro-report-block__unlock-hint">${t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}</p>
     </div>
   `;
 }
