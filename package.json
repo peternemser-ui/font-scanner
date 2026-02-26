@@ -19,7 +19,9 @@
     "format": "prettier --write src/",
     "i18n:audit": "node scripts/i18n-audit.js",
     "db:migrate": "node scripts/migrate-sqlite-to-pg.js",
-    "db:verify": "node scripts/verify-migration.js"
+    "db:verify": "node scripts/verify-migration.js",
+    "load-test": "node scripts/load-test.js",
+    "load-test:full": "node scripts/load-test.js --suite full --duration 30"
   },
   "keywords": [
     "font",
@@ -76,6 +78,7 @@
   },
   "devDependencies": {
     "@types/node": "^20.5.0",
+    "autocannon": "^8.0.0",
     "chai": "^4.5.0",
     "eslint": "^8.47.0",
     "jest": "^29.6.4",

@@ -27,14 +27,26 @@ const JWT_SECRET = config.jwt.secret;
 
 const isDev = process.env.NODE_ENV !== 'production';
 
+/**
+ * Parse a tier limit from env var. Returns the env value as int, or the default.
+ * -1 means unlimited. In dev mode, defaults are always -1 (unlimited).
+ */
+function tierVal(envKey, prodDefault) {
+  const envVal = process.env[envKey];
+  if (envVal !== undefined) return parseInt(envVal, 10);
+  return isDev ? -1 : prodDefault;
+}
+
+// All tier limits are overridable via env vars:
+//   RL_{LIMITER}_{TIER}  e.g. RL_SCAN_ANON=5, RL_GLOBAL_FREE=1000
 const TIER_LIMITS = {
-  //                   anonymous   free   pro
-  global:            {  anon: isDev ? -1 : 300, free: isDev ? -1 : 500, pro: -1 },
-  scan:              {  anon: isDev ? -1 :   3, free: isDev ? -1 :  10, pro: -1 },
-  competitiveAnalysis:{  anon: isDev ? -1 :   1, free: isDev ? -1 :   2, pro: -1 },
-  download:          {  anon: isDev ? -1 :   5, free: isDev ? -1 :  20, pro: -1 },
-  contact:           {  anon: isDev ? -1 :   3, free: isDev ? -1 :   5, pro: -1 },
-  strict:            {  anon: isDev ? -1 :   5, free: isDev ? -1 :   5, pro: -1 },
+  //                   anonymous                          free                           pro
+  global:            { anon: tierVal('RL_GLOBAL_ANON', 300),  free: tierVal('RL_GLOBAL_FREE', 500),  pro: tierVal('RL_GLOBAL_PRO', -1) },
+  scan:              { anon: tierVal('RL_SCAN_ANON',     3),  free: tierVal('RL_SCAN_FREE',    10),  pro: tierVal('RL_SCAN_PRO',   -1) },
+  competitiveAnalysis:{ anon: tierVal('RL_COMPETITIVE_ANON', 1), free: tierVal('RL_COMPETITIVE_FREE', 2), pro: tierVal('RL_COMPETITIVE_PRO', -1) },
+  download:          { anon: tierVal('RL_DOWNLOAD_ANON', 5),  free: tierVal('RL_DOWNLOAD_FREE', 20), pro: tierVal('RL_DOWNLOAD_PRO', -1) },
+  contact:           { anon: tierVal('RL_CONTACT_ANON',  3),  free: tierVal('RL_CONTACT_FREE',  5),  pro: tierVal('RL_CONTACT_PRO', -1) },
+  strict:            { anon: tierVal('RL_STRICT_ANON',   5),  free: tierVal('RL_STRICT_FREE',   5),  pro: tierVal('RL_STRICT_PRO',  -1) },
 };
 
 // ─── In-memory violation tracking ────────────────────────────────────────────

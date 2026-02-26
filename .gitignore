@@ -96,3 +96,6 @@ data/*.db-shm
 tests/*.db
 tests/*.db-wal
 tests/*.db-shm
+
+# Database backups
+backups/
