@@ -108,7 +108,7 @@ class BrokenLinkService {
             // Wait for JS rendering on first page (detect JS-heavy sites)
             if (pagesScanned === 1) {
               // Wait for body to have content and give JS time to render
-              await page.waitForTimeout(300);
+              await new Promise(r => setTimeout(r, 300));
 
               // Check if page might be JS-rendered (few initial links)
               const initialLinkCount = await page.evaluate(() =>
@@ -117,7 +117,7 @@ class BrokenLinkService {
 
               if (initialLinkCount < 5) {
                 logger.info('Few links found initially, waiting for JS rendering...');
-                await page.waitForTimeout(1500);
+                await new Promise(r => setTimeout(r, 1500));
               }
             }
             

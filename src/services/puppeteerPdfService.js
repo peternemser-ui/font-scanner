@@ -580,7 +580,7 @@ async function generatePdfFromUrl(options) {
             }
           }, reportData, reportType);
           logger.info('Force-display result', displayResult);
-          await page.waitForTimeout(3000);
+          await new Promise(r => setTimeout(r, 3000));
         }
 
         // 13b. Ensure locale is correct: if i18n loaded but report rendered with
@@ -682,7 +682,7 @@ async function generatePdfFromUrl(options) {
         logger.info('Locale check after render', localeCheck);
         if (localeCheck?.reRendered) {
           // Wait for re-rendered content to settle
-          await page.waitForTimeout(2000);
+          await new Promise(r => setTimeout(r, 2000));
         }
 
         // 14. Wait for fonts
@@ -690,7 +690,7 @@ async function generatePdfFromUrl(options) {
           { timeout: 10000 }).catch(() => logger.warn('Fonts timed out'));
 
         // 15. Wait for charts/images to settle
-        await page.waitForTimeout(2000);
+        await new Promise(r => setTimeout(r, 2000));
 
         // 16. Convert all <canvas> to static <img> (Chart.js charts fail in PDF)
         const canvasCount = await page.evaluate(() => {
@@ -819,7 +819,7 @@ async function generatePdfFromUrl(options) {
         logger.info('Accordions expanded', { count: accordionCount });
 
         // 19. Wait for lazy content to render
-        await page.waitForTimeout(1000);
+        await new Promise(r => setTimeout(r, 1000));
 
         // 19b. Second-pass: force-expand any remaining fix/recommendation sections
         await page.evaluate(() => {
@@ -865,7 +865,7 @@ async function generatePdfFromUrl(options) {
             el.style.opacity = '1';
           });
         });
-        await page.waitForTimeout(500);
+        await new Promise(r => setTimeout(r, 500));
 
         // 20. Remove chrome elements from DOM (belt-and-suspenders with CSS hiding)
         const removeCount = await page.evaluate(() => {
@@ -1198,7 +1198,7 @@ async function generatePdfFromUrl(options) {
         logger.info('DOM walk light mode applied');
 
         // 23. Wait for final paint
-        await page.waitForTimeout(500);
+        await new Promise(r => setTimeout(r, 500));
 
         // Log captured console errors
         if (consoleMessages.length > 0) {
@@ -1365,7 +1365,7 @@ async function generatePdfFromTemplate(options) {
         logger.info('Template image loading results', { imageStatus });
 
         // 11. Brief settle time
-        await page.waitForTimeout(500);
+        await new Promise(r => setTimeout(r, 500));
 
         // 12. Generate PDF
         const footerHtml = buildPdfFooter(lang, reportType, analyzedUrl);

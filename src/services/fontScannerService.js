@@ -136,7 +136,7 @@ class FontScannerService {
 
       // Wait for fonts to load (reduced wait time)
       try {
-        await page.waitForTimeout(1500); // Reduced from 3000ms to 1500ms
+        await new Promise(r => setTimeout(r, 1500)); // Reduced from 3000ms to 1500ms
 
         // Try to wait for fonts to be ready
         await page.evaluate(() => {

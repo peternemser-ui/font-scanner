@@ -541,7 +541,7 @@ class SEOAnalyzer {
     
     for (const viewport of viewports) {
       await page.setViewport({ width: viewport.width, height: viewport.height });
-      await page.waitForTimeout(100); // Allow reflow
+      await new Promise(r => setTimeout(r, 100)); // Allow reflow
       
       const metrics = await page.evaluate(() => {
         return {

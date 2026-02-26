@@ -67,7 +67,7 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
         await page.goto(url, { waitUntil: 'networkidle2', timeout: 20000 });
 
         // Additional settle time for late styles/layout/images
-        await page.waitForTimeout(500);
+        await new Promise(r => setTimeout(r, 500));
 
         await page.screenshot({
           path: screenshotPath,

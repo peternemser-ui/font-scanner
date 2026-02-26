@@ -62,7 +62,7 @@ class PerformanceSnapshotAnalyzer {
         });
 
         // Wait for additional resources to load (but don't require network idle)
-        await page.waitForTimeout(3000);
+        await new Promise(r => setTimeout(r, 3000));
 
         const responseTime = Date.now() - startNav;
         
