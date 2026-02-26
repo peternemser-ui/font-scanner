@@ -77,6 +77,11 @@ class AuthService {
   async register(email, password) {
     const db = getDatabase();
 
+    // Validate email format
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
+      throw new Error('Invalid email format');
+    }
+
     // Normalize email
     email = email.toLowerCase().trim();
 

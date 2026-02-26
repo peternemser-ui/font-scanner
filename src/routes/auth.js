@@ -32,7 +32,17 @@ router.post('/register', async (req, res) => {
       token: result.token
     });
   } catch (error) {
-    res.status(400).json({ error: error.message });
+    // Only expose known validation messages, not internal errors
+    const safeMessages = [
+      'Email already registered',
+      'Invalid email format',
+      'Password must be at least 8 characters',
+      'Password must contain at least one uppercase letter',
+      'Password must contain at least one lowercase letter',
+      'Password must contain at least one number',
+    ];
+    const message = safeMessages.includes(error.message) ? error.message : 'Registration failed';
+    res.status(400).json({ error: message });
   }
 });
 
@@ -64,7 +74,8 @@ router.post('/login', async (req, res) => {
       token: result.token
     });
   } catch (error) {
-    res.status(401).json({ error: error.message });
+    // Always return generic message to prevent user enumeration
+    res.status(401).json({ error: 'Invalid email or password' });
   }
 });
 

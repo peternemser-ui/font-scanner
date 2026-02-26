@@ -4,6 +4,9 @@
 
 const { getDatabase } = require('../db');
 const { v4: uuidv4 } = require('uuid');
+const { createLogger } = require('../utils/logger');
+
+const logger = createLogger('ScanWorker');
 
 class ScanWorker {
   constructor(queue) {
@@ -20,7 +23,7 @@ class ScanWorker {
       try {
         await this.processJob(job);
       } catch (error) {
-        console.error(`Worker error for ${job.scanId}:`, error);
+        logger.error('Worker error', { scanId: job.scanId, error: error.message });
         await this.queue.fail(job.scanId, error);
       }
     });
@@ -69,7 +72,7 @@ class ScanWorker {
       await this.queue.complete(scanId, aggregatedResults);
 
     } catch (error) {
-      console.error(`❌ Worker failed for ${scanId}:`, error);
+      logger.error('Worker failed', { scanId, error: error.message });
 
       // Update scan status to failed
       await this.updateScanStatus(scanId, 'failed', 0, error.message);
@@ -110,7 +113,7 @@ class ScanWorker {
           [scanId, pageUrl, 200]
         );
       } catch (error) {
-        console.error(`Failed to save crawled page ${pageUrl}:`, error);
+        logger.error('Failed to save crawled page', { pageUrl, error: error.message });
       }
     }
 
@@ -178,7 +181,7 @@ class ScanWorker {
         );
 
       } catch (error) {
-        console.error(`Error analyzing ${pageUrl} with ${analyzerType}:`, error);
+        logger.error('Error analyzing page', { pageUrl, analyzerType, error: error.message });
         results.push({
           page: pageUrl,
           error: error.message

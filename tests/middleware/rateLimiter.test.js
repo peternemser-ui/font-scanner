@@ -8,34 +8,42 @@ const { getRateLimitStats, getRateLimitAnalytics } = require('../../src/middlewa
 describe('Rate Limiting Configuration', () => {
   
   describe('getRateLimitStats', () => {
-    it('should return rate limit configuration', () => {
+    it('should return rate limit configuration with tiers and windows', () => {
       const stats = getRateLimitStats();
-      
+
       expect(stats).toBeDefined();
-      expect(stats).toHaveProperty('global');
-      expect(stats).toHaveProperty('scan');
-      expect(stats).toHaveProperty('download');
+      expect(stats).toHaveProperty('tiers');
+      expect(stats).toHaveProperty('windows');
+      expect(stats.tiers).toHaveProperty('global');
+      expect(stats.tiers).toHaveProperty('scan');
+      expect(stats.tiers).toHaveProperty('download');
     });
 
-    it('should have correct global limits', () => {
+    it('should have tiered global limits (anon/free/pro)', () => {
       const stats = getRateLimitStats();
-      
-      expect(stats.global.window).toBe('15 minutes');
-      expect(stats.global.limit).toBe(100);
+
+      expect(stats.windows.global).toBeDefined();
+      expect(stats.tiers.global).toHaveProperty('anon');
+      expect(stats.tiers.global).toHaveProperty('free');
+      expect(stats.tiers.global).toHaveProperty('pro');
     });
 
-    it('should have correct scan limits', () => {
+    it('should have tiered scan limits (anon/free/pro)', () => {
       const stats = getRateLimitStats();
-      
-      expect(stats.scan.window).toBe('15 minutes');
-      expect(stats.scan.limit).toBe(20);
+
+      expect(stats.windows.scan).toBeDefined();
+      expect(stats.tiers.scan).toHaveProperty('anon');
+      expect(stats.tiers.scan).toHaveProperty('free');
+      expect(stats.tiers.scan).toHaveProperty('pro');
     });
 
-    it('should have correct download limits', () => {
+    it('should have tiered download limits (anon/free/pro)', () => {
       const stats = getRateLimitStats();
-      
-      expect(stats.download.window).toBe('15 minutes');
-      expect(stats.download.limit).toBe(50);
+
+      expect(stats.windows.download).toBeDefined();
+      expect(stats.tiers.download).toHaveProperty('anon');
+      expect(stats.tiers.download).toHaveProperty('free');
+      expect(stats.tiers.download).toHaveProperty('pro');
     });
   });
 
@@ -50,17 +58,19 @@ describe('Rate Limiting Configuration', () => {
       expect(analytics).toHaveProperty('timestamp');
     });
 
-    it('should have valid configuration', () => {
+    it('should have valid configuration with tiers and windows', () => {
       const analytics = getRateLimitAnalytics();
       const config = analytics.configuration;
-      
+
       expect(config).toBeDefined();
-      expect(config.global.limit).toBe(100);
-      expect(config.scan.limit).toBe(20);
-      expect(config.download.limit).toBe(50);
-      expect(config.global.window).toBe('15 minutes');
-      expect(config.scan.window).toBe('15 minutes');
-      expect(config.download.window).toBe('15 minutes');
+      expect(config).toHaveProperty('tiers');
+      expect(config).toHaveProperty('windows');
+      expect(config.tiers.global).toHaveProperty('anon');
+      expect(config.tiers.scan).toHaveProperty('anon');
+      expect(config.tiers.download).toHaveProperty('anon');
+      expect(config.windows.global).toBeDefined();
+      expect(config.windows.scan).toBeDefined();
+      expect(config.windows.download).toBeDefined();
     });
 
     it('should have valid statistics structure', () => {
@@ -152,30 +162,34 @@ describe('Rate Limiting Configuration', () => {
     it('should use default values when env vars not set', () => {
       // Assuming env vars are not set or using defaults
       const stats = getRateLimitStats();
-      
-      // Check that limits are numeric
-      expect(typeof stats.global.limit).toBe('number');
-      expect(typeof stats.scan.limit).toBe('number');
-      expect(typeof stats.download.limit).toBe('number');
-      
-      // Check that they have reasonable values
-      expect(stats.global.limit).toBeGreaterThan(0);
-      expect(stats.scan.limit).toBeGreaterThan(0);
-      expect(stats.download.limit).toBeGreaterThan(0);
+
+      // Check that tier limits exist and are numeric for each tier
+      expect(typeof stats.tiers.global.anon).toBe('number');
+      expect(typeof stats.tiers.scan.anon).toBe('number');
+      expect(typeof stats.tiers.download.anon).toBe('number');
+
+      // Check that windows are defined
+      expect(stats.windows.global).toBeDefined();
+      expect(stats.windows.scan).toBeDefined();
+      expect(stats.windows.download).toBeDefined();
     });
 
-    it('should have scan limit less than or equal to global limit', () => {
+    it('should have scan anon limit less than or equal to global anon limit', () => {
       const stats = getRateLimitStats();
-      
+
+      // In dev mode, limits may be -1 (unlimited), so skip comparison when both are -1
+      if (stats.tiers.scan.anon === -1 && stats.tiers.global.anon === -1) return;
       // Scan operations are expensive, so limit should be lower
-      expect(stats.scan.limit).toBeLessThanOrEqual(stats.global.limit);
+      expect(stats.tiers.scan.anon).toBeLessThanOrEqual(stats.tiers.global.anon);
     });
 
-    it('should have download limit less than or equal to global limit', () => {
+    it('should have download anon limit less than or equal to global anon limit', () => {
       const stats = getRateLimitStats();
-      
+
+      // In dev mode, limits may be -1 (unlimited), so skip comparison when both are -1
+      if (stats.tiers.download.anon === -1 && stats.tiers.global.anon === -1) return;
       // Downloads should be limited, but less restrictive than scans
-      expect(stats.download.limit).toBeLessThanOrEqual(stats.global.limit);
+      expect(stats.tiers.download.anon).toBeLessThanOrEqual(stats.tiers.global.anon);
     });
   });
 

@@ -212,7 +212,7 @@ router.post(
     if (safeSuccessUrl) safeSuccessUrl = validateReturnUrl(safeSuccessUrl, requestHost);
     if (safeCancelUrl) safeCancelUrl = validateReturnUrl(safeCancelUrl, requestHost);
 
-    logger.info('Creating report payment', { reportType, url, email: email || null });
+    logger.info('Creating report payment', { reportType, url, hasEmail: !!email });
 
     const session = await stripeService.createOneTimePayment(
       reportType,

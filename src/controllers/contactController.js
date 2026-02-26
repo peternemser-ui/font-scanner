@@ -60,7 +60,7 @@ const submitContact = asyncHandler(async (req, res) => {
   logger.info('Contact message received', {
     requestId,
     hasName: !!cleanName,
-    email: cleanEmail,
+    hasEmail: !!cleanEmail,
     hasUrl: !!cleanUrl,
   });
 

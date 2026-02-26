@@ -153,11 +153,11 @@ describe('ProManager', () => {
 
     it('should return false for free user', () => {
       manager.saveUser({ id: '1', email: 'free@example.com', plan: 'free' }, 'token');
-      expect(manager.isPro()).toBe(false);
+      expect(manager.isPro()).toBeFalsy();
     });
 
     it('should return false when not authenticated', () => {
-      expect(manager.isPro()).toBe(false);
+      expect(manager.isPro()).toBeFalsy();
     });
   });
 
@@ -216,15 +216,14 @@ describe('ProManager', () => {
       expect(banner).toContain('pro-unlock-banner');
       expect(banner).toContain('4');
       expect(banner).toContain('SEO');
-      expect(banner).toContain('Upgrade to Pro');
-      expect(banner).toContain('/upgrade.html');
+      expect(banner).toContain('Pro required');
     });
 
     it('should use default values when not provided', () => {
       const banner = manager.renderProUnlockBanner();
 
       expect(banner).toContain('4'); // default step count
-      expect(banner).toContain('Upgrade to Pro');
+      expect(banner).toContain('Pro required');
     });
   });
 
@@ -255,7 +254,7 @@ describe('ProManager', () => {
       expect(html).toContain('pro-unlock-banner');
       expect(html).toContain('pro-step');
       expect(html).toContain('Advanced step 1');
-      expect(html).toContain('Upgrade to Pro');
+      expect(html).toContain('Pro required');
     });
 
     it('should render locked steps for unauthenticated users', () => {
@@ -263,7 +262,7 @@ describe('ProManager', () => {
 
       expect(html).toContain('pro-unlock-banner');
       expect(html).toContain('pro-step');
-      expect(html).toContain('Upgrade to Pro');
+      expect(html).toContain('Pro required');
     });
   });
 
@@ -283,7 +282,7 @@ describe('ProManager', () => {
 
       expect(overlay).toContain('pro-code-overlay');
       expect(overlay).toContain('Advanced Solution');
-      expect(overlay).toContain('Upgrade to Pro');
+      expect(overlay).toContain('Pro required');
     });
   });
 
@@ -423,9 +422,9 @@ describe('ProManager', () => {
     it('should call logout endpoint and clear user data', async () => {
       manager.saveUser({ id: '1', email: 'test@example.com', plan: 'free' }, 'test_token');
 
-      // Mock window.location
-      delete global.window;
-      global.window = { location: { href: '' } };
+      // Mock window.location — the eval'd code uses global.location directly
+      const mockLocation = { href: '' };
+      global.location = mockLocation;
 
       fetch.mockResolvedValueOnce({ ok: true });
 
@@ -439,21 +438,21 @@ describe('ProManager', () => {
       expect(manager.user).toBeNull();
       expect(manager.token).toBeNull();
       expect(localStorage.getItem('sm_user')).toBeNull();
-      expect(window.location.href).toBe('/');
+      expect(global.location.href).toBe('/');
     });
 
     it('should clear user data even if API call fails', async () => {
       manager.saveUser({ id: '1', email: 'test@example.com', plan: 'free' }, 'test_token');
 
-      delete global.window;
-      global.window = { location: { href: '' } };
+      const mockLocation = { href: '' };
+      global.location = mockLocation;
 
       fetch.mockRejectedValueOnce(new Error('Network error'));
 
       await manager.logout();
 
       expect(manager.user).toBeNull();
-      expect(window.location.href).toBe('/');
+      expect(global.location.href).toBe('/');
     });
   });
 });

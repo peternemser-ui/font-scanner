@@ -78,13 +78,28 @@ class TestDatabase {
   async clearData() {
     if (!this.db) return;
 
-    // Clear tables in order respecting foreign key constraints
+    // Clear tables in order respecting foreign key constraints.
+    // Child tables (those with FK references to users) must be cleared BEFORE users.
     const tables = [
+      // Child tables first (FK → users or FK → scans)
+      'usage_tracking',
+      'scan_usage',
+      'scan_results',
+      'crawled_pages',
+      'password_resets',
+      'api_keys',
+      'recommendation_feedback',
+      'ai_recommendations',
+      'benchmark_stats',
+      'admin_activity_log',
+      'contact_messages',
       'sessions',
       'entitlements',
-      'stripe_events',
       'report_purchases',
       'billing_sessions',
+      'stripe_events',
+      'scans',
+      // Parent table last
       'users'
     ];
 

@@ -361,8 +361,8 @@ app.use(compression());
 // Cookie parsing (required for anon_id usage tracking)
 app.use(cookieParser());
 
-// Logging
-app.use(morgan('combined'));
+// HTTP request logging — custom format that excludes auth headers and sensitive data
+app.use(morgan(':remote-addr :method :url :status :res[content-length] - :response-time ms'));
 
 // Request ID tracking - adds unique ID to each request
 app.use(requestIdMiddleware);
@@ -537,11 +537,25 @@ app.get('/api/version', (req, res) => {
 });
 
 // Readiness probe - checks if app is ready to accept traffic
-app.get('/api/ready', (req, res) => {
+// Verifies database connectivity so K8s/load balancers don't route to a broken instance
+app.get('/api/ready', async (req, res) => {
   if (isShuttingDown) {
     return res.status(503).json({
       status: 'NOT_READY',
       reason: 'Server is shutting down',
+      timestamp: new Date().toISOString()
+    });
+  }
+
+  // Check database connectivity
+  try {
+    const db = getDatabase();
+    await db.get('SELECT 1');
+  } catch (dbError) {
+    logger.error('Readiness check failed: database unreachable', { error: dbError.message });
+    return res.status(503).json({
+      status: 'NOT_READY',
+      reason: 'Database unreachable',
       timestamp: new Date().toISOString()
     });
   }

@@ -64,11 +64,14 @@ function request(url, options = {}) {
   });
 }
 
-/** Check if server is reachable. */
+/** Check if the Site Mechanic server is reachable (not just any server on the port). */
 async function isServerRunning() {
   try {
-    const res = await request(`${BASE_URL}/`, { method: 'GET' });
-    return res.status < 500;
+    const res = await request(`${BASE_URL}/api/health`, { method: 'GET' });
+    // Only consider the server available if it responds with 200 and looks like our app
+    if (res.status !== 200) return false;
+    const body = res.body.toString();
+    return body.includes('ok') || body.includes('healthy') || body.includes('status');
   } catch {
     return false;
   }
@@ -180,9 +183,8 @@ if (typeof describe === 'function') {
       }, 90000); // 90s timeout
     }
 
-    it('should not include lang in POST body (server uses DB locale)', () => {
-      // Static assertion: verify the client utility doesn't send lang
-      // This is a design-level check, not a runtime check
+    it('should include lang in POST body for locale-aware PDF generation', () => {
+      // Static assertion: verify the client utility sends the current language
       const fs = require('fs');
       const path = require('path');
       const utilityPath = path.join(__dirname, '..', 'src', 'public', 'pdf-export-utility.js');
@@ -190,10 +192,11 @@ if (typeof describe === 'function') {
 
       // Find the fetch body JSON.stringify block
       const fetchBodyMatch = source.match(/body:\s*JSON\.stringify\(\{[\s\S]*?\}\)/);
+      expect(fetchBodyMatch).toBeTruthy();
       if (fetchBodyMatch) {
         const fetchBody = fetchBodyMatch[0];
-        // Ensure 'lang:' is NOT in the body (it should be removed)
-        expect(fetchBody).not.toMatch(/\blang\s*:/);
+        // Verify lang is included in the body for locale-aware PDF generation
+        expect(fetchBody).toMatch(/\blang\s*:/);
       }
     });
 

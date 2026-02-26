@@ -30,7 +30,12 @@ router.post('/stripe', express.raw({ type: 'application/json' }), async (req, re
     } else {
       // No webhook secret configured - accept unverified (dev/testing only)
       logger.warn('No webhook secret configured - accepting unverified webhook (non-production)');
-      event = JSON.parse(req.body.toString());
+      try {
+        event = JSON.parse(req.body.toString());
+      } catch (parseError) {
+        logger.error('Failed to parse webhook body as JSON', { error: parseError.message });
+        return res.status(400).send('Invalid JSON body');
+      }
     }
   } catch (error) {
     logger.error('Webhook signature verification failed', {

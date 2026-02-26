@@ -4,6 +4,9 @@
  */
 
 const EventEmitter = require('events');
+const { createLogger } = require('../utils/logger');
+
+const logger = createLogger('ScanQueue');
 
 class ScanQueue extends EventEmitter {
   constructor() {
@@ -61,7 +64,7 @@ class ScanQueue extends EventEmitter {
       // Worker will handle the actual processing
       this.emit('job:process', job);
     } catch (error) {
-      console.error(`❌ Error processing scan ${job.scanId}:`, error);
+      logger.error('Error processing scan', { scanId: job.scanId, error: error.message });
       await this.handleJobFailure(job, error);
     }
   }
@@ -105,7 +108,7 @@ class ScanQueue extends EventEmitter {
     job.attempts++;
     job.lastError = error.message;
 
-    console.error(`❌ Scan failed: ${job.scanId} (attempt ${job.attempts}/${job.maxAttempts})`);
+    logger.error('Scan failed', { scanId: job.scanId, attempt: job.attempts, maxAttempts: job.maxAttempts });
 
     if (job.attempts < job.maxAttempts) {
       // Retry with exponential backoff
@@ -123,7 +126,7 @@ class ScanQueue extends EventEmitter {
       this.processing.delete(job.scanId);
       job.failedAt = new Date();
 
-      console.error(`💀 Scan permanently failed: ${job.scanId}`);
+      logger.error('Scan permanently failed', { scanId: job.scanId });
 
       this.emit('job:failed', job);
 

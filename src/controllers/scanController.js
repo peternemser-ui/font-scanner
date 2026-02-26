@@ -468,8 +468,11 @@ const downloadReport = asyncHandler(async (req, res) => {
 
   logger.info('Report downloaded', { filename });
 
+  // Sanitize filename for Content-Disposition (prevent header injection)
+  const safeFilename = filename.replace(/[^\w.-]/g, '_');
+
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}"`);
 
   const fileStream = fs.createReadStream(filepath);
   fileStream.pipe(res);

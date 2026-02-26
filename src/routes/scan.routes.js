@@ -6,6 +6,9 @@ const express = require('express');
 const router = express.Router();
 const { v4: uuidv4 } = require('uuid');
 const { z } = require('zod');
+const { createLogger } = require('../utils/logger');
+
+const logger = createLogger('ScanRoutes');
 const { getDatabase } = require('../db');
 const { getQueue } = require('../queue/scanQueue');
 const stripeService = require('../services/stripeService');
@@ -117,7 +120,7 @@ router.post('/', optionalAuth, checkScanQuota, validate(createScanSchema), enfor
     res.status(202).json(response);
 
   } catch (error) {
-    console.error('Error creating scan:', error);
+    logger.error('Error creating scan', { error: error.message });
     res.status(500).json({
       error: 'Failed to create scan',
       message: error.message
@@ -193,7 +196,7 @@ router.get('/:scanId', async (req, res) => {
     res.json(response);
 
   } catch (error) {
-    console.error('Error fetching scan:', error);
+    logger.error('Error fetching scan', { error: error.message });
     res.status(500).json({
       error: 'Failed to fetch scan',
       message: error.message
@@ -251,7 +254,7 @@ router.delete('/:scanId', async (req, res) => {
     }
 
   } catch (error) {
-    console.error('Error cancelling scan:', error);
+    logger.error('Error cancelling scan', { error: error.message });
     res.status(500).json({
       error: 'Failed to cancel scan',
       message: error.message
@@ -337,7 +340,7 @@ router.get('/:scanId/pdf', optionalAuth, async (req, res) => {
     res.setHeader('Content-Length', pdfBuffer.length);
     res.send(pdfBuffer);
   } catch (error) {
-    console.error('Error generating PDF:', error);
+    logger.error('Error generating PDF', { error: error.message });
     res.status(500).json({
       error: 'Failed to generate PDF',
       message: error.message
@@ -384,7 +387,7 @@ router.post('/language-audit', validate(languageAuditSchema), optionalAuth, asyn
     res.json(result);
 
   } catch (error) {
-    console.error('Language audit error:', error);
+    logger.error('Language audit error', { error: error.message });
     res.status(500).json({
       error: 'Language audit failed',
       message: error.message

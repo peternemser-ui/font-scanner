@@ -539,8 +539,9 @@ const generatePDF = asyncHandler(async (req, res) => {
       });
     }
 
+    const safeFilename1 = (result.filename || 'report.pdf').replace(/[^\w.-]/g, '_');
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename1}"`);
 
     const fileStream = fs.createReadStream(result.filepath);
     fileStream.pipe(res);
@@ -643,8 +644,9 @@ const renderPDF = asyncHandler(async (req, res) => {
     // Stream the PDF file
     const fs = require('fs');
 
+    const safeFilename2 = (result.filename || 'report.pdf').replace(/[^\w.-]/g, '_');
     res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="${result.filename}"`);
+    res.setHeader('Content-Disposition', `attachment; filename="${safeFilename2}"`);
 
     const fileStream = fs.createReadStream(result.filepath);
     fileStream.pipe(res);

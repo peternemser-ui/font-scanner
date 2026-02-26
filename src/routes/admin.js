@@ -8,6 +8,9 @@ const router = express.Router();
 const { requireAuth } = require('../middleware/requireAuth');
 const { requireAdmin, logAdminAction } = require('../middleware/requireAdmin');
 const { getDatabase } = require('../db');
+const { createLogger } = require('../utils/logger');
+
+const logger = createLogger('AdminRoutes');
 const bcrypt = require('bcryptjs');
 const { v4: uuidv4 } = require('uuid');
 const { PRICING } = require('../config/pricing');
@@ -77,7 +80,7 @@ router.get('/dashboard-stats', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching admin stats:', error);
+    logger.error('Error fetching admin stats', { error: error.message });
     res.status(500).json({ error: 'Failed to fetch dashboard statistics' });
   }
 });
@@ -121,7 +124,7 @@ router.get('/billing-sessions', async (req, res) => {
       sessions
     });
   } catch (error) {
-    console.error('Error fetching billing sessions:', error);
+    logger.error('Error fetching billing sessions', { error: error.message });
     res.status(500).json({ error: 'Failed to fetch billing sessions' });
   }
 });
@@ -133,10 +136,10 @@ router.get('/billing-sessions', async (req, res) => {
 router.get('/users', async (req, res) => {
   try {
     const db = getDatabase();
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 50;
+    const page = Math.max(parseInt(req.query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
     const offset = (page - 1) * limit;
-    const search = req.query.search || '';
+    const search = (req.query.search || '').slice(0, 200);
 
     let query = 'SELECT id, email, plan, is_admin, created_at, last_login, stripe_customer_id FROM users';
     let countQuery = 'SELECT COUNT(*) as count FROM users';
@@ -181,7 +184,7 @@ router.get('/users', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching users:', error);
+    logger.error('Error fetching users', { error: error.message });
     res.status(500).json({ error: 'Failed to fetch users' });
   }
 });
@@ -239,7 +242,7 @@ router.get('/users/:userId', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching user details:', error);
+    logger.error('Error fetching user details', { error: error.message });
     res.status(500).json({ error: 'Failed to fetch user details' });
   }
 });
@@ -252,6 +255,8 @@ router.patch('/users/:userId', async (req, res) => {
   try {
     const db = getDatabase();
     const { userId } = req.params;
+    // Whitelist allowed fields to prevent unexpected property injection
+    const ALLOWED_PLANS = ['free', 'pro'];
     const { plan, is_admin, email } = req.body;
 
     const user = await db.get('SELECT * FROM users WHERE id = ?', [userId]);
@@ -263,6 +268,9 @@ router.patch('/users/:userId', async (req, res) => {
     const params = [];
 
     if (plan !== undefined) {
+      if (!ALLOWED_PLANS.includes(plan)) {
+        return res.status(400).json({ error: `Invalid plan. Must be one of: ${ALLOWED_PLANS.join(', ')}` });
+      }
       updates.push('plan = ?');
       params.push(plan);
     }
@@ -273,6 +281,9 @@ router.patch('/users/:userId', async (req, res) => {
     }
 
     if (email !== undefined) {
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ error: 'Invalid email format' });
+      }
       // Check if email already exists
       const existing = await db.get('SELECT id FROM users WHERE email = ? AND id != ?', [email, userId]);
       if (existing) {
@@ -304,7 +315,7 @@ router.patch('/users/:userId', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error updating user:', error);
+    logger.error('Error updating user', { error: error.message });
     res.status(500).json({ error: 'Failed to update user' });
   }
 });
@@ -340,7 +351,7 @@ router.delete('/users/:userId', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error deleting user:', error);
+    logger.error('Error deleting user', { error: error.message });
     res.status(500).json({ error: 'Failed to delete user' });
   }
 });
@@ -356,6 +367,10 @@ router.post('/testing/create-user', async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ error: 'Invalid email format' });
     }
 
     // Check if user exists
@@ -387,7 +402,7 @@ router.post('/testing/create-user', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error creating test user:', error);
+    logger.error('Error creating test user', { error: error.message });
     res.status(500).json({ error: 'Failed to create test user' });
   }
 });
@@ -421,7 +436,7 @@ router.post('/testing/reset-usage/:userId', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error resetting usage:', error);
+    logger.error('Error resetting usage', { error: error.message });
     res.status(500).json({ error: 'Failed to reset usage' });
   }
 });
@@ -433,7 +448,7 @@ router.post('/testing/reset-usage/:userId', async (req, res) => {
 router.get('/activity-log', async (req, res) => {
   try {
     const db = getDatabase();
-    const limit = parseInt(req.query.limit) || 100;
+    const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 100, 1), 500);
 
     const logs = await db.all(
       `SELECT
@@ -454,7 +469,7 @@ router.get('/activity-log', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Error fetching activity log:', error);
+    logger.error('Error fetching activity log', { error: error.message });
     res.status(500).json({ error: 'Failed to fetch activity log' });
   }
 });
@@ -506,7 +521,7 @@ router.get('/tests/suites', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error listing test suites:', error);
+    logger.error('Error listing test suites', { error: error.message });
     res.status(500).json({ error: 'Failed to list test suites' });
   }
 });
@@ -584,7 +599,7 @@ router.post('/tests/run', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('Error running tests:', error);
+    logger.error('Error running tests', { error: error.message });
     res.status(500).json({ 
       error: 'Failed to run tests',
       message: error.message,
@@ -815,7 +830,7 @@ router.get('/analytics', async (req, res) => {
       planDistribution
     });
   } catch (error) {
-    console.error('Error fetching analytics:', error);
+    logger.error('Error fetching analytics', { error: error.message });
     res.status(500).json({ error: 'Failed to fetch analytics' });
   }
 });

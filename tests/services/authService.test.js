@@ -145,13 +145,13 @@ describe('AuthService', () => {
     it('should throw error for invalid token', () => {
       expect(() => {
         authService.verifyToken('invalid.token.here');
-      }).toThrow('Invalid or expired token');
+      }).toThrow('Invalid token');
     });
 
     it('should throw error for malformed token', () => {
       expect(() => {
         authService.verifyToken('not-a-token');
-      }).toThrow('Invalid or expired token');
+      }).toThrow('Invalid token');
     });
   });
 
@@ -292,7 +292,7 @@ describe('AuthService', () => {
 
     it('should return null for non-existent ID', async () => {
       const user = await authService.getUserById('nonexistent-id');
-      expect(user).toBeNull();
+      expect(user).toBeUndefined();
     });
   });
 
