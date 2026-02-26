@@ -5,10 +5,25 @@
 
 const { PRICING, getFreeLimits, getPlanLimits, getStripePriceId, getSingleReportPriceId, isPlanPro } = require('./pricing');
 
+// JWT secret — single source of truth for all consumers
+const DEV_JWT_FALLBACK = 'dev-only-secret-do-not-use-in-production';
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
+  throw new Error('JWT_SECRET environment variable must be set in production');
+}
+const EFFECTIVE_JWT_SECRET = JWT_SECRET || DEV_JWT_FALLBACK;
+
 const config = {
   // Server
   port: parseInt(process.env.PORT || '3000', 10),
   nodeEnv: process.env.NODE_ENV || 'development',
+
+  // JWT
+  jwt: {
+    secret: EFFECTIVE_JWT_SECRET,
+    algorithm: 'HS256',
+    expiresIn: process.env.JWT_EXPIRES_IN || '7d',
+  },
 
   // Logging
   logLevel: process.env.LOG_LEVEL || 'INFO',

@@ -2,6 +2,7 @@ const jwt = require('jsonwebtoken');
 const { getDatabase } = require('../db');
 const { createLogger } = require('../utils/logger');
 const { isSafeReportId } = require('../utils/reportId');
+const config = require('../config');
 
 const logger = createLogger('StripeService');
 
@@ -11,13 +12,6 @@ if (!STRIPE_SECRET_KEY && process.env.NODE_ENV === 'production') {
   throw new Error('STRIPE_SECRET_KEY environment variable must be set in production');
 }
 const stripe = require('stripe')(STRIPE_SECRET_KEY || 'sk_test_placeholder_dev_only');
-
-// JWT secret for entitlement tokens
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable must be set in production');
-}
-const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-secret-do-not-use-in-production';
 
 class StripeService {
   getBaseUrl(requestOrigin = null) {
@@ -116,8 +110,8 @@ class StripeService {
           ...payload,
           iss: 'site-mechanic',
         },
-        EFFECTIVE_JWT_SECRET,
-        { expiresIn: '30d' }
+        config.jwt.secret,
+        { algorithm: config.jwt.algorithm, expiresIn: '30d' }
       );
     } catch (e) {
       logger.warn('Failed to create entitlement token', { error: e.message });

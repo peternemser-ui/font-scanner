@@ -2,15 +2,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { getDatabase } = require('../db');
+const config = require('../config');
 
-// JWT_SECRET must be set in production
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable must be set in production');
-}
-const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-secret-do-not-use-in-production';
 const SALT_ROUNDS = 10;
-const JWT_EXPIRES_IN = '7d';
 
 class AuthService {
   /**
@@ -57,8 +51,8 @@ class AuthService {
         email: user.email,
         plan: user.plan || 'free'
       },
-      EFFECTIVE_JWT_SECRET,
-      { expiresIn: JWT_EXPIRES_IN }
+      config.jwt.secret,
+      { algorithm: config.jwt.algorithm, expiresIn: config.jwt.expiresIn }
     );
   }
 
@@ -68,7 +62,7 @@ class AuthService {
    */
   verifyToken(token) {
     try {
-      return jwt.verify(token, JWT_SECRET);
+      return jwt.verify(token, config.jwt.secret, { algorithms: [config.jwt.algorithm] });
     } catch (error) {
       if (error.name === 'TokenExpiredError') {
         throw new Error('Token expired');

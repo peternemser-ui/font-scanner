@@ -1,13 +1,7 @@
 const jwt = require('jsonwebtoken');
 const { getDatabase } = require('../db');
 const stripeService = require('../services/stripeService');
-
-// JWT_SECRET must be set in production
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET && process.env.NODE_ENV === 'production') {
-  throw new Error('JWT_SECRET environment variable must be set in production');
-}
-const EFFECTIVE_JWT_SECRET = JWT_SECRET || 'dev-only-secret-do-not-use-in-production';
+const config = require('../config');
 
 // Extended user fields including subscription data
 const USER_SELECT_FIELDS = `
@@ -28,7 +22,7 @@ async function requireAuth(req, res, next) {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, EFFECTIVE_JWT_SECRET);
+    const decoded = jwt.verify(token, config.jwt.secret, { algorithms: [config.jwt.algorithm] });
 
     // Verify user still exists - load full subscription data
     const db = getDatabase();
@@ -111,7 +105,7 @@ async function optionalAuth(req, res, next) {
     const authHeader = req.headers.authorization;
     if (authHeader && authHeader.startsWith('Bearer ')) {
       const token = authHeader.split(' ')[1];
-      const decoded = jwt.verify(token, EFFECTIVE_JWT_SECRET);
+      const decoded = jwt.verify(token, config.jwt.secret, { algorithms: [config.jwt.algorithm] });
 
       const db = getDatabase();
       const user = await db.get(

@@ -53,10 +53,7 @@ if (config.nodeEnv === 'production') {
     logger.error('CORS_ORIGIN must be set in production');
     process.exit(1);
   }
-  if (!process.env.JWT_SECRET) {
-    logger.error('JWT_SECRET must be set in production');
-    process.exit(1);
-  }
+  // JWT_SECRET check is handled by config/index.js at import time
   if (!process.env.STRIPE_SECRET_KEY) {
     logger.error('STRIPE_SECRET_KEY must be set in production');
     process.exit(1);
@@ -377,7 +374,8 @@ app.use((req, res, next) => {
     res.cookie('sm_url_lang', urlLang, {
       maxAge: 365 * 24 * 60 * 60 * 1000, // 1 year
       httpOnly: false, // Allow JS to read it
-      sameSite: 'lax'
+      sameSite: 'lax',
+      secure: process.env.NODE_ENV === 'production'
     });
 
     // Also set on request for API routes
@@ -441,8 +439,16 @@ app.use(express.static(path.join(__dirname, 'public'), { maxAge: STATIC_MAX_AGE 
 app.use('/reports', express.static(path.resolve(process.cwd(), config.reports.dir), { maxAge: STATIC_MAX_AGE }));
 
 // Routes
-// Liveness probe - checks if app is alive
+// Liveness probe - checks if app is alive (no internal details for public callers)
 app.get('/api/health', (req, res) => {
+  res.json({
+    status: 'OK',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Detailed health stats — admin only
+app.get('/api/health/details', requireAuth, requireAdmin, (req, res) => {
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString(),
@@ -471,7 +477,8 @@ const _versionInfo = (() => {
 })();
 
 app.get('/api/version', (req, res) => {
-  res.json(_versionInfo);
+  // Only expose version number publicly; git details are admin-only via /api/health/details
+  res.json({ version: _versionInfo.version });
 });
 
 // Readiness probe - checks if app is ready to accept traffic
@@ -492,7 +499,17 @@ app.get('/api/ready', (req, res) => {
 });
 
 // Prometheus metrics endpoint
-app.get('/metrics', metricsHandler);
+// Prometheus metrics — only from localhost/internal or authenticated admin
+app.get('/metrics', (req, res, next) => {
+  const ip = req.ip || req.connection.remoteAddress;
+  const isLocal = ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
+  if (isLocal) return next();
+  // Non-local requests must be authenticated admin
+  requireAuth(req, res, (err) => {
+    if (err) return res.status(401).json({ error: 'Unauthorized' });
+    requireAdmin(req, res, next);
+  });
+}, metricsHandler);
 
 // Rate limit stats endpoint (for monitoring — admin only)
 app.get('/api/rate-limits', requireAuth, requireAdmin, (req, res) => {
@@ -868,7 +885,7 @@ io.on('connection', (socket) => {
   socket.on('join-admin-health', async (token) => {
     try {
       const jwt = require('jsonwebtoken');
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || config.jwt?.secret || 'dev-secret');
+      const decoded = jwt.verify(token, config.jwt.secret, { algorithms: [config.jwt.algorithm] });
       const db = getDatabase();
       const user = await db.get('SELECT is_admin FROM users WHERE id = ?', [decoded.id || decoded.userId]);
       if (!user || !user.is_admin) {
