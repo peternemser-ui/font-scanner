@@ -47,16 +47,39 @@ const usageService = require('./services/usageService');
 
 const logger = createLogger('Server');
 
-// Production environment validation
-if (config.nodeEnv === 'production') {
-  if (!config.cors.origin) {
-    logger.error('CORS_ORIGIN must be set in production');
-    process.exit(1);
+// ─── Environment validation ──────────────────────────────────────────────────
+// Production: required vars are fatal. Development: warn for missing optional vars.
+{
+  const isProduction = config.nodeEnv === 'production';
+  const missing = [];
+
+  // --- Required in production (fatal) ---
+  if (isProduction) {
+    if (!config.cors.origin)              missing.push('CORS_ORIGIN');
+    // JWT_SECRET check is handled by config/index.js at import time
+    if (!process.env.STRIPE_SECRET_KEY)   missing.push('STRIPE_SECRET_KEY');
+    if (!process.env.STRIPE_WEBHOOK_SECRET) missing.push('STRIPE_WEBHOOK_SECRET');
+    if (!process.env.APP_BASE_URL && !process.env.BASE_URL) missing.push('APP_BASE_URL');
+
+    // Database: PostgreSQL requires DATABASE_URL
+    if (config.database.driver === 'postgres' && !config.database.postgresUrl) {
+      missing.push('DATABASE_URL');
+    }
+
+    if (missing.length > 0) {
+      logger.error(`Missing required environment variables for production: ${missing.join(', ')}`);
+      process.exit(1);
+    }
   }
-  // JWT_SECRET check is handled by config/index.js at import time
-  if (!process.env.STRIPE_SECRET_KEY) {
-    logger.error('STRIPE_SECRET_KEY must be set in production');
-    process.exit(1);
+
+  // --- Warnings for development (non-fatal) ---
+  const warned = [];
+  if (!process.env.STRIPE_SECRET_KEY)     warned.push('STRIPE_SECRET_KEY (payments disabled)');
+  if (!process.env.STRIPE_WEBHOOK_SECRET) warned.push('STRIPE_WEBHOOK_SECRET (webhooks unverified)');
+  if (!process.env.ANTHROPIC_API_KEY && config.ai.enabled) warned.push('ANTHROPIC_API_KEY (AI features enabled but no key)');
+
+  if (warned.length > 0 && !isProduction) {
+    logger.warn(`Missing optional environment variables: ${warned.join(', ')}`);
   }
 }
 const app = express();
@@ -278,9 +301,33 @@ app.use(
           'ws:'
         ],
         frameSrc: ["'self'", 'https://js.stripe.com', 'https://hooks.stripe.com'],
+        objectSrc: ["'none'"],
+        baseUri: ["'self'"],
+        formAction: ["'self'"],
       },
     },
     crossOriginEmbedderPolicy: false,
+    // HSTS — tell browsers to only use HTTPS for 1 year
+    strictTransportSecurity: {
+      maxAge: 31536000, // 1 year in seconds
+      includeSubDomains: true,
+      preload: true,
+    },
+    // Prevent MIME-type sniffing
+    xContentTypeOptions: true, // nosniff (helmet default, explicit for clarity)
+    // Referrer policy — send origin only on cross-origin, full URL on same-origin
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    // Disable browser features the app doesn't need
+    permissionsPolicy: {
+      features: {
+        camera: [],          // deny
+        microphone: [],      // deny
+        geolocation: [],     // deny
+        'payment': ['self'], // allow Stripe
+      },
+    },
+    // Prevent clickjacking — already set by helmet but explicit
+    xFrameOptions: { action: 'sameorigin' },
   })
 );
 // Abuse filter — hard IP-based limit to block DoS/spam (applies to ALL requests)
@@ -296,14 +343,15 @@ app.use((req, res, next) => {
 // Rate limit monitoring
 app.use(rateLimitLogger);
 
-// CORS
+// CORS — in production, origin must be an explicit domain (set via CORS_ORIGIN env var).
+// In development, '*' is allowed for convenience.
 app.use(
-
   cors({
     origin: config.cors.origin,
     credentials: true,
-    methods: ['GET' , 'POST'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    maxAge: 86400, // Cache preflight for 24 hours
   })
 );
 
@@ -440,7 +488,14 @@ app.use('/reports', express.static(path.resolve(process.cwd(), config.reports.di
 
 // Routes
 // Liveness probe - checks if app is alive (no internal details for public callers)
+// Returns 503 during shutdown so load balancers stop sending traffic
 app.get('/api/health', (req, res) => {
+  if (isShuttingDown) {
+    return res.status(503).json({
+      status: 'SHUTTING_DOWN',
+      timestamp: new Date().toISOString()
+    });
+  }
   res.json({
     status: 'OK',
     timestamp: new Date().toISOString()
@@ -925,84 +980,84 @@ server.listen(PORT, () => {
 
 // Graceful shutdown handling
 const gracefulShutdown = async (signal) => {
-  logger.info(`${signal} received. Starting graceful shutdown...`);
+  // Prevent double-shutdown from multiple signals
+  if (isShuttingDown) return;
   isShuttingDown = true;
+  logger.info(`${signal} received. Starting graceful shutdown...`);
 
-  // Stop accepting new connections
+  // Force shutdown after 30 seconds if graceful shutdown takes too long
+  const forceShutdownTimer = setTimeout(() => {
+    logger.error('Graceful shutdown timeout exceeded (30s). Forcing shutdown.');
+    process.exit(1);
+  }, 30000);
+  forceShutdownTimer.unref(); // Don't keep process alive just for this timer
+
+  // 1. Stop accepting new connections
   server.close(async () => {
     logger.info('HTTP server closed. All connections finished.');
-
-    // Cleanup tasks
-    logger.info('Performing cleanup tasks...');
-
-    // Stop memory monitor interval
-    try {
-      if (memoryMonitorInterval) {
-        clearInterval(memoryMonitorInterval);
-        logger.info('Memory monitor stopped');
-      }
-    } catch (error) {
-      logger.error('Error stopping memory monitor:', error);
-    }
-
-    // Stop health emitter interval
-    try {
-      if (healthEmitterInterval) {
-        clearInterval(healthEmitterInterval);
-        logger.info('Health emitter stopped');
-      }
-    } catch (error) {
-      logger.error('Error stopping health emitter:', error);
-    }
-
-    // Stop report cleanup scheduler
-    try {
-      logger.info('Stopping report cleanup scheduler...');
-      stopScheduledCleanup(cleanupInterval);
-      logger.info('Report cleanup scheduler stopped');
-    } catch (error) {
-      logger.error('Error stopping report cleanup scheduler:', error);
-    }
-
-    // Drain browser pool
-    try {
-      logger.info('Draining browser pool...');
-      await browserPool.drain();
-      logger.info('Browser pool drained successfully');
-    } catch (error) {
-      logger.error('Error draining browser pool:', error);
-    }
-
-    // Close database connections
-    try {
-      logger.info('Closing database connection...');
-      const db = getDatabase();
-      await db.close();
-      logger.info('Database connection closed');
-    } catch (error) {
-      logger.error('Error closing database:', error);
-    }
-
-    // Clear scan queue
-    try {
-      logger.info('Clearing scan queue...');
-      const queue = getQueue();
-      queue.clear();
-      logger.info('Scan queue cleared');
-    } catch (error) {
-      logger.error('Error clearing scan queue:', error);
-    }
-
+    await performCleanup();
+    clearTimeout(forceShutdownTimer);
     logger.info('Cleanup complete. Exiting process.');
     process.exit(0);
   });
 
-  // Force shutdown after 30 seconds if graceful shutdown takes too long
-  setTimeout(() => {
-    logger.error('Graceful shutdown timeout exceeded. Forcing shutdown.');
-    process.exit(1);
-  }, 30000);
+  // 2. Close Socket.IO connections so clients reconnect to another instance
+  try {
+    io.close();
+    logger.info('Socket.IO server closed');
+  } catch (error) {
+    logger.error('Error closing Socket.IO:', error);
+  }
 };
+
+async function performCleanup() {
+  logger.info('Performing cleanup tasks...');
+
+  // Stop intervals
+  try {
+    if (memoryMonitorInterval) clearInterval(memoryMonitorInterval);
+    if (healthEmitterInterval) clearInterval(healthEmitterInterval);
+    logger.info('Intervals stopped');
+  } catch (error) {
+    logger.error('Error stopping intervals:', error);
+  }
+
+  // Stop report cleanup scheduler
+  try {
+    stopScheduledCleanup(cleanupInterval);
+    logger.info('Report cleanup scheduler stopped');
+  } catch (error) {
+    logger.error('Error stopping report cleanup scheduler:', error);
+  }
+
+  // Drain browser pool
+  try {
+    logger.info('Draining browser pool...');
+    await browserPool.drain();
+    logger.info('Browser pool drained successfully');
+  } catch (error) {
+    logger.error('Error draining browser pool:', error);
+  }
+
+  // Close database connections
+  try {
+    logger.info('Closing database connection...');
+    const db = getDatabase();
+    await db.close();
+    logger.info('Database connection closed');
+  } catch (error) {
+    logger.error('Error closing database:', error);
+  }
+
+  // Clear scan queue
+  try {
+    const queue = getQueue();
+    queue.clear();
+    logger.info('Scan queue cleared');
+  } catch (error) {
+    logger.error('Error clearing scan queue:', error);
+  }
+}
 
 // Listen for termination signals
 process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));

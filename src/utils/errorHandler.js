@@ -123,12 +123,19 @@ function parsePuppeteerError(error) {
 }
 
 /**
- * Format error response
+ * Format error response — safe for public consumption.
+ * In production, 5xx errors get a generic message to avoid leaking internals.
  */
 function formatErrorResponse(error, includeStack = false) {
+  const statusCode = error.statusCode || 500;
+  const isServerError = statusCode >= 500;
+  const isProduction = process.env.NODE_ENV === 'production';
+
   const response = {
-    error: error.name || 'Error',
-    message: error.message || 'An unexpected error occurred',
+    error: (isServerError && isProduction) ? 'InternalError' : (error.name || 'Error'),
+    message: (isServerError && isProduction && !error.isOperational)
+      ? 'An unexpected error occurred. Please try again later.'
+      : (error.message || 'An unexpected error occurred'),
     timestamp: new Date().toISOString(),
   };
 
@@ -140,9 +147,36 @@ function formatErrorResponse(error, includeStack = false) {
 }
 
 /**
+ * Redact sensitive fields from an object before logging.
+ */
+const SENSITIVE_KEYS = new Set([
+  'password', 'currentPassword', 'newPassword', 'confirmPassword',
+  'token', 'resetToken', 'authorization', 'secret',
+  'credit_card', 'card_number', 'cvv', 'ssn',
+]);
+
+function redactSensitive(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  const redacted = {};
+  for (const [key, value] of Object.entries(obj)) {
+    if (SENSITIVE_KEYS.has(key.toLowerCase ? key.toLowerCase() : key)) {
+      redacted[key] = '[REDACTED]';
+    } else {
+      redacted[key] = value;
+    }
+  }
+  return redacted;
+}
+
+/**
  * Error logging with context
  */
 function logError(error, context = {}) {
+  // Redact sensitive data from request body before logging
+  if (context.body) {
+    context = { ...context, body: redactSensitive(context.body) };
+  }
+
   const errorInfo = {
     name: error.name,
     message: error.message,
