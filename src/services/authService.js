@@ -187,16 +187,29 @@ class AuthService {
   }
 
   /**
-   * Change user password (for password reset)
+   * Change user password (requires current password verification)
    */
-  async changePassword(userId, newPassword) {
+  async changePassword(userId, currentPassword, newPassword) {
+    const db = getDatabase();
+
+    // Fetch current password hash
+    const user = await db.get('SELECT password_hash FROM users WHERE id = ?', [userId]);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Verify current password
+    const isMatch = await bcrypt.compare(currentPassword, user.password_hash);
+    if (!isMatch) {
+      throw new Error('Current password is incorrect');
+    }
+
     const passwordError = this.validatePassword(newPassword);
     if (passwordError) {
       throw new Error(passwordError);
     }
 
     const passwordHash = await this.hashPassword(newPassword);
-    const db = getDatabase();
 
     await db.run(
       'UPDATE users SET password_hash = ? WHERE id = ?',

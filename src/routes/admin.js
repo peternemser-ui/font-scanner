@@ -518,15 +518,27 @@ router.get('/tests/suites', async (req, res) => {
  */
 router.post('/tests/run', async (req, res) => {
   const { suite, category } = req.body;
-  
+
   // Build jest command arguments
   const args = ['--json', '--testLocationInResults'];
-  
+
+  // Allowlists to prevent command injection
+  const ALLOWED_CATEGORIES = ['unit', 'integration', 'services', 'middleware', 'frontend', 'utils', 'config'];
+
   if (suite) {
-    // Run specific test file
+    // Validate suite is a safe path: only allow alphanumeric, hyphens, underscores, dots, slashes
+    if (!/^[a-zA-Z0-9_\-./]+\.test\.js$/.test(suite)) {
+      return res.status(400).json({ error: 'Invalid test suite path' });
+    }
+    // Prevent path traversal
+    if (suite.includes('..')) {
+      return res.status(400).json({ error: 'Invalid test suite path' });
+    }
     args.push(suite);
   } else if (category) {
-    // Run all tests in a category
+    if (!ALLOWED_CATEGORIES.includes(category)) {
+      return res.status(400).json({ error: `Invalid category. Allowed: ${ALLOWED_CATEGORIES.join(', ')}` });
+    }
     args.push(`tests/${category}/`);
   }
   // If neither, runs all tests
@@ -591,8 +603,7 @@ function runJestTests(args) {
     
     const jestProcess = spawn(npmCmd, ['jest', ...args], {
       cwd: process.cwd(),
-      env: { ...process.env, NODE_ENV: 'test' },
-      shell: true
+      env: { ...process.env, NODE_ENV: 'test' }
     });
     
     let stdout = '';

@@ -9,7 +9,7 @@
  * @module utils/controllerHelpers
  */
 
-const { normalizeUrl, validateUrl, sanitizeUrl, testUrlReachability } = require('./validators');
+const { normalizeUrl, validateUrl, sanitizeUrl, testUrlReachability, isValidDomain } = require('./validators');
 const { getRequestScanStartedAt, attachScanStartedAt } = require('./scanTimestamp');
 const { makeReportId } = require('./reportId');
 const { ensureReportScreenshot } = require('./reportScreenshot');
@@ -142,10 +142,15 @@ async function processUrl(url, { testReachability = false, allowHttpFallback = f
   let processed = normalizeUrl(sanitized);
   let isValid = validateUrl(processed);
 
+  // SSRF protection: validate domain is not private/internal
+  if (isValid && !isValidDomain(processed)) {
+    return { url: processed, isValid: false, isReachable: null };
+  }
+
   // Try HTTP fallback if enabled and HTTPS validation failed
   if (!isValid && allowHttpFallback && processed.startsWith('https://')) {
     const httpUrl = processed.replace('https://', 'http://');
-    if (validateUrl(httpUrl)) {
+    if (validateUrl(httpUrl) && isValidDomain(httpUrl)) {
       processed = httpUrl;
       isValid = true;
     }

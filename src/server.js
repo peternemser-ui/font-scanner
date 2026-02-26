@@ -22,16 +22,17 @@ const requestIdMiddleware = require('./middleware/requestId');
 const { initializeDatabase, getDatabase } = require('./db');
 const { getQueue } = require('./queue/scanQueue');
 const ScanWorker = require('./queue/scanWorker');
-const { 
-  globalLimiter, 
-  scanLimiter, 
+const {
+  globalLimiter,
+  scanLimiter,
   downloadLimiter,
   competitiveAnalysisLimiter,
   contactLimiter,
   rateLimitLogger,
   getRateLimitStats,
-  getRateLimitAnalytics
+  getRateLimitAnalytics,
 } = require('./middleware/rateLimiter');
+const { abuseFilter } = require('./middleware/abuseFilter');
 const browserPool = require('./utils/browserPool');
 const {
   startScheduledCleanup,
@@ -39,6 +40,7 @@ const {
   getCleanupStats
 } = require('./utils/reportCleanup');
 const { optionalAuth, requireAuth } = require('./middleware/requireAuth');
+const { requireAdmin } = require('./middleware/requireAdmin');
 const stripeService = require('./services/stripeService');
 const { checkScanQuota, resolveEffectivePlan } = require('./middleware/scanQuota');
 const usageService = require('./services/usageService');
@@ -284,8 +286,15 @@ app.use(
     crossOriginEmbedderPolicy: false,
   })
 );
-// Rate limiting - Global limiter for all requests
-app.use(globalLimiter);
+// Abuse filter — hard IP-based limit to block DoS/spam (applies to ALL requests)
+app.use(abuseFilter);
+
+// Rate limiting — tiered global limiter for API and page requests (skip static assets)
+const STATIC_ASSET_RE = /\.(js|css|svg|png|jpg|jpeg|gif|ico|woff2?|ttf|eot|map|json|webp|avif)(\?.*)?$/i;
+app.use((req, res, next) => {
+  if (STATIC_ASSET_RE.test(req.path)) return next();
+  return globalLimiter(req, res, next);
+});
 
 // Rate limit monitoring
 app.use(rateLimitLogger);
@@ -486,8 +495,8 @@ app.get('/api/ready', (req, res) => {
 // Prometheus metrics endpoint
 app.get('/metrics', metricsHandler);
 
-// Rate limit stats endpoint (for monitoring)
-app.get('/api/rate-limits', (req, res) => {
+// Rate limit stats endpoint (for monitoring — admin only)
+app.get('/api/rate-limits', requireAuth, requireAdmin, (req, res) => {
   res.json({
     limits: getRateLimitStats(),
     message: 'Current rate limit configuration',
@@ -495,7 +504,7 @@ app.get('/api/rate-limits', (req, res) => {
 });
 
 // Enhanced rate limit analytics endpoint (detailed monitoring)
-app.get('/api/admin/rate-limits', (req, res) => {
+app.get('/api/admin/rate-limits', requireAuth, requireAdmin, (req, res) => {
   try {
     const analytics = getRateLimitAnalytics();
     res.json(analytics);
@@ -508,8 +517,8 @@ app.get('/api/admin/rate-limits', (req, res) => {
   }
 });
 
-// Error telemetry analytics endpoint
-app.get('/api/admin/errors', (req, res) => {
+// Error telemetry analytics endpoint (admin only)
+app.get('/api/admin/errors', requireAuth, requireAdmin, (req, res) => {
   try {
     const { timeWindow, category, type } = req.query;
     const errorTelemetry = require('./utils/errorTelemetry');
@@ -538,8 +547,8 @@ app.get('/api/admin/errors', (req, res) => {
   }
 });
 
-// Get specific error details
-app.get('/api/admin/errors/:errorId', (req, res) => {
+// Get specific error details (admin only)
+app.get('/api/admin/errors/:errorId', requireAuth, requireAdmin, (req, res) => {
   try {
     const { errorId } = req.params;
     const errorTelemetry = require('./utils/errorTelemetry');

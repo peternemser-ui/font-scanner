@@ -449,12 +449,17 @@ const downloadReport = asyncHandler(async (req, res) => {
   const config = require('../config');
   const { NotFoundError } = require('../utils/errorHandler');
 
-  const reportsDir = path.join(__dirname, '../../', config.reports.dir);
-  const filepath = path.join(reportsDir, filename);
+  const reportsDir = path.resolve(path.join(__dirname, '../../', config.reports.dir));
+  const filepath = path.resolve(path.join(reportsDir, filename));
 
   // Validate filename and check if file exists
   if (!filename.endsWith('.pdf')) {
     throw new ValidationError('Invalid file type. Only PDF files are supported.');
+  }
+
+  // Prevent path traversal — resolved path must be inside reportsDir
+  if (!filepath.startsWith(reportsDir)) {
+    throw new ValidationError('Invalid filename');
   }
 
   if (!fs.existsSync(filepath)) {
