@@ -224,11 +224,17 @@ class BrowserPool {
    * @param {Function} fn - Async function that receives a browser
    * @returns {Promise<*>} Result of the function
    */
-  async execute(fn) {
+  async execute(fn, { timeoutMs = 120000 } = {}) {
     const browser = await this.acquire();
-    
+
     try {
-      return await fn(browser);
+      const result = await Promise.race([
+        fn(browser),
+        new Promise((_, reject) =>
+          setTimeout(() => reject(new Error(`Browser pool execute timed out after ${timeoutMs}ms`)), timeoutMs)
+        )
+      ]);
+      return result;
     } finally {
       await this.release(browser);
     }

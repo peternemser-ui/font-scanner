@@ -432,12 +432,13 @@ function detectPreferredLanguage(acceptLanguage, supportedLangs) {
   return null;
 }
 
-// Static files
-app.use(express.static(path.join(__dirname, 'public')));
+// Static files — cache for 1 year (cache-busted via ?v= query string)
+const STATIC_MAX_AGE = process.env.NODE_ENV === 'production' ? '1y' : '0';
+app.use(express.static(path.join(__dirname, 'public'), { maxAge: STATIC_MAX_AGE }));
 
 // Serve generated report artifacts (PDFs, screenshots)
 // NOTE: config.reports.dir is repo-relative by default (./reports)
-app.use('/reports', express.static(path.resolve(process.cwd(), config.reports.dir)));
+app.use('/reports', express.static(path.resolve(process.cwd(), config.reports.dir), { maxAge: STATIC_MAX_AGE }));
 
 // Routes
 // Liveness probe - checks if app is alive
@@ -450,29 +451,27 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Version endpoint
-app.get('/api/version', (req, res) => {
+// Version endpoint — git info cached at startup to avoid spawning processes per request
+const _versionInfo = (() => {
   const { execSync } = require('child_process');
   const packageJson = require('../package.json');
-  
   let gitHash = 'unknown';
   let gitBranch = 'unknown';
-  
   try {
     gitHash = execSync('git rev-parse --short HEAD').toString().trim();
     gitBranch = execSync('git rev-parse --abbrev-ref HEAD').toString().trim();
   } catch (error) {
-    logger.warn('Could not retrieve git information');
+    // git may not be available in Docker/CI
   }
-  
-  res.json({
+  return {
     version: packageJson.version,
-    git: {
-      hash: gitHash,
-      branch: gitBranch
-    },
+    git: { hash: gitHash, branch: gitBranch },
     build: `${packageJson.version}-${gitHash}`
-  });
+  };
+})();
+
+app.get('/api/version', (req, res) => {
+  res.json(_versionInfo);
 });
 
 // Readiness probe - checks if app is ready to accept traffic

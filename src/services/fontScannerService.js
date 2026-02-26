@@ -57,7 +57,7 @@ class FontScannerService {
    */
   async scanSingleViewport(url, viewportType = 'desktop') {
     // Acquire browser from pool
-    const browser = await browserPool.acquire();
+    let browser = await browserPool.acquire();
     let page = null;
 
     try {
@@ -192,9 +192,9 @@ class FontScannerService {
         await page.close();
       }
       
-      // Release browser back to pool before fallback
-      await browserPool.release(browser);
-      
+      // Mark browser as released so finally block skips it
+      browser = null;
+
       // Use simple HTTP-based analysis as fallback
       logger.info(`Using simple analyzer fallback for: ${url}`);
       const results = await simpleAnalyzer.analyzeUrl(url);
@@ -215,11 +215,13 @@ class FontScannerService {
         },
       };
     } finally {
-      // Always close page and release browser
+      // Always close page and release browser (browser is null if already released in catch)
       if (page && !page.isClosed()) {
         await page.close();
       }
-      await browserPool.release(browser);
+      if (browser) {
+        await browserPool.release(browser);
+      }
     }
   }
 }
