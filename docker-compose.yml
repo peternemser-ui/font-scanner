@@ -1,6 +1,25 @@
 version: '3.9'
 
 services:
+  db:
+    image: postgres:16-alpine
+    container_name: font-scanner-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sitemechanic
+      POSTGRES_USER: ${POSTGRES_USER:-smuser}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    networks:
+      - font-scanner-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-smuser} -d sitemechanic"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
   font-scanner:
     build:
       context: .
@@ -8,20 +27,58 @@ services:
       target: production
     container_name: font-scanner-app
     restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
     ports:
       - "${PORT:-3000}:3000"
     environment:
       - NODE_ENV=production
       - PORT=3000
-      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+      # Database
+      - DB_DRIVER=postgres
+      - DATABASE_URL=postgres://${POSTGRES_USER:-smuser}:${POSTGRES_PASSWORD}@db:5432/sitemechanic
+
+      # Auth
+      - JWT_SECRET=${JWT_SECRET:?Set JWT_SECRET in .env}
+      - DOWNLOAD_TOKEN_SECRET=${DOWNLOAD_TOKEN_SECRET:?Set DOWNLOAD_TOKEN_SECRET in .env}
+
+      # Stripe
+      - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
+      - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
+      - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
+      - STRIPE_PRICE_PRO_MONTHLY=${STRIPE_PRICE_PRO_MONTHLY:-}
+      - STRIPE_PRICE_PRO_YEARLY=${STRIPE_PRICE_PRO_YEARLY:-}
+      - STRIPE_PRICE_SINGLE_REPORT=${STRIPE_PRICE_SINGLE_REPORT:-}
+      - STRIPE_PRICE_DAY_PASS=${STRIPE_PRICE_DAY_PASS:-}
+      - PAYMENT_DEMO_MODE=false
+
+      # App
+      - APP_BASE_URL=${APP_BASE_URL:?Set APP_BASE_URL in .env}
+      - CORS_ORIGIN=${CORS_ORIGIN:?Set CORS_ORIGIN in .env}
+      - BILLING_ALLOWED_RETURN_HOSTS=${BILLING_ALLOWED_RETURN_HOSTS:-}
+
+      # Puppeteer
       - PUPPETEER_HEADLESS=true
       - PUPPETEER_TIMEOUT=${PUPPETEER_TIMEOUT:-30000}
-      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-900000}
+
+      # Rate Limiting
+      - RATE_LIMIT_WINDOW_MS=${RATE_LIMIT_WINDOW_MS:-60000}
       - RATE_LIMIT_MAX_REQUESTS=${RATE_LIMIT_MAX_REQUESTS:-100}
+
+      # Reports
       - REPORTS_DIR=/app/reports
       - REPORTS_RETENTION_DAYS=${REPORTS_RETENTION_DAYS:-7}
+
+      # Performance
       - MAX_PAGES_TO_SCAN=${MAX_PAGES_TO_SCAN:-10}
       - SCAN_TIMEOUT=${SCAN_TIMEOUT:-60000}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+
+      # AI (optional)
+      - AI_ENABLED=${AI_ENABLED:-false}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
     volumes:
       - reports-data:/app/reports
       - logs-data:/app/logs
@@ -55,6 +112,8 @@ services:
           memory: 512M
 
 volumes:
+  pg-data:
+    driver: local
   reports-data:
     driver: local
   logs-data:
