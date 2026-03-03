@@ -83,6 +83,8 @@ const logger = createLogger('Server');
   }
 }
 const app = express();
+// Trust reverse proxy (Nginx) so req.ip reads X-Forwarded-For instead of Docker gateway IP
+app.set('trust proxy', 1);
 const server = http.createServer(app);
 const io = new SocketIO(server, {
   cors: {
