@@ -203,6 +203,19 @@ function errorMiddleware(err, req, res, next) {
     error = parsePuppeteerError(err);
   }
 
+  // Stripe errors: never forward Stripe's HTTP status to the client.
+  // A Stripe 401 (invalid API key) or 402 (card declined) is a server-side
+  // payment provider issue, not a client auth failure. Map to 502.
+  if (err.type === 'StripeAuthenticationError' || err.type === 'StripeAPIError' ||
+      err.type === 'StripeConnectionError' || err.type === 'StripeRateLimitError' ||
+      (err.raw && err.raw.type && err.raw.type.startsWith('invalid_request'))) {
+    error = new AppError(
+      'Payment service error. Please try again later.',
+      502,
+      true
+    );
+  }
+
   // Log error
   logError(error, {
     url: req.url,

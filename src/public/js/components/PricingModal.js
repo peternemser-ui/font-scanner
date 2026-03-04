@@ -314,9 +314,16 @@
     const data = await resp.json();
     if (!resp.ok) {
       console.error('[PricingModal] Checkout error response:', data);
-      // If token is expired or invalid, clear it so login prompt can show
+      // Only clear tokens for genuine auth failures (JWT expired/invalid).
+      // Do NOT clear on Stripe/payment errors that happen to return 401/502.
       if (resp.status === 401) {
-        clearExpiredAuthTokens();
+        const msg = (data.message || data.error || '').toLowerCase();
+        const isPaymentError = msg.includes('stripe') || msg.includes('api key') || msg.includes('payment service');
+        if (!isPaymentError) {
+          clearExpiredAuthTokens();
+        } else {
+          console.warn('[PricingModal] Payment provider error (not auth) — tokens preserved');
+        }
       }
       throw new Error(data.message || data.error || t('errors.checkoutFailed', 'Checkout failed'));
     }

@@ -625,9 +625,17 @@
       return;
     }
 
-    // Handle auth requirement - save purchase intent, clear stale tokens, redirect to auth
+    // Handle auth requirement - but only for genuine auth failures, not Stripe errors
     if (response.status === 401) {
-      // Save purchase intent so pricing modal auto-opens after auth
+      const msg = (data?.message || data?.error || '').toLowerCase();
+      const isPaymentError = msg.includes('stripe') || msg.includes('api key') || msg.includes('payment service');
+
+      if (isPaymentError) {
+        showToast('Payment service error. Please try again later.');
+        return;
+      }
+
+      // Genuine auth failure — save purchase intent, clear stale tokens, redirect to auth
       try {
         localStorage.setItem('sm_pending_purchase', JSON.stringify({
           type: 'single_report',
