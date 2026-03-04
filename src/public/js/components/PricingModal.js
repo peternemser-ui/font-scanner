@@ -241,9 +241,11 @@
         headers: { 'Authorization': `Bearer ${token}` }
       });
       if (!resp.ok) {
-        // If token is expired or invalid, clear it so login prompt shows
+        // NOTE: Do NOT clear tokens here. A billing status 401 should not
+        // log the user out — it may be transient. Tokens are only cleared
+        // when an explicit user action (checkout) returns 401.
         if (resp.status === 401) {
-          clearExpiredAuthTokens();
+          console.warn('[PricingModal] Billing status returned 401 — tokens preserved');
         }
         return null;
       }

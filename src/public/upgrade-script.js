@@ -201,9 +201,10 @@ document.addEventListener('DOMContentLoaded', async () => {
           document.getElementById('card-daypass').classList.add('sm-plan-card--current');
         }
       } else if (resp.status === 401) {
-        // Token expired/invalid - clear it so buttons show "Login to Upgrade"
-        localStorage.removeItem('sm_auth_token');
-        localStorage.removeItem('sm_token');
+        // Token may be expired/invalid — log but do NOT clear tokens here.
+        // Background billing checks should not nuke the user's session.
+        // Tokens are cleared only when explicit actions (checkout) return 401.
+        console.warn('[Upgrade] Billing status returned 401 — tokens preserved');
       }
     } catch (e) {
       // Ignore - allow user to stay on upgrade page

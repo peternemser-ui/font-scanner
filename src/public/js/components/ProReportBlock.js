@@ -65,11 +65,12 @@
       .then(r => {
         if (!r.ok) {
           console.warn('[ProReportBlock] Billing status fetch failed:', r.status);
-          // If token is expired or invalid, clear it so login prompts show correctly
+          // NOTE: Do NOT clear auth tokens here. A billing status 401 can happen
+          // for transient reasons (server restart, DB issue) and should not log the
+          // user out. Token clearing should only happen on explicit user actions
+          // (e.g. checkout attempt) that fail with 401, not background fetches.
           if (r.status === 401) {
-            console.log('[ProReportBlock] Token expired/invalid, clearing auth tokens');
-            localStorage.removeItem('sm_auth_token');
-            localStorage.removeItem('sm_token');
+            console.log('[ProReportBlock] Billing status returned 401 — tokens preserved, user may need to re-login if checkout also fails');
           }
           return null;
         }
