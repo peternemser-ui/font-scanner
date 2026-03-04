@@ -306,14 +306,22 @@ class AuthService {
    * Reset password with token
    */
   async resetPassword(userId, token, newPassword) {
+    const db = getDatabase();
+
     // Verify token first
     await this.verifyResetToken(userId, token);
 
-    // Change password
-    await this.changePassword(userId, newPassword);
+    // Validate new password strength
+    const passwordError = this.validatePassword(newPassword);
+    if (passwordError) {
+      throw new Error(passwordError);
+    }
+
+    // Set new password directly (token already proves identity)
+    const passwordHash = await this.hashPassword(newPassword);
+    await db.run('UPDATE users SET password_hash = ? WHERE id = ?', [passwordHash, userId]);
 
     // Delete used reset token
-    const db = getDatabase();
     await db.run('DELETE FROM password_resets WHERE user_id = ?', [userId]);
 
     return { success: true };
