@@ -191,6 +191,24 @@ const config = {
     cacheTtlHours: parseInt(process.env.AI_CACHE_TTL_HOURS || '24', 10),
   },
 
+  // Email (SMTP)
+  email: {
+    smtp: {
+      host: process.env.SMTP_HOST || 'box.aupt-industries.com',
+      port: parseInt(process.env.SMTP_PORT, 10) || 587,
+      secure: process.env.SMTP_SECURE === 'true',
+      auth: {
+        user: process.env.SMTP_USER || '',
+        pass: process.env.SMTP_PASS || ''
+      }
+    },
+    from: {
+      name: process.env.EMAIL_FROM_NAME || 'Site Mechanic',
+      address: process.env.EMAIL_FROM_ADDRESS || 'support@sitemechanic.io'
+    },
+    appUrl: process.env.APP_URL || 'https://sitemechanic.io'
+  },
+
   // Database
   database: {
     driver: (process.env.DB_DRIVER || 'sqlite').toLowerCase(),

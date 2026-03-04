@@ -3,7 +3,9 @@ const jwt = require('jsonwebtoken');
 const { v4: uuidv4 } = require('uuid');
 const { getDatabase } = require('../db');
 const config = require('../config');
+const { createLogger } = require('../utils/logger');
 
+const logger = createLogger('AuthService');
 const SALT_ROUNDS = 10;
 
 class AuthService {
@@ -245,20 +247,26 @@ class AuthService {
       [user.id, tokenHash, expiresAt.toISOString()]
     );
 
-    // In production, the reset token should be emailed, not returned in response
-    // For development/testing, we return it for convenience
+    // Send reset email
+    try {
+      const emailService = require('./emailService');
+      const resetUrl = `${config.email.appUrl}/auth.html?userId=${user.id}&token=${encodeURIComponent(resetToken)}`;
+      await emailService.sendPasswordResetEmail(user.email, resetUrl);
+    } catch (emailErr) {
+      logger.error('[Auth] Failed to send reset email', { error: emailErr.message });
+      // Don't fail the request — security: don't reveal if email was sent
+    }
+
     const isProduction = process.env.NODE_ENV === 'production';
 
     if (isProduction) {
-      // Production: Log that email should be sent (integrate with email service)
-      // Future: Integrate with SendGrid, SES, or other email service
       return {
         success: true,
         message: 'If this email exists, a reset link has been sent'
       };
     }
 
-    // Development only: return token for testing
+    // Development only: return token for testing convenience
     return {
       success: true,
       resetToken,
