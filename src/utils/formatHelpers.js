@@ -239,6 +239,31 @@ function scoreToGrade(score) {
   return 'F';
 }
 
+/**
+ * Normalize a database timestamp to a valid ISO 8601 string.
+ *
+ * Handles PostgreSQL formats like "2026-03-04 02:10:23.138412+00"
+ * and SQLite formats like "2026-03-04 02:10:23".
+ *
+ * @param {string|Date|null} val - Raw timestamp value
+ * @returns {string|null} ISO 8601 string or null
+ */
+function toISODate(val) {
+  if (!val) return null;
+  if (val instanceof Date) return isNaN(val.getTime()) ? null : val.toISOString();
+  if (typeof val === 'string') {
+    // Strip PG timezone offset (+00, +00:00) before converting
+    let s = val.replace(/\+\d{2}(:\d{2})?$/, '');
+    // Convert "YYYY-MM-DD HH:MM:SS[.micro]" → ISO "YYYY-MM-DDTHH:MM:SS[.micro]Z"
+    if (!s.includes('T') && s.includes(' ')) {
+      s = s.replace(' ', 'T') + 'Z';
+    }
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? null : d.toISOString();
+  }
+  return null;
+}
+
 module.exports = {
   formatBytes,
   formatDuration,
@@ -249,5 +274,6 @@ module.exports = {
   truncate,
   parsePerformanceTiming,
   formatNumber,
-  scoreToGrade
+  scoreToGrade,
+  toISODate
 };

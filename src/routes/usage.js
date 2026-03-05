@@ -9,6 +9,7 @@ const { requireAuth } = require('../middleware/requireAuth');
 const { getDatabase } = require('../db');
 const { PRICING, getPlanLimits } = require('../config/pricing');
 const { getFullEntitlements } = require('../utils/entitlements');
+const { toISODate } = require('../utils/formatHelpers');
 
 /**
  * GET /api/usage/stats
@@ -105,8 +106,8 @@ router.get('/recent-scans', requireAuth, async (req, res) => {
           analyzerType,
           status: scan.status || 'completed',
           isPurchased: purchasedIds.has(scan.id),
-          createdAt: scan.created_at,
-          finishedAt: scan.finished_at
+          createdAt: toISODate(scan.created_at),
+          finishedAt: toISODate(scan.finished_at)
         };
       })
     });

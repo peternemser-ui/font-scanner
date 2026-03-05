@@ -10,6 +10,7 @@ const { requireAuth, optionalAuth } = require('../middleware/requireAuth');
 const { requireReportAccess } = require('../middleware/entitlementGuard');
 const { createLogger } = require('../utils/logger');
 const { asyncHandler } = require('../utils/errorHandler');
+const { toISODate } = require('../utils/formatHelpers');
 
 const logger = createLogger('ReportsRoutes');
 
@@ -71,7 +72,7 @@ router.get('/owned', requireAuth, asyncHandler(async (req, res) => {
       reportId: scan.report_id,
       siteUrl: scan.target_url,
       analyzerType,
-      createdAt: scan.created_at,
+      createdAt: toISODate(scan.created_at),
       ownedVia: purchasedIds.has(scan.report_id) ? 'purchased' : 'plan'
     });
   }
@@ -83,7 +84,7 @@ router.get('/owned', requireAuth, asyncHandler(async (req, res) => {
         reportId: p.report_id,
         siteUrl: p.site_url || '',
         analyzerType: p.analyzer_type || 'unknown',
-        createdAt: p.purchased_at,
+        createdAt: toISODate(p.purchased_at),
         ownedVia: 'purchased'
       });
     }
@@ -147,7 +148,7 @@ router.get('/:id', requireAuth, requireReportAccess, asyncHandler(async (req, re
     reportId: scan.report_id,
     siteUrl: scan.target_url,
     locale: scan.locale || 'en',
-    createdAt: scan.created_at,
+    createdAt: toISODate(scan.created_at),
     data: resultData,
     access: req.reportAccess
   });

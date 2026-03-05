@@ -3,6 +3,7 @@ const { getDatabase } = require('../db');
 const { createLogger } = require('../utils/logger');
 const { isSafeReportId } = require('../utils/reportId');
 const config = require('../config');
+const { toISODate } = require('../utils/formatHelpers');
 
 const logger = createLogger('StripeService');
 
@@ -579,9 +580,7 @@ class StripeService {
         reportId: r.report_id,
         siteUrl: r.site_url || '',
         analyzerType: r.analyzer_type || '',
-        purchasedAt: r.purchased_at
-          ? (r.purchased_at.includes('T') ? r.purchased_at : r.purchased_at.replace(' ', 'T') + 'Z')
-          : null
+        purchasedAt: toISODate(r.purchased_at)
       }));
     } catch (e) {
       logger.warn('Could not fetch purchased report details', { error: e.message });

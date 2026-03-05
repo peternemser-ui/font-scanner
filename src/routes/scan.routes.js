@@ -17,6 +17,7 @@ const { checkScanQuota, recordScanUsage } = require('../middleware/scanQuota');
 const { enforcePageLimit } = require('../middleware/entitlementGuard');
 const usageService = require('../services/usageService');
 const { PRICING } = require('../config/pricing');
+const { toISODate } = require('../utils/formatHelpers');
 
 // ============================================================
 // VALIDATION SCHEMAS
@@ -157,9 +158,9 @@ router.get('/:scanId', async (req, res) => {
       url: scan.target_url,
       status: scan.status,
       progress: scan.progress,
-      createdAt: scan.created_at,
-      startedAt: scan.started_at,
-      finishedAt: scan.finished_at,
+      createdAt: toISODate(scan.created_at),
+      startedAt: toISODate(scan.started_at),
+      finishedAt: toISODate(scan.finished_at),
       pagesCrawled: scan.pages_crawled
     };
 
@@ -302,7 +303,7 @@ router.get('/:scanId/pdf', optionalAuth, async (req, res) => {
     const scanData = {
       scanId: scan.id,
       url: scan.target_url,
-      createdAt: scan.created_at,
+      createdAt: toISODate(scan.created_at),
       summary: {
         totalPages: scan.pages_crawled || 1,
         analyzersRun: results.filter(r => r.result_type !== 'aggregate').length
