@@ -114,4 +114,29 @@ async function verifyConnection() {
   }
 }
 
-module.exports = { sendPasswordResetEmail, verifyConnection };
+/**
+ * Send a test email to verify SMTP is working end-to-end
+ * @param {string} toEmail - Recipient email address
+ */
+async function sendTestEmail(toEmail) {
+  const fromName = config.email.from.name;
+  const fromAddress = config.email.from.address;
+
+  const info = await transporter.sendMail({
+    from: `"${fromName}" <${fromAddress}>`,
+    to: toEmail,
+    subject: 'Site Mechanic — SMTP Test',
+    text: `This is a test email from Site Mechanic.\n\nIf you received this, your SMTP configuration is working correctly.\n\nSent at: ${new Date().toISOString()}`,
+    html: `
+      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
+        <h2 style="color:#0F172A;">Site Mechanic — SMTP Test</h2>
+        <p>If you received this, your SMTP configuration is working correctly.</p>
+        <p style="color:#6b7280;font-size:13px;">Sent at: ${new Date().toISOString()}</p>
+      </div>`
+  });
+
+  logger.info(`[Email] Test email sent to ${toEmail}`, { messageId: info.messageId });
+  return info;
+}
+
+module.exports = { sendPasswordResetEmail, sendTestEmail, verifyConnection };

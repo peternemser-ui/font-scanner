@@ -495,4 +495,37 @@ router.post('/verify-reset-token', async (req, res) => {
   }
 });
 
+/**
+ * POST /api/auth/test-email
+ * Admin-only: verify SMTP connection and optionally send a test email
+ */
+router.post('/test-email', requireAuth, async (req, res) => {
+  try {
+    const { getDatabase } = require('../db');
+    const db = getDatabase();
+    const user = await db.get('SELECT is_admin FROM users WHERE id = ?', [req.user.id]);
+    if (!user?.is_admin) return res.status(403).json({ error: 'Admin only' });
+
+    const emailService = require('../services/emailService');
+
+    // Step 1: verify SMTP connection
+    const connected = await emailService.verifyConnection();
+    if (!connected) {
+      return res.json({ success: false, step: 'connection', error: 'SMTP connection failed — check SMTP_HOST, SMTP_PORT, SMTP_USER, SMTP_PASS env vars' });
+    }
+
+    // Step 2: optionally send a test email
+    const { to } = req.body || {};
+    if (to) {
+      const info = await emailService.sendTestEmail(to);
+      return res.json({ success: true, step: 'sent', messageId: info.messageId, to });
+    }
+
+    res.json({ success: true, step: 'connection', message: 'SMTP connection verified' });
+  } catch (error) {
+    logger.error('[Auth] test-email failed', { error: error.message });
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 module.exports = router;
