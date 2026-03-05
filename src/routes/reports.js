@@ -90,8 +90,19 @@ router.get('/owned', requireAuth, asyncHandler(async (req, res) => {
     }
   }
 
-  const reports = Array.from(reportMap.values());
-  reports.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+  // Dedupe by (siteUrl, analyzerType) — keep only the latest report per pair
+  const siteTypeMap = new Map();
+  const allReports = Array.from(reportMap.values());
+  allReports.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+  for (const r of allReports) {
+    const key = `${(r.siteUrl || '').toLowerCase()}||${r.analyzerType}`;
+    if (!siteTypeMap.has(key)) {
+      siteTypeMap.set(key, r);
+    }
+  }
+
+  const reports = Array.from(siteTypeMap.values());
 
   res.json({
     success: true,
