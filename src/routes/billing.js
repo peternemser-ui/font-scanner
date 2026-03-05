@@ -381,8 +381,8 @@ router.post(
            ON CONFLICT(user_id, report_id) DO UPDATE SET
              stripe_checkout_session_id = excluded.stripe_checkout_session_id,
              purchased_at = CURRENT_TIMESTAMP,
-             site_url = COALESCE(excluded.site_url, site_url),
-             analyzer_type = COALESCE(excluded.analyzer_type, analyzer_type),
+             site_url = COALESCE(excluded.site_url, report_purchases.site_url),
+             analyzer_type = COALESCE(excluded.analyzer_type, report_purchases.analyzer_type),
              status = 'paid'`,
           [user.id, reportId, session.id, siteUrl, analyzerType]
         );
