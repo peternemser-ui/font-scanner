@@ -1188,9 +1188,14 @@ function getReportTypeCategory(type) {
 function safeParseDate(val) {
   if (!val) return null;
   if (val instanceof Date) return isNaN(val.getTime()) ? null : val;
-  // Convert SQLite "YYYY-MM-DD HH:MM:SS" to ISO if needed
-  if (typeof val === 'string' && !val.includes('T') && val.includes(' ')) {
-    val = val.replace(' ', 'T') + 'Z';
+  if (typeof val === 'string') {
+    // Handle PostgreSQL timestamps like "2026-03-04 02:10:23.138412+00"
+    // Strip the timezone offset before converting, then append Z
+    val = val.replace(/\+\d{2}$/, '').replace(/\+\d{2}:\d{2}$/, '');
+    // Convert "YYYY-MM-DD HH:MM:SS" to ISO "YYYY-MM-DDTHH:MM:SSZ"
+    if (!val.includes('T') && val.includes(' ')) {
+      val = val.replace(' ', 'T') + 'Z';
+    }
   }
   const d = new Date(val);
   return isNaN(d.getTime()) ? null : d;
