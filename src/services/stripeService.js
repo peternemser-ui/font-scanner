@@ -573,8 +573,18 @@ class StripeService {
     let purchasedReportDetails = [];
     try {
       const rows = await db.all(
-        'SELECT report_id, site_url, analyzer_type, purchased_at FROM report_purchases WHERE user_id = ? ORDER BY purchased_at DESC',
-        [userId]
+        `SELECT rp.report_id, rp.site_url, rp.analyzer_type, rp.purchased_at
+         FROM report_purchases rp
+         INNER JOIN (
+           SELECT site_url, analyzer_type, MAX(purchased_at) AS max_pa
+           FROM report_purchases WHERE user_id = ?
+           GROUP BY site_url, analyzer_type
+         ) latest ON rp.site_url = latest.site_url
+           AND rp.analyzer_type = latest.analyzer_type
+           AND rp.purchased_at = latest.max_pa
+         WHERE rp.user_id = ?
+         ORDER BY rp.purchased_at DESC`,
+        [userId, userId]
       );
       purchasedReportDetails = rows.map(r => ({
         reportId: r.report_id,
