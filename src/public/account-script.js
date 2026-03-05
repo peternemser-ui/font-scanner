@@ -638,15 +638,20 @@ async function loadBillingStatus() {
       console.warn('[Account] Failed to fetch server scans:', e);
     }
 
-    // Also load recent scans from browser storage (for better UX)
-    const browserReports = await loadBrowserStoredReports();
+    // Free users only see purchased reports — not free scans
+    if (!isPro) {
+      allReports = [...purchasedReports];
+      allReports.sort((a, b) => b.purchasedAtDate - a.purchasedAtDate);
+      filteredReports = [...allReports];
+    } else {
+      // Pro/Day Pass users see everything
+      const browserReports = await loadBrowserStoredReports();
+      const uniqueBrowserReports = browserReports.filter(r => !knownIds.has(r.reportId));
 
-    // Merge: purchased > owned > server scans > browser-only (deduplicate by reportId)
-    const uniqueBrowserReports = browserReports.filter(r => !knownIds.has(r.reportId));
-
-    allReports = [...purchasedReports, ...serverOwnedReports, ...serverScans, ...uniqueBrowserReports];
-    allReports.sort((a, b) => b.purchasedAtDate - a.purchasedAtDate);
-    filteredReports = [...allReports];
+      allReports = [...purchasedReports, ...serverOwnedReports, ...serverScans, ...uniqueBrowserReports];
+      allReports.sort((a, b) => b.purchasedAtDate - a.purchasedAtDate);
+      filteredReports = [...allReports];
+    }
 
   } catch (error) {
     console.error('Failed to load billing status:', error);
