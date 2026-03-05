@@ -9577,5 +9577,17 @@
     "performance": "Desempenho",
     "security": "Segurança",
     "accessibility": "Acessibilidade"
+  },
+  "email": {
+    "reportPurchase": {
+      "subject": "Seu relatório de {{type}} está pronto",
+      "heading": "Seu relatório de {{type}} está pronto",
+      "intro": "Seu relatório para {{site}} foi gerado e está pronto para visualização.",
+      "viewOnline": "Ver relatório online",
+      "aiHeading": "Avaliação estratégica com IA",
+      "quickWinLabel": "Ganho rápido",
+      "footer": "Este e-mail foi enviado porque você comprou um relatório no Site Mechanic.",
+      "attachmentNote": "Seu relatório PDF completo está anexado a este e-mail."
+    }
   }
 }

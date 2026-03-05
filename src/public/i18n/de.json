@@ -9573,5 +9573,17 @@
     "performance": "Leistung",
     "security": "Sicherheit",
     "accessibility": "Barrierefreiheit"
+  },
+  "email": {
+    "reportPurchase": {
+      "subject": "Ihr {{type}}-Bericht ist fertig",
+      "heading": "Ihr {{type}}-Bericht ist fertig",
+      "intro": "Ihr Bericht für {{site}} wurde erstellt und ist bereit zur Ansicht.",
+      "viewOnline": "Bericht online ansehen",
+      "aiHeading": "KI-Strategiebewertung",
+      "quickWinLabel": "Schneller Gewinn",
+      "footer": "Diese E-Mail wurde gesendet, weil Sie einen Bericht bei Site Mechanic erworben haben.",
+      "attachmentNote": "Ihr vollständiger PDF-Bericht ist dieser E-Mail angehängt."
+    }
   }
 }

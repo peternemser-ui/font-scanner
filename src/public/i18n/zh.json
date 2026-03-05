@@ -9573,5 +9573,17 @@
     "performance": "性能",
     "security": "安全性",
     "accessibility": "无障碍性"
+  },
+  "email": {
+    "reportPurchase": {
+      "subject": "您的{{type}}报告已准备就绪",
+      "heading": "您的{{type}}报告已准备就绪",
+      "intro": "您关于 {{site}} 的报告已生成，可以查看。",
+      "viewOnline": "在线查看报告",
+      "aiHeading": "AI战略评估",
+      "quickWinLabel": "快速改进",
+      "footer": "此邮件是因为您在 Site Mechanic 上购买了报告而发送的。",
+      "attachmentNote": "您的完整PDF报告已附在此邮件中。"
+    }
   }
 }

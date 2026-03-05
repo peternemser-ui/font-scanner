@@ -9573,5 +9573,17 @@
     "performance": "Performance",
     "security": "Security",
     "accessibility": "Accessibility"
+  },
+  "email": {
+    "reportPurchase": {
+      "subject": "Your {{type}} Report is Ready",
+      "heading": "Your {{type}} Report is Ready",
+      "intro": "Your report for {{site}} has been generated and is ready to view.",
+      "viewOnline": "View Report Online",
+      "aiHeading": "AI Strategic Assessment",
+      "quickWinLabel": "Quick Win",
+      "footer": "This email was sent because you purchased a report on Site Mechanic.",
+      "attachmentNote": "Your full PDF report is attached to this email."
+    }
   }
 }

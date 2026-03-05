@@ -9639,5 +9639,17 @@
     "performance": "パフォーマンス",
     "security": "セキュリティ",
     "accessibility": "アクセシビリティ"
+  },
+  "email": {
+    "reportPurchase": {
+      "subject": "{{type}}レポートの準備ができました",
+      "heading": "{{type}}レポートの準備ができました",
+      "intro": "{{site}}のレポートが生成され、閲覧可能になりました。",
+      "viewOnline": "オンラインでレポートを見る",
+      "aiHeading": "AI戦略的評価",
+      "quickWinLabel": "クイックウィン",
+      "footer": "このメールは、Site Mechanicでレポートをご購入いただいたためお送りしています。",
+      "attachmentNote": "完全なPDFレポートがこのメールに添付されています。"
+    }
   }
 }

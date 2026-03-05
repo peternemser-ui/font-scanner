@@ -1099,6 +1099,11 @@ class StripeService {
                     siteUrl,
                     analyzerType
                   });
+
+                  // Fire-and-forget: email the user their report with PDF + AI analysis
+                  const { sendPurchaseReportWithPdf } = require('./emailService');
+                  sendPurchaseReportWithPdf({ userId, reportId, siteUrl, analyzerType })
+                    .catch(err => logger.error('[Email] Purchase report email failed', { error: err.message, reportId }));
                 } catch (e) {
                   logger.error('[ENTITLEMENT_DEBUG] Failed to record report purchase', {
                     sessionId: session.id,
