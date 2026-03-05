@@ -557,14 +557,24 @@ async function loadBillingStatus() {
     const isPro = userPlan === 'pro' || userPlan === 'day_pass';
 
     // Start with purchased reports from server
-    const purchasedReports = (billingStatus.purchasedReportDetails || []).map(report => ({
-      ...report,
-      siteUrlNormalized: normalizeDomain(report.siteUrl),
-      reportTypeLabel: getReportTypeLabel(report.analyzerType),
-      reportTypeCategory: getReportTypeCategory(report.analyzerType),
-      purchasedAtDate: safeParseDate(report.purchasedAt) || new Date(0),
-      accessLevel: 'purchased'
-    }));
+    // Deduplicate: keep only the latest purchase per (site, analyzerType)
+    const purchaseMap = new Map();
+    for (const report of (billingStatus.purchasedReportDetails || [])) {
+      const key = `${normalizeDomain(report.siteUrl)}|${report.analyzerType || 'full'}`;
+      const existing = purchaseMap.get(key);
+      const thisDate = safeParseDate(report.purchasedAt) || new Date(0);
+      if (!existing || thisDate > existing.purchasedAtDate) {
+        purchaseMap.set(key, {
+          ...report,
+          siteUrlNormalized: normalizeDomain(report.siteUrl),
+          reportTypeLabel: getReportTypeLabel(report.analyzerType),
+          reportTypeCategory: getReportTypeCategory(report.analyzerType),
+          purchasedAtDate: thisDate,
+          accessLevel: 'purchased'
+        });
+      }
+    }
+    const purchasedReports = Array.from(purchaseMap.values());
     const knownIds = new Set(purchasedReports.map(r => r.reportId));
 
     // Fetch owned reports from the canonical server endpoint (authoritative for ownership)
@@ -1050,6 +1060,13 @@ function createSiteGroupElement(group, index) {
     const checkboxId = `compare-${report.reportId}`;
     const isChecked = selectedForCompare.has(report.reportId) ? 'checked' : '';
 
+    const rowBadge = report.accessLevel === 'purchased'
+      ? `<span class="report-row__badge report-row__badge--purchased">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+          ${t('reportsPage.badges.purchased', 'Purchased')}
+        </span>`
+      : '';
+
     return `
       <div class="report-row">
         <div class="report-row__checkbox">
@@ -1057,6 +1074,7 @@ function createSiteGroupElement(group, index) {
         </div>
         <span class="report-row__type">${escapeHtml(getReportTypeLabel(report.analyzerType))}</span>
         <span class="report-row__time">${formatDateTime(report.purchasedAtDate)}</span>
+        ${rowBadge}
         <a href="${viewUrl}" class="report-row__action">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
           ${t('reportsPage.buttons.view', 'View')}
