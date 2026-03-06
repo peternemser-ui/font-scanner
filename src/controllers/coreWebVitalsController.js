@@ -7,6 +7,7 @@ const coreWebVitalsService = require('../services/coreWebVitalsService');
 const { createLogger } = require('../utils/logger');
 const { ValidationError, asyncHandler } = require('../utils/errorHandler');
 const { validateUrl, sanitizeUrl, normalizeUrl, testUrlReachability } = require('../utils/validators');
+const { isUrlSafe } = require('../utils/ssrfProtection');
 
 const {
   getAnalyzerKeyOverride,
@@ -34,6 +35,12 @@ exports.analyzeCoreWebVitals = asyncHandler(async (req, res) => {
   
   if (!validateUrl(url)) {
     throw new ValidationError('Invalid URL format');
+  }
+
+  // SSRF protection: DNS-resolution-based check
+  const ssrfCheck = await isUrlSafe(url);
+  if (!ssrfCheck.safe) {
+    throw new ValidationError('Invalid domain. Please provide a valid public domain.');
   }
 
   logger.info(`Starting Core Web Vitals analysis for: ${url}`, { requestId: req.id });

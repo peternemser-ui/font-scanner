@@ -8736,7 +8736,10 @@
       },
       "lighthouse": {
         "title": "Lighthouseカテゴリスコア",
-        "bestPractices": "ベストプラクティス"
+        "bestPractices": "ベストプラクティス",
+        "unavailableTitle": "パフォーマンス指標が一時的に利用できません",
+        "unavailableMessage": "パフォーマンス指標は一時的に利用できません。レポートの他のセクションには影響がありません。",
+        "retryButton": "分析を再試行"
       },
       "sectionIntros": {
         "cwv": "Core Web Vitalsは、実際のユーザー体験を測定するためのGoogleの主要指標です。読み込みパフォーマンス（LCP）、インタラクティブ性（FID/INP）、視覚的安定性（CLS）に焦点を当てています。スコアはGoogleの「良好」「改善が必要」「不良」の閾値と比較されます。3つの指標すべてで「良好」の閾値を満たすことが、最適な検索ランキングに不可欠です。",
@@ -9650,6 +9653,26 @@
       "quickWinLabel": "クイックウィン",
       "footer": "このメールは、Site Mechanicでレポートをご購入いただいたためお送りしています。",
       "attachmentNote": "完全なPDFレポートがこのメールに添付されています。"
+    },
+    "welcome": {
+      "subject": "Site Mechanic へようこそ！",
+      "heading": "Site Mechanic へようこそ！",
+      "intro": "アカウントが作成されました。プロフェッショナルなツールでウェブサイトの分析を始めましょう。",
+      "cta": "始める",
+      "featuresHeading": "できること：",
+      "feature1": "SEO、パフォーマンス、セキュリティの監査を実行",
+      "feature2": "AIによる実践的な改善提案を取得",
+      "feature3": "詳細なPDFレポートをエクスポート",
+      "footer": "このメールは、Site Mechanic でアカウントを作成されたためお送りしています。"
+    },
+    "passwordReset": {
+      "subject": "Site Mechanic パスワードのリセット",
+      "heading": "パスワードをリセット",
+      "intro": "パスワードのリセットリクエストを受け付けました。下のボタンをクリックして新しいパスワードを設定してください。",
+      "cta": "パスワードをリセット",
+      "expiry": "このリンクは1時間後に期限切れになります。",
+      "fallback": "ボタンが機能しない場合は、このURLをブラウザにコピー＆ペーストしてください：",
+      "footer": "パスワードのリセットをリクエストしていない場合は、このメールを無視してください。パスワードは変更されません。"
     }
   }
 }

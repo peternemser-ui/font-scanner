@@ -8670,7 +8670,10 @@
       },
       "lighthouse": {
         "title": "Lighthouse 类别评分",
-        "bestPractices": "最佳实践"
+        "bestPractices": "最佳实践",
+        "unavailableTitle": "性能指标暂时不可用",
+        "unavailableMessage": "性能指标暂时不可用。报告的其他部分不受影响。",
+        "retryButton": "重试分析"
       },
       "sectionIntros": {
         "cwv": "核心网页指标是Google衡量真实用户体验的关键指标。它们关注加载性能（LCP）、交互性（FID/INP）和视觉稳定性（CLS）。评分与Google的良好、需要改进和差三个阈值进行比较。所有三项指标达到良好阈值对最佳搜索排名至关重要。",
@@ -9584,6 +9587,26 @@
       "quickWinLabel": "快速改进",
       "footer": "此邮件是因为您在 Site Mechanic 上购买了报告而发送的。",
       "attachmentNote": "您的完整PDF报告已附在此邮件中。"
+    },
+    "welcome": {
+      "subject": "欢迎使用 Site Mechanic！",
+      "heading": "欢迎使用 Site Mechanic！",
+      "intro": "您的账户已创建。您可以开始使用专业工具分析您的网站了。",
+      "cta": "开始使用",
+      "featuresHeading": "您可以进行以下操作：",
+      "feature1": "运行 SEO、性能和安全审计",
+      "feature2": "获取基于 AI 的实用建议",
+      "feature3": "导出详细的 PDF 报告",
+      "footer": "您收到此邮件是因为您在 Site Mechanic 上创建了账户。"
+    },
+    "passwordReset": {
+      "subject": "重置您的 Site Mechanic 密码",
+      "heading": "重置您的密码",
+      "intro": "我们收到了重置您密码的请求。请点击下方按钮选择新密码。",
+      "cta": "重置密码",
+      "expiry": "此链接将在 1 小时后过期。",
+      "fallback": "如果按钮无法使用，请将此链接复制并粘贴到浏览器中：",
+      "footer": "如果您没有请求重置密码，可以忽略此邮件。您的密码将保持不变。"
     }
   }
 }

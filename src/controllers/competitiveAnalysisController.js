@@ -13,6 +13,7 @@ const competitiveAnalysisService = require('../services/competitiveAnalysisServi
 const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { validateUrl, sanitizeUrl, normalizeUrl, testUrlReachability } = require('../utils/validators');
 const { createLogger } = require('../utils/logger');
+const { isUrlSafe } = require('../utils/ssrfProtection');
 const config = require('../config');
 const crypto = require('crypto');
 
@@ -62,6 +63,12 @@ const analyzeCompetitors = asyncHandler(async (req, res) => {
     throw new ValidationError('Invalid URL format for your site');
   }
 
+  // SSRF protection for your URL
+  const yourSsrfCheck = await isUrlSafe(normalizedYourUrl);
+  if (!yourSsrfCheck.safe) {
+    throw new ValidationError('Invalid domain. Please provide a valid public domain.');
+  }
+
   // Validate competitor URLs
   if (!competitorUrls || !Array.isArray(competitorUrls) || competitorUrls.length === 0) {
     throw new ValidationError('At least one competitor URL is required');
@@ -73,15 +80,20 @@ const analyzeCompetitors = asyncHandler(async (req, res) => {
     throw new ValidationError(`Maximum ${maxCompetitors} competitor URLs allowed (system resource protection)`);
   }
 
-  // Sanitize and validate all competitor URLs
-  const sanitizedCompetitorUrls = competitorUrls.map(url => {
+  // Sanitize and validate all competitor URLs (with SSRF protection)
+  const sanitizedCompetitorUrls = [];
+  for (const url of competitorUrls) {
     const sanitized = sanitizeUrl(url);
     const normalized = normalizeUrl(sanitized);
     if (!validateUrl(normalized)) {
       throw new ValidationError(`Invalid competitor URL: ${url}`);
     }
-    return normalized;
-  });
+    const compSsrfCheck = await isUrlSafe(normalized);
+    if (!compSsrfCheck.safe) {
+      throw new ValidationError(`Invalid competitor URL: ${url}`);
+    }
+    sanitizedCompetitorUrls.push(normalized);
+  }
 
   logger.info(`Competitive analysis requested: ${normalizedYourUrl} vs ${sanitizedCompetitorUrls.length} competitors`, {
     requestId: req.id,

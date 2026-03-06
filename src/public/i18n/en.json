@@ -691,7 +691,10 @@
       },
       "lighthouse": {
         "title": "Lighthouse Category Scores",
-        "bestPractices": "Best Practices"
+        "bestPractices": "Best Practices",
+        "unavailableTitle": "Performance Metrics Temporarily Unavailable",
+        "unavailableMessage": "Performance metrics are temporarily unavailable. Other report sections are unaffected.",
+        "retryButton": "Retry Analysis"
       },
       "sectionIntros": {
         "cwv": "Core Web Vitals are Google's key metrics for measuring real-world user experience. They focus on loading performance (LCP), interactivity (FID/INP), and visual stability (CLS). Scores are compared against Google's thresholds for Good, Needs Improvement, and Poor performance. Meeting the Good thresholds for all three metrics is essential for optimal search rankings.",
@@ -9584,6 +9587,26 @@
       "quickWinLabel": "Quick Win",
       "footer": "This email was sent because you purchased a report on Site Mechanic.",
       "attachmentNote": "Your full PDF report is attached to this email."
+    },
+    "welcome": {
+      "subject": "Welcome to Site Mechanic!",
+      "heading": "Welcome to Site Mechanic!",
+      "intro": "Your account has been created. You're ready to start analyzing your websites with professional-grade tools.",
+      "cta": "Get Started",
+      "featuresHeading": "Here's what you can do:",
+      "feature1": "Run SEO, performance, and security audits",
+      "feature2": "Get actionable recommendations with AI insights",
+      "feature3": "Export detailed PDF reports",
+      "footer": "You're receiving this because you created an account on Site Mechanic."
+    },
+    "passwordReset": {
+      "subject": "Reset your Site Mechanic password",
+      "heading": "Reset Your Password",
+      "intro": "We received a request to reset your password. Click the button below to choose a new one.",
+      "cta": "Reset Password",
+      "expiry": "This link expires in 1 hour.",
+      "fallback": "If the button doesn't work, copy and paste this URL into your browser:",
+      "footer": "If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged."
     }
   }
 }

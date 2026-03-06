@@ -1849,8 +1849,48 @@ document.addEventListener('DOMContentLoaded', () => {
       </div>
     ` : '';
 
+    // Lighthouse unavailability banner — shown when both desktop + mobile Lighthouse fell back
+    const lighthouseUnavailableBanner = (results.lighthouseUnavailable || data.lighthouseUnavailable) ? `
+      <div id="lighthouse-unavailable-banner" role="alert" style="
+        background: rgba(245, 158, 11, 0.12);
+        border: 1px solid rgba(245, 158, 11, 0.45);
+        border-radius: 10px;
+        padding: 1rem 1.25rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: flex-start;
+        gap: 0.875rem;
+      ">
+        <span aria-hidden="true" style="font-size: 1.25rem; line-height: 1.4; flex-shrink: 0;">&#9888;</span>
+        <div style="flex: 1; min-width: 0;">
+          <p style="margin: 0 0 0.25rem 0; font-weight: 600; font-size: 0.9375rem; color: #F59E0B;">
+            ${t('performance.lighthouse.unavailableTitle', 'Performance Metrics Temporarily Unavailable')}
+          </p>
+          <p style="margin: 0 0 0.625rem 0; font-size: 0.875rem; color: var(--r-text-muted, #9CA3AF); line-height: 1.5;">
+            ${t('performance.lighthouse.unavailableMessage', 'Performance metrics are temporarily unavailable. Other report sections are unaffected.')}
+          </p>
+          <button
+            id="lighthouse-retry-btn"
+            type="button"
+            style="
+              background: rgba(245, 158, 11, 0.18);
+              border: 1px solid rgba(245, 158, 11, 0.5);
+              border-radius: 6px;
+              color: #F59E0B;
+              cursor: pointer;
+              font-size: 0.8125rem;
+              font-weight: 600;
+              padding: 0.375rem 0.875rem;
+              transition: background 0.15s;
+            "
+          >${t('performance.lighthouse.retryButton', 'Retry Analysis')}</button>
+        </div>
+      </div>
+    ` : '';
+
     const html = `
       ${ReportShell.renderReportHeader({ title: t('reports.performanceHub.lighthouseTitle', 'Speed & UX Report: Lighthouse Audit'), url, timestamp: generatedAt, badgeText: t('reports.performanceHub.lighthouseBadge', 'Lighthouse'), mode: 'full' })}
+      ${lighthouseUnavailableBanner}
       ${screenshotHTML}
       ${summaryDonuts}
       ${accordions}
@@ -1881,6 +1921,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
     }
+    // Wire up Lighthouse retry button — triggers a fresh full analysis for the same URL
+    const lighthouseRetryBtn = resultsContent.querySelector('#lighthouse-retry-btn');
+    if (lighthouseRetryBtn) {
+      // Hover effects via JS (inline onmouseover blocked by CSP script-src-attr)
+      lighthouseRetryBtn.addEventListener('mouseover', function() {
+        this.style.background = 'rgba(245,158,11,0.28)';
+      });
+      lighthouseRetryBtn.addEventListener('mouseout', function() {
+        this.style.background = 'rgba(245,158,11,0.18)';
+      });
+      lighthouseRetryBtn.addEventListener('click', function() {
+        const retryUrl = urlInput ? urlInput.value.trim() : '';
+        if (!retryUrl) return;
+        // Remove the banner immediately so user gets feedback
+        const banner = document.getElementById('lighthouse-unavailable-banner');
+        if (banner) banner.remove();
+        // Trigger a fresh full-mode scan via the existing scan button flow
+        const modeTabFull = document.querySelector('[data-tab="full"]') || document.querySelector('.tab-btn[data-mode="full"]');
+        if (modeTabFull) modeTabFull.click();
+        const scanBtn = document.getElementById('analyzeButton') || document.querySelector('[data-action="scan"]');
+        if (scanBtn) {
+          setTimeout(function() { scanBtn.click(); }, 100);
+        }
+      });
+    }
+
     window.currentPerformanceHubResults = { mode: 'full', url, data: results };
     ReportAccordion.initInteractions();
     showPdfExportButton();

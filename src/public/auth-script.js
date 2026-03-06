@@ -142,7 +142,7 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
     const response = await fetch('/api/auth/register', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password })
+      body: JSON.stringify({ email, password, locale: window.i18n?.locale || document.documentElement.lang || 'en' })
     });
 
     const data = await response.json();
@@ -249,7 +249,7 @@ document.getElementById('forgotPasswordForm')?.addEventListener('submit', async 
     const response = await fetch('/api/auth/forgot-password', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email })
+      body: JSON.stringify({ email, locale: window.i18n?.locale || document.documentElement.lang || 'en' })
     });
 
     const data = await response.json();

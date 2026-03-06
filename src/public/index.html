@@ -346,12 +346,7 @@
 
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NC831RG5CE"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-NC831RG5CE');
-</script>
+<script src="/js/gtag-init.js"></script>
 </head>
   <body>
     <!-- Navigation Bar with Unified Header (rendered by nav-template.js) -->
@@ -642,18 +637,7 @@ Get prioritized fixes.</h1>
 
     <!-- Usage Pill Component -->
     <script src="/js/components/UsagePill.js?v=3.0.0"></script>
-    <script>
-      // Initialize Usage Pill on homepage
-      document.addEventListener('DOMContentLoaded', function() {
-        if (window.UsagePill) {
-          window.UsagePill.create('#usagePillContainer', {
-            mode: 'inline',
-            showReports: false,
-            showUpgradeLink: true
-          });
-        }
-      });
-    </script>
+    <script src="/js/homepage-init.js"></script>
 
     <!-- Analyzer Loader -->
     <script src="analyzer-loader.js?v=3.0.0"></script>

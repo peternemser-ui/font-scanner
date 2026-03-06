@@ -5,6 +5,7 @@
 const brokenLinkService = require('../services/brokenLinkService');
 const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { validateUrl, sanitizeUrl, normalizeUrl, testUrlReachability } = require('../utils/validators');
+const { isUrlSafe } = require('../utils/ssrfProtection');
 const { createLogger } = require('../utils/logger');
 
 const {
@@ -32,6 +33,12 @@ const checkBrokenLinks = asyncHandler(async (req, res) => {
 
   if (!validateUrl(normalized)) {
     throw new ValidationError('Invalid URL format');
+  }
+
+  // SSRF protection: DNS-resolution-based check
+  const ssrfCheck = await isUrlSafe(normalized);
+  if (!ssrfCheck.safe) {
+    throw new ValidationError('Invalid domain. Please provide a valid public domain.');
   }
 
   logger.info(`Broken link check requested: ${normalized}`, {

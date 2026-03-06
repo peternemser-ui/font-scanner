@@ -16,6 +16,7 @@ const { getRequestScanStartedAt, attachToResponse } = require('../utils/scanTime
 const { makeReportId } = require('../utils/reportId');
 const { ensureReportScreenshot } = require('../utils/reportScreenshot');
 const { getAnalyzerKeyOverride } = require('../utils/controllerHelpers');
+const { isUrlSafe } = require('../utils/ssrfProtection');
 
 const logger = createLogger('ScanController');
 
@@ -62,6 +63,12 @@ const scanWebsite = asyncHandler(async (req, res) => {
   }
 
   if (!isValidDomain(url)) {
+    throw new ValidationError('Invalid domain. Please provide a valid public domain.');
+  }
+
+  // SSRF protection: DNS-resolution-based check to prevent DNS rebinding attacks
+  const ssrfCheck = await isUrlSafe(url);
+  if (!ssrfCheck.safe) {
     throw new ValidationError('Invalid domain. Please provide a valid public domain.');
   }
 
@@ -655,8 +662,14 @@ const performBestInClassScan = asyncHandler(async (req, res) => {
     throw new ValidationError('Invalid URL format for best-in-class scan');
   }
 
+  // SSRF protection: DNS-resolution-based check
+  const bestSsrfCheck = await isUrlSafe(url);
+  if (!bestSsrfCheck.safe) {
+    throw new ValidationError('Invalid domain. Please provide a valid public domain.');
+  }
+
   // Test URL reachability
-  logger.info('🔍 Testing URL reachability for best-in-class scan', { url });
+  logger.info('Testing URL reachability for best-in-class scan', { url });
   const isReachable = await testUrlReachability(url);
   
   if (!isReachable) {
@@ -750,6 +763,12 @@ const performSEOScan = asyncHandler(async (req, res) => {
   }
 
   if (!isValidDomain(url)) {
+    throw new ValidationError('Invalid domain. Please provide a valid public domain.');
+  }
+
+  // SSRF protection: DNS-resolution-based check
+  const seoSsrfCheck = await isUrlSafe(url);
+  if (!seoSsrfCheck.safe) {
     throw new ValidationError('Invalid domain. Please provide a valid public domain.');
   }
 

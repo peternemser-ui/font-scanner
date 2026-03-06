@@ -8670,7 +8670,10 @@
       },
       "lighthouse": {
         "title": "Lighthouse-Kategoriebewertungen",
-        "bestPractices": "Best Practices"
+        "bestPractices": "Best Practices",
+        "unavailableTitle": "Leistungsmetriken vorübergehend nicht verfügbar",
+        "unavailableMessage": "Leistungsmetriken sind vorübergehend nicht verfügbar. Andere Berichtabschnitte sind nicht betroffen.",
+        "retryButton": "Analyse wiederholen"
       },
       "sectionIntros": {
         "cwv": "Die Core Web Vitals sind Googles wichtigste Metriken zur Messung der realen Benutzererfahrung. Sie konzentrieren sich auf Ladeleistung (LCP), Interaktivität (FID/INP) und visuelle Stabilität (CLS). Die Bewertungen werden mit Googles Schwellenwerten für Gut, Verbesserungsbedürftig und Schlecht verglichen. Das Erreichen der Gut-Schwellenwerte für alle drei Metriken ist essentiell für ein optimales Suchmaschinenranking.",
@@ -9584,6 +9587,26 @@
       "quickWinLabel": "Schneller Gewinn",
       "footer": "Diese E-Mail wurde gesendet, weil Sie einen Bericht bei Site Mechanic erworben haben.",
       "attachmentNote": "Ihr vollständiger PDF-Bericht ist dieser E-Mail angehängt."
+    },
+    "welcome": {
+      "subject": "Willkommen bei Site Mechanic!",
+      "heading": "Willkommen bei Site Mechanic!",
+      "intro": "Ihr Konto wurde erstellt. Sie können jetzt Ihre Websites mit professionellen Tools analysieren.",
+      "cta": "Loslegen",
+      "featuresHeading": "Das können Sie tun:",
+      "feature1": "SEO-, Performance- und Sicherheitsaudits durchführen",
+      "feature2": "Umsetzbare Empfehlungen mit KI-Erkenntnissen erhalten",
+      "feature3": "Detaillierte PDF-Berichte exportieren",
+      "footer": "Sie erhalten diese E-Mail, weil Sie ein Konto bei Site Mechanic erstellt haben."
+    },
+    "passwordReset": {
+      "subject": "Setzen Sie Ihr Site Mechanic-Passwort zurück",
+      "heading": "Passwort zurücksetzen",
+      "intro": "Wir haben eine Anfrage zum Zurücksetzen Ihres Passworts erhalten. Klicken Sie auf die Schaltfläche unten, um ein neues zu wählen.",
+      "cta": "Passwort zurücksetzen",
+      "expiry": "Dieser Link läuft in 1 Stunde ab.",
+      "fallback": "Wenn die Schaltfläche nicht funktioniert, kopieren Sie diese URL und fügen Sie sie in Ihren Browser ein:",
+      "footer": "Wenn Sie kein Zurücksetzen des Passworts angefordert haben, können Sie diese E-Mail ignorieren. Ihr Passwort bleibt unverändert."
     }
   }
 }

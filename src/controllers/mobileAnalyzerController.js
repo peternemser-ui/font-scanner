@@ -6,6 +6,7 @@
 const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { createLogger } = require('../utils/logger');
 const { sanitizeUrl, validateUrl, normalizeUrl } = require('../utils/validators');
+const { isUrlSafe } = require('../utils/ssrfProtection');
 const mobileAnalyzerService = require('../services/mobileAnalyzerService');
 const { getRequestScanStartedAt, attachToResponse } = require('../utils/scanTimestamp');
 
@@ -33,6 +34,12 @@ const analyzeMobile = asyncHandler(async (req, res) => {
   
   if (!validateUrl(normalized)) {
     throw new ValidationError('Invalid URL format. Please enter a valid URL.');
+  }
+
+  // SSRF protection: DNS-resolution-based check
+  const ssrfCheck = await isUrlSafe(normalized);
+  if (!ssrfCheck.safe) {
+    throw new ValidationError('Invalid domain. Please provide a valid public domain.');
   }
 
   logger.info(`Mobile analysis requested: ${normalized}`, {

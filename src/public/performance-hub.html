@@ -899,12 +899,7 @@
   <link rel="stylesheet" href="/pdf-export-styles.css?v=3.0.0">
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NC831RG5CE"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-NC831RG5CE');
-</script>
+<script src="/js/gtag-init.js"></script>
 </head>
 <body data-page="performance-hub">
   <!-- Navigation Bar -->
@@ -965,74 +960,6 @@
   <!-- Analyzer Script -->
   <script src="/performance-hub-script.js?v=3.0.0"></script>
   
-  <script>
-    // PDF Export Function using improved utility
-    async function exportToPDF() {
-      const urlInput = document.getElementById('urlInput');
-      const url = urlInput ? urlInput.value : '';
-      const exportBtn = document.getElementById('exportPdfBtn');
-
-      // Create PDF exporter with Speed & UX configuration
-      const exporter = new PDFExportUtility({
-        filename: `speed-ux-report-${new Date().toISOString().split('T')[0]}.pdf`,
-        reportTitle: 'Site Mechanic',
-        reportSubtitle: 'Speed & UX Report',
-        url: url,
-        scale: 2,
-        pageFormat: 'a4'
-      });
-
-      try {
-        // Export with automatic accordion expansion
-        await exporter.export('#resultsContent', exportBtn);
-      } catch (error) {
-        console.error('PDF export failed:', error);
-      }
-    }
-    
-    // Tab mode selector with mode indicator update
-    document.querySelectorAll('.tabs__item').forEach(tab => {
-      tab.addEventListener('click', function() {
-        document.querySelectorAll('.tabs__item').forEach(t => t.classList.remove('tabs__item--active'));
-        this.classList.add('tabs__item--active');
-
-        const mode = this.dataset.mode;
-        if (window.setPerformanceMode) {
-          window.setPerformanceMode(mode);
-          return;
-        }
-
-        const translate = (key, fallback) => {
-          if (window.i18n && typeof window.i18n.t === 'function') {
-            const result = window.i18n.t(key);
-            if (result !== key) return result;
-          }
-          return fallback;
-        };
-
-        const modeLabels = {
-          quick: translate('reports.modeLabels.quick', 'Quick scan'),
-          cwv: translate('reports.modeLabels.cwv', 'Core Web Vitals'),
-          full: translate('reports.modeLabels.full', 'Lighthouse Audit')
-        };
-
-        const modeDescriptions = {
-          quick: translate('performanceHub.modes.quickDesc', 'Resource analysis focusing on requests, page weight, blocking assets, and server response time.'),
-          cwv: translate('performanceHub.modes.cwvDescLong', 'Core Web Vitals deep dive: LCP, CLS, INP/TBT with risk flags and pass/fail indicators.'),
-          full: translate('performanceHub.modes.fullDescLong', 'Complete Lighthouse Audit across Performance, Accessibility, Best Practices, and SEO (desktop + mobile).')
-        };
-
-        const selectedMode = document.getElementById('selectedMode');
-        if (selectedMode) selectedMode.textContent = modeLabels[mode] || mode;
-        const modeDescription = document.getElementById('modeDescription');
-        if (modeDescription) modeDescription.textContent = modeDescriptions[mode] || modeDescriptions.quick;
-      });
-    });
-    
-    // Initialize navigation
-    document.addEventListener('DOMContentLoaded', function() {
-      initializeNavigation('performance-hub', 'SITE MECHANIC', '> speed & ux');
-    });
-  </script>
+  <script src="/js/performance-hub-init.js"></script>
 </body>
 </html>

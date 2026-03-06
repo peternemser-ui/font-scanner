@@ -10,6 +10,56 @@ const logger = createLogger('EmailService');
 
 const I18N_DIR = path.join(__dirname, '../public/i18n');
 
+/**
+ * Build the branded email wrapper with red logo header.
+ * All transactional emails should use this for consistent UX.
+ * @param {object} opts
+ * @param {string} opts.body - Inner HTML content for the email body
+ * @param {string} opts.fromName - Company name for the footer copyright
+ * @returns {string} Full HTML email document
+ */
+function brandedEmailHtml({ body, fromName }) {
+  const appUrl = process.env.APP_BASE_URL || process.env.BASE_URL || 'https://sitemechanic.io';
+  const logoUrl = `${appUrl}/assets/logo-red.svg`;
+  return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#f4f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:8px;overflow:hidden;">
+          <!-- Header with red logo -->
+          <tr>
+            <td style="background-color:#0F172A;padding:28px 32px;text-align:center;">
+              <img src="${logoUrl}" alt="Site Mechanic" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              ${body}
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="background-color:#f9fafb;padding:20px 32px;text-align:center;">
+              <p style="margin:0;color:#9ca3af;font-size:12px;">
+                &copy; ${new Date().getFullYear()} ${escHtml(fromName)}
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+}
+
 // Create reusable transporter
 const transporter = nodemailer.createTransport({
   host: config.email.smtp.host,
@@ -25,80 +75,57 @@ const transporter = nodemailer.createTransport({
  * Send password reset email
  * @param {string} toEmail - Recipient email address
  * @param {string} resetUrl - Full password reset URL with token
+ * @param {string} [locale='en'] - User's locale for i18n
  */
-async function sendPasswordResetEmail(toEmail, resetUrl) {
+async function sendPasswordResetEmail(toEmail, resetUrl, locale) {
   const fromName = config.email.from.name;
   const fromAddress = config.email.from.address;
+  const lang = locale || 'en';
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;background-color:#f4f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:8px;overflow:hidden;">
-          <!-- Header -->
-          <tr>
-            <td style="background-color:#0F172A;padding:24px 32px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Site Mechanic</h1>
-            </td>
-          </tr>
-          <!-- Body -->
-          <tr>
-            <td style="padding:32px;">
-              <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:22px;font-weight:600;">Reset Your Password</h2>
+  const subject = getI18nString(lang, 'email.passwordReset.subject', 'Reset your Site Mechanic password');
+  const heading = getI18nString(lang, 'email.passwordReset.heading', 'Reset Your Password');
+  const intro = getI18nString(lang, 'email.passwordReset.intro', 'We received a request to reset your password. Click the button below to choose a new one.');
+  const cta = getI18nString(lang, 'email.passwordReset.cta', 'Reset Password');
+  const expiry = getI18nString(lang, 'email.passwordReset.expiry', 'This link expires in 1 hour.');
+  const fallback = getI18nString(lang, 'email.passwordReset.fallback', 'If the button doesn\'t work, copy and paste this URL into your browser:');
+  const footerText = getI18nString(lang, 'email.passwordReset.footer', 'If you didn\'t request a password reset, you can safely ignore this email. Your password will remain unchanged.');
+
+  const html = brandedEmailHtml({
+    fromName,
+    body: `
+              <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:22px;font-weight:600;">${escHtml(heading)}</h2>
               <p style="margin:0 0 24px;color:#4a4a68;font-size:15px;line-height:1.6;">
-                We received a request to reset your password. Click the button below to choose a new one.
+                ${escHtml(intro)}
               </p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding:8px 0 24px;">
-                    <a href="${resetUrl}" style="display:inline-block;background-color:#3B82F6;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 32px;border-radius:6px;">
-                      Reset Password
+                    <a href="${resetUrl}" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 32px;border-radius:6px;">
+                      ${escHtml(cta)}
                     </a>
                   </td>
                 </tr>
               </table>
               <p style="margin:0 0 8px;color:#6b7280;font-size:13px;line-height:1.5;">
-                This link expires in <strong>1 hour</strong>.
+                <strong>${escHtml(expiry)}</strong>
               </p>
               <p style="margin:0 0 24px;color:#6b7280;font-size:13px;line-height:1.5;">
-                If the button doesn't work, copy and paste this URL into your browser:
+                ${escHtml(fallback)}
               </p>
-              <p style="margin:0 0 24px;color:#3B82F6;font-size:13px;line-height:1.5;word-break:break-all;">
+              <p style="margin:0 0 24px;color:#DC2626;font-size:13px;line-height:1.5;word-break:break-all;">
                 ${resetUrl}
               </p>
               <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
               <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.5;">
-                If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged.
-              </p>
-            </td>
-          </tr>
-          <!-- Footer -->
-          <tr>
-            <td style="background-color:#f9fafb;padding:20px 32px;text-align:center;">
-              <p style="margin:0;color:#9ca3af;font-size:12px;">
-                &copy; ${new Date().getFullYear()} ${fromName}
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+                ${escHtml(footerText)}
+              </p>`
+  });
 
   const info = await transporter.sendMail({
     from: `"${fromName}" <${fromAddress}>`,
     to: toEmail,
-    subject: 'Reset your Site Mechanic password',
-    text: `Reset your password by visiting: ${resetUrl}\n\nThis link expires in 1 hour.\n\nIf you didn't request this, ignore this email.`,
+    subject,
+    text: `${heading}\n\n${intro}\n\n${resetUrl}\n\n${expiry}\n\n${footerText}`,
     html
   });
 
@@ -298,27 +325,9 @@ async function sendReportPurchaseEmail({ toEmail, reportId, siteUrl, analyzerTyp
               </table>` : ''}`;
   }
 
-  const html = `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin:0;padding:0;background-color:#f4f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:8px;overflow:hidden;">
-          <!-- Header -->
-          <tr>
-            <td style="background-color:#0F172A;padding:24px 32px;text-align:center;">
-              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:600;">Site Mechanic</h1>
-            </td>
-          </tr>
-          <!-- Body -->
-          <tr>
-            <td style="padding:32px;">
+  const html = brandedEmailHtml({
+    fromName,
+    body: `
               <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:22px;font-weight:600;">${escHtml(heading)}</h2>
               <p style="margin:0 0 24px;color:#4a4a68;font-size:15px;line-height:1.6;">
                 ${escHtml(intro)}
@@ -326,7 +335,7 @@ async function sendReportPurchaseEmail({ toEmail, reportId, siteUrl, analyzerTyp
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding:8px 0 24px;">
-                    <a href="${reportUrl}" style="display:inline-block;background-color:#3B82F6;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 32px;border-radius:6px;">
+                    <a href="${reportUrl}" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 32px;border-radius:6px;">
                       ${escHtml(viewOnline)}
                     </a>
                   </td>
@@ -337,23 +346,8 @@ async function sendReportPurchaseEmail({ toEmail, reportId, siteUrl, analyzerTyp
               <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
               <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.5;">
                 ${escHtml(footerText)}
-              </p>
-            </td>
-          </tr>
-          <!-- Footer -->
-          <tr>
-            <td style="background-color:#f9fafb;padding:20px 32px;text-align:center;">
-              <p style="margin:0;color:#9ca3af;font-size:12px;">
-                &copy; ${new Date().getFullYear()} ${escHtml(fromName)}
-              </p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>`;
+              </p>`
+  });
 
   const plainText = `${heading}\n\n${intro}\n\nView your report: ${reportUrl}\n\n${footerText}`;
 
@@ -518,4 +512,77 @@ async function sendPurchaseReportWithPdf({ userId, reportId, siteUrl, analyzerTy
   });
 }
 
-module.exports = { sendPasswordResetEmail, sendTestEmail, verifyConnection, sendReportPurchaseEmail, sendPurchaseReportWithPdf };
+/**
+ * Send a welcome email when a new user registers.
+ * @param {string} toEmail - The new user's email address
+ * @param {string} [locale='en'] - User's locale for i18n
+ */
+async function sendWelcomeEmail(toEmail, locale) {
+  const fromName = config.email.from.name;
+  const fromAddress = config.email.from.address;
+  const appUrl = process.env.APP_BASE_URL || process.env.BASE_URL || 'https://sitemechanic.io';
+  const lang = locale || 'en';
+
+  const subject = getI18nString(lang, 'email.welcome.subject', 'Welcome to Site Mechanic!');
+  const heading = getI18nString(lang, 'email.welcome.heading', 'Welcome to Site Mechanic!');
+  const intro = getI18nString(lang, 'email.welcome.intro', 'Your account has been created. You\'re ready to start analyzing your websites with professional-grade tools.');
+  const cta = getI18nString(lang, 'email.welcome.cta', 'Get Started');
+  const featuresHeading = getI18nString(lang, 'email.welcome.featuresHeading', 'Here\'s what you can do:');
+  const feature1 = getI18nString(lang, 'email.welcome.feature1', 'Run SEO, performance, and security audits');
+  const feature2 = getI18nString(lang, 'email.welcome.feature2', 'Get actionable recommendations with AI insights');
+  const feature3 = getI18nString(lang, 'email.welcome.feature3', 'Export detailed PDF reports');
+  const footerText = getI18nString(lang, 'email.welcome.footer', 'You\'re receiving this because you created an account on Site Mechanic.');
+
+  const html = brandedEmailHtml({
+    fromName,
+    body: `
+              <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:22px;font-weight:600;">${escHtml(heading)}</h2>
+              <p style="margin:0 0 24px;color:#4a4a68;font-size:15px;line-height:1.6;">
+                ${escHtml(intro)}
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td align="center" style="padding:8px 0 24px;">
+                    <a href="${appUrl}" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 32px;border-radius:6px;">
+                      ${escHtml(cta)}
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0 0 8px;color:#4a4a68;font-size:14px;line-height:1.6;font-weight:600;">${escHtml(featuresHeading)}</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+                <tr>
+                  <td style="padding:6px 0;color:#4a4a68;font-size:14px;line-height:1.5;">
+                    &#8226;&nbsp; ${escHtml(feature1)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;color:#4a4a68;font-size:14px;line-height:1.5;">
+                    &#8226;&nbsp; ${escHtml(feature2)}
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:6px 0;color:#4a4a68;font-size:14px;line-height:1.5;">
+                    &#8226;&nbsp; ${escHtml(feature3)}
+                  </td>
+                </tr>
+              </table>
+              <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
+              <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.5;">
+                ${escHtml(footerText)}
+              </p>`
+  });
+
+  const info = await transporter.sendMail({
+    from: `"${fromName}" <${fromAddress}>`,
+    to: toEmail,
+    subject,
+    text: `${heading}\n\n${intro}\n\n${appUrl}\n\n- ${feature1}\n- ${feature2}\n- ${feature3}`,
+    html
+  });
+
+  logger.info(`[Email] Welcome email sent to ${toEmail}`, { messageId: info.messageId });
+  return info;
+}
+
+module.exports = { sendPasswordResetEmail, sendWelcomeEmail, sendTestEmail, verifyConnection, sendReportPurchaseEmail, sendPurchaseReportWithPdf };

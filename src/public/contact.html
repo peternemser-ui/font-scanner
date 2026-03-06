@@ -232,12 +232,7 @@
     <script src="/i18n.js?v=3.0.0"></script>
   <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NC831RG5CE"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-NC831RG5CE');
-</script>
+<script src="/js/gtag-init.js"></script>
 </head>
   <body>
     <div id="nav-placeholder"></div>
@@ -313,16 +308,6 @@
     <script src="/pro-utils.js?v=3.0.0"></script>
     <script src="nav-template.js?v=3.0.0"></script>
     <script src="/language-switcher.js?v=3.0.0"></script>
-    <script>
-    (function() {
-      // Show success state if redirected back after send
-      if (window.location.search.includes('sent=true')) {
-        var form = document.getElementById('contactForm');
-        var success = document.getElementById('contactSuccess');
-        if (form) form.style.display = 'none';
-        if (success) success.style.display = 'block';
-      }
-    })();
-    </script>
+    <script src="/js/contact-success.js"></script>
   </body>
 </html>

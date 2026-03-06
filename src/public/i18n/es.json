@@ -691,7 +691,10 @@
       },
       "lighthouse": {
         "title": "Puntuaciones por Categoría de Lighthouse",
-        "bestPractices": "Mejores Prácticas"
+        "bestPractices": "Mejores Prácticas",
+        "unavailableTitle": "Métricas de rendimiento temporalmente no disponibles",
+        "unavailableMessage": "Las métricas de rendimiento no están disponibles temporalmente. Las demás secciones del informe no se ven afectadas.",
+        "retryButton": "Reintentar análisis"
       },
       "sectionIntros": {
         "cwv": "Los Core Web Vitals son las métricas clave de Google para medir la experiencia real del usuario. Se centran en el rendimiento de carga (LCP), la interactividad (FID/INP) y la estabilidad visual (CLS). Las puntuaciones se comparan con los umbrales de Google para Bueno, Necesita Mejora y Deficiente. Cumplir los umbrales de Bueno para las tres métricas es esencial para un posicionamiento óptimo en buscadores.",
@@ -9588,6 +9591,26 @@
       "quickWinLabel": "Mejora rápida",
       "footer": "Este correo fue enviado porque compraste un informe en Site Mechanic.",
       "attachmentNote": "Tu informe PDF completo está adjunto a este correo."
+    },
+    "welcome": {
+      "subject": "Bienvenido a Site Mechanic",
+      "heading": "Bienvenido a Site Mechanic",
+      "intro": "Tu cuenta ha sido creada. Ya puedes comenzar a analizar tus sitios web con herramientas profesionales.",
+      "cta": "Comenzar",
+      "featuresHeading": "Esto es lo que puedes hacer:",
+      "feature1": "Ejecutar auditorías de SEO, rendimiento y seguridad",
+      "feature2": "Obtener recomendaciones prácticas con inteligencia artificial",
+      "feature3": "Exportar informes detallados en PDF",
+      "footer": "Recibes este correo porque creaste una cuenta en Site Mechanic."
+    },
+    "passwordReset": {
+      "subject": "Restablecer tu contraseña de Site Mechanic",
+      "heading": "Restablecer tu contraseña",
+      "intro": "Recibimos una solicitud para restablecer tu contraseña. Haz clic en el botón de abajo para elegir una nueva.",
+      "cta": "Restablecer contraseña",
+      "expiry": "Este enlace expira en 1 hora.",
+      "fallback": "Si el botón no funciona, copia y pega esta URL en tu navegador:",
+      "footer": "Si no solicitaste restablecer tu contraseña, puedes ignorar este correo. Tu contraseña no se modificará."
     }
   }
 }

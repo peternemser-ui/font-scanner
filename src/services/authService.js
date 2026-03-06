@@ -222,7 +222,7 @@ class AuthService {
    * Generate password reset token
    * Token expires in 1 hour
    */
-  async generateResetToken(email) {
+  async generateResetToken(email, locale) {
     const db = getDatabase();
     email = email.toLowerCase().trim();
 
@@ -251,7 +251,7 @@ class AuthService {
     try {
       const emailService = require('./emailService');
       const resetUrl = `${config.email.appUrl}/auth.html?userId=${user.id}&token=${encodeURIComponent(resetToken)}`;
-      await emailService.sendPasswordResetEmail(user.email, resetUrl);
+      await emailService.sendPasswordResetEmail(user.email, resetUrl, locale);
     } catch (emailErr) {
       logger.error('[Auth] Failed to send reset email', { error: emailErr.message });
       // Don't fail the request — security: don't reveal if email was sent

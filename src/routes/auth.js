@@ -18,13 +18,19 @@ const logger = createLogger('AuthRoutes');
  */
 router.post('/register', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, locale } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
     }
 
     const result = await authService.register(email, password);
+
+    // Send welcome email (fire-and-forget, don't block registration)
+    const emailService = require('../services/emailService');
+    emailService.sendWelcomeEmail(email, locale).catch(err => {
+      logger.warn('Failed to send welcome email', { error: err.message });
+    });
 
     res.json({
       success: true,
@@ -410,13 +416,13 @@ router.get('/usage', optionalAuth, async (req, res) => {
  */
 router.post('/forgot-password', async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email, locale } = req.body;
 
     if (!email) {
       return res.status(400).json({ error: 'Email is required' });
     }
 
-    const result = await authService.generateResetToken(email);
+    const result = await authService.generateResetToken(email, locale);
 
     // In production, the token would be sent via email
     // Never expose the token in the API response

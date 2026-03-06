@@ -10,6 +10,7 @@ const gdprComplianceService = require('../services/gdprComplianceService');
 const { asyncHandler, ValidationError } = require('../utils/errorHandler');
 const { validateUrl, sanitizeUrl, normalizeUrl, testUrlReachability } = require('../utils/validators');
 const { createLogger } = require('../utils/logger');
+const { isUrlSafe } = require('../utils/ssrfProtection');
 
 const {
   getAnalyzerKeyOverride,
@@ -30,6 +31,12 @@ const validateAndPrepareUrl = async (url, requestId) => {
 
   if (!validateUrl(normalized)) {
     throw new ValidationError('Invalid URL format');
+  }
+
+  // SSRF protection: DNS-resolution-based check
+  const ssrfCheck = await isUrlSafe(normalized);
+  if (!ssrfCheck.safe) {
+    throw new ValidationError('Invalid domain. Please provide a valid public domain.');
   }
 
   // Test HTTPS first

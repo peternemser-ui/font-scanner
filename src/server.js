@@ -273,9 +273,10 @@ const healthEmitterInterval = setInterval(async () => {
 }, HEALTH_EMIT_INTERVAL);
 
 // Security middleware - Content Security Policy
-// Note: 'unsafe-inline' is still required for some page-specific initialization scripts.
-// Inline onclick handlers have been migrated to data-action attributes with event delegation.
-// Critical billing/redirect scripts have been moved to external files.
+// All inline scripts have been externalized into /js/*.js files.
+// 'unsafe-inline' removed from script-src (SEC-001 hardening).
+// 'unsafe-inline' remains in style-src because inline styles are used extensively
+// by components and would require a larger refactor to eliminate.
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -285,7 +286,6 @@ app.use(
         fontSrc: ["'self'", 'https://fonts.gstatic.com'],
         scriptSrc: [
           "'self'",
-          "'unsafe-inline'", // TODO: Remove when all inline scripts are externalized
           'https://cdn.socket.io',
           'https://cdn.jsdelivr.net',
           'https://cdnjs.cloudflare.com',
@@ -480,13 +480,52 @@ function detectPreferredLanguage(acceptLanguage, supportedLangs) {
   return null;
 }
 
-// Static files — cache for 1 year (cache-busted via ?v= query string)
-const STATIC_MAX_AGE = process.env.NODE_ENV === 'production' ? '1y' : '0';
-app.use(express.static(path.join(__dirname, 'public'), { maxAge: STATIC_MAX_AGE }));
+// Static files — differentiated Cache-Control by asset type
+// Images/fonts/SVGs: 30 days (rarely change, cache-busted via ?v= query string)
+// CSS/JS: 1 day (change more frequently during development cycles)
+// HTML: no-cache (always revalidate to pick up new deployments)
+const isProduction = process.env.NODE_ENV === 'production';
+app.use(express.static(path.join(__dirname, 'public'), {
+  etag: true,
+  lastModified: true,
+  setHeaders(res, filePath) {
+    if (!isProduction) {
+      res.setHeader('Cache-Control', 'no-cache');
+      return;
+    }
+    const ext = path.extname(filePath).toLowerCase();
+    if (['.html', '.htm'].includes(ext)) {
+      // HTML: always revalidate — ensures users see latest deployment
+      res.setHeader('Cache-Control', 'no-cache');
+    } else if (['.js', '.css'].includes(ext)) {
+      // CSS/JS: 1 day — these change with each release
+      res.setHeader('Cache-Control', 'public, max-age=86400');
+    } else if (['.png', '.jpg', '.jpeg', '.gif', '.ico', '.webp', '.avif', '.svg',
+                '.woff', '.woff2', '.ttf', '.eot', '.otf'].includes(ext)) {
+      // Images & fonts: 30 days — rarely change, cache-busted via query string
+      res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+    } else {
+      // Everything else (JSON locale files, maps, etc.): 1 hour
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+  }
+}));
 
 // Serve generated report artifacts (PDFs, screenshots)
 // NOTE: config.reports.dir is repo-relative by default (./reports)
-app.use('/reports', express.static(path.resolve(process.cwd(), config.reports.dir), { maxAge: STATIC_MAX_AGE }));
+// Report artifacts are immutable once generated — cache for 30 days
+app.use('/reports', express.static(path.resolve(process.cwd(), config.reports.dir), {
+  etag: true,
+  lastModified: true,
+  setHeaders(res) {
+    if (!isProduction) {
+      res.setHeader('Cache-Control', 'no-cache');
+      return;
+    }
+    // Generated PDFs and screenshots are immutable (unique filenames)
+    res.setHeader('Cache-Control', 'public, max-age=2592000, immutable');
+  }
+}));
 
 // Routes
 // Liveness probe - checks if app is alive (no internal details for public callers)

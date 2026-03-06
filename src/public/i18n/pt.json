@@ -8694,7 +8694,10 @@
       },
       "lighthouse": {
         "title": "Pontuações das Categorias Lighthouse",
-        "bestPractices": "Boas Práticas"
+        "bestPractices": "Boas Práticas",
+        "unavailableTitle": "Métricas de desempenho temporariamente indisponíveis",
+        "unavailableMessage": "As métricas de desempenho estão temporariamente indisponíveis. As outras seções do relatório não são afetadas.",
+        "retryButton": "Repetir análise"
       },
       "sectionIntros": {
         "cwv": "Os Core Web Vitals são as métricas-chave do Google para medir a experiência real do usuário. Eles focam no desempenho de carregamento (LCP), interatividade (FID/INP) e estabilidade visual (CLS). As pontuações são comparadas com os limites do Google para Bom, Precisa Melhorar e Ruim. Atender ao limite Bom para todas as três métricas é essencial para rankings de busca ideais.",
@@ -9588,6 +9591,26 @@
       "quickWinLabel": "Ganho rápido",
       "footer": "Este e-mail foi enviado porque você comprou um relatório no Site Mechanic.",
       "attachmentNote": "Seu relatório PDF completo está anexado a este e-mail."
+    },
+    "welcome": {
+      "subject": "Bem-vindo ao Site Mechanic!",
+      "heading": "Bem-vindo ao Site Mechanic!",
+      "intro": "Sua conta foi criada. Você está pronto para analisar seus sites com ferramentas profissionais.",
+      "cta": "Começar",
+      "featuresHeading": "Veja o que você pode fazer:",
+      "feature1": "Executar auditorias de SEO, desempenho e segurança",
+      "feature2": "Obter recomendações práticas com insights de IA",
+      "feature3": "Exportar relatórios detalhados em PDF",
+      "footer": "Você está recebendo este e-mail porque criou uma conta no Site Mechanic."
+    },
+    "passwordReset": {
+      "subject": "Redefinir sua senha do Site Mechanic",
+      "heading": "Redefinir sua senha",
+      "intro": "Recebemos uma solicitação para redefinir sua senha. Clique no botão abaixo para escolher uma nova.",
+      "cta": "Redefinir senha",
+      "expiry": "Este link expira em 1 hora.",
+      "fallback": "Se o botão não funcionar, copie e cole esta URL no seu navegador:",
+      "footer": "Se você não solicitou a redefinição de senha, pode ignorar este e-mail. Sua senha permanecerá inalterada."
     }
   }
 }

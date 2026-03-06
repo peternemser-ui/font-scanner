@@ -13,6 +13,7 @@ const { normalizeUrl, validateUrl, sanitizeUrl, testUrlReachability, isValidDoma
 const { getRequestScanStartedAt, attachScanStartedAt } = require('./scanTimestamp');
 const { makeReportId } = require('./reportId');
 const { ensureReportScreenshot } = require('./reportScreenshot');
+const { isUrlSafe } = require('./ssrfProtection');
 
 /**
  * Extract analyzer key from request body, falling back to default
@@ -145,6 +146,14 @@ async function processUrl(url, { testReachability = false, allowHttpFallback = f
   // SSRF protection: validate domain is not private/internal
   if (isValid && !isValidDomain(processed)) {
     return { url: processed, isValid: false, isReachable: null };
+  }
+
+  // SSRF protection: DNS-resolution-based check to prevent DNS rebinding
+  if (isValid) {
+    const ssrfCheck = await isUrlSafe(processed);
+    if (!ssrfCheck.safe) {
+      return { url: processed, isValid: false, isReachable: null, ssrfBlocked: true, ssrfReason: ssrfCheck.reason };
+    }
   }
 
   // Try HTTP fallback if enabled and HTTPS validation failed

@@ -1,6 +1,6 @@
 /**
  * Google Analytics (gtag.js) initialization
- * GA4 Property: G-TZ2S73Q6BK
+ * GA4 Property: G-NC831RG5CE
  */
 (function() {
   'use strict';
@@ -8,5 +8,5 @@
   function gtag(){dataLayer.push(arguments);}
   window.gtag = gtag;
   gtag('js', new Date());
-  gtag('config', 'G-TZ2S73Q6BK');
+  gtag('config', 'G-NC831RG5CE');
 })();

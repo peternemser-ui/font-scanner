@@ -659,7 +659,10 @@
       },
       "lighthouse": {
         "title": "Scores par Catégorie Lighthouse",
-        "bestPractices": "Meilleures Pratiques"
+        "bestPractices": "Meilleures Pratiques",
+        "unavailableTitle": "Métriques de performance temporairement indisponibles",
+        "unavailableMessage": "Les métriques de performance sont temporairement indisponibles. Les autres sections du rapport ne sont pas affectées.",
+        "retryButton": "Relancer l'analyse"
       },
       "sectionIntros": {
         "cwv": "Les Core Web Vitals sont les métriques clés de Google pour mesurer l'expérience utilisateur réelle. Ils se concentrent sur la performance de chargement (LCP), l'interactivité (FID/INP) et la stabilité visuelle (CLS). Les scores sont comparés aux seuils de Google pour Bon, À améliorer et Médiocre. Atteindre les seuils Bon pour les trois métriques est essentiel pour un classement optimal dans les recherches.",
@@ -9588,6 +9591,26 @@
       "quickWinLabel": "Gain rapide",
       "footer": "Cet e-mail vous a été envoyé suite à l'achat d'un rapport sur Site Mechanic.",
       "attachmentNote": "Votre rapport PDF complet est joint à cet e-mail."
+    },
+    "welcome": {
+      "subject": "Bienvenue sur Site Mechanic !",
+      "heading": "Bienvenue sur Site Mechanic !",
+      "intro": "Votre compte a été créé. Vous êtes prêt à analyser vos sites web avec des outils professionnels.",
+      "cta": "Commencer",
+      "featuresHeading": "Voici ce que vous pouvez faire :",
+      "feature1": "Lancer des audits SEO, performance et sécurité",
+      "feature2": "Obtenir des recommandations concrètes grâce à l'IA",
+      "feature3": "Exporter des rapports détaillés en PDF",
+      "footer": "Vous recevez cet e-mail car vous avez créé un compte sur Site Mechanic."
+    },
+    "passwordReset": {
+      "subject": "Réinitialiser votre mot de passe Site Mechanic",
+      "heading": "Réinitialiser votre mot de passe",
+      "intro": "Nous avons reçu une demande de réinitialisation de votre mot de passe. Cliquez sur le bouton ci-dessous pour en choisir un nouveau.",
+      "cta": "Réinitialiser le mot de passe",
+      "expiry": "Ce lien expire dans 1 heure.",
+      "fallback": "Si le bouton ne fonctionne pas, copiez et collez cette URL dans votre navigateur :",
+      "footer": "Si vous n'avez pas demandé de réinitialisation de mot de passe, vous pouvez ignorer cet e-mail. Votre mot de passe restera inchangé."
     }
   }
 }

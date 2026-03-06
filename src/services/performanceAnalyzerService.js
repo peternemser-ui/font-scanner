@@ -85,9 +85,24 @@ class PerformanceAnalyzerService {
         mobileLighthouse = this.createPuppeteerFallback(resourceMetrics, 'mobile');
       }
 
+      // Track whether both Lighthouse runs fell back to Puppeteer estimates
+      const desktopLighthouseFailed = !!(desktopLighthouse.fallback || desktopLighthouse.failed || desktopLighthouse.error);
+      const mobileLighthouseFailed = !!(mobileLighthouse.fallback || mobileLighthouse.failed || mobileLighthouse.error);
+      const lighthouseUnavailable = desktopLighthouseFailed && mobileLighthouseFailed;
+
+      if (lighthouseUnavailable) {
+        logger.warn(`Both Lighthouse runs used fallback for ${url} — marking response lighthouseUnavailable`);
+      }
+
       // Combine and process results
       const results = this.processResults(url, resourceMetrics, desktopLighthouse, mobileLighthouse, startTime);
-      
+
+      // Surface unavailability to the API consumer so the frontend can degrade gracefully
+      if (lighthouseUnavailable) {
+        results.lighthouseUnavailable = true;
+        results.lighthouseError = desktopLighthouse.error || mobileLighthouse.error || 'Lighthouse analysis unavailable';
+      }
+
       logger.info(`Performance analysis completed for: ${url} (Desktop: ${results.desktop.performanceScore}, Mobile: ${results.mobile.performanceScore})`);
       return results;
 
@@ -155,9 +170,24 @@ class PerformanceAnalyzerService {
         mobileLighthouse = this.createPuppeteerFallback(resourceMetrics, 'mobile');
       }
 
+      // Track whether both Lighthouse runs fell back to Puppeteer estimates
+      const desktopLighthouseFailed = !!(desktopLighthouse.fallback || desktopLighthouse.failed || desktopLighthouse.error);
+      const mobileLighthouseFailed = !!(mobileLighthouse.fallback || mobileLighthouse.failed || mobileLighthouse.error);
+      const lighthouseUnavailable = desktopLighthouseFailed && mobileLighthouseFailed;
+
+      if (lighthouseUnavailable) {
+        logger.warn(`Both Lighthouse runs used fallback for ${url} (optimized path) — marking response lighthouseUnavailable`);
+      }
+
       // Combine and process results
       const results = this.processResults(url, resourceMetrics, desktopLighthouse, mobileLighthouse, startTime);
-      
+
+      // Surface unavailability to the API consumer so the frontend can degrade gracefully
+      if (lighthouseUnavailable) {
+        results.lighthouseUnavailable = true;
+        results.lighthouseError = desktopLighthouse.error || mobileLighthouse.error || 'Lighthouse analysis unavailable';
+      }
+
       logger.info(`OPTIMIZED Performance analysis completed for: ${url} (Desktop: ${results.desktop.performanceScore}, Mobile: ${results.mobile.performanceScore})`);
       return results;
 
