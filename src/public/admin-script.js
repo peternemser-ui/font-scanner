@@ -37,6 +37,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load analytics charts (non-blocking)
   loadAnalytics();
 
+  // Load Docker widget on homepage
+  loadDockerWidget();
+
   // Initialize tabs
   initializeTabs();
 
@@ -76,6 +79,15 @@ async function loadDashboardStats() {
     document.getElementById('scansWeek').textContent = data.stats.scans.thisWeek;
     document.getElementById('activeSubscriptions').textContent = data.stats.subscriptions.active;
     document.getElementById('mrr').textContent = data.stats.subscriptions.mrr;
+
+    // Purchases
+    if (data.stats.purchases) {
+      document.getElementById('totalPurchases').textContent = data.stats.purchases.total;
+      document.getElementById('purchaseSubtext').textContent = data.stats.purchases.today + ' today';
+    } else {
+      document.getElementById('totalPurchases').textContent = '0';
+      document.getElementById('purchaseSubtext').textContent = '0 today';
+    }
 
   } catch (error) {
     console.error('Error loading dashboard stats:', error);
@@ -911,6 +923,78 @@ document.addEventListener('click', function(e) {
     return;
   }
 });
+
+// =============================================================================
+// DOCKER WIDGET (homepage)
+// =============================================================================
+
+async function loadDockerWidget() {
+  var body = document.getElementById('dockerWidgetBody');
+  var dot = document.getElementById('dockerDot');
+  if (!body) return;
+
+  try {
+    var response = await fetch('/api/admin/server-info', {
+      headers: proManager.getAuthHeaders()
+    });
+    var data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+
+    var s = data.server;
+    var d = data.docker;
+    var g = data.git;
+    var a = data.app;
+
+    if (dot) { dot.classList.add('live'); }
+
+    var envClass = s.env === 'production' ? 'env-prod' : 'env-dev';
+
+    body.innerHTML =
+      '<div class="docker-widget-row">' +
+        '<span class="docker-widget-label">Environment</span>' +
+        '<span class="docker-widget-value ' + envClass + '">' + escapeHtml(s.env) + '</span>' +
+      '</div>' +
+      '<div class="docker-widget-row">' +
+        '<span class="docker-widget-label">Docker</span>' +
+        '<span class="docker-widget-value">' + (d.isDocker ? 'Yes' : 'No') + '</span>' +
+      '</div>' +
+      (d.containerId ? '<div class="docker-widget-row">' +
+        '<span class="docker-widget-label">Container</span>' +
+        '<span class="docker-widget-value">' + escapeHtml(d.containerId) + '</span>' +
+      '</div>' : '') +
+      '<div class="docker-widget-row">' +
+        '<span class="docker-widget-label">Version</span>' +
+        '<span class="docker-widget-value">' + escapeHtml(a.version || 'N/A') + '</span>' +
+      '</div>' +
+      '<div class="docker-widget-row">' +
+        '<span class="docker-widget-label">Node</span>' +
+        '<span class="docker-widget-value">' + escapeHtml(s.nodeVersion) + '</span>' +
+      '</div>' +
+      '<div class="docker-widget-row">' +
+        '<span class="docker-widget-label">Branch</span>' +
+        '<span class="docker-widget-value">' + escapeHtml(g.branch || 'N/A') + '</span>' +
+      '</div>' +
+      '<div class="docker-widget-row">' +
+        '<span class="docker-widget-label">Commit</span>' +
+        '<span class="docker-widget-value">' + escapeHtml(g.commit || 'N/A') + '</span>' +
+      '</div>' +
+      '<div class="docker-widget-row">' +
+        '<span class="docker-widget-label">Uptime</span>' +
+        '<span class="docker-widget-value">' + formatUptime(s.uptime) + '</span>' +
+      '</div>' +
+      '<div class="docker-widget-row">' +
+        '<span class="docker-widget-label">Memory</span>' +
+        '<span class="docker-widget-value">' + data.memory.rss + ' MB</span>' +
+      '</div>' +
+      '<button class="docker-widget-deploy-btn" id="dockerWidgetDeployBtn">Deploy Latest</button>';
+
+    // Attach deploy handler
+    document.getElementById('dockerWidgetDeployBtn').addEventListener('click', handleDeploy);
+
+  } catch (error) {
+    body.innerHTML = '<div class="docker-widget-loading" style="color:#ef4444;">Failed to load</div>';
+  }
+}
 
 // =============================================================================
 // SERVER INFO & DEPLOY

@@ -46,6 +46,16 @@ router.get('/dashboard-stats', async (req, res) => {
       `SELECT COUNT(*) as count FROM entitlements WHERE status = 'active'`
     );
 
+    // Report purchases
+    let totalPurchases = { count: 0 };
+    let purchasesToday = { count: 0 };
+    try {
+      totalPurchases = await db.get('SELECT COUNT(*) as count FROM report_purchases') || { count: 0 };
+      purchasesToday = await db.get(
+        'SELECT COUNT(*) as count FROM report_purchases WHERE purchased_at >= date("now")'
+      ) || { count: 0 };
+    } catch (_) { /* table may not exist */ }
+
     // Recent activity
     const recentUsers = await db.all(
       'SELECT id, email, plan, created_at FROM users ORDER BY created_at DESC LIMIT 10'
@@ -71,6 +81,10 @@ router.get('/dashboard-stats', async (req, res) => {
         subscriptions: {
           active: activeSubscriptions.count,
           mrr: activeSubscriptions.count * PRICING.plans.pro_monthly.price // per pro user
+        },
+        purchases: {
+          total: totalPurchases.count,
+          today: purchasesToday.count
         }
       },
       recentActivity: {

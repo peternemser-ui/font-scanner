@@ -271,6 +271,17 @@
     .chart-card:hover { border-color: var(--admin-border-hover); }
     .chart-card--full { grid-column: 1 / -1; }
 
+    .charts-grid--top {
+      grid-template-columns: 2fr 1fr;
+    }
+
+    .chart-card--2-3 { min-width: 0; }
+    .chart-card--1-3 { min-width: 0; }
+
+    @media (max-width: 900px) {
+      .charts-grid--top { grid-template-columns: 1fr; }
+    }
+
     .chart-header {
       display: flex;
       justify-content: space-between;
@@ -933,6 +944,95 @@
     .legend-dot.available { background: #22c55e; }
     .legend-dot.borrowed { background: #f59e0b; }
 
+    /* ── Docker Widget (homepage) ────────────────────────── */
+    .docker-widget { display: flex; flex-direction: column; }
+
+    .docker-widget .chart-header { margin-bottom: 0.5rem; }
+
+    .docker-status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--admin-text-faint);
+      display: inline-block;
+    }
+
+    .docker-status-dot.live {
+      background: #22c55e;
+      box-shadow: 0 0 6px #22c55e;
+    }
+
+    .docker-widget-body {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+      font-size: 0.85rem;
+    }
+
+    .docker-widget-loading {
+      color: var(--admin-text-faint);
+      text-align: center;
+      padding: 2rem 0;
+    }
+
+    .docker-widget-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.4rem 0;
+      border-bottom: 1px solid var(--admin-border);
+    }
+
+    .docker-widget-row:last-child { border-bottom: none; }
+
+    .docker-widget-label {
+      font-size: 0.75rem;
+      color: var(--admin-text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .docker-widget-value {
+      font-weight: 600;
+      color: var(--admin-text);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+    }
+
+    .docker-widget-value.env-prod {
+      color: #22c55e;
+    }
+
+    .docker-widget-value.env-dev {
+      color: #f59e0b;
+    }
+
+    .docker-widget-deploy-btn {
+      margin-top: auto;
+      padding: 0.5rem;
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .docker-widget-deploy-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+    }
+
+    .docker-widget-deploy-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
     /* ── Server Info Panel ────────────────────────────────── */
     .server-info-panel {
       background: var(--admin-surface);
@@ -1076,18 +1176,34 @@
           <div class="stat-value" id="activeSubscriptions">-</div>
           <div class="stat-subtext">$<span id="mrr">-</span> MRR</div>
         </div>
+        <div class="stat-card">
+          <div class="stat-label">Reports Purchased</div>
+          <div class="stat-value" id="totalPurchases">-</div>
+          <div class="stat-subtext" id="purchaseSubtext">Loading...</div>
+        </div>
       </div>
 
       <!-- Analytics Charts -->
       <div class="charts-section">
-        <div class="charts-grid">
-          <div class="chart-card chart-card--full">
+        <div class="charts-grid charts-grid--top">
+          <div class="chart-card chart-card--2-3">
             <div class="chart-header">
               <h3 class="chart-title">Scan Activity</h3>
               <span class="chart-period">Last 30 days</span>
             </div>
             <canvas id="scanActivityChart"></canvas>
           </div>
+          <div class="chart-card chart-card--1-3 docker-widget">
+            <div class="chart-header">
+              <h3 class="chart-title">Server Status</h3>
+              <span class="docker-status-dot" id="dockerDot"></span>
+            </div>
+            <div class="docker-widget-body" id="dockerWidgetBody">
+              <div class="docker-widget-loading">Loading...</div>
+            </div>
+          </div>
+        </div>
+        <div class="charts-grid">
           <div class="chart-card">
             <div class="chart-header">
               <h3 class="chart-title">User Registrations</h3>
@@ -1355,47 +1471,6 @@
   <script src="/pro-utils.js?v=3.0.0"></script>
   <script src="/admin-charts.js?v=3.0.0"></script>
   <script src="/admin-script.js?v=3.0.0"></script>
-  <script>
-  // Admin theme toggle (standalone, doesn't depend on nav-template)
-  (function() {
-    var body = document.body;
-    var html = document.documentElement;
-    var btn = document.getElementById('adminThemeToggle');
-    var icon = btn ? btn.querySelector('.theme-icon-display') : null;
-
-    function applyTheme(theme) {
-      if (theme === 'light') {
-        body.classList.add('white-theme');
-        html.classList.add('white-theme');
-        html.setAttribute('data-theme', 'light');
-        body.style.backgroundColor = '';
-        body.style.color = '';
-      } else {
-        body.classList.remove('white-theme');
-        html.classList.remove('white-theme');
-        html.setAttribute('data-theme', 'dark');
-        body.style.backgroundColor = '';
-        body.style.color = '';
-      }
-      if (icon) icon.textContent = theme === 'light' ? '\u2600' : '\u263E';
-    }
-
-    // Read saved preference
-    var saved = localStorage.getItem('theme') || 'dark';
-    applyTheme(saved);
-
-    if (btn) {
-      btn.addEventListener('click', function() {
-        var next = body.classList.contains('white-theme') ? 'dark' : 'light';
-        localStorage.setItem('theme', next);
-        applyTheme(next);
-        // Re-render charts for new theme colors
-        if (typeof _analyticsData !== 'undefined' && _analyticsData && typeof _renderCharts === 'function') {
-          _renderCharts(_analyticsData);
-        }
-      });
-    }
-  })();
-  </script>
+  <script src="/js/admin-theme.js?v=3.0.0"></script>
 </body>
 </html>
