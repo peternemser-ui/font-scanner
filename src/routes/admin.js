@@ -858,4 +858,116 @@ router.get('/analytics', async (req, res) => {
   }
 });
 
+// =============================================================================
+// SERVER / DOCKER INFO
+// =============================================================================
+
+const os = require('os');
+const fs_sync = require('fs');
+const { execSync } = require('child_process');
+
+/**
+ * GET /api/admin/server-info
+ * Return server environment, Docker status, git info, and runtime details
+ */
+router.get('/server-info', async (req, res) => {
+  try {
+    const mem = process.memoryUsage();
+    const isDocker = fs_sync.existsSync('/.dockerenv') || fs_sync.existsSync('/run/.containerenv');
+
+    // Git info (best-effort)
+    let gitBranch = '', gitCommit = '', gitCommitDate = '', gitRemoteUrl = '';
+    try {
+      gitBranch = execSync('git rev-parse --abbrev-ref HEAD', { timeout: 3000 }).toString().trim();
+      gitCommit = execSync('git rev-parse --short HEAD', { timeout: 3000 }).toString().trim();
+      gitCommitDate = execSync('git log -1 --format=%ci', { timeout: 3000 }).toString().trim();
+      gitRemoteUrl = execSync('git config --get remote.origin.url', { timeout: 3000 }).toString().trim();
+    } catch (_) { /* git not available */ }
+
+    // Docker container ID
+    let containerId = '';
+    if (isDocker) {
+      try {
+        const cgroup = fs_sync.readFileSync('/proc/self/cgroup', 'utf8');
+        const match = cgroup.match(/[0-9a-f]{64}/);
+        if (match) containerId = match[0].substring(0, 12);
+      } catch (_) { /* not available */ }
+    }
+
+    // Package version
+    let packageVersion = '';
+    try {
+      const pkg = JSON.parse(fs_sync.readFileSync(path.join(process.cwd(), 'package.json'), 'utf8'));
+      packageVersion = pkg.version || '';
+    } catch (_) {}
+
+    res.json({
+      success: true,
+      server: {
+        nodeVersion: process.version,
+        platform: process.platform,
+        arch: process.arch,
+        uptime: Math.floor(process.uptime()),
+        pid: process.pid,
+        env: process.env.NODE_ENV || 'development',
+        hostname: os.hostname(),
+        cpus: os.cpus().length,
+        totalMemory: Math.round(os.totalmem() / 1024 / 1024),
+        freeMemory: Math.round(os.freemem() / 1024 / 1024),
+        loadAvg: os.loadavg().map(l => Math.round(l * 100) / 100)
+      },
+      docker: {
+        isDocker,
+        containerId: containerId || null
+      },
+      git: {
+        branch: gitBranch,
+        commit: gitCommit,
+        commitDate: gitCommitDate,
+        remoteUrl: gitRemoteUrl
+      },
+      app: {
+        version: packageVersion,
+        cwd: process.cwd()
+      },
+      memory: {
+        heapUsed: Math.round(mem.heapUsed / 1024 / 1024),
+        heapTotal: Math.round(mem.heapTotal / 1024 / 1024),
+        rss: Math.round(mem.rss / 1024 / 1024),
+        external: Math.round(mem.external / 1024 / 1024)
+      }
+    });
+  } catch (error) {
+    logger.error('Error fetching server info', { error: error.message });
+    res.status(500).json({ error: 'Failed to fetch server info' });
+  }
+});
+
+/**
+ * POST /api/admin/deploy
+ * Pull latest code from git remote. Container restart must be done externally.
+ */
+router.post('/deploy', async (req, res) => {
+  try {
+    const output = execSync('git pull origin main 2>&1', {
+      cwd: process.cwd(),
+      timeout: 30000
+    }).toString().trim();
+
+    await logAdminAction(req.admin.id, 'DEPLOY_PULL', null, { output: output.substring(0, 500) });
+
+    res.json({
+      success: true,
+      message: 'Git pull completed. Restart the container to apply changes.',
+      output
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: 'Deploy failed',
+      message: error.message,
+      output: error.stdout ? error.stdout.toString() : ''
+    });
+  }
+});
+
 module.exports = router;

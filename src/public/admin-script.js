@@ -913,6 +913,120 @@ document.addEventListener('click', function(e) {
 });
 
 // =============================================================================
+// SERVER INFO & DEPLOY
+// =============================================================================
+
+async function loadServerInfo() {
+  const grid = document.getElementById('serverInfoGrid');
+  const envBadge = document.getElementById('serverEnvBadge');
+
+  try {
+    const response = await fetch('/api/admin/server-info', {
+      headers: proManager.getAuthHeaders()
+    });
+
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+
+    const s = data.server;
+    const d = data.docker;
+    const g = data.git;
+    const a = data.app;
+
+    // Environment badge
+    envBadge.textContent = s.env;
+    envBadge.className = 'server-info-env' + (s.env !== 'production' ? ' dev' : '');
+
+    const items = [
+      { label: 'Docker', value: d.isDocker ? 'Running' : 'No' },
+      { label: 'Container ID', value: d.containerId || 'N/A' },
+      { label: 'App Version', value: a.version || 'N/A' },
+      { label: 'Node.js', value: s.nodeVersion },
+      { label: 'Git Branch', value: g.branch || 'N/A' },
+      { label: 'Git Commit', value: g.commit || 'N/A' },
+      { label: 'Last Deploy', value: g.commitDate ? new Date(g.commitDate).toLocaleString() : 'N/A' },
+      { label: 'Uptime', value: formatUptime(s.uptime) },
+      { label: 'Hostname', value: s.hostname },
+      { label: 'Platform', value: s.platform + '/' + s.arch },
+      { label: 'CPUs', value: s.cpus },
+      { label: 'System Memory', value: s.freeMemory + ' / ' + s.totalMemory + ' MB' },
+      { label: 'Load Average', value: s.loadAvg.join(', ') },
+      { label: 'PID', value: s.pid }
+    ];
+
+    grid.innerHTML = items.map(function(item) {
+      return '<div class="server-info-item">' +
+        '<span class="server-info-label">' + escapeHtml(item.label) + '</span>' +
+        '<span class="server-info-value">' + escapeHtml(String(item.value)) + '</span>' +
+        '</div>';
+    }).join('');
+
+  } catch (error) {
+    grid.innerHTML = '<div class="server-info-loading" style="color:#ef4444;">Failed to load server info: ' + escapeHtml(error.message) + '</div>';
+  }
+}
+
+async function handleDeploy() {
+  if (!confirm('Pull latest code from main branch?\n\nThe container may need to be restarted manually after this.')) {
+    return;
+  }
+
+  const deployBtn = document.getElementById('deployBtn');
+  const outputEl = document.getElementById('deployOutput');
+
+  deployBtn.disabled = true;
+  deployBtn.textContent = 'Deploying...';
+  outputEl.classList.remove('hidden');
+  outputEl.textContent = 'Running git pull origin main...\n';
+
+  try {
+    const response = await fetch('/api/admin/deploy', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...proManager.getAuthHeaders()
+      }
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || data.error || 'Deploy failed');
+    }
+
+    outputEl.textContent += data.output + '\n\n' + data.message;
+    showSuccess('Deploy completed! ' + data.message);
+
+    // Refresh server info to show new commit
+    setTimeout(loadServerInfo, 1000);
+
+  } catch (error) {
+    outputEl.textContent += 'ERROR: ' + error.message;
+    showError('Deploy failed: ' + error.message);
+  } finally {
+    deployBtn.disabled = false;
+    deployBtn.textContent = 'Deploy Latest';
+  }
+}
+
+// Initialize server info when health tab is activated or on load
+document.addEventListener('DOMContentLoaded', function() {
+  document.getElementById('refreshServerInfoBtn')?.addEventListener('click', loadServerInfo);
+  document.getElementById('deployBtn')?.addEventListener('click', handleDeploy);
+
+  // Load on first health tab activation
+  var healthTabLoaded = false;
+  document.querySelectorAll('.admin-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      if (tab.dataset.tab === 'health' && !healthTabLoaded) {
+        healthTabLoaded = true;
+        loadServerInfo();
+      }
+    });
+  });
+});
+
+// =============================================================================
 // SYSTEM HEALTH DASHBOARD
 // =============================================================================
 

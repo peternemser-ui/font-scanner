@@ -932,6 +932,97 @@
     .legend-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
     .legend-dot.available { background: #22c55e; }
     .legend-dot.borrowed { background: #f59e0b; }
+
+    /* ── Server Info Panel ────────────────────────────────── */
+    .server-info-panel {
+      background: var(--admin-surface);
+      border: 1px solid var(--admin-border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .server-info-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.25rem;
+    }
+
+    .server-info-title-row { display: flex; align-items: center; gap: 0.75rem; }
+
+    .server-info-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--admin-text);
+      margin: 0;
+    }
+
+    .server-info-env {
+      font-size: 0.65rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      padding: 0.25rem 0.6rem;
+      border-radius: 6px;
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+    }
+
+    .server-info-env.dev {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+    }
+
+    .server-info-actions { display: flex; gap: 0.5rem; }
+
+    .server-info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .server-info-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .server-info-label {
+      font-size: 0.7rem;
+      color: var(--admin-text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .server-info-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--admin-text);
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      word-break: break-all;
+    }
+
+    .server-info-loading {
+      grid-column: 1 / -1;
+      text-align: center;
+      color: var(--admin-text-muted);
+      padding: 1rem;
+    }
+
+    .deploy-output {
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--admin-input-bg);
+      border: 1px solid var(--admin-border);
+      border-radius: 8px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 0.8rem;
+      color: var(--admin-text-muted);
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+    }
   </style>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NC831RG5CE"></script>
@@ -1159,6 +1250,24 @@
 
       <!-- System Health Tab -->
       <div id="healthTab" class="tab-content">
+        <!-- Server / Docker Info Panel -->
+        <div class="server-info-panel" id="serverInfoPanel">
+          <div class="server-info-header">
+            <div class="server-info-title-row">
+              <h3 class="server-info-title">Server &amp; Deployment</h3>
+              <span class="server-info-env" id="serverEnvBadge">--</span>
+            </div>
+            <div class="server-info-actions">
+              <button id="refreshServerInfoBtn" class="btn btn-secondary" style="padding:0.4rem 0.75rem;font-size:0.8rem;">Refresh</button>
+              <button id="deployBtn" class="btn btn-primary" style="padding:0.4rem 0.75rem;font-size:0.8rem;">Deploy Latest</button>
+            </div>
+          </div>
+          <div class="server-info-grid" id="serverInfoGrid">
+            <div class="server-info-loading">Loading server info...</div>
+          </div>
+          <div id="deployOutput" class="deploy-output hidden"></div>
+        </div>
+
         <div class="health-status-bar" id="healthStatusBar">
           <span class="health-dot" id="healthDot"></span>
           <span id="healthStatusText">Connecting...</span>
