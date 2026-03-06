@@ -6,9 +6,9 @@
 
 /* ── Palette ──────────────────────────────────────────────── */
 var CHART_PALETTE = [
-  '#DC2626', '#3b82f6', '#a855f7', '#f59e0b',
-  '#ef4444', '#14b8a6', '#ec4899', '#f97316',
-  '#6366f1', '#5bf4e7', '#f43f5e', '#84cc16'
+  '#5bf4e7', '#3b82f6', '#a855f7', '#f59e0b',
+  '#14b8a6', '#ec4899', '#f97316', '#6366f1',
+  '#ef4444', '#84cc16', '#f43f5e', '#DC2626'
 ];
 
 /* Helper: read a CSS custom property from :root / body */
@@ -395,7 +395,7 @@ async function loadAnalytics() {
 function _renderCharts(data) {
   // Scan activity bar chart (last 30 days)
   var scan = _fillDays(data.scanActivity, 30);
-  _drawBarChart('scanActivityChart', scan.labels, scan.values, { color: _cssVar('--admin-accent', '#DC2626') });
+  _drawBarChart('scanActivityChart', scan.labels, scan.values, { color: _cssVar('--admin-accent', '#5bf4e7') });
 
   // User registration area chart (last 30 days)
   var users = _fillDays(data.userGrowth, 30);

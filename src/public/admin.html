@@ -20,8 +20,12 @@
       --admin-text: #F1F5F9;
       --admin-text-muted: #94A3B8;
       --admin-text-faint: #64748B;
-      --admin-accent: #DC2626;
-      --admin-accent-soft: rgba(220,38,38,0.15);
+      --admin-accent: #5bf4e7;
+      --admin-accent-hover: #3dd4c8;
+      --admin-accent-soft: rgba(91,244,231,0.12);
+      --admin-accent-gradient: linear-gradient(135deg, #5bf4e7, #14b8a6);
+      --admin-accent-shadow: rgba(91,244,231,0.3);
+      --admin-accent-btn-text: #0B0F14;
       --admin-topbar-bg: rgba(11,15,20,0.85);
       --admin-input-bg: rgba(255,255,255,0.05);
       --admin-input-border: rgba(255,255,255,0.1);
@@ -42,7 +46,11 @@
       --admin-text-muted: #64748B;
       --admin-text-faint: #94A3B8;
       --admin-accent: #DC2626;
+      --admin-accent-hover: #b91c1c;
       --admin-accent-soft: rgba(220,38,38,0.08);
+      --admin-accent-gradient: linear-gradient(135deg, #ef4444, #dc2626);
+      --admin-accent-shadow: rgba(220,38,38,0.3);
+      --admin-accent-btn-text: #fff;
       --admin-topbar-bg: rgba(255,255,255,0.9);
       --admin-input-bg: rgba(0,0,0,0.03);
       --admin-input-border: rgba(0,0,0,0.1);
@@ -164,8 +172,8 @@
     }
 
     .admin-badge {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: #fff;
+      background: var(--admin-accent-gradient);
+      color: var(--admin-accent-btn-text, #fff);
       padding: 0.5rem 1rem;
       border-radius: 20px;
       font-size: 0.75rem;
@@ -248,7 +256,12 @@
     .tab-content.active { display: block; }
 
     /* ── Charts ───────────────────────────────────────────── */
-    .charts-section { margin-bottom: 2rem; }
+    .charts-section {
+      margin-bottom: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
 
     .charts-grid {
       display: grid;
@@ -375,13 +388,13 @@
     }
 
     .btn-primary {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: #fff;
+      background: var(--admin-accent-gradient);
+      color: var(--admin-accent-btn-text, #fff);
     }
 
     .btn-primary:hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+      box-shadow: 0 4px 12px var(--admin-accent-shadow);
     }
 
     .btn-danger {
@@ -554,13 +567,13 @@
     }
 
     .btn-run-all {
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: #fff;
+      background: var(--admin-accent-gradient);
+      color: var(--admin-accent-btn-text, #fff);
     }
 
     .btn-run-all:hover:not(:disabled) {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+      box-shadow: 0 4px 12px var(--admin-accent-shadow);
     }
 
     .btn-run-all:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -1011,8 +1024,8 @@
     .docker-widget-deploy-btn {
       margin-top: auto;
       padding: 0.5rem;
-      background: linear-gradient(135deg, #ef4444, #dc2626);
-      color: #fff;
+      background: var(--admin-accent-gradient);
+      color: var(--admin-accent-btn-text, #fff);
       border: none;
       border-radius: 8px;
       font-size: 0.8rem;
@@ -1023,7 +1036,7 @@
 
     .docker-widget-deploy-btn:hover {
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.3);
+      box-shadow: 0 4px 12px var(--admin-accent-shadow);
     }
 
     .docker-widget-deploy-btn:disabled {
