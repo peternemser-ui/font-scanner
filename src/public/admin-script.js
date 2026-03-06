@@ -517,6 +517,14 @@ async function loadTestSuites() {
       throw new Error(data.error || 'Failed to load test suites');
     }
 
+    // Handle production environment where Jest is unavailable
+    if (data.unavailable) {
+      container.innerHTML = `<div class="loading">Test runner is not available in this environment.<br><span style="font-size:0.85rem;color:var(--admin-text-faint);">Jest is a dev dependency and is not installed in production.</span></div>`;
+      document.getElementById('runAllTestsBtn').disabled = true;
+      document.getElementById('quickCheckBtn').disabled = true;
+      return;
+    }
+
     testSuites = data.suites;
     renderTestSuites();
 
@@ -1152,6 +1160,7 @@ function renderSparkline(containerId, data, maxValue) {
   if (!container || !data || data.length === 0) return;
 
   maxValue = maxValue || 1;
+  var okColor = getComputedStyle(document.body).getPropertyValue('--admin-sparkline-ok').trim() || '#22c55e';
   var bars = '';
   for (var i = 0; i < data.length; i++) {
     var val = data[i];
@@ -1160,7 +1169,7 @@ function renderSparkline(containerId, data, maxValue) {
     var color;
     if (ratio > 0.85) color = '#ef4444';
     else if (ratio > 0.6) color = '#f59e0b';
-    else color = '#00ff41';
+    else color = okColor;
     bars += '<div class="spark-bar" style="height:' + heightPct + '%;background:' + color + '"></div>';
   }
   container.innerHTML = bars;

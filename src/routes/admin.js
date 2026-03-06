@@ -488,19 +488,32 @@ const path = require('path');
 router.get('/tests/suites', async (req, res) => {
   const fs = require('fs').promises;
   const testsDir = path.join(process.cwd(), 'tests');
-  
+
+  // Check if Jest is available in this environment
+  try {
+    require.resolve('jest');
+  } catch (_) {
+    return res.json({
+      success: true,
+      suites: [],
+      categories: [],
+      unavailable: true,
+      message: 'Test runner is not available in production (Jest is a dev dependency)'
+    });
+  }
+
   try {
     const suites = [];
-    
+
     // Scan test directories
     const categories = ['utils', 'services', 'middleware', 'integration'];
-    
+
     for (const category of categories) {
       const categoryPath = path.join(testsDir, category);
       try {
         const files = await fs.readdir(categoryPath);
         const testFiles = files.filter(f => f.endsWith('.test.js'));
-        
+
         for (const file of testFiles) {
           suites.push({
             id: `${category}/${file}`,
@@ -513,13 +526,13 @@ router.get('/tests/suites', async (req, res) => {
         // Category doesn't exist, skip
       }
     }
-    
+
     res.json({
       success: true,
       suites,
       categories: [...new Set(suites.map(s => s.category))]
     });
-    
+
   } catch (error) {
     logger.error('Error listing test suites', { error: error.message });
     res.status(500).json({ error: 'Failed to list test suites' });
@@ -532,6 +545,11 @@ router.get('/tests/suites', async (req, res) => {
  * Body: { suite?: string, category?: string } - if empty, runs all tests
  */
 router.post('/tests/run', async (req, res) => {
+  // Check if Jest is available
+  try { require.resolve('jest'); } catch (_) {
+    return res.status(503).json({ error: 'Test runner is not available in this environment (Jest is a dev dependency)' });
+  }
+
   const { suite, category } = req.body;
 
   // Build jest command arguments
@@ -673,6 +691,11 @@ function runJestTests(args) {
  * Run a quick health check (subset of critical tests)
  */
 router.get('/tests/quick-check', async (req, res) => {
+  // Check if Jest is available
+  try { require.resolve('jest'); } catch (_) {
+    return res.json({ success: false, healthy: false, error: 'Test runner not available in production' });
+  }
+
   try {
     // Run only validator and sanitizer tests (fast)
     const result = await runJestTests([

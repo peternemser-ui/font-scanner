@@ -6,10 +6,16 @@
 
 /* ── Palette ──────────────────────────────────────────────── */
 var CHART_PALETTE = [
-  '#00ff41', '#3b82f6', '#a855f7', '#f59e0b',
-  '#ef4444', '#5bf4e7', '#ec4899', '#f97316',
-  '#6366f1', '#14b8a6', '#f43f5e', '#84cc16'
+  '#DC2626', '#3b82f6', '#a855f7', '#f59e0b',
+  '#ef4444', '#14b8a6', '#ec4899', '#f97316',
+  '#6366f1', '#5bf4e7', '#f43f5e', '#84cc16'
 ];
+
+/* Helper: read a CSS custom property from :root / body */
+function _cssVar(name, fallback) {
+  var val = getComputedStyle(document.body).getPropertyValue(name);
+  return val ? val.trim() : fallback;
+}
 
 /* ── Canvas helpers ───────────────────────────────────────── */
 
@@ -51,7 +57,7 @@ function _niceMax(val) {
 }
 
 function _noData(ctx, w, h, msg) {
-  ctx.fillStyle = '#444';
+  ctx.fillStyle = _cssVar('--admin-chart-nodata', '#444');
   ctx.font = '13px Inter, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
@@ -84,17 +90,19 @@ function _drawBarChart(id, labels, values, opts) {
 
   // Grid + Y labels
   var i, gy;
+  var gridColor = _cssVar('--admin-chart-grid', 'rgba(255,255,255,0.05)');
+  var labelColor = _cssVar('--admin-chart-label', '#555');
   ctx.textBaseline = 'middle';
   for (i = 0; i <= 4; i++) {
     gy = pad.t + (ch / 4) * i;
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = gridColor;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(pad.l, gy);
     ctx.lineTo(w - pad.r, gy);
     ctx.stroke();
 
-    ctx.fillStyle = '#555';
+    ctx.fillStyle = labelColor;
     ctx.font = '11px Inter, -apple-system, sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText(Math.round(mx - (mx / 4) * i), pad.l - 10, gy);
@@ -119,7 +127,7 @@ function _drawBarChart(id, labels, values, opts) {
 
     // X label (show every Nth to avoid overlap)
     if (idx % every === 0 || idx === values.length - 1) {
-      ctx.fillStyle = '#555';
+      ctx.fillStyle = labelColor;
       ctx.font = '10px Inter, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
@@ -154,17 +162,19 @@ function _drawAreaChart(id, labels, values, opts) {
 
   // Grid + Y labels
   var i, gy;
+  var gridColor = _cssVar('--admin-chart-grid', 'rgba(255,255,255,0.05)');
+  var labelColor = _cssVar('--admin-chart-label', '#555');
   ctx.textBaseline = 'middle';
   for (i = 0; i <= 4; i++) {
     gy = pad.t + (ch / 4) * i;
-    ctx.strokeStyle = 'rgba(255,255,255,0.05)';
+    ctx.strokeStyle = gridColor;
     ctx.lineWidth = 1;
     ctx.beginPath();
     ctx.moveTo(pad.l, gy);
     ctx.lineTo(w - pad.r, gy);
     ctx.stroke();
 
-    ctx.fillStyle = '#555';
+    ctx.fillStyle = labelColor;
     ctx.font = '11px Inter, -apple-system, sans-serif';
     ctx.textAlign = 'right';
     ctx.fillText(Math.round(mx - (mx / 4) * i), pad.l - 10, gy);
@@ -210,7 +220,7 @@ function _drawAreaChart(id, labels, values, opts) {
     ctx.fill();
     ctx.beginPath();
     ctx.arc(p.x, p.y, 1.5, 0, Math.PI * 2);
-    ctx.fillStyle = '#0a0a0a';
+    ctx.fillStyle = _cssVar('--admin-chart-dot-center', '#0a0a0a');
     ctx.fill();
   });
 
@@ -218,7 +228,7 @@ function _drawAreaChart(id, labels, values, opts) {
   var every = Math.ceil(labels.length / 7);
   labels.forEach(function (label, idx) {
     if (idx % every === 0 || idx === labels.length - 1) {
-      ctx.fillStyle = '#555';
+      ctx.fillStyle = labelColor;
       ctx.font = '10px Inter, -apple-system, sans-serif';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
@@ -265,12 +275,12 @@ function _drawDonutChart(id, labels, values, colors) {
   });
 
   // Center text
-  ctx.fillStyle = '#fff';
+  ctx.fillStyle = _cssVar('--admin-text', '#fff');
   ctx.font = 'bold 28px Inter, -apple-system, sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'middle';
   ctx.fillText(total, cx, cy - 6);
-  ctx.fillStyle = '#666';
+  ctx.fillStyle = _cssVar('--admin-text-faint', '#666');
   ctx.font = '11px Inter, -apple-system, sans-serif';
   ctx.fillText('TOTAL USERS', cx, cy + 14);
 
@@ -288,7 +298,7 @@ function _drawDonutChart(id, labels, values, colors) {
     ctx.fillStyle = (colors && colors[idx]) || CHART_PALETTE[idx];
     ctx.fill();
 
-    ctx.fillStyle = '#999';
+    ctx.fillStyle = _cssVar('--admin-text-muted', '#999');
     ctx.font = '12px Inter, -apple-system, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -328,14 +338,14 @@ function _drawHBarChart(id, labels, values) {
     var displayLabel = labels[idx]
       ? labels[idx].replace(/[_-]/g, ' ').replace(/\b\w/g, function (c) { return c.toUpperCase(); })
       : 'Unknown';
-    ctx.fillStyle = '#aaa';
+    ctx.fillStyle = _cssVar('--admin-text-muted', '#aaa');
     ctx.font = '12px Inter, -apple-system, sans-serif';
     ctx.textAlign = 'right';
     ctx.textBaseline = 'middle';
     ctx.fillText(displayLabel, pad.l - 14, y + barH / 2);
 
     // Track background
-    ctx.fillStyle = 'rgba(255,255,255,0.03)';
+    ctx.fillStyle = _cssVar('--admin-chart-grid', 'rgba(255,255,255,0.03)');
     _roundRect(ctx, pad.l, y, cw, barH, 4);
     ctx.fill();
 
@@ -349,7 +359,7 @@ function _drawHBarChart(id, labels, values) {
     ctx.fill();
 
     // Value
-    ctx.fillStyle = '#888';
+    ctx.fillStyle = _cssVar('--admin-text-muted', '#888');
     ctx.font = '12px Inter, -apple-system, sans-serif';
     ctx.textAlign = 'left';
     ctx.textBaseline = 'middle';
@@ -385,7 +395,7 @@ async function loadAnalytics() {
 function _renderCharts(data) {
   // Scan activity bar chart (last 30 days)
   var scan = _fillDays(data.scanActivity, 30);
-  _drawBarChart('scanActivityChart', scan.labels, scan.values, { color: '#00ff41' });
+  _drawBarChart('scanActivityChart', scan.labels, scan.values, { color: _cssVar('--admin-accent', '#DC2626') });
 
   // User registration area chart (last 30 days)
   var users = _fillDays(data.userGrowth, 30);
