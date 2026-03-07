@@ -263,14 +263,14 @@
       gap: 1.5rem;
     }
 
-    .charts-grid {
+    .charts-grid-unified {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: 2fr 1fr;
       gap: 1.5rem;
     }
 
     @media (max-width: 768px) {
-      .charts-grid { grid-template-columns: 1fr; }
+      .charts-grid-unified { grid-template-columns: 1fr; }
     }
 
     .chart-card {
@@ -279,21 +279,12 @@
       border-radius: 12px;
       padding: 1.25rem;
       min-height: 200px;
+      min-width: 0;
     }
 
     .chart-card:hover { border-color: var(--admin-border-hover); }
     .chart-card--full { grid-column: 1 / -1; }
-
-    .charts-grid--top {
-      grid-template-columns: 2fr 1fr;
-    }
-
-    .chart-card--2-3 { min-width: 0; }
-    .chart-card--1-3 { min-width: 0; }
-
-    @media (max-width: 900px) {
-      .charts-grid--top { grid-template-columns: 1fr; }
-    }
+    .chart-card--scan-activity { grid-column: 1; }
 
     .chart-header {
       display: flex;
@@ -1198,15 +1189,15 @@
 
       <!-- Analytics Charts -->
       <div class="charts-section">
-        <div class="charts-grid charts-grid--top">
-          <div class="chart-card chart-card--2-3">
+        <div class="charts-grid-unified">
+          <div class="chart-card chart-card--scan-activity">
             <div class="chart-header">
               <h3 class="chart-title">Scan Activity</h3>
               <span class="chart-period">Last 30 days</span>
             </div>
             <canvas id="scanActivityChart"></canvas>
           </div>
-          <div class="chart-card chart-card--1-3 docker-widget">
+          <div class="chart-card docker-widget">
             <div class="chart-header">
               <h3 class="chart-title">Server Status</h3>
               <span class="docker-status-dot" id="dockerDot"></span>
@@ -1215,8 +1206,6 @@
               <div class="docker-widget-loading">Loading...</div>
             </div>
           </div>
-        </div>
-        <div class="charts-grid">
           <div class="chart-card">
             <div class="chart-header">
               <h3 class="chart-title">User Registrations</h3>
