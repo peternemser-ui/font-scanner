@@ -1,4 +1,6 @@
 const crypto = require('crypto');
+const dns = require('dns');
+const { promisify } = require('util');
 const express = require('express');
 const router = express.Router();
 const authService = require('../services/authService');
@@ -12,6 +14,49 @@ const { createLogger } = require('../utils/logger');
 
 const logger = createLogger('AuthRoutes');
 
+const resolveMx = promisify(dns.resolveMx);
+
+// Domains that technically exist but should never be used for real registration
+const BLOCKED_DOMAINS = new Set([
+  'example.com', 'example.org', 'example.net',
+  'test.com', 'test.org', 'test.net',
+  'localhost', 'invalid', 'mailinator.com',
+  'tempmail.com', 'throwaway.email', 'guerrillamail.com',
+  'sharklasers.com', 'grr.la', 'guerrillamailblock.com',
+  'yopmail.com', 'trashmail.com', 'fakeinbox.com',
+  'dispostable.com', 'mailnesia.com', 'maildrop.cc',
+  'temp-mail.org', 'getnada.com', '10minutemail.com',
+]);
+
+/**
+ * Validate email domain: check blocklist + MX records
+ * Returns null if valid, or an error string if invalid.
+ */
+async function validateEmailDomain(email) {
+  const domain = email.split('@')[1]?.toLowerCase();
+  if (!domain) return 'Invalid email format';
+
+  if (BLOCKED_DOMAINS.has(domain)) {
+    return 'Please use a real email address';
+  }
+
+  try {
+    const records = await resolveMx(domain);
+    if (!records || records.length === 0) {
+      return 'This email domain cannot receive mail';
+    }
+  } catch (err) {
+    // ENOTFOUND = domain doesn't exist, ENODATA = no MX records
+    if (err.code === 'ENOTFOUND' || err.code === 'ENODATA') {
+      return 'This email domain cannot receive mail';
+    }
+    // DNS timeout or other transient error — allow registration
+    logger.warn('MX lookup failed, allowing registration', { domain, error: err.code });
+  }
+
+  return null;
+}
+
 /**
  * POST /api/auth/register
  * Register a new user account
@@ -22,6 +67,12 @@ router.post('/register', async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({ error: 'Email and password required' });
+    }
+
+    // Validate email domain (blocklist + MX check)
+    const domainError = await validateEmailDomain(email.trim().toLowerCase());
+    if (domainError) {
+      return res.status(400).json({ error: domainError });
     }
 
     const result = await authService.register(email, password);

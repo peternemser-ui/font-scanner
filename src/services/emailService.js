@@ -526,44 +526,50 @@ async function sendWelcomeEmail(toEmail, locale) {
   const subject = getI18nString(lang, 'email.welcome.subject', 'Welcome to Site Mechanic!');
   const heading = getI18nString(lang, 'email.welcome.heading', 'Welcome to Site Mechanic!');
   const intro = getI18nString(lang, 'email.welcome.intro', 'Your account has been created. You\'re ready to start analyzing your websites with professional-grade tools.');
-  const cta = getI18nString(lang, 'email.welcome.cta', 'Get Started');
+  const cta = getI18nString(lang, 'email.welcome.cta', 'Start Your First Scan');
   const featuresHeading = getI18nString(lang, 'email.welcome.featuresHeading', 'Here\'s what you can do:');
   const feature1 = getI18nString(lang, 'email.welcome.feature1', 'Run SEO, performance, and security audits');
+  const feature1Desc = getI18nString(lang, 'email.welcome.feature1Desc', 'Analyze any website in seconds with 15+ professional tools');
   const feature2 = getI18nString(lang, 'email.welcome.feature2', 'Get actionable recommendations with AI insights');
+  const feature2Desc = getI18nString(lang, 'email.welcome.feature2Desc', 'AI-powered analysis tells you exactly what to fix and why');
   const feature3 = getI18nString(lang, 'email.welcome.feature3', 'Export detailed PDF reports');
+  const feature3Desc = getI18nString(lang, 'email.welcome.feature3Desc', 'Share branded reports with clients and stakeholders');
   const footerText = getI18nString(lang, 'email.welcome.footer', 'You\'re receiving this because you created an account on Site Mechanic.');
 
   const html = brandedEmailHtml({
     fromName,
     body: `
-              <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:22px;font-weight:600;">${escHtml(heading)}</h2>
-              <p style="margin:0 0 24px;color:#4a4a68;font-size:15px;line-height:1.6;">
+              <h2 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;font-weight:700;">${escHtml(heading)}</h2>
+              <p style="margin:0 0 28px;color:#4a4a68;font-size:15px;line-height:1.7;">
                 ${escHtml(intro)}
               </p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td align="center" style="padding:8px 0 24px;">
-                    <a href="${appUrl}" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 32px;border-radius:6px;">
+                  <td align="center" style="padding:0 0 32px;">
+                    <a href="${appUrl}" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;font-size:16px;font-weight:700;padding:14px 40px;border-radius:8px;letter-spacing:0.3px;">
                       ${escHtml(cta)}
                     </a>
                   </td>
                 </tr>
               </table>
-              <p style="margin:0 0 8px;color:#4a4a68;font-size:14px;line-height:1.6;font-weight:600;">${escHtml(featuresHeading)}</p>
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;">
+              <p style="margin:0 0 16px;color:#1a1a2e;font-size:15px;font-weight:700;">${escHtml(featuresHeading)}</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
                 <tr>
-                  <td style="padding:6px 0;color:#4a4a68;font-size:14px;line-height:1.5;">
-                    &#8226;&nbsp; ${escHtml(feature1)}
+                  <td style="padding:12px 16px;background-color:#f8fafc;border-radius:8px 8px 0 0;border-bottom:1px solid #f1f5f9;">
+                    <p style="margin:0 0 2px;color:#1a1a2e;font-size:14px;font-weight:600;">&#9889; ${escHtml(feature1)}</p>
+                    <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.5;">${escHtml(feature1Desc)}</p>
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:6px 0;color:#4a4a68;font-size:14px;line-height:1.5;">
-                    &#8226;&nbsp; ${escHtml(feature2)}
+                  <td style="padding:12px 16px;background-color:#f8fafc;border-bottom:1px solid #f1f5f9;">
+                    <p style="margin:0 0 2px;color:#1a1a2e;font-size:14px;font-weight:600;">&#10024; ${escHtml(feature2)}</p>
+                    <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.5;">${escHtml(feature2Desc)}</p>
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:6px 0;color:#4a4a68;font-size:14px;line-height:1.5;">
-                    &#8226;&nbsp; ${escHtml(feature3)}
+                  <td style="padding:12px 16px;background-color:#f8fafc;border-radius:0 0 8px 8px;">
+                    <p style="margin:0 0 2px;color:#1a1a2e;font-size:14px;font-weight:600;">&#128196; ${escHtml(feature3)}</p>
+                    <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.5;">${escHtml(feature3Desc)}</p>
                   </td>
                 </tr>
               </table>
@@ -577,7 +583,7 @@ async function sendWelcomeEmail(toEmail, locale) {
     from: `"${fromName}" <${fromAddress}>`,
     to: toEmail,
     subject,
-    text: `${heading}\n\n${intro}\n\n${appUrl}\n\n- ${feature1}\n- ${feature2}\n- ${feature3}`,
+    text: `${heading}\n\n${intro}\n\n${appUrl}\n\n- ${feature1}: ${feature1Desc}\n- ${feature2}: ${feature2Desc}\n- ${feature3}: ${feature3Desc}`,
     html
   });
 
