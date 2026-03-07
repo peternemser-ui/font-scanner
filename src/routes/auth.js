@@ -16,6 +16,21 @@ const logger = createLogger('AuthRoutes');
 
 const resolveMx = promisify(dns.resolveMx);
 
+// In-memory auth failure tracking for admin security widget
+const authFailureStats = {
+  failures: [],
+  record() {
+    this.failures.push(Date.now());
+    if (this.failures.length > 500) this.failures.shift();
+  },
+  getSummary() {
+    const now = Date.now();
+    const lastHour = this.failures.filter(t => t > now - 3600000).length;
+    const last24h = this.failures.filter(t => t > now - 86400000).length;
+    return { lastHour, last24Hours: last24h, total: this.failures.length };
+  }
+};
+
 // Domains that technically exist but should never be used for real registration
 const BLOCKED_DOMAINS = new Set([
   'example.com', 'example.org', 'example.net',
@@ -131,6 +146,7 @@ router.post('/login', async (req, res) => {
       token: result.token
     });
   } catch (error) {
+    authFailureStats.record();
     // Always return generic message to prevent user enumeration
     res.status(401).json({ error: 'Invalid email or password' });
   }
@@ -586,3 +602,4 @@ router.post('/test-email', requireAuth, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.authFailureStats = authFailureStats;

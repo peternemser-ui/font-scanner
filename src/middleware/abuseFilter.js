@@ -155,4 +155,9 @@ function getAbuseFilterStats() {
   };
 }
 
-module.exports = { abuseFilter, getAbuseFilterStats };
+function clearAbuseFilterBlocked() {
+  blocked.clear();
+  ipHits.clear();
+}
+
+module.exports = { abuseFilter, getAbuseFilterStats, clearAbuseFilterBlocked };

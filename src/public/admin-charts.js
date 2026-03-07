@@ -417,6 +417,43 @@ function _renderCharts(data) {
   var typeLabels = data.scanTypes.map(function (s) { return s.result_type; });
   var typeValues = data.scanTypes.map(function (s) { return parseInt(s.count, 10) || 0; });
   _drawHBarChart('scanTypesChart', typeLabels, typeValues);
+
+  // Revenue chart (fetched separately)
+  _loadRevenueChart();
+}
+
+/**
+ * Fetch and render revenue bar chart
+ */
+async function _loadRevenueChart() {
+  try {
+    var response = await fetch('/api/admin/revenue-chart', {
+      headers: proManager.getAuthHeaders()
+    });
+    var data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+
+    var rows = data.data || [];
+    // Build a 30-day map
+    var map = {};
+    rows.forEach(function (r) { map[r.day] = r.amount || 0; });
+
+    var labels = [];
+    var values = [];
+    var now = new Date();
+    for (var i = 29; i >= 0; i--) {
+      var d = new Date(now);
+      d.setDate(d.getDate() - i);
+      var key = d.toISOString().split('T')[0];
+      var short = (d.getMonth() + 1) + '/' + d.getDate();
+      labels.push(short);
+      values.push(map[key] || 0);
+    }
+
+    _drawBarChart('revenueChart', labels, values, { color: '#22c55e' });
+  } catch (err) {
+    console.error('Error loading revenue chart:', err);
+  }
 }
 
 /**

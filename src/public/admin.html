@@ -577,6 +577,14 @@
 
     .btn-quick-check:hover:not(:disabled) { background: rgba(59, 130, 246, 0.25); }
 
+    .btn-copy-failed {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.25);
+    }
+    .btn-copy-failed:hover:not(:disabled) { background: rgba(239, 68, 68, 0.25); }
+    .btn-copy-failed.copied { background: rgba(34, 197, 94, 0.15); color: #22c55e; border-color: rgba(34, 197, 94, 0.25); }
+
     .test-summary {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
@@ -1127,6 +1135,249 @@
       max-height: 200px;
       overflow-y: auto;
     }
+
+    /* ── Security Widget ──────────────────────────────────── */
+    .security-widget { display: flex; flex-direction: column; }
+    .security-threat-badge {
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    .security-threat-badge.low { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .security-threat-badge.medium { background: rgba(245,158,11,0.15); color: #f59e0b; }
+    .security-threat-badge.high { background: rgba(239,68,68,0.15); color: #ef4444; }
+
+    .security-widget-body {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      flex: 1;
+    }
+    .widget-stat-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0.6rem;
+      border-bottom: 1px solid var(--admin-border);
+      font-size: 0.8rem;
+    }
+    .widget-stat-row:last-child { border-bottom: none; }
+    .widget-stat-label { color: var(--admin-text-muted); }
+    .widget-stat-value { font-weight: 600; color: var(--admin-text); font-variant-numeric: tabular-nums; }
+    .widget-stat-value.warn { color: #f59e0b; }
+    .widget-stat-value.danger { color: #ef4444; }
+
+    .security-top-ips {
+      margin-top: 0.25rem;
+      font-size: 0.75rem;
+    }
+    .security-top-ips-title {
+      font-size: 0.7rem;
+      color: var(--admin-text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.25rem;
+    }
+    .security-ip-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.2rem 0.6rem;
+      color: var(--admin-text-muted);
+    }
+    .security-ip-row .ip-hits { color: #ef4444; font-weight: 600; }
+
+    /* ── Quick Actions Bar ─────────────────────────────────── */
+    .quick-actions-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1rem;
+      background: var(--admin-surface);
+      border: 1px solid var(--admin-border);
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+    .quick-actions-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--admin-text-faint);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-right: 0.5rem;
+    }
+    .quick-action-btn {
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid var(--admin-border);
+      border-radius: 6px;
+      background: transparent;
+      color: var(--admin-text-muted);
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .quick-action-btn:hover {
+      background: var(--admin-surface-hover);
+      color: var(--admin-text);
+      border-color: var(--admin-border-hover);
+    }
+    .quick-action-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .quick-action-btn.success {
+      color: #22c55e;
+      border-color: rgba(34,197,94,0.3);
+    }
+
+    /* ── Error Log Panel ───────────────────────────────────── */
+    .error-log-panel {
+      background: var(--admin-surface);
+      border: 1px solid var(--admin-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .error-log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.75rem;
+    }
+    .error-log-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--admin-text);
+      margin: 0;
+    }
+    .error-log-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    .error-log-count {
+      font-size: 0.75rem;
+      color: var(--admin-text-faint);
+    }
+    .error-log-body {
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .error-log-empty {
+      text-align: center;
+      padding: 2rem;
+      color: var(--admin-text-faint);
+      font-size: 0.875rem;
+    }
+    .error-log-entry {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--admin-border);
+      font-size: 0.8rem;
+    }
+    .error-log-entry:last-child { border-bottom: none; }
+    .error-log-entry-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 0.3rem;
+    }
+    .error-log-type {
+      font-weight: 600;
+      color: #ef4444;
+    }
+    .error-log-time {
+      font-size: 0.7rem;
+      color: var(--admin-text-faint);
+      white-space: nowrap;
+    }
+    .error-log-message {
+      color: var(--admin-text);
+      margin-bottom: 0.3rem;
+      word-break: break-word;
+    }
+    .error-log-context {
+      font-size: 0.7rem;
+      color: var(--admin-text-muted);
+    }
+    .error-log-stack {
+      background: var(--admin-surface-hover);
+      border-radius: 6px;
+      padding: 0.5rem;
+      margin-top: 0.3rem;
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: var(--admin-text-muted);
+      max-height: 100px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+      cursor: pointer;
+    }
+    .error-log-stack.collapsed {
+      max-height: 2.5em;
+      overflow: hidden;
+    }
+
+    /* ── Active Scans Panel ────────────────────────────────── */
+    .active-scans-panel {
+      background: var(--admin-surface);
+      border: 1px solid var(--admin-border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      margin-bottom: 2rem;
+    }
+    .active-scans-empty {
+      text-align: center;
+      padding: 1.5rem;
+      color: var(--admin-text-faint);
+      font-size: 0.875rem;
+    }
+    .active-scan-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.6rem;
+      border-bottom: 1px solid var(--admin-border);
+      font-size: 0.8rem;
+    }
+    .active-scan-item:last-child { border-bottom: none; }
+    .active-scan-url {
+      flex: 1;
+      color: var(--admin-text);
+      font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .active-scan-progress {
+      width: 80px;
+      height: 6px;
+      background: var(--admin-surface-hover);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .active-scan-progress-fill {
+      height: 100%;
+      background: var(--admin-accent, #5bf4e7);
+      border-radius: 3px;
+      transition: width 0.3s;
+    }
+    .active-scan-time {
+      color: var(--admin-text-faint);
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+    .active-scan-pct {
+      color: var(--admin-text-muted);
+      font-size: 0.75rem;
+      font-weight: 600;
+      min-width: 32px;
+      text-align: right;
+    }
   </style>
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-NC831RG5CE"></script>
@@ -1187,6 +1438,15 @@
         </div>
       </div>
 
+      <!-- Quick Actions -->
+      <div class="quick-actions-bar">
+        <span class="quick-actions-label">Quick Actions</span>
+        <button class="quick-action-btn" id="actionClearPool" title="Drain and recreate browser pool">Clear Browser Pool</button>
+        <button class="quick-action-btn" id="actionForceGC" title="Trigger manual garbage collection">Force GC</button>
+        <button class="quick-action-btn" id="actionFlushRateLimits" title="Clear rate limit violation history">Flush Rate Limits</button>
+        <button class="quick-action-btn" id="actionClearBlocked" title="Unblock all IPs blocked by abuse filter">Unblock All IPs</button>
+      </div>
+
       <!-- Analytics Charts -->
       <div class="charts-section">
         <div class="charts-grid-unified">
@@ -1220,6 +1480,31 @@
             </div>
             <canvas id="planDistChart"></canvas>
           </div>
+          <div class="chart-card security-widget">
+            <div class="chart-header">
+              <h3 class="chart-title">Security Overview</h3>
+              <span class="security-threat-badge" id="threatBadge">--</span>
+            </div>
+            <div class="security-widget-body" id="securityWidgetBody">
+              <div class="docker-widget-loading">Loading...</div>
+            </div>
+          </div>
+          <div class="chart-card db-stats-widget">
+            <div class="chart-header">
+              <h3 class="chart-title">Database</h3>
+              <span class="chart-period">SQLite</span>
+            </div>
+            <div class="db-stats-body" id="dbStatsBody">
+              <div class="docker-widget-loading">Loading...</div>
+            </div>
+          </div>
+          <div class="chart-card chart-card--full">
+            <div class="chart-header">
+              <h3 class="chart-title">Revenue</h3>
+              <span class="chart-period">Last 30 days</span>
+            </div>
+            <canvas id="revenueChart"></canvas>
+          </div>
           <div class="chart-card chart-card--full">
             <div class="chart-header">
               <h3 class="chart-title">Top Scan Types</h3>
@@ -1227,6 +1512,31 @@
             </div>
             <canvas id="scanTypesChart"></canvas>
           </div>
+        </div>
+      </div>
+
+      <!-- Error Log Panel -->
+      <div class="error-log-panel" id="errorLogPanel">
+        <div class="error-log-header">
+          <h3 class="error-log-title">Recent Errors</h3>
+          <div class="error-log-controls">
+            <span class="error-log-count" id="errorLogCount">0 errors</span>
+            <button id="refreshErrorLogBtn" class="btn-test btn-quick-check" style="padding: 0.3rem 0.75rem; font-size: 0.75rem;">Refresh</button>
+          </div>
+        </div>
+        <div class="error-log-body" id="errorLogBody">
+          <div class="docker-widget-loading">Loading...</div>
+        </div>
+      </div>
+
+      <!-- Active Scans Panel -->
+      <div class="active-scans-panel" id="activeScansPanel">
+        <div class="error-log-header">
+          <h3 class="error-log-title">Active Scans</h3>
+          <span class="error-log-count" id="activeScanCount">0 running</span>
+        </div>
+        <div class="active-scans-body" id="activeScansBody">
+          <div class="active-scans-empty">No active scans</div>
         </div>
       </div>
 
@@ -1277,6 +1587,7 @@
             <div class="test-controls">
               <button id="quickCheckBtn" class="btn-test btn-quick-check">Quick Health Check</button>
               <button id="runAllTestsBtn" class="btn-test btn-run-all">Run All Tests</button>
+              <button id="copyFailedReportBtn" class="btn-test btn-copy-failed hidden" title="Copy failed test report to clipboard">Copy Failed Report</button>
             </div>
           </div>
 

@@ -127,6 +127,11 @@ const rateLimitStats = {
   getRecentViolations(limit = 50) {
     return this.violations.slice(-limit).reverse();
   },
+
+  clear() {
+    this.violations = [];
+    this.ipStats.clear();
+  },
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -378,6 +383,7 @@ module.exports = {
   getRateLimitStats,
   getRateLimitAnalytics,
   TIER_LIMITS,
+  rateLimitStats,
   // Legacy alias
   createRateLimiter: createTieredLimiter,
 };

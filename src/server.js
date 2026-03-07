@@ -256,6 +256,21 @@ const healthEmitterInterval = setInterval(async () => {
       };
     } catch (_) { /* ignore */ }
 
+    // Security data for admin dashboard
+    let security = { blockedIPs: 0, authFailuresLastHour: 0 };
+    try {
+      const { getAbuseFilterStats } = require('./middleware/abuseFilter');
+      const { authFailureStats } = require('./routes/auth');
+      const abuseStats = getAbuseFilterStats();
+      const authSummary = authFailureStats.getSummary();
+      security = {
+        blockedIPs: abuseStats.blockedIPs || 0,
+        activeIPs: abuseStats.activeIPs || 0,
+        authFailuresLastHour: authSummary.lastHour || 0,
+        authFailures24h: authSummary.last24Hours || 0
+      };
+    } catch (_) { /* ignore */ }
+
     io.to('admin-health').emit('admin:health-tick', {
       timestamp: Date.now(),
       memory,
@@ -265,7 +280,8 @@ const healthEmitterInterval = setInterval(async () => {
       requestsPerMinute,
       errors,
       rateLimits,
-      browserPool: browserPoolStatus
+      browserPool: browserPoolStatus,
+      security
     });
   } catch (err) {
     // Never crash the interval

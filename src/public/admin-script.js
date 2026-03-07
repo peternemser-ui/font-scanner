@@ -40,6 +40,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   // Load Docker widget on homepage
   loadDockerWidget();
 
+  // Load new dashboard widgets
+  loadSecurityWidget();
+  loadDbStats();
+  loadErrorLog();
+  loadActiveScans();
+  initQuickActions();
+
+  // Auto-refresh security widget every 30s
+  setInterval(loadSecurityWidget, 30000);
+  // Auto-refresh active scans every 10s
+  setInterval(loadActiveScans, 10000);
+
   // Initialize tabs
   initializeTabs();
 
@@ -510,6 +522,7 @@ async function initializeTestRunner() {
   // Attach event listeners
   document.getElementById('runAllTestsBtn')?.addEventListener('click', runAllTests);
   document.getElementById('quickCheckBtn')?.addEventListener('click', runQuickCheck);
+  document.getElementById('copyFailedReportBtn')?.addEventListener('click', copyFailedReport);
 }
 
 /**
@@ -767,10 +780,79 @@ async function runQuickCheck() {
   }
 }
 
+/** Last test results for failed report generation */
+let lastTestResults = null;
+
+/**
+ * Generate a structured markdown report of failed tests for Claude
+ */
+function generateFailedTestReport(results) {
+  const failedFiles = results.testResults.filter(file =>
+    file.assertionResults.some(a => a.status === 'failed')
+  );
+
+  if (failedFiles.length === 0) return null;
+
+  let report = `# Failed Test Report\n\n`;
+  report += `**${results.numFailedTests} failed** out of ${results.numTotalTests} tests\n\n`;
+
+  for (const file of failedFiles) {
+    const filePath = file.name;
+    const failures = file.assertionResults.filter(a => a.status === 'failed');
+
+    report += `## ${filePath}\n\n`;
+
+    for (const failure of failures) {
+      report += `### FAIL: ${failure.fullName}\n\n`;
+      if (failure.failureMessages.length > 0) {
+        report += '```\n' + failure.failureMessages.join('\n') + '\n```\n\n';
+      }
+    }
+  }
+
+  report += `---\nPlease analyze these failures and fix them. The test files are in the \`tests/\` directory and the source code is in \`src/\`.\n`;
+
+  return report;
+}
+
+/**
+ * Copy failed test report to clipboard
+ */
+function copyFailedReport() {
+  if (!lastTestResults) return;
+  const report = generateFailedTestReport(lastTestResults);
+  if (!report) return;
+
+  navigator.clipboard.writeText(report).then(() => {
+    const btn = document.getElementById('copyFailedReportBtn');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = 'Copy Failed Report';
+      btn.classList.remove('copied');
+    }, 2000);
+  }).catch(() => {
+    showError('Failed to copy to clipboard');
+  });
+}
+
 /**
  * Display test results
  */
 function displayTestResults(results) {
+  lastTestResults = results;
+
+  // Show/hide copy failed report button
+  const copyBtn = document.getElementById('copyFailedReportBtn');
+  if (copyBtn) {
+    if (results.numFailedTests > 0) {
+      copyBtn.classList.remove('hidden');
+      copyBtn.textContent = `Copy Failed Report (${results.numFailedTests})`;
+    } else {
+      copyBtn.classList.add('hidden');
+    }
+  }
+
   // Update summary
   const summary = document.getElementById('testSummary');
   summary.classList.remove('hidden');
@@ -993,6 +1075,290 @@ async function loadDockerWidget() {
 
   } catch (error) {
     body.innerHTML = '<div class="docker-widget-loading" style="color:#ef4444;">Failed to load</div>';
+  }
+}
+
+// =============================================================================
+// SECURITY WIDGET
+// =============================================================================
+
+async function loadSecurityWidget() {
+  var body = document.getElementById('securityWidgetBody');
+  var badge = document.getElementById('threatBadge');
+  if (!body) return;
+
+  try {
+    var response = await fetch('/api/admin/security-overview', {
+      headers: proManager.getAuthHeaders()
+    });
+    var data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+
+    // Threat badge
+    if (badge) {
+      badge.textContent = data.threatLevel.toUpperCase();
+      badge.className = 'security-threat-badge ' + data.threatLevel;
+    }
+
+    var rl = data.rateLimits || {};
+    var af = data.abuseFilter || {};
+    var auth = data.authFailures || {};
+
+    var html =
+      '<div class="widget-stat-row">' +
+        '<span class="widget-stat-label">Blocked IPs</span>' +
+        '<span class="widget-stat-value' + (af.blockedIPs > 0 ? ' danger' : '') + '">' + (af.blockedIPs || 0) + '</span>' +
+      '</div>' +
+      '<div class="widget-stat-row">' +
+        '<span class="widget-stat-label">Rate Violations (1h)</span>' +
+        '<span class="widget-stat-value' + (rl.lastHour > 10 ? ' warn' : '') + '">' + (rl.lastHour || 0) + '</span>' +
+      '</div>' +
+      '<div class="widget-stat-row">' +
+        '<span class="widget-stat-label">Rate Violations (24h)</span>' +
+        '<span class="widget-stat-value">' + (rl.last24Hours || 0) + '</span>' +
+      '</div>' +
+      '<div class="widget-stat-row">' +
+        '<span class="widget-stat-label">Auth Failures (1h)</span>' +
+        '<span class="widget-stat-value' + (auth.lastHour > 5 ? ' warn' : '') + '">' + (auth.lastHour || 0) + '</span>' +
+      '</div>' +
+      '<div class="widget-stat-row">' +
+        '<span class="widget-stat-label">Auth Failures (24h)</span>' +
+        '<span class="widget-stat-value">' + (auth.last24Hours || 0) + '</span>' +
+      '</div>';
+
+    // Top offending IPs
+    var topIPs = data.topIPs || [];
+    if (topIPs.length > 0) {
+      html += '<div class="security-top-ips">' +
+        '<div class="security-top-ips-title">Top Offending IPs</div>';
+      topIPs.slice(0, 3).forEach(function(entry) {
+        html += '<div class="security-ip-row">' +
+          '<span>' + escapeHtml(entry.ip) + '</span>' +
+          '<span class="ip-hits">' + entry.totalHits + ' hits</span>' +
+        '</div>';
+      });
+      html += '</div>';
+    }
+
+    body.innerHTML = html;
+  } catch (error) {
+    body.innerHTML = '<div class="docker-widget-loading" style="color:#ef4444;">Failed to load</div>';
+  }
+}
+
+// =============================================================================
+// DATABASE STATS WIDGET
+// =============================================================================
+
+async function loadDbStats() {
+  var body = document.getElementById('dbStatsBody');
+  if (!body) return;
+
+  try {
+    var response = await fetch('/api/admin/db-stats', {
+      headers: proManager.getAuthHeaders()
+    });
+    var data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+
+    function formatBytes(bytes) {
+      if (bytes === 0) return '0 B';
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / 1024 / 1024).toFixed(1) + ' MB';
+    }
+
+    var html =
+      '<div class="widget-stat-row">' +
+        '<span class="widget-stat-label">DB File Size</span>' +
+        '<span class="widget-stat-value">' + formatBytes(data.fileSize) + '</span>' +
+      '</div>' +
+      '<div class="widget-stat-row">' +
+        '<span class="widget-stat-label">WAL Size</span>' +
+        '<span class="widget-stat-value">' + formatBytes(data.walSize) + '</span>' +
+      '</div>';
+
+    var tables = data.tables || {};
+    Object.keys(tables).forEach(function(table) {
+      var displayName = table.replace(/_/g, ' ').replace(/\b\w/g, function(c) { return c.toUpperCase(); });
+      html += '<div class="widget-stat-row">' +
+        '<span class="widget-stat-label">' + escapeHtml(displayName) + '</span>' +
+        '<span class="widget-stat-value">' + tables[table].toLocaleString() + '</span>' +
+      '</div>';
+    });
+
+    body.innerHTML = html;
+  } catch (error) {
+    body.innerHTML = '<div class="docker-widget-loading" style="color:#ef4444;">Failed to load</div>';
+  }
+}
+
+// =============================================================================
+// ERROR LOG
+// =============================================================================
+
+async function loadErrorLog() {
+  var body = document.getElementById('errorLogBody');
+  var countEl = document.getElementById('errorLogCount');
+  if (!body) return;
+
+  try {
+    var response = await fetch('/api/admin/error-log', {
+      headers: proManager.getAuthHeaders()
+    });
+    var data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+
+    var errors = data.errors || [];
+    if (countEl) countEl.textContent = errors.length + ' error' + (errors.length !== 1 ? 's' : '');
+
+    if (errors.length === 0) {
+      body.innerHTML = '<div class="error-log-empty">No recent errors</div>';
+      return;
+    }
+
+    var html = '';
+    errors.forEach(function(err) {
+      var timeAgo = formatTimeAgo(err.timestamp);
+      var ctx = err.context || {};
+      var contextStr = '';
+      if (ctx.method || ctx.url) {
+        contextStr = (ctx.method || '') + ' ' + (ctx.url || '');
+        if (err.statusCode) contextStr += ' (' + err.statusCode + ')';
+      }
+
+      html += '<div class="error-log-entry">' +
+        '<div class="error-log-entry-header">' +
+          '<span class="error-log-type">' + escapeHtml(err.type || 'Error') + '</span>' +
+          '<span class="error-log-time">' + timeAgo + '</span>' +
+        '</div>' +
+        '<div class="error-log-message">' + escapeHtml(err.message || 'Unknown error') + '</div>';
+
+      if (contextStr) {
+        html += '<div class="error-log-context">' + escapeHtml(contextStr) + '</div>';
+      }
+
+      if (err.stack) {
+        html += '<div class="error-log-stack collapsed" onclick="this.classList.toggle(\'collapsed\')">' +
+          escapeHtml(err.stack) + '</div>';
+      }
+
+      html += '</div>';
+    });
+
+    body.innerHTML = html;
+  } catch (error) {
+    body.innerHTML = '<div class="docker-widget-loading" style="color:#ef4444;">Failed to load errors</div>';
+  }
+}
+
+function formatTimeAgo(timestamp) {
+  var diff = Date.now() - (typeof timestamp === 'number' ? timestamp : new Date(timestamp).getTime());
+  if (diff < 60000) return Math.floor(diff / 1000) + 's ago';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
+  return Math.floor(diff / 86400000) + 'd ago';
+}
+
+// =============================================================================
+// ACTIVE SCANS
+// =============================================================================
+
+async function loadActiveScans() {
+  var body = document.getElementById('activeScansBody');
+  var countEl = document.getElementById('activeScanCount');
+  if (!body) return;
+
+  try {
+    var response = await fetch('/api/admin/active-scans', {
+      headers: proManager.getAuthHeaders()
+    });
+    var data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+
+    var scans = data.scans || [];
+    if (countEl) countEl.textContent = scans.length + ' running';
+
+    if (scans.length === 0) {
+      body.innerHTML = '<div class="active-scans-empty">No active scans</div>';
+      return;
+    }
+
+    var html = '';
+    scans.forEach(function(scan) {
+      var pct = scan.progress || 0;
+      var elapsed = scan.elapsed_seconds || 0;
+      var elapsedStr = elapsed < 60 ? elapsed + 's' : Math.floor(elapsed / 60) + 'm ' + (elapsed % 60) + 's';
+
+      html += '<div class="active-scan-item">' +
+        '<span class="active-scan-url" title="' + escapeHtml(scan.target_url || '') + '">' + escapeHtml(scan.target_url || 'Unknown') + '</span>' +
+        '<div class="active-scan-progress"><div class="active-scan-progress-fill" style="width:' + pct + '%"></div></div>' +
+        '<span class="active-scan-pct">' + pct + '%</span>' +
+        '<span class="active-scan-time">' + elapsedStr + '</span>' +
+      '</div>';
+    });
+
+    body.innerHTML = html;
+  } catch (error) {
+    body.innerHTML = '<div class="active-scans-empty" style="color:#ef4444;">Failed to load</div>';
+  }
+}
+
+// =============================================================================
+// QUICK ACTIONS
+// =============================================================================
+
+function initQuickActions() {
+  var actions = [
+    { id: 'actionClearPool', url: '/api/admin/actions/clear-browser-pool' },
+    { id: 'actionForceGC', url: '/api/admin/actions/force-gc' },
+    { id: 'actionFlushRateLimits', url: '/api/admin/actions/flush-rate-limits' },
+    { id: 'actionClearBlocked', url: '/api/admin/actions/clear-blocked' }
+  ];
+
+  actions.forEach(function(action) {
+    var btn = document.getElementById(action.id);
+    if (!btn) return;
+
+    var originalText = btn.textContent;
+    btn.addEventListener('click', async function() {
+      btn.disabled = true;
+      try {
+        var response = await fetch(action.url, {
+          method: 'POST',
+          headers: proManager.getAuthHeaders()
+        });
+        var data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Failed');
+
+        btn.classList.add('success');
+        btn.textContent = 'Done';
+        setTimeout(function() {
+          btn.classList.remove('success');
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }, 2000);
+
+        // Refresh security widget after security-related actions
+        if (action.id === 'actionFlushRateLimits' || action.id === 'actionClearBlocked') {
+          loadSecurityWidget();
+        }
+      } catch (error) {
+        btn.textContent = 'Error';
+        btn.style.color = '#ef4444';
+        setTimeout(function() {
+          btn.style.color = '';
+          btn.textContent = originalText;
+          btn.disabled = false;
+        }, 2000);
+      }
+    });
+  });
+
+  // Error log refresh button
+  var refreshBtn = document.getElementById('refreshErrorLogBtn');
+  if (refreshBtn) {
+    refreshBtn.addEventListener('click', loadErrorLog);
   }
 }
 

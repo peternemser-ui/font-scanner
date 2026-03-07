@@ -20,36 +20,53 @@ const I18N_DIR = path.join(__dirname, '../public/i18n');
  */
 function brandedEmailHtml({ body, fromName }) {
   const appUrl = process.env.APP_BASE_URL || process.env.BASE_URL || 'https://sitemechanic.io';
-  const logoUrl = `${appUrl}/assets/logo-red.svg`;
+  // Base64-encoded SVG logo for maximum email client compatibility
+  const logoDataUri = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0iVVRGLTgiPz4NCjxzdmcgaWQ9IkxheWVyXzEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgdmVyc2lvbj0iMS4xIiB2aWV3Qm94PSIwIDAgNDQ1IDY3Ij4NCiAgPGRlZnM+DQogICAgPHN0eWxlPg0KICAgICAgLnN0MCB7DQogICAgICAgIGZpbGw6ICNEQzI2MjY7DQogICAgICB9DQogICAgPC9zdHlsZT4NCiAgPC9kZWZzPg0KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTAuNTUsNjEuNzVjLTEuMTEsMC0yLjAxLS45LTIuMDEtMi4wMXYtMy45OWMwLTEuMDguOS0xLjk4LDIuMDEtMS45OGgyMC45NGMuNTQsMCwxLjAxLS40NywxLjAxLTEuMDF2LTYuOTdIMTAuNTVjLTEuMTEsMC0yLjAxLS45LTIuMDEtMi4wMXYtMTEuOTZjMC0xLjExLjktMi4wMSwyLjAxLTIuMDFoNC45NmMuNTcsMCwxLjAxLS40MywxLjAxLTEuMDF2LTQuOTljMC0xLjA4LjktMS45OCwyLjAxLTEuOThoMTkuOTRjMS4xMSwwLDIuMDEuOSwyLjAxLDIuMDF2My45OWMwLDEuMDgtLjksMS45OC0yLjAxLDEuOThoLTIwLjk0Yy0uNTQsMC0xLjAxLjQ3LTEuMDEsMS4wMXY2YzAsLjU0LjQ3Ljk3LDEuMDEuOTdoMjAuOTRjMS4xMSwwLDIuMDEuOSwyLjAxLDIuMDF2MTEuOTZjMCwxLjExLS45LDIuMDEtMi4wMSwyLjAxaC00Ljk5Yy0uNTQsMC0uOTcuNDMtLjk3LDEuMDF2NC45NmMwLDEuMTEtLjksMi4wMS0yLjAxLDIuMDFIMTAuNTVaIi8+DQogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00Ny4xNSwxMy44N2MtMS4xMSwwLTIuMDEtLjktMi4wMS0yLjAxdi0zLjk5YzAtMS4xMS45LTIuMDEsMi4wMS0yLjAxaDMuOTljMS4wOCwwLDEuOTguOSwxLjk4LDIuMDF2My45OWMwLDEuMTEtLjksMi4wMS0xLjk4LDIuMDFoLTMuOTlaTTQ3LjE1LDYxLjc1Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDFWMjMuODJjMC0xLjA4LjktMS45OCwyLjAxLTEuOThoMy45OWMxLjA4LDAsMS45OC45LDEuOTgsMi4wMXYzNS44OGMwLDEuMTEtLjksMi4wMS0xLjk4LDIuMDFoLTMuOTlaIi8+DQogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik03MS4yNyw2MS43NWMtMS4xMSwwLTIuMDEtLjktMi4wMS0yLjAxdi00Ljk2YzAtLjU3LS40My0xLjAxLS45Ny0xLjAxaC00Ljk5Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDF2LTIwLjk0YzAtLjU0LS40My0xLjAxLTEuMDEtMS4wMWgtNC45NmMtMS4xMSwwLTIuMDEtLjktMi4wMS0xLjk4di0zLjk5YzAtMS4xMS45LTIuMDEsMi4wMS0yLjAxaDQuOTZjLjU3LDAsMS4wMS0uNDcsMS4wMS0xLjAxVjcuODdjMC0xLjExLjktMi4wMSwyLjAxLTIuMDFoMy45OWMxLjExLDAsMS45OC45LDEuOTgsMi4wMXYxMi45N2MwLC41NC40NywxLjAxLDEuMDEsMS4wMWgxMi45N2MxLjExLDAsMi4wMS45LDIuMDEsMS45OHYzLjk5YzAsMS4xMS0uOSwyLjAxLTIuMDEsMi4wMWgtMTIuOTdjLS41NCwwLTEuMDEuNDctMS4wMSwxLjAxdjIxLjk1YzAsLjU0LjQ3LDEuMDEsMS4wMSwxLjAxaDEyLjk3YzEuMTEsMCwyLjAxLjksMi4wMSwxLjk4djMuOTljMCwxLjExLS45LDIuMDEtMi4wMSwyLjAxaC0xMS45NloiLz4NCiAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTk4LjgzLDYxLjc1Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDF2LTQuOTZjMC0uNTctLjQzLTEuMDEtMS4wMS0xLjAxaC00Ljk2Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDF2LTE5Ljk0YzAtMS4xMS45LTIuMDEsMi4wMS0yLjAxaDQuOTZjLjU3LDAsMS4wMS0uNDMsMS4wMS0xLjAxdi00Ljk2YzAtMS4xMS45LTIuMDEsMi4wMS0yLjAxaDExLjk2YzEuMTEsMCwyLjAxLjksMi4wMSwxLjk4djQuOTljMCwuNTcuNDMsMS4wMS45NywxLjAxaDQuOTljMS4xMSwwLDIuMDEuOSwyLjAxLDIuMDF2MTEuOTZjMCwxLjExLS45LDIuMDEtMi4wMSwyLjAxaC0yMC45NGMtLjU0LDAtMS4wMS40My0xLjAxLjk3djZjMCwuNTQuNDcsMS4wMSwxLjAxLDEuMDFoMjAuOTRjMS4xMSwwLDIuMDEuOSwyLjAxLDEuOTh2My45OWMwLDEuMTEtLjksMi4wMS0yLjAxLDIuMDFoLTE5Ljk0Wk0xMTIuODEsMzcuNzl2LTYuOTdjMC0uNTQtLjQ3LTEuMDEtMS4wMS0xLjAxaC0xMy45N2MtLjU0LDAtMS4wMS40Ny0xLjAxLDEuMDF2NmMwLC41NC40Ny45NywxLjAxLjk3aDE0Ljk4WiIvPg0KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMTUyLjExLDYxLjc1Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDFWMjMuODZjMC0xLjExLjktMi4wMSwyLjAxLTIuMDFoMTkuOTRjMS4xMSwwLDIuMDEuOSwyLjAxLDIuMDF2NC45NmMwLC41Ny40MywxLjAxLjk3LDEuMDFoNmMuNTQsMCwxLjAxLS40MywxLjAxLTEuMDF2LTQuOTZjMC0xLjExLjktMi4wMSwxLjk4LTIuMDFoMTJjMS4wOCwwLDEuOTguOSwxLjk4LDIuMDF2NC45NmMwLC41Ny40NywxLjAxLDEuMDEsMS4wMWg0Ljk5YzEuMTEsMCwyLjAxLjksMi4wMSwyLjAxdjI3LjkxYzAsMS4xMS0uOSwyLjAxLTIuMDEsMi4wMWgtMy45OWMtMS4xMSwwLTIuMDEtLjktMi4wMS0yLjAxdi0yOC45MmMwLS41NC0uNDMtMS4wMS0uOTctMS4wMWgtMTMuOTdjLS41NywwLTEuMDEuNDctMS4wMSwxLjAxdjI4LjkyYzAsMS4xMS0uOSwyLjAxLTIuMDEsMi4wMWgtMy45OWMtMS4wOCwwLTEuOTgtLjktMS45OC0yLjAxdi0yOC45MmMwLS41NC0uNDctMS4wMS0xLjAxLTEuMDFoLTEzLjk3Yy0uNTQsMC0xLjAxLjQ3LTEuMDEsMS4wMXYyOC45MmMwLDEuMTEtLjksMi4wMS0xLjk4LDIuMDFoLTMuOTlaIi8+DQogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0yMjAuNzksNjEuNzVjLTEuMTEsMC0yLjAxLS45LTIuMDEtMi4wMXYtNC45NmMwLS41Ny0uNDMtMS4wMS0xLjAxLTEuMDFoLTQuOTZjLTEuMTEsMC0yLjAxLS45LTIuMDEtMi4wMXYtMTkuOTRjMC0xLjExLjktMi4wMSwyLjAxLTIuMDFoNC45NmMuNTcsMCwxLjAxLS40MywxLjAxLTEuMDF2LTQuOTZjMC0xLjExLjktMi4wMSwyLjAxLTIuMDFoMTEuOTZjMS4xMSwwLDIuMDEuOSwyLjAxLDEuOTh2NC45OWMwLC41Ny40MywxLjAxLjk3LDEuMDFoNC45OWMxLjExLDAsMi4wMS45LDIuMDEsMi4wMXYxMS45NmMwLDEuMTEtLjksMi4wMS0yLjAxLDIuMDFoLTIwLjk0Yy0uNTQsMC0xLjAxLjQzLTEuMDEuOTd2NmMwLC41NC40NywxLjAxLDEuMDEsMS4wMWgyMC45NGMxLjExLDAsMi4wMS45LDIuMDEsMS45OHYzLjk5YzAsMS4xMS0uOSwyLjAxLTIuMDEsMi4wMWgtMTkuOTRaTTIzNC43NiwzNy43OXYtNi45N2MwLS41NC0uNDctMS4wMS0xLjAxLTEuMDFoLTEzLjk3Yy0uNTQsMC0xLjAxLjQ3LTEuMDEsMS4wMXY2YzAsLjU0LjQ3Ljk3LDEuMDEuOTdoMTQuOThaIi8+DQogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0yNTcuMTcsNjEuNzVjLTEuMTEsMC0yLjAxLS45LTIuMDEtMi4wMXYtNC45NmMwLS41Ny0uNDMtMS4wMS0xLjAxLTEuMDFoLTQuOTZjLTEuMTEsMC0yLjAxLS45LTIuMDEtMi4wMXYtMTkuOTRjMC0xLjExLjktMi4wMSwyLjAxLTIuMDFoNC45NmMuNTgsMCwxLjAxLS40MywxLjAxLTEuMDF2LTQuOTZjMC0xLjExLjktMi4wMSwyLjAxLTIuMDFoMTkuOTRjMS4xMSwwLDIuMDEuOSwyLjAxLDEuOTh2NC4wMmMwLDEuMDgtLjksMS45OC0yLjAxLDEuOThoLTIwLjk0Yy0uNTQsMC0xLjAxLjQ3LTEuMDEsMS4wMXYyMS45NWMwLC41NC40NywxLjAxLDEuMDEsMS4wMWgyMC45NGMxLjExLDAsMi4wMS45LDIuMDEsMS45OHYzLjk5YzAsMS4xMS0uOSwyLjAxLTIuMDEsMi4wMWgtMTkuOTRaIi8+DQogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik0yODUuNTgsNjEuNzVjLTEuMTEsMC0yLjAxLS45LTIuMDEtMi4wMVY3Ljg3YzAtMS4xMS45LTIuMDEsMi4wMS0yLjAxaDMuOTljMS4wOCwwLDEuOTguOSwxLjk4LDIuMDF2MTIuOTdjMCwuNTQuNDcsMS4wMSwxLjAxLDEuMDFoMTIuOTdjMS4xMSwwLDIuMDEuOSwyLjAxLDIuMDF2NC45NmMwLC41Ny40MywxLjAxLjk3LDEuMDFoNC45OWMxLjExLDAsMi4wMS45LDIuMDEsMi4wMXYyNy45MWMwLDEuMTEtLjksMi4wMS0yLjAxLDIuMDFoLTMuOTljLTEuMDgsMC0xLjk4LS45LTEuOTgtMi4wMXYtMjguOTJjMC0uNTQtLjQ3LTEuMDEtMS4wMS0xLjAxaC0xMy45N2MtLjU0LDAtMS4wMS40Ny0xLjAxLDEuMDF2MjguOTJjMCwxLjExLS45LDIuMDEtMS45OCwyLjAxaC0zLjk5WiIvPg0KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzMwLjE2LDYxLjc1Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDF2LTQuOTZjMC0uNTctLjQzLTEuMDEtMS0xLjAxaC00Ljk2Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDF2LTExLjk2YzAtMS4xMS45LTIuMDEsMi4wMS0yLjAxaDIwLjk0Yy41NCwwLDEuMDEtLjQzLDEuMDEtLjk3di02YzAtLjU0LS40Ny0xLjAxLTEuMDEtMS4wMWgtMjAuOTRjLTEuMTEsMC0yLjAxLS45LTIuMDEtMS45OHYtMy45OWMwLTEuMTEuOS0yLjAxLDIuMDEtMi4wMWgxOS45M2MxLjExLDAsMi4wMS45LDIuMDEsMS45OHY0Ljk5YzAsLjU3LjQzLDEuMDEuOTcsMS4wMWg0Ljk5YzEuMTEsMCwyLjAxLjksMi4wMSwyLjAxdjI3LjkxYzAsMS4xMS0uOSwyLjAxLTIuMDEsMi4wMWgtMTkuOTRaTTM0My4xMiw1My43OGMuNTQsMCwxLjAxLS40NywxLjAxLTEuMDF2LTZjMC0uNTQtLjQ3LS45Ny0xLjAxLS45N2gtMTQuOTh2Ni45N2MwLC41NC40NywxLjAxLDEuMDEsMS4wMWgxMy45N1oiLz4NCiAgPHBhdGggY2xhc3M9InN0MCIgZD0iTTM1OS4xLDYxLjc1Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDFWMjMuODZjMC0xLjExLjktMi4wMSwyLjAxLTIuMDFoMTkuOTNjMS4xMSwwLDIuMDEuOSwyLjAxLDIuMDF2NC45NmMwLC41Ny40MywxLjAxLjk3LDEuMDFoNC45OWMxLjExLDAsMi4wMS45LDIuMDEsMi4wMXYyNy45MWMwLDEuMTEtLjksMi4wMS0yLjAxLDIuMDFoLTMuOTljLTEuMDgsMC0xLjk4LS45LTEuOTgtMi4wMXYtMjguOTJjMC0uNTQtLjQ3LTEuMDEtMS4wMS0xLjAxaC0xMy45N2MtLjU0LDAtMS4wMS40Ny0xLjAxLDEuMDF2MjguOTJjMCwxLjExLS45LDIuMDEtMS45OCwyLjAxaC0zLjk5WiIvPg0KICA8cGF0aCBjbGFzcz0ic3QwIiBkPSJNMzk2LjAyLDEzLjg3Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDF2LTMuOTljMC0xLjExLjktMi4wMSwyLjAxLTIuMDFoMy45OWMxLjA4LDAsMS45OC45LDEuOTgsMi4wMXYzLjk5YzAsMS4xMS0uOSwyLjAxLTEuOTgsMi4wMWgtMy45OVpNMzk2LjAyLDYxLjc1Yy0xLjExLDAtMi4wMS0uOS0yLjAxLTIuMDFWMjMuODJjMC0xLjA4LjktMS45OCwyLjAxLTEuOThoMy45OWMxLjA4LDAsMS45OC45LDEuOTgsMi4wMXYzNS44OGMwLDEuMTEtLjksMi4wMS0xLjk4LDIuMDFoLTMuOTlaIi8+DQogIDxwYXRoIGNsYXNzPSJzdDAiIGQ9Ik00MTYuNiw2MS43NWMtMS4xMSwwLTIuMDEtLjktMi4wMS0yLjAxdi00Ljk2YzAtLjU3LS40My0xLjAxLTEtMS4wMWgtNC45NmMtMS4xMSwwLTIuMDEtLjktMi4wMS0yLjAxdi0xOS45NGMwLTEuMTEuOS0yLjAxLDIuMDEtMi4wMWg0Ljk2Yy41NywwLDEtLjQzLDEtMS4wMXYtNC45NmMwLTEuMTEuOS0yLjAxLDIuMDEtMi4wMWgxOS45NGMxLjExLDAsMi4wMS45LDIuMDEsMS45OHY0LjAyYzAsMS4wOC0uOSwxLjk4LTIuMDEsMS45OGgtMjAuOTRjLS41NCwwLTEuMDEuNDctMS4wMSwxLjAxdjIxLjk1YzAsLjU0LjQ3LDEuMDEsMS4wMSwxLjAxaDIwLjk0YzEuMTEsMCwyLjAxLjksMi4wMSwxLjk4djMuOTljMCwxLjExLS45LDIuMDEtMi4wMSwyLjAxaC0xOS45NFoiLz4NCjwvc3ZnPg==';
+  const fallbackLogoUrl = `${appUrl}/assets/logo-red.svg`;
   return `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!--[if mso]>
+  <style>
+    table { border-collapse: collapse; }
+    .fallback-font { font-family: Arial, sans-serif; }
+  </style>
+  <![endif]-->
 </head>
-<body style="margin:0;padding:0;background-color:#f4f4f7;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7;padding:40px 20px;">
+<body style="margin:0;padding:0;background-color:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0f2f5;padding:48px 20px;">
     <tr>
       <td align="center">
-        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background-color:#ffffff;border-radius:8px;overflow:hidden;">
-          <!-- Header with red logo -->
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
+          <!-- Logo header -->
           <tr>
-            <td style="background-color:#0F172A;padding:28px 32px;text-align:center;">
-              <img src="${logoUrl}" alt="Site Mechanic" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
+            <td style="background-color:#0F172A;padding:32px 40px;text-align:center;border-radius:12px 12px 0 0;">
+              <img src="${logoDataUri}" onerror="this.src='${fallbackLogoUrl}'" alt="Site Mechanic" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
             </td>
           </tr>
           <!-- Body -->
           <tr>
-            <td style="padding:32px;">
+            <td style="background-color:#ffffff;padding:36px 40px;">
               ${body}
             </td>
           </tr>
           <!-- Footer -->
           <tr>
-            <td style="background-color:#f9fafb;padding:20px 32px;text-align:center;">
-              <p style="margin:0;color:#9ca3af;font-size:12px;">
-                &copy; ${new Date().getFullYear()} ${escHtml(fromName)}
-              </p>
+            <td style="background-color:#ffffff;padding:0 40px 28px;border-radius:0 0 12px 12px;">
+              <table width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="border-top:1px solid #e5e7eb;padding-top:20px;text-align:center;">
+                    <p style="margin:0 0 4px;color:#9ca3af;font-size:12px;">
+                      &copy; ${new Date().getFullYear()} ${escHtml(fromName)}
+                    </p>
+                    <p style="margin:0;color:#c4c9d2;font-size:11px;">
+                      <a href="${appUrl}" style="color:#c4c9d2;text-decoration:none;">sitemechanic.io</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
             </td>
           </tr>
         </table>
@@ -93,30 +110,35 @@ async function sendPasswordResetEmail(toEmail, resetUrl, locale) {
   const html = brandedEmailHtml({
     fromName,
     body: `
-              <h2 style="margin:0 0 16px;color:#1a1a2e;font-size:22px;font-weight:600;">${escHtml(heading)}</h2>
-              <p style="margin:0 0 24px;color:#4a4a68;font-size:15px;line-height:1.6;">
+              <h2 style="margin:0 0 16px;color:#0F172A;font-size:22px;font-weight:700;">${escHtml(heading)}</h2>
+              <p style="margin:0 0 28px;color:#475569;font-size:15px;line-height:1.7;">
                 ${escHtml(intro)}
               </p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td align="center" style="padding:8px 0 24px;">
-                    <a href="${resetUrl}" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;font-size:15px;font-weight:600;padding:12px 32px;border-radius:6px;">
+                  <td align="center" style="padding:8px 0 28px;">
+                    <a href="${resetUrl}" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;font-size:15px;font-weight:700;padding:14px 40px;border-radius:8px;box-shadow:0 2px 8px rgba(220,38,38,0.25);">
                       ${escHtml(cta)}
                     </a>
                   </td>
                 </tr>
               </table>
-              <p style="margin:0 0 8px;color:#6b7280;font-size:13px;line-height:1.5;">
-                <strong>${escHtml(expiry)}</strong>
-              </p>
-              <p style="margin:0 0 24px;color:#6b7280;font-size:13px;line-height:1.5;">
-                ${escHtml(fallback)}
-              </p>
-              <p style="margin:0 0 24px;color:#DC2626;font-size:13px;line-height:1.5;word-break:break-all;">
-                ${resetUrl}
-              </p>
-              <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
-              <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.5;">
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fafbfc;border-radius:8px;border:1px solid #e2e8f0;margin:0 0 24px;">
+                <tr>
+                  <td style="padding:14px 18px;">
+                    <p style="margin:0 0 6px;color:#0F172A;font-size:13px;font-weight:600;">
+                      ${escHtml(expiry)}
+                    </p>
+                    <p style="margin:0;color:#64748b;font-size:13px;line-height:1.5;">
+                      ${escHtml(fallback)}
+                    </p>
+                    <p style="margin:8px 0 0;color:#DC2626;font-size:12px;line-height:1.4;word-break:break-all;">
+                      ${resetUrl}
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.5;">
                 ${escHtml(footerText)}
               </p>`
   });
@@ -154,18 +176,31 @@ async function verifyConnection() {
 async function sendTestEmail(toEmail) {
   const fromName = config.email.from.name;
   const fromAddress = config.email.from.address;
+  const sentAt = new Date().toISOString();
+
+  const html = brandedEmailHtml({
+    fromName,
+    body: `
+              <h2 style="margin:0 0 16px;color:#0F172A;font-size:22px;font-weight:700;">SMTP Test</h2>
+              <p style="margin:0 0 16px;color:#475569;font-size:15px;line-height:1.7;">
+                If you received this, your SMTP configuration is working correctly.
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0fdf4;border-radius:8px;border:1px solid #bbf7d0;margin:0 0 16px;">
+                <tr>
+                  <td style="padding:14px 18px;">
+                    <p style="margin:0;color:#166534;font-size:14px;font-weight:600;">&#10004; Connection verified</p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;color:#94a3b8;font-size:12px;">Sent at: ${sentAt}</p>`
+  });
 
   const info = await transporter.sendMail({
     from: `"${fromName}" <${fromAddress}>`,
     to: toEmail,
     subject: 'Site Mechanic — SMTP Test',
-    text: `This is a test email from Site Mechanic.\n\nIf you received this, your SMTP configuration is working correctly.\n\nSent at: ${new Date().toISOString()}`,
-    html: `
-      <div style="font-family:sans-serif;max-width:480px;margin:0 auto;padding:24px;">
-        <h2 style="color:#0F172A;">Site Mechanic — SMTP Test</h2>
-        <p>If you received this, your SMTP configuration is working correctly.</p>
-        <p style="color:#6b7280;font-size:13px;">Sent at: ${new Date().toISOString()}</p>
-      </div>`
+    text: `SMTP Test\n\nIf you received this, your SMTP configuration is working correctly.\n\nSent at: ${sentAt}`,
+    html
   });
 
   logger.info(`[Email] Test email sent to ${toEmail}`, { messageId: info.messageId });
@@ -539,42 +574,56 @@ async function sendWelcomeEmail(toEmail, locale) {
   const html = brandedEmailHtml({
     fromName,
     body: `
-              <h2 style="margin:0 0 8px;color:#1a1a2e;font-size:24px;font-weight:700;">${escHtml(heading)}</h2>
-              <p style="margin:0 0 28px;color:#4a4a68;font-size:15px;line-height:1.7;">
+              <h2 style="margin:0 0 8px;color:#0F172A;font-size:24px;font-weight:700;">${escHtml(heading)}</h2>
+              <p style="margin:0 0 32px;color:#475569;font-size:15px;line-height:1.7;">
                 ${escHtml(intro)}
               </p>
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
-                  <td align="center" style="padding:0 0 32px;">
-                    <a href="${appUrl}" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;font-size:16px;font-weight:700;padding:14px 40px;border-radius:8px;letter-spacing:0.3px;">
+                  <td align="center" style="padding:0 0 36px;">
+                    <a href="${appUrl}" style="display:inline-block;background-color:#DC2626;color:#ffffff;text-decoration:none;font-size:16px;font-weight:700;padding:14px 44px;border-radius:8px;letter-spacing:0.3px;box-shadow:0 2px 8px rgba(220,38,38,0.25);">
                       ${escHtml(cta)}
                     </a>
                   </td>
                 </tr>
               </table>
-              <p style="margin:0 0 16px;color:#1a1a2e;font-size:15px;font-weight:700;">${escHtml(featuresHeading)}</p>
-              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 28px;">
+              <p style="margin:0 0 14px;color:#0F172A;font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;">${escHtml(featuresHeading)}</p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;border:1px solid #e2e8f0;border-radius:10px;overflow:hidden;">
                 <tr>
-                  <td style="padding:12px 16px;background-color:#f8fafc;border-radius:8px 8px 0 0;border-bottom:1px solid #f1f5f9;">
-                    <p style="margin:0 0 2px;color:#1a1a2e;font-size:14px;font-weight:600;">&#9889; ${escHtml(feature1)}</p>
-                    <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.5;">${escHtml(feature1Desc)}</p>
+                  <td style="padding:16px 18px;background-color:#fafbfc;border-bottom:1px solid #e2e8f0;">
+                    <table cellpadding="0" cellspacing="0"><tr>
+                      <td style="vertical-align:top;padding-right:12px;font-size:20px;">&#9889;</td>
+                      <td>
+                        <p style="margin:0 0 3px;color:#0F172A;font-size:14px;font-weight:600;">${escHtml(feature1)}</p>
+                        <p style="margin:0;color:#64748b;font-size:13px;line-height:1.5;">${escHtml(feature1Desc)}</p>
+                      </td>
+                    </tr></table>
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:12px 16px;background-color:#f8fafc;border-bottom:1px solid #f1f5f9;">
-                    <p style="margin:0 0 2px;color:#1a1a2e;font-size:14px;font-weight:600;">&#10024; ${escHtml(feature2)}</p>
-                    <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.5;">${escHtml(feature2Desc)}</p>
+                  <td style="padding:16px 18px;background-color:#fafbfc;border-bottom:1px solid #e2e8f0;">
+                    <table cellpadding="0" cellspacing="0"><tr>
+                      <td style="vertical-align:top;padding-right:12px;font-size:20px;">&#10024;</td>
+                      <td>
+                        <p style="margin:0 0 3px;color:#0F172A;font-size:14px;font-weight:600;">${escHtml(feature2)}</p>
+                        <p style="margin:0;color:#64748b;font-size:13px;line-height:1.5;">${escHtml(feature2Desc)}</p>
+                      </td>
+                    </tr></table>
                   </td>
                 </tr>
                 <tr>
-                  <td style="padding:12px 16px;background-color:#f8fafc;border-radius:0 0 8px 8px;">
-                    <p style="margin:0 0 2px;color:#1a1a2e;font-size:14px;font-weight:600;">&#128196; ${escHtml(feature3)}</p>
-                    <p style="margin:0;color:#6b7280;font-size:13px;line-height:1.5;">${escHtml(feature3Desc)}</p>
+                  <td style="padding:16px 18px;background-color:#fafbfc;">
+                    <table cellpadding="0" cellspacing="0"><tr>
+                      <td style="vertical-align:top;padding-right:12px;font-size:20px;">&#128202;</td>
+                      <td>
+                        <p style="margin:0 0 3px;color:#0F172A;font-size:14px;font-weight:600;">${escHtml(feature3)}</p>
+                        <p style="margin:0;color:#64748b;font-size:13px;line-height:1.5;">${escHtml(feature3Desc)}</p>
+                      </td>
+                    </tr></table>
                   </td>
                 </tr>
               </table>
-              <hr style="border:none;border-top:1px solid #e5e7eb;margin:24px 0;">
-              <p style="margin:0;color:#9ca3af;font-size:12px;line-height:1.5;">
+              <p style="margin:0;color:#94a3b8;font-size:12px;line-height:1.5;">
                 ${escHtml(footerText)}
               </p>`
   });
