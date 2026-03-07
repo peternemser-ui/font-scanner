@@ -984,4 +984,276 @@ router.post('/deploy', async (req, res) => {
   }
 });
 
+// =============================================================================
+// SECURITY OVERVIEW
+// =============================================================================
+
+router.get('/security-overview', async (req, res) => {
+  try {
+    const { getAbuseFilterStats } = require('../middleware/abuseFilter');
+    const { getRateLimitAnalytics } = require('../middleware/rateLimiter');
+    const { authFailureStats } = require('./auth');
+
+    const abuseStats = getAbuseFilterStats();
+    const rateLimitAnalytics = getRateLimitAnalytics();
+    const authFailures = authFailureStats.getSummary();
+
+    // Determine threat level
+    const blockedCount = abuseStats.blockedIPs || 0;
+    const lastHourViolations = rateLimitAnalytics.statistics?.lastHour || 0;
+    let threatLevel = 'low';
+    if (blockedCount > 0 || lastHourViolations > 10) threatLevel = 'medium';
+    if (blockedCount > 5) threatLevel = 'high';
+
+    res.json({
+      success: true,
+      threatLevel,
+      abuseFilter: abuseStats,
+      rateLimits: rateLimitAnalytics.statistics || {},
+      topIPs: (rateLimitAnalytics.statistics?.topIPs || []).slice(0, 5),
+      authFailures
+    });
+  } catch (error) {
+    logger.error('Error fetching security overview', { error: error.message });
+    res.status(500).json({ error: 'Failed to fetch security overview' });
+  }
+});
+
+// =============================================================================
+// DATABASE STATS
+// =============================================================================
+
+router.get('/db-stats', async (req, res) => {
+  try {
+    const db = getDatabase();
+
+    // File sizes
+    let dbSize = 0, walSize = 0, shmSize = 0;
+    try {
+      const dbPath = path.join(process.cwd(), 'data', 'fontscanner.db');
+      dbSize = fs_sync.existsSync(dbPath) ? fs_sync.statSync(dbPath).size : 0;
+      const walPath = dbPath + '-wal';
+      walSize = fs_sync.existsSync(walPath) ? fs_sync.statSync(walPath).size : 0;
+      const shmPath = dbPath + '-shm';
+      shmSize = fs_sync.existsSync(shmPath) ? fs_sync.statSync(shmPath).size : 0;
+    } catch (_) { /* ignore */ }
+
+    // Row counts
+    const tables = {};
+    const tableNames = ['users', 'scans', 'scan_results', 'billing_sessions', 'stripe_events'];
+    for (const table of tableNames) {
+      try {
+        const row = await db.get(`SELECT COUNT(*) as count FROM ${table}`);
+        tables[table] = row.count;
+      } catch (_) {
+        tables[table] = 0;
+      }
+    }
+
+    res.json({
+      success: true,
+      fileSize: dbSize,
+      walSize,
+      shmSize,
+      tables
+    });
+  } catch (error) {
+    logger.error('Error fetching db stats', { error: error.message });
+    res.status(500).json({ error: 'Failed to fetch database stats' });
+  }
+});
+
+// =============================================================================
+// REVENUE CHART
+// =============================================================================
+
+router.get('/revenue-chart', async (req, res) => {
+  try {
+    const db = getDatabase();
+
+    const rows = await db.all(
+      `SELECT date(completed_at) as day, SUM(amount_total) as total_cents
+       FROM billing_sessions
+       WHERE payment_status = 'paid' AND completed_at >= date('now', '-30 days')
+       GROUP BY date(completed_at)
+       ORDER BY day ASC`
+    );
+
+    const data = (rows || []).map(r => ({
+      day: r.day,
+      amount: Math.round((r.total_cents || 0) / 100 * 100) / 100
+    }));
+
+    res.json({ success: true, data });
+  } catch (error) {
+    logger.error('Error fetching revenue chart', { error: error.message });
+    res.status(500).json({ error: 'Failed to fetch revenue data' });
+  }
+});
+
+// =============================================================================
+// ERROR LOG
+// =============================================================================
+
+router.get('/error-log', async (req, res) => {
+  try {
+    const errorTelemetry = require('../utils/errorTelemetry');
+    const stats = errorTelemetry.getStatistics({ timeWindow: 'day' });
+
+    res.json({
+      success: true,
+      errors: stats.recentErrors || []
+    });
+  } catch (error) {
+    logger.error('Error fetching error log', { error: error.message });
+    res.status(500).json({ error: 'Failed to fetch error log' });
+  }
+});
+
+// =============================================================================
+// ACTIVE SCANS
+// =============================================================================
+
+router.get('/active-scans', async (req, res) => {
+  try {
+    const db = getDatabase();
+
+    const scans = await db.all(
+      `SELECT id, target_url, status, progress, started_at,
+        CAST((julianday('now') - julianday(started_at)) * 86400 AS INTEGER) as elapsed_seconds
+       FROM scans WHERE status = 'running' ORDER BY started_at ASC`
+    );
+
+    res.json({ success: true, scans: scans || [] });
+  } catch (error) {
+    logger.error('Error fetching active scans', { error: error.message });
+    res.status(500).json({ error: 'Failed to fetch active scans' });
+  }
+});
+
+// =============================================================================
+// QUICK ACTIONS
+// =============================================================================
+
+router.post('/actions/clear-browser-pool', async (req, res) => {
+  try {
+    const browserPool = require('../utils/browserPool');
+    await browserPool.drain();
+    await logAdminAction(req.admin.id, 'CLEAR_BROWSER_POOL', null, {});
+    res.json({ success: true, message: 'Browser pool drained' });
+  } catch (error) {
+    logger.error('Error clearing browser pool', { error: error.message });
+    res.status(500).json({ error: 'Failed to clear browser pool' });
+  }
+});
+
+router.post('/actions/force-gc', async (req, res) => {
+  try {
+    const before = process.memoryUsage();
+    if (global.gc) {
+      global.gc();
+    }
+    const after = process.memoryUsage();
+    await logAdminAction(req.admin.id, 'FORCE_GC', null, {
+      gcAvailable: !!global.gc,
+      freedMB: Math.round((before.heapUsed - after.heapUsed) / 1024 / 1024 * 100) / 100
+    });
+    res.json({
+      success: true,
+      gcAvailable: !!global.gc,
+      before: { heapUsed: Math.round(before.heapUsed / 1024 / 1024) },
+      after: { heapUsed: Math.round(after.heapUsed / 1024 / 1024) }
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to force GC' });
+  }
+});
+
+router.post('/actions/flush-rate-limits', async (req, res) => {
+  try {
+    const { rateLimitStats } = require('../middleware/rateLimiter');
+    const before = rateLimitStats.violations.length;
+    rateLimitStats.clear();
+    await logAdminAction(req.admin.id, 'FLUSH_RATE_LIMITS', null, { clearedViolations: before });
+    res.json({ success: true, message: 'Rate limit history cleared', cleared: before });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to flush rate limits' });
+  }
+});
+
+router.post('/actions/clear-blocked', async (req, res) => {
+  try {
+    const { clearAbuseFilterBlocked, getAbuseFilterStats } = require('../middleware/abuseFilter');
+    const before = getAbuseFilterStats();
+    clearAbuseFilterBlocked();
+    await logAdminAction(req.admin.id, 'CLEAR_BLOCKED_IPS', null, { blockedBefore: before.blockedIPs });
+    res.json({ success: true, message: 'All blocked IPs cleared', clearedIPs: before.blockedIPs });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to clear blocked IPs' });
+  }
+});
+
+/**
+ * POST /api/admin/test-emails
+ * Test all email workflows. Sends to the specified address.
+ * Body: { to: "your@email.com", type: "all" | "welcome" | "reset" | "smtp" }
+ */
+router.post('/test-emails', async (req, res) => {
+  try {
+    const { to, type } = req.body || {};
+    if (!to) return res.status(400).json({ error: 'Missing "to" email address' });
+
+    const emailService = require('../services/emailService');
+    const results = {};
+
+    // 1. SMTP Connection
+    if (type === 'all' || type === 'smtp') {
+      try {
+        const ok = await emailService.verifyConnection();
+        results.smtp = { success: ok, message: ok ? 'SMTP connection verified' : 'SMTP connection failed' };
+      } catch (err) {
+        results.smtp = { success: false, error: err.message };
+      }
+    }
+
+    // 2. Welcome email
+    if (type === 'all' || type === 'welcome') {
+      try {
+        const info = await emailService.sendWelcomeEmail(to, 'en');
+        results.welcome = { success: true, messageId: info.messageId };
+      } catch (err) {
+        results.welcome = { success: false, error: err.message };
+      }
+    }
+
+    // 3. Password reset email
+    if (type === 'all' || type === 'reset') {
+      try {
+        const appUrl = process.env.APP_BASE_URL || process.env.BASE_URL || 'https://sitemechanic.io';
+        const fakeResetUrl = `${appUrl}/en/reset-password.html?userId=test-000&token=test-token-000`;
+        const info = await emailService.sendPasswordResetEmail(to, fakeResetUrl, 'en');
+        results.reset = { success: true, messageId: info.messageId };
+      } catch (err) {
+        results.reset = { success: false, error: err.message };
+      }
+    }
+
+    // 4. Basic test email
+    if (type === 'all' || type === 'test') {
+      try {
+        const info = await emailService.sendTestEmail(to);
+        results.test = { success: true, messageId: info.messageId };
+      } catch (err) {
+        results.test = { success: false, error: err.message };
+      }
+    }
+
+    await logAdminAction(req.admin.id, 'TEST_EMAILS', null, { to, type, results });
+    res.json({ success: true, to, type, results });
+  } catch (error) {
+    logger.error('Email test failed', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
