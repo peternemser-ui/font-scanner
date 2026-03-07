@@ -57,12 +57,14 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy production dependencies from dependencies stage
-COPY --from=dependencies --chown=nodejs:nodejs /app/node_modules ./node_modules
+# Copy all dependencies (including dev for admin test runner)
+COPY --from=build --chown=nodejs:nodejs /app/node_modules ./node_modules
 
 # Copy application code
 COPY --chown=nodejs:nodejs ./src ./src
+COPY --chown=nodejs:nodejs ./tests ./tests
 COPY --chown=nodejs:nodejs package*.json ./
+COPY --chown=nodejs:nodejs jest.config.js ./
 
 # Create directories with proper permissions
 RUN mkdir -p /app/reports /app/logs && \
