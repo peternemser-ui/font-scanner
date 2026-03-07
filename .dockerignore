@@ -5,9 +5,6 @@ npm-debug.log
 # Testing
 coverage
 .nyc_output
-tests
-*.test.js
-*.spec.js
 
 # Git
 .git
@@ -63,5 +60,4 @@ Jenkinsfile
 # Misc
 .prettierrc
 .eslintrc*
-jest.config.js
 .editorconfig
