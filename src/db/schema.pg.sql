@@ -7,10 +7,13 @@
 CREATE TABLE IF NOT EXISTS users (
   id TEXT PRIMARY KEY,
   email TEXT UNIQUE NOT NULL,
+  password_hash TEXT,
   email_verified INTEGER DEFAULT 0,
+  is_admin INTEGER DEFAULT 0,
   stripe_customer_id TEXT,
   plan TEXT DEFAULT 'free',
   created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
   last_login TIMESTAMPTZ,
   metadata_json TEXT
 );

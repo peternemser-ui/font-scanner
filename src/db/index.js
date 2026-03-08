@@ -133,10 +133,10 @@ class Database {
 
       // Record migration
       try {
-        await this.run(
-          'INSERT OR IGNORE INTO migrations (name) VALUES (?)',
-          [migrationName]
-        );
+        const insertSQL = this.driverName === 'postgres'
+          ? 'INSERT INTO migrations (name) VALUES ($1) ON CONFLICT DO NOTHING'
+          : 'INSERT OR IGNORE INTO migrations (name) VALUES (?)';
+        await this.run(insertSQL, [migrationName]);
         console.log(`Applied migration: ${migrationName}`);
       } catch (error) {
         console.warn(`Could not record migration ${migrationName}:`, error.message);
