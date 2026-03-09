@@ -376,8 +376,8 @@ function renderUnifiedHeader(appTitle, subtitle) {
       <!-- Center: App Logo and Subtitle -->
       <div class="unified-header-center">
         <a href="/" class="app-logo-link" aria-label="${navT('nav.aria.home', 'Site Mechanic Home')}">
-          <img src="/assets/logo-dark.svg?v=${logoAssetVersion}" alt="Site Mechanic" class="app-logo app-logo-dark" />
-          <img src="/assets/logo-light.svg?v=${logoAssetVersion}" alt="Site Mechanic" class="app-logo app-logo-light" />
+          <img src="/assets/logo-dark.svg?v=${logoAssetVersion}" alt="Site Mechanic" class="app-logo app-logo-dark" width="445" height="67" />
+          <img src="/assets/logo-light.svg?v=${logoAssetVersion}" alt="Site Mechanic" class="app-logo app-logo-light" width="445" height="67" />
         </a>
         <div class="app-subtitle" data-i18n="app.tagline">${subtitle}</div>
       </div>

@@ -868,7 +868,7 @@ p {
 .app-logo {
   height: var(--app-logo-height);
   width: auto;
-  max-width: 100%;
+  max-width: 220px;
   display: block;
 }
 
@@ -8049,6 +8049,7 @@ body.white-theme .example-chip:hover {
 @media (max-width: 900px) {
   .hero-headline {
     font-size: 2rem;
+    line-height: 1.2;
     margin-bottom: 6px;
   }
 
@@ -8088,6 +8089,7 @@ body.white-theme .example-chip:hover {
 
   .hero-headline {
     font-size: 1.75rem;
+    line-height: 1.2;
     margin-bottom: 6px;
   }
 
