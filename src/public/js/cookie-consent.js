@@ -74,7 +74,7 @@
     style.textContent = [
       '.cc-banner {',
       '  position: fixed; bottom: 0; left: 0; right: 0;',
-      '  z-index: 50;',
+      '  z-index: 10000;',
       '  background: var(--bg-elevated, #111418);',
       '  border-top: 1px solid var(--border-color, rgba(255,255,255,0.08));',
       '  padding: 1rem 1.5rem;',
