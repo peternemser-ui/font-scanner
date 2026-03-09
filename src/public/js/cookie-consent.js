@@ -166,9 +166,13 @@
       '}',
       /* Mobile stacking */
       '@media (max-width: 600px) {',
-      '  .cc-inner { flex-direction: column; align-items: stretch; }',
-      '  .cc-actions { justify-content: stretch; }',
-      '  .cc-btn { flex: 1; text-align: center; }',
+      '  .cc-banner { padding: 0.75rem 1rem; }',
+      '  .cc-inner { flex-direction: column; align-items: stretch; gap: 0.75rem; }',
+      '  .cc-text { flex-basis: auto; font-size: 0.8125rem; }',
+      '  .cc-actions { flex-direction: column; gap: 0.5rem; }',
+      '  .cc-btn { width: 100%; text-align: center; padding: 0.75rem 1rem; font-size: 1rem; }',
+      '  .cc-btn--primary { order: -1; }',
+      '  .cc-customize-link { padding: 0.5rem; font-size: 0.8125rem; text-align: center; }',
       '}'
     ].join('\n');
     document.head.appendChild(style);
