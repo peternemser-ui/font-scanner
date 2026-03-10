@@ -6,6 +6,7 @@ const config = require('../config');
 const browserPool = require('./browserPool');
 const { createLogger } = require('./logger');
 const { isSafeReportId } = require('./reportId');
+const { setDeviceProfile } = require('./browserHelpers');
 
 const logger = createLogger('ReportScreenshot');
 
@@ -60,7 +61,7 @@ async function ensureReportScreenshot({ url, reportId, requestId, filename = 'sc
     await browserPool.execute(async (browser) => {
       const page = await browser.newPage();
       try {
-        await page.setViewport({ width: 1280, height: 720 });
+        await setDeviceProfile(page, 'desktop');
 
         // Wait for network to be mostly idle for better screenshots
         // Use 'networkidle2' which waits until there are no more than 2 network connections for 500ms

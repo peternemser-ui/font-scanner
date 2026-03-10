@@ -2,7 +2,7 @@ const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { roundTo } = require('../utils/formatHelpers');
 const { calculateWeightedScore, scoreSecurityHeaders } = require('../utils/scoringHelpers');
-const { dismissPageOverlays } = require('../utils/browserHelpers');
+const { dismissPageOverlays, setDeviceProfile } = require('../utils/browserHelpers');
 
 const logger = createLogger('SecurityAnalyzerService');
 

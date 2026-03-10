@@ -7,6 +7,7 @@
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { roundTo, formatDuration } = require('../utils/formatHelpers');
+const { setDeviceProfile } = require('../utils/browserHelpers');
 
 const logger = createLogger('CROAnalyzerService');
 
@@ -18,8 +19,8 @@ class CROAnalyzerService {
     try {
       const results = await browserPool.execute(async (browser) => {
         const page = await browser.newPage();
-        await page.setViewport({ width: 1920, height: 1080 });
-        
+        await setDeviceProfile(page, 'desktop');
+
         // Use domcontentloaded for faster initial load, then wait for network to settle
         try {
           await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 });

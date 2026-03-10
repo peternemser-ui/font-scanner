@@ -7,6 +7,7 @@
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { formatDuration } = require('../utils/formatHelpers');
+const { setDeviceProfile } = require('../utils/browserHelpers');
 
 const logger = createLogger('GDPRComplianceService');
 
@@ -18,7 +19,7 @@ class GDPRComplianceService {
     try {
       const results = await browserPool.execute(async (browser) => {
         const page = await browser.newPage();
-        await page.setViewport({ width: 1920, height: 1080 });
+        await setDeviceProfile(page, 'desktop');
 
         // Enable request interception to track third-party requests
         await page.setRequestInterception(true);

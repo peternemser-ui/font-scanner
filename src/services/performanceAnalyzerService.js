@@ -7,6 +7,7 @@ const browserPool = require('../utils/browserPool');
 const lighthouseAnalyzer = require('./lighthouseAnalyzer');
 const { createLogger } = require('../utils/logger');
 const { roundTo } = require('../utils/formatHelpers');
+const { setDeviceProfile } = require('../utils/browserHelpers');
 const logger = createLogger('PerformanceAnalyzer');
 
 class PerformanceAnalyzerService {
@@ -205,8 +206,9 @@ class PerformanceAnalyzerService {
       const page = await browser.newPage();
       const resources = [];
       const timing = {};
-      
+
       try {
+        await setDeviceProfile(page, 'desktop');
         // Track all network requests
         page.on('response', async (response) => {
           try {

@@ -7,7 +7,7 @@
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { roundTo, formatDuration } = require('../utils/formatHelpers');
-const { dismissPageOverlays } = require('../utils/browserHelpers');
+const { dismissPageOverlays, setDeviceProfile } = require('../utils/browserHelpers');
 
 const logger = createLogger('CompetitiveAccessibilityAnalyzer');
 
@@ -110,6 +110,7 @@ class CompetitiveAccessibilityAnalyzer {
       const page = await browser.newPage();
 
       try {
+        await setDeviceProfile(page, 'desktop');
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
 
         // Wait for network to settle (catches client-side redirects)

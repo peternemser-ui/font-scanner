@@ -6,6 +6,7 @@
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { roundTo, formatDuration } = require('../utils/formatHelpers');
+const { setDeviceProfile } = require('../utils/browserHelpers');
 
 const logger = createLogger('LocalSEOService');
 
@@ -17,9 +18,9 @@ class LocalSEOService {
     try {
       const results = await browserPool.execute(async (browser) => {
         const page = await browser.newPage();
-        await page.setViewport({ width: 1920, height: 1080 });
+        await setDeviceProfile(page, 'desktop');
         await page.goto(url, { waitUntil: 'networkidle2', timeout: 60000 });
-        
+
         const analysis = await page.evaluate(() => {
           const text = document.body.textContent;
           const html = document.body.innerHTML;

@@ -6,6 +6,7 @@
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { roundTo, formatDuration } = require('../utils/formatHelpers');
+const { setDeviceProfile } = require('../utils/browserHelpers');
 
 const logger = createLogger('CompetitivePerformanceAnalyzer');
 
@@ -45,8 +46,9 @@ class CompetitivePerformanceAnalyzer {
     return browserPool.execute(async (browser) => {
       const page = await browser.newPage();
       const resources = [];
-      
+
       try {
+        await setDeviceProfile(page, 'desktop');
         // Track all resources
         page.on('response', async (response) => {
           try {

@@ -6,7 +6,7 @@
 const browserPool = require('../utils/browserPool');
 const { createLogger } = require('../utils/logger');
 const { roundTo, formatDuration } = require('../utils/formatHelpers');
-const { dismissPageOverlays } = require('../utils/browserHelpers');
+const { dismissPageOverlays, setDeviceProfile } = require('../utils/browserHelpers');
 
 const logger = createLogger('CompetitiveCWVAnalyzer');
 
@@ -110,6 +110,7 @@ class CompetitiveCoreWebVitalsAnalyzer {
       const page = await browser.newPage();
 
       try {
+        await setDeviceProfile(page, 'desktop');
         // Use domcontentloaded first for faster initial load, then wait for network
         await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 });
         

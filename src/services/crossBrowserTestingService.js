@@ -64,10 +64,11 @@ class CrossBrowserTestingService {
     
     try {
       const page = await browser.newPage();
-      
-      // Set viewport for consistent testing
+
+      // Set viewport and realistic UA for consistent testing
       await page.setViewport({ width: 1920, height: 1080 });
-      
+      await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36');
+
       // Navigate and wait for fonts to load
       await page.goto(url, { waitUntil: 'networkidle0', timeout: this.testTimeout });
       
