@@ -3192,7 +3192,10 @@
     "sending": "Enviando...",
     "sendResetLink": "Enviar enlace de restablecimiento",
     "resetting": "Restableciendo...",
-    "resetPassword": "Restablecer contraseña"
+    "resetPassword": "Restablecer contraseña",
+    "continueWithGoogle": "Continuar con Google",
+    "continueWithFacebook": "Continuar con Facebook",
+    "orDivider": "o"
   },
   "account": {
     "accountShort": "Cuenta",

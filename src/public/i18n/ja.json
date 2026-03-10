@@ -2884,7 +2884,10 @@
     "sending": "送信中...",
     "sendResetLink": "リセットリンクを送信",
     "resetting": "リセット中...",
-    "resetPassword": "パスワードをリセット"
+    "resetPassword": "パスワードをリセット",
+    "continueWithGoogle": "Googleで続行",
+    "continueWithFacebook": "Facebookで続行",
+    "orDivider": "または"
   },
   "account": {
     "accountShort": "アカウント",

@@ -3192,7 +3192,10 @@
     "sending": "Отправка...",
     "sendResetLink": "Отправить ссылку для сброса",
     "resetting": "Сброс...",
-    "resetPassword": "Сбросить пароль"
+    "resetPassword": "Сбросить пароль",
+    "continueWithGoogle": "Продолжить через Google",
+    "continueWithFacebook": "Продолжить через Facebook",
+    "orDivider": "или"
   },
   "account": {
     "email": "Эл. почта",

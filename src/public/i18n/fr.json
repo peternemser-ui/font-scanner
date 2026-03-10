@@ -3192,7 +3192,10 @@
     "sending": "Envoi en cours...",
     "sendResetLink": "Envoyer le lien de réinitialisation",
     "resetting": "Réinitialisation...",
-    "resetPassword": "Réinitialiser le mot de passe"
+    "resetPassword": "Réinitialiser le mot de passe",
+    "continueWithGoogle": "Continuer avec Google",
+    "continueWithFacebook": "Continuer avec Facebook",
+    "orDivider": "ou"
   },
   "account": {
     "accountShort": "Compte",

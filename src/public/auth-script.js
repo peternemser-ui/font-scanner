@@ -174,8 +174,65 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
   }
 });
 
+// ── Social login: hide unconfigured providers, wire click handlers ──
+(async function initSocialButtons() {
+  try {
+    const res = await fetch('/api/auth/oauth/providers');
+    const providers = await res.json();
+    const hasAny = providers.google || providers.facebook;
+
+    document.querySelectorAll('.btn-social').forEach(btn => {
+      const provider = btn.dataset.provider;
+      if (!providers[provider]) {
+        btn.style.display = 'none';
+      } else {
+        btn.addEventListener('click', () => {
+          const urlParams = new URLSearchParams(window.location.search);
+          const returnTo = urlParams.get('redirect') || urlParams.get('returnTo') || '';
+          const oauthUrl = `/api/auth/oauth/${provider}` + (returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : '');
+          window.location.href = oauthUrl;
+        });
+      }
+    });
+
+    // Hide entire social section if no providers configured
+    if (!hasAny) {
+      document.querySelectorAll('.social-buttons, .social-divider').forEach(el => el.style.display = 'none');
+    }
+  } catch {
+    // If the endpoint fails, hide social buttons
+    document.querySelectorAll('.social-buttons, .social-divider').forEach(el => el.style.display = 'none');
+  }
+})();
+
 // Check if already logged in
 document.addEventListener('DOMContentLoaded', () => {
+  // ── Handle OAuth callback (token in URL fragment) ──────────
+  const hash = window.location.hash.substring(1);
+  if (hash) {
+    const hashParams = new URLSearchParams(hash);
+    const oauthToken = hashParams.get('oauth_token');
+    const oauthUser = hashParams.get('oauth_user');
+    const oauthError = hashParams.get('oauth_error');
+    const oauthReturnTo = hashParams.get('returnTo');
+
+    if (oauthError) {
+      // Clear hash, show error
+      history.replaceState(null, '', window.location.pathname + window.location.search);
+      setTimeout(() => showError('login', decodeURIComponent(oauthError)), 100);
+    } else if (oauthToken && oauthUser) {
+      // Store token and user, redirect
+      localStorage.setItem('sm_token', oauthToken);
+      localStorage.setItem('sm_auth_token', oauthToken);
+      localStorage.setItem('sm_user', oauthUser);
+      history.replaceState(null, '', window.location.pathname);
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectTo = oauthReturnTo || urlParams.get('redirect') || urlParams.get('returnTo') || '/dashboard.html';
+      window.location.href = redirectTo;
+      return;
+    }
+  }
+
   const token = localStorage.getItem('sm_token');
   const user = localStorage.getItem('sm_user');
 

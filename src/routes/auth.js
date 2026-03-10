@@ -12,6 +12,9 @@ const { resolveEffectivePlan } = require('../middleware/scanQuota');
 const { PRICING, getPlanLimits } = require('../config/pricing');
 const { createLogger } = require('../utils/logger');
 
+const oauthService = require('../services/oauthService');
+const config = require('../config');
+
 const logger = createLogger('AuthRoutes');
 
 const resolveMx = promisify(dns.resolveMx);
@@ -598,6 +601,200 @@ router.post('/test-email', requireAuth, async (req, res) => {
   } catch (error) {
     logger.error('[Auth] test-email failed', { error: error.message });
     res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// ── OAuth: Social Login ──────────────────────────────────────
+
+/**
+ * GET /api/auth/oauth/providers
+ * Returns which OAuth providers are configured (for frontend button visibility)
+ */
+router.get('/oauth/providers', (req, res) => {
+  res.json({
+    google: !!config.oauth.google.clientId,
+    facebook: !!config.oauth.facebook.clientId,
+  });
+});
+
+const OAUTH_STATE_COOKIE = 'oauth_state';
+const OAUTH_STATE_MAX_AGE = 5 * 60 * 1000; // 5 minutes
+const isProduction = process.env.NODE_ENV === 'production';
+
+/**
+ * Build the redirect URL after OAuth completes.
+ * Token is passed in the URL fragment (#) so it never reaches the server in logs.
+ */
+function buildOAuthRedirectUrl(token, user, returnTo, error) {
+  const base = '/auth.html';
+  if (error) {
+    return `${base}#oauth_error=${encodeURIComponent(error)}`;
+  }
+  const userJson = JSON.stringify({ id: user.id, email: user.email, plan: user.plan, is_admin: user.is_admin });
+  const params = `oauth_token=${encodeURIComponent(token)}&oauth_user=${encodeURIComponent(userJson)}`;
+  const returnParam = returnTo ? `&returnTo=${encodeURIComponent(returnTo)}` : '';
+  return `${base}#${params}${returnParam}`;
+}
+
+/**
+ * GET /api/auth/oauth/google
+ * Initiate Google OAuth flow
+ */
+router.get('/oauth/google', (req, res) => {
+  if (!config.oauth.google.clientId) {
+    return res.status(501).json({ error: 'Google OAuth is not configured' });
+  }
+
+  const state = oauthService.generateState();
+  const returnTo = req.query.returnTo || '';
+
+  // Store state + returnTo in a cookie for CSRF verification
+  res.cookie(OAUTH_STATE_COOKIE, JSON.stringify({ state, returnTo }), {
+    httpOnly: true,
+    maxAge: OAUTH_STATE_MAX_AGE,
+    sameSite: 'lax',
+    secure: isProduction,
+  });
+
+  const authUrl = oauthService.getGoogleAuthUrl(state);
+  res.redirect(authUrl);
+});
+
+/**
+ * GET /api/auth/oauth/google/callback
+ * Google OAuth callback
+ */
+router.get('/oauth/google/callback', async (req, res) => {
+  try {
+    const { code, state, error: oauthError } = req.query;
+
+    if (oauthError) {
+      logger.warn('Google OAuth denied', { error: oauthError });
+      return res.redirect(buildOAuthRedirectUrl(null, null, null, 'Google login was cancelled'));
+    }
+
+    // Verify CSRF state
+    const stateCookie = req.cookies?.[OAUTH_STATE_COOKIE];
+    if (!stateCookie) {
+      return res.redirect(buildOAuthRedirectUrl(null, null, null, 'Login session expired. Please try again.'));
+    }
+
+    let parsed;
+    try { parsed = JSON.parse(stateCookie); } catch { parsed = {}; }
+
+    if (!oauthService.verifyState(state, parsed.state)) {
+      return res.redirect(buildOAuthRedirectUrl(null, null, null, 'Invalid login state. Please try again.'));
+    }
+
+    // Clear state cookie
+    res.clearCookie(OAUTH_STATE_COOKIE);
+
+    // Exchange code for tokens
+    const tokens = await oauthService.exchangeGoogleCode(code);
+    const profile = await oauthService.getGoogleUserInfo(tokens.access_token);
+
+    if (!profile.email) {
+      return res.redirect(buildOAuthRedirectUrl(null, null, null, 'Could not get email from Google. Please try again.'));
+    }
+
+    // Find or create user
+    const { user, token } = await oauthService.findOrCreateUser(
+      'google', profile.id, profile.email, profile.name, profile.picture
+    );
+
+    // Transfer anonymous usage
+    const anonId = req.cookies?.anon_id;
+    if (anonId && user.id) {
+      await usageService.transferAnonymousUsage(user.id, anonId).catch(err => {
+        logger.warn('Failed to transfer anonymous usage', { error: err.message });
+      });
+    }
+
+    logger.info('Google OAuth login', { userId: user.id, email: profile.email });
+    res.redirect(buildOAuthRedirectUrl(token, user, parsed.returnTo));
+  } catch (error) {
+    logger.error('Google OAuth callback failed', { error: error.message });
+    res.redirect(buildOAuthRedirectUrl(null, null, null, 'Google login failed. Please try again.'));
+  }
+});
+
+/**
+ * GET /api/auth/oauth/facebook
+ * Initiate Facebook OAuth flow
+ */
+router.get('/oauth/facebook', (req, res) => {
+  if (!config.oauth.facebook.clientId) {
+    return res.status(501).json({ error: 'Facebook OAuth is not configured' });
+  }
+
+  const state = oauthService.generateState();
+  const returnTo = req.query.returnTo || '';
+
+  res.cookie(OAUTH_STATE_COOKIE, JSON.stringify({ state, returnTo }), {
+    httpOnly: true,
+    maxAge: OAUTH_STATE_MAX_AGE,
+    sameSite: 'lax',
+    secure: isProduction,
+  });
+
+  const authUrl = oauthService.getFacebookAuthUrl(state);
+  res.redirect(authUrl);
+});
+
+/**
+ * GET /api/auth/oauth/facebook/callback
+ * Facebook OAuth callback
+ */
+router.get('/oauth/facebook/callback', async (req, res) => {
+  try {
+    const { code, state, error: oauthError, error_description } = req.query;
+
+    if (oauthError) {
+      logger.warn('Facebook OAuth denied', { error: oauthError, description: error_description });
+      return res.redirect(buildOAuthRedirectUrl(null, null, null, 'Facebook login was cancelled'));
+    }
+
+    // Verify CSRF state
+    const stateCookie = req.cookies?.[OAUTH_STATE_COOKIE];
+    if (!stateCookie) {
+      return res.redirect(buildOAuthRedirectUrl(null, null, null, 'Login session expired. Please try again.'));
+    }
+
+    let parsed;
+    try { parsed = JSON.parse(stateCookie); } catch { parsed = {}; }
+
+    if (!oauthService.verifyState(state, parsed.state)) {
+      return res.redirect(buildOAuthRedirectUrl(null, null, null, 'Invalid login state. Please try again.'));
+    }
+
+    res.clearCookie(OAUTH_STATE_COOKIE);
+
+    // Exchange code for tokens
+    const tokens = await oauthService.exchangeFacebookCode(code);
+    const profile = await oauthService.getFacebookUserInfo(tokens.access_token);
+
+    if (!profile.email) {
+      return res.redirect(buildOAuthRedirectUrl(null, null, null, 'Could not get email from Facebook. Please grant email permission and try again.'));
+    }
+
+    // Find or create user
+    const { user, token } = await oauthService.findOrCreateUser(
+      'facebook', profile.id, profile.email, profile.name, profile.picture
+    );
+
+    // Transfer anonymous usage
+    const anonId = req.cookies?.anon_id;
+    if (anonId && user.id) {
+      await usageService.transferAnonymousUsage(user.id, anonId).catch(err => {
+        logger.warn('Failed to transfer anonymous usage', { error: err.message });
+      });
+    }
+
+    logger.info('Facebook OAuth login', { userId: user.id, email: profile.email });
+    res.redirect(buildOAuthRedirectUrl(token, user, parsed.returnTo));
+  } catch (error) {
+    logger.error('Facebook OAuth callback failed', { error: error.message });
+    res.redirect(buildOAuthRedirectUrl(null, null, null, 'Facebook login failed. Please try again.'));
   }
 });
 

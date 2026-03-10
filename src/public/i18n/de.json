@@ -2771,7 +2771,10 @@
     "sending": "Wird gesendet...",
     "sendResetLink": "Link zum Zurücksetzen senden",
     "resetting": "Wird zurückgesetzt...",
-    "resetPassword": "Passwort zuruecksetzen"
+    "resetPassword": "Passwort zuruecksetzen",
+    "continueWithGoogle": "Weiter mit Google",
+    "continueWithFacebook": "Weiter mit Facebook",
+    "orDivider": "oder"
   },
   "account": {
     "accountShort": "Konto",

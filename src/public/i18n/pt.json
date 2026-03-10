@@ -2610,7 +2610,10 @@
     "sending": "Enviando...",
     "sendResetLink": "Enviar link de redefinição",
     "resetting": "Redefinindo...",
-    "resetPassword": "Redefinir Senha"
+    "resetPassword": "Redefinir Senha",
+    "continueWithGoogle": "Continuar com Google",
+    "continueWithFacebook": "Continuar com Facebook",
+    "orDivider": "ou"
   },
   "account": {
     "accountShort": "Conta",

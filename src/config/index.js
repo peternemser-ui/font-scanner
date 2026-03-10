@@ -135,6 +135,20 @@ const config = {
     },
   },
 
+  // OAuth (Social Login)
+  oauth: {
+    google: {
+      clientId: process.env.GOOGLE_OAUTH_CLIENT_ID || '',
+      clientSecret: process.env.GOOGLE_OAUTH_CLIENT_SECRET || '',
+      redirectUri: process.env.GOOGLE_OAUTH_REDIRECT_URI || '',
+    },
+    facebook: {
+      clientId: process.env.FACEBOOK_OAUTH_APP_ID || '',
+      clientSecret: process.env.FACEBOOK_OAUTH_APP_SECRET || '',
+      redirectUri: process.env.FACEBOOK_OAUTH_REDIRECT_URI || '',
+    },
+  },
+
   // Billing Configuration
   billing: {
     // Stripe Price IDs
