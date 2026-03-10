@@ -925,6 +925,7 @@ function displayPerformanceResults(results) {
 function createAccordionSection(container, id, displayTitle, contentCreator, score) {
   const accordion = document.createElement('div');
   accordion.className = 'accordion';
+  accordion.setAttribute('data-accordion-id', id);
   
   const header = document.createElement('button');
   header.className = 'accordion-header';

@@ -1354,6 +1354,7 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
 
   const accordion = document.createElement('div');
   accordion.className = 'accordion';
+  accordion.setAttribute('data-accordion-id', id);
   if (isPro) {
     accordion.classList.add('pro-section');
     accordion.dataset.pro = 'true';
