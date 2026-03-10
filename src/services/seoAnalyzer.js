@@ -118,12 +118,12 @@ class SEOAnalyzer {
             if (retryFinalUrl !== url) {
               logger.info(`Re-navigating directly to final URL: ${retryFinalUrl}`);
               finalResponse = await navigateToPage(retryPage, retryFinalUrl, {
-                timeout: 25000,
+                timeout: 15000,
                 waitUntil: 'networkidle2',
                 checkBotProtection: false,
                 retries: 0
               });
-              await new Promise(r => setTimeout(r, 2000));
+              await new Promise(r => setTimeout(r, 1500));
             }
 
             // Skip overlay dismissal entirely on retry
@@ -140,11 +140,12 @@ class SEOAnalyzer {
       }
     });
 
-    // Create timeout promise (60 seconds to allow for redirect retry)
+    // Create timeout promise (35 seconds — must leave room for lightweight
+    // fallback + screenshot capture within the 60-second frontend budget)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
-        reject(new Error('SEO analysis timed out after 60 seconds. The website may be too slow or complex to analyze.'));
-      }, 60000);
+        reject(new Error('SEO analysis timed out after 35 seconds. The website may be too slow or complex to analyze.'));
+      }, 35000);
     });
 
     // Race between analysis and timeout

@@ -793,7 +793,12 @@ const performSEOScan = asyncHandler(async (req, res) => {
       const startedAt = getRequestScanStartedAt(req) || seoResults?.startedAt || seoResults?.timestamp || new Date().toISOString();
       const analyzerKey = getAnalyzerKeyOverride(req, 'seo');
       const reportId = makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt });
-      const screenshotUrl = reportId ? await ensureReportScreenshot({ url, reportId, requestId }) : null;
+      // Fire screenshot capture in background — don't block the response
+      if (reportId) {
+        ensureReportScreenshot({ url, reportId, requestId }).catch(e =>
+          logger.warn('Background screenshot failed', { reportId, error: e.message })
+        );
+      }
       return res.json({
         success: true,
         url,
@@ -802,7 +807,7 @@ const performSEOScan = asyncHandler(async (req, res) => {
         timestamp: startedAt,
         startedAt,
         reportId,
-        screenshotUrl,
+        screenshotUrl: reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : null,
         duration: `${(duration / 1000).toFixed(2)}s`,
         results: seoResults
       });
@@ -849,7 +854,12 @@ const performSEOScan = asyncHandler(async (req, res) => {
     const startedAt = getRequestScanStartedAt(req) || lightweightResults?.startedAt || lightweightResults?.timestamp || new Date().toISOString();
     const analyzerKey = getAnalyzerKeyOverride(req, 'seo');
     const reportId = makeReportId({ analyzerKey, normalizedUrl: url, startedAtISO: startedAt });
-    const screenshotUrl = reportId ? await ensureReportScreenshot({ url, reportId, requestId }) : null;
+    // Fire screenshot capture in background — don't block the response
+    if (reportId) {
+      ensureReportScreenshot({ url, reportId, requestId }).catch(e =>
+        logger.warn('Background screenshot failed', { reportId, error: e.message })
+      );
+    }
     return res.json({
       success: true,
       url,
@@ -858,7 +868,7 @@ const performSEOScan = asyncHandler(async (req, res) => {
       timestamp: startedAt,
       startedAt,
       reportId,
-      screenshotUrl,
+      screenshotUrl: reportId ? `/reports/${encodeURIComponent(reportId)}/screenshot.jpg` : null,
       duration: `${(duration / 1000).toFixed(2)}s`,
       warning: 'Full headless analysis unavailable (protocol/bot protection). Limited fallback results returned.',
       results: lightweightResults
