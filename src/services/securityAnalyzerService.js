@@ -6,6 +6,9 @@ const { dismissPageOverlays } = require('../utils/browserHelpers');
 
 const logger = createLogger('SecurityAnalyzerService');
 
+const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36';
+const MOBILE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.0 Mobile/15E148 Safari/604.1';
+
 class SecurityAnalyzerService {
   /**
    * Main security analysis orchestrator
@@ -138,14 +141,13 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
-        // Set viewport for device
+        // Set viewport and realistic user agent for device
         if (device === 'mobile') {
           await page.setViewport({ width: 375, height: 812, isMobile: true });
-          await page.setUserAgent(
-            'Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X) AppleWebKit/605.1.15'
-          );
+          await page.setUserAgent(MOBILE_UA);
         } else {
           await page.setViewport({ width: 1920, height: 1080 });
+          await page.setUserAgent(DESKTOP_UA);
         }
 
         // Navigate to page
@@ -197,6 +199,7 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
+        await page.setUserAgent(DESKTOP_UA);
         const response = await page.goto(url, {
           waitUntil: 'domcontentloaded',
           timeout: 30000
@@ -287,9 +290,10 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
-        const response = await page.goto(url, { 
-          waitUntil: 'domcontentloaded', 
-          timeout: 30000 
+        await page.setUserAgent(DESKTOP_UA);
+        const response = await page.goto(url, {
+          waitUntil: 'domcontentloaded',
+          timeout: 30000
         });
 
         const headers = response.headers();
@@ -357,6 +361,7 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
+        await page.setUserAgent(DESKTOP_UA);
         await page.goto(url, {
           waitUntil: 'load',
           timeout: 30000
@@ -461,6 +466,7 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
+        await page.setUserAgent(DESKTOP_UA);
         await page.goto(url, {
           waitUntil: 'load',
           timeout: 30000
@@ -526,6 +532,7 @@ class SecurityAnalyzerService {
       const page = await browser.newPage();
 
       try {
+        await page.setUserAgent(DESKTOP_UA);
         await page.goto(url, {
           waitUntil: 'load',
           timeout: 30000
