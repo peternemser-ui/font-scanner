@@ -20,7 +20,7 @@ const { createLogger } = require('../utils/logger');
 
 const logger = createLogger('PuppeteerPdfService');
 
-const TEMP_DIR = path.join(__dirname, '../../temp');
+const TEMP_DIR = process.env.PDF_TEMP_DIR || require('os').tmpdir();
 const I18N_DIR = path.join(__dirname, '../public/i18n');
 
 const CJK_LANGS = ['ja', 'zh', 'ko'];

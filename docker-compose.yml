@@ -88,7 +88,6 @@ services:
     volumes:
       - reports-data:/app/reports
       - logs-data:/app/logs
-      - temp-data:/app/temp
     networks:
       - font-scanner-network
     healthcheck:
@@ -124,8 +123,6 @@ volumes:
   reports-data:
     driver: local
   logs-data:
-    driver: local
-  temp-data:
     driver: local
 
 networks:
