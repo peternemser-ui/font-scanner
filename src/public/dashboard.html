@@ -411,7 +411,6 @@
       body.scan-complete .pro-upsell,
       body.scan-complete .homepage-footer-bar,
       body.scan-complete .whats-included-link,
-      body.scan-complete .home-hero__links,
       body.scan-complete .sample-report-link,
       body.scan-complete .example-chips,
       body.scan-complete .home-hero__collage,
@@ -573,19 +572,9 @@
         font-size: 14px;
       }
 
-      .home-hero > .home-hero__links {
-        max-width: 1100px;
-        margin: 0 auto;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 1.5rem;
-        position: relative;
-        z-index: 2;
-        text-align: center;
-      }
-
       .sample-report-link {
+        display: inline-block;
+        margin-top: 0.75rem;
         color: var(--accent-primary, #5bf4e7);
         font-size: 0.9375rem;
         font-weight: 600;
@@ -757,6 +746,7 @@
 Get prioritized fixes &mdash; and shareable reports.</h1>
 
             <p class="hero-subhead" data-i18n="homepage.hero.subhead">Performance, SEO, accessibility, security, and typography diagnostics in one scan.</p>
+            <a href="/assets/sample-seo-report.pdf" target="_blank" rel="noopener" class="sample-report-link" data-i18n="homepage.whatYouGet.sampleReport">View a sample PDF report &rarr;</a>
           </div>
         </div>
 
@@ -810,16 +800,11 @@ Get prioritized fixes &mdash; and shareable reports.</h1>
           <button type="button" class="example-chip" data-url="github.com" data-i18n="homepage.exampleUrls.example3">github.com</button>
         </div>
 
-        <!-- Sample Report + What's Included Links -->
-        <div class="home-hero__links">
-          <a href="/assets/sample-seo-report.pdf" target="_blank" rel="noopener" class="sample-report-link" data-i18n="homepage.whatYouGet.sampleReport">
-            View a sample PDF report &rarr;
-          </a>
-          <a href="#feature-strip" class="whats-included-link">
-            <span data-i18n="homepage.hero.whatsIncluded">What's included</span>
-            <span class="whats-included-link__arrow">&darr;</span>
-          </a>
-        </div>
+        <!-- What's Included Link -->
+        <a href="#feature-strip" class="whats-included-link">
+          <span data-i18n="homepage.hero.whatsIncluded">What's included</span>
+          <span class="whats-included-link__arrow">&darr;</span>
+        </a>
       </section>
 
       <!-- Feature Strip -->
