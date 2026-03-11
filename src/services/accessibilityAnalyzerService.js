@@ -314,9 +314,9 @@ class AccessibilityAnalyzerService {
   processResults(url, desktopLighthouse, mobileLighthouse, accessibilityMetrics, startTime) {
     const analysisDuration = formatDuration(Date.now() - startTime, 2);
     
-    // Calculate accessibility scores
-    const desktopAccessibilityScore = desktopLighthouse.accessibility || 0;
-    const mobileAccessibilityScore = mobileLighthouse.accessibility || 0;
+    // Calculate accessibility scores (guard against null/undefined Lighthouse results)
+    const desktopAccessibilityScore = desktopLighthouse?.accessibility || 0;
+    const mobileAccessibilityScore = mobileLighthouse?.accessibility || 0;
     
     // Analyze contrast issues
     const contrastAnalysis = this.analyzeContrast(accessibilityMetrics.contrast);
