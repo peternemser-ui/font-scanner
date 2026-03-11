@@ -62,7 +62,7 @@ const config = {
 
   // Browser Pool
   browserPool: {
-    min: parseInt(process.env.BROWSER_POOL_MIN || '1', 10),
+    min: parseInt(process.env.BROWSER_POOL_MIN || '2', 10),
     max: parseInt(process.env.BROWSER_POOL_MAX || '5', 10),
     idleTimeout: parseInt(process.env.BROWSER_POOL_IDLE_TIMEOUT || '300000', 10), // 5 minutes
     acquireTimeout: parseInt(process.env.BROWSER_POOL_ACQUIRE_TIMEOUT || '30000', 10), // 30 seconds
@@ -82,18 +82,18 @@ const config = {
 
   // Lighthouse (centralized config)
   lighthouse: {
-    // Overall execution timeout guard for a single LH run (reduced for speed)
-    timeoutMs: parseInt(process.env.LIGHTHOUSE_TIMEOUT_MS || '90000', 10), // Default 90s; heavy sites often exceed 60s
+    // Overall execution timeout guard for a single LH run
+    timeoutMs: parseInt(process.env.LIGHTHOUSE_TIMEOUT_MS || '45000', 10), // 45s (was 90s)
     // How long LH will wait for page load internally
-    maxWaitForLoadMs: parseInt(process.env.LIGHTHOUSE_MAX_WAIT_MS || '50000', 10), // Reduced from 75s to 50s
+    maxWaitForLoadMs: parseInt(process.env.LIGHTHOUSE_MAX_WAIT_MS || '30000', 10), // 30s (was 50s)
     // Retries for common flaky failures (NO_FCP, Chrome internal error)
-    retries: parseInt(process.env.LIGHTHOUSE_RETRIES || '1', 10), // Reduced from 2 to 1 for speed
-    // Desktop settle pauses (increased for better reliability)
-    pauseAfterFcpMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_FCP_MS || '2000', 10), // Increased from 1500
-    pauseAfterLoadMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_LOAD_MS || '2000', 10), // Increased from 1500
+    retries: parseInt(process.env.LIGHTHOUSE_RETRIES || '0', 10), // 0 retries (was 1) — faster failure
+    // Desktop settle pauses
+    pauseAfterFcpMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_FCP_MS || '1000', 10), // 1s (was 2s)
+    pauseAfterLoadMsDesktop: parseInt(process.env.LH_DESKTOP_PAUSE_LOAD_MS || '1000', 10), // 1s (was 2s)
     // Mobile settle pauses
-    pauseAfterFcpMsMobile: parseInt(process.env.LH_MOBILE_PAUSE_FCP_MS || '1000', 10),
-    pauseAfterLoadMsMobile: parseInt(process.env.LH_MOBILE_PAUSE_LOAD_MS || '1000', 10),
+    pauseAfterFcpMsMobile: parseInt(process.env.LH_MOBILE_PAUSE_FCP_MS || '500', 10), // 0.5s (was 1s)
+    pauseAfterLoadMsMobile: parseInt(process.env.LH_MOBILE_PAUSE_LOAD_MS || '500', 10), // 0.5s (was 1s)
     // Mobile throttling (use LH "mobileSlow4G"-like defaults for reliability)
     mobileThrottling: {
       rttMs: parseInt(process.env.LH_MOBILE_RTT_MS || '150', 10),
@@ -112,7 +112,7 @@ const config = {
       // Use mobile scores as fallback for desktop when desktop fails
       useMobileAsFallback: process.env.LH_USE_MOBILE_FALLBACK !== 'false',
       // Delay between retries (ms) - increased for better recovery
-      retryDelayMs: parseInt(process.env.LH_RETRY_DELAY_MS || '5000', 10),
+      retryDelayMs: parseInt(process.env.LH_RETRY_DELAY_MS || '2000', 10), // 2s (was 5s)
     },
     // Circuit breaker to skip Lighthouse temporarily after repeated failures
     circuitBreaker: {
