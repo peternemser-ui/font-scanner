@@ -68,7 +68,7 @@ router.get('/recent-scans', requireAuth, async (req, res) => {
 
     // Get recent scans for this user
     const scans = await db.all(
-      `SELECT id, target_url, status, options_json, created_at, finished_at
+      `SELECT id, report_id, target_url, status, options_json, created_at, finished_at
        FROM scans
        WHERE user_id = ?
        ORDER BY created_at DESC
@@ -101,11 +101,11 @@ router.get('/recent-scans', requireAuth, async (req, res) => {
         }
 
         return {
-          id: scan.id,
+          id: scan.report_id || scan.id,
           siteUrl: scan.target_url,
           analyzerType,
           status: scan.status || 'completed',
-          isPurchased: purchasedIds.has(scan.id),
+          isPurchased: purchasedIds.has(scan.report_id || scan.id),
           createdAt: toISODate(scan.created_at),
           finishedAt: toISODate(scan.finished_at)
         };
