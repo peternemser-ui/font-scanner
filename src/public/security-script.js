@@ -1038,66 +1038,45 @@ async function displaySecurityResults(data) {
     resultsContent.appendChild(comparisonSection);
   }
 
-  // Accordion sections container
-  const accordionsContainer = document.createElement('div');
-  accordionsContainer.className = 'accordions-container';
-
-  // 1. SSL/TLS Certificate
-  createAccordionSection(
-    accordionsContainer,
-    'ssl-section',
-    t('reports.security.sslTlsCertificate', 'SSL/TLS Certificate'),
-    () => renderSSLContent(data.ssl),
-    data.ssl.score
-  );
-
-  // 2. Security Headers
-  createAccordionSection(
-    accordionsContainer,
-    'headers-section',
-    t('reports.security.headers', 'Security Headers'),
-    () => renderHeadersContent(data.headers),
-    data.headers.score
-  );
-
-  // 3. Vulnerabilities & Threats
-  createAccordionSection(
-    accordionsContainer,
-    'vulnerabilities-section',
-    t('reports.security.vulnerabilitiesThreats', 'Vulnerabilities & Threats'),
-    () => renderVulnerabilitiesContent(data.vulnerabilities),
-    data.vulnerabilities.score
-  );
-
-  // 4. Cookie Security
-  createAccordionSection(
-    accordionsContainer,
-    'cookies-section',
-    t('reports.security.cookieSecurity', 'Cookie Security'),
-    () => renderCookiesContent(data.cookies),
-    data.cookies.score
-  );
-
-  // 5. Third-Party Scripts
-  createAccordionSection(
-    accordionsContainer,
-    'thirdparty-section',
-    t('reports.security.thirdPartyScripts', 'Third-Party Scripts'),
-    () => renderThirdPartyContent(data.thirdPartyScripts),
-    data.thirdPartyScripts.score
-  );
-
-  resultsContent.appendChild(accordionsContainer);
-
-  // 6 & 7: Pro sections — use ReportAccordion (same pattern as SEO page)
+  // Build all sections using ReportAccordion (consistent style, matches SEO page)
   const secReportId = document.body.getAttribute('data-report-id') || '';
   const isUnlocked = !!(
     (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
     (secReportId && window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(secReportId))
   );
 
-  const proSectionsHTML = (window.ReportAccordion ? [
-    window.ReportAccordion.createSection({
+  const sections = [
+    {
+      id: 'ssl-section',
+      title: t('reports.security.sslTlsCertificate', 'SSL/TLS Certificate'),
+      scoreTextRight: data.ssl.score,
+      contentHTML: renderSSLContent(data.ssl)
+    },
+    {
+      id: 'headers-section',
+      title: t('reports.security.headers', 'Security Headers'),
+      scoreTextRight: data.headers.score,
+      contentHTML: renderHeadersContent(data.headers)
+    },
+    {
+      id: 'vulnerabilities-section',
+      title: t('reports.security.vulnerabilitiesThreats', 'Vulnerabilities & Threats'),
+      scoreTextRight: data.vulnerabilities.score,
+      contentHTML: renderVulnerabilitiesContent(data.vulnerabilities)
+    },
+    {
+      id: 'cookies-section',
+      title: t('reports.security.cookieSecurity', 'Cookie Security'),
+      scoreTextRight: data.cookies.score,
+      contentHTML: renderCookiesContent(data.cookies)
+    },
+    {
+      id: 'thirdparty-section',
+      title: t('reports.security.thirdPartyScripts', 'Third-Party Scripts'),
+      scoreTextRight: data.thirdPartyScripts.score,
+      contentHTML: renderThirdPartyContent(data.thirdPartyScripts)
+    },
+    {
       id: 'report-recommendations',
       title: t('reports.common.reportRecommendations', 'Recommendations'),
       scoreTextRight: null,
@@ -1106,8 +1085,8 @@ async function displaySecurityResults(data) {
       context: 'security',
       reportId: secReportId,
       contentHTML: (() => { try { return renderRecommendationsContent(data.recommendations, data); } catch (e) { console.error('[Security] Recommendations render error:', e); return '<div style="padding:1rem;color:var(--r-text-muted);">Recommendations could not be loaded.</div>'; } })()
-    }),
-    window.ReportAccordion.createSection({
+    },
+    {
       id: 'ai-strategic-analysis',
       title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
       scoreTextRight: null,
@@ -1120,15 +1099,12 @@ async function displaySecurityResults(data) {
           ? window.AIRecommendations.renderLoadingAnimation()
           : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') +
         '</div>'
-    })
-  ] : []).join('');
+    }
+  ];
 
-  if (proSectionsHTML) {
-    resultsContent.insertAdjacentHTML('beforeend', proSectionsHTML);
-  }
-
-  // Initialize ReportAccordion click handlers for the Pro sections
-  if (window.ReportAccordion && window.ReportAccordion.initInteractions) {
+  if (window.ReportAccordion) {
+    const sectionsHTML = sections.map(s => window.ReportAccordion.createSection(s)).join('');
+    resultsContent.insertAdjacentHTML('beforeend', sectionsHTML);
     window.ReportAccordion.initInteractions();
   }
 
