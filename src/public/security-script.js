@@ -1435,11 +1435,19 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
     });
   }
 
-  // Pro sections: eagerly pre-render so content is ready when billing is cached.
-  // The global entitlements:updated handler (outside this function) re-renders
-  // all results when billing status arrives, so no per-section listener needed.
+  // Pro sections: eagerly pre-render and auto-expand if user has Pro access
   if (isPro) {
     renderContent();
+    // Auto-expand Pro sections for Pro users (no click needed)
+    if (userHasPro()) {
+      content.classList.add('expanded');
+      header.classList.add('active');
+      const toggle = header.querySelector('.accordion-toggle');
+      if (toggle) {
+        toggle.textContent = '▲';
+        toggle.classList.add('rotated');
+      }
+    }
   }
 
   accordion.appendChild(header);
