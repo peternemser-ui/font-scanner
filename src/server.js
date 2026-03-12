@@ -841,8 +841,10 @@ function withUsageTracking(handler) {
         }
 
         // Record scan in scans table so it appears in the reports dashboard
-        // Skip for billing re-scans and already-counted scans to avoid duplicate entries
-        if (userId && !isBillingRescan && !alreadyCounted) {
+        // Skip for billing re-scans but always save each analyzer result
+        // (alreadyCounted only gates usage counting, not report persistence)
+        // Dedup by report_id to prevent duplicate entries for the same report
+        if (userId && !isBillingRescan) {
           const targetUrl = req.body?.url || req.body?.site_url || 'unknown';
           // Derive analyzer type from the route path (e.g. /api/core-web-vitals -> core-web-vitals)
           const routePath = (req.route?.path || req.originalUrl || '').split('?')[0];
@@ -854,13 +856,27 @@ function withUsageTracking(handler) {
           // Capture the user's active locale so PDFs render in the scan's original language
           const scanLocale = req.body?.lang || req.locale || 'en';
           const db = getDatabase();
-          db.run(
-            `INSERT INTO scans (id, target_url, status, options_json, user_id, report_id, result_json, locale, started_at, finished_at)
-             VALUES (?, ?, 'completed', ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
-            [scanId, targetUrl, JSON.stringify({ analyzerType }), userId, reportId, JSON.stringify(data), scanLocale]
-          ).catch(err => {
-            logger.error('Failed to record scan in database', { error: err.message });
-          });
+
+          if (reportId) {
+            // Use upsert: if this report_id already exists, update the result; otherwise insert
+            db.run(
+              `INSERT INTO scans (id, target_url, status, options_json, user_id, report_id, result_json, locale, started_at, finished_at)
+               VALUES (?, ?, 'completed', ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
+               ON CONFLICT (report_id) DO UPDATE SET result_json = excluded.result_json, finished_at = datetime('now')`,
+              [scanId, targetUrl, JSON.stringify({ analyzerType }), userId, reportId, JSON.stringify(data), scanLocale]
+            ).catch(err => {
+              logger.error('Failed to record scan in database', { error: err.message });
+            });
+          } else {
+            // No reportId — insert without upsert (legacy scans)
+            db.run(
+              `INSERT INTO scans (id, target_url, status, options_json, user_id, report_id, result_json, locale, started_at, finished_at)
+               VALUES (?, ?, 'completed', ?, ?, ?, ?, ?, datetime('now'), datetime('now'))`,
+              [scanId, targetUrl, JSON.stringify({ analyzerType }), userId, reportId, JSON.stringify(data), scanLocale]
+            ).catch(err => {
+              logger.error('Failed to record scan in database', { error: err.message });
+            });
+          }
 
           // Decrement day_pass report counter
           if (reportId && req.user) {
