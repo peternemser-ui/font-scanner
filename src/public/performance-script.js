@@ -888,13 +888,16 @@ function displayPerformanceResults(results) {
   createAccordionSection(container, 'network-performance', t('reports.performance.networkPerformance', 'Network Performance'), () => renderNetworkPerformanceContent(results.network), results.network?.score || 0);
   createAccordionSection(container, 'caching-optimization', t('reports.performance.cachingOptimization', 'Caching & Optimization'), () => renderCachingOptimizationContent(results.caching), results.caching?.score || 0);
   createAccordionSection(container, 'report-recommendations', t('reports.common.reportRecommendations', 'Recommendations'), () => renderRecommendationsContent(results.recommendations), null, { isPro: true }); // Pro gated
-  createAccordionSection(container, 'ai-strategic-analysis', t('reports.ai.strategicTitle', 'AI Strategic Analysis'), () => '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>', null, { isPro: true });
-
-  // Fetch AI strategic analysis content
-  if (window.AIRecommendations) {
-    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
-    window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'performance', results, locale, { skipHeader: true });
-  }
+  createAccordionSection(container, 'ai-strategic-analysis', t('reports.ai.strategicTitle', 'AI Strategic Analysis'), () => {
+    const html = '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>';
+    setTimeout(() => {
+      if (window.AIRecommendations) {
+        const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+        window.AIRecommendations.fetchAndRender('ai-strategic-content', reportId, 'performance', results, locale, { skipHeader: true });
+      }
+    }, 0);
+    return html;
+  }, null);
   if (window.SelfImprovement) {
     window.SelfImprovement.integrate({ data: results, analyzerType: 'performance', donutLabels: {}, resultsContent: container, reportId: reportId });
   }
@@ -958,8 +961,13 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
     } else {
       // Expand and create content if not already created
       if (!contentInner.hasChildNodes()) {
-        const contentHTML = contentCreator();
-        contentInner.innerHTML = contentHTML;
+        try {
+          const contentHTML = contentCreator();
+          contentInner.innerHTML = contentHTML;
+        } catch (err) {
+          console.error('[PerformanceReport] Error rendering section ' + id + ':', err);
+          contentInner.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.common.sectionLoadError', 'This section could not be loaded. Please try refreshing the page.') + '</div>';
+        }
       }
       
       content.classList.add('expanded');
