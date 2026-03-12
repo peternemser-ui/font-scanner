@@ -1108,19 +1108,23 @@ async function displaySecurityResults(data) {
     accordionsContainer,
     'ai-strategic-analysis',
     t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
-    () => '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>',
+    () => {
+      const html = '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>';
+      // Schedule fetch after DOM update (content div needs to be in DOM first)
+      setTimeout(() => {
+        if (window.AIRecommendations) {
+          const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+          const secReportId = document.body.getAttribute('data-report-id') || '';
+          window.AIRecommendations.fetchAndRender('ai-strategic-content', secReportId, 'security', data, locale, { skipHeader: true });
+        }
+      }, 0);
+      return html;
+    },
     null,
     { isPro: true }
   );
 
   resultsContent.appendChild(accordionsContainer);
-
-  // Fetch AI strategic analysis content
-  if (window.AIRecommendations) {
-    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
-    const secReportId = document.body.getAttribute('data-report-id') || '';
-    window.AIRecommendations.fetchAndRender('ai-strategic-content', secReportId, 'security', data, locale, { skipHeader: true });
-  }
   if (window.SelfImprovement) {
     const secReportId = document.body.getAttribute('data-report-id') || '';
     window.SelfImprovement.integrate({ data: data, analyzerType: 'security', donutLabels: {}, resultsContent: resultsContent, reportId: secReportId });
@@ -1386,11 +1390,16 @@ function createAccordionSection(container, id, displayTitle, contentCreator, sco
       contentInner.innerHTML = previewHtml || renderLockedProPreview(displayTitle, [t('reports.security.securityFixesPreview', 'Security fixes preview'), t('reports.security.owaspRecommendations', 'OWASP-aligned recommendations')]);
       return;
     }
-    const contentHTML = contentCreator();
-    if (typeof contentHTML === 'string') {
-      contentInner.innerHTML = contentHTML;
-    } else {
-      contentInner.appendChild(contentHTML);
+    try {
+      const contentHTML = contentCreator();
+      if (typeof contentHTML === 'string') {
+        contentInner.innerHTML = contentHTML;
+      } else if (contentHTML) {
+        contentInner.appendChild(contentHTML);
+      }
+    } catch (err) {
+      console.error('[SecurityReport] Error rendering section ' + id + ':', err);
+      contentInner.innerHTML = '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.common.sectionLoadError', 'This section could not be loaded. Please try refreshing the page.') + '</div>';
     }
   };
 

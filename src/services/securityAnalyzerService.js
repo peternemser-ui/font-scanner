@@ -798,7 +798,8 @@ class SecurityAnalyzerService {
     }
 
     // Security headers recommendations
-    if (!headers.details['Content-Security-Policy'].present) {
+    const hd = headers.details || {};
+    if (!(hd['Content-Security-Policy'] || {}).present) {
       recommendations.push({
         priority: 'critical',
         title: 'Implement Content Security Policy',
@@ -813,7 +814,7 @@ class SecurityAnalyzerService {
       });
     }
 
-    if (!headers.details['Strict-Transport-Security'].present) {
+    if (!(hd['Strict-Transport-Security'] || {}).present) {
       recommendations.push({
         priority: 'high',
         title: 'Enable HTTP Strict Transport Security',
@@ -825,7 +826,7 @@ class SecurityAnalyzerService {
       });
     }
 
-    if (!headers.details['X-Frame-Options'].present) {
+    if (!(hd['X-Frame-Options'] || {}).present) {
       recommendations.push({
         priority: 'medium',
         title: 'Prevent Clickjacking Attacks',
@@ -837,7 +838,7 @@ class SecurityAnalyzerService {
       });
     }
 
-    if (!headers.details['X-Content-Type-Options'].present) {
+    if (!(hd['X-Content-Type-Options'] || {}).present) {
       recommendations.push({
         priority: 'medium',
         title: 'Prevent MIME Sniffing',
@@ -850,7 +851,7 @@ class SecurityAnalyzerService {
     }
 
     // Vulnerability recommendations
-    vulnerabilities.issues.forEach(vuln => {
+    (vulnerabilities.issues || []).forEach(vuln => {
       if (vuln.severity === 'critical') {
         recommendations.push({
           priority: 'critical',

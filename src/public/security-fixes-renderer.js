@@ -131,9 +131,16 @@ function generateSecurityFixesData(recommendations, results) {
   // Process each recommendation from the security analyzer
   if (recommendations && recommendations.length > 0) {
     recommendations.forEach(rec => {
-      const fixData = createSecurityFix(rec, results);
-      if (fixData) {
-        fixes.push(fixData);
+      // Skip string entries (from error fallback like "Security analysis failed: ...")
+      if (typeof rec === 'string') return;
+      if (!rec || !rec.title) return;
+      try {
+        const fixData = createSecurityFix(rec, results);
+        if (fixData) {
+          fixes.push(fixData);
+        }
+      } catch (err) {
+        console.warn('[SecurityFixes] Failed to process recommendation:', rec.title, err);
       }
     });
   }
