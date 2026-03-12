@@ -74,6 +74,7 @@ function _drawBarChart(id, labels, values, opts) {
   opts = opts || {};
 
   var w = canvas.parentElement.clientWidth;
+  if (w < 10) return; // skip if hidden/collapsed
   var h = opts.height || 280;
   var ctx = _setupCanvas(canvas, w, h);
   var color = opts.color || CHART_PALETTE[0];
@@ -146,6 +147,7 @@ function _drawAreaChart(id, labels, values, opts) {
   opts = opts || {};
 
   var w = canvas.parentElement.clientWidth;
+  if (w < 10) return; // skip if hidden/collapsed
   var h = opts.height || 280;
   var ctx = _setupCanvas(canvas, w, h);
   var color = opts.color || CHART_PALETTE[1];
@@ -246,6 +248,7 @@ function _drawDonutChart(id, labels, values, colors) {
   if (!canvas) return;
 
   var w = canvas.parentElement.clientWidth;
+  if (w < 10) return; // skip if hidden/collapsed
   var h = 280;
   var ctx = _setupCanvas(canvas, w, h);
 
@@ -315,6 +318,7 @@ function _drawHBarChart(id, labels, values) {
   if (!canvas) return;
 
   var w = canvas.parentElement.clientWidth;
+  if (w < 10) return; // skip if hidden/collapsed
   var barH = 28;
   var gap = 8;
   var rows = Math.max(values.length, 1);
@@ -418,13 +422,19 @@ function _renderCharts(data) {
   var typeValues = data.scanTypes.map(function (s) { return parseInt(s.count, 10) || 0; });
   _drawHBarChart('scanTypesChart', typeLabels, typeValues);
 
-  // Revenue chart (fetched separately)
-  _loadRevenueChart();
+  // Revenue chart (fetched separately, or re-render cached)
+  if (_revenueData) {
+    _drawRevenueChart(_revenueData);
+  } else {
+    _loadRevenueChart();
+  }
 }
 
 /**
  * Fetch and render revenue bar chart
  */
+var _revenueData = null;
+
 async function _loadRevenueChart() {
   try {
     var response = await fetch('/api/admin/revenue-chart', {
@@ -433,27 +443,31 @@ async function _loadRevenueChart() {
     var data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Failed');
 
-    var rows = data.data || [];
-    // Build a 30-day map
-    var map = {};
-    rows.forEach(function (r) { map[r.day] = r.amount || 0; });
-
-    var labels = [];
-    var values = [];
-    var now = new Date();
-    for (var i = 29; i >= 0; i--) {
-      var d = new Date(now);
-      d.setDate(d.getDate() - i);
-      var key = d.toISOString().split('T')[0];
-      var short = (d.getMonth() + 1) + '/' + d.getDate();
-      labels.push(short);
-      values.push(map[key] || 0);
-    }
-
-    _drawBarChart('revenueChart', labels, values, { color: '#22c55e' });
+    _revenueData = data;
+    _drawRevenueChart(data);
   } catch (err) {
     console.error('Error loading revenue chart:', err);
   }
+}
+
+function _drawRevenueChart(data) {
+  var rows = (data && data.data) || [];
+  var map = {};
+  rows.forEach(function (r) { map[r.day] = r.amount || 0; });
+
+  var labels = [];
+  var values = [];
+  var now = new Date();
+  for (var i = 29; i >= 0; i--) {
+    var d = new Date(now);
+    d.setDate(d.getDate() - i);
+    var key = d.toISOString().split('T')[0];
+    var short = (d.getMonth() + 1) + '/' + d.getDate();
+    labels.push(short);
+    values.push(map[key] || 0);
+  }
+
+  _drawBarChart('revenueChart', labels, values, { color: '#22c55e' });
 }
 
 /**

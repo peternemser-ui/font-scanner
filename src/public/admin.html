@@ -255,12 +255,45 @@
     .tab-content { display: none; }
     .tab-content.active { display: block; }
 
+    /* ── Chart Tabs ──────────────────────────────────────── */
+    .chart-tabs-nav {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid var(--admin-border);
+      margin-bottom: 1.5rem;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+    .chart-tabs-nav::-webkit-scrollbar { display: none; }
+
+    .chart-tab-btn {
+      padding: 0.7rem 1.25rem;
+      background: none;
+      border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--admin-text-muted);
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      white-space: nowrap;
+      transition: all 0.2s ease;
+      font-family: inherit;
+    }
+    .chart-tab-btn:hover { color: var(--admin-text); }
+    .chart-tab-btn.active {
+      color: var(--admin-accent);
+      border-bottom-color: var(--admin-accent);
+    }
+
+    .chart-tab-panel { display: none; }
+    .chart-tab-panel.active { display: block; }
+
     /* ── Charts ───────────────────────────────────────────── */
     .charts-section {
       margin-bottom: 2rem;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
+      gap: 0;
     }
 
     .charts-grid-unified {
@@ -310,6 +343,116 @@
     }
 
     .chart-card canvas { display: block; width: 100%; }
+
+    /* ── AI Costs Panel ──────────────────────────────────── */
+    .ai-costs-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 768px) {
+      .ai-costs-grid { grid-template-columns: 1fr; }
+    }
+
+    .ai-stat-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.6rem 0;
+      border-bottom: 1px solid var(--admin-border);
+      font-size: 0.85rem;
+    }
+    .ai-stat-row:last-child { border-bottom: none; }
+    .ai-stat-label { color: var(--admin-text-muted); }
+    .ai-stat-value { color: var(--admin-text); font-weight: 600; }
+    .ai-stat-value.cost { color: #22c55e; }
+
+    .ai-model-switcher {
+      margin-top: 1.5rem;
+    }
+    .ai-model-switcher h4 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--admin-text);
+      margin: 0 0 0.75rem;
+    }
+    .ai-model-options {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .ai-model-option {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: var(--admin-surface);
+      border: 1px solid var(--admin-border);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    .ai-model-option:hover { border-color: var(--admin-border-hover); }
+    .ai-model-option.selected {
+      border-color: var(--admin-accent);
+      background: var(--admin-accent-soft);
+    }
+    .ai-model-option-left {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .ai-model-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--admin-text);
+    }
+    .ai-model-meta {
+      font-size: 0.72rem;
+      color: var(--admin-text-faint);
+    }
+    .ai-model-price {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--admin-text-muted);
+      white-space: nowrap;
+    }
+    .ai-toggle-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1rem;
+      padding: 0.75rem 1rem;
+      background: var(--admin-surface);
+      border: 1px solid var(--admin-border);
+      border-radius: 8px;
+    }
+    .ai-toggle-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--admin-text);
+    }
+    .ai-toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--admin-border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .ai-toggle-switch.on { background: var(--admin-accent); }
+    .ai-toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+    }
+    .ai-toggle-switch.on::after { transform: translateX(20px); }
 
     /* ── Table ────────────────────────────────────────────── */
     .users-table {
@@ -1447,57 +1590,50 @@
         <button class="quick-action-btn" id="actionClearBlocked" title="Unblock all IPs blocked by abuse filter">Unblock All IPs</button>
       </div>
 
-      <!-- Analytics Charts -->
+      <!-- Analytics Charts (Tabbed) -->
       <div class="charts-section">
-        <div class="charts-grid-unified">
-          <div class="chart-card chart-card--scan-activity">
+        <div class="chart-tabs-nav" id="chartTabsNav">
+          <button class="chart-tab-btn active" data-chart-tab="activity">Scan Activity</button>
+          <button class="chart-tab-btn" data-chart-tab="users">Users</button>
+          <button class="chart-tab-btn" data-chart-tab="revenue">Revenue</button>
+          <button class="chart-tab-btn" data-chart-tab="scantypes">Scan Types</button>
+          <button class="chart-tab-btn" data-chart-tab="infrastructure">Infrastructure</button>
+          <button class="chart-tab-btn" data-chart-tab="ai-costs">AI Costs</button>
+        </div>
+
+        <!-- Tab: Scan Activity -->
+        <div class="chart-tab-panel active" id="chartPanel-activity">
+          <div class="chart-card chart-card--full">
             <div class="chart-header">
               <h3 class="chart-title">Scan Activity</h3>
               <span class="chart-period">Last 30 days</span>
             </div>
             <canvas id="scanActivityChart"></canvas>
           </div>
-          <div class="chart-card docker-widget">
-            <div class="chart-header">
-              <h3 class="chart-title">Server Status</h3>
-              <span class="docker-status-dot" id="dockerDot"></span>
+        </div>
+
+        <!-- Tab: Users -->
+        <div class="chart-tab-panel" id="chartPanel-users">
+          <div class="charts-grid-unified">
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">User Registrations</h3>
+                <span class="chart-period">Last 30 days</span>
+              </div>
+              <canvas id="userGrowthChart"></canvas>
             </div>
-            <div class="docker-widget-body" id="dockerWidgetBody">
-              <div class="docker-widget-loading">Loading...</div>
-            </div>
-          </div>
-          <div class="chart-card">
-            <div class="chart-header">
-              <h3 class="chart-title">User Registrations</h3>
-              <span class="chart-period">Last 30 days</span>
-            </div>
-            <canvas id="userGrowthChart"></canvas>
-          </div>
-          <div class="chart-card">
-            <div class="chart-header">
-              <h3 class="chart-title">Plan Distribution</h3>
-              <span class="chart-period">All users</span>
-            </div>
-            <canvas id="planDistChart"></canvas>
-          </div>
-          <div class="chart-card security-widget">
-            <div class="chart-header">
-              <h3 class="chart-title">Security Overview</h3>
-              <span class="security-threat-badge" id="threatBadge">--</span>
-            </div>
-            <div class="security-widget-body" id="securityWidgetBody">
-              <div class="docker-widget-loading">Loading...</div>
+            <div class="chart-card">
+              <div class="chart-header">
+                <h3 class="chart-title">Plan Distribution</h3>
+                <span class="chart-period">All users</span>
+              </div>
+              <canvas id="planDistChart"></canvas>
             </div>
           </div>
-          <div class="chart-card db-stats-widget">
-            <div class="chart-header">
-              <h3 class="chart-title">Database</h3>
-              <span class="chart-period">SQLite</span>
-            </div>
-            <div class="db-stats-body" id="dbStatsBody">
-              <div class="docker-widget-loading">Loading...</div>
-            </div>
-          </div>
+        </div>
+
+        <!-- Tab: Revenue -->
+        <div class="chart-tab-panel" id="chartPanel-revenue">
           <div class="chart-card chart-card--full">
             <div class="chart-header">
               <h3 class="chart-title">Revenue</h3>
@@ -1505,12 +1641,82 @@
             </div>
             <canvas id="revenueChart"></canvas>
           </div>
+        </div>
+
+        <!-- Tab: Scan Types -->
+        <div class="chart-tab-panel" id="chartPanel-scantypes">
           <div class="chart-card chart-card--full">
             <div class="chart-header">
               <h3 class="chart-title">Top Scan Types</h3>
               <span class="chart-period">All time</span>
             </div>
             <canvas id="scanTypesChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Tab: Infrastructure -->
+        <div class="chart-tab-panel" id="chartPanel-infrastructure">
+          <div class="charts-grid-unified">
+            <div class="chart-card docker-widget">
+              <div class="chart-header">
+                <h3 class="chart-title">Server Status</h3>
+                <span class="docker-status-dot" id="dockerDot"></span>
+              </div>
+              <div class="docker-widget-body" id="dockerWidgetBody">
+                <div class="docker-widget-loading">Loading...</div>
+              </div>
+            </div>
+            <div class="chart-card security-widget">
+              <div class="chart-header">
+                <h3 class="chart-title">Security Overview</h3>
+                <span class="security-threat-badge" id="threatBadge">--</span>
+              </div>
+              <div class="security-widget-body" id="securityWidgetBody">
+                <div class="docker-widget-loading">Loading...</div>
+              </div>
+            </div>
+            <div class="chart-card db-stats-widget">
+              <div class="chart-header">
+                <h3 class="chart-title">Database</h3>
+                <span class="chart-period">SQLite</span>
+              </div>
+              <div class="db-stats-body" id="dbStatsBody">
+                <div class="docker-widget-loading">Loading...</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab: AI Costs -->
+        <div class="chart-tab-panel" id="chartPanel-ai-costs">
+          <div class="ai-costs-grid">
+            <div>
+              <div class="chart-card">
+                <div class="chart-header">
+                  <h3 class="chart-title">AI Token Usage</h3>
+                  <span class="chart-period">Last 30 days</span>
+                </div>
+                <canvas id="aiCostsChart"></canvas>
+              </div>
+              <div class="chart-card" style="margin-top:1.5rem">
+                <div class="chart-header">
+                  <h3 class="chart-title">Cost Summary</h3>
+                </div>
+                <div id="aiCostsSummary">
+                  <div class="docker-widget-loading">Loading...</div>
+                </div>
+              </div>
+            </div>
+            <div>
+              <div class="chart-card">
+                <div class="chart-header">
+                  <h3 class="chart-title">AI Configuration</h3>
+                </div>
+                <div id="aiConfigPanel">
+                  <div class="docker-widget-loading">Loading...</div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

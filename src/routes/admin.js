@@ -1256,4 +1256,160 @@ router.post('/test-emails', async (req, res) => {
   }
 });
 
+/**
+ * GET /api/admin/ai-costs
+ * Get AI token usage and estimated costs over time
+ */
+router.get('/ai-costs', async (req, res) => {
+  try {
+    const db = getDatabase();
+    const config = require('../config');
+
+    // Daily token usage for last 30 days
+    const daily = await db.all(`
+      SELECT date(created_at) as day,
+             SUM(tokens_used) as total_tokens,
+             COUNT(*) as request_count,
+             model_id
+      FROM ai_recommendations
+      WHERE created_at >= date('now', '-30 days')
+      GROUP BY date(created_at), model_id
+      ORDER BY day ASC
+    `);
+
+    // Totals
+    const totals = await db.get(`
+      SELECT SUM(tokens_used) as total_tokens,
+             COUNT(*) as total_requests
+      FROM ai_recommendations
+    `);
+
+    const last30 = await db.get(`
+      SELECT SUM(tokens_used) as total_tokens,
+             COUNT(*) as total_requests
+      FROM ai_recommendations
+      WHERE created_at >= date('now', '-30 days')
+    `);
+
+    // Model breakdown
+    const byModel = await db.all(`
+      SELECT model_id,
+             SUM(tokens_used) as total_tokens,
+             COUNT(*) as request_count
+      FROM ai_recommendations
+      WHERE created_at >= date('now', '-30 days')
+      GROUP BY model_id
+    `);
+
+    // Cost estimates per model (per 1M tokens, input+output blended average)
+    const costPer1M = {
+      'claude-sonnet-4-20250514': 8.00,
+      'claude-haiku-4-5-20251001': 2.00,
+      'claude-opus-4-20250514': 30.00,
+      'claude-3-5-sonnet-20241022': 6.00,
+      'claude-3-haiku-20240307': 0.50,
+    };
+
+    const costBreakdown = byModel.map(m => {
+      const rate = costPer1M[m.model_id] || 8.00;
+      return {
+        model: m.model_id,
+        tokens: m.total_tokens,
+        requests: m.request_count,
+        estimatedCost: ((m.total_tokens / 1000000) * rate).toFixed(4),
+        ratePer1M: rate,
+      };
+    });
+
+    const totalCost30d = costBreakdown.reduce((sum, m) => sum + parseFloat(m.estimatedCost), 0);
+
+    res.json({
+      daily,
+      totals: {
+        allTime: { tokens: totals?.total_tokens || 0, requests: totals?.total_requests || 0 },
+        last30Days: { tokens: last30?.total_tokens || 0, requests: last30?.total_requests || 0 },
+      },
+      costBreakdown,
+      totalCost30d: totalCost30d.toFixed(4),
+      currentModel: config.ai.model,
+      aiEnabled: config.ai.enabled,
+    });
+  } catch (error) {
+    logger.error('Failed to fetch AI costs', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * GET /api/admin/ai-config
+ * Get current AI configuration
+ */
+router.get('/ai-config', async (req, res) => {
+  const config = require('../config');
+  res.json({
+    enabled: config.ai.enabled,
+    model: config.ai.model,
+    maxTokens: config.ai.maxTokens,
+    cacheTtlHours: config.ai.cacheTtlHours,
+    availableModels: [
+      { id: 'claude-haiku-4-5-20251001', name: 'Claude 4.5 Haiku', costPer1M: 2.00, speed: 'fastest', quality: 'good' },
+      { id: 'claude-sonnet-4-20250514', name: 'Claude 4 Sonnet', costPer1M: 8.00, speed: 'fast', quality: 'great' },
+      { id: 'claude-opus-4-20250514', name: 'Claude 4 Opus', costPer1M: 30.00, speed: 'slower', quality: 'best' },
+    ],
+  });
+});
+
+/**
+ * PATCH /api/admin/ai-config
+ * Update AI model or settings at runtime
+ */
+router.patch('/ai-config', async (req, res) => {
+  try {
+    const config = require('../config');
+    const { model, maxTokens, enabled } = req.body;
+
+    const allowedModels = [
+      'claude-haiku-4-5-20251001',
+      'claude-sonnet-4-20250514',
+      'claude-opus-4-20250514',
+    ];
+
+    if (model !== undefined) {
+      if (!allowedModels.includes(model)) {
+        return res.status(400).json({ error: `Invalid model. Allowed: ${allowedModels.join(', ')}` });
+      }
+      config.ai.model = model;
+      process.env.AI_MODEL = model;
+    }
+
+    if (maxTokens !== undefined) {
+      const tokens = parseInt(maxTokens, 10);
+      if (isNaN(tokens) || tokens < 256 || tokens > 8192) {
+        return res.status(400).json({ error: 'maxTokens must be between 256 and 8192' });
+      }
+      config.ai.maxTokens = tokens;
+      process.env.AI_MAX_TOKENS = String(tokens);
+    }
+
+    if (enabled !== undefined) {
+      config.ai.enabled = !!enabled;
+      process.env.AI_ENABLED = enabled ? 'true' : 'false';
+    }
+
+    await logAdminAction(req.admin.id, 'UPDATE_AI_CONFIG', null, { model, maxTokens, enabled });
+
+    res.json({
+      success: true,
+      config: {
+        enabled: config.ai.enabled,
+        model: config.ai.model,
+        maxTokens: config.ai.maxTokens,
+      },
+    });
+  } catch (error) {
+    logger.error('Failed to update AI config', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;

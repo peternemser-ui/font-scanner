@@ -54,6 +54,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Initialize tabs
   initializeTabs();
+  initChartTabs();
 
   // Load initial data
   await loadUsers();
@@ -432,6 +433,215 @@ function initializeTabs() {
       currentTab = targetTab;
     });
   });
+}
+
+/**
+ * Chart tab switching
+ */
+function initChartTabs() {
+  var nav = document.getElementById('chartTabsNav');
+  if (!nav) return;
+
+  var btns = nav.querySelectorAll('.chart-tab-btn');
+  var panels = document.querySelectorAll('.chart-tab-panel');
+  var aiCostsLoaded = false;
+
+  btns.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var target = btn.dataset.chartTab;
+
+      btns.forEach(function (b) { b.classList.remove('active'); });
+      panels.forEach(function (p) { p.classList.remove('active'); });
+
+      btn.classList.add('active');
+      var panel = document.getElementById('chartPanel-' + target);
+      if (panel) panel.classList.add('active');
+
+      // Lazy-load AI costs on first visit
+      if (target === 'ai-costs' && !aiCostsLoaded) {
+        aiCostsLoaded = true;
+        loadAICosts();
+        loadAIConfig();
+      }
+
+      // Re-render charts when switching tabs (canvas size may have changed)
+      if (typeof _analyticsData !== 'undefined' && _analyticsData) {
+        setTimeout(function () { _renderCharts(_analyticsData); }, 50);
+      }
+    });
+  });
+}
+
+/**
+ * Load AI costs data and render chart + summary
+ */
+async function loadAICosts() {
+  try {
+    var response = await fetch('/api/admin/ai-costs', {
+      headers: proManager.getAuthHeaders()
+    });
+    var data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to load AI costs');
+
+    // Render token usage chart
+    _renderAICostsChart(data);
+
+    // Render cost summary
+    _renderAICostsSummary(data);
+  } catch (err) {
+    console.error('Error loading AI costs:', err);
+    var summary = document.getElementById('aiCostsSummary');
+    if (summary) summary.innerHTML = '<div style="color:var(--admin-text-faint);font-size:0.85rem;padding:1rem">No AI usage data available</div>';
+  }
+}
+
+function _renderAICostsChart(data) {
+  // Build 30-day series from daily data
+  var map = {};
+  (data.daily || []).forEach(function (r) {
+    if (!map[r.day]) map[r.day] = 0;
+    map[r.day] += r.total_tokens || 0;
+  });
+
+  var labels = [];
+  var values = [];
+  var now = new Date();
+  for (var i = 29; i >= 0; i--) {
+    var d = new Date(now);
+    d.setDate(d.getDate() - i);
+    var key = d.toISOString().split('T')[0];
+    var short = (d.getMonth() + 1) + '/' + d.getDate();
+    labels.push(short);
+    values.push(map[key] || 0);
+  }
+
+  _drawBarChart('aiCostsChart', labels, values, { color: '#a855f7' });
+}
+
+function _renderAICostsSummary(data) {
+  var el = document.getElementById('aiCostsSummary');
+  if (!el) return;
+
+  var t = data.totals || {};
+  var last30 = t.last30Days || {};
+  var allTime = t.allTime || {};
+
+  function fmtTokens(n) {
+    if (!n) return '0';
+    if (n >= 1000000) return (n / 1000000).toFixed(2) + 'M';
+    if (n >= 1000) return (n / 1000).toFixed(1) + 'K';
+    return String(n);
+  }
+
+  var rows = [
+    { label: 'Tokens (30d)', value: fmtTokens(last30.tokens) },
+    { label: 'Requests (30d)', value: String(last30.requests || 0) },
+    { label: 'Est. Cost (30d)', value: '$' + (data.totalCost30d || '0.00'), cls: 'cost' },
+    { label: 'Tokens (all time)', value: fmtTokens(allTime.tokens) },
+    { label: 'Requests (all time)', value: String(allTime.requests || 0) },
+  ];
+
+  // Add per-model breakdown
+  if (data.costBreakdown && data.costBreakdown.length) {
+    rows.push({ label: '', value: '' }); // spacer
+    data.costBreakdown.forEach(function (m) {
+      var shortName = m.model.replace('claude-', '').split('-202')[0];
+      rows.push({ label: shortName, value: fmtTokens(m.tokens) + ' / $' + m.estimatedCost, cls: 'cost' });
+    });
+  }
+
+  el.innerHTML = rows.map(function (r) {
+    if (!r.label && !r.value) return '<div style="border-bottom:1px solid var(--admin-border);margin:0.25rem 0"></div>';
+    return '<div class="ai-stat-row"><span class="ai-stat-label">' + r.label +
+      '</span><span class="ai-stat-value' + (r.cls ? ' ' + r.cls : '') + '">' + r.value + '</span></div>';
+  }).join('');
+}
+
+/**
+ * Load AI config and render model switcher
+ */
+async function loadAIConfig() {
+  try {
+    var response = await fetch('/api/admin/ai-config', {
+      headers: proManager.getAuthHeaders()
+    });
+    var data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+
+    _renderAIConfig(data);
+  } catch (err) {
+    console.error('Error loading AI config:', err);
+    var panel = document.getElementById('aiConfigPanel');
+    if (panel) panel.innerHTML = '<div style="color:var(--admin-text-faint);font-size:0.85rem;padding:1rem">Failed to load AI config</div>';
+  }
+}
+
+function _renderAIConfig(data) {
+  var panel = document.getElementById('aiConfigPanel');
+  if (!panel) return;
+
+  var html = '';
+
+  // AI enabled toggle
+  html += '<div class="ai-toggle-row">' +
+    '<span class="ai-toggle-label">AI Recommendations</span>' +
+    '<div class="ai-toggle-switch' + (data.enabled ? ' on' : '') + '" id="aiEnabledToggle"></div>' +
+    '</div>';
+
+  // Model selector
+  html += '<div class="ai-model-switcher">' +
+    '<h4>Model</h4>' +
+    '<div class="ai-model-options">';
+
+  (data.availableModels || []).forEach(function (m) {
+    var selected = m.id === data.model;
+    html += '<div class="ai-model-option' + (selected ? ' selected' : '') + '" data-model-id="' + m.id + '">' +
+      '<div class="ai-model-option-left">' +
+        '<span class="ai-model-name">' + m.name + '</span>' +
+        '<span class="ai-model-meta">' + m.speed + ' &middot; ' + m.quality + ' quality</span>' +
+      '</div>' +
+      '<span class="ai-model-price">$' + m.costPer1M.toFixed(2) + '/1M tokens</span>' +
+    '</div>';
+  });
+
+  html += '</div></div>';
+
+  panel.innerHTML = html;
+
+  // Attach event listeners
+  var toggle = document.getElementById('aiEnabledToggle');
+  if (toggle) {
+    toggle.addEventListener('click', function () {
+      var isOn = toggle.classList.contains('on');
+      _updateAIConfig({ enabled: !isOn });
+      toggle.classList.toggle('on');
+    });
+  }
+
+  panel.querySelectorAll('.ai-model-option').forEach(function (opt) {
+    opt.addEventListener('click', function () {
+      var modelId = opt.dataset.modelId;
+      panel.querySelectorAll('.ai-model-option').forEach(function (o) { o.classList.remove('selected'); });
+      opt.classList.add('selected');
+      _updateAIConfig({ model: modelId });
+    });
+  });
+}
+
+async function _updateAIConfig(updates) {
+  try {
+    var response = await fetch('/api/admin/ai-config', {
+      method: 'PATCH',
+      headers: Object.assign({ 'Content-Type': 'application/json' }, proManager.getAuthHeaders()),
+      body: JSON.stringify(updates)
+    });
+    var data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed');
+    showSuccess('AI configuration updated');
+  } catch (err) {
+    console.error('Failed to update AI config:', err);
+    showError('Failed to update AI config: ' + err.message);
+  }
 }
 
 /**

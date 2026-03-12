@@ -645,12 +645,14 @@ class AccessibilityAnalyzerService {
     }
 
     // Mobile-specific issues
-    const mobileDiff = Math.abs(desktopLighthouse.accessibility - mobileLighthouse.accessibility);
-    if (mobileDiff > 15) {
+    const desktopScore = desktopLighthouse?.accessibility ?? 0;
+    const mobileScore = mobileLighthouse?.accessibility ?? 0;
+    const mobileDiff = Math.abs(desktopScore - mobileScore);
+    if (mobileDiff > 15 && desktopScore > 0 && mobileScore > 0) {
       recommendations.push({
         priority: 'high',
         title: 'Mobile Accessibility Gap',
-        description: `Mobile accessibility score is ${mobileDiff} points lower than desktop, indicating that mobile users face significant additional barriers. With over 60% of web traffic coming from mobile devices, a poor mobile accessibility experience affects the majority of your visitors. Common causes include touch targets that are too small (the WCAG minimum is 44x44 CSS pixels), text that is not properly resizable, and interactive elements that are placed too close together. Mobile screen readers like VoiceOver and TalkBack handle layout differently than their desktop counterparts, so elements that work on desktop may fail on mobile. Closing this gap ensures an equitable experience across all devices and prevents legal exposure under accessibility regulations.`,
+        description: `Mobile accessibility score is ${Math.round(mobileDiff)} points lower than desktop, indicating that mobile users face significant additional barriers. With over 60% of web traffic coming from mobile devices, a poor mobile accessibility experience affects the majority of your visitors. Common causes include touch targets that are too small (the WCAG minimum is 44x44 CSS pixels), text that is not properly resizable, and interactive elements that are placed too close together. Mobile screen readers like VoiceOver and TalkBack handle layout differently than their desktop counterparts, so elements that work on desktop may fail on mobile. Closing this gap ensures an equitable experience across all devices and prevents legal exposure under accessibility regulations.`,
         impact: 'Mobile users with disabilities experience a degraded experience compared to desktop users.',
         solution: 'Review touch target sizes, viewport configuration, and mobile-specific interactions. Ensure minimum touch target size of 44x44 pixels.'
       });
