@@ -327,7 +327,7 @@ class ProManager {
       });
     }
     // Fallback with locale detection
-    const locale = window.i18n?.currentLanguage || navigator.language || 'en-US';
+    const locale = window.i18n?.currentLanguage || (typeof navigator !== 'undefined' && navigator.language) || 'en-US';
     return date.toLocaleDateString(locale, {
       year: 'numeric',
       month: 'long',

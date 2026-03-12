@@ -17,6 +17,24 @@ const { isSafeReportId } = require('./reportId');
 
 const logger = createLogger('Entitlements');
 
+/**
+ * Normalize a date value from the database to ISO 8601 format.
+ * SQLite may return dates as "YYYY-MM-DD HH:MM:SS.sss+00" instead of ISO "...T...Z".
+ * @param {string|null} val
+ * @returns {string|null}
+ */
+function toISO(val) {
+  if (!val) return null;
+  // Already ISO format
+  if (val.includes('T')) return val;
+  // Convert SQLite format to ISO
+  try {
+    return new Date(val).toISOString();
+  } catch {
+    return val;
+  }
+}
+
 // One-time migration flag for NULL-status report_purchases records
 let _nullStatusMigrated = false;
 
@@ -214,8 +232,8 @@ async function resolveEntitlements(userContext = {}) {
       plan: effectivePlan,
       subscriptionStatus: user.stripe_subscription_status || 'none',
       subscriptionInterval: user.stripe_subscription_interval || null,
-      currentPeriodEnd: user.stripe_current_period_end || null,
-      dayPassExpiresAt,
+      currentPeriodEnd: toISO(user.stripe_current_period_end),
+      dayPassExpiresAt: toISO(dayPassExpiresAt),
       cancelAtPeriodEnd,
       purchasedReports,
       permissions
