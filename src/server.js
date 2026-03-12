@@ -859,10 +859,11 @@ function withUsageTracking(handler) {
 
           if (reportId) {
             // Use upsert: if this report_id already exists, update the result; otherwise insert
+            // The WHERE clause matches the partial unique index on report_id
             db.run(
               `INSERT INTO scans (id, target_url, status, options_json, user_id, report_id, result_json, locale, started_at, finished_at)
                VALUES (?, ?, 'completed', ?, ?, ?, ?, ?, datetime('now'), datetime('now'))
-               ON CONFLICT (report_id) DO UPDATE SET result_json = excluded.result_json, finished_at = datetime('now')`,
+               ON CONFLICT (report_id) WHERE report_id IS NOT NULL DO UPDATE SET result_json = excluded.result_json, finished_at = datetime('now')`,
               [scanId, targetUrl, JSON.stringify({ analyzerType }), userId, reportId, JSON.stringify(data), scanLocale]
             ).catch(err => {
               logger.error('Failed to record scan in database', { error: err.message });
