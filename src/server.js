@@ -841,8 +841,8 @@ function withUsageTracking(handler) {
         }
 
         // Record scan in scans table so it appears in the reports dashboard
-        // Skip for billing re-scans to avoid duplicate entries
-        if (userId && !isBillingRescan) {
+        // Skip for billing re-scans and already-counted scans to avoid duplicate entries
+        if (userId && !isBillingRescan && !alreadyCounted) {
           const targetUrl = req.body?.url || req.body?.site_url || 'unknown';
           // Derive analyzer type from the route path (e.g. /api/core-web-vitals -> core-web-vitals)
           const routePath = (req.route?.path || req.originalUrl || '').split('?')[0];
