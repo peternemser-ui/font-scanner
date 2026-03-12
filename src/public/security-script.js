@@ -970,7 +970,7 @@ async function displaySecurityResults(data) {
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${data.vulnerabilities.score}/100</td>
               <td style="padding: 0.75rem; text-align: center; color: ${getScoreColor(data.vulnerabilities.score)}; font-weight: bold;">${getGrade(data.vulnerabilities.score)}</td>
               <td style="padding: 0.75rem; color: ${data.vulnerabilities.critical === 0 ? 'var(--accent-primary)' : '#ff4444'};">
-                ${data.vulnerabilities.critical} ${t('reports.security.critical', 'Critical')}, ${data.vulnerabilities.high} ${t('reports.security.high', 'High')}, ${data.vulnerabilities.medium} ${t('reports.security.medium', 'Medium')}
+                ${data.vulnerabilities.critical || 0} ${t('reports.security.critical', 'Critical')}, ${data.vulnerabilities.high || 0} ${t('reports.security.high', 'High')}, ${data.vulnerabilities.medium || 0} ${t('reports.security.medium', 'Medium')}
               </td>
             </tr>
             <tr style="border-bottom: 1px solid var(--r-border, rgba(0, 0, 0, 0.08));">

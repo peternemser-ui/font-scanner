@@ -53,11 +53,11 @@ class SecurityAnalyzerService {
       ]);
 
       // Extract results with fallbacks
-      const sslData = sslResult.status === 'fulfilled' ? sslResult.value : { score: 0, issues: ['Analysis failed'], error: true };
-      const headersData = headersResult.status === 'fulfilled' ? headersResult.value : { score: 0, implemented: 0, total: 6, error: true };
-      const vulnerabilitiesData = vulnerabilitiesResult.status === 'fulfilled' ? vulnerabilitiesResult.value : { issues: [], score: 0, error: true };
-      const cookiesData = cookiesResult.status === 'fulfilled' ? cookiesResult.value : { cookies: [], secureCount: 0, insecureCount: 0, score: 0, error: true };
-      const thirdPartyData = thirdPartyResult.status === 'fulfilled' ? thirdPartyResult.value : { scripts: [], withSRI: 0, withoutSRI: 0, score: 0, error: true };
+      const sslData = sslResult.status === 'fulfilled' ? sslResult.value : { valid: false, protocol: null, issuer: null, validFrom: null, validUntil: null, daysRemaining: null, score: 0, issues: ['Analysis failed'], error: true };
+      const headersData = headersResult.status === 'fulfilled' ? headersResult.value : { score: 0, implemented: 0, total: 6, details: {}, error: true };
+      const vulnerabilitiesData = vulnerabilitiesResult.status === 'fulfilled' ? vulnerabilitiesResult.value : { issues: [], score: 0, critical: 0, high: 0, medium: 0, low: 0, error: true };
+      const cookiesData = cookiesResult.status === 'fulfilled' ? cookiesResult.value : { list: [], total: 0, secure: 0, issues: [], score: 0, error: true };
+      const thirdPartyData = thirdPartyResult.status === 'fulfilled' ? thirdPartyResult.value : { scripts: [], total: 0, withSRI: 0, score: 0, error: true };
 
       // Calculate overall security score
       const overallScore = this.calculateOverallScore({
@@ -258,7 +258,13 @@ class SecurityAnalyzerService {
             sslData.issues.push('Using outdated TLS protocol');
             sslData.score -= 25;
           }
-        } else if (!securityDetails.isSecure) {
+        } else if (securityDetails.isSecure) {
+          // Page loaded over HTTPS but Puppeteer didn't expose certificate details
+          // (common with redirects, CDNs, or certain server configs)
+          sslData.valid = true;
+          sslData.score = 80;
+          sslData.issues.push('HTTPS active but certificate details unavailable for inspection');
+        } else {
           sslData.issues.push('No HTTPS - website is not secure');
           sslData.score = 0;
         }

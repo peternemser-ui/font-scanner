@@ -40,24 +40,32 @@ class AccessibilityAnalyzerService {
       
       // Try Lighthouse, but use Puppeteer-only fallback if it fails
       let desktopLighthouse, mobileLighthouse;
-      
+
       try {
         logger.info('Attempting Lighthouse desktop analysis...');
         desktopLighthouse = await Promise.race([
           lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'desktop' }),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Lighthouse timeout')), 30000))
         ]);
+        if (!desktopLighthouse || typeof desktopLighthouse.accessibility === 'undefined') {
+          logger.warn('Lighthouse desktop returned empty result, using Puppeteer-only fallback');
+          desktopLighthouse = this.createPuppeteerFallback(accessibilityMetrics, 'desktop');
+        }
       } catch (lhError) {
         logger.warn(`Lighthouse desktop failed, using Puppeteer-only score: ${lhError.message}`);
         desktopLighthouse = this.createPuppeteerFallback(accessibilityMetrics, 'desktop');
       }
-      
+
       try {
         logger.info('Attempting Lighthouse mobile analysis...');
         mobileLighthouse = await Promise.race([
           lighthouseAnalyzer.analyzeWithLighthouse(url, { formFactor: 'mobile' }),
           new Promise((_, reject) => setTimeout(() => reject(new Error('Lighthouse timeout')), 30000))
         ]);
+        if (!mobileLighthouse || typeof mobileLighthouse.accessibility === 'undefined') {
+          logger.warn('Lighthouse mobile returned empty result, using Puppeteer-only fallback');
+          mobileLighthouse = this.createPuppeteerFallback(accessibilityMetrics, 'mobile');
+        }
       } catch (lhError) {
         logger.warn(`Lighthouse mobile failed, using Puppeteer-only score: ${lhError.message}`);
         mobileLighthouse = this.createPuppeteerFallback(accessibilityMetrics, 'mobile');
