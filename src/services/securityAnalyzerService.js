@@ -59,30 +59,45 @@ class SecurityAnalyzerService {
       const cookiesData = cookiesResult.status === 'fulfilled' ? cookiesResult.value : { list: [], total: 0, secure: 0, issues: [], score: 0, error: true };
       const thirdPartyData = thirdPartyResult.status === 'fulfilled' ? thirdPartyResult.value : { scripts: [], total: 0, withSRI: 0, score: 0, error: true };
 
-      // Cross-reference SSL with desktop analysis: if desktop confirmed HTTPS
-      // but SSL deep analysis failed or couldn't get cert details, trust the desktop finding
-      if (sslData.score < 90 && desktopResults.https) {
-        if (desktopResults.hsts) {
-          // HTTPS + HSTS confirmed by desktop analysis — strong SSL
-          sslData.valid = true;
+      // Cross-reference SSL: use multiple signals to determine HTTPS status
+      // Desktop analysis, headers analysis (HSTS implies HTTPS), or SSL's own valid flag
+      const hd = headersData.details || {};
+      const hasHSTS = desktopResults.hsts || (hd['Strict-Transport-Security'] || {}).present;
+      const httpsConfirmed = desktopResults.https || hasHSTS || sslData.valid;
+
+      if (sslData.score < 90 && httpsConfirmed) {
+        sslData.valid = true;
+        sslData.error = false;
+        sslData.issues = (sslData.issues || []).filter(i =>
+          i !== 'HTTPS active but certificate details unavailable for inspection' &&
+          i !== 'Failed to analyze SSL certificate' &&
+          i !== 'Analysis failed' &&
+          i !== 'No HTTPS - website is not secure'
+        );
+        if (hasHSTS) {
           sslData.score = Math.max(sslData.score, 95);
-          sslData.issues = (sslData.issues || []).filter(i =>
-            i !== 'HTTPS active but certificate details unavailable for inspection' &&
-            i !== 'Failed to analyze SSL certificate' &&
-            i !== 'Analysis failed'
-          );
           if (!sslData.issuer) {
             sslData.issues.push('Certificate details not exposed by server (common with CDNs)');
           }
         } else {
-          // HTTPS confirmed but no HSTS
-          sslData.valid = true;
           sslData.score = Math.max(sslData.score, 85);
-          sslData.issues = (sslData.issues || []).filter(i =>
-            i !== 'Failed to analyze SSL certificate' && i !== 'Analysis failed'
-          );
         }
-        sslData.error = false;
+      }
+
+      // Also fix desktop/mobile if they failed but we know HTTPS is active
+      if (httpsConfirmed) {
+        if (desktopResults.error && !desktopResults.https) {
+          desktopResults.https = true;
+          desktopResults.csp = desktopResults.csp || (hd['Content-Security-Policy'] || {}).present || false;
+          desktopResults.hsts = desktopResults.hsts || hasHSTS || false;
+          desktopResults.securityScore = this.calculateDeviceSecurityScore(desktopResults);
+        }
+        if (mobileResults.error && !mobileResults.https) {
+          mobileResults.https = true;
+          mobileResults.csp = mobileResults.csp || (hd['Content-Security-Policy'] || {}).present || false;
+          mobileResults.hsts = mobileResults.hsts || hasHSTS || false;
+          mobileResults.securityScore = this.calculateDeviceSecurityScore(mobileResults);
+        }
       }
 
       // Calculate overall security score
@@ -176,9 +191,9 @@ class SecurityAnalyzerService {
           await page.setUserAgent(DESKTOP_UA);
         }
 
-        // Navigate to page
+        // Navigate to page (use networkidle2 instead of load for better reliability in Docker)
         const response = await page.goto(url, {
-          waitUntil: 'load',
+          waitUntil: 'domcontentloaded',
           timeout: 30000
         });
 
