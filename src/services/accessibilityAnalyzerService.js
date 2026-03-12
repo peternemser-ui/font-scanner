@@ -313,28 +313,32 @@ class AccessibilityAnalyzerService {
    */
   processResults(url, desktopLighthouse, mobileLighthouse, accessibilityMetrics, startTime) {
     const analysisDuration = formatDuration(Date.now() - startTime, 2);
-    
+
+    // Ensure Lighthouse objects are never null/undefined — use empty objects as fallback
+    const dLH = desktopLighthouse || {};
+    const mLH = mobileLighthouse || {};
+
     // Calculate accessibility scores (guard against null/undefined Lighthouse results)
-    const desktopAccessibilityScore = desktopLighthouse?.accessibility || 0;
-    const mobileAccessibilityScore = mobileLighthouse?.accessibility || 0;
-    
+    const desktopAccessibilityScore = dLH.accessibility || 0;
+    const mobileAccessibilityScore = mLH.accessibility || 0;
+
     // Analyze contrast issues
     const contrastAnalysis = this.analyzeContrast(accessibilityMetrics.contrast);
-    
+
     // Analyze keyboard accessibility
     const keyboardAnalysis = this.analyzeKeyboard(accessibilityMetrics.keyboard);
-    
+
     // Analyze ARIA implementation
     const ariaAnalysis = this.analyzeARIA(accessibilityMetrics.aria);
-    
+
     // Generate WCAG compliance data
-    const desktopWCAG = this.extractWCAGCompliance(desktopLighthouse, accessibilityMetrics);
-    const mobileWCAG = this.extractWCAGCompliance(mobileLighthouse, accessibilityMetrics);
+    const desktopWCAG = this.extractWCAGCompliance(dLH, accessibilityMetrics);
+    const mobileWCAG = this.extractWCAGCompliance(mLH, accessibilityMetrics);
     
     // Generate recommendations
     const recommendations = this.generateRecommendations(
-      desktopLighthouse,
-      mobileLighthouse,
+      dLH,
+      mLH,
       contrastAnalysis,
       keyboardAnalysis,
       ariaAnalysis
@@ -351,7 +355,7 @@ class AccessibilityAnalyzerService {
       wcagLevel: 'AA',
       violationsCount: (contrastAnalysis.issuesCount || 0) + (keyboardAnalysis.issuesCount || 0) + (ariaAnalysis.issuesCount || 0),
       contrastIssues: contrastAnalysis.issuesCount || 0,
-      bestPracticesCount: desktopLighthouse.bestPractices || 0,
+      bestPracticesCount: dLH.bestPractices || 0,
 
       // Desktop-specific results
       desktop: {
@@ -361,13 +365,13 @@ class AccessibilityAnalyzerService {
           ...desktopWCAG
         },
         lighthouse: {
-          accessibility: desktopLighthouse.accessibility || 0,
-          performance: desktopLighthouse.performance || desktopLighthouse.score || 0,
-          bestPractices: desktopLighthouse.bestPractices || 0,
-          seo: desktopLighthouse.seo || 0
+          accessibility: dLH.accessibility || 0,
+          performance: dLH.performance || dLH.score || 0,
+          bestPractices: dLH.bestPractices || 0,
+          seo: dLH.seo || 0
         }
       },
-      
+
       // Mobile-specific results
       mobile: {
         accessibilityScore: roundTo(mobileAccessibilityScore, 0),
@@ -376,10 +380,10 @@ class AccessibilityAnalyzerService {
           ...mobileWCAG
         },
         lighthouse: {
-          accessibility: mobileLighthouse.accessibility || 0,
-          performance: mobileLighthouse.performance || mobileLighthouse.score || 0,
-          bestPractices: mobileLighthouse.bestPractices || 0,
-          seo: mobileLighthouse.seo || 0
+          accessibility: mLH.accessibility || 0,
+          performance: mLH.performance || mLH.score || 0,
+          bestPractices: mLH.bestPractices || 0,
+          seo: mLH.seo || 0
         }
       },
 
