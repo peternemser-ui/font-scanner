@@ -65,6 +65,15 @@ services:
       - FACEBOOK_OAUTH_APP_ID=${FACEBOOK_OAUTH_APP_ID:-}
       - FACEBOOK_OAUTH_APP_SECRET=${FACEBOOK_OAUTH_APP_SECRET:-}
 
+      # Email / SMTP
+      - SMTP_HOST=${SMTP_HOST:-box.aupt-industries.com}
+      - SMTP_PORT=${SMTP_PORT:-587}
+      - SMTP_SECURE=${SMTP_SECURE:-false}
+      - SMTP_USER=${SMTP_USER:-}
+      - SMTP_PASS=${SMTP_PASS:-}
+      - EMAIL_FROM_NAME=${EMAIL_FROM_NAME:-Site Mechanic}
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS:-support@sitemechanic.io}
+
       # Puppeteer
       - PUPPETEER_HEADLESS=true
       - PUPPETEER_TIMEOUT=${PUPPETEER_TIMEOUT:-30000}

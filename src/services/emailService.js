@@ -41,8 +41,8 @@ function brandedEmailHtml({ body, fromName }) {
         <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;">
           <!-- Logo header -->
           <tr>
-            <td style="background-color:#0F172A;padding:32px 40px;text-align:center;border-radius:12px 12px 0 0;">
-              <img src="${logoUrl}" alt="Site Mechanic" width="200" style="display:block;margin:0 auto;max-width:200px;height:auto;" />
+            <td style="background-color:#F8FAFC;padding:28px 40px;text-align:center;border-radius:12px 12px 0 0;border-bottom:1px solid #e2e8f0;">
+              <img src="${logoUrl}" alt="Site Mechanic" width="180" style="display:block;margin:0 auto;max-width:180px;height:auto;" />
             </td>
           </tr>
           <!-- Body -->
