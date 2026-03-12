@@ -1087,46 +1087,57 @@ async function displaySecurityResults(data) {
     data.thirdPartyScripts.score
   );
 
-  // 6. Report and Recommendations (Pro gated)
-  createAccordionSection(
-    accordionsContainer,
-    'report-recommendations',
-    t('reports.common.reportRecommendations', 'Recommendations'),
-    () => renderRecommendationsContent(data.recommendations, data),
-    null,
-    {
-      isPro: true,
-      previewHtml: renderLockedProPreview(t('reports.common.reportRecommendations', 'Recommendations'), [
-        t('reports.security.criticalRemediationSteps', 'Critical remediation steps'),
-        t('reports.security.owaspAlignedFixes', 'OWASP-aligned fixes')
-      ])
-    }
-  );
-
-  // 7. AI Strategic Analysis (Pro gated)
-  createAccordionSection(
-    accordionsContainer,
-    'ai-strategic-analysis',
-    t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
-    () => {
-      const html = '<div id="ai-strategic-content">' + (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation ? window.AIRecommendations.renderLoadingAnimation() : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') + '</div>';
-      // Schedule fetch after DOM update (content div needs to be in DOM first)
-      setTimeout(() => {
-        if (window.AIRecommendations) {
-          const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
-          const secReportId = document.body.getAttribute('data-report-id') || '';
-          window.AIRecommendations.fetchAndRender('ai-strategic-content', secReportId, 'security', data, locale, { skipHeader: true });
-        }
-      }, 0);
-      return html;
-    },
-    null,
-    { isPro: true }
-  );
-
   resultsContent.appendChild(accordionsContainer);
+
+  // 6 & 7: Pro sections — use ReportAccordion (same pattern as SEO page)
+  const secReportId = document.body.getAttribute('data-report-id') || '';
+  const isUnlocked = !!(
+    (window.ProReportBlock && typeof window.ProReportBlock.isProSubscriber === 'function' && window.ProReportBlock.isProSubscriber()) ||
+    (secReportId && window.ProReportBlock && typeof window.ProReportBlock.hasAccess === 'function' && window.ProReportBlock.hasAccess(secReportId))
+  );
+
+  const proSectionsHTML = (window.ReportAccordion ? [
+    window.ReportAccordion.createSection({
+      id: 'report-recommendations',
+      title: t('reports.common.reportRecommendations', 'Recommendations'),
+      scoreTextRight: null,
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'security',
+      reportId: secReportId,
+      contentHTML: (() => { try { return renderRecommendationsContent(data.recommendations, data); } catch (e) { console.error('[Security] Recommendations render error:', e); return '<div style="padding:1rem;color:var(--r-text-muted);">Recommendations could not be loaded.</div>'; } })()
+    }),
+    window.ReportAccordion.createSection({
+      id: 'ai-strategic-analysis',
+      title: t('reports.ai.strategicTitle', 'AI Strategic Analysis'),
+      scoreTextRight: null,
+      isPro: true,
+      locked: !isUnlocked,
+      context: 'security',
+      reportId: secReportId,
+      contentHTML: '<div id="ai-strategic-content">' +
+        (window.AIRecommendations && window.AIRecommendations.renderLoadingAnimation
+          ? window.AIRecommendations.renderLoadingAnimation()
+          : '<div style="padding:1.5rem;text-align:center;color:var(--r-text-muted,#6B7280);">' + t('reports.ai.loading', 'Analyzing your results...') + '</div>') +
+        '</div>'
+    })
+  ] : []).join('');
+
+  if (proSectionsHTML) {
+    resultsContent.insertAdjacentHTML('beforeend', proSectionsHTML);
+  }
+
+  // Initialize ReportAccordion click handlers for the Pro sections
+  if (window.ReportAccordion && window.ReportAccordion.initInteractions) {
+    window.ReportAccordion.initInteractions();
+  }
+
+  // Fetch AI strategic analysis content (container is now in DOM)
+  if (window.AIRecommendations) {
+    const locale = document.documentElement.lang || (window.i18n && window.i18n.locale) || 'en';
+    window.AIRecommendations.fetchAndRender('ai-strategic-content', secReportId, 'security', data, locale, { skipHeader: true });
+  }
   if (window.SelfImprovement) {
-    const secReportId = document.body.getAttribute('data-report-id') || '';
     window.SelfImprovement.integrate({ data: data, analyzerType: 'security', donutLabels: {}, resultsContent: resultsContent, reportId: secReportId });
   }
 
