@@ -858,6 +858,8 @@ async function displaySecurityResults(data) {
     }
   }
   resultsContent.innerHTML = '';
+  // Wrap in report-scope for proper CSS styling of accordions
+  resultsContent.classList.add('report-scope');
 
   // Get URL and timestamp for header
   const url = data.url || document.getElementById('urlInput').value.trim();
