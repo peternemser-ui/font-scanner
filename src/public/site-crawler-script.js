@@ -484,27 +484,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isUnlocked) {
       revealCrawlerProContent();
 
-      // Defer VisualSitemap init until the accordion is first expanded,
-      // because D3 needs a visible container with real dimensions.
+      // Auto-expand the Visual Sitemap accordion so D3 has a visible container
+      const vsBody = document.querySelector('[data-accordion-body="visual-sitemap"]');
+      const vsHeader = document.querySelector('[data-accordion-toggle="visual-sitemap"]');
+      if (vsBody) {
+        vsBody.classList.add('report-accordion__body--open');
+        vsBody.removeAttribute('hidden');
+        if (vsHeader) {
+          vsHeader.setAttribute('aria-expanded', 'true');
+          const chevron = vsHeader.querySelector('.report-accordion__chevron');
+          if (chevron) chevron.classList.add('report-accordion__chevron--open');
+        }
+      }
+
+      // Initialize interactive VisualSitemap (after DOM settles and accordion is visible)
       if (window.VisualSitemap && typeof window.VisualSitemap.init === 'function') {
-        let vsInitialized = false;
-        const vsAccordionHeader = document.querySelector('[data-accordion-toggle="visual-sitemap"]');
-        if (vsAccordionHeader) {
-          vsAccordionHeader.addEventListener('click', function onVsExpand() {
-            if (vsInitialized) return;
-            vsInitialized = true;
-            // Small delay to let the accordion body become visible
-            setTimeout(() => {
-              window.VisualSitemap.init('main', { siteStructure, hostname, pages });
-            }, 50);
-          });
-        }
-        // Also handle print mode (all accordions auto-expanded)
-        if (new URLSearchParams(window.location.search).get('print') === '1') {
-          setTimeout(() => {
-            window.VisualSitemap.init('main', { siteStructure, hostname, pages });
-          }, 200);
-        }
+        setTimeout(() => {
+          window.VisualSitemap.init('main', { siteStructure, hostname, pages });
+        }, 200);
       }
     }
 
@@ -542,32 +539,26 @@ document.addEventListener('DOMContentLoaded', () => {
 
         revealCrawlerProContent();
 
-        // Defer VisualSitemap init until accordion is expanded (D3 needs dimensions)
+        // Auto-expand Visual Sitemap accordion and init D3
+        const vsBody2 = document.querySelector('[data-accordion-body="visual-sitemap"]');
+        const vsHeader2 = document.querySelector('[data-accordion-toggle="visual-sitemap"]');
+        if (vsBody2) {
+          vsBody2.classList.add('report-accordion__body--open');
+          vsBody2.removeAttribute('hidden');
+          if (vsHeader2) {
+            vsHeader2.setAttribute('aria-expanded', 'true');
+            const chevron2 = vsHeader2.querySelector('.report-accordion__chevron');
+            if (chevron2) chevron2.classList.add('report-accordion__chevron--open');
+          }
+        }
         if (window.VisualSitemap && typeof window.VisualSitemap.init === 'function') {
-          let vsInitialized = false;
-          const vsHeader = document.querySelector('[data-accordion-toggle="visual-sitemap"]');
-          if (vsHeader) {
-            vsHeader.addEventListener('click', function onVsExpand() {
-              if (vsInitialized) return;
-              vsInitialized = true;
-              setTimeout(() => {
-                window.VisualSitemap.init('main', {
-                  siteStructure: crawlStructure,
-                  hostname: crawlHostname,
-                  pages: crawlPages
-                });
-              }, 50);
+          setTimeout(() => {
+            window.VisualSitemap.init('main', {
+              siteStructure: crawlStructure,
+              hostname: crawlHostname,
+              pages: crawlPages
             });
-          }
-          if (new URLSearchParams(window.location.search).get('print') === '1') {
-            setTimeout(() => {
-              window.VisualSitemap.init('main', {
-                siteStructure: crawlStructure,
-                hostname: crawlHostname,
-                pages: crawlPages
-              });
-            }, 200);
-          }
+          }, 200);
         }
 
         if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
