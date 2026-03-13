@@ -484,11 +484,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if (isUnlocked) {
       revealCrawlerProContent();
 
-      // Initialize interactive VisualSitemap (after DOM settles)
+      // Defer VisualSitemap init until the accordion is first expanded,
+      // because D3 needs a visible container with real dimensions.
       if (window.VisualSitemap && typeof window.VisualSitemap.init === 'function') {
-        setTimeout(() => {
-          window.VisualSitemap.init('main', { siteStructure, hostname, pages });
-        }, 100);
+        let vsInitialized = false;
+        const vsAccordionHeader = document.querySelector('[data-accordion-toggle="visual-sitemap"]');
+        if (vsAccordionHeader) {
+          vsAccordionHeader.addEventListener('click', function onVsExpand() {
+            if (vsInitialized) return;
+            vsInitialized = true;
+            // Small delay to let the accordion body become visible
+            setTimeout(() => {
+              window.VisualSitemap.init('main', { siteStructure, hostname, pages });
+            }, 50);
+          });
+        }
+        // Also handle print mode (all accordions auto-expanded)
+        if (new URLSearchParams(window.location.search).get('print') === '1') {
+          setTimeout(() => {
+            window.VisualSitemap.init('main', { siteStructure, hostname, pages });
+          }, 200);
+        }
       }
     }
 
@@ -526,15 +542,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
         revealCrawlerProContent();
 
-        // Initialize interactive VisualSitemap after unlock
+        // Defer VisualSitemap init until accordion is expanded (D3 needs dimensions)
         if (window.VisualSitemap && typeof window.VisualSitemap.init === 'function') {
-          setTimeout(() => {
-            window.VisualSitemap.init('main', {
-              siteStructure: crawlStructure,
-              hostname: crawlHostname,
-              pages: crawlPages
+          let vsInitialized = false;
+          const vsHeader = document.querySelector('[data-accordion-toggle="visual-sitemap"]');
+          if (vsHeader) {
+            vsHeader.addEventListener('click', function onVsExpand() {
+              if (vsInitialized) return;
+              vsInitialized = true;
+              setTimeout(() => {
+                window.VisualSitemap.init('main', {
+                  siteStructure: crawlStructure,
+                  hostname: crawlHostname,
+                  pages: crawlPages
+                });
+              }, 50);
             });
-          }, 100);
+          }
+          if (new URLSearchParams(window.location.search).get('print') === '1') {
+            setTimeout(() => {
+              window.VisualSitemap.init('main', {
+                siteStructure: crawlStructure,
+                hostname: crawlHostname,
+                pages: crawlPages
+              });
+            }, 200);
+          }
         }
 
         if (window.CreditsManager && typeof window.CreditsManager.renderPaywallState === 'function') {
