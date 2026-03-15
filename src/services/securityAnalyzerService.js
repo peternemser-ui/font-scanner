@@ -197,22 +197,33 @@ class SecurityAnalyzerService {
           timeout: 30000
         });
 
-        await dismissPageOverlays(page, { timeout: 4000 });
-
-        // Collect security metrics
-        const securityInfo = await page.evaluate(() => {
-          return {
-            https: location.protocol === 'https:',
-            csp: !!document.querySelector('meta[http-equiv="Content-Security-Policy"]'),
-            mixedContentElements: document.querySelectorAll('img[src^="http:"], script[src^="http:"]').length,
-          };
-        });
-
-        // Check response headers from initial navigation
+        // Check response headers BEFORE dismissPageOverlays (which can destroy execution context)
         const headers = response ? response.headers() : {};
+        const responseUrl = response ? response.url() : url;
+        const isHttps = responseUrl.startsWith('https://');
+
+        // Collect security metrics BEFORE overlay dismissal to avoid context destruction
+        let securityInfo;
+        try {
+          securityInfo = await page.evaluate(() => {
+            return {
+              https: location.protocol === 'https:',
+              csp: !!document.querySelector('meta[http-equiv="Content-Security-Policy"]'),
+              mixedContentElements: document.querySelectorAll('img[src^="http:"], script[src^="http:"]').length,
+            };
+          });
+        } catch (evalError) {
+          // Execution context destroyed (e.g., by navigation) — fall back to response-based detection
+          logger.warn(`${device} page.evaluate failed, using response-based detection`, { error: evalError.message });
+          securityInfo = {
+            https: isHttps,
+            csp: false,
+            mixedContentElements: 0,
+          };
+        }
 
         const securityScore = this.calculateDeviceSecurityScore({
-          https: securityInfo.https,
+          https: securityInfo.https || isHttps,
           csp: securityInfo.csp || !!headers['content-security-policy'],
           hsts: !!headers['strict-transport-security'],
           mixedContent: securityInfo.mixedContentElements,
@@ -221,7 +232,7 @@ class SecurityAnalyzerService {
         return {
           device,
           securityScore,
-          https: securityInfo.https,
+          https: securityInfo.https || isHttps,
           csp: securityInfo.csp || !!headers['content-security-policy'],
           hsts: !!headers['strict-transport-security'],
           mixedContent: securityInfo.mixedContentElements,
@@ -246,18 +257,28 @@ class SecurityAnalyzerService {
           timeout: 30000
         });
 
-        await dismissPageOverlays(page, { timeout: 4000 });
-
-        const securityDetails = await page.evaluate(() => {
-          return {
-            protocol: location.protocol,
-            isSecure: location.protocol === 'https:',
-          };
-        });
-
-        // Get certificate info from response
+        // Get certificate info and security details BEFORE dismissPageOverlays
+        // (overlay dismissal can destroy execution context via unintended navigation)
         const securityInfo = response.securityDetails();
-        
+        const responseUrl = response ? response.url() : url;
+        const isHttps = responseUrl.startsWith('https://');
+
+        let securityDetails;
+        try {
+          securityDetails = await page.evaluate(() => {
+            return {
+              protocol: location.protocol,
+              isSecure: location.protocol === 'https:',
+            };
+          });
+        } catch (evalError) {
+          logger.warn('SSL page.evaluate failed, using response-based detection', { error: evalError.message });
+          securityDetails = {
+            protocol: isHttps ? 'https:' : 'http:',
+            isSecure: isHttps,
+          };
+        }
+
         let sslData = {
           valid: securityDetails.isSecure,
           protocol: securityDetails.protocol,
@@ -414,9 +435,10 @@ class SecurityAnalyzerService {
           timeout: 30000
         });
 
-        await dismissPageOverlays(page, { timeout: 4000 });
-
-        const vulnerabilities = await page.evaluate(() => {
+        // Collect vulnerability data BEFORE dismissPageOverlays (which can destroy execution context)
+        let vulnerabilities;
+        try {
+          vulnerabilities = await page.evaluate(() => {
           const issues = [];
 
           // Check for mixed content
@@ -476,6 +498,10 @@ class SecurityAnalyzerService {
 
           return issues;
         });
+        } catch (evalError) {
+          logger.warn('Vulnerability page.evaluate failed', { error: evalError.message });
+          vulnerabilities = [];
+        }
 
         // Count by severity
         const critical = vulnerabilities.filter(v => v.severity === 'critical').length;
