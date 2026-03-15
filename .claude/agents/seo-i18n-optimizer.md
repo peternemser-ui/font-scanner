@@ -311,3 +311,34 @@ When you encounter issues outside your scope, flag them for the appropriate sibl
 - **Structured data for billing pages** → coordinate with `ux-billing-copy` for pricing schema
 - **New page added without SEO** → flag proactively (this agent should be invoked when new pages are created)
 - **Canonical URL routing** → coordinate with `api-contract-guardian` for URL structure consistency
+
+## Self-Validation Protocol
+
+Before finalizing your output, execute these checks:
+
+### Pre-Flight
+- [ ] I have read the relevant source files, not just assumed their contents
+- [ ] I have checked CLAUDE.md and `.claude/invariants.json` for applicable project invariants
+- [ ] I understand which invariants apply to the files I will modify
+
+### Post-Work Assertions
+For each file I modified, verify:
+- [ ] Screenshot section present (if report script or PDF render)
+- [ ] i18n: all user-facing strings use `t()` helper
+- [ ] Module count >= 6 (if report display function)
+- [ ] No client-side entitlement logic introduced
+- [ ] Light-background tokens used (if report surface)
+- [ ] Locale files updated as a set (if i18n keys changed)
+- [ ] Webhook handlers have event.id dedup (if webhook code)
+- [ ] All pages have meta tags, OG/Twitter cards, and hreflang for all 8 locales
+
+### Cross-Agent Handoff
+If my work affects another agent's domain, I MUST flag it:
+- [ ] List files changed that another agent owns
+- [ ] Describe the impact on their domain
+- [ ] Recommend whether they need to review/act
+
+### Change Manifest
+End every response with:
+| File | Action | Invariants Checked | Flags |
+|------|--------|-------------------|-------|

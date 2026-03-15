@@ -1,0 +1,63 @@
+{
+  "projectName": "Site Mechanic",
+  "techSummary": "Node.js/Express pay-for-report SaaS with Puppeteer scanning, Lighthouse audits, Stripe billing, and i18n (8 locales)",
+  "invariants": [
+    {
+      "id": "screenshot-section",
+      "description": "Every report page renders a .screenshot-section after the header",
+      "check": "regex",
+      "pattern": "screenshot-section|screenshotHTML|screenshotUrl",
+      "appliesTo": ["src/public/*-script.js", "src/public/pdf-templates/*-render.js"],
+      "severity": "warning"
+    },
+    {
+      "id": "light-background",
+      "description": "Report surfaces use light-background tokens, no hardcoded dark colors",
+      "check": "absence",
+      "pattern": "#161A1F|#1C2128",
+      "appliesTo": ["src/public/*-script.js", "src/public/pdf-templates/*-render.js"],
+      "severity": "warning"
+    },
+    {
+      "id": "module-count",
+      "description": "Reports render >= 6 distinct content modules/sections",
+      "check": "count-min",
+      "pattern": "createSection|accordion|report-section",
+      "minimum": 6,
+      "appliesTo": ["src/public/*-script.js"],
+      "severity": "warning"
+    },
+    {
+      "id": "i18n-everywhere",
+      "description": "All user-facing strings use the t() helper, no hardcoded English in report output",
+      "check": "regex",
+      "pattern": "\\bt\\(",
+      "appliesTo": ["src/public/*-script.js", "src/public/pdf-templates/*-render.js"],
+      "severity": "warning"
+    },
+    {
+      "id": "server-entitlements",
+      "description": "No entitlement resolution logic on the client side",
+      "check": "absence",
+      "pattern": "resolveEntitlements|getEntitlements",
+      "appliesTo": ["src/public/**/*.js"],
+      "severity": "block"
+    },
+    {
+      "id": "no-mixed-languages",
+      "description": "All 8 locale files must be updated together",
+      "check": "co-change",
+      "locales": ["en", "es", "fr", "de", "pt", "ja", "zh", "ru"],
+      "appliesTo": ["src/public/i18n/*.json"],
+      "severity": "warning"
+    },
+    {
+      "id": "idempotent-webhooks",
+      "description": "Webhook handlers check event.id for deduplication",
+      "check": "regex",
+      "pattern": "event\\.id|eventId|dedup",
+      "appliesTo": ["src/routes/webhooks.js"],
+      "severity": "warning"
+    }
+  ]
+}
