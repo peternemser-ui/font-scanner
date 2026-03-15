@@ -509,6 +509,19 @@
             ${_t('reports.common.goPro30', 'Go Pro — $30/mo')}
           </button>
         </div>
+        ${(() => {
+          const balance = cachedBillingStatus?.bugRewardTokenBalance || 0;
+          if (balance <= 0) return '';
+          return `
+            <button
+              class="pro-report-block__unlock-btn"
+              data-redeem-bug-token
+              ${reportId ? `data-report-id="${reportId}"` : ''}
+              style="margin-top:0.5rem;width:100%;background:var(--r-surface-2,#1C2128);border:1px solid #22c55e;color:#22c55e;padding:0.5rem 1rem;border-radius:8px;font-size:0.8125rem;font-weight:600;cursor:pointer;"
+            >
+              ${_t('bugReport.redeemToken', 'Use Reward Token')} (${balance} available)
+            </button>`;
+        })()}
         <p class="pro-report-block__unlock-hint">
           ${_t('reports.common.proUnlocksAll', 'Pro unlocks all reports. Single purchase unlocks only this scan.')}
         </p>

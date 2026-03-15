@@ -9741,5 +9741,29 @@
       "fallback": "If the button doesn't work, copy and paste this URL into your browser:",
       "footer": "If you didn't request a password reset, you can safely ignore this email. Your password will remain unchanged."
     }
+  },
+  "bugReport": {
+    "trigger": "Found a data issue? Report it & earn a free unlock",
+    "drawerTitle": "Report an Issue",
+    "categoryLabel": "What type of issue?",
+    "categories": {
+      "wrongData": "Wrong Data",
+      "missingSection": "Missing Section",
+      "displayIssue": "Display Issue",
+      "crashError": "Crash / Error",
+      "other": "Other"
+    },
+    "descriptionPlaceholder": "Describe what's wrong (minimum 30 characters)...",
+    "submitBtn": "Submit Report",
+    "successTitle": "Report Submitted!",
+    "successMsg": "You'll earn a free report unlock if we confirm this bug.",
+    "loginRequired": "Sign in to report bugs and earn free report unlocks",
+    "signIn": "Sign In",
+    "limitReached": "You've reached the daily report limit",
+    "duplicateDetected": "A similar report was recently submitted",
+    "tokenBalance": "{{count}} reward token(s) available",
+    "redeemToken": "Use Reward Token",
+    "tokenRedeemed": "Report unlocked with reward token!",
+    "tokenExpiry": "Expires {{date}}"
   }
 }

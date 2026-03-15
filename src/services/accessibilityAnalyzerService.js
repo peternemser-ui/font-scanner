@@ -597,11 +597,12 @@ class AccessibilityAnalyzerService {
     const recommendations = [];
 
     // Contrast issues
-    if (contrast.issuesCount > 5) {
+    if (contrast.issuesCount > 0) {
+      const contrastPriority = contrast.issuesCount > 5 ? 'high' : (contrast.issuesCount > 2 ? 'medium' : 'low');
       recommendations.push({
-        priority: 'high',
-        title: 'Multiple Color Contrast Issues',
-        description: `Found ${contrast.issuesCount} elements with insufficient color contrast. WCAG 2.1 Success Criterion 1.4.3 requires a minimum contrast ratio of 4.5:1 for normal-sized text and 3:1 for large text (18px bold or 24px regular). Low contrast makes text difficult or impossible to read for users with low vision, color blindness, or anyone viewing the page in bright sunlight. This is one of the most common accessibility failures and affects a significant portion of the population—approximately 8% of men and 0.5% of women have some form of color vision deficiency. Fixing contrast issues improves readability for all users and is often required for legal compliance under the ADA, Section 508, and the European Accessibility Act.`,
+        priority: contrastPriority,
+        title: contrast.issuesCount > 5 ? 'Multiple Color Contrast Issues' : 'Color Contrast Issues',
+        description: `Found ${contrast.issuesCount} element${contrast.issuesCount === 1 ? '' : 's'} with insufficient color contrast. WCAG 2.1 Success Criterion 1.4.3 requires a minimum contrast ratio of 4.5:1 for normal-sized text and 3:1 for large text (18px bold or 24px regular). Low contrast makes text difficult or impossible to read for users with low vision, color blindness, or anyone viewing the page in bright sunlight. This is one of the most common accessibility failures and affects a significant portion of the population—approximately 8% of men and 0.5% of women have some form of color vision deficiency. Fixing contrast issues improves readability for all users and is often required for legal compliance under the ADA, Section 508, and the European Accessibility Act.`,
         wcagReference: '1.4.3 Contrast (Minimum)',
         impact: 'Users with low vision or color blindness may have difficulty reading content.',
         solution: 'Increase contrast between text and background colors. Use online contrast checkers to validate your color scheme.'
@@ -609,11 +610,12 @@ class AccessibilityAnalyzerService {
     }
 
     // Keyboard accessibility
-    if (keyboard.missingFocusIndicators.length > 5) {
+    if (keyboard.missingFocusIndicators.length > 0) {
+      const focusPriority = keyboard.missingFocusIndicators.length > 5 ? 'high' : (keyboard.missingFocusIndicators.length > 2 ? 'medium' : 'low');
       recommendations.push({
-        priority: 'high',
+        priority: focusPriority,
         title: 'Missing Focus Indicators',
-        description: `${keyboard.missingFocusIndicators.length} interactive elements lack visible focus indicators. Focus indicators are the visual outlines or highlights that show which element is currently selected when navigating with a keyboard. Without them, keyboard-only users—including people with motor disabilities who cannot use a mouse—have no way to tell where they are on the page. This creates a completely unusable experience for those users, similar to navigating a website with an invisible mouse cursor. Many browsers provide a default focus ring, but CSS resets or custom styles often remove it without adding a replacement.`,
+        description: `${keyboard.missingFocusIndicators.length} interactive element${keyboard.missingFocusIndicators.length === 1 ? '' : 's'} lack visible focus indicators. Focus indicators are the visual outlines or highlights that show which element is currently selected when navigating with a keyboard. Without them, keyboard-only users—including people with motor disabilities who cannot use a mouse—have no way to tell where they are on the page. This creates a completely unusable experience for those users, similar to navigating a website with an invisible mouse cursor. Many browsers provide a default focus ring, but CSS resets or custom styles often remove it without adding a replacement.`,
         wcagReference: '2.4.7 Focus Visible',
         impact: 'Keyboard-only users cannot see which element has focus, making navigation difficult.',
         solution: 'Add visible focus styles using CSS :focus pseudo-class. Ensure focus indicators have sufficient contrast.'

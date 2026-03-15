@@ -443,10 +443,23 @@ async function getFullEntitlements(userId, anonId = null) {
     }
   );
 
+  // Bug reward token balance (for showing "Use Reward Token" in paywall)
+  let bugRewardTokenBalance = 0;
+  if (userId) {
+    try {
+      const tokenRow = await db.get(
+        "SELECT COUNT(*) as count FROM bug_reward_tokens WHERE user_id = ? AND status = 'active' AND expires_at > datetime('now')",
+        [userId]
+      );
+      bugRewardTokenBalance = tokenRow?.count || 0;
+    } catch (_) { /* table may not exist yet */ }
+  }
+
   return {
     ...entitlements,
     planCode,
-    usage: usageSummary
+    usage: usageSummary,
+    bugRewardTokenBalance
   };
 }
 

@@ -430,6 +430,11 @@ function initializeTabs() {
         joinHealthRoom();
       }
 
+      // Load bug reports when switching to bugs tab
+      if (targetTab === 'bugs') {
+        loadBugReports();
+      }
+
       currentTab = targetTab;
     });
   });
@@ -1963,3 +1968,117 @@ function formatUptime(seconds) {
   if (h > 0) return h + 'h ' + m + 'm ' + s + 's';
   return m + 'm ' + s + 's';
 }
+
+// ── Bug Reports ─────────────────────────────────────────────────────
+
+var _bugFilter = 'all';
+var _bugPage = 1;
+
+function loadBugReports(status, page) {
+  _bugFilter = status || _bugFilter || 'all';
+  _bugPage = page || 1;
+
+  var qs = '?page=' + _bugPage + '&limit=20';
+  if (_bugFilter !== 'all') qs += '&status=' + _bugFilter;
+
+  fetch('/api/admin/bugs' + qs, {
+    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('admin_token') }
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.success) throw new Error(data.error || 'Failed to load');
+    renderBugReportsTable(data.bugReports || [], data.total || 0, data.page, data.limit);
+  })
+  .catch(function(err) {
+    document.getElementById('bugReportsTableBody').innerHTML =
+      '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">' + err.message + '</td></tr>';
+  });
+}
+
+function renderBugReportsTable(reports, total, page, limit) {
+  var tbody = document.getElementById('bugReportsTableBody');
+  if (!reports.length) {
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--admin-text-muted);">No bug reports found</td></tr>';
+    document.getElementById('bugPagination').innerHTML = '';
+    return;
+  }
+
+  var rows = reports.map(function(r) {
+    var shortUrl = (r.scannedUrl || '').replace(/^https?:\/\//, '').replace(/\/$/, '');
+    if (shortUrl.length > 30) shortUrl = shortUrl.substring(0, 30) + '...';
+    var shortDesc = (r.description || '').substring(0, 60);
+    if ((r.description || '').length > 60) shortDesc += '...';
+    var catLabel = (r.category || '').replace(/_/g, ' ');
+    var dateStr = r.createdAt ? new Date(r.createdAt).toLocaleDateString() : '';
+
+    var actions = '';
+    if (r.status === 'pending') {
+      actions =
+        '<button class="bug-action-btn bug-action-btn--approve" onclick="reviewBug(' + r.id + ',\'approved\')">Approve</button>' +
+        '<button class="bug-action-btn bug-action-btn--reject" onclick="reviewBug(' + r.id + ',\'rejected\')">Reject</button>' +
+        '<button class="bug-action-btn bug-action-btn--duplicate" onclick="reviewBug(' + r.id + ',\'duplicate\')">Dupe</button>';
+    } else {
+      actions = r.tokenGranted ? '<span style="color:#22c55e;font-size:0.75rem;">Token granted</span>' : '—';
+    }
+
+    return '<tr>' +
+      '<td>' + (r.userEmail || '—') + '</td>' +
+      '<td title="' + (r.scannedUrl || '') + '">' + (shortUrl || '—') + '</td>' +
+      '<td style="text-transform:capitalize;">' + catLabel + '</td>' +
+      '<td title="' + (r.description || '').replace(/"/g, '&quot;') + '">' + shortDesc + '</td>' +
+      '<td><span class="bug-status bug-status--' + r.status + '">' + r.status + '</span></td>' +
+      '<td>' + dateStr + '</td>' +
+      '<td>' + actions + '</td>' +
+    '</tr>';
+  });
+
+  tbody.innerHTML = rows.join('');
+
+  // Pagination
+  var totalPages = Math.ceil(total / limit);
+  var pagDiv = document.getElementById('bugPagination');
+  if (totalPages <= 1) { pagDiv.innerHTML = ''; return; }
+  var btns = '';
+  for (var i = 1; i <= totalPages; i++) {
+    var active = i === page ? 'background:var(--admin-accent);color:#fff;' : '';
+    btns += '<button onclick="loadBugReports(null,' + i + ')" style="padding:0.25rem 0.625rem;border:1px solid var(--admin-border);border-radius:4px;cursor:pointer;color:var(--admin-text);background:var(--admin-card-bg);' + active + '">' + i + '</button>';
+  }
+  pagDiv.innerHTML = btns;
+}
+
+function reviewBug(bugId, decision) {
+  var notes = '';
+  if (decision === 'rejected' || decision === 'duplicate') {
+    notes = prompt('Add a note (optional):') || '';
+  }
+
+  fetch('/api/admin/bugs/' + bugId, {
+    method: 'PATCH',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': 'Bearer ' + localStorage.getItem('admin_token')
+    },
+    body: JSON.stringify({ decision: decision, adminNotes: notes })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (!data.success) throw new Error(data.error || 'Failed');
+    var msg = decision === 'approved'
+      ? 'Bug approved — reward token granted!'
+      : 'Bug ' + decision;
+    showSuccess(msg);
+    loadBugReports();
+  })
+  .catch(function(err) {
+    showError(err.message);
+  });
+}
+
+// Bug filter chip clicks
+document.addEventListener('click', function(e) {
+  var chip = e.target.closest('.bug-filter-chip');
+  if (!chip) return;
+  document.querySelectorAll('.bug-filter-chip').forEach(function(c) { c.classList.remove('active'); });
+  chip.classList.add('active');
+  loadBugReports(chip.getAttribute('data-bug-filter'), 1);
+});

@@ -596,6 +596,16 @@ class StripeService {
       logger.warn('Could not fetch purchased report details', { error: e.message });
     }
 
+    // Bug reward token balance
+    let bugRewardTokenBalance = 0;
+    try {
+      const tokenRow = await db.get(
+        "SELECT COUNT(*) as count FROM bug_reward_tokens WHERE user_id = ? AND status = 'active' AND expires_at > datetime('now')",
+        [userId]
+      );
+      bugRewardTokenBalance = tokenRow?.count || 0;
+    } catch (_) { /* table may not exist yet */ }
+
     return {
       plan: entitlements.plan,
       subscriptionStatus: entitlements.subscriptionStatus,
@@ -606,7 +616,8 @@ class StripeService {
       hasStripeCustomer: !!user.stripe_customer_id,
       purchasedReports: entitlements.purchasedReports,
       purchasedReportDetails,
-      permissions: entitlements.permissions
+      permissions: entitlements.permissions,
+      bugRewardTokenBalance
     };
   }
 

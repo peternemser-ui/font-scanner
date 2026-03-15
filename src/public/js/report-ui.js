@@ -1435,6 +1435,45 @@
         return;
       }
 
+      // Redeem bug reward token
+      const redeemToken = e.target.closest('[data-redeem-bug-token]');
+      if (redeemToken) {
+        e.preventDefault();
+        if (typeof e.stopImmediatePropagation === 'function') e.stopImmediatePropagation();
+        let reportId = redeemToken.dataset.reportId || document.body.getAttribute('data-report-id');
+        if (!reportId) {
+          const computed = computeReportId(getReportUrl(), getScanStartedAt(), getAnalyzerKey());
+          if (computed) { reportId = computed; setCurrentReportId(reportId); }
+        }
+        if (!reportId) { showToast('Run a scan first.'); return; }
+
+        redeemToken.disabled = true;
+        redeemToken.textContent = '...';
+        try {
+          const token = localStorage.getItem('sm_auth_token') || localStorage.getItem('sm_token');
+          const resp = await fetch('/api/bugs/redeem-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', ...(token ? { 'Authorization': `Bearer ${token}` } : {}) },
+            credentials: 'include',
+            body: JSON.stringify({ reportId })
+          });
+          const data = await resp.json();
+          if (!resp.ok) throw new Error(data.error || 'Redemption failed');
+
+          showToast(t('bugReport.tokenRedeemed', 'Report unlocked with reward token!'));
+          // Refresh entitlements to remove paywall
+          if (window.ProReportBlock && typeof window.ProReportBlock.refreshBillingStatus === 'function') {
+            await window.ProReportBlock.refreshBillingStatus();
+          }
+          window.dispatchEvent(new CustomEvent('entitlements:updated'));
+        } catch (err) {
+          showToast(err.message);
+          redeemToken.disabled = false;
+          redeemToken.textContent = t('bugReport.redeemToken', 'Use Reward Token');
+        }
+        return;
+      }
+
       // Open pricing modal button
       const openPricingModal = e.target.closest('[data-open-pricing-modal]');
       if (openPricingModal) {

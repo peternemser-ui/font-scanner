@@ -56,6 +56,14 @@ router.get('/dashboard-stats', async (req, res) => {
       ) || { count: 0 };
     } catch (_) { /* table may not exist */ }
 
+    // Bug report stats
+    let pendingBugs = { count: 0 };
+    let tokensGranted = { count: 0 };
+    try {
+      pendingBugs = await db.get(`SELECT COUNT(*) as count FROM bug_reports WHERE status = 'pending'`) || { count: 0 };
+      tokensGranted = await db.get('SELECT COUNT(*) as count FROM bug_reward_tokens') || { count: 0 };
+    } catch (_) { /* tables may not exist yet */ }
+
     // Recent activity
     const recentUsers = await db.all(
       'SELECT id, email, plan, created_at FROM users ORDER BY created_at DESC LIMIT 10'
@@ -85,6 +93,10 @@ router.get('/dashboard-stats', async (req, res) => {
         purchases: {
           total: totalPurchases.count,
           today: purchasesToday.count
+        },
+        bugs: {
+          pending: pendingBugs.count,
+          tokensGranted: tokensGranted.count
         }
       },
       recentActivity: {
@@ -1409,6 +1421,61 @@ router.patch('/ai-config', async (req, res) => {
   } catch (error) {
     logger.error('Failed to update AI config', { error: error.message });
     res.status(500).json({ error: error.message });
+  }
+});
+
+// ── Bug Reports ─────────────────────────────────────────────────────
+const bugReportService = require('../services/bugReportService');
+
+/**
+ * GET /api/admin/bugs
+ * List all bug reports with optional status filter and pagination
+ */
+router.get('/bugs', async (req, res) => {
+  try {
+    const { status, page = 1, limit = 20 } = req.query;
+    const result = await bugReportService.getAllBugReports({
+      status,
+      page: parseInt(page, 10) || 1,
+      limit: Math.min(parseInt(limit, 10) || 20, 100)
+    });
+    res.json({ success: true, ...result });
+  } catch (error) {
+    logger.error('Failed to fetch bug reports', { error: error.message });
+    res.status(500).json({ error: error.message });
+  }
+});
+
+/**
+ * PATCH /api/admin/bugs/:id
+ * Approve, reject, or mark as duplicate. Approving auto-grants a reward token.
+ */
+router.patch('/bugs/:id', async (req, res) => {
+  try {
+    const bugId = parseInt(req.params.id, 10);
+    const { decision, adminNotes } = req.body;
+
+    if (!decision) {
+      return res.status(400).json({ error: 'decision is required (approved, rejected, or duplicate)' });
+    }
+
+    const result = await bugReportService.reviewBugReport(bugId, req.user.id, decision, adminNotes);
+
+    // Log admin action
+    await logAdminAction(req.user.id, 'REVIEW_BUG_REPORT', result.userId, {
+      bugId,
+      decision,
+      tokenGranted: result.tokenGranted,
+      adminNotes
+    });
+
+    res.json({ success: true, ...result });
+  } catch (error) {
+    const status = error.status || 500;
+    if (status >= 500) {
+      logger.error('Failed to review bug report', { error: error.message });
+    }
+    res.status(status).json({ error: error.message });
   }
 });
 

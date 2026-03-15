@@ -783,6 +783,10 @@ app.use('/api/pro-report', proReportRoutes);
 const aiRecommendationsRoutes = require('./routes/aiRecommendations');
 app.use('/api/ai/recommendations', aiRecommendationsRoutes);
 
+// Bug reports & reward tokens
+const bugReportRoutes = require('./routes/bugReports');
+app.use('/api/bugs', bugReportRoutes);
+
 // New async scan API
 const scanRoutes = require('./routes/scan.routes');
 app.use('/api/scans', scanRoutes);
